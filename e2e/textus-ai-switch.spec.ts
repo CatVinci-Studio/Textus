@@ -306,7 +306,7 @@ test("the popped-out AI window says it is off and turns it back on", async ({
 test.describe("on a phone", () => {
   test.use(PHONE);
 
-  test("off, the title row's AI button is struck through and a tap turns it back on", async ({
+  test("off, the title row's AI button is struck through and a tap turns it back on, as the capsule", async ({
     page,
   }) => {
     await openPhone(page, { settings: { textusAi: false } });
@@ -314,7 +314,7 @@ test.describe("on a phone", () => {
     await expect(button).toHaveClass(/textus-ai-button-off/);
     await button.tap();
     await page.getByRole("menuitem", { name: "Turn on Textus AI" }).tap();
-    await expect(button).not.toHaveClass(/textus-ai-button-off/);
-    await expect(panelButton(page)).toBeVisible();
+    await expect(button).toHaveCount(0);
+    await expect(page.locator(".page-switch")).toBeVisible();
   });
 });

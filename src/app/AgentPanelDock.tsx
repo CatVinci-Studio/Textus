@@ -1,25 +1,20 @@
-import { isIOSApp } from "../platform/capabilities";
 import type { PresenceHandle } from "../ui/usePresence";
 import {
   AGENT_PANEL_DEFAULT_WIDTH,
   AGENT_PANEL_MAX_WIDTH,
   AGENT_PANEL_MIN_WIDTH,
-  AgentPanelSheetGrip,
 } from "../ai/chat/panel/agent-panel";
 import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 import { TextusAiOffNote } from "../ai/TextusAiSwitch";
 
-/** The docked Agent panel's frame (a bottom sheet on a phone); the active
- *  tab's editor renders its conversation into the mount point here. */
+/** The docked Agent panel's frame (a page of its own on a phone); the
+ *  active tab's editor renders its conversation into the mount point here. */
 export function AgentPanelDock({
   presence,
   closing,
-  sheetFull,
-  onSheetFullChange,
   width,
   onResize,
-  onClose,
   mountRef,
   sourceMode,
   onToggleSourceMode,
@@ -28,12 +23,9 @@ export function AgentPanelDock({
 }: {
   presence: PresenceHandle;
   closing: boolean;
-  sheetFull: boolean;
-  onSheetFullChange: (full: boolean) => void;
   width: number;
   /** `done`: the drag let go, or a key moved it - remember it. */
   onResize: (width: number, done: boolean) => void;
-  onClose: () => void;
   mountRef: (el: HTMLElement | null) => void;
   /** The active tab is in source mode or split view. */
   sourceMode: boolean;
@@ -49,18 +41,9 @@ export function AgentPanelDock({
       aria-label={t.agentPanelTitle}
       data-state={presence.state}
       inert={closing || undefined}
-      className={`agent-panel${sheetFull ? " agent-panel-sheet-full" : ""}`}
+      className="agent-panel"
       style={{ width }}
     >
-      {/* Phone widths: the bottom sheet's handle. */}
-      {isIOSApp && (
-        <AgentPanelSheetGrip
-          full={sheetFull}
-          onFullChange={onSheetFullChange}
-          onClose={onClose}
-          label={t.agentPanelSheet}
-        />
-      )}
       <ResizeHandle
         className="agent-panel-resizer"
         edge="left"

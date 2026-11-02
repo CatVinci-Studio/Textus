@@ -24,6 +24,7 @@ test("one control names the mode and the model, and its list switches either", a
   await expect(list.locator(".mode-picker-mode-name")).toHaveText([
     "Write",
     "Review",
+    "Research",
     "Create",
   ]);
   await expect(list.getByRole("option", { name: "Write" })).toContainText(

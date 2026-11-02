@@ -571,8 +571,14 @@ export function installDevTauriShim(): void {
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
         return Promise.resolve([...recents.folders]);
+      // Files opened from outside before the window was ready: none here. The
+      // native side always answers with a list.
+      case "take_pending_open_paths":
+        return Promise.resolve([]);
     }
-    if (!files) return null;
+    // No fake folder: the folder of a document opened anyway (dropped in,
+    // `__devFiles`) lists as empty, as the native side never answers null.
+    if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
     const path = String(args.path ?? args.root ?? "");
     switch (cmd) {
       case "read_text_file":
@@ -1216,6 +1222,16 @@ export function installDevTauriShim(): void {
             value && typeof value === "object" && "__delay" in value
               ? { ...value, value: settledTurns(blocks, value.value) }
               : (settledTurns(blocks, value) as typeof value);
+        }
+        // `{ __events: [...], value }` first sends each event through the
+        // command's Channel (a paper's progress), then answers.
+        if (value && typeof value === "object" && "__events" in value) {
+          const channel = (Object.values(args ?? {}) as unknown[]).find(
+            (v) => !!v && typeof v === "object" && "onmessage" in v,
+          ) as { onmessage?: (event: unknown) => void } | undefined;
+          for (const event of (value as { __events: unknown[] }).__events)
+            channel?.onmessage?.(event);
+          return Promise.resolve((value as { value?: unknown }).value ?? null);
         }
         // `{ __delay: ms, value }` answers only after a while - a picture
         // still being made - and `{ __delay: ms, __reject }` fails then.

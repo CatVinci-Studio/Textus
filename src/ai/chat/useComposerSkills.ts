@@ -28,8 +28,8 @@ export function useComposerSkills({
   /** The input Escape closed the menu for; typing reopens it. */
   dismissedInput: string | null;
   lang: PickerLabels["lang"];
-  /** Only this mode's skills are offered. */
-  mode: AgentMode;
+  /** Only this mode's skills are offered; none for null. */
+  mode: AgentMode | null;
 }) {
   const [skills, setSkills] = useState<AgentSkill[]>([]);
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);
@@ -73,7 +73,7 @@ export function useComposerSkills({
     const listed = skillList ?? [];
     const names = new Set(listed.map((s) => s.name));
     const extra = listFromWorkspace(skills.filter((s) => !names.has(s.name)));
-    return pickerSkills([...listed, ...extra], lang, mode);
+    return mode ? pickerSkills([...listed, ...extra], lang, mode) : [];
   }, [skillList, skills, lang, mode]);
 
   return {

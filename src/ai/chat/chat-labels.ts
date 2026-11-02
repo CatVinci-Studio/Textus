@@ -12,7 +12,9 @@ import { aiErrorTexts } from "../error-messages";
 export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
   return {
     placeholder: t.agentInputPlaceholder,
+    researchPlaceholder: t.paperTopicPlaceholder,
     suggestionTab: t.composerSuggestionTab,
+    followUps: t.composerFollowUps,
     queued: t.agentQueued,
     queuedPaused: t.agentQueuedPaused,
     queueContinue: t.agentQueueContinue,
@@ -102,6 +104,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       // No heading named: the whole document, not an empty quote.
       "read_document:whole": t.toolReadWholeDocument,
       search_files: t.toolSearchFiles,
+      search_references: t.toolSearchReferences,
       find_files: t.toolFindFiles,
       // No name: every file (and old chats' list_files).
       "find_files:whole": t.toolListFiles,
@@ -117,6 +120,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       edit_chapters: t.toolEditChapters,
       web_search: t.toolWebSearch,
       web_fetch: t.toolWebFetch,
+      search_papers: t.toolSearchPapers,
       // Any MCP server's tool.
       mcp: t.toolMcp,
       // Any tool without its own line: a word, not its internal name.
@@ -144,9 +148,11 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     modeWrite: t.agentModeWrite,
     modeReview: t.agentModeReview,
     modeCreate: t.agentModeCreate,
+    modeResearch: t.agentModeResearch,
     modeWriteHint: t.agentModeWriteHint,
     modeReviewHint: t.agentModeReviewHint,
     modeCreateHint: t.agentModeCreateHint,
+    modeResearchHint: t.agentModeResearchHint,
     modeLabel: t.chatModeLabel,
     modelLabel: t.chatModelLabel,
     modeAndModelLabel: t.chatModeModelLabel,

@@ -69,9 +69,12 @@ function exportBaseName(tab: DocTab, t: Strings): string {
 const isMac = isMacPlatform();
 
 // Content too wide for a page wraps or shrinks instead of being clipped. A
-// page can't scroll, so display math breaks like inline math.
+// page can't scroll, so display math breaks like inline math, and a diagram
+// drawn wider than the column shrinks to it, its height with it.
 const EXPORT_FIT_CSS =
   ".milkdown table { width: 100%; } " +
+  ".mermaid-preview { overflow: visible; } " +
+  ".mermaid-preview > svg { min-width: 0; height: auto; } " +
   ".math-block-rendered, .katex-display { overflow: visible; } " +
   ".katex-display > .katex { white-space: normal; } " +
   ".milkdown a, .milkdown p, .milkdown li, .milkdown td, .milkdown th { overflow-wrap: anywhere; } ";

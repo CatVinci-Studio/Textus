@@ -14,7 +14,12 @@ import { fnv1a } from "../utils/hash";
 import { zoomButton } from "./diagram-zoom";
 import { isLargeDoc, pausesFeatures } from "./large-doc";
 import { registerDrawAll } from "./draw-when-visible";
-import { appearanceIsDark, diagramRenderer } from "./diagram-engine";
+import {
+  appearanceIsDark,
+  diagramRenderer,
+  DIAGRAM_LANGUAGES,
+  type DrawnDiagram,
+} from "./diagram-engine";
 import {
   redrawPendingDiagrams,
   registerPendingDrawer,
@@ -23,6 +28,26 @@ import type { DiagramEngine } from "../prefs/SettingsContext";
 
 const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
+/** How far the column's width must move before drawings are laid out again,
+ *  and how long it must then hold still: a panel sliding open redraws once. */
+const RESIZE_REDRAW_PX = 24;
+const RESIZE_DEBOUNCE_MS = 250;
+/** The longest a pass waits while the text keeps changing: a paper being
+ *  written changes several times a second, and its diagrams were drawn only
+ *  once it stopped. */
+const MAX_WAIT_MS = 2000;
+/** The smallest a diagram is scaled down to fit the column; one wider than
+ *  that keeps this scale and scrolls, so a long timeline stays readable. */
+const MIN_SCALE = 0.65;
+
+/** `container`'s drawing given the least width it can be read at, from its
+ *  viewBox. One laid out for the column, as a chart is, is never held. */
+function keepReadable(container: HTMLElement) {
+  const svg = container.querySelector("svg");
+  const width = svg?.viewBox?.baseVal?.width;
+  if (!svg || !width) return;
+  svg.style.minWidth = `${Math.round(width * MIN_SCALE)}px`;
+}
 /** Drawings of diagrams not in the document kept for when one is accepted;
  *  every streamed step of one lands here too. */
 const PENDING_KEPT = 30;
@@ -33,7 +58,7 @@ let renderIdCounter = 0;
 /** A diagram as the preview last drew it. */
 interface Drawn {
   svg: string;
-  engine: DiagramEngine;
+  engine: DrawnDiagram["engine"];
   /** What it was drawn for (the render pass's `styleOf`). */
   style: string;
   /** Part of its widget's key: with the source alone, ProseMirror kept the old
@@ -45,20 +70,31 @@ interface MermaidBlock {
   from: number;
   to: number;
   code: string;
+  language: string;
+  /** What its drawing is kept under. */
+  key: string;
 }
 
 const isCodeBlock = (node: ProseNode) => node.type.name === "code_block";
 const isMermaid = (node: ProseNode) =>
-  isCodeBlock(node) && node.attrs.language === "mermaid";
+  isCodeBlock(node) && DIAGRAM_LANGUAGES.includes(node.attrs.language);
+
+/** A drawing's cache key: its source, and a chart's language with it, so a
+ *  chart and a diagram of the same text never share a drawing. */
+const drawingKey = (language: string, code: string) =>
+  language === "mermaid" ? code : `${language}\n${code}`;
 
 function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
   const blocks: MermaidBlock[] = [];
   doc.descendants((node, pos) => {
     if (isMermaid(node)) {
+      const language = node.attrs.language as string;
       blocks.push({
         from: pos,
         to: pos + node.nodeSize,
         code: node.textContent,
+        language,
+        key: drawingKey(language, node.textContent),
       });
     }
   });
@@ -66,9 +102,9 @@ function collectMermaidBlocks(doc: ProseNode): MermaidBlock[] {
 }
 
 /**
- * A live diagram preview below every ```mermaid block. While the cursor is
- * away from a drawn block its source hides; moving back in, or clicking the
- * diagram, reveals it.
+ * A live diagram preview below every ```mermaid and ```chart block. While
+ * the cursor is away from a drawn block its source hides; moving back in, or
+ * clicking the diagram, reveals it.
  */
 export function createMermaidPreviewPlugin(options: {
   enabled: () => boolean;
@@ -77,6 +113,8 @@ export function createMermaidPreviewPlugin(options: {
 }) {
   return $prose(() => {
     let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+    /** When the edits the next pass waits for began; 0 when none wait. */
+    let waitingSince = 0;
     // Per editor instance: rendering in one open tab must not cancel a
     // render already in flight in another tab.
     let renderSeq = 0;
@@ -88,6 +126,8 @@ export function createMermaidPreviewPlugin(options: {
     const pendingDrawn = new Map<string, Drawn>();
     // The engine the last pass was started for: a change redraws every diagram.
     let drawnFor = options.engine();
+    /** The width the last pass laid drawings out at. */
+    let drawnWidth = 0;
 
     function decorate(
       node: ProseNode,
@@ -95,7 +135,7 @@ export function createMermaidPreviewPlugin(options: {
       touches: Touches,
     ): Decoration[] {
       if (!options.enabled() || !isMermaid(node)) return [];
-      const code = node.textContent;
+      const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
       const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
       if (!drawn) return [];
@@ -109,6 +149,7 @@ export function createMermaidPreviewPlugin(options: {
             const container = document.createElement("div");
             container.className = "mermaid-preview";
             container.innerHTML = svg;
+            keepReadable(container);
             container.append(zoomButton(container));
             container.addEventListener("mousedown", (event) => {
               event.preventDefault();
@@ -164,13 +205,14 @@ export function createMermaidPreviewPlugin(options: {
         function drawing() {
           // The preview box's inner width: the column less its padding.
           const width = editorView.dom.clientWidth - 40;
+          drawnWidth = width;
           const fontFamily = getComputedStyle(editorView.dom).fontFamily;
           const engine = options.engine();
           const dark = appearanceIsDark();
           // A Pele drawing takes its colours from CSS variables, so an appearance
           // switch keeps it; a Mermaid one has its palette baked in.
           const layout = `${width}|${fontFamily}|${engine}`;
-          const styleOf = (by: DiagramEngine) =>
+          const styleOf = (by: Drawn["engine"]) =>
             by === "pele" ? layout : `${layout}|${dark}`;
           // The editor's largest optional dependencies, fetched only when a real
           // diagram has to be drawn.
@@ -179,21 +221,23 @@ export function createMermaidPreviewPlugin(options: {
         }
 
         // A proposal's diagram, drawn as the document's are.
-        registerPendingDrawer(editorView.dom, async (code) => {
+        registerPendingDrawer(editorView.dom, async (code, language) => {
           if (!options.enabled() || editorView.dom.clientWidth === 0)
             throw new Error("diagrams are not drawn here");
           const { draw, styleOf } = drawing();
-          let drawn = pendingDrawn.get(code) ?? lastRenders.get(code);
+          const key = drawingKey(language, code);
+          let drawn = pendingDrawn.get(key) ?? lastRenders.get(key);
           if (!drawn || drawn.style !== styleOf(drawn.engine)) {
             const id = ++renderIdCounter;
             const { svg, engine: by } = await draw(
               code,
               `mermaid-preview-${id}`,
+              language,
             );
             drawn = { svg, engine: by, style: styleOf(by), id };
           }
-          pendingDrawn.delete(code);
-          pendingDrawn.set(code, drawn);
+          pendingDrawn.delete(key);
+          pendingDrawn.set(key, drawn);
           if (pendingDrawn.size > PENDING_KEPT)
             pendingDrawn.delete(pendingDrawn.keys().next().value as string);
           return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
@@ -262,13 +306,13 @@ export function createMermaidPreviewPlugin(options: {
           const rendered = new Map<string, Drawn>();
           let offScreen = false;
           const large = isLargeDoc(editorView.state.doc);
-          for (const { from, code } of blocks) {
-            if (!code.trim() || rendered.has(code)) continue;
+          for (const { from, code, language, key } of blocks) {
+            if (!code.trim() || rendered.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
-            const cached = lastRenders.get(code) ?? pendingDrawn.get(code);
+            const cached = lastRenders.get(key) ?? pendingDrawn.get(key);
             if (cached && cached.style === styleOf(cached.engine)) {
-              rendered.set(code, cached);
+              rendered.set(key, cached);
               continue;
             }
             if (!all && large && !nearView(from)) {
@@ -280,9 +324,10 @@ export function createMermaidPreviewPlugin(options: {
               const { svg, engine: by } = await draw(
                 code,
                 `mermaid-preview-${id}`,
+                language,
               );
               if (mySeq !== renderSeq) return;
-              rendered.set(code, { svg, engine: by, style: styleOf(by), id });
+              rendered.set(key, { svg, engine: by, style: styleOf(by), id });
             } catch {
               // Invalid or half-typed diagram syntax: skip this block.
             }
@@ -304,12 +349,29 @@ export function createMermaidPreviewPlugin(options: {
         }
 
         let waitingToBeShown = false;
+        // A wider or narrower column lays every drawing out again, once it
+        // has settled: a chart drawn while the column was narrow would
+        // otherwise stay that small.
+        let resizeTimer: ReturnType<typeof setTimeout> | undefined;
         const shown =
           typeof ResizeObserver === "undefined"
             ? null
             : new ResizeObserver(() => {
-                if (waitingToBeShown && editorView.dom.clientWidth > 0)
+                const width = editorView.dom.clientWidth;
+                if (waitingToBeShown && width > 0) {
                   void renderAll();
+                  return;
+                }
+                if (
+                  width === 0 ||
+                  Math.abs(width - 40 - drawnWidth) < RESIZE_REDRAW_PX
+                )
+                  return;
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                  if (collectMermaidBlocks(editorView.state.doc).length > 0)
+                    void renderAll();
+                }, RESIZE_DEBOUNCE_MS);
               });
         shown?.observe(editorView.dom);
         // An appearance switch redraws the diagrams in the new colours.
@@ -348,11 +410,23 @@ export function createMermaidPreviewPlugin(options: {
             // passes, the expensive part, stop.
             if (pausesFeatures(view.state.doc)) return;
             if (debounceTimer) clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => void renderAll(), DEBOUNCE_MS);
+            const now = Date.now();
+            waitingSince ||= now;
+            debounceTimer = setTimeout(
+              () => {
+                waitingSince = 0;
+                void renderAll();
+              },
+              Math.max(
+                0,
+                Math.min(DEBOUNCE_MS, waitingSince + MAX_WAIT_MS - now),
+              ),
+            );
           },
           destroy() {
             if (debounceTimer) clearTimeout(debounceTimer);
             clearTimeout(scrollTimer);
+            clearTimeout(resizeTimer);
             waitForScroll(false);
             registerDrawAll(editorView.dom, null);
             registerPendingDrawer(editorView.dom, null);

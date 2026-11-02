@@ -18,6 +18,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             builder().commands(collect_commands![
                 crate::commands::fs::open_file_dialog,
                 crate::commands::fs::open_css_file_dialog,
+                crate::commands::fs::open_settings_file_dialog,
+                crate::commands::fs::save_settings_file_dialog,
                 crate::commands::fs::open_image_file_dialog,
                 crate::commands::fs::save_file_dialog,
                 crate::commands::fs::list_dir,
@@ -234,6 +236,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::client::set_ai_proxy,
                     crate::ai::web::web_search_status,
                     crate::ai::next_message::suggest_next_message,
+                    crate::ai::doc_title::suggest_doc_title,
                 ])
                 // Commands reading their inputs as one struct can't be generated; their
                 // input types are.
@@ -261,6 +264,19 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 .typ::<aicompat::capabilities::ThinkingLevel>(),
         ),
         (
+            // The long-form paper agent (ai::paper): not used by the frontend yet.
+            "ai-paper.ts",
+            builder()
+                .commands(collect_commands![
+                    crate::ai::paper::ai_paper_run,
+                    crate::ai::paper::ai_paper_save_outline,
+                    crate::ai::paper::ai_paper_draft,
+                    crate::ai::paper::ai_paper_status
+                ])
+                .typ::<crate::ai::paper::Dossier>()
+                .typ::<crate::ai::paper::Outline>(),
+        ),
+        (
             "ai-project.ts",
             builder().commands(collect_commands![
                 crate::ai::workspace::load_agent_workspace,
@@ -271,6 +287,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::project::read_project_file,
                 crate::ai::project::ensure_project_file,
                 crate::ai::project::pick_text_files,
+                crate::ai::project::import_references_picked,
                 crate::ai::project::learn_style,
             ]),
         ),

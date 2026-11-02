@@ -18,20 +18,31 @@ pub(crate) use stream::*;
 
 /// The key as the server takes it: Google's APIs in `x-goog-api-key`, since
 /// Vertex AI refuses a key sent as a Bearer token, and everyone else Bearer.
+/// OpenCode also refuses a request without a session id to route it by.
 pub(crate) fn with_key(
     req: reqwest::RequestBuilder,
     base_url: &str,
     key: &str,
 ) -> reqwest::RequestBuilder {
-    let google = reqwest::Url::parse(base_url)
+    let host = reqwest::Url::parse(base_url)
         .ok()
-        .and_then(|url| url.host_str().map(|h| h.ends_with(".googleapis.com")))
-        .unwrap_or(false);
-    if google {
+        .and_then(|url| url.host_str().map(str::to_string))
+        .unwrap_or_default();
+    if host.ends_with(".googleapis.com") {
         req.header("x-goog-api-key", key)
+    } else if host == "opencode.ai" {
+        req.bearer_auth(key)
+            .header("x-opencode-session", opencode_session())
     } else {
         req.bearer_auth(key)
     }
+}
+
+/// One session id for this run of the app: stable, so OpenCode's routing and
+/// prompt cache hold across a conversation's steps.
+fn opencode_session() -> &'static str {
+    static SESSION: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    SESSION.get_or_init(|| format!("textus-{:016x}", rand::random::<u64>()))
 }
 
 fn chat_completions_url(base_url: &str) -> String {

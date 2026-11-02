@@ -10,6 +10,9 @@ import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../ui/icons";
 import { useFullscreenMark } from "./useFullscreenMark";
+import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { PageSwitch } from "../mobile/PageSwitch";
+import { usePageSwipe } from "../mobile/usePageSwipe";
 import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,
@@ -57,6 +60,17 @@ export function WindowBar({
   const { t, settings } = useSettings();
   useFullscreenMark();
   const menuBar = appDrawsWindowFrame && settings.menuBarShown;
+  // A phone switches between the document and Textus AI as two pages: the
+  // capsule takes the AI button's place, and the word count goes into the
+  // menu to leave the row to the title.
+  const phone = usePhoneLayout();
+  const pages = phone && settings.textusAi && showAgentToggle;
+  // An iPad keeps the docked panel, with the same edge swipes.
+  usePageSwipe(
+    isIOSApp && settings.textusAi && showAgentToggle,
+    agentOpen,
+    onToggleAgent,
+  );
   return (
     <header className="window-bar" data-tauri-drag-region>
       {menuBar ? (
@@ -68,7 +82,7 @@ export function WindowBar({
           </span>
         </>
       ) : (
-        <AppMenuButton checks={menuChecks} />
+        <AppMenuButton checks={pages ? { ...menuChecks, words } : menuChecks} />
       )}
       {/* The iPhone and the iPad open the sidebar from their own bar. */}
       {!isIOSApp && !menuBar && (
@@ -116,18 +130,29 @@ export function WindowBar({
             {t.largeDocBadge}
           </span>
         )}
-        <span className="word-count">
-          {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
-        </span>
+        {!pages && (
+          <span className="word-count">
+            {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
+          </span>
+        )}
         {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
-        <TextusAiButton
-          className="window-bar-toggle"
-          panelOpen={agentOpen}
-          showPanel={showAgentToggle}
-          shortcut={agentShortcut}
-          onTogglePanel={onToggleAgent}
-        />
+        {pages ? (
+          <PageSwitch
+            ai={agentOpen}
+            onChange={(ai) => {
+              if (ai !== agentOpen) onToggleAgent();
+            }}
+          />
+        ) : (
+          <TextusAiButton
+            className="window-bar-toggle"
+            panelOpen={agentOpen}
+            showPanel={showAgentToggle}
+            shortcut={agentShortcut}
+            onTogglePanel={onToggleAgent}
+          />
+        )}
       </div>
       <WindowCaptionButtons />
     </header>

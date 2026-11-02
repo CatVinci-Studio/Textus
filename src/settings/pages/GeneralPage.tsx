@@ -5,6 +5,7 @@ import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
+import { SettingsFileSection } from "../sections/settings-file";
 import { Select } from "../../ui/Select";
 import {
   canInstallCliCommand,
@@ -75,6 +76,7 @@ export function GeneralPage({
       <SettingsGroup title={t.settingsFilesGroup}>
         <ToggleRow
           label={t.autosaveLabel}
+          hint={t.autosaveHint}
           checked={settings.autosave}
           onChange={(v) => setSettings({ autosave: v })}
         />
@@ -83,6 +85,7 @@ export function GeneralPage({
           checked={settings.autoSuggestFilename}
           onChange={(v) => setSettings({ autoSuggestFilename: v })}
         />
+        {isDesktopApp && <SettingsFileSection t={t} />}
       </SettingsGroup>
 
       {/* A desktop's: the phone has no windows to close, no default editor

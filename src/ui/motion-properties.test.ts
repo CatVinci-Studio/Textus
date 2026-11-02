@@ -36,9 +36,6 @@ const EXCEPTIONS: Record<string, string> = {
   // A focus ring may change its shadow.
   "ai/chat/inline-chat.css :is(.agent-panel-body, .chat-window-body) .inline-chat-field box-shadow":
     "focus ring",
-  // A small absolutely placed pill: its width lays out nothing else.
-  "ai/chat/panel/agent-panel.css .agent-panel-tabs-thumb width":
-    "segmented control",
   // A hairline in an SVG of its own: repaints that line only.
   "ai/margin/ReviewMargin.css .review-links path stroke-width":
     "connector under the pointer",

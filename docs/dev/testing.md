@@ -174,7 +174,8 @@ PERF_DOCS=zh-5k PERF_LABEL=after npm run bench:large-doc
 `e2e/perf/large-doc.perf.ts` opens generated documents (`e2e/perf/large-docs.ts`:
 Chinese and English, 1k to 20k top-level blocks with formulas, diagrams,
 code, images, tables and HTML, plus 200k characters of plain text) in
-Chromium and measures opening, typing in the middle (input to next frame,
+Chromium and measures opening, memory (JS heap, DOM nodes and layout
+objects after a garbage collection, on opening and after scrolling), typing in the middle (input to next frame,
 p50/p95, with each plugin's share), IME commits, scrolling end to end, a
 jump to the last heading, a save and a tab switch. It asserts nothing and is not part of
 `test:e2e` or CI. Results print to the console and land in

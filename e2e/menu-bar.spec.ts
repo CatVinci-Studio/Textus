@@ -39,6 +39,23 @@ test("Settings turns it on, and the sidebar's button makes room", async ({
   await expect(page.locator(".window-menu-button")).toBeHidden();
 });
 
+test("the sidebar leaves the menu row whole", async ({ page }) => {
+  await openApp(page, {
+    settings: { language: "en", menuBarShown: true },
+    storage: { "textus-sidebar-open": "1" },
+  });
+  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
+  await expect(page.locator(bar)).toBeVisible();
+  // The row carries the menu alone: the bar's copy of the sidebar's fill and
+  // right edge stays out of it, so nothing cuts across the titles.
+  const copy = await page.evaluate(
+    () =>
+      getComputedStyle(document.querySelector(".window-bar")!, "::before")
+        .display,
+  );
+  expect(copy).toBe("none");
+});
+
 test("each title opens its list; the pointer and ← / → move along", async ({
   page,
 }) => {

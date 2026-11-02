@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
- * After a reply, what the writer will probably say next shows grey in the
- * empty message box; Tab takes it, and with the setting off nothing is asked.
+ * After a reply, what the writer will probably say next shows as buttons
+ * over the message box, the likeliest grey in it; Tab takes that, a click
+ * sends one, and with the setting off nothing is asked.
  */
 
 const composer = (page: Page) => page.locator(".agent-panel-view textarea");
@@ -28,7 +29,7 @@ async function open(page: Page, suggestNextMessage = true) {
       { kind: "User", text: "…" },
       { kind: "Assistant", text: "第一章已经润色好了。" },
     ],
-    suggest_next_message: "接着润色第二章",
+    suggest_next_message: ["接着润色第二章", "加一段总结"],
   });
   await composer(page).fill("润色第一章");
   await composer(page).press("Enter");
@@ -67,4 +68,33 @@ test("with Suggest your next message off, nothing is asked", async ({
     /接着润色第二章/,
   );
   expect(await asked(page)).toBe(0);
+});
+
+test("after a reply, a suggested next message is a button that sends it", async ({
+  page,
+}) => {
+  await open(page);
+  const chips = page.getByRole("group", { name: "建议的下一句" });
+  await expect(chips.getByRole("button")).toHaveText([
+    "接着润色第二章",
+    "加一段总结",
+  ]);
+  await chips.getByRole("button", { name: "加一段总结" }).click();
+  // Sent as the next message, not left in the box.
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          (
+            window as unknown as {
+              __devInvokeCalls?: { cmd: string; message?: string }[];
+            }
+          ).__devInvokeCalls ?? []
+        )
+          .filter((c) => c.cmd === "ai_agent_message")
+          .map((c) => c.message?.endsWith("加一段总结")),
+      ),
+    )
+    .toEqual([false, true]);
+  await expect(composer(page)).toHaveValue("");
 });

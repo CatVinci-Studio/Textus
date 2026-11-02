@@ -37,6 +37,10 @@ export const fs = {
           filters?.allFilter ?? null,
         ),
   openCssFileDialog: () => command("open_css_file_dialog"),
+  /** Pickers for a settings file, in and out. Desktop only. */
+  openSettingsFileDialog: () => command("open_settings_file_dialog"),
+  saveSettingsFileDialog: (defaultName: string) =>
+    command("save_settings_file_dialog", defaultName),
   /** A picker for one image file. `filterName` names `extensions` in the UI
    *  language. Desktop only. */
   openImageFileDialog: (filterName: string, extensions: readonly string[]) =>

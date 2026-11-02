@@ -15,10 +15,11 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { PaperLength } from "../ai/paper/lazy";
+import { DEFAULT_PAPER_LENGTH } from "../ai/paper/paper-lengths";
 import { ModeIcon } from "../ai/chat/mode-icons";
-import type { AgentMode, Settings } from "../prefs/SettingsContext";
+import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** The panel always asks for the document as it is now; this stands until
@@ -47,6 +48,7 @@ export function EditorAgentPanel({
   onPopOut,
   guard,
   setGuard,
+  writePaper,
 }: {
   run: EditorRunner;
   t: Strings;
@@ -75,16 +77,18 @@ export function EditorAgentPanel({
   /** Starting a new conversation asked first (edits still undecided). */
   guard: boolean;
   setGuard: (guard: boolean) => void;
+  /** Starts a paper on a topic (usePaperWriter). */
+  writePaper: (topic: string, targetChars: number) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
-  const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
-  // The window bar's button opens and closes the panel; only the iPhone's
-  // sheet keeps a close button of its own.
-  const phone = usePhoneLayout();
+  const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
+  // Research mode's paper length; the message sent is its topic.
+  const [paperChars, setPaperChars] = useState(DEFAULT_PAPER_LENGTH);
   const emptyText = {
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
     create: t.agentPanelEmptyCreate,
+    research: t.agentPanelEmptyResearch,
   }[mode];
   return (
     <AgentPanelView
@@ -92,13 +96,10 @@ export function EditorAgentPanel({
         title: t.agentPanelTitle,
         newConversation: t.chatNewConversation,
         popOut: t.agentPanelPopOut,
-        close: t.chatClose,
-        tabChat: t.agentTabChat,
-        tabProject: t.agentTabProject,
+        project: t.agentTabProject,
       }}
       onNewConversation={onNewConversation}
       onPopOut={canDetachChat ? onPopOut : undefined}
-      onClose={phone ? () => agentPanel.setOpen(false) : undefined}
       history={
         <ChatHistoryMenu
           buttonClassName="inline-chat-header-button"
@@ -157,6 +158,12 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
+        onResearch={(topic) => writePaper(topic, paperChars)}
+        researchControls={
+          <Suspense fallback={null}>
+            <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
+          </Suspense>
+        }
         footer={
           guard && (
             <CloseConfirmBar

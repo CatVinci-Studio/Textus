@@ -159,11 +159,11 @@ for (const colorScheme of ["light", "dark"] as const) {
       await open(page, colorScheme, true);
       await expect(page.locator(".agent-panel-view")).toBeVisible();
       await scan(page, `ai chat ${colorScheme}`);
-      await page.locator("#agent-tab-memory").click();
-      await expect(page.locator("#agent-tab-memory")).toHaveAttribute(
-        "aria-selected",
-        "true",
-      );
+      const project = page
+        .locator(".agent-panel-view")
+        .getByRole("button", { name: "Project", exact: true });
+      await project.click();
+      await expect(project).toHaveAttribute("aria-pressed", "true");
       await scan(page, `ai memory ${colorScheme}`);
     });
 

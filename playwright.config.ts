@@ -6,7 +6,9 @@ import { defineConfig, devices } from "@playwright/test";
  * only, since fonts differ. PLAYWRIGHT_PORT lets a second worktree run too.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
-const playgroundPort = port + 10;
+// Far from the app's port: worktrees pick ports ten apart (1430, 1440, ...),
+// and a nearer offset landed on another run's app server.
+const playgroundPort = port + 1000;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
   // How AI text lands and leaves: timing differs in WebKit. Not
@@ -19,6 +21,9 @@ const WEBKIT_SPECS = [
   "stream-edge-cases.spec.ts",
   "revise-stream.spec.ts",
   "agent-image.spec.ts",
+  // A wide diagram scrolls from its left edge: WebKit lays out flex overflow
+  // on its own.
+  "diagram-fit.spec.ts",
   "drag-autoscroll.spec.ts",
   "api-key-field.spec.ts",
   "sidebar-toggle.spec.ts",
@@ -31,6 +36,7 @@ const WEBKIT_SPECS = [
   "file-tree.spec.ts",
   "user-css.spec.ts",
   "plugins.spec.ts",
+  "large-doc-lazy.spec.ts",
 ];
 
 export default defineConfig({

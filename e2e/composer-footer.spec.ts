@@ -163,7 +163,7 @@ for (const uiTextScale of [1, 1.25])
 test.describe("on a phone", () => {
   test.use(PHONE);
   for (const language of ["de", "ru"] as const)
-    test(`${language}: the sheet keeps the mode, its tools and Send on one row`, async ({
+    test(`${language}: the AI page keeps the mode, its tools and Send on one row`, async ({
       page,
     }) => {
       await page.addInitScript(() => {
@@ -175,7 +175,7 @@ test.describe("on a phone", () => {
         "mobile",
       );
       await selectPassage(page);
-      await page.locator(".window-bar-toggle").tap();
+      await page.locator(".page-switch button").nth(1).tap();
       const view = page.locator(".agent-panel-view");
       await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
       await expectOneRow(view.locator(".inline-chat-toolbar"));

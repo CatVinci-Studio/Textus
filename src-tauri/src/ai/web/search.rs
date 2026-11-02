@@ -270,13 +270,10 @@ impl Service {
 /// A client for the search services: through the app's proxy when one is
 /// set, like the AI providers' requests - the services are on the public
 /// internet, so no address checks are needed.
-fn http_client() -> Result<reqwest::Client, String> {
-    let builder = crate::net::client(CONNECT_TIMEOUT, TOTAL_TIMEOUT);
-    let builder = match aicompat::http::proxy_url() {
-        Some(proxy) => builder.proxy(reqwest::Proxy::all(proxy).map_err(|e| e.to_string())?),
-        None => builder,
-    };
-    builder.build().map_err(|e| e.to_string())
+pub(super) fn http_client() -> Result<reqwest::Client, String> {
+    crate::net::public_client(CONNECT_TIMEOUT, TOTAL_TIMEOUT)?
+        .build()
+        .map_err(|e| e.to_string())
 }
 
 fn text(value: &Value, key: &str) -> String {

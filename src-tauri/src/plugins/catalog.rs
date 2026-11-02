@@ -9,18 +9,21 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::sync::Mutex;
 
-/// The catalog's published address.
-const CATALOG_URL: &str =
-    "https://github.com/CatVinci-Studio/textus-plugins/releases/download/catalog/index.json";
-
-/// Where packages may come from: that repository's releases (GitHub redirects
-/// to its own storage).
+/// Where the catalog names its files: the textus-plugins repository's
+/// releases. Anything else in it is left out.
 const PACKAGE_PREFIX: &str = "https://github.com/CatVinci-Studio/textus-plugins/releases/download/";
-const DOWNLOAD_HOSTS: [&str; 3] = [
-    "github.com",
-    "objects.githubusercontent.com",
-    "release-assets.githubusercontent.com",
-];
+
+/// Where the app reads them: Textus's own site passes each release file on,
+/// so the store works where GitHub can't be reached.
+const MIRROR_PREFIX: &str = "https://textus.catvinci.com/plugin-release/";
+const CATALOG_URL: &str = "https://textus.catvinci.com/plugin-release/catalog/index.json";
+const DOWNLOAD_HOSTS: [&str; 1] = ["textus.catvinci.com"];
+
+/// A release file's address on the site; None for one from elsewhere.
+fn mirrored(url: &str) -> Option<String> {
+    url.strip_prefix(PACKAGE_PREFIX)
+        .map(|rest| format!("{MIRROR_PREFIX}{rest}"))
+}
 
 /// A package this large is not a plugin.
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
@@ -129,11 +132,11 @@ fn client() -> Result<reqwest::Client, String> {
 }
 
 fn client_with(redirects: reqwest::redirect::Policy) -> Result<reqwest::Client, String> {
-    reqwest::Client::builder()
+    use std::time::Duration;
+    // Connecting gives up soon, so an unreachable counting endpoint falls
+    // back quickly.
+    crate::net::public_client(Duration::from_secs(10), Duration::from_secs(120))?
         .user_agent(crate::app_identity::APP_NAME)
-        // Soon, so an unreachable counting endpoint falls back quickly.
-        .connect_timeout(std::time::Duration::from_secs(10))
-        .timeout(std::time::Duration::from_secs(120))
         .redirect(redirects)
         .build()
         .map_err(|e| e.to_string())
@@ -154,19 +157,29 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
     let plugins = catalog
         .plugins
         .into_iter()
-        .filter(|p| super::require_id(&p.id).is_ok() && p.url.starts_with(PACKAGE_PREFIX))
-        .map(|mut p| {
-            p.screenshots.retain(|url| url.starts_with(PACKAGE_PREFIX));
-            p.readme.retain(|_, url| url.starts_with(PACKAGE_PREFIX));
-            p.icon = p.icon.filter(|url| url.starts_with(PACKAGE_PREFIX));
-            p
+        .filter(|p| super::require_id(&p.id).is_ok())
+        .filter_map(|mut p| {
+            p.url = mirrored(&p.url)?;
+            p.screenshots = p
+                .screenshots
+                .iter()
+                .filter_map(|url| mirrored(url))
+                .collect();
+            p.readme = std::mem::take(&mut p.readme)
+                .into_iter()
+                .filter_map(|(lang, url)| Some((lang, mirrored(&url)?)))
+                .collect();
+            p.icon = p.icon.as_deref().and_then(mirrored);
+            Some(p)
         })
         .collect();
     let skills = catalog
         .skills
         .into_iter()
-        .filter(|s| {
-            !s.name.trim().is_empty() && s.url.starts_with(PACKAGE_PREFIX) && s.size <= MAX_SKILL
+        .filter(|s| !s.name.trim().is_empty() && s.size <= MAX_SKILL)
+        .filter_map(|mut s| {
+            s.url = mirrored(&s.url)?;
+            Some(s)
         })
         .collect();
     Ok((plugins, skills))
@@ -205,11 +218,12 @@ async fn fetch() -> Result<String, String> {
     if let Some(path) = url.strip_prefix("file://") {
         return std::fs::read_to_string(path).map_err(|e| e.to_string());
     }
-    let response = client()?
-        .get(&url)
-        .send()
-        .await
-        .map_err(|e| format!("Couldn't reach the plugin catalog: {e}"))?;
+    let response = client()?.get(&url).send().await.map_err(|e| {
+        format!(
+            "Couldn't reach the plugin catalog: {}",
+            crate::net::error_text(&e)
+        )
+    })?;
     if !response.status().is_success() {
         return Err(format!(
             "The plugin catalog answered {}.",
@@ -303,7 +317,7 @@ async fn download_with(client: reqwest::Client, url: &str, what: &str) -> Result
         .get(url)
         .send()
         .await
-        .map_err(|e| format!("Couldn't download {what}: {e}"))?;
+        .map_err(|e| format!("Couldn't download {what}: {}", crate::net::error_text(&e)))?;
     ext_stats::check_redirected(&response)?;
     if !response.status().is_success() {
         return Err(format!(

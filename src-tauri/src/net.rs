@@ -13,6 +13,41 @@ pub fn client(connect: Duration, total: Duration) -> reqwest::ClientBuilder {
         .user_agent(concat!("Textus/", env!("CARGO_PKG_VERSION")))
 }
 
+/// [`client`] for servers on the public internet: through the app's network
+/// proxy when one is set, like the AI providers' requests. An app started
+/// from the desktop doesn't inherit HTTPS_PROXY, so where only a proxy
+/// reaches GitHub, going direct fails (the plugin and theme catalogs, #512).
+pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::ClientBuilder, String> {
+    through(client(connect, total), aicompat::http::proxy_url())
+}
+
+/// `builder` through `proxy`, if there is one.
+fn through(
+    builder: reqwest::ClientBuilder,
+    proxy: Option<String>,
+) -> Result<reqwest::ClientBuilder, String> {
+    Ok(match proxy {
+        Some(proxy) => builder.proxy(reqwest::Proxy::all(proxy).map_err(|e| e.to_string())?),
+        None => builder,
+    })
+}
+
+/// `error` with its causes: reqwest's own text for a failed connection is only
+/// "error sending request for url (...)", which doesn't say whether the name,
+/// the connection or TLS failed.
+pub fn error_text(error: &reqwest::Error) -> String {
+    let mut text = error.to_string();
+    let mut cause = std::error::Error::source(error);
+    while let Some(next) = cause {
+        let more = next.to_string();
+        if !text.contains(&more) {
+            text = format!("{text}: {more}");
+        }
+        cause = next.source();
+    }
+    text
+}
+
 /// The response's body, or None if it is longer than `max` bytes, judged by the
 /// declared length or else while reading.
 pub async fn read_limited(
@@ -82,6 +117,55 @@ mod tests {
     async fn a_declared_length_over_the_limit_is_refused_unread() {
         let response = "HTTP/1.1 200 OK\r\nContent-Length: 100\r\nConnection: close\r\n\r\nabc";
         assert_eq!(read(response, 10).await, None);
+    }
+
+    #[tokio::test]
+    async fn a_request_goes_through_the_proxy_when_there_is_one() {
+        // The "proxy" answers for a host that doesn't exist, so only a
+        // request sent through it can succeed.
+        let proxy =
+            serve_once("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_secs(5)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = client
+            .get("http://catalog.invalid/index.json")
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+    }
+
+    #[test]
+    fn an_unreadable_proxy_is_an_error() {
+        let builder = client(Duration::from_secs(5), Duration::from_secs(5));
+        assert!(through(builder, Some("not a url".into())).is_err());
+    }
+
+    #[tokio::test]
+    async fn a_failed_connection_says_why() {
+        // A port nothing listens on: refused.
+        let port = std::net::TcpListener::bind("127.0.0.1:0")
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port();
+        let client = client(Duration::from_secs(5), Duration::from_secs(5))
+            .no_proxy()
+            .build()
+            .unwrap();
+        let err = client
+            .get(format!("http://127.0.0.1:{port}/"))
+            .send()
+            .await
+            .unwrap_err();
+        let text = error_text(&err);
+        assert!(text.starts_with(&err.to_string()), "{text}");
+        assert!(text.len() > err.to_string().len(), "{text}");
     }
 
     #[tokio::test]

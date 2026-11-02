@@ -35,6 +35,10 @@ fn the_catalog_lists_skills_beside_plugins_and_an_older_one_none() {
     let (_, skills) = parse_all(&text).unwrap();
     assert_eq!(skills.len(), 1, "only from the catalog's own address");
     assert_eq!(skills[0].name, "press-release");
+    assert_eq!(
+        skills[0].url,
+        format!("{MIRROR_PREFIX}catalog/skill-press-release.md")
+    );
     assert_eq!((skills[0].installs, skills[0].installs30), (Some(4), None));
     let (_, none) = parse_all(r#"{"schema": 1, "plugins": []}"#).unwrap();
     assert!(none.is_empty());
@@ -74,7 +78,7 @@ fn a_screenshot_from_anywhere_else_is_left_out() {
     let (plugins, _) = parse_all(&text).unwrap();
     assert_eq!(
         plugins[0].screenshots,
-        vec![format!("{PACKAGE_PREFIX}catalog/shot-catvinci.tasks-1.png")]
+        vec![format!("{MIRROR_PREFIX}catalog/shot-catvinci.tasks-1.png")]
     );
 }
 
@@ -130,6 +134,11 @@ fn the_catalog_keeps_only_packages_from_its_own_releases() {
     let entries = parse(&text).unwrap();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].id, "catvinci.tasks");
+    // Read from Textus's own site, never from GitHub.
+    assert_eq!(
+        entries[0].url,
+        format!("{MIRROR_PREFIX}catvinci.tasks-v1.0.0/a.zip")
+    );
     assert!(parse(r#"{"schema": 2, "plugins": []}"#)
         .unwrap_err()
         .contains("newer Textus"));
