@@ -1,4 +1,3 @@
-import { Fragment, useSyncExternalStore } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./menu/app-menu-model";
@@ -13,11 +12,7 @@ import { useFullscreenMark } from "./useFullscreenMark";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { PageSwitch } from "../mobile/PageSwitch";
 import { usePageSwipe } from "../mobile/usePageSwipe";
-import { runCommand } from "./commands";
-import {
-  statusItemsSnapshot,
-  subscribeStatusItems,
-} from "../plugins/contributions/status-items";
+import { PluginStatusItems } from "./PluginStatusItems";
 
 /**
  * The window's one top strip: a real layout row (an overlay title bar hides
@@ -156,41 +151,5 @@ export function WindowBar({
       </div>
       <WindowCaptionButtons />
     </header>
-  );
-}
-
-/** What plugins show here: a text, its tooltip, and a command a click
- *  runs. */
-function PluginStatusItems() {
-  const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);
-  return (
-    <>
-      {items.map((item) => {
-        const label = (
-          <span className="plugin-status-item" data-status={item.key}>
-            {item.text}
-          </span>
-        );
-        const shown = item.command ? (
-          <button
-            type="button"
-            className="plugin-status-item plugin-status-button"
-            data-status={item.key}
-            onClick={() => runCommand(item.command!)}
-          >
-            {item.text}
-          </button>
-        ) : (
-          label
-        );
-        return item.tooltip ? (
-          <Tooltip key={item.key} text={item.tooltip}>
-            {shown}
-          </Tooltip>
-        ) : (
-          <Fragment key={item.key}>{shown}</Fragment>
-        );
-      })}
-    </>
   );
 }
