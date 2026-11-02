@@ -130,6 +130,10 @@ export function PluginsPage({ t }: SettingsPageProps) {
       t={t}
       intro={t.extensionsIntroPlugins}
       help={t.pluginsInstallHelp}
+      primary={{
+        label: t.createMakePlugin,
+        onSelect: () => requestCreate("", "plugin"),
+      }}
       actions={
         isDesktopApp
           ? [

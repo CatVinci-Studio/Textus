@@ -27,14 +27,16 @@ import {
  *  installed from the card under it. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
 const KINDS = createKinds();
+/** The starting points under the empty box, one of each kind. */
+const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
 
 /**
- * Settings › Extensions › Create: a chat in Create mode, with no document.
- * Empty, its box sits in the middle with the kinds and a few starting
- * points; the first message calls the kind's skill, and the box goes down
- * under the conversation. Loaded with the chat, not with Settings. "Fix
- * with AI" and the like fill in the box before it starts, and are the next
- * message after.
+ * Settings › Extensions › Create: a chat in Create mode, with no document,
+ * that always searches and thinks. Empty, its box sits in the middle over a
+ * few starting points; `/` in it picks what to make - unpicked, the model
+ * tells from the request - and the first message goes down under the
+ * conversation. Loaded with the chat, not with Settings. "Fix with AI" and
+ * the like fill in the box before it starts, and are the next message after.
  */
 export function CreateChat({ t }: { t: Strings }) {
   const { settings } = useSettings();
@@ -45,8 +47,9 @@ export function CreateChat({ t }: { t: Strings }) {
     false,
     settings.agentModels[settings.aiProvider] || undefined,
   );
-  const [kind, setKind] = useState<CreateKind>(KINDS[0]);
-  // The built-in skills, so the first message carries its kind's.
+  // What to make, picked with / or a starting point; null for the model's
+  // choice. A message sent with one calls its skill.
+  const [kind, setKind] = useState<CreateKind | null>(null);
   const [skills, setSkills] = useState<AgentSkill[]>([]);
   const composer = useRef<ChatComposerHandle>(null);
   const empty = conversation.history.length === 0 && !conversation.busy;
@@ -54,15 +57,15 @@ export function CreateChat({ t }: { t: Strings }) {
   const takeRequest = useLatest(() => {
     const request = takeCreateRequest();
     if (!request) return;
-    if (!empty) {
+    if (!empty && request.text) {
       void conversation.send(NO_DOCUMENT, request.text, [], {
         mode: "create",
-        webSearch: false,
+        webSearch: true,
       });
       return;
     }
-    setKind(KINDS.includes(request.kind) ? request.kind : KINDS[0]);
-    composer.current?.restore(request.text);
+    setKind(KINDS.includes(request.kind) ? request.kind : null);
+    if (request.text) composer.current?.restore(request.text);
   });
   useEffect(() => {
     ai.loadAgentWorkspace(null, null)
@@ -87,12 +90,14 @@ export function CreateChat({ t }: { t: Strings }) {
     >
       {!empty && (
         <div className="create-studio-bar">
-          <span className="create-studio-kind">{kindLabel[kind]}</span>
           <button
             type="button"
             className="text-button settings-inline-button"
             disabled={conversation.busy}
-            onClick={conversation.reset}
+            onClick={() => {
+              setKind(null);
+              conversation.reset();
+            }}
           >
             {t.createNew}
           </button>
@@ -119,22 +124,28 @@ export function CreateChat({ t }: { t: Strings }) {
           conversation={conversation}
           defaultMode="create"
           onlyMode="create"
-          defaultWebSearch={false}
-          labels={
-            empty ? { ...labels, placeholder: t.createPlaceholder } : labels
-          }
+          defaultWebSearch
+          autoTools
+          labels={{ ...labels, placeholder: t.createPlaceholder }}
           composerRef={composer}
-          prepareMessage={
-            empty
-              ? (message) => {
-                  slide.mark();
-                  return resolveSkillMessage(
-                    createMessage(kind, message),
-                    skills,
-                  );
-                }
-              : undefined
+          kinds={KINDS.map((k) => ({
+            key: k,
+            label: kindLabel[k],
+            pick: () => setKind(k),
+          }))}
+          kind={
+            kind && {
+              label: kindLabel[kind],
+              clearLabel: t.paperGenreAuto,
+              clear: () => setKind(null),
+            }
           }
+          prepareMessage={(message) => {
+            if (empty) slide.mark();
+            if (!kind) return message;
+            setKind(null);
+            return resolveSkillMessage(createMessage(kind, message), skills);
+          }}
           proposalStatus={() => "expired"}
           pendingCount={0}
           pendingBar={false}
@@ -147,39 +158,27 @@ export function CreateChat({ t }: { t: Strings }) {
         />
       )}
       {empty && settings.textusAi && (
-        <div className="create-studio-start">
-          <div
-            className="create-studio-kinds"
-            role="radiogroup"
-            aria-label={t.createTitle}
-          >
-            {KINDS.map((k) => (
+        <ul className="create-studio-examples" aria-label={t.createExamples}>
+          {EXAMPLES.map(([k, key]) => (
+            <li key={key}>
               <button
-                key={k}
                 type="button"
-                role="radio"
-                aria-checked={kind === k}
-                className="create-studio-kind-chip"
-                onClick={() => setKind(k)}
+                className="create-studio-example"
+                onClick={() => {
+                  setKind(k);
+                  composer.current?.restore(t[key] as string);
+                }}
               >
-                {kindLabel[k]}
-              </button>
-            ))}
-          </div>
-          <ul className="create-studio-examples" aria-label={t.createExamples}>
-            {CREATE_EXAMPLES[kind].map((key) => (
-              <li key={key}>
-                <button
-                  type="button"
-                  className="create-studio-example"
-                  onClick={() => composer.current?.restore(t[key] as string)}
-                >
+                <span className="create-studio-example-text">
                   {t[key] as string}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+                </span>
+                <span className="create-studio-example-kind">
+                  {kindLabel[k]}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

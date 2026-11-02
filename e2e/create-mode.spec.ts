@@ -32,7 +32,6 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
     .locator(".settings-nav-item", { hasText: "Extensions" })
     .click();
   await settings.getByRole("tab", { name: "Create" }).click();
-  await settings.getByRole("radio", { name: "Skills" }).click();
 
   const message = "a skill for my weekly report";
   await mockInvoke(page, {
@@ -44,15 +43,30 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
       },
     ],
   });
-  // Empty, its box is in the middle with the kinds under it; once sent
-  // it goes down under the conversation and they fold away.
+  // Empty, its box is in the middle over the starting points, and the page
+  // doesn't scroll; no mode to pick, no search or Deep to switch.
   const panel = settings.locator(".create-studio");
   const input = panel.locator(".inline-chat-input");
   await expect(panel).toHaveClass(/create-studio-empty/);
+  await expect(settings.locator(".settings-content")).toHaveCSS(
+    "overflow-y",
+    "hidden",
+  );
+  await expect(panel.locator(".mode-picker-value")).toHaveCount(0);
+  await expect(panel.getByRole("button", { name: "Web search" })).toHaveCount(
+    0,
+  );
+  // / picks what to make, shown until sent.
+  await input.fill("/sk");
+  await input.press("Enter");
+  await expect(panel.locator(".inline-chat-selection-chip")).toHaveText(
+    "Skills",
+  );
   await input.fill(message);
   await input.press("Enter");
   await expect(panel).not.toHaveClass(/create-studio-empty/);
-  await expect(panel.locator(".create-studio-start")).toHaveCount(0);
+  await expect(panel.locator(".create-studio-examples")).toHaveCount(0);
+  await expect(panel.locator(".inline-chat-selection-chip")).toHaveCount(0);
 
   // Its / menu holds Create's three.
   await input.fill("/");

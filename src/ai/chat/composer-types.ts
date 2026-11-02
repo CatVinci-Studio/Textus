@@ -160,14 +160,18 @@ export interface ChatComposerProps {
    *  topic of a paper, handed here with its text files instead of to
    *  onSend. */
   onResearch?: (topic: string, files: ChatAttachment[]) => void;
-  /** What `/` offers in Research: the kinds of piece, each set by picking
-   *  it. */
-  researchKinds?: { key: string; label: string; pick: () => void }[];
-  /** The kind of piece picked with `/` in Research, shown while one is:
-   *  `clear` goes back to the model's choice. */
-  researchKind?: {
+  /** What `/` offers instead of skills, where there is one thing to choose
+   *  - Research's kind of piece, Create's kind of making - each set by
+   *  picking it. */
+  kinds?: { key: string; label: string; pick: () => void }[];
+  /** The kind picked with `/`, shown while one is: `clear` goes back to
+   *  the model's choice. */
+  kind?: {
     label: string;
     clearLabel: string;
     clear: () => void;
   } | null;
+  /** Web search and Deep thinking always on, their switches not shown
+   *  (Create). */
+  autoTools?: boolean;
 }

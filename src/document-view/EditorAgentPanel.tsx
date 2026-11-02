@@ -173,13 +173,19 @@ export function EditorAgentPanel({
             ),
           )
         }
-        researchKinds={(["auto", ...PAPER_GENRES] as const).map((genre) => ({
-          key: genre,
-          label: genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
-          pick: () => setPaperGenre(genre),
-        }))}
-        researchKind={
-          paperGenre === "auto"
+        // `/` picks the kind of piece in Research; skills elsewhere.
+        kinds={
+          mode !== "research"
+            ? []
+            : (["auto", ...PAPER_GENRES] as const).map((genre) => ({
+                key: genre,
+                label:
+                  genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
+                pick: () => setPaperGenre(genre),
+              }))
+        }
+        kind={
+          mode !== "research" || paperGenre === "auto"
             ? null
             : {
                 label: genreLabel(t, paperGenre),

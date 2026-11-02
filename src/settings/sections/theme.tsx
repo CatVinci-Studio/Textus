@@ -1,3 +1,4 @@
+import { requestCreate } from "../../ai/chat/create-request";
 import { useId, useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../theme/builtin-themes";
@@ -338,6 +339,10 @@ export function ThemesTab({ t }: { t: Strings }) {
     <ExtensionsTabLayout
       t={t}
       intro={t.extensionsIntroThemes}
+      primary={{
+        label: t.createMakeTheme,
+        onSelect: () => requestCreate("", "theme"),
+      }}
       query={query}
       onQuery={setQuery}
       actions={[

@@ -21,11 +21,9 @@ import {
   CloseIcon,
   GenericFileIcon,
   ImageFileIcon,
-  LightbulbIcon,
   PlusIcon,
-  SearchIcon,
 } from "../../ui/icons";
-import { rememberDeepThinking } from "./deep-thinking";
+import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
 import { FollowUpChips } from "./FollowUpChips";
@@ -89,8 +87,9 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   onResearch,
-  researchKind,
-  researchKinds = [],
+  kind = null,
+  kinds = [],
+  autoTools = false,
   handle,
   suggestions = [],
 }: ChatComposerProps) {
@@ -114,8 +113,10 @@ export function ChatComposer({
     onModeChange,
   });
   const options = useRequestOptions(defaultWebSearch, compact);
-  const { searchUnavailable, webSearch, setWebSearch, thinking } = options;
-  const { deepThinking, setDeepThinking, canThinkDeeper } = options;
+  // Create always searches and thinks deeper, where the model can.
+  const webSearch = autoTools || options.webSearch;
+  const thinking =
+    autoTools && options.canThinkDeeper ? "deep" : options.thinking;
   const { selectionDropped, setDroppedSelection, showSelection, setChipHot } =
     useSelectionChip(selectedText, selectionChip);
   const {
@@ -176,12 +177,13 @@ export function ChatComposer({
   // dead key.
   let pickerSections: PickerSection[] = [];
   let pickerEmpty: string[] = [];
-  if (skillMenuOpen && skillTrigger && mode === "research") {
-    // Research's `/` sets the kind of piece, its one choice.
+  if (skillMenuOpen && skillTrigger && kinds.length > 0) {
+    // Where there are kinds (Research's pieces, Create's makings), `/`
+    // picks one.
     const query = skillTrigger[1].toLowerCase();
     pickerSections = [
       {
-        rows: researchKinds
+        rows: kinds
           .filter(
             (k) =>
               k.key.includes(query) || k.label.toLowerCase().includes(query),
@@ -484,88 +486,15 @@ export function ChatComposer({
                 </button>
               </Tooltip>
             )}
-            {/* A paper does its own searching and thinking: no search or
-                Deep for it; the kind of piece picked with /, while one is. */}
-            {mode === "research" && researchKind && (
-              <span className="inline-chat-selection-chip">
-                <span className="inline-chat-chip-label">
-                  {researchKind.label}
-                </span>
-                <Tooltip text={researchKind.clearLabel} side="above">
-                  <button
-                    type="button"
-                    className="inline-chat-chip-remove"
-                    aria-label={researchKind.clearLabel}
-                    {...holdFocus}
-                    onClick={researchKind.clear}
-                  >
-                    <CloseIcon />
-                  </button>
-                </Tooltip>
-              </span>
-            )}
-            {!compact && mode !== "research" && (
-              <>
-                <Tooltip
-                  side="above"
-                  description={
-                    webSearch && searchUnavailable
-                      ? labels.webSearchNeedsService
-                      : null
-                  }
-                  text={
-                    webSearch && searchUnavailable
-                      ? labels.webSearchNeedsService
-                      : webSearch
-                        ? labels.toggleOnHint.replace(
-                            "{label}",
-                            labels.webSearch,
-                          )
-                        : labels.webSearch
-                  }
-                >
-                  <button
-                    type="button"
-                    className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
-                      webSearch && searchUnavailable ? " needs-setup" : ""
-                    }`}
-                    aria-label={labels.webSearch}
-                    aria-pressed={webSearch}
-                    {...holdFocus}
-                    onClick={() => setWebSearch((value) => !value)}
-                  >
-                    <SearchIcon />
-                  </button>
-                </Tooltip>
-                {canThinkDeeper && (
-                  <Tooltip
-                    side="above"
-                    description={labels.deepThinkingHint}
-                    text={
-                      deepThinking
-                        ? labels.toggleOnHint.replace(
-                            "{label}",
-                            labels.deepThinkingHint,
-                          )
-                        : labels.deepThinkingHint
-                    }
-                  >
-                    <button
-                      type="button"
-                      className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
-                      aria-label={labels.deepThinking}
-                      aria-pressed={deepThinking}
-                      {...holdFocus}
-                      onClick={() => {
-                        rememberDeepThinking(!deepThinking);
-                        setDeepThinking(!deepThinking);
-                      }}
-                    >
-                      <LightbulbIcon />
-                    </button>
-                  </Tooltip>
-                )}
-              </>
+            {kind && <KindChip kind={kind} holdFocus={holdFocus} />}
+            {/* A paper does its own searching and thinking, and Create
+                always searches and thinks: no buttons for them there. */}
+            {!compact && mode !== "research" && !autoTools && (
+              <ComposerToggles
+                labels={labels}
+                options={options}
+                holdFocus={holdFocus}
+              />
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (
               <span

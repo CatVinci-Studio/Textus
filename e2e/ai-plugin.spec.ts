@@ -159,8 +159,8 @@ test("a plugin's page asks the AI to change it, in Extensions' Create tab", asyn
     "true",
   );
   await expect(
-    settings.getByRole("radio", { name: "Plugins" }),
-  ).toHaveAttribute("aria-checked", "true");
+    settings.locator(".create-studio .inline-chat-selection-chip"),
+  ).toHaveText("Plugins");
   await expect(
     settings.locator(".create-studio .inline-chat-input"),
   ).toHaveValue("Change the Word Count plugin (local.word-count): ");

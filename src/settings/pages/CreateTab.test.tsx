@@ -70,12 +70,14 @@ vi.mock("../../platform/ipc", () => ({
 
 afterEach(cleanup);
 
-it("starts a Create conversation with the chosen kind's skill loaded", async () => {
+it("starts a Create conversation with the starting point's kind's skill loaded", async () => {
   render(<CreateTab t={en} />);
-  fireEvent.click(
-    await screen.findByRole("radio", { name: en.extensionsTabThemes }),
+  // Each starting point says what it makes.
+  const amber = await screen.findByText(en.createExampleThemeAmber);
+  expect(amber.closest("button")?.textContent).toContain(
+    en.extensionsTabThemes,
   );
-  fireEvent.click(screen.getByText(en.createExampleThemeAmber));
+  fireEvent.click(amber);
   // The built-in skills are in before the first message goes.
   await act(async () => {});
   fireEvent.click(await screen.findByText("Send"));

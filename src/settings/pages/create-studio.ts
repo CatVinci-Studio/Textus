@@ -16,9 +16,9 @@ export function createMessage(kind: CreateKind, text: string): string {
   return `/${kind} ${text.trim()}`;
 }
 
-/** Two starting points for each kind, as the user would say them. */
-export const CREATE_EXAMPLES: Record<CreateKind, readonly (keyof Strings)[]> = {
-  plugin: ["createExamplePluginTodo", "createExamplePluginCount"],
-  theme: ["createExampleThemeAmber", "createExampleThemeMono"],
-  skill: ["createExampleSkillWeekly", "createExampleSkillPolish"],
+/** A starting point for each kind, as the user would say it. */
+export const CREATE_EXAMPLES: Record<CreateKind, keyof Strings> = {
+  plugin: "createExamplePluginTodo",
+  theme: "createExampleThemeAmber",
+  skill: "createExampleSkillWeekly",
 };

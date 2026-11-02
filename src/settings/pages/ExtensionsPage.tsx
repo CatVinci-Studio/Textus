@@ -1,3 +1,4 @@
+import { requestCreate } from "../../ai/chat/create-request";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
@@ -70,7 +71,11 @@ export function ExtensionsPage(props: SettingsPageProps) {
         ))}
       </div>
       {!props.indexing && (
-        <div role="tabpanel" aria-label={label[tab]}>
+        <div
+          role="tabpanel"
+          aria-label={label[tab]}
+          className="extensions-panel"
+        >
           {tab === "themes" && <ThemesTab t={t} />}
           {tab === "plugins" && <PluginsPage {...props} />}
           {tab === "skills" && (
@@ -78,6 +83,10 @@ export function ExtensionsPage(props: SettingsPageProps) {
               t={t}
               intro={t.extensionsIntroSkills}
               help={t.extensionsSkillsHelp}
+              primary={{
+                label: t.createMakeSkill,
+                onSelect: () => requestCreate("", "skill"),
+              }}
               query={skillQuery}
               onQuery={setSkillQuery}
               actions={[

@@ -382,7 +382,7 @@ describe("ChatComposer selection chip", () => {
         defaultWebSearch={false}
         onSend={() => {}}
         onResearch={onResearch}
-        researchKinds={[
+        kinds={[
           { key: "auto", label: "Choose for me", pick: () => {} },
           { key: "report", label: "In-depth report", pick },
         ]}
@@ -422,9 +422,7 @@ describe("ChatComposer selection chip", () => {
       onStop: () => {},
       onEscape: () => {},
     };
-    const { rerender } = render(
-      <ChatComposer {...props} researchKind={null} />,
-    );
+    const { rerender } = render(<ChatComposer {...props} kind={null} />);
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
     fireEvent.click(screen.getByRole("option", { name: "Research" }));
     // The model's choice: nothing in the toolbar for it.
@@ -432,7 +430,7 @@ describe("ChatComposer selection chip", () => {
     rerender(
       <ChatComposer
         {...props}
-        researchKind={{
+        kind={{
           label: "News brief",
           clearLabel: "Choose for me",
           clear,
