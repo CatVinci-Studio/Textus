@@ -24,6 +24,7 @@ const t = {
   autosaveLabel: "Save automatically",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   navTheme: "Theme",
+  frostedTitleBarLabel: "Frosted title bar",
   settingsViewGroup: "View",
   navMarkdown: "Markdown",
   imageStorageGroupLabel: "Images",
@@ -267,6 +268,27 @@ test.describe("desktop", () => {
         ),
       )
       .toBe(true);
+  });
+
+  test("the title bar can frost what scrolls under it, and turn opaque again", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).click();
+    const toggle = panel.getByRole("checkbox", {
+      name: t.frostedTitleBarLabel,
+    });
+    const bar = page.locator(".window-bar");
+    await expect(toggle).not.toBeChecked();
+    await expect(bar).toHaveCSS("backdrop-filter", "none");
+
+    await toggle.click();
+    await expect(toggle).toBeChecked();
+    await expect(bar).toHaveCSS("backdrop-filter", "saturate(1.8) blur(5px)");
+
+    await toggle.click();
+    await expect(bar).toHaveCSS("backdrop-filter", "none");
   });
 
   test("Custom CSS keeps the focus while it is emptied", async ({ page }) => {

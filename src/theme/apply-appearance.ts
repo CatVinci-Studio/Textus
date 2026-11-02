@@ -103,6 +103,13 @@ export function useApplyAppearance(
 
   useEffect(() => {
     const root = document.documentElement;
+    if (settings.frostedTitleBar)
+      root.setAttribute("data-frosted-title-bar", "");
+    else root.removeAttribute("data-frosted-title-bar");
+  }, [settings.frostedTitleBar]);
+
+  useEffect(() => {
+    const root = document.documentElement;
     if (settings.contentWidth === "auto")
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);

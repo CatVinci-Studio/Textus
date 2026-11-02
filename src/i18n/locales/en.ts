@@ -1390,6 +1390,9 @@ type /name in a conversation to use one.
   appearanceSystem: "Follow system",
   appearanceLight: "Light",
   appearanceDark: "Dark",
+  frostedTitleBarLabel: "Frosted title bar",
+  frostedTitleBarHelp:
+    "Let the document show through, blurred, as it scrolls under the title bar.",
   pdfPreparing: "Preparing PDF…",
   pdfFailed: "Could not prepare the PDF:",
   languageWelcomeTitle: "Choose your language",

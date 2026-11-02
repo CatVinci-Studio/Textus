@@ -1419,6 +1419,9 @@ export default {
   appearanceSystem: "Как в системе",
   appearanceLight: "Светлое",
   appearanceDark: "Тёмное",
+  frostedTitleBarLabel: "Матовый заголовок окна",
+  frostedTitleBarHelp:
+    "Содержимое просвечивает размытым, когда прокручивается под заголовком.",
   pdfPreparing: "Подготовка PDF…",
   pdfFailed: "Не удалось подготовить PDF:",
   languageWelcomeTitle: "Выберите язык",
