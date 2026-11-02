@@ -159,7 +159,12 @@ export type Genre =
  *  A thread of numbered posts for X (Twitter) or Weibo, each short
  *  enough for one post.
  */
-"thread";
+"thread" | 
+/**
+ *  A short news story of a few hundred characters: the news first,
+ *  for quick, automated reporting.
+ */
+"brief";
 
 /**
  *  What the app does differently for a genre. Mirrored in

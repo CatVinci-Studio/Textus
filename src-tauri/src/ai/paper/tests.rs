@@ -2190,3 +2190,18 @@ async fn a_thread_opens_on_its_headline_alone() {
     assert_eq!(made, "# 屋顶能降温吗");
     assert_eq!(finish::references_heading("en", Genre::Thread), "Sources");
 }
+
+#[test]
+fn a_brief_is_short_researched_lightly_and_written_straight_on() {
+    let brief = Genre::Brief.profile();
+    assert!(brief.chars.1 <= 1000);
+    assert_eq!(brief.scale.questions.0, 1);
+    assert!(!Genre::Brief.form().checkpoint);
+    assert!(!Genre::Brief.form().headings);
+    let shape = outline::Shape::of(&brief.scale, 600, 6);
+    assert_eq!((shape.max_sections, shape.max_figures), (1, 0));
+    assert_eq!(
+        choose::read("{\"genre\": \"brief\", \"chars\": 5000}", 8000),
+        (Genre::Brief, 1000)
+    );
+}
