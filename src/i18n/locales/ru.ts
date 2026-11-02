@@ -428,8 +428,6 @@ export default {
   paperEnded: "Работа над этой статьёй завершена.",
   paperPause: "Пауза",
   paperContinue: "Продолжить",
-  paperStepsSpent:
-    "Статья израсходовала {n} обращений к модели и приостановлена. «Продолжить» даёт ещё {n}.",
   paperPaused: "На паузе — продолжите, когда захотите.",
   paperUnitCharacters: "знаков",
   paperUnitWords: "слов",

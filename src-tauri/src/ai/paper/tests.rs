@@ -2005,13 +2005,12 @@ async fn a_paper_stops_to_ask_once_its_model_calls_are_spent() {
 }
 
 #[test]
-fn going_on_gives_a_spent_paper_its_model_calls_again() {
-    let mut spent = ResearchBudget::for_paper();
-    spent.used.model_steps = spent.limits.model_steps;
-    let renewed = spent.renewed();
-    assert_eq!(renewed.remaining().model_steps, budget::MODEL_STEPS);
-    // A paper stopped with calls left keeps its limit.
-    let mut stopped = ResearchBudget::for_paper();
-    stopped.used.model_steps = 50;
-    assert_eq!(stopped.renewed(), stopped);
+fn a_paper_has_no_model_call_limit_even_one_kept_with_the_old_one() {
+    assert_eq!(ResearchBudget::for_paper().limits.model_steps, u32::MAX);
+    let mut old = ResearchBudget::for_paper();
+    old.limits.model_steps = 120;
+    old.used.model_steps = 120;
+    let renewed = old.renewed();
+    assert_eq!(renewed.limits.model_steps, u32::MAX);
+    assert_eq!(renewed.used, old.used);
 }
