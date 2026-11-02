@@ -363,7 +363,20 @@ pub async fn ai_paper_run(
                 send(PaperEvent::Phase {
                     phase: PaperPhase::Outlining,
                 });
-                outline::make_outline(&agent, &files.paper, &files.dossier, &send).await?
+                // Outlined, like everything written, as the user asks of
+                // their writing; researched plainly.
+                let mut workspace = crate::ai::workspace::load(
+                    &app,
+                    doc_path.as_deref(),
+                    workspace_root.as_deref(),
+                );
+                let guidance =
+                    crate::ai::agent::writing_guidance(&mut workspace, &files.paper.topic);
+                let guided = model::Guided {
+                    inner: &agent,
+                    guidance: &guidance,
+                };
+                outline::make_outline(&guided, &files.paper, &files.dossier, &send).await?
             }
         };
         files.outline = Some(outline.clone());
@@ -450,9 +463,19 @@ pub async fn ai_paper_draft(
             images: files.paper.budget.limits.images,
             done: false,
         };
-        let agent = model::Metered {
+        let metered = model::Metered {
             inner: &agent,
             budget: &budget,
+        };
+        let mut workspace = crate::ai::workspace::load(
+            &app,
+            request.doc_path.as_deref(),
+            request.workspace_root.as_deref(),
+        );
+        let guidance = crate::ai::agent::writing_guidance(&mut workspace, &files.paper.topic);
+        let agent = model::Guided {
+            inner: &metered,
+            guidance: &guidance,
         };
         send(PaperEvent::Sources {
             heading: finish::references_heading(&files.paper.language, files.paper.genre).into(),
@@ -540,7 +563,7 @@ pub async fn ai_paper_draft(
                     text: sections[i].clone(),
                 });
             }
-            if agent.spent() {
+            if metered.spent() {
                 return Err(budget::STEPS_SPENT.to_string());
             }
             let mut reviewed = files.clone();

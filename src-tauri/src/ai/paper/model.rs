@@ -118,6 +118,53 @@ impl<M: Model> Model for Metered<'_, M> {
     }
 }
 
+/// A model whose every step is told what the user asks of all the writing
+/// done for them - their writing instructions, memories, style profile and
+/// library (`agent::user_guidance`) - after the stage's own instructions.
+pub(crate) struct Guided<'a, M: Model> {
+    pub(crate) inner: &'a M,
+    pub(crate) guidance: &'a str,
+}
+
+impl<M: Model> Guided<'_, M> {
+    fn instructions(&self, instructions: &str) -> String {
+        if self.guidance.is_empty() {
+            instructions.to_string()
+        } else {
+            format!("{instructions}\n\n{}", self.guidance)
+        }
+    }
+}
+
+impl<M: Model> Model for Guided<'_, M> {
+    fn step<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            let instructions = self.instructions(instructions);
+            self.inner.step(&instructions, turns, tools).await
+        })
+    }
+
+    fn step_watched<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+        watch: Watch<'a>,
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            let instructions = self.instructions(instructions);
+            self.inner
+                .step_watched(&instructions, turns, tools, watch)
+                .await
+        })
+    }
+}
+
 /// A piece of what a step streams, as a stage watching it sees it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Streamed<'a> {
@@ -218,4 +265,47 @@ pub(crate) fn clip(text: &str) -> String {
     }
     let cut: String = text.chars().take(DETAIL_CHARS - 1).collect();
     format!("{cut}…")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ai::workspace::AgentWorkspace;
+
+    /// Answers each step with the instructions it was given.
+    struct Echo;
+
+    impl Model for Echo {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [AgentTurn],
+            _tools: &'a [ToolSpec],
+        ) -> BoxFuture<'a, Result<StepResult, String>> {
+            Box::pin(async move { Ok(StepResult::Done(instructions.to_string())) })
+        }
+    }
+
+    #[tokio::test]
+    async fn research_writes_as_the_user_asks_of_their_writing() {
+        let mut workspace = AgentWorkspace {
+            instructions: vec!["Never use emoji.".into()],
+            project_instructions: Some("Say \"customers\", not \"users\".".into()),
+            style: Some("Short sentences.".into()),
+            ..Default::default()
+        };
+        let guidance = crate::ai::agent::writing_guidance(&mut workspace, "Tides");
+        let guided = Guided {
+            inner: &Echo,
+            guidance: &guidance,
+        };
+        let StepResult::Done(sent) = guided.step("Write the section.", &[], &[]).await.unwrap()
+        else {
+            panic!("a tool call");
+        };
+        assert!(sent.starts_with("Write the section."), "{sent}");
+        for asked in ["Never use emoji.", "not \"users\"", "Short sentences."] {
+            assert!(sent.contains(asked), "{sent}");
+        }
+    }
 }

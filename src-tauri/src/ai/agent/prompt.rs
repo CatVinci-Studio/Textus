@@ -149,6 +149,44 @@ impl std::fmt::Display for AgentMode {
     }
 }
 
+/// What the user asks of everything written for them: the writing
+/// instructions (agent.md), global then the project's - with both, the
+/// project's section says it wins a conflict - then, with `memories`, what
+/// Textus AI remembered, which the instructions win over. The chat's modes
+/// and Research's writing both take it.
+pub(crate) fn user_guidance(workspace: &AgentWorkspace, memories: bool) -> Vec<String> {
+    let mut sections: Vec<String> = workspace
+        .instructions
+        .iter()
+        .map(|instructions| format!("---user instructions---\n{instructions}"))
+        .collect();
+    if let Some(project) = &workspace.project_instructions {
+        sections.push(if workspace.instructions.is_empty() {
+            format!("---user instructions---\n{project}")
+        } else {
+            format!("---user instructions for this project (where they conflict with the ones above, follow these)---\n{project}")
+        });
+    }
+    if memories {
+        sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
+    }
+    sections
+}
+
+/// [`user_guidance`] for a piece written outside the chat (Research): with
+/// the memories and the style profile and library entries `focus` - what it
+/// is about - calls for, as one block of instructions.
+pub(crate) fn writing_guidance(workspace: &mut AgentWorkspace, focus: &str) -> String {
+    workspace.memories.select_for(focus);
+    let pick = crate::ai::project::pick_library(&workspace.library, focus);
+    let mut sections = user_guidance(workspace, true);
+    sections.extend(crate::ai::project::writing_context_section(
+        workspace.style.as_deref(),
+        &pick.included,
+    ));
+    sections.join("\n\n")
+}
+
 /// The static half of the prompt: role, writing instructions and skill index
 /// (and the document, tool-less). Skill bodies and files come through tools.
 pub(crate) fn build_instructions(
@@ -183,24 +221,9 @@ pub(crate) fn build_instructions(
         sections.push(workspace_section(workspace, ui_language));
     }
 
-    // The writing instructions (agent.md): global, then the project's. With
-    // both present, the project's section says it wins a conflict.
-    for instructions in &workspace.instructions {
-        sections.push(format!("---user instructions---\n{instructions}"));
-    }
-    if let Some(project) = &workspace.project_instructions {
-        sections.push(if workspace.instructions.is_empty() {
-            format!("---user instructions---\n{project}")
-        } else {
-            format!("---user instructions for this project (where they conflict with the ones above, follow these)---\n{project}")
-        });
-    }
-
-    // What Textus AI remembered, after the user's instructions, which win. Only
-    // without tools; with them it comes with the message, keeping the cache.
-    if !with_tools {
-        sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
-    }
+    // What Textus AI remembered only without tools; with them it comes with
+    // the message, keeping the cache.
+    sections.extend(user_guidance(workspace, !with_tools));
 
     // The skill index: names and descriptions only; bodies load via use_skill.
     // /name-only skills (and turned-off built-ins) aren't offered.
