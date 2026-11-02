@@ -1,5 +1,5 @@
 //! A plugin's own data, in a global place and a project one (with
-//! `project.data`), each with keys (`kv/`, a file per key so a write touches one
+//! `project.data`; with no folder open, a hidden one of the app's), each with keys (`kv/`, a file per key so a write touches one
 //! key) and files (`files/`), held to a quota.
 
 use super::access::inside;
@@ -23,7 +23,8 @@ pub enum StoreScope {
 }
 
 /// The folder of `id`'s `scope`: `root` is the folder the window has open,
-/// for the project's.
+/// for the project's. With none open the project's is a hidden folder of the
+/// app's, so a plugin works without asking the user to open one.
 fn place(
     app: &tauri::AppHandle,
     id: &str,
@@ -43,28 +44,40 @@ fn place(
             if !state.allows(id, "project.data") {
                 return Err(format!("{id} was not granted project.data."));
             }
-            let root = root
-                .filter(|r| !r.is_empty())
-                .ok_or("No folder is open, so there is no project to keep it in.")?;
-            Ok(project_place(Path::new(root), id))
+            match root.filter(|r| !r.is_empty()) {
+                Some(root) => Ok(project_place(Path::new(root), id)),
+                None => loose_place(app, id),
+            }
         }
     }
 }
 
-/// An uninstalled plugin's global storage goes to the Trash where there is one,
-/// since it may hold the user's notes. A project's copy stays with that folder.
+/// The project place of a window with no folder open: hidden beside the
+/// plugins' global places, under a name no plugin id can take.
+fn loose_place(app: &tauri::AppHandle, id: &str) -> Result<PathBuf, String> {
+    Ok(loose_dir(&crate::ai::workspace::global_agent_dir(app)?, id))
+}
+
+fn loose_dir(global: &Path, id: &str) -> PathBuf {
+    global.join("plugins").join(".no-folder").join(id)
+}
+
+/// An uninstalled plugin's global storage, and what it kept with no folder
+/// open, goes to the Trash where there is one, since it may hold the user's
+/// notes. A project's copy stays with that folder.
 pub(super) fn forget_global(app: &tauri::AppHandle, id: &str) -> Result<(), String> {
     require_id(id)?;
-    let place = crate::ai::workspace::global_agent_dir(app)?
-        .join("plugins")
-        .join(id);
-    if !place.is_dir() {
-        return Ok(());
+    let global = crate::ai::workspace::global_agent_dir(app)?;
+    for place in [global.join("plugins").join(id), loose_dir(&global, id)] {
+        if !place.is_dir() {
+            continue;
+        }
+        #[cfg(desktop)]
+        trash::delete(&place).map_err(|e| e.to_string())?;
+        #[cfg(not(desktop))]
+        std::fs::remove_dir_all(&place).map_err(|e| e.to_string())?;
     }
-    #[cfg(desktop)]
-    return trash::delete(&place).map_err(|e| e.to_string());
-    #[cfg(not(desktop))]
-    std::fs::remove_dir_all(&place).map_err(|e| e.to_string())
+    Ok(())
 }
 
 fn project_place(root: &Path, id: &str) -> PathBuf {
@@ -300,14 +313,17 @@ pub fn plugin_store_usage(
     root: Option<String>,
 ) -> Result<(u64, u64), String> {
     require_id(&id)?;
-    let global = crate::ai::workspace::global_agent_dir(&app)?
-        .join("plugins")
-        .join(&id);
-    let project = root
-        .filter(|r| !r.is_empty())
-        .map(|r| size_of(&project_place(Path::new(&r), &id)))
-        .unwrap_or(0);
-    Ok((size_of(&global), project))
+    let global = size_of(
+        &crate::ai::workspace::global_agent_dir(&app)?
+            .join("plugins")
+            .join(&id),
+    );
+    // With no folder open, what the plugin kept without one counts as its
+    // data for every document: it isn't any project's.
+    Ok(match root.filter(|r| !r.is_empty()) {
+        Some(r) => (global, size_of(&project_place(Path::new(&r), &id))),
+        None => (global + size_of(&loose_place(&app, &id)?), 0),
+    })
 }
 
 /// Empties one of a plugin's places (Clear data). Asked by the user, not the
@@ -327,7 +343,7 @@ pub fn plugin_store_clear(
             .join(&id),
         StoreScope::Project => match root.filter(|r| !r.is_empty()) {
             Some(root) => project_place(Path::new(&root), &id),
-            None => return Ok(()),
+            None => loose_place(&app, &id)?,
         },
     };
     match std::fs::remove_dir_all(&dir) {
@@ -388,6 +404,17 @@ mod tests {
         // The same file again replaces itself: still within.
         write_within(&place, &f, &big).unwrap();
         assert!(set(&place, "more", &json!("x".repeat(64))).is_err());
+    }
+
+    #[test]
+    fn with_no_folder_open_the_project_place_is_hidden_beside_the_global_ones() {
+        let place = loose_dir(Path::new("/config/textus"), "local.todo");
+        assert_eq!(
+            place,
+            Path::new("/config/textus/plugins/.no-folder/local.todo")
+        );
+        // No plugin's global place can be it: an id never starts with a dot.
+        assert!(require_id(".no-folder").is_err());
     }
 
     #[test]

@@ -31,13 +31,12 @@ export async function written(
   emitPluginEvent(change, { path });
 }
 
-/** The folder of a plugin's project place: the sidebar's (null for global). */
+/** The folder of a plugin's project place: the sidebar's. Null for global,
+ *  and with no folder open, where the backend keeps a hidden one instead. */
 function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   if (scope !== "project") return null;
   p.need("project.data");
-  const root = getWindowAccess()?.rootPath();
-  if (!root) throw new Error("No folder is open.");
-  return root;
+  return getWindowAccess()?.rootPath() ?? null;
 }
 
 /** A token for the version of a document in a tab. */
