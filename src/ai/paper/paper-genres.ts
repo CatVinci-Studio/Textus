@@ -5,10 +5,12 @@ import type { Genre } from "../../platform/bindings/ai-paper";
  *  every one of Rust's `Genre::ALL` (ai/paper/genre.rs). */
 export const PAPER_GENRES: readonly Genre[] = [
   "report",
+  "analysis",
   "article",
   "thread",
   "brief",
   "paper",
+  "review",
 ];
 
 /** What the picker chose: a genre, or "auto" for the model to choose one
@@ -20,8 +22,12 @@ export function genreLabel(t: Strings, genre: Genre): string {
   switch (genre) {
     case "paper":
       return t.paperGenrePaper;
+    case "review":
+      return t.paperGenreReview;
     case "report":
       return t.paperGenreReport;
+    case "analysis":
+      return t.paperGenreAnalysis;
     case "article":
       return t.paperGenreArticle;
     case "thread":

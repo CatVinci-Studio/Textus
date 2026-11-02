@@ -168,7 +168,27 @@ pub(crate) fn references_heading(language: &str, genre: Genre) -> &'static str {
     let (_, references, _, sources) = words(language);
     match genre.profile().frame {
         Frame::Academic => references,
-        Frame::News | Frame::Headline => sources,
+        Frame::News | Frame::Headline | Frame::Executive => sources,
+    }
+}
+
+/// What an executive summary is called in `language`.
+fn executive_summary(language: &str) -> &'static str {
+    let lang = language.to_lowercase();
+    let traditional = ["zh-hant", "zh-tw", "zh-hk", "zh-mo"]
+        .iter()
+        .any(|t| lang.starts_with(t));
+    match lang.split(['-', '_']).next().unwrap_or("") {
+        "zh" if traditional => "執行摘要",
+        "zh" => "执行摘要",
+        "ja" => "エグゼクティブサマリー",
+        "ko" => "요약",
+        "es" => "Resumen ejecutivo",
+        "fr" => "Synthèse",
+        "de" => "Management Summary",
+        "ru" => "Резюме",
+        "pt" => "Sumário executivo",
+        _ => "Executive summary",
     }
 }
 
@@ -246,8 +266,11 @@ pub(crate) async fn opening(
     outline: &Outline,
     sections: &[String],
 ) -> String {
-    let (abstract_word, _, _, _) = words(&paper.language);
     let profile = paper.genre.profile();
+    let abstract_word = match profile.frame {
+        Frame::Executive => executive_summary(&paper.language),
+        _ => words(&paper.language).0,
+    };
     let instructions = format!(
         "You write the title and the abstract of a finished {}, in the language tagged \"{}\". {} Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
         profile.name, paper.language, profile.opening

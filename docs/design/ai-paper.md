@@ -54,9 +54,8 @@ it, lazily loaded. Each stage and helper is one run of
   `OutlineSection`s with `FigurePlan`s (`generated`, `mermaid`, `chart`,
   `web`). The TypeScript shapes are generated into
   `src/platform/bindings/ai-paper.ts`.
-- **Genres** (`paper/genre.rs`): what kind of piece is written - so far
-  only a paper. A genre is a `Profile` of the parts of the stages' prompts
-  that differ by kind - what the research covers and prefers, the
+- **Genres** (`paper/genre.rs`): what kind of piece is written. A genre
+  is a `Profile` of the parts of the stages' prompts that differ by kind - what the research covers and prefers, the
   outline's order, the writers' voice, what the review reads for, what
   opens the piece - while each stage keeps its own checks. `Paper` and
   `PaperRequest` carry it; a paper kept before genres is a paper.
@@ -91,6 +90,20 @@ it, lazily loaded. Each stage and helper is one run of
   quick or automated reporting: one to three questions on the latest
   reporting, written in the inverted pyramid - the news in the first
   sentence - under a present-tense headline, with no figures, straight on.
+  A **review** is a literature review: its research searches the
+  scholarly literature first, one study to a note with its method and
+  sample, on more scholarly lookups and fewer searches (30, 50, 50, 4);
+  its outline goes strand by strand - a theme, an approach, a school -
+  never study by study, and ends on the gaps; its writers compare and
+  weigh studies rather than list them; at least a figure every three
+  sections; framed as a paper (`Frame::Academic`). An **analysis** is a
+  report for decision-makers - a market, industry or policy analysis, a
+  调研报告: research prefers official statistics, filings and research
+  firms (50, 60, 10, 4), every figure kept with its unit, year and who
+  measured it; the outline puts the findings first and ends on
+  recommendations that rest on them; it opens on a labelled executive
+  summary and ends on its sources (`Frame::Executive`). A paper no longer
+  takes a literature review.
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once

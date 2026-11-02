@@ -2247,3 +2247,91 @@ async fn the_choosing_step_keeps_threads_for_social_posts_and_news_for_briefs() 
         "{instructions}"
     );
 }
+
+#[tokio::test]
+async fn a_review_is_researched_in_the_literature_and_framed_as_a_paper() {
+    let review = Genre::Review.profile();
+    let paper_budget = ResearchBudget::for_paper().limits;
+    let review_budget = ResearchBudget::for_genre(Genre::Review).limits;
+    assert!(review_budget.paper_lookups > paper_budget.paper_lookups);
+    assert_eq!(review.scale.figure_every, Some(3));
+    assert!(Genre::Review.form().checkpoint && Genre::Review.form().headings);
+    let made = finish::opening(
+        &Opener("{\"title\": \"屋顶绿化降温研究综述\", \"abstract\": \"三类研究。\"}"),
+        &Paper {
+            genre: Genre::Review,
+            ..paper()
+        },
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 屋顶绿化降温研究综述\n\n**摘要**：三类研究。");
+    assert_eq!(finish::references_heading("zh", Genre::Review), "参考文献");
+}
+
+#[tokio::test]
+async fn an_analysis_opens_on_an_executive_summary_and_lists_its_sources() {
+    assert!(Genre::Analysis.form().checkpoint && Genre::Analysis.form().headings);
+    let analysis = |language: &str| Paper {
+        genre: Genre::Analysis,
+        language: language.into(),
+        ..paper()
+    };
+    let opener =
+        Opener("{\"title\": \"储能需求三年翻倍\", \"abstract\": \"建议先布局工商业储能。\"}");
+    assert_eq!(
+        finish::opening(&opener, &analysis("zh"), &outline(), &[]).await,
+        "# 储能需求三年翻倍\n\n**执行摘要**：建议先布局工商业储能。"
+    );
+    assert_eq!(
+        finish::opening(&opener, &analysis("en"), &outline(), &[]).await,
+        "# 储能需求三年翻倍\n\n**Executive summary:** 建议先布局工商业储能。"
+    );
+    assert_eq!(
+        finish::references_heading("zh", Genre::Analysis),
+        "资料来源"
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"analysis\", \"chars\": 7000}", None),
+        (Genre::Analysis, 7000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"review\"}", None),
+        (Genre::Review, 7500)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async { Ok(aicompat::agent::StepResult::Done(String::new())) })
+        }
+    }
+    let told = Told(Default::default());
+    choose::choose(&told, "写一份储能行业调研报告", None).await;
+    let instructions = told.0.lock().unwrap().clone();
+    let line = |name: &str| {
+        instructions
+            .lines()
+            .find(|l| l.starts_with(&format!("- \"{name}\"")))
+            .unwrap_or_default()
+            .to_string()
+    };
+    assert!(
+        !line("paper").contains("literature review"),
+        "{instructions}"
+    );
+    assert!(line("review").contains("文献综述"), "{instructions}");
+    assert!(line("analysis").contains("调研报告"), "{instructions}");
+    assert!(!line("report").contains("调研报告"), "{instructions}");
+}
