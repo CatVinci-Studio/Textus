@@ -2,7 +2,7 @@
 //! progress card's phase, each section's state, the budget spent, and the
 //! outline when it waits for the user.
 
-use super::{BudgetCounts, Genre, Outline};
+use super::{BudgetCounts, Genre, GenreForm, Outline};
 use serde::Serialize;
 
 /// One update from `ai_paper_run`. Display only: what is kept is on disk.
@@ -56,6 +56,7 @@ pub enum PaperEvent {
     Genre {
         genre: Genre,
         target_chars: u32,
+        form: GenreForm,
     },
     /// The research questions the topic was split into, in the order the
     /// helpers take them.

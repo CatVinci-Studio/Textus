@@ -2124,3 +2124,69 @@ async fn the_choosing_step_is_told_every_genre_and_the_length_picked() {
         "{instructions}"
     );
 }
+
+#[test]
+fn shorter_genres_research_less_and_have_fewer_sections_and_figures() {
+    let article = outline::Shape::of(&Genre::Article.profile().scale, 3000, 3);
+    assert_eq!((article.min_sections, article.max_sections), (3, 5));
+    assert_eq!(article.figure_every, Some(3));
+    let thread = outline::Shape::of(&Genre::Thread.profile().scale, 1500, 6);
+    assert_eq!((thread.min_sections, thread.max_sections), (1, 1));
+    assert_eq!(
+        (thread.max_figures, thread.max_web, thread.images),
+        (0, 0, 0)
+    );
+    assert_eq!(
+        outline::Shape::new(5000, 2),
+        outline::Shape::of(&Genre::Report.profile().scale, 5000, 2)
+    );
+    assert!(
+        ResearchBudget::for_genre(Genre::Thread).limits.searches
+            < ResearchBudget::for_paper().limits.searches
+    );
+    for genre in Genre::ALL {
+        let (least, most) = genre.profile().chars;
+        assert_eq!(genre.fit(0), least);
+        assert_eq!(genre.fit(u32::MAX), most);
+    }
+}
+
+#[test]
+fn a_thread_post_too_long_for_one_post_is_sent_back_softly() {
+    let thread = Paper {
+        genre: Genre::Thread,
+        language: "en".into(),
+        ..paper()
+    };
+    let long = "x".repeat(300);
+    let posts = format!(
+        "1/ Short [3](https://example.org/a-very-long-address-that-is-not-read)\n---\n2/ {long}"
+    );
+    let found = draft::long_posts(&posts, &thread);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(found[0].contains("post 2"), "{found:?}");
+    assert!(checks::is_soft(&found[0]));
+    let chinese = Paper {
+        genre: Genre::Thread,
+        ..paper()
+    };
+    assert_eq!(draft::long_posts(&"字".repeat(150), &chinese).len(), 1);
+    assert!(draft::long_posts(&"x".repeat(300), &paper()).is_empty());
+}
+
+#[tokio::test]
+async fn a_thread_opens_on_its_headline_alone() {
+    let thread = Paper {
+        genre: Genre::Thread,
+        ..paper()
+    };
+    let made = finish::opening(
+        &Opener("{\"title\": \"屋顶能降温吗\", \"abstract\": \"不该有\"}"),
+        &thread,
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 屋顶能降温吗");
+    assert_eq!(finish::references_heading("en", Genre::Thread), "Sources");
+}

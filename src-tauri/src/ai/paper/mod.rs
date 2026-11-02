@@ -23,7 +23,7 @@ mod web_figures;
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
-pub use genre::Genre;
+pub use genre::{Genre, GenreForm};
 pub(crate) use store::{
     clear_sections, load, load_section, new_id, save, save_section, PaperFiles,
 };
@@ -233,10 +233,10 @@ pub async fn ai_paper_run(
     let mut research_budget = kept
         .as_ref()
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
-    let images = research_budget.limits.images;
-    research_budget.limits.images =
-        crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
-            .map_or(0, |run| research_budget.limits.images.min(run.limit as u32));
+    let mut images = research_budget.limits.images;
+    let image_cap = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
+        .map_or(0, |run| run.limit as u32);
+    research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = crate::ai::web::native_search(
         &provider,
@@ -276,9 +276,14 @@ pub async fn ai_paper_run(
                     Some(genre) => (genre, genre.fit(target_chars)),
                     None => choose::choose(&agent, &topic, target_chars).await,
                 };
+                let mut limits = ResearchBudget::for_genre(genre).limits;
+                images = limits.images;
+                limits.images = images.min(image_cap);
+                budget.limit(limits);
                 send(PaperEvent::Genre {
                     genre,
                     target_chars,
+                    form: genre.form(),
                 });
                 PaperFiles {
                     paper: Paper {
@@ -594,6 +599,7 @@ pub struct PaperProgress {
     pub outline: Option<Outline>,
     /// How many of the outline's sections are written.
     pub drafted: u32,
+    pub form: GenreForm,
 }
 
 /// Paper `id` as it was kept, for its card to go on from where it stopped.
@@ -617,6 +623,7 @@ pub(crate) fn progress(root: &std::path::Path, id: &str) -> Result<PaperProgress
         drafted += load_section(root, id, i)?.is_some() as u32;
     }
     Ok(PaperProgress {
+        form: files.paper.genre.form(),
         paper: files.paper,
         outline: files.outline,
         drafted,

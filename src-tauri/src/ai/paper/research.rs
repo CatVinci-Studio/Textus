@@ -23,8 +23,7 @@ use std::sync::Mutex;
 const AT_ONCE: usize = 4;
 /// A helper's steps: a few searches and reads, and its notes.
 const HELPER_STEPS: usize = 10;
-/// Questions the topic is split into, at least and at most.
-const MIN_QUESTIONS: usize = 4;
+/// Questions a reply may give at most, whatever the genre.
 const MAX_QUESTIONS: usize = 10;
 
 pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
@@ -46,8 +45,13 @@ pub(crate) async fn plan_questions(
 ) -> Result<Vec<String>, String> {
     let profile = paper.genre.profile();
     let instructions = format!(
-        "You plan the research for a {} of about {} characters, written in the language tagged \"{}\". Split its topic into {MIN_QUESTIONS}-{MAX_QUESTIONS} research questions that together cover it in breadth and depth: {} - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
-        profile.name, paper.target_chars, paper.language, profile.research_angles
+        "You plan the research for a {} of about {} characters, written in the language tagged \"{}\". Split its topic into {least}-{most} research questions that together cover it in breadth and depth: {} - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
+        profile.name,
+        paper.target_chars,
+        paper.language,
+        profile.research_angles,
+        least = profile.scale.questions.0,
+        most = profile.scale.questions.1,
     );
     let reply = match model
         .step_watched(
@@ -61,8 +65,9 @@ pub(crate) async fn plan_questions(
         StepResult::Done(text) => text,
         StepResult::ToolCalls(_) => String::new(),
     };
-    let questions = parse_questions(&reply);
-    if questions.len() < 2 {
+    let mut questions = parse_questions(&reply);
+    questions.truncate(profile.scale.questions.1);
+    if questions.len() < 2.min(profile.scale.questions.0) {
         return Err("The research plan came back empty - try again.".into());
     }
     Ok(questions)

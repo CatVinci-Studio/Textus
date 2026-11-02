@@ -131,11 +131,16 @@ describe("the paper store", () => {
     expect(paperRun("k7")!.genre).toBeNull();
     applyPaperEvent("k7", {
       type: "genre",
+      form: { checkpoint: false, headings: false },
       genre: "report",
       targetChars: 6000,
     });
     expect(paperRun("k7")!.genre).toBe("report");
     expect(paperRun("k7")!.targetChars).toBe(6000);
+    expect(paperRun("k7")!.form).toEqual({
+      checkpoint: false,
+      headings: false,
+    });
   });
 
   it("proposes nothing: the paper is already in the document", () => {
