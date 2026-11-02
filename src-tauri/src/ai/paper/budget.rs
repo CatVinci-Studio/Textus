@@ -77,11 +77,17 @@ impl ResearchBudget {
 
     /// Enough for 6-10 research questions on a 5,000-10,000 character paper.
     pub(crate) fn for_paper() -> Self {
+        Self::for_genre(super::Genre::Paper)
+    }
+
+    /// What `genre`'s research may spend.
+    pub(crate) fn for_genre(genre: super::Genre) -> Self {
+        let (searches, fetches, paper_lookups, images) = genre.profile().scale.budget;
         Self::new(BudgetCounts {
-            searches: 40,
-            fetches: 60,
-            paper_lookups: 30,
-            images: 6,
+            searches,
+            fetches,
+            paper_lookups,
+            images,
             model_steps: MODEL_STEPS,
         })
     }
@@ -128,6 +134,16 @@ impl SharedBudget {
 
     pub(crate) fn take(&self, kind: BudgetKind) -> bool {
         self.0.lock().unwrap().take(kind)
+    }
+
+    /// Its limits made `limits`, the model steps aside: a new piece's, once
+    /// its genre is chosen.
+    pub(crate) fn limit(&self, limits: BudgetCounts) {
+        let mut budget = self.0.lock().unwrap();
+        budget.limits = BudgetCounts {
+            model_steps: budget.limits.model_steps,
+            ..limits
+        };
     }
 
     /// What it stands at now, to keep with the paper or show the user.

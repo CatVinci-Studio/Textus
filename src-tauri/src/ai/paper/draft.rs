@@ -142,7 +142,8 @@ pub(crate) async fn write_section(
         async move {
             let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
             let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
-            let wrong = problems(&markdown, section, sources, &paper.language);
+            let mut wrong = problems(&markdown, section, sources, &paper.language);
+            wrong.extend(long_posts(&markdown, paper));
             if !markdown.is_empty() {
                 *last.lock().unwrap() = Some(markdown.clone());
             }
@@ -217,11 +218,40 @@ pub(crate) async fn write_section(
             Some(repaired(&text, &sources))
         })
         .ok_or_else(|| format!("\"{}\" wasn't written in a form that holds.", section.title))?;
-    Ok(format!(
-        "## {}\n\n{}",
-        section.title,
-        super::timeline::upright_timelines(&body)
-    ))
+    let body = super::timeline::upright_timelines(&body);
+    // A genre of one section is all under its title: no heading of its own.
+    if !paper.genre.form().headings {
+        return Ok(body);
+    }
+    Ok(format!("## {}\n\n{}", section.title, body))
+}
+
+/// The posts of a thread too long for one post: its genre's most
+/// characters, half that in Chinese, Japanese and Korean, whose
+/// characters count double. Soft, as a length is.
+pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
+    let Some(most) = paper.genre.profile().scale.post_chars else {
+        return Vec::new();
+    };
+    let most = if length("字", &paper.language) == 1 {
+        most / 2
+    } else {
+        most
+    };
+    // A citation's address isn't read in the post: its link shows as [n].
+    let address = regex::Regex::new(r"\]\([^)\s]*\)").unwrap();
+    markdown
+        .split("\n---")
+        .map(|post| address.replace_all(post.trim(), "]").chars().count() as u32)
+        .enumerate()
+        .filter(|(_, n)| *n > most)
+        .map(|(i, n)| {
+            format!(
+                "It is too long in post {}: {n} characters, against at most {most} - split it or cut it.",
+                i + 1
+            )
+        })
+        .collect()
 }
 
 /// A writer that answered with its section as its reply instead of handing

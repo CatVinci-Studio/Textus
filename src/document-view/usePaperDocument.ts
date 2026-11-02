@@ -52,6 +52,7 @@ export function usePaperDocument(
       state.outline,
       state.sectionText,
       state.sources,
+      state.form?.headings,
     );
     run((ctx) => writePaper(ctx.get(editorViewCtx), ctx, markdown));
   }, [run]);
@@ -83,6 +84,7 @@ export function usePaperDocument(
               state.outline,
               state.sectionText,
               state.sources,
+              state.form?.headings,
             )
           : null);
       run((ctx) =>
@@ -99,11 +101,14 @@ export function usePaperDocument(
     (key: string, goingOn = false) => {
       if (live.current) settle(live.current.key);
       const state = paperRun(key);
-      const firstTitle = state?.outline?.sections[0]?.title;
+      const firstTitle =
+        state?.form?.headings === false
+          ? null
+          : (state?.outline?.sections[0]?.title ?? undefined);
       const original = run((ctx) => {
         const view = ctx.get(editorViewCtx);
         const place =
-          goingOn && state && firstTitle
+          goingOn && state && firstTitle !== undefined
             ? writtenPaper(view.state.doc, state.topic, firstTitle)
             : null;
         return beginPaper(view, place);

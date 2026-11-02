@@ -3,6 +3,7 @@
 //! hands it over with submit_outline, which checks it and sends back what is
 //! wrong until it holds; the user then edits and approves it.
 
+use super::genre::Scale;
 use super::research::{Model, Streamed, ThinkingTail};
 use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
@@ -11,19 +12,14 @@ use std::sync::Mutex;
 
 pub(crate) const SUBMIT_OUTLINE_TOOL: &str = "submit_outline";
 
-/// Sections a paper has, at least and at most, whatever its length.
-const MIN_SECTIONS: usize = 3;
-const MAX_SECTIONS: usize = 12;
-/// About this many characters a section: fewer, longer sections read as an
-/// argument; many short ones as a list.
-const CHARS_PER_SECTION: u32 = 800;
-
 /// The outline a paper of a given length is to have: how many sections,
 /// and how many figures in all and from the web.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Shape {
     pub min_sections: usize,
     pub max_sections: usize,
+    /// At least one figure for every this many sections; None for none.
+    pub figure_every: Option<usize>,
     pub max_figures: usize,
     /// Web pictures: each needs a match on Commons, and too many crowd out
     /// the figures that carry the paper's own data.
@@ -34,17 +30,34 @@ pub(crate) struct Shape {
 
 impl Shape {
     /// The shape of a paper of `target_chars` characters with `images`
-    /// generated pictures left: about one section per CHARS_PER_SECTION.
+    /// generated pictures left.
+    #[cfg(test)]
     pub(crate) fn new(target_chars: u32, images: u32) -> Self {
-        let n = ((target_chars + CHARS_PER_SECTION / 2) / CHARS_PER_SECTION) as usize;
-        let max_sections = n.clamp(MIN_SECTIONS, MAX_SECTIONS);
+        Self::of(&super::Genre::Paper.profile().scale, target_chars, images)
+    }
+
+    /// The shape of a piece of `scale` and `target_chars` characters:
+    /// about one section per its `chars_per_section` - fewer, longer
+    /// sections read as an argument; many short ones as a list.
+    pub(crate) fn of(scale: &Scale, target_chars: u32, images: u32) -> Self {
+        let per = scale.chars_per_section;
+        let n = (target_chars.saturating_add(per / 2) / per) as usize;
+        let (least, most) = scale.sections;
+        let max_sections = n.clamp(least, most);
+        let figures = scale.figure_every.is_some();
         Shape {
-            min_sections: max_sections.saturating_sub(2).max(MIN_SECTIONS),
+            min_sections: max_sections.saturating_sub(2).max(least),
             max_sections,
-            max_figures: max_sections + 1,
-            max_web: max_sections.div_ceil(3),
-            images,
+            figure_every: scale.figure_every,
+            max_figures: if figures { max_sections + 1 } else { 0 },
+            max_web: if figures { max_sections.div_ceil(3) } else { 0 },
+            images: if figures { images } else { 0 },
         }
+    }
+
+    fn min_figures(&self, sections: usize) -> usize {
+        self.figure_every
+            .map_or(0, |every| sections.div_ceil(every))
     }
 }
 /// Tries at an outline that holds.
@@ -115,16 +128,16 @@ pub(crate) fn problems(
         }
     }
     let figures: Vec<_> = outline.sections.iter().flat_map(|s| &s.figures).collect();
-    if figures.len() < n.div_ceil(2) {
+    if figures.len() < shape.min_figures(n) {
         out.push(format!(
             "{} figures for {n} sections: plan at least {} - diagrams, charts of the dossier's data, pictures.",
             figures.len(),
-            n.div_ceil(2)
+            shape.min_figures(n)
         ));
     }
     if figures.len() > shape.max_figures {
         out.push(format!(
-            "{} figures: at most {} for a paper this long - keep the ones that carry the most.",
+            "{} figures: at most {} for a piece this long - keep the ones that carry the most.",
             figures.len(),
             shape.max_figures
         ));
@@ -234,7 +247,11 @@ pub(crate) async fn make_outline(
     } else {
         "words"
     };
-    let shape = Shape::new(paper.target_chars, paper.budget.remaining().images);
+    let shape = Shape::of(
+        &profile.scale,
+        paper.target_chars,
+        paper.budget.remaining().images,
+    );
     let (images_left, min_sections, max_sections, max_figures, max_web) = (
         shape.images,
         shape.min_sections,
@@ -243,13 +260,17 @@ pub(crate) async fn make_outline(
         shape.max_web,
     );
     let instructions = format!(
-        "You outline a {} on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it {} and {min_sections}-{max_sections} sections, each long enough to develop its point, {} - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. Plan figures that carry information - at least one for every two sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); and pictures where a picture says more than words - a real one first: `web` for a photograph, map, artwork or document Wikimedia Commons would have (a generated picture takes its place when none is found), at most {max_web}; `generated` only for an illustration nothing real could show (describe it), at most {images_left} of them. Write titles, key points and specs in the {}'s language. Hand it over with submit_outline.",
+        "You outline a {} on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it {} and {min_sections}-{max_sections} sections, each long enough to develop its point, {} - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. {figures} Write titles, key points and specs in the {}'s language. Hand it over with submit_outline.",
         profile.name,
         paper.topic,
         paper.language,
         profile.thesis,
         profile.outline_order,
-        profile.name
+        profile.name,
+        figures = match shape.figure_every {
+            None => "It has no figures: leave every section's `figures` empty.".to_string(),
+            Some(every) => format!("Plan figures that carry information - at least one for every {} sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); and pictures where a picture says more than words - a real one first: `web` for a photograph, map, artwork or document Wikimedia Commons would have (a generated picture takes its place when none is found), at most {max_web}; `generated` only for an illustration nothing real could show (describe it), at most {images_left} of them.", match every { 2 => "two".to_string(), 3 => "three".to_string(), n => n.to_string() }),
+        },
     );
     let message = format!(
         "Topic: {}\n\nThe research notes:\n{}",

@@ -149,7 +149,34 @@ export type Genre =
  *  A long read for the general reader, as a news organisation writes
  *  one: a headline, a standfirst, and its sources named in the text.
  */
-"report";
+"report" | 
+/**
+ *  A feature for a newsletter or a WeChat official account: a few
+ *  thousand characters, crossheads, a headline and a standfirst.
+ */
+"article" | 
+/**
+ *  A thread of numbered posts for X (Twitter) or Weibo, each short
+ *  enough for one post.
+ */
+"thread";
+
+/**
+ *  What the app does differently for a genre. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type GenreForm = {
+	/**
+	 *  Whether the user approves its outline; false for a piece written
+	 *  straight on.
+	 */
+	checkpoint: boolean,
+	/**
+	 *  Whether its sections go under headings of their own; false for a
+	 *  piece of one section, all under its title.
+	 */
+	headings: boolean,
+};
 
 /**
  *  The image model setting as a request carries it. Keep in step with the
@@ -284,7 +311,7 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  *  The kind of piece the request was found to call for, and its
  *  length in characters: sent once, before research, for a new piece.
  */
-{ type: "genre"; genre: Genre; targetChars: number } | 
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
 /**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
@@ -349,7 +376,7 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  The kind of piece the request was found to call for, and its
  *  length in characters: sent once, before research, for a new piece.
  */
-{ type: "genre"; genre: Genre; targetChars: number } | 
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
 /**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
@@ -399,6 +426,7 @@ export type PaperProgress_Deserialize = {
 	outline?: Outline | null,
 	/**  How many of the outline's sections are written. */
 	drafted: number,
+	form: GenreForm,
 };
 
 /**  How far a kept paper has come: what its card offers to go on with. */
@@ -407,6 +435,7 @@ export type PaperProgress_Serialize = {
 	outline: Outline | null,
 	/**  How many of the outline's sections are written. */
 	drafted: number,
+	form: GenreForm,
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */

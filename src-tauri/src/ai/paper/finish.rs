@@ -168,7 +168,7 @@ pub(crate) fn references_heading(language: &str, genre: Genre) -> &'static str {
     let (_, references, _, sources) = words(language);
     match genre.profile().frame {
         Frame::Academic => references,
-        Frame::News => sources,
+        Frame::News | Frame::Headline => sources,
     }
 }
 
@@ -283,6 +283,7 @@ pub(crate) async fn opening(
         .iter()
         .any(|l| paper.language.to_lowercase().starts_with(l));
     match field("abstract") {
+        _ if profile.frame == Frame::Headline => format!("# {title}"),
         Some(text) if profile.frame == Frame::News => format!("# {title}\n\n**{text}**"),
         Some(text) if cjk => format!("# {title}\n\n**{abstract_word}**：{text}"),
         Some(text) => format!("# {title}\n\n**{abstract_word}:** {text}"),

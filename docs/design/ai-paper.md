@@ -75,6 +75,18 @@ it, lazily loaded. Each stage and helper is one run of
   lengths, and one that can't be read keeps a paper. The choice is sent as
   `genre` before research and kept in `paper.json`, so a paper gone on
   with isn't chosen again.
+  **Scale**: each genre also has a `Scale` - its research questions and
+  budget, its sections and characters a section, figures at least one
+  for every two or three sections or none, whether the user approves its
+  outline. An **article** (a newsletter or 公众号 feature, 1,500-4,000
+  characters) and a **thread** (numbered posts for X or Weibo, split by
+  `---`, each post at most 280 characters, 140 in Chinese, Japanese and
+  Korean - a soft check) research less and are written straight on: the
+  app approves their outline itself (`GenreForm::checkpoint`). A thread
+  is one section, all under its headline, with no heading of its own
+  (`GenreForm::headings`), and opens on its headline alone
+  (`Frame::Headline`). The run's `genre` event and `ai_paper_status`
+  carry the `GenreForm`, so a card back after a restart knows them.
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once
