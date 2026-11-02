@@ -175,7 +175,7 @@ it, lazily loaded. Each stage and helper is one run of
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
   the lazy `paper` module): the AI panel's fourth mode, **Research**, takes
-  the message as the paper's topic, at the length picked beside the mode
+  the message as the paper's topic, of the kind picked beside the mode - **Choose for me** (the default) lets the model choose it and its length, a genre picked is written at the middle of its lengths -
   under the message box; it never reaches the chat agent, so it is no skill's mode and
   not a default. The conversation
   gets the user's ask and a card (`write_paper` turns, which Rust keeps from

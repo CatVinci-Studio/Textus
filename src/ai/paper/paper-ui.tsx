@@ -17,7 +17,11 @@ import {
   type PaperRunState,
   type QuestionState,
 } from "./paper-store";
-import { PAPER_LENGTHS } from "./paper-lengths";
+import {
+  genreLabel,
+  PAPER_GENRES,
+  type PaperGenreChoice,
+} from "./paper-genres";
 import { citationOrder } from "./paper-document";
 import "./outline-card.css";
 
@@ -274,7 +278,9 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   return (
     <div className="paper-card">
       <div className="paper-card-head">
-        <span className="paper-card-title">{t.paperCardTitle}</span>
+        <span className="paper-card-title">
+          {run?.genre ? genreLabel(t, run.genre) : t.paperCardTitle}
+        </span>
         <span className="paper-card-topic">{info.topic}</span>
       </div>
       {run?.phase === "awaitingOutline" && run.outline && !run.error && (
@@ -340,33 +346,28 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   );
 }
 
-/** Research mode's choice of the paper's length; the topic is the
- *  message sent. */
-export function PaperLength({
+/** Research mode's choice of what kind of piece to write - by default the
+ *  model's, from the topic; the topic is the message sent. */
+export function PaperGenre({
   t,
   value,
   onChange,
 }: {
   t: Strings;
-  value: number;
-  onChange: (chars: number) => void;
+  value: PaperGenreChoice;
+  onChange: (genre: PaperGenreChoice) => void;
 }) {
-  const label = (n: number) =>
-    n === PAPER_LENGTHS[0]
-      ? t.paperLengthShort
-      : n === PAPER_LENGTHS[1]
-        ? t.paperLengthMedium
-        : t.paperLengthLong;
   return (
     <Select
       className="inline-chat-mode paper-length"
-      aria-label={t.paperLength}
-      value={String(value)}
-      onChange={(e) => onChange(Number(e.target.value))}
+      aria-label={t.paperGenre}
+      value={value}
+      onChange={(e) => onChange(e.target.value as PaperGenreChoice)}
     >
-      {PAPER_LENGTHS.map((n) => (
-        <option key={n} value={String(n)}>
-          {label(n)}
+      <option value="auto">{t.paperGenreAuto}</option>
+      {PAPER_GENRES.map((genre) => (
+        <option key={genre} value={genre}>
+          {genreLabel(t, genre)}
         </option>
       ))}
     </Select>

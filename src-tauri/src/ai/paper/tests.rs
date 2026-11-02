@@ -2075,20 +2075,26 @@ async fn a_report_opens_on_a_headline_and_a_standfirst_and_lists_its_sources() {
 #[test]
 fn the_chosen_genre_is_read_from_the_reply_and_fitted_to_its_lengths() {
     assert_eq!(
-        choose::read("{\"genre\": \"report\", \"chars\": 6000}", 8000),
+        choose::read("{\"genre\": \"report\", \"chars\": 6000}", Some(8000)),
         (Genre::Report, 6000)
     );
     assert_eq!(
-        choose::read("Sure: {\"genre\": \"report\", \"chars\": 99000}", 8000),
+        choose::read(
+            "Sure: {\"genre\": \"report\", \"chars\": 99000}",
+            Some(8000)
+        ),
         (Genre::Report, 10000)
     );
     assert_eq!(
-        choose::read("{\"genre\": \"paper\"}", 8000),
+        choose::read("{\"genre\": \"paper\"}", Some(8000)),
         (Genre::Paper, 8000)
     );
-    assert_eq!(choose::read("I can't tell.", 3000), (Genre::Paper, 5000));
     assert_eq!(
-        choose::read("{\"genre\": \"poem\", \"chars\": 300}", 8000),
+        choose::read("I can't tell.", Some(3000)),
+        (Genre::Paper, 5000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"poem\", \"chars\": 300}", Some(8000)),
         (Genre::Paper, 8000)
     );
 }
@@ -2113,7 +2119,7 @@ async fn the_choosing_step_is_told_every_genre_and_the_length_picked() {
         }
     }
     let told = Told(Default::default());
-    let chosen = choose::choose(&told, "台北为什么这么热", 8000).await;
+    let chosen = choose::choose(&told, "台北为什么这么热", Some(8000)).await;
     assert_eq!(chosen, (Genre::Report, 5000));
     let instructions = told.0.lock().unwrap().clone();
     for genre in Genre::ALL {
@@ -2201,7 +2207,7 @@ fn a_brief_is_short_researched_lightly_and_written_straight_on() {
     let shape = outline::Shape::of(&brief.scale, 600, 6);
     assert_eq!((shape.max_sections, shape.max_figures), (1, 0));
     assert_eq!(
-        choose::read("{\"genre\": \"brief\", \"chars\": 5000}", 8000),
+        choose::read("{\"genre\": \"brief\", \"chars\": 5000}", Some(8000)),
         (Genre::Brief, 1000)
     );
 }

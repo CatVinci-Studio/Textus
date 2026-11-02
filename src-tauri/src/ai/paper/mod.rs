@@ -184,12 +184,15 @@ pub struct PaperRequest {
     pub id: Option<String>,
     pub topic: String,
     /// What kind of piece to write; None for the model to choose from the
-    /// topic, at about `target_chars`.
+    /// topic.
     #[serde(default)]
     pub genre: Option<Genre>,
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
-    pub target_chars: u32,
+    /// Its length in characters; None for the genre's, or the model's
+    /// choice.
+    #[serde(default)]
+    pub target_chars: Option<u32>,
     /// The image model, for the pictures the outline may plan; None for
     /// none.
     pub image_model: Option<crate::ai::images::ImageModel>,
@@ -273,7 +276,7 @@ pub async fn ai_paper_run(
             Some(kept) => kept,
             None => {
                 let (genre, target_chars) = match genre {
-                    Some(genre) => (genre, genre.fit(target_chars)),
+                    Some(genre) => (genre, genre.length(target_chars)),
                     None => choose::choose(&agent, &topic, target_chars).await,
                 };
                 let mut limits = ResearchBudget::for_genre(genre).limits;
