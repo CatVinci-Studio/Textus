@@ -6,10 +6,7 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
 import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
 import type { ChatComposerLabels, SelectionChipHandlers } from "./ChatComposer";
-import type {
-  ChatComposerHandle,
-  ChatComposerProps,
-} from "./composer-types";
+import type { ChatComposerHandle, ChatComposerProps } from "./composer-types";
 import type { QuickAskPendingBarLabels } from "./quick-ask/QuickAskPendingBar";
 import { isProposalTool, parseToolProposal } from "./proposal";
 import { refusedProposalIds } from "../revision/proposal-status";
