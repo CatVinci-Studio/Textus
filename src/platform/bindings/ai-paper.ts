@@ -138,6 +138,14 @@ export type FigurePlan = {
 	spec: string,
 };
 
+/**  The kind of piece. Mirrored in src/platform/bindings/ai-paper.ts. */
+export type Genre = 
+/**
+ *  A researched paper with a thesis, an abstract and numbered
+ *  references.
+ */
+"paper";
+
 /**
  *  The image model setting as a request carries it. Keep in step with the
  *  frontend's `ImageModel`.
@@ -405,6 +413,8 @@ export type PaperRequest_Deserialize = {
 	 */
 	id?: string | null,
 	topic: string,
+	/**  What kind of piece to write; a paper when not given. */
+	genre?: Genre,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,
@@ -431,6 +441,8 @@ export type PaperRequest_Serialize = {
 	 */
 	id: string | null,
 	topic: string,
+	/**  What kind of piece to write; a paper when not given. */
+	genre: Genre,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,
@@ -461,6 +473,8 @@ export type PaperStage =
 export type Paper_Deserialize = {
 	id: string,
 	topic: string,
+	/**  What kind of piece it is; a paper kept before genres is a paper. */
+	genre?: Genre,
 	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
 	language: string,
 	/**  How long the finished text should be, in characters. */
@@ -481,6 +495,8 @@ export type Paper_Deserialize = {
 export type Paper_Serialize = {
 	id: string,
 	topic: string,
+	/**  What kind of piece it is; a paper kept before genres is a paper. */
+	genre: Genre,
 	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
 	language: string,
 	/**  How long the finished text should be, in characters. */

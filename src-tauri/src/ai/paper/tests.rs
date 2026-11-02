@@ -8,6 +8,7 @@ fn paper() -> Paper {
     Paper {
         id: "abc123".into(),
         topic: "城市热岛效应".into(),
+        genre: Genre::Paper,
         language: "zh".into(),
         target_chars: 8000,
         budget: ResearchBudget::for_paper(),
@@ -2014,4 +2015,13 @@ fn going_on_gives_a_spent_paper_its_model_calls_again() {
     let mut stopped = ResearchBudget::for_paper();
     stopped.used.model_steps = 50;
     assert_eq!(stopped.renewed(), stopped);
+}
+
+#[test]
+fn a_paper_kept_before_genres_reads_as_a_paper() {
+    let mut kept = serde_json::to_value(paper()).unwrap();
+    kept.as_object_mut().unwrap().remove("genre");
+    let read: Paper = serde_json::from_value(kept).unwrap();
+    assert_eq!(read.genre, Genre::Paper);
+    assert_eq!(serde_json::to_value(Genre::Paper).unwrap(), json!("paper"));
 }

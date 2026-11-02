@@ -97,9 +97,13 @@ pub(crate) async fn review(
     outline: &Outline,
     sections: &[String],
 ) -> Result<Vec<Issue>, String> {
+    let profile = paper.genre.profile();
     let instructions = format!(
-        "You review a drafted paper, in the language tagged \"{}\", before the author sees it. Each section was written apart and has passed checks of its length, its citations and its figures; find what only reading them together shows: the same material in two sections, sections that contradict each other, a key point of the outline that no section makes, a figure the text never refers to, a claim stronger than what it cites, a section that doesn't connect to the thesis or to the one before it. Report only what is worth a revision, most important first, with what its writer should do - not style preferences. Report with report_issues once; an empty list if the paper needs nothing.",
-        paper.language
+        "You review a drafted {}, in the language tagged \"{}\", before the author sees it. Each section was written apart and has passed checks of its length, its citations and its figures; find what only reading them together shows: {}. Report only what is worth a revision, most important first, with what its writer should do - not style preferences. Report with report_issues once; an empty list if the {} needs nothing.",
+        profile.name,
+        paper.language,
+        profile.review_for,
+        profile.name
     );
     let outline_text: Vec<String> = outline
         .sections

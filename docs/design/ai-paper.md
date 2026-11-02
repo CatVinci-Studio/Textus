@@ -54,6 +54,12 @@ it, lazily loaded. Each stage and helper is one run of
   `OutlineSection`s with `FigurePlan`s (`generated`, `mermaid`, `chart`,
   `web`). The TypeScript shapes are generated into
   `src/platform/bindings/ai-paper.ts`.
+- **Genres** (`paper/genre.rs`): what kind of piece is written - so far
+  only a paper. A genre is a `Profile` of the parts of the stages' prompts
+  that differ by kind - what the research covers and prefers, the
+  outline's order, the writers' voice, what the review reads for, what
+  opens the piece - while each stage keeps its own checks. `Paper` and
+  `PaperRequest` carry it; a paper kept before genres is a paper.
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once
