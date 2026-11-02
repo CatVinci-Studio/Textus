@@ -2,7 +2,9 @@
 //! there, and the outline the user edited, kept for drafting.
 
 use super::GenreForm;
-use super::{clear_sections, load, load_section, outline, paper_root, save, Outline, Paper, PaperStage};
+use super::{
+    clear_sections, load, load_section, outline, paper_root, save, Outline, Paper, PaperStage,
+};
 use serde::Serialize;
 
 /// The outline as the user edited it on the card, kept for drafting. Notes
