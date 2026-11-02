@@ -24,6 +24,9 @@ pub enum Genre {
     /// A thread of numbered posts for X (Twitter) or Weibo, each short
     /// enough for one post.
     Thread,
+    /// A short news story of a few hundred characters: the news first,
+    /// for quick, automated reporting.
+    Brief,
 }
 
 /// What the app does differently for a genre. Mirrored in
@@ -191,9 +194,39 @@ const THREAD: Profile = Profile {
     },
 };
 
+const BRIEF: Profile = Profile {
+    name: "brief",
+    when: "a quick news story or update: what has just happened, told in a few paragraphs - a news flash, a daily update, an automated report on an event, a release or a set of figures",
+    chars: (300, 1000),
+    research_angles: "what exactly happened, when and where, who is involved, the key number or statement, and what happens next",
+    research_sources: "Search the web for the latest reporting and official statements, read the best pages in full, and keep each fact that answers it with add_note - who, what, when, where, the exact number or words, with the date it was published. Prefer the original announcement or a news agency; say where reports disagree.",
+    thesis: "a thesis - the news in one plain sentence",
+    outline_order: "as one section, the whole story: its key points from most to least important",
+    voice: "a short news story as a news agency writes it, in the inverted pyramid: the first sentence says what happened, who, when and where - the most important fact first; the next one or two say why it matters and give the key number or quote; then the details and the background, most important first, and what happens next. Short paragraphs of one or two sentences, plain words, every term explained, the date of each event given; no opinion, no build-up, no summing up. Say who says a thing in the sentence itself.",
+    cite: REPORT.cite,
+    review_for: "a first sentence that doesn't give the news, a fact the story gives twice, a claim stronger than what it cites, a term never explained, a date missing from an event",
+    opening: "The title is a news headline: short, in the present tense, saying what happened. The abstract is empty.",
+    frame: Frame::Headline,
+    scale: Scale {
+        questions: (1, 3),
+        budget: (8, 10, 0, 0),
+        sections: (1, 1),
+        chars_per_section: u32::MAX,
+        figure_every: None,
+        checkpoint: false,
+        post_chars: None,
+    },
+};
+
 impl Genre {
     /// Every genre, in the order the choosing step is told them.
-    pub(crate) const ALL: [Genre; 4] = [Genre::Paper, Genre::Report, Genre::Article, Genre::Thread];
+    pub(crate) const ALL: [Genre; 5] = [
+        Genre::Paper,
+        Genre::Report,
+        Genre::Article,
+        Genre::Thread,
+        Genre::Brief,
+    ];
 
     pub(crate) fn form(self) -> GenreForm {
         let scale = &self.profile().scale;
@@ -215,6 +248,7 @@ impl Genre {
             Genre::Report => &REPORT,
             Genre::Article => &ARTICLE,
             Genre::Thread => &THREAD,
+            Genre::Brief => &BRIEF,
         }
     }
 }
