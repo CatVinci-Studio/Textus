@@ -264,16 +264,15 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 .typ::<aicompat::capabilities::ThinkingLevel>(),
         ),
         (
-            // The long-form paper agent (ai::paper): not used by the frontend yet.
+            // Research mode's writing agent (ai::paper).
             "ai-paper.ts",
             builder()
                 .commands(collect_commands![
                     crate::ai::paper::ai_paper_run,
-                    crate::ai::paper::ai_paper_save_outline,
+                    crate::ai::paper::status::ai_paper_save_outline,
                     crate::ai::paper::ai_paper_draft,
-                    crate::ai::paper::ai_paper_status
+                    crate::ai::paper::status::ai_paper_status
                 ])
-                .typ::<crate::ai::paper::Dossier>()
                 .typ::<crate::ai::paper::Outline>(),
         ),
         (

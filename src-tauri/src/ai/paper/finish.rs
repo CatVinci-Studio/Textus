@@ -3,8 +3,9 @@
 //! of the sources the text cites below them, in the paper's language.
 
 use super::draft::WEB_FIGURE_MARK;
+use super::genre::Frame;
 use super::research::Model;
-use super::{Dossier, Outline, Paper};
+use super::{Dossier, Genre, Outline, Paper};
 use aicompat::agent::{AgentTurn, StepResult};
 use regex::Regex;
 use serde_json::Value;
@@ -12,29 +13,29 @@ use std::sync::OnceLock;
 
 /// The words a paper's apparatus is labelled with, by the language it is
 /// written in: abstract, references, figure.
-fn words(language: &str) -> (&'static str, &'static str, &'static str) {
+fn words(language: &str) -> (&'static str, &'static str, &'static str, &'static str) {
     let lang = language.to_lowercase();
     let traditional = ["zh-hant", "zh-tw", "zh-hk", "zh-mo"]
         .iter()
         .any(|t| lang.starts_with(t));
     match lang.split(['-', '_']).next().unwrap_or("") {
-        "zh" if traditional => ("摘要", "參考文獻", "圖"),
-        "zh" => ("摘要", "参考文献", "图"),
-        "ja" => ("要旨", "参考文献", "図"),
-        "ko" => ("초록", "참고문헌", "그림"),
-        "es" => ("Resumen", "Referencias", "Figura"),
-        "fr" => ("Résumé", "Références", "Figure"),
-        "de" => ("Zusammenfassung", "Literatur", "Abbildung"),
-        "ru" => ("Аннотация", "Литература", "Рисунок"),
-        "pt" => ("Resumo", "Referências", "Figura"),
-        _ => ("Abstract", "References", "Figure"),
+        "zh" if traditional => ("摘要", "參考文獻", "圖", "資料來源"),
+        "zh" => ("摘要", "参考文献", "图", "资料来源"),
+        "ja" => ("要旨", "参考文献", "図", "出典"),
+        "ko" => ("초록", "참고문헌", "그림", "출처"),
+        "es" => ("Resumen", "Referencias", "Figura", "Fuentes"),
+        "fr" => ("Résumé", "Références", "Figure", "Sources"),
+        "de" => ("Zusammenfassung", "Literatur", "Abbildung", "Quellen"),
+        "ru" => ("Аннотация", "Литература", "Рисунок", "Источники"),
+        "pt" => ("Resumo", "Referências", "Figura", "Fontes"),
+        _ => ("Abstract", "References", "Figure", "Sources"),
     }
 }
 
 /// A figure's caption line: "图 3　…" in Chinese and Japanese, else
 /// "Figure 3. …".
 fn caption(language: &str, n: usize, text: &str) -> String {
-    let (_, _, figure) = words(language);
+    let (_, _, figure, _) = words(language);
     let cjk = ["zh", "ja"]
         .iter()
         .any(|l| language.to_lowercase().starts_with(l));
@@ -163,8 +164,32 @@ pub(crate) fn entry(s: &aicompat::agent::Source) -> String {
 }
 
 /// The reference list's heading in `language`.
-pub(crate) fn references_heading(language: &str) -> &'static str {
-    words(language).1
+pub(crate) fn references_heading(language: &str, genre: Genre) -> &'static str {
+    let (_, references, _, sources) = words(language);
+    match genre.profile().frame {
+        Frame::Academic => references,
+        Frame::News | Frame::Headline | Frame::Executive => sources,
+    }
+}
+
+/// What an executive summary is called in `language`.
+fn executive_summary(language: &str) -> &'static str {
+    let lang = language.to_lowercase();
+    let traditional = ["zh-hant", "zh-tw", "zh-hk", "zh-mo"]
+        .iter()
+        .any(|t| lang.starts_with(t));
+    match lang.split(['-', '_']).next().unwrap_or("") {
+        "zh" if traditional => "執行摘要",
+        "zh" => "执行摘要",
+        "ja" => "エグゼクティブサマリー",
+        "ko" => "요약",
+        "es" => "Resumen ejecutivo",
+        "fr" => "Synthèse",
+        "de" => "Management Summary",
+        "ru" => "Резюме",
+        "pt" => "Sumário executivo",
+        _ => "Executive summary",
+    }
 }
 
 /// `sections`' citations numbered 1, 2, … in the order the paper first
@@ -209,7 +234,7 @@ pub(crate) fn number_citations(sections: &mut [String], dossier: &Dossier) -> Do
 /// The sources `sections` cite, as the list that ends the paper: each by its
 /// number, in number order, with its title and address. None when nothing is
 /// cited.
-pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str) -> Option<String> {
+pub(crate) fn references(sections: &[String], dossier: &Dossier, heading: &str) -> Option<String> {
     let mut numbers: Vec<u32> = sections
         .iter()
         .flat_map(|s| {
@@ -229,7 +254,6 @@ pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str)
     if lines.is_empty() {
         return None;
     }
-    let (_, heading, _) = words(language);
     Some(format!("## {heading}\n\n{}", lines.join("\n\n")))
 }
 
@@ -242,10 +266,14 @@ pub(crate) async fn opening(
     outline: &Outline,
     sections: &[String],
 ) -> String {
-    let (abstract_word, _, _) = words(&paper.language);
+    let profile = paper.genre.profile();
+    let abstract_word = match profile.frame {
+        Frame::Executive => executive_summary(&paper.language),
+        _ => words(&paper.language).0,
+    };
     let instructions = format!(
-        "You write the title and the abstract of a finished paper, in the language tagged \"{}\". The title is specific and says what the paper finds or argues, not only its topic. The abstract, one paragraph of about 150-250 words (or 250-400 characters in Chinese or Japanese), states the question, the approach, the main findings with their key figures, and what follows from them - from the paper's text only, without citations. Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
-        paper.language
+        "You write the title and the abstract of a finished {}, in the language tagged \"{}\". {} Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
+        profile.name, paper.language, profile.opening
     );
     let message = format!("Thesis: {}\n\n{}", outline.thesis, sections.join("\n\n"));
     let reply = match model
@@ -278,6 +306,8 @@ pub(crate) async fn opening(
         .iter()
         .any(|l| paper.language.to_lowercase().starts_with(l));
     match field("abstract") {
+        _ if profile.frame == Frame::Headline => format!("# {title}"),
+        Some(text) if profile.frame == Frame::News => format!("# {title}\n\n**{text}**"),
         Some(text) if cjk => format!("# {title}\n\n**{abstract_word}**：{text}"),
         Some(text) => format!("# {title}\n\n**{abstract_word}:** {text}"),
         None => format!("# {title}"),

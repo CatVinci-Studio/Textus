@@ -8,6 +8,7 @@ fn paper() -> Paper {
     Paper {
         id: "abc123".into(),
         topic: "城市热岛效应".into(),
+        genre: Genre::Paper,
         language: "zh".into(),
         target_chars: 8000,
         budget: ResearchBudget::for_paper(),
@@ -1018,17 +1019,34 @@ fn the_references_list_only_what_the_text_cites_in_number_order() {
         "Again [3](https://example.org/study) and [1](https://a.example/).".to_string(),
     ];
     assert_eq!(
-        finish::references(&sections, &d, "zh").unwrap(),
+        finish::references(
+            &sections,
+            &d,
+            finish::references_heading("zh", Genre::Paper)
+        )
+        .unwrap(),
         "## 参考文献\n\n\\[1\\] <https://a.example/>\n\n\\[3\\] Study. <https://example.org/study>"
     );
-    assert!(finish::references(&sections, &d, "zh-Hant")
-        .unwrap()
-        .starts_with("## 參考文獻"));
-    assert!(finish::references(&sections, &d, "en-US")
-        .unwrap()
-        .starts_with("## References"));
+    assert!(finish::references(
+        &sections,
+        &d,
+        finish::references_heading("zh-Hant", Genre::Paper)
+    )
+    .unwrap()
+    .starts_with("## 參考文獻"));
+    assert!(finish::references(
+        &sections,
+        &d,
+        finish::references_heading("en-US", Genre::Paper)
+    )
+    .unwrap()
+    .starts_with("## References"));
     assert_eq!(
-        finish::references(&["No citations.".to_string()], &d, "en"),
+        finish::references(
+            &["No citations.".to_string()],
+            &d,
+            finish::references_heading("en", Genre::Paper)
+        ),
         None
     );
 }
@@ -1270,7 +1288,12 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         draft::problems(&cited, &section, &sources, "en"),
         Vec::<String>::new()
     );
-    let listed = finish::references(std::slice::from_ref(&cited), &dossier, "en").unwrap();
+    let listed = finish::references(
+        std::slice::from_ref(&cited),
+        &dossier,
+        finish::references_heading("en", Genre::Paper),
+    )
+    .unwrap();
     assert!(
         listed.ends_with("\\[1\\] a.md. `references/Tides 2024/a.md`"),
         "{listed}"
@@ -1573,7 +1596,7 @@ fn an_untitled_source_is_listed_by_its_address_once() {
     let listed = finish::references(
         &["A [3](https://doi.org/10.1/x) and [4](https://b.example/).".to_string()],
         &d,
-        "en",
+        finish::references_heading("en", Genre::Paper),
     )
     .unwrap();
     assert_eq!(
@@ -1985,7 +2008,12 @@ fn citations_are_numbered_in_the_order_the_paper_first_cites_them() {
             (3, "https://example.org/study")
         ]
     );
-    let listed = finish::references(&sections, &numbered, "en").unwrap();
+    let listed = finish::references(
+        &sections,
+        &numbered,
+        finish::references_heading("en", Genre::Paper),
+    )
+    .unwrap();
     assert!(
         listed.starts_with(
             "## References\n\n\\[1\\] Source 93. <https://a.example/>\n\n\\[2\\] Source 248."
@@ -2067,4 +2095,296 @@ fn a_paper_has_no_model_call_limit_even_one_kept_with_the_old_one() {
     let renewed = old.renewed();
     assert_eq!(renewed.limits.model_steps, u32::MAX);
     assert_eq!(renewed.used, old.used);
+}
+
+#[test]
+fn a_paper_kept_before_genres_reads_as_a_paper() {
+    let mut kept = serde_json::to_value(paper()).unwrap();
+    kept.as_object_mut().unwrap().remove("genre");
+    let read: Paper = serde_json::from_value(kept).unwrap();
+    assert_eq!(read.genre, Genre::Paper);
+    assert_eq!(serde_json::to_value(Genre::Paper).unwrap(), json!("paper"));
+}
+
+#[tokio::test]
+async fn a_report_opens_on_a_headline_and_a_standfirst_and_lists_its_sources() {
+    let report = Paper {
+        genre: Genre::Report,
+        ..paper()
+    };
+    let made = finish::opening(
+        &Opener("{\"title\": \"城市正在变热\", \"abstract\": \"屋顶上的草能让街道凉下来。\"}"),
+        &report,
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 城市正在变热\n\n**屋顶上的草能让街道凉下来。**");
+    assert_eq!(finish::references_heading("zh", Genre::Report), "资料来源");
+    assert_eq!(finish::references_heading("en", Genre::Report), "Sources");
+    assert_eq!(finish::references_heading("en", Genre::Paper), "References");
+}
+
+#[test]
+fn the_chosen_genre_is_read_from_the_reply_and_fitted_to_its_lengths() {
+    assert_eq!(
+        choose::read("{\"genre\": \"report\", \"chars\": 6000}", Some(8000)),
+        (Genre::Report, 6000)
+    );
+    assert_eq!(
+        choose::read(
+            "Sure: {\"genre\": \"report\", \"chars\": 99000}",
+            Some(8000)
+        ),
+        (Genre::Report, 10000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"paper\"}", Some(8000)),
+        (Genre::Paper, 8000)
+    );
+    assert_eq!(
+        choose::read("I can't tell.", Some(3000)),
+        (Genre::Paper, 5000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"poem\", \"chars\": 300}", Some(8000)),
+        (Genre::Paper, 8000)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_is_told_every_genre_and_the_length_picked() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async {
+                Ok(aicompat::agent::StepResult::Done(
+                    "{\"genre\": \"report\", \"chars\": 5000}".into(),
+                ))
+            })
+        }
+    }
+    let told = Told(Default::default());
+    let chosen = choose::choose(&told, "台北为什么这么热", Some(8000)).await;
+    assert_eq!(chosen, (Genre::Report, 5000));
+    let instructions = told.0.lock().unwrap().clone();
+    for genre in Genre::ALL {
+        assert!(instructions.contains(&format!("\"{}\"", genre.profile().name)));
+    }
+    assert!(
+        instructions.contains("about 8000 characters"),
+        "{instructions}"
+    );
+}
+
+#[test]
+fn shorter_genres_research_less_and_have_fewer_sections_and_figures() {
+    let article = outline::Shape::of(&Genre::Article.profile().scale, 3000, 3);
+    assert_eq!((article.min_sections, article.max_sections), (3, 5));
+    assert_eq!(article.figure_every, Some(3));
+    let thread = outline::Shape::of(&Genre::Thread.profile().scale, 1500, 6);
+    assert_eq!((thread.min_sections, thread.max_sections), (1, 1));
+    assert_eq!(
+        (thread.max_figures, thread.max_web, thread.images),
+        (0, 0, 0)
+    );
+    assert_eq!(
+        outline::Shape::new(5000, 2),
+        outline::Shape::of(&Genre::Report.profile().scale, 5000, 2)
+    );
+    assert!(
+        ResearchBudget::for_genre(Genre::Thread).limits.searches
+            < ResearchBudget::for_paper().limits.searches
+    );
+    for genre in Genre::ALL {
+        let (least, most) = genre.profile().chars;
+        assert_eq!(genre.fit(0), least);
+        assert_eq!(genre.fit(u32::MAX), most);
+    }
+}
+
+#[test]
+fn a_thread_post_too_long_for_one_post_is_sent_back_softly() {
+    let thread = Paper {
+        genre: Genre::Thread,
+        language: "en".into(),
+        ..paper()
+    };
+    let long = "x".repeat(300);
+    let posts = format!(
+        "1/ Short [3](https://example.org/a-very-long-address-that-is-not-read)\n---\n2/ {long}"
+    );
+    let found = draft::long_posts(&posts, &thread);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert!(found[0].contains("post 2"), "{found:?}");
+    assert!(checks::is_soft(&found[0]));
+    let chinese = Paper {
+        genre: Genre::Thread,
+        ..paper()
+    };
+    assert_eq!(draft::long_posts(&"字".repeat(150), &chinese).len(), 1);
+    assert!(draft::long_posts(&"x".repeat(300), &paper()).is_empty());
+}
+
+#[tokio::test]
+async fn a_thread_opens_on_its_headline_alone() {
+    let thread = Paper {
+        genre: Genre::Thread,
+        ..paper()
+    };
+    let made = finish::opening(
+        &Opener("{\"title\": \"屋顶能降温吗\", \"abstract\": \"不该有\"}"),
+        &thread,
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 屋顶能降温吗");
+    assert_eq!(finish::references_heading("en", Genre::Thread), "Sources");
+}
+
+#[test]
+fn a_brief_is_short_researched_lightly_and_written_straight_on() {
+    let brief = Genre::Brief.profile();
+    assert!(brief.chars.1 <= 1500);
+    assert_eq!(brief.scale.questions.0, 1);
+    assert!(!Genre::Brief.form().checkpoint);
+    assert!(!Genre::Brief.form().headings);
+    let shape = outline::Shape::of(&brief.scale, 600, 6);
+    assert_eq!((shape.max_sections, shape.max_figures), (1, 0));
+    assert_eq!(
+        choose::read("{\"genre\": \"brief\", \"chars\": 5000}", Some(8000)),
+        (Genre::Brief, 1500)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_keeps_threads_for_social_posts_and_news_for_briefs() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async { Ok(aicompat::agent::StepResult::Done(String::new())) })
+        }
+    }
+    let told = Told(Default::default());
+    choose::choose(&told, "请帮我写一个 今天的新闻简报", None).await;
+    let instructions = told.0.lock().unwrap().clone();
+    let line = |name: &str| {
+        instructions
+            .lines()
+            .find(|l| l.starts_with(&format!("- \"{name}\"")))
+            .unwrap_or_default()
+            .to_string()
+    };
+    assert!(line("thread").contains("only when"), "{instructions}");
+    for word in ["新闻稿", "简报", "快讯"] {
+        assert!(line("brief").contains(word), "{instructions}");
+        assert!(!line("thread").contains(word), "{instructions}");
+    }
+    assert!(
+        instructions.contains("A thread is only for"),
+        "{instructions}"
+    );
+}
+
+#[tokio::test]
+async fn a_review_is_researched_in_the_literature_and_framed_as_a_paper() {
+    let review = Genre::Review.profile();
+    let paper_budget = ResearchBudget::for_paper().limits;
+    let review_budget = ResearchBudget::for_genre(Genre::Review).limits;
+    assert!(review_budget.paper_lookups > paper_budget.paper_lookups);
+    assert_eq!(review.scale.figure_every, Some(3));
+    assert!(Genre::Review.form().checkpoint && Genre::Review.form().headings);
+    let made = finish::opening(
+        &Opener("{\"title\": \"屋顶绿化降温研究综述\", \"abstract\": \"三类研究。\"}"),
+        &Paper {
+            genre: Genre::Review,
+            ..paper()
+        },
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 屋顶绿化降温研究综述\n\n**摘要**：三类研究。");
+    assert_eq!(finish::references_heading("zh", Genre::Review), "参考文献");
+}
+
+#[tokio::test]
+async fn an_analysis_opens_on_an_executive_summary_and_lists_its_sources() {
+    assert!(Genre::Analysis.form().checkpoint && Genre::Analysis.form().headings);
+    let analysis = |language: &str| Paper {
+        genre: Genre::Analysis,
+        language: language.into(),
+        ..paper()
+    };
+    let opener =
+        Opener("{\"title\": \"储能需求三年翻倍\", \"abstract\": \"建议先布局工商业储能。\"}");
+    assert_eq!(
+        finish::opening(&opener, &analysis("zh"), &outline(), &[]).await,
+        "# 储能需求三年翻倍\n\n**执行摘要**：建议先布局工商业储能。"
+    );
+    assert_eq!(
+        finish::opening(&opener, &analysis("en"), &outline(), &[]).await,
+        "# 储能需求三年翻倍\n\n**Executive summary:** 建议先布局工商业储能。"
+    );
+    assert_eq!(
+        finish::references_heading("zh", Genre::Analysis),
+        "资料来源"
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"analysis\", \"chars\": 7000}", None),
+        (Genre::Analysis, 7000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"review\"}", None),
+        (Genre::Review, 7500)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async { Ok(aicompat::agent::StepResult::Done(String::new())) })
+        }
+    }
+    let told = Told(Default::default());
+    choose::choose(&told, "写一份储能行业调研报告", None).await;
+    let instructions = told.0.lock().unwrap().clone();
+    let line = |name: &str| {
+        instructions
+            .lines()
+            .find(|l| l.starts_with(&format!("- \"{name}\"")))
+            .unwrap_or_default()
+            .to_string()
+    };
+    assert!(
+        !line("paper").contains("literature review"),
+        "{instructions}"
+    );
+    assert!(line("review").contains("文献综述"), "{instructions}");
+    assert!(line("analysis").contains("调研报告"), "{instructions}");
+    assert!(!line("report").contains("调研报告"), "{instructions}");
 }

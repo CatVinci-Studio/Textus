@@ -32,7 +32,8 @@ const en = {
   agentPanelEmptyWrite: "Start writing",
   agentPanelEmptyReview: "Get more suggestions",
   agentPanelEmptyCreate: "Make a theme, plugin or skill",
-  agentPanelEmptyResearch: "Research a topic and write a paper",
+  agentPanelEmptyResearch:
+    "Research a topic and write it up: a report, an article, a thread, a brief or a paper",
   aiWorkingCompletion: "Writing a continuation…",
   aiWorkingGrammar: "Checking this paragraph…",
   noticeCompletionNeedsCaret:
@@ -392,13 +393,18 @@ type /name in a conversation to use one.
   paperOutlineApprove: "Approve and write",
   paperOutlineApproving: "Starting to write…",
   paperTopicPlaceholder:
-    "What the paper is about, and anything it should cover",
-  paperLength: "Length",
-  paperLengthShort: "Short (about 5,000 characters)",
-  paperLengthMedium: "Medium (about 8,000 characters)",
-  paperLengthLong: "Long (about 10,000 characters)",
-  paperAsk: "Write a paper: {topic}",
-  paperCardTitle: "Paper",
+    "What to write about, for whom, and anything it should cover",
+  paperGenre: "Kind of piece",
+  paperGenreAuto: "Choose for me",
+  paperGenrePaper: "Academic paper",
+  paperGenreReview: "Literature review",
+  paperGenreReport: "In-depth report",
+  paperGenreAnalysis: "Analysis report",
+  paperGenreArticle: "Article",
+  paperGenreThread: "Thread",
+  paperGenreBrief: "News brief",
+  paperAsk: "Research and write: {topic}",
+  paperCardTitle: "Research",
   paperPlanning: "Planning the research…",
   paperResearching:
     "Researching: {searches} searches, {pages} pages and {papers} paper lookups so far…",
@@ -424,12 +430,12 @@ type /name in a conversation to use one.
   paperOutlineRetry:
     "Draft {n}: the last one didn't pass its checks, so it is being redone…",
   paperPapersOnly:
-    "No web search is available, so this paper's research only searches scholarly papers (OpenAlex, arXiv) and your reference library.",
+    "No web search is available, so this piece's research only searches scholarly papers (OpenAlex, arXiv) and your reference library.",
   paperWritten:
-    "The paper is written in the document. Edit it there like any text; Undo takes it out.",
+    "It is written in the document. Edit it there like any text; Undo takes it out.",
   paperWrittenCard: "Written in the document.",
   paperAddingPictures: "Adding pictures, {n} to go…",
-  paperEnded: "This paper's run has ended.",
+  paperEnded: "This piece's run has ended.",
   paperPause: "Pause",
   paperContinue: "Continue",
   paperPaused: "Paused - continue whenever you like.",
@@ -772,8 +778,7 @@ type /name in a conversation to use one.
   agentModeReviewHint: "Reads it and leaves notes; changes nothing",
   agentModeCreateHint: "Makes themes, plugins and skills",
   agentModeResearch: "Research",
-  agentModeResearchHint:
-    "Researches a topic and writes a paper into the document",
+  agentModeResearchHint: "Researches a topic and writes it into the document",
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   writingModelLabel: "Assist model",

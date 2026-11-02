@@ -6,14 +6,17 @@
 
 mod budget;
 mod checks;
+mod choose;
 mod draft;
 mod events;
 mod finish;
+mod genre;
 mod library;
 mod model;
 mod outline;
 mod research;
 mod review;
+pub mod status;
 mod store;
 mod timeline;
 mod web_figures;
@@ -21,9 +24,11 @@ mod web_figures;
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
+pub use genre::{Genre, GenreForm};
+#[cfg(test)]
+use status::progress;
 pub(crate) use store::{
-    clear_sections, load, load_section, new_id, paper_root, progress, save, save_section,
-    PaperFiles, PaperProgress,
+    clear_sections, load, load_section, new_id, paper_root, save, save_section, PaperFiles,
 };
 
 use serde::{Deserialize, Serialize};
@@ -36,6 +41,9 @@ use tauri::ipc::Channel;
 pub struct Paper {
     pub id: String,
     pub topic: String,
+    /// What kind of piece it is; a paper kept before genres is a paper.
+    #[serde(default)]
+    pub genre: Genre,
     /// The language it is written in, a BCP 47 tag ("zh", "en").
     pub language: String,
     /// How long the finished text should be, in characters.
@@ -178,9 +186,16 @@ pub struct PaperRequest {
     /// for a new id.
     pub id: Option<String>,
     pub topic: String,
+    /// What kind of piece to write; None for the model to choose from the
+    /// topic.
+    #[serde(default)]
+    pub genre: Option<Genre>,
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
-    pub target_chars: u32,
+    /// Its length in characters; None for the genre's, or the model's
+    /// choice.
+    #[serde(default)]
+    pub target_chars: Option<u32>,
     /// The image model, for the pictures the outline may plan; None for
     /// none.
     pub image_model: Option<crate::ai::images::ImageModel>,
@@ -207,6 +222,7 @@ pub async fn ai_paper_run(
         request_id,
         id,
         topic,
+        genre,
         language,
         target_chars,
         image_model,
@@ -226,10 +242,10 @@ pub async fn ai_paper_run(
     let mut research_budget = kept
         .as_ref()
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
-    let images = research_budget.limits.images;
-    research_budget.limits.images =
-        crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
-            .map_or(0, |run| research_budget.limits.images.min(run.limit as u32));
+    let mut images = research_budget.limits.images;
+    let image_cap = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
+        .map_or(0, |run| run.limit as u32);
+    research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = crate::ai::web::native_search(
         &provider,
@@ -262,18 +278,37 @@ pub async fn ai_paper_run(
             inner: &agent,
             budget: &budget,
         };
-        let mut files = kept.unwrap_or_else(|| PaperFiles {
-            paper: Paper {
-                id: id.unwrap_or_else(new_id),
-                topic,
-                language,
-                target_chars,
-                budget: budget.snapshot(),
-                stage: PaperStage::Researching,
-            },
-            dossier: Dossier::default(),
-            outline: None,
-        });
+        let mut files = match kept {
+            Some(kept) => kept,
+            None => {
+                let (genre, target_chars) = match genre {
+                    Some(genre) => (genre, genre.length(target_chars)),
+                    None => choose::choose(&agent, &topic, target_chars).await,
+                };
+                let mut limits = ResearchBudget::for_genre(genre).limits;
+                images = limits.images;
+                limits.images = images.min(image_cap);
+                budget.limit(limits);
+                send(PaperEvent::Genre {
+                    genre,
+                    target_chars,
+                    form: genre.form(),
+                });
+                PaperFiles {
+                    paper: Paper {
+                        id: id.unwrap_or_else(new_id),
+                        topic,
+                        genre,
+                        language,
+                        target_chars,
+                        budget: budget.snapshot(),
+                        stage: PaperStage::Researching,
+                    },
+                    dossier: Dossier::default(),
+                    outline: None,
+                }
+            }
+        };
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
@@ -399,7 +434,7 @@ pub async fn ai_paper_draft(
             budget: &budget,
         };
         send(PaperEvent::Sources {
-            heading: finish::references_heading(&files.paper.language).into(),
+            heading: finish::references_heading(&files.paper.language, files.paper.genre).into(),
             sources: files
                 .dossier
                 .sources
@@ -515,7 +550,11 @@ pub async fn ai_paper_draft(
         // Numbered first, so only the sources cited are looked up.
         let mut dossier = finish::number_citations(&mut sections, &files.dossier);
         finish::title_sources(&mut dossier).await;
-        let references = finish::references(&sections, &dossier, language);
+        let references = finish::references(
+            &sections,
+            &dossier,
+            finish::references_heading(language, files.paper.genre),
+        );
         let sections: Vec<String> = sections
             .iter()
             .map(|s| finish::plain_citations(s))
@@ -535,40 +574,6 @@ pub async fn ai_paper_draft(
         Ok(())
     })
     .await
-}
-
-/// The outline as the user edited it on the card, kept for drafting. Notes
-/// it names that the dossier doesn't have are dropped; it needs a section,
-/// and every section a title.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn ai_paper_save_outline(
-    doc_path: Option<String>,
-    workspace_root: Option<String>,
-    id: String,
-    outline: Outline,
-) -> Result<Outline, String> {
-    let root = paper_root(doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
-    let mut files = load(&root, &id)?;
-    let outline = outline::as_edited(outline, &files.dossier)?;
-    files.outline = Some(outline.clone());
-    files.paper.stage = PaperStage::Drafting;
-    // Sections drafted from an outline before this one aren't this one's.
-    clear_sections(&root, &id)?;
-    save(&root, &files)?;
-    Ok(outline)
-}
-
-/// Paper `id` as it was kept, for its card to go on from where it stopped.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn ai_paper_status(
-    doc_path: Option<String>,
-    workspace_root: Option<String>,
-    id: String,
-) -> Result<PaperProgress, String> {
-    let root = paper_root(doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
-    progress(&root, &id)
 }
 
 #[cfg(test)]

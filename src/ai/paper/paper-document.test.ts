@@ -61,6 +61,16 @@ describe("the paper as it is written", () => {
     );
   });
 
+  it("puts a piece without headings straight under its title", () => {
+    const thread = { ...outline, sections: [outline.sections[0]] };
+    expect(
+      paperDraft("Green roofs", thread, { 0: "1/ Plants shade." }, null, false),
+    ).toBe("# Green roofs\n\n1/ Plants shade.");
+    expect(paperDraft("Green roofs", thread, {}, null, false)).toBe(
+      "# Green roofs",
+    );
+  });
+
   it("gives a kept section the paper's heading, not its own", () => {
     expect(sectionBody("## How roofs cool\n\nPlants shade.")).toBe(
       "Plants shade.",

@@ -23,8 +23,7 @@ use std::sync::Mutex;
 const AT_ONCE: usize = 4;
 /// A helper's steps: a few searches and reads, and its notes.
 const HELPER_STEPS: usize = 10;
-/// Questions the topic is split into, at least and at most.
-const MIN_QUESTIONS: usize = 4;
+/// Questions a reply may give at most, whatever the genre.
 const MAX_QUESTIONS: usize = 10;
 
 pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
@@ -44,9 +43,15 @@ pub(crate) async fn plan_questions(
     paper: &Paper,
     watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
+    let profile = paper.genre.profile();
     let instructions = format!(
-        "You plan the research for a paper of about {} characters, written in the language tagged \"{}\". Split its topic into {MIN_QUESTIONS}-{MAX_QUESTIONS} research questions that together cover it in breadth and depth: background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
-        paper.target_chars, paper.language
+        "You plan the research for a {} of about {} characters, written in the language tagged \"{}\". Split its topic into {least}-{most} research questions that together cover it in breadth and depth: {} - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
+        profile.name,
+        paper.target_chars,
+        paper.language,
+        profile.research_angles,
+        least = profile.scale.questions.0,
+        most = profile.scale.questions.1,
     );
     let reply = match model
         .step_watched(
@@ -60,8 +65,9 @@ pub(crate) async fn plan_questions(
         StepResult::Done(text) => text,
         StepResult::ToolCalls(_) => String::new(),
     };
-    let questions = parse_questions(&reply);
-    if questions.len() < 2 {
+    let mut questions = parse_questions(&reply);
+    questions.truncate(profile.scale.questions.1);
+    if questions.len() < 2.min(profile.scale.questions.0) {
         return Err("The research plan came back empty - try again.".into());
     }
     Ok(questions)
@@ -221,14 +227,16 @@ async fn research_question(
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Vec<Note>, String> {
     let instructions = format!(
-        "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
+        "You are one of several researchers gathering material for a {name} on \"{}\", written in the language tagged \"{}\". Your part is one question. {} Aim for four to eight notes, written in the {name}'s language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
         paper.topic,
         paper.language,
+        paper.genre.profile().research_sources,
         if library.is_some() {
             " The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_reference, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose."
         } else {
             ""
-        }
+        },
+        name = paper.genre.profile().name,
     );
     let mut specs: Vec<ToolSpec> = web.tools(question).iter().map(|t| t.spec.clone()).collect();
     specs.push(add_note_spec());

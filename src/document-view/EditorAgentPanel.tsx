@@ -16,8 +16,9 @@ import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
 import { Suspense, useState } from "react";
-import { PaperLength } from "../ai/paper/lazy";
-import { DEFAULT_PAPER_LENGTH } from "../ai/paper/paper-lengths";
+import { PaperGenre } from "../ai/paper/lazy";
+import type { PaperGenreChoice } from "../ai/paper/paper-genres";
+import type { Genre } from "../platform/bindings/ai-paper";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -78,12 +79,13 @@ export function EditorAgentPanel({
   guard: boolean;
   setGuard: (guard: boolean) => void;
   /** Starts a paper on a topic (usePaperWriter). */
-  writePaper: (topic: string, targetChars: number) => void;
+  writePaper: (topic: string, genre: Genre | null) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
-  // Research mode's paper length; the message sent is its topic.
-  const [paperChars, setPaperChars] = useState(DEFAULT_PAPER_LENGTH);
+  // Research mode's kind of piece, "auto" for the model's choice; the
+  // message sent is its topic.
+  const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
   const emptyText = {
     write: t.agentPanelEmptyWrite,
     review: t.agentPanelEmptyReview,
@@ -158,10 +160,12 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
-        onResearch={(topic) => writePaper(topic, paperChars)}
+        onResearch={(topic) =>
+          writePaper(topic, paperGenre === "auto" ? null : paperGenre)
+        }
         researchControls={
           <Suspense fallback={null}>
-            <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
+            <PaperGenre t={t} value={paperGenre} onChange={setPaperGenre} />
           </Suspense>
         }
         footer={

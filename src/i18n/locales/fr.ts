@@ -34,7 +34,8 @@ export default {
   agentPanelEmptyWrite: "Commencez à écrire",
   agentPanelEmptyReview: "Obtenez plus de suggestions",
   agentPanelEmptyCreate: "Créez un thème, une extension ou une compétence",
-  agentPanelEmptyResearch: "Étudiez un sujet et rédigez un article",
+  agentPanelEmptyResearch:
+    "Enquêter sur un sujet et le rédiger : grand format, article, fil, brève ou article scientifique",
   aiWorkingCompletion: "Rédaction de la suite…",
   aiWorkingGrammar: "Vérification du paragraphe…",
   noticeCompletionNeedsCaret:
@@ -408,13 +409,19 @@ utiliser une.
   paperOutlineLess: "Moins",
   paperOutlineApprove: "Approuver et rédiger",
   paperOutlineApproving: "Début de la rédaction…",
-  paperTopicPlaceholder: "Le sujet de l’article et ce qu’il doit couvrir",
-  paperLength: "Longueur",
-  paperLengthShort: "Court (environ 5 000 caractères)",
-  paperLengthMedium: "Moyen (environ 8 000 caractères)",
-  paperLengthLong: "Long (environ 10 000 caractères)",
-  paperAsk: "Rédiger un article : {topic}",
-  paperCardTitle: "Article",
+  paperTopicPlaceholder:
+    "Sur quoi écrire, pour qui, et ce que le texte doit couvrir",
+  paperGenre: "Type de texte",
+  paperGenreAuto: "Choisir pour moi",
+  paperGenrePaper: "Article scientifique",
+  paperGenreReview: "Revue de littérature",
+  paperGenreReport: "Grand format",
+  paperGenreAnalysis: "Rapport d’analyse",
+  paperGenreArticle: "Article",
+  paperGenreThread: "Fil",
+  paperGenreBrief: "Brève",
+  paperAsk: "Enquêter et rédiger : {topic}",
+  paperCardTitle: "Recherche",
   paperPlanning: "Planification de la recherche…",
   paperResearching:
     "Recherche : {searches} recherches, {pages} pages et {papers} recherches d’articles…",
@@ -440,12 +447,12 @@ utiliser une.
   paperOutlineRetry:
     "Version {n} : la précédente n'a pas passé les vérifications, elle est refaite…",
   paperPapersOnly:
-    "Aucune recherche web disponible : la recherche ne porte que sur les articles scientifiques (OpenAlex, arXiv) et votre bibliothèque.",
+    "Aucune recherche web n'est disponible : la recherche de ce texte ne porte que sur les articles scientifiques (OpenAlex, arXiv) et votre bibliothèque de références.",
   paperWritten:
-    "L’article est écrit dans le document. Modifiez-le comme n’importe quel texte ; Annuler le retire.",
+    "Le texte est écrit dans le document. Modifiez-le comme n'importe quel texte ; Annuler le retire en entier.",
   paperWrittenCard: "Écrit dans le document.",
   paperAddingPictures: "Ajout des images, encore {n}…",
-  paperEnded: "La rédaction de cet article est terminée.",
+  paperEnded: "La rédaction de ce texte est terminée.",
   paperPause: "Mettre en pause",
   paperContinue: "Continuer",
   paperPaused: "En pause : reprenez quand vous voulez.",
@@ -800,8 +807,7 @@ utiliser une.
   agentModeReviewHint: "Le lit et laisse des notes ; ne change rien",
   agentModeCreateHint: "Crée des thèmes, des plugins et des compétences",
   agentModeResearch: "Recherche",
-  agentModeResearchHint:
-    "Étudie un sujet et rédige un article dans le document",
+  agentModeResearchHint: "Enquête sur un sujet et le rédige dans le document",
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",
   agentAdvancedGroupLabel: "Avancé",
   writingModelLabel: "Modèle d'assistance",

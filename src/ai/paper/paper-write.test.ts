@@ -22,6 +22,8 @@ describe("a paper written into the document", () => {
     const place = writtenPaper(doc, "Roofs", "Cooling");
     expect(place).not.toBeNull();
     expect(writtenPaper(doc, "Roofs", "Costs")).toBeNull();
+    // A piece without headings is found by its title alone.
+    expect(writtenPaper(doc, "Roofs", null)).toEqual(place);
     const original = beginPaper(t.view, place);
     t.editor.action((ctx) =>
       writePaper(

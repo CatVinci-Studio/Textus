@@ -65,18 +65,24 @@ export function sectionBody(text: string): string {
 }
 
 /** The paper as it stands while its sections are written: the topic as its
- *  title, then every section of the outline under its heading, with what
- *  its writer has written so far, and once its sources are known its
- *  citations numbered as the finished paper numbers them, listed below. */
+ *  title, then every section of the outline under its heading - or, for a
+ *  genre without `headings`, straight under the title - with what its
+ *  writer has written so far, and once its sources are known its citations
+ *  numbered as the finished paper numbers them, listed below. */
 export function paperDraft(
   topic: string,
   outline: Outline,
   sectionText: Record<number, string>,
   sources: PaperSources | null = null,
+  headings = true,
 ): string {
   const parts = [`# ${topic}`];
   outline.sections.forEach((section, i) => {
     const body = sectionBody(sectionText[i] ?? "");
+    if (!headings) {
+      if (body) parts.push(body);
+      return;
+    }
     parts.push(body ? `## ${section.title}\n\n${body}` : `## ${section.title}`);
   });
   if (!sources) return parts.join("\n\n");

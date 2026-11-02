@@ -12,12 +12,13 @@ import { paperRegion, setPaperRegion } from "./paper-region-plugin";
 // step Undo can take back.
 
 /** A paper written so far on `topic` - its title, `# topic`, right above
- *  its first section's heading - and the blocks after it up to the next
- *  title: what a paper going on after a pause takes back. */
+ *  its first section's heading, or alone for a piece without headings
+ *  (`firstTitle` null) - and the blocks after it up to the next title: what
+ *  a paper going on after a pause takes back. */
 export function writtenPaper(
   doc: ProseNode,
   topic: string,
-  firstTitle: string,
+  firstTitle: string | null,
 ): { from: number; to: number } | null {
   const heading = (node: ProseNode | null, level: number, text: string) =>
     node?.type.name === "heading" &&
@@ -30,7 +31,12 @@ export function writtenPaper(
     if (from < 0) {
       if (
         heading(node, 1, topic) &&
-        heading(i + 1 < doc.childCount ? doc.child(i + 1) : null, 2, firstTitle)
+        (firstTitle === null ||
+          heading(
+            i + 1 < doc.childCount ? doc.child(i + 1) : null,
+            2,
+            firstTitle,
+          ))
       )
         from = pos;
     } else if (node.type.name === "heading" && node.attrs.level === 1) {

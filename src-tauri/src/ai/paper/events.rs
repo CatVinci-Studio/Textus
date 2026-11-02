@@ -2,7 +2,7 @@
 //! progress card's phase, each section's state, the budget spent, and the
 //! outline when it waits for the user.
 
-use super::{BudgetCounts, Outline};
+use super::{BudgetCounts, Genre, GenreForm, Outline};
 use serde::Serialize;
 
 /// One update from `ai_paper_run`. Display only: what is kept is on disk.
@@ -50,6 +50,13 @@ pub enum PaperEvent {
     /// scholarly indexes and the user's library are searched.
     WebSearch {
         available: bool,
+    },
+    /// The kind of piece the request was found to call for, and its
+    /// length in characters: sent once, before research, for a new piece.
+    Genre {
+        genre: Genre,
+        target_chars: u32,
+        form: GenreForm,
     },
     /// The research questions the topic was split into, in the order the
     /// helpers take them.

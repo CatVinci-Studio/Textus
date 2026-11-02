@@ -8,7 +8,11 @@ import type { EditorRunner } from "../editor/useEditorRunner";
 import type { GeneratedImageData } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
-import type { Outline, PaperProgress } from "../platform/bindings/ai-paper";
+import type {
+  Genre,
+  Outline,
+  PaperProgress,
+} from "../platform/bindings/ai-paper";
 import {
   applyPaperEvent,
   newPaperId,
@@ -87,36 +91,6 @@ export function usePaperWriter({
     }));
   };
 
-  /** Researches and outlines paper `key`, or goes on with what it kept. */
-  const research = useCallback(
-    (key: string, topic: string, targetChars: number) => {
-      const { settings: s } = latest.current;
-      const requestId = crypto.randomUUID();
-      requests.current.set(key, requestId);
-      void ai
-        .paperRun(
-          {
-            ...common(),
-            searchService: s.searchService,
-            searxngUrl: s.searxngUrl || null,
-            requestId,
-            id: key,
-            topic,
-            language: paperLanguage(topic, s.language),
-            targetChars,
-          },
-          (event) => applyPaperEvent(key, event),
-        )
-        .then((paper) => {
-          requests.current.delete(key);
-          updatePaperRun(key, () => ({ paperId: paper.id }));
-        })
-        .catch((err) => fail(key, err));
-      // `common` and `fail` read refs only.
-    },
-    [],
-  );
-
   /** Drafts paper `key` from its approved outline once `ready` resolves,
    *  writing it into the document as it comes; to true when it was begun
    *  before, so what was written of it is taken back, not written twice. */
@@ -191,6 +165,46 @@ export function usePaperWriter({
     [draft],
   );
 
+  /** Researches and outlines paper `key`, or goes on with what it kept. */
+  const research = useCallback(
+    (
+      key: string,
+      topic: string,
+      genre: Genre | null,
+      targetChars: number | null,
+    ) => {
+      const { settings: s } = latest.current;
+      const requestId = crypto.randomUUID();
+      requests.current.set(key, requestId);
+      void ai
+        .paperRun(
+          {
+            ...common(),
+            searchService: s.searchService,
+            searxngUrl: s.searxngUrl || null,
+            requestId,
+            id: key,
+            topic,
+            language: paperLanguage(topic, s.language),
+            genre,
+            targetChars,
+          },
+          (event) => applyPaperEvent(key, event),
+        )
+        .then((paper) => {
+          requests.current.delete(key);
+          updatePaperRun(key, () => ({ paperId: paper.id }));
+          // A genre written straight on approves its own outline.
+          const run = paperRun(key);
+          if (run?.outline && run.form?.checkpoint === false)
+            approve(key, run.outline);
+        })
+        .catch((err) => fail(key, err));
+      // `common` and `fail` read refs only.
+    },
+    [approve],
+  );
+
   const stop = useCallback((key: string) => {
     const requestId = requests.current.get(key);
     if (requestId) void ai.cancelAgentMessage(requestId);
@@ -216,7 +230,8 @@ export function usePaperWriter({
         phaseSince: Date.now(),
       }));
       void status(key)
-        .then(({ paper, outline }) => {
+        .then(({ paper, outline, form }) => {
+          updatePaperRun(key, () => ({ genre: paper.genre ?? null, form }));
           if (
             (paper.stage === "drafting" || paper.stage === "reviewed") &&
             outline
@@ -229,7 +244,7 @@ export function usePaperWriter({
             }));
             draft(key, paper.id, Promise.resolve(true));
           } else if (paper.stage !== "done") {
-            research(key, paper.topic, paper.targetChars);
+            research(key, paper.topic, paper.genre ?? null, paper.targetChars);
           } else {
             requests.current.delete(key);
           }
@@ -244,12 +259,14 @@ export function usePaperWriter({
     (key: string, topic: string) => {
       if (paperRun(key)) return;
       void status(key)
-        .then(({ paper, outline }) => {
+        .then(({ paper, outline, form }) => {
           if (paperRun(key)) return;
           const { t: strings } = latest.current;
           updatePaperRun(key, () => ({
             topic,
             paperId: paper.id,
+            genre: paper.genre ?? null,
+            form,
             outline,
             unit: /^(zh|ja|ko)/.test(paper.language)
               ? strings.paperUnitCharacters
@@ -274,16 +291,19 @@ export function usePaperWriter({
     return () => clearPaperActions(mine);
   }, [isActive, approve, stop, resume, restore]);
 
-  /** Starts a paper on `topic` of about `targetChars` characters. Its
-   *  card's key is its id, so the card finds it again after a restart. */
+  /** Starts a piece on `topic` of `genre`, or of the model's choice when
+   *  null, at its genre's length. Its card's key is its id, so the card
+   *  finds it again after a restart. */
   return useCallback(
-    (topic: string, targetChars: number) => {
+    (topic: string, genre: Genre | null) => {
       const { settings: s, t: strings } = latest.current;
       const key = newPaperId();
       const language = paperLanguage(topic, s.language);
       updatePaperRun(key, () => ({
         topic,
         paperId: key,
+        // A genre picked shows on the card at once; the model's, once chosen.
+        genre,
         unit: /^(zh|ja|ko)/.test(language)
           ? strings.paperUnitCharacters
           : strings.paperUnitWords,
@@ -292,7 +312,7 @@ export function usePaperWriter({
       latest.current.conversation.append(
         paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
       );
-      research(key, topic, targetChars);
+      research(key, topic, genre, null);
     },
     [agentPanel, research],
   );
