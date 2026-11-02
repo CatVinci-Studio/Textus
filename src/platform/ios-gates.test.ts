@@ -13,7 +13,6 @@ const ALLOWED: Record<string, string> = {
   "ai/chat/chat-history.ts": "paths relative to the app's Documents folder",
   "ai/revision/pending-accept.ts":
     "no focus: the keyboard would cover the sheet",
-  "app/AgentPanelDock.tsx": "the AI panel is a bottom sheet with a grip",
   "app/App.tsx": "the keyboard toolbar and the document list",
   "app/AppNotices.tsx": "no Esc key: Zen mode's hint stays as the way out",
   "app/Sidebar.tsx": "the sidebar is a drawer, its width the layout's",

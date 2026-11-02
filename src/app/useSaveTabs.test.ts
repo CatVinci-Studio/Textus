@@ -16,6 +16,7 @@ vi.mock("../platform/ipc", () => ({
     writeTextFile: vi.fn(),
     saveFileDialog: vi.fn(),
     migrateDraftImages: vi.fn(),
+    renameEntry: vi.fn(),
   },
   session: { addRecentFile: vi.fn() },
 }));
@@ -41,7 +42,11 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-function setup(tab: DocTab) {
+function setup(
+  tab: DocTab,
+  folder: string | null = null,
+  aiTitleFor?: (tab: DocTab) => string | null,
+) {
   const { result } = renderHook(() => {
     const tabState = useTabState();
     const saves = useSaveTabs({
@@ -49,6 +54,8 @@ function setup(tab: DocTab) {
       t: en as Strings,
       autoSuggestFilename: true,
       imageFolder: "assets",
+      folder,
+      aiTitleFor,
     });
     return { tabState, ...saves };
   });
@@ -76,13 +83,122 @@ describe("autosaveTab", () => {
     });
   });
 
-  it("never asks where to save an untitled document", async () => {
-    const result = setup({ ...doc, path: null, diskMtime: null });
-    await act(async () => {
-      expect(await result.current.autosaveTab("a")).toBe("skipped");
+  describe("an untitled document", () => {
+    const draft: DocTab = {
+      ...doc,
+      path: null,
+      content: "# Trip plan\n\nday one",
+      savedContent: "",
+      diskMtime: null,
+    };
+    const onDisk = (taken: string[]) =>
+      vi
+        .mocked(fs.fileMtimeMs)
+        .mockImplementation(async (p) => (taken.includes(p) ? 7 : null));
+    // A new file: written with the editor's own line endings.
+    beforeEach(() => {
+      vi.mocked(fs.readTextFile).mockRejectedValue(new Error("not found"));
     });
-    expect(fs.saveFileDialog).not.toHaveBeenCalled();
-    expect(fs.writeTextFile).not.toHaveBeenCalled();
+
+    it("is saved into the open folder under its heading, without a dialog", async () => {
+      onDisk(["/work/Trip plan.md"]);
+      const result = setup(draft, "/work");
+      await act(async () => {
+        expect(await result.current.autosaveTab("a")).toBe("saved");
+      });
+      expect(fs.saveFileDialog).not.toHaveBeenCalled();
+      // The taken name is numbered, never overwritten.
+      expect(fs.writeTextFile).toHaveBeenCalledWith(
+        "/work/Trip plan 2.md",
+        draft.content,
+      );
+      expect(result.current.tabState.tabs[0]).toMatchObject({
+        path: "/work/Trip plan 2.md",
+        savedContent: draft.content,
+      });
+    });
+
+    it("stays a draft with no folder open, or nothing in it", async () => {
+      onDisk([]);
+      const nowhere = setup(draft);
+      const blank = setup({ ...draft, content: " \n" }, "/work");
+      await act(async () => {
+        expect(await nowhere.current.autosaveTab("a")).toBe("skipped");
+        expect(await blank.current.autosaveTab("a")).toBe("skipped");
+      });
+      expect(fs.writeTextFile).not.toHaveBeenCalled();
+    });
+
+    it("is named by the AI's title when it has no heading", async () => {
+      onDisk([]);
+      const untitled = {
+        ...draft,
+        content: "some thoughts on the garden\n\nmore",
+      };
+      const result = setup(untitled, "/work", () => "Spring garden");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      expect(fs.writeTextFile).toHaveBeenCalledWith(
+        "/work/Spring garden.md",
+        untitled.content,
+      );
+    });
+
+    it("has its file follow the title until it is named by hand", async () => {
+      onDisk([]);
+      vi.mocked(fs.renameEntry).mockImplementation(
+        async (_from, name) => `/work/${name}`,
+      );
+      const result = setup(draft, "/work");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      const retitle = (content: string) =>
+        act(() => result.current.tabState.updateTab("a", { content }));
+      retitle("# Kyoto trip\n\nday one");
+      await act(async () => {
+        expect(await result.current.autosaveTab("a")).toBe("saved");
+      });
+      expect(fs.renameEntry).toHaveBeenCalledWith(
+        "/work/Trip plan.md",
+        "Kyoto trip.md",
+      );
+      expect(result.current.tabState.tabs[0].path).toBe("/work/Kyoto trip.md");
+
+      // Saved As: the user chose the name, and it stays.
+      vi.mocked(fs.saveFileDialog).mockResolvedValue("/work/Mine.md");
+      await act(async () => {
+        await result.current.saveTabAs("a");
+      });
+      retitle("# Osaka\n\nday one");
+      await act(async () => {
+        await result.current.autosaveTab("a");
+      });
+      expect(fs.renameEntry).toHaveBeenCalledTimes(1);
+      expect(result.current.tabState.tabs[0].path).toBe("/work/Mine.md");
+    });
+
+    it("takes the next number when two drafts of one name save together", async () => {
+      const written: string[] = [];
+      vi.mocked(fs.fileMtimeMs).mockImplementation(async (p) =>
+        written.includes(p) ? 7 : null,
+      );
+      vi.mocked(fs.writeTextFile).mockImplementation(async (p) => {
+        written.push(p);
+      });
+      const result = setup(draft, "/work");
+      act(() =>
+        result.current.tabState.setTabs([draft, { ...draft, id: "b" }]),
+      );
+      await act(async () => {
+        await Promise.all([
+          result.current.autosaveTab("a"),
+          result.current.autosaveTab("b"),
+        ]);
+      });
+      expect(written).toEqual(["/work/Trip plan.md", "/work/Trip plan 2.md"]);
+    });
   });
 
   it("keeps a file changed on disk unless the user chooses to overwrite", async () => {

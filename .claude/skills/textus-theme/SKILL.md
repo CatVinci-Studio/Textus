@@ -10,10 +10,11 @@ description: Author or modify a Textus editor theme - a Typora-compatible CSS fi
 They are different mechanisms and the distinction decides everything else.
 
 **The built-in look** is Textus's default (`src/theme/content-base.css` and the
-`--doc-*` defaults in `src/ui/base.css`); it is the only built-in theme. Every
-other look is a theme in the gallery (`textus-themes`) or a user's imported
-file. Paper, Slate, Forest and Parchment were withdrawn in 1.3.2; a setting
-naming one falls back to the default.
+`--doc-*` defaults in `src/ui/base.css`). Paper, Slate and Forest are built-in
+palettes over it (`src/theme/content-themes.css`, three blocks each: light,
+system dark, pinned dark; `--doc-*` only). Every other look is a theme in the
+gallery (`textus-themes`) or a user's imported file. Parchment was withdrawn
+in 1.3.2; a setting naming it falls back to the default.
 
 **Imported themes** are arbitrary Typora-compatible CSS files a user picks in
 Settings. They are read, inlined, and injected into a `<style>` tag at

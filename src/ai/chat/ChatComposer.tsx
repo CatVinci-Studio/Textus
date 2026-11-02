@@ -16,7 +16,7 @@ import {
   type PickerSkill,
 } from "./skill-picker";
 import { basename } from "../../utils/path";
-import { AGENT_MODES, type AgentMode } from "../../prefs/SettingsContext";
+import type { PanelMode } from "../../prefs/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -28,6 +28,7 @@ import {
 import { rememberDeepThinking } from "./deep-thinking";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
+import { FollowUpChips } from "./FollowUpChips";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 
 import { useComposerSkills } from "./useComposerSkills";
@@ -86,8 +87,10 @@ export function ChatComposer({
   onStop,
   onEscape,
   onModeChange,
+  onResearch,
+  researchControls,
   handle,
-  suggestion = null,
+  suggestions = [],
 }: ChatComposerProps) {
   const phone = usePhoneLayout();
   const picker = labels.picker ?? defaultPickerLabels();
@@ -120,7 +123,8 @@ export function ChatComposer({
     input,
     dismissedInput,
     lang: picker.lang,
-    mode,
+    // Research has no skills: the message is a paper's topic.
+    mode: mode === "research" ? null : mode,
   });
 
   // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
@@ -221,8 +225,15 @@ export function ChatComposer({
   /** The skill a typed /word names, by its name or any alias. */
   const resolveName = (token: string) => resolveSkillName(token, available);
 
-  function submit() {
-    const typed = input.trim();
+  /** Sends what is typed, or a suggested next message picked instead. */
+  function submit(text: string = input) {
+    const typed = text.trim();
+    if (mode === "research") {
+      if (!typed || busy || !onResearch) return;
+      setInput("");
+      onResearch(typed);
+      return;
+    }
     const message = resolveSkillMessage(typed, skills, resolveName);
     // While a reply is coming the message joins the queue.
     if (!message) return;
@@ -297,18 +308,26 @@ export function ChatComposer({
     if (e.key === "Escape") onEscape();
   }
 
-  // The suggested next message, while the box is empty.
-  const offered = !busy && input === "" ? suggestion : null;
+  // The suggested next messages, while the box is empty: the likeliest grey
+  // in it, all as buttons over it (not in Quick Ask's one-line box).
+  const followUps = !busy && input === "" ? suggestions : [];
+  const offered = followUps[0] ?? null;
 
-  const modeLabels: Record<AgentMode, [string, string]> = {
+  const modeLabels: Record<PanelMode, [string, string]> = {
     write: [labels.modeWrite, labels.modeWriteHint],
     review: [labels.modeReview, labels.modeReviewHint],
     create: [labels.modeCreate, labels.modeCreateHint],
+    research: [labels.modeResearch, labels.modeResearchHint],
   };
   // Quick Ask works on the selection: it writes or reviews, never creates.
-  const modes: ModeChoice[] = AGENT_MODES.filter(
-    (m) => !compact || m !== "create",
-  ).map((value) => ({
+  // Research is the panel's, where its paper is followed; it sits before
+  // Create, which makes things for the app rather than the document.
+  const modes: ModeChoice[] = [
+    "write" as const,
+    "review" as const,
+    ...(onResearch ? (["research"] as const) : []),
+    ...(compact ? [] : (["create"] as const)),
+  ].map((value) => ({
     value,
     label: modeLabels[value][0],
     hint: modeLabels[value][1],
@@ -367,6 +386,14 @@ export function ChatComposer({
           <span className="quick-ask-dock-actions">{dockActions}</span>
         </div>
       )}
+      {!compact && followUps.length > 0 && (
+        <FollowUpChips
+          suggestions={followUps}
+          label={labels.followUps}
+          holdFocus={phone}
+          onPick={submit}
+        />
+      )}
       <div className="inline-chat-bar">
         {attachError && (
           <div className="inline-chat-attach-error">{attachError}</div>
@@ -411,7 +438,9 @@ export function ChatComposer({
             placeholder={
               offered
                 ? `${offered}  (${labels.suggestionTab})`
-                : labels.placeholder
+                : mode === "research"
+                  ? labels.researchPlaceholder
+                  : labels.placeholder
             }
             value={input}
             onChange={(e) => {
@@ -427,7 +456,10 @@ export function ChatComposer({
             ) : (
               <ModePicker {...pickerProps} holdFocus={phone} />
             )}
-            {!compact && (
+            {/* A paper does its own research: no files, search or Deep
+                for it, only its own choices. */}
+            {mode === "research" && researchControls}
+            {!compact && mode !== "research" && (
               <>
                 <Tooltip text={labels.attachFile} side="above">
                   <button
@@ -522,7 +554,7 @@ export function ChatComposer({
             <button
               className="inline-chat-send"
               {...holdFocus}
-              onClick={busy ? onStop : submit}
+              onClick={busy ? onStop : () => submit()}
               disabled={!busy && !input.trim()}
             >
               {busy ? labels.stop : labels.send}

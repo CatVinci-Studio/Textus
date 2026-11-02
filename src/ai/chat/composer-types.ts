@@ -2,7 +2,7 @@ import type { ReactNode, RefObject } from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveStrings } from "../../i18n/strings";
 import { pickerLabels, type PickerLabels } from "./ComposerPicker";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 
 // What ChatComposer is given, apart from the component so the hooks and
 // windows that only pass these along needn't import it.
@@ -22,11 +22,15 @@ export interface ChatComposerHandle {
 export interface ChatComposerLabels {
   /** After a suggestion in the empty box: the key that takes it. */
   suggestionTab: string;
+  /** Accessible name of the suggested next messages' buttons, as a group. */
+  followUps: string;
   /** Accessible name of the selection chip's remove button. */
   dropSelection: string;
   /** The docked Quick Ask's context line when nothing is selected. */
   atCursor: string;
   placeholder: string;
+  /** The box in Research mode, where the message is a paper's topic. */
+  researchPlaceholder: string;
   send: string;
   /** Send button's label while a request is in flight - clicking it then
    *  stops the request instead of sending. */
@@ -46,10 +50,12 @@ export interface ChatComposerLabels {
   modeWrite: string;
   modeReview: string;
   modeCreate: string;
+  modeResearch: string;
   /** One line on what each mode does, under its name in the picker. */
   modeWriteHint: string;
   modeReviewHint: string;
   modeCreateHint: string;
+  modeResearchHint: string;
   /** Accessible name of the phone's segmented mode control, and the
    *  picker's heading over the modes. */
   modeLabel: string;
@@ -96,9 +102,9 @@ export function defaultPickerLabels(): PickerLabels {
 export const FILE_LIMIT = 30;
 
 export interface ChatComposerProps {
-  /** What the writer will probably say next: grey in the empty box, Tab
-   *  takes it. */
-  suggestion?: string | null;
+  /** What the writer will probably say next, most likely first: the first
+   *  grey in the empty box (Tab takes it), all as buttons that send it. */
+  suggestions?: string[];
   /** Resolves the agent workspace (skills) - re-loaded whenever it changes. */
   docPath: string | null;
   /** Explicit workspace root, or null for the document's own folder. Skills
@@ -152,5 +158,11 @@ export interface ChatComposerProps {
   onStop: () => void;
   onEscape: () => void;
   /** The mode as it is now, on the first render and on every switch. */
-  onModeChange?: (mode: AgentMode) => void;
+  onModeChange?: (mode: PanelMode) => void;
+  /** The panel: Research is offered, and a message sent in it is the
+   *  topic of a paper, handed here instead of to onSend. */
+  onResearch?: (topic: string) => void;
+  /** Research mode's choices (the paper's length), in the toolbar where
+   *  the other modes have their attach, search and Deep buttons. */
+  researchControls?: ReactNode;
 }

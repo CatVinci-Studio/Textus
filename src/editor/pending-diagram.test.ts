@@ -18,6 +18,7 @@ describe("splitMermaidFences", () => {
       { kind: "text", text: "Here:" },
       {
         kind: "diagram",
+        language: "mermaid",
         code: "flowchart LR\n  A --> B",
         raw: "```mermaid\nflowchart LR\n  A --> B\n```",
       },
@@ -31,6 +32,7 @@ describe("splitMermaidFences", () => {
     ).toEqual([
       {
         kind: "diagram",
+        language: "mermaid",
         code: "flowchart LR",
         raw: "```mermaid\nflowchart LR\n  A --> B[Fin",
       },
@@ -39,7 +41,18 @@ describe("splitMermaidFences", () => {
 
   it("has nothing to draw while only the opening line has arrived", () => {
     expect(splitMermaidFences("```mermaid")).toEqual([
-      { kind: "diagram", code: "", raw: "```mermaid" },
+      { kind: "diagram", language: "mermaid", code: "", raw: "```mermaid" },
+    ]);
+  });
+
+  it("cuts out a chart fence, with its language", () => {
+    expect(splitMermaidFences('```chart\n{"data": [1]}\n```')).toEqual([
+      {
+        kind: "diagram",
+        language: "chart",
+        code: '{"data": [1]}',
+        raw: '```chart\n{"data": [1]}\n```',
+      },
     ]);
   });
 

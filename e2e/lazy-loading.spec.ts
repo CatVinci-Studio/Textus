@@ -35,6 +35,7 @@ test("a window opens in its language with only that language's strings", async (
     now.filter((name) => name.startsWith("locale:") && name !== "locale:zh"),
   ).toEqual([]);
   expect(now).not.toContain("mermaid");
+  expect(now).not.toContain("chart");
   expect(now).not.toContain("katex");
 });
 
@@ -80,6 +81,25 @@ test("a diagram loads its engine when one is drawn", async ({ page }) => {
     ),
   ).toHaveCount(1, { timeout: 10_000 });
   expect(await loaded(page)).toContain("mermaid");
+});
+
+test("a chart loads its renderer, and not Mermaid, when one is drawn", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  expect(await loaded(page)).not.toContain("chart");
+  await pasteMarkdown(
+    page,
+    '```chart\n{"type": "bar", "labels": ["a", "b"], "data": [1, 2]}\n```\n\nEnd.',
+  );
+  await expect(
+    page.locator(
+      '[data-active-tab="true"] .ProseMirror .mermaid-preview > svg.textus-chart',
+    ),
+  ).toHaveCount(1, { timeout: 10_000 });
+  const now = await loaded(page);
+  expect(now).toContain("chart");
+  expect(now).not.toContain("mermaid");
 });
 
 test("an installed plugin starts, and its views load, only once it is needed", async ({
@@ -148,4 +168,21 @@ test("an installed plugin starts, and its views load, only once it is needed", a
   const after = await loaded(page);
   expect(after).toContain("plugin-webviews");
   expect(after).toContain("plugin:test.shout");
+});
+
+test("the paper agent's UI loads only when Research is picked", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", agentDefaultMode: "write" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const panel = page.locator(".agent-panel-view");
+  await expect(panel.getByRole("combobox", { name: /^Mode/ })).toBeVisible();
+  expect(await loaded(page)).not.toContain("paper");
+  // Research mode picks the paper's length beside the mode.
+  await panel.getByRole("combobox", { name: /^Mode/ }).click();
+  await page.getByRole("option", { name: "Research" }).click();
+  await expect.poll(() => loaded(page)).toContain("paper");
+  await expect(page.getByLabel("Length")).toBeVisible();
 });

@@ -56,7 +56,7 @@ function App() {
     shell.panels;
   const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =
     shell.panels;
-  const { sheetFull, setSheetFull, panelMode, setPanelMode } = shell.panels;
+  const { panelMode, setPanelMode } = shell.panels;
   const { activeTab, activeTitle, activeDirty, featuresPaused, wordCount } =
     docs;
   const { openFolder, openFile, openFileDialog, handleChange } = docs;
@@ -178,11 +178,8 @@ function App() {
           <AgentPanelDock
             presence={agentPresence}
             closing={agentClosing}
-            sheetFull={sheetFull}
-            onSheetFullChange={setSheetFull}
             width={agentPanel.width}
             onResize={agentPanel.setWidth}
-            onClose={() => agentPanel.setOpen(false)}
             mountRef={setAgentPanelEl}
             sourceMode={!!activeTab.sourceMode}
             onToggleSourceMode={toggleSourceMode}

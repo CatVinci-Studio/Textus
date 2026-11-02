@@ -1,3 +1,5 @@
+import { drawAllBlocks } from "./lazy-blocks/lazy-blocks-drawer";
+
 // Drawing deferred until it is near the screen: drawing every formula of a
 // long document is much of what opening it costs. An export or print draws
 // everything still waiting first.
@@ -78,11 +80,13 @@ export function registerDrawAll(
   else drawAllers.delete(editorDom);
 }
 
-/** Draws everything in `root` still waiting, for an export or print. */
+/** Draws everything in `root` still waiting, for an export or print: a
+ *  long document's blocks out of sight first, then what is in them. */
 export async function drawEverything(root: Element): Promise<void> {
   const editor = root.matches(".ProseMirror")
     ? root
     : root.querySelector(".ProseMirror");
+  if (editor) drawAllBlocks(editor);
   const drawAll = editor && drawAllers.get(editor);
   if (drawAll) await drawAll();
   root.querySelectorAll(`[${PENDING_ATTR}]`).forEach(drawNow);

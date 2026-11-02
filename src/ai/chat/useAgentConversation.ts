@@ -485,13 +485,16 @@ export function useAgentConversation(
     error,
     retryable,
     lastOptions: () => lastOptionsRef.current,
-    /** What the writer will probably say next. */
-    suggestion: next.suggestion,
+    /** What the writer will probably say next, most likely first. */
+    suggestions: next.suggestions,
     send,
     stop,
     retry,
     reset,
     restore,
+    /** Adds turns made outside a request (a paper's card and proposal) to
+     *  the end of the history; a request in flight is left alone. */
+    append: (turns: AgentTurn[]) => setHistory((prev) => [...prev, ...turns]),
   };
 }
 

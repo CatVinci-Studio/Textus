@@ -153,6 +153,13 @@ describe("the View menu's on/off items", () => {
     );
   });
 
+  it("head the phone's menu with the word count when the title row has no room for it", () => {
+    const t = resolveStrings("en");
+    const [first] = buildMobileMenu(t, { words: 49 });
+    expect(first).toEqual({ label: `49 ${t.wordsUnit}`, disabled: true });
+    expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuDocuments });
+  });
+
   it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {
     const plugins = [{ label: "New Quick Note…", command: "notes.new" }];
     const phone = flatten(buildMobileMenu(t, {}, plugins));

@@ -5,12 +5,14 @@ pub mod catalog;
 pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
+pub mod doc_title;
 pub mod images;
 pub mod kept_proposals;
 #[cfg(test)]
 mod live_eval;
 pub mod memory;
 pub mod next_message;
+pub mod paper;
 pub mod project;
 pub mod route;
 pub mod rules;

@@ -5,7 +5,7 @@
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 
-pub(super) struct Tag {
+pub(crate) struct Tag {
     pub name: String,
     attrs: Vec<(String, String)>,
 }
@@ -27,14 +27,14 @@ impl Tag {
     }
 }
 
-pub(super) enum Node {
+pub(crate) enum Node {
     Open(Tag),
     Close,
     Text(String),
     End,
 }
 
-pub(super) struct Pull<'a> {
+pub(crate) struct Pull<'a> {
     reader: Reader<&'a [u8]>,
     /// The Close owed for an empty element, handed out by the next `next`.
     owed_close: bool,

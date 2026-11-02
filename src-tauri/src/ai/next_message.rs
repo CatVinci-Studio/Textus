@@ -1,16 +1,20 @@
-//! What the writer will probably say next in a conversation, offered grey in
-//! the empty message box after each reply. One short request to the
-//! conversation's model.
+//! What the writer will probably say next in a conversation, after each
+//! reply: the first grey in the empty message box, all of them as buttons
+//! over it. One short request to the conversation's model. The list is read
+//! by `useNextMessage` (src/ai/chat/next-message.ts).
 
 use crate::ai::memory::Exchange;
 
-const INSTRUCTIONS: &str = "You predict the next message a writer will send to their writing assistant, from the conversation so far. Write that one message as they would type it: short (at most 15 words, or 30 characters in Chinese or Japanese), in the language they write their messages in, plain text with no quotes. Make it the natural next step - go on with the next part, change something in what was just done, or a follow-up question - never a thank-you or a goodbye, and never asking again for what the assistant just did: what it wrote or changed is already in the document. If there is no clear next step, answer NONE.";
+const INSTRUCTIONS: &str = "You predict the next message a writer will send to their writing assistant, from the conversation so far. Give up to three different ones, one per line, most likely first, each as they would type it: short (at most 6 words, or 15 characters in Chinese or Japanese), in the language they write their messages in, plain text with no quotes or numbering. Make each a concrete next step on their document - go on with the next part, change something in what was just done, or a follow-up question - never a thank-you or a goodbye, and never asking again for what the assistant just did: what it wrote or changed is already in the document. If there is no clear next step, answer NONE.";
 
 /// The last few messages are enough to see where the conversation goes.
 const MESSAGES_SENT: usize = 4;
 
 /// A suggestion longer than this isn't a message the writer would type.
 const LONGEST: usize = 80;
+
+/// As many as fit as buttons over the message box.
+const MOST: usize = 3;
 
 fn input(exchange: &Exchange) -> String {
     let start = exchange.messages.len().saturating_sub(MESSAGES_SENT);
@@ -19,7 +23,7 @@ fn input(exchange: &Exchange) -> String {
         text.push_str(&format!("- {}\n", clip(message, 600)));
     }
     text.push_str(&format!(
-        "\nThe assistant's reply to the last one (what it wrote or changed is already in the document):\n{}\n\nTheir next message:",
+        "\nThe assistant's reply to the last one (what it wrote or changed is already in the document):\n{}\n\nTheir next messages:",
         clip(&exchange.reply, 1500)
     ));
     text
@@ -33,12 +37,20 @@ fn clip(text: &str, chars: usize) -> String {
     }
 }
 
-/// The model's answer as one message to offer, or None: NONE, nothing,
+/// One line of the answer as a message to offer, or None: NONE, nothing,
 /// or something too long to be a typed message.
-pub(crate) fn suggestion(answer: &str) -> Option<String> {
-    let line = answer.lines().map(str::trim).find(|l| !l.is_empty())?;
+fn suggestion(line: &str) -> Option<String> {
     let line = line
-        .trim_start_matches(['-', '*', '>'])
+        .trim()
+        .trim_start_matches(['-', '*', '>', '•'])
+        .trim_start();
+    // "1." / "2)" numbering, which the model adds despite being asked not to.
+    let digits = line.len() - line.trim_start_matches(|c: char| c.is_ascii_digit()).len();
+    let line = match line[digits..].strip_prefix(['.', ')', '、']) {
+        Some(rest) if digits > 0 => rest,
+        _ => line,
+    };
+    let line = line
         .trim()
         .trim_matches(['"', '\'', '“', '”', '「', '」', '`'])
         .trim();
@@ -48,7 +60,25 @@ pub(crate) fn suggestion(answer: &str) -> Option<String> {
     Some(line.to_string())
 }
 
-/// The message the writer will probably send next, or None.
+/// The model's answer as up to three different messages, most likely first.
+pub(crate) fn suggestions(answer: &str) -> Vec<String> {
+    let mut found: Vec<String> = Vec::new();
+    for line in answer.lines().filter_map(suggestion) {
+        if !found
+            .iter()
+            .any(|f| f.to_lowercase() == line.to_lowercase())
+        {
+            found.push(line);
+        }
+        if found.len() == MOST {
+            break;
+        }
+    }
+    found
+}
+
+/// The messages the writer will probably send next, most likely first;
+/// empty when there is no clear next step.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn suggest_next_message(
@@ -56,10 +86,10 @@ pub async fn suggest_next_message(
     provider: String,
     model: Option<String>,
     exchange: Exchange,
-) -> Result<Option<String>, String> {
+) -> Result<Vec<String>, String> {
     crate::ai::ensure_on(&app)?;
     if exchange.messages.is_empty() || exchange.reply.trim().is_empty() {
-        return Ok(None);
+        return Ok(Vec::new());
     }
     let answer = crate::ai::client::call(
         &app,
@@ -69,7 +99,7 @@ pub async fn suggest_next_message(
         model.as_deref(),
     )
     .await?;
-    Ok(suggestion(&answer))
+    Ok(suggestions(&answer))
 }
 
 #[cfg(test)]
@@ -77,10 +107,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_answer_is_one_short_message_or_nothing() {
+    fn each_line_is_one_short_message_or_nothing() {
         assert_eq!(suggestion("继续写第三章").as_deref(), Some("继续写第三章"));
         assert_eq!(
-            suggestion("\n\"Make the ending darker\"\n").as_deref(),
+            suggestion("\"Make the ending darker\"").as_deref(),
             Some("Make the ending darker")
         );
         assert_eq!(
@@ -91,9 +121,26 @@ mod tests {
             suggestion("- Translate it into French").as_deref(),
             Some("Translate it into French")
         );
+        assert_eq!(
+            suggestion("2. Add a summary at the top").as_deref(),
+            Some("Add a summary at the top")
+        );
+        assert_eq!(suggestion("1、缩短这一节").as_deref(), Some("缩短这一节"));
+        assert_eq!(suggestion("3D charts").as_deref(), Some("3D charts"));
         assert_eq!(suggestion("NONE"), None);
         assert_eq!(suggestion("   "), None);
         assert_eq!(suggestion(&"很长".repeat(50)), None);
+    }
+
+    #[test]
+    fn the_answer_is_up_to_three_different_messages() {
+        assert_eq!(
+            suggestions("\n1. Shorten this section\n2. Add a summary at the top\n\n- shorten this section\n3. Fix the title\n4. Translate it"),
+            ["Shorten this section", "Add a summary at the top", "Fix the title"]
+        );
+        assert_eq!(suggestions("继续写第三章"), ["继续写第三章"]);
+        assert!(suggestions("NONE").is_empty());
+        assert!(suggestions("").is_empty());
     }
 
     #[test]

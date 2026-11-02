@@ -52,9 +52,9 @@ export function useSidePanels(aiOn: boolean) {
   );
   const sidebarWidth = useSidebarWidth(windowWidth);
   const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
-  // On a phone, the document gives up focus here and the sheet's input
+  // On a phone, the document gives up focus here and the AI page's input
   // doesn't take it, so the keyboard goes away in one movement. With the
-  // keyboard up, the sheet rises once it has gone, or its top jumps.
+  // keyboard up, the page comes once it has gone, or its bottom jumps.
   const pendingAgentOpen = useRef<(() => void) | null>(null);
   const setAgentOpen = agentPanel.setOpen;
   useEffect(() => {
@@ -90,24 +90,6 @@ export function useSidePanels(aiOn: boolean) {
   // What the find bar and the tutorial card keep clear of on the right.
   const dockedWidth = agentPresence.mounted && !isIOSApp ? agentPanel.width : 0;
   useLayoutEffect(() => setDockedPanelWidth(dockedWidth), [dockedWidth]);
-  // The phone's AI sheet leaves where it stood: as the keyboard goes, the
-  // web view grows and the sheet's top would jump.
-  useLayoutEffect(() => {
-    const sheet = document.querySelector<HTMLElement>("aside.agent-panel");
-    if (!isIOSApp || !sheet) return;
-    if (!agentClosing) {
-      for (const prop of ["top", "bottom", "height"])
-        sheet.style.removeProperty(prop);
-      return;
-    }
-    if (getComputedStyle(sheet).position !== "fixed") return;
-    const box = sheet.getBoundingClientRect();
-    sheet.style.top = `${box.top}px`;
-    sheet.style.bottom = "auto";
-    sheet.style.height = `${box.height}px`;
-  }, [agentClosing]);
-  // iPhone: whether the AI bottom sheet is pulled up to full height.
-  const [sheetFull, setSheetFull] = useState(false);
   // Remembered on the desktop like the open state; on iOS it starts on
   // Files.
   const [panelMode, setPanelMode] = useState<PanelMode>(() =>
@@ -130,8 +112,6 @@ export function useSidePanels(aiOn: boolean) {
     sidebarClosing,
     agentPresence,
     agentClosing,
-    sheetFull,
-    setSheetFull,
     panelMode,
     setPanelMode,
   };

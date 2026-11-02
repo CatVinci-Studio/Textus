@@ -1,10 +1,18 @@
 /** What a download adds to, where it goes, and the totals the catalogs
  *  read. No request is kept: only these counts. */
 
-const PLUGINS =
-  "https://github.com/CatVinci-Studio/textus-plugins/releases/download/";
-const THEMES =
-  "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/";
+const GITHUB = {
+  plugins:
+    "https://github.com/CatVinci-Studio/textus-plugins/releases/download/",
+  themes:
+    "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/",
+};
+/** Textus's own site, which passes the same files on (via=site; older
+ *  versions of the app go to GitHub). */
+const SITE = {
+  plugins: "https://textus.catvinci.com/plugin-release/",
+  themes: "https://textus.catvinci.com/theme-gallery/themes/",
+};
 
 const KINDS = ["plugin", "theme", "skill"] as const;
 const EVENTS = ["install", "reinstall", "update"] as const;
@@ -64,13 +72,14 @@ export function packageUrl(fields: Fields): string | null {
   const id = text(fields, "id");
   const version = text(fields, "version");
   if (!kind || !validId(kind, id)) return null;
+  const base = text(fields, "via") === "site" ? SITE : GITHUB;
   if (kind === "plugin")
     return SEMVER.test(version)
-      ? `${PLUGINS}${id}-v${version}/${id}-${version}.zip`
+      ? `${base.plugins}${id}-v${version}/${id}-${version}.zip`
       : null;
-  if (kind === "skill") return `${PLUGINS}catalog/skill-${id}.md`;
+  if (kind === "skill") return `${base.plugins}catalog/skill-${id}.md`;
   const file = text(fields, "file") || "theme.css";
-  return CSS_FILE.test(file) ? `${THEMES}${id}/${file}` : null;
+  return CSS_FILE.test(file) ? `${base.themes}${id}/${file}` : null;
 }
 
 /** The download `fields` count as, or null for a malformed one. */

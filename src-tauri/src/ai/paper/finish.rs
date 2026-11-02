@@ -1,0 +1,371 @@
+//! What turns reviewed sections into a paper: a title and an abstract above
+//! them, every figure numbered and captioned in reading order, and the list
+//! of the sources the text cites below them, in the paper's language.
+
+use super::draft::WEB_FIGURE_MARK;
+use super::research::Model;
+use super::{Dossier, Outline, Paper};
+use aicompat::agent::{AgentTurn, StepResult};
+use regex::Regex;
+use serde_json::Value;
+use std::sync::OnceLock;
+
+/// The words a paper's apparatus is labelled with, by the language it is
+/// written in: abstract, references, figure.
+fn words(language: &str) -> (&'static str, &'static str, &'static str) {
+    let lang = language.to_lowercase();
+    let traditional = ["zh-hant", "zh-tw", "zh-hk", "zh-mo"]
+        .iter()
+        .any(|t| lang.starts_with(t));
+    match lang.split(['-', '_']).next().unwrap_or("") {
+        "zh" if traditional => ("摘要", "參考文獻", "圖"),
+        "zh" => ("摘要", "参考文献", "图"),
+        "ja" => ("要旨", "参考文献", "図"),
+        "ko" => ("초록", "참고문헌", "그림"),
+        "es" => ("Resumen", "Referencias", "Figura"),
+        "fr" => ("Résumé", "Références", "Figure"),
+        "de" => ("Zusammenfassung", "Literatur", "Abbildung"),
+        "ru" => ("Аннотация", "Литература", "Рисунок"),
+        "pt" => ("Resumo", "Referências", "Figura"),
+        _ => ("Abstract", "References", "Figure"),
+    }
+}
+
+/// A figure's caption line: "图 3　…" in Chinese and Japanese, else
+/// "Figure 3. …".
+fn caption(language: &str, n: usize, text: &str) -> String {
+    let (_, _, figure) = words(language);
+    let cjk = ["zh", "ja"]
+        .iter()
+        .any(|l| language.to_lowercase().starts_with(l));
+    let text = text.trim();
+    match (cjk, text.is_empty()) {
+        (_, true) => format!("*{figure} {n}*"),
+        (true, false) => format!("*{figure} {n}　{text}*"),
+        (false, false) => format!("*{figure} {n}. {text}*"),
+    }
+}
+
+fn picture_line() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"^\s*!\[([^\]]*)\]\(textus-(?:picture|generated):").unwrap())
+}
+
+fn cited() -> &'static Regex {
+    super::draft::cited_link()
+}
+
+/// `sections` with a numbered caption under every figure, counted through
+/// the whole paper: a diagram or chart block, a picture line, a web-picture
+/// mark. A chart's caption or title, a picture's alt text and a mark's
+/// description say what it shows. Returns how many there are.
+pub(crate) fn number_figures(sections: &mut [String], language: &str) -> usize {
+    let mut n = 0;
+    for section in sections.iter_mut() {
+        let mut out: Vec<String> = Vec::new();
+        let mut fence: Option<(String, String)> = None;
+        for line in section.lines() {
+            out.push(line.to_string());
+            let trimmed = line.trim_start();
+            match fence.take() {
+                None if trimmed.starts_with("```") => {
+                    fence = Some((
+                        trimmed.trim_start_matches('`').trim().to_lowercase(),
+                        String::new(),
+                    ));
+                }
+                None => {
+                    let shows = if let Some(c) = picture_line().captures(line) {
+                        Some(c[1].to_string())
+                    } else {
+                        trimmed
+                            .strip_prefix(WEB_FIGURE_MARK)
+                            .map(|rest| rest.trim_end_matches("-->").to_string())
+                    };
+                    if let Some(shows) = shows {
+                        n += 1;
+                        out.push(String::new());
+                        out.push(caption(language, n, &shows));
+                    }
+                }
+                Some((lang, _)) if trimmed.starts_with("```") => {
+                    if lang == "mermaid" || lang == "chart" {
+                        let mut spec: Value =
+                            serde_json::from_str(&fence_body(&out)).unwrap_or_default();
+                        let shows = spec["caption"]
+                            .as_str()
+                            .or(spec["title"].as_str())
+                            .unwrap_or("")
+                            .to_string();
+                        // The caption goes under the chart, numbered, and
+                        // only there: drawn in it too, it said it twice.
+                        if let Some(map) = spec.as_object_mut() {
+                            if map.remove("caption").is_some() {
+                                without_body(&mut out);
+                                out.insert(out.len() - 1, spec.to_string());
+                            }
+                        }
+                        n += 1;
+                        out.push(String::new());
+                        out.push(caption(language, n, &shows));
+                    }
+                }
+                Some((lang, mut body)) => {
+                    body.push_str(line);
+                    fence = Some((lang, body));
+                }
+            }
+        }
+        *section = out.join("\n");
+    }
+    n
+}
+
+/// `out` with the body of the fence it has just closed taken out, the
+/// fences left.
+fn without_body(out: &mut Vec<String>) {
+    let close = out.len() - 1;
+    let open = out[..close]
+        .iter()
+        .rposition(|l| l.trim_start().starts_with("```"))
+        .unwrap_or(close);
+    out.drain(open + 1..close);
+}
+
+/// The body of the fence `out` has just closed: its lines between the
+/// opening and the closing fence.
+fn fence_body(out: &[String]) -> String {
+    let close = out.len() - 1;
+    let open = out[..close]
+        .iter()
+        .rposition(|l| l.trim_start().starts_with("```"))
+        .unwrap_or(close);
+    out[open + 1..close].join("\n")
+}
+
+/// A source as the reference list gives it after its number: its title
+/// and address, or a library file's path.
+pub(crate) fn entry(s: &aicompat::agent::Source) -> String {
+    if let Some(path) = super::research::reference_path(&s.url) {
+        let title = if s.title.trim().is_empty() {
+            &path
+        } else {
+            &s.title
+        };
+        return format!("{}. `{path}`", title.trim().trim_end_matches('.'));
+    }
+    let title = s.title.trim().trim_end_matches('.');
+    if title.is_empty() || title == s.url {
+        format!("<{}>", s.url)
+    } else {
+        format!("{title}. <{}>", s.url)
+    }
+}
+
+/// The reference list's heading in `language`.
+pub(crate) fn references_heading(language: &str) -> &'static str {
+    words(language).1
+}
+
+/// `sections`' citations numbered 1, 2, … in the order the paper first
+/// cites them, and the dossier's sources numbered to match: the research
+/// numbers every source it saw, so a paper citing a few of them read
+/// [93][248]. Sources it doesn't cite are left out.
+pub(crate) fn number_citations(sections: &mut [String], dossier: &Dossier) -> Dossier {
+    let mut order: Vec<u32> = Vec::new();
+    for section in sections.iter_mut() {
+        *section = cited()
+            .replace_all(section, |c: &regex::Captures| {
+                let n: u32 = c[1].parse().unwrap_or(0);
+                if !dossier.sources.iter().any(|s| s.n == n) {
+                    return c[0].to_string();
+                }
+                let k = match order.iter().position(|m| *m == n) {
+                    Some(i) => i + 1,
+                    None => {
+                        order.push(n);
+                        order.len()
+                    }
+                };
+                format!("[{k}]({})", &c[2])
+            })
+            .into_owned();
+    }
+    let sources = order
+        .iter()
+        .enumerate()
+        .filter_map(|(i, n)| {
+            let mut source = dossier.sources.iter().find(|s| s.n == *n)?.clone();
+            source.n = i as u32 + 1;
+            Some(source)
+        })
+        .collect();
+    Dossier {
+        notes: dossier.notes.clone(),
+        sources,
+    }
+}
+
+/// The sources `sections` cite, as the list that ends the paper: each by its
+/// number, in number order, with its title and address. None when nothing is
+/// cited.
+pub(crate) fn references(sections: &[String], dossier: &Dossier, language: &str) -> Option<String> {
+    let mut numbers: Vec<u32> = sections
+        .iter()
+        .flat_map(|s| {
+            cited()
+                .captures_iter(s)
+                .filter_map(|c| c[1].parse().ok())
+                .collect::<Vec<u32>>()
+        })
+        .collect();
+    numbers.sort_unstable();
+    numbers.dedup();
+    let lines: Vec<String> = numbers
+        .iter()
+        .filter_map(|n| dossier.sources.iter().find(|s| s.n == *n))
+        .map(|s| format!("\\[{}\\] {}", s.n, entry(s)))
+        .collect();
+    if lines.is_empty() {
+        return None;
+    }
+    let (_, heading, _) = words(language);
+    Some(format!("## {heading}\n\n{}", lines.join("\n\n")))
+}
+
+/// The paper's title and abstract, from one tool-less step over the
+/// finished sections; the topic as the title, and no abstract, when the
+/// reply can't be read.
+pub(crate) async fn opening(
+    model: &dyn Model,
+    paper: &Paper,
+    outline: &Outline,
+    sections: &[String],
+) -> String {
+    let (abstract_word, _, _) = words(&paper.language);
+    let instructions = format!(
+        "You write the title and the abstract of a finished paper, in the language tagged \"{}\". The title is specific and says what the paper finds or argues, not only its topic. The abstract, one paragraph of about 150-250 words (or 250-400 characters in Chinese or Japanese), states the question, the approach, the main findings with their key figures, and what follows from them - from the paper's text only, without citations. Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
+        paper.language
+    );
+    let message = format!("Thesis: {}\n\n{}", outline.thesis, sections.join("\n\n"));
+    let reply = match model
+        .step(
+            &instructions,
+            &[AgentTurn::User {
+                text: message,
+                images: Vec::new(),
+            }],
+            &[],
+        )
+        .await
+    {
+        Ok(StepResult::Done(text)) => text,
+        _ => String::new(),
+    };
+    let parsed: Value = reply
+        .find('{')
+        .zip(reply.rfind('}'))
+        .and_then(|(a, b)| serde_json::from_str(reply.get(a..=b)?).ok())
+        .unwrap_or_default();
+    let field = |key: &str| {
+        parsed[key]
+            .as_str()
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+    };
+    let title = field("title").unwrap_or(paper.topic.trim());
+    let cjk = ["zh", "ja", "ko"]
+        .iter()
+        .any(|l| paper.language.to_lowercase().starts_with(l));
+    match field("abstract") {
+        Some(text) if cjk => format!("# {title}\n\n**{abstract_word}**：{text}"),
+        Some(text) => format!("# {title}\n\n**{abstract_word}:** {text}"),
+        None => format!("# {title}"),
+    }
+}
+
+/// `section` with each citation `[n](address)` as `[n]` in the paper's
+/// numbering, linked to its entry in the reference list (`#ref-n`, which
+/// the editor finds by the entry's leading `[n]`). The brackets are escaped
+/// so they stay text. Inside a code block it is a bare `[n]`, since there a
+/// backslash is no escape: in a chart's JSON `\[` is invalid and the chart
+/// isn't drawn.
+pub(crate) fn plain_citations(section: &str) -> String {
+    let mut in_fence = false;
+    let lines: Vec<String> = section
+        .split('\n')
+        .map(|line| {
+            if line.trim_start().starts_with("```") {
+                in_fence = !in_fence;
+                return line.to_string();
+            }
+            let plain = if in_fence {
+                "[$1]"
+            } else {
+                r"[\[$1\]](#ref-$1)"
+            };
+            cited_number().replace_all(line, plain).into_owned()
+        })
+        .collect();
+    lines.join("\n")
+}
+
+fn cited_number() -> &'static Regex {
+    super::draft::cited_link()
+}
+
+/// The whole paper: its opening, its sections and its reference list, one
+/// after another.
+pub(crate) fn assemble(opening: &str, sections: &[String], references: Option<&str>) -> String {
+    let mut parts: Vec<&str> = vec![opening];
+    parts.extend(sections.iter().map(String::as_str));
+    parts.extend(references);
+    parts
+        .iter()
+        .map(|p| p.trim())
+        .filter(|p| !p.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
+/// `section` without its picture lines: what is left when no image model
+/// is set.
+pub(crate) fn without_pictures(section: &str) -> String {
+    let kept: Vec<&str> = section
+        .lines()
+        .filter(|l| !picture_line().is_match(l))
+        .collect();
+    let mut text = kept.join("\n");
+    while text.contains("\n\n\n") {
+        text = text.replace("\n\n\n", "\n\n");
+    }
+    text
+}
+
+/// The DOI an address names, for a doi.org link.
+fn doi_of(url: &str) -> Option<&str> {
+    let rest = url.split_once("doi.org/")?.1;
+    (rest.starts_with("10.")).then_some(rest)
+}
+
+/// `dossier`'s sources cited by their address alone given a title, so the
+/// reference list names them: a DOI's work, with its authors, from OpenAlex;
+/// a page's own title, read as web_fetch reads it.
+pub(crate) async fn title_sources(dossier: &mut Dossier) {
+    for source in &mut dossier.sources {
+        if !source.title.trim().is_empty() && source.title != source.url {
+            continue;
+        }
+        let address = percent_encoding::percent_decode_str(&source.url)
+            .decode_utf8_lossy()
+            .into_owned();
+        let title = match doi_of(&address) {
+            Some(doi) => crate::ai::web::doi_title(doi).await,
+            None if address.starts_with("http") => crate::ai::web::page_title(&address).await,
+            None => None,
+        };
+        if let Some(title) = title {
+            source.title = title;
+        }
+    }
+}

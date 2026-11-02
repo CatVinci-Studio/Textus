@@ -3,6 +3,7 @@ import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
 import {
   canPickFolder,
   canRevealInFileManager,
+  isDesktopApp,
 } from "../../../platform/capabilities";
 import { useSettings } from "../../../prefs/SettingsContext";
 import { useActiveProvider } from "../../provider-catalog";
@@ -206,6 +207,20 @@ export function ProjectBar({
       setMessage(t.projectStyleLearned);
     });
 
+  const importReferences = (folder: boolean) =>
+    run(t.projectImportingReferences, async () => {
+      const done = await ai.importReferences(docPath, workspaceRoot, folder);
+      if (!done) return;
+      setMessage(
+        (done.skipped > 0
+          ? t.projectReferencesImportedSkipped
+          : t.projectReferencesImported
+        )
+          .replace("{n}", String(done.imported))
+          .replace("{skipped}", String(done.skipped)),
+      );
+    });
+
   const openStyle = () =>
     run(t.projectOpening, async () => {
       openInTab(
@@ -361,6 +376,20 @@ export function ProjectBar({
       },
     },
     { label: t.projectEditInstructions, onSelect: openInstructions },
+    "separator",
+    {
+      label: t.projectImportReferences,
+      onSelect: () => void importReferences(false),
+    },
+    // The folder picker this uses is the desktop dialog's.
+    ...(isDesktopApp
+      ? [
+          {
+            label: t.projectImportReferenceFolder,
+            onSelect: () => void importReferences(true),
+          },
+        ]
+      : []),
   ];
   // iOS: the app's own Documents folder is "Textus" in the Files app, and
   // "Documents" was English in every language.

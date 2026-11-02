@@ -44,8 +44,8 @@ use commands::drafts::{
 use commands::export::export_save_dialog;
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
-    open_image_file_dialog, read_binary_file_base64, read_text_file, save_file_dialog,
-    save_pasted_image, write_text_file,
+    open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
+    save_file_dialog, save_pasted_image, save_settings_file_dialog, write_text_file,
 };
 use commands::image_host::upload_image;
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};
@@ -255,6 +255,8 @@ pub fn run() {
             commands::recents::add_recent_file,
             open_file_dialog,
             open_css_file_dialog,
+            open_settings_file_dialog,
+            save_settings_file_dialog,
             open_image_file_dialog,
             save_file_dialog,
             list_dir,
@@ -285,6 +287,10 @@ pub fn run() {
             ai_grammar_check,
             ai_agent_message,
             ai_cancel,
+            crate::ai::paper::ai_paper_run,
+            crate::ai::paper::ai_paper_save_outline,
+            crate::ai::paper::ai_paper_draft,
+            crate::ai::paper::ai_paper_status,
             fetch_agent_models,
             set_ai_proxy,
             crate::ai::catalog::list_providers,
@@ -314,6 +320,7 @@ pub fn run() {
             crate::ai::project::read_project_file,
             crate::ai::project::ensure_project_file,
             crate::ai::project::pick_text_files,
+            crate::ai::project::import_references_picked,
             crate::ai::project::learn_style,
             crate::ai::project::library_use,
             crate::ai::memory::memory_undo,
@@ -325,6 +332,7 @@ pub fn run() {
             crate::ai::memory::save_offered_skill,
             crate::ai::memory::ai_offer_skill,
             crate::ai::next_message::suggest_next_message,
+            crate::ai::doc_title::suggest_doc_title,
             crate::ai::memory::revision_choices_read,
             crate::ai::memory::revision_choices_write,
             crate::ai::kept_proposals::kept_proposals_read,

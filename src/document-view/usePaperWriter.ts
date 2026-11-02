@@ -1,0 +1,299 @@
+import { useCallback, useEffect, useRef } from "react";
+import { AI_CANCELLED, ai } from "../platform/ipc";
+import { errorText } from "../utils/error-text";
+import { imageModelOf } from "../ai/image-models";
+import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
+import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { EditorRunner } from "../editor/useEditorRunner";
+import type { GeneratedImageData } from "../platform/ipc";
+import type { Settings } from "../prefs/SettingsContext";
+import type { Strings } from "../i18n/strings";
+import type { Outline, PaperProgress } from "../platform/bindings/ai-paper";
+import {
+  applyPaperEvent,
+  newPaperId,
+  paperCardTurns,
+  paperLanguage,
+  paperRun,
+  paperWrittenTurns,
+  clearPaperActions,
+  setPaperActions,
+  updatePaperRun,
+} from "../ai/paper/paper-store";
+import { withoutPictures } from "../ai/paper/paper-document";
+import { usePaperDocument } from "./usePaperDocument";
+
+/**
+ * Research mode's paper: researches and outlines a paper on a topic, waits
+ * on its card for the user to approve the outline, then writes it straight
+ * into the document as it is drafted, with nothing to accept
+ * (docs/design/ai-paper.md). Its progress lives in the paper store; the
+ * conversation keeps its card.
+ */
+export function usePaperWriter({
+  run,
+  conversation,
+  storePicture,
+  agentPanel,
+  settings,
+  filePath,
+  isActive,
+  t,
+}: {
+  run: EditorRunner;
+  conversation: AgentConversation;
+  /** Saves a picture beside the document (useEditorProposals). */
+  storePicture: (
+    image: GeneratedImageData,
+    alt: string,
+  ) => Promise<string | null>;
+  agentPanel: ReturnType<typeof useAgentPanel>;
+  settings: Settings;
+  filePath: string | null;
+  /** This editor's tab is showing: its conversation's cards are on show. */
+  isActive: boolean;
+  t: Strings;
+}) {
+  const paperDocument = usePaperDocument(run, storePicture);
+  // Read when a step starts, so a run picks up the settings of its moment.
+  const latest = useRef({ settings, filePath, conversation, t, paperDocument });
+  latest.current = { settings, filePath, conversation, t, paperDocument };
+  // Each card's request in flight, to stop it.
+  const requests = useRef(new Map<string, string>());
+
+  /** What every paper command is sent with. */
+  const common = () => {
+    const { settings: s, filePath: docPath } = latest.current;
+    return {
+      provider: s.aiProvider,
+      model: s.agentModels[s.aiProvider] || null,
+      docPath,
+      workspaceRoot: s.agentWorkspaceRoot || null,
+      imageModel: imageModelOf(s),
+    };
+  };
+
+  /** A run that ended short: paused by the user, or failed. What was
+   *  written stays, as text of the user's own, and what was kept on disk
+   *  is gone on from with Continue. */
+  const fail = (key: string, err: unknown) => {
+    requests.current.delete(key);
+    latest.current.paperDocument.settle(key);
+    const paused = errorText(err) === AI_CANCELLED;
+    updatePaperRun(key, () => ({
+      error: paused ? null : errorText(err),
+      paused,
+      approving: false,
+    }));
+  };
+
+  /** Researches and outlines paper `key`, or goes on with what it kept. */
+  const research = useCallback(
+    (key: string, topic: string, targetChars: number) => {
+      const { settings: s } = latest.current;
+      const requestId = crypto.randomUUID();
+      requests.current.set(key, requestId);
+      void ai
+        .paperRun(
+          {
+            ...common(),
+            searchService: s.searchService,
+            searxngUrl: s.searxngUrl || null,
+            requestId,
+            id: key,
+            topic,
+            language: paperLanguage(topic, s.language),
+            targetChars,
+          },
+          (event) => applyPaperEvent(key, event),
+        )
+        .then((paper) => {
+          requests.current.delete(key);
+          updatePaperRun(key, () => ({ paperId: paper.id }));
+        })
+        .catch((err) => fail(key, err));
+      // `common` and `fail` read refs only.
+    },
+    [],
+  );
+
+  /** Drafts paper `key` from its approved outline once `ready` resolves,
+   *  writing it into the document as it comes; to true when it was begun
+   *  before, so what was written of it is taken back, not written twice. */
+  const draft = useCallback(
+    (key: string, id: string, ready: Promise<boolean>) => {
+      const base = common();
+      const requestId = crypto.randomUUID();
+      requests.current.set(key, requestId);
+      void ready
+        .then((goingOn) => {
+          latest.current.paperDocument.begin(key, goingOn);
+          return ai.paperDraft(
+            {
+              provider: base.provider,
+              model: base.model,
+              docPath: base.docPath,
+              workspaceRoot: base.workspaceRoot,
+              requestId,
+              id,
+              imageModel: base.imageModel,
+            },
+            (event) => {
+              applyPaperEvent(key, event);
+              if (event.type === "sectionText")
+                latest.current.paperDocument.update(key);
+              if (event.type !== "ready") return;
+              latest.current.paperDocument.settle(
+                key,
+                withoutPictures(event.markdown),
+              );
+              latest.current.conversation.append(
+                paperWrittenTurns(latest.current.t.paperWritten),
+              );
+              updatePaperRun(key, () => ({ written: true }));
+              void latest.current.paperDocument.addPictures(
+                key,
+                event.markdown,
+              );
+            },
+          );
+        })
+        .then(() => {
+          requests.current.delete(key);
+          latest.current.paperDocument.settle(key);
+          updatePaperRun(key, () => ({ approving: false }));
+        })
+        .catch((err) => fail(key, err));
+      // `common` and `fail` read refs only.
+    },
+    [],
+  );
+
+  const approve = useCallback(
+    (key: string, outline: Outline) => {
+      const run = paperRun(key);
+      if (!run?.paperId || run.approving) return;
+      const id = run.paperId;
+      const base = common();
+      updatePaperRun(key, () => ({ approving: true, error: null }));
+      draft(
+        key,
+        id,
+        ai
+          .paperSaveOutline(base.docPath, base.workspaceRoot, id, outline)
+          .then((saved) => {
+            updatePaperRun(key, () => ({ outline: saved }));
+            return false;
+          }),
+      );
+    },
+    // `common` reads refs only.
+    [draft],
+  );
+
+  const stop = useCallback((key: string) => {
+    const requestId = requests.current.get(key);
+    if (requestId) void ai.cancelAgentMessage(requestId);
+  }, []);
+
+  /** How far paper `key` came, as kept beside its document. */
+  const status = useCallback((key: string): Promise<PaperProgress> => {
+    const base = common();
+    return ai.paperStatus(base.docPath, base.workspaceRoot, key);
+    // `common` reads refs only.
+  }, []);
+
+  const resume = useCallback(
+    (key: string) => {
+      const run = paperRun(key);
+      if (!run || requests.current.has(key)) return;
+      // Held until the run's own request replaces it: a second Continue
+      // while the paper's state is read starts nothing.
+      requests.current.set(key, "");
+      updatePaperRun(key, () => ({
+        paused: false,
+        error: null,
+        phaseSince: Date.now(),
+      }));
+      void status(key)
+        .then(({ paper, outline }) => {
+          if (
+            (paper.stage === "drafting" || paper.stage === "reviewed") &&
+            outline
+          ) {
+            updatePaperRun(key, () => ({
+              outline,
+              approving: true,
+              sectionText: {},
+              sections: {},
+            }));
+            draft(key, paper.id, Promise.resolve(true));
+          } else if (paper.stage !== "done") {
+            research(key, paper.topic, paper.targetChars);
+          } else {
+            requests.current.delete(key);
+          }
+        })
+        .catch((err) => fail(key, err));
+    },
+    // `fail` reads refs only.
+    [status, draft, research],
+  );
+
+  const restore = useCallback(
+    (key: string, topic: string) => {
+      if (paperRun(key)) return;
+      void status(key)
+        .then(({ paper, outline }) => {
+          if (paperRun(key)) return;
+          const { t: strings } = latest.current;
+          updatePaperRun(key, () => ({
+            topic,
+            paperId: paper.id,
+            outline,
+            unit: /^(zh|ja|ko)/.test(paper.language)
+              ? strings.paperUnitCharacters
+              : strings.paperUnitWords,
+            ...(paper.stage === "done"
+              ? { phase: "done", written: true }
+              : paper.stage === "outlined" && outline
+                ? { phase: "awaitingOutline" }
+                : { paused: true }),
+          }));
+        })
+        // Not kept, or from before papers could go on: its run has ended.
+        .catch(() => {});
+    },
+    [status],
+  );
+
+  useEffect(() => {
+    if (!isActive) return;
+    const mine = { approve, stop, resume, restore };
+    setPaperActions(mine);
+    return () => clearPaperActions(mine);
+  }, [isActive, approve, stop, resume, restore]);
+
+  /** Starts a paper on `topic` of about `targetChars` characters. Its
+   *  card's key is its id, so the card finds it again after a restart. */
+  return useCallback(
+    (topic: string, targetChars: number) => {
+      const { settings: s, t: strings } = latest.current;
+      const key = newPaperId();
+      const language = paperLanguage(topic, s.language);
+      updatePaperRun(key, () => ({
+        topic,
+        paperId: key,
+        unit: /^(zh|ja|ko)/.test(language)
+          ? strings.paperUnitCharacters
+          : strings.paperUnitWords,
+      }));
+      agentPanel.setOpen(true);
+      latest.current.conversation.append(
+        paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
+      );
+      research(key, topic, targetChars);
+    },
+    [agentPanel, research],
+  );
+}

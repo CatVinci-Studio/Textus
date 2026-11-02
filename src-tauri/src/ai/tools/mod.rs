@@ -14,8 +14,8 @@ mod folder;
 use conventions::*;
 pub(crate) use document::*;
 pub(crate) use edits::*;
-pub(crate) use folder::ADD_COMMENT_TOOL_NAME;
 use folder::*;
+pub(crate) use folder::{references_tool, ADD_COMMENT_TOOL_NAME};
 
 mod ledger;
 pub(crate) use ledger::*;

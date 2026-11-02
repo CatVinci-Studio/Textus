@@ -43,6 +43,12 @@ export const commands = {
 	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
 	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
 	/**
+	 *  "Import references…" and "Import a reference folder…": the picked files
+	 *  (zips unpacked) or folder copied into the project's references/ folder,
+	 *  which is then indexed in the background for search_references.
+	 */
+	import_references_picked: (docPath: string | null, workspaceRoot: string | null, folder: boolean) => __TAURI_INVOKE<ImportedReferences | null>("import_references_picked", { docPath, workspaceRoot, folder }),
+	/**
 	 *  "Learn my style": analyses the picked samples and writes `.textus/style.md`
 	 *  (keeping the previous one as style.previous.md). Returns its path, which the
 	 *  frontend opens for review.
@@ -329,6 +335,14 @@ export type Forgotten_Serialize = {
 	text: string,
 	/**  When it was forgotten, as `2026-10-18T09:30:00Z`. */
 	forgotten: string,
+};
+
+/**  What an import did. */
+export type ImportedReferences = {
+	/**  Files copied or unpacked into references/. */
+	imported: number,
+	/**  Files left out: not a kind the tools read, too large, or past a limit. */
+	skipped: number,
 };
 
 /**

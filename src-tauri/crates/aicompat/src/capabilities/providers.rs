@@ -103,6 +103,20 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             image: None,
         },
     ),
+    // OpenCode Go serves DeepSeek, Kimi and GLM models on one endpoint:
+    // their thinking switch, and their thoughts handed back with each tool
+    // call, which they refuse a turn without.
+    (
+        "opencode-go",
+        ProviderCaps {
+            auto_effort: None,
+            thinking: ThinkingFormat::ThinkingType,
+            native_search: NativeSearch::None,
+            replay_reasoning: true,
+            stream_usage: false,
+            image: None,
+        },
+    ),
     (
         "moonshot",
         ProviderCaps {

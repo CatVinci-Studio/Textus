@@ -340,7 +340,7 @@ test.describe("on a phone", () => {
       "data-window-chrome",
       "mobile",
     );
-    await page.locator(".window-bar-toggle").tap();
+    await page.locator(".page-switch button").nth(1).tap();
     const input = page.locator(".agent-panel .inline-chat-input");
     await expect(input).toBeVisible();
     return input;

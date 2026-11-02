@@ -116,3 +116,40 @@ test("the keyboard toolbar spans the text, not the docked AI panel", async ({
     })
     .toBeLessThanOrEqual(side.x + 1);
 });
+
+test("a swipe from the right edge brings the docked AI panel, and one from its edge puts it away", async ({
+  page,
+}) => {
+  await openIPad(page);
+  const swipe = (from: number, to: number) =>
+    page.evaluate(
+      ([from, to]) => {
+        const target = document.elementFromPoint(from, 600)!;
+        const touch = (x: number) =>
+          new Touch({ identifier: 1, target, clientX: x, clientY: 600 });
+        target.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            touches: [touch(from)],
+            changedTouches: [touch(from)],
+          }),
+        );
+        target.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            touches: [],
+            changedTouches: [touch(to)],
+          }),
+        );
+      },
+      [from, to],
+    );
+  const panel = page.locator(".agent-panel");
+  await swipe(1020, 860);
+  await expect(panel).toBeVisible();
+  // Docked beside the page, as on the desktop.
+  const side = (await panel.boundingBox())!;
+  expect(side.x).toBeGreaterThan(400);
+  await swipe(side.x + 6, side.x + 160);
+  await expect(panel).toHaveCount(0);
+});

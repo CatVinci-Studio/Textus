@@ -18,6 +18,7 @@ const t = {
   navPrivacy: "Privacy",
   generalBasicsLabel: "Basics",
   settingsFilesGroup: "Files",
+  settingsFileLabel: "Settings file",
   generalSystemLabel: "Application",
   settingsHelpGroup: "Help",
   autosaveLabel: "Save automatically",
@@ -583,6 +584,7 @@ test.describe("desktop", () => {
     await expect(files.locator(".settings-row-label")).toHaveText([
       t.autosaveLabel,
       t.autoSuggestFilenameLabel,
+      t.settingsFileLabel,
     ]);
 
     await open(t.navEditor);

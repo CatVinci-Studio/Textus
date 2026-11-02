@@ -1,13 +1,14 @@
-//! The public theme gallery, browsed from Settings. Every request goes to the
-//! gallery repository on raw.githubusercontent.com, by a path checked against
-//! the gallery's shape, so nothing can point the app at another host.
+//! The public theme gallery, browsed from Settings. Every request goes to
+//! Textus's own site, which passes the gallery repository's files on, by a
+//! path checked against the gallery's shape, so nothing can point the app at
+//! another host.
 
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
 
-const GALLERY_BASE: &str = "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/";
+const GALLERY_BASE: &str = "https://textus.catvinci.com/theme-gallery/";
 const CATALOG_PATH: &str = "index.json";
 
 /// The gallery accepts a stylesheet up to 200 KB and screenshots up to 2 MB;
@@ -346,7 +347,7 @@ mod tests {
     fn only_theme_files_in_the_gallery_repository_are_fetched() {
         assert_eq!(
             css_url("themes/plain/theme.css").as_deref(),
-            Some("https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/plain/theme.css")
+            Some("https://textus.catvinci.com/theme-gallery/themes/plain/theme.css")
         );
         assert!(preview_url("themes/midnight-ink/preview.png").is_some());
         assert!(preview_url("themes/lumen/preview-2.WEBP").is_some());

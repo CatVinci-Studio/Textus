@@ -29,20 +29,24 @@ pub fn scratch(name: &str) -> PathBuf {
     dir
 }
 
-/// Under the build folder rather than the system temp dir: each run writes
-/// thousands of small files, which used up a tmpfs /tmp's inodes. Folders left
-/// by earlier runs are cleared once per run.
+/// Under the system temp dir, outside the repository: a folder above the
+/// repository may be a project of its own (a `.textus` marker), and the
+/// agent would search that instead. One folder per process; folders an
+/// earlier run left more than a day ago are cleared once per run, and only
+/// ones named by a process id, so nothing else there is ever touched.
 fn scratch_root() -> PathBuf {
     static ROOT: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
     ROOT.get_or_init(|| {
-        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("target/textus-eval-ws");
-        let alive = |pid: &str| Path::new("/proc").join(pid).exists();
-        if Path::new("/proc/self").exists() {
-            for entry in std::fs::read_dir(&root).into_iter().flatten().flatten() {
-                let pid = entry.file_name().to_string_lossy().into_owned();
-                if pid.parse::<u32>().is_ok() && !alive(&pid) {
-                    let _ = std::fs::remove_dir_all(entry.path());
-                }
+        let root = std::env::temp_dir().join("textus-eval-ws");
+        let day = std::time::Duration::from_secs(24 * 60 * 60);
+        for entry in std::fs::read_dir(&root).into_iter().flatten().flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            let stale = entry
+                .metadata()
+                .and_then(|m| m.modified())
+                .is_ok_and(|t| t.elapsed().is_ok_and(|age| age > day));
+            if name.parse::<u32>().is_ok() && stale {
+                let _ = std::fs::remove_dir_all(entry.path());
             }
         }
         root

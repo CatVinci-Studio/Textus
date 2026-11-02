@@ -21,7 +21,10 @@ const workspace = (library: unknown[]) => ({
 });
 
 async function createEntry(page: Page, name: string) {
-  await page.locator("#agent-tab-memory").click();
+  await page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
   await page
     .locator(".memory-section", { hasText: "Library" })
     .getByRole("button", { name: "New" })
@@ -49,10 +52,11 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
   // The entry opened in a tab of its own...
   await expect(page.locator(".tab-pill")).toHaveCount(2);
   // ...and the panel, now drawn by that tab's editor, is still on Memory.
-  await expect(page.locator("#agent-tab-memory")).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
+  await expect(
+    page
+      .locator(".agent-panel-view")
+      .getByRole("button", { name: "Project", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".agent-panel-memory")).toBeVisible();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator(".raw-html-comment")).toHaveText(note);
@@ -174,7 +178,10 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
   await expect(remembered).toBeVisible();
   await expect(remembered).toHaveClass(/motion-mark/);
   await expect(remembered).toContainText(REMEMBERED.text);
-  await page.getByRole("tab", { name: "Chat" }).click();
+  page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
 
   await chip.getByRole("button", { name: "Undo" }).click();
   await expect(chip).toHaveText("Undone. No longer remembered.");
@@ -220,7 +227,10 @@ test("the Memory tab lists what was remembered, and moves and deletes it", async
     memory_move: "personal/memory/Use-British-spelling",
     memory_delete: null,
   });
-  await page.locator("#agent-tab-memory").click();
+  await page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
   const remembered = page.locator(".memory-remembered");
   await expect(remembered).toContainText("This project");
   await expect(remembered).toContainText(REMEMBERED.text);
@@ -259,7 +269,10 @@ test("with Remember automatically off, the Memory tab says so", async ({
     load_agent_workspace: memoryWorkspace(false),
     library_use: LIBRARY_USE,
   });
-  await page.locator("#agent-tab-memory").click();
+  await page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
   await expect(page.locator(".memory-remembered")).toContainText(
     "Remember automatically is off",
   );
