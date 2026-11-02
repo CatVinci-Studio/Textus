@@ -130,6 +130,9 @@ export interface ChatComposerProps {
   /** Quick Ask: no attach, web-search or Deep thinking buttons, and it asks
    *  for a fast answer. */
   compact?: boolean;
+  /** The one mode offered, and the mode it starts and stays in (Settings ›
+   *  Extensions › Create: Create only). */
+  onlyMode?: AgentMode;
   /** Focus the input as the composer appears (default). Off for the phone's
    *  AI sheet, where raising the keyboard right away flashes. */
   focusOnOpen?: boolean;

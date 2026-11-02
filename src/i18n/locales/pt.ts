@@ -1418,6 +1418,27 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsTabThemes: "Temas",
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Criar",
+  createTitle: "Faça o seu",
+  createIntro:
+    "Diga o que você quer e a Textus AI faz aqui. Instale pelo cartão abaixo da resposta, experimente e peça mudanças.",
+  createPlaceholder: "O que ele deve fazer?",
+  createStart: "Começar",
+  createNew: "Novo",
+  createAiOff: "Ative a Textus AI para criar.",
+  createExamples: "Experimente",
+  createExamplePluginTodo:
+    "Uma lista de tarefas na barra lateral que guarda minhas tarefas mesmo sem pasta aberta",
+  createExamplePluginCount:
+    "Um comando que conta as palavras e os caracteres da seleção",
+  createExampleThemeAmber:
+    "Um tema âmbar acolhedor, claro de dia e escuro à noite",
+  createExampleThemeMono:
+    "Um tema monocromático e calmo com fonte serifada para leituras longas",
+  createExampleSkillWeekly:
+    "Transforme minhas notas em um relatório semanal: feito, próximo e bloqueado",
+  createExampleSkillPolish:
+    "Lapide meu texto: frases mais enxutas, mesmo sentido e tom",
   extensionsIntroPlugins:
     "Novos painéis, tipos de arquivo e ferramentas para o Textus.",
   extensionsIntroThemes: "A aparência dos documentos, sobre o tema escolhido.",

@@ -79,6 +79,7 @@ export function ChatComposer({
   selectionChip,
   selectionPerMessage = false,
   compact = false,
+  onlyMode,
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
@@ -322,12 +323,16 @@ export function ChatComposer({
   // Quick Ask works on the selection: it writes or reviews, never creates.
   // Research is the panel's, where its paper is followed; it sits before
   // Create, which makes things for the app rather than the document.
-  const modes: ModeChoice[] = [
-    "write" as const,
-    "review" as const,
-    ...(onResearch ? (["research"] as const) : []),
-    ...(compact ? [] : (["create"] as const)),
-  ].map((value) => ({
+  const modes: ModeChoice[] = (
+    onlyMode
+      ? [onlyMode]
+      : [
+          "write" as const,
+          "review" as const,
+          ...(onResearch ? (["research"] as const) : []),
+          ...(compact ? [] : (["create"] as const)),
+        ]
+  ).map((value) => ({
     value,
     label: modeLabels[value][0],
     hint: modeLabels[value][1],

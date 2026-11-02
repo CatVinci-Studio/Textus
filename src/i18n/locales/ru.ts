@@ -1431,6 +1431,26 @@ export default {
   extensionsTabThemes: "Темы",
   extensionsTabSkills: "Навыки",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Создать",
+  createTitle: "Сделайте своё",
+  createIntro:
+    "Скажите, что вам нужно, и Textus AI сделает это здесь. Установите из карточки под ответом, попробуйте и попросите изменить.",
+  createPlaceholder: "Что оно должно делать?",
+  createStart: "Начать",
+  createNew: "Новое",
+  createAiOff: "Включите Textus AI, чтобы создавать.",
+  createExamples: "Примеры",
+  createExamplePluginTodo:
+    "Список дел на боковой панели, который хранит задачи даже без открытой папки",
+  createExamplePluginCount:
+    "Команда, которая считает слова и символы в выделении",
+  createExampleThemeAmber: "Тёплая янтарная тема: светлая днём и тёмная ночью",
+  createExampleThemeMono:
+    "Спокойная монохромная тема с шрифтом с засечками для долгого чтения",
+  createExampleSkillWeekly:
+    "Собери мои заметки в недельный отчёт: сделано, дальше, заблокировано",
+  createExampleSkillPolish:
+    "Отполируй мой текст: фразы короче, смысл и тон те же",
   extensionsIntroPlugins: "Новые панели, типы файлов и инструменты для Textus.",
   extensionsIntroThemes: "Как выглядят документы — поверх выбранной темы.",
   extensionsIntroSkills: `Способы хорошо делать определённую работу — для ${AI_NAME} и меню /.`,

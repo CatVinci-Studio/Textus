@@ -1406,6 +1406,26 @@ type /name in a conversation to use one.
   extensionsTabThemes: "Themes",
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Create",
+  createTitle: "Make your own",
+  createIntro:
+    "Say what you want and Textus AI makes it here. Install it from the card under the reply, try it, and ask for changes.",
+  createPlaceholder: "What should it do?",
+  createStart: "Start",
+  createNew: "New",
+  createAiOff: "Turn on Textus AI to create.",
+  createExamples: "Try one",
+  createExamplePluginTodo:
+    "A to-do list in the sidebar that keeps my tasks even with no folder open",
+  createExamplePluginCount:
+    "A command that counts the words and characters of the selection",
+  createExampleThemeAmber: "A warm amber theme, light by day and dark at night",
+  createExampleThemeMono:
+    "A quiet monochrome theme with a serif font for long reading",
+  createExampleSkillWeekly:
+    "Turn my notes into a weekly report with done, next and blocked",
+  createExampleSkillPolish:
+    "Polish my writing: tighter sentences, same meaning and voice",
   extensionsIntroPlugins: "New panels, file types and tools, added to Textus.",
   extensionsIntroThemes: "How documents look, on top of the theme you pick.",
   extensionsIntroSkills: `Ways of doing one kind of task well, for ${AI_NAME} and the / menu.`,

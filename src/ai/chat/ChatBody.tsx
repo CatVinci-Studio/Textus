@@ -76,6 +76,7 @@ export function ChatBody({
   footer,
   fillHeight,
   variant = "full",
+  onlyMode,
   refreshContext,
   onRevealPending,
   quickReview,
@@ -496,8 +497,9 @@ export function ChatBody({
         selectionIsPicture={selectionIsPicture || selectedPictureText !== null}
         busy={busy}
         labels={labels}
-        defaultMode={defaultMode}
-        carryMode={variant !== "quick"}
+        defaultMode={onlyMode ?? defaultMode}
+        carryMode={variant !== "quick" && !onlyMode}
+        onlyMode={onlyMode}
         tourMode={tourMode}
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}
