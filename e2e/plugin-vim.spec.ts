@@ -169,8 +169,11 @@ test("zz, zt and zb bring the caret's line to the middle, top and bottom", async
       return (line.top + line.height / 2 - box.top) / box.height;
     });
   await keys(page, ["z", "z"]);
-  await expect.poll(where).toBeGreaterThan(0.4);
-  expect(await where()).toBeLessThan(0.6);
+  // Polled whole: the line starts below the middle, so "above 0.4" alone
+  // holds before the scroll has moved it.
+  await expect
+    .poll(async () => Math.abs((await where()) - 0.5))
+    .toBeLessThan(0.1);
   await keys(page, ["z", "t"]);
   await expect.poll(where).toBeLessThan(0.15);
   await keys(page, ["z", "b"]);
