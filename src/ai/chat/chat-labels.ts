@@ -5,6 +5,8 @@ import { pickerLabels } from "./ComposerPicker";
 import { permissionLabel } from "../../plugins/store/permissions";
 import { aiErrorTexts } from "../error-messages";
 import { toolActivityLabels } from "./tool-activity";
+import { MODES } from "../modes";
+import type { PanelMode } from "../../prefs/settings-types";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no
@@ -124,14 +126,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     continueRequest: t.chatContinueRequest,
     expandInline: t.chatExpandInline,
     collapseInline: t.chatCollapseInline,
-    modeWrite: t.agentModeWrite,
-    modeReview: t.agentModeReview,
-    modeCreate: t.agentModeCreate,
-    modeResearch: t.agentModeResearch,
-    modeWriteHint: t.agentModeWriteHint,
-    modeReviewHint: t.agentModeReviewHint,
-    modeCreateHint: t.agentModeCreateHint,
-    modeResearchHint: t.agentModeResearchHint,
+    modes: modeLabels(t),
     modeLabel: t.chatModeLabel,
     modelLabel: t.chatModelLabel,
     modeAndModelLabel: t.chatModeModelLabel,
@@ -157,5 +152,19 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       append: t.agentActionAppend,
       insert_at_cursor: t.agentActionInsertAtCursor,
     },
+  };
+}
+
+/** Each mode's name and line, as the composer's picker shows them. */
+function modeLabels(t: Strings) {
+  const of = (mode: PanelMode) => ({
+    label: t[MODES[mode].label],
+    hint: t[MODES[mode].hint],
+  });
+  return {
+    write: of("write"),
+    review: of("review"),
+    create: of("create"),
+    research: of("research"),
   };
 }

@@ -1,14 +1,9 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import type { Strings, TextKey } from "../../i18n/strings";
+import { MODES } from "../modes";
+import type { Strings } from "../../i18n/strings";
 import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
-
-const MODE_LABEL: Record<AgentMode, TextKey> = {
-  write: "agentModeWrite",
-  review: "agentModeReview",
-  create: "agentModeCreate",
-};
 
 /** The modes a skill applies in, said quietly ("Write · Review"); a click
  *  opens them as a menu to tick, several at once, one at least. The menu
@@ -47,7 +42,7 @@ export function ModeChoice({
     setUp(below < menu.offsetHeight + 8 && button.top > below);
   }, [open, ref]);
   const label = AGENT_MODES.filter((m) => modes.includes(m))
-    .map((m) => t[MODE_LABEL[m]])
+    .map((m) => t[MODES[m].label])
     .join(" · ");
   return (
     <span className="skill-mode-choice" ref={ref}>
@@ -92,7 +87,7 @@ export function ModeChoice({
                 <CheckIcon
                   className={`context-menu-check${on ? "" : " context-menu-check-off"}`}
                 />
-                {t[MODE_LABEL[mode]]}
+                {t[MODES[mode].label]}
               </button>
             );
           })}

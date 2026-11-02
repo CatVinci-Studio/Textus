@@ -47,15 +47,9 @@ export interface ChatComposerLabels {
   attachmentTruncated: string;
   /** Shown when an image is attached but the active provider has no vision. */
   attachmentNoVision: string;
-  modeWrite: string;
-  modeReview: string;
-  modeCreate: string;
-  modeResearch: string;
-  /** One line on what each mode does, under its name in the picker. */
-  modeWriteHint: string;
-  modeReviewHint: string;
-  modeCreateHint: string;
-  modeResearchHint: string;
+  /** Each mode's name, and one line on what it does under it in the
+   *  picker (src/ai/modes.ts). */
+  modes: Record<PanelMode, { label: string; hint: string }>;
   /** Accessible name of the phone's segmented mode control, and the
    *  picker's heading over the modes. */
   modeLabel: string;

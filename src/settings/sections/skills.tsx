@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
+import { MODES } from "../../ai/modes";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { Strings, TextKey } from "../../i18n/strings";
+import type { Strings } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
 import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
 import { listFromWorkspace } from "../../ai/chat/skill-picker";
@@ -182,12 +183,6 @@ export function OwnSkillsList({
   );
 }
 
-const MODE_LABEL: Record<AgentMode, TextKey> = {
-  write: "agentModeWrite",
-  review: "agentModeReview",
-  create: "agentModeCreate",
-};
-
 /// The built-in skills by mode, always on. Customize… copies one into the
 /// global skills folder and opens it; Reset deletes the copy.
 export function BuiltinSkillsSection({
@@ -272,11 +267,11 @@ export function BuiltinSkillsSection({
             key={mode}
             className="settings-builtin-category"
             role="group"
-            aria-label={t[MODE_LABEL[mode]]}
+            aria-label={t[MODES[mode].label]}
             data-mode={mode}
           >
             <div className="settings-builtin-category-title" aria-hidden="true">
-              {t[MODE_LABEL[mode]]}
+              {t[MODES[mode].label]}
             </div>
             {names.map(({ name }) => {
               const text = skillText(lang, name);

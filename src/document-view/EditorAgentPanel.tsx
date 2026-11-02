@@ -1,4 +1,5 @@
 import type { DocumentSnapshot } from "../ai/doc-markdown";
+import { MODES } from "../ai/modes";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
@@ -94,12 +95,7 @@ export function EditorAgentPanel({
   // Research mode's kind of piece, "auto" for the model's choice; the
   // message sent is its topic.
   const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
-  const emptyText = {
-    write: t.agentPanelEmptyWrite,
-    review: t.agentPanelEmptyReview,
-    create: t.agentPanelEmptyCreate,
-    research: t.agentPanelEmptyResearch,
-  }[mode];
+  const emptyText = t[MODES[mode].empty];
   return (
     <AgentPanelView
       labels={{

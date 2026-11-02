@@ -345,16 +345,9 @@ export function ChatComposer({
   const followUps = !busy && input === "" ? suggestions : [];
   const offered = followUps[0] ?? null;
 
-  const modeLabels: Record<PanelMode, [string, string]> = {
-    write: [labels.modeWrite, labels.modeWriteHint],
-    review: [labels.modeReview, labels.modeReviewHint],
-    create: [labels.modeCreate, labels.modeCreateHint],
-    research: [labels.modeResearch, labels.modeResearchHint],
-  };
   const modes: ModeChoice[] = modeValues.map((value) => ({
     value,
-    label: modeLabels[value][0],
-    hint: modeLabels[value][1],
+    ...labels.modes[value],
   }));
   const pickerProps = {
     mode,
