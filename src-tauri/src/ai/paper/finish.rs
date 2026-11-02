@@ -243,9 +243,10 @@ pub(crate) async fn opening(
     sections: &[String],
 ) -> String {
     let (abstract_word, _, _) = words(&paper.language);
+    let profile = paper.genre.profile();
     let instructions = format!(
-        "You write the title and the abstract of a finished paper, in the language tagged \"{}\". The title is specific and says what the paper finds or argues, not only its topic. The abstract, one paragraph of about 150-250 words (or 250-400 characters in Chinese or Japanese), states the question, the approach, the main findings with their key figures, and what follows from them - from the paper's text only, without citations. Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
-        paper.language
+        "You write the title and the abstract of a finished {}, in the language tagged \"{}\". {} Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
+        profile.name, paper.language, profile.opening
     );
     let message = format!("Thesis: {}\n\n{}", outline.thesis, sections.join("\n\n"));
     let reply = match model

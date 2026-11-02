@@ -9,6 +9,7 @@ mod checks;
 mod draft;
 mod events;
 mod finish;
+mod genre;
 mod library;
 mod model;
 mod outline;
@@ -21,6 +22,7 @@ mod web_figures;
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
+pub use genre::Genre;
 pub(crate) use store::{
     clear_sections, load, load_section, new_id, save, save_section, PaperFiles,
 };
@@ -35,6 +37,9 @@ use tauri::ipc::Channel;
 pub struct Paper {
     pub id: String,
     pub topic: String,
+    /// What kind of piece it is; a paper kept before genres is a paper.
+    #[serde(default)]
+    pub genre: Genre,
     /// The language it is written in, a BCP 47 tag ("zh", "en").
     pub language: String,
     /// How long the finished text should be, in characters.
@@ -177,6 +182,9 @@ pub struct PaperRequest {
     /// for a new id.
     pub id: Option<String>,
     pub topic: String,
+    /// What kind of piece to write; a paper when not given.
+    #[serde(default)]
+    pub genre: Genre,
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
     pub target_chars: u32,
@@ -206,6 +214,7 @@ pub async fn ai_paper_run(
         request_id,
         id,
         topic,
+        genre,
         language,
         target_chars,
         image_model,
@@ -262,6 +271,7 @@ pub async fn ai_paper_run(
             paper: Paper {
                 id: id.unwrap_or_else(new_id),
                 topic,
+                genre,
                 language,
                 target_chars,
                 budget: budget.snapshot(),

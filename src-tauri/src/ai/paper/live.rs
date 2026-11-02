@@ -70,6 +70,7 @@ fn live_paper() {
     let paper = Paper {
         id: new_id(),
         topic: env_or("TEXTUS_PAPER_TOPIC", "屋顶绿化如何缓解城市热岛效应"),
+        genre: Genre::Paper,
         language: env_or("TEXTUS_PAPER_LANGUAGE", "zh"),
         target_chars: env_or("TEXTUS_PAPER_CHARS", "5000").parse().unwrap_or(5000),
         budget,

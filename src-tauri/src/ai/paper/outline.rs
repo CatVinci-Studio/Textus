@@ -227,6 +227,7 @@ pub(crate) async fn make_outline(
     dossier: &Dossier,
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Outline, String> {
+    let profile = paper.genre.profile();
     let target = target_units(paper);
     let unit = if counts_characters(&paper.language) {
         "characters"
@@ -242,8 +243,12 @@ pub(crate) async fn make_outline(
         shape.max_web,
     );
     let instructions = format!(
-        "You outline a paper on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it a thesis and {min_sections}-{max_sections} sections, each long enough to develop its point, in an order that builds an argument: from context to mechanism, evidence, disputes and outlook, as the topic needs - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. Plan figures that carry information - at least one for every two sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); and pictures where a picture says more than words - a real one first: `web` for a photograph, map, artwork or document Wikimedia Commons would have (a generated picture takes its place when none is found), at most {max_web}; `generated` only for an illustration nothing real could show (describe it), at most {images_left} of them. Write titles, key points and specs in the paper's language. Hand it over with submit_outline.",
-        paper.topic, paper.language
+        "You outline a {} on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it a thesis and {min_sections}-{max_sections} sections, each long enough to develop its point, {} - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. Plan figures that carry information - at least one for every two sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); and pictures where a picture says more than words - a real one first: `web` for a photograph, map, artwork or document Wikimedia Commons would have (a generated picture takes its place when none is found), at most {max_web}; `generated` only for an illustration nothing real could show (describe it), at most {images_left} of them. Write titles, key points and specs in the {}'s language. Hand it over with submit_outline.",
+        profile.name,
+        paper.topic,
+        paper.language,
+        profile.outline_order,
+        profile.name
     );
     let message = format!(
         "Topic: {}\n\nThe research notes:\n{}",
