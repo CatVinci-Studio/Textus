@@ -348,6 +348,17 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUpdateSkill: "Fähigkeit aktualisieren",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
+  chatPluginCheckDom:
+    "Es zeichnet direkt in die Seite, was ein Plugin nicht kann: nichts davon wird sichtbar.",
+  chatPluginCheckProjectStorage:
+    "Es speichert seine Daten im geöffneten Ordner und scheitert, wenn keiner geöffnet ist.",
+  chatPluginCheckPermission:
+    "Es nutzt {permission}, ohne die Berechtigung anzufordern.",
+  chatPluginCheckUnregistered: "Es deklariert {id}, registriert es aber nie.",
+  chatPluginRunError: "Es brach ab mit: {error}",
+  chatPluginFix: "Mit KI beheben",
+  chatPluginFixRequest:
+    "Das Plugin {name} hat diese Probleme:\n{problems}\nFinde die Ursache im Code und behebe sie.",
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",

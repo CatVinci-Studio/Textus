@@ -346,6 +346,17 @@ export default {
   chatSaveSkill: "Сохранить этот навык",
   chatUpdateSkill: "Обновить навык",
   chatPluginCantInstall: "Этот плагин нельзя установить: {reason}",
+  chatPluginCheckDom:
+    "Он рисует прямо на странице, а плагин так не может: ничего не появится.",
+  chatPluginCheckProjectStorage:
+    "Он хранит данные в открытой папке и не работает, если папка не открыта.",
+  chatPluginCheckPermission:
+    "Он использует {permission}, не запросив это разрешение.",
+  chatPluginCheckUnregistered: "Он объявляет {id}, но нигде не регистрирует.",
+  chatPluginRunError: "Остановился с ошибкой: {error}",
+  chatPluginFix: "Исправить с ИИ",
+  chatPluginFixRequest:
+    "У плагина {name} такие проблемы:\n{problems}\nНайди причину в его коде и исправь её.",
   toolSearchDocument: "Поиск в документе: «{arg}»",
   toolReadDocument: "Чтение: «{arg}»",
   toolReadWholeDocument: "Чтение документа",
