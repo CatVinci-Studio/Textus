@@ -43,3 +43,14 @@ it("starts a Create conversation with the chosen kind's skill loaded", async () 
   expect(message).toContain(en.createExampleThemeAmber);
   expect(options).toEqual({ mode: "create", webSearch: false });
 });
+
+it("fills in a request made before it opened, for the user to finish", async () => {
+  const { requestCreate } = await import("../../ai/chat/create-request");
+  requestCreate("Change the Todo plugin (local.todo): ", "plugin");
+  render(<CreateTab t={en} />);
+  await act(async () => {});
+  expect(screen.getByLabelText(en.createPlaceholder)).toHaveProperty(
+    "value",
+    "Change the Todo plugin (local.todo): ",
+  );
+});

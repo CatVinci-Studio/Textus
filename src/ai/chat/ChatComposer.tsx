@@ -100,10 +100,16 @@ export function ChatComposer({
   const { dismissedInput, setDismissedInput } = typing;
   const staged = useAttachments(labels.attachmentNoVision);
   const { attachments, setAttachments, attachError, setAttachError } = staged;
+  // Research is the panel's, where its paper is followed. Create is made in
+  // Settings › Extensions, so it is offered only where it is the one mode.
+  const modeValues: readonly PanelMode[] = onlyMode
+    ? [onlyMode]
+    : ["write", "review", ...(onResearch ? (["research"] as const) : [])];
   const { mode, setMode } = useComposerMode({
     tourMode,
     carryMode,
     defaultMode,
+    offered: modeValues,
     onModeChange,
   });
   const options = useRequestOptions(defaultWebSearch, compact);
@@ -320,19 +326,7 @@ export function ChatComposer({
     create: [labels.modeCreate, labels.modeCreateHint],
     research: [labels.modeResearch, labels.modeResearchHint],
   };
-  // Quick Ask works on the selection: it writes or reviews, never creates.
-  // Research is the panel's, where its paper is followed; it sits before
-  // Create, which makes things for the app rather than the document.
-  const modes: ModeChoice[] = (
-    onlyMode
-      ? [onlyMode]
-      : [
-          "write" as const,
-          "review" as const,
-          ...(onResearch ? (["research"] as const) : []),
-          ...(compact ? [] : (["create"] as const)),
-        ]
-  ).map((value) => ({
+  const modes: ModeChoice[] = modeValues.map((value) => ({
     value,
     label: modeLabels[value][0],
     hint: modeLabels[value][1],
