@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
@@ -32,6 +32,20 @@ export function ModeChoice({
     true,
     open,
   );
+  // Below the button, or above it without room there: a menu hanging past
+  // the bottom of a scrolled list (a reply's chip in a chat) makes the list
+  // longer, and closing it on the press that follows shortens it again -
+  // what was under the pointer moves, and the click misses.
+  const menuRef = useRef<HTMLSpanElement>(null);
+  const [up, setUp] = useState(false);
+  useLayoutEffect(() => {
+    const menu = menuRef.current;
+    if (!open || !menu) return;
+    const button = ref.current!.getBoundingClientRect();
+    const bottom = Math.min(window.innerHeight, scrollerBottom(ref.current!));
+    const below = bottom - button.bottom;
+    setUp(below < menu.offsetHeight + 8 && button.top > below);
+  }, [open, ref]);
   const label = AGENT_MODES.filter((m) => modes.includes(m))
     .map((m) => t[MODE_LABEL[m]])
     .join(" · ");
@@ -51,7 +65,8 @@ export function ModeChoice({
       </button>
       {open && (
         <span
-          className="skill-mode-choice-menu floating-surface"
+          ref={menuRef}
+          className={`skill-mode-choice-menu floating-surface${up ? " skill-mode-choice-menu-up" : ""}`}
           role="menu"
           aria-label={t.agentSkillsModes}
         >
@@ -85,4 +100,12 @@ export function ModeChoice({
       )}
     </span>
   );
+}
+
+/** The bottom of the nearest box that scrolls `el`, or the window's. */
+function scrollerBottom(el: HTMLElement): number {
+  for (let e = el.parentElement; e; e = e.parentElement)
+    if (/auto|scroll/.test(getComputedStyle(e).overflowY))
+      return e.getBoundingClientRect().bottom;
+  return window.innerHeight;
 }
