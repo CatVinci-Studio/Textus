@@ -1,7 +1,7 @@
 //! A paper kept in its project, `.textus/papers/<id>/`, so a stopped run
 //! can resume and the user can read what the research found.
 
-use super::{Dossier, Outline, Paper};
+use super::{Dossier, Material, Outline, Paper};
 use crate::ai::workspace::project_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::path::{Path, PathBuf};
@@ -10,6 +10,7 @@ const PAPERS_FOLDER: &str = "papers";
 const PAPER_FILE: &str = "paper.json";
 const DOSSIER_FILE: &str = "dossier.json";
 const OUTLINE_FILE: &str = "outline.json";
+const MATERIALS_FILE: &str = "materials.json";
 
 /// Everything kept for one paper. A paper not yet researched has an empty
 /// dossier; one not yet outlined, no outline.
@@ -163,6 +164,18 @@ pub(crate) fn load_section(root: &Path, id: &str, index: usize) -> Result<Option
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.to_string()),
     }
+}
+
+/// The files attached to paper `id`'s request, kept for a run that goes on.
+pub(crate) fn save_materials(root: &Path, id: &str, materials: &[Material]) -> Result<(), String> {
+    let dir = paper_dir(root, id)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    write_json(&dir.join(MATERIALS_FILE), &materials)
+}
+
+/// What [`save_materials`] kept; none when nothing was attached.
+pub(crate) fn load_materials(root: &Path, id: &str) -> Result<Vec<Material>, String> {
+    Ok(read_json(&paper_dir(root, id)?.join(MATERIALS_FILE))?.unwrap_or_default())
 }
 
 /// The paper `id` kept in `root`'s `.textus/`.

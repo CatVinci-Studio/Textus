@@ -147,6 +147,9 @@ fn fence_body(out: &[String]) -> String {
 /// A source as the reference list gives it after its number: its title
 /// and address, or a library file's path.
 pub(crate) fn entry(s: &aicompat::agent::Source) -> String {
+    if let Some(name) = super::materials::material_name(&s.url) {
+        return format!("`{name}`");
+    }
     if let Some(path) = super::research::reference_path(&s.url) {
         let title = if s.title.trim().is_empty() {
             &path

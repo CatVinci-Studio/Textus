@@ -12,6 +12,7 @@ mod events;
 mod finish;
 mod genre;
 mod library;
+mod materials;
 mod model;
 mod outline;
 mod research;
@@ -25,6 +26,7 @@ use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
+pub use materials::Material;
 #[cfg(test)]
 use status::progress;
 pub(crate) use store::{
@@ -199,6 +201,10 @@ pub struct PaperRequest {
     /// The image model, for the pictures the outline may plan; None for
     /// none.
     pub image_model: Option<crate::ai::images::ImageModel>,
+    /// Files the user attached for its research; none when going on with a
+    /// paper, which keeps its own.
+    #[serde(default)]
+    pub materials: Vec<Material>,
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,
@@ -226,6 +232,7 @@ pub async fn ai_paper_run(
         language,
         target_chars,
         image_model,
+        materials,
     } = request;
     let root = paper_root(
         doc_path.as_deref(),
@@ -312,6 +319,12 @@ pub async fn ai_paper_run(
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
+        let materials = if materials.is_empty() {
+            store::load_materials(&root, &files.paper.id)?
+        } else {
+            store::save_materials(&root, &files.paper.id, &materials)?;
+            materials
+        };
         let mut keep_spent = KeepSpent {
             root: &root,
             id: files.paper.id.clone(),
@@ -324,8 +337,16 @@ pub async fn ai_paper_run(
                 .join(crate::ai::project::REFERENCES_DIR)
                 .is_dir()
                 .then_some(root.as_path());
-            let dossier =
-                research::research(&agent, &files.paper, &web, &budget, &send, library).await?;
+            let dossier = research::research(
+                &agent,
+                &files.paper,
+                &web,
+                &budget,
+                &send,
+                library,
+                &materials,
+            )
+            .await?;
             // Questions cut short would leave it thin: going on researches again.
             if agent.spent() {
                 return Err(budget::STEPS_SPENT.to_string());

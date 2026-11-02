@@ -10,6 +10,7 @@ import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type {
   Genre,
+  Material,
   Outline,
   PaperProgress,
 } from "../platform/bindings/ai-paper";
@@ -172,6 +173,8 @@ export function usePaperWriter({
       topic: string,
       genre: Genre | null,
       targetChars: number | null,
+      // A paper going on keeps the files it was started with.
+      materials: Material[] = [],
     ) => {
       const { settings: s } = latest.current;
       const requestId = crypto.randomUUID();
@@ -188,6 +191,7 @@ export function usePaperWriter({
             language: paperLanguage(topic, s.language),
             genre,
             targetChars,
+            materials,
           },
           (event) => applyPaperEvent(key, event),
         )
@@ -292,10 +296,10 @@ export function usePaperWriter({
   }, [isActive, approve, stop, resume, restore]);
 
   /** Starts a piece on `topic` of `genre`, or of the model's choice when
-   *  null, at its genre's length. Its card's key is its id, so the card
+   *  null, at its genre's length, researched from `materials` too. Its card's key is its id, so the card
    *  finds it again after a restart. */
   return useCallback(
-    (topic: string, genre: Genre | null) => {
+    (topic: string, genre: Genre | null, materials: Material[]) => {
       const { settings: s, t: strings } = latest.current;
       const key = newPaperId();
       const language = paperLanguage(topic, s.language);
@@ -312,7 +316,7 @@ export function usePaperWriter({
       latest.current.conversation.append(
         paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
       );
-      research(key, topic, genre, null);
+      research(key, topic, genre, null, materials);
     },
     [agentPanel, research],
   );

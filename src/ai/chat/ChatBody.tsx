@@ -73,6 +73,7 @@ export function ChatBody({
   onModeChange,
   onResearch,
   researchControls,
+  researchKinds,
   footer,
   fillHeight,
   variant = "full",
@@ -514,6 +515,7 @@ export function ChatBody({
         onModeChange={onModeChange}
         onResearch={onResearch}
         researchControls={researchControls}
+        researchKinds={researchKinds}
       />
       {footer}
     </>

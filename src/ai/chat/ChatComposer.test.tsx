@@ -355,9 +355,55 @@ describe("ChatComposer selection chip", () => {
     const box = screen.getByPlaceholderText("What the paper is about");
     fireEvent.change(box, { target: { value: "  Green roofs " } });
     fireEvent.click(screen.getByText("Send"));
-    expect(onResearch).toHaveBeenCalledWith("Green roofs");
+    expect(onResearch).toHaveBeenCalledWith("Green roofs", []);
     expect(onSend).not.toHaveBeenCalled();
     expect(box).toHaveValue("");
+  });
+
+  it("hands Research its files, and sets its kind of piece with /", async () => {
+    const onResearch = vi.fn();
+    const pick = vi.fn();
+    const notes: ChatAttachment = {
+      kind: "text",
+      name: "notes.md",
+      content: "Tides were logged hourly.",
+      truncated: false,
+    };
+    pickAttachmentFile.mockResolvedValue(notes);
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        onSend={() => {}}
+        onResearch={onResearch}
+        researchKinds={[
+          { key: "auto", label: "Choose for me", pick: () => {} },
+          { key: "report", label: "In-depth report", pick },
+        ]}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+    fireEvent.click(screen.getByRole("option", { name: "Research" }));
+    const box = screen.getByPlaceholderText("What the paper is about");
+    fireEvent.change(box, { target: { value: "/rep" } });
+    // Only the kind that matches; Enter picks it.
+    expect(await screen.findAllByRole("option")).toHaveLength(1);
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(pick).toHaveBeenCalled();
+    expect(box).toHaveValue("");
+
+    fireEvent.click(screen.getByLabelText("Attach a file"));
+    expect(await screen.findByText("notes.md")).toBeInTheDocument();
+    fireEvent.change(box, { target: { value: "Tides" } });
+    fireEvent.click(screen.getByText("Send"));
+    expect(onResearch).toHaveBeenCalledWith("Tides", [notes]);
   });
 });
 

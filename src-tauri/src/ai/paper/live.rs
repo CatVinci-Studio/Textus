@@ -113,7 +113,7 @@ fn live_paper() {
         };
 
         let t = Instant::now();
-        let dossier = research::research(&agent, &paper, &web, &shared, &send, None)
+        let dossier = research::research(&agent, &paper, &web, &shared, &send, None, &[])
             .await
             .expect("research");
         lap(&mut stats, "research", t);

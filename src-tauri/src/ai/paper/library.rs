@@ -30,7 +30,7 @@ const WEB_LINK_UNSAFE: &percent_encoding::AsciiSet = &percent_encoding::CONTROLS
 
 /// A source's address as the paper's links carry it.
 pub(crate) fn link_safe(url: &str) -> String {
-    if reference_path(url).is_some() {
+    if reference_path(url).is_some() || super::materials::material_name(url).is_some() {
         return url.to_string();
     }
     percent_encoding::utf8_percent_encode(url, WEB_LINK_UNSAFE).to_string()

@@ -202,6 +202,7 @@ pub(crate) fn activity(call: &ToolCall) -> Option<(ActivityKind, String)> {
         SEARCH_PAPERS_TOOL => (ActivityKind::Papers, text("query")),
         SEARCH_REFERENCES_TOOL => (ActivityKind::Library, text("query")),
         READ_REFERENCE_TOOL => (ActivityKind::Library, text("path")),
+        super::materials::READ_MATERIAL_TOOL => (ActivityKind::Library, text("name")),
         _ => return None,
     };
     Some((kind, detail))

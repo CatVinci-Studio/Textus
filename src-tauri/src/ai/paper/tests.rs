@@ -317,7 +317,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, None)
+    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, None, &[])
         .await
         .unwrap();
 
@@ -491,7 +491,7 @@ impl research::Model for Empty {
 async fn research_that_keeps_nothing_fails_with_a_reason() {
     let budget = SharedBudget::new(ResearchBudget::for_paper());
     let web = WebPlan::new(true, None, None, &[]);
-    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, None)
+    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, None, &[])
         .await
         .unwrap_err();
     assert!(err.contains("found nothing to write from"), "{err}");
@@ -1265,6 +1265,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         &budget,
         &|_| {},
         Some(root.path()),
+        &[],
     )
     .await
     .unwrap();
@@ -1703,7 +1704,7 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         web.source_number("https://lite.duckduckgo.com/lite/?q=green+roof"),
         Some(1)
     );
-    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, None)
+    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, None, &[])
         .await
         .unwrap();
     assert!(

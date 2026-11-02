@@ -90,6 +90,7 @@ export function ChatComposer({
   onModeChange,
   onResearch,
   researchControls,
+  researchKinds = [],
   handle,
   suggestions = [],
 }: ChatComposerProps) {
@@ -175,7 +176,30 @@ export function ChatComposer({
   // dead key.
   let pickerSections: PickerSection[] = [];
   let pickerEmpty: string[] = [];
-  if (skillMenuOpen && skillTrigger) {
+  if (skillMenuOpen && skillTrigger && mode === "research") {
+    // Research's `/` sets the kind of piece, its one choice.
+    const query = skillTrigger[1].toLowerCase();
+    pickerSections = [
+      {
+        rows: researchKinds
+          .filter(
+            (k) =>
+              k.key.includes(query) || k.label.toLowerCase().includes(query),
+          )
+          .map((k) => ({
+            key: k.key,
+            primary: k.label,
+            secondary: `/${k.key}`,
+            pick: () => {
+              setInput("");
+              setPickerIndex(0);
+              k.pick();
+            },
+          })),
+      },
+    ];
+    pickerEmpty = [picker.skillNoMatch.replace("{query}", query)];
+  } else if (skillMenuOpen && skillTrigger) {
     const query = skillTrigger[1];
     const row = (skill: PickerSkill): PickerRow => ({
       key: skill.name,
@@ -238,7 +262,8 @@ export function ChatComposer({
     if (mode === "research") {
       if (!typed || busy || !onResearch) return;
       setInput("");
-      onResearch(typed);
+      setAttachments([]);
+      onResearch(typed, attachments);
       return;
     }
     const message = resolveSkillMessage(typed, skills, resolveName);
@@ -455,20 +480,22 @@ export function ChatComposer({
             ) : (
               <ModePicker {...pickerProps} holdFocus={phone} />
             )}
-            {/* A paper does its own research: no files, search or Deep
-                for it, only its own choices. */}
+            {!compact && (
+              <Tooltip text={labels.attachFile} side="above">
+                <button
+                  className="inline-chat-attach"
+                  aria-label={labels.attachFile}
+                  onClick={staged.attachFile}
+                >
+                  <PlusIcon />
+                </button>
+              </Tooltip>
+            )}
+            {/* A paper does its own searching and thinking: no search or
+                Deep for it, only its own choices. */}
             {mode === "research" && researchControls}
             {!compact && mode !== "research" && (
               <>
-                <Tooltip text={labels.attachFile} side="above">
-                  <button
-                    className="inline-chat-attach"
-                    aria-label={labels.attachFile}
-                    onClick={staged.attachFile}
-                  >
-                    <PlusIcon />
-                  </button>
-                </Tooltip>
                 <Tooltip
                   side="above"
                   description={

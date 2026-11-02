@@ -17,8 +17,12 @@ import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
 import { Suspense, useState } from "react";
 import { PaperGenre } from "../ai/paper/lazy";
-import type { PaperGenreChoice } from "../ai/paper/paper-genres";
-import type { Genre } from "../platform/bindings/ai-paper";
+import {
+  PAPER_GENRES,
+  genreLabel,
+  type PaperGenreChoice,
+} from "../ai/paper/paper-genres";
+import type { Genre, Material } from "../platform/bindings/ai-paper";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -79,7 +83,11 @@ export function EditorAgentPanel({
   guard: boolean;
   setGuard: (guard: boolean) => void;
   /** Starts a paper on a topic (usePaperWriter). */
-  writePaper: (topic: string, genre: Genre | null) => void;
+  writePaper: (
+    topic: string,
+    genre: Genre | null,
+    materials: Material[],
+  ) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
@@ -160,9 +168,21 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
-        onResearch={(topic) =>
-          writePaper(topic, paperGenre === "auto" ? null : paperGenre)
+        onResearch={(topic, files) =>
+          writePaper(
+            topic,
+            paperGenre === "auto" ? null : paperGenre,
+            // Text only: the research reads, it doesn't look.
+            files.flatMap((f) =>
+              f.kind === "text" ? [{ name: f.name, content: f.content }] : [],
+            ),
+          )
         }
+        researchKinds={(["auto", ...PAPER_GENRES] as const).map((genre) => ({
+          key: genre,
+          label: genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
+          pick: () => setPaperGenre(genre),
+        }))}
         researchControls={
           <Suspense fallback={null}>
             <PaperGenre t={t} value={paperGenre} onChange={setPaperGenre} />

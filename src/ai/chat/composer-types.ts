@@ -163,8 +163,12 @@ export interface ChatComposerProps {
   /** The mode as it is now, on the first render and on every switch. */
   onModeChange?: (mode: PanelMode) => void;
   /** The panel: Research is offered, and a message sent in it is the
-   *  topic of a paper, handed here instead of to onSend. */
-  onResearch?: (topic: string) => void;
+   *  topic of a paper, handed here with its text files instead of to
+   *  onSend. */
+  onResearch?: (topic: string, files: ChatAttachment[]) => void;
+  /** What `/` offers in Research: the kinds of piece, each set by picking
+   *  it. */
+  researchKinds?: { key: string; label: string; pick: () => void }[];
   /** Research mode's choices (the paper's length), in the toolbar where
    *  the other modes have their attach, search and Deep buttons. */
   researchControls?: ReactNode;
