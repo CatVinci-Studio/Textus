@@ -70,7 +70,8 @@ declare global {
       readonly plugin: PluginInfo;
       /** Places of the plugin's own: `global` for every folder, in
        *  Textus's config folder; `project` in the open folder's
-       *  .textus/plugins/<id>/ (needs project.data); `document(path)` for
+       *  .textus/plugins/<id>/ (needs project.data; with no folder open, a
+       *  hidden one in Textus's config folder); `document(path)` for
        *  one document - a diagram's zoom, a bookmark - which follows the
        *  document when it is renamed or moved. */
       readonly storage: {

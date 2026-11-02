@@ -1013,8 +1013,6 @@ export function installDevTauriShim(): void {
           !pluginState.plugins[id]?.granted.includes("project.data")
         )
           return Promise.reject(`${id} was not granted project.data.`);
-        if (scope === "project" && !args.root)
-          return Promise.reject("No folder is open.");
         const stores = (w.__devPluginStore ??= {}) as Record<
           string,
           { kv: Record<string, unknown>; files: Record<string, string> }
