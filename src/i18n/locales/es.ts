@@ -353,6 +353,14 @@ para usar una.
   chatInstallPlugin: "Instalar este complemento",
   chatUpdatePlugin: "Actualizar el complemento",
   chatPluginCantInstall: "Este complemento no se puede instalar: {reason}",
+  chatPluginCheckDom:
+    "Dibuja en la propia página, algo que un complemento no puede hacer: no se verá nada.",
+  chatPluginCheckPermission: "Usa {permission} sin pedir ese permiso.",
+  chatPluginCheckUnregistered: "Declara {id} pero nunca lo registra.",
+  chatPluginRunError: "Se detuvo con: {error}",
+  chatPluginFix: "Arreglar con IA",
+  chatPluginFixRequest:
+    "El complemento {name} tiene estos problemas:\n{problems}\nEncuentra la causa en su código y corrígela.",
   chatSaveSkill: "Guardar esta habilidad",
   chatUpdateSkill: "Actualizar la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",
@@ -1427,6 +1435,27 @@ para usar una.
   extensionsTabThemes: "Temas",
   extensionsTabSkills: "Habilidades",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Crear",
+  createTitle: "Haz el tuyo",
+  createIntro:
+    "Di lo que quieres y Textus AI lo hace aquí. Instálalo desde la tarjeta bajo la respuesta, pruébalo y pide cambios.",
+  createPlaceholder: "¿Qué debe hacer?",
+  createStart: "Empezar",
+  createNew: "Nuevo",
+  createAiOff: "Activa Textus AI para crear.",
+  createExamples: "Prueba uno",
+  createExamplePluginTodo:
+    "Una lista de tareas en la barra lateral que guarda mis tareas aunque no haya carpeta abierta",
+  createExamplePluginCount:
+    "Un comando que cuenta las palabras y caracteres de la selección",
+  createExampleThemeAmber:
+    "Un tema ámbar cálido, claro de día y oscuro de noche",
+  createExampleThemeMono:
+    "Un tema monocromo y tranquilo con fuente serif para leer largo rato",
+  createExampleSkillWeekly:
+    "Convierte mis notas en un informe semanal: hecho, siguiente y bloqueado",
+  createExampleSkillPolish:
+    "Pule mi texto: frases más ceñidas, mismo sentido y tono",
   extensionsIntroPlugins:
     "Paneles, tipos de archivo y herramientas nuevos para Textus.",
   extensionsIntroThemes:

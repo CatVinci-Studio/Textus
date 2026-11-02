@@ -346,6 +346,15 @@ export default {
   chatSaveSkill: "Сохранить этот навык",
   chatUpdateSkill: "Обновить навык",
   chatPluginCantInstall: "Этот плагин нельзя установить: {reason}",
+  chatPluginCheckDom:
+    "Он рисует прямо на странице, а плагин так не может: ничего не появится.",
+  chatPluginCheckPermission:
+    "Он использует {permission}, не запросив это разрешение.",
+  chatPluginCheckUnregistered: "Он объявляет {id}, но нигде не регистрирует.",
+  chatPluginRunError: "Остановился с ошибкой: {error}",
+  chatPluginFix: "Исправить с ИИ",
+  chatPluginFixRequest:
+    "У плагина {name} такие проблемы:\n{problems}\nНайди причину в его коде и исправь её.",
   toolSearchDocument: "Поиск в документе: «{arg}»",
   toolReadDocument: "Чтение: «{arg}»",
   toolReadWholeDocument: "Чтение документа",
@@ -1418,6 +1427,26 @@ export default {
   extensionsTabThemes: "Темы",
   extensionsTabSkills: "Навыки",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Создать",
+  createTitle: "Сделайте своё",
+  createIntro:
+    "Скажите, что вам нужно, и Textus AI сделает это здесь. Установите из карточки под ответом, попробуйте и попросите изменить.",
+  createPlaceholder: "Что оно должно делать?",
+  createStart: "Начать",
+  createNew: "Новое",
+  createAiOff: "Включите Textus AI, чтобы создавать.",
+  createExamples: "Примеры",
+  createExamplePluginTodo:
+    "Список дел на боковой панели, который хранит задачи даже без открытой папки",
+  createExamplePluginCount:
+    "Команда, которая считает слова и символы в выделении",
+  createExampleThemeAmber: "Тёплая янтарная тема: светлая днём и тёмная ночью",
+  createExampleThemeMono:
+    "Спокойная монохромная тема с шрифтом с засечками для долгого чтения",
+  createExampleSkillWeekly:
+    "Собери мои заметки в недельный отчёт: сделано, дальше, заблокировано",
+  createExampleSkillPolish:
+    "Отполируй мой текст: фразы короче, смысл и тон те же",
   extensionsIntroPlugins: "Новые панели, типы файлов и инструменты для Textus.",
   extensionsIntroThemes: "Как выглядят документы — поверх выбранной темы.",
   extensionsIntroSkills: `Способы хорошо делать определённую работу — для ${AI_NAME} и меню /.`,

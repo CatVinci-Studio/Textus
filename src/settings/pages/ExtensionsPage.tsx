@@ -5,6 +5,7 @@ import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { ThemesTab } from "../sections/theme";
 import { OwnSkillsList, importSkill } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
+import { CreateTab } from "./CreateTab";
 import { AvailableSkills } from "../sections/market-skills";
 import {
   catalogSnapshot,
@@ -24,7 +25,8 @@ const TABS = extensionsTabs();
 
 /**
  * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
- * each, all laid out alike: what is installed, then what is available.
+ * each, all laid out alike: what is installed, then what is available; and
+ * Create, where Textus AI makes one of them.
  * Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
@@ -45,6 +47,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
     plugins: t.extensionsTabPlugins,
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
+    create: t.extensionsTabCreate,
   };
   return (
     <>
@@ -98,6 +101,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
             />
           )}
           {tab === "mcp" && <McpSection t={t} />}
+          {tab === "create" && <CreateTab t={t} />}
         </div>
       )}
     </>

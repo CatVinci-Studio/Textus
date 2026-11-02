@@ -535,6 +535,11 @@ button.agent-context-chip:hover {
   padding: 4px;
 }
 
+.skill-mode-choice-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
 .agent-memory-chip-actions button + button::before,
 .agent-plugin-chip button + button::before {
   content: "·";
@@ -619,4 +624,19 @@ button.agent-context-chip:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--ui-muted);
+}
+
+/* What the plugin's code shows will go wrong, under its install chip. */
+.agent-plugin-problems {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  color: var(--ui-danger);
+}
+
+.agent-plugin-problems ul {
+  margin: 0;
+  padding-left: var(--space-4);
 }

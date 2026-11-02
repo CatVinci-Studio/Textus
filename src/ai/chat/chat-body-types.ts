@@ -88,6 +88,8 @@ export interface ChatBodyProps {
   /** "quick" (the in-document Quick Ask bar) renders no conversation: a
    *  one-line reply summary, the pending bar and the composer. */
   variant?: "quick" | "full";
+  /** The composer offers this mode alone. */
+  onlyMode?: AgentMode;
   /** Detached window only: fetches the editor's document and selection just
    *  before a send, since the user may have moved on since the last push.
    *  Resolves null if the editor doesn't answer; the last push is used. */

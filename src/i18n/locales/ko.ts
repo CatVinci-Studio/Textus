@@ -319,6 +319,16 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatInstallPlugin: "이 플러그인 설치",
   chatUpdatePlugin: "플러그인 업데이트",
   chatPluginCantInstall: "이 플러그인은 설치할 수 없습니다: {reason}",
+  chatPluginCheckDom:
+    "페이지에 직접 그리려 하지만 플러그인은 그럴 수 없습니다. 아무것도 표시되지 않습니다.",
+  chatPluginCheckPermission:
+    "{permission}을(를) 사용하지만 권한을 요청하지 않았습니다.",
+  chatPluginCheckUnregistered:
+    "{id}을(를) 선언했지만 코드에서 등록하지 않습니다.",
+  chatPluginRunError: "실행 중 오류: {error}",
+  chatPluginFix: "AI로 고치기",
+  chatPluginFixRequest:
+    "플러그인 {name}에 다음 문제가 있습니다:\n{problems}\n코드에서 원인을 찾아 고쳐 주세요.",
   chatSaveSkill: "이 스킬 저장",
   chatUpdateSkill: "스킬 업데이트",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
@@ -1354,6 +1364,24 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsTabThemes: "테마",
   extensionsTabSkills: "스킬",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "만들기",
+  createTitle: "나만의 것 만들기",
+  createIntro:
+    "원하는 것을 말하면 Textus AI가 여기서 만들어 줍니다. 답변 아래 카드에서 설치하고 써 본 뒤 수정을 요청하세요.",
+  createPlaceholder: "무엇을 하나요?",
+  createStart: "만들기 시작",
+  createNew: "새로 만들기",
+  createAiOff: "만들려면 Textus AI를 켜세요.",
+  createExamples: "예시",
+  createExamplePluginTodo:
+    "폴더를 열지 않아도 할 일을 저장하는 사이드바 할 일 목록",
+  createExamplePluginCount: "선택한 텍스트의 단어 수와 글자 수를 세는 명령",
+  createExampleThemeAmber: "낮에는 밝고 밤에는 어두운 따뜻한 호박색 테마",
+  createExampleThemeMono: "긴 글 읽기에 맞는 세리프 글꼴의 차분한 흑백 테마",
+  createExampleSkillWeekly:
+    "내 메모를 주간 보고서로 정리: 완료, 다음 할 일, 막힌 일",
+  createExampleSkillPolish:
+    "내 글 다듬기: 뜻과 말투는 그대로, 문장은 더 간결하게",
   extensionsIntroPlugins: "Textus에 새 패널, 파일 형식, 도구를 더합니다.",
   extensionsIntroThemes: "고른 테마 위에 얹는 문서의 모양입니다.",
   extensionsIntroSkills: `한 가지 일을 잘 해내는 방법으로, ${AI_NAME}와 / 메뉴에서 씁니다.`,

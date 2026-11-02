@@ -1,4 +1,4 @@
-import { Fragment, useSyncExternalStore } from "react";
+import { Suspense, useSyncExternalStore } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./menu/app-menu-model";
@@ -13,11 +13,19 @@ import { useFullscreenMark } from "./useFullscreenMark";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { PageSwitch } from "../mobile/PageSwitch";
 import { usePageSwipe } from "../mobile/usePageSwipe";
-import { runCommand } from "./commands";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
 import {
   statusItemsSnapshot,
   subscribeStatusItems,
 } from "../plugins/contributions/status-items";
+
+// What plugins show here comes with the first of it: plugins run once the
+// window is up, so it stays out of what loads before the first frame.
+const PluginStatusItems = lazyComponent(
+  lazyModule("plugin-status", () => import("./PluginStatusItems")),
+  (m) => m.PluginStatusItems,
+);
 
 /**
  * The window's one top strip: a real layout row (an overlay title bar hides
@@ -59,6 +67,10 @@ export function WindowBar({
 }) {
   const { t, settings } = useSettings();
   useFullscreenMark();
+  const hasStatus = useSyncExternalStore(
+    subscribeStatusItems,
+    () => statusItemsSnapshot().length > 0,
+  );
   const menuBar = appDrawsWindowFrame && settings.menuBarShown;
   // A phone switches between the document and Textus AI as two pages: the
   // capsule takes the AI button's place, and the word count goes into the
@@ -124,7 +136,11 @@ export function WindowBar({
         )}
       </span>
       <div className="window-bar-status">
-        <PluginStatusItems />
+        {hasStatus && (
+          <Suspense fallback={null}>
+            <PluginStatusItems />
+          </Suspense>
+        )}
         {largeDoc && (
           <span className="large-doc-badge" title={t.largeDocHint}>
             {t.largeDocBadge}
@@ -156,41 +172,5 @@ export function WindowBar({
       </div>
       <WindowCaptionButtons />
     </header>
-  );
-}
-
-/** What plugins show here: a text, its tooltip, and a command a click
- *  runs. */
-function PluginStatusItems() {
-  const items = useSyncExternalStore(subscribeStatusItems, statusItemsSnapshot);
-  return (
-    <>
-      {items.map((item) => {
-        const label = (
-          <span className="plugin-status-item" data-status={item.key}>
-            {item.text}
-          </span>
-        );
-        const shown = item.command ? (
-          <button
-            type="button"
-            className="plugin-status-item plugin-status-button"
-            data-status={item.key}
-            onClick={() => runCommand(item.command!)}
-          >
-            {item.text}
-          </button>
-        ) : (
-          label
-        );
-        return item.tooltip ? (
-          <Tooltip key={item.key} text={item.tooltip}>
-            {shown}
-          </Tooltip>
-        ) : (
-          <Fragment key={item.key}>{shown}</Fragment>
-        );
-      })}
-    </>
   );
 }

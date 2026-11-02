@@ -286,7 +286,7 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, Review, then Create.
+    // Write, then Review: Create is made in Settings › Extensions.
     expect(
       screen
         .getAllByRole("option")
@@ -294,7 +294,7 @@ describe("ChatComposer selection chip", () => {
           (option) =>
             option.querySelector(".mode-picker-mode-name")?.textContent,
         ),
-    ).toEqual(["Write", "Review", "Create"]);
+    ).toEqual(["Write", "Review"]);
     // Each with a line on what it does.
     expect(
       screen.getByRole("option", { name: "Review" }).textContent,
@@ -350,7 +350,7 @@ describe("ChatComposer selection chip", () => {
           (option) =>
             option.querySelector(".mode-picker-mode-name")?.textContent,
         ),
-    ).toEqual(["Write", "Review", "Research", "Create"]);
+    ).toEqual(["Write", "Review", "Research"]);
     fireEvent.click(screen.getByRole("option", { name: "Research" }));
     const box = screen.getByPlaceholderText("What the paper is about");
     fireEvent.change(box, { target: { value: "  Green roofs " } });
@@ -560,7 +560,9 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
+        // Create's skills, as its tab in Settings › Extensions lists them.
         defaultMode="create"
+        onlyMode="create"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -795,5 +797,28 @@ describe("ChatComposer suggested follow-ups", () => {
   it("stays out of Quick Ask's one-line box", () => {
     renderFollowUps(false, true);
     expect(chips()).toHaveLength(0);
+  });
+});
+
+describe("ChatComposer and Create", () => {
+  it("starts a panel whose default is Create in Write, as Create is made in Settings", () => {
+    const onSend = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="create"
+        defaultWebSearch={false}
+        onSend={onSend}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Mode" })).toHaveTextContent(
+      "Write",
+    );
   });
 });

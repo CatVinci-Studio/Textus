@@ -763,3 +763,115 @@ button.mcp-homepage:hover {
 .plugin-subgroup-title:first-child {
   margin-top: 0;
 }
+
+/* Settings › Extensions › Create: what to make and a box to say it, with
+   examples; then its conversation, filling the page's height. */
+.create-studio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.create-studio-title {
+  margin: 0;
+  font-size: var(--text-title);
+  font-weight: 600;
+}
+.create-studio .auth-tabs {
+  align-self: flex-start;
+  margin: 0;
+}
+.create-studio-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-body);
+  resize: vertical;
+}
+.create-studio-input:focus {
+  outline: none;
+  border-color: var(--ui-primary);
+}
+.create-studio-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.create-studio-note {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.create-studio-examples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.create-studio-example {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+  text-align: left;
+  cursor: pointer;
+}
+.create-studio-example:hover {
+  border-color: var(--ui-primary);
+}
+.create-studio-chat {
+  gap: var(--space-2);
+  height: min(640px, 70vh);
+}
+.create-studio-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.create-studio-kind {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+
+/* A plugin with more than one thing in the bar: its first, and a menu of
+   all of them with its commands, under its name. */
+.plugin-status-group {
+  position: relative;
+  pointer-events: auto;
+}
+.plugin-status-group > .plugin-status-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.plugin-status-more {
+  transform: rotate(90deg);
+  opacity: 0.7;
+}
+.plugin-status-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  transform-origin: top right;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.plugin-status-menu-title {
+  padding: 4px 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.plugin-status-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ui-border);
+}

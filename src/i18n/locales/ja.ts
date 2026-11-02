@@ -325,6 +325,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatInstallPlugin: "このプラグインを入れる",
   chatUpdatePlugin: "プラグインを更新",
   chatPluginCantInstall: "このプラグインは入れられません：{reason}",
+  chatPluginCheckDom:
+    "ページに直接描こうとしていますが、プラグインにはできません。何も表示されません。",
+  chatPluginCheckPermission:
+    "「{permission}」を使っていますが、その権限を求めていません。",
+  chatPluginCheckUnregistered:
+    "{id} を宣言していますが、コードで登録していません。",
+  chatPluginRunError: "実行中にエラー：{error}",
+  chatPluginFix: "AI に直してもらう",
+  chatPluginFixRequest:
+    "プラグイン「{name}」に次の問題があります：\n{problems}\nコードから原因を見つけて直してください。",
   chatSaveSkill: "このスキルを保存",
   chatUpdateSkill: "スキルを更新",
   toolSearchDocument: "文書内を「{arg}」で検索",
@@ -1367,6 +1377,23 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsTabThemes: "テーマ",
   extensionsTabSkills: "スキル",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "作成",
+  createTitle: "自分だけのものを作る",
+  createIntro:
+    "欲しいものを伝えると、Textus AI がここで作ります。返信の下のカードから入れて試し、直してほしい点を伝えましょう。",
+  createPlaceholder: "何をするものですか？",
+  createStart: "作成を始める",
+  createNew: "新規",
+  createAiOff: "作成するには Textus AI をオンにしてください。",
+  createExamples: "例",
+  createExamplePluginTodo:
+    "フォルダーを開いていなくてもタスクを保存できる、サイドバーの ToDo リスト",
+  createExamplePluginCount: "選択範囲の単語数と文字数を数えるコマンド",
+  createExampleThemeAmber: "昼は明るく夜は暗い、温かみのある琥珀色のテーマ",
+  createExampleThemeMono: "長文向けの明朝体を使った、静かなモノクロのテーマ",
+  createExampleSkillWeekly:
+    "メモを週報にまとめる：完了・次にやること・止まっていること",
+  createExampleSkillPolish: "文章を整える：意味と語調はそのまま、より簡潔に",
   extensionsIntroPlugins:
     "Textus に新しいパネル、ファイル形式、ツールを加えます。",
   extensionsIntroThemes: "選んだテーマの上に重ねる、文書の見た目です。",

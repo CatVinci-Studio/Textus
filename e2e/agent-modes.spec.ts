@@ -115,11 +115,6 @@ const MODE_LINES: Record<
       name: "Research",
       line: "Research a topic and write a paper",
     },
-    {
-      mode: "create",
-      name: "Create",
-      line: "Make a theme, plugin or skill",
-    },
   ],
   zh: [
     {
@@ -137,16 +132,11 @@ const MODE_LINES: Record<
       name: "研究",
       line: "研究一个主题，写成论文",
     },
-    {
-      mode: "create",
-      name: "创造",
-      line: "做一个主题、插件或技能",
-    },
   ],
 };
 
 for (const language of ["en", "zh"] as const)
-  test(`${language}: the composer offers Write, Review, Research and Create; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
+  test(`${language}: the composer offers Write, Review and Research; the empty panel shows the mode's icon and says what it does, and follows a switch`, async ({
     page,
   }) => {
     await openPanel(page, language);
@@ -164,7 +154,7 @@ for (const language of ["en", "zh"] as const)
     await expect(hint).toHaveText(modes[1].line);
     for (const { mode, name, line } of modes) {
       await picker.click();
-      // Write, Review, Create, then Research.
+      // Write, Review, then Research: Create is made in Settings.
       await expect(page.locator(".mode-picker-mode-name")).toHaveText(
         modes.map((m) => m.name),
       );

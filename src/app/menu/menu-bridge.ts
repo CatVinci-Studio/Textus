@@ -24,7 +24,7 @@ import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette-entry";
 import { copyPath } from "../../clipboard/copy-path";
-import { openReportProblem } from "../report/ReportProblem";
+import { openReportProblem } from "../report/report-open";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;

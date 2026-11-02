@@ -348,6 +348,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUpdateSkill: "Fähigkeit aktualisieren",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
+  chatPluginCheckDom:
+    "Es zeichnet direkt in die Seite, was ein Plugin nicht kann: nichts davon wird sichtbar.",
+  chatPluginCheckPermission:
+    "Es nutzt {permission}, ohne die Berechtigung anzufordern.",
+  chatPluginCheckUnregistered: "Es deklariert {id}, registriert es aber nie.",
+  chatPluginRunError: "Es brach ab mit: {error}",
+  chatPluginFix: "Mit KI beheben",
+  chatPluginFixRequest:
+    "Das Plugin {name} hat diese Probleme:\n{problems}\nFinde die Ursache im Code und behebe sie.",
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",
@@ -1422,6 +1431,27 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsTabThemes: "Themes",
   extensionsTabSkills: "Skills",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Erstellen",
+  createTitle: "Mach dein eigenes",
+  createIntro:
+    "Sag, was du willst, und Textus AI baut es hier. Installiere es über die Karte unter der Antwort, probiere es aus und bitte um Änderungen.",
+  createPlaceholder: "Was soll es tun?",
+  createStart: "Loslegen",
+  createNew: "Neu",
+  createAiOff: "Schalte Textus AI ein, um etwas zu erstellen.",
+  createExamples: "Beispiele",
+  createExamplePluginTodo:
+    "Eine Aufgabenliste in der Seitenleiste, die meine Aufgaben auch ohne geöffneten Ordner speichert",
+  createExamplePluginCount:
+    "Ein Befehl, der Wörter und Zeichen der Auswahl zählt",
+  createExampleThemeAmber:
+    "Ein warmes Bernstein-Theme, tagsüber hell und nachts dunkel",
+  createExampleThemeMono:
+    "Ein ruhiges, einfarbiges Theme mit Serifenschrift für langes Lesen",
+  createExampleSkillWeekly:
+    "Mach aus meinen Notizen einen Wochenbericht: erledigt, als Nächstes, blockiert",
+  createExampleSkillPolish:
+    "Glätte meinen Text: knappere Sätze, gleicher Sinn und Ton",
   extensionsIntroPlugins: "Neue Bereiche, Dateitypen und Werkzeuge für Textus.",
   extensionsIntroThemes: "Wie Dokumente aussehen, über dem gewählten Theme.",
   extensionsIntroSkills: `Wege, eine Art Aufgabe gut zu erledigen – für ${AI_NAME} und das /-Menü.`,
