@@ -68,6 +68,13 @@ it, lazily loaded. Each stage and helper is one run of
   a sentence; its review also reads for what a newcomer would stumble on;
   it opens on a headline and a bold standfirst, with no label, and ends
   on its sources (`Frame::News`).
+  **Choosing** (`paper/choose.rs`): a request that names no genre is
+  read first by one tool-less step, told each genre's `when` and lengths,
+  which replies with the genre and a length in characters - the length
+  the user picked kept when it suits. Its reply is fitted to the genre's
+  lengths, and one that can't be read keeps a paper. The choice is sent as
+  `genre` before research and kept in `paper.json`, so a paper gone on
+  with isn't chosen again.
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once

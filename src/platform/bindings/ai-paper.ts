@@ -281,6 +281,11 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "webSearch"; available: boolean } | 
 /**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number } | 
+/**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
  */
@@ -340,6 +345,11 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  scholarly indexes and the user's library are searched.
  */
 { type: "webSearch"; available: boolean } | 
+/**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number } | 
 /**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
@@ -418,8 +428,11 @@ export type PaperRequest_Deserialize = {
 	 */
 	id?: string | null,
 	topic: string,
-	/**  What kind of piece to write; a paper when not given. */
-	genre?: Genre,
+	/**
+	 *  What kind of piece to write; None for the model to choose from the
+	 *  topic, at about `target_chars`.
+	 */
+	genre?: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,
@@ -446,8 +459,11 @@ export type PaperRequest_Serialize = {
 	 */
 	id: string | null,
 	topic: string,
-	/**  What kind of piece to write; a paper when not given. */
-	genre: Genre,
+	/**
+	 *  What kind of piece to write; None for the model to choose from the
+	 *  topic, at about `target_chars`.
+	 */
+	genre: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
 	targetChars: number,

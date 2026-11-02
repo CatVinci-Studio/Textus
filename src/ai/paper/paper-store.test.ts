@@ -126,6 +126,18 @@ describe("the paper store", () => {
     expect(paperRun("k6")!.webSearch).toBe(false);
   });
 
+  it("knows the kind of piece and its length once they are chosen", () => {
+    applyPaperEvent("k7", { type: "phase", phase: "planning" });
+    expect(paperRun("k7")!.genre).toBeNull();
+    applyPaperEvent("k7", {
+      type: "genre",
+      genre: "report",
+      targetChars: 6000,
+    });
+    expect(paperRun("k7")!.genre).toBe("report");
+    expect(paperRun("k7")!.targetChars).toBe(6000);
+  });
+
   it("proposes nothing: the paper is already in the document", () => {
     const turns = paperWrittenTurns("Written.");
     expect(proposalsFromTurns(turns)).toHaveLength(0);

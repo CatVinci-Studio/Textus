@@ -33,6 +33,10 @@ pub(crate) enum Frame {
 pub(crate) struct Profile {
     /// What the piece is called in the prompts.
     pub name: &'static str,
+    /// When a request calls for it, as the step choosing a genre reads it.
+    pub when: &'static str,
+    /// Its length in characters, at least and at most.
+    pub chars: (u32, u32),
     /// What its research questions cover between them.
     pub research_angles: &'static str,
     /// What a research helper reads and keeps, and which sources it prefers.
@@ -56,6 +60,8 @@ pub(crate) struct Profile {
 
 const PAPER: Profile = Profile {
     name: "paper",
+    when: "the request asks for a paper, a literature review, a thesis chapter or scholarly writing, or its topic is a research question meant for specialists",
+    chars: (5000, 10000),
     research_angles: "background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading",
     research_sources: "Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree.",
     thesis: "a thesis",
@@ -69,6 +75,8 @@ const PAPER: Profile = Profile {
 
 const REPORT: Profile = Profile {
     name: "report",
+    when: "a long read for the general public on news, current affairs, a place, a person, a trend or how something works - in-depth journalism as the BBC, Reuters or a magazine writes it",
+    chars: (5000, 10000),
     research_angles: "what is happening and why it matters now, who it affects and how - real people, places and cases -, the background a newcomer needs, the numbers that matter and what they mean in everyday terms, what the different sides and independent experts say, and what happens next",
     research_sources: "Search the web, read the best pages in full, and keep every finding that answers it with add_note - specific facts with dates, names, places and numbers, not generalities. Prefer original reporting by established news organisations, official statements and documents, and named experts; keep what people said word for word as the note's quote, saying who said it and their role, since real cases and voices carry a report. Say where sources disagree.",
     thesis: "a thesis - the story's main line in one plain sentence: what is happening and why it matters",
@@ -81,6 +89,15 @@ const REPORT: Profile = Profile {
 };
 
 impl Genre {
+    /// Every genre, in the order the choosing step is told them.
+    pub(crate) const ALL: [Genre; 2] = [Genre::Paper, Genre::Report];
+
+    /// `chars` brought within this genre's lengths.
+    pub(crate) fn fit(self, chars: u32) -> u32 {
+        let (least, most) = self.profile().chars;
+        chars.clamp(least, most)
+    }
+
     pub(crate) fn profile(self) -> &'static Profile {
         match self {
             Genre::Paper => &PAPER,
