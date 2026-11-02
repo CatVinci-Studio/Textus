@@ -76,8 +76,7 @@ export interface ChatBodyProps {
   onModeChange?: (mode: PanelMode) => void;
   /** The panel: Research is offered, its message a paper's topic. */
   onResearch?: ChatComposerProps["onResearch"];
-  /** Research mode's choices, in the composer's toolbar. */
-  researchControls?: React.ReactNode;
+  researchKind?: ChatComposerProps["researchKind"];
   researchKinds?: ChatComposerProps["researchKinds"];
   /** What a message becomes before it is sent: Create's first one calls
    *  its kind's skill. */

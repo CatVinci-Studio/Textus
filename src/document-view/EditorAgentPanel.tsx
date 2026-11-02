@@ -16,8 +16,7 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
-import { Suspense, useState } from "react";
-import { PaperGenre } from "../ai/paper/lazy";
+import { useState } from "react";
 import {
   PAPER_GENRES,
   genreLabel,
@@ -179,10 +178,14 @@ export function EditorAgentPanel({
           label: genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
           pick: () => setPaperGenre(genre),
         }))}
-        researchControls={
-          <Suspense fallback={null}>
-            <PaperGenre t={t} value={paperGenre} onChange={setPaperGenre} />
-          </Suspense>
+        researchKind={
+          paperGenre === "auto"
+            ? null
+            : {
+                label: genreLabel(t, paperGenre),
+                clearLabel: t.paperGenreAuto,
+                clear: () => setPaperGenre("auto"),
+              }
         }
         footer={
           guard && (

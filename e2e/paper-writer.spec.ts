@@ -256,12 +256,17 @@ test("a kind of piece picked is the one asked for, and the card says it at once"
   const panel = page.locator(".agent-panel-view");
   await panel.getByRole("combobox", { name: /^Mode/ }).click();
   await page.getByRole("option", { name: "Research" }).click();
-  const kind = panel.getByRole("combobox", { name: "Kind of piece" });
-  await expect(kind).toHaveText("Choose for me");
-  await kind.click();
-  await page.getByRole("option", { name: "News brief" }).click();
-  await expect(kind).toHaveText("News brief");
-  await panel.locator("textarea").fill("Today's news");
+  // The model's choice by default: nothing shown for it; / picks one,
+  // shown until it is cleared.
+  const box = panel.locator("textarea");
+  await expect(panel.getByLabel("Choose for me")).toHaveCount(0);
+  await box.fill("/brief");
+  await box.press("Enter");
+  await expect(box).toHaveValue("");
+  await expect(panel.locator(".inline-chat-selection-chip")).toHaveText(
+    "News brief",
+  );
+  await box.fill("Today's news");
   await panel.locator("textarea").press("Enter");
 
   await expect(page.locator(".paper-card-title")).toHaveText("News brief");

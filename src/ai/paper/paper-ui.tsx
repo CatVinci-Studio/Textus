@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
-import { Select } from "../../ui/Select";
 import { useSettings } from "../../prefs/SettingsContext";
 import { OutlineCard } from "./OutlineCard";
 import type { SectionStatus } from "../../platform/bindings/ai-paper";
@@ -12,11 +11,7 @@ import {
   type PaperRunState,
   type QuestionState,
 } from "./paper-store";
-import {
-  genreLabel,
-  PAPER_GENRES,
-  type PaperGenreChoice,
-} from "./paper-genres";
+import { genreLabel } from "./paper-genres";
 import { citationOrder } from "./paper-document";
 import "./outline-card.css";
 import { toolActivityLabels, toolActivityText } from "../chat/tool-activity";
@@ -322,33 +317,5 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
         )
       )}
     </div>
-  );
-}
-
-/** Research mode's choice of what kind of piece to write - by default the
- *  model's, from the topic; the topic is the message sent. */
-export function PaperGenre({
-  t,
-  value,
-  onChange,
-}: {
-  t: Strings;
-  value: PaperGenreChoice;
-  onChange: (genre: PaperGenreChoice) => void;
-}) {
-  return (
-    <Select
-      className="inline-chat-mode paper-length"
-      aria-label={t.paperGenre}
-      value={value}
-      onChange={(e) => onChange(e.target.value as PaperGenreChoice)}
-    >
-      <option value="auto">{t.paperGenreAuto}</option>
-      {PAPER_GENRES.map((genre) => (
-        <option key={genre} value={genre}>
-          {genreLabel(t, genre)}
-        </option>
-      ))}
-    </Select>
   );
 }

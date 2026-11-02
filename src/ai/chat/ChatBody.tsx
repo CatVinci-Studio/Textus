@@ -72,7 +72,7 @@ export function ChatBody({
   onEscape,
   onModeChange,
   onResearch,
-  researchControls,
+  researchKind,
   researchKinds,
   prepareMessage,
   composerRef,
@@ -518,7 +518,7 @@ export function ChatBody({
         onEscape={onEscape ?? (() => {})}
         onModeChange={onModeChange}
         onResearch={onResearch}
-        researchControls={researchControls}
+        researchKind={researchKind}
         researchKinds={researchKinds}
       />
       {footer}

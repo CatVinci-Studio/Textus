@@ -89,7 +89,7 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   onResearch,
-  researchControls,
+  researchKind,
   researchKinds = [],
   handle,
   suggestions = [],
@@ -485,8 +485,25 @@ export function ChatComposer({
               </Tooltip>
             )}
             {/* A paper does its own searching and thinking: no search or
-                Deep for it, only its own choices. */}
-            {mode === "research" && researchControls}
+                Deep for it; the kind of piece picked with /, while one is. */}
+            {mode === "research" && researchKind && (
+              <span className="inline-chat-selection-chip">
+                <span className="inline-chat-chip-label">
+                  {researchKind.label}
+                </span>
+                <Tooltip text={researchKind.clearLabel} side="above">
+                  <button
+                    type="button"
+                    className="inline-chat-chip-remove"
+                    aria-label={researchKind.clearLabel}
+                    {...holdFocus}
+                    onClick={researchKind.clear}
+                  >
+                    <CloseIcon />
+                  </button>
+                </Tooltip>
+              </span>
+            )}
             {!compact && mode !== "research" && (
               <>
                 <Tooltip

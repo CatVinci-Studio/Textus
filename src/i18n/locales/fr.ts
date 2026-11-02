@@ -410,9 +410,7 @@ utiliser une.
   paperOutlineLess: "Moins",
   paperOutlineApprove: "Approuver et rédiger",
   paperOutlineApproving: "Début de la rédaction…",
-  paperTopicPlaceholder:
-    "Sur quoi écrire, pour qui, et ce que le texte doit couvrir",
-  paperGenre: "Type de texte",
+  paperTopicPlaceholder: "Sujet et lecteurs… (@ fichier, / type de texte)",
   paperGenreAuto: "Choisir pour moi",
   paperGenrePaper: "Article scientifique",
   paperGenreReview: "Revue de littérature",

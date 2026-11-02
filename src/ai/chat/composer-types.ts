@@ -163,7 +163,11 @@ export interface ChatComposerProps {
   /** What `/` offers in Research: the kinds of piece, each set by picking
    *  it. */
   researchKinds?: { key: string; label: string; pick: () => void }[];
-  /** Research mode's choices (the paper's length), in the toolbar where
-   *  the other modes have their attach, search and Deep buttons. */
-  researchControls?: ReactNode;
+  /** The kind of piece picked with `/` in Research, shown while one is:
+   *  `clear` goes back to the model's choice. */
+  researchKind?: {
+    label: string;
+    clearLabel: string;
+    clear: () => void;
+  } | null;
 }

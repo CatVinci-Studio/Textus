@@ -393,9 +393,7 @@ type /name in a conversation to use one.
   paperOutlineLess: "Show less",
   paperOutlineApprove: "Approve and write",
   paperOutlineApproving: "Starting to write…",
-  paperTopicPlaceholder:
-    "What to write about, for whom, and anything it should cover",
-  paperGenre: "Kind of piece",
+  paperTopicPlaceholder: "Topic and readers… (@ file, / kind of piece)",
   paperGenreAuto: "Choose for me",
   paperGenrePaper: "Academic paper",
   paperGenreReview: "Literature review",

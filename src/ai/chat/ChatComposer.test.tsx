@@ -406,6 +406,43 @@ describe("ChatComposer selection chip", () => {
     fireEvent.click(screen.getByText("Send"));
     expect(onResearch).toHaveBeenCalledWith("Tides", [notes]);
   });
+
+  it("shows Research's kind of piece only once one is picked, and clears it", () => {
+    const clear = vi.fn();
+    const props = {
+      docPath: null,
+      workspaceRoot: null,
+      selectedText: null,
+      busy: false,
+      labels,
+      defaultMode: "review" as const,
+      defaultWebSearch: false,
+      onSend: () => {},
+      onResearch: () => {},
+      onStop: () => {},
+      onEscape: () => {},
+    };
+    const { rerender } = render(
+      <ChatComposer {...props} researchKind={null} />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+    fireEvent.click(screen.getByRole("option", { name: "Research" }));
+    // The model's choice: nothing in the toolbar for it.
+    expect(screen.queryByLabelText("Choose for me")).toBeNull();
+    rerender(
+      <ChatComposer
+        {...props}
+        researchKind={{
+          label: "News brief",
+          clearLabel: "Choose for me",
+          clear,
+        }}
+      />,
+    );
+    expect(screen.getByText("News brief")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Choose for me"));
+    expect(clear).toHaveBeenCalled();
+  });
 });
 
 describe("ChatComposer Deep thinking", () => {
