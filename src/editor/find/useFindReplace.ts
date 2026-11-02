@@ -5,13 +5,10 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
 import { scrollBehavior } from "../../ui/motion";
-import { unfoldRange } from "../html/details-fold";
 import type { EditorRunner } from "../useEditorRunner";
 import { isImeKeydown } from "../../utils/ime";
-import {
-  SMOOTH_SCROLL_MS,
-  drawAround,
-} from "../lazy-blocks/lazy-blocks-drawer";
+import { SMOOTH_SCROLL_MS } from "../lazy-blocks/lazy-blocks-drawer";
+import { makeReachable } from "../reveal-position";
 
 export interface FindReplaceStatus {
   matchCount: number;
@@ -41,10 +38,12 @@ function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
   const s = findReplaceKey.getState(view.state);
   const match = s?.matches[s.activeIndex];
   if (!match) return;
-  // A match in a folded <details> opens it.
-  unfoldRange(view, match.from, match.to);
-  // In a long document the match may be out of sight, not yet drawn.
-  drawAround(view, match.from, behavior === "smooth" ? SMOOTH_SCROLL_MS : 0);
+  makeReachable(
+    view,
+    match.from,
+    match.to,
+    behavior === "smooth" ? SMOOTH_SCROLL_MS : 0,
+  );
   try {
     const dom = view.domAtPos(match.from).node;
     const el = dom instanceof Element ? dom : dom.parentElement;

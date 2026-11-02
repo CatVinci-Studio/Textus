@@ -164,6 +164,43 @@ test("an AI edit and a review note on folded text open the fold", async ({
   );
 });
 
+test("stepping to a review note in text folded again opens the fold", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const { editor } = await openFolded(page, {
+    "textus-agent-panel-open": "1",
+  });
+  const note = (id: string, anchor: string) => [
+    {
+      kind: "ToolCall",
+      call_id: id,
+      name: "add_comment",
+      arguments: JSON.stringify({ anchor, comment: "Say why." }),
+    },
+    { kind: "ToolResult", call_id: id, output: "Comment added" },
+  ];
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "Notes, please" },
+      ...note("c1", "Intro paragraph."),
+      ...note("c2", NOTED),
+      { kind: "Assistant", text: "Done." },
+    ],
+  });
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Notes, please");
+  await composer.press("Enter");
+  const noted = editor.locator("p", { hasText: NOTED });
+  await expect(noted).toBeVisible();
+  // Folded again by the user, then reached from the notes' bar.
+  await editor.locator(".raw-html-details-head summary").click();
+  await expect(noted).toBeHidden();
+  await page.getByRole("button", { name: "Next note" }).click();
+  await page.getByRole("button", { name: "Next note" }).click();
+  await expect(noted).toBeVisible();
+});
+
 test("a grammar check asked for in folded text opens it", async ({ page }) => {
   const { editor, hidden } = await openFolded(page);
   // The caret into the folded text (it opens), then the fold closed over it.
