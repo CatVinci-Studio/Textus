@@ -61,11 +61,18 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
   await expect(chip).toContainText("Weekly report");
   const modes = chip.getByRole("button", { name: /Modes it works in/ });
   await expect(modes).toHaveText("Write");
+  // The chip's actions are links, not the browser's bare buttons.
+  const save = chip.getByRole("button", { name: "Save this skill" });
+  await expect(save).toHaveCSS("border-top-style", "none");
   await modes.click();
+  // Its menu opens whole beside the button, each mode under its name alone.
+  await expect(
+    chip.getByRole("menuitemcheckbox", { name: "Review", exact: true }),
+  ).toBeVisible();
   await chip.getByRole("menuitemcheckbox", { name: "Review" }).click();
   // Straight to Save, the menu still open: the press that closes it is
   // Save's.
-  await chip.getByRole("button", { name: "Save this skill" }).click();
+  await save.click();
   await expect(chip).toContainText("Kept as /weekly-report");
   const log = await page.evaluate(
     () =>

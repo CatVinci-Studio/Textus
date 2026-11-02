@@ -471,12 +471,12 @@ button.agent-context-chip:hover {
   gap: 8px;
 }
 
-.agent-memory-chip-actions button,
 /* What a plugin the reply wrote asks to do, before Install. */
 .agent-plugin-permissions {
   color: var(--ui-muted);
 }
 
+.agent-memory-chip-actions > button,
 .agent-theme-chip button {
   padding: 0;
   border: 0;
@@ -527,7 +527,7 @@ button.agent-context-chip:hover {
 .skill-mode-choice-menu {
   position: absolute;
   top: calc(100% + 4px);
-  right: 0;
+  left: 0;
   z-index: 30;
   display: flex;
   flex-direction: column;
@@ -540,19 +540,19 @@ button.agent-context-chip:hover {
   bottom: calc(100% + 4px);
 }
 
-.agent-memory-chip-actions button + button::before,
+.agent-memory-chip-actions > button + button::before,
 .agent-plugin-chip button + button::before {
   content: "·";
   margin-right: 8px;
   color: var(--ui-muted);
 }
 
-.agent-memory-chip-actions button:hover:not(:disabled),
+.agent-memory-chip-actions > button:hover:not(:disabled),
 .agent-theme-chip button:hover:not(:disabled) {
   text-decoration: underline;
 }
 
-.agent-memory-chip-actions button:disabled,
+.agent-memory-chip-actions > button:disabled,
 .agent-theme-chip button:disabled {
   opacity: 0.5;
   cursor: default;
