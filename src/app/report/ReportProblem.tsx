@@ -19,13 +19,6 @@ import {
 } from "./report";
 import "./ReportProblem.css";
 
-const listeners = new Set<(open: boolean) => void>();
-
-/** Help > Report a Problem. */
-export function openReportProblem(): void {
-  for (const listener of listeners) listener(true);
-}
-
 const KIND_TEXT: Record<ReportChoice["kind"], TextKey> = {
   bug: "reportKindBug",
   idea: "reportKindIdea",
@@ -51,21 +44,18 @@ const SEVERITY_TEXT: Record<ReportChoice["severity"], TextKey> = {
  * below it: sent to be filed as an issue, opened in GitHub's form, or
  * copied for a chat or an email. Nothing leaves without a button pressed.
  */
-export function ReportProblemHost({
+export function ReportProblemDialog({
   t,
   settings,
+  open,
+  onClose,
 }: {
   t: Strings;
   settings: Settings;
+  open: boolean;
+  onClose: () => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [facts, setFacts] = useState<ReportFacts | null>(null);
-  useEffect(() => {
-    listeners.add(setOpen);
-    return () => {
-      listeners.delete(setOpen);
-    };
-  }, []);
   useEffect(() => {
     if (!open) return;
     systemIpc
@@ -75,7 +65,7 @@ export function ReportProblemHost({
         setFacts({ ...info, language: settings.language, settings }),
       );
   }, [open, settings]);
-  const close = () => setOpen(false);
+  const close = onClose;
   const presence = usePresence(open, { exitMs: 150 });
   const dialog = useModalDialog(close, open, ".report-problem-text");
   if (!presence.mounted) return null;
