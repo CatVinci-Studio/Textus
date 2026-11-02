@@ -113,7 +113,7 @@ const MODE_LINES: Record<
     {
       mode: "research",
       name: "Research",
-      line: "Research a topic and write a paper",
+      line: "Research a topic and write it up: a report, an article, a thread, a brief or a paper",
     },
     {
       mode: "create",
@@ -135,7 +135,7 @@ const MODE_LINES: Record<
     {
       mode: "research",
       name: "研究",
-      line: "研究一个主题，写成论文",
+      line: "研究一个主题并写出来：深度报道、文章、推文串、快讯或论文",
     },
     {
       mode: "create",

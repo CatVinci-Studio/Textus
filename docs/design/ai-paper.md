@@ -87,7 +87,7 @@ it, lazily loaded. Each stage and helper is one run of
   (`GenreForm::headings`), and opens on its headline alone
   (`Frame::Headline`). The run's `genre` event and `ai_paper_status`
   carry the `GenreForm`, so a card back after a restart knows them.
-  A **brief** (300-1,000 characters) is a news agency's short story for
+  A **brief** (300-1,500 characters) is a news agency's short story for
   quick or automated reporting: one to three questions on the latest
   reporting, written in the inverted pyramid - the news in the first
   sentence - under a present-tense headline, with no figures, straight on.

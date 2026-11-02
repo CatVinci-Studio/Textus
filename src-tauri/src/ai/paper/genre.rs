@@ -172,7 +172,7 @@ const ARTICLE: Profile = Profile {
 
 const THREAD: Profile = Profile {
     name: "thread",
-    when: "a thread for X (Twitter), Weibo or another social network: a topic or a piece of news told in a run of short posts",
+    when: "only when the request asks for posts on a social network - a thread, tweets, X, Twitter, Weibo, 推文, 微博, 帖子 - told in a run of short posts",
     chars: (600, 2500),
     research_angles: "what happened and why it matters, the most striking facts and numbers, a case or a quote, and what comes next",
     research_sources: REPORT.research_sources,
@@ -196,13 +196,13 @@ const THREAD: Profile = Profile {
 
 const BRIEF: Profile = Profile {
     name: "brief",
-    when: "a quick news story or update: what has just happened, told in a few paragraphs - a news flash, a daily update, an automated report on an event, a release or a set of figures",
-    chars: (300, 1000),
-    research_angles: "what exactly happened, when and where, who is involved, the key number or statement, and what happens next",
+    when: "a news story, a press release or a briefing of the day's news: what has just happened, told news-first in a few paragraphs - a news flash, 新闻稿, 快讯, 简报, 消息, a daily roundup, an automated report on an event, a release or a set of figures",
+    chars: (300, 1500),
+    research_angles: "what exactly happened, when and where, who is involved, the key number or statement, and what happens next - or, for a roundup of the day's news, the few most important stories, one question each",
     research_sources: "Search the web for the latest reporting and official statements, read the best pages in full, and keep each fact that answers it with add_note - who, what, when, where, the exact number or words, with the date it was published. Prefer the original announcement or a news agency; say where reports disagree.",
     thesis: "a thesis - the news in one plain sentence",
     outline_order: "as one section, the whole story: its key points from most to least important",
-    voice: "a short news story as a news agency writes it, in the inverted pyramid: the first sentence says what happened, who, when and where - the most important fact first; the next one or two say why it matters and give the key number or quote; then the details and the background, most important first, and what happens next. Short paragraphs of one or two sentences, plain words, every term explained, the date of each event given; no opinion, no build-up, no summing up. Say who says a thing in the sentence itself.",
+    voice: "a short news story as a news agency writes it, in the inverted pyramid: the first sentence says what happened, who, when and where - the most important fact first; the next one or two say why it matters and give the key number or quote; then the details and the background, most important first, and what happens next. Short paragraphs of one or two sentences, plain words, every term explained, the date of each event given; no opinion, no build-up, no summing up. Say who says a thing in the sentence itself. A roundup of several stories gives each its own short paragraphs, most important first, each opening on a bold lead-in of a few words that says what it is - never numbered posts.",
     cite: REPORT.cite,
     review_for: "a first sentence that doesn't give the news, a fact the story gives twice, a claim stronger than what it cites, a term never explained, a date missing from an event",
     opening: "The title is a news headline: short, in the present tense, saying what happened. The abstract is empty.",

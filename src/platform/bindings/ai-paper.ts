@@ -59,29 +59,6 @@ export type BudgetCounts = {
 	modelSteps: number,
 };
 
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier = Dossier_Serialize | Dossier_Deserialize;
-
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier_Deserialize = {
-	notes: Note_Deserialize[],
-	/**
-	 *  The sources the notes cite, numbered once for the whole paper: what
-	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
-	 */
-	sources?: WebSource[],
-};
-
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier_Serialize = {
-	notes: Note_Serialize[],
-	/**
-	 *  The sources the notes cite, numbered once for the whole paper: what
-	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
-	 */
-	sources: WebSource[],
-};
-
 /**
  *  What drafting an outlined paper takes. Mirrored in
  *  src/platform/bindings/ai-paper.ts.
@@ -213,58 +190,6 @@ export type ImageModel_Serialize = {
 	baseUrl: string,
 	/**  At most this many pictures per send; `PER_SEND` when unset. */
 	limit: number | null,
-};
-
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead = Lead_Serialize | Lead_Deserialize;
-
-export type LeadKind = "image" | "data";
-
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead_Deserialize = {
-	kind: LeadKind,
-	description: string,
-	url?: string | null,
-};
-
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead_Serialize = {
-	kind: LeadKind,
-	description: string,
-	url: string | null,
-};
-
-/**  One finding: a claim and what supports it. */
-export type Note = Note_Serialize | Note_Deserialize;
-
-/**  One finding: a claim and what supports it. */
-export type Note_Deserialize = {
-	/**  "n1", "n2", ...: what an outline section's `evidence` names. */
-	id: string,
-	/**  The research question it answers. */
-	question: string,
-	claim: string,
-	evidence: string,
-	/**  Words taken verbatim from a source, if any. */
-	quote?: string | null,
-	/**  The sources' numbers in the paper's source book. */
-	sources: number[],
-	leads: Lead_Deserialize[],
-};
-
-/**  One finding: a claim and what supports it. */
-export type Note_Serialize = {
-	/**  "n1", "n2", ...: what an outline section's `evidence` names. */
-	id: string,
-	/**  The research question it answers. */
-	question: string,
-	claim: string,
-	evidence: string,
-	/**  Words taken verbatim from a source, if any. */
-	quote: string | null,
-	/**  The sources' numbers in the paper's source book. */
-	sources: number[],
-	leads: Lead_Serialize[],
 };
 
 /**  The plan the user approves before drafting. Kept as `outline.json`. */
@@ -591,12 +516,5 @@ export type SectionStatus = "drafting" | "drafted" | "revising";
 export type SourceEntry = {
 	n: number,
 	entry: string,
-};
-
-/**  One web page a reply cites as `[n]`. Exported as WebSource. */
-export type WebSource = {
-	n: number,
-	url: string,
-	title: string,
 };
 
