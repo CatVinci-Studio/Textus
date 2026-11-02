@@ -100,6 +100,14 @@ test("the title is centred over the document column, not the window", async ({
     await centre(page, ".main-pane"),
     0,
   );
+
+  // The AI panel takes its width from the other side of the column.
+  await page.locator(".window-bar-toggle").click();
+  await expect(page.locator(".agent-panel")).toBeVisible();
+  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
+    await centre(page, ".main-pane"),
+    0,
+  );
 });
 
 test("the title slides with the sidebar, frame for frame", async ({ page }) => {
@@ -162,6 +170,50 @@ test("the title slides with the sidebar, frame for frame", async ({ page }) => {
   // Seen across the slide, not at either end of it.
   expect(travelled).toBeGreaterThan(50);
   expect(worst).toBeLessThan(1);
+});
+
+test("the title slides with the AI panel, rather than jumping to its column", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" }, animations: true });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  const slides = await page.evaluate(async () => {
+    const title = document.querySelector(".window-bar-title")!;
+    const toggle = document.querySelector<HTMLElement>(".window-bar-toggle")!;
+    const sliding = (a: Animation) =>
+      a instanceof CSSTransition &&
+      a.transitionProperty === "transform" &&
+      a.playState === "running";
+    // The panel mounts - or unmounts, once its exit has played - a frame or
+    // more after the click, so wait on the title's own transition rather
+    // than on a clock.
+    const waitForSlide = async () => {
+      const until = performance.now() + 3000;
+      while (performance.now() < until) {
+        if (title.getAnimations().some(sliding)) return true;
+        await new Promise(requestAnimationFrame);
+      }
+      return false;
+    };
+    const settle = async () => {
+      const until = performance.now() + 3000;
+      while (performance.now() < until) {
+        if (!title.getAnimations().some((a) => a.playState === "running"))
+          return;
+        await new Promise(requestAnimationFrame);
+      }
+    };
+    toggle.click();
+    const opening = await waitForSlide();
+    await settle();
+    toggle.click();
+    const closing = await waitForSlide();
+    await settle();
+    return { opening, closing };
+  });
+
+  expect(slides).toEqual({ opening: true, closing: true });
 });
 
 test.describe("on a Mac", () => {
