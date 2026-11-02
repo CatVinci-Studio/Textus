@@ -965,17 +965,34 @@ fn the_references_list_only_what_the_text_cites_in_number_order() {
         "Again [3](https://example.org/study) and [1](https://a.example/).".to_string(),
     ];
     assert_eq!(
-        finish::references(&sections, &d, "zh").unwrap(),
+        finish::references(
+            &sections,
+            &d,
+            finish::references_heading("zh", Genre::Paper)
+        )
+        .unwrap(),
         "## 参考文献\n\n\\[1\\] <https://a.example/>\n\n\\[3\\] Study. <https://example.org/study>"
     );
-    assert!(finish::references(&sections, &d, "zh-Hant")
-        .unwrap()
-        .starts_with("## 參考文獻"));
-    assert!(finish::references(&sections, &d, "en-US")
-        .unwrap()
-        .starts_with("## References"));
+    assert!(finish::references(
+        &sections,
+        &d,
+        finish::references_heading("zh-Hant", Genre::Paper)
+    )
+    .unwrap()
+    .starts_with("## 參考文獻"));
+    assert!(finish::references(
+        &sections,
+        &d,
+        finish::references_heading("en-US", Genre::Paper)
+    )
+    .unwrap()
+    .starts_with("## References"));
     assert_eq!(
-        finish::references(&["No citations.".to_string()], &d, "en"),
+        finish::references(
+            &["No citations.".to_string()],
+            &d,
+            finish::references_heading("en", Genre::Paper)
+        ),
         None
     );
 }
@@ -1217,7 +1234,12 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         draft::problems(&cited, &section, &sources, "en"),
         Vec::<String>::new()
     );
-    let listed = finish::references(std::slice::from_ref(&cited), &dossier, "en").unwrap();
+    let listed = finish::references(
+        std::slice::from_ref(&cited),
+        &dossier,
+        finish::references_heading("en", Genre::Paper),
+    )
+    .unwrap();
     assert!(
         listed.ends_with("\\[1\\] a.md. `references/Tides 2024/a.md`"),
         "{listed}"
@@ -1520,7 +1542,7 @@ fn an_untitled_source_is_listed_by_its_address_once() {
     let listed = finish::references(
         &["A [3](https://doi.org/10.1/x) and [4](https://b.example/).".to_string()],
         &d,
-        "en",
+        finish::references_heading("en", Genre::Paper),
     )
     .unwrap();
     assert_eq!(
@@ -1932,7 +1954,12 @@ fn citations_are_numbered_in_the_order_the_paper_first_cites_them() {
             (3, "https://example.org/study")
         ]
     );
-    let listed = finish::references(&sections, &numbered, "en").unwrap();
+    let listed = finish::references(
+        &sections,
+        &numbered,
+        finish::references_heading("en", Genre::Paper),
+    )
+    .unwrap();
     assert!(
         listed.starts_with(
             "## References\n\n\\[1\\] Source 93. <https://a.example/>\n\n\\[2\\] Source 248."
@@ -2024,4 +2051,23 @@ fn a_paper_kept_before_genres_reads_as_a_paper() {
     let read: Paper = serde_json::from_value(kept).unwrap();
     assert_eq!(read.genre, Genre::Paper);
     assert_eq!(serde_json::to_value(Genre::Paper).unwrap(), json!("paper"));
+}
+
+#[tokio::test]
+async fn a_report_opens_on_a_headline_and_a_standfirst_and_lists_its_sources() {
+    let report = Paper {
+        genre: Genre::Report,
+        ..paper()
+    };
+    let made = finish::opening(
+        &Opener("{\"title\": \"城市正在变热\", \"abstract\": \"屋顶上的草能让街道凉下来。\"}"),
+        &report,
+        &outline(),
+        &[],
+    )
+    .await;
+    assert_eq!(made, "# 城市正在变热\n\n**屋顶上的草能让街道凉下来。**");
+    assert_eq!(finish::references_heading("zh", Genre::Report), "资料来源");
+    assert_eq!(finish::references_heading("en", Genre::Report), "Sources");
+    assert_eq!(finish::references_heading("en", Genre::Paper), "References");
 }

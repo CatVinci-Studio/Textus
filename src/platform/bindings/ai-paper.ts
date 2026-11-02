@@ -144,7 +144,12 @@ export type Genre =
  *  A researched paper with a thesis, an abstract and numbered
  *  references.
  */
-"paper";
+"paper" | 
+/**
+ *  A long read for the general reader, as a news organisation writes
+ *  one: a headline, a standfirst, and its sources named in the text.
+ */
+"report";
 
 /**
  *  The image model setting as a request carries it. Keep in step with the
