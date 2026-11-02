@@ -53,11 +53,12 @@ test("the phone menu is short; the view modes are switched in Settings", async (
   ]);
   await page.getByRole("menuitem", { name: "Settings…" }).tap();
   await page.getByRole("button", { name: "Editor & Appearance" }).tap();
-  // Source mode is the window's, not a setting: the switch follows it.
-  const source = page.getByRole("checkbox", { name: "Source Mode" });
-  await expect(source).not.toBeChecked();
-  await source.tap();
-  await expect(source).toBeChecked();
+  // Source mode is the window's, not a setting: the choice follows it.
+  const view = page.getByRole("combobox", { name: "Editing view" });
+  // The phone's own picker: a native select.
+  await expect(view).toHaveValue("rich");
+  await view.selectOption("source");
+  await expect(view).toHaveValue("source");
   await expect(
     page.locator(".source-textarea, .cm-editor, textarea").first(),
   ).toBeAttached();
