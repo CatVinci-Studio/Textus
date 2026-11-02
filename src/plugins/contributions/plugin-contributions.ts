@@ -3,6 +3,8 @@ import { registerCommand, runCommand } from "../../app/commands";
 import { registerSidebarTab } from "../../app/sidebar-tabs";
 import { registerEditorMenuItems } from "../../editor/editor-menu-items";
 import { showMessage } from "../../ui/app-dialog";
+import { currentStrings } from "../../i18n/current";
+import { explainError } from "../../utils/error-explain";
 import { isMacPlatform } from "../../platform/os";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
@@ -91,7 +93,7 @@ export function applyContributions(
             : void deps
                 .runPluginCommand(id, command.command, args)
                 .catch((err) =>
-                  showMessage(String((err as Error)?.message ?? err), {
+                  showMessage(explainError(err, currentStrings()), {
                     title: text(manifest.name),
                     tone: "error",
                   }),

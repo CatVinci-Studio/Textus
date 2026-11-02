@@ -1,4 +1,5 @@
 import type { DocumentSnapshot } from "../ai/doc-markdown";
+import { MODES } from "../ai/modes";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
@@ -15,9 +16,13 @@ import { chatLabels } from "../ai/chat/chat-labels";
 import type { AgentConversation } from "../ai/chat/useAgentConversation";
 import type { EditProposal } from "../ai/types";
 import { canDetachChat } from "../platform/capabilities";
-import { Suspense, useState } from "react";
-import { PaperLength } from "../ai/paper/lazy";
-import { DEFAULT_PAPER_LENGTH } from "../ai/paper/paper-lengths";
+import { useState } from "react";
+import {
+  PAPER_GENRES,
+  genreLabel,
+  type PaperGenreChoice,
+} from "../ai/paper/paper-genres";
+import type { Genre, Material } from "../platform/bindings/ai-paper";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -78,18 +83,18 @@ export function EditorAgentPanel({
   guard: boolean;
   setGuard: (guard: boolean) => void;
   /** Starts a paper on a topic (usePaperWriter). */
-  writePaper: (topic: string, targetChars: number) => void;
+  writePaper: (
+    topic: string,
+    genre: Genre | null,
+    materials: Material[],
+  ) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
   const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
-  // Research mode's paper length; the message sent is its topic.
-  const [paperChars, setPaperChars] = useState(DEFAULT_PAPER_LENGTH);
-  const emptyText = {
-    write: t.agentPanelEmptyWrite,
-    review: t.agentPanelEmptyReview,
-    create: t.agentPanelEmptyCreate,
-    research: t.agentPanelEmptyResearch,
-  }[mode];
+  // Research mode's kind of piece, "auto" for the model's choice; the
+  // message sent is its topic.
+  const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
+  const emptyText = t[MODES[mode].empty];
   return (
     <AgentPanelView
       labels={{
@@ -158,11 +163,35 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
-        onResearch={(topic) => writePaper(topic, paperChars)}
-        researchControls={
-          <Suspense fallback={null}>
-            <PaperLength t={t} value={paperChars} onChange={setPaperChars} />
-          </Suspense>
+        onResearch={(topic, files) =>
+          writePaper(
+            topic,
+            paperGenre === "auto" ? null : paperGenre,
+            // Text only: the research reads, it doesn't look.
+            files.flatMap((f) =>
+              f.kind === "text" ? [{ name: f.name, content: f.content }] : [],
+            ),
+          )
+        }
+        // `/` picks the kind of piece in Research; skills elsewhere.
+        kinds={
+          mode !== "research"
+            ? []
+            : (["auto", ...PAPER_GENRES] as const).map((genre) => ({
+                key: genre,
+                label:
+                  genre === "auto" ? t.paperGenreAuto : genreLabel(t, genre),
+                pick: () => setPaperGenre(genre),
+              }))
+        }
+        kind={
+          mode !== "research" || paperGenre === "auto"
+            ? null
+            : {
+                label: genreLabel(t, paperGenre),
+                clearLabel: t.paperGenreAuto,
+                clear: () => setPaperGenre("auto"),
+              }
         }
         footer={
           guard && (

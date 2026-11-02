@@ -82,7 +82,15 @@ If another copy of the e2e suite may be running (another worktree), set
 - Keep to the code shape in CONTRIBUTING.md › Code style: pure logic in
   modules of its own, side effects in the hook or command that calls it; at
   most 8 hooks a component and 600 lines a file; provider differences as
-  data, never an `if` on a provider's id. `npm run check` holds the limits.
+  data, never an `if` on a provider's id. `npm run check` holds the limits,
+  and fails on code copied instead of shared.
+- Build on the shared layer a feature belongs to rather than beside it: a
+  new AI mode or long-form writer takes the user's instructions, memories
+  and style from `agent::user_guidance` / `writing_guidance`, words tool
+  calls with `src/ai/chat/tool-activity.ts` and uses the chat's composer; a
+  plugin API call's permission goes in `src/plugins/api-permissions.ts`,
+  which both the broker and the install check read. A second copy of one of
+  these drifts from the first.
 - Add or update tests with the change, each in the lowest layer that can
   catch its mistake ([docs/dev/testing.md](docs/dev/testing.md)): unit tests
   next to the code (`name.test.ts`, `#[cfg(test)]`); what keys, typing and

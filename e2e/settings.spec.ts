@@ -218,7 +218,7 @@ test.describe("desktop", () => {
     ).toBeFocused();
   });
 
-  test("the Source switch, from split view, ends in plain source mode", async ({
+  test("Source Mode, picked from split view, ends in plain source mode", async ({
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
@@ -232,11 +232,12 @@ test.describe("desktop", () => {
     await expect(page.locator(".split-view")).toBeVisible();
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
-    const source = panel.getByRole("checkbox", { name: t.menuViewSource });
-    await expect(source).not.toBeChecked();
-    await source.click();
+    const view = panel.getByRole("combobox", { name: "Editing view" });
+    await expect(view).toHaveText("Source and Preview");
+    await view.click();
+    await page.getByRole("option", { name: t.menuViewSource }).click();
 
-    await expect(source).toBeChecked();
+    await expect(view).toHaveText(t.menuViewSource);
     await expect(page.locator(".split-view")).toHaveCount(0);
     await expect(
       page.locator('[data-active-tab="true"] textarea.source-view'),
@@ -590,7 +591,9 @@ test.describe("desktop", () => {
     await open(t.navEditor);
     await expect(titles).toHaveText([
       t.navTheme,
+      "Text & Layout",
       t.settingsViewGroup,
+      "This Document",
       t.navMarkdown,
       t.imageStorageGroupLabel,
       t.menuExport,
@@ -598,7 +601,7 @@ test.describe("desktop", () => {
     // The text's width and the interface's size are layout, not theme.
     const view = panel.locator(".settings-group", {
       has: page.locator(".settings-group-title", {
-        hasText: t.settingsViewGroup,
+        hasText: "Text & Layout",
       }),
     });
     await expect(view.locator(".settings-row-label").first()).toHaveText(
@@ -700,7 +703,7 @@ test.describe("phone", () => {
     await expect(panel.locator(".settings-nav")).toHaveCount(0);
     await expect(panel.locator(".settings-search")).toHaveCount(0);
     await expect(
-      panel.getByRole("checkbox", { name: "Source Mode" }),
+      panel.getByRole("combobox", { name: "Editing view" }),
     ).toBeVisible();
 
     // Back: the list again, under the search box.
@@ -724,6 +727,7 @@ test.describe("phone", () => {
   }) => {
     await openPhone(page, { settings: { language: "en" } });
     const panel = await openSettings(page);
+    // Found by the ? text of the row whose choice it is.
     await panel.locator(".settings-search input").fill("source mode");
     // The results stand in for the list.
     await expect(panel.locator(".settings-nav")).toHaveCount(0);
@@ -735,7 +739,7 @@ test.describe("phone", () => {
     expect(first!.y - (box!.y + box!.height)).toBeLessThan(40);
     await panel.getByRole("option").first().tap();
     await expect(
-      panel.getByRole("checkbox", { name: "Source Mode" }),
+      panel.getByRole("combobox", { name: "Editing view" }),
     ).toBeVisible();
     await panel
       .locator(".settings-header")
@@ -782,7 +786,7 @@ test.describe("phone", () => {
     // No PDF page number switch, with no PDF export.
     await back.tap();
     await panel.getByRole("button", { name: t.navEditor }).tap();
-    await expect(panel.getByText(t.menuViewSource)).toBeVisible();
+    await expect(panel.getByText(t.contentWidthLabel)).toBeVisible();
     await expect(panel.getByText(t.pdfPageNumbersLabel)).toHaveCount(0);
 
     // No update button or channel: the App Store updates the app.
@@ -829,7 +833,7 @@ test.describe("phone", () => {
   });
 });
 
-test("Settings' view switches match the View menu's: Track My Changes and Read Only, for the document in front", async ({
+test("Settings' This Document switches match the View menu's: Track My Changes and Read Only", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });

@@ -110,14 +110,15 @@ pub(crate) async fn write_section(
 ) -> Result<String, String> {
     let watch = SectionWatch::new(index as u32, send);
     let section = &outline.sections[index];
+    let profile = paper.genre.profile();
     let unit = if length("字", &paper.language) == 1 {
         "characters"
     } else {
         "words"
     };
     let instructions = format!(
-        "You write one section of a paper, in the language tagged \"{}\": substantial, specific prose for an informed reader - the notes' figures, dates, names and findings, explained and connected into an argument that serves the thesis, not a list of facts. Say where sources disagree and what the evidence can't show. Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
-        paper.language
+        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
+        profile.name, paper.language, profile.voice, profile.cite
     );
     let sources: Vec<(u32, String)> = dossier
         .notes
@@ -141,7 +142,8 @@ pub(crate) async fn write_section(
         async move {
             let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
             let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
-            let wrong = problems(&markdown, section, sources, &paper.language);
+            let mut wrong = problems(&markdown, section, sources, &paper.language);
+            wrong.extend(long_posts(&markdown, paper));
             if !markdown.is_empty() {
                 *last.lock().unwrap() = Some(markdown.clone());
             }
@@ -216,11 +218,40 @@ pub(crate) async fn write_section(
             Some(repaired(&text, &sources))
         })
         .ok_or_else(|| format!("\"{}\" wasn't written in a form that holds.", section.title))?;
-    Ok(format!(
-        "## {}\n\n{}",
-        section.title,
-        super::timeline::upright_timelines(&body)
-    ))
+    let body = super::timeline::upright_timelines(&body);
+    // A genre of one section is all under its title: no heading of its own.
+    if !paper.genre.form().headings {
+        return Ok(body);
+    }
+    Ok(format!("## {}\n\n{}", section.title, body))
+}
+
+/// The posts of a thread too long for one post: its genre's most
+/// characters, half that in Chinese, Japanese and Korean, whose
+/// characters count double. Soft, as a length is.
+pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
+    let Some(most) = paper.genre.profile().scale.post_chars else {
+        return Vec::new();
+    };
+    let most = if length("字", &paper.language) == 1 {
+        most / 2
+    } else {
+        most
+    };
+    // A citation's address isn't read in the post: its link shows as [n].
+    let address = regex::Regex::new(r"\]\([^)\s]*\)").unwrap();
+    markdown
+        .split("\n---")
+        .map(|post| address.replace_all(post.trim(), "]").chars().count() as u32)
+        .enumerate()
+        .filter(|(_, n)| *n > most)
+        .map(|(i, n)| {
+            format!(
+                "It is too long in post {}: {n} characters, against at most {most} - split it or cut it.",
+                i + 1
+            )
+        })
+        .collect()
 }
 
 /// A writer that answered with its section as its reply instead of handing

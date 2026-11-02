@@ -16,7 +16,8 @@
   color: var(--ui-muted);
 }
 
-.mode-picker-model::before {
+/* The dot only between a mode and its model: alone, the model is all. */
+.mode-picker-value + .mode-picker-model::before {
   content: "·";
   padding: 0 0.4em;
 }

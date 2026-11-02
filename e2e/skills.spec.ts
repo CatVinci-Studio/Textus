@@ -10,7 +10,7 @@ const AI_NAME = "Textus AI";
 async function openWithPanel(
   page: Page,
   language: string,
-  mode: "write" | "review" | "create" = "review",
+  mode: "write" | "review" = "review",
 ) {
   await openApp(page, {
     settings: { language, agentDefaultMode: mode },
@@ -60,17 +60,17 @@ test.describe("the / picker", () => {
   test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the mode's skills, grouped and in Chinese", async ({
     page,
   }) => {
-    const input = await openWithPanel(page, "zh", "create");
+    const input = await openWithPanel(page, "zh", "review");
     const menu = page.locator(".composer-picker");
     for (const key of ["/", "／", "、", "・"]) {
       await input.fill(key);
       await expect(menu, key).toBeVisible();
-      // Create's three built-ins.
-      await expect(menu.getByRole("option"), key).toHaveCount(3);
+      // Review's one built-in.
+      await expect(menu.getByRole("option"), key).toHaveCount(1);
       await expect(
-        menu.getByRole("group", { name: "生成" }),
+        menu.getByRole("group", { name: "检查" }),
         key,
-      ).toContainText("设计主题");
+      ).toContainText("/proofread");
       await expect(menu, key).toContainText("↑↓ 选择");
       await input.fill("");
       await expect(menu, key).toHaveCount(0);
@@ -120,13 +120,14 @@ test.describe("the / picker", () => {
   });
 
   test("each mode offers its own skills", async ({ page }) => {
-    const input = await openWithPanel(page, "en", "create");
+    // Create's are in its tab in Settings › Extensions, never the panel's.
+    const input = await openWithPanel(page, "en", "review");
     const menu = page.locator(".composer-picker");
     await input.fill("/");
-    await expect(menu.getByRole("option")).toHaveCount(3);
+    await expect(menu.getByRole("option")).toHaveCount(1);
+    await expect(menu).toContainText("/proofread");
     for (const name of ["/theme", "/plugin", "/skill"])
-      await expect(menu).toContainText(name);
-    await expect(menu).not.toContainText("/proofread");
+      await expect(menu).not.toContainText(name);
   });
 
   test("picks with the keyboard; Escape closes only the menu", async ({

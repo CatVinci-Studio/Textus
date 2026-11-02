@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
 import type { Strings } from "../../i18n/strings";
-import { Select } from "../../ui/Select";
 import { useSettings } from "../../prefs/SettingsContext";
 import { OutlineCard } from "./OutlineCard";
-import type {
-  ActivityKind,
-  SectionStatus,
-} from "../../platform/bindings/ai-paper";
+import type { SectionStatus } from "../../platform/bindings/ai-paper";
 import {
-  PAPER_MODEL_STEPS,
-  PAPER_STEPS_SPENT,
   paperActions,
   restorePaperCard,
   usePaperRun,
@@ -17,9 +11,10 @@ import {
   type PaperRunState,
   type QuestionState,
 } from "./paper-store";
-import { PAPER_LENGTHS } from "./paper-lengths";
+import { genreLabel } from "./paper-genres";
 import { citationOrder } from "./paper-document";
 import "./outline-card.css";
+import { toolActivityLabels, toolActivityText } from "../chat/tool-activity";
 
 /** One line of what the run is doing now. */
 function progressLine(run: PaperRunState, t: Strings): string {
@@ -68,21 +63,6 @@ function useElapsed(since: number, on: boolean): string {
   }, [on, since]);
   const seconds = Math.max(0, Math.floor((now - since) / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
-function activityLabel(kind: ActivityKind, t: Strings): string {
-  switch (kind) {
-    case "search":
-      return t.paperActivitySearch;
-    case "read":
-      return t.paperActivityRead;
-    case "papers":
-      return t.paperActivityPapers;
-    case "library":
-      return t.paperActivityLibrary;
-    case "note":
-      return t.paperActivityNote;
-  }
 }
 
 function questionStatus(q: QuestionState, t: Strings): string {
@@ -145,6 +125,7 @@ function Mark({ state }: { state: string }) {
  *  and the helpers' latest steps, the outline as it is written, or each
  *  section with what its writer is writing. */
 function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
+  const activity = { toolActivity: toolActivityLabels(t) };
   if (run.phase === "starting" || run.phase === "planning") {
     return run.thinking ? (
       <p className="paper-card-thinking">{run.thinking}</p>
@@ -170,10 +151,9 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
           <ul className="paper-card-recent">
             {run.recent.map((a) => (
               <li key={a.id} className="paper-card-enter">
-                <span className="paper-card-recent-kind">
-                  {activityLabel(a.kind, t)}
+                <span className="paper-card-recent-detail">
+                  {toolActivityText(a.tool, a.arguments, activity)}
                 </span>
-                <span className="paper-card-recent-detail">{a.detail}</span>
               </li>
             ))}
           </ul>
@@ -274,7 +254,9 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
   return (
     <div className="paper-card">
       <div className="paper-card-head">
-        <span className="paper-card-title">{t.paperCardTitle}</span>
+        <span className="paper-card-title">
+          {run?.genre ? genreLabel(t, run.genre) : t.paperCardTitle}
+        </span>
         <span className="paper-card-topic">{info.topic}</span>
       </div>
       {run?.phase === "awaitingOutline" && run.outline && !run.error && (
@@ -288,9 +270,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
       )}
       {run?.error ? (
         <p className="paper-card-error" role="alert">
-          {run.error === PAPER_STEPS_SPENT
-            ? t.paperStepsSpent.replace(/{n}/g, String(PAPER_MODEL_STEPS))
-            : run.error}
+          {run.error}
         </p>
       ) : (
         line && (
@@ -337,38 +317,5 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
         )
       )}
     </div>
-  );
-}
-
-/** Research mode's choice of the paper's length; the topic is the
- *  message sent. */
-export function PaperLength({
-  t,
-  value,
-  onChange,
-}: {
-  t: Strings;
-  value: number;
-  onChange: (chars: number) => void;
-}) {
-  const label = (n: number) =>
-    n === PAPER_LENGTHS[0]
-      ? t.paperLengthShort
-      : n === PAPER_LENGTHS[1]
-        ? t.paperLengthMedium
-        : t.paperLengthLong;
-  return (
-    <Select
-      className="inline-chat-mode paper-length"
-      aria-label={t.paperLength}
-      value={String(value)}
-      onChange={(e) => onChange(Number(e.target.value))}
-    >
-      {PAPER_LENGTHS.map((n) => (
-        <option key={n} value={String(n)}>
-          {label(n)}
-        </option>
-      ))}
-    </Select>
   );
 }

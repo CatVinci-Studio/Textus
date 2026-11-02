@@ -54,6 +54,56 @@ it, lazily loaded. Each stage and helper is one run of
   `OutlineSection`s with `FigurePlan`s (`generated`, `mermaid`, `chart`,
   `web`). The TypeScript shapes are generated into
   `src/platform/bindings/ai-paper.ts`.
+- **Genres** (`paper/genre.rs`): what kind of piece is written. A genre
+  is a `Profile` of the parts of the stages' prompts that differ by kind - what the research covers and prefers, the
+  outline's order, the writers' voice, what the review reads for, what
+  opens the piece - while each stage keeps its own checks. `Paper` and
+  `PaperRequest` carry it; a paper kept before genres is a paper.
+  A **report** is a long read for the general reader, as the BBC or
+  Reuters writes one: its research looks for people, cases, quotes and
+  what happens next; its outline is ordered as a story with plain
+  crossheads; its writers explain every term on first use, keep numbers
+  few and pictured, and say in the sentence who says a thing, citing once
+  a sentence; its review also reads for what a newcomer would stumble on;
+  it opens on a headline and a bold standfirst, with no label, and ends
+  on its sources (`Frame::News`).
+  **Choosing** (`paper/choose.rs`): a request that names no genre is
+  read first by one tool-less step, told each genre's `when` and lengths,
+  which replies with the genre and a length in characters - the length
+  the user picked kept when it suits. Its reply is fitted to the genre's
+  lengths, and one that can't be read keeps a paper. The choice is sent as
+  `genre` before research and kept in `paper.json`, so a paper gone on
+  with isn't chosen again.
+  **Scale**: each genre also has a `Scale` - its research questions and
+  budget, its sections and characters a section, figures at least one
+  for every two or three sections or none, whether the user approves its
+  outline. An **article** (a newsletter or 公众号 feature, 1,500-4,000
+  characters) and a **thread** (numbered posts for X or Weibo, split by
+  `---`, each post at most 280 characters, 140 in Chinese, Japanese and
+  Korean - a soft check) research less and are written straight on: the
+  app approves their outline itself (`GenreForm::checkpoint`). A thread
+  is one section, all under its headline, with no heading of its own
+  (`GenreForm::headings`), and opens on its headline alone
+  (`Frame::Headline`). The run's `genre` event and `ai_paper_status`
+  carry the `GenreForm`, so a card back after a restart knows them.
+  A **brief** (300-1,500 characters) is a news agency's short story for
+  quick or automated reporting: one to three questions on the latest
+  reporting, written in the inverted pyramid - the news in the first
+  sentence - under a present-tense headline, with no figures, straight on.
+  A **review** is a literature review: its research searches the
+  scholarly literature first, one study to a note with its method and
+  sample, on more scholarly lookups and fewer searches (30, 50, 50, 4);
+  its outline goes strand by strand - a theme, an approach, a school -
+  never study by study, and ends on the gaps; its writers compare and
+  weigh studies rather than list them; at least a figure every three
+  sections; framed as a paper (`Frame::Academic`). An **analysis** is a
+  report for decision-makers - a market, industry or policy analysis, a
+  调研报告: research prefers official statistics, filings and research
+  firms (50, 60, 10, 4), every figure kept with its unit, year and who
+  measured it; the outline puts the findings first and ends on
+  recommendations that rest on them; it opens on a labelled executive
+  summary and ends on its sources (`Frame::Executive`). A paper no longer
+  takes a literature review.
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once
@@ -138,7 +188,7 @@ it, lazily loaded. Each stage and helper is one run of
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
   the lazy `paper` module): the AI panel's fourth mode, **Research**, takes
-  the message as the paper's topic, at the length picked beside the mode
+  the message as the paper's topic, of the kind picked beside the mode - **Choose for me** (the default) lets the model choose it and its length, a genre picked is written at the middle of its lengths -
   under the message box; it never reaches the chat agent, so it is no skill's mode and
   not a default. The conversation
   gets the user's ask and a card (`write_paper` turns, which Rust keeps from

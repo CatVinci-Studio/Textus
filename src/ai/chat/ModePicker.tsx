@@ -21,7 +21,8 @@ type Item =
 /**
  * The composer's mode and model in one control: "Write · gpt-6.1-sol". One
  * list holds the modes, then the models grouped by provider. Without
- * `models` it is the mode alone.
+ * `models` it is the mode alone; with one mode (Create), the model alone,
+ * and nothing when there is no model to switch to either.
  */
 export function ModePicker({
   mode,
@@ -40,8 +41,9 @@ export function ModePicker({
   holdFocus?: boolean;
 }) {
   const groups = models?.groups ?? [];
+  const shownModes = modes.length > 1 ? modes : [];
   const items: Item[] = [
-    ...modes.map((choice) => ({ kind: "mode" as const, choice })),
+    ...shownModes.map((choice) => ({ kind: "mode" as const, choice })),
     ...groups.flatMap((g) =>
       g.models.map((model) => ({
         kind: "model" as const,
@@ -126,8 +128,9 @@ export function ModePicker({
     }
   }
 
-  const current = modes.find((m) => m.value === mode);
+  const current = shownModes.find((m) => m.value === mode);
   const model = models?.model;
+  if (items.length === 0) return null;
   const option = (item: Item, index: number) => (
     <li
       key={
@@ -189,7 +192,7 @@ export function ModePicker({
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKey}
       >
-        <span className="mode-picker-value">{current?.label}</span>
+        {current && <span className="mode-picker-value">{current.label}</span>}
         {model && (
           <span className="mode-picker-model" title={model}>
             {model}
@@ -212,13 +215,13 @@ export function ModePicker({
             data-floating-select=""
             onKeyDown={onListKey}
           >
-            {groups.length > 0 && (
+            {groups.length > 0 && shownModes.length > 0 && (
               <li role="presentation" className="ui-select-group">
                 {labels.mode}
               </li>
             )}
-            {modes.map((choice, i) => option({ kind: "mode", choice }, i))}
-            {groups.length > 0 && (
+            {shownModes.map((choice, i) => option({ kind: "mode", choice }, i))}
+            {groups.length > 0 && shownModes.length > 0 && (
               <li
                 role="presentation"
                 className="ui-select-group mode-picker-models"

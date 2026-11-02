@@ -30,7 +30,7 @@ const savedServers = (page: Page) =>
     return local.mcpServers ?? null;
   });
 
-test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
+test("Extensions has a tab each for themes, plugins, skills and MCP, and one to make them", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -40,6 +40,7 @@ test("Extensions has a tab each for themes, plugins, skills and MCP", async ({
     "Plugins",
     "Skills",
     "MCP",
+    "Create",
   ]);
   await expect(panel.getByRole("tab", { name: "Themes" })).toHaveAttribute(
     "aria-selected",

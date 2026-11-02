@@ -1307,10 +1307,10 @@ test("one view for every document: switching it switches every tab, and new ones
   await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings.getByRole("button", { name: "Editor & Appearance" }).click();
-  const split = settings.getByRole("checkbox", { name: "Source and Preview" });
-  await expect(split).toBeChecked();
-  await split.click();
-  await expect(split).not.toBeChecked();
+  const view = settings.getByRole("combobox", { name: "Editing view" });
+  await expect(view).toHaveText("Source and Preview");
+  await view.click();
+  await page.getByRole("option", { name: "Rich text" }).click();
   await settings.getByRole("button", { name: "Close" }).click();
   await expect(settings).toHaveCount(0);
   for (const i of [0, 1, 2]) {

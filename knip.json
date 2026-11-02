@@ -13,5 +13,6 @@
   "ignoreExportsUsedInFile": true,
   "rules": {
     "duplicates": "off"
-  }
+  },
+  "ignoreDependencies": ["jscpd"]
 }

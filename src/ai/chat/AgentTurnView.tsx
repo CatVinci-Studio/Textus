@@ -3,13 +3,14 @@ import { lazy, Suspense, useState } from "react";
 import type { AgentTurn, ImageAttachment, WebSource } from "../types";
 import { links } from "../../platform/ipc";
 import { MarkdownText } from "../MarkdownText";
-import { siteOf } from "../citations";
 import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import type { ReplyPluginLabels } from "./ReplyPlugins";
 import { ReplySkills } from "./ReplySkills";
 import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
 import "./AgentTurnView.css";
+import { toolActivityText } from "./tool-activity";
+import { siteOf } from "../citations";
 
 // A reply that wrote a plugin brings in the plugin manager: loaded only then.
 const ReplyPlugins = lazy(() =>
@@ -27,48 +28,6 @@ export interface AgentTurnLabels extends ReplyThemeLabels, ReplyPluginLabels {
   toolResult: string;
   /** The heading of the list of web pages under a reply. */
   sources: string;
-}
-
-/** A tool call as one readable line: "Reading the section “Methods”"
- *  rather than `read_document`. */
-export function toolActivityText(
-  name: string,
-  argumentsJson: string,
-  labels: AgentTurnLabels,
-): string {
-  let args: Record<string, unknown> = {};
-  try {
-    args = JSON.parse(argumentsJson) ?? {};
-  } catch {
-    // Partial or malformed arguments: describe the tool without them.
-  }
-  // web_search takes a list of queries, web_fetch an address - shown by
-  // its site, which is what says where the request went.
-  const queries = Array.isArray(args.queries)
-    ? args.queries
-        .filter((q): q is string => typeof q === "string")
-        .join("”, “")
-    : undefined;
-  const site = typeof args.url === "string" ? siteOf(args.url) : undefined;
-  // An MCP server's tool, named as the model knows it (mcp_<server>_<tool>),
-  // which says whose tool it is.
-  if (name.startsWith("mcp_") && labels.toolActivity.mcp)
-    return labels.toolActivity.mcp.replace("{arg}", name.slice(4));
-  const arg =
-    [args.query, queries, site, args.heading, args.path, args.name].find(
-      (v): v is string => typeof v === "string" && v.length > 0,
-    ) ??
-    (typeof args.start_line === "number"
-      ? `${args.start_line}–${typeof args.end_line === "number" ? args.end_line : ""}`
-      : "");
-  // A tool called with no argument may have its own wording ("Reading the
-  // document" rather than "Reading “”"), keyed "<name>:whole".
-  const template =
-    (arg ? undefined : labels.toolActivity[`${name}:whole`]) ??
-    labels.toolActivity[name] ??
-    labels.toolActivity["*"];
-  if (!template) return name;
-  return template.replace("{arg}", arg);
 }
 
 export function AgentTurnView({

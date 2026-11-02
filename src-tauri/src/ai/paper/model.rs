@@ -3,11 +3,9 @@
 //! scripted model in tests.
 
 use super::budget::{BudgetKind, SharedBudget, STEPS_SPENT};
-use super::research::{READ_REFERENCE_TOOL, SEARCH_REFERENCES_TOOL};
-use super::{ActivityKind, PaperEvent};
-use aicompat::agent::{AgentTurn, StepResult, ToolCall, ToolSpec};
+use super::PaperEvent;
+use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
 use futures_util::future::BoxFuture;
-use serde_json::Value;
 use std::sync::Mutex;
 
 /// One step of a model: what a stage's run asks of it. A trait, so the
@@ -118,6 +116,53 @@ impl<M: Model> Model for Metered<'_, M> {
     }
 }
 
+/// A model whose every step is told what the user asks of all the writing
+/// done for them - their writing instructions, memories, style profile and
+/// library (`agent::user_guidance`) - after the stage's own instructions.
+pub(crate) struct Guided<'a, M: Model> {
+    pub(crate) inner: &'a M,
+    pub(crate) guidance: &'a str,
+}
+
+impl<M: Model> Guided<'_, M> {
+    fn instructions(&self, instructions: &str) -> String {
+        if self.guidance.is_empty() {
+            instructions.to_string()
+        } else {
+            format!("{instructions}\n\n{}", self.guidance)
+        }
+    }
+}
+
+impl<M: Model> Model for Guided<'_, M> {
+    fn step<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            let instructions = self.instructions(instructions);
+            self.inner.step(&instructions, turns, tools).await
+        })
+    }
+
+    fn step_watched<'a>(
+        &'a self,
+        instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+        watch: Watch<'a>,
+    ) -> BoxFuture<'a, Result<StepResult, String>> {
+        Box::pin(async move {
+            let instructions = self.instructions(instructions);
+            self.inner
+                .step_watched(&instructions, turns, tools, watch)
+                .await
+        })
+    }
+}
+
 /// A piece of what a step streams, as a stage watching it sees it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum Streamed<'a> {
@@ -184,29 +229,6 @@ pub(crate) fn tail(text: &str, chars: usize) -> &str {
         .map_or(text, |(i, _)| &text[i..])
 }
 
-/// A helper's tool call as the card tells it, or None for one it doesn't.
-pub(crate) fn activity(call: &ToolCall) -> Option<(ActivityKind, String)> {
-    use crate::ai::web::{SEARCH_PAPERS_TOOL, WEB_FETCH_TOOL, WEB_SEARCH_TOOL};
-    let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
-    let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
-    let (kind, detail) = match call.name.as_str() {
-        WEB_SEARCH_TOOL => {
-            let queries: Vec<&str> = match &args["queries"] {
-                Value::Array(list) => list.iter().filter_map(Value::as_str).collect(),
-                Value::String(one) => vec![one.as_str()],
-                _ => args["query"].as_str().into_iter().collect(),
-            };
-            (ActivityKind::Search, queries.join(" · "))
-        }
-        WEB_FETCH_TOOL => (ActivityKind::Read, text("url")),
-        SEARCH_PAPERS_TOOL => (ActivityKind::Papers, text("query")),
-        SEARCH_REFERENCES_TOOL => (ActivityKind::Library, text("query")),
-        READ_REFERENCE_TOOL => (ActivityKind::Library, text("path")),
-        _ => return None,
-    };
-    Some((kind, detail))
-}
-
 /// The longest an activity's detail is sent: the card shows one line.
 const DETAIL_CHARS: usize = 120;
 
@@ -217,4 +239,47 @@ pub(crate) fn clip(text: &str) -> String {
     }
     let cut: String = text.chars().take(DETAIL_CHARS - 1).collect();
     format!("{cut}…")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ai::workspace::AgentWorkspace;
+
+    /// Answers each step with the instructions it was given.
+    struct Echo;
+
+    impl Model for Echo {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [AgentTurn],
+            _tools: &'a [ToolSpec],
+        ) -> BoxFuture<'a, Result<StepResult, String>> {
+            Box::pin(async move { Ok(StepResult::Done(instructions.to_string())) })
+        }
+    }
+
+    #[tokio::test]
+    async fn research_writes_as_the_user_asks_of_their_writing() {
+        let mut workspace = AgentWorkspace {
+            instructions: vec!["Never use emoji.".into()],
+            project_instructions: Some("Say \"customers\", not \"users\".".into()),
+            style: Some("Short sentences.".into()),
+            ..Default::default()
+        };
+        let guidance = crate::ai::agent::writing_guidance(&mut workspace, "Tides");
+        let guided = Guided {
+            inner: &Echo,
+            guidance: &guidance,
+        };
+        let StepResult::Done(sent) = guided.step("Write the section.", &[], &[]).await.unwrap()
+        else {
+            panic!("a tool call");
+        };
+        assert!(sent.starts_with("Write the section."), "{sent}");
+        for asked in ["Never use emoji.", "not \"users\"", "Short sentences."] {
+            assert!(sent.contains(asked), "{sent}");
+        }
+    }
 }

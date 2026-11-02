@@ -139,7 +139,7 @@
 
 /* In the panel and the detached window the field is one rounded box on the
    panel's foot, lit at its edge on focus. Quick Ask keeps the open layout. */
-:is(.agent-panel-body, .chat-window-body) .inline-chat-field {
+:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-field {
   /* A medium container with capsule controls, kept a padding clear of its
      corners. */
   gap: var(--space-2);
@@ -153,38 +153,41 @@
     box-shadow var(--dur-fast) var(--ease-standard);
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-field:focus-within {
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .inline-chat-field:focus-within {
   border-color: color-mix(in srgb, var(--ui-accent) 55%, var(--ui-border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-input {
+:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-input {
   padding: 2px 2px 0;
 }
 
 /* Inside the box the tools go frameless - one frame (the field's) is
    enough; the mode reads as a quiet chip, the icons as plain glyphs. */
-:is(.agent-panel-body, .chat-window-body)
+:is(.agent-panel-body, .chat-window-body, .create-studio)
   :is(.inline-chat-attach, .inline-chat-toggle) {
   border-color: transparent;
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-toggle.is-active {
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .inline-chat-toggle.is-active {
   border-color: transparent;
 }
 
-:is(.agent-panel-body, .chat-window-body) .inline-chat-toolbar {
+:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-toolbar {
   gap: 4px;
 }
 
-:is(.agent-panel-body, .chat-window-body) .ui-select.inline-chat-mode {
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .ui-select.inline-chat-mode {
   min-width: 0;
   border-color: transparent;
   /* The colour only: the chevron is the background image. */
   background-color: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
-:is(.agent-panel-body, .chat-window-body)
+:is(.agent-panel-body, .chat-window-body, .create-studio)
   .ui-select.inline-chat-mode:not(:disabled):hover {
   background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
 }
@@ -551,7 +554,8 @@
 
 /* The panel's and the window's conversation: more air between turns, and
    a step's progress lines kept together under the turn they belong to. */
-:is(.agent-panel-body, .chat-window-body) .inline-chat-messages {
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  .inline-chat-messages {
   gap: 12px;
   padding: 12px 12px 16px;
   /* Where scrollbars take room (Linux, Windows), the conversation growing
@@ -559,7 +563,7 @@
   scrollbar-gutter: stable;
 }
 
-:is(.agent-panel-body, .chat-window-body)
+:is(.agent-panel-body, .chat-window-body, .create-studio)
   .inline-chat-messages
   > :is(:has(> .agent-tool-line, > .agent-tool-result))
   + :is(:has(> .agent-tool-line, > .agent-tool-result)) {

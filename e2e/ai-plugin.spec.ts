@@ -119,7 +119,7 @@ test("Install this plugin installs the reply's plugin and turns it on", async ({
   await expect(guide).toContainText("Count Words");
 });
 
-test("a plugin's page asks the AI to change it, in Create mode", async ({
+test("a plugin's page asks the AI to change it, in Extensions' Create tab", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -153,14 +153,19 @@ test("a plugin's page asks the AI to change it, in Create mode", async ({
     .locator('.plugin-card[data-plugin="local.word-count"] .plugin-card-open')
     .click();
   await page.getByRole("button", { name: "Edit with AI" }).click();
-  await expect(page.locator(".settings-panel")).toHaveCount(0);
-  const panel = page.locator(".agent-panel");
-  await expect(panel.locator(".agent-panel-empty")).toContainText(
-    "Make a theme, plugin or skill",
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  await expect(settings.getByRole("tab", { name: "Create" })).toHaveAttribute(
+    "aria-selected",
+    "true",
   );
-  await expect(panel.locator(".inline-chat-input")).toHaveValue(
-    "Change the Word Count plugin (local.word-count): ",
-  );
+  await expect(
+    settings.locator(".create-studio .inline-chat-selection-chip"),
+  ).toHaveText("Plugins");
+  await expect(
+    settings.locator(".create-studio .inline-chat-input"),
+  ).toHaveValue("Change the Word Count plugin (local.word-count): ");
+  // The document's panel is left as it was.
+  await expect(page.locator(".agent-panel")).toHaveCount(0);
 });
 
 test("a plugin written in the conversation can't take someone else's id", async ({

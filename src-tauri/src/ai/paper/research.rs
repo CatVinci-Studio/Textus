@@ -6,10 +6,11 @@
 
 use super::library::{library_call, library_file, library_specs};
 pub(crate) use super::library::{link_safe, reference_address, reference_path};
-pub(crate) use super::model::{activity, clip, Model, Streamed, ThinkingTail, Watch};
-use super::{
-    ActivityKind, Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget,
+use super::materials::{
+    cited_material, material_address, material_call, material_spec, materials_prompt, Material,
 };
+pub(crate) use super::model::{clip, Model, Streamed, ThinkingTail, Watch};
+use super::{Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{
     run_agent_loop, AgentTurn, StepResult, ToolCall, ToolOutput, ToolRun, ToolSpec,
@@ -23,9 +24,10 @@ use std::sync::Mutex;
 const AT_ONCE: usize = 4;
 /// A helper's steps: a few searches and reads, and its notes.
 const HELPER_STEPS: usize = 10;
-/// Questions the topic is split into, at least and at most.
-const MIN_QUESTIONS: usize = 4;
+/// Questions a reply may give at most, whatever the genre.
 const MAX_QUESTIONS: usize = 10;
+/// Characters of each attached file the research plan sees.
+const PLAN_GLIMPSE: usize = 1_500;
 
 pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
 pub(crate) const SEARCH_REFERENCES_TOOL: &str = "search_references";
@@ -42,26 +44,35 @@ fn user(text: String) -> AgentTurn {
 pub(crate) async fn plan_questions(
     model: &dyn Model,
     paper: &Paper,
+    materials: &[Material],
     watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
+    let profile = paper.genre.profile();
     let instructions = format!(
-        "You plan the research for a paper of about {} characters, written in the language tagged \"{}\". Split its topic into {MIN_QUESTIONS}-{MAX_QUESTIONS} research questions that together cover it in breadth and depth: background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
-        paper.target_chars, paper.language
+        "You plan the research for a {} of about {} characters, written in the language tagged \"{}\". Split its topic into {least}-{most} research questions that together cover it in breadth and depth: {} - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
+        profile.name,
+        paper.target_chars,
+        paper.language,
+        profile.research_angles,
+        least = profile.scale.questions.0,
+        most = profile.scale.questions.1,
     );
+    let mut message = format!("Topic: {}", paper.topic);
+    for m in materials {
+        // Enough of each to plan by; the helpers read them whole.
+        let opening: String = m.content.chars().take(PLAN_GLIMPSE).collect();
+        message.push_str(&format!("\n\nThe user attached {}:\n{opening}", m.name));
+    }
     let reply = match model
-        .step_watched(
-            &instructions,
-            &[user(format!("Topic: {}", paper.topic))],
-            &[],
-            watch,
-        )
+        .step_watched(&instructions, &[user(message)], &[], watch)
         .await?
     {
         StepResult::Done(text) => text,
         StepResult::ToolCalls(_) => String::new(),
     };
-    let questions = parse_questions(&reply);
-    if questions.len() < 2 {
+    let mut questions = parse_questions(&reply);
+    questions.truncate(profile.scale.questions.1);
+    if questions.len() < 2.min(profile.scale.questions.0) {
         return Err("The research plan came back empty - try again.".into());
     }
     Ok(questions)
@@ -137,6 +148,7 @@ fn read_note(
     question: &str,
     web: &WebPlan,
     library: Option<&Path>,
+    materials: &[Material],
 ) -> Result<Note, String> {
     let args: Value = serde_json::from_str(arguments).map_err(|e| e.to_string())?;
     let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
@@ -151,12 +163,13 @@ fn read_note(
     let mut sources = Vec::new();
     for c in &cited {
         let local = library.and_then(|root| library_file(root, c));
-        let number = match local {
-            Some(path) => {
+        let number = match (cited_material(materials, c), local) {
+            (Some(m), _) => Some(web.add_source(&material_address(&m.name), &m.name)),
+            (None, Some(path)) => {
                 let name = path.rsplit('/').next().unwrap_or(&path).to_string();
                 Some(web.add_source(&reference_address(&path), &name))
             }
-            None => {
+            (None, None) => {
                 let address = if c.trim().starts_with("http") {
                     Some(c.trim().to_string())
                 } else {
@@ -216,24 +229,35 @@ async fn research_question(
     web: &WebPlan,
     budget: &SharedBudget,
     library: Option<&Path>,
+    materials: &[Material],
     (index, question): (u32, &str),
     share: Share,
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Vec<Note>, String> {
     let instructions = format!(
-        "You are one of several researchers gathering material for a paper on \"{}\", written in the language tagged \"{}\". Your part is one question. Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree. Aim for four to eight notes, written in the paper's language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
+        "You are one of several researchers gathering material for a {name} on \"{}\", written in the language tagged \"{}\". Your part is one question. {} Aim for four to eight notes, written in the {name}'s language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
         paper.topic,
         paper.language,
+        paper.genre.profile().research_sources,
         if library.is_some() {
             " The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_reference, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose."
         } else {
             ""
-        }
+        },
+        name = paper.genre.profile().name,
     );
+    let instructions = if materials.is_empty() {
+        instructions
+    } else {
+        instructions + &materials_prompt(materials)
+    };
     let mut specs: Vec<ToolSpec> = web.tools(question).iter().map(|t| t.spec.clone()).collect();
     specs.push(add_note_spec());
     if library.is_some() {
         specs.extend(library_specs());
+    }
+    if !materials.is_empty() {
+        specs.push(material_spec());
     }
     let web_tools = web.tools(question);
     let notes = Mutex::new(Vec::new());
@@ -241,18 +265,21 @@ async fn research_question(
     let execute = |call: ToolCall| {
         let (web_tools, notes, spent) = (&web_tools, &notes, &spent);
         async move {
-            let tell = |kind, detail: &str| {
+            let tell = |tool: &str, arguments: String| {
                 send(PaperEvent::Activity {
                     question: index,
-                    kind,
-                    detail: clip(detail),
+                    tool: tool.to_string(),
+                    arguments,
                 })
             };
             if call.name == ADD_NOTE_TOOL {
                 return ToolOutput::from(
-                    match read_note(&call.arguments, question, web, library) {
+                    match read_note(&call.arguments, question, web, library, materials) {
                         Ok(note) => {
-                            tell(ActivityKind::Note, &note.claim);
+                            tell(
+                                ADD_NOTE_TOOL,
+                                json!({ "claim": clip(&note.claim) }).to_string(),
+                            );
                             notes.lock().unwrap().push(note);
                             "Kept.".to_string()
                         }
@@ -260,22 +287,22 @@ async fn research_question(
                     },
                 );
             }
-            let told = activity(&call);
+            if let Some(answer) = material_call(materials, &call) {
+                tell(&call.name, call.arguments.clone());
+                return ToolOutput::from(answer);
+            }
             if let Some(root) = library {
-                if let Some((kind, detail)) =
-                    told.as_ref().filter(|(k, _)| *k == ActivityKind::Library)
-                {
-                    tell(*kind, detail);
-                }
                 if let Some(answer) = library_call(root, &call).await {
+                    tell(&call.name, call.arguments.clone());
                     return ToolOutput::from(answer);
                 }
             }
             if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
                 return ToolOutput::from(refused);
             }
-            if let Some((kind, detail)) = &told {
-                tell(*kind, detail);
+            let known = web_tools.iter().any(|t| t.spec.name == call.name);
+            if known {
+                tell(&call.name, call.arguments.clone());
             }
             let output = match web_tools
                 .iter()
@@ -285,7 +312,7 @@ async fn research_question(
                 Some(crate::ai::tools::Run::Async(run)) => run(call).await,
                 _ => ToolOutput::from(format!("Unknown tool: {}", call.name)),
             };
-            if told.is_some() {
+            if known {
                 let spent = budget.snapshot();
                 send(PaperEvent::Budget {
                     used: spent.used,
@@ -328,12 +355,13 @@ pub(crate) async fn research(
     send: &(dyn Fn(PaperEvent) + Sync),
     // The project folder, when it has a reference library.
     library: Option<&Path>,
+    materials: &[Material],
 ) -> Result<Dossier, String> {
     send(PaperEvent::Phase {
         phase: PaperPhase::Planning,
     });
     let thinking = ThinkingTail::new(send);
-    let questions = plan_questions(model, paper, &|streamed| {
+    let questions = plan_questions(model, paper, materials, &|streamed| {
         if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
             thinking.push(text)
         }
@@ -355,6 +383,7 @@ pub(crate) async fn research(
                 web,
                 budget,
                 library,
+                materials,
                 (i as u32, &question),
                 share,
                 send,

@@ -2,7 +2,7 @@
 //! progress card's phase, each section's state, the budget spent, and the
 //! outline when it waits for the user.
 
-use super::{BudgetCounts, Outline};
+use super::{BudgetCounts, Genre, GenreForm, Outline};
 use serde::Serialize;
 
 /// One update from `ai_paper_run`. Display only: what is kept is on disk.
@@ -51,17 +51,25 @@ pub enum PaperEvent {
     WebSearch {
         available: bool,
     },
+    /// The kind of piece the request was found to call for, and its
+    /// length in characters: sent once, before research, for a new piece.
+    Genre {
+        genre: Genre,
+        target_chars: u32,
+        form: GenreForm,
+    },
     /// The research questions the topic was split into, in the order the
     /// helpers take them.
     Questions {
         questions: Vec<String>,
     },
-    /// A research helper did something: what question `question` (its
-    /// index) searched, read or kept.
+    /// A research helper did something: the tool question `question` (its
+    /// index) called, and its arguments as JSON, which the card words as
+    /// the chat does a tool call.
     Activity {
         question: u32,
-        kind: ActivityKind,
-        detail: String,
+        tool: String,
+        arguments: String,
     },
     /// The outline as the outliner writes it: its thesis once whole, and
     /// the titles of the sections given so far. `attempt` counts its tries;
@@ -104,24 +112,6 @@ pub enum PaperEvent {
 pub struct SourceEntry {
     pub n: u32,
     pub entry: String,
-}
-
-/// What a research helper's step was.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub enum ActivityKind {
-    /// A web search; `detail` is its queries.
-    Search,
-    /// A page read; `detail` is its address.
-    Read,
-    /// A scholarly search; `detail` is its query.
-    Papers,
-    /// The user's reference library searched or read; `detail` is the query
-    /// or the path.
-    Library,
-    /// A note kept; `detail` is its claim.
-    Note,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]

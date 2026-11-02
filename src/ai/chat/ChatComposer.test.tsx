@@ -75,15 +75,16 @@ const labels = {
   selectedPicture: "Picture selected",
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "This provider can't read images.",
-  modeWrite: "Write",
-  modeReview: "Review",
-  modeCreate: "Create",
-  modeWriteHint: "Writes and changes the document",
-  modeReviewHint: "Reads and leaves notes",
-  modeCreateHint: "Makes themes, plugins and skills",
-  modeResearch: "Research",
   researchPlaceholder: "What the paper is about",
-  modeResearchHint: "Researches a topic and writes a paper into the document",
+  modes: {
+    write: { label: "Write", hint: "Writes and changes the document" },
+    review: { label: "Review", hint: "Reads and leaves notes" },
+    create: { label: "Create", hint: "Makes themes, plugins and skills" },
+    research: {
+      label: "Research",
+      hint: "Researches a topic and writes a paper into the document",
+    },
+  },
   modeLabel: "Mode",
   modelLabel: "Model",
   modeAndModelLabel: "Mode and model",
@@ -286,7 +287,7 @@ describe("ChatComposer selection chip", () => {
   it("sends the selected interaction mode and web-search choice", () => {
     const { onSend } = renderComposer();
     fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
-    // Write, Review, then Create.
+    // Write, then Review: Create is made in Settings › Extensions.
     expect(
       screen
         .getAllByRole("option")
@@ -294,7 +295,7 @@ describe("ChatComposer selection chip", () => {
           (option) =>
             option.querySelector(".mode-picker-mode-name")?.textContent,
         ),
-    ).toEqual(["Write", "Review", "Create"]);
+    ).toEqual(["Write", "Review"]);
     // Each with a line on what it does.
     expect(
       screen.getByRole("option", { name: "Review" }).textContent,
@@ -350,14 +351,95 @@ describe("ChatComposer selection chip", () => {
           (option) =>
             option.querySelector(".mode-picker-mode-name")?.textContent,
         ),
-    ).toEqual(["Write", "Review", "Research", "Create"]);
+    ).toEqual(["Write", "Review", "Research"]);
     fireEvent.click(screen.getByRole("option", { name: "Research" }));
     const box = screen.getByPlaceholderText("What the paper is about");
     fireEvent.change(box, { target: { value: "  Green roofs " } });
     fireEvent.click(screen.getByText("Send"));
-    expect(onResearch).toHaveBeenCalledWith("Green roofs");
+    expect(onResearch).toHaveBeenCalledWith("Green roofs", []);
     expect(onSend).not.toHaveBeenCalled();
     expect(box).toHaveValue("");
+  });
+
+  it("hands Research its files, and sets its kind of piece with /", async () => {
+    const onResearch = vi.fn();
+    const pick = vi.fn();
+    const notes: ChatAttachment = {
+      kind: "text",
+      name: "notes.md",
+      content: "Tides were logged hourly.",
+      truncated: false,
+    };
+    pickAttachmentFile.mockResolvedValue(notes);
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="review"
+        defaultWebSearch={false}
+        onSend={() => {}}
+        onResearch={onResearch}
+        kinds={[
+          { key: "auto", label: "Choose for me", pick: () => {} },
+          { key: "report", label: "In-depth report", pick },
+        ]}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+    fireEvent.click(screen.getByRole("option", { name: "Research" }));
+    const box = screen.getByPlaceholderText("What the paper is about");
+    fireEvent.change(box, { target: { value: "/rep" } });
+    // Only the kind that matches; Enter picks it.
+    expect(await screen.findAllByRole("option")).toHaveLength(1);
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(pick).toHaveBeenCalled();
+    expect(box).toHaveValue("");
+
+    fireEvent.click(screen.getByLabelText("Attach a file"));
+    expect(await screen.findByText("notes.md")).toBeInTheDocument();
+    fireEvent.change(box, { target: { value: "Tides" } });
+    fireEvent.click(screen.getByText("Send"));
+    expect(onResearch).toHaveBeenCalledWith("Tides", [notes]);
+  });
+
+  it("shows Research's kind of piece only once one is picked, and clears it", () => {
+    const clear = vi.fn();
+    const props = {
+      docPath: null,
+      workspaceRoot: null,
+      selectedText: null,
+      busy: false,
+      labels,
+      defaultMode: "review" as const,
+      defaultWebSearch: false,
+      onSend: () => {},
+      onResearch: () => {},
+      onStop: () => {},
+      onEscape: () => {},
+    };
+    const { rerender } = render(<ChatComposer {...props} kind={null} />);
+    fireEvent.click(screen.getByRole("combobox", { name: "Mode" }));
+    fireEvent.click(screen.getByRole("option", { name: "Research" }));
+    // The model's choice: nothing in the toolbar for it.
+    expect(screen.queryByLabelText("Choose for me")).toBeNull();
+    rerender(
+      <ChatComposer
+        {...props}
+        kind={{
+          label: "News brief",
+          clearLabel: "Choose for me",
+          clear,
+        }}
+      />,
+    );
+    expect(screen.getByText("News brief")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText("Choose for me"));
+    expect(clear).toHaveBeenCalled();
   });
 });
 
@@ -560,7 +642,9 @@ describe("ChatComposer pickers", () => {
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
+        // Create's skills, as its tab in Settings › Extensions lists them.
         defaultMode="create"
+        onlyMode="create"
         defaultWebSearch={false}
         onSend={onSend}
         onStop={() => {}}
@@ -795,5 +879,28 @@ describe("ChatComposer suggested follow-ups", () => {
   it("stays out of Quick Ask's one-line box", () => {
     renderFollowUps(false, true);
     expect(chips()).toHaveLength(0);
+  });
+});
+
+describe("ChatComposer and Create", () => {
+  it("starts a panel whose default is Create in Write, as Create is made in Settings", () => {
+    const onSend = vi.fn();
+    render(
+      <ChatComposer
+        docPath={null}
+        workspaceRoot={null}
+        selectedText={null}
+        busy={false}
+        labels={labels}
+        defaultMode="create"
+        defaultWebSearch={false}
+        onSend={onSend}
+        onStop={() => {}}
+        onEscape={() => {}}
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Mode" })).toHaveTextContent(
+      "Write",
+    );
   });
 });

@@ -56,7 +56,8 @@ export function PluginData({
     });
     if (!ok) return;
     await pluginsIpc.storeClear(id, "global", null).catch(() => {});
-    if (root) await pluginsIpc.storeClear(id, "project", root).catch(() => {});
+    // With no folder open, the hidden place the plugin kept data in instead.
+    await pluginsIpc.storeClear(id, "project", root).catch(() => {});
     setRound((n) => n + 1);
   };
   return (

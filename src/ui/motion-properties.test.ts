@@ -34,7 +34,7 @@ const ALLOWED = new Set([
 /** `file selector property`, and why. */
 const EXCEPTIONS: Record<string, string> = {
   // A focus ring may change its shadow.
-  "ai/chat/inline-chat.css :is(.agent-panel-body, .chat-window-body) .inline-chat-field box-shadow":
+  "ai/chat/inline-chat.css :is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-field box-shadow":
     "focus ring",
   // A hairline in an SVG of its own: repaints that line only.
   "ai/margin/ReviewMargin.css .review-links path stroke-width":

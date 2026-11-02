@@ -302,10 +302,12 @@ from)`, `tags()`, `tasks()`, `search(query)`, `onDidChange`. Read this
 
 - `ctx.storage.global` (in Textus's config folder, for every project) and
   `ctx.storage.project` (`project.data`, in the open folder's
-  `.textus/plugins/<id>/`, so it travels with the project): `get`, `set`,
-  `delete`, `keys`, and files of the plugin's own - `readText`,
-  `writeText`, `files`, `deleteFile`. 50 MB each; no plugin reaches
-  another's. Uninstalling a plugin moves its global data to the Trash.
+  `.textus/plugins/<id>/`, so it travels with the project; with no folder
+  open, a hidden folder in Textus's config folder, so the plugin works
+  without one): `get`, `set`, `delete`, `keys`, and files of the plugin's
+  own - `readText`, `writeText`, `files`, `deleteFile`. 50 MB each; no
+  plugin reaches another's. Uninstalling a plugin moves its global data,
+  and what it kept with no folder open, to the Trash.
 - `ctx.storage.document(path)`: `get`, `set`, `delete`, `keys` for one
   document - a diagram's zoom, a bookmark. Kept with the plugin's global
   data, it follows the document when it is renamed or moved, in the file

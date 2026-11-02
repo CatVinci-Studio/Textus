@@ -6,6 +6,7 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
 import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
 import type { ChatComposerLabels, SelectionChipHandlers } from "./ChatComposer";
+import type { ChatComposerHandle, ChatComposerProps } from "./composer-types";
 import type { QuickAskPendingBarLabels } from "./quick-ask/QuickAskPendingBar";
 import { isProposalTool, parseToolProposal } from "./proposal";
 import { refusedProposalIds } from "../revision/proposal-status";
@@ -74,9 +75,15 @@ export interface ChatBodyProps {
   /** The composer's mode, now and on every switch. */
   onModeChange?: (mode: PanelMode) => void;
   /** The panel: Research is offered, its message a paper's topic. */
-  onResearch?: (topic: string) => void;
-  /** Research mode's choices, in the composer's toolbar. */
-  researchControls?: React.ReactNode;
+  onResearch?: ChatComposerProps["onResearch"];
+  kind?: ChatComposerProps["kind"];
+  kinds?: ChatComposerProps["kinds"];
+  autoTools?: boolean;
+  /** What a message becomes before it is sent: Create's first one calls
+   *  its kind's skill. */
+  prepareMessage?: (message: string) => string;
+  /** Lets the caller fill in the box. */
+  composerRef?: React.RefObject<ChatComposerHandle | null>;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,
@@ -88,6 +95,8 @@ export interface ChatBodyProps {
   /** "quick" (the in-document Quick Ask bar) renders no conversation: a
    *  one-line reply summary, the pending bar and the composer. */
   variant?: "quick" | "full";
+  /** The composer offers this mode alone. */
+  onlyMode?: AgentMode;
   /** Detached window only: fetches the editor's document and selection just
    *  before a send, since the user may have moved on since the last push.
    *  Resolves null if the editor doesn't answer; the last push is used. */

@@ -437,12 +437,13 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
       result.text = lines.text;
       copyText(lines.text);
       const tr = state.tr;
+      // The whole document: one empty line is left, as Vim leaves one.
       if (
         lines.blocks &&
         lines.from === 0 &&
         lines.to === state.doc.content.size
       )
-        tr.delete(lines.from + 1, lines.to - 1);
+        tr.replaceWith(0, lines.to, state.schema.nodes.paragraph.create());
       else tr.delete(lines.from, lines.to);
       dispatch(tr);
       break;

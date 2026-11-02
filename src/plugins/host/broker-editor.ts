@@ -83,33 +83,29 @@ function editOf(
  * types (hover cards, marks, the keyboard).
  */
 export function editorHandlers(p: PluginScope) {
-  const doc = (
-    permission: "editor.read" | "editor.write" | "editor.propose",
-  ) => {
-    p.need(permission);
-    return getActiveDocument();
-  };
-  const open = (permission: "editor.write" | "editor.propose") => {
-    const d = doc(permission);
+  // Each call's permission is checked before it runs (api-permissions.ts).
+  const doc = getActiveDocument;
+  const open = () => {
+    const d = doc();
     if (!d) throw new Error("No document is open.");
     return d;
   };
   return {
-    "editor.getPath": () => doc("editor.read")?.path ?? null,
-    "editor.getText": () => doc("editor.read")?.text() ?? null,
-    "editor.getSelection": () => doc("editor.read")?.selection() ?? null,
-    "editor.getBlocks": () => doc("editor.read")?.blocks() ?? null,
+    "editor.getPath": () => doc()?.path ?? null,
+    "editor.getText": () => doc()?.text() ?? null,
+    "editor.getSelection": () => doc()?.selection() ?? null,
+    "editor.getBlocks": () => doc()?.blocks() ?? null,
     "editor.getOutline": () => {
-      const text = doc("editor.read")?.text();
+      const text = doc()?.text();
       return text === undefined ? null : outlineOf(text);
     },
     "editor.edit": ({ changes }: Params) => {
-      const d = open("editor.write");
+      const d = open();
       const list = Array.isArray(changes) ? changes : [changes];
       return d.edit(list.map((change) => editOf(d, change)));
     },
     "editor.propose": ({ change, reason }: Params) => {
-      const d = open("editor.propose");
+      const d = open();
       const said = optionalStr(reason);
       return d.propose(
         `plugin-${p.id}-${++proposalCounter}`,
@@ -128,20 +124,17 @@ export function editorHandlers(p: PluginScope) {
       });
     },
     "editor.registerHover": () => {
-      p.need("editor.read");
       addHoverProvider(p.id, (target) =>
         p.request<HoverCard | null>("$provideHover", { target }),
       );
     },
     "editor.registerDecorations": () => {
-      p.need("editor.read");
       addDecorationProvider(p.id, (blocks) =>
         p.request<PluginDecoration[]>("$decorate", { blocks }),
       );
     },
     "editor.unregisterDecorations": () => removeDecorationProvider(p.id),
     "editor.captureKeys": (capture: Params | null) => {
-      p.need("editor.input");
       setKeyCapture(
         p.id,
         capture && {
@@ -152,7 +145,6 @@ export function editorHandlers(p: PluginScope) {
       );
     },
     "editor.exec": (op: EditorOp) => {
-      p.need("editor.input");
       return runEditorOp(p.id, op);
     },
   };

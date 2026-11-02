@@ -16,7 +16,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
-import { toolActivityText } from "./AgentTurnView";
+import { toolActivityText } from "./tool-activity";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
@@ -72,10 +72,15 @@ export function ChatBody({
   onEscape,
   onModeChange,
   onResearch,
-  researchControls,
+  kind,
+  kinds,
+  autoTools,
+  prepareMessage,
+  composerRef,
   footer,
   fillHeight,
   variant = "full",
+  onlyMode,
   refreshContext,
   onRevealPending,
   quickReview,
@@ -165,15 +170,17 @@ export function ChatBody({
   });
   const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
   const { nextQueued, sendingQueued } = queueState;
-  const composer = useRef<ChatComposerHandle>(null);
+  const ownComposer = useRef<ChatComposerHandle>(null);
+  const composer = composerRef ?? ownComposer;
 
   function handleSend(
-    message: string,
+    typedMessage: string,
     attachments: ChatAttachment[],
     includeSelection: boolean,
     options: AgentRequestOptions,
-    typed: string = message,
+    typed: string = typedMessage,
   ) {
+    const message = prepareMessage?.(typedMessage) ?? typedMessage;
     const compose = (state: {
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;
@@ -496,8 +503,9 @@ export function ChatBody({
         selectionIsPicture={selectionIsPicture || selectedPictureText !== null}
         busy={busy}
         labels={labels}
-        defaultMode={defaultMode}
-        carryMode={variant !== "quick"}
+        defaultMode={onlyMode ?? defaultMode}
+        carryMode={variant !== "quick" && !onlyMode}
+        onlyMode={onlyMode}
         tourMode={tourMode}
         selectionChip={selectionChip}
         selectionPerMessage={variant !== "quick"}
@@ -511,7 +519,9 @@ export function ChatBody({
         onEscape={onEscape ?? (() => {})}
         onModeChange={onModeChange}
         onResearch={onResearch}
-        researchControls={researchControls}
+        kind={kind}
+        kinds={kinds}
+        autoTools={autoTools}
       />
       {footer}
     </>
