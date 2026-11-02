@@ -60,6 +60,14 @@ it, lazily loaded. Each stage and helper is one run of
   outline's order, the writers' voice, what the review reads for, what
   opens the piece - while each stage keeps its own checks. `Paper` and
   `PaperRequest` carry it; a paper kept before genres is a paper.
+  A **report** is a long read for the general reader, as the BBC or
+  Reuters writes one: its research looks for people, cases, quotes and
+  what happens next; its outline is ordered as a story with plain
+  crossheads; its writers explain every term on first use, keep numbers
+  few and pictured, and say in the sentence who says a thing, citing once
+  a sentence; its review also reads for what a newcomer would stumble on;
+  it opens on a headline and a bold standfirst, with no label, and ends
+  on its sources (`Frame::News`).
 - **The research budget** (`paper/budget.rs`): searches, page reads,
   scholarly lookups and generated pictures for the whole paper (40, 60,
   30, 6), with what is used. `SharedBudget` lets helpers running at once

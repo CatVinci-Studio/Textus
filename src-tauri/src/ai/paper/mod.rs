@@ -405,7 +405,7 @@ pub async fn ai_paper_draft(
             budget: &budget,
         };
         send(PaperEvent::Sources {
-            heading: finish::references_heading(&files.paper.language).into(),
+            heading: finish::references_heading(&files.paper.language, files.paper.genre).into(),
             sources: files
                 .dossier
                 .sources
@@ -521,7 +521,11 @@ pub async fn ai_paper_draft(
         // Numbered first, so only the sources cited are looked up.
         let mut dossier = finish::number_citations(&mut sections, &files.dossier);
         finish::title_sources(&mut dossier).await;
-        let references = finish::references(&sections, &dossier, language);
+        let references = finish::references(
+            &sections,
+            &dossier,
+            finish::references_heading(language, files.paper.genre),
+        );
         let sections: Vec<String> = sections
             .iter()
             .map(|s| finish::plain_citations(s))

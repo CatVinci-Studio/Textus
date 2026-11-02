@@ -117,8 +117,8 @@ pub(crate) async fn write_section(
         "words"
     };
     let instructions = format!(
-        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. Mark every fact from a note with its source right after it as [n](address), exactly as the note gives it, and cite nothing else. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
-        profile.name, paper.language, profile.voice
+        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
+        profile.name, paper.language, profile.voice, profile.cite
     );
     let sources: Vec<(u32, String)> = dossier
         .notes
