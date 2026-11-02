@@ -63,8 +63,8 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
   await expect(modes).toHaveText("Write");
   await modes.click();
   await chip.getByRole("menuitemcheckbox", { name: "Review" }).click();
-  await modes.click();
-  await expect(chip.getByRole("menuitemcheckbox")).toHaveCount(0);
+  // Straight to Save, the menu still open: the press that closes it is
+  // Save's.
   await chip.getByRole("button", { name: "Save this skill" }).click();
   await expect(chip).toContainText("Kept as /weekly-report");
   const log = await page.evaluate(

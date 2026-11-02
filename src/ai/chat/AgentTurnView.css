@@ -535,6 +535,11 @@ button.agent-context-chip:hover {
   padding: 4px;
 }
 
+.skill-mode-choice-menu-up {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+
 .agent-memory-chip-actions button + button::before,
 .agent-plugin-chip button + button::before {
   content: "·";
