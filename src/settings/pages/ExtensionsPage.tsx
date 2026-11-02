@@ -1,4 +1,10 @@
-import { useEffect, useState, useSyncExternalStore } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -22,9 +28,15 @@ import { explainError } from "../../utils/error-explain";
 
 const TABS = extensionsTabs();
 
+// The chat comes with it: loaded once the tab is opened.
+const CreateTab = lazy(() =>
+  import("./CreateTab").then((m) => ({ default: m.CreateTab })),
+);
+
 /**
  * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
- * each, all laid out alike: what is installed, then what is available.
+ * each, all laid out alike: what is installed, then what is available; and
+ * Create, where Textus AI makes one of them.
  * Desktop only, as plugins are.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
@@ -45,6 +57,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
     plugins: t.extensionsTabPlugins,
     skills: t.extensionsTabSkills,
     mcp: t.extensionsTabMcp,
+    create: t.extensionsTabCreate,
   };
   return (
     <>
@@ -98,6 +111,11 @@ export function ExtensionsPage(props: SettingsPageProps) {
             />
           )}
           {tab === "mcp" && <McpSection t={t} />}
+          {tab === "create" && (
+            <Suspense fallback={null}>
+              <CreateTab t={t} />
+            </Suspense>
+          )}
         </div>
       )}
     </>

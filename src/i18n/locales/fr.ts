@@ -1451,6 +1451,27 @@ utiliser une.
   extensionsTabThemes: "Thèmes",
   extensionsTabSkills: "Compétences",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "Créer",
+  createTitle: "Faites le vôtre",
+  createIntro:
+    "Dites ce que vous voulez et Textus AI le fait ici. Installez-le depuis la carte sous la réponse, essayez-le et demandez des changements.",
+  createPlaceholder: "Que doit-il faire ?",
+  createStart: "Commencer",
+  createNew: "Nouveau",
+  createAiOff: "Activez Textus AI pour créer.",
+  createExamples: "Essayez",
+  createExamplePluginTodo:
+    "Une liste de tâches dans la barre latérale qui garde mes tâches même sans dossier ouvert",
+  createExamplePluginCount:
+    "Une commande qui compte les mots et les caractères de la sélection",
+  createExampleThemeAmber:
+    "Un thème ambre chaleureux, clair le jour et sombre la nuit",
+  createExampleThemeMono:
+    "Un thème monochrome et calme avec une police à empattements pour les longues lectures",
+  createExampleSkillWeekly:
+    "Transformer mes notes en compte rendu hebdomadaire : fait, à faire, bloqué",
+  createExampleSkillPolish:
+    "Polir mon texte : des phrases plus serrées, même sens et même ton",
   extensionsIntroPlugins:
     "De nouveaux panneaux, types de fichiers et outils pour Textus.",
   extensionsIntroThemes:

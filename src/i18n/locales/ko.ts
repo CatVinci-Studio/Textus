@@ -1356,6 +1356,24 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsTabThemes: "테마",
   extensionsTabSkills: "스킬",
   extensionsTabMcp: "MCP",
+  extensionsTabCreate: "만들기",
+  createTitle: "나만의 것 만들기",
+  createIntro:
+    "원하는 것을 말하면 Textus AI가 여기서 만들어 줍니다. 답변 아래 카드에서 설치하고 써 본 뒤 수정을 요청하세요.",
+  createPlaceholder: "무엇을 하나요?",
+  createStart: "만들기 시작",
+  createNew: "새로 만들기",
+  createAiOff: "만들려면 Textus AI를 켜세요.",
+  createExamples: "예시",
+  createExamplePluginTodo:
+    "폴더를 열지 않아도 할 일을 저장하는 사이드바 할 일 목록",
+  createExamplePluginCount: "선택한 텍스트의 단어 수와 글자 수를 세는 명령",
+  createExampleThemeAmber: "낮에는 밝고 밤에는 어두운 따뜻한 호박색 테마",
+  createExampleThemeMono: "긴 글 읽기에 맞는 세리프 글꼴의 차분한 흑백 테마",
+  createExampleSkillWeekly:
+    "내 메모를 주간 보고서로 정리: 완료, 다음 할 일, 막힌 일",
+  createExampleSkillPolish:
+    "내 글 다듬기: 뜻과 말투는 그대로, 문장은 더 간결하게",
   extensionsIntroPlugins: "Textus에 새 패널, 파일 형식, 도구를 더합니다.",
   extensionsIntroThemes: "고른 테마 위에 얹는 문서의 모양입니다.",
   extensionsIntroSkills: `한 가지 일을 잘 해내는 방법으로, ${AI_NAME}와 / 메뉴에서 씁니다.`,

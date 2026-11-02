@@ -3,7 +3,12 @@ import { extensionsTabs } from "./extensions-tab";
 
 describe("Settings › Extensions' tabs", () => {
   it("leave out Plugins where the app doesn't show plugins (a release)", () => {
-    expect(extensionsTabs(false)).toEqual(["themes", "skills", "mcp"]);
+    expect(extensionsTabs(false)).toEqual([
+      "themes",
+      "skills",
+      "mcp",
+      "create",
+    ]);
   });
 
   it("put Plugins after Themes where it does (a development build)", () => {
@@ -12,6 +17,11 @@ describe("Settings › Extensions' tabs", () => {
       "plugins",
       "skills",
       "mcp",
+      "create",
     ]);
+  });
+
+  it("keep Create last, where nothing installed sits after it", () => {
+    expect(extensionsTabs(true, false).slice(-1)).toEqual(["create"]);
   });
 });
