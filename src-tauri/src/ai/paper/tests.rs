@@ -2071,3 +2071,56 @@ async fn a_report_opens_on_a_headline_and_a_standfirst_and_lists_its_sources() {
     assert_eq!(finish::references_heading("en", Genre::Report), "Sources");
     assert_eq!(finish::references_heading("en", Genre::Paper), "References");
 }
+
+#[test]
+fn the_chosen_genre_is_read_from_the_reply_and_fitted_to_its_lengths() {
+    assert_eq!(
+        choose::read("{\"genre\": \"report\", \"chars\": 6000}", 8000),
+        (Genre::Report, 6000)
+    );
+    assert_eq!(
+        choose::read("Sure: {\"genre\": \"report\", \"chars\": 99000}", 8000),
+        (Genre::Report, 10000)
+    );
+    assert_eq!(
+        choose::read("{\"genre\": \"paper\"}", 8000),
+        (Genre::Paper, 8000)
+    );
+    assert_eq!(choose::read("I can't tell.", 3000), (Genre::Paper, 5000));
+    assert_eq!(
+        choose::read("{\"genre\": \"poem\", \"chars\": 300}", 8000),
+        (Genre::Paper, 8000)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_is_told_every_genre_and_the_length_picked() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async {
+                Ok(aicompat::agent::StepResult::Done(
+                    "{\"genre\": \"report\", \"chars\": 5000}".into(),
+                ))
+            })
+        }
+    }
+    let told = Told(Default::default());
+    let chosen = choose::choose(&told, "台北为什么这么热", 8000).await;
+    assert_eq!(chosen, (Genre::Report, 5000));
+    let instructions = told.0.lock().unwrap().clone();
+    for genre in Genre::ALL {
+        assert!(instructions.contains(&format!("\"{}\"", genre.profile().name)));
+    }
+    assert!(
+        instructions.contains("about 8000 characters"),
+        "{instructions}"
+    );
+}

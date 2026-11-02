@@ -3,6 +3,7 @@ import type { AgentTurn } from "../types";
 import type {
   ActivityKind,
   BudgetCounts,
+  Genre,
   Outline,
   PaperEvent,
   PaperPhase,
@@ -55,6 +56,9 @@ export interface PaperRunState {
   topic: string;
   /** The paper's id in `.textus/papers/`, once research has made it. */
   paperId: string | null;
+  /** The kind of piece and its length in characters, once chosen. */
+  genre: Genre | null;
+  targetChars: number | null;
   sections: Record<number, SectionStatus>;
   used: BudgetCounts | null;
   outline: Outline | null;
@@ -96,6 +100,8 @@ const NEW_RUN: PaperRunState = {
   phase: "starting",
   topic: "",
   paperId: null,
+  genre: null,
+  targetChars: null,
   sections: {},
   used: null,
   outline: null,
@@ -167,6 +173,8 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         return {
           sources: { heading: event.heading, sources: event.sources },
         };
+      case "genre":
+        return { genre: event.genre, targetChars: event.targetChars };
       case "webSearch":
         return { webSearch: event.available };
       case "thinking":

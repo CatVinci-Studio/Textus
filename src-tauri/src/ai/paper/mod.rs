@@ -6,6 +6,7 @@
 
 mod budget;
 mod checks;
+mod choose;
 mod draft;
 mod events;
 mod finish;
@@ -182,9 +183,10 @@ pub struct PaperRequest {
     /// for a new id.
     pub id: Option<String>,
     pub topic: String,
-    /// What kind of piece to write; a paper when not given.
+    /// What kind of piece to write; None for the model to choose from the
+    /// topic, at about `target_chars`.
     #[serde(default)]
-    pub genre: Genre,
+    pub genre: Option<Genre>,
     /// The language it is written in, a BCP 47 tag.
     pub language: String,
     pub target_chars: u32,
@@ -267,19 +269,32 @@ pub async fn ai_paper_run(
             inner: &agent,
             budget: &budget,
         };
-        let mut files = kept.unwrap_or_else(|| PaperFiles {
-            paper: Paper {
-                id: id.unwrap_or_else(new_id),
-                topic,
-                genre,
-                language,
-                target_chars,
-                budget: budget.snapshot(),
-                stage: PaperStage::Researching,
-            },
-            dossier: Dossier::default(),
-            outline: None,
-        });
+        let mut files = match kept {
+            Some(kept) => kept,
+            None => {
+                let (genre, target_chars) = match genre {
+                    Some(genre) => (genre, genre.fit(target_chars)),
+                    None => choose::choose(&agent, &topic, target_chars).await,
+                };
+                send(PaperEvent::Genre {
+                    genre,
+                    target_chars,
+                });
+                PaperFiles {
+                    paper: Paper {
+                        id: id.unwrap_or_else(new_id),
+                        topic,
+                        genre,
+                        language,
+                        target_chars,
+                        budget: budget.snapshot(),
+                        stage: PaperStage::Researching,
+                    },
+                    dossier: Dossier::default(),
+                    outline: None,
+                }
+            }
+        };
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
