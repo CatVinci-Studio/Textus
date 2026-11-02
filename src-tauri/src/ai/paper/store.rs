@@ -192,3 +192,28 @@ fn read_json<T: DeserializeOwned>(path: &Path) -> Result<Option<T>, String> {
         Err(e) => Err(e.to_string()),
     }
 }
+
+/// How far a kept paper has come: what its card offers to go on with.
+#[derive(Serialize, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct PaperProgress {
+    pub paper: Paper,
+    pub outline: Option<Outline>,
+    /// How many of the outline's sections are written.
+    pub drafted: u32,
+}
+
+pub(crate) fn progress(root: &Path, id: &str) -> Result<PaperProgress, String> {
+    let files = load(root, id)?;
+    let sections = files.outline.as_ref().map_or(0, |o| o.sections.len());
+    let mut drafted = 0;
+    for i in 0..sections {
+        drafted += load_section(root, id, i)?.is_some() as u32;
+    }
+    Ok(PaperProgress {
+        paper: files.paper,
+        outline: files.outline,
+        drafted,
+    })
+}

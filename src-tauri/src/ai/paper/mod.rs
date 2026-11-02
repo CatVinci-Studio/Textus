@@ -22,7 +22,8 @@ use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub(crate) use store::{
-    clear_sections, load, load_section, new_id, paper_root, save, save_section, PaperFiles,
+    clear_sections, load, load_section, new_id, paper_root, progress, save, save_section,
+    PaperFiles, PaperProgress,
 };
 
 use serde::{Deserialize, Serialize};
@@ -558,17 +559,6 @@ pub async fn ai_paper_save_outline(
     Ok(outline)
 }
 
-/// How far a kept paper has come: what its card offers to go on with.
-#[derive(Serialize, Debug)]
-#[cfg_attr(test, derive(specta::Type))]
-#[serde(rename_all = "camelCase")]
-pub struct PaperProgress {
-    pub paper: Paper,
-    pub outline: Option<Outline>,
-    /// How many of the outline's sections are written.
-    pub drafted: u32,
-}
-
 /// Paper `id` as it was kept, for its card to go on from where it stopped.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -579,20 +569,6 @@ pub async fn ai_paper_status(
 ) -> Result<PaperProgress, String> {
     let root = paper_root(doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
     progress(&root, &id)
-}
-
-pub(crate) fn progress(root: &std::path::Path, id: &str) -> Result<PaperProgress, String> {
-    let files = load(root, id)?;
-    let sections = files.outline.as_ref().map_or(0, |o| o.sections.len());
-    let mut drafted = 0;
-    for i in 0..sections {
-        drafted += load_section(root, id, i)?.is_some() as u32;
-    }
-    Ok(PaperProgress {
-        paper: files.paper,
-        outline: files.outline,
-        drafted,
-    })
 }
 
 #[cfg(test)]
