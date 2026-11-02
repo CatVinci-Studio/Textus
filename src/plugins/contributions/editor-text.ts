@@ -319,18 +319,55 @@ export function linesRange(
       blocks: false,
     };
   }
-  const from = $head.before(depth);
-  let to = $head.after(depth);
-  const texts = [block.textContent];
-  for (let n = 1; n < count; n++) {
-    const next = state.doc.resolve(Math.min(to + 1, state.doc.content.size));
-    let d = next.depth;
-    while (d > 0 && !next.node(d).isTextblock) d--;
-    if (d === 0 || next.before(d) < to) break;
-    texts.push(next.node(d).textContent);
-    to = next.after(d);
+  // The text blocks from the caret's on, found wherever they sit - the
+  // next list item's is not right after this one's end.
+  const blocks: { pos: number; node: ProseNode }[] = [];
+  state.doc.nodesBetween(
+    $head.before(depth),
+    state.doc.content.size,
+    (node, pos) => {
+      if (blocks.length >= count) return false;
+      if (!node.isTextblock) return true;
+      blocks.push({ pos, node });
+      return false;
+    },
+  );
+  const first = blocks[0];
+  const last = blocks[blocks.length - 1];
+  const range = wholeBlocks(
+    state.doc,
+    first.pos,
+    last.pos + last.node.nodeSize,
+  );
+  return {
+    ...range,
+    text: blocks.map((b) => b.node.textContent).join("\n") + "\n",
+    blocks: true,
+  };
+}
+
+/** The range `from`-`to` of text blocks as whole blocks: the items or
+ *  quotes they are in when they span several, and a list, quote or item
+ *  whose content is all of them in its place - deleting a quote's only
+ *  line leaves no empty quote, which ProseMirror would fill again. */
+function wholeBlocks(
+  doc: ProseNode,
+  from: number,
+  to: number,
+): { from: number; to: number } {
+  const shared = doc.resolve(from).blockRange(doc.resolve(to));
+  if (shared && shared.depth > 0) {
+    from = shared.start;
+    to = shared.end;
   }
-  return { from, to, text: texts.join("\n") + "\n", blocks: true };
+  for (;;) {
+    const $from = doc.resolve(from);
+    const d = $from.depth;
+    if (d === 0 || from !== $from.start(d) || to !== $from.end(d)) break;
+    from = $from.before(d);
+    to = $from.after(d);
+  }
+  return { from, to };
 }
 
 export function selectionText(state: EditorState): string {
