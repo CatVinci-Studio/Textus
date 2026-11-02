@@ -273,7 +273,12 @@ test("a plugin reads the document's outline, and puts a status in the window bar
     hasText: "Hello here",
   });
   await expect(status).toBeVisible();
+  // With commands of its own, the plugin's place opens them and the item.
   await status.click();
+  await page
+    .getByRole("menu", { name: "Hello" })
+    .getByRole("menuitem", { name: "Hello here" })
+    .click();
   await expect(page.locator(".app-dialog")).toContainText("Hello 1");
 });
 

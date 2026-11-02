@@ -59,7 +59,7 @@ test("Settings › Extensions has the plugins, with no MCP servers to run", asyn
   await open(page);
   await openExtensions(page);
   const tabs = page.getByRole("tab");
-  await expect(tabs).toHaveText(["Themes", "Plugins", "Skills"]);
+  await expect(tabs).toHaveText(["Themes", "Plugins", "Skills", "Create"]);
   await page.getByRole("tab", { name: "Plugins" }).tap();
   await expect(page.getByText("Bookmarks", { exact: true })).toBeVisible();
   // One for the desktop alone says so, and the catalog doesn't offer it.
