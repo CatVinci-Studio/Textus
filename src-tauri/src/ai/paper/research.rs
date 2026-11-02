@@ -9,10 +9,8 @@ pub(crate) use super::library::{link_safe, reference_address, reference_path};
 use super::materials::{
     cited_material, material_address, material_call, material_spec, materials_prompt, Material,
 };
-pub(crate) use super::model::{activity, clip, Model, Streamed, ThinkingTail, Watch};
-use super::{
-    ActivityKind, Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget,
-};
+pub(crate) use super::model::{clip, Model, Streamed, ThinkingTail, Watch};
+use super::{Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{
     run_agent_loop, AgentTurn, StepResult, ToolCall, ToolOutput, ToolRun, ToolSpec,
@@ -267,18 +265,21 @@ async fn research_question(
     let execute = |call: ToolCall| {
         let (web_tools, notes, spent) = (&web_tools, &notes, &spent);
         async move {
-            let tell = |kind, detail: &str| {
+            let tell = |tool: &str, arguments: String| {
                 send(PaperEvent::Activity {
                     question: index,
-                    kind,
-                    detail: clip(detail),
+                    tool: tool.to_string(),
+                    arguments,
                 })
             };
             if call.name == ADD_NOTE_TOOL {
                 return ToolOutput::from(
                     match read_note(&call.arguments, question, web, library, materials) {
                         Ok(note) => {
-                            tell(ActivityKind::Note, &note.claim);
+                            tell(
+                                ADD_NOTE_TOOL,
+                                json!({ "claim": clip(&note.claim) }).to_string(),
+                            );
                             notes.lock().unwrap().push(note);
                             "Kept.".to_string()
                         }
@@ -286,28 +287,22 @@ async fn research_question(
                     },
                 );
             }
-            let told = activity(&call);
             if let Some(answer) = material_call(materials, &call) {
-                if let Some((kind, detail)) = &told {
-                    tell(*kind, detail);
-                }
+                tell(&call.name, call.arguments.clone());
                 return ToolOutput::from(answer);
             }
             if let Some(root) = library {
-                if let Some((kind, detail)) =
-                    told.as_ref().filter(|(k, _)| *k == ActivityKind::Library)
-                {
-                    tell(*kind, detail);
-                }
                 if let Some(answer) = library_call(root, &call).await {
+                    tell(&call.name, call.arguments.clone());
                     return ToolOutput::from(answer);
                 }
             }
             if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
                 return ToolOutput::from(refused);
             }
-            if let Some((kind, detail)) = &told {
-                tell(*kind, detail);
+            let known = web_tools.iter().any(|t| t.spec.name == call.name);
+            if known {
+                tell(&call.name, call.arguments.clone());
             }
             let output = match web_tools
                 .iter()
@@ -317,7 +312,7 @@ async fn research_question(
                 Some(crate::ai::tools::Run::Async(run)) => run(call).await,
                 _ => ToolOutput::from(format!("Unknown tool: {}", call.name)),
             };
-            if told.is_some() {
+            if known {
                 let spent = budget.snapshot();
                 send(PaperEvent::Budget {
                     used: spent.used,

@@ -33,22 +33,6 @@ export const commands = {
 };
 
 /* Types */
-/**  What a research helper's step was. */
-export type ActivityKind = 
-/**  A web search; `detail` is its queries. */
-"search" | 
-/**  A page read; `detail` is its address. */
-"read" | 
-/**  A scholarly search; `detail` is its query. */
-"papers" | 
-/**
- *  The user's reference library searched or read; `detail` is the query
- *  or the path.
- */
-"library" | 
-/**  A note kept; `detail` is its claim. */
-"note";
-
 /**  A count of each thing research spends. */
 export type BudgetCounts = {
 	searches: number,
@@ -265,10 +249,11 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "questions"; questions: string[] } | 
 /**
- *  A research helper did something: what question `question` (its
- *  index) searched, read or kept.
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
  */
-{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+{ type: "activity"; question: number; tool: string; arguments: string } | 
 /**
  *  The outline as the outliner writes it: its thesis once whole, and
  *  the titles of the sections given so far. `attempt` counts its tries;
@@ -330,10 +315,11 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "questions"; questions: string[] } | 
 /**
- *  A research helper did something: what question `question` (its
- *  index) searched, read or kept.
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
  */
-{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+{ type: "activity"; question: number; tool: string; arguments: string } | 
 /**
  *  The outline as the outliner writes it: its thesis once whole, and
  *  the titles of the sections given so far. `attempt` counts its tries;

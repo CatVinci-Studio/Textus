@@ -16,7 +16,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
-import { toolActivityText } from "./AgentTurnView";
+import { toolActivityText } from "./tool-activity";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";

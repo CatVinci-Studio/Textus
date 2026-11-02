@@ -3,11 +3,9 @@
 //! scripted model in tests.
 
 use super::budget::{BudgetKind, SharedBudget, STEPS_SPENT};
-use super::research::{READ_REFERENCE_TOOL, SEARCH_REFERENCES_TOOL};
-use super::{ActivityKind, PaperEvent};
-use aicompat::agent::{AgentTurn, StepResult, ToolCall, ToolSpec};
+use super::PaperEvent;
+use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
 use futures_util::future::BoxFuture;
-use serde_json::Value;
 use std::sync::Mutex;
 
 /// One step of a model: what a stage's run asks of it. A trait, so the
@@ -229,30 +227,6 @@ pub(crate) fn tail(text: &str, chars: usize) -> &str {
     text.char_indices()
         .nth(skip)
         .map_or(text, |(i, _)| &text[i..])
-}
-
-/// A helper's tool call as the card tells it, or None for one it doesn't.
-pub(crate) fn activity(call: &ToolCall) -> Option<(ActivityKind, String)> {
-    use crate::ai::web::{SEARCH_PAPERS_TOOL, WEB_FETCH_TOOL, WEB_SEARCH_TOOL};
-    let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
-    let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
-    let (kind, detail) = match call.name.as_str() {
-        WEB_SEARCH_TOOL => {
-            let queries: Vec<&str> = match &args["queries"] {
-                Value::Array(list) => list.iter().filter_map(Value::as_str).collect(),
-                Value::String(one) => vec![one.as_str()],
-                _ => args["query"].as_str().into_iter().collect(),
-            };
-            (ActivityKind::Search, queries.join(" · "))
-        }
-        WEB_FETCH_TOOL => (ActivityKind::Read, text("url")),
-        SEARCH_PAPERS_TOOL => (ActivityKind::Papers, text("query")),
-        SEARCH_REFERENCES_TOOL => (ActivityKind::Library, text("query")),
-        READ_REFERENCE_TOOL => (ActivityKind::Library, text("path")),
-        super::materials::READ_MATERIAL_TOOL => (ActivityKind::Library, text("name")),
-        _ => return None,
-    };
-    Some((kind, detail))
 }
 
 /// The longest an activity's detail is sent: the card shows one line.

@@ -3,10 +3,7 @@ import type { Strings } from "../../i18n/strings";
 import { Select } from "../../ui/Select";
 import { useSettings } from "../../prefs/SettingsContext";
 import { OutlineCard } from "./OutlineCard";
-import type {
-  ActivityKind,
-  SectionStatus,
-} from "../../platform/bindings/ai-paper";
+import type { SectionStatus } from "../../platform/bindings/ai-paper";
 import {
   paperActions,
   restorePaperCard,
@@ -22,6 +19,7 @@ import {
 } from "./paper-genres";
 import { citationOrder } from "./paper-document";
 import "./outline-card.css";
+import { toolActivityLabels, toolActivityText } from "../chat/tool-activity";
 
 /** One line of what the run is doing now. */
 function progressLine(run: PaperRunState, t: Strings): string {
@@ -70,21 +68,6 @@ function useElapsed(since: number, on: boolean): string {
   }, [on, since]);
   const seconds = Math.max(0, Math.floor((now - since) / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
-function activityLabel(kind: ActivityKind, t: Strings): string {
-  switch (kind) {
-    case "search":
-      return t.paperActivitySearch;
-    case "read":
-      return t.paperActivityRead;
-    case "papers":
-      return t.paperActivityPapers;
-    case "library":
-      return t.paperActivityLibrary;
-    case "note":
-      return t.paperActivityNote;
-  }
 }
 
 function questionStatus(q: QuestionState, t: Strings): string {
@@ -147,6 +130,7 @@ function Mark({ state }: { state: string }) {
  *  and the helpers' latest steps, the outline as it is written, or each
  *  section with what its writer is writing. */
 function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
+  const activity = { toolActivity: toolActivityLabels(t) };
   if (run.phase === "starting" || run.phase === "planning") {
     return run.thinking ? (
       <p className="paper-card-thinking">{run.thinking}</p>
@@ -172,10 +156,9 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
           <ul className="paper-card-recent">
             {run.recent.map((a) => (
               <li key={a.id} className="paper-card-enter">
-                <span className="paper-card-recent-kind">
-                  {activityLabel(a.kind, t)}
+                <span className="paper-card-recent-detail">
+                  {toolActivityText(a.tool, a.arguments, activity)}
                 </span>
-                <span className="paper-card-recent-detail">{a.detail}</span>
               </li>
             ))}
           </ul>

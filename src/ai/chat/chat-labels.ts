@@ -4,6 +4,7 @@ import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
 import { permissionLabel } from "../../plugins/store/permissions";
 import { aiErrorTexts } from "../error-messages";
+import { toolActivityLabels } from "./tool-activity";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no
@@ -106,37 +107,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     permission: (p) => permissionLabel(p, t),
     language: lang,
     aiErrors: aiErrorTexts(t),
-    toolActivity: {
-      search_document: t.toolSearchDocument,
-      read_document: t.toolReadDocument,
-      // No heading named: the whole document, not an empty quote.
-      "read_document:whole": t.toolReadWholeDocument,
-      search_files: t.toolSearchFiles,
-      search_references: t.toolSearchReferences,
-      find_files: t.toolFindFiles,
-      // No name: every file (and old chats' list_files).
-      "find_files:whole": t.toolListFiles,
-      list_files: t.toolListFiles,
-      read_file: t.toolReadFile,
-      use_skill: t.toolUseSkill,
-      add_comment: t.toolAddComment,
-      check_conventions: t.toolCheckConventions,
-      measure_text: t.toolMeasureText,
-      remember: t.toolRemember,
-      generate_image: t.toolGenerateImage,
-      search_conversations: t.toolSearchConversations,
-      edit_chapters: t.toolEditChapters,
-      web_search: t.toolWebSearch,
-      web_fetch: t.toolWebFetch,
-      search_papers: t.toolSearchPapers,
-      // Any MCP server's tool.
-      mcp: t.toolMcp,
-      // Any tool without its own line: a word, not its internal name.
-      "*": t.toolWorking,
-      // The edit being written, in words, not the raw "propose_edit". The
-      // ellipsis is added after it.
-      propose_edit: t.proposalStatusStreaming.replace(/…$/, ""),
-    },
+    toolActivity: toolActivityLabels(t),
     diffCollapse: t.diffCollapse,
     diffShow: t.diffShow,
     pendingSummary: t.chatPendingSummary,

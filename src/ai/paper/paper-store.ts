@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { AgentTurn } from "../types";
 import type {
-  ActivityKind,
   BudgetCounts,
   Genre,
   GenreForm,
@@ -37,8 +36,9 @@ export interface PaperActivity {
   /** Unique in its run: the list's key. */
   id: number;
   question: number;
-  kind: ActivityKind;
-  detail: string;
+  /** The tool called and its arguments, worded as the chat words them. */
+  tool: string;
+  arguments: string;
 }
 
 /** How many of the helpers' latest steps the card keeps. */
@@ -194,14 +194,14 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         return {
           questions: withQuestion(run.questions, event.question, (q) => ({
             state: "active",
-            notes: q.notes + (event.kind === "note" ? 1 : 0),
+            notes: q.notes + (event.tool === "add_note" ? 1 : 0),
           })),
           recent: [
             {
               id: (run.recent[0]?.id ?? 0) + 1,
               question: event.question,
-              kind: event.kind,
-              detail: event.detail,
+              tool: event.tool,
+              arguments: event.arguments,
             },
             ...run.recent,
           ].slice(0, RECENT_ACTIVITY),

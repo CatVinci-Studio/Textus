@@ -374,9 +374,9 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
         .filter_map(|e| match e {
             PaperEvent::Activity {
                 question,
-                kind: ActivityKind::Note,
-                detail,
-            } => Some((*question, detail.clone())),
+                tool,
+                arguments,
+            } if tool == research::ADD_NOTE_TOOL => Some((*question, arguments.clone())),
             _ => None,
         })
         .collect();
@@ -410,28 +410,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
 }
 
 #[test]
-fn a_helper_s_tool_calls_are_told_in_one_line() {
-    let call = |name: &str, args: serde_json::Value| aicompat::agent::ToolCall {
-        call_id: "c".into(),
-        name: name.into(),
-        arguments: args.to_string(),
-    };
-    assert_eq!(
-        research::activity(&call(
-            "web_search",
-            json!({"queries": ["green roofs", "heat island"]})
-        )),
-        Some((ActivityKind::Search, "green roofs · heat island".into()))
-    );
-    assert_eq!(
-        research::activity(&call("web_fetch", json!({"url": "https://who.int/heat"}))),
-        Some((ActivityKind::Read, "https://who.int/heat".into()))
-    );
-    assert_eq!(
-        research::activity(&call("search_papers", json!({"query": "urban greening"}))),
-        Some((ActivityKind::Papers, "urban greening".into()))
-    );
-    assert_eq!(research::activity(&call("add_note", json!({}))), None);
+fn a_note_s_claim_is_told_in_one_line() {
     let long = "城".repeat(300);
     let clipped = research::clip(&long);
     assert_eq!(clipped.chars().count(), 120);

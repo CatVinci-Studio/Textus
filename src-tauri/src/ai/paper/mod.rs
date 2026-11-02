@@ -24,7 +24,7 @@ mod web_figures;
 
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
-pub(crate) use events::{ActivityKind, PaperEvent, PaperPhase, SectionStatus, SourceEntry};
+pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
 pub use materials::Material;
 #[cfg(test)]

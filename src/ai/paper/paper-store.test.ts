@@ -63,15 +63,15 @@ describe("the paper store", () => {
     applyPaperEvent("k4", {
       type: "activity",
       question: 1,
-      kind: "search",
-      detail: "green roofs",
+      tool: "web_search",
+      arguments: '{"queries":["green roofs"]}',
     });
     for (let i = 0; i < RECENT_ACTIVITY + 1; i++) {
       applyPaperEvent("k4", {
         type: "activity",
         question: 0,
-        kind: "note",
-        detail: `claim ${i}`,
+        tool: "add_note",
+        arguments: JSON.stringify({ claim: `claim ${i}` }),
       });
     }
     // An event for a question the run doesn't have changes nothing.
@@ -93,7 +93,7 @@ describe("the paper store", () => {
       { text: "B?", state: "failed", notes: 0 },
     ]);
     expect(run.recent).toHaveLength(RECENT_ACTIVITY);
-    expect(run.recent[0].detail).toBe(`claim ${RECENT_ACTIVITY}`);
+    expect(run.recent[0].arguments).toContain(`claim ${RECENT_ACTIVITY}`);
     expect(new Set(run.recent.map((a) => a.id)).size).toBe(RECENT_ACTIVITY);
   });
 
