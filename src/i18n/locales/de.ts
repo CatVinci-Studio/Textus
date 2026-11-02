@@ -611,7 +611,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   settingsSearchResults: "Suchergebnisse",
   settingsSearchNoMatches: "Keine Einstellung passt.",
   settingsViewGroup: "Ansicht",
-  settingsFrontDocumentHint: "Für das Dokument im Vordergrund.",
+  settingsTextGroup: "Text & Layout",
+  viewModeLabel: "Bearbeitungsansicht",
+  viewModeRich: "Formatierter Text",
+  viewModeHelp:
+    "Formatierter Text zeigt das Dokument, wie es sich liest; der Quellcodemodus sein Markdown; Quelltext und Vorschau beides nebeneinander.",
+  settingsDocumentGroup: "Dieses Dokument",
   settingsHelpGroup: "Hilfe",
   navGeneral: "Allgemein",
   navEditor: "Editor & Design",
@@ -789,7 +794,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentModeReviewHint: "Prüft das Dokument und schlägt Änderungen vor",
   agentModeCreateHint: "Erstellt Themes, Plugins und Skills",
   agentModeResearch: "Recherche",
-  agentModeResearchHint: "Recherchiert ein Thema gründlich und schreibt es dann",
+  agentModeResearchHint:
+    "Recherchiert ein Thema gründlich und schreibt es dann",
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
   agentAdvancedGroupLabel: "Erweitert",
   writingModelLabel: "Assistenzmodell",

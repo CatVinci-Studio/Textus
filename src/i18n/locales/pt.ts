@@ -606,7 +606,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   settingsSearchResults: "Resultados da busca",
   settingsSearchNoMatches: "Nenhum ajuste corresponde.",
   settingsViewGroup: "Visualização",
-  settingsFrontDocumentHint: "Para o documento em primeiro plano.",
+  settingsTextGroup: "Texto e layout",
+  viewModeLabel: "Vista de edição",
+  viewModeRich: "Texto formatado",
+  viewModeHelp:
+    "O texto formatado mostra o documento como se lê; o modo fonte, o seu Markdown; fonte e pré-visualização, os dois lado a lado.",
+  settingsDocumentGroup: "Este documento",
   settingsHelpGroup: "Ajuda",
   navGeneral: "Geral",
   navEditor: "Editor e aparência",

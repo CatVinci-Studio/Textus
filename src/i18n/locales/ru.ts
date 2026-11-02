@@ -612,7 +612,12 @@ export default {
   settingsSearchResults: "Результаты поиска",
   settingsSearchNoMatches: "Нет подходящих настроек.",
   settingsViewGroup: "Вид",
-  settingsFrontDocumentHint: "Для открытого сейчас документа.",
+  settingsTextGroup: "Текст и макет",
+  viewModeLabel: "Режим правки",
+  viewModeRich: "Форматированный текст",
+  viewModeHelp:
+    "Форматированный текст показывает документ как он читается, режим исходного кода — его Markdown, исходник и просмотр — оба рядом.",
+  settingsDocumentGroup: "Этот документ",
   settingsHelpGroup: "Справка",
   navGeneral: "Основные",
   navEditor: "Редактор и оформление",

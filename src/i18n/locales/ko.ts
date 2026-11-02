@@ -581,7 +581,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   settingsSearchResults: "검색 결과",
   settingsSearchNoMatches: "일치하는 설정이 없습니다.",
   settingsViewGroup: "보기",
-  settingsFrontDocumentHint: "앞에 있는 문서에 적용됩니다.",
+  settingsTextGroup: "글자와 레이아웃",
+  viewModeLabel: "편집 보기",
+  viewModeRich: "서식 있는 텍스트",
+  viewModeHelp:
+    "서식 있는 텍스트는 완성된 모습으로, 소스 모드는 Markdown 원문으로, 소스와 미리보기는 둘을 나란히 보여 줍니다.",
+  settingsDocumentGroup: "이 문서",
   settingsHelpGroup: "도움말",
   navGeneral: "일반",
   navEditor: "편집기 및 모양",

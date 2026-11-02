@@ -553,7 +553,12 @@ export default {
   settingsSearchResults: "搜尋結果",
   settingsSearchNoMatches: "沒有符合的設定。",
   settingsViewGroup: "檢視",
-  settingsFrontDocumentHint: "作用於目前的文件。",
+  settingsTextGroup: "文字與版面",
+  viewModeLabel: "編輯檢視",
+  viewModeRich: "所見即所得",
+  viewModeHelp:
+    "所見即所得顯示排好版的文件；源碼模式顯示 Markdown 原文；源碼與預覽把兩者並排。",
+  settingsDocumentGroup: "目前的文件",
   settingsHelpGroup: "說明",
   navGeneral: "一般",
   navEditor: "編輯器與外觀",

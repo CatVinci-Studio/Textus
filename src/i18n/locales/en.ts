@@ -602,7 +602,12 @@ type /name in a conversation to use one.
   settingsSearchResults: "Search results",
   settingsSearchNoMatches: "No settings match.",
   settingsViewGroup: "View",
-  settingsFrontDocumentHint: "For the document in front.",
+  settingsTextGroup: "Text & Layout",
+  viewModeLabel: "Editing view",
+  viewModeRich: "Rich text",
+  viewModeHelp:
+    "Rich text shows the document as it reads; Source Mode, its Markdown; Source and Preview, both side by side.",
+  settingsDocumentGroup: "This Document",
   settingsHelpGroup: "Help",
   navGeneral: "General",
   navEditor: "Editor & Appearance",

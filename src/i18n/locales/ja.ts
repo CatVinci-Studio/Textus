@@ -589,7 +589,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   settingsSearchResults: "検索結果",
   settingsSearchNoMatches: "一致する設定はありません。",
   settingsViewGroup: "表示",
-  settingsFrontDocumentHint: "前面の書類に適用されます。",
+  settingsTextGroup: "文字とレイアウト",
+  viewModeLabel: "編集ビュー",
+  viewModeRich: "リッチテキスト",
+  viewModeHelp:
+    "リッチテキストは仕上がりのまま、ソースモードは Markdown のまま、ソースとプレビューは両方を並べて表示します。",
+  settingsDocumentGroup: "この書類",
   settingsHelpGroup: "ヘルプ",
   navGeneral: "一般",
   navEditor: "編集と外観",

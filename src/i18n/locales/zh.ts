@@ -553,7 +553,12 @@ export default {
   settingsSearchResults: "搜索结果",
   settingsSearchNoMatches: "没有匹配的设置。",
   settingsViewGroup: "视图",
-  settingsFrontDocumentHint: "作用于当前文档。",
+  settingsTextGroup: "文字与版面",
+  viewModeLabel: "编辑视图",
+  viewModeRich: "所见即所得",
+  viewModeHelp:
+    "所见即所得显示排好版的文档；源码模式显示 Markdown 原文；源码与预览把两者并排。",
+  settingsDocumentGroup: "当前文档",
   settingsHelpGroup: "帮助",
   navGeneral: "通用",
   navEditor: "编辑与外观",

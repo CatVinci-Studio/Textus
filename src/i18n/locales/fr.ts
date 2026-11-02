@@ -627,7 +627,12 @@ utiliser une.
   settingsSearchResults: "Résultats de la recherche",
   settingsSearchNoMatches: "Aucun réglage ne correspond.",
   settingsViewGroup: "Affichage",
-  settingsFrontDocumentHint: "Pour le document au premier plan.",
+  settingsTextGroup: "Texte et mise en page",
+  viewModeLabel: "Vue d’édition",
+  viewModeRich: "Texte enrichi",
+  viewModeHelp:
+    "Le texte enrichi montre le document tel qu’il se lit ; le mode source, son Markdown ; source et aperçu, les deux côte à côte.",
+  settingsDocumentGroup: "Ce document",
   settingsHelpGroup: "Aide",
   navGeneral: "Général",
   navEditor: "Éditeur et apparence",
