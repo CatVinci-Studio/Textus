@@ -27,7 +27,8 @@ import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
-import type { Endpoint } from "./rpc";
+import type { Endpoint, Handlers } from "./rpc";
+import { guarded } from "../api-permissions";
 import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 
@@ -307,8 +308,13 @@ export class PluginHost {
     };
   }
 
-  /** The methods the plugin's code calls. */
-  private handlers() {
+  /** The methods the plugin's code calls, each checked against the
+   *  permission it always needs (api-permissions.ts) before it runs. */
+  private handlers(): Handlers {
+    return guarded(this.methods(), (permission) => this.need(permission));
+  }
+
+  private methods() {
     const scope = this.scope();
     return {
       "host.error": ({ message }: Params) => {

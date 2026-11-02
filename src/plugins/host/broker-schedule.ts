@@ -34,7 +34,6 @@ export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
     "schedule.clear": ({ id }: Params) => clearJob(p.id, str(id, "id")),
     "schedule.list": () => listJobs(p.id),
     "notify.show": (notification: Params) => {
-      p.need("notifications");
       return scheduleIpc.notify(
         p.id,
         notification as unknown as NotificationSpec,

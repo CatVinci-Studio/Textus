@@ -1,5 +1,6 @@
 import type { PluginFile } from "../../platform/ipc";
 import type { Permission, PluginManifest } from "./manifest";
+import { PERMISSION_CALLS } from "../api-permissions";
 
 /**
  * What a plugin's own code shows will go wrong once it runs, read before it
@@ -14,25 +15,6 @@ export type PluginCheck =
   /** A command, tab or view the manifest declares that the code never
    *  registers: its menu item or tab does nothing. */
   | { kind: "unregistered"; id: string };
-
-/** The calls that need a permission, as the broker checks them. */
-const NEEDS: readonly [RegExp, Permission][] = [
-  [
-    /\btextus\.editor\.(getText|getPath|getSelection|getBlocks|getOutline)\b/,
-    "editor.read",
-  ],
-  [/\btextus\.editor\.(edit|insertText|replaceSelection)\b/, "editor.write"],
-  [/\btextus\.editor\.propose\b/, "editor.propose"],
-  // Writing goes through the folder's root, which reading grants.
-  [
-    /\btextus\.(files\.(root|list|find|readText|writeText|create|process|rename)\b|metadata\.)/,
-    "files.read",
-  ],
-  [/\btextus\.files\.(writeText|create|process|rename)\b/, "files.write"],
-  [/\bstorage\.project\b/, "project.data"],
-  [/\btextus\.env\.(readClipboard|writeClipboard)\b/, "clipboard"],
-  [/\btextus\.ai\.registerTool\b/, "ai.tools"],
-];
 
 /** Timers are the frame's own and fine; anything else on these is the
  *  frame's page. */
@@ -62,7 +44,7 @@ export function checkPlugin(
   const checks: PluginCheck[] = [];
   if (DOM.test(source)) checks.push({ kind: "dom" });
   const granted = new Set<string>(manifest.permissions);
-  for (const [call, permission] of NEEDS)
+  for (const [call, permission] of PERMISSION_CALLS)
     if (call.test(source) && !granted.has(permission))
       checks.push({ kind: "permission", permission });
   const { commands, sidebarTabs, views } = manifest.contributes;
