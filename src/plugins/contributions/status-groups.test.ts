@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { groupStatusItems, type StatusItem } from "./status-items";
+import { groupStatusItems } from "./status-groups";
+import type { StatusItem } from "./status-items";
 
 const item = (plugin: string, id: string): StatusItem => ({
   key: `${plugin}/${id}`,

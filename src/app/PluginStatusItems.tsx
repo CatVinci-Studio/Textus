@@ -4,12 +4,14 @@ import { ChevronIcon } from "../ui/icons";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { runCommand } from "./commands";
 import {
-  groupStatusItems,
   statusItemsSnapshot,
   subscribeStatusItems,
-  type StatusGroup,
   type StatusItem,
 } from "../plugins/contributions/status-items";
+import {
+  groupStatusItems,
+  type StatusGroup,
+} from "../plugins/contributions/status-groups";
 import {
   pluginName,
   pluginsSnapshot,

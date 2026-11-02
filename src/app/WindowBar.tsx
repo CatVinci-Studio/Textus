@@ -1,3 +1,4 @@
+import { Suspense, useSyncExternalStore } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../ui/WindowCaptionButtons";
 import type { MenuChecks } from "./menu/app-menu-model";
@@ -12,7 +13,19 @@ import { useFullscreenMark } from "./useFullscreenMark";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { PageSwitch } from "../mobile/PageSwitch";
 import { usePageSwipe } from "../mobile/usePageSwipe";
-import { PluginStatusItems } from "./PluginStatusItems";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
+import {
+  statusItemsSnapshot,
+  subscribeStatusItems,
+} from "../plugins/contributions/status-items";
+
+// What plugins show here comes with the first of it: plugins run once the
+// window is up, so it stays out of what loads before the first frame.
+const PluginStatusItems = lazyComponent(
+  lazyModule("plugin-status", () => import("./PluginStatusItems")),
+  (m) => m.PluginStatusItems,
+);
 
 /**
  * The window's one top strip: a real layout row (an overlay title bar hides
@@ -54,6 +67,10 @@ export function WindowBar({
 }) {
   const { t, settings } = useSettings();
   useFullscreenMark();
+  const hasStatus = useSyncExternalStore(
+    subscribeStatusItems,
+    () => statusItemsSnapshot().length > 0,
+  );
   const menuBar = appDrawsWindowFrame && settings.menuBarShown;
   // A phone switches between the document and Textus AI as two pages: the
   // capsule takes the AI button's place, and the word count goes into the
@@ -119,7 +136,11 @@ export function WindowBar({
         )}
       </span>
       <div className="window-bar-status">
-        <PluginStatusItems />
+        {hasStatus && (
+          <Suspense fallback={null}>
+            <PluginStatusItems />
+          </Suspense>
+        )}
         {largeDoc && (
           <span className="large-doc-badge" title={t.largeDocHint}>
             {t.largeDocBadge}
