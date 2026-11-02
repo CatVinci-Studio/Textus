@@ -123,10 +123,20 @@ export type Genre =
  */
 "paper" | 
 /**
+ *  A literature review: what the research on a question has found,
+ *  strand by strand, and what it leaves open.
+ */
+"review" | 
+/**
  *  A long read for the general reader, as a news organisation writes
  *  one: a headline, a standfirst, and its sources named in the text.
  */
 "report" | 
+/**
+ *  An analysis for decision-makers - of a market, an industry or a
+ *  policy: an executive summary, the findings first, recommendations.
+ */
+"analysis" | 
 /**
  *  A feature for a newsletter or a WeChat official account: a few
  *  thousand characters, crossheads, a headline and a standfirst.

@@ -1,4 +1,4 @@
-//! What kind of piece is written - a paper, and the genres to come - and
+//! What kind of piece is written - a paper, a review, a report - and
 //! how that changes each stage: what the research looks for, how the
 //! outline is ordered, the writers' voice, what the review reads for and
 //! what opens the piece. A genre is data, a `Profile`; the stages put its
@@ -15,9 +15,15 @@ pub enum Genre {
     /// references.
     #[default]
     Paper,
+    /// A literature review: what the research on a question has found,
+    /// strand by strand, and what it leaves open.
+    Review,
     /// A long read for the general reader, as a news organisation writes
     /// one: a headline, a standfirst, and its sources named in the text.
     Report,
+    /// An analysis for decision-makers - of a market, an industry or a
+    /// policy: an executive summary, the findings first, recommendations.
+    Analysis,
     /// A feature for a newsletter or a WeChat official account: a few
     /// thousand characters, crossheads, a headline and a standfirst.
     Article,
@@ -52,6 +58,8 @@ pub(crate) enum Frame {
     News,
     /// Only a headline, and a list of sources.
     Headline,
+    /// An executive summary labelled as one, and a list of sources.
+    Executive,
 }
 
 /// How big a genre's piece is and how it is made.
@@ -116,7 +124,7 @@ pub(crate) struct Profile {
 
 const PAPER: Profile = Profile {
     name: "paper",
-    when: "the request asks for a paper, a literature review, a thesis chapter or scholarly writing, or its topic is a research question meant for specialists",
+    when: "the request asks for a paper, a thesis chapter or scholarly writing that argues a point, or its topic is a research question meant for specialists",
     chars: (5000, 10000),
     research_angles: "background and definitions, how it works, the state of the art, the evidence and data, disputes and limits, cases, and where it is heading",
     research_sources: "Search the web and the scholarly literature, read the best pages in full, and keep every finding that answers it with add_note - specific claims with figures, dates, names and results, not generalities; prefer primary and scholarly sources, and say where sources disagree.",
@@ -128,6 +136,26 @@ const PAPER: Profile = Profile {
     opening: "The title is specific and says what the paper finds or argues, not only its topic. The abstract, one paragraph of about 150-250 words (or 250-400 characters in Chinese or Japanese), states the question, the approach, the main findings with their key figures, and what follows from them - from the paper's text only, without citations.",
     frame: Frame::Academic,
     scale: LONG,
+};
+
+const REVIEW: Profile = Profile {
+    name: "review",
+    when: "a literature review, a survey of the research or the related-work chapter of a thesis: what has been studied on a question, with what methods and findings, and what remains open - 文献综述, 综述, 研究现状, 研究进展",
+    chars: (5000, 10000),
+    research_angles: "the field's foundational studies, its main approaches or schools of thought, the methods and data they use, the key findings and how they changed over time, where studies disagree and why, and the questions still open",
+    research_sources: "Search the scholarly literature first, then the web for reviews and reports; read the best papers' abstracts and findings in full, and keep each study's result with add_note - who did it and when, with what method, data or sample, and what it found, with its figures; one study to a note. Prefer peer-reviewed papers, systematic reviews and meta-analyses, and cite a news or blog page only for a fact no paper gives. Say where studies disagree.",
+    thesis: "a thesis - what the research as a whole shows on the question, and where its main gap is",
+    outline_order: "organised by strand - a theme, an approach or a school of thought -, never study by study or question by question: open on the question, its scope and why it matters, then one section for each strand of the research, then where the strands disagree and why, and end on the gaps and the research they call for. Section titles name the strand, not a study",
+    voice: "a literature review for researchers new to the question: synthesise, don't summarise. Group the studies that agree, set those that disagree against each other, and say what explains the difference - method, sample, period or setting. Name each study in the sentence by its authors or institution and year where the note gives them (\"Smith et al. (2021) found …\"), with its method and its key figure. Weigh the evidence: say which findings are well replicated, which rest on one study or a small sample, and what no study has yet shown. Never list one study after another, and never claim more than a study found.",
+    cite: PAPER.cite,
+    review_for: "the same study discussed in two sections, sections that contradict each other, a key point of the outline that no section makes, a figure the text never refers to, a claim stronger than what it cites; and what makes a review weak: a section that lists studies one after another without comparing them, a disagreement given without what explains it, a study named without its method or year, no section saying what remains open",
+    opening: "The title names the question reviewed and its scope. The abstract, one paragraph of about 150-250 words (or 250-400 characters in Chinese or Japanese), states the question and its scope, the main strands of research, what they agree and disagree on, and the main gaps - from the paper's text only, without citations.",
+    frame: Frame::Academic,
+    scale: Scale {
+        budget: (30, 50, 50, 4),
+        figure_every: Some(3),
+        ..LONG
+    },
 };
 
 const REPORT: Profile = Profile {
@@ -144,6 +172,25 @@ const REPORT: Profile = Profile {
     opening: "The title is a headline: short, concrete and in plain words, saying what is happening rather than naming the topic, with no colon and subtitle. The abstract is the standfirst under it: one or two sentences, at most 50 words (or 80 characters in Chinese or Japanese), that tell a reader why this matters to them and make them read on - from the text only, without citations.",
     frame: Frame::News,
     scale: LONG,
+};
+
+const ANALYSIS: Profile = Profile {
+    name: "analysis",
+    when: "a research or analysis report for decision-makers, with data and recommendations - a market, industry, policy or competitive analysis, a feasibility study, a white paper: 调研报告, 行业报告, 研究报告, 分析报告, 市场分析, 白皮书",
+    chars: (5000, 10000),
+    research_angles: "how big it is and how fast it is changing, its structure - the segments, the main players and their shares -, what drives it and what holds it back, the rules and policies that shape it, comparisons with other markets or periods, the risks, and what is likely in the next few years",
+    research_sources: "Search the web, read the best pages in full, and keep every finding that answers it with add_note - figures with their unit, year, place and who measured them, not generalities. Prefer official statistics, regulators, company filings and annual reports, and established research firms and industry bodies. Say how a figure was defined when sources define it differently, and where estimates disagree keep each with its source.",
+    thesis: "a thesis - the report's main finding in one sentence, as a decision-maker would act on it",
+    outline_order: "with the conclusion first, as a research institute or a consultancy writes it: open on the key findings, then the context and the size, the analysis - structure, players, drivers, constraints, comparisons -, the risks and the outlook, and end on recommendations that follow from the findings. Section titles say what the section finds, not only its subject",
+    voice: "clear, precise prose for a busy decision-maker, as a research institute's or a consultancy's report is written. Lead each section and each paragraph with its finding, then the evidence for it. Give figures exactly, with their unit, year and who measured them, and say what each means for the decision; compare them - over time, against peers - rather than list them. Keep apart what the data show, what is estimated and what is judgement, and say how certain each is. Recommendations are concrete - who should do what, and why - each resting on a finding. No marketing language, filler or summing up. In Chinese, write plain modern Chinese: no 此外, 综上所述 or 值得注意的是.",
+    cite: PAPER.cite,
+    review_for: "the same material in two sections, sections that contradict each other, a key point of the outline that no section makes, a figure the text never refers to, a claim stronger than what it cites; and what a decision-maker needs: a figure without its unit, year or source, two figures for the same thing that don't agree, a section that doesn't open on its finding, an estimate given as a fact, a recommendation no finding supports",
+    opening: "The title says the report's main finding or the decision it informs, not only its subject. The abstract is the executive summary: one paragraph of about 120-200 words (or 200-350 characters in Chinese or Japanese) that gives the key findings with their figures and the main recommendation - from the text only, without citations.",
+    frame: Frame::Executive,
+    scale: Scale {
+        budget: (50, 60, 10, 4),
+        ..LONG
+    },
 };
 
 const ARTICLE: Profile = Profile {
@@ -220,9 +267,11 @@ const BRIEF: Profile = Profile {
 
 impl Genre {
     /// Every genre, in the order the choosing step is told them.
-    pub(crate) const ALL: [Genre; 5] = [
+    pub(crate) const ALL: [Genre; 7] = [
         Genre::Paper,
+        Genre::Review,
         Genre::Report,
+        Genre::Analysis,
         Genre::Article,
         Genre::Thread,
         Genre::Brief,
@@ -252,7 +301,9 @@ impl Genre {
     pub(crate) fn profile(self) -> &'static Profile {
         match self {
             Genre::Paper => &PAPER,
+            Genre::Review => &REVIEW,
             Genre::Report => &REPORT,
+            Genre::Analysis => &ANALYSIS,
             Genre::Article => &ARTICLE,
             Genre::Thread => &THREAD,
             Genre::Brief => &BRIEF,
