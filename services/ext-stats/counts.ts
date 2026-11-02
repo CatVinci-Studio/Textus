@@ -2,7 +2,8 @@
  *  read. No request is kept: only these counts. */
 
 const GITHUB = {
-  plugins: "https://github.com/CatVinci-Studio/textus-plugins/releases/download/",
+  plugins:
+    "https://github.com/CatVinci-Studio/textus-plugins/releases/download/",
   themes:
     "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/",
 };

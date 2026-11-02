@@ -160,7 +160,11 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
         .filter(|p| super::require_id(&p.id).is_ok())
         .filter_map(|mut p| {
             p.url = mirrored(&p.url)?;
-            p.screenshots = p.screenshots.iter().filter_map(|url| mirrored(url)).collect();
+            p.screenshots = p
+                .screenshots
+                .iter()
+                .filter_map(|url| mirrored(url))
+                .collect();
             p.readme = std::mem::take(&mut p.readme)
                 .into_iter()
                 .filter_map(|(lang, url)| Some((lang, mirrored(&url)?)))
