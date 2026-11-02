@@ -1468,7 +1468,6 @@ utiliser une.
   createIntro:
     "Dites ce que vous voulez et Textus AI le fait ici. Installez-le depuis la carte sous la réponse, essayez-le et demandez des changements.",
   createPlaceholder: "Que doit-il faire ?",
-  createStart: "Commencer",
   createNew: "Nouveau",
   createAiOff: "Activez Textus AI pour créer.",
   createExamples: "Essayez",

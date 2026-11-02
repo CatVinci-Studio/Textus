@@ -1438,7 +1438,6 @@ export default {
   createIntro:
     "Скажите, что вам нужно, и Textus AI сделает это здесь. Установите из карточки под ответом, попробуйте и попросите изменить.",
   createPlaceholder: "Что оно должно делать?",
-  createStart: "Начать",
   createNew: "Новое",
   createAiOff: "Включите Textus AI, чтобы создавать.",
   createExamples: "Примеры",

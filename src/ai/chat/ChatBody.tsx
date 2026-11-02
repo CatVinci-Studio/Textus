@@ -74,6 +74,8 @@ export function ChatBody({
   onResearch,
   researchControls,
   researchKinds,
+  prepareMessage,
+  composerRef,
   footer,
   fillHeight,
   variant = "full",
@@ -167,15 +169,17 @@ export function ChatBody({
   });
   const { queue, setQueue, queuePaused, setQueuePaused } = queueState;
   const { nextQueued, sendingQueued } = queueState;
-  const composer = useRef<ChatComposerHandle>(null);
+  const ownComposer = useRef<ChatComposerHandle>(null);
+  const composer = composerRef ?? ownComposer;
 
   function handleSend(
-    message: string,
+    typedMessage: string,
     attachments: ChatAttachment[],
     includeSelection: boolean,
     options: AgentRequestOptions,
-    typed: string = message,
+    typed: string = typedMessage,
   ) {
+    const message = prepareMessage?.(typedMessage) ?? typedMessage;
     const compose = (state: {
       selectionMarkdown: string | null;
       cursor?: { before: string; after: string } | null;

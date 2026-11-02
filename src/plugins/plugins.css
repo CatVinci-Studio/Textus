@@ -766,72 +766,122 @@ button.mcp-homepage:hover {
 
 /* Settings › Extensions › Create: what to make and a box to say it, with
    examples; then its conversation, filling the page's height. */
+/* Create: a chat in Settings. Empty, its box sits in the middle - the
+   title over it, the kinds and starting points under it; once it starts
+   those go and the box slides down under the conversation
+   (useBoxSlide). */
 .create-studio {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+  height: min(640px, 70vh);
+}
+.create-studio-hero,
+.create-studio-start {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.create-studio-hero {
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  text-align: center;
+}
+.create-studio-start {
   gap: var(--space-3);
+  padding: 0 var(--space-2);
+}
+.create-studio-empty > .inline-chat-messages {
+  display: none;
+}
+.create-studio:not(.create-studio-empty) > .inline-chat-messages {
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.create-studio-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
+}
+.create-studio-mark svg {
+  width: 22px;
+  height: 22px;
 }
 .create-studio-title {
   margin: 0;
   font-size: var(--text-title);
   font-weight: 600;
 }
-.create-studio .auth-tabs {
-  align-self: flex-start;
+.create-studio-intro {
+  max-width: 32em;
   margin: 0;
-}
-.create-studio-input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-body);
-  resize: vertical;
-}
-.create-studio-input:focus {
-  outline: none;
-  border-color: var(--ui-primary);
-}
-.create-studio-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-.create-studio-note {
   color: var(--ui-muted);
-  font-size: var(--text-footnote);
+  font-size: var(--text-secondary);
+}
+.create-studio-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+.create-studio-kind-chip {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    border-color var(--dur-fast) var(--ease-standard);
+}
+.create-studio-kind-chip:hover {
+  color: var(--ui-text);
+}
+.create-studio-kind-chip[aria-checked="true"] {
+  border-color: color-mix(in srgb, var(--ui-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
 }
 .create-studio-examples {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .create-studio-example {
+  width: 100%;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-subtle);
-  color: var(--ui-text);
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
+  color: var(--ui-muted);
   font: inherit;
   font-size: var(--text-secondary);
   text-align: left;
   cursor: pointer;
 }
 .create-studio-example:hover {
-  border-color: var(--ui-primary);
-}
-.create-studio-chat {
-  gap: var(--space-2);
-  height: min(640px, 70vh);
+  background: var(--ui-subtle);
+  color: var(--ui-text);
 }
 .create-studio-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  animation: motion-settle-in var(--dur-base) var(--ease-out);
 }
 .create-studio-kind {
   color: var(--ui-muted);

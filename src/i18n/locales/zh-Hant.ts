@@ -1321,7 +1321,6 @@ export default {
   createIntro:
     "說說你想要什麼，Textus AI 在這裡把它做出來。在回覆下方的卡片裡安裝、試用，再提修改。",
   createPlaceholder: "它要做什麼？",
-  createStart: "開始創造",
   createNew: "新建",
   createAiOff: "開啟 Textus AI 後才能創造。",
   createExamples: "試試這些",

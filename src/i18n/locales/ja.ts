@@ -1388,7 +1388,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   createIntro:
     "欲しいものを伝えると、Textus AI がここで作ります。返信の下のカードから入れて試し、直してほしい点を伝えましょう。",
   createPlaceholder: "何をするものですか？",
-  createStart: "作成を始める",
   createNew: "新規",
   createAiOff: "作成するには Textus AI をオンにしてください。",
   createExamples: "例",

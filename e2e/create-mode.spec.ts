@@ -44,12 +44,17 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
       },
     ],
   });
-  await settings.locator(".create-studio-input").fill(message);
-  await settings.getByRole("button", { name: "Start" }).click();
-  const panel = settings.locator(".create-studio-chat");
+  // Empty, its box is in the middle with the kinds under it; once sent
+  // it goes down under the conversation and they fold away.
+  const panel = settings.locator(".create-studio");
+  const input = panel.locator(".inline-chat-input");
+  await expect(panel).toHaveClass(/create-studio-empty/);
+  await input.fill(message);
+  await input.press("Enter");
+  await expect(panel).not.toHaveClass(/create-studio-empty/);
+  await expect(panel.locator(".create-studio-start")).toHaveCount(0);
 
   // Its / menu holds Create's three.
-  const input = panel.locator(".inline-chat-input");
   await input.fill("/");
   const menu = page.locator(".composer-picker");
   await expect(menu.getByRole("option")).toHaveCount(3);

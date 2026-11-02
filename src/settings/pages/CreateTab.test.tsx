@@ -5,7 +5,6 @@ import {
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CreateTab } from "./CreateTab";
@@ -15,7 +14,46 @@ const send = vi.fn();
 vi.mock("../../ai/chat/useAgentConversation", () => ({
   useAgentConversation: () => ({ history: [], busy: false, send }),
 }));
-vi.mock("../../ai/chat/ChatBody", () => ({ ChatBody: () => null }));
+// The chat's box, as far as Create uses it: filled in through its handle,
+// and its message made ready by Create before it goes.
+vi.mock("../../ai/chat/ChatBody", async () => {
+  const { useState } = await import("react");
+  return {
+    ChatBody: (props: {
+      labels: { placeholder: string };
+      composerRef: { current: unknown };
+      prepareMessage?: (m: string) => string;
+      conversation: { send: (...args: unknown[]) => void };
+    }) => {
+      const [value, setValue] = useState("");
+      props.composerRef.current = { restore: setValue };
+      return (
+        <>
+          <textarea
+            aria-label={props.labels.placeholder}
+            value={value}
+            readOnly
+          />
+          <button
+            onClick={() =>
+              props.conversation.send(
+                null,
+                props.prepareMessage?.(value) ?? value,
+                [],
+                { mode: "create" },
+              )
+            }
+          >
+            Send
+          </button>
+        </>
+      );
+    },
+  };
+});
+vi.mock("../../ai/chat/chat-labels", () => ({
+  chatLabels: () => ({ placeholder: "Ask anything" }),
+}));
 vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => ({
     settings: { aiProvider: "x", agentModels: {}, textusAi: true },
@@ -34,15 +72,17 @@ afterEach(cleanup);
 
 it("starts a Create conversation with the chosen kind's skill loaded", async () => {
   render(<CreateTab t={en} />);
-  fireEvent.click(screen.getByRole("radio", { name: en.extensionsTabThemes }));
+  fireEvent.click(
+    await screen.findByRole("radio", { name: en.extensionsTabThemes }),
+  );
   fireEvent.click(screen.getByText(en.createExampleThemeAmber));
-  fireEvent.click(screen.getByText(en.createStart));
-  // The chat loads, takes in the built-in skills, then sends.
-  await waitFor(() => expect(send).toHaveBeenCalledOnce());
-  const [, message, , options] = send.mock.calls[0];
+  // The built-in skills are in before the first message goes.
+  await act(async () => {});
+  fireEvent.click(await screen.findByText("Send"));
+  expect(send).toHaveBeenCalledOnce();
+  const [, message] = send.mock.calls[0];
   expect(message).toContain("Make a theme.");
   expect(message).toContain(en.createExampleThemeAmber);
-  expect(options).toEqual({ mode: "create", webSearch: false });
 });
 
 it("fills in a request made before it opened, for the user to finish", async () => {

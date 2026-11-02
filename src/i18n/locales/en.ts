@@ -1412,7 +1412,6 @@ type /name in a conversation to use one.
   createIntro:
     "Say what you want and Textus AI makes it here. Install it from the card under the reply, try it, and ask for changes.",
   createPlaceholder: "What should it do?",
-  createStart: "Start",
   createNew: "New",
   createAiOff: "Turn on Textus AI to create.",
   createExamples: "Try one",

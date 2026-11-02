@@ -6,7 +6,10 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
 import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
 import type { ChatComposerLabels, SelectionChipHandlers } from "./ChatComposer";
-import type { ChatComposerProps } from "./composer-types";
+import type {
+  ChatComposerHandle,
+  ChatComposerProps,
+} from "./composer-types";
 import type { QuickAskPendingBarLabels } from "./quick-ask/QuickAskPendingBar";
 import { isProposalTool, parseToolProposal } from "./proposal";
 import { refusedProposalIds } from "../revision/proposal-status";
@@ -79,6 +82,11 @@ export interface ChatBodyProps {
   /** Research mode's choices, in the composer's toolbar. */
   researchControls?: React.ReactNode;
   researchKinds?: ChatComposerProps["researchKinds"];
+  /** What a message becomes before it is sent: Create's first one calls
+   *  its kind's skill. */
+  prepareMessage?: (message: string) => string;
+  /** Lets the caller fill in the box. */
+  composerRef?: React.RefObject<ChatComposerHandle | null>;
   /** Rendered above the composer - the popup's close-confirmation bar. */
   footer?: React.ReactNode;
   /** Jumps the editor to a pending edit. Absent in the detached window,

@@ -1375,7 +1375,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   createIntro:
     "원하는 것을 말하면 Textus AI가 여기서 만들어 줍니다. 답변 아래 카드에서 설치하고 써 본 뒤 수정을 요청하세요.",
   createPlaceholder: "무엇을 하나요?",
-  createStart: "만들기 시작",
   createNew: "새로 만들기",
   createAiOff: "만들려면 Textus AI를 켜세요.",
   createExamples: "예시",

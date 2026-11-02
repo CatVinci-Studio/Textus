@@ -1445,7 +1445,6 @@ para usar una.
   createIntro:
     "Di lo que quieres y Textus AI lo hace aquí. Instálalo desde la tarjeta bajo la respuesta, pruébalo y pide cambios.",
   createPlaceholder: "¿Qué debe hacer?",
-  createStart: "Empezar",
   createNew: "Nuevo",
   createAiOff: "Activa Textus AI para crear.",
   createExamples: "Prueba uno",

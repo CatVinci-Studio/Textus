@@ -1425,7 +1425,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   createIntro:
     "Diga o que você quer e a Textus AI faz aqui. Instale pelo cartão abaixo da resposta, experimente e peça mudanças.",
   createPlaceholder: "O que ele deve fazer?",
-  createStart: "Começar",
   createNew: "Novo",
   createAiOff: "Ative a Textus AI para criar.",
   createExamples: "Experimente",

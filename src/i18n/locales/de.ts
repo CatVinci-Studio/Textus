@@ -1440,7 +1440,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   createIntro:
     "Sag, was du willst, und Textus AI baut es hier. Installiere es über die Karte unter der Antwort, probiere es aus und bitte um Änderungen.",
   createPlaceholder: "Was soll es tun?",
-  createStart: "Loslegen",
   createNew: "Neu",
   createAiOff: "Schalte Textus AI ein, um etwas zu erstellen.",
   createExamples: "Beispiele",
