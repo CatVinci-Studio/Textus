@@ -302,6 +302,8 @@ export function usePaperWriter({
       updatePaperRun(key, () => ({
         topic,
         paperId: key,
+        // A genre picked shows on the card at once; the model's, once chosen.
+        genre,
         unit: /^(zh|ja|ko)/.test(language)
           ? strings.paperUnitCharacters
           : strings.paperUnitWords,

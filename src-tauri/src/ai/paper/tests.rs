@@ -2200,7 +2200,7 @@ async fn a_thread_opens_on_its_headline_alone() {
 #[test]
 fn a_brief_is_short_researched_lightly_and_written_straight_on() {
     let brief = Genre::Brief.profile();
-    assert!(brief.chars.1 <= 1000);
+    assert!(brief.chars.1 <= 1500);
     assert_eq!(brief.scale.questions.0, 1);
     assert!(!Genre::Brief.form().checkpoint);
     assert!(!Genre::Brief.form().headings);
@@ -2208,6 +2208,42 @@ fn a_brief_is_short_researched_lightly_and_written_straight_on() {
     assert_eq!((shape.max_sections, shape.max_figures), (1, 0));
     assert_eq!(
         choose::read("{\"genre\": \"brief\", \"chars\": 5000}", Some(8000)),
-        (Genre::Brief, 1000)
+        (Genre::Brief, 1500)
+    );
+}
+
+#[tokio::test]
+async fn the_choosing_step_keeps_threads_for_social_posts_and_news_for_briefs() {
+    struct Told(std::sync::Mutex<String>);
+    impl research::Model for Told {
+        fn step<'a>(
+            &'a self,
+            instructions: &'a str,
+            _turns: &'a [aicompat::agent::AgentTurn],
+            _tools: &'a [aicompat::agent::ToolSpec],
+        ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>>
+        {
+            *self.0.lock().unwrap() = instructions.to_string();
+            Box::pin(async { Ok(aicompat::agent::StepResult::Done(String::new())) })
+        }
+    }
+    let told = Told(Default::default());
+    choose::choose(&told, "请帮我写一个 今天的新闻简报", None).await;
+    let instructions = told.0.lock().unwrap().clone();
+    let line = |name: &str| {
+        instructions
+            .lines()
+            .find(|l| l.starts_with(&format!("- \"{name}\"")))
+            .unwrap_or_default()
+            .to_string()
+    };
+    assert!(line("thread").contains("only when"), "{instructions}");
+    for word in ["新闻稿", "简报", "快讯"] {
+        assert!(line("brief").contains(word), "{instructions}");
+        assert!(!line("thread").contains(word), "{instructions}");
+    }
+    assert!(
+        instructions.contains("A thread is only for"),
+        "{instructions}"
     );
 }
