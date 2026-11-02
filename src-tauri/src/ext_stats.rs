@@ -89,7 +89,10 @@ pub(crate) fn download_url(base: &str, d: &Download, event: Event) -> Option<Str
         .append_pair("kind", d.kind.name())
         .append_pair("id", d.id)
         .append_pair("version", d.version)
-        .append_pair("event", event.name());
+        .append_pair("event", event.name())
+        // Redirect to Textus's own site, not GitHub (older versions leave
+        // this out).
+        .append_pair("via", "site");
     // A theme's stylesheet may be named otherwise.
     if d.kind == Kind::Theme {
         let file = d.direct.rsplit('/').next().unwrap_or_default();
@@ -228,7 +231,7 @@ fn remember_in(file: &Path, kind: Kind, id: &str) {
 mod tests {
     use super::*;
 
-    const DIRECT: &str = "https://github.com/CatVinci-Studio/textus-plugins/releases/download/a.b-v1.0.0/a.b-1.0.0.zip";
+    const DIRECT: &str = "https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip";
 
     fn plugin() -> Download<'static> {
         Download {
@@ -272,7 +275,7 @@ mod tests {
         let fields: BTreeMap<String, String> = url.query_pairs().into_owned().collect();
         assert_eq!(
             fields.keys().collect::<Vec<_>>(),
-            ["event", "id", "kind", "version"]
+            ["event", "id", "kind", "version", "via"]
         );
         assert_eq!(fields["kind"], "plugin");
         assert_eq!(fields["event"], "install");
@@ -280,7 +283,7 @@ mod tests {
             kind: Kind::Theme,
             id: "plain",
             version: "2026-10-18T04:55:06Z",
-            direct: "https://raw.githubusercontent.com/CatVinci-Studio/textus-themes/main/themes/plain/theme.css",
+            direct: "https://textus.catvinci.com/theme-gallery/themes/plain/theme.css",
             ..plugin()
         };
         let url = download_url(ENDPOINT, &theme, Event::Update).unwrap();
@@ -303,10 +306,10 @@ mod tests {
         let other =
             Url::parse("https://github.com/someone/else/releases/download/x/x.zip").unwrap();
         assert!(!may_follow(&from, &other, DIRECT, base, |_| true));
-        // GitHub's own redirect onwards is the caller's to judge.
-        let github = [Url::parse(DIRECT).unwrap()];
-        assert!(may_follow(&github, &other, DIRECT, base, |_| true));
-        assert!(!may_follow(&github, &other, DIRECT, base, elsewhere));
+        // A redirect onwards from the package's address is the caller's to judge.
+        let package = [Url::parse(DIRECT).unwrap()];
+        assert!(may_follow(&package, &other, DIRECT, base, |_| true));
+        assert!(!may_follow(&package, &other, DIRECT, base, elsewhere));
     }
 
     #[test]

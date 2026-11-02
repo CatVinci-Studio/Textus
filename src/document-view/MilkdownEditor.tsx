@@ -13,6 +13,7 @@ import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
 import "../theme/content-base.css";
 import "../editor/milkdown-theme.css";
+import "../theme/content-themes.css";
 
 interface MilkdownEditorProps {
   /** The owning tab, the key this editor is flushed under. */

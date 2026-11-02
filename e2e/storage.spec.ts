@@ -106,7 +106,7 @@ const SETTINGS = {
   languageChosen: true,
   onboardingShown: true,
   theme: "dark",
-  themeId: "default",
+  themeId: "paper",
   contentWidth: "full",
   customCss: "#write { letter-spacing: 0.01em; }",
 };
@@ -122,7 +122,7 @@ test("the boot script puts the appearance on the document before the app runs", 
   expect(first).toEqual({
     theme: "dark",
     width: "full",
-    contentTheme: null,
+    contentTheme: "paper",
     userTheme: null,
     lang: "ja",
     themeCss: null,

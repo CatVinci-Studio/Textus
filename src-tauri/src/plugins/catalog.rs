@@ -9,18 +9,21 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use std::sync::Mutex;
 
-/// The catalog's published address.
-const CATALOG_URL: &str =
-    "https://github.com/CatVinci-Studio/textus-plugins/releases/download/catalog/index.json";
-
-/// Where packages may come from: that repository's releases (GitHub redirects
-/// to its own storage).
+/// Where the catalog names its files: the textus-plugins repository's
+/// releases. Anything else in it is left out.
 const PACKAGE_PREFIX: &str = "https://github.com/CatVinci-Studio/textus-plugins/releases/download/";
-const DOWNLOAD_HOSTS: [&str; 3] = [
-    "github.com",
-    "objects.githubusercontent.com",
-    "release-assets.githubusercontent.com",
-];
+
+/// Where the app reads them: Textus's own site passes each release file on,
+/// so the store works where GitHub can't be reached.
+const MIRROR_PREFIX: &str = "https://textus.catvinci.com/plugin-release/";
+const CATALOG_URL: &str = "https://textus.catvinci.com/plugin-release/catalog/index.json";
+const DOWNLOAD_HOSTS: [&str; 1] = ["textus.catvinci.com"];
+
+/// A release file's address on the site; None for one from elsewhere.
+fn mirrored(url: &str) -> Option<String> {
+    url.strip_prefix(PACKAGE_PREFIX)
+        .map(|rest| format!("{MIRROR_PREFIX}{rest}"))
+}
 
 /// A package this large is not a plugin.
 const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
@@ -154,19 +157,25 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
     let plugins = catalog
         .plugins
         .into_iter()
-        .filter(|p| super::require_id(&p.id).is_ok() && p.url.starts_with(PACKAGE_PREFIX))
-        .map(|mut p| {
-            p.screenshots.retain(|url| url.starts_with(PACKAGE_PREFIX));
-            p.readme.retain(|_, url| url.starts_with(PACKAGE_PREFIX));
-            p.icon = p.icon.filter(|url| url.starts_with(PACKAGE_PREFIX));
-            p
+        .filter(|p| super::require_id(&p.id).is_ok())
+        .filter_map(|mut p| {
+            p.url = mirrored(&p.url)?;
+            p.screenshots = p.screenshots.iter().filter_map(|url| mirrored(url)).collect();
+            p.readme = std::mem::take(&mut p.readme)
+                .into_iter()
+                .filter_map(|(lang, url)| Some((lang, mirrored(&url)?)))
+                .collect();
+            p.icon = p.icon.as_deref().and_then(mirrored);
+            Some(p)
         })
         .collect();
     let skills = catalog
         .skills
         .into_iter()
-        .filter(|s| {
-            !s.name.trim().is_empty() && s.url.starts_with(PACKAGE_PREFIX) && s.size <= MAX_SKILL
+        .filter(|s| !s.name.trim().is_empty() && s.size <= MAX_SKILL)
+        .filter_map(|mut s| {
+            s.url = mirrored(&s.url)?;
+            Some(s)
         })
         .collect();
     Ok((plugins, skills))

@@ -56,9 +56,12 @@ window.__textusBoot = function (boot, themeCss) {
       root.style.setProperty("--doc-line-height", String(leading));
       root.setAttribute("data-doc-leading", "");
     }
-    // The only built-in content theme is the default, the absence of an
-    // attribute; anything else is an imported theme's CSS.
-    if (themeCss) root.setAttribute("data-user-theme", "");
+    // BUILTIN_CONTENT_THEMES in theme/builtin-themes.ts, minus "default"
+    // (which is the absence of the attribute).
+    var builtin = ["paper", "slate", "forest"];
+    if (builtin.indexOf(settings.themeId) >= 0)
+      root.setAttribute("data-content-theme", settings.themeId);
+    else if (themeCss) root.setAttribute("data-user-theme", "");
     // macOS only (native_titlebar_height in lib.rs): what the window bar
     // lines its contents up with, so they sit level with the traffic lights.
     if (typeof boot.titlebarHeight === "number")

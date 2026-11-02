@@ -107,6 +107,19 @@ describe("the package a download asks for", () => {
       packageUrl({ kind: "theme", id: "plain", file: "light.css" }),
     ).toMatch(/plain\/light\.css$/);
   });
+
+  it("is on Textus's own site when the app asks for it there", () => {
+    const site = { via: "site", version: "1.0.0" };
+    expect(packageUrl({ ...site, kind: "plugin", id: "a.b" })).toBe(
+      "https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip",
+    );
+    expect(packageUrl({ ...site, kind: "skill", id: "press-release" })).toBe(
+      "https://textus.catvinci.com/plugin-release/catalog/skill-press-release.md",
+    );
+    expect(packageUrl({ ...site, kind: "theme", id: "plain" })).toBe(
+      "https://textus.catvinci.com/theme-gallery/themes/plain/theme.css",
+    );
+  });
 });
 
 describe("the totals", () => {
