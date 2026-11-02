@@ -9,6 +9,12 @@ import { chatLabels } from "../../ai/chat/chat-labels";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 import { useAgentConversation } from "../../ai/chat/useAgentConversation";
 import {
+  onCreateRequest,
+  takeCreateRequest,
+  type CreateRequest,
+} from "../../ai/chat/create-request";
+import { useLatest } from "../../utils/hooks/useLatest";
+import {
   CREATE_EXAMPLES,
   createKinds,
   createMessage,
@@ -19,6 +25,7 @@ import {
  *  installed from the card under it. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
 const KINDS = createKinds();
+const OPTIONS = { mode: "create", webSearch: false } as const;
 
 /**
  * Settings › Extensions › Create: say what you want, and Textus AI makes the
@@ -57,14 +64,29 @@ export function CreateTab({ t }: { t: Strings }) {
     skill: t.extensionsTabSkills,
   };
   const started = conversation.history.length > 0 || conversation.busy;
+  // "Edit with AI", "Fix with AI": a new start, filled in for the user to
+  // finish - or, once a conversation is going, its next message.
+  const take = useLatest((request: CreateRequest) => {
+    if (started) {
+      void conversation.send(NO_DOCUMENT, request.text, [], OPTIONS);
+      return;
+    }
+    setKind(KINDS.includes(request.kind) ? request.kind : KINDS[0]);
+    setText(request.text);
+  });
+  useEffect(() => {
+    const takeWaiting = () => {
+      const request = takeCreateRequest();
+      if (request) take.current(request);
+    };
+    takeWaiting();
+    return onCreateRequest(takeWaiting);
+  }, [take]);
   const start = () => {
     if (!text.trim()) return;
     const message = resolveSkillMessage(createMessage(kind, text), skills);
     setText("");
-    void conversation.send(NO_DOCUMENT, message, [], {
-      mode: "create",
-      webSearch: false,
-    });
+    void conversation.send(NO_DOCUMENT, message, [], OPTIONS);
   };
 
   if (started)

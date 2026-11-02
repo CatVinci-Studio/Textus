@@ -104,7 +104,7 @@ describe("the composer on a phone", () => {
       [...document.querySelectorAll(".mode-picker-mode-name")].map(
         (m) => m.textContent,
       ),
-    ).toEqual(["Write", "Review", "Create"]);
+    ).toEqual(["Write", "Review"]);
     fireEvent.click(screen.getByRole("option", { name: "Review" }));
     expect(picker).toHaveTextContent("Review");
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {

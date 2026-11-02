@@ -1,4 +1,5 @@
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { OPEN_CREATE_EVENT } from "../ai/chat/create-request";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { openExtensionsTab } from "../settings/pages/extensions-tab";
@@ -26,6 +27,16 @@ export function useSettingsOpening() {
   }>({ open: null, request: 0 });
   const request = (open: SettingsStart | null) =>
     setState((s) => ({ open, request: s.request + 1 }));
+  // A request for Create no open tab took: Extensions, on Create, which
+  // takes it as it mounts.
+  useEffect(() => {
+    const open = () => {
+      openExtensionsTab("create");
+      setState((s) => ({ open: "extensions", request: s.request + 1 }));
+    };
+    window.addEventListener(OPEN_CREATE_EVENT, open);
+    return () => window.removeEventListener(OPEN_CREATE_EVENT, open);
+  }, []);
   return {
     open: state.open,
     request: state.request,

@@ -141,7 +141,12 @@ export function AiPage({
                   <Select
                     className="settings-select"
                     aria-label={t.agentDefaultModeLabel}
-                    value={settings.agentDefaultMode}
+                    // Create is made in Settings › Extensions now.
+                    value={
+                      settings.agentDefaultMode === "create"
+                        ? "write"
+                        : settings.agentDefaultMode
+                    }
                     onChange={(e) =>
                       setSettings({
                         agentDefaultMode: e.target.value as AgentMode,
@@ -150,7 +155,6 @@ export function AiPage({
                   >
                     <option value="write">{t.agentModeWrite}</option>
                     <option value="review">{t.agentModeReview}</option>
-                    <option value="create">{t.agentModeCreate}</option>
                   </Select>
                 </SettingRow>
                 <SettingRow

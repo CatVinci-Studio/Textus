@@ -1,9 +1,9 @@
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
 
-/** What Settings › Extensions › Create makes; each is the name of the
- *  built-in skill that makes it. */
-export type CreateKind = "plugin" | "theme" | "skill";
+import type { CreateKind } from "../../ai/chat/create-request";
+
+export type { CreateKind };
 
 /** The kinds offered, plugins first where the app shows them. */
 export function createKinds(pluginsShown = PLUGINS_SHOWN): CreateKind[] {

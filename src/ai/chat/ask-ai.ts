@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AgentMode } from "../../prefs/settings-types";
+import { requestCreate } from "./create-request";
 
 /**
  * The AI panel asked for from outside the editor (a plugin's "Edit with AI"):
@@ -14,6 +15,9 @@ interface Asked {
 }
 
 export function askAi(text: string, mode: AgentMode): void {
+  // Create is made in Settings › Extensions, not beside a document; what
+  // asks for it here is about a plugin.
+  if (mode === "create") return requestCreate(text, "plugin");
   window.dispatchEvent(
     new CustomEvent<Asked>(ASK_AI_EVENT, { detail: { text, mode } }),
   );
