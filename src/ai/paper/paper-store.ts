@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from "react";
 import type { AgentTurn } from "../types";
 import type {
-  ActivityKind,
   BudgetCounts,
+  Genre,
+  GenreForm,
   Outline,
   PaperEvent,
   PaperPhase,
@@ -14,11 +15,6 @@ import type { PaperSources } from "./paper-document";
  *  with Rust's `PAPER_TURN` (ai/agent/history.rs), which keeps them from
  *  the model. */
 export const PAPER_TURN = "write_paper";
-
-/** A paper's error once its model calls are spent, and how many each run
- *  of them is; in step with paper/budget.rs. */
-export const PAPER_STEPS_SPENT = "PAPER_STEPS_SPENT";
-export const PAPER_MODEL_STEPS = 120;
 
 /** What the conversation keeps of a paper: enough to draw its card. */
 export interface PaperCardInfo {
@@ -40,8 +36,9 @@ export interface PaperActivity {
   /** Unique in its run: the list's key. */
   id: number;
   question: number;
-  kind: ActivityKind;
-  detail: string;
+  /** The tool called and its arguments, worded as the chat words them. */
+  tool: string;
+  arguments: string;
 }
 
 /** How many of the helpers' latest steps the card keeps. */
@@ -55,6 +52,11 @@ export interface PaperRunState {
   topic: string;
   /** The paper's id in `.textus/papers/`, once research has made it. */
   paperId: string | null;
+  /** The kind of piece and its length in characters, once chosen. */
+  genre: Genre | null;
+  targetChars: number | null;
+  /** What the app does differently for its genre, once chosen. */
+  form: GenreForm | null;
   sections: Record<number, SectionStatus>;
   used: BudgetCounts | null;
   outline: Outline | null;
@@ -96,6 +98,9 @@ const NEW_RUN: PaperRunState = {
   phase: "starting",
   topic: "",
   paperId: null,
+  genre: null,
+  targetChars: null,
+  form: null,
   sections: {},
   used: null,
   outline: null,
@@ -167,6 +172,12 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         return {
           sources: { heading: event.heading, sources: event.sources },
         };
+      case "genre":
+        return {
+          genre: event.genre,
+          targetChars: event.targetChars,
+          form: event.form,
+        };
       case "webSearch":
         return { webSearch: event.available };
       case "thinking":
@@ -183,14 +194,14 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
         return {
           questions: withQuestion(run.questions, event.question, (q) => ({
             state: "active",
-            notes: q.notes + (event.kind === "note" ? 1 : 0),
+            notes: q.notes + (event.tool === "add_note" ? 1 : 0),
           })),
           recent: [
             {
               id: (run.recent[0]?.id ?? 0) + 1,
               question: event.question,
-              kind: event.kind,
-              detail: event.detail,
+              tool: event.tool,
+              arguments: event.arguments,
             },
             ...run.recent,
           ].slice(0, RECENT_ACTIVITY),

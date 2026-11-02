@@ -1,6 +1,23 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { animate, duration, glideScroll } from "../ui/motion";
 import { drawAround } from "./lazy-blocks/lazy-blocks-drawer";
+import { unfoldRange } from "./html/details-fold";
+
+/**
+ * What every way to a place in the document does before it scrolls there:
+ * opens the folded <details> around `from`-`to`, where it has no place on
+ * screen, and draws it if a long document left it undrawn, kept drawn for
+ * the `glideMs` of the scroll.
+ */
+export function makeReachable(
+  view: EditorView,
+  from: number,
+  to: number,
+  glideMs: number,
+) {
+  unfoldRange(view, from, to);
+  drawAround(view, from, glideMs);
+}
 
 /**
  * Brings `pos` into view in one eased stroke of fixed length (the browser's
@@ -9,8 +26,7 @@ import { drawAround } from "./lazy-blocks/lazy-blocks-drawer";
  */
 export function revealPosition(view: EditorView, pos: number) {
   const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
-  // In a long document `pos` may be out of sight, not yet drawn.
-  drawAround(view, pos, duration("--dur-sheet"));
+  makeReachable(view, pos, pos, duration("--dur-sheet"));
   const at = view.coordsAtPos(pos);
   if (scroller) {
     const box = scroller.getBoundingClientRect();

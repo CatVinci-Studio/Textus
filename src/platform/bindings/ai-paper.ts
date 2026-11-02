@@ -33,22 +33,6 @@ export const commands = {
 };
 
 /* Types */
-/**  What a research helper's step was. */
-export type ActivityKind = 
-/**  A web search; `detail` is its queries. */
-"search" | 
-/**  A page read; `detail` is its address. */
-"read" | 
-/**  A scholarly search; `detail` is its query. */
-"papers" | 
-/**
- *  The user's reference library searched or read; `detail` is the query
- *  or the path.
- */
-"library" | 
-/**  A note kept; `detail` is its claim. */
-"note";
-
 /**  A count of each thing research spends. */
 export type BudgetCounts = {
 	searches: number,
@@ -57,29 +41,6 @@ export type BudgetCounts = {
 	images: number,
 	/**  Calls to the writing model, in every stage together. */
 	modelSteps: number,
-};
-
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier = Dossier_Serialize | Dossier_Deserialize;
-
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier_Deserialize = {
-	notes: Note_Deserialize[],
-	/**
-	 *  The sources the notes cite, numbered once for the whole paper: what
-	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
-	 */
-	sources?: WebSource[],
-};
-
-/**  What the research helpers found. Kept as `dossier.json`. */
-export type Dossier_Serialize = {
-	notes: Note_Serialize[],
-	/**
-	 *  The sources the notes cite, numbered once for the whole paper: what
-	 *  `Note::sources` and the text's `[n]` point at, and the reference list.
-	 */
-	sources: WebSource[],
 };
 
 /**
@@ -138,6 +99,61 @@ export type FigurePlan = {
 	spec: string,
 };
 
+/**  The kind of piece. Mirrored in src/platform/bindings/ai-paper.ts. */
+export type Genre = 
+/**
+ *  A researched paper with a thesis, an abstract and numbered
+ *  references.
+ */
+"paper" | 
+/**
+ *  A literature review: what the research on a question has found,
+ *  strand by strand, and what it leaves open.
+ */
+"review" | 
+/**
+ *  A long read for the general reader, as a news organisation writes
+ *  one: a headline, a standfirst, and its sources named in the text.
+ */
+"report" | 
+/**
+ *  An analysis for decision-makers - of a market, an industry or a
+ *  policy: an executive summary, the findings first, recommendations.
+ */
+"analysis" | 
+/**
+ *  A feature for a newsletter or a WeChat official account: a few
+ *  thousand characters, crossheads, a headline and a standfirst.
+ */
+"article" | 
+/**
+ *  A thread of numbered posts for X (Twitter) or Weibo, each short
+ *  enough for one post.
+ */
+"thread" | 
+/**
+ *  A short news story of a few hundred characters: the news first,
+ *  for quick, automated reporting.
+ */
+"brief";
+
+/**
+ *  What the app does differently for a genre. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type GenreForm = {
+	/**
+	 *  Whether the user approves its outline; false for a piece written
+	 *  straight on.
+	 */
+	checkpoint: boolean,
+	/**
+	 *  Whether its sections go under headings of their own; false for a
+	 *  piece of one section, all under its title.
+	 */
+	headings: boolean,
+};
+
 /**
  *  The image model setting as a request carries it. Keep in step with the
  *  frontend's `ImageModel`.
@@ -170,56 +186,11 @@ export type ImageModel_Serialize = {
 	limit: number | null,
 };
 
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead = Lead_Serialize | Lead_Deserialize;
-
-export type LeadKind = "image" | "data";
-
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead_Deserialize = {
-	kind: LeadKind,
-	description: string,
-	url?: string | null,
-};
-
-/**  A picture or a data set a note's source has that a figure could use. */
-export type Lead_Serialize = {
-	kind: LeadKind,
-	description: string,
-	url: string | null,
-};
-
-/**  One finding: a claim and what supports it. */
-export type Note = Note_Serialize | Note_Deserialize;
-
-/**  One finding: a claim and what supports it. */
-export type Note_Deserialize = {
-	/**  "n1", "n2", ...: what an outline section's `evidence` names. */
-	id: string,
-	/**  The research question it answers. */
-	question: string,
-	claim: string,
-	evidence: string,
-	/**  Words taken verbatim from a source, if any. */
-	quote?: string | null,
-	/**  The sources' numbers in the paper's source book. */
-	sources: number[],
-	leads: Lead_Deserialize[],
-};
-
-/**  One finding: a claim and what supports it. */
-export type Note_Serialize = {
-	/**  "n1", "n2", ...: what an outline section's `evidence` names. */
-	id: string,
-	/**  The research question it answers. */
-	question: string,
-	claim: string,
-	evidence: string,
-	/**  Words taken verbatim from a source, if any. */
-	quote: string | null,
-	/**  The sources' numbers in the paper's source book. */
-	sources: number[],
-	leads: Lead_Serialize[],
+export type Material = {
+	/**  The file's name, or its path in the project when picked with @. */
+	name: string,
+	/**  Its text, as the composer extracted it. */
+	content: string,
 };
 
 /**  The plan the user approves before drafting. Kept as `outline.json`. */
@@ -268,15 +239,21 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "webSearch"; available: boolean } | 
 /**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
+/**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
  */
 { type: "questions"; questions: string[] } | 
 /**
- *  A research helper did something: what question `question` (its
- *  index) searched, read or kept.
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
  */
-{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+{ type: "activity"; question: number; tool: string; arguments: string } | 
 /**
  *  The outline as the outliner writes it: its thesis once whole, and
  *  the titles of the sections given so far. `attempt` counts its tries;
@@ -328,15 +305,21 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  */
 { type: "webSearch"; available: boolean } | 
 /**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
+/**
  *  The research questions the topic was split into, in the order the
  *  helpers take them.
  */
 { type: "questions"; questions: string[] } | 
 /**
- *  A research helper did something: what question `question` (its
- *  index) searched, read or kept.
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
  */
-{ type: "activity"; question: number; kind: ActivityKind; detail: string } | 
+{ type: "activity"; question: number; tool: string; arguments: string } | 
 /**
  *  The outline as the outliner writes it: its thesis once whole, and
  *  the titles of the sections given so far. `attempt` counts its tries;
@@ -376,6 +359,7 @@ export type PaperProgress_Deserialize = {
 	outline?: Outline | null,
 	/**  How many of the outline's sections are written. */
 	drafted: number,
+	form: GenreForm,
 };
 
 /**  How far a kept paper has come: what its card offers to go on with. */
@@ -384,6 +368,7 @@ export type PaperProgress_Serialize = {
 	outline: Outline | null,
 	/**  How many of the outline's sections are written. */
 	drafted: number,
+	form: GenreForm,
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
@@ -405,14 +390,28 @@ export type PaperRequest_Deserialize = {
 	 */
 	id?: string | null,
 	topic: string,
+	/**
+	 *  What kind of piece to write; None for the model to choose from the
+	 *  topic.
+	 */
+	genre?: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
-	targetChars: number,
+	/**
+	 *  Its length in characters; None for the genre's, or the model's
+	 *  choice.
+	 */
+	targetChars?: number | null,
 	/**
 	 *  The image model, for the pictures the outline may plan; None for
 	 *  none.
 	 */
 	imageModel?: ImageModel_Deserialize | null,
+	/**
+	 *  Files the user attached for its research; none when going on with a
+	 *  paper, which keeps its own.
+	 */
+	materials?: Material[],
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
@@ -431,14 +430,28 @@ export type PaperRequest_Serialize = {
 	 */
 	id: string | null,
 	topic: string,
+	/**
+	 *  What kind of piece to write; None for the model to choose from the
+	 *  topic.
+	 */
+	genre: Genre | null,
 	/**  The language it is written in, a BCP 47 tag. */
 	language: string,
-	targetChars: number,
+	/**
+	 *  Its length in characters; None for the genre's, or the model's
+	 *  choice.
+	 */
+	targetChars: number | null,
 	/**
 	 *  The image model, for the pictures the outline may plan; None for
 	 *  none.
 	 */
 	imageModel: ImageModel_Serialize | null,
+	/**
+	 *  Files the user attached for its research; none when going on with a
+	 *  paper, which keeps its own.
+	 */
+	materials: Material[],
 };
 
 /**  How far a paper has come. */
@@ -461,6 +474,8 @@ export type PaperStage =
 export type Paper_Deserialize = {
 	id: string,
 	topic: string,
+	/**  What kind of piece it is; a paper kept before genres is a paper. */
+	genre?: Genre,
 	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
 	language: string,
 	/**  How long the finished text should be, in characters. */
@@ -481,6 +496,8 @@ export type Paper_Deserialize = {
 export type Paper_Serialize = {
 	id: string,
 	topic: string,
+	/**  What kind of piece it is; a paper kept before genres is a paper. */
+	genre: Genre,
 	/**  The language it is written in, a BCP 47 tag ("zh", "en"). */
 	language: string,
 	/**  How long the finished text should be, in characters. */
@@ -512,12 +529,5 @@ export type SectionStatus = "drafting" | "drafted" | "revising";
 export type SourceEntry = {
 	n: number,
 	entry: string,
-};
-
-/**  One web page a reply cites as `[n]`. Exported as WebSource. */
-export type WebSource = {
-	n: number,
-	url: string,
-	title: string,
 };
 

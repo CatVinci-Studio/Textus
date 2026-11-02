@@ -33,7 +33,7 @@ import { PluginFormHost } from "../plugins/views/plugin-form";
 import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
-import { ReportProblemHost } from "./report/ReportProblem";
+import { ReportProblemHost } from "./report/report-open";
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices

@@ -12,6 +12,7 @@ import {
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
+import type { ViewMode } from "../../prefs/settings-types";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { useSyncExternalStore } from "react";
 import {
@@ -53,8 +54,8 @@ export function EditorPage({
           }}
         />
       </SettingsGroup>
-      {/* The window's layout, then the view every document is in. */}
-      <SettingsGroup title={t.settingsViewGroup}>
+      {/* How the text is set, and the window's own. */}
+      <SettingsGroup title={t.settingsTextGroup}>
         <SettingRow label={t.contentWidthLabel}>
           <Select
             className="settings-select"
@@ -151,17 +152,23 @@ export function EditorPage({
             onChange={(on) => setSettings({ menuBarShown: on })}
           />
         )}
-        {/* One view for every document in every window. */}
-        <ToggleRow
-          label={t.menuViewSource}
-          checked={settings.viewMode === "source"}
-          onChange={(on) => setSettings({ viewMode: on ? "source" : "rich" })}
-        />
-        <ToggleRow
-          label={t.menuToggleSplitView}
-          checked={settings.viewMode === "split"}
-          onChange={(on) => setSettings({ viewMode: on ? "split" : "rich" })}
-        />
+      </SettingsGroup>
+      {/* One view for every document in every window. */}
+      <SettingsGroup title={t.settingsViewGroup}>
+        <SettingRow label={t.viewModeLabel} help={t.viewModeHelp}>
+          <Select
+            className="settings-select"
+            aria-label={t.viewModeLabel}
+            value={settings.viewMode}
+            onChange={(e) =>
+              setSettings({ viewMode: e.target.value as ViewMode })
+            }
+          >
+            <option value="rich">{t.viewModeRich}</option>
+            <option value="source">{t.menuViewSource}</option>
+            <option value="split">{t.menuToggleSplitView}</option>
+          </Select>
+        </SettingRow>
         <ToggleRow
           label={t.menuViewTypewriter}
           checked={settings.typewriterMode}
@@ -172,16 +179,16 @@ export function EditorPage({
           checked={settings.zenMode}
           onChange={(on) => setSettings({ zenMode: on })}
         />
-        {/* The document in front's, as the View menu's own. */}
+      </SettingsGroup>
+      {/* The document in front's, as the View menu's own. */}
+      <SettingsGroup title={t.settingsDocumentGroup}>
         <ToggleRow
           label={t.menuTrackChanges}
-          hint={t.settingsFrontDocumentHint}
           checked={tracking}
           onChange={() => emitMenuEvent("track-changes")}
         />
         <ToggleRow
           label={t.menuToggleReadOnly}
-          hint={t.settingsFrontDocumentHint}
           checked={readOnly}
           onChange={() => emitMenuEvent("toggle-read-only")}
         />

@@ -57,7 +57,6 @@ export function viewHandlers(p: PluginScope) {
       return pluginsIpc.readResource(p.id, record.resource);
     },
     "webview.writeFile": ({ webview: id, text }: Params) => {
-      p.need("files.write");
       const record = p.ownWebview(str(id, "webview"));
       if (!record.resource) throw new Error("This view shows no file.");
       return written(
@@ -94,7 +93,6 @@ export function viewHandlers(p: PluginScope) {
       setListMessage(p.id, listOf(view), optionalStr(text) ?? "");
     },
     "codeBlock.setSource": ({ webview: id, source }: Params) => {
-      p.need("editor.write");
       const record = p.ownWebview(str(id, "webview"));
       return setCodeBlockSource(record.id, str(source, "source"));
     },

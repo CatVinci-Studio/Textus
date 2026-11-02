@@ -4,10 +4,11 @@
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
 
-export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp";
+export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp" | "create";
 
 /** The page's tabs, in order; Plugins only where the app shows plugins,
- *  MCP servers only where the app can run their programs. */
+ *  MCP servers only where the app can run their programs. Create, where
+ *  Textus AI makes a theme, plugin or skill, comes last. */
 export function extensionsTabs(
   pluginsShown = PLUGINS_SHOWN,
   mcp = isDesktopApp,
@@ -17,6 +18,7 @@ export function extensionsTabs(
     ...(pluginsShown ? (["plugins"] as const) : []),
     "skills",
     ...(mcp ? (["mcp"] as const) : []),
+    "create",
   ];
 }
 

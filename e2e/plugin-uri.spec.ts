@@ -91,5 +91,9 @@ test("a command link runs its command once the user says so", async ({
 
   await arrive(page, "textus://command/test.clip.count?scope=all");
   await dialog.getByRole("button", { name: "Run" }).click();
-  await expect(page.getByText("counted all")).toBeVisible();
+  // Its second item: the two share the plugin's place in the window bar.
+  await page.locator('[data-status-plugin="test.clip"]').click();
+  await expect(
+    page.getByRole("menuitem", { name: "counted all" }),
+  ).toBeVisible();
 });

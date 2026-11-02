@@ -47,15 +47,9 @@ export interface ChatComposerLabels {
   attachmentTruncated: string;
   /** Shown when an image is attached but the active provider has no vision. */
   attachmentNoVision: string;
-  modeWrite: string;
-  modeReview: string;
-  modeCreate: string;
-  modeResearch: string;
-  /** One line on what each mode does, under its name in the picker. */
-  modeWriteHint: string;
-  modeReviewHint: string;
-  modeCreateHint: string;
-  modeResearchHint: string;
+  /** Each mode's name, and one line on what it does under it in the
+   *  picker (src/ai/modes.ts). */
+  modes: Record<PanelMode, { label: string; hint: string }>;
   /** Accessible name of the phone's segmented mode control, and the
    *  picker's heading over the modes. */
   modeLabel: string;
@@ -130,6 +124,9 @@ export interface ChatComposerProps {
   /** Quick Ask: no attach, web-search or Deep thinking buttons, and it asks
    *  for a fast answer. */
   compact?: boolean;
+  /** The one mode offered, and the mode it starts and stays in (Settings ›
+   *  Extensions › Create: Create only). */
+  onlyMode?: AgentMode;
   /** Focus the input as the composer appears (default). Off for the phone's
    *  AI sheet, where raising the keyboard right away flashes. */
   focusOnOpen?: boolean;
@@ -160,9 +157,21 @@ export interface ChatComposerProps {
   /** The mode as it is now, on the first render and on every switch. */
   onModeChange?: (mode: PanelMode) => void;
   /** The panel: Research is offered, and a message sent in it is the
-   *  topic of a paper, handed here instead of to onSend. */
-  onResearch?: (topic: string) => void;
-  /** Research mode's choices (the paper's length), in the toolbar where
-   *  the other modes have their attach, search and Deep buttons. */
-  researchControls?: ReactNode;
+   *  topic of a paper, handed here with its text files instead of to
+   *  onSend. */
+  onResearch?: (topic: string, files: ChatAttachment[]) => void;
+  /** What `/` offers instead of skills, where there is one thing to choose
+   *  - Research's kind of piece, Create's kind of making - each set by
+   *  picking it. */
+  kinds?: { key: string; label: string; pick: () => void }[];
+  /** The kind picked with `/`, shown while one is: `clear` goes back to
+   *  the model's choice. */
+  kind?: {
+    label: string;
+    clearLabel: string;
+    clear: () => void;
+  } | null;
+  /** Web search and Deep thinking always on, their switches not shown
+   *  (Create). */
+  autoTools?: boolean;
 }

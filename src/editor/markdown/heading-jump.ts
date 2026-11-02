@@ -1,6 +1,5 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { unfoldRange } from "../html/details-fold";
 import { revealPosition } from "../reveal-position";
 import { headingSlug } from "./link-target";
 
@@ -46,8 +45,6 @@ export function revealHeading(view: EditorView, anchor: string): boolean {
   const pos =
     headingPos(view.state.doc, anchor) ?? referencePos(view.state.doc, anchor);
   if (pos === null) return false;
-  // A heading in a folded <details> has no place on screen until it opens.
-  unfoldRange(view, pos);
   revealPosition(view, pos);
   return true;
 }

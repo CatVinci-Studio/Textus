@@ -21,11 +21,9 @@ import {
   CloseIcon,
   GenericFileIcon,
   ImageFileIcon,
-  LightbulbIcon,
   PlusIcon,
-  SearchIcon,
 } from "../../ui/icons";
-import { rememberDeepThinking } from "./deep-thinking";
+import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
 import { FollowUpChips } from "./FollowUpChips";
@@ -79,6 +77,7 @@ export function ChatComposer({
   selectionChip,
   selectionPerMessage = false,
   compact = false,
+  onlyMode,
   focusOnOpen = true,
   defaultWebSearch,
   dockActions,
@@ -88,7 +87,9 @@ export function ChatComposer({
   onEscape,
   onModeChange,
   onResearch,
-  researchControls,
+  kind = null,
+  kinds = [],
+  autoTools = false,
   handle,
   suggestions = [],
 }: ChatComposerProps) {
@@ -99,15 +100,23 @@ export function ChatComposer({
   const { dismissedInput, setDismissedInput } = typing;
   const staged = useAttachments(labels.attachmentNoVision);
   const { attachments, setAttachments, attachError, setAttachError } = staged;
+  // Research is the panel's, where its paper is followed. Create is made in
+  // Settings › Extensions, so it is offered only where it is the one mode.
+  const modeValues: readonly PanelMode[] = onlyMode
+    ? [onlyMode]
+    : ["write", "review", ...(onResearch ? (["research"] as const) : [])];
   const { mode, setMode } = useComposerMode({
     tourMode,
     carryMode,
     defaultMode,
+    offered: modeValues,
     onModeChange,
   });
   const options = useRequestOptions(defaultWebSearch, compact);
-  const { searchUnavailable, webSearch, setWebSearch, thinking } = options;
-  const { deepThinking, setDeepThinking, canThinkDeeper } = options;
+  // Create always searches and thinks deeper, where the model can.
+  const webSearch = autoTools || options.webSearch;
+  const thinking =
+    autoTools && options.canThinkDeeper ? "deep" : options.thinking;
   const { selectionDropped, setDroppedSelection, showSelection, setChipHot } =
     useSelectionChip(selectedText, selectionChip);
   const {
@@ -168,7 +177,31 @@ export function ChatComposer({
   // dead key.
   let pickerSections: PickerSection[] = [];
   let pickerEmpty: string[] = [];
-  if (skillMenuOpen && skillTrigger) {
+  if (skillMenuOpen && skillTrigger && kinds.length > 0) {
+    // Where there are kinds (Research's pieces, Create's makings), `/`
+    // picks one.
+    const query = skillTrigger[1].toLowerCase();
+    pickerSections = [
+      {
+        rows: kinds
+          .filter(
+            (k) =>
+              k.key.includes(query) || k.label.toLowerCase().includes(query),
+          )
+          .map((k) => ({
+            key: k.key,
+            primary: k.label,
+            secondary: `/${k.key}`,
+            pick: () => {
+              setInput("");
+              setPickerIndex(0);
+              k.pick();
+            },
+          })),
+      },
+    ];
+    pickerEmpty = [picker.skillNoMatch.replace("{query}", query)];
+  } else if (skillMenuOpen && skillTrigger) {
     const query = skillTrigger[1];
     const row = (skill: PickerSkill): PickerRow => ({
       key: skill.name,
@@ -231,7 +264,8 @@ export function ChatComposer({
     if (mode === "research") {
       if (!typed || busy || !onResearch) return;
       setInput("");
-      onResearch(typed);
+      setAttachments([]);
+      onResearch(typed, attachments);
       return;
     }
     const message = resolveSkillMessage(typed, skills, resolveName);
@@ -313,24 +347,9 @@ export function ChatComposer({
   const followUps = !busy && input === "" ? suggestions : [];
   const offered = followUps[0] ?? null;
 
-  const modeLabels: Record<PanelMode, [string, string]> = {
-    write: [labels.modeWrite, labels.modeWriteHint],
-    review: [labels.modeReview, labels.modeReviewHint],
-    create: [labels.modeCreate, labels.modeCreateHint],
-    research: [labels.modeResearch, labels.modeResearchHint],
-  };
-  // Quick Ask works on the selection: it writes or reviews, never creates.
-  // Research is the panel's, where its paper is followed; it sits before
-  // Create, which makes things for the app rather than the document.
-  const modes: ModeChoice[] = [
-    "write" as const,
-    "review" as const,
-    ...(onResearch ? (["research"] as const) : []),
-    ...(compact ? [] : (["create"] as const)),
-  ].map((value) => ({
+  const modes: ModeChoice[] = modeValues.map((value) => ({
     value,
-    label: modeLabels[value][0],
-    hint: modeLabels[value][1],
+    ...labels.modes[value],
   }));
   const pickerProps = {
     mode,
@@ -456,80 +475,26 @@ export function ChatComposer({
             ) : (
               <ModePicker {...pickerProps} holdFocus={phone} />
             )}
-            {/* A paper does its own research: no files, search or Deep
-                for it, only its own choices. */}
-            {mode === "research" && researchControls}
-            {!compact && mode !== "research" && (
-              <>
-                <Tooltip text={labels.attachFile} side="above">
-                  <button
-                    className="inline-chat-attach"
-                    aria-label={labels.attachFile}
-                    onClick={staged.attachFile}
-                  >
-                    <PlusIcon />
-                  </button>
-                </Tooltip>
-                <Tooltip
-                  side="above"
-                  description={
-                    webSearch && searchUnavailable
-                      ? labels.webSearchNeedsService
-                      : null
-                  }
-                  text={
-                    webSearch && searchUnavailable
-                      ? labels.webSearchNeedsService
-                      : webSearch
-                        ? labels.toggleOnHint.replace(
-                            "{label}",
-                            labels.webSearch,
-                          )
-                        : labels.webSearch
-                  }
+            {!compact && (
+              <Tooltip text={labels.attachFile} side="above">
+                <button
+                  className="inline-chat-attach"
+                  aria-label={labels.attachFile}
+                  onClick={staged.attachFile}
                 >
-                  <button
-                    type="button"
-                    className={`inline-chat-toggle inline-chat-web-search${webSearch ? " is-active" : ""}${
-                      webSearch && searchUnavailable ? " needs-setup" : ""
-                    }`}
-                    aria-label={labels.webSearch}
-                    aria-pressed={webSearch}
-                    {...holdFocus}
-                    onClick={() => setWebSearch((value) => !value)}
-                  >
-                    <SearchIcon />
-                  </button>
-                </Tooltip>
-                {canThinkDeeper && (
-                  <Tooltip
-                    side="above"
-                    description={labels.deepThinkingHint}
-                    text={
-                      deepThinking
-                        ? labels.toggleOnHint.replace(
-                            "{label}",
-                            labels.deepThinkingHint,
-                          )
-                        : labels.deepThinkingHint
-                    }
-                  >
-                    <button
-                      type="button"
-                      className={`inline-chat-toggle inline-chat-deep-thinking${deepThinking ? " is-active" : ""}`}
-                      aria-label={labels.deepThinking}
-                      aria-pressed={deepThinking}
-                      {...holdFocus}
-                      onClick={() => {
-                        rememberDeepThinking(!deepThinking);
-                        setDeepThinking(!deepThinking);
-                      }}
-                    >
-                      <LightbulbIcon />
-                    </button>
-                  </Tooltip>
-                )}
-              </>
+                  <PlusIcon />
+                </button>
+              </Tooltip>
+            )}
+            {kind && <KindChip kind={kind} holdFocus={holdFocus} />}
+            {/* A paper does its own searching and thinking, and Create
+                always searches and thinks: no buttons for them there. */}
+            {!compact && mode !== "research" && !autoTools && (
+              <ComposerToggles
+                labels={labels}
+                options={options}
+                holdFocus={holdFocus}
+              />
             )}
             {selectedText && !selectionDropped && dockActions === undefined && (
               <span

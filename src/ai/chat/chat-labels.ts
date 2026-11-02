@@ -4,6 +4,9 @@ import type { InlineChatLabels } from "./quick-ask/InlineChat";
 import { pickerLabels } from "./ComposerPicker";
 import { permissionLabel } from "../../plugins/store/permissions";
 import { aiErrorTexts } from "../error-messages";
+import { toolActivityLabels } from "./tool-activity";
+import { MODES } from "../modes";
+import type { PanelMode } from "../../prefs/settings-types";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no
@@ -95,40 +98,18 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     usageGuide: t.pluginUsageGuide,
     exportPlugin: t.pluginExport,
     pluginCantInstall: t.chatPluginCantInstall,
+    pluginCheck: {
+      dom: t.chatPluginCheckDom,
+      permission: t.chatPluginCheckPermission,
+      unregistered: t.chatPluginCheckUnregistered,
+      runError: t.chatPluginRunError,
+      fix: t.chatPluginFix,
+      fixRequest: t.chatPluginFixRequest,
+    },
     permission: (p) => permissionLabel(p, t),
     language: lang,
     aiErrors: aiErrorTexts(t),
-    toolActivity: {
-      search_document: t.toolSearchDocument,
-      read_document: t.toolReadDocument,
-      // No heading named: the whole document, not an empty quote.
-      "read_document:whole": t.toolReadWholeDocument,
-      search_files: t.toolSearchFiles,
-      search_references: t.toolSearchReferences,
-      find_files: t.toolFindFiles,
-      // No name: every file (and old chats' list_files).
-      "find_files:whole": t.toolListFiles,
-      list_files: t.toolListFiles,
-      read_file: t.toolReadFile,
-      use_skill: t.toolUseSkill,
-      add_comment: t.toolAddComment,
-      check_conventions: t.toolCheckConventions,
-      measure_text: t.toolMeasureText,
-      remember: t.toolRemember,
-      generate_image: t.toolGenerateImage,
-      search_conversations: t.toolSearchConversations,
-      edit_chapters: t.toolEditChapters,
-      web_search: t.toolWebSearch,
-      web_fetch: t.toolWebFetch,
-      search_papers: t.toolSearchPapers,
-      // Any MCP server's tool.
-      mcp: t.toolMcp,
-      // Any tool without its own line: a word, not its internal name.
-      "*": t.toolWorking,
-      // The edit being written, in words, not the raw "propose_edit". The
-      // ellipsis is added after it.
-      propose_edit: t.proposalStatusStreaming.replace(/…$/, ""),
-    },
+    toolActivity: toolActivityLabels(t),
     diffCollapse: t.diffCollapse,
     diffShow: t.diffShow,
     pendingSummary: t.chatPendingSummary,
@@ -145,14 +126,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     continueRequest: t.chatContinueRequest,
     expandInline: t.chatExpandInline,
     collapseInline: t.chatCollapseInline,
-    modeWrite: t.agentModeWrite,
-    modeReview: t.agentModeReview,
-    modeCreate: t.agentModeCreate,
-    modeResearch: t.agentModeResearch,
-    modeWriteHint: t.agentModeWriteHint,
-    modeReviewHint: t.agentModeReviewHint,
-    modeCreateHint: t.agentModeCreateHint,
-    modeResearchHint: t.agentModeResearchHint,
+    modes: modeLabels(t),
     modeLabel: t.chatModeLabel,
     modelLabel: t.chatModelLabel,
     modeAndModelLabel: t.chatModeModelLabel,
@@ -178,5 +152,19 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       append: t.agentActionAppend,
       insert_at_cursor: t.agentActionInsertAtCursor,
     },
+  };
+}
+
+/** Each mode's name and line, as the composer's picker shows them. */
+function modeLabels(t: Strings) {
+  const of = (mode: PanelMode) => ({
+    label: t[MODES[mode].label],
+    hint: t[MODES[mode].hint],
+  });
+  return {
+    write: of("write"),
+    review: of("review"),
+    create: of("create"),
+    research: of("research"),
   };
 }

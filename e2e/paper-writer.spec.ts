@@ -122,12 +122,14 @@ test("a paper is researched, its outline approved, and written into the document
           cmd: string;
           id?: string;
           outline?: typeof outline;
-          request?: { topic?: string; id?: string };
+          request?: { topic?: string; id?: string; genre?: string | null };
         },
     ),
   );
   const run = calls.find((c) => c.cmd === "ai_paper_run");
   expect(run?.request?.topic).toBe("Green roofs");
+  // Choose for me, the default: the model chooses the kind of piece.
+  expect(run?.request?.genre ?? null).toBeNull();
   const saved = calls.find((c) => c.cmd === "ai_paper_save_outline");
   expect(saved?.id).toBe("abc123");
   expect(saved?.outline?.sections[0].title).toBe("How plants cool roofs");
@@ -233,4 +235,49 @@ test("a paused paper goes on from what it kept, in place of what it wrote", asyn
       ).__devInvokeCalls.filter((c) => c.cmd === "ai_paper_draft").length,
   );
   expect(drafts).toBe(2);
+});
+
+test("a kind of piece picked is the one asked for, and the card says it at once", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        ai_paper_run: {
+          __events: [{ type: "phase", phase: "planning" }],
+          value: { id: "abc123", topic: "Today's news", language: "en" },
+        },
+      };
+  });
+  await openApp(page, {
+    settings: { language: "en", agentDefaultMode: "write" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const panel = page.locator(".agent-panel-view");
+  await panel.getByRole("combobox", { name: /^Mode/ }).click();
+  await page.getByRole("option", { name: "Research" }).click();
+  // The model's choice by default: nothing shown for it; / picks one,
+  // shown until it is cleared.
+  const box = panel.locator("textarea");
+  await expect(panel.getByLabel("Choose for me")).toHaveCount(0);
+  await box.fill("/brief");
+  await box.press("Enter");
+  await expect(box).toHaveValue("");
+  await expect(panel.locator(".inline-chat-selection-chip")).toHaveText(
+    "News brief",
+  );
+  await box.fill("Today's news");
+  await panel.locator("textarea").press("Enter");
+
+  await expect(page.locator(".paper-card-title")).toHaveText("News brief");
+  const run = await page.evaluate(() =>
+    (
+      (
+        window as unknown as {
+          __devInvokeCalls?: { cmd: string; request?: { genre?: string } }[];
+        }
+      ).__devInvokeCalls ?? []
+    ).find((c) => c.cmd === "ai_paper_run"),
+  );
+  expect(run?.request?.genre).toBe("brief");
 });

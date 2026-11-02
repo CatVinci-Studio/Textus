@@ -73,6 +73,10 @@ remembering them:
   be read, tested or loaded lazily on its own.
 - **No dead code**: no unused file, export or dependency (`knip`, set up
   in `knip.json`).
+- **No copies**: no run of code found twice in `src/` or `src-tauri/src/`
+  (`scripts/check-duplicates.mjs`, with jscpd; `jscpd` is run by path, so
+  `knip.json` names it). The copies there today are listed and may only
+  go. Share the code instead: a function, a table, a component.
 - **Shape**: no file over 600 lines, no component with more than eight
   hooks (`scripts/check-code-shape.mjs`) - split by concern, as
   `MilkdownEditor` and `App` were.

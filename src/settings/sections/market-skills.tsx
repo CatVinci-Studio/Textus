@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
+import { MODES } from "../../ai/modes";
 import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
 import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
 import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { TextKey } from "../../i18n/strings";
 import { AvailableSection } from "../pages/AvailableSection";
 import { CatalogProblem } from "../pages/AvailablePlugins";
 import { installsText } from "../pages/installs-text";
@@ -29,12 +29,6 @@ export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
     return words.every((w) => text.includes(w));
   });
 }
-
-const MODE_LABEL = {
-  write: "agentModeWrite",
-  review: "agentModeReview",
-  create: "agentModeCreate",
-} as const satisfies Record<string, TextKey>;
 
 /** Under the user's skills: the catalog's skills not installed yet, each
  *  installed with a click into the global skills folder. */
@@ -135,7 +129,7 @@ export function AvailableSkills({
                 <span className="plugin-byline">
                   <span className="market-skill-modes">
                     {(skill.modes ?? ["write"])
-                      .map((m) => t[MODE_LABEL[m]])
+                      .map((m) => t[MODES[m].label])
                       .join(" · ")}
                   </span>
                   {skill.official && (

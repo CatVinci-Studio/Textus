@@ -1,6 +1,16 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { pluginsInReply, type ReplyPlugin } from "../../plugins/chat-plugin";
 import {
+  checkPlugin,
+  type PluginCheck,
+} from "../../plugins/store/plugin-check";
+import {
+  pluginLog,
+  pluginLogVersion,
+  subscribePluginLog,
+} from "../../plugins/store/plugin-log";
+import { askAi } from "./ask-ai";
+import {
   installPlugin,
   pluginsSnapshot,
   setPluginEnabled,
@@ -21,6 +31,20 @@ export interface ReplyPluginLabels {
   exportPlugin: string;
   /** "Can't be installed: {reason}". */
   pluginCantInstall: string;
+  /** What checkPlugin and the plugin's first run found, and asking the AI
+   *  to fix it. */
+  pluginCheck: {
+    dom: string;
+    /** "{permission}". */
+    permission: string;
+    /** "{id}". */
+    unregistered: string;
+    /** "{error}". */
+    runError: string;
+    fix: string;
+    /** "{name}", "{problems}". */
+    fixRequest: string;
+  };
   /** What a permission lets a plugin do, in a few words. */
   permission: (permission: Permission) => string;
   language: string;
@@ -56,9 +80,16 @@ function ReplyPluginChip({
   labels: ReplyPluginLabels;
 }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
+  useSyncExternalStore(subscribePluginLog, pluginLogVersion);
   const [busy, setBusy] = useState(false);
+  // When this card installed it: errors logged since are this version's.
+  const [installedAt, setInstalledAt] = useState<number | null>(null);
   const working = useRef(false);
   const manifest = plugin.manifest;
+  const checks = useMemo(
+    () => (manifest ? checkPlugin(manifest, plugin.files) : []),
+    [manifest, plugin.files],
+  );
   if (!manifest)
     return (
       <div className="agent-theme-chip agent-plugin-chip">
@@ -70,12 +101,24 @@ function ReplyPluginChip({
   const name = localize(manifest, manifest.name, labels.language);
   const installed = snapshot.records.find((r) => r.id === manifest.id);
   const current = installed?.manifest?.version === manifest.version;
+  const problems = checks.map((c) => checkText(c, labels));
+  const runError =
+    installedAt === null
+      ? undefined
+      : pluginLog(manifest.id)
+          .filter((e) => e.level === "error" && e.at >= installedAt)
+          .pop();
+  if (runError)
+    problems.push(
+      labels.pluginCheck.runError.replace("{error}", runError.message),
+    );
 
   async function install() {
     if (working.current || !manifest) return;
     working.current = true;
     setBusy(true);
     try {
+      setInstalledAt(Date.now());
       const id = await installPlugin(plugin.files);
       await setPluginEnabled(id, true);
     } catch (err) {
@@ -121,6 +164,46 @@ function ReplyPluginChip({
           {labels.exportPlugin}
         </button>
       )}
+      {problems.length > 0 && (
+        <div className="agent-plugin-problems" role="status">
+          <ul>
+            {problems.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            onClick={() =>
+              askAi(
+                labels.pluginCheck.fixRequest
+                  .replace("{name}", `${name} (${manifest.id})`)
+                  .replace(
+                    "{problems}",
+                    problems.map((p) => `- ${p}`).join("\n"),
+                  ),
+                "create",
+              )
+            }
+          >
+            {labels.pluginCheck.fix}
+          </button>
+        </div>
+      )}
     </div>
   );
+}
+
+function checkText(check: PluginCheck, labels: ReplyPluginLabels): string {
+  const t = labels.pluginCheck;
+  switch (check.kind) {
+    case "dom":
+      return t.dom;
+    case "permission":
+      return t.permission.replace(
+        "{permission}",
+        labels.permission(check.permission),
+      );
+    case "unregistered":
+      return t.unregistered.replace("{id}", check.id);
+  }
 }

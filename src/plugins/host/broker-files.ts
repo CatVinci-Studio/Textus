@@ -31,13 +31,12 @@ export async function written(
   emitPluginEvent(change, { path });
 }
 
-/** The folder of a plugin's project place: the sidebar's (null for global). */
+/** The folder of a plugin's project place: the sidebar's. Null for global,
+ *  and with no folder open, where the backend keeps a hidden one instead. */
 function placeRoot(p: PluginScope, scope: StoreScope): string | null {
   if (scope !== "project") return null;
   p.need("project.data");
-  const root = getWindowAccess()?.rootPath();
-  if (!root) throw new Error("No folder is open.");
-  return root;
+  return getWindowAccess()?.rootPath() ?? null;
 }
 
 /** A token for the version of a document in a tab. */
@@ -49,10 +48,8 @@ const TAB_TOKEN = "tab:";
  * the file and network ones again.
  */
 export function fileHandlers(p: PluginScope) {
-  const write = () => {
-    p.need("files.write");
-    return p.root();
-  };
+  // files.write is checked before the call runs (api-permissions.ts).
+  const write = () => p.root();
   /** Writes `text` to `path` (in its tab if open, else on disk) if it is still
    *  the version `token` names. */
   const writeVersion = async (path: string, text: string, token: string) => {
@@ -84,7 +81,6 @@ export function fileHandlers(p: PluginScope) {
   };
   return {
     "files.root": () => {
-      p.need("files.read");
       return getWindowAccess()?.rootPath() ?? null;
     },
     "files.list": async ({ path }: Params) => {
@@ -132,7 +128,6 @@ export function fileHandlers(p: PluginScope) {
       );
     },
     "files.processRead": ({ path }: Params) => {
-      p.need("files.write");
       return readVersion(str(path, "path"));
     },
     "files.processWrite": ({ path, text, token }: Params) =>
@@ -185,13 +180,11 @@ export function fileHandlers(p: PluginScope) {
       );
     },
     "files.willSave": ({ on }: Params) => {
-      p.need("files.write");
       setWillSave(p.id, on === true, (path, text) =>
         p.request<string | null>("$willSave", { path, text }),
       );
     },
     "export.willExport": ({ on }: Params) => {
-      p.need("editor.read");
       setWillExport(p.id, on === true, (page) =>
         p.request("$willExport", page),
       );
@@ -267,11 +260,9 @@ export function fileHandlers(p: PluginScope) {
         typeof value === "string" ? value : null,
       ),
     "clipboard.readText": () => {
-      p.need("clipboard");
       return navigator.clipboard.readText();
     },
     "clipboard.writeText": ({ text }: Params) => {
-      p.need("clipboard");
       return navigator.clipboard.writeText(str(text, "text"));
     },
   };

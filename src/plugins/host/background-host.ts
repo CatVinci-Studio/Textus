@@ -1,3 +1,4 @@
+import { guarded } from "../api-permissions";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
 import { fileHandlers } from "./broker-files";
@@ -80,6 +81,10 @@ function scopeOf(run: BackgroundRun): PluginScope {
 
 export function backgroundHandlers(run: BackgroundRun) {
   const scope = scopeOf(run);
+  return guarded(backgroundMethods(run, scope), scope.need);
+}
+
+function backgroundMethods(run: BackgroundRun, scope: PluginScope) {
   const files = Object.fromEntries(
     Object.entries(fileHandlers(scope)).filter(
       ([name]) =>

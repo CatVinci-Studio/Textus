@@ -52,15 +52,16 @@ const labels = {
   selectedPicture: "Picture selected",
   attachmentTruncated: "(shortened)",
   attachmentNoVision: "No images",
-  modeWrite: "Write",
-  modeReview: "Review",
-  modeCreate: "Create",
-  modeWriteHint: "Writes and changes the document",
-  modeReviewHint: "Reads and leaves notes",
-  modeCreateHint: "Makes themes, plugins and skills",
-  modeResearch: "Research",
   researchPlaceholder: "What the paper is about",
-  modeResearchHint: "Researches a topic and writes a paper into the document",
+  modes: {
+    write: { label: "Write", hint: "Writes and changes the document" },
+    review: { label: "Review", hint: "Reads and leaves notes" },
+    create: { label: "Create", hint: "Makes themes, plugins and skills" },
+    research: {
+      label: "Research",
+      hint: "Researches a topic and writes a paper into the document",
+    },
+  },
   modeLabel: "Mode",
   modelLabel: "Model",
   modeAndModelLabel: "Mode and model",
@@ -104,7 +105,7 @@ describe("the composer on a phone", () => {
       [...document.querySelectorAll(".mode-picker-mode-name")].map(
         (m) => m.textContent,
       ),
-    ).toEqual(["Write", "Review", "Create"]);
+    ).toEqual(["Write", "Review"]);
     fireEvent.click(screen.getByRole("option", { name: "Review" }));
     expect(picker).toHaveTextContent("Review");
     fireEvent.change(screen.getByPlaceholderText("Ask anything"), {

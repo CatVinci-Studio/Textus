@@ -24,21 +24,28 @@ describe("the composer's model", () => {
     expect(modelChoices(entry, {})).toEqual(["gpt-6.1-sol", "gpt-6-luna"]);
   });
 
+  it("offers a local provider's installed models, never one since removed", () => {
+    const ollama = {
+      id: "ollama",
+      agentDefaultModel: null,
+      knownModels: [],
+    } as unknown as ProviderCatalogEntry;
+    const chosen = { ollama: "llama-old" };
+    // Not in use: what was fetched, not the model picked there once.
+    expect(modelChoices(ollama, chosen, [], false)).toEqual([]);
+    expect(modelChoices(ollama, chosen, ["qwen"], false)).toEqual(["qwen"]);
+    // In use: the model it runs, and what is installed.
+    expect(modelChoices(ollama, chosen, ["qwen"], true)).toEqual([
+      "llama-old",
+      "qwen",
+    ]);
+  });
+
   it("is a button only when there is another model to switch to", () => {
-    const single = {
-      id: "local",
-      agentDefaultModel: "llama",
-      knownModels: ["llama"],
-    } as ProviderCatalogEntry;
-    expect(canSwitchModel([single], {})).toBe(false);
-    expect(canSwitchModel([], {})).toBe(false);
-    expect(canSwitchModel([entry], {})).toBe(true);
+    expect(canSwitchModel([{ models: ["llama"] }])).toBe(false);
+    expect(canSwitchModel([])).toBe(false);
+    expect(canSwitchModel([{ models: ["a", "b"] }])).toBe(true);
     // One model each from two providers is still a choice.
-    expect(
-      canSwitchModel(
-        [single, { ...single, id: "other" } as ProviderCatalogEntry],
-        {},
-      ),
-    ).toBe(true);
+    expect(canSwitchModel([{ models: ["a"] }, { models: ["b"] }])).toBe(true);
   });
 });

@@ -357,8 +357,7 @@
   white-space: nowrap;
 }
 
-.paper-card-item-status,
-.paper-card-recent-kind {
+.paper-card-item-status {
   flex: none;
   color: var(--ui-muted);
 }

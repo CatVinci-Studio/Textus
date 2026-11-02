@@ -1,7 +1,7 @@
 //! A paper kept in its project, `.textus/papers/<id>/`, so a stopped run
 //! can resume and the user can read what the research found.
 
-use super::{Dossier, Outline, Paper};
+use super::{Dossier, Material, Outline, Paper};
 use crate::ai::workspace::project_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::path::{Path, PathBuf};
@@ -10,6 +10,7 @@ const PAPERS_FOLDER: &str = "papers";
 const PAPER_FILE: &str = "paper.json";
 const DOSSIER_FILE: &str = "dossier.json";
 const OUTLINE_FILE: &str = "outline.json";
+const MATERIALS_FILE: &str = "materials.json";
 
 /// Everything kept for one paper. A paper not yet researched has an empty
 /// dossier; one not yet outlined, no outline.
@@ -45,6 +46,68 @@ pub(crate) fn paper_dir(root: &Path, id: &str) -> Result<PathBuf, String> {
         return Err(format!("Not a paper id: {id:?}"));
     }
     Ok(project_dir(root).join(PAPERS_FOLDER).join(id))
+}
+
+/// Where papers are kept while their document has no project - untitled,
+/// or in a folder too broad to be one - so research needs no folder: the
+/// system's temporary folder, out of the user's sight.
+fn scratch_root() -> PathBuf {
+    std::env::temp_dir().join("textus-research")
+}
+
+/// The folder paper `id` is kept in: the document's project, or the
+/// scratch folder while it has none. A paper begun in the scratch folder
+/// moves into the project the first time it is asked for there, once the
+/// document is saved into one.
+pub(crate) fn paper_root(
+    doc_path: Option<&str>,
+    workspace_root: Option<&str>,
+    id: Option<&str>,
+) -> Result<PathBuf, String> {
+    let project = crate::ai::workspace::project_root(doc_path, workspace_root);
+    root_in(&scratch_root(), project, id)
+}
+
+/// [`paper_root`] with the scratch folder given, for tests.
+pub(crate) fn root_in(
+    scratch: &Path,
+    project: Option<PathBuf>,
+    id: Option<&str>,
+) -> Result<PathBuf, String> {
+    let Some(root) = project else {
+        return Ok(scratch.to_path_buf());
+    };
+    if let Some(id) = id {
+        let from = paper_dir(scratch, id)?;
+        let to = paper_dir(&root, id)?;
+        if from.is_dir() && !to.exists() {
+            move_paper(&from, &to).map_err(|e| e.to_string())?;
+        }
+    }
+    Ok(root)
+}
+
+/// A paper's folder moved whole; copied file by file where it can't be
+/// renamed (the temporary folder on another volume). Its files are flat.
+fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        std::fs::copy(entry.path(), to.join(entry.file_name()))?;
+    }
+    // The copy is whole; what is left behind is only clutter in the
+    // temporary folder.
+    for entry in std::fs::read_dir(from)?.flatten() {
+        let _ = std::fs::remove_file(entry.path());
+    }
+    let _ = std::fs::remove_dir(from);
+    Ok(())
 }
 
 /// Writes the paper's files into `root`'s `.textus/`, each whole or not at
@@ -101,6 +164,18 @@ pub(crate) fn load_section(root: &Path, id: &str, index: usize) -> Result<Option
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(e) => Err(e.to_string()),
     }
+}
+
+/// The files attached to paper `id`'s request, kept for a run that goes on.
+pub(crate) fn save_materials(root: &Path, id: &str, materials: &[Material]) -> Result<(), String> {
+    let dir = paper_dir(root, id)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    write_json(&dir.join(MATERIALS_FILE), &materials)
+}
+
+/// What [`save_materials`] kept; none when nothing was attached.
+pub(crate) fn load_materials(root: &Path, id: &str) -> Result<Vec<Material>, String> {
+    Ok(read_json(&paper_dir(root, id)?.join(MATERIALS_FILE))?.unwrap_or_default())
 }
 
 /// The paper `id` kept in `root`'s `.textus/`.

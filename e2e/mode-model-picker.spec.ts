@@ -25,10 +25,9 @@ test("one control names the mode and the model, and its list switches either", a
     "Write",
     "Review",
     "Research",
-    "Create",
   ]);
   await expect(list.getByRole("option", { name: "Write" })).toContainText(
-    "Writes and changes the document",
+    "Everyday writing and edits, right away",
   );
   await expect(
     list.getByRole("option", { name: "gpt-6.1-sol" }),

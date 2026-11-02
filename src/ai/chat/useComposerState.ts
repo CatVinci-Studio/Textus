@@ -108,20 +108,24 @@ export function useAttachments(noVisionMessage: string) {
 
 /** The mode the message goes in: the tour's while it runs, else the one
  *  carried from last time where the composer carries it, reported to
- *  `onModeChange` as it changes. */
+ *  `onModeChange` as it changes. One the composer doesn't offer (a default
+ *  or a last mode of Create, made in Settings now) reads as its first. */
 export function useComposerMode({
   tourMode,
   carryMode,
   defaultMode,
+  offered,
   onModeChange,
 }: {
   tourMode: AgentMode | null;
   carryMode: boolean;
   defaultMode: AgentMode;
+  offered: readonly PanelMode[];
   onModeChange: ChatComposerProps["onModeChange"];
 }) {
-  const [mode, setModeState] = useState<PanelMode>(
-    () => tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode),
+  const allowed = (m: PanelMode) => (offered.includes(m) ? m : offered[0]);
+  const [mode, setModeState] = useState<PanelMode>(() =>
+    allowed(tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode)),
   );
   useEffect(() => {
     if (tourMode) setModeState(tourMode);

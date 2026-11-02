@@ -3,7 +3,6 @@ import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView, NodeView } from "@milkdown/kit/prose/view";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import { $nodeSchema, $prose, $remark } from "@milkdown/kit/utils";
-import { unfoldRange } from "../html/details-fold";
 import { revealPosition } from "../reveal-position";
 import { touchesHeading } from "./heading-id-plugin";
 
@@ -175,8 +174,6 @@ class TocView implements NodeView {
     event.preventDefault();
     const pos = tocEntryPos(this.view.state.doc, Number(link.dataset.index));
     if (pos === null) return;
-    // A heading in a folded <details> has no place on screen until it opens.
-    unfoldRange(this.view, pos);
     this.view.dispatch(
       this.view.state.tr.setSelection(
         TextSelection.create(this.view.state.doc, pos),

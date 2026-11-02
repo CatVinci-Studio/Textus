@@ -538,7 +538,10 @@ fn a_picture_that_was_not_made_is_asked_for_again_by_itself() {
 
 #[test]
 fn a_picture_is_drawn_again_from_the_writers_description() {
-    let run = run();
+    // A server that never answers, so the picture is still being made
+    // while the test looks (a refused connection can fail it first).
+    let silent = std::net::TcpListener::bind("127.0.0.1:0").expect("listen");
+    let run = run_at(&format!("https://{}", silent.local_addr().expect("addr")));
     let (id, _) = run.start("A red boat".into(), Aspect::Square, None);
     assert_eq!(
         ai_generated_image_prompt(id.clone()).as_deref(),

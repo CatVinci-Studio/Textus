@@ -4,7 +4,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { askAi } from "../../ai/chat/ask-ai";
+import { requestCreate } from "../../ai/chat/create-request";
 import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
@@ -40,7 +40,7 @@ import { PluginIcon } from "./PluginArt";
  * others; "⋯" installs from a file or loads a folder. Each card opens its
  * plugin's page.
  */
-export function PluginsPage({ t, onClose }: SettingsPageProps) {
+export function PluginsPage({ t }: SettingsPageProps) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install, enable, attempt, actionFor } =
@@ -112,10 +112,7 @@ export function PluginsPage({ t, onClose }: SettingsPageProps) {
           setOpen(null);
           setOpenItem(null);
         }}
-        onEditWithAi={() => {
-          onClose();
-          askAi(editRequest(openRecord, t), "create");
-        }}
+        onEditWithAi={() => requestCreate(editRequest(openRecord, t))}
         onEnable={(on) => void enable(openRecord, on)}
         onUpdate={() => {
           const item =
@@ -133,6 +130,10 @@ export function PluginsPage({ t, onClose }: SettingsPageProps) {
       t={t}
       intro={t.extensionsIntroPlugins}
       help={t.pluginsInstallHelp}
+      primary={{
+        label: t.createMakePlugin,
+        onSelect: () => requestCreate("", "plugin"),
+      }}
       actions={
         isDesktopApp
           ? [

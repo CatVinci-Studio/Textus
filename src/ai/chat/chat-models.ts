@@ -3,6 +3,7 @@ import {
   useProviderCatalog,
   type ProviderCatalogEntry,
 } from "../provider-catalog";
+import { readFetchedModels } from "../model-info";
 import {
   localizedLabel,
   useConnectedProviders,
@@ -20,26 +21,32 @@ export function chatModel(
 }
 
 /** The models to offer for a provider: the one in use first, then the rest
- *  it lists, each once. */
+ *  it lists, each once. One with no list of its own (Ollama: whatever is
+ *  installed) offers what was last fetched from it, and the model chosen
+ *  there only while it is the provider in use: one since removed isn't
+ *  offered. */
 export function modelChoices(
   entry: ProviderCatalogEntry,
   chosen: Record<string, string>,
+  fetched: string[] = [],
+  inUse = true,
 ): string[] {
-  const current = chatModel(entry, chosen);
+  const own = entry.knownModels.length > 0 || !!entry.agentDefaultModel;
+  const current = own || inUse ? chatModel(entry, chosen) : "";
   return [
-    ...new Set([current, entry.agentDefaultModel ?? "", ...entry.knownModels]),
+    ...new Set([
+      current,
+      entry.agentDefaultModel ?? "",
+      ...entry.knownModels,
+      ...(own ? [] : fetched),
+    ]),
   ].filter(Boolean);
 }
 
 /** Whether there is anything to switch to: more than one model across
  *  the providers that are ready. With one, the composer lists no models. */
-export function canSwitchModel(
-  ready: ProviderCatalogEntry[],
-  chosen: Record<string, string>,
-): boolean {
-  return (
-    ready.reduce((n, entry) => n + modelChoices(entry, chosen).length, 0) > 1
-  );
+export function canSwitchModel(groups: { models: string[] }[]): boolean {
+  return groups.reduce((n, group) => n + group.models.length, 0) > 1;
 }
 
 export interface ModelGroup {
@@ -73,16 +80,23 @@ export function useChatModels(): ChatModels {
       (e.keyOptional && e.id !== "custom"),
   );
   const chosen = settings.agentModels;
+  // A provider with nothing to offer isn't listed, not even its name.
+  const groups = ready
+    .map((entry) => ({
+      provider: entry.id,
+      label: localizedLabel(entry, t),
+      models: modelChoices(
+        entry,
+        chosen,
+        readFetchedModels(entry.id)?.models,
+        entry.id === settings.aiProvider,
+      ),
+    }))
+    .filter((group) => group.models.length > 0);
   return {
     model: active ? chatModel(active, chosen) : "",
     provider: settings.aiProvider,
-    groups: canSwitchModel(ready, chosen)
-      ? ready.map((entry) => ({
-          provider: entry.id,
-          label: localizedLabel(entry, t),
-          models: modelChoices(entry, chosen),
-        }))
-      : [],
+    groups: canSwitchModel(groups) ? groups : [],
     choose: (provider, model) =>
       setSettings({
         aiProvider: provider as typeof settings.aiProvider,

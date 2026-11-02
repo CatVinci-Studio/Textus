@@ -9,8 +9,9 @@
 //! ```
 //!
 //! MiniMax by default, its key read in place from the app's key file (or
-//! MINIMAX_API_KEY); TEXTUS_PAPER_TOPIC, TEXTUS_PAPER_LANGUAGE,
-//! TEXTUS_PAPER_CHARS and TEXTUS_EVAL_AGENT_MODEL change the run.
+//! MINIMAX_API_KEY); TEXTUS_PAPER_TOPIC, TEXTUS_PAPER_GENRE ("paper",
+//! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS and
+//! TEXTUS_EVAL_AGENT_MODEL change the run.
 
 use super::*;
 use aicompat::capabilities::ThinkingLevel;
@@ -70,6 +71,8 @@ fn live_paper() {
     let paper = Paper {
         id: new_id(),
         topic: env_or("TEXTUS_PAPER_TOPIC", "屋顶绿化如何缓解城市热岛效应"),
+        genre: serde_json::from_value(json!(env_or("TEXTUS_PAPER_GENRE", "paper")))
+            .expect("TEXTUS_PAPER_GENRE"),
         language: env_or("TEXTUS_PAPER_LANGUAGE", "zh"),
         target_chars: env_or("TEXTUS_PAPER_CHARS", "5000").parse().unwrap_or(5000),
         budget,
@@ -91,8 +94,8 @@ fn live_paper() {
 
     tauri::async_runtime::block_on(async {
         eprintln!(
-            "live_paper: \"{}\" ({}, {} characters) on {model}",
-            paper.topic, paper.language, paper.target_chars
+            "live_paper: \"{}\" ({:?}, {}, {} characters) on {model}",
+            paper.topic, paper.genre, paper.language, paper.target_chars
         );
         let shared = std::sync::Arc::new(SharedBudget::new(paper.budget));
         let native = crate::ai::web::native_search("minimax", &model);
@@ -110,7 +113,7 @@ fn live_paper() {
         };
 
         let t = Instant::now();
-        let dossier = research::research(&agent, &paper, &web, &shared, &send, None)
+        let dossier = research::research(&agent, &paper, &web, &shared, &send, None, &[])
             .await
             .expect("research");
         lap(&mut stats, "research", t);
@@ -197,7 +200,11 @@ fn live_paper() {
         let figures = finish::number_figures(&mut sections, &paper.language);
         let mut dossier = finish::number_citations(&mut sections, &dossier);
         finish::title_sources(&mut dossier).await;
-        let references = finish::references(&sections, &dossier, &paper.language);
+        let references = finish::references(
+            &sections,
+            &dossier,
+            finish::references_heading(&paper.language, paper.genre),
+        );
         let sections: Vec<String> = sections
             .iter()
             .map(|s| finish::plain_citations(s))
