@@ -343,6 +343,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatSaveSkill: "Guardar esta habilidade",
   chatUpdateSkill: "Atualizar a habilidade",
   chatPluginCantInstall: "Este plugin não pode ser instalado: {reason}",
+  chatPluginCheckDom:
+    "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",
+  chatPluginCheckProjectStorage:
+    "Guarda os dados na pasta aberta, então falha sem uma pasta aberta.",
+  chatPluginCheckPermission: "Usa {permission} sem pedir essa permissão.",
+  chatPluginCheckUnregistered: "Declara {id} mas nunca o registra.",
+  chatPluginRunError: "Parou com: {error}",
+  chatPluginFix: "Corrigir com IA",
+  chatPluginFixRequest:
+    "O plugin {name} tem estes problemas:\n{problems}\nEncontre a causa no código e corrija.",
   toolSearchDocument: "Buscando “{arg}” no documento",
   toolReadDocument: "Lendo “{arg}”",
   toolReadWholeDocument: "Lendo o documento",

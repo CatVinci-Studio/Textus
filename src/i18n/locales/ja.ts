@@ -325,6 +325,18 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatInstallPlugin: "このプラグインを入れる",
   chatUpdatePlugin: "プラグインを更新",
   chatPluginCantInstall: "このプラグインは入れられません：{reason}",
+  chatPluginCheckDom:
+    "ページに直接描こうとしていますが、プラグインにはできません。何も表示されません。",
+  chatPluginCheckProjectStorage:
+    "データを開いているフォルダーに保存するため、フォルダーを開いていないと失敗します。",
+  chatPluginCheckPermission:
+    "「{permission}」を使っていますが、その権限を求めていません。",
+  chatPluginCheckUnregistered:
+    "{id} を宣言していますが、コードで登録していません。",
+  chatPluginRunError: "実行中にエラー：{error}",
+  chatPluginFix: "AI に直してもらう",
+  chatPluginFixRequest:
+    "プラグイン「{name}」に次の問題があります：\n{problems}\nコードから原因を見つけて直してください。",
   chatSaveSkill: "このスキルを保存",
   chatUpdateSkill: "スキルを更新",
   toolSearchDocument: "文書内を「{arg}」で検索",

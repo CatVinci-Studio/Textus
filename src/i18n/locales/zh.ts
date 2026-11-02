@@ -306,6 +306,15 @@ export default {
   chatInstallPlugin: "安装此插件",
   chatUpdatePlugin: "更新插件",
   chatPluginCantInstall: "这个插件无法安装：{reason}",
+  chatPluginCheckDom: "它直接改动页面，插件做不到：它画的东西不会显示。",
+  chatPluginCheckProjectStorage:
+    "它把数据存在打开的文件夹里，没有打开文件夹时会失败。",
+  chatPluginCheckPermission: "它用到了「{permission}」，却没有申请这项权限。",
+  chatPluginCheckUnregistered: "它声明了 {id}，代码里却没有注册。",
+  chatPluginRunError: "运行时出错：{error}",
+  chatPluginFix: "让 AI 修复",
+  chatPluginFixRequest:
+    "插件「{name}」有这些问题：\n{problems}\n请在它的代码里找到原因并修复。",
   chatSaveSkill: "保存此技能",
   chatUpdateSkill: "更新技能",
   toolSearchDocument: "在文档中搜索「{arg}」",

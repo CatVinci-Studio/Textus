@@ -358,6 +358,16 @@ utiliser une.
   chatUpdateSkill: "Mettre à jour la compétence",
   chatPluginCantInstall:
     "Cette extension ne peut pas être installée : {reason}",
+  chatPluginCheckDom:
+    "Elle dessine dans la page elle-même, ce qu'une extension ne peut pas faire : rien ne s'affichera.",
+  chatPluginCheckProjectStorage:
+    "Elle garde ses données dans le dossier ouvert, donc elle échoue sans dossier ouvert.",
+  chatPluginCheckPermission: "Elle utilise {permission} sans le demander.",
+  chatPluginCheckUnregistered: "Elle déclare {id} mais ne l'enregistre jamais.",
+  chatPluginRunError: "Elle s'est arrêtée avec : {error}",
+  chatPluginFix: "Corriger avec l'IA",
+  chatPluginFixRequest:
+    "L'extension {name} a ces problèmes :\n{problems}\nTrouve la cause dans son code et corrige-la.",
   toolSearchDocument: "Recherche de «\u00a0{arg}\u00a0» dans le document",
   toolReadDocument: "Lecture de «\u00a0{arg}\u00a0»",
   toolReadWholeDocument: "Lecture du document",

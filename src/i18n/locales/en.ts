@@ -339,6 +339,16 @@ type /name in a conversation to use one.
   chatInstallPlugin: "Install this plugin",
   chatUpdatePlugin: "Update the plugin",
   chatPluginCantInstall: "This plugin can't be installed: {reason}",
+  chatPluginCheckDom:
+    "It draws on the page itself, which a plugin can't: nothing it draws will show.",
+  chatPluginCheckProjectStorage:
+    "It keeps its data in the open folder, so it fails with no folder open.",
+  chatPluginCheckPermission: "It uses {permission} without asking for it.",
+  chatPluginCheckUnregistered: "It declares {id} but never sets it up.",
+  chatPluginRunError: "It stopped with: {error}",
+  chatPluginFix: "Fix with AI",
+  chatPluginFixRequest:
+    "The plugin {name} has these problems:\n{problems}\nFind the cause in its code and fix it.",
   chatSaveSkill: "Save this skill",
   chatUpdateSkill: "Update the skill",
   toolSearchDocument: "Searching the document for “{arg}”",

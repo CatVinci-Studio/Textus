@@ -353,6 +353,16 @@ para usar una.
   chatInstallPlugin: "Instalar este complemento",
   chatUpdatePlugin: "Actualizar el complemento",
   chatPluginCantInstall: "Este complemento no se puede instalar: {reason}",
+  chatPluginCheckDom:
+    "Dibuja en la propia página, algo que un complemento no puede hacer: no se verá nada.",
+  chatPluginCheckProjectStorage:
+    "Guarda sus datos en la carpeta abierta, así que falla si no hay ninguna abierta.",
+  chatPluginCheckPermission: "Usa {permission} sin pedir ese permiso.",
+  chatPluginCheckUnregistered: "Declara {id} pero nunca lo registra.",
+  chatPluginRunError: "Se detuvo con: {error}",
+  chatPluginFix: "Arreglar con IA",
+  chatPluginFixRequest:
+    "El complemento {name} tiene estos problemas:\n{problems}\nEncuentra la causa en su código y corrígela.",
   chatSaveSkill: "Guardar esta habilidad",
   chatUpdateSkill: "Actualizar la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",

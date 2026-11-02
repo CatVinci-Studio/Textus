@@ -306,6 +306,15 @@ export default {
   chatInstallPlugin: "安裝此外掛",
   chatUpdatePlugin: "更新外掛",
   chatPluginCantInstall: "這個外掛無法安裝：{reason}",
+  chatPluginCheckDom: "它直接改動頁面，外掛做不到：它畫的東西不會顯示。",
+  chatPluginCheckProjectStorage:
+    "它把資料存在開啟的資料夾裡，沒有開啟資料夾時會失敗。",
+  chatPluginCheckPermission: "它用到了「{permission}」，卻沒有申請這項權限。",
+  chatPluginCheckUnregistered: "它宣告了 {id}，程式碼裡卻沒有註冊。",
+  chatPluginRunError: "執行時出錯：{error}",
+  chatPluginFix: "讓 AI 修復",
+  chatPluginFixRequest:
+    "外掛「{name}」有這些問題：\n{problems}\n請在它的程式碼裡找到原因並修復。",
   chatSaveSkill: "儲存此技能",
   chatUpdateSkill: "更新技能",
   toolSearchDocument: "在文件中搜尋「{arg}」",

@@ -319,6 +319,18 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatInstallPlugin: "이 플러그인 설치",
   chatUpdatePlugin: "플러그인 업데이트",
   chatPluginCantInstall: "이 플러그인은 설치할 수 없습니다: {reason}",
+  chatPluginCheckDom:
+    "페이지에 직접 그리려 하지만 플러그인은 그럴 수 없습니다. 아무것도 표시되지 않습니다.",
+  chatPluginCheckProjectStorage:
+    "데이터를 열린 폴더에 저장하므로 폴더가 열려 있지 않으면 실패합니다.",
+  chatPluginCheckPermission:
+    "{permission}을(를) 사용하지만 권한을 요청하지 않았습니다.",
+  chatPluginCheckUnregistered:
+    "{id}을(를) 선언했지만 코드에서 등록하지 않습니다.",
+  chatPluginRunError: "실행 중 오류: {error}",
+  chatPluginFix: "AI로 고치기",
+  chatPluginFixRequest:
+    "플러그인 {name}에 다음 문제가 있습니다:\n{problems}\n코드에서 원인을 찾아 고쳐 주세요.",
   chatSaveSkill: "이 스킬 저장",
   chatUpdateSkill: "스킬 업데이트",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
