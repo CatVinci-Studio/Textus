@@ -1,16 +1,11 @@
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { ThemesTab } from "../sections/theme";
 import { OwnSkillsList, importSkill } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
+import { CreateTab } from "./CreateTab";
 import { AvailableSkills } from "../sections/market-skills";
 import {
   catalogSnapshot,
@@ -27,11 +22,6 @@ import {
 import { explainError } from "../../utils/error-explain";
 
 const TABS = extensionsTabs();
-
-// The chat comes with it: loaded once the tab is opened.
-const CreateTab = lazy(() =>
-  import("./CreateTab").then((m) => ({ default: m.CreateTab })),
-);
 
 /**
  * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
@@ -111,11 +101,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
             />
           )}
           {tab === "mcp" && <McpSection t={t} />}
-          {tab === "create" && (
-            <Suspense fallback={null}>
-              <CreateTab t={t} />
-            </Suspense>
-          )}
+          {tab === "create" && <CreateTab t={t} />}
         </div>
       )}
     </>

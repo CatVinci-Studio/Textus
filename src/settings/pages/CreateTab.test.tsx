@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CreateTab } from "./CreateTab";
@@ -33,11 +34,11 @@ afterEach(cleanup);
 
 it("starts a Create conversation with the chosen kind's skill loaded", async () => {
   render(<CreateTab t={en} />);
-  // The built-in skills come in.
-  await act(async () => {});
   fireEvent.click(screen.getByRole("radio", { name: en.extensionsTabThemes }));
   fireEvent.click(screen.getByText(en.createExampleThemeAmber));
   fireEvent.click(screen.getByText(en.createStart));
+  // The chat loads, takes in the built-in skills, then sends.
+  await waitFor(() => expect(send).toHaveBeenCalledOnce());
   const [, message, , options] = send.mock.calls[0];
   expect(message).toContain("Make a theme.");
   expect(message).toContain(en.createExampleThemeAmber);

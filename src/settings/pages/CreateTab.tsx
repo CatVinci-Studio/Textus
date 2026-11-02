@@ -1,19 +1,11 @@
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { CreateChat } from "./create-chat-lazy";
 import type { Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
-import { ai } from "../../platform/ipc";
-import type { AgentSkill } from "../../ai/types";
-import type { DocumentSnapshot } from "../../ai/doc-markdown";
-import { ChatBody } from "../../ai/chat/ChatBody";
-import { chatLabels } from "../../ai/chat/chat-labels";
-import { resolveSkillMessage } from "../../ai/chat/proposal";
-import { useAgentConversation } from "../../ai/chat/useAgentConversation";
 import {
   onCreateRequest,
   takeCreateRequest,
-  type CreateRequest,
 } from "../../ai/chat/create-request";
-import { useLatest } from "../../utils/hooks/useLatest";
 import {
   CREATE_EXAMPLES,
   createKinds,
@@ -21,11 +13,7 @@ import {
   type CreateKind,
 } from "./create-studio";
 
-/** Nothing is being written: what is made goes in the reply, and is
- *  installed from the card under it. */
-const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
 const KINDS = createKinds();
-const OPTIONS = { mode: "create", webSearch: false } as const;
 
 /**
  * Settings › Extensions › Create: say what you want, and Textus AI makes the
@@ -37,94 +25,44 @@ export function CreateTab({ t }: { t: Strings }) {
   const { settings } = useSettings();
   const [kind, setKind] = useState<CreateKind>(KINDS[0]);
   const [text, setText] = useState("");
-  const [skills, setSkills] = useState<AgentSkill[]>([]);
-  const conversation = useAgentConversation(
-    null,
-    null,
-    settings.aiProvider,
-    false,
-    settings.agentModels[settings.aiProvider] || undefined,
-  );
-  // The built-in skills, so the first message carries its kind's.
+  // The first message, once Create has started: the chat takes over.
+  const [first, setFirst] = useState<string | null>(null);
+  // "Edit with AI", "Fix with AI" before Create starts: filled in for the
+  // user to finish. Once it has, the chat takes them.
+  const waiting = first === null;
   useEffect(() => {
-    let cancelled = false;
-    ai.loadAgentWorkspace(null, null)
-      .then((ws) => {
-        if (!cancelled && ws?.skills) setSkills(ws.skills);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
+    if (!waiting) return;
+    const take = () => {
+      const request = takeCreateRequest();
+      if (!request) return;
+      setKind(KINDS.includes(request.kind) ? request.kind : KINDS[0]);
+      setText(request.text);
     };
-  }, []);
+    take();
+    return onCreateRequest(take);
+  }, [waiting]);
 
   const kindLabel: Record<CreateKind, string> = {
     plugin: t.extensionsTabPlugins,
     theme: t.extensionsTabThemes,
     skill: t.extensionsTabSkills,
   };
-  const started = conversation.history.length > 0 || conversation.busy;
-  // "Edit with AI", "Fix with AI": a new start, filled in for the user to
-  // finish - or, once a conversation is going, its next message.
-  const take = useLatest((request: CreateRequest) => {
-    if (started) {
-      void conversation.send(NO_DOCUMENT, request.text, [], OPTIONS);
-      return;
-    }
-    setKind(KINDS.includes(request.kind) ? request.kind : KINDS[0]);
-    setText(request.text);
-  });
-  useEffect(() => {
-    const takeWaiting = () => {
-      const request = takeCreateRequest();
-      if (request) take.current(request);
-    };
-    takeWaiting();
-    return onCreateRequest(takeWaiting);
-  }, [take]);
   const start = () => {
     if (!text.trim()) return;
-    const message = resolveSkillMessage(createMessage(kind, text), skills);
+    setFirst(createMessage(kind, text));
     setText("");
-    void conversation.send(NO_DOCUMENT, message, [], OPTIONS);
   };
 
-  if (started)
+  if (first !== null)
     return (
-      <div className="create-studio create-studio-chat">
-        <div className="create-studio-bar">
-          <span className="create-studio-kind">{kindLabel[kind]}</span>
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            disabled={conversation.busy}
-            onClick={() => conversation.reset()}
-          >
-            {t.createNew}
-          </button>
-        </div>
-        <ChatBody
-          document={NO_DOCUMENT}
-          selectedText={null}
-          selectionMarkdown={null}
-          docPath={null}
-          workspaceRoot={null}
-          conversation={conversation}
-          defaultMode="create"
-          onlyMode="create"
-          defaultWebSearch={false}
-          labels={chatLabels(t, settings.language)}
-          proposalStatus={() => "expired"}
-          pendingCount={0}
-          pendingBar={false}
-          fillHeight
-          onProposals={() => {}}
-          onAcceptProposal={() => {}}
-          onRejectProposal={() => {}}
-          onAcceptAll={() => {}}
-          onRejectAll={() => {}}
+      <Suspense fallback={null}>
+        <CreateChat
+          t={t}
+          kindLabel={kindLabel[kind]}
+          first={first}
+          onNew={() => setFirst(null)}
         />
-      </div>
+      </Suspense>
     );
 
   return (
