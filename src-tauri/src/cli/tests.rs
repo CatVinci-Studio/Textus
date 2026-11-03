@@ -165,7 +165,8 @@ fn open_hands_absolute_paths_to_the_app() {
     let app = FakeApp::default();
     let (code, _, _) = run_in(Path::new("/w"), &["open", "a.md", "/b.md"], &app);
     assert_eq!(code, 0);
-    assert_eq!(app.opened.borrow()[0], args(&["/w/a.md", "/b.md"]));
+    let joined = Path::new("/w").join("a.md").to_string_lossy().into_owned();
+    assert_eq!(app.opened.borrow()[0], args(&[&joined, "/b.md"]));
 }
 
 #[test]

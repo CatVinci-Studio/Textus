@@ -282,6 +282,8 @@ export function installDevTauriShim(): void {
       }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
+      case "cli_command_status":
+        return answer(cmd, "missing");
       case "ai_records_export":
         return answer(cmd, {
           conversations: Object.values(store.conversations),
