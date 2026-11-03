@@ -330,6 +330,25 @@ declare global {
       }>;
       onDidChangeActiveTab: Event<TabInfo | null>;
       onDidChangeLayout: Event<void>;
+      /** Shows one of the plugin's floating views (`contributes.floatingViews`):
+       *  a small transparent page of its own size, floating where the user
+       *  left it. The user moves, folds and closes it; nothing floats until
+       *  the plugin opens it, usually from a command. From Textus 1.3.6. */
+      openFloating(viewId: string): Promise<void>;
+      closeFloating(viewId: string): Promise<void>;
+      /** The plugin's floating views that are open. */
+      floatingViews(): Promise<FloatingViewState[]>;
+      /** One of them opened, closed, folded or moved: stop animating while
+       *  `visible` is false. */
+      onDidChangeFloating: Event<FloatingViewState>;
+    }
+
+    interface FloatingViewState {
+      view: string;
+      open: boolean;
+      /** False while folded to a dot or closed. */
+      visible: boolean;
+      place: "desktop" | "window";
     }
 
     interface TabInfo {
@@ -863,6 +882,16 @@ declare global {
           args: Record<string, unknown>,
         ) => string | Promise<string> | unknown,
       ): Disposable;
+      /** What Textus AI is doing and with which service and model - never
+       *  what is said. From 1.3.6. */
+      state(): Promise<AiState>;
+      onDidChangeState: Event<AiState>;
+    }
+
+    interface AiState {
+      state: "idle" | "thinking" | "writing" | "proposing";
+      /** null before Textus AI is first used. */
+      model: { provider: string; id: string | null } | null;
     }
 
     interface Plugins {
@@ -970,6 +999,9 @@ declare global {
        *  every window closed in background mode). */
       readonly state: "active" | "inactive" | "background";
       onDidChangeState: Event<"active" | "inactive" | "background">;
+      /** The user typed (heard once typing pauses) or saved by hand -
+       *  that it happened, with nothing of the document. From 1.3.6. */
+      onDidActivity: Event<{ kind: "typing" | "saved" }>;
     }
 
     /**

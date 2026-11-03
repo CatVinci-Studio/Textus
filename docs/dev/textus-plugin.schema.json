@@ -228,6 +228,38 @@
             }
           }
         },
+        "floatingViews": {
+          "type": "array",
+          "description": "Small transparent pages that float on the desktop or in Textus's window - a desk pet, a timer. Shown with layout.openFloating; the user moves, folds and closes them. Textus 1.3.6 and later.",
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "width": {
+                "type": "number",
+                "minimum": 64,
+                "maximum": 480,
+                "description": "Points; 160 when left out"
+              },
+              "height": {
+                "type": "number",
+                "minimum": 64,
+                "maximum": 480,
+                "description": "Points; 160 when left out"
+              },
+              "place": {
+                "enum": ["either", "desktop", "window"],
+                "description": "Where it may float: over the desktop, in Textus's window, or either as the user picks (the default)"
+              }
+            }
+          }
+        },
         "views": {
           "type": "array",
           "items": {

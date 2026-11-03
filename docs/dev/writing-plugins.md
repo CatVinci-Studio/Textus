@@ -144,6 +144,7 @@ made when they are first shown.
 | `links`         | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                                                                                               |
 | `settings`      | Rows on the plugin's page in Settings, drawn as Textus's own: `{ key, type, default, title, description?, group?, when? }`. See [Settings of every kind](#settings-of-every-kind).                                                                                                                                     |
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                 |
+| `floatingViews` | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`; the user moves, folds and closes it. From 1.3.6.                                                                  |
 
 A menu item's `when` is a small expression over the moment it is shown:
 `editorHasSelection`, `resourceExtname == .pdf`, `view == jane.tasks.list`,
@@ -375,6 +376,12 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
   The plugin's `main` code isn't started for it.
 - A plugin turned off keeps its jobs, paused; uninstalled, they go. A
   plugin keeps at most 32.
+- `app.onDidActivity` says the user typed (once typing pauses) or saved
+  by hand, with nothing of the document, and needs no permission;
+  `ai.state()` and `ai.onDidChangeState` say what Textus AI is doing
+  (`idle`, `thinking`, `writing`, `proposing`) and with which service and
+  model, never what is said. Both from 1.3.6, for a status light or a desk
+  pet.
 - `app.state` is `"active"` (a Textus window has the focus), `"inactive"`
   (windows open, none focused) or `"background"` (none open);
   `app.onDidChangeState` follows it.

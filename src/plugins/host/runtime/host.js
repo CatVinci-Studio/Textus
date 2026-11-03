@@ -576,6 +576,18 @@
       },
       onDidChangeActiveTab: on("activeTab"),
       onDidChangeLayout: on("layout"),
+      // A floating view (contributes.floatingViews) shown or closed; the
+      // user moves, folds and closes it too.
+      openFloating: function (viewId) {
+        return call("layout.openFloating", { view: String(viewId) });
+      },
+      closeFloating: function (viewId) {
+        return call("layout.closeFloating", { view: String(viewId) });
+      },
+      floatingViews: function () {
+        return call("layout.floatingViews");
+      },
+      onDidChangeFloating: on("floating"),
     },
     views: {
       registerList: function (id, provider) {
@@ -872,6 +884,11 @@
           aiTools.delete(String(name));
         });
       },
+      // What Textus AI is doing and with which model, never what it says.
+      state: function () {
+        return call("ai.state");
+      },
+      onDidChangeState: on("aiState"),
     },
     plugins: {
       get: function (id) {
@@ -936,6 +953,8 @@
         return env.appState || "active";
       },
       onDidChangeState: on("appState"),
+      // The user typed (once typing pauses) or saved, nothing more.
+      onDidActivity: on("activity"),
     },
   };
 

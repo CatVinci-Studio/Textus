@@ -4,6 +4,11 @@ import { panesOf } from "../../app/split/split-tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
 import { webviewsOf } from "../views/webviews";
+import {
+  closeFloating,
+  openFloatingViews,
+  showFloating,
+} from "../views/floating-views";
 import { webPageUrl } from "../views/web-page-url";
 import {
   optionalStr,
@@ -114,6 +119,38 @@ export function layoutHandlers(p: PluginScope) {
         throw new Error("Only web links open in the browser.");
       return links.openWebLink(address);
     },
+    "layout.openFloating": ({ view }: Params) => {
+      const id = str(view, "view");
+      const declared = p
+        .manifest()
+        .contributes.floatingViews.find((v) => v.id === id);
+      if (!declared) throw new Error(`No floating view ${id} in the manifest.`);
+      showFloating(
+        {
+          plugin: p.id,
+          view: id,
+          title: localize(p.manifest(), declared.title, p.deps.language()),
+          width: declared.width,
+          height: declared.height,
+          allowed: declared.place,
+        },
+        false,
+      );
+    },
+    "layout.closeFloating": ({ view }: Params) => {
+      const id = str(view, "view");
+      if (openFloatingViews().some((v) => v.view === id && v.plugin === p.id))
+        closeFloating(id);
+    },
+    "layout.floatingViews": () =>
+      openFloatingViews()
+        .filter((v) => v.plugin === p.id)
+        .map((v) => ({
+          view: v.view,
+          open: true,
+          visible: !v.folded,
+          place: v.place,
+        })),
     "layout.activeTab": () => access().activeTab(),
     "layout.tabs": () => access().tabs(),
     "layout.split": () => {

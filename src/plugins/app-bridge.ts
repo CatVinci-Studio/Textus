@@ -1,3 +1,5 @@
+import type { AiState } from "./ai-state";
+import type { FloatingChange } from "./views/floating-views";
 import type { SentBlock } from "../ai/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
 import type { EditProposal } from "../ai/types";
@@ -170,6 +172,14 @@ export interface PluginEventMap {
   editorKey: string;
   /** A Textus window came to the front, went behind, or the last closed. */
   appState: AppState;
+  /** What Textus AI is doing and with which model, never what it says. */
+  aiState: AiState;
+  /** The user typed (once typing pauses) or saved: that it happened, with
+   *  nothing of the document. */
+  activity: { kind: "typing" | "saved" };
+  /** One of the plugin's floating views opened, closed, folded or moved
+   *  (told to that plugin only). */
+  floating: FloatingChange & { plugin: string };
 }
 
 type Listener<K extends keyof PluginEventMap> = (

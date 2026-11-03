@@ -26,6 +26,7 @@ import {
   skillOfferTurns,
 } from "./memory-pass";
 import { useNextMessage } from "./next-message";
+import { reportAiState } from "../../plugins/ai-state";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -200,6 +201,7 @@ export function useAgentConversation(
     };
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
+    reportAiState("thinking", provider, model || null);
     requestIdRef.current = requestId;
     // add_comment arguments streaming in, by call id.
     const commentArgs = new Map<string, string>();
@@ -245,6 +247,7 @@ export function useAgentConversation(
           // Anything else means the model has stopped thinking for now.
           const thought = thinkingDone(prev?.thought ?? null, Date.now());
           if (event.type === "delta") {
+            reportAiState("writing", provider, model || null);
             setStreaming(
               {
                 turns: prev?.turns ?? [],
@@ -271,6 +274,7 @@ export function useAgentConversation(
             event.type === "toolStart" &&
             (event.name === "propose_edit" || event.name === "add_comment")
           ) {
+            reportAiState("proposing", provider, model || null);
             // The reply stays; the row under it says an edit (or a note)
             // is coming.
             if (event.name === "add_comment") commentArgs.set(event.callId, "");
@@ -359,6 +363,7 @@ export function useAgentConversation(
       setRetryable({ document, message: trimmed, images, options });
       return undefined;
     } finally {
+      reportAiState("idle", provider, model || null);
       if (generation === generationRef.current) {
         setBusy(false);
         setStreaming(null);

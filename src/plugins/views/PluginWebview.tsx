@@ -71,6 +71,7 @@ export function PluginWebview({
         frameHosts: grantedHosts(plugin?.granted ?? []),
         language: windowInfo().language(),
         l10n: plugin?.manifest?.l10n ?? {},
+        floating: current.kind === "floating",
       }),
       plugin ? pluginName(plugin) : current.plugin,
     );
@@ -204,7 +205,7 @@ function WebviewOrProblem({
   return <PluginWebview id={record.id} className={className} />;
 }
 
-/** A sidebar tab's panel, or a view in a tab of its own. */
+/** A sidebar tab's panel, a view in a tab of its own, or a floating view. */
 export function PluginWebviewPanel({
   plugin,
   view,
@@ -212,7 +213,7 @@ export function PluginWebviewPanel({
 }: {
   plugin: string;
   view: string;
-  kind: "sidebar" | "view";
+  kind: "sidebar" | "view" | "floating";
 }) {
   const { record, error } = useResolvedWebview(
     plugin,

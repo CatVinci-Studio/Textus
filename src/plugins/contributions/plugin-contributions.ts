@@ -26,6 +26,11 @@ import {
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
+import {
+  closeFloatingOf,
+  rememberedOpen,
+  showFloating,
+} from "../views/floating-views";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -193,6 +198,22 @@ export function applyContributions(
     );
   for (const block of codeBlocks)
     undo.push(addCodeBlockLanguage(block.language, id, block.frame));
+  // Floating views left open last time open again; turned off, they go.
+  const reopen = rememberedOpen();
+  for (const floating of manifest.contributes.floatingViews)
+    if (reopen.includes(floating.id))
+      showFloating(
+        {
+          plugin: id,
+          view: floating.id,
+          title: text(floating.title),
+          width: floating.width,
+          height: floating.height,
+          allowed: floating.place,
+        },
+        false,
+      );
+  undo.push(() => closeFloatingOf(id));
   contributions.set(id, undo);
   const events = manifest.activationEvents;
   if (events.includes("onStartupFinished") || events.includes("*"))
