@@ -85,7 +85,7 @@ export function FloatingWindowApp() {
     );
     // Asks for the page; the editor window may have sent it before this
     // window listened.
-    up({ kind: "ready" });
+    up({ kind: "hello" });
     return () => {
       stop();
       disconnect?.();

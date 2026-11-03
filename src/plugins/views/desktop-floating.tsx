@@ -28,6 +28,9 @@ export const DOT_SIZE = 36;
 
 /** What the floating window tells the editor window that runs its plugin. */
 export type FloatingUp =
+  /** The window is up and asks for the page; again after a reload. */
+  | { view: string; kind: "hello" }
+  /** The page's frame is up: its messages can flow. */
   | { view: string; kind: "ready" }
   | { view: string; kind: "message"; message: unknown }
   | { view: string; kind: "state"; state: unknown }
@@ -95,11 +98,9 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
     const stop = unlistenAll(
       listenToThisWindow<FloatingUp>(FLOATING_UP, ({ payload }) => {
         if (payload.view !== view.view) return;
-        if (payload.kind === "ready") {
-          // A reloaded floating window asks again.
-          if (!webview(id)?.endpoint) webviewConnected(id, endpoint);
-          else sendPage();
-        } else if (payload.kind === "message")
+        if (payload.kind === "hello") sendPage();
+        else if (payload.kind === "ready") webviewConnected(id, endpoint);
+        else if (payload.kind === "message")
           webviewMessage(id, payload.message);
         else if (payload.kind === "state")
           setWebviewState(current.key, payload.state);
