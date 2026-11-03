@@ -10,12 +10,14 @@ pub(crate) use super::checks::prose_length;
 use super::checks::*;
 pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
 use super::handover::{hand_over, Checked, Task};
-use super::research::{Model, Streamed};
+use super::research::Model;
+use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
-use aicompat::agent::{AgentTurn, ToolSpec};
+use aicompat::agent::{AgentTurn, ProviderEvent, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
 use std::sync::Mutex;
+use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
@@ -160,7 +162,7 @@ pub(crate) async fn write_section(
         }
         Checked::not_kept("section", &wrong)
     };
-    let push = |streamed: Streamed<'_>| watch.push(streamed);
+    let push = |streamed: ProviderEvent<'_>| watch.push(streamed);
     let task = Task {
         instructions: &instructions,
         message: match revision {
@@ -360,11 +362,12 @@ pub(crate) async fn draft(
 }
 
 /// The least time between two SectionText events for one section.
-const SECTION_EVERY: std::time::Duration = std::time::Duration::from_millis(300);
+const SECTION_EVERY: Duration = Duration::from_millis(300);
 
 /// Watches a writer's stream and sends what it has written so far, whole,
-/// as SectionText - the document shows it as it comes: the `markdown` of the submit_section call it is making, or
-/// its reply when it writes the section there instead.
+/// as SectionText - the document shows it as it comes: the `markdown` of
+/// the submit_section call it is making, or its reply when it writes the
+/// section there instead.
 pub(crate) struct SectionWatch<'a> {
     index: u32,
     send: &'a (dyn Fn(PaperEvent) + Sync),
@@ -376,7 +379,7 @@ struct WatchState {
     args: String,
     reply: String,
     sent: usize,
-    last: Option<std::time::Instant>,
+    last: LastSent,
 }
 
 impl<'a> SectionWatch<'a> {
@@ -388,34 +391,34 @@ impl<'a> SectionWatch<'a> {
         }
     }
 
-    pub(crate) fn push(&self, streamed: Streamed<'_>) {
+    pub(crate) fn push(&self, streamed: ProviderEvent<'_>) {
         let text = {
             let mut state = self.state.lock().unwrap();
             match streamed {
-                Streamed::Thinking(_) => return,
-                Streamed::Text(text) => state.reply.push_str(text),
-                Streamed::ToolStart => {
+                ProviderEvent::Thinking(_) | ProviderEvent::Citation { .. } => return,
+                ProviderEvent::Text(text) => state.reply.push_str(text),
+                ProviderEvent::ToolStart { .. } => {
                     *state = WatchState {
                         last: state.last,
                         ..WatchState::default()
                     }
                 }
-                Streamed::ToolArgs(delta) => state.args.push_str(delta),
+                ProviderEvent::ToolArgs { delta, .. } => state.args.push_str(delta),
             }
-            if state.last.is_some_and(|at| at.elapsed() < SECTION_EVERY) {
+            if !state.last.due(SECTION_EVERY) {
                 return;
             }
             // Decoded only when due: a few times a second, not per token.
             let text = if state.args.is_empty() {
                 state.reply.trim().to_string()
             } else {
-                partial_string_value(&state.args, "\"markdown\"")
+                string_value(&state.args, "\"markdown\"")
             };
             if text.len() == state.sent || text.trim().is_empty() {
                 return;
             }
             state.sent = text.len();
-            state.last = Some(std::time::Instant::now());
+            state.last.now();
             text
         };
         (self.send)(PaperEvent::SectionText {
@@ -423,43 +426,4 @@ impl<'a> SectionWatch<'a> {
             text,
         });
     }
-}
-
-/// The string value of `key` in JSON that is still arriving, unescaped as
-/// far as it has come: an escape cut in half is left for the next time.
-pub(crate) fn partial_string_value(json: &str, key: &str) -> String {
-    let Some(at) = json.find(key) else {
-        return String::new();
-    };
-    let rest = json[at + key.len()..].trim_start();
-    let Some(rest) = rest.strip_prefix(':').map(str::trim_start) else {
-        return String::new();
-    };
-    let Some(body) = rest.strip_prefix('"') else {
-        return String::new();
-    };
-    let mut out = String::with_capacity(body.len());
-    let mut chars = body.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => break,
-            '\\' => match chars.next() {
-                Some('n') => out.push('\n'),
-                Some('t') => out.push('\t'),
-                Some('r') => {}
-                Some('u') => {
-                    let hex: String = chars.by_ref().take(4).collect();
-                    match u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
-                        Some(c) if hex.len() == 4 => out.push(c),
-                        // A surrogate pair or a cut escape: left out.
-                        _ => {}
-                    }
-                }
-                Some(other) => out.push(other),
-                None => break,
-            },
-            c => out.push(c),
-        }
-    }
-    out
 }

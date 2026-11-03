@@ -1,12 +1,10 @@
-//! How the paper's stages talk to a model: one step at a time, streamed
-//! to the card as thinking and activity. A trait, so the stages run on a
-//! scripted model in tests.
+//! How the paper's stages talk to a model: one step at a time, its stream
+//! going to the providers' own sink, as the chat's does. A trait, so the
+//! stages run on a scripted model in tests.
 
 use super::budget::{BudgetKind, SharedBudget, STEPS_SPENT};
-use super::PaperEvent;
 use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
 use futures_util::future::BoxFuture;
-use std::sync::Mutex;
 
 /// One step of a model: what a stage's run asks of it. A trait, so the
 /// stages run on a scripted model in tests.
@@ -49,16 +47,8 @@ impl Model for aicompat::providers::AgentProvider {
         tools: &'a [ToolSpec],
         watch: Watch<'a>,
     ) -> BoxFuture<'a, Result<StepResult, String>> {
-        use aicompat::agent::ProviderEvent;
         Box::pin(async move {
-            let on_event = |event: ProviderEvent<'_>| match event {
-                ProviderEvent::Thinking(text) => watch(Streamed::Thinking(text)),
-                ProviderEvent::Text(text) => watch(Streamed::Text(text)),
-                ProviderEvent::ToolStart { .. } => watch(Streamed::ToolStart),
-                ProviderEvent::ToolArgs { delta, .. } => watch(Streamed::ToolArgs(delta)),
-                ProviderEvent::Citation { .. } => {}
-            };
-            aicompat::providers::AgentProvider::step(self, instructions, turns, tools, &on_event)
+            aicompat::providers::AgentProvider::step(self, instructions, turns, tools, watch)
                 .await
                 .map(|(step, _)| step)
         })
@@ -163,71 +153,9 @@ impl<M: Model> Model for Guided<'_, M> {
     }
 }
 
-/// A piece of what a step streams, as a stage watching it sees it.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) enum Streamed<'a> {
-    /// A fragment of the model's thinking.
-    Thinking(&'a str),
-    /// A fragment of the model's reply.
-    Text(&'a str),
-    /// A tool call began: the arguments that follow are its own.
-    ToolStart,
-    /// A fragment of a tool call's JSON arguments.
-    ToolArgs(&'a str),
-}
-
-pub(crate) type Watch<'a> = &'a (dyn Fn(Streamed<'_>) + Send + Sync);
-
-/// How much of the planner's stream a Thinking event carries: its tail.
-const THINKING_TAIL: usize = 160;
-/// The least time between two Thinking events.
-const THINKING_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
-
-/// Gathers a stream's fragments and sends their tail as Thinking, a few
-/// times a second at most: the planner's tokens arrive far faster than a
-/// card needs to redraw.
-pub(crate) struct ThinkingTail<'a> {
-    send: &'a (dyn Fn(PaperEvent) + Sync),
-    state: Mutex<(String, Option<std::time::Instant>)>,
-}
-
-impl<'a> ThinkingTail<'a> {
-    pub(crate) fn new(send: &'a (dyn Fn(PaperEvent) + Sync)) -> Self {
-        Self {
-            send,
-            state: Mutex::new((String::new(), None)),
-        }
-    }
-
-    pub(crate) fn push(&self, fragment: &str) {
-        let text = {
-            let mut state = self.state.lock().unwrap();
-            let (text, last) = &mut *state;
-            text.push_str(fragment);
-            // Keep the buffer bounded: only its tail is ever sent.
-            if text.len() > THINKING_TAIL * 8 {
-                *text = tail(text, THINKING_TAIL * 2).to_string();
-            }
-            if last.is_some_and(|at| at.elapsed() < THINKING_EVERY) {
-                return;
-            }
-            *last = Some(std::time::Instant::now());
-            tail(text, THINKING_TAIL).to_string()
-        };
-        let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
-        if !text.is_empty() {
-            (self.send)(PaperEvent::Thinking { text });
-        }
-    }
-}
-
-/// The last `chars` characters of `text`.
-pub(crate) fn tail(text: &str, chars: usize) -> &str {
-    let skip = text.chars().count().saturating_sub(chars);
-    text.char_indices()
-        .nth(skip)
-        .map_or(text, |(i, _)| &text[i..])
-}
+/// Where a step's stream goes, as it comes: the providers' own sink, so a
+/// stage sees what the chat sees.
+pub(crate) type Watch<'a> = aicompat::agent::EventSink<'a>;
 
 /// The longest an activity's detail is sent: the card shows one line.
 const DETAIL_CHARS: usize = 120;

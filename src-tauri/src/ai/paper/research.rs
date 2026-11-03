@@ -6,15 +6,16 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
-pub(crate) use super::model::{clip, Model, Streamed, ThinkingTail, Watch};
+pub(crate) use super::model::{clip, Model, Watch};
 use super::notes::NoteTaker;
 pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::sources::link_safe;
+use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{run_agent_loop, AgentTurn, StepResult, ToolCall};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult, ToolCall};
 use futures_util::stream::{self, StreamExt};
 use std::path::Path;
 use std::sync::Mutex;
@@ -307,7 +308,7 @@ pub(crate) async fn research(
     });
     let thinking = ThinkingTail::new(send);
     let questions = plan_questions(model, paper, kit, &|streamed| {
-        if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
+        if let ProviderEvent::Thinking(text) | ProviderEvent::Text(text) = streamed {
             thinking.push(text)
         }
     })
