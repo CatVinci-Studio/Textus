@@ -1513,7 +1513,6 @@ utiliser une.
   extensionsFold: "Masquer",
   extensionsUnfold: "Afficher",
   themePreviewEnlarge: "Agrandir",
-  themeOpenDetails: "{name} : détails",
   themeBackToList: "Tous les thèmes",
   extensionsThemesGet: "Obtenir des thèmes",
   extensionsSkillsHelp: `Une compétence indique à ${AI_NAME} comment bien faire un type de tâche. Celles qui sont activées sont proposées à ${AI_NAME} et dans le menu / ; une nouvelle installation en active cinq, et vous ajoutez les autres ici.`,

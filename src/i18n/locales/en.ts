@@ -1452,7 +1452,6 @@ type /name in a conversation to use one.
   extensionsFold: "Hide",
   extensionsUnfold: "Show",
   themePreviewEnlarge: "View larger",
-  themeOpenDetails: "{name}: details",
   themeBackToList: "All themes",
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,

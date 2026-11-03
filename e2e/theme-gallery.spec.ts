@@ -172,7 +172,7 @@ test.describe("theme gallery", () => {
     page,
   }) => {
     const dialog = await openGallery(page);
-    await dialog.getByRole("button", { name: "Paper Mint: details" }).click();
+    await dialog.getByRole("button", { name: /^Paper Mint/ }).click();
     const themePage = dialog.locator('[data-theme-page="paper-mint"]');
     await expect(
       themePage.getByRole("heading", { name: "Paper Mint" }),

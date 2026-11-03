@@ -1358,7 +1358,6 @@ export default {
   extensionsFold: "收合",
   extensionsUnfold: "展開",
   themePreviewEnlarge: "檢視大圖",
-  themeOpenDetails: "「{name}」的詳情",
   themeBackToList: "全部主題",
   extensionsThemesGet: "取得主題",
   extensionsSkillsHelp: `Skill 告訴 ${AI_NAME} 怎樣做好某一類事。開著的 Skill 會提供給 ${AI_NAME}，也會出現在 / 選單裡；新安裝預設開五個，其餘的在這裡加入。`,

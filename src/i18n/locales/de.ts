@@ -1485,7 +1485,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsFold: "Ausblenden",
   extensionsUnfold: "Einblenden",
   themePreviewEnlarge: "Größer anzeigen",
-  themeOpenDetails: "{name}: Details",
   themeBackToList: "Alle Themes",
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,

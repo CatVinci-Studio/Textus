@@ -1415,7 +1415,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsFold: "접기",
   extensionsUnfold: "펼치기",
   themePreviewEnlarge: "크게 보기",
-  themeOpenDetails: "{name}: 자세히",
   themeBackToList: "모든 테마",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,

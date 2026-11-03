@@ -1480,7 +1480,6 @@ export default {
   extensionsFold: "Свернуть",
   extensionsUnfold: "Развернуть",
   themePreviewEnlarge: "Увеличить",
-  themeOpenDetails: "{name}: подробнее",
   themeBackToList: "Все темы",
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,

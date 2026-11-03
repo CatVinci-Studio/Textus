@@ -1470,7 +1470,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver maior",
-  themeOpenDetails: "{name}: detalhes",
   themeBackToList: "Todos os temas",
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,

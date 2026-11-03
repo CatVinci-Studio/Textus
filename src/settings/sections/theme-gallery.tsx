@@ -183,12 +183,7 @@ function GalleryItem({
         paths={theme.previews}
         label={`${t.themePreviewEnlarge}: ${theme.name}`}
       />
-      <button
-        type="button"
-        className="plugin-card-open"
-        aria-label={t.themeOpenDetails.replace("{name}", theme.name)}
-        onClick={onOpen}
-      >
+      <button type="button" className="plugin-card-open" onClick={onOpen}>
         <span className="settings-row-label plugin-card-name">
           {theme.name}
         </span>

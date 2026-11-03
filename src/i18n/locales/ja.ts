@@ -1430,7 +1430,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsFold: "閉じる",
   extensionsUnfold: "開く",
   themePreviewEnlarge: "拡大表示",
-  themeOpenDetails: "「{name}」の詳細",
   themeBackToList: "すべてのテーマ",
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,

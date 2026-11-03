@@ -1491,7 +1491,6 @@ para usar una.
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver más grande",
-  themeOpenDetails: "{name}: detalles",
   themeBackToList: "Todos los temas",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
