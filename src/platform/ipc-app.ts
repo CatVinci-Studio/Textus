@@ -146,6 +146,8 @@ export const clipboardIpc = {
  *  and sending the report to be filed. */
 export const systemIpc = {
   info: () => command("system_info"),
+  /** The font families installed here, for the text font setting. */
+  fontFamilies: () => command("system_font_families"),
   sendReport: (report: Generated.ProblemReport_Deserialize) =>
     command("send_problem_report", report),
 };

@@ -17,6 +17,16 @@
 :root[data-doc-leading] :is(.milkdown, #write) {
   line-height: var(--doc-line-height) !important;
 }
+:root[data-doc-font] :is(.milkdown, #write) {
+  font-family: var(--doc-chosen-font) !important;
+}
+:root[data-doc-tracking] :is(.milkdown, #write) {
+  letter-spacing: var(--doc-letter-spacing) !important;
+}
+/* Code keeps its own grid. */
+:root[data-doc-tracking] :is(.milkdown, #write) :is(code, pre, kbd) {
+  letter-spacing: normal !important;
+}
 
 /* A click below the text still lands in it: the page height less the
    column's padding, divided by the zoom. flow-root keeps the last block's

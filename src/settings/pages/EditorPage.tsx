@@ -25,6 +25,7 @@ import {
 } from "../../document/read-only-state";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
+import { TextFontRows } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
@@ -123,6 +124,7 @@ export function EditorPage({
             ))}
           </Select>
         </SettingRow>
+        <TextFontRows t={t} settings={settings} setSettings={setSettings} />
         {/* A phone's UI is sized by iOS's own text styles instead. */}
         {!phone && (
           <SettingRow label={t.uiTextScaleLabel}>

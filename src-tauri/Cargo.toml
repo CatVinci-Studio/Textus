@@ -108,6 +108,8 @@ codepage = "0.1"
 # in the tree via pdf-extract, at the same version and features, so it adds
 # no crates - only lopdf's writer code to the binary.
 lopdf = { version = "0.42", default-features = false }
+# Settings › Editor › Text font: the families installed on this machine.
+fontdb = { version = "0.24", default-features = false, features = ["fs", "memmap"] }
 
 # The writing-rules engine (src/ai/rules/, docs/design/ai-concepts.md): Markdown
 # parsed into prose blocks so code, math, front matter and link targets are

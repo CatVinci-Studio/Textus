@@ -94,6 +94,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::clipboard::clipboard_text,
                 crate::commands::input_source::set_roman_input,
                 crate::commands::system_info::system_info,
+                crate::commands::fonts::system_font_families,
                 crate::commands::system_info::send_problem_report,
                 crate::menu::trigger_menu_item,
                 crate::menu::list_recent_files,

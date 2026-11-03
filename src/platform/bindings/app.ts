@@ -99,6 +99,7 @@ export const commands = {
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
+	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**
 	 *  Files `report`. "LIMIT" when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
