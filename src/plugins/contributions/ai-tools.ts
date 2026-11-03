@@ -1,7 +1,11 @@
 import type * as Generated from "../../platform/bindings/plugins";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { listenToThisWindow } from "../../platform/events";
-import { pluginsSnapshot, subscribePlugins } from "../store/plugin-records";
+import {
+  pluginsSnapshot,
+  pluginText,
+  subscribePlugins,
+} from "../store/plugin-records";
 
 /**
  * Tools plugins give Textus AI: the window tells Rust the tools of its on
@@ -17,7 +21,7 @@ interface ToolCallEvent {
 }
 
 /** The tools offered now, from the plugins' records. */
-function offered() {
+export function offered() {
   const { allOn, records } = pluginsSnapshot();
   if (!allOn) return [];
   return records.flatMap((r) =>
@@ -25,7 +29,8 @@ function offered() {
       ? r.manifest.contributes.aiTools.map((tool) => ({
           plugin: r.id,
           name: tool.name,
-          description: tool.description,
+          // A `%key%` description is the plugin's translation of it.
+          description: pluginText(r, tool.description),
           parameters: tool.parameters as Generated.Value,
         }))
       : [],
