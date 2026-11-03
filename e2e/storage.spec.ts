@@ -152,9 +152,7 @@ test("the reader's text size, spacing and font are on the first frame", async ({
       docTextSize: 20,
       docLineSpacing: "relaxed",
       docFont: "Georgia",
-      // Word's kind and points, as saved before spacing was one number.
-      docLetterSpacing: "condensed",
-      docLetterSpacingBy: 0.5,
+      docLetterSpacing: -0.5,
     },
   });
   await page.addInitScript(() => {

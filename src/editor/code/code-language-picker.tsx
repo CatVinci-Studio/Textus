@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { isIOSApp } from "../../platform/capabilities";
 import { Select } from "../../ui/Select";
-import { useFloatingMenu } from "../../ui/useFloatingList";
+import { useFloatingMenu } from "../../ui/useFloatingMenu";
 import { isImeKeydown } from "../../utils/ime";
 
 export interface LanguagePickerProps {

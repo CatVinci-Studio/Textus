@@ -28,7 +28,8 @@ export interface UiState {
   themeChrome: ThemeChromeCache;
   /** The skills last run from the composer, newest first. */
   recentSkills: string[];
-  /** The text fonts last chosen in Settings, newest first. */
+  /** The text fonts last chosen in Settings, newest first. In the file only:
+   *  without the native side there are no fonts to choose. */
   recentFonts: string[];
   /** The folder last opened in the sidebar, or null after Close Folder; the
    *  session's first window opens it again. */
@@ -136,11 +137,6 @@ const LOCAL: {
   },
   recentSkills: {
     key: "textus-recent-skills",
-    decode: (raw) => JSON.parse(raw),
-    encode: (value) => JSON.stringify(value),
-  },
-  recentFonts: {
-    key: "textus-recent-fonts",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

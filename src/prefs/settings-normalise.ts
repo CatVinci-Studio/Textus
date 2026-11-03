@@ -28,7 +28,6 @@ import {
   DOC_LINE_SPACING,
   DOC_LINE_HEIGHTS,
   DOC_LETTER_SPACING,
-  type DocLetterSpacing,
   storedAgentMode,
 } from "./settings-types";
 
@@ -36,23 +35,6 @@ import {
  *  takes its default, and fields this version doesn't know are kept. */
 
 /** A stored provider-to-model map: its string entries, nothing else. */
-/** Character spacing as saved: points, or before it was a number, Word's
- *  normal, or expanded or condensed by `docLetterSpacingBy` points. */
-function storedLetterSpacing(spacing: unknown, by: unknown): DocLetterSpacing {
-  const points =
-    spacing === "normal"
-      ? 0
-      : spacing === "expanded" || spacing === "condensed"
-        ? storedInRange(by, DOC_LETTER_SPACING, 1) *
-          (spacing === "condensed" ? -1 : 1)
-        : spacing;
-  return storedInRange(
-    points,
-    DOC_LETTER_SPACING,
-    DEFAULT_SETTINGS.docLetterSpacing,
-  );
-}
-
 function stringMap(value: unknown): Record<string, string> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
     return {};
@@ -149,9 +131,11 @@ function readSettings(parsed: Raw | null): Settings {
         typeof parsed.docFont === "string"
           ? parsed.docFont.trim()
           : DEFAULT_SETTINGS.docFont,
-      docLetterSpacing: storedLetterSpacing(
+      // Points; the kinds of the unreleased first form read as the theme's.
+      docLetterSpacing: storedInRange(
         parsed.docLetterSpacing,
-        parsed.docLetterSpacingBy,
+        DOC_LETTER_SPACING,
+        DEFAULT_SETTINGS.docLetterSpacing,
       ),
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.

@@ -7,8 +7,7 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { installTestLocalStorage } from "../../dev/test-local-storage";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const fonts = [
   { name: "Georgia", local: {} },
@@ -24,6 +23,13 @@ vi.mock("../../platform/ipc", async (original) => ({
   systemIpc: { fontFamilies: () => Promise.resolve(fonts) },
 }));
 
+// Recent fonts are kept in ui-state.json, which only the native side has.
+const uiState = new Map<string, unknown>();
+vi.mock("../../storage/ui-state", () => ({
+  getUiState: (key: string) => uiState.get(key),
+  setUiState: (key: string, value: unknown) => uiState.set(key, value),
+}));
+
 const { FontPicker } = await import("./FontPicker");
 
 const labels = {
@@ -35,10 +41,9 @@ const labels = {
   none: "No font has that name",
 };
 
-beforeAll(installTestLocalStorage);
 afterEach(() => {
   cleanup();
-  localStorage.clear();
+  uiState.clear();
 });
 
 async function setup(value = "") {
@@ -69,13 +74,11 @@ describe("the text font picker", () => {
     ]);
     fireEvent.keyDown(search, { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith("SimSun");
-    expect(JSON.parse(localStorage.getItem("textus-recent-fonts")!)).toEqual([
-      "SimSun",
-    ]);
+    expect(uiState.get("recentFonts")).toEqual(["SimSun"]);
   });
 
   it("puts the fonts chosen lately first, and skips headings with the arrows", async () => {
-    localStorage.setItem("textus-recent-fonts", JSON.stringify(["Georgia"]));
+    uiState.set("recentFonts", ["Georgia"]);
     const { onChange, search } = await setup();
     expect(screen.getByText("Recently used")).toBeInTheDocument();
     // Theme's, then past the heading to Georgia.

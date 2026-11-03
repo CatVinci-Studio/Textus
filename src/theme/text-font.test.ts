@@ -16,23 +16,21 @@ describe("text font, size and spacing", () => {
     expect(letterSpacing(-0.5)).toBe("-0.5pt");
   });
 
-  it("reads Word's spacing saved before it was one number", () => {
-    const load = (spacing: unknown, by?: unknown) => {
+  it("keeps stored character spacing to its points' range", () => {
+    const load = (spacing: unknown) => {
       localStorage.setItem(
         "catvinci-settings",
-        JSON.stringify({ docLetterSpacing: spacing, docLetterSpacingBy: by }),
+        JSON.stringify({ docLetterSpacing: spacing }),
       );
       return loadSettings().docLetterSpacing;
     };
-    expect(load("expanded", 2.34)).toBe(2.3);
-    expect(load("condensed", 0.5)).toBe(-0.5);
-    expect(load("condensed", 99)).toBe(-10);
-    expect(load("expanded", "x")).toBe(1);
-    expect(load("normal", 3)).toBe(0);
-    expect(load("auto", 3)).toBe("auto");
+    expect(load(2.34)).toBe(2.3);
     expect(load(-1.26)).toBe(-1.3);
     expect(load(42)).toBe(10);
-    expect(load("wide")).toBe("auto");
+    expect(load(-99)).toBe(-10);
+    expect(load(0)).toBe(0);
+    expect(load("auto")).toBe("auto");
+    expect(load("expanded")).toBe("auto");
   });
 
   it("keeps a stored text size to whole px within its range", () => {

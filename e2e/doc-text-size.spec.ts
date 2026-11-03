@@ -66,4 +66,15 @@ test("View › Text Style… sets the text beside the document, which stays in v
   await page.keyboard.press("Escape");
   await expect(panel).toHaveCount(0);
   await expect(text).toHaveCSS("font-size", "19px");
+
+  // The rest of the page is a click away.
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-text-style"),
+  );
+  await panel.getByRole("button", { name: "More in Settings" }).click();
+  await expect(page.locator(".settings-category-title")).toHaveText(
+    "Editor & Appearance",
+  );
 });

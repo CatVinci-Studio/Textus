@@ -72,14 +72,8 @@ window.__textusBoot = function (boot, themeCss) {
       );
       root.setAttribute("data-doc-font", "");
     }
-    // Points (DOC_LETTER_SPACING), or Word's kinds saved before.
-    var by = Math.abs(Number(settings.docLetterSpacingBy)) || 1;
-    var points =
-      typeof settings.docLetterSpacing === "number"
-        ? settings.docLetterSpacing
-        : { normal: 0, expanded: by, condensed: -by }[
-            settings.docLetterSpacing
-          ];
+    // Points (DOC_LETTER_SPACING).
+    var points = settings.docLetterSpacing;
     if (typeof points === "number" && isFinite(points)) {
       points = Math.min(10, Math.max(-10, points));
       root.style.setProperty(

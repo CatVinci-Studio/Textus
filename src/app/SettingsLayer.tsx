@@ -4,6 +4,7 @@ import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { openExtensionsTab } from "../settings/pages/extensions-tab";
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
+import { listenToThisWindow, unlistenAll } from "../platform/events";
 import { Presence } from "../ui/usePresence";
 
 // Settings loads on first open, warmed once the window is idle.
@@ -14,8 +15,9 @@ const SettingsPanel = lazyComponent(
   (m) => m.SettingsPanel,
 );
 
-/** Where Settings opens: a page, or "updates" - About, checking. */
-type SettingsStart = "general" | "editor" | "extensions" | "updates";
+/** Where Settings opens: a page, or "updates" - About, checking; or
+ *  "text-style", View › Text Style…'s panel over the document instead. */
+type SettingsStart = "general" | "extensions" | "updates" | "text-style";
 
 /** Whether Settings is open, and at which page. Each request counts, so
  *  one made while Settings is open goes to its page from wherever it was. */
@@ -34,13 +36,20 @@ export function useSettingsOpening() {
       setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
     window.addEventListener(OPEN_CREATE_EVENT, open);
-    return () => window.removeEventListener(OPEN_CREATE_EVENT, open);
+    const unlisten = unlistenAll(
+      listenToThisWindow("menu-text-style", () =>
+        setState((s) => ({ open: "text-style", request: s.request + 1 })),
+      ),
+    );
+    return () => {
+      window.removeEventListener(OPEN_CREATE_EVENT, open);
+      unlisten();
+    };
   }, []);
   return {
     open: state.open,
     request: state.request,
     openSettings: () => request("general"),
-    openEditorSettings: () => request("editor"),
     openUpdates: () => request("updates"),
     openPluginSettings: () => {
       openExtensionsTab("plugins");

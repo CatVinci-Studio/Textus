@@ -1,10 +1,6 @@
 import { useState, type KeyboardEvent } from "react";
-import {
-  inRange,
-  readTyped,
-  stepFrom,
-  type StepRange,
-} from "../utils/step-range";
+import { inRange, type StepRange } from "../utils/step-range";
+import { readTyped, stepFrom } from "../utils/step-input";
 import { isImeKeydown } from "../utils/ime";
 import { UndoIcon } from "./icons";
 import { Tooltip } from "./Tooltip";

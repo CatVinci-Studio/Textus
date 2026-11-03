@@ -44,6 +44,7 @@ import type {
 import { useModalDialog } from "../ui/useModalDialog";
 import { usePresenceProps } from "../ui/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
+import { TextStylePanel } from "./TextStylePanel";
 
 // The settings dialog shell: navigation, search and subpages, for every
 // platform. On a phone the same panel fills the screen as iOS's Settings
@@ -60,7 +61,8 @@ export interface SettingsPanelProps {
   fixedShortcuts?: FixedShortcutGroup[];
   /** The commands plugins add, under Shortcuts' own. */
   pluginCommands?: ShortcutCommand[];
-  /** The page to open at; General when left out. */
+  /** The page to open at; General when left out. "text-style" opens View ›
+   *  Text Style…'s panel instead. */
   initialCategory?: string;
 }
 
@@ -97,7 +99,23 @@ function pageOfKey(key: string): {
   };
 }
 
-export function SettingsPanel({
+/** Settings over the window; or View › Text Style…'s panel of its text
+ *  rows, which comes with it rather than costing the startup its own
+ *  loader. */
+export function SettingsPanel(props: SettingsPanelProps) {
+  // The panel's "More in Settings" becomes Settings at those rows.
+  const [category, setCategory] = useState(props.initialCategory);
+  return category === "text-style" ? (
+    <TextStylePanel
+      onClose={props.onClose}
+      onMore={() => setCategory("editor")}
+    />
+  ) : (
+    <SettingsDialog {...props} initialCategory={category} />
+  );
+}
+
+function SettingsDialog({
   onClose,
   onOpenFile,
   onFilesDeleted,

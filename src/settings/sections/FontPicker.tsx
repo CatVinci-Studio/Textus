@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import type { Lang } from "../../i18n/strings";
 import { isIOSApp } from "../../platform/capabilities";
 import { Select } from "../../ui/Select";
-import { useFloatingMenu } from "../../ui/useFloatingList";
+import { useFloatingMenu } from "../../ui/useFloatingMenu";
 import { isImeKeydown } from "../../utils/ime";
 import {
   fontFamilies,
