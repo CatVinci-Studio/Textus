@@ -45,12 +45,19 @@ pub struct DiskWorkspace {
     pub root_override: Option<PathBuf>,
     /// Folders whose files go into the record (the workspace as built).
     pub show: Vec<PathBuf>,
+    /// The document opened on its own: no folder open in the sidebar.
+    pub lone: bool,
+    /// The conversation's scratch folder, its attached files in `attached/`.
+    pub scratch: Option<PathBuf>,
 }
 
 impl DiskWorkspace {
     /// The folder the user has open: the one chosen, else the document's,
-    /// as if its folder were opened in the sidebar.
+    /// as if its folder were opened in the sidebar - none for a lone one.
     pub fn opened_folder(&self) -> Option<String> {
+        if self.lone {
+            return None;
+        }
         self.root_override
             .clone()
             .or_else(|| self.doc_path.as_deref()?.parent().map(PathBuf::from))
@@ -1390,7 +1397,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
         }
     }
 
-    let ws = match &case.disk {
+    let mut ws = match &case.disk {
         Some(d) => crate::ai::workspace::load_from(
             d.global.as_deref(),
             d.doc_path
@@ -1401,6 +1408,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
         ),
         None => case.workspace.clone(),
     };
+    ws.attached = case.disk.as_ref().is_some_and(|d| d.scratch.is_some());
     input["workspace_loaded"] = workspace_json(&ws);
 
     if !case.script.is_empty() && checks.0.iter().all(|c| c.name != "request") {
@@ -1436,6 +1444,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
             thinking: aicompat::capabilities::ThinkingLevel::Auto,
             pictures: None,
             memory: None,
+            scratch: case.disk.as_ref().and_then(|d| d.scratch.as_deref()),
         };
         let conv = run_conversation(auth, &setup, &case.doc, &script);
         if let Some(e) = &conv.error {

@@ -122,10 +122,15 @@ pub fn agent_provider_id() -> &'static str {
 
 /// The app's ChatGPT sign-in: its access token and account.
 pub(crate) fn chatgpt_sign_in() -> (String, String) {
-    let path = std::env::var_os("HOME")
+    // TEXTUS_EVAL_CHATGPT_AUTH: another profile's sign-in (the test one).
+    let path = std::env::var_os("TEXTUS_EVAL_CHATGPT_AUTH")
         .map(PathBuf::from)
-        .expect("HOME")
-        .join(".config/com.catvinci.textus/auth-codex.json");
+        .unwrap_or_else(|| {
+            std::env::var_os("HOME")
+                .map(PathBuf::from)
+                .expect("HOME")
+                .join(".config/com.catvinci.textus/auth-codex.json")
+        });
     let text = std::fs::read_to_string(&path).expect("Textus signed in to ChatGPT");
     let auth: Value = serde_json::from_str(&text).expect("auth-codex.json");
     let expires = auth["expires"].as_i64().unwrap_or(0);
@@ -688,6 +693,8 @@ pub struct AgentSetup<'a> {
     /// The memory pass after each exchange, writing to these folders, whose
     /// contents go with each message. None: nothing is remembered.
     pub memory: Option<&'a crate::ai::memory::MemoryDirs>,
+    /// The conversation's scratch folder, with its attached files.
+    pub scratch: Option<&'a Path>,
 }
 
 /// Keep in step with the frontend's note for an undecided proposal.
@@ -796,7 +803,7 @@ pub fn run_conversation(
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
-            scratch: None,
+            scratch: setup.scratch,
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,
@@ -832,7 +839,7 @@ pub fn run_conversation(
         // when the case gives it one, on this turn's document.
         let mut tool_set = tools::ToolRegistry::builtin(
             ws.has_usable_skills(),
-            root.is_some(),
+            root.is_some() || setup.scratch.is_some(),
             setup.mode,
             sees_images(),
         );

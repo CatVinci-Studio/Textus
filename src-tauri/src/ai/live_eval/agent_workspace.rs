@@ -71,7 +71,8 @@ pub fn doc_folder(dir: &Path, doc_rel: &str, doc: &str) -> DiskWorkspace {
 }
 
 fn says_cannot(reply: &str, words: &[&str]) -> Result<(), String> {
-    let lower = reply.to_lowercase();
+    // Models write can’t with a typographic apostrophe as often as not.
+    let lower = reply.to_lowercase().replace('\u{2019}', "'");
     words
         .iter()
         .any(|w| lower.contains(&w.to_lowercase()))
@@ -442,7 +443,7 @@ fn workspace_cases() -> Vec<AgentCase> {
     let dir = scratch("doc-folder-notes");
     put(&dir, "notes/costs.md", "# Garden costs\n\nRaised beds (6): £1,150\nSoil and compost: £430\nWater tank: £270\nTotal set-up: £1,850\n\nYearly running costs (water, seeds, tools): £320\n");
     let ws = doc_folder(&dir, "proposal.md", BUDGET_EN);
-    c.push(AgentCase::new("workspace/en/doc-folder-notes", Lang::En, Lang::En, BUDGET_EN, "Fill in the TBD amounts in Costs using my notes.", edit_in(para(BUDGET_EN, 1), StructureExpect::Same).has(&["1,850", "320"]).lacks(&["TBD"]).check("looked in the folder", used_file_tools), "No project folder is chosen, so the document's own folder is the project folder; it holds notes/costs.md. Expect the agent to find and read it, then replace both TBDs (£1,850 set-up, £320 a year) in the Costs paragraph only.").disk(ws));
+    c.push(AgentCase::new("workspace/en/doc-folder-notes", Lang::En, Lang::En, BUDGET_EN, "Fill in the TBD amounts in Costs using my notes.", edit_in(para(BUDGET_EN, 1), StructureExpect::Same).has(&["1,850", "320"]).lacks(&["TBD"]).check("looked in the folder", used_file_tools), "The document's folder is open in the sidebar, so it is the project folder; it holds notes/costs.md. Expect the agent to find and read it, then replace both TBDs (£1,850 set-up, £320 a year) in the Costs paragraph only.").disk(ws));
 
     let dir = scratch("search-chapters");
     put(&dir, "第一章.md", "# 第一章\n\n林晚搬进书店楼上的那天，带着一只橘猫。猫叫年糕，胖，怕生。\n\n老周说，店里有老鼠，正好。\n");
@@ -540,6 +541,40 @@ fn workspace_cases() -> Vec<AgentCase> {
     let no_folder = DiskWorkspace::default();
     c.push(AgentCase::new("workspace/en/unsaved-draft", Lang::En, Lang::En, BUDGET_EN, "Update the Costs paragraph with the figures from my notes/costs.md file.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says why and what to do", |o| mentions(&o.reply, &["save", "project folder", "settings"])).without_tools(&["read_file", "list_files", "search_files", "find_files"]), "The document is unsaved and no project folder is chosen, so there is no folder to read (no file tools are offered). Expect the agent to say it can't open the file and ask for the figures (or to save the document in a folder / choose a project folder); no invented numbers.").disk(no_folder.clone()));
     c.push(AgentCase::new("workspace/zh/unsaved-draft", Lang::ZhHans, Lang::ZhHans, INVITE_ZH, "根据我 notes.md 里记的场地，补上活动地点。", either().lacks(&["图书馆", "多功能厅"]).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_ZH)).check("says why and what to do", |o| mentions(&o.reply, &["保存", "项目文件夹", "设置"])), "Unsaved draft, no project folder: the agent can't read notes.md. Expect a Chinese reply saying so and asking for the venue (a clearly marked placeholder is acceptable), never an invented venue.").disk(no_folder));
+
+    // A lone document: its folder isn't opened, so notes beside it can't
+    // be read - the agent says why and how (attach, or open the folder).
+    let dir = scratch("lone-document");
+    put(&dir, "notes/costs.md", "# Garden costs\n\nTotal set-up: £1,850\nYearly running costs: £320\n");
+    let lone = DiskWorkspace {
+        lone: true,
+        ..doc_folder(&dir, "proposal.md", BUDGET_EN)
+    };
+    c.push(AgentCase::new("workspace/en/lone-document", Lang::En, Lang::En, BUDGET_EN, "Fill in the TBD amounts in Costs using my notes/costs.md.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says how", |o| mentions(&o.reply, &["attach", "open", "folder"])).without_tools(&["read_file", "list_files", "search_files", "find_files"]), "The document is opened on its own: its folder is not the project folder, so notes/costs.md beside it can't be read and no file tools are offered. Expect the agent to say so and suggest attaching the file or opening its folder; no invented figures.").disk(lone));
+
+    // Files attached to the conversation: read whole from attached/.
+    let conversation = scratch("attached");
+    put(&conversation, "attached/costs.md", "# Garden costs\n\nRaised beds (6): £1,150\nSoil and compost: £430\nWater tank: £270\nTotal set-up: £1,850\n\nYearly running costs (water, seeds, tools): £320\n");
+    let attached = DiskWorkspace {
+        doc_path: None,
+        scratch: Some(conversation.clone()),
+        show: vec![conversation],
+        ..DiskWorkspace::default()
+    };
+    c.push(AgentCase::new("workspace/en/attached-file", Lang::En, Lang::En, BUDGET_EN, "I attached my costs file (attached/costs.md). Fill in the TBD amounts in Costs from it.", edit_in(para(BUDGET_EN, 1), StructureExpect::Same).has(&["1,850", "320"]).lacks(&["TBD"]).check("read the attachment", used_file_tools), "No project folder, one attached file in the conversation's scratch folder: expect read_file on attached/costs.md and the Costs paragraph filled with £1,850 set-up and £320 a year.").disk(attached));
+
+    // A zip attached and unpacked: the files inside are read like any other.
+    let conversation = scratch("attached-zip");
+    put(&conversation, "attached/quotes/北风园艺.md", "# 北风园艺报价\n\n总价：2,400 元，含安装。\n");
+    put(&conversation, "attached/quotes/青禾景观.md", "# 青禾景观报价\n\n总价：1,980 元，不含安装（安装另加 300 元）。\n");
+    put(&conversation, "attached/quotes/安居花木.md", "# 安居花木报价\n\n总价：2,150 元，含安装。\n");
+    let zipped = DiskWorkspace {
+        doc_path: None,
+        scratch: Some(conversation.clone()),
+        show: vec![conversation],
+        ..DiskWorkspace::default()
+    };
+    c.push(AgentCase::new("workspace/zh/attached-zip", Lang::ZhHans, Lang::ZhHans, WEEKLY_ZH, "我附上了一个压缩包 quotes.zip，已经解压到 attached/quotes/。算上安装，哪家最便宜？", no_edit().reply(&["安居花木"]).check("read the attachments", used_file_tools), "Three quotes unpacked from an attached zip under attached/quotes/: with installation, 北风 2,400, 青禾 1,980+300=2,280, 安居 2,150 - expect a Chinese answer naming 安居花木 as cheapest, after reading the files, no edit.").mode(AgentMode::Review).disk(zipped));
 
     // A chosen project folder: another folder than the document's.
     let base = scratch("override");
