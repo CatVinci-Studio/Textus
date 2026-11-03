@@ -85,6 +85,11 @@ function currentEntries(
   );
 }
 
+/** The palette's entries now, for `textus commands`. */
+export function paletteNow(): PaletteEntry[] {
+  return currentEntries(currentStrings(), loadSettings());
+}
+
 /** Opens the palette; the entry picked runs. */
 export async function openCommandPalette(): Promise<void> {
   await pickWithCommands([], "");

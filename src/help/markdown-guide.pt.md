@@ -187,7 +187,7 @@ A árvore também é um pequeno gerenciador de arquivos. O nome da pasta superio
 
 Arraste arquivos do Finder ou do Explorador de Arquivos para a janela para abri-los: documentos abrem em abas, imagens entram no documento onde você as solta e uma pasta abre na barra lateral. **Arquivo → Copiar caminho** copia o caminho completo do documento em primeiro plano.
 
-Num terminal, `textus notas.md` abre um arquivo no Textus; **Ajustes → Geral** instala o comando `textus` se ele ainda não estiver lá.
+Num terminal, `textus notas.md` abre um arquivo no Textus; **Ajustes → Geral** instala o comando `textus` se ele ainda não estiver lá. Ele faz mais sem abrir janela: `textus search <palavras>` as encontra nos arquivos de uma pasta, `textus read` mostra um PDF ou arquivo do Word como Markdown e `textus help` lista todos os comandos, inclusive os dos plugins.
 
 **Arquivo → Abrir…** também abre um documento do Word (`.docx`), assim como soltá-lo na janela: ele vira um novo documento Markdown com o mesmo nome, ainda não salvo, com seus títulos, listas, tabelas, links, notas de rodapé e imagens. As imagens vão, ao salvar, para onde **Ajustes → Editor e aparência → Imagens** coloca as coladas, e **Salvar** sugere um arquivo `.md` ao lado do arquivo do Word. Parte da formatação pode ficar diferente; o arquivo do Word nunca é alterado. Só no computador.
 

@@ -14,6 +14,7 @@ import {
 import { useStartupRestore } from "../document/startup-restore";
 import { useOpenPathsPush, useFileDrop } from "./useFileOpening";
 import { useSettingsCommands } from "./useSettingsCommands";
+import { useCliRequests } from "./useCliRequests";
 import { useDocumentActions } from "./useDocumentActions";
 import {
   takeClosedPath,
@@ -98,6 +99,12 @@ export function useWindowWiring({
 
   // The same, pushed to an already-running window.
   useOpenPathsPush(openPathInTab);
+  useCliRequests({
+    openPath: openPathInTab,
+    activePath: activeTab.path,
+    settings,
+    setSettings,
+  });
   useFileDrop(openFile, openPathInTab, openFolder.openFolder);
   // A file from the sidebar dragged over the documents opens where it is
   // let go.

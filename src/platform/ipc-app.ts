@@ -261,6 +261,10 @@ export const themeGallery = {
 export const cli = {
   cliCommandStatus: () => desktopQueryCommand("cli_command_status", false),
   installCliCommand: () => desktopActionCommand("install_cli_command"),
+  /** This window takes `textus` requests (`cli-request`), or stops. */
+  listening: (on: boolean) => desktopActionCommand("cli_listening", on),
+  respond: (id: string, out: string, err: string, exit: number) =>
+    desktopActionCommand("cli_respond", id, out, err, exit),
 };
 
 // Background mode (desktop only)

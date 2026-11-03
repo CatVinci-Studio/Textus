@@ -120,6 +120,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::theme_gallery::theme_gallery_preview,
                 crate::commands::cli::cli_command_status,
                 crate::commands::cli::install_cli_command,
+                crate::cli::app::cli_listening,
+                crate::cli::app::cli_respond,
                 crate::background::background_status,
                 crate::commands::default_editor::default_editor_status,
                 crate::commands::default_editor::set_default_editor,
