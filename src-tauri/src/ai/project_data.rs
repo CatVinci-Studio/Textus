@@ -37,7 +37,11 @@ pub(crate) fn adopt(global: &Path, root: &Path, sub: &str) -> PathBuf {
     let from = project_dir(root).join(sub);
     if from.is_dir() && !to.exists() {
         if let Err(e) = move_dir(&from, &to) {
-            eprintln!("textus: could not move {} to {}: {e}", from.display(), to.display());
+            eprintln!(
+                "textus: could not move {} to {}: {e}",
+                from.display(),
+                to.display()
+            );
         }
     }
     to
@@ -53,7 +57,7 @@ fn move_dir(from: &Path, to: &Path) -> std::io::Result<()> {
     copy_dir(from, to)
 }
 
-fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
+pub(crate) fn copy_dir(from: &Path, to: &Path) -> std::io::Result<()> {
     std::fs::create_dir_all(to)?;
     for entry in std::fs::read_dir(from)? {
         let entry = entry?;
@@ -91,7 +95,10 @@ mod tests {
         let memory = adopt(&global, &root, "memory");
 
         assert!(memory.starts_with(&global));
-        assert_eq!(std::fs::read_to_string(memory.join("sub/likes.md")).unwrap(), "tea");
+        assert_eq!(
+            std::fs::read_to_string(memory.join("sub/likes.md")).unwrap(),
+            "tea"
+        );
         assert!(!project_dir(&root).join("memory").exists());
         // Once there, a stale copy left in the folder isn't taken again.
         std::fs::create_dir_all(project_dir(&root).join("memory")).unwrap();

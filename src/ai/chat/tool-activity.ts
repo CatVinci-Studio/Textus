@@ -28,9 +28,7 @@ export function toolActivityLabels(t: Strings): Record<string, string> {
     web_search: t.toolWebSearch,
     web_fetch: t.toolWebFetch,
     search_papers: t.toolSearchPapers,
-    // Research's own: its reference library, the files attached, a note.
-    read_reference: t.toolReadFile,
-    read_material: t.toolReadFile,
+    // Research's own: a note.
     add_note: t.toolAddNote,
     // Any MCP server's tool.
     mcp: t.toolMcp,

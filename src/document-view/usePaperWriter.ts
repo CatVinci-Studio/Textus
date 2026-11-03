@@ -10,7 +10,6 @@ import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type {
   Genre,
-  Material,
   Outline,
   PaperProgress,
 } from "../platform/bindings/ai-paper";
@@ -173,8 +172,9 @@ export function usePaperWriter({
       topic: string,
       genre: Genre | null,
       targetChars: number | null,
-      // A paper going on keeps the files it was started with.
-      materials: Material[] = [],
+      // The conversation whose attached files a new paper reads; a paper
+      // going on keeps its own copy.
+      conversation: string | null = null,
     ) => {
       const { settings: s } = latest.current;
       const requestId = crypto.randomUUID();
@@ -191,7 +191,7 @@ export function usePaperWriter({
             language: paperLanguage(topic, s.language),
             genre,
             targetChars,
-            materials,
+            conversation,
           },
           (event) => applyPaperEvent(key, event),
         )
@@ -296,10 +296,11 @@ export function usePaperWriter({
   }, [isActive, approve, stop, resume, restore]);
 
   /** Starts a piece on `topic` of `genre`, or of the model's choice when
-   *  null, at its genre's length, researched from `materials` too. Its card's key is its id, so the card
-   *  finds it again after a restart. */
+   *  null, at its genre's length, researched from the files attached to
+   *  `conversation` too. Its card's key is its id, so the card finds it
+   *  again after a restart. */
   return useCallback(
-    (topic: string, genre: Genre | null, materials: Material[]) => {
+    (topic: string, genre: Genre | null, conversation: string) => {
       const { settings: s, t: strings } = latest.current;
       const key = newPaperId();
       const language = paperLanguage(topic, s.language);
@@ -316,7 +317,7 @@ export function usePaperWriter({
       latest.current.conversation.append(
         paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
       );
-      research(key, topic, genre, null, materials);
+      research(key, topic, genre, null, conversation);
     },
     [agentPanel, research],
   );

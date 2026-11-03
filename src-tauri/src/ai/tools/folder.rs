@@ -73,7 +73,7 @@ pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
-pub(super) const READ_FILE_TOOL_NAME: &str = "read_file";
+pub(crate) const READ_FILE_TOOL_NAME: &str = "read_file";
 
 /// How much of the project the listing shows: enough for reference material,
 /// small enough that a huge folder can't blow up the prompt.
@@ -82,9 +82,11 @@ pub(super) const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 pub(super) const FIND_FILES_TOOL_NAME: &str = "find_files";
 pub(crate) const SEARCH_REFERENCES_TOOL_NAME: &str = "search_references";
 
-/// search_references, offered when the project has a references folder.
-pub(crate) fn references_tool<'a>() -> Tool<'a> {
-    Tool {
+/// search_references, when the project folder `root` has a references
+/// folder to search.
+pub(crate) fn references_tool<'a>(root: Option<&std::path::Path>) -> Option<Tool<'a>> {
+    root.filter(|root| root.join(crate::ai::project::REFERENCES_DIR).is_dir())?;
+    Some(Tool {
         spec: ToolSpec {
             name: SEARCH_REFERENCES_TOOL_NAME.into(),
             description: format!("Search the user's reference library - the papers, books, reports and notes in the project's `{}/` folder - for the passages that best answer a question, ranked by relevance. Pass the words the sources would use; several words are fine and the best passages contain most of them. Each result is `path:first-last` and the passage: cite the source by its file name, and read_file with start_line and end_line for more around it. Prefer it to search_files for research in the references; search_files finds one exact phrase anywhere in the project.", crate::ai::project::REFERENCES_DIR).into(),
@@ -102,7 +104,7 @@ pub(crate) fn references_tool<'a>() -> Tool<'a> {
         access: Access::ReadOnly,
         modes: EVERY_MODE,
         run: Run::Text(search_references),
-    }
+    })
 }
 
 fn search_references(ctx: &ToolContext, arguments: &str) -> String {

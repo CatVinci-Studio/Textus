@@ -186,13 +186,6 @@ export type ImageModel_Serialize = {
 	limit: number | null,
 };
 
-export type Material = {
-	/**  The file's name, or its path in the project when picked with @. */
-	name: string,
-	/**  Its text, as the composer extracted it. */
-	content: string,
-};
-
 /**  The plan the user approves before drafting. Kept as `outline.json`. */
 export type Outline = {
 	thesis: string,
@@ -408,10 +401,11 @@ export type PaperRequest_Deserialize = {
 	 */
 	imageModel?: ImageModel_Deserialize | null,
 	/**
-	 *  Files the user attached for its research; none when going on with a
-	 *  paper, which keeps its own.
+	 *  The conversation whose attached files its research reads: copied
+	 *  into the paper's folder when it starts, so going on with it needs
+	 *  none.
 	 */
-	materials?: Material[],
+	conversation?: string | null,
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
@@ -448,10 +442,11 @@ export type PaperRequest_Serialize = {
 	 */
 	imageModel: ImageModel_Serialize | null,
 	/**
-	 *  Files the user attached for its research; none when going on with a
-	 *  paper, which keeps its own.
+	 *  The conversation whose attached files its research reads: copied
+	 *  into the paper's folder when it starts, so going on with it needs
+	 *  none.
 	 */
-	materials: Material[],
+	conversation: string | null,
 };
 
 /**  How far a paper has come. */

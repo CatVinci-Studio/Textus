@@ -2,7 +2,8 @@
 //! (ai::project_data), `papers/<id>/`, so a stopped run can resume and the
 //! user can read what the research found.
 
-use super::{Dossier, Material, Outline, Paper};
+use super::{Dossier, Outline, Paper};
+use crate::ai::scratch::ATTACHED;
 use crate::ai::workspace::project_dir;
 use serde::{de::DeserializeOwned, Serialize};
 use std::path::{Path, PathBuf};
@@ -89,8 +90,8 @@ pub(crate) fn root_in(
     Ok(root)
 }
 
-/// A paper's folder moved whole; copied file by file where it can't be
-/// renamed (the temporary folder on another volume). Its files are flat.
+/// A paper's folder moved whole; copied where it can't be renamed (the
+/// temporary folder on another volume).
 fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
     if let Some(parent) = to.parent() {
         std::fs::create_dir_all(parent)?;
@@ -98,11 +99,7 @@ fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
     if std::fs::rename(from, to).is_ok() {
         return Ok(());
     }
-    std::fs::create_dir_all(to)?;
-    for entry in std::fs::read_dir(from)? {
-        let entry = entry?;
-        std::fs::copy(entry.path(), to.join(entry.file_name()))?;
-    }
+    crate::ai::project_data::copy_dir(from, to)?;
     // The copy is whole; what is left behind is only clutter in the
     // temporary folder.
     for entry in std::fs::read_dir(from)?.flatten() {
@@ -168,16 +165,54 @@ pub(crate) fn load_section(root: &Path, id: &str, index: usize) -> Result<Option
     }
 }
 
-/// The files attached to paper `id`'s request, kept for a run that goes on.
-pub(crate) fn save_materials(root: &Path, id: &str, materials: &[Material]) -> Result<(), String> {
+/// Paper `id`'s folder, with the files attached to it in its `attached/`,
+/// or None when it has none. They are copied there from the conversation's
+/// scratch folder the first time, so a paper going on still has them once
+/// that folder is gone; an older paper's materials.json is written out as
+/// files once.
+pub(crate) fn keep_attachments(
+    root: &Path,
+    id: &str,
+    conversation: Option<&Path>,
+) -> Result<Option<PathBuf>, String> {
     let dir = paper_dir(root, id)?;
-    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    write_json(&dir.join(MATERIALS_FILE), &materials)
+    let attached = dir.join(ATTACHED);
+    if !attached.exists() {
+        if let Some(from) = conversation
+            .map(|c| c.join(ATTACHED))
+            .filter(|f| f.is_dir())
+        {
+            crate::ai::project_data::copy_dir(&from, &attached).map_err(|e| e.to_string())?;
+        }
+    }
+    write_out_materials(&dir)?;
+    Ok(attached.is_dir().then_some(dir))
 }
 
-/// What [`save_materials`] kept; none when nothing was attached.
-pub(crate) fn load_materials(root: &Path, id: &str) -> Result<Vec<Material>, String> {
-    Ok(read_json(&paper_dir(root, id)?.join(MATERIALS_FILE))?.unwrap_or_default())
+/// A file attached as text by an older Textus, kept in materials.json.
+#[derive(serde::Deserialize)]
+struct Material {
+    name: String,
+    content: String,
+}
+
+fn write_out_materials(dir: &Path) -> Result<(), String> {
+    let file = dir.join(MATERIALS_FILE);
+    let Some(materials) = read_json::<Vec<Material>>(&file)? else {
+        return Ok(());
+    };
+    let attached = dir.join(ATTACHED);
+    std::fs::create_dir_all(&attached).map_err(|e| e.to_string())?;
+    for m in materials {
+        let name = m.name.rsplit(['/', '\\']).next().unwrap_or("");
+        let name = match name.trim_start_matches('.') {
+            "" => "material.md",
+            name => name,
+        };
+        crate::atomic::write_sync(&attached.join(name), m.content.as_bytes())
+            .map_err(|e| e.to_string())?;
+    }
+    std::fs::remove_file(&file).map_err(|e| e.to_string())
 }
 
 /// The paper `id` kept in `root`'s `.textus/`.
