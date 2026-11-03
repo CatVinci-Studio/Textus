@@ -7,7 +7,7 @@ use crate::ai::workspace::project_dir;
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
-const PROJECTS: &str = "projects";
+pub(crate) const PROJECTS: &str = "projects";
 
 /// A folder name for `root`: its path with every separator and odd
 /// character as `-`, as Claude Code names its projects, ended by a short

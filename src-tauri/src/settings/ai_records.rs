@@ -5,12 +5,11 @@
 
 use super::chat_history::ChatHistory;
 use super::HistoryKind;
+use crate::ai::memory::MEMORY_FOLDER as MEMORY;
+use crate::ai::project_data::PROJECTS;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-
-const MEMORY: &str = "memory";
-const PROJECTS: &str = "projects";
 
 #[derive(Serialize, Deserialize, Default)]
 #[cfg_attr(test, derive(specta::Type))]
