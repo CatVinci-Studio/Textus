@@ -84,6 +84,7 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
             ))}
           </Select>
         </SettingRow>
+        <LetterSpacingRow t={t} settings={settings} setSettings={setSettings} />
         <SettingRow label={t.docLineSpacingLabel}>
           <Select
             className="settings-select"
@@ -102,7 +103,6 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
             ))}
           </Select>
         </SettingRow>
-        <LetterSpacingRow t={t} settings={settings} setSettings={setSettings} />
       </div>
     </details>
   );

@@ -33,14 +33,14 @@ test("the document takes the reader's text size and line spacing, and follows a 
   const size = page.getByRole("combobox", { name: "Document text size" });
   await expect(size).toBeHidden();
   await fold.click();
-  // Font first, then size and line spacing, then character spacing.
+  // Font, size, character spacing, then line spacing.
   await expect(
     page.locator(".settings-fold-body .settings-row-label"),
   ).toHaveText([
     "Text font",
     "Document text size",
-    "Line spacing",
     "Character spacing",
+    "Line spacing",
   ]);
   await size.click();
   await page
