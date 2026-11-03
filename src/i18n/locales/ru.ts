@@ -726,7 +726,7 @@ export default {
   conventionsNewMedia: "Соцсети",
   conventionsEu: "Институты ЕС",
   agentAttachFile:
-    "Прикрепить файл: PDF, Word, PowerPoint, таблица, EPUB, RTF, HTML, изображение или обычный текст",
+    "Прикрепить файлы: документы, PDF, изображения, код, zip — любой файл",
   chatAttachmentTruncated: "(сокращено)",
   chatAttachmentNoVision: `Этот провайдер не умеет читать изображения. Смените провайдера в разделе «Настройки > ${AI_NAME}» или прикрепите документ.`,
   aiGrammarLabel: "Включить проверку грамматики",
