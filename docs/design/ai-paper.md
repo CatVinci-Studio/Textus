@@ -20,7 +20,8 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
 1. **Plan research**: the topic split into 6-10 questions (background,
    mechanism, state of the art, disputes, cases, data, trends), for breadth.
 2. **Research helpers**: up to four at once, one question each, with web
-   search, page reads, scholarly search and the user's references. Each
+   search, page reads, scholarly search, the project's files, the files
+   attached and the user's references. Each
    returns notes: a claim, its evidence, a quote, the sources' numbers, and
    leads to pictures or data.
 3. **Outline**: a thesis, and per section its key points, the notes it
@@ -127,6 +128,22 @@ it, lazily loaded. Each stage and helper is one run of
   The helpers share one `WebPlan`: one source numbering for the paper (kept
   as `Dossier::sources`, for the reference list) and one budget. The stages
   run on the `Model` trait, so tests drive them with a scripted model.
+- **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
+  `ToolRegistry` shared by every helper has the file tools (`read_file`,
+  `find_files`, `search_files`), `search_references` when the project has a
+  `references/` folder, and the plugins' and MCP servers' tools
+  (`agent::installed_tools`), all executed with `registry.execute` over one
+  `ToolContext`: an empty document, the project folder as `root`, the
+  paper's folder as `scratch`. Each helper adds its own registry with the
+  web tools, ranked by its question, and `add_note` (`paper/notes.rs`), the
+  one tool of research's own. Around both, each question's share of the
+  budget and the card's activity and budget events.
+- **Attached files**: the request names its `conversation`; the files the
+  composer staged in that conversation's `attached/` are copied into the
+  paper's own `attached/` when it starts (`store::keep_attachments`), so a
+  paper going on still has them after the scratch folder is gone. The plan
+  sees each one's opening; the helpers are told their paths and read them
+  with `read_file`.
 - **Outline** (`paper/outline.rs`): the model hands it over with
   `submit_outline`, which checks it whole - a thesis, 3-12 sections with
   titles and key points, notes that exist, at least one figure for every
@@ -211,12 +228,14 @@ it, lazily loaded. Each stage and helper is one run of
   to come. A picture whose caption the user has removed is left out. The
   language is the topic's script's, else the UI's.
 
-- **The user's library**: when the project has a `references/` folder, each
-  research helper also has `search_references` and `read_reference`, is
-  told to search it first, and may cite a file by its path in `add_note`.
-  The file becomes a source like a page - its address `references/…`,
-  percent-encoded so a link holds it - cited `[n](references/…)`, accepted
-  by the section checks, and listed by name and path in the references.
+- **Local sources** (`paper/sources.rs`): `add_note` may cite a file by
+  the path `read_file` reads it by - `attached/…` from the paper's folder, or
+  any project file such as `references/…` - accepted when it resolves
+  there. The file becomes a source like a page - its path percent-encoded
+  so a link holds it - cited `[n](attached/…)` or `[n](references/…)`,
+  accepted by the section checks, and listed in the references: an
+  attached file by its name, a project file by name and path. With a
+  `references/` folder the helpers are told to search it first.
 
 - **Web pictures** (`paper/web_figures.rs`, `web/commons.rs`): a writer marks
   a `web` figure as `<!-- textus-figure web: caption | English search words
