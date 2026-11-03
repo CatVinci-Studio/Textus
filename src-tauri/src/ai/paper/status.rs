@@ -19,7 +19,12 @@ pub async fn ai_paper_save_outline(
     id: String,
     outline: Outline,
 ) -> Result<Outline, String> {
-    let root = paper_root(&app, doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
+    let root = paper_root(
+        &app,
+        doc_path.as_deref(),
+        workspace_root.as_deref(),
+        Some(&id),
+    )?;
     let mut files = load(&root, &id)?;
     let outline = outline::as_edited(outline, &files.dossier)?;
     files.outline = Some(outline.clone());
@@ -51,7 +56,12 @@ pub async fn ai_paper_status(
     workspace_root: Option<String>,
     id: String,
 ) -> Result<PaperProgress, String> {
-    let root = paper_root(&app, doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
+    let root = paper_root(
+        &app,
+        doc_path.as_deref(),
+        workspace_root.as_deref(),
+        Some(&id),
+    )?;
     progress(&root, &id)
 }
 
