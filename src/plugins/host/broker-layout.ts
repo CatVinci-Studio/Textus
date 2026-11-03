@@ -7,6 +7,7 @@ import { webviewsOf } from "../views/webviews";
 import {
   closeFloating,
   openFloatingViews,
+  floatingOnDesktop,
   showFloating,
 } from "../views/floating-views";
 import { webPageUrl } from "../views/web-page-url";
@@ -134,7 +135,7 @@ export function layoutHandlers(p: PluginScope) {
           height: declared.height,
           allowed: declared.place,
         },
-        false,
+        floatingOnDesktop(),
       );
     },
     "layout.closeFloating": ({ view }: Params) => {

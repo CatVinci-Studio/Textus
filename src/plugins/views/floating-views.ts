@@ -71,6 +71,18 @@ function changed(view: FloatingView, isOpen: boolean) {
   });
 }
 
+let desktopHere = false;
+
+/** Whether this window may float views over the desktop: the platform can,
+ *  and it is the main window, so two windows never float the same view. */
+export function floatingOnDesktop(): boolean {
+  return desktopHere;
+}
+
+export function setFloatingOnDesktop(can: boolean) {
+  desktopHere = can;
+}
+
 export function subscribeFloating(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

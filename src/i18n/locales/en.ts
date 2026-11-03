@@ -1521,6 +1521,8 @@ type /name in a conversation to use one.
   floatingFold: "Fold {name}",
   floatingUnfold: "Unfold {name}",
   floatingClose: "Close {name}",
+  floatingToDesktop: "Float {name} on the desktop",
+  floatingToWindow: "Put {name} back in the window",
   pluginBackToList: "All plugins",
   pluginSettingsScope: "Applies to",
   pluginSettingsScopeGlobal: "Every document",

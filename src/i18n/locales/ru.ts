@@ -1550,6 +1550,8 @@ export default {
   floatingFold: "Свернуть «{name}»",
   floatingUnfold: "Развернуть «{name}»",
   floatingClose: "Закрыть «{name}»",
+  floatingToDesktop: "Вынести «{name}» на рабочий стол",
+  floatingToWindow: "Вернуть «{name}» в окно",
   pluginBackToList: "Все плагины",
   pluginSettingsScope: "Применяется к",
   pluginSettingsScopeGlobal: "Все документы",

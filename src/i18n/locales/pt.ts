@@ -1539,6 +1539,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   floatingFold: "Recolher {name}",
   floatingUnfold: "Expandir {name}",
   floatingClose: "Fechar {name}",
+  floatingToDesktop: "Levar {name} para a área de trabalho",
+  floatingToWindow: "Devolver {name} à janela",
   pluginBackToList: "Todos os plugins",
   pluginSettingsScope: "Aplica-se a",
   pluginSettingsScopeGlobal: "Todos os documentos",

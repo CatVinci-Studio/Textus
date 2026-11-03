@@ -1004,3 +1004,19 @@ button.mcp-homepage:hover {
   cursor: pointer;
   touch-action: none;
 }
+
+/* A floating view's own window on the desktop: nothing but the view. */
+:root[data-floating-window],
+:root[data-floating-window] body {
+  background: transparent;
+  overflow: hidden;
+}
+.floating-window {
+  inset: 0;
+}
+:root[data-floating-window] .floating-view-dot {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}

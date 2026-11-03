@@ -17,6 +17,7 @@ export type ThisWindow = Pick<
   | "setTitle"
   | "setAlwaysOnTop"
   | "startResizeDragging"
+  | "startDragging"
   | "outerPosition"
   | "outerSize"
   | "scaleFactor"
@@ -55,6 +56,7 @@ const browserWindow: ThisWindow = {
   },
   setAlwaysOnTop: done,
   startResizeDragging: done,
+  startDragging: done,
   outerPosition: () =>
     Promise.resolve(new PhysicalPosition(window.screenX, window.screenY)),
   outerSize: () =>

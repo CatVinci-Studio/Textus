@@ -1,19 +1,28 @@
 import { useRef, useState, useSyncExternalStore } from "react";
 import { windowInfo } from "../store/plugin-records";
+import { windowIpc } from "../../platform/ipc";
+import { thisWindow } from "../../platform/this-window";
 import { PluginWebviewPanel } from "./PluginWebview";
+import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import {
   closeFloating,
+  floatingOnDesktop,
   floatingVersion,
   moveFloating,
   openFloatingViews,
+  setFloatingOnDesktop,
   subscribeFloating,
   type FloatingView,
 } from "./floating-views";
 
 /** Kept this far inside the window's edges, so a view can't be lost. */
 const MARGIN = 8;
-/** The folded dot's size. */
-const DOT = 36;
+
+// Only the main window floats views over the desktop.
+void windowIpc
+  .floatingDesktopSupported()
+  .then((can) => setFloatingOnDesktop(can && thisWindow().label === "main"))
+  .catch(() => {});
 
 /**
  * Plugins' floating views shown in this window: each a frame of its own
@@ -22,14 +31,22 @@ const DOT = 36;
  */
 export function FloatingViews() {
   useSyncExternalStore(subscribeFloating, floatingVersion);
-  const here = openFloatingViews().filter((v) => v.place === "window");
-  if (!here.length) return null;
+  const open = openFloatingViews();
+  const here = open.filter((v) => v.place === "window");
+  const desktop = open.filter((v) => v.place === "desktop");
   return (
-    <div className="floating-views">
-      {here.map((view) => (
-        <FloatingBox key={view.view} view={view} />
+    <>
+      {desktop.map((view) => (
+        <DesktopFloating key={view.view} view={view} />
       ))}
-    </div>
+      {here.length > 0 && (
+        <div className="floating-views">
+          {here.map((view) => (
+            <FloatingBox key={view.view} view={view} />
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -129,6 +146,17 @@ function FloatingBox({ view }: { view: FloatingView }) {
           title={view.title}
           {...dragHandlers}
         />
+        {view.allowed === "either" && floatingOnDesktop() && (
+          <button
+            type="button"
+            className="floating-view-action"
+            aria-label={t.floatingToDesktop.replace("{name}", view.title)}
+            title={t.floatingToDesktop.replace("{name}", view.title)}
+            onClick={() => moveFloating(view.view, { place: "desktop" })}
+          >
+            ⇱
+          </button>
+        )}
         <button
           type="button"
           className="floating-view-action"

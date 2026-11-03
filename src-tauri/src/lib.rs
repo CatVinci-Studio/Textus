@@ -430,6 +430,16 @@ pub fn run() {
             #[cfg(desktop)]
             tab_drag::start_floating_tab_drag,
             #[cfg(desktop)]
+            commands::floating_window::floating_desktop_supported,
+            #[cfg(desktop)]
+            commands::floating_window::open_floating_window,
+            #[cfg(desktop)]
+            commands::floating_window::close_floating_window,
+            #[cfg(desktop)]
+            commands::floating_window::resize_floating_window,
+            #[cfg(desktop)]
+            commands::floating_window::floating_window_position,
+            #[cfg(desktop)]
             commands::chat_window::detach_chat_window,
             #[cfg(desktop)]
             commands::chat_window::take_chat_handoff,

@@ -1499,6 +1499,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   floatingFold: "「{name}」をたたむ",
   floatingUnfold: "「{name}」を広げる",
   floatingClose: "「{name}」を閉じる",
+  floatingToDesktop: "「{name}」をデスクトップに出す",
+  floatingToWindow: "「{name}」をウインドウに戻す",
   pluginBackToList: "すべてのプラグイン",
   pluginSettingsScope: "適用先",
   pluginSettingsScopeGlobal: "すべての文書",

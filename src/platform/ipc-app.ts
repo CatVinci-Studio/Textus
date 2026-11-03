@@ -92,6 +92,37 @@ export const windowIpc = {
   focusChatWindow: () => desktopQueryCommand("focus_chat_window", false),
   /** The chat window serving THIS editor window, if any. */
   currentChatWindow: () => desktopQueryCommand("current_chat_window", null),
+  /** Whether a plugin's floating view can float over the desktop here. */
+  floatingDesktopSupported: () =>
+    desktopQueryCommand("floating_desktop_supported", false),
+  /** A floating view's window, opened for this editor window; answers its
+   *  label. */
+  openFloatingWindow: (
+    view: string,
+    at: { x: number; y: number } | null,
+    width: number,
+    height: number,
+  ) =>
+    desktopActionCommand(
+      "open_floating_window",
+      view,
+      at?.x ?? null,
+      at?.y ?? null,
+      width,
+      height,
+    ),
+  closeFloatingWindow: (view: string) =>
+    desktopQueryCommand("close_floating_window", undefined, view),
+  resizeFloatingWindow: (view: string, width: number, height: number) =>
+    desktopQueryCommand(
+      "resize_floating_window",
+      undefined,
+      view,
+      width,
+      height,
+    ),
+  floatingWindowPosition: (view: string) =>
+    desktopQueryCommand("floating_window_position", null, view),
 };
 
 // Menu: only where the app draws its own because the native bar is gone.

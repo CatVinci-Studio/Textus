@@ -29,6 +29,7 @@ import { addSlashItems } from "./slash-commands";
 import {
   closeFloatingOf,
   rememberedOpen,
+  floatingOnDesktop,
   showFloating,
 } from "../views/floating-views";
 
@@ -211,7 +212,7 @@ export function applyContributions(
           height: floating.height,
           allowed: floating.place,
         },
-        false,
+        floatingOnDesktop(),
       );
   undo.push(() => closeFloatingOf(id));
   contributions.set(id, undo);

@@ -12,6 +12,7 @@ pub const CHAT_LABEL_PREFIX: &str = "chat-";
 pub fn is_editor_window(label: &str) -> bool {
     label != crate::tab_drag::DRAG_PILL_LABEL
         && !label.starts_with(CHAT_LABEL_PREFIX)
+        && !label.starts_with(crate::commands::floating_window::FLOATING_LABEL_PREFIX)
         && !label.starts_with(crate::commands::export::PDF_EXPORT_LABEL_PREFIX)
         && label != crate::schedule::HOST_LABEL
 }

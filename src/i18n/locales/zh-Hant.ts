@@ -1425,6 +1425,8 @@ export default {
   floatingFold: "收起「{name}」",
   floatingUnfold: "展開「{name}」",
   floatingClose: "關閉「{name}」",
+  floatingToDesktop: "把「{name}」放到桌面上",
+  floatingToWindow: "把「{name}」放回視窗裡",
   pluginBackToList: "全部外掛",
   pluginSettingsScope: "適用於",
   pluginSettingsScopeGlobal: "所有文件",

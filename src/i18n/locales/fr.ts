@@ -1583,6 +1583,8 @@ utiliser une.
   floatingFold: "Replier {name}",
   floatingUnfold: "Déplier {name}",
   floatingClose: "Fermer {name}",
+  floatingToDesktop: "Placer {name} sur le bureau",
+  floatingToWindow: "Remettre {name} dans la fenêtre",
   pluginBackToList: "Toutes les extensions",
   pluginSettingsScope: "S'applique à",
   pluginSettingsScopeGlobal: "Tous les documents",

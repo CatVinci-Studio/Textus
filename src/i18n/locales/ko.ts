@@ -1483,6 +1483,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   floatingFold: "{name} 접기",
   floatingUnfold: "{name} 펼치기",
   floatingClose: "{name} 닫기",
+  floatingToDesktop: "{name}을(를) 바탕화면에 띄우기",
+  floatingToWindow: "{name}을(를) 창 안으로 되돌리기",
   pluginBackToList: "모든 플러그인",
   pluginSettingsScope: "적용 대상",
   pluginSettingsScopeGlobal: "모든 문서",

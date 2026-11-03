@@ -1554,6 +1554,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   floatingFold: "{name} einklappen",
   floatingUnfold: "{name} ausklappen",
   floatingClose: "{name} schließen",
+  floatingToDesktop: "{name} auf den Schreibtisch legen",
+  floatingToWindow: "{name} zurück ins Fenster holen",
   pluginBackToList: "Alle Plugins",
   pluginSettingsScope: "Gilt für",
   pluginSettingsScopeGlobal: "Alle Dokumente",
