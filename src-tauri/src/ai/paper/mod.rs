@@ -18,6 +18,7 @@ mod notes;
 mod outline;
 mod research;
 mod review;
+mod session;
 mod sources;
 pub mod status;
 mod store;
@@ -29,6 +30,7 @@ use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
+use session::Session;
 #[cfg(test)]
 use status::progress;
 pub(crate) use store::{
@@ -220,7 +222,6 @@ pub async fn ai_paper_run(
     request: PaperRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<Paper, String> {
-    crate::ai::ensure_on(&app)?;
     let PaperRequest {
         provider,
         model,
@@ -237,16 +238,17 @@ pub async fn ai_paper_run(
         image_model,
         conversation,
     } = request;
-    let root = paper_root(
+    let session = Session::open(
         &app,
+        &provider,
+        model,
         doc_path.as_deref(),
         workspace_root.as_deref(),
-        id.as_deref(),
     )?;
+    let root = session.root(id.as_deref())?;
     let project =
         crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
-    let entry = crate::ai::catalog::find(&provider)
-        .ok_or_else(|| format!("unknown provider: {provider}"))?;
+    let entry = session.entry;
     // A paper begun before goes on from what it kept: its research, its
     // outline, what its research may still spend.
     let kept = id.as_deref().and_then(|id| load(&root, id).ok());
@@ -256,17 +258,12 @@ pub async fn ai_paper_run(
         .as_ref()
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
     let mut images = research_budget.limits.images;
-    let image_cap = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), &provider)
+    let image_cap = session
+        .pictures(image_model.as_ref())
         .map_or(0, |run| run.limit as u32);
     research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
-    let native = crate::ai::web::native_search(
-        &provider,
-        model
-            .as_deref()
-            .or(entry.agent_default_model)
-            .unwrap_or_default(),
-    );
+    let native = session.native_search();
     let service =
         crate::ai::web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref());
     let can_search = native.is_some() || service.is_some();
@@ -278,15 +275,7 @@ pub async fn ai_paper_run(
         available: can_search,
     });
     crate::ai::cancel::cancellable(request_id, async {
-        let agent =
-            crate::ai::route::agent_provider(&app, entry, model, Default::default(), native)
-                .await?
-                .ok_or_else(|| {
-                    format!(
-                        "{} can't call tools, which writing a paper needs.",
-                        entry.label
-                    )
-                })?;
+        let agent = session.agent(native).await?;
         let agent = model::Metered {
             inner: &agent,
             budget: &budget,
@@ -374,13 +363,7 @@ pub async fn ai_paper_run(
                 });
                 // Outlined, like everything written, as the user asks of
                 // their writing; researched plainly.
-                let mut workspace = crate::ai::workspace::load(
-                    &app,
-                    doc_path.as_deref(),
-                    workspace_root.as_deref(),
-                );
-                let guidance =
-                    crate::ai::agent::writing_guidance(&mut workspace, &files.paper.topic);
+                let guidance = session.guidance(&files.paper.topic);
                 let guided = model::Guided {
                     inner: &agent,
                     guidance: &guidance,

@@ -32,6 +32,24 @@ fn native_search_covers_the_providers_that_have_it() {
 }
 
 #[test]
+fn a_request_naming_no_model_searches_as_the_provider_s_default_model() {
+    for provider in ["openai", "anthropic", "qwen", "deepseek"] {
+        let default = crate::ai::catalog::find(provider)
+            .and_then(|e| e.agent_default_model)
+            .unwrap();
+        assert_eq!(
+            native_search_for(provider, None),
+            native_search(provider, default),
+            "{provider}"
+        );
+    }
+    assert_eq!(
+        native_search_for("qwen", Some("qwen-plus")),
+        native_search("qwen", "qwen-plus")
+    );
+}
+
+#[test]
 fn a_native_search_gets_web_fetch_only_and_off_gets_nothing() {
     let service = Some(Service::new(Backend::Tavily, "k".into()));
     let native = WebPlan::new(

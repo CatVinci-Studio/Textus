@@ -33,38 +33,24 @@ pub async fn ai_paper_draft(
     request: DraftRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<(), String> {
-    crate::ai::ensure_on(&app)?;
-    let root = paper_root(
+    let session = Session::open(
         &app,
+        &request.provider,
+        request.model.clone(),
         request.doc_path.as_deref(),
         request.workspace_root.as_deref(),
-        Some(&request.id),
     )?;
+    let root = session.root(Some(&request.id))?;
     let files = load(&root, &request.id)?;
     let outline = files
         .outline
         .clone()
         .ok_or_else(|| "This paper has no outline yet.".to_string())?;
-    let entry = crate::ai::catalog::find(&request.provider)
-        .ok_or_else(|| format!("unknown provider: {}", request.provider))?;
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
-        let agent = crate::ai::route::agent_provider(
-            &app,
-            entry,
-            request.model.clone(),
-            Default::default(),
-            None,
-        )
-        .await?
-        .ok_or_else(|| {
-            format!(
-                "{} can't call tools, which writing a paper needs.",
-                entry.label
-            )
-        })?;
+        let agent = session.agent(None).await?;
         let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
         let mut keep_spent = KeepSpent {
             root: &root,
@@ -77,12 +63,7 @@ pub async fn ai_paper_draft(
             inner: &agent,
             budget: &budget,
         };
-        let mut workspace = crate::ai::workspace::load(
-            &app,
-            request.doc_path.as_deref(),
-            request.workspace_root.as_deref(),
-        );
-        let guidance = crate::ai::agent::writing_guidance(&mut workspace, &files.paper.topic);
+        let guidance = session.guidance(&files.paper.topic);
         let agent = model::Guided {
             inner: &metered,
             guidance: &guidance,
@@ -191,9 +172,7 @@ pub async fn ai_paper_draft(
         }
         // Pictures begun before the figures are numbered, so one that can't
         // be made leaves no caption behind.
-        let pictures =
-            crate::ai::images::ImageRun::resolve(&app, request.image_model.as_ref(), entry.id)
-                .map(|run| run.in_folder(request.doc_path.as_deref()));
+        let pictures = session.pictures(request.image_model.as_ref());
         for section in &mut sections {
             *section = match &pictures {
                 Some(run) => crate::ai::images::place_pictures(run, section).0,
