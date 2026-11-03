@@ -1173,6 +1173,8 @@ utiliser une.
   cliCommandNotInstalled: "Non installée",
   cliCommandInstallButton: "Installer",
   cliCommandReinstallButton: "Réinstaller",
+  cliCommandOutdated: "Ancienne version",
+  cliCommandUpdateButton: "Mettre à jour",
   cliCommandInstalling: "Installation…",
   cliCommandFailed: "Installation impossible\u00a0:",
   defaultEditorLabel: "Éditeur Markdown par défaut",

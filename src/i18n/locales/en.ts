@@ -1126,6 +1126,8 @@ type /name in a conversation to use one.
   cliCommandNotInstalled: "Not installed",
   cliCommandInstallButton: "Install",
   cliCommandReinstallButton: "Reinstall",
+  cliCommandOutdated: "An older version",
+  cliCommandUpdateButton: "Update",
   cliCommandInstalling: "Installing…",
   cliCommandFailed: "Couldn't install:",
   defaultEditorLabel: "Default Markdown editor",

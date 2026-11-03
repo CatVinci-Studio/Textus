@@ -177,7 +177,7 @@ export const commands = {
 	 *  never loads from the network itself.
 	 */
 	theme_gallery_preview: (path: string) => __TAURI_INVOKE<string>("theme_gallery_preview", { path }),
-	cli_command_status: () => __TAURI_INVOKE<boolean>("cli_command_status"),
+	cli_command_status: () => __TAURI_INVOKE<CliStatus>("cli_command_status"),
 	install_cli_command: () => __TAURI_INVOKE<null>("install_cli_command"),
 	/**  A window's frontend starts (`on`) or stops taking requests. */
 	cli_listening: (on: boolean) => __TAURI_INVOKE<void>("cli_listening", { on }),
@@ -210,6 +210,12 @@ export type ChatHandoff = {
 	editorLabel: string,
 	state: Value,
 };
+
+/**
+ *  What Settings shows: `Outdated` is a script an older Textus wrote,
+ *  which only opens the app.
+ */
+export type CliStatus = "installed" | "outdated" | "missing";
 
 /**  What Settings shows for the row. */
 export type DefaultEditorStatus = {

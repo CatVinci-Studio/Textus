@@ -259,7 +259,8 @@ export const themeGallery = {
 // CLI command
 
 export const cli = {
-  cliCommandStatus: () => desktopQueryCommand("cli_command_status", false),
+  cliCommandStatus: () =>
+    desktopQueryCommand("cli_command_status", "missing" as const),
   installCliCommand: () => desktopActionCommand("install_cli_command"),
   /** This window takes `textus` requests (`cli-request`), or stops. */
   listening: (on: boolean) => desktopActionCommand("cli_listening", on),
@@ -287,7 +288,7 @@ export const background = {
 
 // Default editor (desktop only)
 
-export type { DefaultEditorStatus } from "./bindings/app";
+export type { CliStatus, DefaultEditorStatus } from "./bindings/app";
 
 export const defaultEditor = {
   status: () => desktopQueryCommand("default_editor_status", null),

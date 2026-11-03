@@ -10,8 +10,11 @@
 //! Startup installs it quietly where no password is needed; Settings ›
 //! General retries.
 
+use serde::Serialize;
+
 #[cfg(target_os = "macos")]
 mod imp {
+    use super::CliStatus;
     use crate::app_identity::APP_NAME;
 
     const CLI_BIN_PATH: &str = "/usr/local/bin/textus";
@@ -35,17 +38,18 @@ mod imp {
         Ok(())
     }
 
-    /// A dev build takes any script as installed, so it never swaps an
+    /// A dev build takes any script as current, so it never swaps an
     /// installed app's script for its own.
-    pub fn is_installed() -> bool {
-        std::fs::read_to_string(CLI_BIN_PATH)
-            .is_ok_and(|c| bundled_exe().is_none() || c == script_content())
+    pub fn status() -> CliStatus {
+        CliStatus::of(std::fs::read_to_string(CLI_BIN_PATH).ok(), |s| {
+            bundled_exe().is_none() || s == script_content()
+        })
     }
 
     /// Installs only when `/usr/local/bin` is user-writable, rather than
     /// prompt for a password at startup.
     pub fn try_silent_install() {
-        if !is_installed() {
+        if status() != CliStatus::Installed {
             let _ = write_direct();
         }
     }
@@ -125,6 +129,7 @@ fn path_with(path: &str, dir: &str) -> String {
 
 #[cfg(windows)]
 mod imp {
+    use super::CliStatus;
     use std::path::PathBuf;
     use windows_registry::{Type, CURRENT_USER};
 
@@ -150,17 +155,18 @@ mod imp {
         (key.get_string("Path").unwrap_or_default(), ty)
     }
 
-    pub fn is_installed() -> bool {
+    pub fn status() -> CliStatus {
         let Ok((name, bin)) = paths() else {
-            return false;
+            return CliStatus::Missing;
         };
-        let script = std::fs::read_to_string(bin.join("textus.cmd")).unwrap_or_default();
-        script == super::windows_script(&name)
-            && super::path_has(&user_path().0, &bin.to_string_lossy())
+        CliStatus::of(std::fs::read_to_string(bin.join("textus.cmd")).ok(), |s| {
+            s == super::windows_script(&name)
+                && super::path_has(&user_path().0, &bin.to_string_lossy())
+        })
     }
 
     pub fn try_silent_install() {
-        if !is_installed() {
+        if status() != CliStatus::Installed {
             let _ = install();
         }
     }
@@ -219,6 +225,7 @@ fn linux_script(app: &str) -> String {
 
 #[cfg(target_os = "linux")]
 mod imp {
+    use super::CliStatus;
     use std::path::PathBuf;
 
     const PACKAGED: &str = "/usr/bin/textus";
@@ -238,18 +245,20 @@ mod imp {
         std::env::var_os("APPIMAGE").is_none() && std::path::Path::new(PACKAGED).exists()
     }
 
-    pub fn is_installed() -> bool {
+    pub fn status() -> CliStatus {
         if packaged() {
-            return true;
+            return CliStatus::Installed;
         }
         let (Some(app), Some(path)) = (app(), script_path()) else {
-            return false;
+            return CliStatus::Missing;
         };
-        std::fs::read_to_string(path).is_ok_and(|c| c == super::linux_script(&app))
+        CliStatus::of(std::fs::read_to_string(path).ok(), |s| {
+            s == super::linux_script(&app)
+        })
     }
 
     pub fn try_silent_install() {
-        if !is_installed() {
+        if status() != CliStatus::Installed {
             let _ = install();
         }
     }
@@ -272,8 +281,10 @@ mod imp {
 
 #[cfg(not(any(target_os = "macos", windows, target_os = "linux")))]
 mod imp {
-    pub fn is_installed() -> bool {
-        false
+    use super::CliStatus;
+
+    pub fn status() -> CliStatus {
+        CliStatus::Missing
     }
 
     pub fn try_silent_install() {}
@@ -285,10 +296,36 @@ mod imp {
 
 pub use imp::try_silent_install;
 
+/// What Settings shows: `Outdated` is a script an older Textus wrote,
+/// which only opens the app.
+#[derive(Serialize, Clone, Copy, PartialEq, Eq, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub enum CliStatus {
+    Installed,
+    Outdated,
+    Missing,
+}
+
+impl CliStatus {
+    /// From the script found, if any, and whether it is this app's.
+    #[cfg_attr(
+        not(any(target_os = "macos", windows, target_os = "linux", test)),
+        allow(dead_code)
+    )]
+    fn of(script: Option<String>, current: impl FnOnce(&str) -> bool) -> Self {
+        match script {
+            None => Self::Missing,
+            Some(s) if current(&s) => Self::Installed,
+            Some(_) => Self::Outdated,
+        }
+    }
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn cli_command_status() -> bool {
-    imp::is_installed()
+pub fn cli_command_status() -> CliStatus {
+    imp::status()
 }
 
 #[tauri::command]
@@ -329,6 +366,17 @@ mod tests {
              TEXTUS_CLI=1 exec '/Applications/Textus.app/Contents/MacOS/textus' \"$@\"\nfi\n\
              exec open -a \"Textus\" \"$@\"\n"
         );
+    }
+
+    #[test]
+    fn a_script_an_older_textus_wrote_needs_updating() {
+        let exe = "/Applications/Textus.app/Contents/MacOS/textus";
+        let current = |s: &str| s == mac_script(Some(exe), "Textus");
+        let older = "#!/bin/bash\nexec open -a \"Textus\" \"$@\"\n".to_string();
+        assert_eq!(CliStatus::of(Some(older), current), CliStatus::Outdated);
+        let now = mac_script(Some(exe), "Textus");
+        assert_eq!(CliStatus::of(Some(now), current), CliStatus::Installed);
+        assert_eq!(CliStatus::of(None, current), CliStatus::Missing);
     }
 
     #[test]

@@ -72,6 +72,7 @@ export {
   BACKGROUND_STATUS,
   type BackgroundStatus,
   background,
+  type CliStatus,
   type DefaultEditorStatus,
   defaultEditor,
   type Distribution,

@@ -1106,6 +1106,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   cliCommandNotInstalled: "未インストール",
   cliCommandInstallButton: "インストール",
   cliCommandReinstallButton: "再インストール",
+  cliCommandOutdated: "古いバージョン",
+  cliCommandUpdateButton: "更新",
   cliCommandInstalling: "インストール中…",
   cliCommandFailed: "インストールできませんでした：",
   defaultEditorLabel: "既定の Markdown エディタ",

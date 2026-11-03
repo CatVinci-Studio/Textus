@@ -1097,6 +1097,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   cliCommandNotInstalled: "설치 안 됨",
   cliCommandInstallButton: "설치",
   cliCommandReinstallButton: "다시 설치",
+  cliCommandOutdated: "이전 버전",
+  cliCommandUpdateButton: "업데이트",
   cliCommandInstalling: "설치 중…",
   cliCommandFailed: "설치하지 못했습니다:",
   defaultEditorLabel: "기본 Markdown 편집기",

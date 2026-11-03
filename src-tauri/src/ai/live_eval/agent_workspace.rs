@@ -545,7 +545,11 @@ fn workspace_cases() -> Vec<AgentCase> {
     // A lone document: its folder isn't opened, so notes beside it can't
     // be read - the agent says why and how (attach, or open the folder).
     let dir = scratch("lone-document");
-    put(&dir, "notes/costs.md", "# Garden costs\n\nTotal set-up: £1,850\nYearly running costs: £320\n");
+    put(
+        &dir,
+        "notes/costs.md",
+        "# Garden costs\n\nTotal set-up: £1,850\nYearly running costs: £320\n",
+    );
     let lone = DiskWorkspace {
         lone: true,
         ..doc_folder(&dir, "proposal.md", BUDGET_EN)
@@ -565,9 +569,21 @@ fn workspace_cases() -> Vec<AgentCase> {
 
     // A zip attached and unpacked: the files inside are read like any other.
     let conversation = scratch("attached-zip");
-    put(&conversation, "attached/quotes/北风园艺.md", "# 北风园艺报价\n\n总价：2,400 元，含安装。\n");
-    put(&conversation, "attached/quotes/青禾景观.md", "# 青禾景观报价\n\n总价：1,980 元，不含安装（安装另加 300 元）。\n");
-    put(&conversation, "attached/quotes/安居花木.md", "# 安居花木报价\n\n总价：2,150 元，含安装。\n");
+    put(
+        &conversation,
+        "attached/quotes/北风园艺.md",
+        "# 北风园艺报价\n\n总价：2,400 元，含安装。\n",
+    );
+    put(
+        &conversation,
+        "attached/quotes/青禾景观.md",
+        "# 青禾景观报价\n\n总价：1,980 元，不含安装（安装另加 300 元）。\n",
+    );
+    put(
+        &conversation,
+        "attached/quotes/安居花木.md",
+        "# 安居花木报价\n\n总价：2,150 元，含安装。\n",
+    );
     let zipped = DiskWorkspace {
         doc_path: None,
         scratch: Some(conversation.clone()),

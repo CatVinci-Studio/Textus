@@ -1148,6 +1148,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   cliCommandNotInstalled: "Nicht installiert",
   cliCommandInstallButton: "Installieren",
   cliCommandReinstallButton: "Neu installieren",
+  cliCommandOutdated: "Ältere Version",
+  cliCommandUpdateButton: "Aktualisieren",
   cliCommandInstalling: "Wird installiert…",
   cliCommandFailed: "Installation fehlgeschlagen:",
   defaultEditorLabel: "Standard-Markdown-Editor",

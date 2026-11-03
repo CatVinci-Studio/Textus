@@ -1053,6 +1053,8 @@ export default {
   cliCommandNotInstalled: "未安装",
   cliCommandInstallButton: "安装",
   cliCommandReinstallButton: "重新安装",
+  cliCommandOutdated: "旧版本",
+  cliCommandUpdateButton: "更新",
   cliCommandInstalling: "安装中…",
   cliCommandFailed: "安装失败:",
   defaultEditorLabel: "默认 Markdown 编辑器",

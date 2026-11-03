@@ -1154,6 +1154,8 @@ export default {
   cliCommandNotInstalled: "Не установлена",
   cliCommandInstallButton: "Установить",
   cliCommandReinstallButton: "Переустановить",
+  cliCommandOutdated: "Старая версия",
+  cliCommandUpdateButton: "Обновить",
   cliCommandInstalling: "Установка…",
   cliCommandFailed: "Не удалось установить:",
   defaultEditorLabel: "Редактор Markdown по умолчанию",

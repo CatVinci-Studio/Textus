@@ -1143,6 +1143,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   cliCommandNotInstalled: "Não instalado",
   cliCommandInstallButton: "Instalar",
   cliCommandReinstallButton: "Reinstalar",
+  cliCommandOutdated: "Versão anterior",
+  cliCommandUpdateButton: "Atualizar",
   cliCommandInstalling: "Instalando…",
   cliCommandFailed: "Não foi possível instalar:",
   defaultEditorLabel: "Editor de Markdown padrão",
