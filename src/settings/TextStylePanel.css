@@ -1,0 +1,55 @@
+/* Where the find bar sits: under the window bar, left of a docked Textus
+   AI panel, over the document but leaving it in view. */
+.text-style-panel {
+  position: fixed;
+  top: 40px;
+  right: calc(24px + var(--docked-panel-width, 0px));
+  z-index: var(--z-popover);
+  width: 360px;
+  max-width: calc(100vw - 48px);
+  box-sizing: border-box;
+  padding: 8px 16px 12px;
+  border-radius: var(--shape-m);
+  corner-shape: superellipse(1.25);
+  animation: motion-drop-in var(--dur-base) var(--ease-out);
+}
+
+.text-style-panel[data-state="closing"] {
+  animation: motion-lift-out var(--dur-fast) var(--ease-in) forwards;
+}
+
+.text-style-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--control-height);
+}
+
+.text-style-title {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+/* Rows as in Settings, tighter: the panel is narrow. */
+.text-style-panel .settings-row {
+  min-height: 40px;
+  padding: 4px 0;
+  gap: 12px;
+  font-size: var(--text-body);
+}
+
+.text-style-more {
+  margin-top: 8px;
+}
+
+/* The phone: across the page under its title row, as the find bar. */
+@media (max-width: 760px) {
+  :root[data-window-chrome="mobile"] .text-style-panel {
+    top: var(--mobile-top);
+    right: 8px;
+    left: 8px;
+    width: auto;
+    max-width: none;
+  }
+}

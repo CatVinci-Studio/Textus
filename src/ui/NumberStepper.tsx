@@ -69,8 +69,9 @@ export function NumberStepper({
     } else if (e.key === "Enter" && draft !== null) {
       commit(typed === undefined ? value : typed);
     } else if (e.key === "Escape" && draft !== null) {
-      // Only the typing is undone; the dialog it is in stays open.
+      // Only the typing is undone; the dialog or panel it is in stays open.
       e.preventDefault();
+      e.stopPropagation();
       setDraft(null);
     }
   };

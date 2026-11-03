@@ -2,6 +2,7 @@ import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { isIOSApp } from "../platform/capabilities";
 import { SettingsLayer } from "./SettingsLayer";
+import { TextStyleLayer } from "./TextStyleLayer";
 import { DocumentList } from "../mobile/DocumentList";
 import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -202,6 +203,8 @@ function App() {
               shortcut: c.shortcut,
             }))}
         />
+
+        <TextStyleLayer onMore={settingsOpening.openEditorSettings} />
 
         <ClosePrompt
           open={!!pendingClose}

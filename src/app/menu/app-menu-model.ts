@@ -41,6 +41,7 @@ export type NativeMenuId =
   | "split-right"
   | "split-down"
   | "close-split"
+  | "text-style"
   | "zoom-in"
   | "zoom-out"
   | "zoom-reset"
@@ -400,6 +401,7 @@ export function buildAppMenu(
         { label: t.menuSplitDown, action: { native: "split-down" } },
         { label: t.menuCloseSplit, action: { native: "close-split" } },
         "separator",
+        { label: t.menuTextStyle, action: { native: "text-style" } },
         { label: t.menuZoomIn, accel: "mod+=", action: { native: "zoom-in" } },
         {
           label: t.menuZoomOut,

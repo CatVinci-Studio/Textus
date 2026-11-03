@@ -266,6 +266,7 @@ pub(crate) fn build(
     let split_right_item = item(SPLIT_RIGHT_ID, "Split Right").build(app)?;
     let split_down_item = item(SPLIT_DOWN_ID, "Split Down").build(app)?;
     let close_split_item = item(CLOSE_SPLIT_ID, "Close Split").build(app)?;
+    let text_style_item = item(TEXT_STYLE_ID, "Text Style…").build(app)?;
 
     // Fixed OS-convention accelerators, unlike the items above. The frontend
     // applies the zoom itself.
@@ -299,6 +300,8 @@ pub(crate) fn build(
             .item(&split_down_item)
             .item(&close_split_item)
             .separator()
+            // The document's type, then the whole window's size.
+            .item(&text_style_item)
             .item(&zoom_in_item)
             .item(&zoom_out_item)
             .item(&zoom_reset_item);

@@ -84,13 +84,12 @@ describe("a number stepper", () => {
     fireEvent.keyDown(field, { key: "ArrowDown" });
     expect(changes).toEqual([29]);
     fireEvent.change(field, { target: { value: "12" } });
-    // What a dialog around it sees: an Escape already taken.
+    // A dialog or panel around it never sees the Escape.
     const escape = vi.fn();
-    const listen = (e: KeyboardEvent) => escape(e.defaultPrevented);
-    document.addEventListener("keydown", listen);
+    document.addEventListener("keydown", escape);
     fireEvent.keyDown(field, { key: "Escape" });
-    document.removeEventListener("keydown", listen);
-    expect(escape).toHaveBeenCalledWith(true);
+    document.removeEventListener("keydown", escape);
+    expect(escape).not.toHaveBeenCalled();
     expect(field).toHaveValue("29");
     expect(changes).toEqual([29]);
   });

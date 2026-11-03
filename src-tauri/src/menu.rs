@@ -68,6 +68,7 @@ const SPLIT_RIGHT_ID: &str = "split-right";
 const COMMAND_PALETTE_ID: &str = "command-palette";
 const SPLIT_DOWN_ID: &str = "split-down";
 const CLOSE_SPLIT_ID: &str = "close-split";
+const TEXT_STYLE_ID: &str = "text-style";
 const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
@@ -387,6 +388,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, &format!("menu-{id}"));
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
+    } else if id == TEXT_STYLE_ID {
+        emit_to_focused(app_handle, "menu-text-style");
     } else if id == ZOOM_IN_ID {
         emit_to_focused(app_handle, "menu-zoom-in");
     } else if id == ZOOM_OUT_ID {

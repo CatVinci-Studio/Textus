@@ -44,3 +44,26 @@ test("the document takes the reader's text size and line spacing, and follows a 
   // The theme's own spacing again: Textus's default 1.8.
   await expect(text).toHaveCSS("line-height", "28.8px");
 });
+
+test("View › Text Style… sets the text beside the document, which stays in view", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", docTextSize: 18 } });
+  await pasteMarkdown(page, "A line to read while the size changes.");
+  const text = page.locator(paragraph).first();
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-text-style"),
+  );
+  const panel = page.getByRole("dialog", { name: "Text Style" });
+  await panel.getByRole("button", { name: "Increase" }).first().click();
+  await expect(text).toHaveCSS("font-size", "19px");
+  // Nothing dims the document or takes it from view.
+  await expect(page.locator(".settings-backdrop")).toHaveCount(0);
+  await expect(text).toBeInViewport();
+
+  await page.keyboard.press("Escape");
+  await expect(panel).toHaveCount(0);
+  await expect(text).toHaveCSS("font-size", "19px");
+});

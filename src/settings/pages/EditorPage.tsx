@@ -5,8 +5,6 @@ import {
   type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
-  DOC_TEXT_SIZE,
-  DOC_LINE_SPACING,
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
@@ -23,11 +21,9 @@ import {
 } from "../../document/read-only-state";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
-import { stepperLabels, TextFontRows } from "../sections/text-font";
+import { TextFontRows } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
-import { NumberStepper } from "../../ui/NumberStepper";
-import { docLineHeightNow, docTextSizeNow } from "../../theme/doc-type-now";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
@@ -73,35 +69,8 @@ export function EditorPage({
             <option value="full">{t.contentWidthFull}</option>
           </Select>
         </SettingRow>
-        {/* The reader's own size and spacing for the document, over the
-            theme's. */}
-        <SettingRow label={t.docTextSizeLabel}>
-          <NumberStepper
-            value={
-              settings.docTextSize === "auto" ? null : settings.docTextSize
-            }
-            range={DOC_TEXT_SIZE}
-            unit="px"
-            from={docTextSizeNow}
-            onChange={(size) => setSettings({ docTextSize: size ?? "auto" })}
-            labels={stepperLabels(t, t.docTextSizeLabel)}
-          />
-        </SettingRow>
-        <SettingRow label={t.docLineSpacingLabel}>
-          <NumberStepper
-            value={
-              settings.docLineSpacing === "auto"
-                ? null
-                : settings.docLineSpacing
-            }
-            range={DOC_LINE_SPACING}
-            from={docLineHeightNow}
-            onChange={(height) =>
-              setSettings({ docLineSpacing: height ?? "auto" })
-            }
-            labels={stepperLabels(t, t.docLineSpacingLabel)}
-          />
-        </SettingRow>
+        {/* The reader's own type for the document, over the theme's; also
+            View › Text Style…, over the document. */}
         <TextFontRows t={t} settings={settings} setSettings={setSettings} />
         {/* A phone's UI is sized by iOS's own text styles instead. */}
         {!phone && (

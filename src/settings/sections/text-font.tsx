@@ -1,15 +1,25 @@
 import type { Strings } from "../../i18n/strings";
-import { DOC_LETTER_SPACING } from "../../prefs/SettingsContext";
+import {
+  DOC_LETTER_SPACING,
+  DOC_LINE_SPACING,
+  DOC_TEXT_SIZE,
+} from "../../prefs/SettingsContext";
 import type { SettingsPageProps } from "../pages/types";
 import { NumberStepper, type StepperLabels } from "../../ui/NumberStepper";
-import { docLetterSpacingNow } from "../../theme/doc-type-now";
+import {
+  docLetterSpacingNow,
+  docLineHeightNow,
+  docTextSizeNow,
+} from "../../theme/doc-type-now";
 import { SettingRow } from "./controls";
 import { FontPicker } from "./FontPicker";
 
-/** The text font and character spacing, over the theme's. */
+/** The document's type as the reader sets it over the theme's: size, line
+ *  spacing, font and character spacing. Settings › Editor & Appearance and
+ *  View › Text Style… show the same rows. */
 
 /** A document text stepper's labels: its row's name, "Theme's" for unset. */
-export function stepperLabels(t: Strings, label: string): StepperLabels {
+function stepperLabels(t: Strings, label: string): StepperLabels {
   return {
     label,
     unset: t.docTextSizeAuto,
@@ -26,6 +36,29 @@ export function TextFontRows({
 }: Pick<SettingsPageProps, "t" | "settings" | "setSettings">) {
   return (
     <>
+      <SettingRow label={t.docTextSizeLabel}>
+        <NumberStepper
+          value={settings.docTextSize === "auto" ? null : settings.docTextSize}
+          range={DOC_TEXT_SIZE}
+          unit="px"
+          from={docTextSizeNow}
+          onChange={(size) => setSettings({ docTextSize: size ?? "auto" })}
+          labels={stepperLabels(t, t.docTextSizeLabel)}
+        />
+      </SettingRow>
+      <SettingRow label={t.docLineSpacingLabel}>
+        <NumberStepper
+          value={
+            settings.docLineSpacing === "auto" ? null : settings.docLineSpacing
+          }
+          range={DOC_LINE_SPACING}
+          from={docLineHeightNow}
+          onChange={(height) =>
+            setSettings({ docLineSpacing: height ?? "auto" })
+          }
+          labels={stepperLabels(t, t.docLineSpacingLabel)}
+        />
+      </SettingRow>
       <SettingRow label={t.docFontLabel}>
         <FontPicker
           value={settings.docFont}

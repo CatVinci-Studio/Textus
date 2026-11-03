@@ -14,9 +14,8 @@ const SettingsPanel = lazyComponent(
   (m) => m.SettingsPanel,
 );
 
-/** The page Settings opens at: General, or Plugins from that menu. */
 /** Where Settings opens: a page, or "updates" - About, checking. */
-type SettingsStart = "general" | "extensions" | "updates";
+type SettingsStart = "general" | "editor" | "extensions" | "updates";
 
 /** Whether Settings is open, and at which page. Each request counts, so
  *  one made while Settings is open goes to its page from wherever it was. */
@@ -41,6 +40,7 @@ export function useSettingsOpening() {
     open: state.open,
     request: state.request,
     openSettings: () => request("general"),
+    openEditorSettings: () => request("editor"),
     openUpdates: () => request("updates"),
     openPluginSettings: () => {
       openExtensionsTab("plugins");
