@@ -17,7 +17,11 @@ let families: Promise<string[]> | null = null;
 /** Read once per session: the list is a few hundred names and rarely
  *  changes while Textus runs. */
 function fontFamilies(): Promise<string[]> {
-  families ??= systemIpc.fontFamilies().catch(() => []);
+  // Without the native side (the browser build) there is no list.
+  families ??= systemIpc
+    .fontFamilies()
+    .then((list) => (Array.isArray(list) ? list : []))
+    .catch(() => []);
   return families;
 }
 
