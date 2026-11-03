@@ -7,11 +7,12 @@ import { CheckIcon } from "../../ui/icons";
 import { clearAllConversations } from "../../ai/chat/chat-history";
 import { clearClipboardHistory } from "../../clipboard/history";
 import { drafts } from "../../platform/ipc";
-import { hasTextusAi } from "../../platform/capabilities";
+import { hasTextusAi, isDesktopApp } from "../../platform/capabilities";
+import { SettingsFileSection } from "./settings-file";
 
 // Settings > Privacy: a switch per kind of local history, plus a clear. A
 // switch off only stops new writes; a clear can't be undone, so it asks first.
-// Last, whether installs are counted.
+// Last, the settings file, which can carry the AI history away.
 
 function ClearRow({
   label,
@@ -121,6 +122,15 @@ export function PrivacySection({ t }: { t: Strings }) {
           />
         </div>
       </section>
+
+      {isDesktopApp && (
+        <section className="settings-group">
+          <h2 className="settings-group-title">{t.settingsFileLabel}</h2>
+          <div className="settings-group-body">
+            <SettingsFileSection t={t} />
+          </div>
+        </section>
+      )}
     </>
   );
 }

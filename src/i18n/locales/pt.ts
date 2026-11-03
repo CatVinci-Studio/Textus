@@ -1171,6 +1171,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageAlignLeft: "À esquerda",
   docTextSizeLabel: "Tamanho do texto",
   docTextSizeAuto: "O do tema",
+  docTextLabel: "Texto do documento",
+  docTextCustom: "Personalizado",
   docLineSpacingLabel: "Espaçamento entre linhas",
   docLineSpacingAuto: "O do tema",
   docLineSpacingCompact: "Compacto",
@@ -1194,8 +1196,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autosaveHint:
     "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   settingsFileLabel: "Arquivo de ajustes",
-  settingsFileHint:
-    "Faça backup das configurações ou leve-as para outro computador, com as conversas e memórias de IA se quiser. Chaves de API e tokens MCP ficam aqui.",
+  settingsFileSummary:
+    "Importe ou exporte as configurações do app e o histórico de IA",
   settingsFileExport: "Exportar…",
   settingsFileImport: "Importar…",
   settingsFileImportConfirm:
@@ -1468,6 +1470,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver maior",
+  themeBackToList: "Todos os temas",
   extensionsThemesGet: "Obter temas",
   extensionsSkillsHelp: `Uma habilidade diz ao ${AI_NAME} como fazer bem um tipo de tarefa. As ativadas são oferecidas ao ${AI_NAME} e no menu /; uma instalação nova começa com cinco ativadas, e você adiciona as outras aqui.`,
   extensionsSkillsMoved:

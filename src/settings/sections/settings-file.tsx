@@ -26,7 +26,7 @@ async function themeCss(list: UserThemeMeta[]): Promise<ThemeCss> {
   return found;
 }
 
-/** Settings › General's export and import of the settings as a file. */
+/** Settings › Privacy's export and import of the settings, AI records too. */
 export function SettingsFileSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const [error, setError] = useState<string | null>(null);
@@ -82,11 +82,7 @@ export function SettingsFileSection({ t }: { t: Strings }) {
   }
 
   return (
-    <SettingRow
-      label={t.settingsFileLabel}
-      hint={t.settingsFileHint}
-      error={error}
-    >
+    <SettingRow label={t.settingsFileSummary} error={error}>
       <button
         className="text-button settings-inline-button"
         onClick={() => void exportFile()}

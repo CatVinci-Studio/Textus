@@ -1134,6 +1134,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageAlignLeft: "左寄せ",
   docTextSizeLabel: "本文の文字サイズ",
   docTextSizeAuto: "テーマに合わせる",
+  docTextLabel: "本文の文字",
+  docTextCustom: "カスタム",
   docLineSpacingLabel: "行間",
   docLineSpacingAuto: "テーマに合わせる",
   docLineSpacingCompact: "狭め",
@@ -1157,8 +1159,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autosaveHint:
     "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
   settingsFileLabel: "設定ファイル",
-  settingsFileHint:
-    "設定をバックアップしたり、別のコンピュータに移したりできます。AI の会話とメモリーも一緒に移せます。API キーと MCP トークンはこのコンピュータに残ります。",
+  settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",
   settingsFileExport: "書き出す…",
   settingsFileImport: "読み込む…",
   settingsFileImportConfirm:
@@ -1429,6 +1430,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsFold: "閉じる",
   extensionsUnfold: "開く",
   themePreviewEnlarge: "拡大表示",
+  themeBackToList: "すべてのテーマ",
   extensionsThemesGet: "テーマを入手",
   extensionsSkillsHelp: `スキルは ${AI_NAME} に、ある種類の作業をうまくこなす方法を伝えます。オンのスキルは ${AI_NAME} と / メニューで使えます。新しくインストールすると 5 つがオンで、残りはここで追加します。`,
   extensionsSkillsMoved:

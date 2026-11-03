@@ -1176,6 +1176,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageAlignLeft: "Links",
   docTextSizeLabel: "Textgröße",
   docTextSizeAuto: "Wie im Design",
+  docTextLabel: "Fließtext",
+  docTextCustom: "Angepasst",
   docLineSpacingLabel: "Zeilenabstand",
   docLineSpacingAuto: "Wie im Design",
   docLineSpacingCompact: "Eng",
@@ -1200,8 +1202,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autosaveHint:
     "Ist ein Ordner geöffnet, bekommen auch unbenannte Dokumente dort eine Datei, nach ihrem Titel benannt.",
   settingsFileLabel: "Einstellungsdatei",
-  settingsFileHint:
-    "Sichere deine Einstellungen oder nimm sie auf einen anderen Computer mit, auf Wunsch samt KI-Gesprächen und Erinnerungen. API-Schlüssel und MCP-Token bleiben hier.",
+  settingsFileSummary:
+    "Einstellungen der App und den KI-Verlauf importieren oder exportieren",
   settingsFileExport: "Exportieren…",
   settingsFileImport: "Importieren…",
   settingsFileImportConfirm:
@@ -1483,6 +1485,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsFold: "Ausblenden",
   extensionsUnfold: "Einblenden",
   themePreviewEnlarge: "Größer anzeigen",
+  themeBackToList: "Alle Themes",
   extensionsThemesGet: "Themes holen",
   extensionsSkillsHelp: `Ein Skill sagt ${AI_NAME}, wie es eine Art von Aufgabe gut erledigt. Eingeschaltete Skills bekommt ${AI_NAME}, und sie stehen im /-Menü; eine neue Installation beginnt mit fünf, den Rest fügst du hier hinzu.`,
   extensionsSkillsMoved:

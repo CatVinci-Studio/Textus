@@ -1080,6 +1080,8 @@ export default {
   imageAlignLeft: "靠左",
   docTextSizeLabel: "正文字号",
   docTextSizeAuto: "跟随主题",
+  docTextLabel: "正文文字",
+  docTextCustom: "已调整",
   docLineSpacingLabel: "行距",
   docLineSpacingAuto: "跟随主题",
   docLineSpacingCompact: "紧凑",
@@ -1102,8 +1104,7 @@ export default {
   autosaveLabel: "自动保存",
   autosaveHint: "打开文件夹时，未命名文档也会以标题为名存进这个文件夹。",
   settingsFileLabel: "设置文件",
-  settingsFileHint:
-    "备份设置，或带到另一台电脑上，也可以连同 AI 对话和记忆一起。API 密钥和 MCP 令牌留在本机。",
+  settingsFileSummary: "导入/导出软件的设置以及 AI 历史记录",
   settingsFileExport: "导出…",
   settingsFileImport: "导入…",
   settingsFileImportConfirm:
@@ -1352,6 +1353,7 @@ export default {
   extensionsFold: "收起",
   extensionsUnfold: "展开",
   themePreviewEnlarge: "查看大图",
+  themeBackToList: "全部主题",
   extensionsThemesGet: "获取主题",
   extensionsSkillsHelp: `Skill 告诉 ${AI_NAME} 怎样做好某一类事。开着的 Skill 会提供给 ${AI_NAME}，也会出现在 / 菜单里；新安装默认开五个，其余的在这里添加。`,
   extensionsSkillsMoved: "你添加的 Skill 在“设置 › 扩展”里，内置的在下面。",
