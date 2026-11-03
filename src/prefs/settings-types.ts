@@ -117,6 +117,7 @@ export type SearchService =
   | "tavily"
   | "brave"
   | "exa"
+  | "keenable"
   | "searxng";
 
 export const SEARCH_SERVICES: SearchService[] = [
@@ -128,6 +129,7 @@ export const SEARCH_SERVICES: SearchService[] = [
   "tavily",
   "brave",
   "exa",
+  "keenable",
   "searxng",
 ];
 

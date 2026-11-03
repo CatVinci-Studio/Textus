@@ -248,6 +248,22 @@ async fn exa_sends_its_key_header_and_reads_highlights() {
 }
 
 #[tokio::test]
+async fn keenable_sends_its_title_and_prefers_description() {
+    let (hits, request) = run(
+            Backend::Keenable,
+            "200 OK",
+            r#"{"results":[{"title":"Tides","url":"https://sea.example/k","description":"","snippet":"From Keenable.","published_at":"2026-01-01"},{"title":"B","url":"https://sea.example/b","description":"Desc.","snippet":"Long."}]}"#,
+        )
+        .await;
+    assert!(request.contains("x-keenable-title: Textus"), "{request}");
+    assert!(request.contains("\"max_results\""), "{request}");
+    let hits = hits.unwrap();
+    assert_eq!(hits[0].snippet, "From Keenable.");
+    assert_eq!(hits[0].date.as_deref(), Some("2026-01-01"));
+    assert_eq!(hits[1].snippet, "Desc.");
+}
+
+#[tokio::test]
 async fn searxng_asks_for_json_and_explains_a_403() {
     let (hits, request) = run(
             Backend::Searxng,
@@ -288,6 +304,7 @@ fn ids_round_trip_and_keys_are_shared_where_the_provider_is_the_same() {
         Backend::Tavily,
         Backend::Brave,
         Backend::Exa,
+        Backend::Keenable,
         Backend::Searxng,
     ] {
         let id = serde_json::to_value(backend).unwrap();

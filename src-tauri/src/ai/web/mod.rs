@@ -63,6 +63,11 @@ pub(crate) fn resolve_service(
             .map(str::trim)
             .filter(|u| u.starts_with("http://") || u.starts_with("https://"))
             .map(|u| Service::new(Backend::Searxng, u.to_string())),
+        // Keenable works without a key; a saved one is used when present.
+        Some(Backend::Keenable) => Some(Service::new(
+            Backend::Keenable,
+            key(Backend::Keenable).unwrap_or_default(),
+        )),
         Some(backend) => key(backend).map(|k| Service::new(backend, k)),
         None => [Backend::Deepseek, Backend::Zhipu, Backend::Kimi]
             .into_iter()

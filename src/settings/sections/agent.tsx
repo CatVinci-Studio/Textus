@@ -385,6 +385,8 @@ const SEARCH_KEY_IDS: Partial<Record<SearchService, string>> = {
   tavily: "search-tavily",
   brave: "search-brave",
   exa: "search-exa",
+  // Optional: Keenable searches without a key.
+  keenable: "search-keenable",
 };
 
 /** A search service's name as the UI shows it - brand names, but for the
@@ -401,6 +403,7 @@ const SEARCH_SERVICE_NAMES: Record<
   tavily: { brand: "Tavily" },
   brave: { brand: "Brave Search" },
   exa: { brand: "Exa" },
+  keenable: { brand: "Keenable" },
   searxng: { brand: "SearXNG" },
 };
 

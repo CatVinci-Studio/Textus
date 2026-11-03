@@ -23,6 +23,7 @@ pub enum Backend {
     Tavily,
     Brave,
     Exa,
+    Keenable,
     Searxng,
 }
 
@@ -41,6 +42,7 @@ impl Backend {
             Backend::Tavily => "Tavily",
             Backend::Brave => "Brave Search",
             Backend::Exa => "Exa",
+            Backend::Keenable => "Keenable",
             Backend::Searxng => "SearXNG",
         }
     }
@@ -56,6 +58,8 @@ impl Backend {
             Backend::Tavily => "search-tavily",
             Backend::Brave => "search-brave",
             Backend::Exa => "search-exa",
+            // Optional: Keenable answers without a key.
+            Backend::Keenable => "search-keenable",
             Backend::Searxng => return None,
         })
     }
@@ -69,10 +73,16 @@ impl Backend {
             Backend::Tavily => "https://api.tavily.com/search",
             Backend::Brave => "https://api.search.brave.com/res/v1/web/search",
             Backend::Exa => "https://api.exa.ai/search",
+            Backend::Keenable => "https://api.keenable.ai/v1/search/public",
             Backend::Searxng => "",
         }
     }
 }
+
+/// Keenable's keyed endpoint, used when a key is saved.
+const KEENABLE_KEYED_ENDPOINT: &str = "https://api.keenable.ai/v1/search";
+/// Keenable's `snippet` can hold a whole page.
+const KEENABLE_SNIPPET_CHARS: usize = 600;
 
 /// One search result.
 #[derive(Clone, Debug, PartialEq)]
@@ -110,6 +120,10 @@ impl Service {
         }
         match self.backend {
             Backend::Searxng => format!("{}/search", self.credential.trim_end_matches('/')),
+            // With a key, Keenable's keyed endpoint; without, the public one.
+            Backend::Keenable if !self.credential.trim().is_empty() => {
+                KEENABLE_KEYED_ENDPOINT.to_string()
+            }
             backend => backend.endpoint().to_string(),
         }
     }
@@ -197,6 +211,17 @@ impl Service {
                 "numResults": count,
                 "contents": {"highlights": true},
             })),
+            Backend::Keenable => {
+                let request = client
+                    .post(url)
+                    .header("X-Keenable-Title", "Textus")
+                    .json(&json!({ "query": query, "max_results": count }));
+                if key.trim().is_empty() {
+                    request
+                } else {
+                    request.header("X-API-Key", key.trim())
+                }
+            }
             Backend::Searxng => client.get(url).query(&[("q", query), ("format", "json")]),
         }
     }
@@ -422,6 +447,21 @@ pub(crate) fn parse(backend: Backend, value: &Value) -> Result<Vec<Hit>, String>
                     .pointer("/profile/name")
                     .and_then(Value::as_str)
                     .map(str::to_string),
+            })
+            .collect(),
+        Backend::Keenable => list("/results")
+            .iter()
+            .map(|r| Hit {
+                title: text(r, "title"),
+                url: text(r, "url"),
+                snippet: optional(r, "description")
+                    .filter(|d| !d.trim().is_empty())
+                    .unwrap_or_else(|| text(r, "snippet"))
+                    .chars()
+                    .take(KEENABLE_SNIPPET_CHARS)
+                    .collect(),
+                date: optional(r, "published_at"),
+                site: None,
             })
             .collect(),
         Backend::Exa => list("/results")

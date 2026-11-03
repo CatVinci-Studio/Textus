@@ -40,7 +40,7 @@ export const commands = {
 
 /* Types */
 /**  One search service. The ids are what Settings stores. */
-export type Backend = "deepseek" | "zhipu" | "kimi" | "bocha" | "tavily" | "brave" | "exa" | "searxng";
+export type Backend = "deepseek" | "zhipu" | "kimi" | "bocha" | "tavily" | "brave" | "exa" | "keenable" | "searxng";
 
 /**  What the frontend knows about the cursor beyond the raw text around it. */
 export type CompletionHints = CompletionHints_Serialize | CompletionHints_Deserialize;
