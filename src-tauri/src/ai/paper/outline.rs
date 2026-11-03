@@ -4,9 +4,10 @@
 //! wrong until it holds; the user then edits and approves it.
 
 use super::genre::Scale;
+use super::handover::{hand_over, Checked, Task};
 use super::research::{Model, Streamed, ThinkingTail};
 use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
-use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
+use aicompat::agent::ToolSpec;
 use serde_json::json;
 use std::sync::Mutex;
 
@@ -278,62 +279,35 @@ pub(crate) async fn make_outline(
         dossier_text(dossier)
     );
     let watch = OutlineWatch::new(send);
-    let kept: Mutex<Option<Outline>> = Mutex::new(None);
-    let specs = vec![submit_outline_spec()];
-    let execute = |call: ToolCall| {
-        let kept = &kept;
-        async move {
-            let outline: Outline = match serde_json::from_str(&call.arguments) {
-                Ok(outline) => outline,
-                Err(e) => {
-                    return ToolOutput::from(format!(
-                        "The outline couldn't be read: {e}. Send it again."
-                    ))
-                }
-            };
-            let wrong = problems(&outline, dossier, target, &shape);
-            if !wrong.is_empty() {
-                // Seen in a live run's output, never in the app's.
-                if cfg!(test) {
-                    eprintln!("paper: outline not kept: {}", wrong.join(" | "));
-                }
-                return ToolOutput::from(format!(
-                    "Not kept - fix these and send the whole outline again:\n- {}",
-                    wrong.join("\n- ")
-                ));
-            }
-            *kept.lock().unwrap() = Some(outline);
-            ToolOutput {
-                text: "Kept. Reply with one short line.".into(),
-                settled: true,
-                ..ToolOutput::default()
-            }
-        }
+    let push = |streamed: Streamed<'_>| watch.push(streamed);
+    let task = Task {
+        instructions: &instructions,
+        message,
+        tool: submit_outline_spec(),
+        steps: OUTLINE_STEPS,
+        watch: Some(&push),
     };
-    run_agent_loop(
-        Vec::new(),
-        AgentTurn::User {
-            text: message,
-            images: Vec::new(),
-        },
-        OUTLINE_STEPS,
-        |turns: Vec<AgentTurn>| {
-            let (instructions, specs) = (&instructions, &specs);
-            let watch = &watch;
-            async move {
-                model
-                    .step_watched(instructions, &turns, specs, &|s| watch.push(s))
-                    .await
+    let (kept, _) = hand_over(model, task, |arguments| {
+        let outline: Outline = match serde_json::from_str(arguments) {
+            Ok(outline) => outline,
+            Err(e) => {
+                return Checked::Refused(format!(
+                    "The outline couldn't be read: {e}. Send it again."
+                ))
             }
-        },
-        execute,
-        |_| ToolRun::InOrder,
-        |_| {},
-    )
+        };
+        let wrong = problems(&outline, dossier, target, &shape);
+        if wrong.is_empty() {
+            return Checked::Kept(outline);
+        }
+        // Seen in a live run's output, never in the app's.
+        if cfg!(test) {
+            eprintln!("paper: outline not kept: {}", wrong.join(" | "));
+        }
+        Checked::not_kept("outline", &wrong)
+    })
     .await?;
-    kept.into_inner()
-        .unwrap()
-        .ok_or_else(|| "No outline that holds came back - try again.".to_string())
+    kept.ok_or_else(|| "No outline that holds came back - try again.".to_string())
 }
 
 /// The user's edit of an outline, made safe to draft from: blank key points
