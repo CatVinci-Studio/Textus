@@ -68,6 +68,8 @@ pub fn open_floating_window(
         .resizable(false)
         .shadow(false)
         .focused(false)
+        // A click on it acts at once, though it never takes the focus first.
+        .accept_first_mouse(true)
         .inner_size(width, height)
         .position(x, y);
     crate::settings::with_boot(builder, &app, &label)
