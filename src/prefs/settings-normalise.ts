@@ -25,8 +25,8 @@ import {
   UI_TEXT_SCALES,
   type UiTextScale,
   DOC_TEXT_SIZE,
-  DOC_LINE_SPACINGS,
-  type DocLineSpacing,
+  DOC_LINE_SPACING,
+  DOC_LINE_HEIGHTS,
   DOC_LETTER_SPACINGS,
   type DocLetterSpacing,
   LETTER_SPACING_BY,
@@ -134,11 +134,12 @@ function readSettings(parsed: Raw | null): Settings {
         DOC_TEXT_SIZE,
         DEFAULT_SETTINGS.docTextSize,
       ),
-      docLineSpacing: DOC_LINE_SPACINGS.includes(
-        parsed.docLineSpacing as DocLineSpacing,
-      )
-        ? (parsed.docLineSpacing as DocLineSpacing)
-        : DEFAULT_SETTINGS.docLineSpacing,
+      docLineSpacing: storedInRange(
+        DOC_LINE_HEIGHTS[parsed.docLineSpacing as string] ??
+          parsed.docLineSpacing,
+        DOC_LINE_SPACING,
+        DEFAULT_SETTINGS.docLineSpacing,
+      ),
       docFont:
         typeof parsed.docFont === "string"
           ? parsed.docFont.trim()

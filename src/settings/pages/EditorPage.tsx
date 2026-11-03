@@ -6,8 +6,7 @@ import {
   UI_TEXT_SCALES,
   type UiTextScale,
   DOC_TEXT_SIZE,
-  DOC_LINE_SPACINGS,
-  type DocLineSpacing,
+  DOC_LINE_SPACING,
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
@@ -28,7 +27,7 @@ import { stepperLabels, TextFontRows } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
 import { NumberStepper } from "../../ui/NumberStepper";
-import { docTextSizeNow } from "../../theme/doc-type-now";
+import { docLineHeightNow, docTextSizeNow } from "../../theme/doc-type-now";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
@@ -89,33 +88,19 @@ export function EditorPage({
           />
         </SettingRow>
         <SettingRow label={t.docLineSpacingLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.docLineSpacingLabel}
-            value={settings.docLineSpacing}
-            onChange={(e) =>
-              setSettings({
-                docLineSpacing: e.target.value as DocLineSpacing,
-              })
+          <NumberStepper
+            value={
+              settings.docLineSpacing === "auto"
+                ? null
+                : settings.docLineSpacing
             }
-          >
-            {DOC_LINE_SPACINGS.map((spacing) => (
-              <option key={spacing} value={spacing}>
-                {
-                  t[
-                    (
-                      {
-                        auto: "docLineSpacingAuto",
-                        compact: "docLineSpacingCompact",
-                        standard: "docLineSpacingStandard",
-                        relaxed: "docLineSpacingRelaxed",
-                      } as const
-                    )[spacing]
-                  ]
-                }
-              </option>
-            ))}
-          </Select>
+            range={DOC_LINE_SPACING}
+            from={docLineHeightNow}
+            onChange={(height) =>
+              setSettings({ docLineSpacing: height ?? "auto" })
+            }
+            labels={stepperLabels(t, t.docLineSpacingLabel)}
+          />
         </SettingRow>
         <TextFontRows t={t} settings={settings} setSettings={setSettings} />
         {/* A phone's UI is sized by iOS's own text styles instead. */}

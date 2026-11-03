@@ -30,19 +30,12 @@ export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
 /** The document's text size in whole px, or "auto" for the theme's own. */
 export const DOC_TEXT_SIZE = { min: 10, max: 48, step: 1 } as const;
 export type DocTextSize = "auto" | number;
-/** The document's line spacing, or "auto" for the theme's own. */
-export const DOC_LINE_SPACINGS = [
-  "auto",
-  "compact",
-  "standard",
-  "relaxed",
-] as const;
-export type DocLineSpacing = (typeof DOC_LINE_SPACINGS)[number];
-/** Each spacing's line height. */
-export const DOC_LINE_HEIGHTS: Record<
-  Exclude<DocLineSpacing, "auto">,
-  number
-> = {
+/** The document's line height as a multiple of its text size, or "auto"
+ *  for the theme's own. */
+export const DOC_LINE_SPACING = { min: 1, max: 3, step: 0.05 } as const;
+export type DocLineSpacing = "auto" | number;
+/** The named spacings saved before it was a number, and their heights. */
+export const DOC_LINE_HEIGHTS: Record<string, number> = {
   compact: 1.55,
   standard: 1.8,
   relaxed: 2.05,

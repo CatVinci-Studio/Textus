@@ -11,7 +11,6 @@ import {
   useSettings,
   type Settings,
   type ThemeMode,
-  DOC_LINE_HEIGHTS,
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
@@ -132,7 +131,7 @@ export function useApplyAppearance(
     } else {
       root.style.setProperty(
         "--doc-line-height",
-        String(DOC_LINE_HEIGHTS[settings.docLineSpacing]),
+        String(settings.docLineSpacing),
       );
       root.setAttribute("data-doc-leading", "");
     }

@@ -5,7 +5,7 @@ import { letterSpacing } from "./apply-appearance";
 import { loadSettings } from "../prefs/SettingsContext";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
-describe("text font, size and character spacing", () => {
+describe("text font, size and spacing", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
 
@@ -48,6 +48,23 @@ describe("text font, size and character spacing", () => {
     expect(load(4)).toBe(10);
     expect(load("auto")).toBe("auto");
     expect(load("large")).toBe("auto");
+  });
+
+  it("reads line spacing as a number, the named spacings saved before included", () => {
+    const load = (spacing: unknown) => {
+      localStorage.setItem(
+        "catvinci-settings",
+        JSON.stringify({ docLineSpacing: spacing }),
+      );
+      return loadSettings().docLineSpacing;
+    };
+    expect(load(1.5)).toBe(1.5);
+    expect(load(1.234)).toBe(1.23);
+    expect(load(9)).toBe(3);
+    expect(load("compact")).toBe(1.55);
+    expect(load("relaxed")).toBe(2.05);
+    expect(load("auto")).toBe("auto");
+    expect(load("constructor")).toBe("auto");
   });
 
   it("follows the theme until a font is chosen", () => {

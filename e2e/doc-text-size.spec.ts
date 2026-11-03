@@ -33,10 +33,13 @@ test("the document takes the reader's text size and line spacing, and follows a 
   await size.fill("16");
   await size.press("Enter");
   await expect(text).toHaveCSS("font-size", "16px");
-  await page.getByRole("combobox", { name: "Line spacing" }).click();
+  const spacing = page.getByRole("spinbutton", { name: "Line spacing" });
+  await spacing.fill("1,5");
+  await spacing.press("Enter");
+  await expect(text).toHaveCSS("line-height", "24px");
   await page
-    .getByRole("listbox")
-    .getByRole("option", { name: "Theme's" })
+    .locator(".settings-row", { has: spacing })
+    .getByRole("button", { name: "Use the theme's" })
     .click();
   // The theme's own spacing again: Textus's default 1.8.
   await expect(text).toHaveCSS("line-height", "28.8px");
