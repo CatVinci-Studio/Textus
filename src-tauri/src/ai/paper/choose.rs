@@ -3,9 +3,9 @@
 //! piece it asks for - a paper, a review, a report - without the user
 //! having to say.
 
+use super::model::ask;
 use super::research::Model;
 use super::Genre;
-use aicompat::agent::{AgentTurn, StepResult};
 use serde_json::Value;
 
 /// The genre and length in characters `request` calls for. `asked` is the
@@ -30,30 +30,15 @@ pub(crate) async fn choose(model: &dyn Model, request: &str, asked: Option<u32>)
             None => "Choose a length within the kind's that the topic needs.".to_string(),
         },
     );
-    let reply = match model
-        .step(
-            &instructions,
-            &[AgentTurn::User {
-                text: format!("Request: {request}"),
-                images: Vec::new(),
-            }],
-            &[],
-        )
+    let reply = ask(model, &instructions, format!("Request: {request}"), &|_| {})
         .await
-    {
-        Ok(StepResult::Done(text)) => text,
-        _ => String::new(),
-    };
+        .unwrap_or_default();
     read(&reply, asked)
 }
 
 /// The genre and length in `reply`, fitted to the genre's lengths.
 pub(crate) fn read(reply: &str, asked: Option<u32>) -> (Genre, u32) {
-    let parsed: Value = reply
-        .find('{')
-        .zip(reply.rfind('}'))
-        .and_then(|(a, b)| serde_json::from_str(reply.get(a..=b)?).ok())
-        .unwrap_or_default();
+    let parsed: Value = crate::ai::json_reply::object(reply).unwrap_or_default();
     let genre = parsed["genre"]
         .as_str()
         .and_then(|name| Genre::ALL.into_iter().find(|g| g.profile().name == name));

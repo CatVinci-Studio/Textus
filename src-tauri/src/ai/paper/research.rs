@@ -6,6 +6,7 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
+use super::model::ask;
 pub(crate) use super::model::{clip, Model, Watch};
 use super::notes::NoteTaker;
 pub(crate) use super::notes::ADD_NOTE_TOOL;
@@ -15,7 +16,7 @@ use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, StepResult, ToolCall};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
 use futures_util::stream::{self, StreamExt};
 use std::path::Path;
 use std::sync::Mutex;
@@ -159,13 +160,7 @@ pub(crate) async fn plan_questions(
         let opening: String = text.chars().take(PLAN_GLIMPSE).collect();
         message.push_str(&format!("\n\nThe user attached {path}:\n{opening}"));
     }
-    let reply = match model
-        .step_watched(&instructions, &[user(message)], &[], watch)
-        .await?
-    {
-        StepResult::Done(text) => text,
-        StepResult::ToolCalls(_) => String::new(),
-    };
+    let reply = ask(model, &instructions, message, watch).await?;
     let mut questions = parse_questions(&reply);
     questions.truncate(profile.scale.questions.1);
     if questions.len() < 2.min(profile.scale.questions.0) {
@@ -177,10 +172,7 @@ pub(crate) async fn plan_questions(
 /// The questions in a reply: its JSON array of strings, or failing that its
 /// list lines ("1. …", "- …").
 pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
-    let from_json = reply
-        .find('[')
-        .zip(reply.rfind(']'))
-        .and_then(|(a, b)| serde_json::from_str::<Vec<String>>(reply.get(a..=b)?).ok());
+    let from_json = crate::ai::json_reply::array::<Vec<String>>(reply);
     let questions = from_json.unwrap_or_else(|| {
         reply
             .lines()

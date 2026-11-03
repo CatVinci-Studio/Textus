@@ -48,8 +48,7 @@ fn offer_input(exchange: &Exchange, skills: &[AgentSkill]) -> String {
 /// The offer in the answer, or none: an offer needs all three parts, and
 /// a name no skill of the user's has.
 pub(crate) fn parse_offer(answer: &str, skills: &[AgentSkill]) -> Option<SkillOffer> {
-    let (start, end) = (answer.find('{')?, answer.rfind('}')?);
-    let value: serde_json::Value = serde_json::from_str(answer.get(start..=end)?).ok()?;
+    let value: serde_json::Value = crate::ai::json_reply::object(answer)?;
     let offer: SkillOffer = serde_json::from_value(value.get("skill")?.clone()).ok()?;
     // As the `/` menu names a skill (parse_skill_file): words joined by -.
     let offer = SkillOffer {

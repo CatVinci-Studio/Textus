@@ -169,6 +169,26 @@ pub(crate) fn clip(text: &str) -> String {
     format!("{cut}…")
 }
 
+/// One tool-less step, as it streams to `watch`: the model's reply to
+/// `message`, or "" when it calls a tool anyway.
+pub(crate) async fn ask(
+    model: &dyn Model,
+    instructions: &str,
+    message: String,
+    watch: Watch<'_>,
+) -> Result<String, String> {
+    let turns = [AgentTurn::User {
+        text: message,
+        images: Vec::new(),
+    }];
+    Ok(
+        match model.step_watched(instructions, &turns, &[], watch).await? {
+            StepResult::Done(text) => text,
+            StepResult::ToolCalls(_) => String::new(),
+        },
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

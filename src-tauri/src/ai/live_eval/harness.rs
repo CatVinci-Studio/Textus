@@ -1242,10 +1242,7 @@ pub fn judge(
         else {
             continue;
         };
-        let (Some(start), Some(end)) = (raw.find('{'), raw.rfind('}')) else {
-            continue;
-        };
-        let Ok(v) = serde_json::from_str::<Value>(&raw[start..=end]) else {
+        let Some(v) = crate::ai::json_reply::object::<Value>(&raw) else {
             continue;
         };
         let mut verdict = Verdict {
