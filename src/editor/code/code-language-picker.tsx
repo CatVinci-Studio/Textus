@@ -3,8 +3,7 @@ import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { isIOSApp } from "../../platform/capabilities";
 import { Select } from "../../ui/Select";
-import { usePresence, useMergedRef } from "../../ui/usePresence";
-import { useFloatingList } from "../../ui/useFloatingList";
+import { useFloatingMenu } from "../../ui/useFloatingList";
 import { isImeKeydown } from "../../utils/ime";
 
 export interface LanguagePickerProps {
@@ -72,13 +71,6 @@ export function mountLanguagePicker(container: HTMLElement) {
       queueMicrotask(() => done?.unmount());
     },
   };
-}
-
-function useFloatingMenu(open: boolean, active: number, dismiss: () => void) {
-  const floating = useFloatingList(open, active, dismiss);
-  const presence = usePresence(open, { exitMs: 120 });
-  const listRef = useMergedRef(floating.listRef, presence.ref);
-  return { ...floating, listRef, presence };
 }
 
 function LanguageMenu({

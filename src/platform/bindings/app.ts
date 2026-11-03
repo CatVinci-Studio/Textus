@@ -99,7 +99,7 @@ export const commands = {
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
-	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
+	system_font_families: () => __TAURI_INVOKE<FontFamily[]>("system_font_families"),
 	/**
 	 *  Files `report`. "LIMIT" when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
@@ -277,6 +277,18 @@ export type DetachedTab_Serialize = {
 	helpDoc?: string,
 	/**  The Word document an unsaved tab was opened from. */
 	importedFrom?: string,
+};
+
+/**
+ *  One family: the name CSS knows it by, and what it is called in the UI's
+ *  languages where the font says (宋体 for SimSun), so it can be shown and
+ *  found by the name its reader knows. `FontFamily` in
+ *  src/settings/sections/font-families.ts reads it.
+ */
+export type FontFamily = {
+	name: string,
+	/**  By UI language code ("zh", "zh-Hant", "ja", ...). */
+	local: { [key in string]: string },
 };
 
 /**  A stylesheet fetched to install the theme, which counts the install. */

@@ -576,6 +576,10 @@ export function installDevTauriShim(): void {
         return Promise.resolve(
           w.__devSystem ?? { os: "Linux", arch: "x86_64", webview: "dev" },
         );
+      // `window.__devFonts = [{ name, local }]` stands in for the installed
+      // fonts; none by default, as in the browser build.
+      case "system_font_families":
+        return Promise.resolve(w.__devFonts ?? []);
       case "list_recent_files":
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":

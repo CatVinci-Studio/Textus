@@ -132,10 +132,11 @@ export function useApplyAppearance(
       root.setAttribute("data-doc-leading", "");
     }
     if (settings.docFont) {
-      // The theme's stack after it covers what the chosen font lacks.
+      // The theme's stack after it covers what the chosen font lacks; the
+      // Default theme sets none, and an unset var() would void the rule.
       root.style.setProperty(
         "--doc-chosen-font",
-        `${JSON.stringify(settings.docFont)}, var(--doc-font)`,
+        `${JSON.stringify(settings.docFont)}, var(--doc-font, var(--font-sans))`,
       );
       root.setAttribute("data-doc-font", "");
     } else {

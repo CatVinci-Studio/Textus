@@ -1,0 +1,74 @@
+/* The text font list: a search pinned on top, then rows of one height each
+   (FontPicker.tsx's ROW), as only those in view are drawn. */
+.font-picker-menu {
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  box-sizing: border-box;
+}
+
+.font-picker-search {
+  position: sticky;
+  /* Above the rows, which are positioned too. */
+  z-index: 1;
+  top: -4px;
+  margin: -4px -4px 4px;
+  padding: 4px;
+  background: var(--ui-bg);
+}
+
+.font-picker-search input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--control-height-sm);
+  padding: 4px 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+}
+
+.font-picker-search input:focus {
+  outline: none;
+  border-color: var(--ui-accent);
+}
+
+.font-picker-option,
+.font-picker-heading {
+  height: 32px;
+  box-sizing: border-box;
+}
+
+.font-picker-heading {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 8px 4px;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
+}
+
+/* The name in its own face, as large as the list's text. */
+.font-picker-face {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--text-body-large);
+}
+
+/* Its CSS name, when the name shown is another (宋体, SimSun). */
+.font-picker-name {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.font-picker-empty {
+  padding: 8px;
+  color: var(--ui-muted);
+}
