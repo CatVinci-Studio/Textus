@@ -179,6 +179,10 @@ export const commands = {
 	theme_gallery_preview: (path: string) => __TAURI_INVOKE<string>("theme_gallery_preview", { path }),
 	cli_command_status: () => __TAURI_INVOKE<boolean>("cli_command_status"),
 	install_cli_command: () => __TAURI_INVOKE<null>("install_cli_command"),
+	/**  A window's frontend starts (`on`) or stops taking requests. */
+	cli_listening: (on: boolean) => __TAURI_INVOKE<void>("cli_listening", { on }),
+	/**  A window's answer to request `id`. */
+	cli_respond: (id: string, out: string, err: string, exit: number) => __TAURI_INVOKE<void>("cli_respond", { id, out, err, exit }),
 	/**  The tray now, for Settings as it opens. */
 	background_status: () => __TAURI_INVOKE<Status>("background_status"),
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),

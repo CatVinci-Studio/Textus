@@ -7,6 +7,8 @@ mod atomic;
 mod auth;
 #[cfg(desktop)]
 mod background;
+#[cfg(desktop)]
+pub mod cli;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(all(test, desktop))]
 mod bindings;
@@ -94,6 +96,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(cli::app::CliBridge::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -164,6 +167,7 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     commands::cli::try_silent_install();
+    cli::app::start(app.handle());
 
     menu::install(app)?;
 
@@ -481,6 +485,10 @@ pub fn run() {
             cli_command_status,
             #[cfg(desktop)]
             install_cli_command,
+            #[cfg(desktop)]
+            cli::app::cli_listening,
+            #[cfg(desktop)]
+            cli::app::cli_respond,
             #[cfg(desktop)]
             commands::fs::move_picture_to_trash,
             #[cfg(desktop)]
