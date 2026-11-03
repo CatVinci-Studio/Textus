@@ -37,7 +37,13 @@ export interface FloatingChange {
   /** False while folded, so the page can stop its animations. */
   visible: boolean;
   place: "desktop" | "window";
+  /** The half of the window, or of the screen, it sits in: a character
+   *  there can face the middle. */
+  side: "left" | "right";
 }
+
+/** A click, a few quick ones (petting), or a drag that moved it. */
+export type FloatingTouch = "poke" | "pet" | "moved";
 
 const KEY = "textus.floatingViews";
 const open = new Map<string, FloatingView>();
@@ -64,6 +70,20 @@ function save(view: string, value: Saved) {
   }
 }
 
+/** The screen's left edge among several (WebKit and Chromium know it). */
+const screenLeft = () =>
+  (window.screen as Screen & { availLeft?: number }).availLeft ?? 0;
+
+/** Left or right of the middle; unplaced views start by the right edge. */
+export function floatingSide(view: FloatingView): "left" | "right" {
+  if (view.x === null) return "right";
+  const [x, room] =
+    view.place === "window"
+      ? [view.x * window.innerWidth, window.innerWidth]
+      : [view.x - screenLeft(), window.screen.availWidth];
+  return x + view.width / 2 < room / 2 ? "left" : "right";
+}
+
 function changed(view: FloatingView, isOpen: boolean) {
   version++;
   setFloatingCount(open.size);
@@ -75,6 +95,7 @@ function changed(view: FloatingView, isOpen: boolean) {
     open: isOpen,
     visible: isOpen && !view.folded,
     place: view.place,
+    side: floatingSide(view),
   });
 }
 
@@ -90,6 +111,30 @@ export function floatingOnDesktop(): Promise<boolean> {
   return desktopHere;
 }
 
+const PET_MS = 1200;
+let pokes: { view: string; at: number[] } = { view: "", at: [] };
+
+/** The user touched a view: three clicks in a moment are petting. */
+export function touchFloating(view: string, kind: "poke" | "moved") {
+  const current = open.get(view);
+  if (!current) return;
+  let touch: FloatingTouch = kind;
+  if (kind === "poke") {
+    const now = Date.now();
+    const recent = pokes.view === view ? pokes.at : [];
+    pokes = { view, at: [...recent.filter((t) => now - t < PET_MS), now] };
+    if (pokes.at.length >= 3) {
+      touch = "pet";
+      pokes = { view, at: [] };
+    }
+  }
+  emitPluginEvent("floatingTouch", {
+    plugin: current.plugin,
+    view,
+    kind: touch,
+  });
+}
+
 export function subscribeFloating(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
@@ -103,14 +148,10 @@ export function openFloatingViews(): FloatingView[] {
   return [...open.values()];
 }
 
-export function floatingView(view: string): FloatingView | undefined {
-  return open.get(view);
-}
-
-/** Where a view goes when nothing was remembered: on the desktop where it
- *  can be, else in the window. */
+/** Where a view goes when nothing was remembered: in the window, unless
+ *  it floats only over the desktop and can here. */
 function firstPlace(allowed: FloatingPlace, desktop: boolean) {
-  return allowed === "window" || !desktop ? "window" : "desktop";
+  return allowed === "desktop" && desktop ? "desktop" : "window";
 }
 
 export function showFloating(

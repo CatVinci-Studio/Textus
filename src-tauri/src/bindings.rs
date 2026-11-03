@@ -88,6 +88,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::floating_window::close_floating_window,
                 crate::commands::floating_window::resize_floating_window,
                 crate::commands::floating_window::floating_window_position,
+                crate::commands::floating_window::show_floating_owner,
                 crate::commands::chat_window::take_chat_handoff,
                 crate::commands::chat_window::close_chat_window,
                 crate::commands::web_page::web_page_show,

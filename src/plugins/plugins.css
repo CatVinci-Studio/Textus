@@ -924,8 +924,8 @@ button.mcp-homepage:hover {
 }
 
 /* Plugins' floating views in the window: over the editor, under menus and
-   dialogs. The page is transparent; a bar over its top, shown on hover,
-   moves, folds and closes it. */
+   dialogs. The page is transparent and looked at, not clicked: a layer over
+   it moves the view and opens its menu. */
 .floating-views {
   position: fixed;
   inset: 0;
@@ -940,55 +940,14 @@ button.mcp-homepage:hover {
 .floating-view .plugin-webview-frame {
   background: transparent;
 }
-.floating-view[data-dragging] iframe {
-  pointer-events: none;
-}
-.floating-view-bar {
+.floating-view-handle {
   position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 22px;
-  padding: 0 2px;
-  border-radius: var(--shape-s);
-  background: color-mix(in srgb, var(--ui-bg) 85%, transparent);
-  box-shadow: var(--shadow-raised);
-  opacity: 0;
-  transition: opacity var(--dur-fast) var(--ease-standard);
-}
-.floating-view:hover .floating-view-bar,
-.floating-view:focus-within .floating-view-bar,
-.floating-view[data-dragging] .floating-view-bar {
-  opacity: 1;
-}
-.floating-view-grip {
-  flex: 1;
-  height: 100%;
+  inset: 0;
   cursor: grab;
   touch-action: none;
 }
-.floating-view[data-dragging] .floating-view-grip {
+.floating-view[data-dragging] .floating-view-handle {
   cursor: grabbing;
-}
-.floating-view-action {
-  width: 20px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--shape-xs);
-  background: none;
-  color: var(--ui-muted);
-  font: inherit;
-  font-size: var(--text-caption);
-  line-height: 1;
-  cursor: pointer;
-}
-.floating-view-action:hover {
-  background: var(--ui-hover);
-  color: var(--ui-text);
 }
 .floating-view-dot {
   width: 36px;

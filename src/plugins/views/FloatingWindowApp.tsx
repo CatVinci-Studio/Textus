@@ -8,6 +8,8 @@ import {
 } from "../../platform/events";
 import { thisWindow } from "../../platform/this-window";
 import { windowIpc } from "../../platform/ipc";
+import { popUpNativeMenu } from "../../platform/native-menu";
+import { OPEN_AGENT_PANEL_EVENT } from "../../utils/events";
 import { currentStrings } from "../../i18n/current";
 import {
   FLOATING_DOWN,
@@ -33,8 +35,8 @@ function up(payload: Up) {
 
 /**
  * The window a floating view floats in over the desktop: transparent, the
- * plugin's page in a sandboxed frame as in the editor window, and the same
- * bar to move, fold and close it. The editor window runs the plugin; this
+ * plugin's page in a sandboxed frame as in the editor window, dragged
+ * anywhere and with a right-click menu as there, which also opens Textus. The editor window runs the plugin; this
  * one passes the frame's messages to it and its answers back.
  */
 export function FloatingWindowApp() {
@@ -104,7 +106,7 @@ export function FloatingWindowApp() {
       from &&
       Math.hypot(at[0] - (from[0] ?? 0), at[1] - (from[1] ?? 0)) < 3
     ) {
-      if (folded) up({ kind: "unfold" });
+      up({ kind: folded ? "unfold" : "poke" });
       return;
     }
     up({ kind: "moved", x: at[0], y: at[1] });
@@ -123,6 +125,38 @@ export function FloatingWindowApp() {
       </button>
     );
 
+  /** The system's menu: the window is too small to draw one in. */
+  const menu = (event: React.MouseEvent) => {
+    event.preventDefault();
+    void popUpNativeMenu([
+      {
+        label: t.floatingOpenApp,
+        run: () => void windowIpc.showFloatingOwner(OWNER),
+      },
+      {
+        label: t.floatingOpenAi,
+        run: () => {
+          void windowIpc.showFloatingOwner(OWNER);
+          void emitToWindow(OWNER, OPEN_AGENT_PANEL_EVENT, null);
+        },
+      },
+      "separator",
+      {
+        label: t.floatingToWindow.replace("{name}", title),
+        run: () => up({ kind: "toWindow" }),
+      },
+      {
+        label: t.floatingFold.replace("{name}", title),
+        run: () => up({ kind: "fold" }),
+      },
+      "separator",
+      {
+        label: t.floatingClose.replace("{name}", title),
+        run: () => up({ kind: "close" }),
+      },
+    ]);
+  };
+
   return (
     <div
       className="floating-view floating-window"
@@ -130,40 +164,11 @@ export function FloatingWindowApp() {
       aria-label={title}
     >
       <div ref={boxRef} className="plugin-webview plugin-webview-panel" />
-      <div className="floating-view-bar">
-        <div
-          className="floating-view-grip"
-          role="button"
-          tabIndex={-1}
-          aria-label={t.floatingMove.replace("{name}", title)}
-          onPointerDown={(e) => void drag(e)}
-        />
-        <button
-          type="button"
-          className="floating-view-action"
-          aria-label={t.floatingToWindow.replace("{name}", title)}
-          title={t.floatingToWindow.replace("{name}", title)}
-          onClick={() => up({ kind: "toWindow" })}
-        >
-          ⇲
-        </button>
-        <button
-          type="button"
-          className="floating-view-action"
-          aria-label={t.floatingFold.replace("{name}", title)}
-          onClick={() => up({ kind: "fold" })}
-        >
-          –
-        </button>
-        <button
-          type="button"
-          className="floating-view-action"
-          aria-label={t.floatingClose.replace("{name}", title)}
-          onClick={() => up({ kind: "close" })}
-        >
-          ×
-        </button>
-      </div>
+      <div
+        className="floating-view-handle"
+        onPointerDown={(e) => void drag(e)}
+        onContextMenu={menu}
+      />
     </div>
   );
 }

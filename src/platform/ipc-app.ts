@@ -123,6 +123,9 @@ export const windowIpc = {
     ),
   floatingWindowPosition: (view: string) =>
     desktopQueryCommand("floating_window_position", null, view),
+  /** The editor window a floating view belongs to, to the front. */
+  showFloatingOwner: (owner: string) =>
+    desktopQueryCommand("show_floating_owner", undefined, owner),
 };
 
 // Menu: only where the app draws its own because the native bar is gone.

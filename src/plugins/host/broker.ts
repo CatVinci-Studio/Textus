@@ -130,6 +130,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   aiState: null,
   activity: null,
   floating: null,
+  floatingTouch: null,
 };
 
 export class PluginHost {
@@ -343,9 +344,9 @@ export class PluginHost {
           event,
           event === "settings" || event === "editorKey"
             ? () => {}
-            : event === "floating"
-              ? onPluginEvent("floating", (data) => {
-                  if (data.plugin === this.id) this.event("floating", data);
+            : event === "floating" || event === "floatingTouch"
+              ? onPluginEvent(event, (data) => {
+                  if (data.plugin === this.id) this.event(event, data);
                 })
               : onPluginEvent(event, (data) => this.event(event, data)),
         );

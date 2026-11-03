@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { windowInfo } from "../store/plugin-records";
+import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import { Presence } from "../../ui/usePresence";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import {
@@ -9,6 +11,7 @@ import {
   moveFloating,
   openFloatingViews,
   subscribeFloating,
+  touchFloating,
   type FloatingView,
 } from "./floating-views";
 
@@ -17,8 +20,8 @@ const MARGIN = 8;
 
 /**
  * Plugins' floating views shown in this window: each a frame of its own
- * size over the editor, moved by the bar that appears over its top on
- * hover, folded to a dot or closed from it.
+ * size over the editor, dragged anywhere to move it, folded to a dot or
+ * closed from its right-click menu.
  */
 export function FloatingViews() {
   useSyncExternalStore(subscribeFloating, floatingVersion);
@@ -71,8 +74,14 @@ function FloatingBox({
   desktop: boolean;
 }) {
   const t = windowInfo().strings();
-  const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
+  const [drag, setDrag] = useState<{
+    dx: number;
+    dy: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const [live, setLive] = useState<{ left: number; top: number } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const moved = useRef(false);
   const width = view.folded ? DOT : view.width;
   const height = view.folded ? DOT : view.height;
@@ -82,10 +91,17 @@ function FloatingBox({
     if (event.button !== 0) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     moved.current = false;
-    setDrag({ dx: event.clientX - at.left, dy: event.clientY - at.top });
+    setDrag({
+      dx: event.clientX - at.left,
+      dy: event.clientY - at.top,
+      x: event.clientX,
+      y: event.clientY,
+    });
   };
   const move = (event: React.PointerEvent) => {
     if (!drag) return;
+    // A hand's tremor is still a click.
+    if (Math.hypot(event.clientX - drag.x, event.clientY - drag.y) < 4) return;
     moved.current = true;
     setLive({
       left: clamp(event.clientX - drag.dx, width, window.innerWidth),
@@ -93,11 +109,13 @@ function FloatingBox({
     });
   };
   const end = () => {
-    if (drag && live)
+    if (drag && live) {
       moveFloating(view.view, {
         x: live.left / window.innerWidth,
         y: live.top / window.innerHeight,
       });
+      touchFloating(view.view, "moved");
+    } else if (drag && !view.folded) touchFloating(view.view, "poke");
     setDrag(null);
     setLive(null);
   };
@@ -125,6 +143,26 @@ function FloatingBox({
       </button>
     );
 
+  const items: ContextMenuEntry[] = [
+    ...(view.allowed === "either" && desktop
+      ? [
+          {
+            label: t.floatingToDesktop.replace("{name}", view.title),
+            onSelect: () => moveFloating(view.view, { place: "desktop" }),
+          },
+        ]
+      : []),
+    {
+      label: t.floatingFold.replace("{name}", view.title),
+      onSelect: () => moveFloating(view.view, { folded: true }),
+    },
+    "separator",
+    {
+      label: t.floatingClose.replace("{name}", view.title),
+      onSelect: () => closeFloating(view.view),
+    },
+  ];
+
   return (
     <div
       className="floating-view"
@@ -139,43 +177,26 @@ function FloatingBox({
         view={view.view}
         kind="floating"
       />
-      <div className="floating-view-bar">
-        <div
-          className="floating-view-grip"
-          role="button"
-          tabIndex={-1}
-          aria-label={t.floatingMove.replace("{name}", view.title)}
-          title={view.title}
-          {...dragHandlers}
-        />
-        {view.allowed === "either" && desktop && (
-          <button
-            type="button"
-            className="floating-view-action"
-            aria-label={t.floatingToDesktop.replace("{name}", view.title)}
-            title={t.floatingToDesktop.replace("{name}", view.title)}
-            onClick={() => moveFloating(view.view, { place: "desktop" })}
-          >
-            ⇱
-          </button>
+      {/* The page is looked at, not clicked: dragging anywhere moves it,
+          and its menu is a right-click away. */}
+      <div
+        className="floating-view-handle"
+        {...dragHandlers}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setMenu({ x: e.clientX, y: e.clientY });
+        }}
+      />
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={items}
+            onClose={() => setMenu(null)}
+          />
         )}
-        <button
-          type="button"
-          className="floating-view-action"
-          aria-label={t.floatingFold.replace("{name}", view.title)}
-          onClick={() => moveFloating(view.view, { folded: true })}
-        >
-          –
-        </button>
-        <button
-          type="button"
-          className="floating-view-action"
-          aria-label={t.floatingClose.replace("{name}", view.title)}
-          onClick={() => closeFloating(view.view)}
-        >
-          ×
-        </button>
-      </div>
+      </Presence>
     </div>
   );
 }

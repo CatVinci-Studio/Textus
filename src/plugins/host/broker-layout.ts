@@ -6,6 +6,7 @@ import { localize } from "../store/manifest";
 import { webviewsOf } from "../views/webviews";
 import {
   closeFloating,
+  floatingSide,
   openFloatingViews,
   showContribution,
 } from "../views/floating-views";
@@ -144,6 +145,7 @@ export function layoutHandlers(p: PluginScope) {
           open: true,
           visible: !v.folded,
           place: v.place,
+          side: floatingSide(v),
         })),
     "layout.activeTab": () => access().activeTab(),
     "layout.tabs": () => access().tabs(),

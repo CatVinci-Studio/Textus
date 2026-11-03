@@ -7,6 +7,9 @@ export interface AiState {
   state: AiActivity;
   /** The service and model in use; null before Textus AI is first used. */
   model: { provider: string; id: string | null } | null;
+  /** On going idle after a request: whether it finished, failed or was
+   *  stopped. */
+  ended?: "done" | "failed" | "stopped";
 }
 
 let current: AiState = { state: "idle", model: null };
@@ -20,8 +23,13 @@ export function reportAiState(
   state: AiActivity,
   provider: string,
   model: string | null,
+  ended?: AiState["ended"],
 ) {
-  const next: AiState = { state, model: { provider, id: model } };
+  const next: AiState = {
+    state,
+    model: { provider, id: model },
+    ...(ended ? { ended } : {}),
+  };
   if (
     next.state === current.state &&
     next.model?.provider === current.model?.provider &&

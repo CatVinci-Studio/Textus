@@ -118,6 +118,21 @@ pub fn floating_window_position(app: tauri::AppHandle, view: String) -> Option<(
     Some((at.x, at.y))
 }
 
+/// The editor window a floating view belongs to, brought to the front: a
+/// view on the desktop opens Textus from its menu.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn show_floating_owner(app: tauri::AppHandle, owner: String) {
+    if !crate::commands::chat_window::is_editor_window(&owner) {
+        return;
+    }
+    if let Some(window) = app.get_webview_window(&owner) {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

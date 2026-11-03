@@ -1,5 +1,5 @@
 import type { AiState } from "./ai-state";
-import type { FloatingChange } from "./views/floating-views";
+import type { FloatingChange, FloatingTouch } from "./views/floating-views";
 import type { SentBlock } from "../ai/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
 import type { EditProposal } from "../ai/types";
@@ -180,6 +180,9 @@ export interface PluginEventMap {
   /** One of the plugin's floating views opened, closed, folded or moved
    *  (told to that plugin only). */
   floating: FloatingChange & { plugin: string };
+  /** The user poked, petted or carried one of the plugin's floating views
+   *  (told to that plugin only). */
+  floatingTouch: { plugin: string; view: string; kind: FloatingTouch };
 }
 
 type Listener<K extends keyof PluginEventMap> = (

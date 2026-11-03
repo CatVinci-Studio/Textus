@@ -440,6 +440,8 @@ pub fn run() {
             #[cfg(desktop)]
             commands::floating_window::floating_window_position,
             #[cfg(desktop)]
+            commands::floating_window::show_floating_owner,
+            #[cfg(desktop)]
             commands::chat_window::detach_chat_window,
             #[cfg(desktop)]
             commands::chat_window::take_chat_handoff,

@@ -162,6 +162,9 @@ export function useWindowWiring({
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: panels.toggleSidebar,
     onToggleAgentPanel: panels.toggleAgentPanel,
+    onOpenAgentPanel: () => {
+      if (!panels.agentPanel.open) panels.toggleAgentPanel();
+    },
     onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: docs.toggleSplitView,
     onToggleReadOnly: () => docs.toggleReadOnly(),

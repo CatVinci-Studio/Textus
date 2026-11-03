@@ -3,8 +3,9 @@ import { openApp } from "./helpers";
 
 /**
  * A plugin's floating view: opened by the plugin, a transparent page of its
- * own size over the window, moved by its bar, folded to a dot and closed by
- * the user - and the plugin hears each change.
+ * own size over the window, dragged anywhere, folded to a dot and closed
+ * from its right-click menu - and the plugin hears each change, and which
+ * half of the window it sits in.
  */
 
 const HOST = `
@@ -18,6 +19,7 @@ exports.activate = function (ctx) {
     textus.layout.onDidChangeFloating(function (change) {
       if (!change.visible)
         textus.ui.notice((change.open ? "folded" : "closed") + " in " + change.place);
+      else textus.ui.notice("on the " + change.side);
     }),
   );
   textus.layout.openFloating("test.float.pet");
@@ -81,18 +83,17 @@ test("a floating view opens over the window, moves, folds and closes", async ({
     "rgba(0, 0, 0, 0)",
   );
 
-  // Its bar moves it; where it was left is remembered.
-  const before = await view.boundingBox();
-  await view.hover();
-  const grip = view.getByRole("button", { name: "Move Pet" });
-  const box = (await grip.boundingBox())!;
-  await page.mouse.move(box.x + 10, box.y + box.height / 2);
+  // Dragged by any part of it; where it was left is remembered.
+  const before = (await view.boundingBox())!;
+  await page.mouse.move(before.x + 60, before.y + 60);
   await page.mouse.down();
-  await page.mouse.move(box.x - 190, box.y - 140, { steps: 6 });
+  await page.mouse.move(60, before.y - 80, { steps: 8 });
   await page.mouse.up();
   const after = (await view.boundingBox())!;
-  expect(after.x).toBeLessThan(before!.x - 150);
-  expect(after.y).toBeLessThan(before!.y - 100);
+  expect(after.x).toBeLessThan(before.x - 150);
+  expect(after.y).toBeLessThan(before.y - 50);
+  // Now in the left half: a character there turns to face the middle.
+  await expect(page.getByText("on the left")).toBeVisible();
   const saved = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("textus.floatingViews") ?? "{}"),
   );
@@ -104,15 +105,19 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   expect((await view.boundingBox())!.x).toBeCloseTo(after.x, -1);
 
   // Folded to a dot and back; the plugin hears it go out of sight.
-  await view.getByRole("button", { name: "Fold Pet" }).click();
+  await view.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Fold Pet" }).click();
   await expect(view).toHaveCount(0);
   await expect(page.getByText("folded in window")).toBeVisible();
   const dot = page.getByRole("button", { name: "Unfold Pet" });
   await dot.click();
   await expect(view).toBeVisible();
 
-  await view.hover();
-  await view.getByRole("button", { name: "Close Pet" }).click();
+  await view.click({ button: "right" });
+  await expect(
+    page.getByRole("menuitem", { name: "Float Pet on the desktop" }),
+  ).toHaveCount(0);
+  await page.getByRole("menuitem", { name: "Close Pet" }).click();
   await expect(view).toHaveCount(0);
   await expect(dot).toHaveCount(0);
   await expect(page.getByText("closed in window")).toBeVisible();

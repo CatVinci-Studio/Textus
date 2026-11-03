@@ -588,6 +588,7 @@
         return call("layout.floatingViews");
       },
       onDidChangeFloating: on("floating"),
+      onDidTouchFloating: on("floatingTouch"),
     },
     views: {
       registerList: function (id, provider) {

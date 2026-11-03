@@ -70,6 +70,11 @@ export const commands = {
 	/**  Where the window is now, in screen points, to open there next time. */
 	floating_window_position: (view: string) => __TAURI_INVOKE<[number | null, number | null] | null>("floating_window_position", { view }),
 	/**
+	 *  The editor window a floating view belongs to, brought to the front: a
+	 *  view on the desktop opens Textus from its menu.
+	 */
+	show_floating_owner: (owner: string) => __TAURI_INVOKE<void>("show_floating_owner", { owner }),
+	/**
 	 *  Claimed by the chat window's frontend at mount, and again whenever
 	 *  CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 	 */

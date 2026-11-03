@@ -20,6 +20,7 @@ import {
 import {
   closeFloating,
   moveFloating,
+  touchFloating,
   type FloatingView,
 } from "./floating-views";
 
@@ -35,6 +36,7 @@ export type FloatingUp =
   | { view: string; kind: "message"; message: unknown }
   | { view: string; kind: "state"; state: unknown }
   | { view: string; kind: "moved"; x: number; y: number }
+  | { view: string; kind: "poke" }
   | { view: string; kind: "fold" | "unfold" | "close" | "toWindow" };
 
 /** What the editor window sends down: the page, then the frame's calls. */
@@ -143,8 +145,10 @@ function useFloatingWindow(view: FloatingView): string | null {
       unlistenAll(
         listenToThisWindow<FloatingUp>(FLOATING_UP, ({ payload }) => {
           if (payload.view !== view.view) return;
-          if (payload.kind === "moved")
+          if (payload.kind === "moved") {
             moveFloating(view.view, { x: payload.x, y: payload.y });
+            touchFloating(view.view, "moved");
+          } else if (payload.kind === "poke") touchFloating(view.view, "poke");
           else if (payload.kind === "fold" || payload.kind === "unfold")
             moveFloating(view.view, { folded: payload.kind === "fold" });
           else if (payload.kind === "close") closeFloating(view.view);

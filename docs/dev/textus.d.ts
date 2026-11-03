@@ -341,6 +341,12 @@ declare global {
       /** One of them opened, closed, folded or moved: stop animating while
        *  `visible` is false. */
       onDidChangeFloating: Event<FloatingViewState>;
+      /** The user clicked one ("poke"), clicked it three times in a moment
+       *  ("pet") or dragged it somewhere ("moved"). */
+      onDidTouchFloating: Event<{
+        view: string;
+        kind: "poke" | "pet" | "moved";
+      }>;
     }
 
     interface FloatingViewState {
@@ -349,6 +355,9 @@ declare global {
       /** False while folded to a dot or closed. */
       visible: boolean;
       place: "desktop" | "window";
+      /** The half of the window or screen it sits in: a character there
+       *  can face the middle. */
+      side: "left" | "right";
     }
 
     interface TabInfo {
@@ -892,6 +901,8 @@ declare global {
       state: "idle" | "thinking" | "writing" | "proposing";
       /** null before Textus AI is first used. */
       model: { provider: string; id: string | null } | null;
+      /** On going idle after a request: finished, failed or stopped. */
+      ended?: "done" | "failed" | "stopped";
     }
 
     interface Plugins {

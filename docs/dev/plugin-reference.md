@@ -244,15 +244,17 @@ type FormField =
 | `closeFloating(viewId: string): Promise<void>`                                                          |                                                                                                                                                                                                                                                                              |
 | `floatingViews(): Promise<FloatingViewState[]>`                                                         | The plugin's floating views that are open.                                                                                                                                                                                                                                   |
 | `onDidChangeFloating: Event<FloatingViewState>`                                                         | One of them opened, closed, folded or moved: stop animating while `visible` is false.                                                                                                                                                                                        |
+| `onDidTouchFloating: Event<{ view: string; kind: "poke" \| "pet" \| "moved"; }>`                        | The user clicked one ("poke"), clicked it three times in a moment ("pet") or dragged it somewhere ("moved").                                                                                                                                                                 |
 
 ## FloatingViewState
 
-| Member                         |                                        |
-| ------------------------------ | -------------------------------------- |
-| `view: string`                 |                                        |
-| `open: boolean`                |                                        |
-| `visible: boolean`             | False while folded to a dot or closed. |
-| `place: "desktop" \| "window"` |                                        |
+| Member                         |                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `view: string`                 |                                                                                     |
+| `open: boolean`                |                                                                                     |
+| `visible: boolean`             | False while folded to a dot or closed.                                              |
+| `place: "desktop" \| "window"` |                                                                                     |
+| `side: "left" \| "right"`      | The half of the window or screen it sits in: a character there can face the middle. |
 
 ## TabInfo
 
@@ -598,10 +600,11 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 
 ## AiState
 
-| Member                                                    |                                      |
-| --------------------------------------------------------- | ------------------------------------ |
-| `state: "idle" \| "thinking" \| "writing" \| "proposing"` |                                      |
-| `model: { provider: string; id: string \| null } \| null` | null before Textus AI is first used. |
+| Member                                                    |                                                             |
+| --------------------------------------------------------- | ----------------------------------------------------------- |
+| `state: "idle" \| "thinking" \| "writing" \| "proposing"` |                                                             |
+| `model: { provider: string; id: string \| null } \| null` | null before Textus AI is first used.                        |
+| `ended?: "done" \| "failed" \| "stopped"`                 | On going idle after a request: finished, failed or stopped. |
 
 ## Plugins
 
