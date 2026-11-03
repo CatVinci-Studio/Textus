@@ -720,7 +720,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   conventionsNewMedia: "Redes sociais",
   conventionsEu: "Instituições da UE",
   agentAttachFile:
-    "Anexar um arquivo: PDF, Word, PowerPoint, planilha, EPUB, RTF, HTML, imagem ou texto simples",
+    "Anexar arquivos: documentos, PDFs, imagens, código, um zip – qualquer arquivo",
   chatAttachmentTruncated: "(parcial)",
   chatAttachmentNoVision: `Este provedor não lê imagens. Troque de provedor em Ajustes > ${AI_NAME} ou anexe um documento.`,
   aiGrammarLabel: "Ativar verificação gramatical",

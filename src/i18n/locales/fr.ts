@@ -744,7 +744,7 @@ utiliser une.
   conventionsNewMedia: "Réseaux sociaux",
   conventionsEu: "Institutions de l'UE",
   agentAttachFile:
-    "Joindre un fichier\u00a0: PDF, Word, PowerPoint, feuille de calcul, EPUB, RTF, HTML, image ou texte brut",
+    "Joindre des fichiers : documents, PDF, images, code, un zip… n’importe quel fichier",
   chatAttachmentTruncated: "(tronqué)",
   chatAttachmentNoVision: `Ce fournisseur ne peut pas lire les images. Changez de fournisseur dans Réglages > ${AI_NAME}, ou joignez plutôt un document.`,
   aiGrammarLabel: "Activer la vérification grammaticale",

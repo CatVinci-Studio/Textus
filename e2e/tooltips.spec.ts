@@ -61,7 +61,7 @@ test("Tab onto a composer button shows its tooltip, Esc hides it", async ({
 }) => {
   await open(page);
   await page.locator(".agent-panel-view .inline-chat-attach").focus();
-  await expect(tooltip(page)).toHaveText(/^附加文件：PDF/);
+  await expect(tooltip(page)).toHaveText(/^附加文件：/);
   await page.keyboard.press("Tab");
   await expect(webSearch(page)).toBeFocused();
   await expect(tooltip(page)).toHaveText("联网搜索");

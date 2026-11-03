@@ -737,7 +737,7 @@ para usar una.
   conventionsNewMedia: "Redes sociales",
   conventionsEu: "Instituciones de la UE",
   agentAttachFile:
-    "Adjuntar un archivo: PDF, Word, PowerPoint, hoja de cálculo, EPUB, RTF, HTML, imagen o texto sin formato",
+    "Adjuntar archivos: documentos, PDF, imágenes, código, un zip… cualquier archivo",
   chatAttachmentTruncated: "(recortado)",
   chatAttachmentNoVision: `Este proveedor no puede leer imágenes. Cambia de proveedor en Ajustes > ${AI_NAME} o adjunta un documento.`,
   aiGrammarLabel: "Activar revisión gramatical",

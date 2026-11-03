@@ -727,7 +727,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   conventionsNewMedia: "Social Media",
   conventionsEu: "EU-Institutionen",
   agentAttachFile:
-    "Datei anhängen: PDF, Word, PowerPoint, Tabelle, EPUB, RTF, HTML, Bild oder reiner Text",
+    "Dateien anhängen: Dokumente, PDFs, Bilder, Code, ein Zip – jede Datei",
   chatAttachmentTruncated: "(gekürzt)",
   chatAttachmentNoVision: `Dieser Anbieter kann keine Bilder lesen. Wechsle den Anbieter unter Einstellungen > ${AI_NAME} oder hänge stattdessen ein Dokument an.`,
   aiGrammarLabel: "Grammatikprüfung aktivieren",
