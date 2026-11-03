@@ -315,6 +315,40 @@ button.settings-link-row {
   color: var(--ui-muted);
 }
 
+/* A row that folds rarer rows under it (Text & Layout's body text): the
+   summary is a row like the others, its chevron turning as it opens. */
+.settings-fold > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.settings-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-fold > summary > .settings-row-label {
+  flex: 1;
+}
+
+.settings-fold-chevron {
+  flex: none;
+  color: var(--ui-muted);
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.settings-fold[open] .settings-fold-chevron {
+  transform: rotate(90deg);
+}
+
+.settings-fold-body > * {
+  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
+}
+
+/* Indented a step: they belong to the row above. */
+.settings-fold-body {
+  padding-left: 16px;
+}
+
 button.settings-danger-button {
   color: var(--ui-danger);
 }
@@ -1233,8 +1267,8 @@ button.settings-skill-action:focus-visible {
   border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
-/* Extensions › Themes › Get themes: each theme is an ordinary settings row
-   with its screenshot in front. */
+/* Extensions › Themes › Get themes: each theme is a card like a catalog
+   plugin's, with its screenshot in front. */
 .theme-gallery-item {
   display: flex;
   align-items: center;
@@ -1242,18 +1276,16 @@ button.settings-skill-action:focus-visible {
   padding: 12px 0;
 }
 
-.theme-gallery-item > .settings-row {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  padding: 0;
+/* A theme's page: its screenshots, light then dark, one above the other. */
+.theme-gallery-shots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.theme-gallery-item .settings-row-hint {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
+.theme-gallery-preview.is-large {
+  width: 100%;
 }
 
 .theme-gallery-preview {
@@ -1324,11 +1356,19 @@ button.settings-skill-action:focus-visible {
   color: var(--ui-muted);
 }
 
-/* A command name inside a row label (General › the textus command). */
-.settings-inline-code {
-  padding: 0.05em 0.35em;
-  border-radius: var(--shape-xs);
-  background: var(--doc-code-bg, rgba(0, 0, 0, 0.06));
-  font-family: var(--font-mono);
-  font-size: 0.92em;
+/* Character spacing: the kind, then Word's "By" in points beside it. */
+.settings-letter-spacing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.settings-letter-spacing-by {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ui-muted);
+}
+.settings-letter-spacing-by .settings-text-input {
+  width: 4.5em;
+  text-align: right;
 }

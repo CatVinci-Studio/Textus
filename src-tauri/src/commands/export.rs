@@ -118,6 +118,35 @@ pub async fn export_via_pandoc(
     .map_err(|e| e.to_string())?
 }
 
+/// Where `textus export` saves, and whether the export has taken it.
+static CLI_EXPORT_TARGET: std::sync::Mutex<Option<(String, bool)>> = std::sync::Mutex::new(None);
+
+#[cfg(desktop)]
+pub(crate) fn set_cli_export_target(target: Option<String>) {
+    *CLI_EXPORT_TARGET.lock().unwrap_or_else(|e| e.into_inner()) = target.map(|t| (t, false));
+}
+
+#[cfg(desktop)]
+pub(crate) fn cli_export_taken() -> bool {
+    CLI_EXPORT_TARGET
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .is_some_and(|(_, taken)| *taken)
+}
+
+/// The target of a `textus export` waiting for its save dialog, taken once.
+fn take_cli_export_target() -> Option<String> {
+    let mut target = CLI_EXPORT_TARGET.lock().unwrap_or_else(|e| e.into_inner());
+    match target.as_mut() {
+        Some((path, taken)) if !*taken => {
+            *taken = true;
+            Some(path.clone())
+        }
+        _ => None,
+    }
+}
+
 /// Save dialog for exports, with the target format's name and extension.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -128,6 +157,9 @@ pub async fn export_save_dialog(
     ext: String,
 ) -> Option<String> {
     use super::fs::{window_file_dialog, with_default_extension};
+    if let Some(target) = take_cli_export_target() {
+        return Some(target);
+    }
     tauri::async_runtime::spawn_blocking(move || {
         window_file_dialog(&window)
             .set_file_name(&default_name)
@@ -156,6 +188,15 @@ pub async fn open_pandoc_install_page(app: tauri::AppHandle) -> Result<(), Strin
 #[cfg_attr(test, specta::specta)]
 pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
+    // `textus export` prints where it saved; no file manager window.
+    let from_terminal = CLI_EXPORT_TARGET
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .is_some_and(|(target, _)| *target == path);
+    if from_terminal {
+        return Ok(());
+    }
     app.opener()
         .reveal_item_in_dir(&path)
         .map_err(|e| e.to_string())

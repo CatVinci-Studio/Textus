@@ -155,6 +155,13 @@ export const commands = {
 	 */
 	history_upsert: (kind: HistoryKind, entry: Value) => __TAURI_INVOKE<null>("history_upsert", { kind, entry }),
 	history_remove: (kind: HistoryKind, key: string) => __TAURI_INVOKE<void>("history_remove", { kind, key }),
+	/**  Every conversation and memory, for a settings file. */
+	ai_records_export: () => __TAURI_INVOKE<AiRecords>("ai_records_export"),
+	/**
+	 *  Adds a settings file's conversations and memories; every window's history
+	 *  hears of each conversation saved.
+	 */
+	ai_records_import: (records: AiRecords) => __TAURI_INVOKE<Imported>("ai_records_import", { records }),
 	history_clear: (kind: HistoryKind) => __TAURI_INVOKE<void>("history_clear", { kind }),
 	/**  One saved conversation whole, turns included. `None` when its file is gone. */
 	chat_history_get: (id: string) => __TAURI_INVOKE<Value | null>("chat_history_get", { id }),
@@ -170,6 +177,12 @@ export const commands = {
 };
 
 /* Types */
+export type AiRecords = {
+	/**  Whole conversations, turns included, as the chat history keeps them. */
+	conversations: Value[],
+	memories: MemoryFile[],
+};
+
 export type DirEntryInfo = DirEntryInfo_Serialize | DirEntryInfo_Deserialize;
 
 export type DirEntryInfo_Deserialize = {
@@ -252,12 +265,27 @@ export type ImageMigration_Serialize = {
 	new: string | null,
 };
 
+/**  How many of each an import added. */
+export type Imported = {
+	conversations: number,
+	memories: number,
+};
+
 /**  One indexed file. */
 export type IndexedFile = {
 	/**  Absolute, to open it. */
 	path: string,
 	/**  From the indexed folder, `/`-separated, to show where it is. */
 	rel: string,
+};
+
+/**
+ *  A memory by its path under the global folder: `memory/<name>.md`, or
+ *  `projects/<key>/memory/<name>.md` for a project's.
+ */
+export type MemoryFile = {
+	path: string,
+	text: string,
 };
 
 /**

@@ -56,8 +56,11 @@ pub async fn ai_agent_message(
     // The document, block by block as the editor has it.
     blocks: Vec<doc_blocks::SentBlock>,
     doc_path: Option<String>,
-    // The chosen project folder. None keeps the document's own folder.
+    // The chosen project folder, or None.
     workspace_root: Option<String>,
+    // The conversation, whose scratch folder holds its attached files. None
+    // from an older frontend.
+    conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
     // Attachments with no text to extract; text-shaped ones were already
@@ -95,6 +98,7 @@ pub async fn ai_agent_message(
             Document::from_blocks(blocks),
             doc_path,
             workspace_root,
+            conversation,
             history,
             message,
             images,
@@ -118,8 +122,8 @@ async fn ai_agent_message_inner(
     provider: String,
     document: Document,
     doc_path: Option<String>,
-    // The chosen project folder. None keeps the document's own folder.
     workspace_root: Option<String>,
+    conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
     images: Vec<ImageAttachment>,
@@ -134,6 +138,8 @@ async fn ai_agent_message_inner(
     on_event: &dyn EventSink,
 ) -> Result<Vec<AgentTurn>, String> {
     let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let scratch = crate::ai::scratch::with_attachments(conversation.as_deref());
+    workspace.attached = scratch.is_some();
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
     // What the request is about, for picking library entries and, past the
@@ -217,6 +223,7 @@ async fn ai_agent_message_inner(
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
+                scratch: scratch.as_deref(),
                 sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
@@ -247,7 +254,7 @@ async fn ai_agent_message_inner(
             };
             let mut tools = ToolRegistry::builtin(
                 workspace.has_usable_skills(),
-                workspace.root.is_some(),
+                workspace.root.is_some() || scratch.is_some(),
                 mode,
                 entry.supports_vision,
             );
@@ -261,12 +268,8 @@ async fn ai_agent_message_inner(
                 });
             }
             // The reference library's search, once there is a library.
-            if workspace.root.as_deref().is_some_and(|root| {
-                std::path::Path::new(root)
-                    .join(crate::ai::project::REFERENCES_DIR)
-                    .is_dir()
-            }) {
-                tools.add(tools::references_tool());
+            if let Some(tool) = tools::references_tool(workspace.root.as_deref().map(Path::new)) {
+                tools.add(tool);
             }
             // A document shown whole needs no tools to read it: offered, they were
             // read again and again instead of edited.
@@ -289,13 +292,7 @@ async fn ai_agent_message_inner(
             }
             // The user's earlier conversations, when they refer to one.
             tools.add(search_conversations_tool(&stores.chat));
-            // The tools of the MCP servers the user turned on.
-            #[cfg(desktop)]
-            for tool in crate::mcp::tools_for_request(&app).await {
-                tools.add(tool);
-            }
-            // And of the plugins the user gave ai.tools.
-            for tool in crate::plugins::ai_tools::tools_for_request(&app) {
+            for tool in installed_tools(&app).await {
                 tools.add(tool);
             }
             // Create mode reads the plugins installed, to change one.
@@ -390,6 +387,16 @@ async fn ai_agent_message_inner(
         web.attach_sources(&mut turns);
         turns
     })
+}
+
+/// The tools of the MCP servers the user turned on, and of the plugins the
+/// user gave ai.tools: what every mode and Research's researchers offer.
+pub(crate) async fn installed_tools<'a>(app: &AppHandle) -> Vec<tools::Tool<'a>> {
+    let mut installed = Vec::new();
+    #[cfg(desktop)]
+    installed.extend(crate::mcp::tools_for_request(app).await);
+    installed.extend(crate::plugins::ai_tools::tools_for_request(app));
+    installed
 }
 
 /// A turn as the frontend keeps it: a tool result without the images it

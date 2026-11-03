@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.3.4"
+version = "1.3.5"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -108,6 +108,11 @@ codepage = "0.1"
 # in the tree via pdf-extract, at the same version and features, so it adds
 # no crates - only lopdf's writer code to the binary.
 lopdf = { version = "0.42", default-features = false }
+# Attached pictures: other formats turned into ones every model reads, and
+# big ones made smaller (commands/attachment/picture.rs).
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp", "tiff", "ico"] }
+# Settings › Editor › Text font: the families installed on this machine.
+fontdb = { version = "0.24", default-features = false, features = ["fs", "memmap"] }
 
 # The writing-rules engine (src/ai/rules/, docs/design/ai-concepts.md): Markdown
 # parsed into prose blocks so code, math, front matter and link targets are
@@ -138,6 +143,10 @@ ignore = "0.4"
 # docs/dev/ios-code-map.md.
 # iOS document access (plugins/textus-files): pickers, security-scoped reads
 # and writes, remembered folders.
+# The scratch folder checks it is the user's own (ai/scratch.rs).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [target.'cfg(target_os = "ios")'.dependencies]
 tauri-plugin-textus-files = { path = "plugins/textus-files" }
 
@@ -255,7 +264,8 @@ webview2-com = "0.39"
 # UI_Notifications, Data_Xml_Dom: plugins' toasts (src/schedule/notify/windows.rs).
 # Win32_UI_Input_KeyboardAndMouse, Win32_UI_HiDpi, Win32_Graphics_Gdi: the
 # cursor and its display's scale for a tab dragged out (src/tab_drag.rs).
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Foundation", "UI_Notifications", "Data_Xml_Dom"] }
+# Win32_System_Console: `textus` prints to the terminal that ran it (src/cli/handoff.rs).
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_Console", "Win32_UI_HiDpi", "Win32_UI_Input_KeyboardAndMouse", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Foundation", "UI_Notifications", "Data_Xml_Dom"] }
 windows-registry = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]

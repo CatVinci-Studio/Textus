@@ -21,6 +21,7 @@ where the project is heading.
 | [ios-release.md](dev/ios-release.md)                | Shipping the iOS app: App Store Connect setup, keys, TestFlight, review                           |
 | [ios-code-map.md](dev/ios-code-map.md)              | What the desktop and iOS apps share and what is desktop-only; building on a Mac                   |
 | [windows-installer.md](dev/windows-installer.md)    | The NSIS installer, and why there is no MSI                                                       |
+| [cli.md](dev/cli.md)                                | The `textus` command: how a command line is read, what runs without the app, the app connection   |
 | [webview-support.md](dev/webview-support.md)        | The oldest web engines supported (WebView2 on Chromium 105), what broke below, the check that guards it |
 | [writing-plugins.md](dev/writing-plugins.md)        | Writing a plugin: the manifest, the API, webviews, testing and publishing to the market          |
 | [plugin-reference.md](dev/plugin-reference.md)      | The plugin API, every call and type (made from [textus.d.ts](dev/textus.d.ts))                    |

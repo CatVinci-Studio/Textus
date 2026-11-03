@@ -12,12 +12,12 @@ pub mod drafting;
 mod events;
 mod finish;
 mod genre;
-mod library;
-mod materials;
 mod model;
+mod notes;
 mod outline;
 mod research;
 mod review;
+mod sources;
 pub mod status;
 mod store;
 mod timeline;
@@ -27,7 +27,6 @@ use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
-pub use materials::Material;
 #[cfg(test)]
 use status::progress;
 pub(crate) use store::{
@@ -202,10 +201,11 @@ pub struct PaperRequest {
     /// The image model, for the pictures the outline may plan; None for
     /// none.
     pub image_model: Option<crate::ai::images::ImageModel>,
-    /// Files the user attached for its research; none when going on with a
-    /// paper, which keeps its own.
+    /// The conversation whose attached files its research reads: copied
+    /// into the paper's folder when it starts, so going on with it needs
+    /// none.
     #[serde(default)]
-    pub materials: Vec<Material>,
+    pub conversation: Option<String>,
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,
@@ -233,13 +233,16 @@ pub async fn ai_paper_run(
         language,
         target_chars,
         image_model,
-        materials,
+        conversation,
     } = request;
     let root = paper_root(
+        &app,
         doc_path.as_deref(),
         workspace_root.as_deref(),
         id.as_deref(),
     )?;
+    let project =
+        crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
     let entry = crate::ai::catalog::find(&provider)
         .ok_or_else(|| format!("unknown provider: {provider}"))?;
     // A paper begun before goes on from what it kept: its research, its
@@ -320,12 +323,9 @@ pub async fn ai_paper_run(
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
-        let materials = if materials.is_empty() {
-            store::load_materials(&root, &files.paper.id)?
-        } else {
-            store::save_materials(&root, &files.paper.id, &materials)?;
-            materials
-        };
+        let conversation = crate::ai::scratch::with_attachments(conversation.as_deref());
+        let paper_folder =
+            store::keep_attachments(&root, &files.paper.id, conversation.as_deref())?;
         let mut keep_spent = KeepSpent {
             root: &root,
             id: files.paper.id.clone(),
@@ -334,20 +334,26 @@ pub async fn ai_paper_run(
             done: false,
         };
         if files.dossier.notes.is_empty() {
-            let library = root
-                .join(crate::ai::project::REFERENCES_DIR)
-                .is_dir()
-                .then_some(root.as_path());
-            let dossier = research::research(
-                &agent,
-                &files.paper,
-                &web,
-                &budget,
-                &send,
-                library,
-                &materials,
-            )
-            .await?;
+            let (empty, conventions) = Default::default();
+            let ctx = research::context(
+                &empty,
+                &conventions,
+                project.as_deref(),
+                paper_folder.as_deref(),
+                entry.supports_vision,
+            );
+            let tools = research::shared_tools(
+                project.as_deref(),
+                paper_folder.is_some(),
+                entry.supports_vision,
+                crate::ai::agent::installed_tools(&app).await,
+            );
+            let kit = research::Kit {
+                tools: &tools,
+                ctx: &ctx,
+            };
+            let dossier =
+                research::research(&agent, &files.paper, &web, &budget, &send, &kit).await?;
             // Questions cut short would leave it thin: going on researches again.
             if agent.spent() {
                 return Err(budget::STEPS_SPENT.to_string());
@@ -398,5 +404,7 @@ pub async fn ai_paper_run(
 
 #[cfg(test)]
 mod live;
+#[cfg(test)]
+mod research_tests;
 #[cfg(test)]
 mod tests;

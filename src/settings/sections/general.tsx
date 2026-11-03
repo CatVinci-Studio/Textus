@@ -7,6 +7,7 @@ import type { Strings } from "../../i18n/strings";
 import {
   cli,
   defaultEditor,
+  type CliStatus,
   updater,
   type DefaultEditorStatus,
   type UpdateChannel,
@@ -239,29 +240,24 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
   );
 }
 
-/** "Install the {command} command…" with the command set as code. */
-function withCommand(label: string) {
-  const [before, after = ""] = label.split("{command}");
-  return (
-    <>
-      {before}
-      <code className="settings-inline-code">textus</code>
-      {after}
-    </>
-  );
-}
+const CLI_STATUS: Record<CliStatus, (t: Strings) => [string, string]> = {
+  installed: (t) => [t.cliCommandInstalled, t.cliCommandReinstallButton],
+  outdated: (t) => [t.cliCommandOutdated, t.cliCommandUpdateButton],
+  missing: (t) => [t.cliCommandNotInstalled, t.cliCommandInstallButton],
+};
 
 /**
  * Startup already tries a silent install; this row covers when that failed
- * and retries through an admin-privileged prompt.
+ * (an older Textus's script, or none) and retries through an
+ * admin-privileged prompt.
  */
 export function CliCommandSection({ t }: { t: Strings }) {
-  const [installed, setInstalled] = useState(false);
+  const [status, setStatus] = useState<CliStatus>("missing");
   const [phase, setPhase] = useState<"idle" | "installing" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    cli.cliCommandStatus().then(setInstalled);
+    cli.cliCommandStatus().then(setStatus);
   }, []);
 
   async function install() {
@@ -269,7 +265,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
     setError(null);
     try {
       await cli.installCliCommand();
-      setInstalled(true);
+      setStatus("installed");
       setPhase("idle");
     } catch (err) {
       setPhase("error");
@@ -277,26 +273,19 @@ export function CliCommandSection({ t }: { t: Strings }) {
     }
   }
 
+  const [state, action] = CLI_STATUS[status](t);
   return (
     <SettingRow
-      label={withCommand(t.cliCommandLabel)}
+      label={t.cliCommandLabel}
       error={error && `${t.cliCommandFailed} ${error}`}
     >
-      {!error && (
-        <span className="settings-row-value">
-          {installed ? t.cliCommandInstalled : t.cliCommandNotInstalled}
-        </span>
-      )}
+      {!error && <span className="settings-row-value">{state}</span>}
       <button
         className="text-button settings-inline-button"
         onClick={install}
         disabled={phase === "installing"}
       >
-        {phase === "installing"
-          ? t.cliCommandInstalling
-          : installed
-            ? t.cliCommandReinstallButton
-            : t.cliCommandInstallButton}
+        {phase === "installing" ? t.cliCommandInstalling : action}
       </button>
     </SettingRow>
   );

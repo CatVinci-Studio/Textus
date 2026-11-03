@@ -199,6 +199,12 @@ export const storage = {
   /** A document saved under a new path takes its conversations along. */
   chatHistoryMoveDocument: (from: string, to: string) =>
     command("chat_history_move_document", from, to),
+  /** Every conversation and memory, for a settings file. */
+  aiRecordsExport: () => command("ai_records_export"),
+  /** Adds a settings file's conversations and memories; nothing is replaced
+   *  by an older copy, and no memory here is overwritten. */
+  aiRecordsImport: (records: Generated.AiRecords) =>
+    command("ai_records_import", records),
 };
 
 // Drafts

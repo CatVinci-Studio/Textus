@@ -5,14 +5,13 @@ import {
   galleryStatus,
   installGalleryTheme,
   installedCopy,
-  type GalleryStatus,
   type GalleryTheme,
   localizedTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
+import { isEffectiveDark } from "../../theme/apply-appearance";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../../prefs/SettingsContext";
-import { SettingRow } from "./controls";
 import { explainError } from "../../utils/error-explain";
 import { openDiagramViewer } from "../../editor/diagram-zoom";
 import { AvailableSection } from "../pages/AvailableSection";
@@ -82,11 +81,13 @@ export function AvailableThemes({
   query,
   gallery,
   install,
+  onOpen,
 }: {
   t: Strings;
   query: string;
   gallery: ReturnType<typeof useGalleryCatalog>;
   install: ReturnType<typeof useGalleryInstall>;
+  onOpen: (theme: GalleryTheme) => void;
 }) {
   const { settings } = useSettings();
   const { catalog, unreachable, retry } = gallery;
@@ -120,11 +121,9 @@ export function AvailableThemes({
           key={theme.id}
           t={t}
           theme={theme}
-          status="install"
-          inUse={false}
           busy={install.busy}
           onInstall={() => void install.install(theme)}
-          onUse={() => {}}
+          onOpen={() => onOpen(theme)}
         />
       ))}
     />
@@ -163,85 +162,62 @@ function GalleryUnreachable({ t, retry }: { t: Strings; retry: () => void }) {
   );
 }
 
+/** A gallery theme's row: its screenshot, then its name, line and byline,
+ *  opening its page; Install beside it. */
 function GalleryItem({
   t,
   theme,
-  status,
-  inUse,
   busy,
   onInstall,
-  onUse,
+  onOpen,
 }: {
   t: Strings;
   theme: GalleryTheme;
-  status: GalleryStatus;
-  inUse: boolean;
   busy: boolean;
   onInstall: () => void;
-  onUse: () => void;
+  onOpen: () => void;
 }) {
-  const byline = t.themeGalleryBy.replace("{author}", theme.author);
   return (
-    // The hint is cut to two lines; the whole description is on hover.
-    <div
-      className="theme-gallery-item"
-      aria-label={theme.name}
-      role="group"
-      title={theme.description}
-    >
+    <div className="theme-gallery-item" aria-label={theme.name} role="group">
       <GalleryPreview
-        path={theme.previews[0]}
+        paths={theme.previews}
         label={`${t.themePreviewEnlarge}: ${theme.name}`}
       />
-      <SettingRow
-        label={theme.name}
-        hint={[
-          theme.author && byline,
-          installsText(theme, t),
-          theme.description,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      >
-        {status === "install" ? (
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            disabled={busy}
-            onClick={onInstall}
-          >
-            {t.themeGalleryInstall}
-          </button>
-        ) : (
-          <>
-            {status === "update" ? (
-              <button
-                type="button"
-                className="text-button settings-inline-button"
-                disabled={busy}
-                onClick={onInstall}
-              >
-                {t.themeGalleryUpdate}
-              </button>
-            ) : (
-              <span className="settings-row-value">
-                {inUse ? t.themeGalleryInUse : t.themeGalleryInstalled}
-              </span>
-            )}
-            {!inUse && (
-              <button
-                type="button"
-                className="text-button settings-inline-button"
-                disabled={busy}
-                onClick={onUse}
-              >
-                {t.themeGalleryUse}
-              </button>
-            )}
-          </>
+      <button type="button" className="plugin-card-open" onClick={onOpen}>
+        <span className="settings-row-label plugin-card-name">
+          {theme.name}
+        </span>
+        {theme.description && (
+          <span className="settings-row-hint plugin-card-description">
+            {theme.description}
+          </span>
         )}
-      </SettingRow>
+        <ThemeByline t={t} theme={theme} />
+      </button>
+      <div className="settings-row-control">
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          disabled={busy}
+          onClick={onInstall}
+        >
+          {t.themeGalleryInstall}
+        </button>
+      </div>
     </div>
+  );
+}
+
+/** Who made a gallery theme and how often it was installed. */
+export function ThemeByline({ t, theme }: { t: Strings; theme: GalleryTheme }) {
+  const installs = installsText(theme, t);
+  return (
+    <span className="plugin-byline">
+      {theme.author && (
+        <span>{t.themeGalleryBy.replace("{author}", theme.author)}</span>
+      )}
+      {installs && <span className="plugin-installs">{installs}</span>}
+    </span>
   );
 }
 
@@ -265,16 +241,25 @@ async function inPreviewSlot<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
-/** A theme's first screenshot, fetched through the backend as a `data:` URL
- *  once its row scrolls into view; an empty frame until then. A click shows
- *  it large, in the picture viewer. */
-function GalleryPreview({
-  path,
+/** A theme's screenshot - `at`, else the one for the current appearance:
+ *  the second, a theme's dark look, in dark - fetched through the backend as
+ *  a `data:` URL once it scrolls into view; an empty frame until then. A
+ *  click shows it large in the picture viewer, the others a step away. */
+export function GalleryPreview({
+  paths,
   label,
+  at,
+  large,
 }: {
-  path: string | undefined;
+  paths: string[];
   label: string;
+  at?: number;
+  large?: boolean;
 }) {
+  const { settings } = useSettings();
+  const shown =
+    at ?? (isEffectiveDark(settings.theme) && paths.length > 1 ? 1 : 0);
+  const path = paths[shown];
   const frame = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -304,7 +289,10 @@ function GalleryPreview({
   }, [path, visible]);
 
   return (
-    <div className="theme-gallery-preview" ref={frame}>
+    <div
+      className={`theme-gallery-preview${large ? " is-large" : ""}`}
+      ref={frame}
+    >
       {src && (
         <button
           type="button"
@@ -312,7 +300,13 @@ function GalleryPreview({
           aria-label={label}
           onClick={(e) => {
             const img = e.currentTarget.querySelector("img");
-            if (img) openDiagramViewer(img, e.currentTarget);
+            const pictures = paths.map((p, i) =>
+              i === shown && src
+                ? src
+                : themeGallery.preview(p).catch(() => null),
+            );
+            if (img)
+              openDiagramViewer(img, e.currentTarget, { pictures, at: shown });
           }}
         >
           <img src={src} alt="" draggable={false} />

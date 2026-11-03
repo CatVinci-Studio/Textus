@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Strings } from "../../i18n/strings";
-import { fs, themes } from "../../platform/ipc";
+import { fs, storage, themes } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import {
   settingsFileText,
@@ -26,19 +26,24 @@ async function themeCss(list: UserThemeMeta[]): Promise<ThemeCss> {
   return found;
 }
 
-/** Settings › General's export and import of the settings as a file. */
+/** Settings › Privacy's export and import of the settings, AI records too. */
 export function SettingsFileSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const [error, setError] = useState<string | null>(null);
 
   async function exportFile() {
     setError(null);
+    const withAi = await showConfirm(t.settingsFileWithAi, {
+      okLabel: t.settingsFileWithAiYes,
+      cancelLabel: t.settingsFileSettingsOnly,
+    });
     const path = await fs.saveSettingsFileDialog("Textus Settings.json");
     if (!path) return;
     try {
       const text = settingsFileText(
         settings,
         await themeCss(settings.userThemes),
+        withAi ? await storage.aiRecordsExport() : null,
       );
       await fs.writeTextFile(path, text);
     } catch (err) {
@@ -56,7 +61,10 @@ export function SettingsFileSection({ t }: { t: Strings }) {
         setError(t.settingsFileNotSettings);
         return;
       }
-      const ok = await showConfirm(t.settingsFileImportConfirm, {
+      const confirm = imported.ai
+        ? `${t.settingsFileImportConfirm} ${t.settingsFileImportAi}`
+        : t.settingsFileImportConfirm;
+      const ok = await showConfirm(confirm, {
         okLabel: t.settingsFileImportReplace,
         cancelLabel: t.cancel,
       });
@@ -66,6 +74,7 @@ export function SettingsFileSection({ t }: { t: Strings }) {
         if (css.dark !== undefined)
           await themes.saveThemeCss(id, "dark", css.dark);
       }
+      if (imported.ai) await storage.aiRecordsImport(imported.ai);
       setSettings(imported.settings);
     } catch (err) {
       setError(explainError(err, t));
@@ -73,11 +82,7 @@ export function SettingsFileSection({ t }: { t: Strings }) {
   }
 
   return (
-    <SettingRow
-      label={t.settingsFileLabel}
-      hint={t.settingsFileHint}
-      error={error}
-    >
+    <SettingRow label={t.settingsFileSummary} error={error}>
       <button
         className="text-button settings-inline-button"
         onClick={() => void exportFile()}

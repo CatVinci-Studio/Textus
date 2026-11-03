@@ -27,6 +27,9 @@ import {
   type DocTextSize,
   DOC_LINE_SPACINGS,
   type DocLineSpacing,
+  DOC_LETTER_SPACINGS,
+  type DocLetterSpacing,
+  LETTER_SPACING_BY,
   storedAgentMode,
 } from "./settings-types";
 
@@ -34,6 +37,17 @@ import {
  *  takes its default, and fields this version doesn't know are kept. */
 
 /** A stored provider-to-model map: its string entries, nothing else. */
+/** Points within Word's range, at its 0.1 pt step. */
+export function letterSpacingBy(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_SETTINGS.docLetterSpacingBy;
+  const clamped = Math.min(
+    LETTER_SPACING_BY.max,
+    Math.max(LETTER_SPACING_BY.min, n),
+  );
+  return Math.round(clamped * 10) / 10;
+}
+
 function stringMap(value: unknown): Record<string, string> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
     return {};
@@ -123,6 +137,16 @@ function readSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.docLineSpacing as DocLineSpacing)
         : DEFAULT_SETTINGS.docLineSpacing,
+      docFont:
+        typeof parsed.docFont === "string"
+          ? parsed.docFont.trim()
+          : DEFAULT_SETTINGS.docFont,
+      docLetterSpacing: DOC_LETTER_SPACINGS.includes(
+        parsed.docLetterSpacing as DocLetterSpacing,
+      )
+        ? (parsed.docLetterSpacing as DocLetterSpacing)
+        : DEFAULT_SETTINGS.docLetterSpacing,
+      docLetterSpacingBy: letterSpacingBy(parsed.docLetterSpacingBy),
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",

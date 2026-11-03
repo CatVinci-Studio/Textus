@@ -98,6 +98,8 @@ No solo escribir: los complementos añaden todo lo demás que necesites.
 
 Mapas mentales, diapositivas Marp, tableros kanban, PDF y Word en una pestaña, citas de Zotero, gráficos de todo tipo y más están en **Ajustes › Extensiones**, en el ordenador y en iPhone y iPad.
 
+Muchos plugins también le dan a Textus AI sus propias herramientas, así que basta con pedírselo en una conversación. Los plugins están en [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) y los temas en [textus-themes](https://github.com/CatVinci-Studio/textus-themes), donde puedes compartir los tuyos.
+
 ## Preguntas frecuentes
 
 <details>

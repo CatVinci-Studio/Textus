@@ -282,6 +282,15 @@ export function installDevTauriShim(): void {
       }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
+      case "cli_command_status":
+        return answer(cmd, "missing");
+      case "ai_records_export":
+        return answer(cmd, {
+          conversations: Object.values(store.conversations),
+          memories: [],
+        });
+      case "ai_records_import":
+        return answer(cmd, { conversations: 0, memories: 0 });
       case "chat_history_move_document": {
         for (const entry of [
           ...store.histories.chat,
@@ -1340,13 +1349,16 @@ export function installDevTauriShim(): void {
         });
       }
       // Real format handling (PDF, spreadsheets) needs the native side.
-      if (cmd === "pick_attachment_file") {
-        return Promise.resolve({
-          kind: "text",
-          name: "dev-shim-notes.md",
-          content: "Canned dev-shim attachment content.",
-          truncated: false,
-        } satisfies ChatAttachment);
+      if (cmd === "pick_attachment_files") {
+        return Promise.resolve([
+          {
+            kind: "text",
+            name: "dev-shim-notes.md",
+            content: "Canned dev-shim attachment content.",
+            truncated: false,
+            path: "attached/dev-shim-notes.md",
+          } satisfies ChatAttachment,
+        ]);
       }
       // Nothing waiting to open in this window.
       if (cmd === "take_pending_window_paths") return Promise.resolve([]);

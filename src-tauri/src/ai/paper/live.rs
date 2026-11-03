@@ -113,7 +113,13 @@ fn live_paper() {
         };
 
         let t = Instant::now();
-        let dossier = research::research(&agent, &paper, &web, &shared, &send, None, &[])
+        let bare = super::research_tests::Bare::default();
+        let (tools, ctx) = bare.kit(None, None, Vec::new());
+        let kit = research::Kit {
+            tools: &tools,
+            ctx: &ctx,
+        };
+        let dossier = research::research(&agent, &paper, &web, &shared, &send, &kit)
             .await
             .expect("research");
         lap(&mut stats, "research", t);

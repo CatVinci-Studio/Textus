@@ -209,6 +209,7 @@ export function useAgentConversation(
         blocks: document.blocks,
         docPath,
         workspaceRoot,
+        conversation: conversationId,
         history: annotateProposalStatuses(history, proposalStatuses ?? {}),
         message: trimmed,
         images,

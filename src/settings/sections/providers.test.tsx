@@ -10,8 +10,12 @@ import {
 } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
-import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
+import {
+  FALLBACK_CATALOG,
+  type ProviderCatalogEntry,
+} from "../../ai/provider-catalog";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
+import { fetchConnected } from "./provider-connection";
 import {
   CustomProviderPanel,
   ProviderAuthPanel,
@@ -222,6 +226,18 @@ describe("account sign-in", () => {
         screen.queryByText("https://claude.example/oauth/authorize?state=abc"),
       ).not.toBeInTheDocument(),
     );
+  });
+});
+
+describe("fetchConnected", () => {
+  it("still finds a saved key when the sign-in can't be read", async () => {
+    vi.mocked(auth.oauthStatus).mockRejectedValueOnce("invalid JSON");
+    vi.mocked(auth.providerApiKeyStatus).mockResolvedValueOnce(true);
+    const openai = FALLBACK_CATALOG.find((e) => e.id === "openai")!;
+    await expect(fetchConnected(openai)).resolves.toEqual({
+      oauth: false,
+      apiKey: true,
+    });
   });
 });
 

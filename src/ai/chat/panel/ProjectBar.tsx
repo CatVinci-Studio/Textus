@@ -305,14 +305,15 @@ export function ProjectBar({
   };
 
   if (info === undefined) return null;
-  // An unsaved draft simply has no project yet: nothing to say up front. A
+  // No folder open simply means no project yet: nothing to say up front. A
   // folder too broad to read is worth saying, once.
   if (!root) {
+    const tooBroad = info?.root_source === "tooBroad";
     if (memory)
       return (
         <>
           <div className="project-bar project-bar-empty memory-no-project">
-            {docPath ? t.projectTooBroad : t.memoryNeedsSave}
+            {tooBroad ? t.projectTooBroad : t.memoryNeedsSave}
           </div>
           {info && info.memories.items.length > 0 && (
             <div className="project-bar project-bar-memory">
@@ -326,7 +327,7 @@ export function ProjectBar({
           )}
         </>
       );
-    if (!docPath) return null;
+    if (!tooBroad) return null;
     return (
       <div className="project-bar project-bar-empty">{t.projectTooBroad}</div>
     );
@@ -343,7 +344,7 @@ export function ProjectBar({
     ...(workspaceRoot
       ? [
           {
-            label: t.projectUseDocFolder,
+            label: t.projectNoFolder,
             onSelect: () => {
               setMenuOpen(false);
               setSettings({ agentWorkspaceRoot: "" });

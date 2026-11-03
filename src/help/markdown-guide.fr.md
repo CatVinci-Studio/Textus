@@ -187,7 +187,7 @@ L'arbre est aussi un petit gestionnaire de fichiers. Le nom du dossier parent, a
 
 Faites glisser des fichiers depuis le Finder ou l'Explorateur de fichiers sur la fenêtre pour les ouvrir : les documents s'ouvrent dans des onglets, les images vont dans le document là où vous les lâchez, et un dossier s'ouvre dans la barre latérale. **Fichier → Copier le chemin** copie le chemin complet du document au premier plan.
 
-Depuis un terminal, `textus notes.md` ouvre un fichier dans Textus ; **Réglages → Général** installe la commande `textus` si elle n'est pas encore là.
+Depuis un terminal, `textus notes.md` ouvre un fichier dans Textus ; **Réglages → Général** installe la commande `textus` si elle n'est pas encore là. Elle en fait plus sans ouvrir de fenêtre : `textus search <mots>` les trouve dans les fichiers d'un dossier, `textus read` affiche un PDF ou un fichier Word en Markdown, et `textus help` liste toutes les commandes, y compris celles des plugins.
 
 **Fichier → Ouvrir…** ouvre aussi un document Word (`.docx`), tout comme le déposer sur la fenêtre : il devient un nouveau document Markdown du même nom, pas encore enregistré, avec ses titres, listes, tableaux, liens, notes de bas de page et images. Les images vont, à l'enregistrement, là où **Réglages → Éditeur et apparence → Images** place les images collées, et **Enregistrer** propose un fichier `.md` à côté du fichier Word. Une partie de la mise en forme peut différer ; le fichier Word lui-même n'est jamais modifié. Sur ordinateur uniquement.
 

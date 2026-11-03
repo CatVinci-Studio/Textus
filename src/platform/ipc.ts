@@ -72,6 +72,7 @@ export {
   BACKGROUND_STATUS,
   type BackgroundStatus,
   background,
+  type CliStatus,
   type DefaultEditorStatus,
   defaultEditor,
   type Distribution,
@@ -212,9 +213,11 @@ export const ai = {
      *  edits name them. */
     blocks: SentBlock[];
     docPath: string | null;
-    /** The chosen project folder; null keeps the document's own. Decides
-     *  where .textus/ is read from and how far file tools may reach. */
+    /** The folder opened or chosen, or null for none. Decides where
+     *  .textus/ is read from and how far file tools may reach. */
     workspaceRoot: string | null;
+    /** The conversation, whose attached files the file tools read. */
+    conversation: string;
     history: AgentTurn[];
     message: string;
     /** Attached images. Text-shaped attachments were already extracted and
@@ -497,5 +500,6 @@ export const ai = {
     workspaceRoot: string | null,
     off: boolean,
   ) => command("set_skill_off", name, source, docPath, workspaceRoot, off),
-  pickAttachmentFile: () => command("pick_attachment_file"),
+  pickAttachmentFiles: (conversation: string) =>
+    command("pick_attachment_files", conversation),
 };

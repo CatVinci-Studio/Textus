@@ -50,21 +50,23 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
     use crate::ai::workspace::RootSource;
     let one_folder = "There is one project folder at a time: for material in two places, the user chooses a folder that contains both.";
     let file_tools = "To find a file by name, use find_files - whenever you know or can guess part of the name; find_files with no name lists every file (only to see what there is); search_files finds words inside files; and read_file reads one - a long one in parts, by line range, starting from where search_files found what you need - and shows you an image, when you can see them.";
+    let readable = "You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it";
+    let attached = if workspace.attached {
+        " Files the user attached to this conversation are under `attached/` - read_file reads them whole, find_files lists them; an attached zip is unpacked there."
+    } else {
+        ""
+    };
     let folder = match (&workspace.root, workspace.root_source) {
         (Some(root), RootSource::Chosen) => format!(
-            "Project folder: {root} - chosen by the user, in {}. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it. Use the document's folder, in the same menu or Settings row, goes back to the open document's own folder. {file_tools} {one_folder}",
-            where_to_choose_the_project_folder(true)
-        ),
-        (Some(root), RootSource::EnclosingProject) => format!(
-            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - opened or chosen by the user, in {}. {readable}. Use no project folder, in the same menu or Settings row, goes back to none. {file_tools}{attached} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
         (Some(root), _) => format!(
-            "Project folder: {root} - the open document's own folder, the default. You can read its text files and its PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files, and nothing outside it; the user can choose another one in {}. {file_tools} {one_folder}",
+            "Project folder: {root} - the nearest folder above the open document that has a .textus/ folder. {readable}; the user can choose another one in {}. {file_tools}{attached} {one_folder}",
             where_to_choose_the_project_folder(true)
         ),
-        (None, RootSource::TooBroad) => format!("Project folder: none - the document's folder is the user's home folder or a whole drive, which is too broad to open to you, so you can't read any files, and there is no project menu. If the user refers to a file, say so, ask them to paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),
-        (None, _) => format!("Project folder: none - the document isn't saved yet and no folder has been chosen, so you can't read any files, and the project bar and its menu don't appear until there is a project folder. If the user refers to a file, say that this is why, ask them to paste what you need, and tell them that saving the document next to their files, or choosing a project folder in {}, lets you read them.", where_to_choose_the_project_folder(false)),
+        (None, RootSource::TooBroad) => format!("Project folder: none - the folder chosen is the user's home folder or a whole drive, which is too broad to open to you, so you can't read the user's files, and there is no project menu.{attached} If the user refers to another file, say so, ask them to attach it or paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),
+        (None, _) => format!("Project folder: none - no folder is open in Textus and none has been chosen, so you can't read the user's other files, and the project bar and its menu don't appear until there is a project folder.{attached} If the user refers to another file, say that this is why, and tell them to attach it with + or to open its folder (File > Open Folder…) or choose a project folder in {}.", where_to_choose_the_project_folder(false)),
     };
     let names = match UiNames::of(ui_language) {
         Some(ui) => {

@@ -99,6 +99,7 @@ export const commands = {
 	 */
 	set_roman_input: (on: boolean) => __TAURI_INVOKE<void>("set_roman_input", { on }),
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
+	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**
 	 *  Files `report`. "LIMIT" when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
@@ -176,8 +177,12 @@ export const commands = {
 	 *  never loads from the network itself.
 	 */
 	theme_gallery_preview: (path: string) => __TAURI_INVOKE<string>("theme_gallery_preview", { path }),
-	cli_command_status: () => __TAURI_INVOKE<boolean>("cli_command_status"),
+	cli_command_status: () => __TAURI_INVOKE<CliStatus>("cli_command_status"),
 	install_cli_command: () => __TAURI_INVOKE<null>("install_cli_command"),
+	/**  A window's frontend starts (`on`) or stops taking requests. */
+	cli_listening: (on: boolean) => __TAURI_INVOKE<void>("cli_listening", { on }),
+	/**  A window's answer to request `id`. */
+	cli_respond: (id: string, out: string, err: string, exit: number) => __TAURI_INVOKE<void>("cli_respond", { id, out, err, exit }),
 	/**  The tray now, for Settings as it opens. */
 	background_status: () => __TAURI_INVOKE<Status>("background_status"),
 	default_editor_status: () => __TAURI_INVOKE<DefaultEditorStatus>("default_editor_status"),
@@ -205,6 +210,12 @@ export type ChatHandoff = {
 	editorLabel: string,
 	state: Value,
 };
+
+/**
+ *  What Settings shows: `Outdated` is a script an older Textus wrote,
+ *  which only opens the app.
+ */
+export type CliStatus = "installed" | "outdated" | "missing";
 
 /**  What Settings shows for the row. */
 export type DefaultEditorStatus = {

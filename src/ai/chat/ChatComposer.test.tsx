@@ -20,7 +20,7 @@ import {
 import { installTestLocalStorage } from "../../dev/test-local-storage";
 import type { ChatAttachment } from "../types";
 
-const pickAttachmentFile = vi.fn();
+const pickAttachmentFiles = vi.fn();
 const listSkills = vi.fn();
 const listProjectFiles = vi.fn();
 let supportsVision = true;
@@ -50,7 +50,7 @@ vi.mock("../../platform/ipc", async () => {
       loadAgentWorkspace: vi.fn().mockResolvedValue({ skills: [] }),
       listSkills: (...args: unknown[]) => listSkills(...args),
       listProjectFiles: (...args: unknown[]) => listProjectFiles(...args),
-      pickAttachmentFile: () => pickAttachmentFile(),
+      pickAttachmentFiles: (id: string) => pickAttachmentFiles(id),
     },
   };
 });
@@ -110,6 +110,7 @@ function composer({ selectedText = null, onSend = () => {} }: ComposerOptions) {
     <ChatComposer
       docPath={null}
       workspaceRoot={null}
+      conversation="c1"
       selectedText={selectedText}
       busy={false}
       labels={labels}
@@ -132,11 +133,12 @@ const imageAttachment: ChatAttachment = {
   name: "chart.png",
   mime: "image/png",
   dataBase64: "AAAA",
+  path: "attached/chart.png",
 };
 
 beforeAll(installTestLocalStorage);
 beforeEach(() => {
-  pickAttachmentFile.mockReset();
+  pickAttachmentFiles.mockReset();
   listSkills.mockReset().mockResolvedValue(null);
   listProjectFiles.mockReset().mockResolvedValue([]);
   supportsVision = true;
@@ -208,6 +210,7 @@ describe("ChatComposer selection chip", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText="first passage"
         busy={false}
         labels={labels}
@@ -264,6 +267,7 @@ describe("ChatComposer selection chip", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}
@@ -332,6 +336,7 @@ describe("ChatComposer selection chip", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}
@@ -369,12 +374,14 @@ describe("ChatComposer selection chip", () => {
       name: "notes.md",
       content: "Tides were logged hourly.",
       truncated: false,
+      path: "attached/notes.md",
     };
-    pickAttachmentFile.mockResolvedValue(notes);
+    pickAttachmentFiles.mockResolvedValue([notes]);
     render(
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}
@@ -412,6 +419,7 @@ describe("ChatComposer selection chip", () => {
     const props = {
       docPath: null,
       workspaceRoot: null,
+      conversation: "c1",
       selectedText: null,
       busy: false,
       labels,
@@ -515,6 +523,7 @@ describe("ChatComposer Deep thinking", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}
@@ -546,7 +555,7 @@ describe("ChatComposer attachments", () => {
   it("shows why a file could not be attached instead of doing nothing", async () => {
     // Every failure must surface: a PDF that can't work must not look like a
     // dead "+" button.
-    pickAttachmentFile.mockRejectedValue(
+    pickAttachmentFiles.mockRejectedValue(
       new IpcError("pick_attachment_file", "This PDF has no text layer."),
     );
     renderComposer();
@@ -559,7 +568,7 @@ describe("ChatComposer attachments", () => {
 
   it("refuses an image when the provider has no vision", async () => {
     supportsVision = false;
-    pickAttachmentFile.mockResolvedValue(imageAttachment);
+    pickAttachmentFiles.mockResolvedValue([imageAttachment]);
     renderComposer();
 
     fireEvent.click(screen.getByLabelText("Attach a file"));
@@ -570,7 +579,7 @@ describe("ChatComposer attachments", () => {
   });
 
   it("stages an image when the provider can read one", async () => {
-    pickAttachmentFile.mockResolvedValue(imageAttachment);
+    pickAttachmentFiles.mockResolvedValue([imageAttachment]);
     renderComposer();
 
     fireEvent.click(screen.getByLabelText("Attach a file"));
@@ -580,12 +589,15 @@ describe("ChatComposer attachments", () => {
   it("says so when an attachment was cut at the extraction cap", async () => {
     // Silence here would read as "the model has my whole file" when it has
     // only the first part of it.
-    pickAttachmentFile.mockResolvedValue({
-      kind: "text",
-      name: "big.pdf",
-      content: "...",
-      truncated: true,
-    } satisfies ChatAttachment);
+    pickAttachmentFiles.mockResolvedValue([
+      {
+        kind: "text",
+        name: "big.pdf",
+        content: "...",
+        truncated: true,
+        path: "attached/big.pdf",
+      } satisfies ChatAttachment,
+    ]);
     renderComposer();
 
     fireEvent.click(screen.getByLabelText("Attach a file"));
@@ -593,7 +605,7 @@ describe("ChatComposer attachments", () => {
   });
 
   it("hands staged attachments to send and clears them", async () => {
-    pickAttachmentFile.mockResolvedValue(imageAttachment);
+    pickAttachmentFiles.mockResolvedValue([imageAttachment]);
     const { onSend } = renderComposer();
 
     fireEvent.click(screen.getByLabelText("Attach a file"));
@@ -639,6 +651,7 @@ describe("ChatComposer pickers", () => {
       <ChatComposer
         docPath={props.docPath ?? null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={{ ...labels, picker: pickerLabels(resolveStrings("zh"), "zh") }}
@@ -764,6 +777,7 @@ describe("ChatComposer suggested next message", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}
@@ -789,6 +803,7 @@ describe("ChatComposer suggested next message", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={true}
         labels={labels}
@@ -813,6 +828,7 @@ describe("ChatComposer suggested follow-ups", () => {
     const props = {
       docPath: null,
       workspaceRoot: null,
+      conversation: "c1",
       selectedText: null,
       labels,
       defaultMode: "write" as const,
@@ -889,6 +905,7 @@ describe("ChatComposer and Create", () => {
       <ChatComposer
         docPath={null}
         workspaceRoot={null}
+        conversation="c1"
         selectedText={null}
         busy={false}
         labels={labels}

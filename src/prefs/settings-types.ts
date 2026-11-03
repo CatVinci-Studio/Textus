@@ -28,7 +28,26 @@ export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
 export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
 /** The document's text size in px, or "auto" for the theme's own. */
-export const DOC_TEXT_SIZES = ["auto", 14, 15, 16, 17, 18, 20, 22, 24] as const;
+export const DOC_TEXT_SIZES = [
+  "auto",
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+] as const;
 export type DocTextSize = (typeof DOC_TEXT_SIZES)[number];
 /** The document's line spacing, or "auto" for the theme's own. */
 export const DOC_LINE_SPACINGS = [
@@ -47,6 +66,18 @@ export const DOC_LINE_HEIGHTS: Record<
   standard: 1.8,
   relaxed: 2.05,
 };
+
+/** Character spacing as Word sets it: the theme's, normal, or expanded or
+ *  condensed by `docLetterSpacingBy` points. */
+export const DOC_LETTER_SPACINGS = [
+  "auto",
+  "normal",
+  "expanded",
+  "condensed",
+] as const;
+export type DocLetterSpacing = (typeof DOC_LETTER_SPACINGS)[number];
+/** The points expanded or condensed by: Word's range and step. */
+export const LETTER_SPACING_BY = { min: 0.1, max: 10, step: 0.1 } as const;
 
 /// Mermaid is the default and every diagram's fallback; Pele draws the same
 /// syntax faster, in its own layout, and only by the user's choice.
@@ -282,6 +313,12 @@ export interface Settings {
    *  theme's; "auto" keeps the theme's. */
   docTextSize: DocTextSize;
   docLineSpacing: DocLineSpacing;
+  /** A font family for the document's text, over the theme's; "" keeps the
+   *  theme's. */
+  docFont: string;
+  docLetterSpacing: DocLetterSpacing;
+  /** Points, for expanded and condensed. */
+  docLetterSpacingBy: number;
   shortcuts: Shortcuts;
   /** The keys of plugins' commands as the user set them, by command id,
    *  over their manifests' keybindings; "" for none. */
@@ -385,6 +422,9 @@ export const DEFAULT_SETTINGS: Settings = {
   uiTextScale: 1,
   docTextSize: "auto",
   docLineSpacing: "auto",
+  docFont: "",
+  docLetterSpacing: "auto",
+  docLetterSpacingBy: 1,
   shortcuts: DEFAULT_SHORTCUTS,
   commandShortcuts: {},
   themeId: "default",

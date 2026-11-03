@@ -63,7 +63,15 @@ describe("ProjectBar", () => {
 
   it("still says so when the folder really is too broad", async () => {
     render(<ProjectBar docPath="/Users/me/draft.md" />);
-    await act(async () => answer(workspace(null)));
+    await act(async () =>
+      answer({ ...workspace(null), root_source: "tooBroad" }),
+    );
     expect(screen.getByText(t.projectTooBroad)).toBeInTheDocument();
+  });
+
+  it("says nothing for a lone document with no folder open", async () => {
+    render(<ProjectBar docPath="/Users/me/Downloads/draft.md" />);
+    await act(async () => answer({ ...workspace(null), root_source: "none" }));
+    expect(screen.queryByText(t.projectTooBroad)).toBeNull();
   });
 });

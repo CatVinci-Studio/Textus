@@ -52,7 +52,7 @@ const CHOICES_FILE: &str = ".revision-choices.json";
 /// refused rather than let the file grow.
 const MAX_CHOICES_BYTES: usize = 64 * 1024;
 
-const MEMORY_FOLDER: &str = "memory";
+pub(crate) const MEMORY_FOLDER: &str = "memory";
 const LIBRARY_FOLDER: &str = "library";
 
 /// Whether Textus AI may remember things by itself.

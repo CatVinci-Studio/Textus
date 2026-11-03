@@ -38,7 +38,7 @@ Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor s
 - **Eine Unterhaltung pro Dokument**: Jeder Tab hat seine eigene Unterhaltung, und wenn du den Tab wechselst, wechselt der Bereich mit. **Neue Unterhaltung** im Kopf des Bereichs fängt von vorn an (sind noch Änderungen offen, wird vorher nachgefragt).
 - **Modi**: Das Eingabefeld bietet zwei. **Schreiben** arbeitet am Dokument: Es entwirft neuen Text (eine Fortsetzung, einen neuen Absatz oder Abschnitt) und ändert den vorhandenen (umschreiben, übersetzen, kürzen). Ist Text ausgewählt, ersetzt eine Änderung daran die Auswahl, und neuer Text kommt dahinter. **Prüfen** beantwortet Fragen, bespricht und kommentiert, ohne etwas zu ändern. Jede Änderung aus Schreiben ist ein Vorschlag, den du annimmst oder ablehnst. Der Bereich startet in dem Modus, der unter **Einstellungen > Textus AI > Chat mit Textus AI > Standardmodus** eingestellt ist.
 - **@-Erwähnungen**: Tippe `@` ins Eingabefeld, um eine Textdatei aus dem Projektordner auszuwählen; sie wird an die Nachricht angehängt.
-- **Dateien anhängen**: Die Schaltfläche **+** links neben dem Eingabefeld hängt ein PDF, ein Word-Dokument, eine PowerPoint-Präsentation, eine Tabelle, ein EPUB-E-Book, eine RTF- oder HTML-Datei, ein Bild oder eine Textdatei an die Nachricht an. Alles außer Bildern wird lokal in Text umgewandelt und mit der Nachricht verschickt; Bilder gehen als echte Bilder an Anbieter, die sie lesen können (die anderen sagen das vorher, statt sie stillschweigend wegzulassen). Von einer langen Datei wird nur ein Teil gesendet; der Chip zeigt dann „(gekürzt)“.
+- **Dateien anhängen**: Die Schaltfläche **+** links neben dem Eingabefeld hängt eine oder mehrere Dateien an die Nachricht an: ein PDF, ein Word-Dokument, eine PowerPoint-Präsentation, eine Tabelle, ein EPUB-E-Book, eine RTF- oder HTML-Datei, eine beliebige Text- oder Code-Datei, ein Zip-Archiv oder ein Bild (PNG, JPEG, GIF, WebP, BMP, TIFF und auf dem Mac HEIC und AVIF). Jede Datei wird in den eigenen temporären Ordner der Unterhaltung kopiert, nie in deine Ordner, und Textus AI kann sie dort noch einmal vollständig lesen. Dokumente werden lokal in Text umgewandelt und mit der Nachricht verschickt; von einem langen wird nur ein Teil gesendet, der Chip zeigt „(gekürzt)“, und den Rest liest Textus AI, wenn es ihn braucht. Ein Zip-Archiv wird dort entpackt und seine Dateien werden aufgelistet. Bilder werden in ein Format umgewandelt, das jeder Dienst liest, bei sehr großen verkleinert und als echte Bilder an Anbieter gesendet, die sie lesen können (die anderen sagen das vorher, statt sie stillschweigend wegzulassen).
 - **Modell**: Die Schaltfläche bei den Bedienelementen des Eingabefelds nennt das Modell, an das deine nächste Nachricht geht; klick darauf, um zu einem anderen Modell eines beliebigen Dienstes zu wechseln, den du unter **Einstellungen > Textus AI** eingerichtet hast. Ist nur ein Modell eingerichtet, zeigt sie einfach dessen Namen.
 - **Websuche**: Mit der Lupe neben dem Eingabefeld sucht Textus AI im Web, wenn eine Anfrage es braucht – siehe **7. Websuche** weiter unten.
 - **Gründlich nachdenken**: Die Schaltfläche neben der Websuche (die Glühbirne) lässt das Modell seine Antwort erst gründlich durchdenken – langsamer und teurer, für schwierige Fragen und größere Überarbeitungen. Sie bleibt eingeschaltet, auch in anderen Dokumenten, bis du sie wieder drückst. Während das Modell nachdenkt, zeigt das Panel „Denkt nach · 8 Sekunden“, danach „12 Sekunden nachgedacht“; ein Klick darauf zeigt die Überlegungen, wenn der Anbieter sie mitliefert. Die Schaltfläche erscheint nur bei Modellen, die gründlicher nachdenken können; die Schnellfrage bittet immer um eine schnelle Antwort.
@@ -91,11 +91,11 @@ Was Textus AI über dich und deine Arbeit weiß, steht in ein paar einfachen Mar
 
 | Konzept | Was es ist | Wo es liegt |
 | --- | --- | --- |
-| **Projektordner** | Der Ordner, in dem Textus AI arbeitet und lesen darf | Der Ordner des Dokuments oder einer, den du wählst |
+| **Projektordner** | Der Ordner, in dem Textus AI arbeitet und lesen darf | Der Ordner, den du in der Seitenleiste öffnest, oder einer, den du wählst |
 | **Stilprofil** | Wie du schreibst | `.textus/style.md` |
 | **Lexikon** | Fakten zu Personen, Orten und Begriffen | `.textus/library/` |
 | **Schreibanweisungen** | Feste Regeln für jede Unterhaltung | `agent.md` – global und pro Projekt |
-| **Gedächtnis** | Was sich Textus AI aus deinen Unterhaltungen merkt | `.textus/memory/` und `memory/` im globalen Konfigurationsordner |
+| **Gedächtnis** | Was sich Textus AI aus deinen Unterhaltungen merkt | `memory/` im globalen Konfigurationsordner und daneben `projects/<Projekt>/memory/` für jedes Projekt |
 | **Skills** | Wiederverwendbare Anweisungen, die du mit `/name` aufrufst | `skills/` – global und pro Projekt |
 | **Globaler Konfigurationsordner** | Was für jedes Dokument gilt | Der Einstellungsordner der App |
 
@@ -120,18 +120,18 @@ Das Projektmenü legt `.textus/` und die Dateien darin an, sobald du sie zum ers
 
 ### Der Projektordner
 
-**Der Projektordner ist der Ordner, in dem Textus AI arbeitet.** Standardmäßig ist das der Ordner des Dokuments, das du bearbeitest – oder der nächste Ordner darüber, der einen `.textus/`-Ordner enthält, sodass ein Kapitel in `novel/part-1/` zu `novel/` gehört: Speichere ein Dokument, und sein Ordner wird zum Projektordner.
+**Der Projektordner ist der Ordner, in dem Textus AI arbeitet.** Es ist der Ordner, den du in der Seitenleiste öffnest (**Datei > Ordner öffnen…**), oder einer, den du wählst – sonst der nächste Ordner über dem Dokument, der einen `.textus/`-Ordner enthält, sodass ein Kapitel in `novel/part-1/` zu `novel/` gehört. Ein Dokument, das du einzeln öffnest, hat keinen Projektordner: Textus AI liest dann nur das Dokument und die Dateien, die du anhängst, sodass eine Datei in Downloads oder auf dem Schreibtisch ihm nie den ganzen Ordner öffnet.
 
 - Textus AI kann die Dateien darin auflisten, nach Namen finden, lesen und durchsuchen, um frühere Szenen einer Figur, einen Begriff oder deine Notizen zu finden: Textdateien (Markdown, reiner Text und ähnliche Formate) bis 16 MB, die es abschnittsweise liest, wenn sie lang sind, und den Text von PDF-, Word-, PowerPoint-, Tabellen-, EPUB- und RTF-Dateien. Mit einem Anbieter, der Bilder sehen kann, sieht es sich auch die PNG-, JPEG-, GIF- und WebP-Bilder darin an, bis 6 MB pro Bild. Versteckte Dateien und Ordner, was eine `.gitignore`- oder `.ignore`-Datei ausschließt (wie bei der Dateisuche in der Seitenleiste), Build- und Abhängigkeitsordner (etwa `node_modules`) und gescannte PDFs ohne Textebene bleiben außen vor.
 - Tippst du `@` ins Eingabefeld des Chats, hängst du eine seiner Dateien an deine Nachricht an.
 - Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Projekts.
 
-Die Leiste unter dem Kopf des KI-Bereichs zeigt den Namen des Projektordners; ein Klick darauf öffnet das **Projektmenü**. Liegt dein Material nicht neben dem Entwurf, klicke dort auf **Projektordner wählen…** (oder **Einstellungen > Textus AI > Projektordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du wieder **Ordner des Dokuments verwenden** wählst.
+Die Leiste unter dem Kopf des KI-Bereichs zeigt den Namen des Projektordners; ein Klick darauf öffnet das **Projektmenü**. Liegt dein Material nicht neben dem Entwurf, klicke dort auf **Projektordner wählen…** (oder **Einstellungen > Textus AI > Projektordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Keinen Projektordner verwenden** wählst.
 
 > [!TIP]
 > Dein Entwurf liegt in `masterarbeit/entwürfe/` und deine Interviewnotizen in `masterarbeit/recherche/`? Wähle `masterarbeit/` als Projektordner, dann kann Textus AI `recherche/interviews.md` lesen, während du an `entwürfe/kapitel-2.md` arbeitest.
 
-Alles, was Textus AI liest, muss im Projektordner liegen: `..`, absolute Pfade und Links nach außen werden abgewiesen. Ein ungespeicherter Entwurf hat keinen Projektordner, solange du keinen gewählt hast, und ein zu weit gefasster Ordner – dein Benutzerordner oder ein ganzes Laufwerk – wird abgewiesen.
+Alles, was Textus AI liest, muss im Projektordner liegen: `..`, absolute Pfade und Links nach außen werden abgewiesen. Ohne geöffneten oder gewählten Ordner gibt es keinen Projektordner, und ein zu weit gefasster Ordner – dein Benutzerordner oder ein ganzes Laufwerk – wird abgewiesen. Was Textus AI bei der Arbeit erzeugt (Recherchenotizen, Entwürfe in Arbeit), landet in Textus' eigenen Ordnern oder im temporären Ordner des Systems, nicht in deinem.
 
 ### Das Stilprofil – „Meinen Stil lernen“
 
@@ -195,7 +195,7 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 
 **Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Global machen** oder **Ins Projekt** verschiebt es.
 
-- **Dieses Projekt**: was dieses Werk betrifft, in `.textus/memory/`; Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
+- **Dieses Projekt**: was dieses Werk betrifft, in `projects/<Projekt>/memory/` im globalen Konfigurationsordner (Textus verwahrt es dort, nicht in deinem Ordner); Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
 - **Für alle Projekte**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Projektordner landet alles hier.
 
 Der Tab **Projekt** im KI-Bereich listet alles unter **Gedächtnis** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Ab und zu räumt Textus AI sein Gedächtnis auf, führt Erinnerungen zusammen, die dasselbe sagen, und verwirft eine Regel, die eine neuere aufgehoben hat; was es verworfen hat, steht unter **Kürzlich vergessen** und lässt sich zurückholen. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Projekt weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.

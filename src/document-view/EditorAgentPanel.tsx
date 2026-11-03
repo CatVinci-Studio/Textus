@@ -22,7 +22,7 @@ import {
   genreLabel,
   type PaperGenreChoice,
 } from "../ai/paper/paper-genres";
-import type { Genre, Material } from "../platform/bindings/ai-paper";
+import type { Genre } from "../platform/bindings/ai-paper";
 import { ModeIcon } from "../ai/chat/mode-icons";
 import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
@@ -86,7 +86,7 @@ export function EditorAgentPanel({
   writePaper: (
     topic: string,
     genre: Genre | null,
-    materials: Material[],
+    conversation: string,
   ) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
@@ -163,14 +163,13 @@ export function EditorAgentPanel({
         onRejectAll={pendingEdits.rejectAll}
         onRevealPending={onRevealPending}
         onModeChange={setMode}
-        onResearch={(topic, files) =>
+        // The files attached are already in the conversation's scratch
+        // folder, which the paper copies.
+        onResearch={(topic) =>
           writePaper(
             topic,
             paperGenre === "auto" ? null : paperGenre,
-            // Text only: the research reads, it doesn't look.
-            files.flatMap((f) =>
-              f.kind === "text" ? [{ name: f.name, content: f.content }] : [],
-            ),
+            conversation.conversationId,
           )
         }
         // `/` picks the kind of piece in Research; skills elsewhere.

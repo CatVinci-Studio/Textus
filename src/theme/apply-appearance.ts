@@ -12,12 +12,24 @@ import {
   type Settings,
   type ThemeMode,
   DOC_LINE_HEIGHTS,
+  type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
 import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
 import { isIOSApp } from "../platform/capabilities";
 import { withCurrentVariables } from "./legacy-variables";
+
+/** The CSS letter-spacing for Word's character spacing; null keeps the
+ *  theme's. */
+export function letterSpacing(
+  spacing: DocLetterSpacing,
+  by: number,
+): string | null {
+  if (spacing === "auto") return null;
+  if (spacing === "normal") return "normal";
+  return `${spacing === "condensed" ? -by : by}pt`;
+}
 
 // Puts the appearance settings on the page: light or dark, the text width,
 // the content theme and the user's Custom CSS, in that cascade order.
@@ -65,7 +77,7 @@ function systemPrefersDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
 
-function isEffectiveDark(themeMode: ThemeMode): boolean {
+export function isEffectiveDark(themeMode: ThemeMode): boolean {
   if (themeMode === "dark") return true;
   if (themeMode === "light") return false;
   return systemPrefersDark();
@@ -124,7 +136,35 @@ export function useApplyAppearance(
       );
       root.setAttribute("data-doc-leading", "");
     }
-  }, [settings.docTextSize, settings.docLineSpacing]);
+    if (settings.docFont) {
+      // The theme's stack after it covers what the chosen font lacks.
+      root.style.setProperty(
+        "--doc-chosen-font",
+        `${JSON.stringify(settings.docFont)}, var(--doc-font)`,
+      );
+      root.setAttribute("data-doc-font", "");
+    } else {
+      root.style.removeProperty("--doc-chosen-font");
+      root.removeAttribute("data-doc-font");
+    }
+    const tracking = letterSpacing(
+      settings.docLetterSpacing,
+      settings.docLetterSpacingBy,
+    );
+    if (tracking === null) {
+      root.style.removeProperty("--doc-letter-spacing");
+      root.removeAttribute("data-doc-tracking");
+    } else {
+      root.style.setProperty("--doc-letter-spacing", tracking);
+      root.setAttribute("data-doc-tracking", "");
+    }
+  }, [
+    settings.docTextSize,
+    settings.docLineSpacing,
+    settings.docFont,
+    settings.docLetterSpacing,
+    settings.docLetterSpacingBy,
+  ]);
 
   // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom
   // leaves popovers and pointer coordinates in the unzoomed space.

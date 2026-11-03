@@ -13,6 +13,15 @@ export function nextScale(scale: number, deltaY: number): number {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
 }
 
+const ARROW_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
+
+/** Pictures to page through with ← and →, the one shown at `at`; each a
+ *  URL, or one still loading. */
+export interface PictureSet {
+  pictures: (string | Promise<string | null>)[];
+  at: number;
+}
+
 /**
  * A diagram's drawing, or a picture, in a zoomable, draggable viewer over
  * the window. It shows a copy: nothing here touches the document.
@@ -20,6 +29,7 @@ export function nextScale(scale: number, deltaY: number): number {
 export function openDiagramViewer(
   source: SVGSVGElement | HTMLImageElement,
   frame: HTMLElement,
+  set?: PictureSet,
 ): () => void {
   const t = currentStrings();
   const picture = source instanceof HTMLImageElement;
@@ -55,6 +65,7 @@ export function openDiagramViewer(
   hint.className = "diagram-viewer-hint";
   hint.textContent = t.diagramViewerHint;
   layer.append(stage, close, hint);
+  const turn = set && set.pictures.length > 1 ? pager(set) : null;
 
   let scale = 1;
   let x = 0;
@@ -64,9 +75,10 @@ export function openDiagramViewer(
   };
   const fit = () => {
     // A picture at its own size, a drawing at the size it is drawn.
-    const box = picture
-      ? { width: source.naturalWidth, height: source.naturalHeight }
-      : source.getBoundingClientRect();
+    const box =
+      drawing instanceof HTMLImageElement
+        ? { width: drawing.naturalWidth, height: drawing.naturalHeight }
+        : source.getBoundingClientRect();
     const room = stage.getBoundingClientRect();
     // A picture opens no larger than it is: stretched, it blurs.
     scale = Math.min(
@@ -135,11 +147,12 @@ export function openDiagramViewer(
 
   const previous = document.activeElement as HTMLElement | null;
   const onKey = (event: KeyboardEvent) => {
-    if (event.key === "Escape") {
-      event.preventDefault();
-      event.stopPropagation();
-      dismiss();
-    }
+    const step = turn && ARROW_STEPS[event.key];
+    if (event.key !== "Escape" && !step) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (step) turn?.(step);
+    else dismiss();
   };
   let closed = false;
   function dismiss() {
@@ -155,6 +168,36 @@ export function openDiagramViewer(
     } else done();
     previous?.focus?.();
   }
+  /** ‹ and › on the sides, and the hint naming the arrow keys; returns the
+   *  step to the next picture or the one before. */
+  function pager({ pictures, at }: PictureSet) {
+    let index = at;
+    const step = async (by: number) => {
+      index = (index + by + pictures.length) % pictures.length;
+      const want = index;
+      const url = await pictures[want];
+      if (!url || want !== index || !(drawing instanceof HTMLImageElement))
+        return;
+      drawing.src = url;
+      await drawing.decode?.().catch(() => {});
+      fit();
+    };
+    for (const [by, label, glyph] of [
+      [-1, t.pictureViewerPrevious, "‹"],
+      [1, t.pictureViewerNext, "›"],
+    ] as const) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `diagram-viewer-turn diagram-viewer-turn-${by < 0 ? "back" : "on"}`;
+      button.setAttribute("aria-label", label);
+      button.textContent = glyph;
+      button.addEventListener("click", () => void step(by));
+      layer.append(button);
+    }
+    hint.textContent = `${t.diagramViewerHint} · ${t.pictureViewerTurnHint}`;
+    return (by: number) => void step(by);
+  }
+
   close.addEventListener("click", dismiss);
   layer.addEventListener("click", (event) => {
     if (event.target === layer) dismiss();

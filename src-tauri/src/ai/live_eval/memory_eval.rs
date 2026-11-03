@@ -86,6 +86,7 @@ fn run(
         thinking: aicompat::capabilities::ThinkingLevel::Auto,
         pictures: None,
         memory: Some(&dirs),
+        scratch: None,
     };
     let conv = harness::run_conversation(&auth, &setup, doc, script);
     assert!(conv.error.is_none(), "{:?}", conv.error);

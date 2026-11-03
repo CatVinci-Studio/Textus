@@ -35,6 +35,7 @@ import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { errorText } from "../utils/error-text";
+import { getUiState, setUiState } from "../storage/ui-state";
 import { explainError } from "../utils/error-explain";
 
 /** The save queue untitled drafts' first autosaves share. */
@@ -42,6 +43,18 @@ const UNTITLED_QUEUE = "\0untitled";
 
 /** Save and Save As for this window's tabs. Both resolve true only when the
  *  document actually reached disk. */
+/** Where Save As starts: the document's own folder, else the folder open
+ *  in the window, else the one the last document was saved into. */
+export function saveFolder(
+  path: string | null | undefined,
+  openFolder: string | null,
+): string | null {
+  if (path) return parentDir(path) || null;
+  if (openFolder) return openFolder;
+  const last = getUiState("lastSaveFolder");
+  return typeof last === "string" && last ? last : null;
+}
+
 export function useSaveTabs(opts: {
   tabState: TabState;
   t: Strings;
@@ -178,8 +191,13 @@ export function useSaveTabs(opts: {
       const defaultName = tab.path
         ? basename(tab.path)
         : (fromWord?.name ?? suggestedName(tab));
-      const picked = await fs.saveFileDialog(defaultName, fromWord?.dir);
+      const picked = await fs.saveFileDialog(
+        defaultName,
+        fromWord?.dir ?? saveFolder(tab.path, folder),
+      );
       if (!picked) return false;
+      const pickedDir = parentDir(picked);
+      if (pickedDir) setUiState("lastSaveFolder", pickedDir);
       // Markdown written into a .docx would destroy the Word document.
       if (isWordDocument(picked)) {
         await showMessage(t.wordSaveRefused, { tone: "warning" });
@@ -188,7 +206,7 @@ export function useSaveTabs(opts: {
       autoNamed.current.delete(tabId);
       return adoptFile(tab, picked, false);
     },
-    [liveTabs, t, suggestedName, adoptFile],
+    [liveTabs, t, suggestedName, adoptFile, folder],
   );
 
   // tabsRef is patched as well as the state, so a save right behind this one

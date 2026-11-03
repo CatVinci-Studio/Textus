@@ -76,7 +76,7 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
 /** The files staged to go with the message, and why one couldn't be, shown
  *  rather than swallowed. Vision support is derived here, the only place an
  *  image is staged, so no caller can forget it. */
-export function useAttachments(noVisionMessage: string) {
+export function useAttachments(noVisionMessage: string, conversation: string) {
   const supportsVision = useActiveProvider()?.supportsVision ?? true;
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
@@ -84,14 +84,13 @@ export function useAttachments(noVisionMessage: string) {
   async function attachFile() {
     setAttachError(null);
     try {
-      const file = await ai.pickAttachmentFile();
-      // null means the picker was cancelled - not something to report.
-      if (!file) return;
-      if (file.kind === "image" && !supportsVision) {
-        setAttachError(noVisionMessage);
-        return;
-      }
-      setAttachments((prev) => [...prev, file]);
+      // None means the picker was cancelled - not something to report.
+      const files = await ai.pickAttachmentFiles(conversation);
+      const kept = supportsVision
+        ? files
+        : files.filter((file) => file.kind !== "image");
+      if (kept.length < files.length) setAttachError(noVisionMessage);
+      setAttachments((prev) => [...prev, ...kept]);
     } catch (err) {
       setAttachError(explainError(err, currentStrings()));
     }

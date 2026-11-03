@@ -15,7 +15,9 @@ use conventions::*;
 pub(crate) use document::*;
 pub(crate) use edits::*;
 use folder::*;
-pub(crate) use folder::{references_tool, ADD_COMMENT_TOOL_NAME};
+pub(crate) use folder::{
+    references_tool, ADD_COMMENT_TOOL_NAME, READ_FILE_TOOL_NAME, SEARCH_REFERENCES_TOOL_NAME,
+};
 
 mod ledger;
 pub(crate) use ledger::*;
@@ -40,6 +42,9 @@ pub struct ToolContext<'a> {
     /// unsaved draft with no folder chosen, or a folder too broad, in which case
     /// the file tools aren't offered.
     pub root: Option<&'a Path>,
+    /// The conversation's scratch folder, when files are attached to it: the
+    /// file tools read its `attached/` beside the project folder.
+    pub scratch: Option<&'a Path>,
     /// The provider takes images: the file tools then list images and read_file
     /// shows them.
     pub sees_images: bool,
@@ -123,6 +128,21 @@ impl<'a> ToolRegistry<'a> {
         registry
     }
 
+    /// Only the project and attached files' tools: what a paper's researcher
+    /// reads with.
+    pub fn files(mode: AgentMode, sees_images: bool) -> Self {
+        let mut registry = Self::builtin(false, true, mode, sees_images);
+        registry.tools.retain(|t| {
+            [
+                FIND_FILES_TOOL_NAME,
+                SEARCH_FILES_TOOL_NAME,
+                READ_FILE_TOOL_NAME,
+            ]
+            .contains(&&*t.spec.name)
+        });
+        registry
+    }
+
     /// Only the tool named `name`, if it is offered: what a chapter's helper has.
     pub fn only(mut self, name: &str) -> Self {
         self.tools.retain(|t| t.spec.name == name);
@@ -149,6 +169,10 @@ impl<'a> ToolRegistry<'a> {
     /// propose_edit.
     pub fn edits(&self) -> bool {
         self.find(PROPOSE_EDIT_TOOL_NAME).is_some()
+    }
+
+    pub fn offers(&self, name: &str) -> bool {
+        self.find(name).is_some()
     }
 
     fn find(&self, name: &str) -> Option<&Tool<'a>> {
