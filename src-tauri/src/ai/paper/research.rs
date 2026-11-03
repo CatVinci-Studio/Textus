@@ -104,31 +104,15 @@ pub(crate) fn shared_tools<'t>(
 /// What the shared tools work on: no document, the project folder, and
 /// the paper's folder, whose `attached/` they read beside it.
 pub(crate) fn context<'t>(
-    empty: &'t crate::ai::doc_blocks::Document,
-    conventions: &'t crate::ai::rules::Conventions,
     root: Option<&'t Path>,
     paper_folder: Option<&'t Path>,
     sees_images: bool,
 ) -> ToolContext<'t> {
     ToolContext {
-        undecided: &[],
-        document: empty,
-        skills: &[],
-        ui_language: "en",
         root,
         scratch: paper_folder,
         sees_images,
-        conventions,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
-    }
-}
-
-fn user(text: String) -> AgentTurn {
-    AgentTurn::User {
-        text,
-        images: Vec::new(),
+        ..ToolContext::without_document()
     }
 }
 
@@ -263,7 +247,7 @@ async fn research_question(
     };
     run_agent_loop(
         Vec::new(),
-        user(format!("Your question: {question}")),
+        AgentTurn::user(format!("Your question: {question}")),
         HELPER_STEPS,
         |turns: Vec<AgentTurn>| {
             let (instructions, specs) = (&instructions, &specs);

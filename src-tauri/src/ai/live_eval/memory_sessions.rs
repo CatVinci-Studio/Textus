@@ -615,10 +615,7 @@ fn live_memory_tidy() {
     let made = harness::block_on(tidy_if_due(&dirs, &source, |instructions, input| {
         let agent = &agent;
         async move {
-            let turn = [AgentTurn::User {
-                text: input,
-                images: Vec::new(),
-            }];
+            let turn = [AgentTurn::user(input)];
             let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
             Ok(match step {
                 StepResult::Done(text) => text,
@@ -676,10 +673,7 @@ fn live_skill_offer() {
         harness::block_on(offer_skill(&exchange, &skills, |instructions, input| {
             let agent = &agent;
             async move {
-                let turn = [AgentTurn::User {
-                    text: input,
-                    images: Vec::new(),
-                }];
+                let turn = [AgentTurn::user(input)];
                 let (step, _) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
                 Ok(match step {
                     StepResult::Done(text) => text,

@@ -83,10 +83,7 @@ mod tests {
             "cancel-test".into(),
             run_agent_loop(
                 vec![],
-                AgentTurn::User {
-                    text: "search".into(),
-                    images: Vec::new(),
-                },
+                AgentTurn::user("search"),
                 12,
                 |_| async {
                     Ok(StepResult::ToolCalls(vec![AgentTurn::ToolCall {

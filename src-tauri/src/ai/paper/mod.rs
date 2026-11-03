@@ -325,10 +325,7 @@ pub async fn ai_paper_run(
             done: false,
         };
         if files.dossier.notes.is_empty() {
-            let (empty, conventions) = Default::default();
             let ctx = research::context(
-                &empty,
-                &conventions,
                 project.as_deref(),
                 paper_folder.as_deref(),
                 entry.supports_vision,

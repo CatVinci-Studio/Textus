@@ -883,16 +883,13 @@ pub fn run_conversation(
         let started = Instant::now();
         let result = block_on(run_agent_loop(
             compact_history(history.clone()),
-            AgentTurn::User {
-                text: request_message(
-                    ws,
-                    setup.mode,
-                    setup.ui_language,
-                    &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
-                    &message_sent,
-                ),
-                images: Vec::new(),
-            },
+            AgentTurn::user(request_message(
+                ws,
+                setup.mode,
+                setup.ui_language,
+                &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
+                &message_sent,
+            )),
             MAX_STEPS,
             |h: Vec<AgentTurn>| {
                 let (instructions, specs, usage, postfix) =
@@ -1151,10 +1148,7 @@ pub fn run_conversation(
                 &exchange,
                 &Default::default(),
                 |instructions, input| async move {
-                    let turn = [AgentTurn::User {
-                        text: input,
-                        images: Vec::new(),
-                    }];
+                    let turn = [AgentTurn::user(input)];
                     let (step, used) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
                     charge(setup.model, &used.unwrap_or_default());
                     let text = match step {

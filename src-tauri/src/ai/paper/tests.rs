@@ -314,8 +314,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -473,8 +472,7 @@ impl research::Model for Empty {
 async fn research_that_keeps_nothing_fails_with_a_reason() {
     let budget = SharedBudget::new(ResearchBudget::for_paper());
     let web = WebPlan::new(true, None, None, &[]);
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -1145,10 +1143,7 @@ fn a_paper_card_s_turns_are_not_sent_to_the_model() {
         images: Vec::new(),
     };
     let kept = crate::ai::agent::without_memory_turns(vec![
-        AgentTurn::User {
-            text: "Write a paper".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("Write a paper"),
         card,
         result,
         AgentTurn::assistant("Written."),
@@ -1246,8 +1241,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     std::fs::write(&file, "Tidal barrages store energy at high tide.\n").unwrap();
     let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(Some(&root), None, Vec::new());
+    let (tools, ctx) = research_tests::kit(Some(&root), None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -1690,8 +1684,7 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         web.source_number("https://lite.duckduckgo.com/lite/?q=green+roof"),
         Some(1)
     );
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,

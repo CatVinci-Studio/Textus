@@ -445,10 +445,7 @@ async fn flattened_chat_turn(
         }
     }
 
-    let user_turn = AgentTurn::User {
-        text: message,
-        images: Vec::new(),
-    };
+    let user_turn = AgentTurn::user(message);
     let mut transcript: Vec<String> = history.iter().filter_map(turn_to_plain_text).collect();
     if let Some(t) = turn_to_plain_text(&user_turn) {
         transcript.push(t);

@@ -60,6 +60,40 @@ pub struct ToolContext<'a> {
     pub checks: std::sync::Mutex<std::collections::HashMap<&'static str, usize>>,
 }
 
+impl<'a> ToolContext<'a> {
+    /// A context that knows only `document`: no skills, project, attached
+    /// files, library or earlier proposals, English names, no conventions
+    /// set. A request sets what it knows beside it.
+    pub(crate) fn for_document(document: &'a crate::ai::doc_blocks::Document) -> Self {
+        ToolContext {
+            undecided: &[],
+            document,
+            skills: &[],
+            ui_language: "en",
+            root: None,
+            scratch: None,
+            sees_images: false,
+            conventions: &NO_CONVENTIONS,
+            library: &[],
+            proposed: Default::default(),
+            checks: Default::default(),
+        }
+    }
+
+    /// [`Self::for_document`] with no document: work on the files and the
+    /// web alone, as a paper's research is.
+    pub(crate) fn without_document() -> ToolContext<'static> {
+        static NO_DOCUMENT: crate::ai::doc_blocks::Document = crate::ai::doc_blocks::Document {
+            text: String::new(),
+            blocks: Vec::new(),
+        };
+        ToolContext::for_document(&NO_DOCUMENT)
+    }
+}
+
+static NO_CONVENTIONS: std::sync::LazyLock<crate::ai::rules::Conventions> =
+    std::sync::LazyLock::new(Default::default);
+
 /// A tool the agent can call: what the model is told (name, description, JSON
 /// schema), what calling it does, the modes it is offered in, and its
 /// implementation.

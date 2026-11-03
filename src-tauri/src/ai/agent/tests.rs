@@ -33,20 +33,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
 
     let document = &md("# Notes\n\n## Methods\n\nWe sampled ten sites.\n\n## Results\n\nAll good.");
     let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
-    let conventions = crate::ai::rules::Conventions::default();
-    let ctx = ToolContext {
-        document,
-        undecided: &[],
-        skills: &[],
-        ui_language: "en",
-        root: None,
-        scratch: None,
-        sees_images: false,
-        conventions: &conventions,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
-    };
+    let ctx = ToolContext::for_document(document);
     let call = |id: &str, name: &str, args: &str| AgentTurn::ToolCall {
         call_id: id.into(),
         name: name.into(),
@@ -65,10 +52,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
     ]));
     let turns = tauri::async_runtime::block_on(run_agent_loop(
         vec![],
-        AgentTurn::User {
-            text: "Say which sites".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("Say which sites"),
         MAX_STEPS,
         |_| {
             let next = script.borrow_mut().pop_front().unwrap();
@@ -132,10 +116,7 @@ fn history_keeps_no_tool_images_and_says_so() {
 fn compact_history_stubs_old_reads_but_keeps_edit_results() {
     let big = "x".repeat(5_000);
     let history = vec![
-        AgentTurn::User {
-            text: "q".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("q"),
         AgentTurn::ToolCall {
             call_id: "r".into(),
             name: "read_file".into(),
@@ -174,15 +155,9 @@ fn compact_history_stubs_old_reads_but_keeps_edit_results() {
 fn compact_history_drops_whole_oldest_exchanges_over_budget() {
     let long = "y".repeat(HISTORY_BUDGET);
     let history = vec![
-        AgentTurn::User {
-            text: long.clone(),
-            images: Vec::new(),
-        },
+        AgentTurn::user(long.clone()),
         AgentTurn::assistant("a1"),
-        AgentTurn::User {
-            text: "recent".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("recent"),
         AgentTurn::assistant("a2"),
     ];
     let out = compact_history(history);
@@ -193,10 +168,7 @@ fn compact_history_drops_whole_oldest_exchanges_over_budget() {
 /// One exchange of `chars` characters: a question, a file read, a reply.
 fn exchange(n: usize, chars: usize) -> Vec<AgentTurn> {
     vec![
-        AgentTurn::User {
-            text: format!("question {n}"),
-            images: Vec::new(),
-        },
+        AgentTurn::user(format!("question {n}")),
         AgentTurn::ToolCall {
             call_id: format!("r{n}"),
             name: "read_file".into(),
@@ -267,10 +239,10 @@ fn over_budget_a_long_attachment_is_not_dropped_early() {
         history.extend(exchange(n, 10_000));
     }
     history.extend([
-        AgentTurn::User {
-            text: format!("<attached-file>{}</attached-file>", "p".repeat(130_000)),
-            images: Vec::new(),
-        },
+        AgentTurn::user(format!(
+            "<attached-file>{}</attached-file>",
+            "p".repeat(130_000)
+        )),
         AgentTurn::assistant("summary"),
     ]);
     history.extend(exchange(5, 5_000));
@@ -943,33 +915,17 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
 
     let document = &md(document);
     let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false);
-    let conventions = crate::ai::rules::Conventions::default();
-    let ctx = ToolContext {
-        document,
-        undecided: &[],
-        skills: &[],
-        ui_language: "en",
-        root: None,
-        scratch: None,
-        sees_images: false,
-        conventions: &conventions,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
-    };
+    let ctx = ToolContext::for_document(document);
     let script = RefCell::new(VecDeque::from(script));
     let steps = std::cell::Cell::new(0);
     let turns = tauri::async_runtime::block_on(run_agent_loop(
         vec![],
-        AgentTurn::User {
-            text: "Translate it into English".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("Translate it into English"),
         MAX_STEPS,
         |_| {
             steps.set(steps.get() + 1);
             let step = StepResult::ToolCalls(script.borrow_mut().pop_front().unwrap());
-            let result = settle_step(step, document, &conventions, None).0;
+            let result = settle_step(step, document, ctx.conventions, None).0;
             async move { Ok(result) }
         },
         |call| tools.execute(&ctx, call),
