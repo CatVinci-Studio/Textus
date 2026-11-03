@@ -62,6 +62,32 @@ window.__textusBoot = function (boot, themeCss) {
       root.style.setProperty("--doc-line-height", String(leading));
       root.setAttribute("data-doc-leading", "");
     }
+    // The reader's font and character spacing (apply-appearance.ts), so the
+    // first frame doesn't set the text in the theme's and then move it.
+    var font = typeof settings.docFont === "string" && settings.docFont.trim();
+    if (font) {
+      root.style.setProperty(
+        "--doc-chosen-font",
+        JSON.stringify(font) + ", var(--doc-font, var(--font-sans))",
+      );
+      root.setAttribute("data-doc-font", "");
+    }
+    // Points (DOC_LETTER_SPACING), or Word's kinds saved before.
+    var by = Math.abs(Number(settings.docLetterSpacingBy)) || 1;
+    var points =
+      typeof settings.docLetterSpacing === "number"
+        ? settings.docLetterSpacing
+        : { normal: 0, expanded: by, condensed: -by }[
+            settings.docLetterSpacing
+          ];
+    if (typeof points === "number" && isFinite(points)) {
+      points = Math.min(10, Math.max(-10, points));
+      root.style.setProperty(
+        "--doc-letter-spacing",
+        points === 0 ? "normal" : points + "pt",
+      );
+      root.setAttribute("data-doc-tracking", "");
+    }
     // BUILTIN_CONTENT_THEMES in theme/builtin-themes.ts, minus "default"
     // (which is the absence of the attribute).
     var builtin = ["paper", "slate", "forest"];

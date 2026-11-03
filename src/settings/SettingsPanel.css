@@ -1323,20 +1323,3 @@ button.settings-skill-action:focus-visible {
   font-size: calc(0.8rem * var(--ui-text-scale, 1));
   color: var(--ui-muted);
 }
-
-/* Character spacing: the kind, then Word's "By" in points beside it. */
-.settings-letter-spacing {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-.settings-letter-spacing-by {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--ui-muted);
-}
-.settings-letter-spacing-by .settings-text-input {
-  width: 4.5em;
-  text-align: right;
-}

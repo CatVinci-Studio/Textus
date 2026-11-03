@@ -143,6 +143,44 @@ test("the boot script puts the appearance on the document before the app runs", 
   ).toBe(SETTINGS.customCss);
 });
 
+test("the reader's text size, spacing and font are on the first frame", async ({
+  page,
+}) => {
+  await bootLikeRust(page, {
+    settings: {
+      ...SETTINGS,
+      docTextSize: 20,
+      docLineSpacing: "relaxed",
+      docFont: "Georgia",
+      // Word's kind and points, as saved before spacing was one number.
+      docLetterSpacing: "condensed",
+      docLetterSpacingBy: 0.5,
+    },
+  });
+  await page.addInitScript(() => {
+    document.addEventListener("readystatechange", () => {
+      if (document.readyState !== "interactive") return;
+      const style = document.documentElement.style;
+      (window as unknown as { __firstText: string[] }).__firstText = [
+        "--doc-font-size",
+        "--doc-line-height",
+        "--doc-chosen-font",
+        "--doc-letter-spacing",
+      ].map((name) => style.getPropertyValue(name));
+    });
+  });
+  await openApp(page, { settings: { language: "en" } });
+  const first = await page.evaluate(
+    () => (window as unknown as { __firstText: string[] }).__firstText,
+  );
+  expect(first).toEqual([
+    "20px",
+    "2.05",
+    '"Georgia", var(--doc-font, var(--font-sans))',
+    "-0.5pt",
+  ]);
+});
+
 test("an imported theme is on the first frame, in the variant for the appearance", async ({
   page,
 }) => {

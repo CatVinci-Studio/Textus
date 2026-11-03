@@ -27,9 +27,8 @@ import {
   DOC_TEXT_SIZE,
   DOC_LINE_SPACING,
   DOC_LINE_HEIGHTS,
-  DOC_LETTER_SPACINGS,
+  DOC_LETTER_SPACING,
   type DocLetterSpacing,
-  LETTER_SPACING_BY,
   storedAgentMode,
 } from "./settings-types";
 
@@ -37,15 +36,21 @@ import {
  *  takes its default, and fields this version doesn't know are kept. */
 
 /** A stored provider-to-model map: its string entries, nothing else. */
-/** Points within Word's range, at its 0.1 pt step. */
-export function letterSpacingBy(value: unknown): number {
-  const n = typeof value === "number" ? value : Number(value);
-  if (!Number.isFinite(n)) return DEFAULT_SETTINGS.docLetterSpacingBy;
-  const clamped = Math.min(
-    LETTER_SPACING_BY.max,
-    Math.max(LETTER_SPACING_BY.min, n),
+/** Character spacing as saved: points, or before it was a number, Word's
+ *  normal, or expanded or condensed by `docLetterSpacingBy` points. */
+function storedLetterSpacing(spacing: unknown, by: unknown): DocLetterSpacing {
+  const points =
+    spacing === "normal"
+      ? 0
+      : spacing === "expanded" || spacing === "condensed"
+        ? storedInRange(by, DOC_LETTER_SPACING, 1) *
+          (spacing === "condensed" ? -1 : 1)
+        : spacing;
+  return storedInRange(
+    points,
+    DOC_LETTER_SPACING,
+    DEFAULT_SETTINGS.docLetterSpacing,
   );
-  return Math.round(clamped * 10) / 10;
 }
 
 function stringMap(value: unknown): Record<string, string> {
@@ -144,12 +149,10 @@ function readSettings(parsed: Raw | null): Settings {
         typeof parsed.docFont === "string"
           ? parsed.docFont.trim()
           : DEFAULT_SETTINGS.docFont,
-      docLetterSpacing: DOC_LETTER_SPACINGS.includes(
-        parsed.docLetterSpacing as DocLetterSpacing,
-      )
-        ? (parsed.docLetterSpacing as DocLetterSpacing)
-        : DEFAULT_SETTINGS.docLetterSpacing,
-      docLetterSpacingBy: letterSpacingBy(parsed.docLetterSpacingBy),
+      docLetterSpacing: storedLetterSpacing(
+        parsed.docLetterSpacing,
+        parsed.docLetterSpacingBy,
+      ),
       // An unknown language (a newer build's, a hand edit) is English, not
       // a string table that isn't there.
       language: isLang(parsed.language) ? parsed.language : "en",

@@ -29,3 +29,9 @@ export function docLineHeightNow(): number {
   const ratio = parseFloat(style.lineHeight) / parseFloat(style.fontSize);
   return ratio > 0 ? ratio : FALLBACK_LINE_HEIGHT;
 }
+
+/** The character spacing in points: "normal" is 0. */
+export function docLetterSpacingNow(): number {
+  const px = parseFloat(docStyle()?.letterSpacing ?? "");
+  return Number.isFinite(px) ? px * 0.75 : 0;
+}

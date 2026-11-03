@@ -19,15 +19,11 @@ import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
 import { isIOSApp } from "../platform/capabilities";
 import { withCurrentVariables } from "./legacy-variables";
 
-/** The CSS letter-spacing for Word's character spacing; null keeps the
+/** The CSS letter-spacing for character spacing in points; null keeps the
  *  theme's. */
-export function letterSpacing(
-  spacing: DocLetterSpacing,
-  by: number,
-): string | null {
+export function letterSpacing(spacing: DocLetterSpacing): string | null {
   if (spacing === "auto") return null;
-  if (spacing === "normal") return "normal";
-  return `${spacing === "condensed" ? -by : by}pt`;
+  return spacing === 0 ? "normal" : `${spacing}pt`;
 }
 
 // Puts the appearance settings on the page: light or dark, the text width,
@@ -146,10 +142,7 @@ export function useApplyAppearance(
       root.style.removeProperty("--doc-chosen-font");
       root.removeAttribute("data-doc-font");
     }
-    const tracking = letterSpacing(
-      settings.docLetterSpacing,
-      settings.docLetterSpacingBy,
-    );
+    const tracking = letterSpacing(settings.docLetterSpacing);
     if (tracking === null) {
       root.style.removeProperty("--doc-letter-spacing");
       root.removeAttribute("data-doc-tracking");
@@ -162,7 +155,6 @@ export function useApplyAppearance(
     settings.docLineSpacing,
     settings.docFont,
     settings.docLetterSpacing,
-    settings.docLetterSpacingBy,
   ]);
 
   // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom

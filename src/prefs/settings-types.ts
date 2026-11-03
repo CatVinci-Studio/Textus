@@ -41,17 +41,10 @@ export const DOC_LINE_HEIGHTS: Record<string, number> = {
   relaxed: 2.05,
 };
 
-/** Character spacing as Word sets it: the theme's, normal, or expanded or
- *  condensed by `docLetterSpacingBy` points. */
-export const DOC_LETTER_SPACINGS = [
-  "auto",
-  "normal",
-  "expanded",
-  "condensed",
-] as const;
-export type DocLetterSpacing = (typeof DOC_LETTER_SPACINGS)[number];
-/** The points expanded or condensed by: Word's range and step. */
-export const LETTER_SPACING_BY = { min: 0.1, max: 10, step: 0.1 } as const;
+/** Character spacing in points, as Word sets it: above 0 expanded, below
+ *  condensed, 0 normal; or "auto" for the theme's own. */
+export const DOC_LETTER_SPACING = { min: -10, max: 10, step: 0.1 } as const;
+export type DocLetterSpacing = "auto" | number;
 
 /// Mermaid is the default and every diagram's fallback; Pele draws the same
 /// syntax faster, in its own layout, and only by the user's choice.
@@ -291,8 +284,6 @@ export interface Settings {
    *  theme's. */
   docFont: string;
   docLetterSpacing: DocLetterSpacing;
-  /** Points, for expanded and condensed. */
-  docLetterSpacingBy: number;
   shortcuts: Shortcuts;
   /** The keys of plugins' commands as the user set them, by command id,
    *  over their manifests' keybindings; "" for none. */
@@ -398,7 +389,6 @@ export const DEFAULT_SETTINGS: Settings = {
   docLineSpacing: "auto",
   docFont: "",
   docLetterSpacing: "auto",
-  docLetterSpacingBy: 1,
   shortcuts: DEFAULT_SHORTCUTS,
   commandShortcuts: {},
   themeId: "default",
