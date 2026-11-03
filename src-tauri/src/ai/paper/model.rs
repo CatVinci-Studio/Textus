@@ -177,10 +177,7 @@ pub(crate) async fn ask(
     message: String,
     watch: Watch<'_>,
 ) -> Result<String, String> {
-    let turns = [AgentTurn::User {
-        text: message,
-        images: Vec::new(),
-    }];
+    let turns = [AgentTurn::user(message)];
     Ok(
         match model.step_watched(instructions, &turns, &[], watch).await? {
             StepResult::Done(text) => text,

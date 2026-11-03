@@ -50,10 +50,7 @@ pub(crate) async fn hand_over<T: Send>(
     let (instructions, watch) = (task.instructions, task.watch);
     let turns = run_agent_loop(
         Vec::new(),
-        AgentTurn::User {
-            text: task.message,
-            images: Vec::new(),
-        },
+        AgentTurn::user(task.message),
         task.steps,
         |turns: Vec<AgentTurn>| {
             let specs = &specs;
