@@ -24,8 +24,8 @@ const WINDOW_READY_WITHIN: Duration = Duration::from_secs(30);
 /// How long the export has to reach its save dialog.
 const EXPORT_STARTS_WITHIN: Duration = Duration::from_secs(30);
 
-/// `--to` formats: the name, the file's extension and the menu item that
-/// exports it (menu.rs's export ids).
+/// `--to` formats and their files' extensions: PDF, HTML and the pandoc
+/// writers of src/export/exporters.ts.
 const EXPORT_FORMATS: &[(&str, &str)] = &[
     ("pdf", "pdf"),
     ("html", "html"),
@@ -356,16 +356,11 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
     }
     let target = job.out.to_string_lossy().into_owned();
     crate::commands::export::set_cli_export_target(Some(target.clone()));
-    let menu_id = if pandoc {
-        format!("export-pandoc:{}", job.format)
-    } else {
-        format!("export-{}", job.format)
-    };
     let opened = in_window(
         app,
         Request {
             command: "export".into(),
-            args: vec![job.file.to_string_lossy().into_owned(), menu_id],
+            args: vec![job.file.to_string_lossy().into_owned(), job.format.into()],
             ..request
         },
     )
