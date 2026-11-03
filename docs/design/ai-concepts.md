@@ -35,16 +35,17 @@ Grammar check uses only the writing conventions and the library's names.
 **The folder Textus AI works in: it may read and search the text files
 there, and the project's own settings live in its `.textus/` folder.**
 
-- **On disk:** the nearest folder holding the document that has a
-  `.textus/` folder - the document's own, or one above it - and otherwise
-  the document's own folder, unless the user chose another one. The walk
-  up stops before the home folder and a drive root, which are never a
-  project.
-- **Create / edit:** nothing to create - saving a document makes its folder
-  the project folder, and a chapter in `novel/part-1/` belongs to `novel/`
+- **On disk:** the folder opened in the sidebar or chosen for the AI, else
+  the nearest folder holding the document that has a `.textus/` folder. A
+  lone document's own folder is not a project (it may be Downloads): the
+  agent then reads the document and the conversation's attached files
+  only. The walk up stops before the home folder and a drive root, which
+  are never a project.
+- **Create / edit:** **File > Open Folder…** makes the opened folder the
+  project folder, and a chapter in `novel/part-1/` belongs to `novel/`
   once `novel/.textus/` exists. **Choose project folder…** in the project bar's menu,
-  or **Settings > Textus AI > Project Folder**, picks another one; **Use the
-  document's folder** goes back to the default. **File > Open Folder…** sets
+  or **Settings > Textus AI > Project Folder**, picks another one; **Use no
+  project folder** goes back to none. **File > Open Folder…** sets
   it too, but only while the AI has no folder of its own (none chosen, or
   the one an earlier Open Folder set); **Close Folder** then puts the
   default back. A folder chosen for the AI is never replaced by the
@@ -145,7 +146,8 @@ Textus AI never changes them.
 - **On disk:** one Markdown file per memory, apart from the files the user
   writes. Personal (the user's habits, every project): `memory/<slug>.md`
   in the global config folder. The project's (this work):
-  `.textus/memory/<slug>.md`. Front matter `kind` (`requirement`, `preference` or
+  `projects/<key>/memory/<slug>.md` beside it (`ai/project_data.rs`), never
+  in the user's folder; an older `.textus/memory/` moves there once. Front matter `kind` (`requirement`, `preference` or
   `style`), `remembered-by: textus-ai`, `created`, `updated`,
   `source-conversation`, `source-title`, `source-document`; then the memory
   in one or a few sentences. A fact about the work (a person, place, term)
@@ -335,10 +337,10 @@ part of the project.
 | Writing conventions                       |       ✓       |     ✓      |       ✓       |
 
 - **One project folder at a time.** A chosen folder is a single setting
-  and applies to every document, unsaved drafts included, until **Use the
-  document's folder**. A chosen folder that no longer exists falls back to
-  the document's project. With neither (an unsaved draft, nothing chosen)
-  there is no project: no file tools, style profile, library, project
+  and applies to every document, unsaved drafts included, until **Use no
+  project folder**. A chosen folder that no longer exists falls back to
+  the document's enclosing project. With neither (a lone document, nothing
+  opened or chosen) there is no project: no file tools, style profile, library, project
   instructions, project skills or project memories - the global layer and
   the personal memories still apply. A folder that is too broad (the home
   folder, a drive root) is refused, whether chosen or the document's own,
@@ -418,7 +420,7 @@ names above.
 
 | User-facing name       | In code                                                                                                                                                                                                                                                                                             |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Project folder         | workspace root: `settings.agentWorkspaceRoot` (`""` = the document's folder), `workspace::project_root`, `AgentWorkspace.root`                                                                                                                                                                      |
+| Project folder         | workspace root: `settings.agentWorkspaceRoot` (`""` = none), `workspace::project_root`, `AgentWorkspace.root`                                                                                                                                                                                       |
 | `.textus/` folder      | `WORKSPACE_DIR_NAME`                                                                                                                                                                                                                                                                                |
 | Style profile          | `AgentWorkspace.style`, `project::read_style`, `learn_style`                                                                                                                                                                                                                                        |
 | Library                | `AgentWorkspace.library`, `project::read_library`, `project::relevant_library`                                                                                                                                                                                                                      |

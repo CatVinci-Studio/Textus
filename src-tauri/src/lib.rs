@@ -7,6 +7,8 @@ mod atomic;
 mod auth;
 #[cfg(desktop)]
 mod background;
+#[cfg(desktop)]
+pub mod cli;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(all(test, desktop))]
 mod bindings;
@@ -37,7 +39,7 @@ use auth::custom_endpoint::{
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
-use commands::attachment::pick_attachment_file;
+use commands::attachment::pick_attachment_files;
 use commands::drafts::{
     clear_all_drafts, clear_draft_snapshot, save_draft_snapshot, take_draft_snapshots,
 };
@@ -94,6 +96,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(cli::app::CliBridge::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -164,6 +167,7 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     }
 
     commands::cli::try_silent_install();
+    cli::app::start(app.handle());
 
     menu::install(app)?;
 
@@ -247,6 +251,8 @@ pub fn run() {
             settings::history_list,
             settings::history_upsert,
             settings::history_remove,
+            settings::ai_records_export,
+            settings::ai_records_import,
             settings::history_clear,
             settings::chat_history_get,
             settings::chat_history_archived,
@@ -337,7 +343,7 @@ pub fn run() {
             crate::ai::memory::revision_choices_write,
             crate::ai::kept_proposals::kept_proposals_read,
             crate::ai::kept_proposals::kept_proposals_write,
-            pick_attachment_file,
+            pick_attachment_files,
             set_provider_api_key,
             provider_api_key_status,
             clear_provider_api_key,
@@ -449,6 +455,7 @@ pub fn run() {
             commands::clipboard::clipboard_text,
             commands::input_source::set_roman_input,
             commands::system_info::system_info,
+            commands::fonts::system_font_families,
             commands::system_info::send_problem_report,
             #[cfg(desktop)]
             background::background_status,
@@ -480,6 +487,10 @@ pub fn run() {
             cli_command_status,
             #[cfg(desktop)]
             install_cli_command,
+            #[cfg(desktop)]
+            cli::app::cli_listening,
+            #[cfg(desktop)]
+            cli::app::cli_respond,
             #[cfg(desktop)]
             commands::fs::move_picture_to_trash,
             #[cfg(desktop)]

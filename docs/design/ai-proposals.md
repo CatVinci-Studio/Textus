@@ -471,9 +471,9 @@ the answer to a per-window store (`useMarginAvailable`).
 
 A saved document's proposals that are neither accepted nor rejected are
 written down 0.4 s after they settle, and offered again when the document
-opens: in a project with a `.textus/` folder, as
-`.textus/pending/<the document's path in the project>.json`; otherwise in
-the app's data folder, under `pending/`, named by a hash of the path. The
+opens: in the app's data folder, under `pending/`, named by a hash of the
+path - never in the user's folder (one an older Textus kept in a
+project's `.textus/pending/` moves there once). The
 file goes once the last of them is decided.
 
 - **What is kept** is each proposal as it was made, with the writer's

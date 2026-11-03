@@ -19,6 +19,7 @@ mod stores;
 pub(crate) use stores::*;
 mod app;
 pub(crate) use app::*;
+mod ai_records;
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -178,6 +179,42 @@ pub fn history_upsert(
         },
     );
     Ok(())
+}
+
+/// Every conversation and memory, for a settings file.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn ai_records_export(
+    app: AppHandle,
+    stores: tauri::State<Stores>,
+) -> Result<ai_records::AiRecords, String> {
+    let global = crate::ai::workspace::global_agent_dir(&app)?;
+    Ok(ai_records::collect(&stores.chat, &global))
+}
+
+/// Adds a settings file's conversations and memories; every window's history
+/// hears of each conversation saved.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn ai_records_import(
+    app: AppHandle,
+    stores: tauri::State<Stores>,
+    records: ai_records::AiRecords,
+) -> Result<ai_records::Imported, String> {
+    let global = crate::ai::workspace::global_agent_dir(&app)?;
+    let (imported, saved) = ai_records::merge(&stores.chat, &global, records);
+    for entry in saved {
+        emit_to_all(
+            &app,
+            "history-changed",
+            HistoryChanged {
+                kind: HistoryKind::Chat,
+                op: HistoryOp::Upsert { entry },
+                from: String::new(),
+            },
+        );
+    }
+    Ok(imported)
 }
 
 #[tauri::command]

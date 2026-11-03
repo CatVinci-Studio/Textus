@@ -50,7 +50,7 @@ export interface PaperRunState {
   phase: PaperPhase | "starting";
   /** What the paper is on: its title until the finished paper has one. */
   topic: string;
-  /** The paper's id in `.textus/papers/`, once research has made it. */
+  /** The paper's id in its project's `papers/`, once research has made it. */
   paperId: string | null;
   /** The kind of piece and its length in characters, once chosen. */
   genre: Genre | null;
@@ -249,7 +249,7 @@ export interface PaperActions {
   restore: (key: string, topic: string) => void;
 }
 
-/** A new paper's card key, which is also its id in `.textus/papers/`:
+/** A new paper's card key, which is also its id in `papers/`:
  *  lowercase hex of the time, as Rust's `new_id`, so ids sort by age. */
 export function newPaperId(): string {
   const nanos =

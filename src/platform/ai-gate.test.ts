@@ -24,6 +24,7 @@ const requests: [string, () => Promise<unknown>][] = [
         blocks: [],
         docPath: null,
         workspaceRoot: null,
+        conversation: "c1",
         history: [],
         message: "hi",
         images: [],

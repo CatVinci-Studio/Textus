@@ -146,6 +146,8 @@ export const clipboardIpc = {
  *  and sending the report to be filed. */
 export const systemIpc = {
   info: () => command("system_info"),
+  /** The font families installed here, for the text font setting. */
+  fontFamilies: () => command("system_font_families"),
   sendReport: (report: Generated.ProblemReport_Deserialize) =>
     command("send_problem_report", report),
 };
@@ -257,8 +259,13 @@ export const themeGallery = {
 // CLI command
 
 export const cli = {
-  cliCommandStatus: () => desktopQueryCommand("cli_command_status", false),
+  cliCommandStatus: () =>
+    desktopQueryCommand("cli_command_status", "missing" as const),
   installCliCommand: () => desktopActionCommand("install_cli_command"),
+  /** This window takes `textus` requests (`cli-request`), or stops. */
+  listening: (on: boolean) => desktopActionCommand("cli_listening", on),
+  respond: (id: string, out: string, err: string, exit: number) =>
+    desktopActionCommand("cli_respond", id, out, err, exit),
 };
 
 // Background mode (desktop only)
@@ -281,7 +288,7 @@ export const background = {
 
 // Default editor (desktop only)
 
-export type { DefaultEditorStatus } from "./bindings/app";
+export type { CliStatus, DefaultEditorStatus } from "./bindings/app";
 
 export const defaultEditor = {
   status: () => desktopQueryCommand("default_editor_status", null),

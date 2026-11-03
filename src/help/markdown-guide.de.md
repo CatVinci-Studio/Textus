@@ -187,7 +187,7 @@ Der Baum ist auch eine kleine Dateiverwaltung. Der Name des übergeordneten Ordn
 
 Zieh Dateien aus dem Finder oder dem Datei-Explorer auf das Fenster, um sie zu öffnen: Dokumente öffnen sich in Tabs, Bilder kommen dort ins Dokument, wo du sie loslässt, und ein Ordner öffnet sich in der Seitenleiste. **Datei → Pfad kopieren** kopiert den vollständigen Pfad des vorderen Dokuments.
 
-Im Terminal öffnet `textus notizen.md` eine Datei in Textus; **Einstellungen → Allgemein** installiert den Befehl `textus`, falls er noch fehlt.
+Im Terminal öffnet `textus notizen.md` eine Datei in Textus; **Einstellungen → Allgemein** installiert den Befehl `textus`, falls er noch fehlt. Es kann mehr, ohne ein Fenster zu öffnen: `textus search <Wörter>` findet sie in den Dateien eines Ordners, `textus read` gibt eine PDF- oder Word-Datei als Markdown aus, und `textus help` listet alle Befehle auf, auch die der Plugins.
 
 **Datei → Öffnen…** öffnet auch ein Word-Dokument (`.docx`), ebenso das Ablegen auf dem Fenster: Es wird ein neues, noch nicht gespeichertes Markdown-Dokument gleichen Namens mit seinen Überschriften, Listen, Tabellen, Links, Fußnoten und Bildern. Die Bilder kommen beim Speichern dorthin, wo **Einstellungen → Editor & Design → Bilder** eingefügte Bilder ablegt, und **Speichern** schlägt eine `.md`-Datei neben der Word-Datei vor. Manche Formatierung kann anders aussehen; die Word-Datei selbst wird nie verändert. Nur auf dem Desktop.
 

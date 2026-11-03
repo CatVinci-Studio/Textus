@@ -9,6 +9,7 @@ import path from "node:path";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { pluginsCheckout } from "../../../vite.dev-plugins";
 import { tabFrame } from "../../plugin-helpers";
+import { around, CARD, film, framed } from "./card-frame";
 import {
   canned,
   LANGS,
@@ -204,11 +205,9 @@ const CODE_FONT = `
   }
 `;
 
-/** Cuts the area around `targets` - their bounds joined, `margin` CSS
- *  pixels on every side - and frames it as the website does: a rounded
- *  window with a soft shadow on its paper, `aspect` (width / height) wide,
- *  the window as large as the frame lets it be. Whole pixels: a fractional
- *  clip leaves seams in Chromium's tiles. */
+/** Cuts the area around `targets` and frames it as the website does: a
+ *  rounded window with a soft shadow on its paper, `aspect` (width /
+ *  height) wide, the window as large as the frame lets it be. */
 async function card(
   page: Page,
   lang: string,
@@ -221,130 +220,57 @@ async function card(
     inset = 18,
   }: { margin?: number; aspect?: number; frame?: number; inset?: number } = {},
 ) {
-  // A block past the window's edge would be cut: brought to its middle.
-  await targets[0].evaluate((el) => {
+  await scrollIn(targets[0]);
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(300);
+  const png = await page.screenshot({
+    clip: await around(page, targets, margin, name),
+  });
+  writeFileSync(
+    cardFile(lang, name),
+    await framed(page, png, { aspect, width: frame, inset }),
+  );
+}
+
+/** A block past the window's edge would be cut: brought to its middle. */
+function scrollIn(target: Locator) {
+  return target.evaluate((el) => {
     const box = el.getBoundingClientRect();
     if (box.top < -2 || box.bottom > window.innerHeight + 2)
       el.scrollIntoView({ block: "center", inline: "nearest" });
   });
-  await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(300);
-  const boxes = await Promise.all(targets.map((t) => t.boundingBox()));
-  const found = boxes.filter((b) => b !== null);
-  expect(found.length, `${name}: nothing to cut around`).toBe(targets.length);
-  const view = page.viewportSize()!;
-  const x = Math.max(
-    0,
-    Math.round(Math.min(...found.map((b) => b.x)) - margin),
-  );
-  const y = Math.max(
-    0,
-    Math.round(Math.min(...found.map((b) => b.y)) - margin),
-  );
-  const right = Math.min(
-    view.width,
-    Math.round(Math.max(...found.map((b) => b.x + b.width)) + margin),
-  );
-  const bottom = Math.min(
-    view.height,
-    Math.round(Math.max(...found.map((b) => b.y + b.height)) + margin),
-  );
-  const png = await page.screenshot({
-    clip: { x, y, width: right - x, height: bottom - y },
-  });
-  const dir = path.join("docs/images/readme", README_DIR[lang]);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    path.join(dir, `${name}.webp`),
-    await framed(page, png, aspect, frame, inset),
-  );
 }
 
-/** `png` (at the page's scale) in a window on the website's paper, the
- *  frame `width` CSS pixels wide: small, so the words are large where the
- *  README shows it. Drawn on a canvas: a large image in a page left seams
- *  in Chromium's screenshot. */
-async function framed(
+/** Where a card of `lang` goes. */
+function cardFile(lang: string, name: string, ext = "webp") {
+  const dir = path.join("docs/images/readme", README_DIR[lang]);
+  mkdirSync(dir, { recursive: true });
+  return path.join(dir, `${name}.${ext}`);
+}
+
+/** A card's film: `act` played in the area `targets` take up. */
+async function filmCard(
   page: Page,
-  png: Buffer,
-  aspect: number,
-  width: number,
-  inset: number,
-): Promise<Buffer> {
-  const data = await page.evaluate(
-    async ({ src, aspect, width, inset }) => {
-      const scale = 2;
-      const W = width * scale;
-      const H = Math.round(W / aspect);
-      const img = new Image();
-      img.src = src;
-      await img.decode();
-      // The window fills the room, the same for every card; the cut sits
-      // in it as large as it fits, on its own colour.
-      const pad = inset * scale;
-      const x = 20 * scale;
-      const y = 18 * scale;
-      const w = W - 2 * x;
-      const h = H - 2 * y;
-      const fit = Math.min(
-        (w - 2 * pad) / img.width,
-        (h - 2 * pad) / img.height,
-      );
-      const iw = Math.round(img.width * fit);
-      const ih = Math.round(img.height * fit);
-      const ix = Math.round(x + (w - iw) / 2);
-      const iy = Math.round(y + (h - ih) / 2);
-      const r = 12 * scale;
-      const canvas = document.createElement("canvas");
-      canvas.width = W;
-      canvas.height = H;
-      const ctx = canvas.getContext("2d")!;
-      const paper = ctx.createRadialGradient(W / 2, 0, 0, W / 2, 0, H * 1.2);
-      paper.addColorStop(0, "#ffffff");
-      paper.addColorStop(0.55, "#faf7f1");
-      paper.addColorStop(1, "#f3eee4");
-      ctx.fillStyle = paper;
-      ctx.fillRect(0, 0, W, H);
-      const window = new Path2D();
-      window.roundRect(x, y, w, h, r);
-      // The website's shadow: a close one and a wide soft one below.
-      ctx.save();
-      ctx.shadowColor = "rgba(29, 43, 58, 0.16)";
-      ctx.shadowBlur = 28 * scale;
-      ctx.shadowOffsetY = 14 * scale;
-      ctx.fillStyle = "#fff";
-      ctx.fill(window);
-      ctx.restore();
-      ctx.save();
-      ctx.clip(window);
-      const probe = document.createElement("canvas");
-      probe.width = probe.height = 1;
-      // Its colour at the middle of its left edge: a corner may be a
-      // dialog's backdrop showing past its rounding.
-      probe
-        .getContext("2d")!
-        .drawImage(img, 1, Math.floor(img.height / 2), 1, 1, 0, 0, 1, 1);
-      const [r0, g0, b0] = probe
-        .getContext("2d")!
-        .getImageData(0, 0, 1, 1).data;
-      ctx.fillStyle = `rgb(${r0}, ${g0}, ${b0})`;
-      ctx.fill(window);
-      ctx.drawImage(img, ix, iy, iw, ih);
-      ctx.restore();
-      ctx.strokeStyle = "rgba(29, 43, 58, 0.1)";
-      ctx.lineWidth = scale;
-      ctx.stroke(window);
-      // WebP: a tenth of the PNG, the same to the eye.
-      return canvas.toDataURL("image/webp", 0.92);
-    },
+  lang: string,
+  name: string,
+  targets: (after: boolean) => Locator[],
+  act: () => Promise<void>,
+  { margin = 20, inset = 18 }: { margin?: number; inset?: number } = {},
+) {
+  await page.evaluate(() => document.fonts.ready);
+  await scrollIn(targets(false)[0]);
+  await film(
+    page,
+    cardFile(lang, name),
+    targets,
+    act,
     {
-      src: `data:image/png;base64,${png.toString("base64")}`,
-      aspect,
-      width,
+      aspect: CARD,
+      width: 640,
       inset,
     },
+    margin,
   );
-  return Buffer.from(data.split(",")[1], "base64");
 }
 
 /** Leaves only the document's blocks that hold `targets` in sight: the
@@ -372,9 +298,6 @@ async function isolate(targets: Locator[]): Promise<() => Promise<void>> {
   });
   return () => style.evaluate((el) => (el as Element).remove());
 }
-
-/** Every small card: one size, whichever grid it is in. */
-const CARD = 4 / 3;
 
 /** The app opened as shot-kit's launch does, with this Mac's code font. */
 async function start(page: Page, options: Parameters<typeof launch>[1]) {
@@ -538,23 +461,33 @@ for (const lang of LANGS) {
         ],
       });
       const composer = page.locator(".agent-panel-view textarea");
-      await composer.fill(sample.ask);
-      await composer.press("Enter");
       const comment = page.locator(".agent-comment").first();
-      await expect(comment).toBeVisible();
-      await expect(
-        doc(page).locator(".pending-sentence").first(),
-      ).toBeVisible();
-      await page.waitForTimeout(1200);
+      const paragraph = note(page);
+      const rewritten = doc(page).locator(":scope > p", {
+        has: page.locator(".pending-sentence"),
+      });
+      // The paragraph as the request goes and the edits come in.
+      const restore = await isolate([paragraph]);
+      await filmCard(
+        page,
+        lang,
+        "ai-revise",
+        (after) => [after ? rewritten : paragraph],
+        async () => {
+          await composer.fill(sample.ask);
+          await composer.press("Enter");
+          await expect(comment).toBeVisible();
+          await expect(
+            doc(page).locator(".pending-sentence").first(),
+          ).toBeVisible();
+          await page.waitForTimeout(1200);
+        },
+      );
+      await restore();
       await composer.blur();
       await card(page, lang, "ai-review", [comment], {
         margin: 4,
       });
-      const rewritten = doc(page).locator(":scope > p", {
-        has: page.locator(".pending-sentence"),
-      });
-      await isolate([rewritten]);
-      await card(page, lang, "ai-revise", [rewritten]);
     });
 
     test("ai: continuation", async ({ page }) => {
@@ -564,14 +497,25 @@ for (const lang of LANGS) {
       const paragraph = note(page);
       const text = (await paragraph.innerText()).trim();
       await caretAfter(page, text.slice(-8), true);
-      // Mid-document, a continuation comes on request.
-      await page.keyboard.press("ControlOrMeta+Shift+Space");
-      await expect(page.locator(".ghost-text")).toHaveAttribute(
-        "data-suggestion",
-        extra.continuation,
-      );
       await isolate([paragraph]);
-      await card(page, lang, "ai-continue", [paragraph]);
+      // Mid-document, a continuation comes on request; Tab takes it.
+      await filmCard(
+        page,
+        lang,
+        "ai-continue",
+        () => [paragraph],
+        async () => {
+          await page.keyboard.press("ControlOrMeta+Shift+Space");
+          await expect(page.locator(".ghost-text")).toHaveAttribute(
+            "data-suggestion",
+            extra.continuation,
+          );
+          await page.waitForTimeout(1400);
+          await page.keyboard.press("Tab");
+          await expect(page.locator(".ghost-text")).toHaveCount(0);
+          await page.waitForTimeout(300);
+        },
+      );
     });
 
     test("ai: grammar", async ({ page }) => {
@@ -602,22 +546,26 @@ for (const lang of LANGS) {
       // The document's end: End on a Mac scrolls.
       await page.keyboard.press("ControlOrMeta+ArrowDown");
       await page.keyboard.press("Enter");
-      await page.keyboard.type(sentence);
-      const underline = doc(page).locator(".grammar-issue");
-      await expect(underline).toHaveText(wrong);
-      // Its paragraph, by position: hovering redraws the underline.
-      const index = await underline.evaluate((el) => {
-        const root = el.closest(".ProseMirror")!;
-        let block: Element = el;
-        while (block.parentElement !== root) block = block.parentElement!;
-        return Array.from(root.children).indexOf(block);
-      });
+      // The new paragraph, by position: hovering redraws the underline.
+      const index = (await doc(page).locator(":scope > *").count()) - 1;
       const paragraph = doc(page).locator(":scope > *").nth(index);
-      await underline.hover();
+      const underline = doc(page).locator(".grammar-issue");
       const popover = page.locator(".grammar-popover");
-      await expect(popover).toBeVisible();
       await isolate([paragraph]);
-      await card(page, lang, "ai-grammar", [paragraph, popover]);
+      await filmCard(
+        page,
+        lang,
+        "ai-grammar",
+        (after) => (after ? [paragraph, popover] : [paragraph]),
+        async () => {
+          await page.keyboard.type(sentence, { delay: 45 });
+          await expect(underline).toHaveText(wrong);
+          await page.waitForTimeout(500);
+          await underline.hover();
+          await expect(popover).toBeVisible();
+          await page.waitForTimeout(400);
+        },
+      );
     });
 
     test("ai: skills", async ({ page }) => {
@@ -627,16 +575,22 @@ for (const lang of LANGS) {
           path: fileIn(sample.folder, sample.title),
           content: sample.doc,
         },
-        settings: { agentDefaultMode: "create" },
-        storage: { "textus-agent-panel-open": "1" },
       });
-      const composer = page.locator(".agent-panel-view textarea");
+      // Create, in Settings › Extensions: its / menu holds what it makes.
+      await page.evaluate(() =>
+        window.dispatchEvent(new Event("textus-open-create")),
+      );
+      const composer = page.locator(".create-studio textarea");
       await composer.fill("/");
       const picker = page.locator(".composer-picker");
       await expect(picker.getByRole("option")).toHaveCount(3);
-      await card(page, lang, "ai-skills", [picker], {
-        margin: 0,
-      });
+      await card(
+        page,
+        lang,
+        "ai-skills",
+        [picker, page.locator(".create-studio .inline-chat-bar")],
+        { margin: 12 },
+      );
     });
 
     test("ai: models", async ({ page }) => {
@@ -726,12 +680,6 @@ for (const lang of LANGS) {
         .locator('[data-type="wikilink"]', { hasText: sample.previewLink })
         .last();
       const preview = page.locator(".hover-card");
-      await expect(async () => {
-        await page.mouse.move(0, 400);
-        await link.hover();
-        await expect(preview).toBeVisible({ timeout: 1500 });
-      }).toPass();
-      await page.waitForTimeout(600);
       const index = await link.evaluate((el) => {
         const root = el.closest(".ProseMirror")!;
         let block: Element = el;
@@ -740,7 +688,21 @@ for (const lang of LANGS) {
       });
       const paragraph = doc(page).locator(":scope > *").nth(index);
       await isolate([paragraph]);
-      await card(page, lang, "plugin-preview", [paragraph, preview]);
+      await page.mouse.move(0, 400);
+      await filmCard(
+        page,
+        lang,
+        "plugin-preview",
+        (after) => (after ? [paragraph, preview] : [paragraph]),
+        async () => {
+          await expect(async () => {
+            await page.mouse.move(0, 400);
+            await link.hover();
+            await expect(preview).toBeVisible({ timeout: 1500 });
+          }).toPass();
+          await page.waitForTimeout(600);
+        },
+      );
     });
 
     test("plugin: vim", async ({ page }) => {
@@ -766,24 +728,36 @@ for (const lang of LANGS) {
           if (/\p{L}/u.test(ch)) counts.set(ch, (counts.get(ch) ?? 0) + 1);
         return [...counts].sort((a, b) => b[1] - a[1])[0][0];
       });
-      await page.keyboard.press("s");
-      // A key no keyboard layout here names: its keydown, as an IME-free
-      // layout of that script sends it.
-      await doc(page).evaluate((root, key) => {
-        root.dispatchEvent(
-          new KeyboardEvent("keydown", {
-            key,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, letter);
-      await expect(page.locator(".plugin-flash-label").first()).toBeVisible();
-      await page.waitForTimeout(300);
-      await card(page, lang, "plugin-vim", [page.locator(".app-shell")], {
-        margin: 0,
-        inset: 0,
-      });
+      const shell = page.locator(".app-shell");
+      const label = page.locator(".plugin-flash-label");
+      await filmCard(
+        page,
+        lang,
+        "plugin-vim",
+        () => [shell],
+        async () => {
+          await page.keyboard.press("s");
+          // A key no keyboard layout here names: its keydown, as an
+          // IME-free layout of that script sends it.
+          await doc(page).evaluate((root, key) => {
+            root.dispatchEvent(
+              new KeyboardEvent("keydown", {
+                key,
+                bubbles: true,
+                cancelable: true,
+              }),
+            );
+          }, letter);
+          await expect(label.first()).toBeVisible();
+          await page.waitForTimeout(1400);
+          // The label's key jumps there.
+          const key = (await label.nth(2).innerText()).trim();
+          await page.keyboard.press(key);
+          await expect(label).toHaveCount(0);
+          await page.waitForTimeout(300);
+        },
+        { margin: 0, inset: 0 },
+      );
     });
 
     test("plugin: version history", async ({ page }) => {

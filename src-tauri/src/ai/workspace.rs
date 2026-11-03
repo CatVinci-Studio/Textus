@@ -166,6 +166,9 @@ pub struct AgentWorkspace {
     pub memories: crate::ai::memory::Memories,
     /// Whether Textus AI may remember things by itself.
     pub remember: bool,
+    /// Whether this request's conversation has files attached (ai::scratch).
+    #[serde(skip)]
+    pub attached: bool,
 }
 
 impl AgentWorkspace {
@@ -182,11 +185,10 @@ impl AgentWorkspace {
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum RootSource {
-    /// An unsaved document and no folder chosen.
+    /// No folder opened or chosen, and none above the document with
+    /// `.textus/`.
     #[default]
     None,
-    /// The open document's own folder - the default.
-    DocumentFolder,
     /// The nearest folder above the document that has a `.textus/` folder.
     EnclosingProject,
     /// The folder the user chose (the project menu, or Settings > Textus AI).

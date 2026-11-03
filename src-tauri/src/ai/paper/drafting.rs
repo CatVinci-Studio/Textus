@@ -35,6 +35,7 @@ pub async fn ai_paper_draft(
 ) -> Result<(), String> {
     crate::ai::ensure_on(&app)?;
     let root = paper_root(
+        &app,
         request.doc_path.as_deref(),
         request.workspace_root.as_deref(),
         Some(&request.id),

@@ -99,7 +99,7 @@ fn a_saved_paper_loads_back_whole() {
         outline: Some(outline()),
     };
     save(root.path(), &files).unwrap();
-    let dir = root.path().join(".textus/papers/abc123");
+    let dir = root.path().join("papers/abc123");
     for name in ["paper.json", "dossier.json", "outline.json"] {
         assert!(dir.join(name).is_file(), "{name}");
     }
@@ -115,10 +115,7 @@ fn a_paper_not_yet_researched_or_outlined_loads_empty() {
         outline: None,
     };
     save(root.path(), &files).unwrap();
-    assert!(!root
-        .path()
-        .join(".textus/papers/abc123/outline.json")
-        .exists());
+    assert!(!root.path().join("papers/abc123/outline.json").exists());
     assert_eq!(load(root.path(), "abc123").unwrap(), files);
 }
 
@@ -137,7 +134,7 @@ fn a_missing_or_unsafe_paper_id_is_an_error() {
         outline: None,
     };
     assert!(save(root.path(), &files).is_err());
-    assert!(!root.path().join(".textus").exists());
+    assert!(!root.path().join("papers").exists());
 }
 
 #[test]
@@ -170,7 +167,7 @@ fn a_scratch_paper_moves_into_the_project_once_there_is_one() {
         load_section(&root, "abc123", 0).unwrap().as_deref(),
         Some("# One")
     );
-    assert!(!scratch.path().join(".textus/papers/abc123").exists());
+    assert!(!scratch.path().join("papers/abc123").exists());
 }
 
 #[test]
@@ -317,7 +314,13 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, None, &[])
+    let bare = research_tests::Bare::default();
+    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let kit = research::Kit {
+        tools: &tools,
+        ctx: &ctx,
+    };
+    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, &kit)
         .await
         .unwrap();
 
@@ -470,7 +473,13 @@ impl research::Model for Empty {
 async fn research_that_keeps_nothing_fails_with_a_reason() {
     let budget = SharedBudget::new(ResearchBudget::for_paper());
     let web = WebPlan::new(true, None, None, &[]);
-    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, None, &[])
+    let bare = research_tests::Bare::default();
+    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let kit = research::Kit {
+        tools: &tools,
+        ctx: &ctx,
+    };
+    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, &kit)
         .await
         .unwrap_err();
     assert!(err.contains("found nothing to write from"), "{err}");
@@ -1149,18 +1158,18 @@ fn a_paper_card_s_turns_are_not_sent_to_the_model() {
 
 #[test]
 fn a_reference_file_s_address_has_no_spaces_and_reads_back() {
-    let address = research::reference_address("references/Tides 2024/潮汐.md");
+    let address = sources::reference_address("references/Tides 2024/潮汐.md");
     assert!(!address.contains(' '), "{address}");
     assert!(address.starts_with("references/Tides%202024/"), "{address}");
     assert_eq!(
-        research::reference_path(&address).as_deref(),
+        sources::reference_path(&address).as_deref(),
         Some("references/Tides 2024/潮汐.md")
     );
-    assert_eq!(research::reference_path("https://a.example/"), None);
+    assert_eq!(sources::reference_path("https://a.example/"), None);
 }
 
-/// Searches the library, reads around the hit, keeps a note citing the
-/// file, and tries to read outside the library.
+/// Searches the library, keeps a note citing the file, and tries to read
+/// outside the project folder.
 struct Librarian;
 
 impl research::Model for Librarian {
@@ -1186,13 +1195,13 @@ impl research::Model for Librarian {
             StepResult::ToolCalls(vec![
                 call(
                     "s",
-                    research::SEARCH_REFERENCES_TOOL,
+                    crate::ai::tools::SEARCH_REFERENCES_TOOL_NAME,
                     json!({"query": "tidal barrages"}),
                 ),
                 call(
                     "r",
-                    research::READ_REFERENCE_TOOL,
-                    json!({"path": "references/../secret.md"}),
+                    crate::ai::tools::READ_FILE_TOOL_NAME,
+                    json!({"path": "../secret.md"}),
                 ),
             ])
         } else if !turns.iter().any(
@@ -1210,9 +1219,8 @@ impl research::Model for Librarian {
                 "{}",
                 results[0]
             );
-            assert!(results[0].contains("<external-content"), "{}", results[0]);
             assert!(
-                results[1].contains("isn't a file in references/"),
+                results[1].contains("outside the project folder"),
                 "{}",
                 results[1]
             );
@@ -1230,24 +1238,23 @@ impl research::Model for Librarian {
 
 #[tokio::test]
 async fn helpers_search_the_user_s_library_and_cite_its_files() {
-    let root = tempfile::tempdir().unwrap();
-    let file = root.path().join("references/Tides 2024/a.md");
+    let outside = tempfile::tempdir().unwrap();
+    std::fs::write(outside.path().join("secret.md"), "Not for the paper.").unwrap();
+    let root = outside.path().join("project");
+    let file = root.join("references/Tides 2024/a.md");
     std::fs::create_dir_all(file.parent().unwrap()).unwrap();
     std::fs::write(&file, "Tidal barrages store energy at high tide.\n").unwrap();
-    std::fs::write(root.path().join("secret.md"), "Not for the paper.").unwrap();
     let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
-    let dossier = research::research(
-        &Librarian,
-        &paper(),
-        &web,
-        &budget,
-        &|_| {},
-        Some(root.path()),
-        &[],
-    )
-    .await
-    .unwrap();
+    let bare = research_tests::Bare::default();
+    let (tools, ctx) = bare.kit(Some(&root), None, Vec::new());
+    let kit = research::Kit {
+        tools: &tools,
+        ctx: &ctx,
+    };
+    let dossier = research::research(&Librarian, &paper(), &web, &budget, &|_| {}, &kit)
+        .await
+        .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     assert_eq!(dossier.notes[0].sources, vec![1]);
     assert_eq!(dossier.notes[1].sources, vec![1]);
@@ -1588,14 +1595,14 @@ fn an_untitled_source_is_listed_by_its_address_once() {
 #[test]
 fn an_address_with_parentheses_is_cited_whole() {
     let doi = "https://doi.org/10.1061/40927(243)238";
-    let safe = research::link_safe(doi);
+    let safe = sources::link_safe(doi);
     assert_eq!(safe, "https://doi.org/10.1061/40927%28243%29238");
     assert_eq!(
-        research::link_safe("https://a.example/%E4%B8%AD"),
+        sources::link_safe("https://a.example/%E4%B8%AD"),
         "https://a.example/%E4%B8%AD"
     );
     assert_eq!(
-        research::link_safe("references/Tides%202024/a.md"),
+        sources::link_safe("references/Tides%202024/a.md"),
         "references/Tides%202024/a.md"
     );
     let mut section = outline().sections.remove(0);
@@ -1683,7 +1690,13 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         web.source_number("https://lite.duckduckgo.com/lite/?q=green+roof"),
         Some(1)
     );
-    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, None, &[])
+    let bare = research_tests::Bare::default();
+    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let kit = research::Kit {
+        tools: &tools,
+        ctx: &ctx,
+    };
+    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, &kit)
         .await
         .unwrap();
     assert!(

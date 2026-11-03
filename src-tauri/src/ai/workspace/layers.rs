@@ -15,19 +15,17 @@ pub(crate) fn global_agent_dir(app: &AppHandle) -> Result<PathBuf, String> {
 /// as a project's `.textus/` is (agent.md, skills/, memory/).
 pub(crate) const GLOBAL_DIR: &str = "textus";
 
-/// Resolves the project folder, the sandbox for the file tools: the chosen
-/// folder, else the nearest enclosing folder with `.textus/`, else the
-/// document's own. A chosen folder that no longer exists falls back.
+/// Resolves the project folder, the sandbox for the file tools: the folder
+/// opened or chosen, else the nearest enclosing folder with `.textus/`. A
+/// lone document's own folder is not one: it may be Downloads or Desktop,
+/// so the agent works in the conversation's scratch folder instead.
 pub(crate) fn resolve_root(doc_path: Option<&str>, root_override: Option<&str>) -> Option<PathBuf> {
     let picked = root_override
         .map(str::trim)
         .filter(|p| !p.is_empty())
         .map(PathBuf::from)
         .filter(|p| p.is_dir());
-    picked.or_else(|| {
-        let folder = document_folder(doc_path)?;
-        Some(enclosing_project(folder).unwrap_or_else(|| folder.to_path_buf()))
-    })
+    picked.or_else(|| enclosing_project(document_folder(doc_path)?))
 }
 
 pub(crate) fn document_folder(doc_path: Option<&str>) -> Option<&Path> {
@@ -117,10 +115,7 @@ pub(crate) fn load_layers(
         None => RootSource::None,
         Some(root) if crate::ai::project::is_too_broad(root) => RootSource::TooBroad,
         Some(_) if chosen => RootSource::Chosen,
-        Some(root) if Some(root.as_path()) != document_folder(doc_path) => {
-            RootSource::EnclosingProject
-        }
-        Some(_) => RootSource::DocumentFolder,
+        Some(_) => RootSource::EnclosingProject,
     };
     let root = resolved.filter(|_| ws.root_source != RootSource::TooBroad);
     if let Some(root) = root.as_deref() {

@@ -98,6 +98,8 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 マインドマップ、Marpのスライド、カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能** にあります。パソコンでもiPhoneとiPadでも使えます。
 
+多くのプラグインは自分の機能を Textus AI にも渡すので、会話の中で頼むだけで使えます。プラグインは [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)、テーマは [textus-themes](https://github.com/CatVinci-Studio/textus-themes) にあり、自作のテーマも共有できます。
+
 ## よくある質問
 
 <details>

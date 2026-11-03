@@ -101,9 +101,11 @@ export interface ChatComposerProps {
   suggestions?: string[];
   /** Resolves the agent workspace (skills) - re-loaded whenever it changes. */
   docPath: string | null;
-  /** Explicit workspace root, or null for the document's own folder. Skills
-   *  come from whichever it resolves to. */
+  /** The folder opened or chosen, or null for none. Skills come from
+   *  whichever it resolves to. */
   workspaceRoot: string | null;
+  /** The conversation the attached files are kept for (ai/scratch.rs). */
+  conversation: string;
   selectedText: string | null;
   /** The selection is one picture: the chip says so, rather than count
    *  its alt text's characters. */

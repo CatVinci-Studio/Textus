@@ -498,10 +498,11 @@ export type Remembered_Serialize = {
  *  is, or why there is none.
  */
 export type RootSource = 
-/**  An unsaved document and no folder chosen. */
+/**
+ *  No folder opened or chosen, and none above the document with
+ *  `.textus/`.
+ */
 "none" | 
-/**  The open document's own folder - the default. */
-"documentFolder" | 
 /**  The nearest folder above the document that has a `.textus/` folder. */
 "enclosingProject" | 
 /**  The folder the user chose (the project menu, or Settings > Textus AI). */

@@ -1,6 +1,6 @@
-//! The AI's undecided proposals, kept with their document: in a project under
-//! `.textus/pending/`, else in the app data's `pending/`. The contents are the
-//! frontend's opaque JSON; made pictures go beside it in `<file>.pictures/`.
+//! The AI's undecided proposals, kept for their document in the app data's
+//! `pending/`, never in the user's folder. The contents are the frontend's
+//! opaque JSON; made pictures go beside it in `<file>.pictures/`.
 
 use crate::ai::workspace::project_dir;
 use sha2::{Digest, Sha256};
@@ -9,31 +9,41 @@ use tauri::Manager;
 
 const PENDING_FOLDER: &str = "pending";
 
-/// Where `doc_path`'s undecided proposals are kept: in its project's
-/// `.textus/pending/`, mirroring its place in the project, or in
-/// `app_data`'s `pending/`. None for a path that isn't absolute.
+/// Where `doc_path`'s undecided proposals are kept: `app_data`'s
+/// `pending/`, by a hash of the path. What an older Textus kept in the
+/// project's `.textus/pending/` moves there the first time. None for a path
+/// that isn't absolute.
 fn kept_file(doc_path: &str, workspace_root: Option<&str>, app_data: &Path) -> Option<PathBuf> {
     let doc = Path::new(doc_path);
     if !doc.is_absolute() {
         return None;
     }
-    // A project that has its `.textus/` already: a loose document's folder
-    // doesn't get one for this.
-    let in_project = crate::ai::workspace::project_root(Some(doc_path), workspace_root)
-        .filter(|root| project_dir(root).is_dir())
-        .and_then(|root| {
-            let rel = doc.strip_prefix(&root).ok()?;
-            // Only the plain names of folders and the file: nothing that
-            // climbs out of the project's pending folder.
-            rel.components()
-                .all(|c| matches!(c, Component::Normal(_)))
-                .then(|| project_dir(&root).join(PENDING_FOLDER).join(rel))
-        });
-    let base = in_project.unwrap_or_else(|| {
-        let hash = Sha256::digest(doc_path.as_bytes());
-        let name: String = hash.iter().take(16).map(|b| format!("{b:02x}")).collect();
-        app_data.join(PENDING_FOLDER).join(name)
-    });
+    let hash = Sha256::digest(doc_path.as_bytes());
+    let name: String = hash.iter().take(16).map(|b| format!("{b:02x}")).collect();
+    let file = app_data.join(PENDING_FOLDER).join(format!("{name}.json"));
+    if let Some(old) = older_kept_file(doc, workspace_root) {
+        if old.is_file() && !file.exists() {
+            if let Some(parent) = file.parent() {
+                let _ = std::fs::create_dir_all(parent);
+            }
+            let _ = std::fs::rename(&old, &file);
+            let _ = std::fs::rename(pictures_dir(&old), pictures_dir(&file));
+        }
+    }
+    Some(file)
+}
+
+/// Where an older Textus kept them: the project's `.textus/pending/`,
+/// mirroring the document's place in the project.
+fn older_kept_file(doc: &Path, workspace_root: Option<&str>) -> Option<PathBuf> {
+    let root = crate::ai::workspace::project_root(doc.to_str(), workspace_root)
+        .filter(|root| project_dir(root).is_dir())?;
+    let rel = doc.strip_prefix(&root).ok()?;
+    // Only the plain names of folders and the file: nothing that climbs out.
+    if !rel.components().all(|c| matches!(c, Component::Normal(_))) {
+        return None;
+    }
+    let base = project_dir(&root).join(PENDING_FOLDER).join(rel);
     let mut name = base.file_name()?.to_os_string();
     name.push(".json");
     Some(base.with_file_name(name))
@@ -173,21 +183,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn a_project_document_keeps_its_proposals_in_the_project() {
+    fn proposals_an_older_textus_kept_in_the_project_move_to_the_app_data() {
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path().join("novel");
-        std::fs::create_dir_all(root.join(".textus")).unwrap();
-        std::fs::create_dir_all(root.join("chapters")).unwrap();
+        let old = root.join(".textus/pending/chapters/one.md.json");
+        std::fs::create_dir_all(old.parent().unwrap()).unwrap();
+        std::fs::write(&old, "[]").unwrap();
+        std::fs::create_dir_all(pictures_dir(&old)).unwrap();
         let doc = root.join("chapters").join("one.md");
         let data = dir.path().join("data");
+
         let file = kept_file(doc.to_str().unwrap(), Some(root.to_str().unwrap()), &data).unwrap();
-        assert_eq!(
-            file,
-            root.join(".textus")
-                .join("pending")
-                .join("chapters")
-                .join("one.md.json")
-        );
+
+        assert!(file.starts_with(data.join("pending")));
+        assert_eq!(std::fs::read_to_string(&file).unwrap(), "[]");
+        assert!(pictures_dir(&file).is_dir());
+        assert!(!old.exists());
     }
 
     #[test]

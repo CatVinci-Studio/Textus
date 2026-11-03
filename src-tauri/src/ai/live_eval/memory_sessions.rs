@@ -508,6 +508,7 @@ fn run_scenario(
             thinking: aicompat::capabilities::ThinkingLevel::Auto,
             pictures: None,
             memory: Some(&dirs),
+            scratch: None,
         };
         let conv = harness::run_conversation(auth, &setup, s.doc, &s.turns);
         log.push(json!({

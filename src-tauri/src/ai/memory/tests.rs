@@ -52,7 +52,10 @@ fn a_memory_is_written_where_its_scope_says() {
     assert!(done.created && done.previous.is_none());
     assert_eq!(done.scope, Scope::Project);
     let stem = done.remembered.rsplit('/').next().unwrap();
-    let file = base.join(format!("novel/.textus/memory/{stem}.md"));
+    // Textus's own folder for the project, not the project's .textus/.
+    let memory = crate::ai::project_data::dir(&base.join("agent"), &base.join("novel"));
+    let file = memory.join(format!("memory/{stem}.md"));
+    assert!(!base.join("novel/.textus/memory").exists());
     let content = std::fs::read_to_string(&file).unwrap();
     assert!(content.starts_with("---\nkind: style\nremembered-by: textus-ai\n"));
     assert!(content.contains("source-title: \"Tighten \\\"the\\\" opening\"\n"));
@@ -202,7 +205,8 @@ fn ids_never_reach_outside_the_memory_folders() {
     // A link in the memory folder is never followed.
     #[cfg(unix)]
     {
-        let memory = base.join("novel/.textus/memory");
+        let memory =
+            crate::ai::project_data::dir(&base.join("agent"), &base.join("novel")).join("memory");
         std::fs::create_dir_all(&memory).unwrap();
         std::os::unix::fs::symlink(base.join("novel/chapter.md"), memory.join("link.md")).unwrap();
         assert!(dirs.delete("project/memory/link").is_err());

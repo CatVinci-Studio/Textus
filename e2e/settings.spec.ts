@@ -58,6 +58,7 @@ const t = {
   aboutTextus: "About Textus",
   aboutMadeBy: "Made by CatVinci Studio",
   updateCheckButton: "Check for Updates",
+  updateLatest: "You're on the latest version.",
   updateChannel: "Update channel",
   updateChannelStable: "Stable",
   updateChannelBeta: "Beta",
@@ -368,10 +369,8 @@ test.describe("desktop", () => {
       ).__devEmitTauriEvent("menu-check-updates"),
     );
     const panel = page.getByRole("dialog", { name: "Settings" });
-    // The check ran without a click: the button no longer says Check.
-    await expect(
-      panel.getByRole("button", { name: t.updateCheckButton }),
-    ).toHaveCount(0);
+    // The check ran without a click: its answer is there.
+    await expect(panel.getByRole("status")).toHaveText(t.updateLatest);
     await expect(panel.locator(".settings-about")).toBeVisible();
   });
 

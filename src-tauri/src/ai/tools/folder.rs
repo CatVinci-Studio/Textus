@@ -73,7 +73,7 @@ pub(super) fn use_skill(ctx: &ToolContext, arguments: &str) -> String {
     }
 }
 
-pub(super) const READ_FILE_TOOL_NAME: &str = "read_file";
+pub(crate) const READ_FILE_TOOL_NAME: &str = "read_file";
 
 /// How much of the project the listing shows: enough for reference material,
 /// small enough that a huge folder can't blow up the prompt.
@@ -82,9 +82,11 @@ pub(super) const SEARCH_FILES_TOOL_NAME: &str = "search_files";
 pub(super) const FIND_FILES_TOOL_NAME: &str = "find_files";
 pub(crate) const SEARCH_REFERENCES_TOOL_NAME: &str = "search_references";
 
-/// search_references, offered when the project has a references folder.
-pub(crate) fn references_tool<'a>() -> Tool<'a> {
-    Tool {
+/// search_references, when the project folder `root` has a references
+/// folder to search.
+pub(crate) fn references_tool<'a>(root: Option<&std::path::Path>) -> Option<Tool<'a>> {
+    root.filter(|root| root.join(crate::ai::project::REFERENCES_DIR).is_dir())?;
+    Some(Tool {
         spec: ToolSpec {
             name: SEARCH_REFERENCES_TOOL_NAME.into(),
             description: format!("Search the user's reference library - the papers, books, reports and notes in the project's `{}/` folder - for the passages that best answer a question, ranked by relevance. Pass the words the sources would use; several words are fine and the best passages contain most of them. Each result is `path:first-last` and the passage: cite the source by its file name, and read_file with start_line and end_line for more around it. Prefer it to search_files for research in the references; search_files finds one exact phrase anywhere in the project.", crate::ai::project::REFERENCES_DIR).into(),
@@ -102,7 +104,7 @@ pub(crate) fn references_tool<'a>() -> Tool<'a> {
         access: Access::ReadOnly,
         modes: EVERY_MODE,
         run: Run::Text(search_references),
-    }
+    })
 }
 
 fn search_references(ctx: &ToolContext, arguments: &str) -> String {
@@ -149,14 +151,12 @@ pub(super) fn path_argument(arguments: &str, key: &str) -> String {
 /// Reads a text file or document from inside the project folder, whole or a
 /// line range, or shows an image to a model that sees them.
 pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
-    let Some(root) = ctx.root else {
-        return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to read."
-            .to_string()
-            .into();
-    };
     // find_files marks images "(image)"; a model may copy it.
     let path = path_argument(arguments, "path");
     let path = path.trim().trim_end_matches("(image)").trim_end();
+    let Some(root) = folder_of(ctx, path) else {
+        return NO_FILES.to_string().into();
+    };
     let is_image = crate::ai::project::file_kind(std::path::Path::new(path))
         == Some(crate::ai::project::FileKind::Image);
     if is_image && ctx.sees_images {
@@ -189,23 +189,49 @@ fn view_image(root: &std::path::Path, path: &str) -> ToolOutput {
 /// Finds which project files mention something - the cross-file companion
 /// to search_document.
 pub(super) fn search_files(ctx: &ToolContext, arguments: &str) -> String {
-    let Some(root) = ctx.root else {
-        return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there is nothing to search."
-            .to_string();
-    };
-    crate::ai::project::search(root, &path_argument(arguments, "query"))
+    let query = path_argument(arguments, "query");
+    in_each_folder(ctx, |root| crate::ai::project::search(root, &query))
 }
 
 /// Finds project files by name, cheaper for the model than listing everything,
 /// or with no name lists them.
 pub(super) fn find_files(ctx: &ToolContext, arguments: &str) -> String {
-    let Some(root) = ctx.root else {
-        return "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use), so there are no files to find."
-            .to_string();
-    };
     let name = path_argument(arguments, "name");
-    if name.trim().is_empty() {
-        return list_files(ctx, root);
+    in_each_folder(ctx, |root| {
+        if name.trim().is_empty() {
+            list_files(ctx, root)
+        } else {
+            crate::ai::project::find(root, &name, ctx.sees_images)
+        }
+    })
+}
+
+const NO_FILES: &str = "There is no project folder for this document (it hasn't been saved, or its folder is too broad to use) and nothing is attached, so there are no files to read.";
+
+/// The folder `path` is in: the conversation's scratch folder for
+/// `attached/...`, else the project folder.
+fn folder_of<'a>(ctx: &ToolContext<'a>, path: &str) -> Option<&'a std::path::Path> {
+    let attached = path
+        .trim_start_matches(['@', '/'])
+        .strip_prefix(crate::ai::scratch::ATTACHED)
+        .is_some_and(|rest| rest.starts_with('/'));
+    if attached {
+        ctx.scratch
+    } else {
+        ctx.root
     }
-    crate::ai::project::find(root, &name, ctx.sees_images)
+}
+
+/// `run` over the project folder and the attached files, each answer under
+/// its own heading when there are both.
+fn in_each_folder(ctx: &ToolContext, run: impl Fn(&std::path::Path) -> String) -> String {
+    match (ctx.root, ctx.scratch) {
+        (Some(root), Some(scratch)) => format!(
+            "In the project folder:\n{}\n\nIn the attached files:\n{}",
+            run(root),
+            run(scratch)
+        ),
+        (Some(folder), None) | (None, Some(folder)) => run(folder),
+        (None, None) => NO_FILES.to_string(),
+    }
 }

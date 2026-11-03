@@ -40,6 +40,7 @@ fn scripted_agent_reads_then_proposes_through_the_real_tools() {
         skills: &[],
         ui_language: "en",
         root: None,
+        scratch: None,
         sees_images: false,
         conventions: &conventions,
         library: &[],
@@ -573,24 +574,29 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
 #[test]
 fn the_workspace_section_says_which_folder_and_why() {
     use crate::ai::workspace::{load_from, RootSource};
-    let doc_folder = load_from(None, Some("/tmp/novel/chapter-1.md"), None);
-    assert_eq!(doc_folder.root_source, RootSource::DocumentFolder);
-    let text = workspace_section(&doc_folder, "en");
-    assert!(text.contains("/tmp/novel") && text.contains("own folder"));
+    // A lone document: no project folder, the reason, and the ways out.
+    let lone = load_from(None, Some("/tmp/novel/chapter-1.md"), None);
+    assert_eq!(
+        (lone.root.as_deref(), lone.root_source),
+        (None, RootSource::None)
+    );
+    let text = workspace_section(&lone, "en");
+    assert!(text.contains("no folder is open") && text.contains("Settings > Textus AI"));
+    assert!(text.contains("attach it with +") && !text.contains("attached/"));
+    // No project, no project bar: only the Settings row is offered.
+    assert!(!text.contains("click the folder name"));
     let tmp = std::env::temp_dir();
     let chosen = load_from(None, Some("/tmp/novel/chapter-1.md"), tmp.to_str());
     assert_eq!(chosen.root_source, RootSource::Chosen);
-    assert!(workspace_section(&chosen, "en").contains("chosen by the user"));
-    // An unsaved draft: no files, the reason, and the way out.
-    let unsaved = load_from(None, None, None);
-    assert_eq!(unsaved.root_source, RootSource::None);
-    let text = workspace_section(&unsaved, "en");
-    assert!(text.contains("isn't saved") && text.contains("Settings > Textus AI"));
-    assert!(!text.contains("list_files"));
-    // No project, no project bar: only the Settings row is offered.
-    assert!(!text.contains("click the folder name"));
-    assert!(workspace_section(&doc_folder, "en").contains("click the folder name"));
-    assert!(workspace_section(&chosen, "en").contains("Use the document's folder"));
+    let text = workspace_section(&chosen, "en");
+    assert!(text.contains("chosen by the user") && text.contains("click the folder name"));
+    assert!(text.contains("Use no project folder"));
+    // Attached files are named wherever there are some.
+    let with_files = AgentWorkspace {
+        attached: true,
+        ..lone
+    };
+    assert!(workspace_section(&with_files, "en").contains("under `attached/`"));
     let too_broad = AgentWorkspace {
         root_source: RootSource::TooBroad,
         ..AgentWorkspace::default()
@@ -608,11 +614,11 @@ fn the_workspace_section_says_which_folder_and_why() {
     // ones alone, and one the backend doesn't know of the same.
     assert_eq!(workspace_section(&too_broad, "xx"), text);
     // The tool-less fallback doesn't hear about file tools.
-    let prompt = build_instructions(&unsaved, &md("draft"), false, AgentMode::Write, "", "en");
+    let prompt = build_instructions(&with_files, &md("draft"), false, AgentMode::Write, "", "en");
     assert!(!prompt.contains("---project---"));
-    let review = request_preamble(&doc_folder, AgentMode::Review, "en");
+    let review = request_preamble(&chosen, AgentMode::Review, "en");
     assert!(review.contains("Review mode:") && review.contains("Write mode you"));
-    let review = request_preamble(&doc_folder, AgentMode::Review, "ja");
+    let review = request_preamble(&chosen, AgentMode::Review, "ja");
     assert!(
         review.contains("Review mode (レビュー in their Japanese UI)")
             && review.contains("Write mode (執筆)")
@@ -710,7 +716,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
         "Choose project folder…",
-        "Use the document's folder",
+        "Use no project folder",
         "Learn my style from samples…",
         "Create style profile",
         "Open style profile",
@@ -944,6 +950,7 @@ fn scripted_revise(document: &str, script: Vec<Vec<AgentTurn>>) -> (Vec<AgentTur
         skills: &[],
         ui_language: "en",
         root: None,
+        scratch: None,
         sees_images: false,
         conventions: &conventions,
         library: &[],

@@ -1,3 +1,4 @@
+import type { AiRecords } from "../platform/bindings/files";
 import type { McpServer } from "./mcp";
 import { normaliseSettings } from "./settings-normalise";
 import type { Settings, UserThemeMeta } from "./settings-types";
@@ -5,7 +6,8 @@ import type { Settings, UserThemeMeta } from "./settings-types";
 /**
  * Settings as a file, to back them up or carry them to another computer;
  * the same payload a settings sync would carry. It holds what is shared
- * between computers and the CSS of imported themes. API keys live in the
+ * between computers and the CSS of imported themes, and, when asked, the AI
+ * records: conversations and memories. API keys live in the
  * system keychain, never here; an MCP server's environment and header values
  * (its tokens) are left blank, and an import keeps this computer's own.
  */
@@ -33,6 +35,8 @@ export type ThemeCss = Record<string, { light: string; dark?: string }>;
 export interface SettingsFile {
   settings: Settings;
   themes: ThemeCss;
+  /** The conversations and memories, when the file has them. */
+  ai: AiRecords | null;
 }
 
 function blanked(values: Record<string, string>): Record<string, string> {
@@ -52,8 +56,13 @@ function filled(
   );
 }
 
-/** The file's text for `settings`, with the CSS of its imported themes. */
-export function settingsFileText(settings: Settings, themes: ThemeCss): string {
+/** The file's text for `settings`, with the CSS of its imported themes and
+ *  any AI records. */
+export function settingsFileText(
+  settings: Settings,
+  themes: ThemeCss,
+  ai: AiRecords | null = null,
+): string {
   const shared: Partial<Settings> = { ...settings };
   for (const key of DEVICE_SETTINGS) delete shared[key];
   shared.mcpServers = settings.mcpServers.map((server) => ({
@@ -62,7 +71,7 @@ export function settingsFileText(settings: Settings, themes: ThemeCss): string {
     headers: blanked(server.headers),
   }));
   return JSON.stringify(
-    { format: FORMAT, version: 1, settings: shared, themes },
+    { format: FORMAT, version: 1, settings: shared, themes, ...(ai && { ai }) },
     null,
     2,
   );
@@ -78,6 +87,14 @@ function mergedThemes(
   const arriving = (incoming ?? []).filter((theme) => css[theme.id]);
   const ids = new Set(arriving.map((theme) => theme.id));
   return [...mine.filter((theme) => !ids.has(theme.id)), ...arriving];
+}
+
+/** The records' shape only; the backend checks each one as it adds it. */
+function aiRecordsOf(value: unknown): AiRecords | null {
+  const ai = value as Partial<AiRecords> | null;
+  return ai && Array.isArray(ai.conversations) && Array.isArray(ai.memories)
+    ? { conversations: ai.conversations, memories: ai.memories }
+    : null;
 }
 
 function themeCssOf(value: unknown): ThemeCss {
@@ -109,6 +126,7 @@ export function settingsFromFile(
     format?: unknown;
     settings?: unknown;
     themes?: unknown;
+    ai?: unknown;
   };
   if (
     parsed?.format !== FORMAT ||
@@ -153,5 +171,6 @@ export function settingsFromFile(
       ...kept,
     }),
     themes,
+    ai: aiRecordsOf(parsed.ai),
   };
 }

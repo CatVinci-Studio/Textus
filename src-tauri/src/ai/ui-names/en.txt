@@ -18,7 +18,7 @@ style profile
 Learn my style
 completion
 Choose project folder…
-Use the document's folder
+Use no project folder
 Learn my style from samples…
 Create style profile
 Open style profile

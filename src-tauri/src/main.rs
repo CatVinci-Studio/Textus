@@ -12,5 +12,10 @@ fn main() {
         // SAFETY: first statement of main, single-threaded.
         unsafe { std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1") };
     }
+    // `textus help`, `textus search ...`: answered and gone before any window.
+    #[cfg(not(any(target_os = "ios", target_os = "android")))]
+    if let Some(code) = textus_lib::cli::entry() {
+        std::process::exit(code);
+    }
     textus_lib::run()
 }

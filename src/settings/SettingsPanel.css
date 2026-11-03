@@ -1324,11 +1324,19 @@ button.settings-skill-action:focus-visible {
   color: var(--ui-muted);
 }
 
-/* A command name inside a row label (General › the textus command). */
-.settings-inline-code {
-  padding: 0.05em 0.35em;
-  border-radius: var(--shape-xs);
-  background: var(--doc-code-bg, rgba(0, 0, 0, 0.06));
-  font-family: var(--font-mono);
-  font-size: 0.92em;
+/* Character spacing: the kind, then Word's "By" in points beside it. */
+.settings-letter-spacing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.settings-letter-spacing-by {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ui-muted);
+}
+.settings-letter-spacing-by .settings-text-input {
+  width: 4.5em;
+  text-align: right;
 }

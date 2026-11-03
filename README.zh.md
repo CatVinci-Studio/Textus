@@ -99,6 +99,8 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 
 还有思维导图、Marp 幻灯片、看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展**，电脑和 iPhone、iPad 上都能用。
 
+不少插件还会把自己的功能交给 Textus AI，在对话里直接让它去做就行。插件在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主题在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也欢迎分享你自己的主题。
+
 ## 常见问题
 
 <details>

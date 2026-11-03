@@ -79,6 +79,20 @@ describe("the settings file", () => {
     expect(imported?.settings.themeId).toBe("local");
   });
 
+  it("carries AI records only when asked, and only well-formed ones", () => {
+    const ai = {
+      conversations: [{ id: "c1", updatedAt: 1, turns: [] }],
+      memories: [{ path: "memory/likes.md", text: "tea" }],
+    };
+    expect(settingsFromFile(settingsFileText(mine, {}, ai), mine)?.ai).toEqual(
+      ai,
+    );
+    expect(settingsFromFile(settingsFileText(mine, {}), mine)?.ai).toBeNull();
+    const odd = JSON.parse(settingsFileText(mine, {}));
+    odd.ai = { conversations: "all of them" };
+    expect(settingsFromFile(JSON.stringify(odd), mine)?.ai).toBeNull();
+  });
+
   it("is refused when it isn't Textus settings", () => {
     expect(settingsFromFile("{}", mine)).toBeNull();
     expect(settingsFromFile("not json", mine)).toBeNull();

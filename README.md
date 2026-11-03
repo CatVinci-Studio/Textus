@@ -102,6 +102,8 @@ Not just writing: plugins add whatever else you need.
 
 Mind maps, Marp slides, Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in **Settings › Extensions**, on the computer and on iPhone and iPad.
 
+Many plugins also hand Textus AI their own tools, so you can ask for what they do in a conversation. The plugins are in [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) and the themes in [textus-themes](https://github.com/CatVinci-Studio/textus-themes), where you can share your own.
+
 ## Questions
 
 <details>

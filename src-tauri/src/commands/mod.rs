@@ -17,6 +17,7 @@ pub mod documents;
 pub mod drafts;
 pub mod export;
 pub mod folder;
+pub mod fonts;
 pub mod fs;
 pub mod image_host;
 pub mod input_source;

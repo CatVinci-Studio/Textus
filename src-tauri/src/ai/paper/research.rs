@@ -1,22 +1,21 @@
 //! A paper's research: the topic split into questions, then a helper per
 //! question - four at a time - searching the web and the literature and
-//! keeping what it finds as notes with add_note. The helpers share one
-//! WebPlan, so a source has one number for the whole paper and the paper's
-//! budget is spent by all of them together.
+//! keeping what it finds as notes with add_note, with the tools every mode
+//! shares (the files, the reference library, plugins' and MCP servers'
+//! tools) beside the web's. The helpers share one WebPlan, so a source has
+//! one number for the whole paper and the paper's budget is spent by all of
+//! them together.
 
-use super::library::{library_call, library_file, library_specs};
-pub(crate) use super::library::{link_safe, reference_address, reference_path};
-use super::materials::{
-    cited_material, material_address, material_call, material_spec, materials_prompt, Material,
-};
 pub(crate) use super::model::{clip, Model, Streamed, ThinkingTail, Watch};
-use super::{Dossier, Lead, LeadKind, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
+use super::notes::NoteTaker;
+pub(crate) use super::notes::ADD_NOTE_TOOL;
+use super::sources::link_safe;
+use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
+use crate::ai::agent::AgentMode;
+use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{
-    run_agent_loop, AgentTurn, StepResult, ToolCall, ToolOutput, ToolRun, ToolSpec,
-};
+use aicompat::agent::{run_agent_loop, AgentTurn, StepResult, ToolCall};
 use futures_util::stream::{self, StreamExt};
-use serde_json::{json, Value};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -29,9 +28,100 @@ const MAX_QUESTIONS: usize = 10;
 /// Characters of each attached file the research plan sees.
 const PLAN_GLIMPSE: usize = 1_500;
 
-pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
-pub(crate) const SEARCH_REFERENCES_TOOL: &str = "search_references";
-pub(crate) const READ_REFERENCE_TOOL: &str = "read_reference";
+/// The mode whose tools a researcher is offered: it reads, and changes
+/// nothing of the user's.
+const MODE: AgentMode = AgentMode::Review;
+
+/// What the researchers work with besides the web and add_note: the tools
+/// every mode shares - the files, the reference library, the plugins' and
+/// MCP servers' tools - and what they work on. Its context's `scratch` is
+/// the paper's folder, whose `attached/` holds the files the user attached.
+pub(crate) struct Kit<'k, 't> {
+    pub tools: &'k ToolRegistry<'t>,
+    pub ctx: &'k ToolContext<'t>,
+}
+
+impl Kit<'_, '_> {
+    /// The attached files, by the paths read_file reads them by.
+    fn attached(&self) -> Vec<String> {
+        let Some(folder) = self.ctx.scratch else {
+            return Vec::new();
+        };
+        let attached = crate::ai::scratch::ATTACHED;
+        crate::ai::project::walk_readable_files(&folder.join(attached), self.ctx.sees_images)
+            .files
+            .into_iter()
+            .map(|rel| format!("{attached}/{rel}"))
+            .collect()
+    }
+
+    /// What a researcher is told about the user's own material.
+    fn prompt(&self) -> String {
+        let mut out = String::new();
+        let attached = self.attached();
+        if !attached.is_empty() {
+            out.push_str(&format!(
+                " The user attached files of their own for this piece - {}: read what bears on your question with read_file before searching, and cite a file by its path in add_note's sources - it is the material the user chose.",
+                attached.join("; ")
+            ));
+        }
+        if self
+            .tools
+            .offers(crate::ai::tools::SEARCH_REFERENCES_TOOL_NAME)
+        {
+            out.push_str(" The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_file, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose.");
+        }
+        out
+    }
+}
+
+/// The researchers' shared tools: the file tools while there is a project
+/// folder or a file attached, the reference library's search while the
+/// project has one, and `installed` - the plugins' and MCP servers' tools
+/// ([`crate::ai::agent::installed_tools`]).
+pub(crate) fn shared_tools<'t>(
+    root: Option<&Path>,
+    attached: bool,
+    sees_images: bool,
+    installed: Vec<Tool<'t>>,
+) -> ToolRegistry<'t> {
+    let mut tools = if root.is_some() || attached {
+        ToolRegistry::files(MODE, sees_images)
+    } else {
+        ToolRegistry::new(MODE)
+    };
+    if let Some(tool) = crate::ai::tools::references_tool(root) {
+        tools.add(tool);
+    }
+    for tool in installed {
+        tools.add(tool);
+    }
+    tools
+}
+
+/// What the shared tools work on: no document, the project folder, and
+/// the paper's folder, whose `attached/` they read beside it.
+pub(crate) fn context<'t>(
+    empty: &'t crate::ai::doc_blocks::Document,
+    conventions: &'t crate::ai::rules::Conventions,
+    root: Option<&'t Path>,
+    paper_folder: Option<&'t Path>,
+    sees_images: bool,
+) -> ToolContext<'t> {
+    ToolContext {
+        undecided: &[],
+        document: empty,
+        skills: &[],
+        ui_language: "en",
+        root,
+        scratch: paper_folder,
+        sees_images,
+        conventions,
+        library: &[],
+        proposed: Default::default(),
+        checks: Default::default(),
+    }
+}
 
 fn user(text: String) -> AgentTurn {
     AgentTurn::User {
@@ -44,7 +134,7 @@ fn user(text: String) -> AgentTurn {
 pub(crate) async fn plan_questions(
     model: &dyn Model,
     paper: &Paper,
-    materials: &[Material],
+    kit: &Kit<'_, '_>,
     watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
     let profile = paper.genre.profile();
@@ -58,10 +148,15 @@ pub(crate) async fn plan_questions(
         most = profile.scale.questions.1,
     );
     let mut message = format!("Topic: {}", paper.topic);
-    for m in materials {
+    for path in kit.attached() {
         // Enough of each to plan by; the helpers read them whole.
-        let opening: String = m.content.chars().take(PLAN_GLIMPSE).collect();
-        message.push_str(&format!("\n\nThe user attached {}:\n{opening}", m.name));
+        let text = kit
+            .ctx
+            .scratch
+            .and_then(|folder| crate::ai::project::read_text(folder, &path).ok())
+            .unwrap_or_default();
+        let opening: String = text.chars().take(PLAN_GLIMPSE).collect();
+        message.push_str(&format!("\n\nThe user attached {path}:\n{opening}"));
     }
     let reply = match model
         .step_watched(&instructions, &[user(message)], &[], watch)
@@ -106,130 +201,16 @@ pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
     out
 }
 
-/// What add_note looks like to the model.
-fn add_note_spec() -> ToolSpec {
-    ToolSpec {
-        name: ADD_NOTE_TOOL.into(),
-        description: "Keep one finding for the paper: a claim, the evidence for it, and the sources it rests on. Call it once per finding as you go - several calls in one step are fine. Only what you keep with add_note reaches the paper; your replies don't.".into(),
-        parameters: json!({
-            "type": "object",
-            "properties": {
-                "claim": {"type": "string", "description": "The finding, in one or two sentences"},
-                "evidence": {"type": "string", "description": "What supports it: figures, results, examples, with their dates"},
-                "quote": {"type": "string", "description": "Words taken verbatim from a source, if worth quoting"},
-                "sources": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Each source's number from the search or page results (\"3\"), or its full address when it has none"
-                },
-                "leads": {
-                    "type": "array",
-                    "description": "Pictures or data in the sources a figure could use",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "kind": {"type": "string", "enum": ["image", "data"]},
-                            "description": {"type": "string"},
-                            "url": {"type": "string"}
-                        },
-                        "required": ["kind", "description"]
-                    }
-                }
-            },
-            "required": ["claim", "evidence", "sources"]
-        }),
-    }
-}
-
-/// An add_note call as a note, or why it can't be one. Its sources must be
-/// numbers the web plan has, or addresses (numbered here).
-fn read_note(
-    arguments: &str,
-    question: &str,
-    web: &WebPlan,
-    library: Option<&Path>,
-    materials: &[Material],
-) -> Result<Note, String> {
-    let args: Value = serde_json::from_str(arguments).map_err(|e| e.to_string())?;
-    let text = |key: &str| args[key].as_str().unwrap_or("").trim().to_string();
-    let (claim, evidence) = (text("claim"), text("evidence"));
-    if claim.is_empty() || evidence.is_empty() {
-        return Err("Pass `claim` and `evidence`.".into());
-    }
-    let cited: Vec<&str> = args["sources"]
-        .as_array()
-        .map(|list| list.iter().filter_map(Value::as_str).collect())
-        .unwrap_or_default();
-    let mut sources = Vec::new();
-    for c in &cited {
-        let local = library.and_then(|root| library_file(root, c));
-        let number = match (cited_material(materials, c), local) {
-            (Some(m), _) => Some(web.add_source(&material_address(&m.name), &m.name)),
-            (None, Some(path)) => {
-                let name = path.rsplit('/').next().unwrap_or(&path).to_string();
-                Some(web.add_source(&reference_address(&path), &name))
-            }
-            (None, None) => {
-                let address = if c.trim().starts_with("http") {
-                    Some(c.trim().to_string())
-                } else {
-                    c.trim_matches(['[', ']', ' '])
-                        .parse()
-                        .ok()
-                        .and_then(|n| web.source_address(n))
-                };
-                if address.as_deref().is_some_and(is_search_page) {
-                    return Err(format!("{c:?} is a search page, not a source: read the page or paper a result points to, and cite that."));
-                }
-                web.source_number(c)
-            }
-        };
-        match number {
-            Some(n) if !sources.contains(&n) => sources.push(n),
-            Some(_) => {}
-            None => return Err(format!("No source is numbered {c:?}: cite the number a search or page result has, the page's full address, or a reference file's path.")),
-        }
-    }
-    if sources.is_empty() {
-        return Err("A note needs its sources: the numbers of the results it rests on. Search or read first.".into());
-    }
-    let leads = args["leads"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|l| {
-            let kind = match l["kind"].as_str()? {
-                "image" => LeadKind::Image,
-                "data" => LeadKind::Data,
-                _ => return None,
-            };
-            Some(Lead {
-                kind,
-                description: l["description"].as_str()?.trim().to_string(),
-                url: l["url"].as_str().map(str::to_string),
-            })
-        })
-        .collect();
-    Ok(Note {
-        id: String::new(),
-        question: question.to_string(),
-        claim,
-        evidence,
-        quote: Some(text("quote")).filter(|q| !q.is_empty()),
-        sources,
-        leads,
-    })
-}
-
-/// One question's helper: its notes, in the order it kept them.
+/// One question's helper: its notes, in the order it kept them. Its own
+/// registry has the web tools, ranked by its question, and add_note; the
+/// rest it shares with the other helpers through `kit`.
 #[allow(clippy::too_many_arguments)]
 async fn research_question(
     model: &dyn Model,
     paper: &Paper,
     web: &WebPlan,
     budget: &SharedBudget,
-    library: Option<&Path>,
-    materials: &[Material],
+    kit: &Kit<'_, '_>,
     (index, question): (u32, &str),
     share: Share,
     send: &(dyn Fn(PaperEvent) + Sync),
@@ -239,80 +220,45 @@ async fn research_question(
         paper.topic,
         paper.language,
         paper.genre.profile().research_sources,
-        if library.is_some() {
-            " The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_reference, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose."
-        } else {
-            ""
-        },
+        kit.prompt(),
         name = paper.genre.profile().name,
     );
-    let instructions = if materials.is_empty() {
-        instructions
-    } else {
-        instructions + &materials_prompt(materials)
-    };
-    let mut specs: Vec<ToolSpec> = web.tools(question).iter().map(|t| t.spec.clone()).collect();
-    specs.push(add_note_spec());
-    if library.is_some() {
-        specs.extend(library_specs());
-    }
-    if !materials.is_empty() {
-        specs.push(material_spec());
-    }
-    let web_tools = web.tools(question);
     let notes = Mutex::new(Vec::new());
+    let taker = NoteTaker {
+        question,
+        index,
+        web,
+        ctx: kit.ctx,
+        notes: &notes,
+        send,
+    };
+    let mut own = ToolRegistry::new(MODE);
+    for tool in web.tools(question) {
+        own.add(tool);
+    }
+    own.add(taker.tool());
+    let mut specs = own.specs();
+    specs.extend(kit.tools.specs());
     let spent = Mutex::new([0usize; 3]);
     let execute = |call: ToolCall| {
-        let (web_tools, notes, spent) = (&web_tools, &notes, &spent);
+        let (own, spent) = (&own, &spent);
         async move {
-            let tell = |tool: &str, arguments: String| {
+            if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
+                return refused.into();
+            }
+            let web_call = call.name != ADD_NOTE_TOOL && own.offers(&call.name);
+            if web_call || kit.tools.offers(&call.name) {
                 send(PaperEvent::Activity {
                     question: index,
-                    tool: tool.to_string(),
-                    arguments,
-                })
-            };
-            if call.name == ADD_NOTE_TOOL {
-                return ToolOutput::from(
-                    match read_note(&call.arguments, question, web, library, materials) {
-                        Ok(note) => {
-                            tell(
-                                ADD_NOTE_TOOL,
-                                json!({ "claim": clip(&note.claim) }).to_string(),
-                            );
-                            notes.lock().unwrap().push(note);
-                            "Kept.".to_string()
-                        }
-                        Err(why) => why,
-                    },
-                );
+                    tool: call.name.clone(),
+                    arguments: call.arguments.clone(),
+                });
             }
-            if let Some(answer) = material_call(materials, &call) {
-                tell(&call.name, call.arguments.clone());
-                return ToolOutput::from(answer);
+            if !own.offers(&call.name) {
+                return kit.tools.execute(kit.ctx, call).await;
             }
-            if let Some(root) = library {
-                if let Some(answer) = library_call(root, &call).await {
-                    tell(&call.name, call.arguments.clone());
-                    return ToolOutput::from(answer);
-                }
-            }
-            if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
-                return ToolOutput::from(refused);
-            }
-            let known = web_tools.iter().any(|t| t.spec.name == call.name);
-            if known {
-                tell(&call.name, call.arguments.clone());
-            }
-            let output = match web_tools
-                .iter()
-                .find(|t| t.spec.name == call.name)
-                .map(|t| &t.run)
-            {
-                Some(crate::ai::tools::Run::Async(run)) => run(call).await,
-                _ => ToolOutput::from(format!("Unknown tool: {}", call.name)),
-            };
-            if known {
+            let output = own.execute(kit.ctx, call).await;
+            if web_call {
                 let spent = budget.snapshot();
                 send(PaperEvent::Budget {
                     used: spent.used,
@@ -332,16 +278,17 @@ async fn research_question(
         },
         execute,
         |name| {
-            if name == ADD_NOTE_TOOL {
-                ToolRun::InOrder
+            if own.offers(name) {
+                own.how_to_run(name)
             } else {
-                ToolRun::Concurrent
+                kit.tools.how_to_run(name)
             }
         },
         |_| {},
     )
     .await?;
-    Ok(notes.into_inner().unwrap())
+    let kept = std::mem::take(&mut *notes.lock().unwrap());
+    Ok(kept)
 }
 
 /// The paper researched: its questions planned, then answered by helpers at
@@ -353,15 +300,13 @@ pub(crate) async fn research(
     web: &WebPlan,
     budget: &SharedBudget,
     send: &(dyn Fn(PaperEvent) + Sync),
-    // The project folder, when it has a reference library.
-    library: Option<&Path>,
-    materials: &[Material],
+    kit: &Kit<'_, '_>,
 ) -> Result<Dossier, String> {
     send(PaperEvent::Phase {
         phase: PaperPhase::Planning,
     });
     let thinking = ThinkingTail::new(send);
-    let questions = plan_questions(model, paper, materials, &|streamed| {
+    let questions = plan_questions(model, paper, kit, &|streamed| {
         if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
             thinking.push(text)
         }
@@ -382,8 +327,7 @@ pub(crate) async fn research(
                 paper,
                 web,
                 budget,
-                library,
-                materials,
+                kit,
                 (i as u32, &question),
                 share,
                 send,

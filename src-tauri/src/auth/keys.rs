@@ -22,23 +22,32 @@ fn read_keys(app: &AppHandle) -> Result<HashMap<String, String>, String> {
 }
 
 /// Parses the keys file; when it doesn't parse, moves it aside and starts from
-/// no keys, so one bad byte can't lock out every provider. The bad file is kept as `.corrupt-<n>`.
+/// no keys, so one bad byte can't lock out every provider.
 fn parse_or_set_aside(path: &Path, text: &str) -> HashMap<String, String> {
+    parse_json_or_set_aside(path, text).unwrap_or_default()
+}
+
+/// Parses a stored JSON file, or moves it aside as `.corrupt-<n>` for hand
+/// recovery and returns None, as if it had never been written.
+pub(super) fn parse_json_or_set_aside<T: serde::de::DeserializeOwned>(
+    path: &Path,
+    text: &str,
+) -> Option<T> {
     match serde_json::from_str(text) {
-        Ok(keys) => keys,
+        Ok(value) => Some(value),
         Err(parse_error) => {
             match set_aside(path) {
                 Ok(moved) => eprintln!(
-                    "provider keys: {} is not valid JSON ({parse_error}); moved it to {}",
+                    "auth: {} is not valid JSON ({parse_error}); moved it to {}",
                     path.display(),
                     moved.display()
                 ),
                 Err(e) => eprintln!(
-                    "provider keys: {} is not valid JSON ({parse_error}) and could not be moved aside: {e}",
+                    "auth: {} is not valid JSON ({parse_error}) and could not be moved aside: {e}",
                     path.display()
                 ),
             }
-            HashMap::new()
+            None
         }
     }
 }
@@ -117,6 +126,23 @@ mod tests {
             fs::read_to_string(dir.join("provider_keys.json.corrupt-2")).unwrap(),
             "{\"openai\": \"sk-"
         );
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn a_corrupt_sign_in_file_reads_as_signed_out() {
+        let dir = std::env::temp_dir().join(format!("textus-signin-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("auth-codex.json");
+        fs::write(&path, "{").unwrap();
+
+        let cred: Option<aicompat::providers::openai_codex::CodexCredential> =
+            parse_json_or_set_aside(&path, "{");
+
+        assert!(cred.is_none());
+        assert!(!path.exists());
+        assert!(dir.join("auth-codex.json.corrupt-1").exists());
         let _ = fs::remove_dir_all(&dir);
     }
 

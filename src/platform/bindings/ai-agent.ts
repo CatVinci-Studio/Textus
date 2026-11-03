@@ -10,10 +10,11 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 export const commands = {
 	ai_cancel: (requestId: string) => __TAURI_INVOKE<void>("ai_cancel", { requestId }),
 	/**
-	 *  The chat composer's "+" button: pick a file, then read it. Returns None
-	 *  only when the picker was cancelled.
+	 *  The chat composer's "+" button: pick files, then copy and read each into
+	 *  the conversation's attachments. Empty when the picker was cancelled; a
+	 *  file that can't be read fails the whole pick, naming it.
 	 */
-	pick_attachment_file: () => __TAURI_INVOKE<ChatAttachment | null>("pick_attachment_file"),
+	pick_attachment_files: (conversation: string) => __TAURI_INVOKE<ChatAttachment[]>("pick_attachment_files", { conversation }),
 	list_image_providers: () => __TAURI_INVOKE<ImageProviderEntry_Serialize[]>("list_image_providers"),
 	/**
 	 *  A picture, once it is made: the frame in the document waits on this.
@@ -111,9 +112,11 @@ content: string;
  *  `content` hit MAX_EXTRACTED_CHARS and was cut; the frontend labels the chip
  *  so the user knows the model isn't seeing the whole file.
  */
-truncated: boolean } | { kind: "image"; name: string; 
+truncated: boolean; 
+/**  Where read_file finds the whole file: `attached/<name>`. */
+path: string } | { kind: "image"; name: string; 
 /**  "image/png", ... - what the provider is told this is. */
-mime: string; dataBase64: string };
+mime: string; dataBase64: string; path: string };
 
 /**  A pending picture as the frontend takes it. */
 export type GeneratedImageData = {

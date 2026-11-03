@@ -111,9 +111,12 @@ only the Settings app writes - so the user picks Textus there.
 
 Textus installs it itself on startup, and again from **Settings › General**
 (`src-tauri/src/commands/cli.rs`): `bin\textus.cmd` beside `Textus.exe`, and
-that folder on the user's `PATH` (`HKCU\Environment`). The script runs
-`start "" "%~dp0..\Textus.exe" %*`, so the terminal gets its prompt back at
-once. The uninstaller removes both, unless the `PATH` is longer than NSIS'
+that folder on the user's `PATH` (`HKCU\Environment`). The script sets
+`TEXTUS_CLI=1` and runs `"%~dp0..\Textus.exe" %*` without `start`, so a
+command's output and exit code reach the terminal; given paths or nothing,
+the exe starts the window as a detached process and returns at once. A
+release exe has no console of its own, so in command mode it attaches to
+the terminal's (`AttachConsole`). See [cli.md](cli.md). The uninstaller removes both, unless the `PATH` is longer than NSIS'
 strings, which would come back cut short.
 
 ## Changing things

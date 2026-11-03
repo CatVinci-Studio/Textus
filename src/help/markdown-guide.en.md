@@ -187,7 +187,7 @@ The tree is a small file manager too. The parent folder's name above it takes yo
 
 Drag files from Finder or File Explorer onto the window to open them: documents open in tabs, pictures go into the document where you let go, and a folder opens in the sidebar. **File → Copy Path** copies the full path of the document in front.
 
-From a terminal, `textus notes.md` opens a file in Textus; **Settings → General** installs the `textus` command if it isn't there yet.
+From a terminal, `textus notes.md` opens a file in Textus; **Settings → General** installs the `textus` command if it isn't there yet. It does more without opening a window: `textus search <words>` finds them in a folder's files, `textus read` prints a PDF or Word file as Markdown, and `textus help` lists every command, plugins' included.
 
 **File → Open…** also opens a Word document (`.docx`), and so does dropping one on the window: it becomes a new Markdown document of the same name, not yet saved, with its headings, lists, tables, links, footnotes and pictures. The pictures go where **Settings → Editor & Appearance → Images** puts pasted ones once you save it, and **Save** suggests a `.md` file next to the Word file. Some formatting may look different; the Word file itself is never changed. On the desktop only.
 

@@ -230,7 +230,7 @@ export function ChatBody({
     // images go as provider image parts.
     const attachmentBlocks = attachments
       .filter((f) => f.kind === "text")
-      .map((f) => attachedFileBlock(f.name, f.content))
+      .map((f) => attachedFileBlock(f.name, f.content, f.path))
       .join("\n\n");
     return {
       message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
@@ -499,6 +499,7 @@ export function ChatBody({
         suggestions={conversation.suggestions}
         docPath={docPath}
         workspaceRoot={workspaceRoot}
+        conversation={conversation.conversationId}
         selectedText={selectedPictureText ?? selectedText}
         selectionIsPicture={selectionIsPicture || selectedPictureText !== null}
         busy={busy}

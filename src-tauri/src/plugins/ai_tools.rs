@@ -84,10 +84,16 @@ pub fn plugin_ai_tool_result(
     }
 }
 
+/// A plugin's name in a tool's name and in its `textus` command: the last
+/// part of its id.
+pub fn short_name(plugin: &str) -> &str {
+    plugin.rsplit('.').next().unwrap_or(plugin)
+}
+
 /// The model's name for a plugin's tool: `plugin_` and its name, in the
 /// letters a tool name may have, at most 64.
 fn model_name(plugin: &str, name: &str) -> String {
-    let short = plugin.rsplit('.').next().unwrap_or(plugin);
+    let short = short_name(plugin);
     let mut out: String = format!("plugin_{short}_{name}")
         .chars()
         .map(|c| {
@@ -155,39 +161,64 @@ async fn run_call(
     tool: &PluginAiTool,
     call: ToolCall,
 ) -> ToolOutput {
+    let arguments = serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({}));
+    let text = match call_tool(app, window, tool, call.call_id, arguments).await {
+        Ok(text) => text,
+        Err(why) => why,
+    };
+    trimmed(text).into()
+}
+
+/// Every tool offered now, with the window offering it: the same table the
+/// model's tools come from, for the `textus` command.
+#[cfg(desktop)]
+pub fn offered_tools(app: &AppHandle) -> Vec<(String, PluginAiTool)> {
+    let hub = app.state::<PluginAiTools>();
+    let offered = hub.offered.lock().unwrap_or_else(|e| e.into_inner());
+    offered
+        .iter()
+        .flat_map(|(window, list)| list.iter().map(|t| (window.clone(), t.clone())))
+        .collect()
+}
+
+/// Runs a plugin's tool in its window: its answer, or why there is none.
+pub async fn call_tool(
+    app: &AppHandle,
+    window: &str,
+    tool: &PluginAiTool,
+    call_id: String,
+    arguments: Value,
+) -> Result<String, String> {
     let (send, answer) = oneshot::channel();
     let hub = app.state::<PluginAiTools>();
-    hub.waiting
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .insert(call.call_id.clone(), send);
-    let event = ToolCallEvent {
-        call_id: call.call_id.clone(),
-        plugin: tool.plugin.clone(),
-        name: tool.name.clone(),
-        arguments: serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({})),
-    };
-    if app.emit_to(window, "plugin-ai-tool-call", event).is_err() {
+    let forget = || {
         hub.waiting
             .lock()
             .unwrap_or_else(|e| e.into_inner())
-            .remove(&call.call_id);
-        return "The plugin's window is gone, so the tool couldn't run."
-            .to_string()
-            .into();
-    }
-    let text = match tokio::time::timeout(ANSWER_WITHIN, answer).await {
-        Ok(Ok(Ok(text))) => text,
-        Ok(Ok(Err(why))) => format!("The plugin's tool failed: {why}"),
-        Ok(Err(_)) | Err(_) => {
-            hub.waiting
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .remove(&call.call_id);
-            "The plugin didn't answer in time.".to_string()
-        }
+            .remove(&call_id);
     };
-    trimmed(text).into()
+    hub.waiting
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(call_id.clone(), send);
+    let event = ToolCallEvent {
+        call_id: call_id.clone(),
+        plugin: tool.plugin.clone(),
+        name: tool.name.clone(),
+        arguments,
+    };
+    if app.emit_to(window, "plugin-ai-tool-call", event).is_err() {
+        forget();
+        return Err("The plugin's window is gone, so the tool couldn't run.".into());
+    }
+    match tokio::time::timeout(ANSWER_WITHIN, answer).await {
+        Ok(Ok(Ok(text))) => Ok(text),
+        Ok(Ok(Err(why))) => Err(format!("The plugin's tool failed: {why}")),
+        Ok(Err(_)) | Err(_) => {
+            forget();
+            Err("The plugin didn't answer in time.".into())
+        }
+    }
 }
 
 fn trimmed(text: String) -> String {
