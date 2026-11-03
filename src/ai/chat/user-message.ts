@@ -19,8 +19,14 @@ export function cursorBlock(before: string, after: string): string {
 }
 
 /** Wraps one attachment's extracted text. */
-export function attachedFileBlock(name: string, content: string): string {
-  return `<attached-file name="${name}">\n${content}\n</attached-file>`;
+export function attachedFileBlock(
+  name: string,
+  content: string,
+  path?: string,
+): string {
+  // The path is where read_file finds the whole file.
+  const where = path && path !== name ? ` path="${escapeHtml(path)}"` : "";
+  return `<attached-file name="${name}"${where}>\n${content}\n</attached-file>`;
 }
 
 /** Wraps a skill the user called with /name: its instructions, marked as
@@ -65,7 +71,7 @@ export interface ParsedUserMessage {
 const SELECTED_TEXT = /<selected-text>\n?([\s\S]*?)\n?<\/selected-text>\n*/;
 const CURSOR = /<cursor>\n?[\s\S]*?\n?<\/cursor>\n*/;
 const ATTACHED_FILE =
-  /<attached-file name="([^"]*)">\n?[\s\S]*?\n?<\/attached-file>\n*/g;
+  /<attached-file name="([^"]*)"(?: path="[^"]*")?>\n?[\s\S]*?\n?<\/attached-file>\n*/g;
 const SKILL =
   /<skill name="([^"]*)"(?: typed="([^"]*)")?>(?:\n?[\s\S]*?\n?)?<\/skill>\n*/;
 

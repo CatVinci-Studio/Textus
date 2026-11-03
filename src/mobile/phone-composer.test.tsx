@@ -81,6 +81,7 @@ function renderComposer(
     <ChatComposer
       docPath={null}
       workspaceRoot={null}
+      conversation="c1"
       selectedText={null}
       busy={false}
       labels={labels}

@@ -31,11 +31,8 @@ fn skill_without_frontmatter_uses_file_stem() {
 }
 
 #[test]
-fn workspace_root_defaults_to_the_documents_folder() {
-    assert_eq!(
-        resolve_root(Some("/tmp/novel/chapter-1.md"), None),
-        Some(PathBuf::from("/tmp/novel"))
-    );
+fn a_lone_document_has_no_project_folder_but_textus_files_find_theirs() {
+    assert_eq!(resolve_root(Some("/tmp/novel/chapter-1.md"), None), None);
     assert_eq!(resolve_root(None, None), None);
     assert_eq!(
         resolve_root(Some("/tmp/novel/.textus/library/Lin.md"), None),
@@ -62,19 +59,18 @@ fn an_explicit_root_wins_over_the_documents_folder() {
 }
 
 #[test]
-fn a_stale_root_falls_back_instead_of_leaving_no_workspace() {
-    // A moved or unmounted folder must not cost the agent its skills and
-    // file tools entirely - that would look like the feature breaking.
+fn a_stale_root_falls_back_to_the_enclosing_project() {
+    // A moved or unmounted folder is skipped, as if none were chosen.
     assert_eq!(
         resolve_root(
-            Some("/tmp/novel/chapter-1.md"),
+            Some("/tmp/novel/.textus/style.md"),
             Some("/definitely/not/a/real/folder")
         ),
         Some(PathBuf::from("/tmp/novel"))
     );
     assert_eq!(
         resolve_root(Some("/tmp/novel/chapter-1.md"), Some("   ")),
-        Some(PathBuf::from("/tmp/novel"))
+        None
     );
 }
 
@@ -209,12 +205,13 @@ fn the_project_is_the_nearest_folder_above_with_a_textus_folder() {
     // A nearer .textus/ wins.
     write(&novel.join("part-1/.textus/agent.md"), "Part rules.");
     assert_eq!(resolve_root(doc.to_str(), None), Some(novel.join("part-1")));
-    // With none anywhere above, the document's own folder, as before.
+    // With none anywhere above, no project folder: a lone document's own
+    // folder (Downloads, Desktop) isn't opened to the agent.
     let loose = root.join("loose/notes.md");
     write(&loose, "x");
-    assert_eq!(resolve_root(loose.to_str(), None), Some(root.join("loose")));
+    assert_eq!(resolve_root(loose.to_str(), None), None);
     let ws = load_layers(None, loose.to_str(), None);
-    assert_eq!(ws.root_source, RootSource::DocumentFolder);
+    assert_eq!((ws.root, ws.root_source), (None, RootSource::None));
     std::fs::remove_dir_all(&root).ok();
 }
 

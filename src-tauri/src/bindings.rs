@@ -249,7 +249,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             builder()
                 .commands(collect_commands![
                     crate::ai::cancel::ai_cancel,
-                    crate::commands::attachment::pick_attachment_file,
+                    crate::commands::attachment::pick_attachment_files,
                     crate::ai::images::list_image_providers,
                     crate::ai::images::ai_generated_image,
                     crate::ai::images::ai_retry_generated_image,

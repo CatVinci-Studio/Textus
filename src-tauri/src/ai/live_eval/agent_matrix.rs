@@ -47,6 +47,17 @@ pub struct DiskWorkspace {
     pub show: Vec<PathBuf>,
 }
 
+impl DiskWorkspace {
+    /// The folder the user has open: the one chosen, else the document's,
+    /// as if its folder were opened in the sidebar.
+    pub fn opened_folder(&self) -> Option<String> {
+        self.root_override
+            .clone()
+            .or_else(|| self.doc_path.as_deref()?.parent().map(PathBuf::from))
+            .map(|p| p.to_string_lossy().into_owned())
+    }
+}
+
 /// "Learn my style": the picked samples, where the profile is written, and
 /// checks on the generated profile.
 #[derive(Clone)]
@@ -1386,10 +1397,7 @@ pub fn run_case(auth: &AnthropicAuth, case: &AgentCase, model: &str) -> Record {
                 .as_ref()
                 .map(|p| p.to_string_lossy().into_owned())
                 .as_deref(),
-            d.root_override
-                .as_ref()
-                .map(|p| p.to_string_lossy().into_owned())
-                .as_deref(),
+            d.opened_folder().as_deref(),
         ),
         None => case.workspace.clone(),
     };
@@ -1576,7 +1584,7 @@ mod tests {
         crate::ai::workspace::load_from(
             d.global.as_deref(),
             path(&d.doc_path).as_deref(),
-            path(&d.root_override).as_deref(),
+            d.opened_folder().as_deref(),
         )
     }
 

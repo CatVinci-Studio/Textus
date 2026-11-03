@@ -38,7 +38,7 @@ The full conversation lives in a panel on the right side of the editor. Open or 
 - **One conversation per document**: each tab has its own conversation, and switching tabs switches the panel with it. **New conversation** in the panel's header starts over (with edits still undecided, it asks first).
 - **Modes**: the composer has two. **Write** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. Every change Write makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
 - **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
-- **Attach files**: the **+** button on the left of the input attaches a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, image, or plain text file to that message. Everything except images is extracted to text locally and travels inside the message; images are sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently). A long file is sent only in part, and the chip says "(shortened)" when that happens.
+- **Attach files**: the **+** button on the left of the input attaches one or more files to that message: a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, any text or code file, a zip archive, or a picture (PNG, JPEG, GIF, WebP, BMP, TIFF, and on a Mac HEIC and AVIF). Each file is copied into the conversation's own temporary folder, never into your folders, where Textus AI can read it again whole. Documents are extracted to text locally and travel inside the message; a long one is sent only in part, the chip says "(shortened)", and Textus AI reads the rest when it needs it. A zip archive is unpacked there and its files listed. Pictures are converted to a format every service reads, made smaller when they are very large, and sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently).
 - **Model**: the button among the input's controls names the model your next message goes to; click it to switch to another model of any service you have set up in **Settings > Textus AI**. With only one model set up, it just shows its name.
 - **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
 - **Deep thinking**: the button beside web search (the light bulb) asks the model to think its answer through before it replies — slower and more expensive, for hard questions and bigger rewrites. It stays on, across documents, until you press it again. While the model thinks, the panel shows "Thinking · 8 seconds"; afterwards "Thought for 12 seconds", which you can click to read the reasoning where the provider shares it. The button only appears for models that can think harder; Quick Ask always asks for a quick answer.
@@ -93,7 +93,7 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 
 | Concept | What it is | Where it lives |
 | --- | --- | --- |
-| **Project folder** | The folder Textus AI works in and may read | The document's folder, or one you choose |
+| **Project folder** | The folder Textus AI works in and may read | The folder you open in the sidebar, or one you choose |
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
 | **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
@@ -122,18 +122,18 @@ The project menu creates `.textus/` and its files for you the first time you ask
 
 ### The project folder
 
-**The project folder is the folder Textus AI works in.** By default it is the folder of the document you are editing — or the nearest folder above it that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`: save a document, and its folder becomes the project folder.
+**The project folder is the folder Textus AI works in.** It is the folder you open in the sidebar (**File > Open Folder…**), or one you choose — or else the nearest folder above the document that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`. A document you open on its own has no project folder: Textus AI then reads only the document and the files you attach, so a file in Downloads or on the Desktop never opens that whole folder to it.
 
 - Textus AI can list, find by name, read and search the files in it to find a character's earlier scenes, a term, or your notes: text files (Markdown, plain text and similar formats) up to 16 MB — a long one it reads a part at a time — and the text of PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files. With a provider that can see images, it can also look at the PNG, JPEG, GIF and WebP images in it, up to 6 MB each. Hidden files and folders, what a `.gitignore` or `.ignore` file leaves out (as in the sidebar's file search), build and dependency folders (such as `node_modules`) and scanned PDFs without a text layer are left out.
 - Typing `@` in the chat input attaches one of its files to your message.
 - Its `.textus/` folder holds the project's style profile, library, writing instructions and skills.
 
-The bar under the AI panel's header shows the project folder's name; click it for the **project menu**. When your reference material doesn't live next to the draft, use **Choose project folder…** there (or **Settings > Textus AI > Project Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use the document's folder** again.
+The bar under the AI panel's header shows the project folder's name; click it for the **project menu**. When your reference material doesn't live next to the draft, use **Choose project folder…** there (or **Settings > Textus AI > Project Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use no project folder**.
 
 > [!TIP]
 > Your draft is in `thesis/drafts/` and your interview notes in `thesis/research/`? Choose `thesis/` as the project folder, and Textus AI can read `research/interviews.md` while you work on `drafts/chapter-2.md`.
 
-Everything Textus AI reads must be inside the project folder: `..`, absolute paths and links pointing outside are refused. An unsaved draft has no project folder unless you have chosen one, and a folder that is too broad — your home folder or a whole drive — is refused.
+Everything Textus AI reads must be inside the project folder: `..`, absolute paths and links pointing outside are refused. Without a folder open or chosen there is no project folder, and a folder that is too broad — your home folder or a whole drive — is refused. What Textus AI makes while it works (research notes, drafts in progress) goes to Textus's own folders or the system's temporary folder, not into yours.
 
 ### The style profile — "Learn my style"
 

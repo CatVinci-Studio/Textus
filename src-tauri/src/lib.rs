@@ -37,7 +37,7 @@ use auth::custom_endpoint::{
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
-use commands::attachment::pick_attachment_file;
+use commands::attachment::pick_attachment_files;
 use commands::drafts::{
     clear_all_drafts, clear_draft_snapshot, save_draft_snapshot, take_draft_snapshots,
 };
@@ -337,7 +337,7 @@ pub fn run() {
             crate::ai::memory::revision_choices_write,
             crate::ai::kept_proposals::kept_proposals_read,
             crate::ai::kept_proposals::kept_proposals_write,
-            pick_attachment_file,
+            pick_attachment_files,
             set_provider_api_key,
             provider_api_key_status,
             clear_provider_api_key,

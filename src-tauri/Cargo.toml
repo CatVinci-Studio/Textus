@@ -108,6 +108,9 @@ codepage = "0.1"
 # in the tree via pdf-extract, at the same version and features, so it adds
 # no crates - only lopdf's writer code to the binary.
 lopdf = { version = "0.42", default-features = false }
+# Attached pictures: other formats turned into ones every model reads, and
+# big ones made smaller (commands/attachment/picture.rs).
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp", "tiff", "ico"] }
 # Settings › Editor › Text font: the families installed on this machine.
 fontdb = { version = "0.24", default-features = false, features = ["fs", "memmap"] }
 
@@ -140,6 +143,10 @@ ignore = "0.4"
 # docs/dev/ios-code-map.md.
 # iOS document access (plugins/textus-files): pickers, security-scoped reads
 # and writes, remembered folders.
+# The scratch folder checks it is the user's own (ai/scratch.rs).
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [target.'cfg(target_os = "ios")'.dependencies]
 tauri-plugin-textus-files = { path = "plugins/textus-files" }
 

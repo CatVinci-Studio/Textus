@@ -56,8 +56,11 @@ pub async fn ai_agent_message(
     // The document, block by block as the editor has it.
     blocks: Vec<doc_blocks::SentBlock>,
     doc_path: Option<String>,
-    // The chosen project folder. None keeps the document's own folder.
+    // The chosen project folder, or None.
     workspace_root: Option<String>,
+    // The conversation, whose scratch folder holds its attached files. None
+    // from an older frontend.
+    conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
     // Attachments with no text to extract; text-shaped ones were already
@@ -95,6 +98,7 @@ pub async fn ai_agent_message(
             Document::from_blocks(blocks),
             doc_path,
             workspace_root,
+            conversation,
             history,
             message,
             images,
@@ -118,8 +122,8 @@ async fn ai_agent_message_inner(
     provider: String,
     document: Document,
     doc_path: Option<String>,
-    // The chosen project folder. None keeps the document's own folder.
     workspace_root: Option<String>,
+    conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
     images: Vec<ImageAttachment>,
@@ -134,6 +138,8 @@ async fn ai_agent_message_inner(
     on_event: &dyn EventSink,
 ) -> Result<Vec<AgentTurn>, String> {
     let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let scratch = crate::ai::scratch::with_attachments(conversation.as_deref());
+    workspace.attached = scratch.is_some();
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
     // What the request is about, for picking library entries and, past the
@@ -217,6 +223,7 @@ async fn ai_agent_message_inner(
                 skills: &workspace.skills,
                 ui_language: &ui_language,
                 root: workspace.root.as_deref().map(Path::new),
+                scratch: scratch.as_deref(),
                 sees_images: entry.supports_vision,
                 conventions: &conventions,
                 library: &library,
@@ -247,7 +254,7 @@ async fn ai_agent_message_inner(
             };
             let mut tools = ToolRegistry::builtin(
                 workspace.has_usable_skills(),
-                workspace.root.is_some(),
+                workspace.root.is_some() || scratch.is_some(),
                 mode,
                 entry.supports_vision,
             );

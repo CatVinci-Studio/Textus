@@ -16,6 +16,7 @@ pub mod paper;
 pub mod project;
 pub mod route;
 pub mod rules;
+pub(crate) mod scratch;
 pub mod tools;
 pub(crate) mod ui_language;
 pub mod web;

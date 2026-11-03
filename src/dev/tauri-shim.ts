@@ -1340,13 +1340,16 @@ export function installDevTauriShim(): void {
         });
       }
       // Real format handling (PDF, spreadsheets) needs the native side.
-      if (cmd === "pick_attachment_file") {
-        return Promise.resolve({
-          kind: "text",
-          name: "dev-shim-notes.md",
-          content: "Canned dev-shim attachment content.",
-          truncated: false,
-        } satisfies ChatAttachment);
+      if (cmd === "pick_attachment_files") {
+        return Promise.resolve([
+          {
+            kind: "text",
+            name: "dev-shim-notes.md",
+            content: "Canned dev-shim attachment content.",
+            truncated: false,
+            path: "attached/dev-shim-notes.md",
+          } satisfies ChatAttachment,
+        ]);
       }
       // Nothing waiting to open in this window.
       if (cmd === "take_pending_window_paths") return Promise.resolve([]);

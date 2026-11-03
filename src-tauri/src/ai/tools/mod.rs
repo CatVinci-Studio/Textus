@@ -40,6 +40,9 @@ pub struct ToolContext<'a> {
     /// unsaved draft with no folder chosen, or a folder too broad, in which case
     /// the file tools aren't offered.
     pub root: Option<&'a Path>,
+    /// The conversation's scratch folder, when files are attached to it: the
+    /// file tools read its `attached/` beside the project folder.
+    pub scratch: Option<&'a Path>,
     /// The provider takes images: the file tools then list images and read_file
     /// shows them.
     pub sees_images: bool,

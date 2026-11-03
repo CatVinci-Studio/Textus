@@ -67,6 +67,7 @@ import { explainError } from "../../utils/error-explain";
 export function ChatComposer({
   docPath,
   workspaceRoot,
+  conversation,
   selectedText,
   selectionIsPicture = false,
   busy,
@@ -98,7 +99,7 @@ export function ChatComposer({
   const typing = useComposerInput(handle);
   const { input, setInput, pickerIndex, setPickerIndex, inputRef } = typing;
   const { dismissedInput, setDismissedInput } = typing;
-  const staged = useAttachments(labels.attachmentNoVision);
+  const staged = useAttachments(labels.attachmentNoVision, conversation);
   const { attachments, setAttachments, attachError, setAttachError } = staged;
   // Research is the panel's, where its paper is followed. Create is made in
   // Settings › Extensions, so it is offered only where it is the one mode.
@@ -158,7 +159,10 @@ export function ChatComposer({
       setAttachments((prev) =>
         prev.some((f) => f.kind === "text" && f.name === path)
           ? prev
-          : [...prev, { kind: "text", name: path, content, truncated: false }],
+          : [
+              ...prev,
+              { kind: "text", name: path, content, truncated: false, path },
+            ],
       );
     } catch (err) {
       setAttachError(explainError(err, currentStrings()));

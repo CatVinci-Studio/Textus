@@ -6,7 +6,11 @@
 fn families(db: &fontdb::Database) -> Vec<String> {
     let mut names: Vec<String> = db
         .faces()
-        .filter_map(|face| face.families.first().map(|(name, _)| name.trim().to_string()))
+        .filter_map(|face| {
+            face.families
+                .first()
+                .map(|(name, _)| name.trim().to_string())
+        })
         .filter(|name| !name.is_empty() && !name.starts_with('.'))
         .collect();
     names.sort_by_key(|n| n.to_lowercase());

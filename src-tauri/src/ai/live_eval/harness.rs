@@ -796,6 +796,7 @@ pub fn run_conversation(
             skills: &ws.skills,
             ui_language: setup.ui_language,
             root,
+            scratch: None,
             sees_images: sees_images(),
             conventions: &conventions,
             library: &library,

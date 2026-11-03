@@ -1242,7 +1242,7 @@ mod tests {
                     .as_ref()
                     .map(|p| p.to_string_lossy().into_owned())
                     .as_deref(),
-                None,
+                d.opened_folder().as_deref(),
             )
         };
         let ws = load(&find("builtin/headline/en/shadowed"));

@@ -97,5 +97,11 @@ describe("the wire format's writer and reader agree", () => {
   it("strips every block for a display-only body", () => {
     const text = `${attachedFileBlock("a.md", "x")}\n\n${selectedTextBlock("y")}\n\nwhat is this?`;
     expect(userMessageBody(text)).toBe("what is this?");
+    // An attached file says where the whole of it is.
+    const attached = attachedFileBlock("a.pdf", "x", "attached/a.pdf");
+    expect(attached).toContain('path="attached/a.pdf"');
+    expect(parseUserMessage(`${attached}\n\nsum up`).attachments).toEqual([
+      "a.pdf",
+    ]);
   });
 });
