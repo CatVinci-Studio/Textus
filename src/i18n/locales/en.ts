@@ -1154,6 +1154,8 @@ type /name in a conversation to use one.
   imageAlignLeft: "Left",
   docTextSizeLabel: "Document text size",
   docTextSizeAuto: "Theme's",
+  docTextLabel: "Body text",
+  docTextCustom: "Custom",
   docLineSpacingLabel: "Line spacing",
   docLineSpacingAuto: "Theme's",
   docLineSpacingCompact: "Compact",
@@ -1177,8 +1179,7 @@ type /name in a conversation to use one.
   autosaveHint:
     "With a folder open, untitled documents get a file there too, named after their title.",
   settingsFileLabel: "Settings file",
-  settingsFileHint:
-    "Back up your settings or carry them to another computer, AI conversations and memories too if you like. API keys and MCP tokens stay here.",
+  settingsFileSummary: "Import or export the app’s settings and AI history",
   settingsFileExport: "Export…",
   settingsFileImport: "Import…",
   settingsFileImportConfirm:
@@ -1451,6 +1452,8 @@ type /name in a conversation to use one.
   extensionsFold: "Hide",
   extensionsUnfold: "Show",
   themePreviewEnlarge: "View larger",
+  themeOpenDetails: "{name}: details",
+  themeBackToList: "All themes",
   extensionsThemesGet: "Get themes",
   extensionsSkillsHelp: `A skill tells ${AI_NAME} how to do one kind of task well. Each one on is offered to ${AI_NAME} and in the / menu; a new installation starts with five on, and you add the rest here.`,
   extensionsSkillsMoved:

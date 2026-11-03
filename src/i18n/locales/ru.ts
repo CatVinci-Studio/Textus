@@ -1182,6 +1182,8 @@ export default {
   imageAlignLeft: "Слева",
   docTextSizeLabel: "Размер текста",
   docTextSizeAuto: "Как в теме",
+  docTextLabel: "Текст документа",
+  docTextCustom: "Настроено",
   docLineSpacingLabel: "Межстрочный интервал",
   docLineSpacingAuto: "Как в теме",
   docLineSpacingCompact: "Плотный",
@@ -1205,8 +1207,7 @@ export default {
   autosaveHint:
     "Если открыта папка, безымянные документы тоже сохраняются в ней под своим заголовком.",
   settingsFileLabel: "Файл настроек",
-  settingsFileHint:
-    "Сохраните настройки или перенесите их на другой компьютер — по желанию вместе с разговорами и памятью ИИ. Ключи API и токены MCP остаются здесь.",
+  settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",
   settingsFileExport: "Экспортировать…",
   settingsFileImport: "Импортировать…",
   settingsFileImportConfirm:
@@ -1479,6 +1480,8 @@ export default {
   extensionsFold: "Свернуть",
   extensionsUnfold: "Развернуть",
   themePreviewEnlarge: "Увеличить",
+  themeOpenDetails: "{name}: подробнее",
+  themeBackToList: "Все темы",
   extensionsThemesGet: "Получить темы",
   extensionsSkillsHelp: `Навык подсказывает ${AI_NAME}, как хорошо делать определённую работу. Включённые навыки доступны ${AI_NAME} и в меню /; в новой установке включено пять, остальные добавляются здесь.`,
   extensionsSkillsMoved:

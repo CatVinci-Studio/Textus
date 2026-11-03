@@ -168,6 +168,30 @@ test.describe("theme gallery", () => {
     await expect(dialog.getByRole("group", { name: "Dusk" })).toBeVisible();
   });
 
+  test("a theme opens its page, with its whole description, and Install there", async ({
+    page,
+  }) => {
+    const dialog = await openGallery(page);
+    await dialog.getByRole("button", { name: "Paper Mint: details" }).click();
+    const themePage = dialog.locator('[data-theme-page="paper-mint"]');
+    await expect(
+      themePage.getByRole("heading", { name: "Paper Mint" }),
+    ).toBeVisible();
+    await expect(themePage).toContainText(
+      "A canned theme from the dev shim's gallery.",
+    );
+    await expect(themePage.locator(".theme-gallery-preview img")).toHaveCount(
+      1,
+    );
+    // Installed from its page, it stays open and is in use.
+    await themePage.getByRole("button", { name: "Install" }).click();
+    await expect(themePage).toContainText("In use");
+
+    await themePage.getByRole("button", { name: "‹ All themes" }).click();
+    await expect(themePage).toHaveCount(0);
+    await expect(installedRow(dialog, "Paper Mint")).toContainText("In use");
+  });
+
   test("a theme's picture opens large, and Escape closes only the picture", async ({
     page,
   }) => {
