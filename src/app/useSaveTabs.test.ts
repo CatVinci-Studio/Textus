@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useSaveTabs } from "./useSaveTabs";
+import { saveFolder, useSaveTabs } from "./useSaveTabs";
+import { setUiState } from "../storage/ui-state";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
 import { showConfirm, showMessage } from "../ui/app-dialog";
@@ -281,5 +282,14 @@ describe("saveTabAs", () => {
       content: "![](assets/p.png)\n",
       reloadKey: 1,
     });
+  });
+});
+
+describe("saveFolder", () => {
+  it("starts Save As by the document, the open folder, then the last save", () => {
+    setUiState("lastSaveFolder", "/notes/last");
+    expect(saveFolder("/work/a.md", "/open")).toBe("/work");
+    expect(saveFolder(null, "/open")).toBe("/open");
+    expect(saveFolder(null, null)).toBe("/notes/last");
   });
 });

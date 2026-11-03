@@ -59,6 +59,9 @@ export interface UiState {
   splitLayout: { tree: unknown } | null;
   /** Settings › Extensions: the kinds whose Available list is folded. */
   extensionsFolded: string[];
+  /** The folder a document was last saved into with Save As, where the
+   *  next untitled one is offered to go when no folder is open. */
+  lastSaveFolder: string;
 }
 
 export interface ThemeChromeCache {
@@ -84,6 +87,11 @@ const LOCAL: {
     encode: (value: UiState[K]) => string;
   };
 } = {
+  lastSaveFolder: {
+    key: "textus-last-save-folder",
+    decode: (raw) => raw,
+    encode: (value) => value,
+  },
   tutorialProgress: {
     key: "textus-tutorial-progress",
     decode: (raw) => JSON.parse(raw),
