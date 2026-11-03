@@ -187,7 +187,7 @@ El árbol también es un pequeño gestor de archivos. El nombre de la carpeta su
 
 Arrastra archivos desde el Finder o el Explorador de archivos a la ventana para abrirlos: los documentos se abren en pestañas, las imágenes entran en el documento donde las sueltas y una carpeta se abre en la barra lateral. **Archivo → Copiar ruta** copia la ruta completa del documento activo.
 
-Desde una terminal, `textus notas.md` abre un archivo en Textus; **Ajustes → General** instala el comando `textus` si todavía no está.
+Desde una terminal, `textus notas.md` abre un archivo en Textus; **Ajustes → General** instala el comando `textus` si todavía no está. Hace más sin abrir ninguna ventana: `textus search <palabras>` las busca en los archivos de una carpeta, `textus read` muestra un PDF o un archivo de Word como Markdown y `textus help` enumera todos los comandos, también los de los plugins.
 
 **Archivo → Abrir…** también abre un documento de Word (`.docx`), y lo mismo pasa al soltarlo en la ventana: se convierte en un documento Markdown nuevo con el mismo nombre, aún sin guardar, con sus títulos, listas, tablas, enlaces, notas al pie e imágenes. Las imágenes van, al guardarlo, adonde **Ajustes → Editor y aspecto → Imágenes** pone las pegadas, y **Guardar** propone un archivo `.md` junto al de Word. Parte del formato puede verse distinto; el archivo de Word nunca cambia. Solo en escritorio.
 
