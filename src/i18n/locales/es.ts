@@ -1156,7 +1156,7 @@ para usar una.
   updateDownloading: "Descargando la actualización…",
   updateFailed: "No se pudo actualizar:",
   updateViaPackageManager: `${APP_NAME} se instaló con tu gestor de paquetes. Actualízalo desde ahí.`,
-  cliCommandLabel: "Instalar el comando {command} en la terminal",
+  cliCommandLabel: "Instalar Textus CLI",
   cliCommandInstalled: "Instalado",
   cliCommandNotInstalled: "No instalado",
   cliCommandInstallButton: "Instalar",

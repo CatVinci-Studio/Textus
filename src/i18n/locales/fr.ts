@@ -1168,7 +1168,7 @@ utiliser une.
   updateDownloading: "Téléchargement de la mise à jour…",
   updateFailed: "Échec de la mise à jour\u00a0:",
   updateViaPackageManager: `${APP_NAME} a été installé par votre gestionnaire de paquets. Mettez-le à jour depuis celui-ci.`,
-  cliCommandLabel: "Installer la commande {command} dans le terminal",
+  cliCommandLabel: "Installer Textus CLI",
   cliCommandInstalled: "Installée",
   cliCommandNotInstalled: "Non installée",
   cliCommandInstallButton: "Installer",

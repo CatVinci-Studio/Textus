@@ -1101,7 +1101,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   updateDownloading: "アップデートをダウンロード中…",
   updateFailed: "アップデートに失敗しました：",
   updateViaPackageManager: `${APP_NAME} はパッケージマネージャーでインストールされています。そちらで更新してください。`,
-  cliCommandLabel: "{command} コマンドをターミナルにインストール",
+  cliCommandLabel: "Textus CLI をインストール",
   cliCommandInstalled: "インストール済み",
   cliCommandNotInstalled: "未インストール",
   cliCommandInstallButton: "インストール",

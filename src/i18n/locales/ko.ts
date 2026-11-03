@@ -1092,7 +1092,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   updateDownloading: "업데이트 다운로드 중…",
   updateFailed: "업데이트 실패:",
   updateViaPackageManager: `${APP_NAME} 앱은 패키지 관리자로 설치되었습니다. 업데이트도 패키지 관리자에서 하세요.`,
-  cliCommandLabel: "터미널에 {command} 명령어 설치",
+  cliCommandLabel: "Textus CLI 설치",
   cliCommandInstalled: "설치됨",
   cliCommandNotInstalled: "설치 안 됨",
   cliCommandInstallButton: "설치",

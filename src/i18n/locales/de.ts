@@ -1143,7 +1143,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   updateDownloading: "Update wird geladen…",
   updateFailed: "Update fehlgeschlagen:",
   updateViaPackageManager: `${APP_NAME} wurde über deinen Paketmanager installiert. Aktualisiere es dort.`,
-  cliCommandLabel: "Befehl {command} im Terminal installieren",
+  cliCommandLabel: "Textus CLI installieren",
   cliCommandInstalled: "Installiert",
   cliCommandNotInstalled: "Nicht installiert",
   cliCommandInstallButton: "Installieren",

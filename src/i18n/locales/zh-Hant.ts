@@ -1049,7 +1049,7 @@ export default {
   updateDownloading: "正在下載更新…",
   updateFailed: "更新失敗：",
   updateViaPackageManager: `${APP_NAME} 是透過套件管理工具安裝的，需在該工具中更新。`,
-  cliCommandLabel: "安裝 {command} 指令到終端機",
+  cliCommandLabel: "安裝 Textus CLI",
   cliCommandInstalled: "已安裝",
   cliCommandNotInstalled: "未安裝",
   cliCommandInstallButton: "安裝",

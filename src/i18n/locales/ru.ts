@@ -1149,7 +1149,7 @@ export default {
   updateDownloading: "Загрузка обновления…",
   updateFailed: "Не удалось обновить:",
   updateViaPackageManager: `${APP_NAME} установлен через менеджер пакетов. Обновите его там.`,
-  cliCommandLabel: "Установить команду {command} в терминал",
+  cliCommandLabel: "Установить Textus CLI",
   cliCommandInstalled: "Установлена",
   cliCommandNotInstalled: "Не установлена",
   cliCommandInstallButton: "Установить",

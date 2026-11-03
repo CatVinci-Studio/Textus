@@ -239,18 +239,6 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
   );
 }
 
-/** "Install the {command} command…" with the command set as code. */
-function withCommand(label: string) {
-  const [before, after = ""] = label.split("{command}");
-  return (
-    <>
-      {before}
-      <code className="settings-inline-code">textus</code>
-      {after}
-    </>
-  );
-}
-
 /**
  * Startup already tries a silent install; this row covers when that failed
  * and retries through an admin-privileged prompt.
@@ -279,7 +267,7 @@ export function CliCommandSection({ t }: { t: Strings }) {
 
   return (
     <SettingRow
-      label={withCommand(t.cliCommandLabel)}
+      label={t.cliCommandLabel}
       error={error && `${t.cliCommandFailed} ${error}`}
     >
       {!error && (

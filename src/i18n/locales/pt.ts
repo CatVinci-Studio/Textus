@@ -1138,7 +1138,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   updateDownloading: "Baixando a atualização…",
   updateFailed: "Falha na atualização:",
   updateViaPackageManager: `O ${APP_NAME} foi instalado pelo seu gerenciador de pacotes. Atualize-o por lá.`,
-  cliCommandLabel: "Instalar o comando {command} no terminal",
+  cliCommandLabel: "Instalar o Textus CLI",
   cliCommandInstalled: "Instalado",
   cliCommandNotInstalled: "Não instalado",
   cliCommandInstallButton: "Instalar",

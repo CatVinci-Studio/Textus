@@ -1121,7 +1121,7 @@ type /name in a conversation to use one.
   updateDownloading: "Downloading update…",
   updateFailed: "Update failed:",
   updateViaPackageManager: `${APP_NAME} was installed by your package manager. Update it there.`,
-  cliCommandLabel: "Install the {command} command in the terminal",
+  cliCommandLabel: "Install Textus CLI",
   cliCommandInstalled: "Installed",
   cliCommandNotInstalled: "Not installed",
   cliCommandInstallButton: "Install",
