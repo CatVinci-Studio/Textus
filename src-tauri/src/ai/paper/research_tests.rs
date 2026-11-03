@@ -228,6 +228,8 @@ fn attachments_are_kept_in_the_paper_s_folder_when_the_scratch_folder_is_gone() 
         .unwrap()
         .unwrap();
     assert_eq!(kept, again);
+    // Only the attachments: the paper's own files stay out of the tools' sight.
+    assert!(!again.join("paper.json").exists() && kept.ends_with("files"));
     assert_eq!(
         std::fs::read_to_string(again.join("attached/a.md")).unwrap(),
         "A"
@@ -250,7 +252,7 @@ fn an_older_paper_s_materials_become_attached_files() {
     .unwrap();
     store::keep_attachments(root.path(), "abc123", None).unwrap();
     assert_eq!(
-        std::fs::read_to_string(dir.join("attached/my notes.md")).unwrap(),
+        std::fs::read_to_string(dir.join("files/attached/my notes.md")).unwrap(),
         "Hourly."
     );
     assert!(!dir.join("materials.json").exists());

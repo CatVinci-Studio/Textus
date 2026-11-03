@@ -12,6 +12,8 @@ const PAPERS_FOLDER: &str = "papers";
 const PAPER_FILE: &str = "paper.json";
 const DOSSIER_FILE: &str = "dossier.json";
 const OUTLINE_FILE: &str = "outline.json";
+/// The paper's attachments, as `files/attached/...`.
+const FILES: &str = "files";
 const MATERIALS_FILE: &str = "materials.json";
 
 /// Everything kept for one paper. A paper not yet researched has an empty
@@ -100,16 +102,12 @@ fn move_paper(from: &Path, to: &Path) -> std::io::Result<()> {
         return Ok(());
     }
     crate::ai::project_data::copy_dir(from, to)?;
-    // The copy is whole; what is left behind is only clutter in the
-    // temporary folder.
-    for entry in std::fs::read_dir(from)?.flatten() {
-        let _ = std::fs::remove_file(entry.path());
-    }
-    let _ = std::fs::remove_dir(from);
+    // The copy is whole; what is left is Textus's own scratch copy.
+    let _ = std::fs::remove_dir_all(from);
     Ok(())
 }
 
-/// Writes the paper's files into `root`'s `.textus/`, each whole or not at
+/// Writes the paper's files under `root`, each whole or not at
 /// all, so a crash mid-save leaves the previous version.
 pub(crate) fn save(root: &Path, files: &PaperFiles) -> Result<(), String> {
     let dir = paper_dir(root, &files.paper.id)?;
@@ -176,7 +174,10 @@ pub(crate) fn keep_attachments(
     conversation: Option<&Path>,
 ) -> Result<Option<PathBuf>, String> {
     let dir = paper_dir(root, id)?;
-    let attached = dir.join(ATTACHED);
+    // A folder of their own, so the file tools see the attachments and not
+    // the paper's own files beside them.
+    let files = dir.join(FILES);
+    let attached = files.join(ATTACHED);
     if !attached.exists() {
         if let Some(from) = conversation
             .map(|c| c.join(ATTACHED))
@@ -185,8 +186,8 @@ pub(crate) fn keep_attachments(
             crate::ai::project_data::copy_dir(&from, &attached).map_err(|e| e.to_string())?;
         }
     }
-    write_out_materials(&dir)?;
-    Ok(attached.is_dir().then_some(dir))
+    write_out_materials(&dir, &attached)?;
+    Ok(attached.is_dir().then_some(files))
 }
 
 /// A file attached as text by an older Textus, kept in materials.json.
@@ -196,13 +197,12 @@ struct Material {
     content: String,
 }
 
-fn write_out_materials(dir: &Path) -> Result<(), String> {
+fn write_out_materials(dir: &Path, attached: &Path) -> Result<(), String> {
     let file = dir.join(MATERIALS_FILE);
     let Some(materials) = read_json::<Vec<Material>>(&file)? else {
         return Ok(());
     };
-    let attached = dir.join(ATTACHED);
-    std::fs::create_dir_all(&attached).map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(attached).map_err(|e| e.to_string())?;
     for m in materials {
         let name = m.name.rsplit(['/', '\\']).next().unwrap_or("");
         let name = match name.trim_start_matches('.') {
@@ -215,7 +215,7 @@ fn write_out_materials(dir: &Path) -> Result<(), String> {
     std::fs::remove_file(&file).map_err(|e| e.to_string())
 }
 
-/// The paper `id` kept in `root`'s `.textus/`.
+/// The paper `id` kept under `root`.
 pub(crate) fn load(root: &Path, id: &str) -> Result<PaperFiles, String> {
     let dir = paper_dir(root, id)?;
     let paper: Paper = read_json(&dir.join(PAPER_FILE))?
