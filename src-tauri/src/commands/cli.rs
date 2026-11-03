@@ -1,9 +1,11 @@
-//! The `textus` terminal command. Each platform's script hands its arguments
-//! to Textus and returns at once; a running Textus takes them itself.
-//! - macOS: `/usr/local/bin/textus` runs `open -a Textus`.
+//! Installs the `textus` terminal command: a script that runs the app's own
+//! binary marked as started from a terminal (`crate::cli::SCRIPT_ENV`), which
+//! answers commands itself and hands paths to the app window at once.
+//! - macOS: `/usr/local/bin/textus` runs the binary inside the .app, or
+//!   `open -a Textus` once that is gone.
 //! - Windows: `bin\textus.cmd` beside the app, that folder on the user's PATH.
-//! - Linux: the .deb/.rpm already ship `/usr/bin/textus`; otherwise (the
-//!   AppImage) `~/.local/bin/textus`.
+//! - Linux: the .deb/.rpm ship the binary itself as `/usr/bin/textus`;
+//!   otherwise (the AppImage) `~/.local/bin/textus`.
 //!
 //! Startup installs it quietly where no password is needed; Settings ›
 //! General retries.
@@ -14,8 +16,15 @@ mod imp {
 
     const CLI_BIN_PATH: &str = "/usr/local/bin/textus";
 
+    /// This binary when it runs from an .app; a dev build has none.
+    fn bundled_exe() -> Option<String> {
+        let exe = std::env::current_exe().ok()?;
+        let in_app = exe.parent()?.parent()?.parent()?.extension()? == "app";
+        in_app.then(|| exe.to_string_lossy().into_owned())
+    }
+
     fn script_content() -> String {
-        format!("#!/bin/bash\nexec open -a \"{APP_NAME}\" \"$@\"\n")
+        super::mac_script(bundled_exe().as_deref(), APP_NAME)
     }
 
     fn write_direct() -> std::io::Result<()> {
@@ -26,10 +35,11 @@ mod imp {
         Ok(())
     }
 
+    /// A dev build takes any script as installed, so it never swaps an
+    /// installed app's script for its own.
     pub fn is_installed() -> bool {
         std::fs::read_to_string(CLI_BIN_PATH)
-            .map(|c| c == script_content())
-            .unwrap_or(false)
+            .is_ok_and(|c| bundled_exe().is_none() || c == script_content())
     }
 
     /// Installs only when `/usr/local/bin` is user-writable, rather than
@@ -76,11 +86,26 @@ mod imp {
     }
 }
 
-/// `textus.cmd`: `start` returns at once; `%~dp0..` keeps it working when
-/// the install folder moves.
+/// `/usr/local/bin/textus`: the binary at `exe`, falling back to
+/// `open -a` (the whole script before commands, and still a dev build's).
+#[cfg(any(target_os = "macos", test))]
+fn mac_script(exe: Option<&str>, app_name: &str) -> String {
+    let open = format!("exec open -a \"{app_name}\" \"$@\"\n");
+    let Some(exe) = exe else {
+        return format!("#!/bin/bash\n{open}");
+    };
+    let quoted = exe.replace('\'', "'\\''");
+    let env = crate::cli::SCRIPT_ENV;
+    format!("#!/bin/sh\nif [ -x '{quoted}' ]; then\n  {env}=1 exec '{quoted}' \"$@\"\nfi\n{open}")
+}
+
+/// `textus.cmd`: waits for the binary, which prints and returns its exit
+/// code, or hands paths to the window and returns at once. `%~dp0..` keeps
+/// it working when the install folder moves.
 #[cfg(any(windows, test))]
 fn windows_script(exe_name: &str) -> String {
-    format!("@echo off\r\nstart \"\" \"%~dp0..\\{exe_name}\" %*\r\n")
+    let env = crate::cli::SCRIPT_ENV;
+    format!("@echo off\r\nsetlocal\r\nset \"{env}=1\"\r\n\"%~dp0..\\{exe_name}\" %*\r\n")
 }
 
 /// Whether a `;`-separated PATH holds `dir`, compared as Windows does.
@@ -183,11 +208,13 @@ mod imp {
     }
 }
 
-/// `sh` script for `~/.local/bin/textus`, the app detached from the terminal.
+/// `sh` script for `~/.local/bin/textus`: the AppImage, which detaches the
+/// window from the terminal itself.
 #[cfg(any(target_os = "linux", test))]
 fn linux_script(app: &str) -> String {
     let quoted = app.replace('\'', "'\\''");
-    format!("#!/bin/sh\nexec setsid -f '{quoted}' \"$@\" >/dev/null 2>&1\n")
+    let env = crate::cli::SCRIPT_ENV;
+    format!("#!/bin/sh\n{env}=1 exec '{quoted}' \"$@\"\n")
 }
 
 #[cfg(target_os = "linux")]
@@ -284,14 +311,31 @@ mod tests {
     }
 
     #[test]
-    fn scripts_pass_their_arguments_on() {
+    fn scripts_run_the_binary_marked_as_from_a_terminal() {
         assert_eq!(
             windows_script("Textus.exe"),
-            "@echo off\r\nstart \"\" \"%~dp0..\\Textus.exe\" %*\r\n"
+            "@echo off\r\nsetlocal\r\nset \"TEXTUS_CLI=1\"\r\n\"%~dp0..\\Textus.exe\" %*\r\n"
         );
         assert_eq!(
             linux_script("/home/a/it's/Textus.AppImage"),
-            "#!/bin/sh\nexec setsid -f '/home/a/it'\\''s/Textus.AppImage' \"$@\" >/dev/null 2>&1\n"
+            "#!/bin/sh\nTEXTUS_CLI=1 exec '/home/a/it'\\''s/Textus.AppImage' \"$@\"\n"
+        );
+        assert_eq!(
+            mac_script(
+                Some("/Applications/Textus.app/Contents/MacOS/textus"),
+                "Textus"
+            ),
+            "#!/bin/sh\nif [ -x '/Applications/Textus.app/Contents/MacOS/textus' ]; then\n  \
+             TEXTUS_CLI=1 exec '/Applications/Textus.app/Contents/MacOS/textus' \"$@\"\nfi\n\
+             exec open -a \"Textus\" \"$@\"\n"
+        );
+    }
+
+    #[test]
+    fn a_dev_build_keeps_the_script_that_opens_the_installed_app() {
+        assert_eq!(
+            mac_script(None, "Textus"),
+            "#!/bin/bash\nexec open -a \"Textus\" \"$@\"\n"
         );
     }
 }
