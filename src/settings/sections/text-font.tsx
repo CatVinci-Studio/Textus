@@ -63,6 +63,7 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
         <ChevronIcon className="settings-fold-chevron" />
       </summary>
       <div className="settings-fold-body">
+        <FontRow t={t} settings={settings} setSettings={setSettings} />
         <SettingRow label={t.docTextSizeLabel}>
           <Select
             className="settings-select"
@@ -101,15 +102,14 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
             ))}
           </Select>
         </SettingRow>
-        <TextFontRows t={t} settings={settings} setSettings={setSettings} />
+        <LetterSpacingRow t={t} settings={settings} setSettings={setSettings} />
       </div>
     </details>
   );
 }
 
-function TextFontRows({ t, settings, setSettings }: Props) {
+function FontRow({ t, settings, setSettings }: Props) {
   const [fonts, setFonts] = useState<string[]>([]);
-  const [by, setBy] = useState(String(settings.docLetterSpacingBy));
   useEffect(() => {
     let live = true;
     void fontFamilies().then((list) => live && setFonts(list));
@@ -117,15 +117,37 @@ function TextFontRows({ t, settings, setSettings }: Props) {
       live = false;
     };
   }, []);
-  useEffect(
-    () => setBy(String(settings.docLetterSpacingBy)),
-    [settings.docLetterSpacingBy],
-  );
   // A font chosen on another machine still shows as the choice.
   const listed =
     settings.docFont && !fonts.includes(settings.docFont)
       ? [settings.docFont, ...fonts]
       : fonts;
+  return (
+    <SettingRow label={t.docFontLabel}>
+      <Select
+        className="settings-select"
+        aria-label={t.docFontLabel}
+        value={settings.docFont}
+        onChange={(e) => setSettings({ docFont: e.target.value })}
+      >
+        <option value="">{t.docFontAuto}</option>
+        {listed.map((name) => (
+          <option key={name} value={name}>
+            {name}
+          </option>
+        ))}
+      </Select>
+    </SettingRow>
+  );
+}
+
+/** Word-style character spacing: expanded or condensed by a number of pt. */
+function LetterSpacingRow({ t, settings, setSettings }: Props) {
+  const [by, setBy] = useState(String(settings.docLetterSpacingBy));
+  useEffect(
+    () => setBy(String(settings.docLetterSpacingBy)),
+    [settings.docLetterSpacingBy],
+  );
   const commitBy = () => {
     const value = letterSpacingBy(by);
     setBy(String(value));
@@ -135,66 +157,49 @@ function TextFontRows({ t, settings, setSettings }: Props) {
     settings.docLetterSpacing === "expanded" ||
     settings.docLetterSpacing === "condensed";
   return (
-    <>
-      <SettingRow label={t.docFontLabel}>
+    <SettingRow label={t.docLetterSpacingLabel}>
+      <div className="settings-letter-spacing">
         <Select
           className="settings-select"
-          aria-label={t.docFontLabel}
-          value={settings.docFont}
-          onChange={(e) => setSettings({ docFont: e.target.value })}
+          aria-label={t.docLetterSpacingLabel}
+          value={settings.docLetterSpacing}
+          onChange={(e) =>
+            setSettings({
+              docLetterSpacing: e.target.value as DocLetterSpacing,
+            })
+          }
         >
-          <option value="">{t.docFontAuto}</option>
-          {listed.map((name) => (
-            <option key={name} value={name}>
-              {name}
+          {DOC_LETTER_SPACINGS.map((spacing) => (
+            <option key={spacing} value={spacing}>
+              {t[SPACING_LABELS[spacing]] as string}
             </option>
           ))}
         </Select>
-      </SettingRow>
-      <SettingRow label={t.docLetterSpacingLabel}>
-        <div className="settings-letter-spacing">
-          <Select
-            className="settings-select"
-            aria-label={t.docLetterSpacingLabel}
-            value={settings.docLetterSpacing}
-            onChange={(e) =>
-              setSettings({
-                docLetterSpacing: e.target.value as DocLetterSpacing,
-              })
-            }
-          >
-            {DOC_LETTER_SPACINGS.map((spacing) => (
-              <option key={spacing} value={spacing}>
-                {t[SPACING_LABELS[spacing]] as string}
-              </option>
-            ))}
-          </Select>
-          {adjustable && (
-            <label className="settings-letter-spacing-by">
-              <input
-                className="settings-text-input"
-                inputMode="decimal"
-                aria-label={t.docLetterSpacingBy}
-                value={by}
-                onChange={(e) => setBy(e.target.value)}
-                onBlur={commitBy}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") commitBy();
-                  const step =
-                    e.key === "ArrowUp" ? 1 : e.key === "ArrowDown" ? -1 : 0;
-                  if (!step) return;
-                  e.preventDefault();
-                  const value = letterSpacingBy(
-                    settings.docLetterSpacingBy + step * LETTER_SPACING_BY.step,
-                  );
-                  setSettings({ docLetterSpacingBy: value });
-                }}
-              />
-              pt
-            </label>
-          )}
-        </div>
-      </SettingRow>
-    </>
+        {adjustable && (
+          <label className="settings-letter-spacing-by">
+            <input
+              className="settings-text-input"
+              inputMode="decimal"
+              aria-label={t.docLetterSpacingBy}
+              value={by}
+              onChange={(e) => setBy(e.target.value)}
+              onBlur={commitBy}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitBy();
+                const step =
+                  e.key === "ArrowUp" ? 1 : e.key === "ArrowDown" ? -1 : 0;
+                if (!step) return;
+                e.preventDefault();
+                const value = letterSpacingBy(
+                  settings.docLetterSpacingBy + step * LETTER_SPACING_BY.step,
+                );
+                setSettings({ docLetterSpacingBy: value });
+              }}
+            />
+            pt
+          </label>
+        )}
+      </div>
+    </SettingRow>
   );
 }
