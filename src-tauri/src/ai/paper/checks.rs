@@ -34,10 +34,10 @@ pub(super) fn same_address(a: &str, b: &str) -> bool {
 pub(crate) const WEB_FIGURE_MARK: &str = "<!-- textus-figure web:";
 
 /// A citation as the paper writes it, `[n](address)`: a web page's address,
-/// or a file in the user's reference library (`references/…`).
+/// or a local file's path (`attached/…`, `references/…`).
 pub(crate) fn cited_link() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\(((?:https?://|references/)[^)\s]+)\)").unwrap())
+    RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]\((https?://[^)\s]+|[^)\s:#/][^)\s:]*)\)").unwrap())
 }
 
 /// A figure named by a number, "图 2" or "Figure 2": the writers' own
