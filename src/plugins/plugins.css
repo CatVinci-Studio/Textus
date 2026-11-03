@@ -936,6 +936,9 @@ button.mcp-homepage:hover {
 .floating-view-dot {
   position: absolute;
   pointer-events: auto;
+  /* Clicked and petted, never selected. */
+  -webkit-user-select: none;
+  user-select: none;
 }
 .floating-view .plugin-webview-frame {
   background: transparent;
@@ -969,6 +972,8 @@ button.mcp-homepage:hover {
 :root[data-floating-window] body {
   background: transparent;
   overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .floating-window {
   inset: 0;

@@ -94,6 +94,19 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   expect(after.y).toBeLessThan(before.y - 50);
   // Now in the left half: a character there turns to face the middle.
   await expect(page.getByText("on the left")).toBeVisible();
+  // Petting her with quick clicks never selects her like text.
+  await view.dblclick();
+  expect(
+    await page.evaluate(() => {
+      const box = document.querySelector("[data-floating-view]")!;
+      const selection = getSelection();
+      return (
+        !!selection &&
+        !selection.isCollapsed &&
+        selection.containsNode(box, true)
+      );
+    }),
+  ).toBe(false);
   const saved = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("textus.floatingViews") ?? "{}"),
   );
