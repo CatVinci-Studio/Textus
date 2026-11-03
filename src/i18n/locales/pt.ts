@@ -1195,13 +1195,19 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileHint:
-    "Faça backup dos seus ajustes ou leve-os para outro computador. Chaves de API e tokens de MCP ficam aqui.",
+    "Faça backup das configurações ou leve-as para outro computador, com as conversas e memórias de IA se quiser. Chaves de API e tokens MCP ficam aqui.",
   settingsFileExport: "Exportar…",
   settingsFileImport: "Importar…",
   settingsFileImportConfirm:
     "Substituir seus ajustes pelos deste arquivo? As chaves de API e os tokens de MCP deste computador são mantidos.",
   settingsFileImportReplace: "Substituir",
   settingsFileNotSettings: "Este arquivo não contém ajustes do Textus.",
+  settingsFileWithAi:
+    "Exportar também seus registros de IA, todas as conversas e memórias? O arquivo incluirá o que você escreveu para o Textus AI.",
+  settingsFileWithAiYes: "Incluir registros de IA",
+  settingsFileSettingsOnly: "Só as configurações",
+  settingsFileImportAi:
+    "As conversas e memórias de IA dele são adicionadas às suas; nenhuma das suas é substituída por uma cópia mais antiga.",
   untitledTab: "Sem título",
   markdownGuideTab: "Guia de Markdown",
   agentGuideTab: "Guia dos Recursos de IA",

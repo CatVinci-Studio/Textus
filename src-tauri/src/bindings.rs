@@ -59,6 +59,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::settings::history_list,
                 crate::settings::history_upsert,
                 crate::settings::history_remove,
+                crate::settings::ai_records_export,
+                crate::settings::ai_records_import,
                 crate::settings::history_clear,
                 crate::settings::chat_history_get,
                 crate::settings::chat_history_archived,

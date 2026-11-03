@@ -1226,13 +1226,19 @@ utiliser une.
     "Avec un dossier ouvert, les documents sans titre y sont aussi enregistrés, nommés d’après leur titre.",
   settingsFileLabel: "Fichier de réglages",
   settingsFileHint:
-    "Sauvegardez vos réglages ou emportez-les sur un autre ordinateur. Les clés d’API et les jetons MCP restent ici.",
+    "Sauvegardez vos réglages ou emportez-les sur un autre ordinateur, avec vos conversations et mémoires d’IA si vous le souhaitez. Les clés d’API et jetons MCP restent ici.",
   settingsFileExport: "Exporter…",
   settingsFileImport: "Importer…",
   settingsFileImportConfirm:
     "Remplacer vos réglages par ceux de ce fichier ? Les clés d’API et les jetons MCP de cet ordinateur sont conservés.",
   settingsFileImportReplace: "Remplacer",
   settingsFileNotSettings: "Ce fichier ne contient pas de réglages Textus.",
+  settingsFileWithAi:
+    "Exporter aussi vos données d’IA – toutes les conversations et mémoires ? Le fichier contiendra alors ce que vous avez écrit à Textus AI.",
+  settingsFileWithAiYes: "Inclure les données d’IA",
+  settingsFileSettingsOnly: "Réglages seulement",
+  settingsFileImportAi:
+    "Ses conversations et mémoires d’IA s’ajoutent aux vôtres ; aucune des vôtres n’est remplacée par une copie plus ancienne.",
   untitledTab: "Sans titre",
   markdownGuideTab: "Guide Markdown",
   agentGuideTab: "Guide des fonctions IA",

@@ -1105,13 +1105,19 @@ export default {
   autosaveHint: "開啟資料夾時，未命名文件也會以標題為名存進這個資料夾。",
   settingsFileLabel: "設定檔",
   settingsFileHint:
-    "備份設定，或帶到另一台電腦上。API 金鑰和 MCP 權杖留在本機。",
+    "備份設定，或帶到另一台電腦上，也可以連同 AI 對話和記憶一起。API 金鑰和 MCP 權杖留在本機。",
   settingsFileExport: "匯出…",
   settingsFileImport: "匯入…",
   settingsFileImportConfirm:
     "要用這個檔案裡的設定取代現在的設定嗎？本機的 API 金鑰和 MCP 權杖會保留。",
   settingsFileImportReplace: "取代",
   settingsFileNotSettings: "這個檔案不是 Textus 的設定。",
+  settingsFileWithAi:
+    "同時匯出 AI 紀錄（所有對話和記憶）嗎？匯出後，檔案裡會包含你和 Textus AI 的對話內容。",
+  settingsFileWithAiYes: "包含 AI 紀錄",
+  settingsFileSettingsOnly: "只匯出設定",
+  settingsFileImportAi:
+    "檔案裡的 AI 對話和記憶會加到本機，已有的不會被更舊的版本覆蓋。",
   untitledTab: "未命名",
   markdownGuideTab: "Markdown 指南",
   agentGuideTab: "AI 功能指南",

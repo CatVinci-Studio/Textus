@@ -1149,13 +1149,19 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "폴더가 열려 있으면 제목 없는 문서도 제목을 이름으로 그 폴더에 저장합니다.",
   settingsFileLabel: "설정 파일",
   settingsFileHint:
-    "설정을 백업하거나 다른 컴퓨터로 옮깁니다. API 키와 MCP 토큰은 이 컴퓨터에 남습니다.",
+    "설정을 백업하거나 다른 컴퓨터로 옮길 수 있고, 원하면 AI 대화와 메모리도 함께 옮길 수 있습니다. API 키와 MCP 토큰은 이 컴퓨터에 남습니다.",
   settingsFileExport: "내보내기…",
   settingsFileImport: "가져오기…",
   settingsFileImportConfirm:
     "이 파일의 설정으로 지금 설정을 바꿀까요? 이 컴퓨터의 API 키와 MCP 토큰은 그대로 둡니다.",
   settingsFileImportReplace: "바꾸기",
   settingsFileNotSettings: "이 파일은 Textus 설정이 아닙니다.",
+  settingsFileWithAi:
+    "AI 기록(모든 대화와 메모리)도 함께 내보낼까요? 파일에 Textus AI와 나눈 대화 내용이 담깁니다.",
+  settingsFileWithAiYes: "AI 기록 포함",
+  settingsFileSettingsOnly: "설정만",
+  settingsFileImportAi:
+    "파일의 AI 대화와 메모리가 이 컴퓨터에 추가됩니다. 기존 항목이 더 오래된 사본으로 바뀌지는 않습니다.",
   untitledTab: "제목 없음",
   markdownGuideTab: "Markdown 가이드",
   agentGuideTab: "AI 기능 가이드",

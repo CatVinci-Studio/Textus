@@ -1201,13 +1201,19 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Ist ein Ordner geöffnet, bekommen auch unbenannte Dokumente dort eine Datei, nach ihrem Titel benannt.",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileHint:
-    "Sichern Sie Ihre Einstellungen oder nehmen Sie sie auf einen anderen Computer mit. API-Schlüssel und MCP-Token bleiben hier.",
+    "Sichere deine Einstellungen oder nimm sie auf einen anderen Computer mit, auf Wunsch samt KI-Gesprächen und Erinnerungen. API-Schlüssel und MCP-Token bleiben hier.",
   settingsFileExport: "Exportieren…",
   settingsFileImport: "Importieren…",
   settingsFileImportConfirm:
     "Ihre Einstellungen durch die aus dieser Datei ersetzen? API-Schlüssel und MCP-Token auf diesem Computer bleiben erhalten.",
   settingsFileImportReplace: "Ersetzen",
   settingsFileNotSettings: "Diese Datei enthält keine Textus-Einstellungen.",
+  settingsFileWithAi:
+    "Auch die KI-Aufzeichnungen exportieren – alle Gespräche und Erinnerungen? Die Datei enthält dann, was du Textus AI geschrieben hast.",
+  settingsFileWithAiYes: "KI-Aufzeichnungen einschließen",
+  settingsFileSettingsOnly: "Nur Einstellungen",
+  settingsFileImportAi:
+    "Ihre KI-Gespräche und Erinnerungen kommen zu deinen hinzu; keine deiner wird durch eine ältere Kopie ersetzt.",
   untitledTab: "Unbenannt",
   markdownGuideTab: "Markdown-Anleitung",
   agentGuideTab: "Anleitung zu KI-Funktionen",

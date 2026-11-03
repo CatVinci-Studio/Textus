@@ -251,6 +251,8 @@ pub fn run() {
             settings::history_list,
             settings::history_upsert,
             settings::history_remove,
+            settings::ai_records_export,
+            settings::ai_records_import,
             settings::history_clear,
             settings::chat_history_get,
             settings::chat_history_archived,

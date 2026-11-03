@@ -1206,13 +1206,19 @@ export default {
     "Если открыта папка, безымянные документы тоже сохраняются в ней под своим заголовком.",
   settingsFileLabel: "Файл настроек",
   settingsFileHint:
-    "Сохраните настройки или перенесите их на другой компьютер. Ключи API и токены MCP остаются здесь.",
+    "Сохраните настройки или перенесите их на другой компьютер — по желанию вместе с разговорами и памятью ИИ. Ключи API и токены MCP остаются здесь.",
   settingsFileExport: "Экспортировать…",
   settingsFileImport: "Импортировать…",
   settingsFileImportConfirm:
     "Заменить ваши настройки настройками из этого файла? Ключи API и токены MCP на этом компьютере сохранятся.",
   settingsFileImportReplace: "Заменить",
   settingsFileNotSettings: "В этом файле нет настроек Textus.",
+  settingsFileWithAi:
+    "Экспортировать и записи ИИ — все разговоры и память? Тогда в файле будет то, что вы писали Textus AI.",
+  settingsFileWithAiYes: "С записями ИИ",
+  settingsFileSettingsOnly: "Только настройки",
+  settingsFileImportAi:
+    "Разговоры и память ИИ из файла добавятся к вашим; ваши не заменяются более старыми копиями.",
   untitledTab: "Без названия",
   markdownGuideTab: "Руководство по Markdown",
   agentGuideTab: "Руководство по ИИ",

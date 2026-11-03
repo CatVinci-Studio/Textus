@@ -1158,13 +1158,19 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
   settingsFileLabel: "設定ファイル",
   settingsFileHint:
-    "設定をバックアップしたり、別のコンピュータに移したりできます。API キーと MCP トークンはこのコンピュータに残ります。",
+    "設定をバックアップしたり、別のコンピュータに移したりできます。AI の会話とメモリーも一緒に移せます。API キーと MCP トークンはこのコンピュータに残ります。",
   settingsFileExport: "書き出す…",
   settingsFileImport: "読み込む…",
   settingsFileImportConfirm:
     "このファイルの設定で今の設定を置き換えますか？このコンピュータの API キーと MCP トークンはそのままです。",
   settingsFileImportReplace: "置き換える",
   settingsFileNotSettings: "このファイルは Textus の設定ではありません。",
+  settingsFileWithAi:
+    "AI の記録（すべての会話とメモリー）も書き出しますか？ファイルに Textus AI との会話の内容が含まれます。",
+  settingsFileWithAiYes: "AI の記録を含める",
+  settingsFileSettingsOnly: "設定のみ",
+  settingsFileImportAi:
+    "ファイル内の AI の会話とメモリーがこのコンピュータに追加されます。既存のものが古い版で上書きされることはありません。",
   untitledTab: "無題",
   markdownGuideTab: "Markdownガイド",
   agentGuideTab: "AI機能ガイド",

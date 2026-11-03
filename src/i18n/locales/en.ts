@@ -1178,13 +1178,19 @@ type /name in a conversation to use one.
     "With a folder open, untitled documents get a file there too, named after their title.",
   settingsFileLabel: "Settings file",
   settingsFileHint:
-    "Back up your settings or carry them to another computer. API keys and MCP tokens stay here.",
+    "Back up your settings or carry them to another computer, AI conversations and memories too if you like. API keys and MCP tokens stay here.",
   settingsFileExport: "Export…",
   settingsFileImport: "Import…",
   settingsFileImportConfirm:
     "Replace your settings with the ones in this file? API keys and MCP tokens on this computer are kept.",
   settingsFileImportReplace: "Replace",
   settingsFileNotSettings: "This file isn’t Textus settings.",
+  settingsFileWithAi:
+    "Export your AI records too - every conversation and memory? The file then holds what you wrote to Textus AI.",
+  settingsFileWithAiYes: "Include AI records",
+  settingsFileSettingsOnly: "Settings only",
+  settingsFileImportAi:
+    "Its AI conversations and memories are added beside yours; none of yours is replaced by an older copy.",
   untitledTab: "Untitled",
   markdownGuideTab: "Markdown Guide",
   agentGuideTab: "AI Features Guide",

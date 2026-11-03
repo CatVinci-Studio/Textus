@@ -1213,13 +1213,19 @@ para usar una.
     "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileHint:
-    "Haz una copia de tus ajustes o llévalos a otro ordenador. Las claves de API y los tokens de MCP se quedan aquí.",
+    "Haz una copia de tus ajustes o llévalos a otro ordenador, con tus conversaciones y memorias de IA si quieres. Las claves de API y los tokens MCP se quedan aquí.",
   settingsFileExport: "Exportar…",
   settingsFileImport: "Importar…",
   settingsFileImportConfirm:
     "¿Reemplazar tus ajustes por los de este archivo? Se conservan las claves de API y los tokens de MCP de este ordenador.",
   settingsFileImportReplace: "Reemplazar",
   settingsFileNotSettings: "Este archivo no contiene ajustes de Textus.",
+  settingsFileWithAi:
+    "¿Exportar también tus registros de IA, todas las conversaciones y memorias? El archivo incluirá lo que escribiste a Textus AI.",
+  settingsFileWithAiYes: "Incluir registros de IA",
+  settingsFileSettingsOnly: "Solo ajustes",
+  settingsFileImportAi:
+    "Sus conversaciones y memorias de IA se añaden a las tuyas; ninguna de las tuyas se sustituye por una copia más antigua.",
   untitledTab: "Sin título",
   markdownGuideTab: "Guía de Markdown",
   agentGuideTab: "Guía de funciones de IA",
