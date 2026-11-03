@@ -100,7 +100,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   projectStyleChip: "文体",
   projectLibraryChip: "ライブラリ {n}",
   projectPickFolder: "プロジェクトフォルダーを選択…",
-  projectNoFolder: "プロジェクトフォルダを使わない",
+  projectNoFolder: "プロジェクトフォルダーを使わない",
   projectReveal: "ファイルマネージャーで表示",
   projectLearnStyle: "サンプルから文体を学習…",
   projectImportReferences: "参考資料を読み込む…",
