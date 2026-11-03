@@ -8,7 +8,8 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { appMenuModule } from "./menu/app-menu-lazy";
 
 /**
  * The caption is the only way to close a frameless window, and must be absent
@@ -100,6 +101,9 @@ describe("where the platform still draws the frame", () => {
 });
 
 describe("where the app owns the frame", () => {
+  // The menu loads once the window is idle; here it is there from the start.
+  beforeAll(() => appMenuModule.load());
+
   it("draws minimize, maximize and close", () => {
     appDrawsWindowFrame.value = true;
     render(<WindowCaptionButtons />);

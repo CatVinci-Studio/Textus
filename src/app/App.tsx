@@ -30,7 +30,7 @@ import {
 import { OnboardingLayers } from "./OnboardingLayers";
 import { QuickPickHost } from "../ui/quick-pick";
 import { PluginFormHost } from "../plugins/views/plugin-form";
-import { FloatingViews } from "../plugins/views/FloatingViews";
+import { FloatingViewsHost } from "../plugins/views/floating-views-host";
 import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
@@ -237,7 +237,7 @@ function App() {
           okLabel={t.pluginOk}
         />
         <PluginFormHost />
-        <FloatingViews />
+        <FloatingViewsHost />
         <NoticeHost />
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}

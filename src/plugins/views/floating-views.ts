@@ -1,5 +1,11 @@
 import { emitPluginEvent } from "../app-bridge";
-import type { FloatingPlace } from "../store/manifest";
+import { windowIpc } from "../../platform/ipc";
+import { thisWindow } from "../../platform/this-window";
+import { setFloatingCount } from "./floating-presence";
+import type {
+  FloatingPlace,
+  FloatingViewContribution,
+} from "../store/manifest";
 
 /**
  * Plugins' floating views that are open (contributes.floatingViews): where
@@ -60,6 +66,7 @@ function save(view: string, value: Saved) {
 
 function changed(view: FloatingView, isOpen: boolean) {
   version++;
+  setFloatingCount(open.size);
   save(view.view, { ...view, open: isOpen });
   for (const listener of listeners) listener();
   emitPluginEvent("floating", {
@@ -71,16 +78,16 @@ function changed(view: FloatingView, isOpen: boolean) {
   });
 }
 
-let desktopHere = false;
+let desktopHere: Promise<boolean> | null = null;
 
 /** Whether this window may float views over the desktop: the platform can,
  *  and it is the main window, so two windows never float the same view. */
-export function floatingOnDesktop(): boolean {
+export function floatingOnDesktop(): Promise<boolean> {
+  desktopHere ??= windowIpc
+    .floatingDesktopSupported()
+    .then((can) => can && thisWindow().label === "main")
+    .catch(() => false);
   return desktopHere;
-}
-
-export function setFloatingOnDesktop(can: boolean) {
-  desktopHere = can;
 }
 
 export function subscribeFloating(listener: () => void): () => void {
@@ -167,6 +174,7 @@ export function closeFloatingOf(plugin: string) {
     if (view.plugin === plugin) {
       open.delete(view.view);
       version++;
+      setFloatingCount(open.size);
       for (const listener of listeners) listener();
     }
 }
@@ -176,4 +184,35 @@ export function rememberedOpen(): string[] {
   return Object.entries(saved())
     .filter(([, value]) => value.open)
     .map(([view]) => view);
+}
+
+/** A plugin's view, as its manifest declares it, shown. */
+export async function showContribution(
+  plugin: string,
+  view: FloatingViewContribution,
+  title: string,
+): Promise<FloatingView> {
+  return showFloating(
+    {
+      plugin,
+      view: view.id,
+      title,
+      width: view.width,
+      height: view.height,
+      allowed: view.place,
+    },
+    await floatingOnDesktop(),
+  );
+}
+
+/** The plugin's views left open last time, open again. */
+export async function reopenFloating(
+  plugin: string,
+  views: FloatingViewContribution[],
+  title: (value: string) => string,
+) {
+  const remembered = rememberedOpen();
+  for (const view of views)
+    if (remembered.includes(view.id))
+      await showContribution(plugin, view, title(view.title));
 }

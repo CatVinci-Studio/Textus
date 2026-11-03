@@ -7,8 +7,7 @@ import { webviewsOf } from "../views/webviews";
 import {
   closeFloating,
   openFloatingViews,
-  floatingOnDesktop,
-  showFloating,
+  showContribution,
 } from "../views/floating-views";
 import { webPageUrl } from "../views/web-page-url";
 import {
@@ -120,22 +119,16 @@ export function layoutHandlers(p: PluginScope) {
         throw new Error("Only web links open in the browser.");
       return links.openWebLink(address);
     },
-    "layout.openFloating": ({ view }: Params) => {
+    "layout.openFloating": async ({ view }: Params) => {
       const id = str(view, "view");
       const declared = p
         .manifest()
         .contributes.floatingViews.find((v) => v.id === id);
       if (!declared) throw new Error(`No floating view ${id} in the manifest.`);
-      showFloating(
-        {
-          plugin: p.id,
-          view: id,
-          title: localize(p.manifest(), declared.title, p.deps.language()),
-          width: declared.width,
-          height: declared.height,
-          allowed: declared.place,
-        },
-        floatingOnDesktop(),
+      await showContribution(
+        p.id,
+        declared,
+        localize(p.manifest(), declared.title, p.deps.language()),
       );
     },
     "layout.closeFloating": ({ view }: Params) => {

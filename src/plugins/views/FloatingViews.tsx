@@ -1,7 +1,5 @@
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { windowInfo } from "../store/plugin-records";
-import { windowIpc } from "../../platform/ipc";
-import { thisWindow } from "../../platform/this-window";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import {
@@ -10,19 +8,12 @@ import {
   floatingVersion,
   moveFloating,
   openFloatingViews,
-  setFloatingOnDesktop,
   subscribeFloating,
   type FloatingView,
 } from "./floating-views";
 
 /** Kept this far inside the window's edges, so a view can't be lost. */
 const MARGIN = 8;
-
-// Only the main window floats views over the desktop.
-void windowIpc
-  .floatingDesktopSupported()
-  .then((can) => setFloatingOnDesktop(can && thisWindow().label === "main"))
-  .catch(() => {});
 
 /**
  * Plugins' floating views shown in this window: each a frame of its own
@@ -31,6 +22,10 @@ void windowIpc
  */
 export function FloatingViews() {
   useSyncExternalStore(subscribeFloating, floatingVersion);
+  const [canFloat, setCanFloat] = useState(false);
+  useEffect(() => {
+    void floatingOnDesktop().then(setCanFloat);
+  }, []);
   const open = openFloatingViews();
   const here = open.filter((v) => v.place === "window");
   const desktop = open.filter((v) => v.place === "desktop");
@@ -42,7 +37,7 @@ export function FloatingViews() {
       {here.length > 0 && (
         <div className="floating-views">
           {here.map((view) => (
-            <FloatingBox key={view.view} view={view} />
+            <FloatingBox key={view.view} view={view} desktop={canFloat} />
           ))}
         </div>
       )}
@@ -67,7 +62,14 @@ function position(view: FloatingView, width: number, height: number) {
   return { left: clamp(x, width, w), top: clamp(y, height, h) };
 }
 
-function FloatingBox({ view }: { view: FloatingView }) {
+function FloatingBox({
+  view,
+  desktop,
+}: {
+  view: FloatingView;
+  /** Whether it can be sent to the desktop from here. */
+  desktop: boolean;
+}) {
   const t = windowInfo().strings();
   const [drag, setDrag] = useState<{ dx: number; dy: number } | null>(null);
   const [live, setLive] = useState<{ left: number; top: number } | null>(null);
@@ -146,7 +148,7 @@ function FloatingBox({ view }: { view: FloatingView }) {
           title={view.title}
           {...dragHandlers}
         />
-        {view.allowed === "either" && floatingOnDesktop() && (
+        {view.allowed === "either" && desktop && (
           <button
             type="button"
             className="floating-view-action"
