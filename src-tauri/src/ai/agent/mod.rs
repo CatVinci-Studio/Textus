@@ -268,12 +268,8 @@ async fn ai_agent_message_inner(
                 });
             }
             // The reference library's search, once there is a library.
-            if workspace.root.as_deref().is_some_and(|root| {
-                std::path::Path::new(root)
-                    .join(crate::ai::project::REFERENCES_DIR)
-                    .is_dir()
-            }) {
-                tools.add(tools::references_tool());
+            if let Some(tool) = tools::references_tool(workspace.root.as_deref().map(Path::new)) {
+                tools.add(tool);
             }
             // A document shown whole needs no tools to read it: offered, they were
             // read again and again instead of edited.
@@ -296,13 +292,7 @@ async fn ai_agent_message_inner(
             }
             // The user's earlier conversations, when they refer to one.
             tools.add(search_conversations_tool(&stores.chat));
-            // The tools of the MCP servers the user turned on.
-            #[cfg(desktop)]
-            for tool in crate::mcp::tools_for_request(&app).await {
-                tools.add(tool);
-            }
-            // And of the plugins the user gave ai.tools.
-            for tool in crate::plugins::ai_tools::tools_for_request(&app) {
+            for tool in installed_tools(&app).await {
                 tools.add(tool);
             }
             // Create mode reads the plugins installed, to change one.
@@ -397,6 +387,16 @@ async fn ai_agent_message_inner(
         web.attach_sources(&mut turns);
         turns
     })
+}
+
+/// The tools of the MCP servers the user turned on, and of the plugins the
+/// user gave ai.tools: what every mode and Research's researchers offer.
+pub(crate) async fn installed_tools<'a>(app: &AppHandle) -> Vec<tools::Tool<'a>> {
+    let mut installed = Vec::new();
+    #[cfg(desktop)]
+    installed.extend(crate::mcp::tools_for_request(app).await);
+    installed.extend(crate::plugins::ai_tools::tools_for_request(app));
+    installed
 }
 
 /// A turn as the frontend keeps it: a tool result without the images it
