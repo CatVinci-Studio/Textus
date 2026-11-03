@@ -34,12 +34,18 @@ export async function fetchConnected(
     const config = await auth.customEndpointStatus();
     return { oauth: false, apiKey: config !== null };
   }
-  const oauth = entry.auth.includes("oauth")
-    ? (await auth.oauthStatus(entry.id)).configured
-    : false;
-  const apiKey = entry.auth.includes("api_key")
-    ? entry.keyOptional || (await auth.providerApiKeyStatus(entry.id))
-    : false;
+  // Checked apart, so a sign-in that can't be read doesn't hide a saved key.
+  const [oauth, apiKey] = await Promise.all([
+    entry.auth.includes("oauth")
+      ? auth
+          .oauthStatus(entry.id)
+          .then((s) => s.configured)
+          .catch(() => false)
+      : false,
+    entry.auth.includes("api_key")
+      ? entry.keyOptional || auth.providerApiKeyStatus(entry.id)
+      : false,
+  ]);
   return { oauth, apiKey };
 }
 
