@@ -27,28 +27,9 @@ export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 /// Interface Text Size, as a factor on the UI's type scale.
 export const UI_TEXT_SCALES = [0.9, 1, 1.1, 1.25] as const;
 export type UiTextScale = (typeof UI_TEXT_SCALES)[number];
-/** The document's text size in px, or "auto" for the theme's own. */
-export const DOC_TEXT_SIZES = [
-  "auto",
-  12,
-  13,
-  14,
-  15,
-  16,
-  17,
-  18,
-  19,
-  20,
-  21,
-  22,
-  23,
-  24,
-  25,
-  26,
-  27,
-  28,
-] as const;
-export type DocTextSize = (typeof DOC_TEXT_SIZES)[number];
+/** The document's text size in whole px, or "auto" for the theme's own. */
+export const DOC_TEXT_SIZE = { min: 10, max: 48, step: 1 } as const;
+export type DocTextSize = "auto" | number;
 /** The document's line spacing, or "auto" for the theme's own. */
 export const DOC_LINE_SPACINGS = [
   "auto",

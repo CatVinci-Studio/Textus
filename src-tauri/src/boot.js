@@ -43,10 +43,11 @@ window.__textusBoot = function (boot, themeCss) {
     // default); theme/apply-appearance.ts sets the same property.
     if ([0.9, 1.1, 1.25].indexOf(settings.uiTextScale) >= 0)
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
-    // The reader's document size and spacing (DOC_TEXT_SIZES and
+    // The reader's document size and spacing (DOC_TEXT_SIZE and
     // DOC_LINE_HEIGHTS in prefs/settings-types.ts; apply-appearance.ts).
     if (typeof settings.docTextSize === "number") {
-      root.style.setProperty("--doc-font-size", settings.docTextSize + "px");
+      var size = Math.min(48, Math.max(10, Math.round(settings.docTextSize)));
+      root.style.setProperty("--doc-font-size", size + "px");
       root.setAttribute("data-doc-size", "");
     }
     var leading = { compact: 1.55, standard: 1.8, relaxed: 2.05 }[

@@ -27,11 +27,11 @@ test("the document takes the reader's text size and line spacing, and follows a 
   await page
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
     .click();
-  await page.getByRole("combobox", { name: "Document text size" }).click();
-  await page
-    .getByRole("listbox")
-    .getByRole("option", { name: "16 px" })
-    .click();
+  await page.getByRole("button", { name: "Increase" }).first().click();
+  await expect(text).toHaveCSS("font-size", "21px");
+  const size = page.getByRole("spinbutton", { name: "Document text size" });
+  await size.fill("16");
+  await size.press("Enter");
   await expect(text).toHaveCSS("font-size", "16px");
   await page.getByRole("combobox", { name: "Line spacing" }).click();
   await page

@@ -5,8 +5,7 @@ import {
   type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
-  DOC_TEXT_SIZES,
-  type DocTextSize,
+  DOC_TEXT_SIZE,
   DOC_LINE_SPACINGS,
   type DocLineSpacing,
   type ColorSwatchMode,
@@ -25,9 +24,11 @@ import {
 } from "../../document/read-only-state";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
-import { TextFontRows } from "../sections/text-font";
+import { stepperLabels, TextFontRows } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { Select } from "../../ui/Select";
+import { NumberStepper } from "../../ui/NumberStepper";
+import { docTextSizeNow } from "../../theme/doc-type-now";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
@@ -76,24 +77,16 @@ export function EditorPage({
         {/* The reader's own size and spacing for the document, over the
             theme's. */}
         <SettingRow label={t.docTextSizeLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.docTextSizeLabel}
-            value={String(settings.docTextSize)}
-            onChange={(e) =>
-              setSettings({
-                docTextSize: (e.target.value === "auto"
-                  ? "auto"
-                  : Number(e.target.value)) as DocTextSize,
-              })
+          <NumberStepper
+            value={
+              settings.docTextSize === "auto" ? null : settings.docTextSize
             }
-          >
-            {DOC_TEXT_SIZES.map((size) => (
-              <option key={size} value={String(size)}>
-                {size === "auto" ? t.docTextSizeAuto : `${size} px`}
-              </option>
-            ))}
-          </Select>
+            range={DOC_TEXT_SIZE}
+            unit="px"
+            from={docTextSizeNow}
+            onChange={(size) => setSettings({ docTextSize: size ?? "auto" })}
+            labels={stepperLabels(t, t.docTextSizeLabel)}
+          />
         </SettingRow>
         <SettingRow label={t.docLineSpacingLabel}>
           <Select

@@ -8,6 +8,7 @@ import {
 import { isRecord, type Raw } from "./settings-sync";
 import { storedImageFolder } from "./image-folder";
 import { storedShortcuts } from "./shortcut-defaults";
+import { storedInRange } from "../utils/step-range";
 import {
   COLOR_SWATCH_MODES,
   type ColorSwatchMode,
@@ -23,8 +24,7 @@ import {
   type ThemeMode,
   UI_TEXT_SCALES,
   type UiTextScale,
-  DOC_TEXT_SIZES,
-  type DocTextSize,
+  DOC_TEXT_SIZE,
   DOC_LINE_SPACINGS,
   type DocLineSpacing,
   DOC_LETTER_SPACINGS,
@@ -129,9 +129,11 @@ function readSettings(parsed: Raw | null): Settings {
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : DEFAULT_SETTINGS.uiTextScale,
-      docTextSize: DOC_TEXT_SIZES.includes(parsed.docTextSize as DocTextSize)
-        ? (parsed.docTextSize as DocTextSize)
-        : DEFAULT_SETTINGS.docTextSize,
+      docTextSize: storedInRange(
+        parsed.docTextSize,
+        DOC_TEXT_SIZE,
+        DEFAULT_SETTINGS.docTextSize,
+      ),
       docLineSpacing: DOC_LINE_SPACINGS.includes(
         parsed.docLineSpacing as DocLineSpacing,
       )

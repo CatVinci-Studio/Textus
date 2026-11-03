@@ -1,0 +1,65 @@
+/* The reset button sits before the stepper, so the stepper stays where it
+   is at the row's end when it comes and goes. */
+.number-stepper-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* A number between − and +, one capsule field: the buttons are circles
+   inset 2px, concentric with it. */
+.number-stepper {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-height);
+  padding: 0 2px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-bg);
+  box-sizing: border-box;
+}
+
+.number-stepper:focus-within {
+  border-color: var(--ui-accent);
+}
+
+.number-stepper .tx-icon-button {
+  font-size: var(--text-body-large);
+  line-height: 1;
+}
+
+.number-stepper .tx-icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.number-stepper-field {
+  width: 3.5em;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-body);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* Not set: the theme's value, dimmed. */
+.number-stepper-field::placeholder {
+  color: var(--ui-muted);
+  opacity: 1;
+}
+
+.number-stepper.has-unit .number-stepper-field {
+  text-align: end;
+}
+
+.number-stepper-unit {
+  padding-inline: 4px 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-body);
+}

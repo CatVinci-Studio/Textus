@@ -9,6 +9,7 @@ import {
 import type { SettingsPageProps } from "../pages/types";
 import { letterSpacingBy } from "../../prefs/settings-normalise";
 import { Select } from "../../ui/Select";
+import type { StepperLabels } from "../../ui/NumberStepper";
 import { SettingRow } from "./controls";
 
 /** The text font and Word-style character spacing, over the theme's. */
@@ -23,6 +24,17 @@ function fontFamilies(): Promise<string[]> {
     .then((list) => (Array.isArray(list) ? list : []))
     .catch(() => []);
   return families;
+}
+
+/** A document text stepper's labels: its row's name, "Theme's" for unset. */
+export function stepperLabels(t: Strings, label: string): StepperLabels {
+  return {
+    label,
+    unset: t.docTextSizeAuto,
+    decrease: t.stepperDecrease,
+    increase: t.stepperIncrease,
+    reset: t.docUseTheme,
+  };
 }
 
 const SPACING_LABELS: Record<DocLetterSpacing, keyof Strings> = {
