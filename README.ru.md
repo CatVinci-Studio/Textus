@@ -98,6 +98,8 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 Карты мыслей, слайды Marp, канбан-доски, PDF и Word во вкладке, цитаты из Zotero, всевозможные диаграммы и многое другое — в **Настройки › Расширения**, на компьютере и на iPhone и iPad.
 
+Многие плагины передают свои инструменты и Textus AI, так что достаточно попросить об этом в разговоре. Плагины лежат в [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins), темы — в [textus-themes](https://github.com/CatVinci-Studio/textus-themes), где можно поделиться и своими.
+
 ## Вопросы и ответы
 
 <details>

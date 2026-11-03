@@ -98,6 +98,8 @@ Pas seulement l’écriture : les extensions ajoutent tout ce dont vous avez bes
 
 Cartes mentales, diapositives Marp, tableaux kanban, PDF et Word dans un onglet, citations Zotero, graphiques en tout genre et plus encore sont dans **Réglages › Extensions**, sur ordinateur comme sur iPhone et iPad.
 
+Beaucoup de plugins confient aussi leurs outils à Textus AI : il suffit de le lui demander dans une conversation. Les plugins sont dans [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) et les thèmes dans [textus-themes](https://github.com/CatVinci-Studio/textus-themes), où vous pouvez partager les vôtres.
+
 ## Questions fréquentes
 
 <details>

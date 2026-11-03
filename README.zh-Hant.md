@@ -99,6 +99,8 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 還有思維導圖、Marp 投影片、看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，都在 **設定 › 擴充功能**，電腦和 iPhone、iPad 上都能用。
 
+不少外掛還會把自己的功能交給 Textus AI，在對話裡直接讓它去做就行。外掛在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主題在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也歡迎分享你自己的主題。
+
 ## 常見問題
 
 <details>
