@@ -16,6 +16,7 @@ const pet = {
   title: "Desk pet",
   width: 160,
   height: 160,
+  icon: null,
   allowed: "either" as const,
 };
 

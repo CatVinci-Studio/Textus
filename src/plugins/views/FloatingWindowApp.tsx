@@ -43,6 +43,7 @@ export function FloatingWindowApp() {
   const boxRef = useRef<HTMLDivElement>(null);
   const endpointRef = useRef<Endpoint | null>(null);
   const [title, setTitle] = useState("");
+  const [icon, setIcon] = useState<string | null>(null);
   const [folded, setFolded] = useState(false);
   const t = currentStrings();
 
@@ -57,6 +58,7 @@ export function FloatingWindowApp() {
           endpointRef.current?.notify(payload.method, payload.params);
         else if (payload.kind === "page") {
           setTitle(payload.title);
+          setIcon(payload.icon);
           setFolded(payload.folded);
           const box = boxRef.current;
           if (!box) return;
@@ -121,7 +123,7 @@ export function FloatingWindowApp() {
         title={title}
         onPointerDown={(e) => void drag(e)}
       >
-        {title.slice(0, 1)}
+        {icon ? <img src={icon} alt="" /> : title.slice(0, 1)}
       </button>
     );
 

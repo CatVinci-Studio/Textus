@@ -34,6 +34,7 @@ const MANIFEST = {
   description: "Floats a pet.",
   engines: { textus: "^1.3.0" },
   main: "host.js",
+  icon: "icon.svg",
   activationEvents: ["*"],
   permissions: [],
   contributes: {
@@ -54,7 +55,11 @@ async function installPlugin(page: Page) {
           dir: "/plugins/test.float",
           manifest: JSON.stringify(manifest),
           dev: false,
-          files: { "host.js": host },
+          files: {
+            "host.js": host,
+            "icon.svg":
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="teal"/></svg>',
+          },
         },
       ];
       w.__devPluginState = {
@@ -123,6 +128,8 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   await expect(view).toHaveCount(0);
   await expect(page.getByText("folded in window")).toBeVisible();
   const dot = page.getByRole("button", { name: "Unfold Pet" });
+  // Folded, it shows its plugin's icon.
+  await expect(dot.locator("img")).toHaveAttribute("src", /^data:image\/svg/);
   await dot.click();
   await expect(view).toBeVisible();
 

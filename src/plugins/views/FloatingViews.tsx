@@ -139,7 +139,7 @@ function FloatingBox({
           if (!moved.current) moveFloating(view.view, { folded: false });
         }}
       >
-        {view.title.slice(0, 1)}
+        {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
       </button>
     );
 

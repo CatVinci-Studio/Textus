@@ -46,6 +46,8 @@ export type FloatingDown =
       kind: "page";
       srcdoc: string;
       title: string;
+      /** The plugin's icon for the folded dot, or null. */
+      icon: string | null;
       init: Record<string, unknown>;
       folded: boolean;
     }
@@ -84,6 +86,7 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
         view: view.view,
         kind: "page",
         ...page,
+        icon: view.icon,
         init: {
           state: webviewState(current.key) ?? null,
           language: windowInfo().language(),

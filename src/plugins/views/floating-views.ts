@@ -2,6 +2,7 @@ import { emitPluginEvent } from "../app-bridge";
 import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
 import { setFloatingCount } from "./floating-presence";
+import { dataUrl, readPluginFile } from "../store/files";
 import type {
   FloatingPlace,
   FloatingViewContribution,
@@ -19,6 +20,8 @@ export interface FloatingView {
   title: string;
   width: number;
   height: number;
+  /** The plugin's icon (a data: URL) for the folded dot; null for none. */
+  icon: string | null;
   /** Where its manifest allows it. */
   allowed: FloatingPlace;
   /** Where it is now. */
@@ -87,7 +90,8 @@ export function floatingSide(view: FloatingView): "left" | "right" {
 function changed(view: FloatingView, isOpen: boolean) {
   version++;
   setFloatingCount(open.size);
-  save(view.view, { ...view, open: isOpen });
+  const { place, x, y, folded } = view;
+  save(view.view, { place, x, y, folded, open: isOpen });
   for (const listener of listeners) listener();
   emitPluginEvent("floating", {
     plugin: view.plugin,
@@ -232,7 +236,14 @@ export async function showContribution(
   plugin: string,
   view: FloatingViewContribution,
   title: string,
+  /** The manifest's icon, a path in the plugin. */
+  icon: string | null,
 ): Promise<FloatingView> {
+  const iconUrl = icon
+    ? await readPluginFile(plugin, "installed", icon)
+        .then((bytes) => dataUrl(icon, bytes))
+        .catch(() => null)
+    : null;
   return showFloating(
     {
       plugin,
@@ -240,6 +251,7 @@ export async function showContribution(
       title,
       width: view.width,
       height: view.height,
+      icon: iconUrl,
       allowed: view.place,
     },
     await floatingOnDesktop(),
@@ -251,9 +263,10 @@ export async function reopenFloating(
   plugin: string,
   views: FloatingViewContribution[],
   title: (value: string) => string,
+  icon: string | null,
 ) {
   const remembered = rememberedOpen();
   for (const view of views)
     if (remembered.includes(view.id))
-      await showContribution(plugin, view, title(view.title));
+      await showContribution(plugin, view, title(view.title), icon);
 }

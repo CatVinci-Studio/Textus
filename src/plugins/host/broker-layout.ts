@@ -130,6 +130,7 @@ export function layoutHandlers(p: PluginScope) {
         p.id,
         declared,
         localize(p.manifest(), declared.title, p.deps.language()),
+        p.manifest().icon ?? null,
       );
     },
     "layout.closeFloating": ({ view }: Params) => {

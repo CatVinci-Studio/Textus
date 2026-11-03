@@ -955,6 +955,7 @@ button.mcp-homepage:hover {
 .floating-view-dot {
   width: 36px;
   height: 36px;
+  overflow: hidden;
   padding: 0;
   border: 1px solid var(--ui-border);
   border-radius: 50%;
@@ -965,6 +966,13 @@ button.mcp-homepage:hover {
   font-weight: 600;
   cursor: pointer;
   touch-action: none;
+}
+.floating-view-dot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 /* A floating view's own window on the desktop: nothing but the view. */

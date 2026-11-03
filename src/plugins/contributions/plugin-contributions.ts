@@ -198,7 +198,9 @@ export function applyContributions(
   const floating = manifest.contributes.floatingViews;
   if (floating.length) {
     const views = import("../views/floating-views");
-    void views.then((m) => m.reopenFloating(id, floating, text));
+    void views.then((m) =>
+      m.reopenFloating(id, floating, text, manifest.icon ?? null),
+    );
     undo.push(() => void views.then((m) => m.closeFloatingOf(id)));
   }
   contributions.set(id, undo);
