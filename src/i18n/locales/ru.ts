@@ -125,6 +125,9 @@ export default {
   diagramViewerLabel: "Диаграмма",
   pictureZoom: "Увеличить изображение",
   pictureViewerLabel: "Изображение",
+  pictureViewerPrevious: "Предыдущее изображение",
+  pictureViewerNext: "Следующее изображение",
+  pictureViewerTurnHint: "← → другие изображения",
   diagramViewerClose: "Закрыть",
   diagramViewerHint:
     "Прокрутка или щипок — масштаб · перетаскивание — сдвиг · двойной щелчок — вписать",

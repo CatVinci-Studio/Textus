@@ -132,6 +132,9 @@ para usar una.
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagen",
   pictureViewerLabel: "Imagen",
+  pictureViewerPrevious: "Imagen anterior",
+  pictureViewerNext: "Imagen siguiente",
+  pictureViewerTurnHint: "← → otras imágenes",
   diagramViewerClose: "Cerrar",
   diagramViewerHint:
     "Desplaza o pellizca para hacer zoom · arrastra para mover · doble clic para ajustar",

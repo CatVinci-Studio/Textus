@@ -10,6 +10,7 @@ import {
   localizedTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
+import { isEffectiveDark } from "../../theme/apply-appearance";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SettingRow } from "./controls";
@@ -190,7 +191,7 @@ function GalleryItem({
       title={theme.description}
     >
       <GalleryPreview
-        path={theme.previews[0]}
+        paths={theme.previews}
         label={`${t.themePreviewEnlarge}: ${theme.name}`}
       />
       <SettingRow
@@ -265,16 +266,14 @@ async function inPreviewSlot<T>(task: () => Promise<T>): Promise<T> {
   }
 }
 
-/** A theme's first screenshot, fetched through the backend as a `data:` URL
+/** A theme's screenshot for the current appearance - the second one, a
+ *  theme's dark look, in dark - fetched through the backend as a `data:` URL
  *  once its row scrolls into view; an empty frame until then. A click shows
- *  it large, in the picture viewer. */
-function GalleryPreview({
-  path,
-  label,
-}: {
-  path: string | undefined;
-  label: string;
-}) {
+ *  it large in the picture viewer, the others a step away. */
+function GalleryPreview({ paths, label }: { paths: string[]; label: string }) {
+  const { settings } = useSettings();
+  const shown = isEffectiveDark(settings.theme) && paths.length > 1 ? 1 : 0;
+  const path = paths[shown];
   const frame = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
@@ -312,7 +311,13 @@ function GalleryPreview({
           aria-label={label}
           onClick={(e) => {
             const img = e.currentTarget.querySelector("img");
-            if (img) openDiagramViewer(img, e.currentTarget);
+            const pictures = paths.map((p, i) =>
+              i === shown && src
+                ? src
+                : themeGallery.preview(p).catch(() => null),
+            );
+            if (img)
+              openDiagramViewer(img, e.currentTarget, { pictures, at: shown });
           }}
         >
           <img src={src} alt="" draggable={false} />

@@ -126,6 +126,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   diagramViewerLabel: "Diagramm",
   pictureZoom: "Bild vergrößern",
   pictureViewerLabel: "Bild",
+  pictureViewerPrevious: "Vorheriges Bild",
+  pictureViewerNext: "Nächstes Bild",
+  pictureViewerTurnHint: "← → weitere Bilder",
   diagramViewerClose: "Schließen",
   diagramViewerHint:
     "Scrollen oder Zwei-Finger-Zoom · ziehen zum Verschieben · Doppelklick zum Einpassen",

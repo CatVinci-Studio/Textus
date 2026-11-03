@@ -123,6 +123,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   diagramViewerLabel: "図",
   pictureZoom: "画像を拡大",
   pictureViewerLabel: "画像",
+  pictureViewerPrevious: "前の画像",
+  pictureViewerNext: "次の画像",
+  pictureViewerTurnHint: "← → 画像を切り替え",
   diagramViewerClose: "閉じる",
   diagramViewerHint:
     "スクロールかピンチで拡大縮小 · ドラッグで移動 · ダブルクリックで全体表示",

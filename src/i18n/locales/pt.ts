@@ -124,6 +124,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagem",
   pictureViewerLabel: "Imagem",
+  pictureViewerPrevious: "Imagem anterior",
+  pictureViewerNext: "Próxima imagem",
+  pictureViewerTurnHint: "← → outras imagens",
   diagramViewerClose: "Fechar",
   diagramViewerHint:
     "Role ou faça pinça para dar zoom · arraste para mover · clique duas vezes para ajustar",

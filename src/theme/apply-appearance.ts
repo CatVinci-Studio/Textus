@@ -77,7 +77,7 @@ function systemPrefersDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
 
-function isEffectiveDark(themeMode: ThemeMode): boolean {
+export function isEffectiveDark(themeMode: ThemeMode): boolean {
   if (themeMode === "dark") return true;
   if (themeMode === "light") return false;
   return systemPrefersDark();

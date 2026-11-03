@@ -124,6 +124,9 @@ type /name in a conversation to use one.
   diagramViewerLabel: "Diagram",
   pictureZoom: "Enlarge picture",
   pictureViewerLabel: "Picture",
+  pictureViewerPrevious: "Previous picture",
+  pictureViewerNext: "Next picture",
+  pictureViewerTurnHint: "← → other pictures",
   diagramViewerClose: "Close",
   diagramViewerHint:
     "Scroll or pinch to zoom · drag to move · double-click to fit",
