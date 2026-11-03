@@ -236,10 +236,12 @@ pub async fn ai_paper_run(
         materials,
     } = request;
     let root = paper_root(
+        &app,
         doc_path.as_deref(),
         workspace_root.as_deref(),
         id.as_deref(),
     )?;
+    let project = crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
     let entry = crate::ai::catalog::find(&provider)
         .ok_or_else(|| format!("unknown provider: {provider}"))?;
     // A paper begun before goes on from what it kept: its research, its
@@ -334,10 +336,9 @@ pub async fn ai_paper_run(
             done: false,
         };
         if files.dossier.notes.is_empty() {
-            let library = root
-                .join(crate::ai::project::REFERENCES_DIR)
-                .is_dir()
-                .then_some(root.as_path());
+            let library = project
+                .as_deref()
+                .filter(|p| p.join(crate::ai::project::REFERENCES_DIR).is_dir());
             let dossier = research::research(
                 &agent,
                 &files.paper,

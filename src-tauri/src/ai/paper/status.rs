@@ -13,12 +13,13 @@ use serde::Serialize;
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_save_outline(
+    app: tauri::AppHandle,
     doc_path: Option<String>,
     workspace_root: Option<String>,
     id: String,
     outline: Outline,
 ) -> Result<Outline, String> {
-    let root = paper_root(doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
+    let root = paper_root(&app, doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
     let mut files = load(&root, &id)?;
     let outline = outline::as_edited(outline, &files.dossier)?;
     files.outline = Some(outline.clone());
@@ -45,11 +46,12 @@ pub struct PaperProgress {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_status(
+    app: tauri::AppHandle,
     doc_path: Option<String>,
     workspace_root: Option<String>,
     id: String,
 ) -> Result<PaperProgress, String> {
-    let root = paper_root(doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
+    let root = paper_root(&app, doc_path.as_deref(), workspace_root.as_deref(), Some(&id))?;
     progress(&root, &id)
 }
 

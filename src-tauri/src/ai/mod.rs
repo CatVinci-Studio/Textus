@@ -14,6 +14,7 @@ pub mod memory;
 pub mod next_message;
 pub mod paper;
 pub mod project;
+pub(crate) mod project_data;
 pub mod route;
 pub mod rules;
 pub(crate) mod scratch;

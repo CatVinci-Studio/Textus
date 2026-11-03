@@ -99,7 +99,7 @@ fn a_saved_paper_loads_back_whole() {
         outline: Some(outline()),
     };
     save(root.path(), &files).unwrap();
-    let dir = root.path().join(".textus/papers/abc123");
+    let dir = root.path().join("papers/abc123");
     for name in ["paper.json", "dossier.json", "outline.json"] {
         assert!(dir.join(name).is_file(), "{name}");
     }
@@ -117,7 +117,7 @@ fn a_paper_not_yet_researched_or_outlined_loads_empty() {
     save(root.path(), &files).unwrap();
     assert!(!root
         .path()
-        .join(".textus/papers/abc123/outline.json")
+        .join("papers/abc123/outline.json")
         .exists());
     assert_eq!(load(root.path(), "abc123").unwrap(), files);
 }
@@ -137,7 +137,7 @@ fn a_missing_or_unsafe_paper_id_is_an_error() {
         outline: None,
     };
     assert!(save(root.path(), &files).is_err());
-    assert!(!root.path().join(".textus").exists());
+    assert!(!root.path().join("papers").exists());
 }
 
 #[test]
@@ -170,7 +170,7 @@ fn a_scratch_paper_moves_into_the_project_once_there_is_one() {
         load_section(&root, "abc123", 0).unwrap().as_deref(),
         Some("# One")
     );
-    assert!(!scratch.path().join(".textus/papers/abc123").exists());
+    assert!(!scratch.path().join("papers/abc123").exists());
 }
 
 #[test]

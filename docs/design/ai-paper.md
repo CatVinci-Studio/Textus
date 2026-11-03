@@ -113,8 +113,10 @@ it, lazily loaded. Each stage and helper is one run of
 - **Events** (`paper/events.rs`): `PaperEvent` over a Tauri Channel - the
   phase, each section's state, the budget, the outline when it is ready,
   errors. Display only; what matters is on disk.
-- **On disk** (`paper/store.rs`): `.textus/papers/<id>/paper.json`,
-  `dossier.json`, `outline.json` in the project folder, each written
+- **On disk** (`paper/store.rs`): `papers/<id>/paper.json`,
+  `dossier.json`, `outline.json` in the project's data folder in the
+  config folder (`ai/project_data.rs`), or in the scratch space
+  (`ai/scratch.rs`) without a project folder, each written
   atomically, so a stopped paper can resume and the user can read the
   research. An id is lowercase letters and digits only.
 - **Research** (`paper/research.rs`): one tool-less step plans 4-10

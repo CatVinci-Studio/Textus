@@ -30,8 +30,17 @@ impl MemoryDirs {
     pub(crate) fn folder(&self, scope: Scope, folder: &str) -> Option<PathBuf> {
         match (scope, folder) {
             (Scope::Personal, MEMORY_FOLDER) => Some(self.personal.as_ref()?.join(MEMORY_FOLDER)),
-            (Scope::Project, MEMORY_FOLDER | LIBRARY_FOLDER) => {
-                Some(project_dir(self.project.as_ref()?).join(folder))
+            // Memories are Textus's own, kept out of the user's folder; the
+            // library is the user's, and stays in it.
+            (Scope::Project, MEMORY_FOLDER) => {
+                let project = self.project.as_ref()?;
+                Some(match &self.personal {
+                    Some(global) => crate::ai::project_data::adopt(global, project, MEMORY_FOLDER),
+                    None => project_dir(project).join(MEMORY_FOLDER),
+                })
+            }
+            (Scope::Project, LIBRARY_FOLDER) => {
+                Some(project_dir(self.project.as_ref()?).join(LIBRARY_FOLDER))
             }
             _ => None,
         }

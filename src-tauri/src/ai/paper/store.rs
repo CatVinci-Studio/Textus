@@ -1,5 +1,6 @@
-//! A paper kept in its project, `.textus/papers/<id>/`, so a stopped run
-//! can resume and the user can read what the research found.
+//! A paper kept with its project's data in Textus's config folder
+//! (ai::project_data), `papers/<id>/`, so a stopped run can resume and the
+//! user can read what the research found.
 
 use super::{Dossier, Material, Outline, Paper};
 use crate::ai::workspace::project_dir;
@@ -40,32 +41,33 @@ fn valid_id(id: &str) -> bool {
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
 }
 
-/// `<root>/.textus/papers/<id>/`.
-pub(crate) fn paper_dir(root: &Path, id: &str) -> Result<PathBuf, String> {
+/// `<base>/papers/<id>/`.
+pub(crate) fn paper_dir(base: &Path, id: &str) -> Result<PathBuf, String> {
     if !valid_id(id) {
         return Err(format!("Not a paper id: {id:?}"));
     }
-    Ok(project_dir(root).join(PAPERS_FOLDER).join(id))
+    Ok(base.join(PAPERS_FOLDER).join(id))
 }
 
-/// Where papers are kept while their document has no project - untitled,
-/// or in a folder too broad to be one - so research needs no folder: the
-/// system's temporary folder, out of the user's sight.
-fn scratch_root() -> PathBuf {
-    std::env::temp_dir().join("textus-research")
-}
-
-/// The folder paper `id` is kept in: the document's project, or the
-/// scratch folder while it has none. A paper begun in the scratch folder
-/// moves into the project the first time it is asked for there, once the
-/// document is saved into one.
+/// The folder paper `id` is kept under: its project's data folder, or the
+/// scratch space while there is no project folder. A paper begun in scratch
+/// moves to the project the first time it is asked for there, and one an
+/// older Textus kept in the project's `.textus/papers/` moves out of it.
 pub(crate) fn paper_root(
+    app: &tauri::AppHandle,
     doc_path: Option<&str>,
     workspace_root: Option<&str>,
     id: Option<&str>,
 ) -> Result<PathBuf, String> {
     let project = crate::ai::workspace::project_root(doc_path, workspace_root);
-    root_in(&scratch_root(), project, id)
+    let base = project.map(|root| match crate::ai::workspace::global_agent_dir(app) {
+        Ok(global) => {
+            crate::ai::project_data::adopt(&global, &root, PAPERS_FOLDER);
+            crate::ai::project_data::dir(&global, &root)
+        }
+        Err(_) => project_dir(&root),
+    });
+    root_in(&crate::ai::scratch::research_dir()?, base, id)
 }
 
 /// [`paper_root`] with the scratch folder given, for tests.

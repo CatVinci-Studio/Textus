@@ -97,7 +97,7 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
 | **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
-| **Memory** | What Textus AI keeps from your conversations | `.textus/memory/`, and `memory/` in the global config folder |
+| **Memory** | What Textus AI keeps from your conversations | `memory/` in the global config folder, and `projects/<project>/memory/` beside it for each project |
 | **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per project |
 | **Global config folder** | What applies to every document | The app's settings folder |
 
@@ -197,7 +197,7 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 
 **Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make global** or **Make project** moves it.
 
-- **This project**: what is about this work, in `.textus/memory/`; facts about people, places and terms go into the library.
+- **This project**: what is about this work, in `projects/<project>/memory/` in the global config folder (Textus keeps it there, not in your folder); facts about people, places and terms go into the library.
 - **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
 
 The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
