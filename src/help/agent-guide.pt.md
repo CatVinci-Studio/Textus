@@ -38,7 +38,7 @@ A conversa completa fica em um painel no lado direito do editor. Abra ou feche o
 - **Uma conversa por documento**: cada aba tem a sua conversa, e trocar de aba troca o painel junto. **Nova conversa**, no cabeçalho do painel, recomeça do zero (se ainda houver edições sem decisão, o app pergunta antes).
 - **Modos**: o campo de mensagem tem dois. **Escrever** trabalha no documento: redige texto novo (uma continuação, um parágrafo ou uma seção nova) e altera o texto que já existe (reescrever, traduzir, cortar). Com texto selecionado, uma mudança nele o substitui, e texto novo vai depois dele. **Revisar** responde, conversa e deixa comentários sem mudar nada. Cada mudança de Escrever é uma proposta que você aceita ou rejeita. O painel começa no modo definido em **Ajustes > Textus AI > Chat da Textus AI > Modo padrão**.
 - **Menções com @**: digite `@` no campo para escolher um arquivo de texto da pasta do projeto; ele é anexado à mensagem.
-- **Anexar arquivos**: o botão **+** à esquerda do campo anexa à mensagem um PDF, um documento do Word, uma apresentação do PowerPoint, uma planilha, um livro EPUB, um arquivo RTF ou HTML, uma imagem ou um arquivo de texto simples. Tudo, menos as imagens, é convertido em texto no seu computador e vai dentro da mensagem; as imagens são enviadas como imagens de verdade aos provedores que conseguem vê-las (os que não conseguem avisam na hora, em vez de descartá-las sem dizer nada). Um arquivo longo é enviado só em parte, e o anexo mostra “(parcial)” quando isso acontece.
+- **Anexar arquivos**: o botão **+** à esquerda do campo anexa à mensagem um ou mais arquivos: um PDF, um documento do Word, uma apresentação do PowerPoint, uma planilha, um livro EPUB, um arquivo RTF ou HTML, qualquer arquivo de texto ou de código, um arquivo zip ou uma imagem (PNG, JPEG, GIF, WebP, BMP, TIFF e, no Mac, HEIC e AVIF). Cada arquivo é copiado para a pasta temporária própria da conversa, nunca para as suas pastas, e a Textus AI pode lê-lo ali de novo por inteiro. Os documentos são convertidos em texto no seu computador e vão dentro da mensagem; um documento longo é enviado só em parte, o anexo mostra “(parcial)” e a Textus AI lê o resto quando precisa. Um arquivo zip é descompactado ali e seus arquivos são listados. As imagens são convertidas para um formato que qualquer serviço lê, reduzidas quando são muito grandes e enviadas como imagens de verdade aos provedores que conseguem vê-las (os que não conseguem avisam na hora, em vez de descartá-las sem dizer nada).
 - **Modelo**: o botão entre os controles do campo mostra o modelo para o qual vai a sua próxima mensagem; clique nele para trocar por outro modelo de qualquer serviço que você configurou em **Ajustes > Textus AI**. Com um só modelo configurado, ele apenas mostra o nome.
 - **Busca na web**: o botão da lupa ao lado do campo de texto deixa a Textus AI buscar na web quando um pedido precisar; veja **7. Busca na web** abaixo.
 - **Raciocínio profundo**: o botão ao lado da busca na web (a lâmpada) pede ao modelo que pense bem na resposta antes de responder — mais lento e mais caro, para perguntas difíceis e reescritas maiores. Ele fica ligado, também em outros documentos, até você tocar nele de novo. Enquanto o modelo pensa, o painel mostra "Pensando · 8 segundos" e depois "Pensou por 12 segundos", que você pode clicar para ler o raciocínio quando o provedor o compartilha. O botão só aparece para modelos que conseguem pensar mais a fundo; a Pergunta rápida sempre pede uma resposta rápida.
@@ -91,11 +91,11 @@ A Textus AI aprende sobre você e o seu trabalho a partir de alguns arquivos Mar
 
 | Conceito | O que é | Onde fica |
 | --- | --- | --- |
-| **Pasta do projeto** | A pasta em que a Textus AI trabalha e que ela pode ler | A pasta do documento ou uma que você escolher |
+| **Pasta do projeto** | A pasta em que a Textus AI trabalha e que ela pode ler | A pasta que você abre na barra lateral ou uma que você escolher |
 | **Perfil de estilo** | Como você escreve | `.textus/style.md` |
 | **Biblioteca** | Fatos sobre pessoas, lugares e termos | `.textus/library/` |
 | **Instruções de escrita** | Regras fixas para toda conversa | `agent.md`, global e por projeto |
-| **Memória** | O que a Textus AI guarda das suas conversas | `.textus/memory/` e `memory/` na pasta de configuração global |
+| **Memória** | O que a Textus AI guarda das suas conversas | `memory/` na pasta de configuração global e, ao lado, `projects/<projeto>/memory/` para cada projeto |
 | **Habilidades** | Instruções reutilizáveis que você chama com `/nome` | `skills/`, global e por projeto |
 | **Pasta de configuração global** | O que vale para todos os documentos | A pasta de configurações do app |
 
@@ -120,18 +120,18 @@ O menu do projeto cria a pasta `.textus/` e os arquivos dela na primeira vez que
 
 ### A pasta do projeto
 
-**A pasta do projeto é a pasta em que a Textus AI trabalha.** Por padrão, é a pasta do documento que você está editando (ou a pasta mais próxima acima dela que tenha uma pasta `.textus/`, de modo que um capítulo em `novel/part-1/` pertence a `novel/`): salve um documento e a pasta dele se torna a pasta do projeto.
+**A pasta do projeto é a pasta em que a Textus AI trabalha.** É a pasta que você abre na barra lateral (**Arquivo > Abrir Pasta…**) ou uma que você escolher; se não houver nenhuma, é a pasta mais próxima acima do documento que tenha uma pasta `.textus/`, de modo que um capítulo em `novel/part-1/` pertence a `novel/`. Um documento que você abre sozinho não tem pasta do projeto: a Textus AI lê então só o documento e os arquivos que você anexar, e assim um arquivo em Downloads ou na Mesa nunca abre a ela toda essa pasta.
 
 - A Textus AI pode listar, encontrar pelo nome, ler e buscar os arquivos dessa pasta para encontrar as cenas anteriores de um personagem, um termo ou as suas notas: arquivos de texto (Markdown, texto simples e formatos parecidos) de até 16 MB, que ela lê por partes quando são longos, e o texto de arquivos PDF, Word, PowerPoint, EPUB, RTF e de planilhas. Com um provedor que consegue ver imagens, ela também vê as imagens PNG, JPEG, GIF e WebP da pasta, de até 6 MB cada. Arquivos e pastas ocultos, o que um arquivo `.gitignore` ou `.ignore` exclui (como na busca de arquivos da barra lateral), pastas de build e de dependências (como `node_modules`) e PDFs digitalizados sem camada de texto ficam de fora.
 - Digitar `@` no campo do chat anexa um dos arquivos dela à sua mensagem.
 - A pasta `.textus/` dela guarda o perfil de estilo, a biblioteca, as instruções de escrita e as habilidades do projeto.
 
-A barra abaixo do cabeçalho do painel de IA mostra o nome da pasta do projeto; clique nele para abrir o **menu do projeto**. Quando o seu material de referência não está ao lado do rascunho, use **Escolher pasta do projeto…** nesse menu (ou **Ajustes > Textus AI > Pasta do projeto**). A pasta escolhida vale para todos os documentos, inclusive rascunhos não salvos, até você escolher **Usar a pasta do documento** de novo.
+A barra abaixo do cabeçalho do painel de IA mostra o nome da pasta do projeto; clique nele para abrir o **menu do projeto**. Quando o seu material de referência não está ao lado do rascunho, use **Escolher pasta do projeto…** nesse menu (ou **Ajustes > Textus AI > Pasta do projeto**). A pasta escolhida vale para todos os documentos, inclusive rascunhos não salvos, até você escolher **Não usar pasta de projeto**.
 
 > [!TIP]
 > Seu rascunho está em `tese/rascunhos/` e as notas das entrevistas em `tese/pesquisa/`? Escolha `tese/` como pasta do projeto, e a Textus AI poderá ler `pesquisa/entrevistas.md` enquanto você trabalha em `rascunhos/capitulo-2.md`.
 
-Tudo o que a Textus AI lê precisa estar dentro da pasta do projeto: `..`, caminhos absolutos e links que apontam para fora são recusados. Um rascunho não salvo não tem pasta do projeto, a menos que você tenha escolhido uma, e uma pasta ampla demais (sua pasta pessoal ou um disco inteiro) é recusada.
+Tudo o que a Textus AI lê precisa estar dentro da pasta do projeto: `..`, caminhos absolutos e links que apontam para fora são recusados. Sem uma pasta aberta ou escolhida não há pasta do projeto, e uma pasta ampla demais (sua pasta pessoal ou um disco inteiro) é recusada. O que a Textus AI cria enquanto trabalha (notas de pesquisa, rascunhos em andamento) vai para as pastas próprias da Textus ou para a pasta temporária do sistema, não para a sua.
 
 ### O perfil de estilo — “Aprender meu estilo”
 
@@ -195,7 +195,7 @@ As instruções de escrita valem só para as conversas. O autocompletar não as 
 
 **A Textus AI lembra o que você pede e como você escreve**, sem que você precise escrever um arquivo. Quando você diz algo que deve valer além de um pedido (“sempre com a grafia de Portugal”, “sem travessões”, uma correção que você teve de fazer duas vezes) ou um fato sobre a sua obra, como quem é um personagem, ela guarda isso e segue nas conversas seguintes. A cada vez, uma linha abaixo da resposta diz o que ela lembrou e onde: **Desfazer** volta atrás, e **Tornar global** ou **Passar para o projeto** muda o lugar.
 
-- **Este projeto**: o que é sobre esta obra, em `.textus/memory/`; fatos sobre pessoas, lugares e termos vão para a biblioteca.
+- **Este projeto**: o que é sobre esta obra, em `projects/<projeto>/memory/` na pasta de configuração global (a Textus a guarda ali, não na sua pasta); fatos sobre pessoas, lugares e termos vão para a biblioteca.
 - **Para todos os projetos**: os seus hábitos gerais, em `memory/` na pasta de configuração global. Sem pasta do projeto, tudo vai para cá.
 
 A aba **Projeto** do painel de IA lista tudo em **Memória**, com quando e em qual conversa cada item foi lembrado: **Editar** abre, **Apagar** remove. De tempos em tempos, a Textus AI organiza a memória, juntando memórias que dizem a mesma coisa e descartando uma regra que outra mais nova anulou; o que ela descartou fica em **Esquecido recentemente**, para você recuperar. As suas próprias instruções de escrita vencem quando as duas discordam, e a Textus AI nunca altera o seu `agent.md` nem o seu perfil de estilo. Quando há memórias demais para enviar, as mais antigas ficam de fora e a aba Projeto avisa. **Ajustes > Textus AI > Lembrar automaticamente** desativa o recurso.
