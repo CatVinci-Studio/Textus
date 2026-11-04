@@ -77,7 +77,9 @@
 
 .sidebar-tabs {
   display: flex;
+  align-items: center;
   gap: 2px;
+  height: 100%;
 }
 
 .sidebar-tab {
@@ -88,19 +90,6 @@
   justify-content: center;
   padding: 4px 4px;
   border: none;
-  border-radius: var(--shape-s);
-  background: transparent;
-  color: var(--ui-muted);
-  cursor: pointer;
-}
-
-.sidebar-tab:hover {
-  background: var(--ui-hover);
-}
-
-.sidebar-tab-active {
-  background: var(--ui-selected);
-  color: var(--ui-selected-text);
 }
 
 .sidebar-view-actions {

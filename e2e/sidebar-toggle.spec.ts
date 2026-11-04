@@ -241,6 +241,41 @@ test("the menu button is the sidebar toggle's twin, hover and all", async ({
   expect(lit[0]).toEqual(lit[1]);
 });
 
+test("the sidebar's tabs are capsules like the document's", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+    animations: true,
+  });
+  await page.locator(toggle).click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+  await page.evaluate(() => {
+    const w = window as unknown as Record<string, unknown> & {
+      __devEmitTauriEvent: (name: string, payload: unknown) => void;
+    };
+    w.__devFiles = { "/notes/a.md": "# a", "/notes/b.md": "# b" };
+    w.__devEmitTauriEvent("tauri://drag-drop", {
+      paths: ["/notes/a.md", "/notes/b.md"],
+      position: { x: 0, y: 0 },
+    });
+  });
+  await expect(page.locator(".tab-pill-active")).toHaveCount(1);
+
+  const tabLook = async (selector: string) => {
+    const state = await look(page, selector);
+    return {
+      radius: state.radius,
+      background: state.background,
+      cursor: state.cursor,
+      duration: state.duration,
+    };
+  };
+  expect(await tabLook(".sidebar-tab-active")).toEqual(
+    await tabLook(".tab-pill-active"),
+  );
+});
+
 /** The bar's strip for the sidebar's surface (window-bar.css): its fill, its
  *  edge, and where the box sits once its slide out of the way is counted. */
 async function strip(page: Page) {

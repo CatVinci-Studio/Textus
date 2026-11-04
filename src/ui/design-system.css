@@ -613,6 +613,28 @@
   }
 }
 
+/* Tabs: a document's and the sidebar's share one look - a capsule that takes
+   the chosen fill - so each bar sets only its layout and type. */
+:is(.tab-pill, .sidebar-tab) {
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+:is(.tab-pill, .sidebar-tab):hover {
+  background: var(--ui-hover);
+}
+
+:is(.tab-pill-active, .sidebar-tab-active) {
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+}
+
 /* Selects: one look - a drawn chevron in place of the native arrow - in
    two sizes like the buttons. */
 :is(
@@ -712,7 +734,6 @@
   .tree-row,
   .clipboard-entry,
   .chat-history-entry,
-  .sidebar-tab,
   .settings-nav-item
 ) {
   transition: background-color 0s;
@@ -729,7 +750,6 @@
   .tree-row,
   .clipboard-entry,
   .chat-history-entry,
-  .sidebar-tab,
   .settings-nav-item
 ):is(:hover, :focus-visible, .is-active, .inline-chat-skill-item-active) {
   transition: background-color var(--dur-instant) var(--ease-standard);
