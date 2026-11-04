@@ -176,13 +176,7 @@ pub(crate) fn parse_changes(answer: &str) -> Vec<Change> {
         #[serde(default)]
         changes: Vec<Change>,
     }
-    let (Some(start), Some(end)) = (answer.find('{'), answer.rfind('}')) else {
-        return Vec::new();
-    };
-    if end < start {
-        return Vec::new();
-    }
-    serde_json::from_str::<Answer>(&answer[start..=end])
+    crate::ai::json_reply::object::<Answer>(answer)
         .map(|a| a.changes)
         .unwrap_or_default()
 }

@@ -4,11 +4,14 @@
 //! wrong until it holds; the user then edits and approves it.
 
 use super::genre::Scale;
-use super::research::{Model, Streamed, ThinkingTail};
+use super::handover::{hand_over, Checked, Task};
+use super::research::Model;
+use super::stream::{after_key, AfterKey, LastSent, ThinkingTail};
 use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
-use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
+use aicompat::agent::{ProviderEvent, ToolSpec};
 use serde_json::json;
 use std::sync::Mutex;
+use std::time::Duration;
 
 pub(crate) const SUBMIT_OUTLINE_TOOL: &str = "submit_outline";
 
@@ -278,62 +281,35 @@ pub(crate) async fn make_outline(
         dossier_text(dossier)
     );
     let watch = OutlineWatch::new(send);
-    let kept: Mutex<Option<Outline>> = Mutex::new(None);
-    let specs = vec![submit_outline_spec()];
-    let execute = |call: ToolCall| {
-        let kept = &kept;
-        async move {
-            let outline: Outline = match serde_json::from_str(&call.arguments) {
-                Ok(outline) => outline,
-                Err(e) => {
-                    return ToolOutput::from(format!(
-                        "The outline couldn't be read: {e}. Send it again."
-                    ))
-                }
-            };
-            let wrong = problems(&outline, dossier, target, &shape);
-            if !wrong.is_empty() {
-                // Seen in a live run's output, never in the app's.
-                if cfg!(test) {
-                    eprintln!("paper: outline not kept: {}", wrong.join(" | "));
-                }
-                return ToolOutput::from(format!(
-                    "Not kept - fix these and send the whole outline again:\n- {}",
-                    wrong.join("\n- ")
-                ));
-            }
-            *kept.lock().unwrap() = Some(outline);
-            ToolOutput {
-                text: "Kept. Reply with one short line.".into(),
-                settled: true,
-                ..ToolOutput::default()
-            }
-        }
+    let push = |streamed: ProviderEvent<'_>| watch.push(streamed);
+    let task = Task {
+        instructions: &instructions,
+        message,
+        tool: submit_outline_spec(),
+        steps: OUTLINE_STEPS,
+        watch: Some(&push),
     };
-    run_agent_loop(
-        Vec::new(),
-        AgentTurn::User {
-            text: message,
-            images: Vec::new(),
-        },
-        OUTLINE_STEPS,
-        |turns: Vec<AgentTurn>| {
-            let (instructions, specs) = (&instructions, &specs);
-            let watch = &watch;
-            async move {
-                model
-                    .step_watched(instructions, &turns, specs, &|s| watch.push(s))
-                    .await
+    let (kept, _) = hand_over(model, task, |arguments| {
+        let outline: Outline = match serde_json::from_str(arguments) {
+            Ok(outline) => outline,
+            Err(e) => {
+                return Checked::Refused(format!(
+                    "The outline couldn't be read: {e}. Send it again."
+                ))
             }
-        },
-        execute,
-        |_| ToolRun::InOrder,
-        |_| {},
-    )
+        };
+        let wrong = problems(&outline, dossier, target, &shape);
+        if wrong.is_empty() {
+            return Checked::Kept(outline);
+        }
+        // Seen in a live run's output, never in the app's.
+        if cfg!(test) {
+            eprintln!("paper: outline not kept: {}", wrong.join(" | "));
+        }
+        Checked::not_kept("outline", &wrong)
+    })
     .await?;
-    kept.into_inner()
-        .unwrap()
-        .ok_or_else(|| "No outline that holds came back - try again.".to_string())
+    kept.ok_or_else(|| "No outline that holds came back - try again.".to_string())
 }
 
 /// The user's edit of an outline, made safe to draft from: blank key points
@@ -358,7 +334,7 @@ pub(crate) fn as_edited(mut outline: Outline, dossier: &Dossier) -> Result<Outli
 }
 
 /// The least time between two OutlineDraft events.
-const DRAFT_EVERY: std::time::Duration = std::time::Duration::from_millis(250);
+const DRAFT_EVERY: Duration = Duration::from_millis(250);
 
 /// Watches the outliner's stream: its thinking sent as Thinking, and the
 /// outline it is writing as OutlineDraft - read from submit_outline's
@@ -378,7 +354,7 @@ struct DraftState {
     thesis: Option<String>,
     titles: Vec<String>,
     sent: (Option<String>, usize),
-    last: Option<std::time::Instant>,
+    last: LastSent,
 }
 
 impl<'a> OutlineWatch<'a> {
@@ -390,31 +366,31 @@ impl<'a> OutlineWatch<'a> {
         }
     }
 
-    pub(crate) fn push(&self, streamed: Streamed<'_>) {
+    pub(crate) fn push(&self, streamed: ProviderEvent<'_>) {
         let event = {
             let mut state = self.state.lock().unwrap();
             match streamed {
-                Streamed::Thinking(text) | Streamed::Text(text) => {
+                ProviderEvent::Thinking(text) | ProviderEvent::Text(text) => {
                     drop(state);
                     self.thinking.push(text);
                     return;
                 }
-                Streamed::ToolStart => {
+                ProviderEvent::ToolStart { .. } => {
                     let attempt = state.attempt + 1;
                     *state = DraftState {
                         attempt,
                         ..DraftState::default()
                     };
                 }
-                Streamed::ToolArgs(delta) => state.args.push_str(delta),
+                ProviderEvent::ToolArgs { delta, .. } => state.args.push_str(delta),
+                ProviderEvent::Citation { .. } => return,
             }
             state.scan();
             let changed = state.sent != (state.thesis.clone(), state.titles.len());
-            let due = state.last.is_none_or(|at| at.elapsed() >= DRAFT_EVERY);
-            if !changed || !due {
+            if !changed || !state.last.due(DRAFT_EVERY) {
                 return;
             }
-            state.last = Some(std::time::Instant::now());
+            state.last.now();
             state.sent = (state.thesis.clone(), state.titles.len());
             PaperEvent::OutlineDraft {
                 attempt: state.attempt,
@@ -446,46 +422,26 @@ impl DraftState {
                 return;
             };
             let start = self.scanned + at;
-            let Some((value, end)) = json_string_after(&self.args[start + key.len()..]) else {
+            let end = match after_key(&self.args[start + key.len()..]) {
                 // The value hasn't all arrived: wait for more from the key.
-                self.scanned = start;
-                return;
-            };
-            match value {
-                Some(thesis) if key == "\"thesis\"" => {
-                    self.thesis = Some(thesis).filter(|t| !t.trim().is_empty());
+                AfterKey::Pending | AfterKey::Text { end: None, .. } => {
+                    self.scanned = start;
+                    return;
                 }
-                Some(title) => self.titles.push(title),
-                None => {}
-            }
+                AfterKey::Other { at } => at,
+                AfterKey::Text {
+                    text,
+                    end: Some(end),
+                } => {
+                    if key == "\"thesis\"" {
+                        self.thesis = Some(text).filter(|t| !t.trim().is_empty());
+                    } else {
+                        self.titles.push(text);
+                    }
+                    end
+                }
+            };
             self.scanned = start + key.len() + end;
         }
     }
-}
-
-/// The value after a key at the start of `text`: Some((Some(string),
-/// end)) for a whole string, unescaped; Some((None, end)) for anything
-/// else, skipped; None while the string is still arriving.
-fn json_string_after(text: &str) -> Option<(Option<String>, usize)> {
-    let colon = text.find(|c: char| !c.is_whitespace())?;
-    if !text[colon..].starts_with(':') {
-        return Some((None, colon));
-    }
-    let open = colon + 1 + text[colon + 1..].find(|c: char| !c.is_whitespace())?;
-    if !text[open..].starts_with('"') {
-        return Some((None, open));
-    }
-    let mut escaped = false;
-    for (i, c) in text[open + 1..].char_indices() {
-        match c {
-            _ if escaped => escaped = false,
-            '\\' => escaped = true,
-            '"' => {
-                let end = open + 1 + i + 1;
-                return Some((serde_json::from_str(&text[open..end]).ok(), end));
-            }
-            _ => {}
-        }
-    }
-    None
 }

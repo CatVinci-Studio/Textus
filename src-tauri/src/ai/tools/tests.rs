@@ -114,24 +114,13 @@ fn a_section_runs_to_the_next_heading_at_its_level() {
     assert_eq!(section_range(&lines, "  "), None);
 }
 
-static NO_CONVENTIONS: std::sync::LazyLock<crate::ai::rules::Conventions> =
-    std::sync::LazyLock::new(crate::ai::rules::Conventions::default);
 #[test]
 fn use_skill_expands_skills_and_loads_packs() {
     let ws = crate::ai::workspace::load_layers(None, None, None);
     let doc = "雨はまだ降っていた。美咲は改札の前で、何度も時計を見た。";
     let ctx = ToolContext {
-        undecided: &[],
-        document: md(doc),
         skills: &ws.skills,
-        ui_language: "en",
-        root: None,
-        scratch: None,
-        sees_images: false,
-        conventions: &NO_CONVENTIONS,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
+        ..ToolContext::for_document(md(doc))
     };
     let call = |name: &str| use_skill(&ctx, &json!({ "name": name }).to_string());
     let proofread = call("proofread");
@@ -184,19 +173,7 @@ fn edit(ctx: &ToolContext, args: &str) -> String {
 }
 
 fn ctx(document: &str) -> ToolContext<'static> {
-    ToolContext {
-        undecided: &[],
-        document: md(document),
-        skills: &[],
-        ui_language: "en",
-        root: None,
-        scratch: None,
-        sees_images: false,
-        conventions: &NO_CONVENTIONS,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
-    }
+    ToolContext::for_document(md(document))
 }
 
 #[test]

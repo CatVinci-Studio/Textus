@@ -9,12 +9,15 @@
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
 pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
-use super::research::{Model, Streamed};
+use super::handover::{hand_over, Checked, Task};
+use super::research::Model;
+use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
-use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
+use aicompat::agent::{AgentTurn, ProviderEvent, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
 use std::sync::Mutex;
+use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
@@ -128,7 +131,6 @@ pub(crate) async fn write_section(
         .filter_map(|s| dossier.sources.iter().find(|x| x.n == *s))
         .map(|s| (s.n, s.url.clone()))
         .collect();
-    let kept: Mutex<Option<String>> = Mutex::new(None);
     // The latest section handed over whose problems were all soft: kept at
     // the end if no try holds.
     let soft: Mutex<Option<String>> = Mutex::new(None);
@@ -136,73 +138,47 @@ pub(crate) async fn write_section(
     // holds or is only soft - a paper with one weaker section beats one
     // that stops there.
     let last: Mutex<Option<String>> = Mutex::new(None);
-    let specs = vec![submit_section_spec()];
-    let execute = |call: ToolCall| {
-        let (kept, soft, last, sources) = (&kept, &soft, &last, &sources);
-        async move {
-            let args: Value = serde_json::from_str(&call.arguments).unwrap_or_default();
-            let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
-            let mut wrong = problems(&markdown, section, sources, &paper.language);
-            wrong.extend(long_posts(&markdown, paper));
-            if !markdown.is_empty() {
-                *last.lock().unwrap() = Some(markdown.clone());
-            }
-            if !wrong.is_empty() {
-                // Seen in a live run's output, never in the app's.
-                if cfg!(test) {
-                    eprintln!(
-                        "paper: \"{}\" not kept: {}",
-                        section.title,
-                        wrong.join(" | ")
-                    );
-                }
-                if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
-                    *soft.lock().unwrap() = Some(markdown);
-                }
-                return ToolOutput::from(format!(
-                    "Not kept - fix these and send the whole section again:\n- {}",
-                    wrong.join("\n- ")
-                ));
-            }
-            *kept.lock().unwrap() = Some(markdown);
-            ToolOutput {
-                text: "Kept. Reply with one short line.".into(),
-                settled: true,
-                ..ToolOutput::default()
-            }
+    let check = |arguments: &str| {
+        let args: Value = serde_json::from_str(arguments).unwrap_or_default();
+        let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
+        let mut wrong = problems(&markdown, section, &sources, &paper.language);
+        wrong.extend(long_posts(&markdown, paper));
+        if !markdown.is_empty() {
+            *last.lock().unwrap() = Some(markdown.clone());
         }
+        if wrong.is_empty() {
+            return Checked::Kept(markdown);
+        }
+        // Seen in a live run's output, never in the app's.
+        if cfg!(test) {
+            eprintln!(
+                "paper: \"{}\" not kept: {}",
+                section.title,
+                wrong.join(" | ")
+            );
+        }
+        if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
+            *soft.lock().unwrap() = Some(markdown);
+        }
+        Checked::not_kept("section", &wrong)
     };
-    let turns = run_agent_loop(
-        Vec::new(),
-        AgentTurn::User {
-            text: match revision {
-                None => writer_message(paper, outline, index, dossier),
-                Some((earlier, points)) => format!(
-                    "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works and no longer than before, and hand over the whole section again.",
-                    writer_message(paper, outline, index, dossier),
-                    points.join("\n- ")
-                ),
-            },
-            images: Vec::new(),
+    let push = |streamed: ProviderEvent<'_>| watch.push(streamed);
+    let task = Task {
+        instructions: &instructions,
+        message: match revision {
+            None => writer_message(paper, outline, index, dossier),
+            Some((earlier, points)) => format!(
+                "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works and no longer than before, and hand over the whole section again.",
+                writer_message(paper, outline, index, dossier),
+                points.join("\n- ")
+            ),
         },
-        WRITER_STEPS,
-        |turns: Vec<AgentTurn>| {
-            let (instructions, specs) = (&instructions, &specs);
-            let watch = &watch;
-            async move {
-                model
-                    .step_watched(instructions, &turns, specs, &|s| watch.push(s))
-                    .await
-            }
-        },
-        execute,
-        |_| ToolRun::InOrder,
-        |_| {},
-    )
-    .await?;
+        tool: submit_section_spec(),
+        steps: WRITER_STEPS,
+        watch: Some(&push),
+    };
+    let (kept, turns) = hand_over(model, task, check).await?;
     let body = kept
-        .into_inner()
-        .unwrap()
         .or(soft.into_inner().unwrap())
         .or_else(|| replied_section(&turns, section, &sources, &paper.language))
         // A revision that never holds keeps the draft it would replace.
@@ -386,11 +362,12 @@ pub(crate) async fn draft(
 }
 
 /// The least time between two SectionText events for one section.
-const SECTION_EVERY: std::time::Duration = std::time::Duration::from_millis(300);
+const SECTION_EVERY: Duration = Duration::from_millis(300);
 
 /// Watches a writer's stream and sends what it has written so far, whole,
-/// as SectionText - the document shows it as it comes: the `markdown` of the submit_section call it is making, or
-/// its reply when it writes the section there instead.
+/// as SectionText - the document shows it as it comes: the `markdown` of
+/// the submit_section call it is making, or its reply when it writes the
+/// section there instead.
 pub(crate) struct SectionWatch<'a> {
     index: u32,
     send: &'a (dyn Fn(PaperEvent) + Sync),
@@ -402,7 +379,7 @@ struct WatchState {
     args: String,
     reply: String,
     sent: usize,
-    last: Option<std::time::Instant>,
+    last: LastSent,
 }
 
 impl<'a> SectionWatch<'a> {
@@ -414,34 +391,34 @@ impl<'a> SectionWatch<'a> {
         }
     }
 
-    pub(crate) fn push(&self, streamed: Streamed<'_>) {
+    pub(crate) fn push(&self, streamed: ProviderEvent<'_>) {
         let text = {
             let mut state = self.state.lock().unwrap();
             match streamed {
-                Streamed::Thinking(_) => return,
-                Streamed::Text(text) => state.reply.push_str(text),
-                Streamed::ToolStart => {
+                ProviderEvent::Thinking(_) | ProviderEvent::Citation { .. } => return,
+                ProviderEvent::Text(text) => state.reply.push_str(text),
+                ProviderEvent::ToolStart { .. } => {
                     *state = WatchState {
                         last: state.last,
                         ..WatchState::default()
                     }
                 }
-                Streamed::ToolArgs(delta) => state.args.push_str(delta),
+                ProviderEvent::ToolArgs { delta, .. } => state.args.push_str(delta),
             }
-            if state.last.is_some_and(|at| at.elapsed() < SECTION_EVERY) {
+            if !state.last.due(SECTION_EVERY) {
                 return;
             }
             // Decoded only when due: a few times a second, not per token.
             let text = if state.args.is_empty() {
                 state.reply.trim().to_string()
             } else {
-                partial_string_value(&state.args, "\"markdown\"")
+                string_value(&state.args, "\"markdown\"")
             };
             if text.len() == state.sent || text.trim().is_empty() {
                 return;
             }
             state.sent = text.len();
-            state.last = Some(std::time::Instant::now());
+            state.last.now();
             text
         };
         (self.send)(PaperEvent::SectionText {
@@ -449,43 +426,4 @@ impl<'a> SectionWatch<'a> {
             text,
         });
     }
-}
-
-/// The string value of `key` in JSON that is still arriving, unescaped as
-/// far as it has come: an escape cut in half is left for the next time.
-pub(crate) fn partial_string_value(json: &str, key: &str) -> String {
-    let Some(at) = json.find(key) else {
-        return String::new();
-    };
-    let rest = json[at + key.len()..].trim_start();
-    let Some(rest) = rest.strip_prefix(':').map(str::trim_start) else {
-        return String::new();
-    };
-    let Some(body) = rest.strip_prefix('"') else {
-        return String::new();
-    };
-    let mut out = String::with_capacity(body.len());
-    let mut chars = body.chars();
-    while let Some(c) = chars.next() {
-        match c {
-            '"' => break,
-            '\\' => match chars.next() {
-                Some('n') => out.push('\n'),
-                Some('t') => out.push('\t'),
-                Some('r') => {}
-                Some('u') => {
-                    let hex: String = chars.by_ref().take(4).collect();
-                    match u32::from_str_radix(&hex, 16).ok().and_then(char::from_u32) {
-                        Some(c) if hex.len() == 4 => out.push(c),
-                        // A surrogate pair or a cut escape: left out.
-                        _ => {}
-                    }
-                }
-                Some(other) => out.push(other),
-                None => break,
-            },
-            c => out.push(c),
-        }
-    }
-    out
 }

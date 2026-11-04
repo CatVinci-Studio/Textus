@@ -43,6 +43,13 @@ pub(crate) fn native_search(provider: &str, model: &str) -> Option<NativeSearch>
     Some(capabilities::search_route(provider, model)).filter(|s| *s != NativeSearch::None)
 }
 
+/// [`native_search`] for the model a request names - or, naming none, the
+/// provider's default agent model, which is the one it is sent to.
+pub(crate) fn native_search_for(provider: &str, model: Option<&str>) -> Option<NativeSearch> {
+    let default = crate::ai::catalog::find(provider).and_then(|e| e.agent_default_model);
+    native_search(provider, model.or(default).unwrap_or_default())
+}
+
 /// The search service Textus's own web_search uses: the one chosen in Settings
 /// ("auto": the first of DeepSeek, Zhipu and Kimi whose key is saved). A
 /// chosen service without its key is None, not a substitute.
@@ -562,14 +569,7 @@ pub fn web_search_status(
     search_service: Option<String>,
     searxng_url: Option<String>,
 ) -> WebSearchStatus {
-    let model = model
-        .or_else(|| {
-            crate::ai::catalog::find(&provider)
-                .and_then(|e| e.agent_default_model)
-                .map(str::to_string)
-        })
-        .unwrap_or_default();
-    let native = native_search(&provider, &model).is_some();
+    let native = native_search_for(&provider, model.as_deref()).is_some();
     WebSearchStatus {
         native,
         service: if native {

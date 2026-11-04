@@ -276,16 +276,13 @@ impl ChapterRun<'_, '_> {
             self.ui_language,
         );
         let (context, _) = request_context_and_library(self.workspace, &part, true, &message, None);
-        let user_turn = AgentTurn::User {
-            text: request_message(
-                self.workspace,
-                self.mode,
-                self.ui_language,
-                &context,
-                &message,
-            ),
-            images: Vec::new(),
-        };
+        let user_turn = AgentTurn::user(request_message(
+            self.workspace,
+            self.mode,
+            self.ui_language,
+            &context,
+            &message,
+        ));
         let specs = self.tools.specs();
         let channel = self.channel;
         // Only its edits reach the window: its prose and thinking are for

@@ -6,12 +6,12 @@
 //! leaves the draft as it was.
 
 use super::draft::write_section;
+use super::handover::{hand_over, Checked, Task};
 use super::research::Model;
 use super::{Dossier, Outline, Paper, PaperEvent};
-use aicompat::agent::{run_agent_loop, AgentTurn, ToolCall, ToolOutput, ToolRun, ToolSpec};
+use aicompat::agent::ToolSpec;
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
-use std::sync::Mutex;
 
 pub(crate) const REPORT_ISSUES_TOOL: &str = "report_issues";
 
@@ -122,41 +122,21 @@ pub(crate) async fn review(
         outline_text.join("\n"),
         drafts.join("\n\n")
     );
-    let found: Mutex<Option<Vec<Issue>>> = Mutex::new(None);
-    let specs = vec![report_issues_spec()];
-    let execute = |call: ToolCall| {
-        let found = &found;
-        async move {
-            match read_issues(&call.arguments, sections.len()) {
-                Ok(issues) => {
-                    *found.lock().unwrap() = Some(issues);
-                    ToolOutput {
-                        text: "Reported. Reply with one short line.".into(),
-                        settled: true,
-                        ..ToolOutput::default()
-                    }
-                }
-                Err(why) => ToolOutput::from(format!("Not read: {why} Report again.")),
-            }
-        }
+    let task = Task {
+        instructions: &instructions,
+        message,
+        tool: report_issues_spec(),
+        steps: REVIEW_STEPS,
+        watch: None,
     };
-    run_agent_loop(
-        Vec::new(),
-        AgentTurn::User {
-            text: message,
-            images: Vec::new(),
-        },
-        REVIEW_STEPS,
-        |turns: Vec<AgentTurn>| {
-            let (instructions, specs) = (&instructions, &specs);
-            async move { model.step(instructions, &turns, specs).await }
-        },
-        execute,
-        |_| ToolRun::InOrder,
-        |_| {},
-    )
+    let (issues, _) = hand_over(model, task, |arguments| {
+        match read_issues(arguments, sections.len()) {
+            Ok(issues) => Checked::Kept(issues),
+            Err(why) => Checked::Refused(format!("Not read: {why} Report again.")),
+        }
+    })
     .await?;
-    Ok(found.into_inner().unwrap().unwrap_or_default())
+    Ok(issues.unwrap_or_default())
 }
 
 /// `sections` with each one `issues` names revised once, three at a time.

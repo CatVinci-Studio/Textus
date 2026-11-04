@@ -314,8 +314,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -424,7 +423,7 @@ fn a_note_s_claim_is_told_in_one_line() {
 fn the_planner_s_stream_is_sent_as_its_tail_a_few_times_a_second() {
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let tail = research::ThinkingTail::new(&send);
+    let tail = stream::ThinkingTail::new(&send);
     tail.push("First   the\nbackground. ");
     // Straight after: held back, but gathered.
     tail.push(&"x".repeat(2000));
@@ -435,9 +434,9 @@ fn the_planner_s_stream_is_sent_as_its_tail_a_few_times_a_second() {
             text: "First the background.".into()
         }]
     );
-    assert_eq!(model::tail("abcdef", 3), "def");
-    assert_eq!(model::tail("绿化城市", 2), "城市");
-    assert_eq!(model::tail("ab", 5), "ab");
+    assert_eq!(stream::tail("abcdef", 3), "def");
+    assert_eq!(stream::tail("绿化城市", 2), "城市");
+    assert_eq!(stream::tail("ab", 5), "ab");
 }
 
 #[tokio::test]
@@ -473,8 +472,7 @@ impl research::Model for Empty {
 async fn research_that_keeps_nothing_fails_with_a_reason() {
     let budget = SharedBudget::new(ResearchBudget::for_paper());
     let web = WebPlan::new(true, None, None, &[]);
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -1145,10 +1143,7 @@ fn a_paper_card_s_turns_are_not_sent_to_the_model() {
         images: Vec::new(),
     };
     let kept = crate::ai::agent::without_memory_turns(vec![
-        AgentTurn::User {
-            text: "Write a paper".into(),
-            images: Vec::new(),
-        },
+        AgentTurn::user("Write a paper"),
         card,
         result,
         AgentTurn::assistant("Written."),
@@ -1246,8 +1241,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     std::fs::write(&file, "Tidal barrages store energy at high tide.\n").unwrap();
     let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
     let web = WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(Some(&root), None, Vec::new());
+    let (tools, ctx) = research_tests::kit(Some(&root), None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -1690,8 +1684,7 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         web.source_number("https://lite.duckduckgo.com/lite/?q=green+roof"),
         Some(1)
     );
-    let bare = research_tests::Bare::default();
-    let (tools, ctx) = bare.kit(None, None, Vec::new());
+    let (tools, ctx) = research_tests::kit(None, None, Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -1732,13 +1725,24 @@ fn a_figure_named_by_number_is_sent_back_and_a_slash_doesn_t_matter() {
     );
 }
 
+/// A fragment of a tool call's arguments, as a provider streams it.
+fn tool_args(delta: &str) -> aicompat::agent::ProviderEvent<'_> {
+    aicompat::agent::ProviderEvent::ToolArgs {
+        call_id: "c",
+        delta,
+    }
+}
+
 #[test]
 fn the_outline_is_told_as_its_arguments_stream() {
-    use research::Streamed;
+    use aicompat::agent::ProviderEvent;
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
     let watch = outline::OutlineWatch::new(&send);
-    watch.push(Streamed::ToolStart);
+    watch.push(ProviderEvent::ToolStart {
+        call_id: "c",
+        name: "submit",
+    });
     // Fragments cut anywhere: inside a key, inside a value, inside an escape.
     for part in [
         r#"{"the"#,
@@ -1748,7 +1752,7 @@ fn the_outline_is_told_as_its_arguments_stream() {
         r#"le": "一、背"#,
         r#"景", "targetWords": 700, "figures": [{"kind": "chart", "spec": "title"}]}"#,
     ] {
-        watch.push(Streamed::ToolArgs(part));
+        watch.push(tool_args(part));
     }
     let first = events.lock().unwrap().clone();
     assert_eq!(
@@ -1760,12 +1764,13 @@ fn the_outline_is_told_as_its_arguments_stream() {
         }]
     );
     // Held back while too soon after the last; the next try starts over.
-    watch.push(Streamed::ToolStart);
-    watch.push(Streamed::ToolArgs(
-        r#"{"sections": [{"title": "A"}, {"title": 3}]}"#,
-    ));
+    watch.push(ProviderEvent::ToolStart {
+        call_id: "c",
+        name: "submit",
+    });
+    watch.push(tool_args(r#"{"sections": [{"title": "A"}, {"title": 3}]}"#));
     std::thread::sleep(std::time::Duration::from_millis(260));
-    watch.push(Streamed::ToolArgs(r#"[{"title": "B"}"#));
+    watch.push(tool_args(r#"[{"title": "B"}"#));
     let events = events.into_inner().unwrap();
     assert_eq!(
         events.last(),
@@ -1779,9 +1784,9 @@ fn the_outline_is_told_as_its_arguments_stream() {
 
 #[test]
 fn a_section_is_shown_as_its_writer_streams_it() {
-    use research::Streamed;
+    use aicompat::agent::ProviderEvent;
     assert_eq!(
-        draft::partial_string_value(
+        stream::string_value(
             r#"{"markdown": "Line one\nsays \"hi\" \u00e9"#,
             "\"markdown\""
         ),
@@ -1789,23 +1794,26 @@ fn a_section_is_shown_as_its_writer_streams_it() {
     );
     // An escape cut in half waits for the rest.
     assert_eq!(
-        draft::partial_string_value(r#"{"markdown": "ab\u00"#, "\"markdown\""),
+        stream::string_value(r#"{"markdown": "ab\u00"#, "\"markdown\""),
         "ab"
     );
     assert_eq!(
-        draft::partial_string_value(r#"{"markdown": "ab\"#, "\"markdown\""),
+        stream::string_value(r#"{"markdown": "ab\"#, "\"markdown\""),
         "ab"
     );
-    assert_eq!(draft::partial_string_value(r#"{"mark"#, "\"markdown\""), "");
+    assert_eq!(stream::string_value(r#"{"mark"#, "\"markdown\""), "");
 
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
     let watch = draft::SectionWatch::new(2, &send);
-    watch.push(Streamed::Thinking("not shown"));
-    watch.push(Streamed::ToolStart);
-    watch.push(Streamed::ToolArgs(r#"{"markdown": "Green roofs"#));
+    watch.push(ProviderEvent::Thinking("not shown"));
+    watch.push(ProviderEvent::ToolStart {
+        call_id: "c",
+        name: "submit",
+    });
+    watch.push(tool_args(r#"{"markdown": "Green roofs"#));
     // Too soon after the last: held back.
-    watch.push(Streamed::ToolArgs(" cool"));
+    watch.push(tool_args(" cool"));
     assert_eq!(
         events.lock().unwrap().clone(),
         [PaperEvent::SectionText {
@@ -1818,7 +1826,7 @@ fn a_section_is_shown_as_its_writer_streams_it() {
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
     let watch = draft::SectionWatch::new(0, &send);
-    watch.push(Streamed::Text(&long));
+    watch.push(ProviderEvent::Text(&long));
     assert_eq!(
         events.lock().unwrap().clone(),
         [PaperEvent::SectionText {

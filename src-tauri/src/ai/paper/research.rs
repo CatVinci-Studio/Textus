@@ -6,15 +6,17 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
-pub(crate) use super::model::{clip, Model, Streamed, ThinkingTail, Watch};
+use super::model::ask;
+pub(crate) use super::model::{clip, Model, Watch};
 use super::notes::NoteTaker;
 pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::sources::link_safe;
+use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{run_agent_loop, AgentTurn, StepResult, ToolCall};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
 use futures_util::stream::{self, StreamExt};
 use std::path::Path;
 use std::sync::Mutex;
@@ -102,31 +104,15 @@ pub(crate) fn shared_tools<'t>(
 /// What the shared tools work on: no document, the project folder, and
 /// the paper's folder, whose `attached/` they read beside it.
 pub(crate) fn context<'t>(
-    empty: &'t crate::ai::doc_blocks::Document,
-    conventions: &'t crate::ai::rules::Conventions,
     root: Option<&'t Path>,
     paper_folder: Option<&'t Path>,
     sees_images: bool,
 ) -> ToolContext<'t> {
     ToolContext {
-        undecided: &[],
-        document: empty,
-        skills: &[],
-        ui_language: "en",
         root,
         scratch: paper_folder,
         sees_images,
-        conventions,
-        library: &[],
-        proposed: Default::default(),
-        checks: Default::default(),
-    }
-}
-
-fn user(text: String) -> AgentTurn {
-    AgentTurn::User {
-        text,
-        images: Vec::new(),
+        ..ToolContext::without_document()
     }
 }
 
@@ -158,13 +144,7 @@ pub(crate) async fn plan_questions(
         let opening: String = text.chars().take(PLAN_GLIMPSE).collect();
         message.push_str(&format!("\n\nThe user attached {path}:\n{opening}"));
     }
-    let reply = match model
-        .step_watched(&instructions, &[user(message)], &[], watch)
-        .await?
-    {
-        StepResult::Done(text) => text,
-        StepResult::ToolCalls(_) => String::new(),
-    };
+    let reply = ask(model, &instructions, message, watch).await?;
     let mut questions = parse_questions(&reply);
     questions.truncate(profile.scale.questions.1);
     if questions.len() < 2.min(profile.scale.questions.0) {
@@ -176,10 +156,7 @@ pub(crate) async fn plan_questions(
 /// The questions in a reply: its JSON array of strings, or failing that its
 /// list lines ("1. …", "- …").
 pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
-    let from_json = reply
-        .find('[')
-        .zip(reply.rfind(']'))
-        .and_then(|(a, b)| serde_json::from_str::<Vec<String>>(reply.get(a..=b)?).ok());
+    let from_json = crate::ai::json_reply::array::<Vec<String>>(reply);
     let questions = from_json.unwrap_or_else(|| {
         reply
             .lines()
@@ -270,7 +247,7 @@ async fn research_question(
     };
     run_agent_loop(
         Vec::new(),
-        user(format!("Your question: {question}")),
+        AgentTurn::user(format!("Your question: {question}")),
         HELPER_STEPS,
         |turns: Vec<AgentTurn>| {
             let (instructions, specs) = (&instructions, &specs);
@@ -307,7 +284,7 @@ pub(crate) async fn research(
     });
     let thinking = ThinkingTail::new(send);
     let questions = plan_questions(model, paper, kit, &|streamed| {
-        if let Streamed::Thinking(text) | Streamed::Text(text) = streamed {
+        if let ProviderEvent::Thinking(text) | ProviderEvent::Text(text) = streamed {
             thinking.push(text)
         }
     })
