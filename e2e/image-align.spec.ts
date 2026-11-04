@@ -38,3 +38,24 @@ test("a row of images lines up whether or not each is a link", async ({
     );
   expect(linked).toBeCloseTo(plain, 0);
 });
+
+test("a badge has no zoom button; a picture keeps it", async ({ page }) => {
+  await openApp(page, { settings: { language: "en" } });
+  const big =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200"><rect width="300" height="200" fill="teal"/></svg>',
+    );
+  const badge =
+    "data:image/svg+xml;utf8," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="90" height="20"><rect width="90" height="20" fill="green"/></svg>',
+    );
+  await pasteMarkdown(page, `Badge ![badge](${badge})\n\n![big](${big})`);
+  const views = page.locator(`${editor} .image-view`);
+  await expect(views).toHaveCount(2);
+  await views.first().hover();
+  await expect(views.first().locator(".mermaid-zoom")).toBeHidden();
+  await views.last().hover();
+  await expect(views.last().locator(".mermaid-zoom")).toBeVisible();
+});

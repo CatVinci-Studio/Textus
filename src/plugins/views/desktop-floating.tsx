@@ -19,6 +19,7 @@ import {
 } from "./webviews";
 import {
   closeFloating,
+  floatingMenuItems,
   floatingSize,
   moveFloating,
   touchFloating,
@@ -39,6 +40,8 @@ export type FloatingUp =
   | { view: string; kind: "moved"; x: number; y: number }
   | { view: string; kind: "resized"; scale: number; x: number; y: number }
   | { view: string; kind: "poke" }
+  /** One of the plugin's own menu items, by its place in `menu`. */
+  | { view: string; kind: "menuItem"; index: number }
   | { view: string; kind: "fold" | "unfold" | "close" | "toWindow" };
 
 /** What the editor window sends down: the page, then the frame's calls. */
@@ -50,6 +53,8 @@ export type FloatingDown =
       title: string;
       /** The plugin's icon for the folded dot, or null. */
       icon: string | null;
+      /** The plugin's own items for its right-click menu, by label. */
+      menu: string[];
       /** The manifest's size and the user's scale of it, to resize by. */
       size: { width: number; height: number; scale: number };
       init: Record<string, unknown>;
@@ -91,6 +96,7 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
         kind: "page",
         ...page,
         icon: view.icon,
+        menu: floatingMenuItems(view).map((item) => item.label),
         size: { width: view.width, height: view.height, scale: view.scale },
         init: {
           state: webviewState(current.key) ?? null,
@@ -165,6 +171,10 @@ function useFloatingWindow(view: FloatingView): string | null {
               y: payload.y,
             });
           else if (payload.kind === "poke") touchFloating(view.view, "poke");
+          else if (payload.kind === "menuItem")
+            floatingMenuItems({ plugin: view.plugin, view: view.view })[
+              payload.index
+            ]?.onSelect();
           else if (payload.kind === "fold" || payload.kind === "unfold")
             moveFloating(view.view, { folded: payload.kind === "fold" });
           else if (payload.kind === "close") closeFloating(view.view);
@@ -172,7 +182,7 @@ function useFloatingWindow(view: FloatingView): string | null {
             moveFloating(view.view, { place: "window" });
         }),
       ),
-    [view.view],
+    [view.view, view.plugin],
   );
   return label;
 }

@@ -43,8 +43,13 @@ function up(payload: Up) {
 export function FloatingWindowApp() {
   const boxRef = useRef<HTMLDivElement>(null);
   const endpointRef = useRef<Endpoint | null>(null);
-  const [title, setTitle] = useState("");
-  const [icon, setIcon] = useState<string | null>(null);
+  // What the editor window says of the view: its name, icon and menu items.
+  const [about, setAbout] = useState<{
+    title: string;
+    icon: string | null;
+    menu: string[];
+  }>({ title: "", icon: null, menu: [] });
+  const { title, icon } = about;
   const [folded, setFolded] = useState(false);
   const [size, setSize] = useState({ width: 0, height: 0, scale: 1 });
   const t = currentStrings();
@@ -59,8 +64,11 @@ export function FloatingWindowApp() {
         else if (payload.kind === "notify")
           endpointRef.current?.notify(payload.method, payload.params);
         else if (payload.kind === "page") {
-          setTitle(payload.title);
-          setIcon(payload.icon);
+          setAbout({
+            title: payload.title,
+            icon: payload.icon,
+            menu: payload.menu,
+          });
           setSize(payload.size);
           setFolded(payload.folded);
           const box = boxRef.current;
@@ -148,6 +156,10 @@ export function FloatingWindowApp() {
   const menu = (event: React.MouseEvent) => {
     event.preventDefault();
     void popUpNativeMenu([
+      ...about.menu.flatMap((label, index) => [
+        { label, run: () => up({ kind: "menuItem", index }) },
+      ]),
+      ...(about.menu.length ? (["separator"] as const) : []),
       {
         label: t.floatingOpenApp,
         run: () => void windowIpc.showFloatingOwner(OWNER),

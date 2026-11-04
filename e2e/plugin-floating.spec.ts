@@ -22,6 +22,11 @@ exports.activate = function (ctx) {
       else textus.ui.notice("on the " + change.side);
     }),
   );
+  ctx.subscriptions.push(
+    textus.commands.register("test.float.dress", function () {
+      textus.ui.notice("dressed up");
+    }),
+  );
   textus.layout.openFloating("test.float.pet");
 };
 `;
@@ -41,6 +46,12 @@ const MANIFEST = {
     floatingViews: [
       { id: "test.float.pet", title: "Pet", width: 120, height: 120 },
     ],
+    commands: [{ command: "test.float.dress", title: "Change outfit" }],
+    menus: {
+      "floating/context": [
+        { command: "test.float.dress", when: "view == test.float.pet" },
+      ],
+    },
   },
 };
 
@@ -160,6 +171,11 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   await expect(
     page.getByRole("menuitem", { name: "Float Pet on the desktop" }),
   ).toHaveCount(0);
+  // The plugin's own items lead its menu.
+  await expect(page.getByRole("menuitem").first()).toHaveText("Change outfit");
+  await page.getByRole("menuitem", { name: "Change outfit" }).click();
+  await expect(page.getByText("dressed up")).toBeVisible();
+  await view.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Close Pet" }).click();
   await expect(view).toHaveCount(0);
   await expect(dot).toHaveCount(0);

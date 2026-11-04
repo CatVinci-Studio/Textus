@@ -10,6 +10,7 @@ import {
   floatingOnDesktop,
   floatingSide,
   floatingSize,
+  floatingMenuItems,
   floatingVersion,
   moveFloating,
   openFloatingViews,
@@ -176,7 +177,10 @@ function FloatingBox({
       </button>
     );
 
+  const own = floatingMenuItems(view);
   const items: ContextMenuEntry[] = [
+    ...own.map((item) => ({ label: item.label, onSelect: item.onSelect })),
+    ...(own.length ? (["separator"] as const) : []),
     ...(view.allowed === "either" && desktop
       ? [
           {

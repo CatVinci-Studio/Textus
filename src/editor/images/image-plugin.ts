@@ -199,6 +199,15 @@ function createImageView(
     dom.append(card);
   };
   img.addEventListener("load", clearMissing);
+  // A short, wide strip (a README badge) has nothing to enlarge, and the
+  // button would cover its words.
+  img.addEventListener("load", () =>
+    zoom.toggleAttribute(
+      "hidden",
+      img.naturalHeight < BADGE_HEIGHT_PX &&
+        img.naturalWidth >= 2 * img.naturalHeight,
+    ),
+  );
   img.addEventListener("error", () => void showMissing());
 
   const apply = (n: ProseNode) => {
@@ -285,6 +294,9 @@ function createImageView(
     ignoreMutation: () => true,
   };
 }
+
+/** A strip shorter than this, and twice as wide, is a badge. */
+const BADGE_HEIGHT_PX = 48;
 
 export function createImagePlugin(options: ImageStore) {
   return $prose(() => {
