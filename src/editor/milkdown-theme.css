@@ -789,6 +789,50 @@ br:is(.pending-delete, .pending-sentence-hot) {
   white-space: normal;
 }
 
+/* Markdown inside <div align="center"> and its kin, as GitHub aligns it. */
+.milkdown .html-align-center {
+  text-align: center;
+}
+.milkdown .html-align-right {
+  text-align: right;
+}
+/* The tag lines themselves, as on GitHub: out of sight until the caret is
+   on one. */
+.milkdown p.html-align-tag {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* A README's <picture> of a light and a dark logo: Textus's theme picks
+   (an explicit one, else the system's), not the browser's own scheme.
+   Hidden with !important: image rules elsewhere set their display. */
+:root[data-theme="light"] img[data-scheme="dark"],
+:root[data-theme="dark"] img[data-scheme="light"] {
+  display: none !important;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) img[data-scheme="dark"] {
+    display: none !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) img[data-scheme="light"] {
+    display: none !important;
+  }
+}
+
+/* A definition list's terms stand out from what they define, as on GitHub. */
+.milkdown .raw-html-rendered dt {
+  font-weight: 600;
+}
+
+/* Its words take a text cursor: a click there edits them in place. */
+.raw-html-edit-box {
+  cursor: text;
+  outline: none;
+}
+
 /* An HTML fragment with no block-level tags flows inline, like GitHub. */
 .raw-html-rendered-inline {
   display: inline;
@@ -994,8 +1038,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
   outline-offset: 3px;
 }
 
-/* Mid-sentence, an image sits on the text like a glyph would. */
-.milkdown :not(.image-paragraph) > .image-view {
+/* Mid-sentence, an image sits on the text like a glyph would. A link
+   around one in a row of images (a README's badges) keeps it in the row. */
+.milkdown .image-view:not(.image-paragraph .image-view) {
   vertical-align: text-bottom;
 }
 

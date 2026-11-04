@@ -157,6 +157,7 @@ export function useSaveTabs(opts: {
         text: content,
         trigger: auto ? "auto" : "manual",
       });
+      if (!auto) emitPluginEvent("activity", { kind: "saved" });
       return true;
     },
     [updateTab, liveTabs, tabsRef, t, imageFolder, writeOrReport],
@@ -224,6 +225,7 @@ export function useSaveTabs(opts: {
         text: content,
         trigger: auto ? "auto" : "manual",
       });
+      if (!auto) emitPluginEvent("activity", { kind: "saved" });
     },
     [tabsRef, updateTab],
   );

@@ -1,6 +1,7 @@
 import type {
   CompletionContribution,
   Contributes,
+  FloatingPlace,
   MenuId,
   SettingContribution,
   SettingType,
@@ -15,6 +16,7 @@ export const MENU_IDS: readonly MenuId[] = [
   "file/context",
   "tab/context",
   "view/title",
+  "floating/context",
   "app/plugins",
   "app/tray",
 ];
@@ -64,6 +66,22 @@ function viewType(value: unknown, what: string): ViewType {
   if (value === undefined || value === "webview") return "webview";
   if (value === "list") return "list";
   throw new ManifestError(`${what} must be "list" or "webview".`);
+}
+
+/** A floating view's side: 160 points unless given, never under 64 or over
+ *  480 - it floats over other things, so it stays small. */
+function floatingSide(value: unknown, what: string): number {
+  const side = number(value, what) ?? 160;
+  if (side < 64 || side > 480)
+    throw new ManifestError(`${what} must be from 64 to 480.`);
+  return Math.round(side);
+}
+
+function floatingPlace(value: unknown, what: string): FloatingPlace {
+  if (value === undefined) return "either";
+  if (value === "desktop" || value === "window" || value === "either")
+    return value;
+  throw new ManifestError(`${what} must be "desktop", "window" or "either".`);
 }
 
 /** Code block languages Textus draws itself: a plugin can't take them. */
@@ -373,6 +391,19 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       };
     },
   );
+  const floatingViews = list(c.floatingViews, "contributes.floatingViews").map(
+    (x, i) => {
+      const at = `contributes.floatingViews[${i}]`;
+      const o = object(x, at);
+      return {
+        id: ownId(o.id, id, `${at}.id`),
+        title: text(o.title, `${at}.title`),
+        width: floatingSide(o.width, `${at}.width`),
+        height: floatingSide(o.height, `${at}.height`),
+        place: floatingPlace(o.place, `${at}.place`),
+      };
+    },
+  );
   // A kind this Textus doesn't know is a later one's: left out.
   const suggestFor = list(c.suggestFor, "contributes.suggestFor")
     .map((x, i) => text(x, `contributes.suggestFor[${i}]`))
@@ -384,6 +415,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     completions,
     links,
     codeBlocks,
+    floatingViews,
     commands,
     keybindings,
     menus,

@@ -26,6 +26,7 @@ import {
   skillOfferTurns,
 } from "./memory-pass";
 import { useNextMessage } from "./next-message";
+import { reportAiState } from "../../plugins/ai-state";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -200,6 +201,8 @@ export function useAgentConversation(
     };
     const requestId = crypto.randomUUID();
     const generation = generationRef.current;
+    reportAiState("thinking", provider, model || null);
+    let ended: "done" | "failed" | "stopped" = "stopped";
     requestIdRef.current = requestId;
     // add_comment arguments streaming in, by call id.
     const commentArgs = new Map<string, string>();
@@ -245,6 +248,7 @@ export function useAgentConversation(
           // Anything else means the model has stopped thinking for now.
           const thought = thinkingDone(prev?.thought ?? null, Date.now());
           if (event.type === "delta") {
+            reportAiState("writing", provider, model || null);
             setStreaming(
               {
                 turns: prev?.turns ?? [],
@@ -271,6 +275,7 @@ export function useAgentConversation(
             event.type === "toolStart" &&
             (event.name === "propose_edit" || event.name === "add_comment")
           ) {
+            reportAiState("proposing", provider, model || null);
             // The reply stays; the row under it says an edit (or a note)
             // is coming.
             if (event.name === "add_comment") commentArgs.set(event.callId, "");
@@ -339,6 +344,7 @@ export function useAgentConversation(
       void rememberAfter([...history, ...newTurns], at + newTurns.length);
       void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
       next.suggestAfter([...history, ...newTurns]);
+      ended = "done";
       return newTurns;
     } catch (err) {
       if (generation !== generationRef.current) return undefined;
@@ -355,10 +361,12 @@ export function useAgentConversation(
         setHistory((prev) => [...prev, ...kept]);
         return kept;
       }
+      ended = "failed";
       setError(errorText(err));
       setRetryable({ document, message: trimmed, images, options });
       return undefined;
     } finally {
+      reportAiState("idle", provider, model || null, ended);
       if (generation === generationRef.current) {
         setBusy(false);
         setStreaming(null);

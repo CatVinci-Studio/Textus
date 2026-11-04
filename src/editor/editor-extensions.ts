@@ -37,6 +37,7 @@ import {
 import { rawHtmlSchema } from "./html/raw-html-schema";
 import { remarkHtmlImages } from "./images/image-html";
 import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
+import { htmlAlignPlugin } from "./html/html-align";
 import {
   brToHardbreakPlugin,
   remarkTableCellBreaks,
@@ -253,6 +254,7 @@ export function withEditorCore(
       .use(rawHtmlSchema)
       .use(remarkHtmlImages)
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
+      .use(htmlAlignPlugin)
       .use(brToHardbreakPlugin)
       .use(remarkTableCellBreaks)
 

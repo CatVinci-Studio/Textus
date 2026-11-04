@@ -74,6 +74,7 @@
 
   /* Layers, low to high, so an entrance and an exit stack predictably. */
   --z-bar: 45;
+  --z-floating: 200;
   --z-popover: 250;
   --z-toast: 300;
   --z-menu: 310;

@@ -83,8 +83,9 @@ test("a <details> folds and opens from its summary in the editor", async ({
   await oneBlock.locator("summary").click();
   await expect(inner).toBeVisible();
   await expect(editor).not.toContainText("<summary>", { useInnerText: true });
-  // Elsewhere in the widget, a click gives the caret the source.
-  await inner.click();
+  // Its words are edited in place; an Option-click gives the caret the
+  // source.
+  await inner.click({ modifiers: ["Alt"] });
   await expect(editor).toContainText("<details><summary>One block", {
     useInnerText: true,
   });
@@ -200,4 +201,105 @@ test("an HTML export carries the SVG as a picture and the folded markdown inside
     scripts: 0,
     endLines: 0,
   });
+});
+
+test("a table's words are edited where they're drawn, its tags kept", async ({
+  page,
+}) => {
+  const editor = await openDoc(page);
+  const cell = editor.locator(".raw-html-rendered table td").first();
+  await expect(cell).toHaveText("Draft");
+  await cell.click();
+  // Still the table, not its source.
+  await expect(editor).not.toContainText("<td>", { useInnerText: true });
+  await page.keyboard.press("End");
+  await page.keyboard.type(" & notes");
+  await page.keyboard.press("Enter");
+  await expect(
+    editor.locator(".raw-html-rendered table td").first(),
+  ).toHaveText("Draft & notes");
+  // The source keeps its tags and attributes; only the words changed.
+  await editor
+    .locator(".raw-html-rendered table td")
+    .first()
+    .click({ modifiers: ["Alt"] });
+  await expect(editor).toContainText(
+    "<tr><td>Draft &amp; notes</td><td style=",
+    { useInnerText: true },
+  );
+
+  // Escape puts the words back.
+  await editor.getByText("The end.").click();
+  const late = editor.locator(".raw-html-rendered table").getByText("late");
+  await late.click();
+  await page.keyboard.type("r");
+  await page.keyboard.press("Escape");
+  await expect(late).toHaveText("late");
+});
+
+test("markdown inside <div align=center> is centred, as on GitHub", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(
+    page,
+    [
+      "Before",
+      "",
+      '<div align="center">',
+      "",
+      "# Moyu",
+      "",
+      "The mascot of Textus.",
+      "",
+      "</div>",
+      "",
+      "After",
+    ].join("\n"),
+  );
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor.locator("h1")).toHaveCSS("text-align", "center");
+  await expect(editor.getByText("The mascot of Textus.")).toHaveCSS(
+    "text-align",
+    "center",
+  );
+  await expect(editor.getByText("After")).toHaveCSS("text-align", "start");
+  // The tag lines are out of sight, as on GitHub.
+  await expect(editor.locator("p.html-align-tag")).toHaveCount(2);
+  await expect(editor).not.toContainText("<div", { useInnerText: true });
+});
+
+test("a <picture>'s logo follows Textus's theme, not the system's", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", theme: "light" } });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await pasteMarkdown(
+    page,
+    [
+      "Logo",
+      "",
+      "<picture>",
+      '  <source media="(prefers-color-scheme: dark)" srcset="dark.png">',
+      '  <img alt="Logo" src="light.png">',
+      "</picture>",
+      "",
+      "After",
+    ].join("\n"),
+  );
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const shown = () =>
+    editor
+      .locator(".raw-html-rendered img[alt=Logo]")
+      .evaluateAll((imgs) =>
+        imgs
+          .filter((img) => getComputedStyle(img).display !== "none")
+          .map((img) => img.getAttribute("src")),
+      );
+  // The system is dark, but Textus is set to light.
+  await expect.poll(shown).toEqual(["light.png"]);
+  await page.evaluate(() =>
+    document.documentElement.setAttribute("data-theme", "dark"),
+  );
+  await expect.poll(shown).toEqual(["dark.png"]);
 });

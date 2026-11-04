@@ -51,6 +51,31 @@ export const commands = {
 	 */
 	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource }),
 	/**
+	 *  Where a floating view can float over the desktop: the platforms whose
+	 *  windows can be transparent without a compositor to ask.
+	 */
+	floating_desktop_supported: () => __TAURI_INVOKE<boolean>("floating_desktop_supported"),
+	/**
+	 *  Opens `view`'s floating window for the calling editor window, at `x`, `y`
+	 *  (screen points), or by the bottom-right corner of its screen; an open one
+	 *  stays where it is. Answers the window's label.
+	 */
+	open_floating_window: (view: string, x: number | null, y: number | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, x, y, width, height }),
+	close_floating_window: (view: string) => __TAURI_INVOKE<void>("close_floating_window", { view }),
+	/**
+	 *  The window takes the new size. Folded or unfolded, its top-left corner
+	 *  stays; resized by the user (`keep_right` given), its bottom and its
+	 *  outer edge do.
+	 */
+	resize_floating_window: (view: string, width: number | null, height: number | null, keepRight: boolean | null) => __TAURI_INVOKE<void>("resize_floating_window", { view, width, height, keepRight }),
+	/**  Where the window is now, in screen points, to open there next time. */
+	floating_window_position: (view: string) => __TAURI_INVOKE<[number | null, number | null] | null>("floating_window_position", { view }),
+	/**
+	 *  The editor window a floating view belongs to, brought to the front: a
+	 *  view on the desktop opens Textus from its menu.
+	 */
+	show_floating_owner: (owner: string) => __TAURI_INVOKE<void>("show_floating_owner", { owner }),
+	/**
 	 *  Claimed by the chat window's frontend at mount, and again whenever
 	 *  CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 	 */

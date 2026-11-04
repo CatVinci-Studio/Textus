@@ -5,7 +5,7 @@ import type { Endpoint } from "../host/rpc";
  * `key` (the view, or the tab), so a panel closed and reopened finds it.
  */
 export type WebviewKind =
-  "sidebar" | "view" | "editor" | "settings" | "codeBlock";
+  "sidebar" | "view" | "editor" | "settings" | "codeBlock" | "floating";
 
 export interface WebviewRecord {
   id: string;

@@ -17,21 +17,65 @@
   background: var(--ui-bg);
 }
 
-/* Opted in, the bar shows the document scrolling under it: a tinted material
-   that blurs what passes beneath. The radius is smaller than the 20px the
-   other materials use: in a bar this short, 20px averaged a line of text into
-   the page, so words vanished while pictures and code blocks still showed. At
-   5px both read as blurred content. Without backdrop-filter the opaque fill
-   above stands, so the choice only changes how it looks where it can. The
-   doubled :root outranks the phone's own fill. */
+/* Opted in, the bar is glass, as a macOS toolbar is: what scrolls beneath
+   shows as colour and shape, most blurred at the top and clearing toward the
+   bar's lower edge, so the glass ends without a line. Three layers behind
+   the bar (.window-bar-glass) each blur more and reach less far down; the
+   bar itself only tints, as a blur of its own would hide the page from
+   them. The phone's taller bar keeps one plain layer. Without
+   backdrop-filter the opaque fill above stands. The doubled :root outranks
+   the phone's own fill. */
 @supports (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
   :root:root[data-frosted-title-bar] .window-bar {
+    background: linear-gradient(
+      color-mix(in srgb, var(--ui-bg) 72%, transparent),
+      color-mix(in srgb, var(--ui-bg) 56%, transparent)
+    );
+  }
+  :root:root[data-frosted-title-bar][data-window-chrome="mobile"] .window-bar {
     background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
     -webkit-backdrop-filter: saturate(180%) blur(5px);
     backdrop-filter: saturate(180%) blur(5px);
   }
+  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"])
+    .window-bar-glass {
+    display: block;
+  }
+}
+
+.window-bar-glass {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  z-index: 44;
+  pointer-events: none;
+}
+.window-bar-glass > i {
+  position: absolute;
+  inset: 0;
+}
+.window-bar-glass > i:nth-child(1) {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 85%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 85%, transparent);
+}
+.window-bar-glass > i:nth-child(2) {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 75%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 75%, transparent);
+}
+.window-bar-glass > i:nth-child(3) {
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 65%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 65%, transparent);
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit

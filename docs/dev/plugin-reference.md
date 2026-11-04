@@ -228,18 +228,33 @@ type FormField =
 
 ## Layout
 
-| Member                                                                                                  |                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `open(target: string \| Location, options?: { where?: Where; asDocument?: boolean }): Promise<void>`    | A file - a document, or a file a plugin's editor opens - at the location given. Needs files.read, except for the file a view of the plugin's shows. |
-| `openView(viewId: string, options?: { where?: Where; title?: string; state?: unknown }): Promise<void>` | One of the plugin's views (`contributes.views` with `"type": "webview"` or `"list"`) in a tab.                                                      |
-| `openWebPage(url: string, options?: { where?: Where; title?: string }): Promise<void>`                  | A web page in a tab, for a host the plugin was granted.                                                                                             |
-| `openUntitled(text: string, options?: { where?: Where; title?: string }): Promise<void>`                | A new document, not yet saved.                                                                                                                      |
-| `openExternal(url: string): Promise<void>`                                                              | In the system's browser.                                                                                                                            |
-| `activeTab(): Promise<TabInfo \| null>`                                                                 |                                                                                                                                                     |
-| `tabs(): Promise<TabInfo[]>`                                                                            |                                                                                                                                                     |
-| `split(): Promise<{ direction: "row" \| "column" \| null; panes: string[]; }>`                          | How the panes run at the outermost, side by side ("row") or one above the other ("column"), and the tab each pane shows, in reading order; or one.  |
-| `onDidChangeActiveTab: Event<TabInfo \| null>`                                                          |                                                                                                                                                     |
-| `onDidChangeLayout: Event<void>`                                                                        |                                                                                                                                                     |
+| Member                                                                                                  |                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `open(target: string \| Location, options?: { where?: Where; asDocument?: boolean }): Promise<void>`    | A file - a document, or a file a plugin's editor opens - at the location given. Needs files.read, except for the file a view of the plugin's shows.                                                                                                                          |
+| `openView(viewId: string, options?: { where?: Where; title?: string; state?: unknown }): Promise<void>` | One of the plugin's views (`contributes.views` with `"type": "webview"` or `"list"`) in a tab.                                                                                                                                                                               |
+| `openWebPage(url: string, options?: { where?: Where; title?: string }): Promise<void>`                  | A web page in a tab, for a host the plugin was granted.                                                                                                                                                                                                                      |
+| `openUntitled(text: string, options?: { where?: Where; title?: string }): Promise<void>`                | A new document, not yet saved.                                                                                                                                                                                                                                               |
+| `openExternal(url: string): Promise<void>`                                                              | In the system's browser.                                                                                                                                                                                                                                                     |
+| `activeTab(): Promise<TabInfo \| null>`                                                                 |                                                                                                                                                                                                                                                                              |
+| `tabs(): Promise<TabInfo[]>`                                                                            |                                                                                                                                                                                                                                                                              |
+| `split(): Promise<{ direction: "row" \| "column" \| null; panes: string[]; }>`                          | How the panes run at the outermost, side by side ("row") or one above the other ("column"), and the tab each pane shows, in reading order; or one.                                                                                                                           |
+| `onDidChangeActiveTab: Event<TabInfo \| null>`                                                          |                                                                                                                                                                                                                                                                              |
+| `onDidChangeLayout: Event<void>`                                                                        |                                                                                                                                                                                                                                                                              |
+| `openFloating(viewId: string): Promise<void>`                                                           | Shows one of the plugin's floating views (`contributes.floatingViews`): a small transparent page of its own size, floating where the user left it. The user moves, folds and closes it; nothing floats until the plugin opens it, usually from a command. From Textus 1.3.6. |
+| `closeFloating(viewId: string): Promise<void>`                                                          |                                                                                                                                                                                                                                                                              |
+| `floatingViews(): Promise<FloatingViewState[]>`                                                         | The plugin's floating views that are open.                                                                                                                                                                                                                                   |
+| `onDidChangeFloating: Event<FloatingViewState>`                                                         | One of them opened, closed, folded or moved: stop animating while `visible` is false.                                                                                                                                                                                        |
+| `onDidTouchFloating: Event<{ view: string; kind: "poke" \| "pet" \| "moved"; }>`                        | The user clicked one ("poke"), clicked it three times in a moment ("pet") or dragged it somewhere ("moved").                                                                                                                                                                 |
+
+## FloatingViewState
+
+| Member                         |                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------- |
+| `view: string`                 |                                                                                     |
+| `open: boolean`                |                                                                                     |
+| `visible: boolean`             | False while folded to a dot or closed.                                              |
+| `place: "desktop" \| "window"` |                                                                                     |
+| `side: "left" \| "right"`      | The half of the window or screen it sits in: a character there can face the middle. |
 
 ## TabInfo
 
@@ -577,9 +592,19 @@ type EditorOp =
 
 Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiTools, run here when the model calls it.
 
-| Member                                                                                                                 |     |
-| ---------------------------------------------------------------------------------------------------------------------- | --- |
-| `registerTool(name: string, run: (args: Record<string, unknown>) => string \| Promise<string> \| unknown): Disposable` |     |
+| Member                                                                                                                 |                                                                                            |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `registerTool(name: string, run: (args: Record<string, unknown>) => string \| Promise<string> \| unknown): Disposable` |                                                                                            |
+| `state(): Promise<AiState>`                                                                                            | What Textus AI is doing and with which service and model - never what is said. From 1.3.6. |
+| `onDidChangeState: Event<AiState>`                                                                                     |                                                                                            |
+
+## AiState
+
+| Member                                                    |                                                             |
+| --------------------------------------------------------- | ----------------------------------------------------------- |
+| `state: "idle" \| "thinking" \| "writing" \| "proposing"` |                                                             |
+| `model: { provider: string; id: string \| null } \| null` | null before Textus AI is first used.                        |
+| `ended?: "done" \| "failed" \| "stopped"`                 | On going idle after a request: finished, failed or stopped. |
 
 ## Plugins
 
@@ -673,6 +698,7 @@ A system notification. A click brings Textus up with `open.path` (a file of the 
 | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly state: "active" \| "inactive" \| "background"`          | "active": a Textus window has the focus; "inactive": windows are open, none focused; "background": no window (background code, or every window closed in background mode). |
 | `onDidChangeState: Event<"active" \| "inactive" \| "background">` |                                                                                                                                                                            |
+| `onDidActivity: Event<{ kind: "typing" \| "saved" }>`             | The user typed (heard once typing pauses) or saved by hand - that it happened, with nothing of the document. From 1.3.6.                                                   |
 
 ## JobRun
 

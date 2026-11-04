@@ -87,9 +87,12 @@ let a plugin break the editor.
 | `exporters` / `importers` | A format to export to or open from                                                                                                                                                          | export/, new           |
 | `templates`               | New-document templates                                                                                                                                                                      | new                    |
 | `statusBar`               | An item in the window bar's status group                                                                                                                                                    | new                    |
+| `floatingViews`           | A small transparent page floating on the desktop or in the window (a desk pet, a timer), opened by the plugin, moved, folded and closed by the user                                         | floating-views, new    |
 
 Not offered, on purpose: changing the editor's schema or keymaps, reading
-other plugins' data, running native code, drawing over the document.
+other plugins' data, running native code, drawing over the document - a
+floating view is the one exception, and only while the user keeps it open,
+with its own bar to move, fold or close it.
 
 ## 3. Lifecycle
 

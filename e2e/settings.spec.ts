@@ -285,10 +285,23 @@ test.describe("desktop", () => {
 
     await toggle.click();
     await expect(toggle).toBeChecked();
-    await expect(bar).toHaveCSS("backdrop-filter", "saturate(1.8) blur(5px)");
+    // Glass in three layers behind the bar, blurring more toward the top;
+    // the bar itself only tints, so they see the page.
+    await expect(bar).toHaveCSS("backdrop-filter", "none");
+    const layers = page.locator(".window-bar-glass > i");
+    await expect(layers).toHaveCount(3);
+    expect(
+      await layers.evaluateAll((all) =>
+        all.map((el) => getComputedStyle(el).backdropFilter),
+      ),
+    ).toEqual(["blur(4px)", "blur(10px)", "saturate(1.8) blur(20px)"]);
+    await expect(page.locator(".window-bar-glass")).toHaveCSS(
+      "pointer-events",
+      "none",
+    );
 
     await toggle.click();
-    await expect(bar).toHaveCSS("backdrop-filter", "none");
+    await expect(page.locator(".window-bar-glass")).toBeHidden();
   });
 
   test("Custom CSS keeps the focus while it is emptied", async ({ page }) => {

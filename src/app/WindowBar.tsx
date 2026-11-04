@@ -84,93 +84,104 @@ export function WindowBar({
     onToggleAgent,
   );
   return (
-    <header className="window-bar" data-tauri-drag-region>
-      {menuBar ? (
-        <>
-          <MenuBar checks={menuChecks} />
-          {/* For a window too narrow for the titles. */}
-          <span className="window-menu-fallback">
-            <AppMenuButton checks={menuChecks} />
-          </span>
-        </>
-      ) : (
-        <AppMenuButton checks={pages ? { ...menuChecks, words } : menuChecks} />
-      )}
-      {/* The iPhone and the iPad open the sidebar from their own bar. */}
-      {!isIOSApp && !menuBar && (
-        <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
-          <button
-            type="button"
-            className="window-bar-sidebar-toggle"
-            aria-pressed={sidebarOpen}
-            aria-label={t.menuToggleSidebar}
-            onClick={onToggleSidebar}
-          >
-            <SidebarToggleIcon />
-          </button>
-        </Tooltip>
-      )}
-      {/* The unsaved dot leads the title, as a native edited title does. */}
-      <span className="window-bar-title">
-        {dirty && (
-          <Tooltip text={t.unsavedIndicator}>
-            <span
-              className="unsaved-dot"
-              role="img"
-              aria-label={t.unsavedIndicator}
-            />
-          </Tooltip>
+    <>
+      {/* The frosted bar's glass, layered under it: see window-bar.css. */}
+      <div className="window-bar-glass" aria-hidden>
+        <i />
+        <i />
+        <i />
+      </div>
+      <header className="window-bar" data-tauri-drag-region>
+        {menuBar ? (
+          <>
+            <MenuBar checks={menuChecks} />
+            {/* For a window too narrow for the titles. */}
+            <span className="window-menu-fallback">
+              <AppMenuButton checks={menuChecks} />
+            </span>
+          </>
+        ) : (
+          <AppMenuButton
+            checks={pages ? { ...menuChecks, words } : menuChecks}
+          />
         )}
-        <span className="window-bar-title-text">{title}</span>
-        {menuChecks.readOnly && (
-          <Tooltip text={t.readOnlyLock}>
+        {/* The iPhone and the iPad open the sidebar from their own bar. */}
+        {!isIOSApp && !menuBar && (
+          <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
             <button
               type="button"
-              className="window-bar-lock"
-              aria-label={t.readOnlyLock}
-              onClick={onToggleReadOnly}
+              className="window-bar-sidebar-toggle"
+              aria-pressed={sidebarOpen}
+              aria-label={t.menuToggleSidebar}
+              onClick={onToggleSidebar}
             >
-              <LockIcon />
+              <SidebarToggleIcon />
             </button>
           </Tooltip>
         )}
-      </span>
-      <div className="window-bar-status">
-        {hasStatus && (
-          <Suspense fallback={null}>
-            <PluginStatusItems />
-          </Suspense>
-        )}
-        {largeDoc && (
-          <span className="large-doc-badge" title={t.largeDocHint}>
-            {t.largeDocBadge}
-          </span>
-        )}
-        {!pages && (
-          <span className="word-count">
-            {words > 0 && `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
-          </span>
-        )}
-        {/* Struck through while Textus AI is off; right-click pauses or
+        {/* The unsaved dot leads the title, as a native edited title does. */}
+        <span className="window-bar-title">
+          {dirty && (
+            <Tooltip text={t.unsavedIndicator}>
+              <span
+                className="unsaved-dot"
+                role="img"
+                aria-label={t.unsavedIndicator}
+              />
+            </Tooltip>
+          )}
+          <span className="window-bar-title-text">{title}</span>
+          {menuChecks.readOnly && (
+            <Tooltip text={t.readOnlyLock}>
+              <button
+                type="button"
+                className="window-bar-lock"
+                aria-label={t.readOnlyLock}
+                onClick={onToggleReadOnly}
+              >
+                <LockIcon />
+              </button>
+            </Tooltip>
+          )}
+        </span>
+        <div className="window-bar-status">
+          {hasStatus && (
+            <Suspense fallback={null}>
+              <PluginStatusItems />
+            </Suspense>
+          )}
+          {largeDoc && (
+            <span className="large-doc-badge" title={t.largeDocHint}>
+              {t.largeDocBadge}
+            </span>
+          )}
+          {!pages && (
+            <span className="word-count">
+              {words > 0 &&
+                `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
+            </span>
+          )}
+          {/* Struck through while Textus AI is off; right-click pauses or
           turns it off. */}
-        {pages ? (
-          <PageSwitch
-            ai={agentOpen}
-            onChange={(ai) => {
-              if (ai !== agentOpen) onToggleAgent();
-            }}
-          />
-        ) : (
-          <TextusAiButton
-            className="window-bar-toggle"
-            panelOpen={agentOpen}
-            showPanel={showAgentToggle}
-            shortcut={agentShortcut}
-            onTogglePanel={onToggleAgent}
-          />
-        )}
-      </div>
-      <WindowCaptionButtons />
-    </header>
+          {pages ? (
+            <PageSwitch
+              ai={agentOpen}
+              onChange={(ai) => {
+                if (ai !== agentOpen) onToggleAgent();
+              }}
+            />
+          ) : (
+            <TextusAiButton
+              className="window-bar-toggle"
+              panelOpen={agentOpen}
+              showPanel={showAgentToggle}
+              shortcut={agentShortcut}
+              onTogglePanel={onToggleAgent}
+            />
+          )}
+        </div>
+        <WindowCaptionButtons />
+      </header>
+    </>
   );
 }

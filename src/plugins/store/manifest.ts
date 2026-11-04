@@ -70,14 +70,16 @@ export interface KeybindingContribution {
 }
 
 /** Where a command is listed: the editor's context menu, a file's or tab's
- *  (given its path), a view's title buttons, the Plugins menu, or the tray
- *  menu (with no window open, which it opens first). */
+ *  (given its path), a view's title buttons, a floating view's right-click
+ *  menu, the Plugins menu, or the tray menu (with no window open, which it
+ *  opens first). */
 export type MenuId =
   | "editor/context"
   | "editor/slash"
   | "file/context"
   | "tab/context"
   | "view/title"
+  | "floating/context"
   | "app/plugins"
   | "app/tray";
 
@@ -198,6 +200,21 @@ export interface LinkContribution {
   command: string;
 }
 
+/** Where a floating view may be: on the desktop, over every window, in
+ *  Textus's window, or either, as the user picks. */
+export type FloatingPlace = "desktop" | "window" | "either";
+
+/** A small page of the plugin's that floats - a desk pet, a timer, a
+ *  teleprompter - shown only when the user turns it on, moved where they
+ *  like. `width` and `height` are its size in points. */
+export interface FloatingViewContribution {
+  id: string;
+  title: string;
+  width: number;
+  height: number;
+  place: FloatingPlace;
+}
+
 /** What a document can hold that a plugin works with, so Textus suggests it
  *  for a document that does: [[wikilinks]]. */
 export type SuggestKind = "wikilinks";
@@ -217,6 +234,7 @@ export interface Contributes {
   completions: CompletionContribution[];
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
+  floatingViews: FloatingViewContribution[];
   /** Suggested, once, for a document with these. */
   suggestFor: SuggestKind[];
 }
