@@ -264,4 +264,7 @@ test("markdown inside <div align=center> is centred, as on GitHub", async ({
     "center",
   );
   await expect(editor.getByText("After")).toHaveCSS("text-align", "start");
+  // The tag lines are out of sight, as on GitHub.
+  await expect(editor.locator("p.html-align-tag")).toHaveCount(2);
+  await expect(editor).not.toContainText("<div", { useInnerText: true });
 });

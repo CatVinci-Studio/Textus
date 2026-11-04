@@ -796,6 +796,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .milkdown .html-align-right {
   text-align: right;
 }
+/* The tag lines themselves, as on GitHub: out of sight until the caret is
+   on one. */
+.milkdown p.html-align-tag {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
 
 /* Its words take a text cursor: a click there edits them in place. */
 .raw-html-edit-box {
