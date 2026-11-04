@@ -16,6 +16,7 @@ pub(super) fn pptx_markdown(path: &Path) -> Result<String, String> {
     let mut slides: Vec<(u32, String)> = zip
         .file_names()
         .filter_map(|name| {
+            let name = name.ok()?;
             let rest = name.strip_prefix("ppt/slides/slide")?;
             let number = rest.strip_suffix(".xml")?.parse::<u32>().ok()?;
             Some((number, name.to_string()))
