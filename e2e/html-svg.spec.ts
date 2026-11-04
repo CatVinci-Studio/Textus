@@ -83,12 +83,9 @@ test("a <details> folds and opens from its summary in the editor", async ({
   await oneBlock.locator("summary").click();
   await expect(inner).toBeVisible();
   await expect(editor).not.toContainText("<summary>", { useInnerText: true });
-  // Beside its words, a click gives the caret the source.
-  const block = (await oneBlock.boundingBox())!;
-  await page.mouse.click(
-    block.x + block.width - 8,
-    block.y + block.height - 4,
-  );
+  // Its words are edited in place; an Option-click gives the caret the
+  // source.
+  await inner.click({ modifiers: ["Alt"] });
   await expect(editor).toContainText("<details><summary>One block", {
     useInnerText: true,
   });
@@ -222,9 +219,10 @@ test("a table's words are edited where they're drawn, its tags kept", async ({
     editor.locator(".raw-html-rendered table td").first(),
   ).toHaveText("Draft & notes");
   // The source keeps its tags and attributes; only the words changed.
-  await editor.locator(".raw-html-rendered table").click({
-    position: { x: 2, y: 2 },
-  });
+  await editor
+    .locator(".raw-html-rendered table td")
+    .first()
+    .click({ modifiers: ["Alt"] });
   await expect(editor).toContainText(
     "<tr><td>Draft &amp; notes</td><td style=",
     { useInnerText: true },

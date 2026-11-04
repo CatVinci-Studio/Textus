@@ -59,19 +59,6 @@ function drawnText(root: HTMLElement): Text[] {
   return nodes;
 }
 
-/** Whether the pointer is on the drawn words, not beside them. */
-function under(node: Text, event: MouseEvent): boolean {
-  const range = document.createRange();
-  range.selectNodeContents(node);
-  return [...range.getClientRects()].some(
-    (r) =>
-      event.clientX >= r.left &&
-      event.clientX <= r.right &&
-      event.clientY >= r.top &&
-      event.clientY <= r.bottom,
-  );
-}
-
 const norm = (text: string) => text.trim().replace(/\s+/g, " ");
 
 const escapeText = (text: string) =>
@@ -129,24 +116,46 @@ export function htmlTextEditing(
     nodes.some((node, i) => norm(node.data) !== segments[i].text)
   )
     return null;
+  // The widget stays out of the editor's editing; a box inside it is its
+  // own editing host, with its own focus and keys.
+  const box = document.createElement("div");
+  box.className = "raw-html-edit-box";
+  box.append(...el.childNodes);
+  el.append(box);
   const before = nodes.map((node) => node.data);
+  // Typing at an edge can start a new text node beside the old one, so a
+  // cell or line holding one run of words is read whole.
+  const parents = nodes.map((node) => node.parentElement!);
+  const wordsNow = (node: Text, i: number) =>
+    parents.filter((parent) => parent === parents[i]).length === 1
+      ? (parents[i].textContent ?? "")
+      : node.isConnected
+        ? node.data
+        : "";
 
+  // The editor keeps the focus around text edited inside it, so leaving
+  // is seen as the selection moving out.
+  const left = () => {
+    const at = getSelection()?.anchorNode;
+    if (!at || !box.contains(at)) commit();
+  };
   const stop = () => {
-    el.contentEditable = "false";
-    el.classList.remove("raw-html-editing");
+    box.contentEditable = "false";
+    box.classList.remove("raw-html-editing");
+    document.removeEventListener("selectionchange", left);
   };
   const cancel = () => {
-    nodes.forEach((node, i) => (node.data = before[i]));
+    nodes.forEach((node, i) => {
+      if (parents.filter((parent) => parent === parents[i]).length === 1)
+        parents[i].replaceChildren(node);
+      node.data = before[i];
+    });
     stop();
     view.focus();
   };
   const commit = () => {
     stop();
-    const next = rewrite(
-      source,
-      segments,
-      nodes.map((node) => (node.isConnected ? node.data : "")),
-    );
+    const next = rewrite(source, segments, nodes.map(wordsNow));
     const to = getPos();
     if (next === null || typeof to !== "number") return;
     const html = view.state.doc.resolve(to).nodeBefore;
@@ -158,23 +167,20 @@ export function htmlTextEditing(
     );
   };
 
-  el.addEventListener("focusout", () => {
-    if (el.isContentEditable) commit();
-  });
-  el.addEventListener("keydown", (event) => {
-    if (!el.isContentEditable) return;
+  box.addEventListener("keydown", (event) => {
+    if (!box.isContentEditable) return;
     if (event.key === "Escape") {
       event.preventDefault();
       cancel();
     } else if (event.key === "Enter" && !event.isComposing) {
       event.preventDefault();
-      el.blur();
+      commit();
       view.focus();
     }
   });
   // Words only: no new lines, formatting or pasted markup.
-  el.addEventListener("beforeinput", (event) => {
-    if (!el.isContentEditable) return;
+  box.addEventListener("beforeinput", (event) => {
+    if (!box.isContentEditable) return;
     const type = event.inputType;
     if (type === "insertFromPaste" || type === "insertFromDrop") {
       event.preventDefault();
@@ -190,13 +196,34 @@ export function htmlTextEditing(
 
   return (event) => {
     if (event.altKey || event.button !== 0) return false;
-    // Only a click on the words themselves; around them shows the source.
-    const at = document.caretRangeFromPoint?.(event.clientX, event.clientY);
-    const hit = at?.startContainer;
-    if (!hit || !nodes.includes(hit as Text) || !under(hit as Text, event))
+    // A click in a cell, line or heading with words; on a picture, a
+    // border or the block's own margin it shows the source.
+    const target = event.target;
+    if (
+      !(target instanceof Element) ||
+      target === el ||
+      target === box ||
+      !nodes.some((node) => target.contains(node))
+    )
       return false;
-    el.contentEditable = "true";
-    el.classList.add("raw-html-editing");
+    // Its own focus, so its keys come to it and not to the editor; the
+    // caret where the click was.
+    event.preventDefault();
+    const at = document.caretRangeFromPoint?.(event.clientX, event.clientY);
+    box.contentEditable = "true";
+    box.classList.add("raw-html-editing");
+    box.focus({ preventScroll: true });
+    const selection = getSelection();
+    if (selection) {
+      if (at && box.contains(at.startContainer)) {
+        selection.removeAllRanges();
+        selection.addRange(at);
+      } else {
+        selection.selectAllChildren(target);
+        selection.collapseToEnd();
+      }
+    }
+    document.addEventListener("selectionchange", left);
     return true;
   };
 }
