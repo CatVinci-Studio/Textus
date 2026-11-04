@@ -123,15 +123,20 @@ export function htmlTextEditing(
   box.append(...el.childNodes);
   el.append(box);
   const before = nodes.map((node) => node.data);
-  // Typing at an edge can start a new text node beside the old one, so a
-  // cell or line holding one run of words is read whole.
+  // Typing at an edge can start a new text node beside the old one, so an
+  // element holding one run of words is read by all its own text nodes -
+  // not its children's, as a <ruby>'s <rt> reading is.
   const parents = nodes.map((node) => node.parentElement!);
+  const children = parents.map((parent) => [...parent.childNodes]);
+  const alone = (i: number) =>
+    parents.filter((parent) => parent === parents[i]).length === 1;
+  const ownText = (parent: Element) =>
+    [...parent.childNodes]
+      .filter((child): child is Text => child instanceof Text)
+      .map((child) => child.data)
+      .join("");
   const wordsNow = (node: Text, i: number) =>
-    parents.filter((parent) => parent === parents[i]).length === 1
-      ? (parents[i].textContent ?? "")
-      : node.isConnected
-        ? node.data
-        : "";
+    alone(i) ? ownText(parents[i]) : node.isConnected ? node.data : "";
 
   // The editor keeps the focus around text edited inside it, so leaving
   // is seen as the selection moving out.
@@ -146,8 +151,7 @@ export function htmlTextEditing(
   };
   const cancel = () => {
     nodes.forEach((node, i) => {
-      if (parents.filter((parent) => parent === parents[i]).length === 1)
-        parents[i].replaceChildren(node);
+      if (alone(i)) parents[i].replaceChildren(...children[i]);
       node.data = before[i];
     });
     stop();
