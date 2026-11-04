@@ -70,14 +70,16 @@ export interface KeybindingContribution {
 }
 
 /** Where a command is listed: the editor's context menu, a file's or tab's
- *  (given its path), a view's title buttons, the Plugins menu, or the tray
- *  menu (with no window open, which it opens first). */
+ *  (given its path), a view's title buttons, a floating view's right-click
+ *  menu, the Plugins menu, or the tray menu (with no window open, which it
+ *  opens first). */
 export type MenuId =
   | "editor/context"
   | "editor/slash"
   | "file/context"
   | "tab/context"
   | "view/title"
+  | "floating/context"
   | "app/plugins"
   | "app/tray";
 

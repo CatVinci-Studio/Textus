@@ -3,6 +3,7 @@ import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
 import { setFloatingCount } from "./floating-presence";
 import { dataUrl, readPluginFile } from "../store/files";
+import { contributedContextItems } from "../../ui/context-menu-items";
 import type {
   FloatingPlace,
   FloatingViewContribution,
@@ -156,6 +157,15 @@ export function touchFloating(view: string, kind: "poke" | "moved") {
     view,
     kind: touch,
   });
+}
+
+/** The plugin's own items for its view's right-click menu
+ *  (contributes.menus "floating/context"). */
+export function floatingMenuItems(view: Pick<FloatingView, "plugin" | "view">) {
+  return contributedContextItems("floating/context", {
+    path: null,
+    view: view.view,
+  }).filter((item) => item.plugin === view.plugin);
 }
 
 export function subscribeFloating(listener: () => void): () => void {

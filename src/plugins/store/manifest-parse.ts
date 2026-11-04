@@ -16,6 +16,7 @@ export const MENU_IDS: readonly MenuId[] = [
   "file/context",
   "tab/context",
   "view/title",
+  "floating/context",
   "app/plugins",
   "app/tray",
 ];
