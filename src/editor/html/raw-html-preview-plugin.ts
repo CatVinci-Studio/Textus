@@ -15,6 +15,7 @@ import {
   type Touches,
 } from "../reveal-state";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
+import { htmlTextEditing, inHtmlTextEdit } from "./html-text-edit";
 import { sanitizeStyle } from "./html-policy";
 import {
   arrowIntoHtmlBlock,
@@ -66,6 +67,8 @@ const CLOSE_TAG_RE = /^<\/([a-zA-Z][a-zA-Z0-9]*)\s*>$/;
 function fragmentWidget(
   rendered: { html: string; inline: boolean },
   docPath: () => string | null,
+  /** The block's source, when its words may be edited where drawn. */
+  source?: string,
 ) {
   return (view: EditorView, getPos: () => number | undefined) => {
     // Inline fragments stay in their line; only block-level content becomes its
@@ -79,7 +82,13 @@ function fragmentWidget(
     el.querySelectorAll<HTMLImageElement>("img:not(.html-svg)").forEach((img) =>
       showDocImage(img, img.getAttribute("src") ?? "", docPath()),
     );
-    caretToSourceOnClick(el, view, getPos, inSummary);
+    const edit = source ? htmlTextEditing(el, view, getPos, source) : null;
+    caretToSourceOnClick(
+      el,
+      view,
+      getPos,
+      (event) => inSummary(event) || !!edit?.(event as MouseEvent),
+    );
     return el;
   };
 }
@@ -295,10 +304,19 @@ function decorateTextblock(
     decorations.push(
       Decoration.widget(
         item.to,
-        fragmentWidget(rendered, docPath),
+        fragmentWidget(
+          rendered,
+          docPath,
+          rendered.inline ? undefined : item.text,
+        ),
         // Kept across rebuilds while the text is the same, so an opened <details>
-        // stays open.
-        widgetSpec(`${docPath() ?? ""}\n${item.text}`),
+        // stays open. Its words are edited in place, away from the editor.
+        {
+          ...widgetSpec(`${docPath() ?? ""}\n${item.text}`),
+          ignoreSelection: true,
+          stopEvent: (event: Event) =>
+            inSummary(event) || inHtmlTextEdit(event),
+        },
       ),
     );
   }

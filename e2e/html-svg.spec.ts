@@ -83,8 +83,12 @@ test("a <details> folds and opens from its summary in the editor", async ({
   await oneBlock.locator("summary").click();
   await expect(inner).toBeVisible();
   await expect(editor).not.toContainText("<summary>", { useInnerText: true });
-  // Elsewhere in the widget, a click gives the caret the source.
-  await inner.click();
+  // Beside its words, a click gives the caret the source.
+  const block = (await oneBlock.boundingBox())!;
+  await page.mouse.click(
+    block.x + block.width - 8,
+    block.y + block.height - 4,
+  );
   await expect(editor).toContainText("<details><summary>One block", {
     useInnerText: true,
   });
@@ -200,4 +204,37 @@ test("an HTML export carries the SVG as a picture and the folded markdown inside
     scripts: 0,
     endLines: 0,
   });
+});
+
+test("a table's words are edited where they're drawn, its tags kept", async ({
+  page,
+}) => {
+  const editor = await openDoc(page);
+  const cell = editor.locator(".raw-html-rendered table td").first();
+  await expect(cell).toHaveText("Draft");
+  await cell.click();
+  // Still the table, not its source.
+  await expect(editor).not.toContainText("<td>", { useInnerText: true });
+  await page.keyboard.press("End");
+  await page.keyboard.type(" & notes");
+  await page.keyboard.press("Enter");
+  await expect(
+    editor.locator(".raw-html-rendered table td").first(),
+  ).toHaveText("Draft & notes");
+  // The source keeps its tags and attributes; only the words changed.
+  await editor.locator(".raw-html-rendered table").click({
+    position: { x: 2, y: 2 },
+  });
+  await expect(editor).toContainText(
+    "<tr><td>Draft &amp; notes</td><td style=",
+    { useInnerText: true },
+  );
+
+  // Escape puts the words back.
+  await editor.getByText("The end.").click();
+  const late = editor.locator(".raw-html-rendered table").getByText("late");
+  await late.click();
+  await page.keyboard.type("r");
+  await page.keyboard.press("Escape");
+  await expect(late).toHaveText("late");
 });
