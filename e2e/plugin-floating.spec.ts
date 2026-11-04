@@ -107,6 +107,20 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   expect(after.x).toBe(viewport.width - start.x - start.width);
   // Now in the left half: a character there turns to face the middle.
   await expect(page.getByText("on the left")).toBeVisible();
+  // Resized from its top corner toward the middle: in proportion, never
+  // past 1.4x, its bottom and outer edge staying put.
+  await view.hover();
+  const grip = view.locator(".floating-view-grip");
+  await expect(grip).toHaveCSS("opacity", "1");
+  const corner = (await grip.boundingBox())!;
+  await page.mouse.move(corner.x + 8, corner.y + 8);
+  await page.mouse.down();
+  await page.mouse.move(corner.x + 300, corner.y - 300, { steps: 6 });
+  await page.mouse.up();
+  const big = (await view.boundingBox())!;
+  expect([big.width, big.height]).toEqual([168, 168]);
+  expect(big.x).toBe(after.x);
+  expect(big.y + big.height).toBe(after.y + after.height);
   // Petting her with quick clicks never selects her like text.
   await view.dblclick();
   expect(
@@ -129,6 +143,7 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   await page.reload();
   await expect(view).toBeVisible();
   expect((await view.boundingBox())!.x).toBeCloseTo(after.x, -1);
+  await expect(view).toHaveCSS("width", "168px");
 
   // Folded to a dot and back; the plugin hears it go out of sight.
   await view.click({ button: "right" });

@@ -19,6 +19,7 @@ import {
 } from "./webviews";
 import {
   closeFloating,
+  floatingSize,
   moveFloating,
   touchFloating,
   type FloatingView,
@@ -36,6 +37,7 @@ export type FloatingUp =
   | { view: string; kind: "message"; message: unknown }
   | { view: string; kind: "state"; state: unknown }
   | { view: string; kind: "moved"; x: number; y: number }
+  | { view: string; kind: "resized"; scale: number; x: number; y: number }
   | { view: string; kind: "poke" }
   | { view: string; kind: "fold" | "unfold" | "close" | "toWindow" };
 
@@ -48,6 +50,8 @@ export type FloatingDown =
       title: string;
       /** The plugin's icon for the folded dot, or null. */
       icon: string | null;
+      /** The manifest's size and the user's scale of it, to resize by. */
+      size: { width: number; height: number; scale: number };
       init: Record<string, unknown>;
       folded: boolean;
     }
@@ -87,6 +91,7 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
         kind: "page",
         ...page,
         icon: view.icon,
+        size: { width: view.width, height: view.height, scale: view.scale },
         init: {
           state: webviewState(current.key) ?? null,
           language: windowInfo().language(),
@@ -133,16 +138,18 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
  *  to it there, and closes it when the view closes. Answers its label. */
 function useFloatingWindow(view: FloatingView): string | null {
   const label = useWindowLabel(view);
+  const [width, height] = view.folded
+    ? [DOT_SIZE, DOT_SIZE]
+    : floatingSize(view);
   useEffect(() => {
     if (!label) return;
-    const size = view.folded ? [DOT_SIZE, DOT_SIZE] : [view.width, view.height];
-    void windowIpc.resizeFloatingWindow(view.view, size[0], size[1]);
+    void windowIpc.resizeFloatingWindow(view.view, width, height);
     void emitToWindow(label, FLOATING_DOWN, {
       view: view.view,
       kind: "folded",
       folded: view.folded,
     } satisfies FloatingDown);
-  }, [label, view.view, view.folded, view.width, view.height]);
+  }, [label, view.view, view.folded, width, height]);
   useEffect(
     () =>
       unlistenAll(
@@ -151,7 +158,13 @@ function useFloatingWindow(view: FloatingView): string | null {
           if (payload.kind === "moved") {
             moveFloating(view.view, { x: payload.x, y: payload.y });
             touchFloating(view.view, "moved");
-          } else if (payload.kind === "poke") touchFloating(view.view, "poke");
+          } else if (payload.kind === "resized")
+            moveFloating(view.view, {
+              scale: payload.scale,
+              x: payload.x,
+              y: payload.y,
+            });
+          else if (payload.kind === "poke") touchFloating(view.view, "poke");
           else if (payload.kind === "fold" || payload.kind === "unfold")
             moveFloating(view.view, { folded: payload.kind === "fold" });
           else if (payload.kind === "close") closeFloating(view.view);
@@ -171,7 +184,7 @@ function useWindowLabel(view: FloatingView): string | null {
     const at =
       view.x === null || view.y === null ? null : { x: view.x, y: view.y };
     windowIpc
-      .openFloatingWindow(view.view, at, view.width, view.height)
+      .openFloatingWindow(view.view, at, ...floatingSize(view))
       .then((opened) => live && setLabel(opened))
       .catch(() => live && moveFloating(view.view, { place: "window" }));
     return () => {

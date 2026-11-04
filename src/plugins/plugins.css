@@ -952,6 +952,34 @@ button.mcp-homepage:hover {
 .floating-view[data-dragging] .floating-view-handle {
   cursor: grabbing;
 }
+/* Resized from the top corner toward the middle; shown on hover. */
+.floating-view-grip {
+  position: absolute;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border: 0 solid var(--ui-muted);
+  border-top-width: 2px;
+  opacity: 0;
+  touch-action: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+.floating-view-grip[data-side="left"] {
+  right: 0;
+  border-right-width: 2px;
+  border-top-right-radius: var(--shape-xs);
+  cursor: nesw-resize;
+}
+.floating-view-grip[data-side="right"] {
+  left: 0;
+  border-left-width: 2px;
+  border-top-left-radius: var(--shape-xs);
+  cursor: nwse-resize;
+}
+.floating-view:hover .floating-view-grip,
+.floating-view-grip:active {
+  opacity: 1;
+}
 .floating-view-dot {
   width: 36px;
   height: 36px;

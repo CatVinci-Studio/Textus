@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { onPluginEvent } from "../app-bridge";
 import {
   closeFloating,
+  floatingSize,
   moveFloating,
   openFloatingViews,
   rememberedOpen,
@@ -38,6 +39,19 @@ describe("floating views", () => {
     expect(showFloating({ ...pet, allowed: "desktop" }, false).place).toBe(
       "window",
     );
+  });
+
+  it("keep the size the user gave them, within bounds", () => {
+    showFloating(pet, false);
+    moveFloating(pet.view, { scale: 1.25 });
+    closeFloating(pet.view);
+    expect(floatingSize(showFloating(pet, false))).toEqual([200, 200]);
+    closeFloating(pet.view);
+    localStorage.setItem(
+      "textus.floatingViews",
+      JSON.stringify({ [pet.view]: { place: "window", scale: 9, open: true } }),
+    );
+    expect(floatingSize(showFloating(pet, false))).toEqual([224, 224]);
   });
 
   it("tell their plugin which half they sit in", () => {

@@ -98,14 +98,35 @@ pub fn close_floating_window(app: tauri::AppHandle, view: String) {
     }
 }
 
-/// Folded to a dot or unfolded: the window takes the new size, its
-/// top-left corner where it was.
+/// The window takes the new size. Folded or unfolded, its top-left corner
+/// stays; resized by the user (`keep_right` given), its bottom and its
+/// outer edge do.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn resize_floating_window(app: tauri::AppHandle, view: String, width: f64, height: f64) {
-    if let Some(window) = app.get_webview_window(&floating_label(&view)) {
-        let _ = window.set_size(tauri::LogicalSize::new(width, height));
+pub fn resize_floating_window(
+    app: tauri::AppHandle,
+    view: String,
+    width: f64,
+    height: f64,
+    keep_right: Option<bool>,
+) {
+    let Some(window) = app.get_webview_window(&floating_label(&view)) else {
+        return;
+    };
+    if let (Some(keep_right), Ok(scale)) = (keep_right, window.scale_factor()) {
+        if let (Ok(at), Ok(size)) = (window.outer_position(), window.outer_size()) {
+            let at = at.to_logical::<f64>(scale);
+            let size = size.to_logical::<f64>(scale);
+            let x = if keep_right {
+                at.x + size.width - width
+            } else {
+                at.x
+            };
+            let _ =
+                window.set_position(tauri::LogicalPosition::new(x, at.y + size.height - height));
+        }
     }
+    let _ = window.set_size(tauri::LogicalSize::new(width, height));
 }
 
 /// Where the window is now, in screen points, to open there next time.

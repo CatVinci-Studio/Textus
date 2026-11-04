@@ -63,10 +63,11 @@ export const commands = {
 	open_floating_window: (view: string, x: number | null, y: number | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, x, y, width, height }),
 	close_floating_window: (view: string) => __TAURI_INVOKE<void>("close_floating_window", { view }),
 	/**
-	 *  Folded to a dot or unfolded: the window takes the new size, its
-	 *  top-left corner where it was.
+	 *  The window takes the new size. Folded or unfolded, its top-left corner
+	 *  stays; resized by the user (`keep_right` given), its bottom and its
+	 *  outer edge do.
 	 */
-	resize_floating_window: (view: string, width: number | null, height: number | null) => __TAURI_INVOKE<void>("resize_floating_window", { view, width, height }),
+	resize_floating_window: (view: string, width: number | null, height: number | null, keepRight: boolean | null) => __TAURI_INVOKE<void>("resize_floating_window", { view, width, height, keepRight }),
 	/**  Where the window is now, in screen points, to open there next time. */
 	floating_window_position: (view: string) => __TAURI_INVOKE<[number | null, number | null] | null>("floating_window_position", { view }),
 	/**

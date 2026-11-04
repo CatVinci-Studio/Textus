@@ -31,6 +31,24 @@ export interface FloatingView {
   x: number | null;
   y: number | null;
   folded: boolean;
+  /** The user's resize, kept in proportion: 1 is the manifest's size. */
+  scale: number;
+}
+
+/** How far the user may shrink or grow a view. */
+export const MIN_SCALE = 0.6;
+export const MAX_SCALE = 1.4;
+
+export function clampScale(scale: number) {
+  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+}
+
+/** Its size now, in points. */
+export function floatingSize(view: FloatingView): [number, number] {
+  return [
+    Math.round(view.width * view.scale),
+    Math.round(view.height * view.scale),
+  ];
 }
 
 /** What a plugin hears when its view opens, closes, folds or moves. */
@@ -54,6 +72,7 @@ const listeners = new Set<() => void>();
 let version = 0;
 
 type Saved = Pick<FloatingView, "place" | "x" | "y" | "folded"> & {
+  scale?: number;
   open: boolean;
 };
 
@@ -84,14 +103,14 @@ export function floatingSide(view: FloatingView): "left" | "right" {
     view.place === "window"
       ? [view.x * window.innerWidth, window.innerWidth]
       : [view.x - screenLeft(), window.screen.availWidth];
-  return x + view.width / 2 < room / 2 ? "left" : "right";
+  return x + floatingSize(view)[0] / 2 < room / 2 ? "left" : "right";
 }
 
 function changed(view: FloatingView, isOpen: boolean) {
   version++;
   setFloatingCount(open.size);
-  const { place, x, y, folded } = view;
-  save(view.view, { place, x, y, folded, open: isOpen });
+  const { place, x, y, folded, scale } = view;
+  save(view.view, { place, x, y, folded, scale, open: isOpen });
   for (const listener of listeners) listener();
   emitPluginEvent("floating", {
     plugin: view.plugin,
@@ -159,7 +178,7 @@ function firstPlace(allowed: FloatingPlace, desktop: boolean) {
 }
 
 export function showFloating(
-  contribution: Omit<FloatingView, "place" | "x" | "y" | "folded">,
+  contribution: Omit<FloatingView, "place" | "x" | "y" | "folded" | "scale">,
   desktop: boolean,
 ): FloatingView {
   const existing = open.get(contribution.view);
@@ -182,6 +201,7 @@ export function showFloating(
     x: remembered?.place === place ? remembered.x : null,
     y: remembered?.place === place ? remembered.y : null,
     folded: false,
+    scale: clampScale(remembered?.scale ?? 1),
   };
   open.set(view.view, view);
   changed(view, true);
@@ -195,11 +215,11 @@ export function closeFloating(view: string) {
   changed(current, false);
 }
 
-/** Moves, folds or unfolds a view, or sends it between the desktop and
- *  the window. */
+/** Moves, resizes, folds or unfolds a view, or sends it between the
+ *  desktop and the window. */
 export function moveFloating(
   view: string,
-  patch: Partial<Pick<FloatingView, "x" | "y" | "folded" | "place">>,
+  patch: Partial<Pick<FloatingView, "x" | "y" | "folded" | "place" | "scale">>,
 ) {
   const current = open.get(view);
   if (!current) return;

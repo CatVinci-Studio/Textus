@@ -4,9 +4,12 @@ import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
+import { ResizeGrip } from "./ResizeGrip";
 import {
   closeFloating,
   floatingOnDesktop,
+  floatingSide,
+  floatingSize,
   floatingVersion,
   moveFloating,
   openFloatingViews,
@@ -90,10 +93,32 @@ function FloatingBox({
   } | null>(null);
   const [live, setLive] = useState<{ left: number; top: number } | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  /** The scale while the user resizes it. */
+  const [sizing, setSizing] = useState<number | null>(null);
   const moved = useRef(false);
-  const width = view.folded ? DOT : view.width;
-  const height = view.folded ? DOT : view.height;
-  const at = live ?? position(view, width, height);
+  const [fullWidth, fullHeight] = floatingSize({
+    ...view,
+    scale: sizing ?? view.scale,
+  });
+  const width = view.folded ? DOT : fullWidth;
+  const height = view.folded ? DOT : fullHeight;
+  const side = floatingSide(view);
+  const at =
+    live ??
+    (sizing === null ? null : resized(sizing)) ??
+    position(view, width, height);
+
+  /** Resized, its bottom and outer edge stay where they were. */
+  function resized(scale: number) {
+    const [w, h] = floatingSize(view);
+    const [toW, toH] = floatingSize({ ...view, scale });
+    const was = position(view, w, h);
+    const left = side === "left" ? was.left : was.left + w - toW;
+    return {
+      left: clamp(left, toW, window.innerWidth),
+      top: clamp(was.top + h - toH, toH, window.innerHeight),
+    };
+  }
 
   const start = (event: React.PointerEvent) => {
     if (event.button !== 0) return;
@@ -193,6 +218,22 @@ function FloatingBox({
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
+        }}
+      />
+      <ResizeGrip
+        side={side}
+        scale={view.scale}
+        width={view.width}
+        height={view.height}
+        onResize={setSizing}
+        onDone={(scale) => {
+          const to = resized(scale);
+          setSizing(null);
+          moveFloating(view.view, {
+            scale,
+            x: to.left / window.innerWidth,
+            y: to.top / window.innerHeight,
+          });
         }}
       />
       <Presence show={menu !== null} exitMs={120}>

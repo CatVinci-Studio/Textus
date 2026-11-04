@@ -11,6 +11,7 @@ import { windowIpc } from "../../platform/ipc";
 import { popUpNativeMenu } from "../../platform/native-menu";
 import { OPEN_AGENT_PANEL_EVENT } from "../../utils/events";
 import { currentStrings } from "../../i18n/current";
+import { ResizeGrip } from "./ResizeGrip";
 import {
   FLOATING_DOWN,
   FLOATING_UP,
@@ -45,6 +46,7 @@ export function FloatingWindowApp() {
   const [title, setTitle] = useState("");
   const [icon, setIcon] = useState<string | null>(null);
   const [folded, setFolded] = useState(false);
+  const [size, setSize] = useState({ width: 0, height: 0, scale: 1 });
   const t = currentStrings();
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function FloatingWindowApp() {
         else if (payload.kind === "page") {
           setTitle(payload.title);
           setIcon(payload.icon);
+          setSize(payload.size);
           setFolded(payload.folded);
           const box = boxRef.current;
           if (!box) return;
@@ -127,6 +130,20 @@ export function FloatingWindowApp() {
       </button>
     );
 
+  // Which half of the screen it floats in: it grows toward the middle.
+  const screenMiddle =
+    ((window.screen as Screen & { availLeft?: number }).availLeft ?? 0) +
+    window.screen.availWidth / 2;
+  const side =
+    window.screenX + window.innerWidth / 2 < screenMiddle ? "left" : "right";
+  const resize = (scale: number) =>
+    windowIpc.resizeFloatingWindow(
+      VIEW,
+      Math.round(size.width * scale),
+      Math.round(size.height * scale),
+      side === "right",
+    );
+
   /** The system's menu: the window is too small to draw one in. */
   const menu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -170,6 +187,18 @@ export function FloatingWindowApp() {
         className="floating-view-handle"
         onPointerDown={(e) => void drag(e)}
         onContextMenu={menu}
+      />
+      <ResizeGrip
+        side={side}
+        {...size}
+        onResize={(scale) => void resize(scale)}
+        onDone={async (scale) => {
+          await resize(scale);
+          setSize((was) => ({ ...was, scale }));
+          const at = await windowIpc.floatingWindowPosition(VIEW);
+          if (at && at[0] !== null && at[1] !== null)
+            up({ kind: "resized", scale, x: at[0], y: at[1] });
+        }}
       />
     </div>
   );

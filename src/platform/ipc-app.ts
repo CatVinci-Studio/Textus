@@ -113,13 +113,20 @@ export const windowIpc = {
     ),
   closeFloatingWindow: (view: string) =>
     desktopQueryCommand("close_floating_window", undefined, view),
-  resizeFloatingWindow: (view: string, width: number, height: number) =>
+  /** Resized; `keepRight` set, its bottom and that outer edge stay. */
+  resizeFloatingWindow: (
+    view: string,
+    width: number,
+    height: number,
+    keepRight: boolean | null = null,
+  ) =>
     desktopQueryCommand(
       "resize_floating_window",
       undefined,
       view,
       width,
       height,
+      keepRight,
     ),
   floatingWindowPosition: (view: string) =>
     desktopQueryCommand("floating_window_position", null, view),
