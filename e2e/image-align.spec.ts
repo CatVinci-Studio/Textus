@@ -39,7 +39,9 @@ test("a row of images lines up whether or not each is a link", async ({
   expect(linked).toBeCloseTo(plain, 0);
 });
 
-test("a badge has no zoom button; a picture keeps it", async ({ page }) => {
+test("a badge has no zoom button or resize handle; a picture keeps them", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   const big =
     "data:image/svg+xml;utf8," +
@@ -56,6 +58,8 @@ test("a badge has no zoom button; a picture keeps it", async ({ page }) => {
   await expect(views).toHaveCount(2);
   await views.first().hover();
   await expect(views.first().locator(".mermaid-zoom")).toBeHidden();
+  await expect(views.first().locator(".image-resize-handle")).toBeHidden();
   await views.last().hover();
   await expect(views.last().locator(".mermaid-zoom")).toBeVisible();
+  await expect(views.last().locator(".image-resize-handle")).toBeVisible();
 });

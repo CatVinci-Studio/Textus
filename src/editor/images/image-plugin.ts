@@ -199,15 +199,15 @@ function createImageView(
     dom.append(card);
   };
   img.addEventListener("load", clearMissing);
-  // A short, wide strip (a README badge) has nothing to enlarge, and the
-  // button would cover its words.
-  img.addEventListener("load", () =>
-    zoom.toggleAttribute(
-      "hidden",
+  // A short, wide strip (a README badge) has nothing to enlarge or
+  // resize, and the controls would cover its words.
+  img.addEventListener("load", () => {
+    const badge =
       img.naturalHeight < BADGE_HEIGHT_PX &&
-        img.naturalWidth >= 2 * img.naturalHeight,
-    ),
-  );
+      img.naturalWidth >= 2 * img.naturalHeight;
+    zoom.toggleAttribute("hidden", badge);
+    handle.toggleAttribute("hidden", badge);
+  });
   img.addEventListener("error", () => void showMissing());
 
   const apply = (n: ProseNode) => {
