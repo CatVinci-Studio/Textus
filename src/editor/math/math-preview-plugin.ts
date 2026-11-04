@@ -17,6 +17,7 @@ import { drawWhenVisible } from "../draw-when-visible";
 import { isLargeDoc } from "../large-doc";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 import { renderFormula } from "./matrix-rows";
+import { revealSelection } from "../pointer-hold";
 
 const mathPreviewKey = new PluginKey("math-preview");
 const KATEX_READY = "katex-ready";
@@ -140,7 +141,8 @@ function findMathNodeAtSelection(state: EditorState): {
   node: { type: { name: string }; textContent: string; nodeSize: number };
   from: number;
 } | null {
-  const { selection } = state;
+  // The reveal's selection, so the preview opens only over a source shown.
+  const selection = revealSelection(state);
   let found: {
     node: { type: { name: string }; textContent: string; nodeSize: number };
     from: number;

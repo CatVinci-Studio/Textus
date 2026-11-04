@@ -38,7 +38,11 @@ const RELEASES = ["mouseup", "dragend", "mousemove", "keydown"] as const;
 const MODIFIERS = new Set(["Shift", "Control", "Alt", "Meta"]);
 
 function stillHeld(event: Event): boolean {
-  if (event instanceof MouseEvent && event.type === "mousemove")
+  // Another button's mouseup mid-drag leaves the left one down.
+  if (
+    event instanceof MouseEvent &&
+    (event.type === "mousemove" || event.button !== 0)
+  )
     return (event.buttons & 1) === 1;
   return event instanceof KeyboardEvent && MODIFIERS.has(event.key);
 }

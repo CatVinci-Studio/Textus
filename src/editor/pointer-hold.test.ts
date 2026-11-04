@@ -76,3 +76,27 @@ it("a key typed lets go of such a press, but not Shift held through a drag", asy
   release(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
   expect(marks(t)).toEqual(["**", "**"]);
 });
+
+it("another button let go mid-drag keeps the hold, the left one still down", async () => {
+  const t = await openView("Some **bold** words.");
+  t.caretAtEnd();
+  press(t);
+  t.caretAt("bold", 2);
+  release(new MouseEvent("mouseup", { button: 2, buttons: 1 }));
+  expect(marks(t)).toEqual([]);
+  release();
+  expect(marks(t)).toEqual(["**", "**"]);
+});
+
+it("a wikilink's brackets wait too while the button is held", async () => {
+  const t = await openView("See [[Note]] here.");
+  const hidden = () =>
+    t.view.dom.querySelectorAll(".wikilink-source-hidden").length;
+  t.caretAtEnd();
+  expect(hidden()).toBe(2);
+  press(t);
+  t.caretAt("Note", 2);
+  expect(hidden()).toBe(2);
+  release();
+  expect(hidden()).toBe(0);
+});

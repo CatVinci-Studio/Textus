@@ -6,7 +6,7 @@ import { openApp, pasteMarkdown } from "./helpers";
  * takes the selection along; WebKitGTK did neither downwards and crawled
  * upwards. A drag selects from wherever it begins: in the page's margin,
  * which only placed the caret, or on bold text or a heading, whose `**` or
- * `#` showing up under the pointer made the web view start over (#554).
+ * `#` showing up under the pointer made the web view start over.
  */
 
 const scroller = '[data-active-tab="true"] .editor-scroll';
