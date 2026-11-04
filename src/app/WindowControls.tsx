@@ -1,7 +1,7 @@
-import { useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
-import { AppMenu } from "./menu/AppMenu";
+import { AppMenu } from "./menu/app-menu-lazy";
 import type { MenuChecks } from "./menu/app-menu-model";
 import { HamburgerIcon } from "../ui/icons";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
@@ -70,7 +70,14 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
       </Tooltip>
       <Presence show={anchor !== null} exitMs={120}>
         {anchor && (
-          <AppMenu x={anchor.x} y={anchor.y} onClose={close} checks={checks} />
+          <Suspense fallback={null}>
+            <AppMenu
+              x={anchor.x}
+              y={anchor.y}
+              onClose={close}
+              checks={checks}
+            />
+          </Suspense>
         )}
       </Presence>
     </div>

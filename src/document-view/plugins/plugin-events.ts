@@ -19,6 +19,8 @@ export function documentChangedForPlugins(
   const source = takeChangeSource(ctx.get(editorViewCtx).state);
   if (active && pluginsListen("documentChange"))
     emitPluginEvent("documentChange", { path, source });
+  if (active && source === "user" && pluginsListen("activity"))
+    emitPluginEvent("activity", { kind: "typing" });
 }
 
 let selectionTimer: ReturnType<typeof setTimeout> | null = null;

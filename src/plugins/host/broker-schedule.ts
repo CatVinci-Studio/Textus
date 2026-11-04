@@ -1,3 +1,4 @@
+import { aiState } from "../ai-state";
 import {
   schedule as scheduleIpc,
   type JobSpec,
@@ -41,5 +42,6 @@ export function scheduleHandlers(p: PluginScope, folder: () => string | null) {
       );
     },
     "app.state": () => currentAppState(),
+    "ai.state": () => aiState(),
   };
 }

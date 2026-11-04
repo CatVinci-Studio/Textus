@@ -7,6 +7,7 @@ pub mod conventions;
 pub mod doc_blocks;
 pub mod doc_title;
 pub mod images;
+pub(crate) mod json_reply;
 pub mod kept_proposals;
 #[cfg(test)]
 mod live_eval;

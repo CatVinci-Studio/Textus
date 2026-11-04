@@ -23,6 +23,40 @@ function svgOf(html: string): string {
 }
 
 describe("the HTML policy keeps", () => {
+  it("a <picture>'s light and dark logos, each an <img> for the theme to pick", () => {
+    expect(
+      clean(
+        '<picture><source media="(prefers-color-scheme: dark)" srcset="dark.png 1x, dark@2x.png 2x">' +
+          '<source media="(prefers-color-scheme: light)" srcset="light.png">' +
+          '<img alt="Logo" src="light.png" width="200"></picture>',
+      ),
+    ).toBe(
+      '<img src="light.png" data-scheme="light" alt="Logo" width="200">' +
+        '<img src="dark.png" data-scheme="dark" alt="Logo" width="200">',
+    );
+    // No scheme to choose between: just its image; a bad source is dropped.
+    expect(clean('<picture><img src="a.png"></picture>')).toBe(
+      '<img src="a.png">',
+    );
+    expect(
+      clean(
+        '<picture><source media="(prefers-color-scheme: dark)" srcset="javascript:alert(1)"><img src="a.png"></picture>',
+      ),
+    ).toBe('<img src="a.png" data-scheme="light"><img data-scheme="dark">');
+  });
+
+  it("definition lists, figures and the smaller inline tags GitHub allows", () => {
+    expect(
+      clean(
+        '<dl><dt>Term</dt><dd>Meaning</dd></dl><figure><img src="a.png"><figcaption>Cap</figcaption></figure>' +
+          '<p><abbr title="HyperText" onclick="x()">HTML</abbr> <q>quote</q> <ruby>墨<rt>mò</rt></ruby> <time datetime="2026-07-08">July 8</time></p>',
+      ),
+    ).toBe(
+      '<dl><dt>Term</dt><dd>Meaning</dd></dl><figure><img src="a.png"><figcaption>Cap</figcaption></figure>' +
+        '<p><abbr title="HyperText">HTML</abbr> <q>quote</q> <ruby>墨<rt>mò</rt></ruby> <time datetime="2026-07-08">July 8</time></p>',
+    );
+  });
+
   it("<details> and <summary>, and whether it starts open", () => {
     expect(
       clean("<details open><summary>More</summary><p>Body</p></details>"),

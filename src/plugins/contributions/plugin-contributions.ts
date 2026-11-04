@@ -139,6 +139,7 @@ export function applyContributions(
     "file/context",
     "tab/context",
     "view/title",
+    "floating/context",
   ];
   for (const place of places) {
     const items: MenuContribution[] = menus[place] ?? [];
@@ -193,6 +194,16 @@ export function applyContributions(
     );
   for (const block of codeBlocks)
     undo.push(addCodeBlockLanguage(block.language, id, block.frame));
+  // Floating views left open last time open again; turned off, they go.
+  // Their code loads only for a plugin that has some.
+  const floating = manifest.contributes.floatingViews;
+  if (floating.length) {
+    const views = import("../views/floating-views");
+    void views.then((m) =>
+      m.reopenFloating(id, floating, text, manifest.icon ?? null),
+    );
+    undo.push(() => void views.then((m) => m.closeFloatingOf(id)));
+  }
   contributions.set(id, undo);
   const events = manifest.activationEvents;
   if (events.includes("onStartupFinished") || events.includes("*"))

@@ -21,6 +21,11 @@
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
+
+/* No button on a picture too small to need it. */
+.mermaid-zoom[hidden] {
+  display: none;
+}
 .mermaid-preview:hover .mermaid-zoom,
 .image-view:hover > .mermaid-zoom,
 .mermaid-zoom:focus-visible {

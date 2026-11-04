@@ -240,7 +240,11 @@ export function zoomButton(
     event.preventDefault();
     event.stopPropagation();
     const drawing = shown();
-    if (drawing) openDiagramViewer(drawing, frame);
+    if (!drawing) return;
+    // The page's own selection goes; the editor puts its caret back on
+    // focus, so no highlight is left behind the viewer.
+    getSelection()?.removeAllRanges();
+    openDiagramViewer(drawing, frame);
   });
   return button;
 }

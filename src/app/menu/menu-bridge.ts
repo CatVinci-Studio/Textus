@@ -4,7 +4,10 @@ import {
   subscribeTracking,
   trackingShown,
 } from "../../ai/margin/track-changes-state";
-import { TRACK_CHANGES_EVENT } from "../../utils/events";
+import {
+  OPEN_AGENT_PANEL_EVENT,
+  TRACK_CHANGES_EVENT,
+} from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
 import { editInFocus } from "../../ui/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
@@ -42,6 +45,8 @@ export interface MenuBridgeHandlers {
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
   onToggleAgentPanel: () => void;
+  /** Opens Textus AI's panel; left open if it is. */
+  onOpenAgentPanel: () => void;
   onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
   onToggleReadOnly: () => void;
@@ -166,6 +171,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-toggle-agent-panel", () =>
         h().onToggleAgentPanel(),
       ),
+      listenToThisWindow(OPEN_AGENT_PANEL_EVENT, () => h().onOpenAgentPanel()),
       listenToThisWindow("menu-toggle-textus-ai", () => h().onToggleTextusAi()),
       listenToThisWindow("menu-toggle-split-view", () =>
         h().onToggleSplitView(),

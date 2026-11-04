@@ -1,6 +1,7 @@
 /* The window's title strip, drawn by the app: the drag region, the filename
-   and the status readouts. Opaque, so scrolling text ends at it instead of
-   colliding with the title. Below every overlay so it never steals clicks. */
+   and the status readouts. Opaque by default, so scrolling text ends at it
+   instead of colliding with the title; see the frosted option below. Below
+   every overlay so it never steals clicks. */
 .window-bar {
   position: fixed;
   top: 0;
@@ -14,6 +15,67 @@
      top-left corner. */
   padding: 0 12px 0 76px;
   background: var(--ui-bg);
+}
+
+/* Opted in, the bar is glass, as a macOS toolbar is: what scrolls beneath
+   shows as colour and shape, most blurred at the top and clearing toward the
+   bar's lower edge, so the glass ends without a line. Three layers behind
+   the bar (.window-bar-glass) each blur more and reach less far down; the
+   bar itself only tints, as a blur of its own would hide the page from
+   them. The phone's taller bar keeps one plain layer. Without
+   backdrop-filter the opaque fill above stands. The doubled :root outranks
+   the phone's own fill. */
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root:root[data-frosted-title-bar] .window-bar {
+    background: linear-gradient(
+      color-mix(in srgb, var(--ui-bg) 72%, transparent),
+      color-mix(in srgb, var(--ui-bg) 56%, transparent)
+    );
+  }
+  :root:root[data-frosted-title-bar][data-window-chrome="mobile"] .window-bar {
+    background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(5px);
+    backdrop-filter: saturate(180%) blur(5px);
+  }
+  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"])
+    .window-bar-glass {
+    display: block;
+  }
+}
+
+.window-bar-glass {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 28px;
+  z-index: 44;
+  pointer-events: none;
+}
+.window-bar-glass > i {
+  position: absolute;
+  inset: 0;
+}
+.window-bar-glass > i:nth-child(1) {
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 85%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 85%, transparent);
+}
+.window-bar-glass > i:nth-child(2) {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 75%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 75%, transparent);
+}
+.window-bar-glass > i:nth-child(3) {
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-mask-image: linear-gradient(var(--ui-bg) 65%, transparent);
+  mask-image: linear-gradient(var(--ui-bg) 65%, transparent);
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit
@@ -105,10 +167,11 @@
 /* Centred in the document column rather than the window: with the sidebar
    or the AI panel open, the window's centre is not the page's, and the title
    would sit off the column it names. Its two halves are kept apart because
-   the sidebar slides over the layout - its half rides the slide, on the
-   slide's curves, on the compositor with it - while the AI panel takes its
-   width at once, so its half lands at once. The fade stays for zen, which
-   takes the title out of clicks and fades it back in. */
+   they arrive at different moments: the sidebar's rides its slide, on the
+   slide's curves, on the compositor with it; the AI panel's belongs to the
+   room the editor makes or takes back beside it, so the title follows that
+   move on the page's own spring, as the text it names does. The fade stays
+   for zen, which takes the title out of clicks and fades it back in. */
 :root:not([data-window-chrome="mobile"], .zen)
   .window-bar:not(:has(> .window-menu-bar))
   .window-bar-title {
@@ -117,6 +180,8 @@
   transition:
     translate var(--window-bar-title-dur, var(--dur-base))
       var(--window-bar-title-ease, var(--ease-in)),
+    transform var(--window-bar-title-shift-dur, var(--dur-slow))
+      var(--ease-spring),
     opacity var(--dur-slow) var(--ease-in-out),
     visibility 0s;
 }
@@ -131,13 +196,16 @@
    trailing the column it names. Its own value beats the one it inherits. */
 .app-shell:has(.resize-handle-active) .window-bar-title {
   --window-bar-title-dur: 0s;
+  --window-bar-title-shift-dur: 0s;
 }
 
 /* Reduced motion leaves the sidebar no travel to follow, so the title's half
-   arrives with it. */
+   arrives with it - and with nothing travelling, the panel's half lands at
+   once, as its column does. */
 @media (prefers-reduced-motion: reduce) {
   .window-bar-title {
     --window-bar-title-dur: 0s;
+    --window-bar-title-shift-dur: 0s;
   }
 }
 

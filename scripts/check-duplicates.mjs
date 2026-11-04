@@ -29,7 +29,6 @@ const IGNORE = [
 const COPIES_NOW = {
   "ai/agent/past.rs | ai/memory/files.rs": 1,
   "ai/chat/ChatBody.tsx | ai/chat/ChatBody.tsx": 1,
-  "ai/paper/draft.rs | ai/paper/outline.rs": 1,
   "ai/project/library.rs | ai/workspace/skills.rs": 1,
   "ai/revision/pending-accept.ts | ai/revision/pending-accept.ts": 1,
   "ai/rules/en/spelling.rs | ai/rules/shared.rs": 1,

@@ -317,3 +317,49 @@ it("file name patterns match with * and without regard to case", () => {
   expect(matchesFilename("*.kanban.md", "notes.md")).toBe(false);
   expect(matchesFilename("*.md", "a.md.bak")).toBe(false);
 });
+
+describe("a plugin's floating views", () => {
+  const withViews = (floatingViews: unknown[]) =>
+    parseManifest({ ...base, contributes: { floatingViews } });
+
+  it("are 160 points square and either place unless the manifest says", () => {
+    const m = withViews([
+      { id: "catvinci.example.pet", title: "Pet" },
+      {
+        id: "catvinci.example.timer",
+        title: "Timer",
+        width: 240.4,
+        height: 96,
+        place: "desktop",
+      },
+    ]);
+    expect(m.contributes.floatingViews).toEqual([
+      {
+        id: "catvinci.example.pet",
+        title: "Pet",
+        width: 160,
+        height: 160,
+        place: "either",
+      },
+      {
+        id: "catvinci.example.timer",
+        title: "Timer",
+        width: 240,
+        height: 96,
+        place: "desktop",
+      },
+    ]);
+  });
+
+  it("stay small, take only their own ids and known places", () => {
+    expect(() =>
+      withViews([{ id: "catvinci.example.big", title: "Big", width: 900 }]),
+    ).toThrow(ManifestError);
+    expect(() => withViews([{ id: "other.plugin.pet", title: "Pet" }])).toThrow(
+      /must start with "catvinci.example."/,
+    );
+    expect(() =>
+      withViews([{ id: "catvinci.example.pet", title: "Pet", place: "dock" }]),
+    ).toThrow(/"desktop", "window" or "either"/);
+  });
+});

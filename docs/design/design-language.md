@@ -194,7 +194,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 | Overlay | `--ui-surface` + its one shadow (`--shadow-popover`, `--shadow-dialog`, `--shadow-sheet`) | Menus, popovers, dialogs, sheets              |
 
 - Shadows MUST appear only on overlays, each paired with its surface.
-- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it.
+- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it. The title bar's opt-in frosted option is the exception: the user may turn it on wherever the engine can blur, because they asked for that surface to be one.
 
 ## 8. Icons - In force
 

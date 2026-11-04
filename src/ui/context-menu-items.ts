@@ -1,14 +1,15 @@
 /**
- * Items added from outside (plugins) to the file tree's, a tab's and a
- * view's menus. Each menu asks when it opens.
+ * Items added from outside (plugins) to the file tree's, a tab's, a
+ * view's and a floating view's menus. Each menu asks when it opens.
  */
-export type ContextMenuPlace = "file/context" | "tab/context" | "view/title";
+export type ContextMenuPlace =
+  "file/context" | "tab/context" | "view/title" | "floating/context";
 
 /** What the menu was opened on. */
 export interface ContextMenuTarget {
   /** The file, or the tab's file (null for a tab without one). */
   path: string | null;
-  /** For "view/title": the view's id. */
+  /** For "view/title" and "floating/context": the view's id. */
   view?: string;
 }
 

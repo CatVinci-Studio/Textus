@@ -4,9 +4,9 @@
 
 use super::draft::WEB_FIGURE_MARK;
 use super::genre::Frame;
+use super::model::ask;
 use super::research::Model;
 use super::{Dossier, Genre, Outline, Paper};
-use aicompat::agent::{AgentTurn, StepResult};
 use regex::Regex;
 use serde_json::Value;
 use std::sync::OnceLock;
@@ -279,25 +279,10 @@ pub(crate) async fn opening(
         profile.name, paper.language, profile.opening
     );
     let message = format!("Thesis: {}\n\n{}", outline.thesis, sections.join("\n\n"));
-    let reply = match model
-        .step(
-            &instructions,
-            &[AgentTurn::User {
-                text: message,
-                images: Vec::new(),
-            }],
-            &[],
-        )
+    let reply = ask(model, &instructions, message, &|_| {})
         .await
-    {
-        Ok(StepResult::Done(text)) => text,
-        _ => String::new(),
-    };
-    let parsed: Value = reply
-        .find('{')
-        .zip(reply.rfind('}'))
-        .and_then(|(a, b)| serde_json::from_str(reply.get(a..=b)?).ok())
         .unwrap_or_default();
+    let parsed: Value = crate::ai::json_reply::object(&reply).unwrap_or_default();
     let field = |key: &str| {
         parsed[key]
             .as_str()

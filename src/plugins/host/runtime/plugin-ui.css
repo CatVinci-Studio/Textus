@@ -27,6 +27,12 @@ body {
   line-height: 1.5;
 }
 
+/* A floating view has no page behind it: only what the plugin draws. */
+:root[data-floating],
+:root[data-floating] body {
+  background: transparent;
+}
+
 * {
   box-sizing: border-box;
 }

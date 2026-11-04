@@ -1,10 +1,10 @@
-import { useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useRef, useState } from "react";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { Presence } from "../../ui/usePresence";
-import { AppMenu } from "./AppMenu";
+import { AppMenu } from "./app-menu-lazy";
 import {
   buildAppMenu,
   menuBarSections,
@@ -97,14 +97,16 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
         {open && (
           // A list of its own per title, so the arrow keys start on its
           // first row each time.
-          <AppMenu
-            key={open.index}
-            x={open.x}
-            y={open.y}
-            section={open.index}
-            onClose={close}
-            checks={checks}
-          />
+          <Suspense fallback={null}>
+            <AppMenu
+              key={open.index}
+              x={open.x}
+              y={open.y}
+              section={open.index}
+              onClose={close}
+              checks={checks}
+            />
+          </Suspense>
         )}
       </Presence>
     </div>

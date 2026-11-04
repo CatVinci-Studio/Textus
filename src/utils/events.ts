@@ -92,3 +92,7 @@ export const FILE_WRITTEN_EVENT = "textus:file-written";
 
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";
+
+/** Asks an editor window to open Textus AI's panel (a floating view's
+ *  menu, from its own window). */
+export const OPEN_AGENT_PANEL_EVENT = "open-agent-panel";

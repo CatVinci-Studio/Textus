@@ -113,8 +113,7 @@ fn live_paper() {
         };
 
         let t = Instant::now();
-        let bare = super::research_tests::Bare::default();
-        let (tools, ctx) = bare.kit(None, None, Vec::new());
+        let (tools, ctx) = super::research_tests::kit(None, None, Vec::new());
         let kit = research::Kit {
             tools: &tools,
             ctx: &ctx,
