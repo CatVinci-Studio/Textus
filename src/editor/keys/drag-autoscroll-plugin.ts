@@ -72,6 +72,9 @@ export function createDragAutoscrollPlugin() {
       };
       const onDown = (event: MouseEvent) => {
         if (event.button !== 0 || event.detail > 1 || event.shiftKey) return;
+        // Taken by something else (a margin press follows its own drag):
+        // the web view starts no selection to carry along.
+        if (event.defaultPrevented) return;
         // Where the press is: ProseMirror puts the caret there only later.
         const at = view.posAtCoords({
           left: event.clientX,

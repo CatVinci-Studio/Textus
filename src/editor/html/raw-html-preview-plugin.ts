@@ -3,6 +3,7 @@ import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { showDocImage } from "../images/image-plugin";
 import { stateWithLiveSelection } from "../live-selection";
+import { revealMoved } from "../pointer-hold";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -434,7 +435,7 @@ export function createRawHtmlPreviewPlugin(
             }
             if (toggle || docPath() !== prev.reveal.config)
               return drawAll(newState, docPath, open);
-            if (!tr.docChanged && !tr.selectionSet) return prev;
+            if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
             const { mapped, blocks } = revealChanges(
               tr,
               prev.reveal,

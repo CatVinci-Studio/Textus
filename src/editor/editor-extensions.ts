@@ -87,6 +87,7 @@ import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
 import { marginClickPlugin } from "./keys/margin-click-plugin";
+import { pointerHoldPlugin } from "./pointer-hold";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -221,6 +222,8 @@ export function withEditorCore(
       // A plugin's completions take Enter, Tab and the arrows while open.
       .use(createCompletionPlugin())
       .use(macNavigationPlugin)
+      // Before the margin's clicks: held before they move the selection.
+      .use(pointerHoldPlugin)
       .use(dragAutoscrollPlugin)
       .use(marginClickPlugin)
       .use(linuxImeEnterPlugin)

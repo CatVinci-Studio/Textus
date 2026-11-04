@@ -20,6 +20,7 @@ import {
   EDIT_ACTION_EVENT,
   TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
+  TOGGLE_MARK_EVENT,
 } from "../../utils/events";
 import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
@@ -210,6 +211,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow<string>("menu-insert-block", (event) => {
         window.dispatchEvent(
           new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
+        );
+      }),
+      listenToThisWindow<string>("menu-toggle-mark", (event) => {
+        window.dispatchEvent(
+          new CustomEvent(TOGGLE_MARK_EVENT, { detail: event.payload }),
         );
       }),
       listenToThisWindow("menu-open-community", () => h().openCommunity()),

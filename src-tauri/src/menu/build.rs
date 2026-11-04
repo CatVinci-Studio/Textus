@@ -211,7 +211,13 @@ pub(crate) fn build(
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
     let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
 
-    let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"));
+    // Fixed, as Bold's and Italic's are; the editor answers the key the same way.
+    let highlight_item = MenuItemBuilder::with_id(HIGHLIGHT_ID, l(HIGHLIGHT_ID, "Highlight"))
+        .accelerator("CmdOrCtrl+Shift+H")
+        .build(app)?;
+    let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"))
+        .item(&highlight_item)
+        .separator();
     for (kind, label) in [
         ("h1", "Heading 1"),
         ("h2", "Heading 2"),

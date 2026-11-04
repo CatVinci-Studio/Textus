@@ -116,6 +116,10 @@ const KEYS: Record<string, Key> = {
   // The editor's.
   "mod+b": { does: "Bold", ...everywhere("editor") },
   "mod+i": { does: "Italic", ...everywhere("editor") },
+  "mod+shift+h": {
+    does: "Highlight",
+    ...menuThenEditor("toggle-mark:highlight"),
+  },
   "mod+enter": { does: "Leave the block", ...everywhere("editor") },
   "alt+arrowup": { does: "Move the block up", ...everywhere("editor") },
   "alt+arrowdown": { does: "Move the block down", ...everywhere("editor") },

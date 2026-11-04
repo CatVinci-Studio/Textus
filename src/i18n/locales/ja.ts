@@ -449,6 +449,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolbarHeading: "見出し",
   toolbarBold: "太字",
   toolbarItalic: "斜体",
+  toolbarHighlight: "ハイライト",
   toolbarMore: "その他",
   zenExitHint: "Escで禅モードを終了",
   zenExitButton: "禅モードを終了",

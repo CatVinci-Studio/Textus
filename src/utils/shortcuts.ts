@@ -85,6 +85,7 @@ const RESERVED_COMBOS = new Set([
   "mod+shift+v",
   "mod+b",
   "mod+i",
+  "mod+shift+h",
   "mod+arrowleft",
   "mod+arrowright",
   "mod+arrowup",
