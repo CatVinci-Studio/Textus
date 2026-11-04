@@ -804,6 +804,29 @@ br:is(.pending-delete, .pending-sentence-hot) {
   overflow: hidden;
 }
 
+/* A README's <picture> of a light and a dark logo: Textus's theme picks
+   (an explicit one, else the system's), not the browser's own scheme.
+   Hidden with !important: image rules elsewhere set their display. */
+:root[data-theme="light"] img[data-scheme="dark"],
+:root[data-theme="dark"] img[data-scheme="light"] {
+  display: none !important;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) img[data-scheme="dark"] {
+    display: none !important;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) img[data-scheme="light"] {
+    display: none !important;
+  }
+}
+
+/* A definition list's terms stand out from what they define, as on GitHub. */
+.milkdown .raw-html-rendered dt {
+  font-weight: 600;
+}
+
 /* Its words take a text cursor: a click there edits them in place. */
 .raw-html-edit-box {
   cursor: text;

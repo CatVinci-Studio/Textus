@@ -268,3 +268,38 @@ test("markdown inside <div align=center> is centred, as on GitHub", async ({
   await expect(editor.locator("p.html-align-tag")).toHaveCount(2);
   await expect(editor).not.toContainText("<div", { useInnerText: true });
 });
+
+test("a <picture>'s logo follows Textus's theme, not the system's", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en", theme: "light" } });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await pasteMarkdown(
+    page,
+    [
+      "Logo",
+      "",
+      "<picture>",
+      '  <source media="(prefers-color-scheme: dark)" srcset="dark.png">',
+      '  <img alt="Logo" src="light.png">',
+      "</picture>",
+      "",
+      "After",
+    ].join("\n"),
+  );
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const shown = () =>
+    editor
+      .locator(".raw-html-rendered img[alt=Logo]")
+      .evaluateAll((imgs) =>
+        imgs
+          .filter((img) => getComputedStyle(img).display !== "none")
+          .map((img) => img.getAttribute("src")),
+      );
+  // The system is dark, but Textus is set to light.
+  await expect.poll(shown).toEqual(["light.png"]);
+  await page.evaluate(() =>
+    document.documentElement.setAttribute("data-theme", "dark"),
+  );
+  await expect.poll(shown).toEqual(["dark.png"]);
+});

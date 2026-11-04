@@ -25,6 +25,11 @@ const BLOCK_TAGS = new Set([
   "hr",
   "details",
   "summary",
+  "dl",
+  "dt",
+  "dd",
+  "figure",
+  "figcaption",
   "table",
   "caption",
   "thead",
@@ -56,6 +61,21 @@ export const INLINE_TAGS = new Set([
   "code",
   "small",
   "input",
+  "abbr",
+  "q",
+  "cite",
+  "dfn",
+  "samp",
+  "var",
+  "tt",
+  "strike",
+  "time",
+  "wbr",
+  "ruby",
+  "rt",
+  "rp",
+  // Drawn as its images, below.
+  "picture",
 ]);
 export const ALLOWED_TAGS = new Set([...BLOCK_TAGS, ...INLINE_TAGS, "svg"]);
 
@@ -294,6 +314,43 @@ function svgToImage(svg: Element, doc: Document): HTMLImageElement {
   return img;
 }
 
+// --- picture -------------------------------------------------------------
+
+const SCHEME_RE = /prefers-color-scheme\s*:\s*(dark|light)/i;
+
+/**
+ * A README's <picture> of a light and a dark logo: one <img> for each,
+ * classed by scheme, so Textus's theme picks it (the browser's own choice
+ * would follow the system, not the theme). Without such sources, its <img>.
+ */
+function pictureImages(picture: Element, doc: Document): Element[] {
+  const fallback = picture.querySelector("img");
+  const bySchema = new Map<string, string>();
+  for (const source of Array.from(picture.querySelectorAll("source"))) {
+    const scheme = SCHEME_RE.exec(source.getAttribute("media") ?? "")?.[1];
+    const first = (source.getAttribute("srcset") ?? "")
+      .split(",")[0]
+      ?.trim()
+      .split(/\s+/)[0];
+    if (scheme && first && !bySchema.has(scheme))
+      bySchema.set(scheme.toLowerCase(), first);
+  }
+  if (bySchema.size === 0) return fallback ? [fallback] : [];
+  return (["light", "dark"] as const).map((scheme) => {
+    const img = doc.createElement("img");
+    for (const attr of ["alt", "title", "width", "height"]) {
+      const value = fallback?.getAttribute(attr);
+      if (value != null) img.setAttribute(attr, value);
+    }
+    img.setAttribute(
+      "src",
+      bySchema.get(scheme) ?? fallback?.getAttribute("src") ?? "",
+    );
+    img.setAttribute("data-scheme", scheme);
+    return img;
+  });
+}
+
 // --- the walk ------------------------------------------------------------
 
 type AttrRule = (value: string) => string | null;
@@ -302,12 +359,16 @@ const keep: AttrRule = (v) => v;
 const ATTR_RULES: Record<string, Record<string, AttrRule>> = {
   img: {
     src: sanitizeImageSrc,
+    "data-scheme": (v) => (v === "light" || v === "dark" ? v : null),
     alt: keep,
     title: keep,
     width: sanitizeDimension,
     height: sanitizeDimension,
   },
   a: { href: sanitizeUrl, title: keep },
+  abbr: { title: keep },
+  dfn: { title: keep },
+  time: { datetime: keep },
   th: { colspan: sanitizeSpan, rowspan: sanitizeSpan },
   td: { colspan: sanitizeSpan, rowspan: sanitizeSpan },
   ol: { start: (v) => (/^-?\d{1,6}$/.test(v.trim()) ? v.trim() : null) },
@@ -356,6 +417,10 @@ function cleanNode(
   const tag = el.localName.toLowerCase();
 
   if (DANGEROUS_TAGS.has(tag)) return;
+  if (tag === "picture") {
+    for (const img of pictureImages(el, doc)) cleanNode(img, out, options);
+    return;
+  }
   if (tag === "svg") {
     out.appendChild(svgToImage(el, doc));
     return;
