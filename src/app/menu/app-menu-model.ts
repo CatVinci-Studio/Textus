@@ -48,6 +48,7 @@ export type NativeMenuId =
   | `recent-folder:${string}`
   | `export-pandoc:${string}`
   | `insert-block:${string}`
+  | `toggle-mark:${string}`
   | `help-doc:${string}`
   | "help-community"
   | "help-report"
@@ -198,6 +199,11 @@ function exportEntries(t: Strings): MenuNode[] {
   ];
 }
 
+/** Format › Highlight's key, fixed as Bold's and Italic's are: the editor
+ *  answers it itself (format-shortcut-plugin.ts), and menu/build.rs gives
+ *  the macOS item the same. */
+const HIGHLIGHT_COMBO = "mod+shift+h";
+
 function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   const headings = [1, 2, 3, 4, 5, 6].map((level): MenuNode => ({
     label: t.menuHeadingTemplate.replace("{n}", String(level)),
@@ -212,6 +218,12 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
     ["table", t.menuTable],
   ];
   return [
+    {
+      label: t.toolbarHighlight,
+      accel: HIGHLIGHT_COMBO,
+      action: { native: "toggle-mark:highlight" },
+    },
+    "separator",
     ...headings,
     "separator",
     ...blocks.map(([kind, label]): MenuNode => ({

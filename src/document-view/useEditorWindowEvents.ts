@@ -17,6 +17,7 @@ import {
   setImageWidth,
 } from "../editor/editor-menu";
 import { toggleSpan } from "../editor/marks/span-commands";
+import { HIGHLIGHT, toggleFormat } from "../editor/keys/format-shortcut-plugin";
 import {
   insertMathBlock,
   insertRule,
@@ -204,14 +205,16 @@ export function useEditorWindowEvents({
     });
   });
 
-  // The iPhone keyboard toolbar's bold and italic.
+  // The iPhone keyboard toolbar's bold and italic, and Format › Highlight.
   useWindowEvent(TOGGLE_MARK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const mark = (e as CustomEvent<string>).detail;
-    if (mark !== "bold" && mark !== "italic") return;
+    if (mark !== "bold" && mark !== "italic" && mark !== "highlight") return;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      toggleSpan(view, mark === "bold" ? 2 : 1);
+      // Highlight as its key does it; bold and italic as the toolbar's.
+      if (mark === "highlight") toggleFormat(view, HIGHLIGHT);
+      else toggleSpan(view, mark === "bold" ? 2 : 1);
       view.focus();
     });
   });

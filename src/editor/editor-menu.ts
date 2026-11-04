@@ -20,6 +20,7 @@ import { embedFileAt } from "./images/obsidian-embed-preview";
 import type { EditorRunner } from "./useEditorRunner";
 import { convertList } from "./keys/block-toggles";
 import { toggleSpan } from "./marks/span-commands";
+import { HIGHLIGHT, toggleFormat } from "./keys/format-shortcut-plugin";
 import type { Strings } from "../i18n/strings";
 import {
   inTable,
@@ -339,9 +340,16 @@ function formatItems(
       toggleSpan(view, rung);
       view.focus();
     });
+  const highlight = () =>
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      toggleFormat(view, HIGHLIGHT);
+      view.focus();
+    });
   const marks: ContextMenuItem[] = [
     { label: t.toolbarBold, onSelect: span(2) },
     { label: t.toolbarItalic, onSelect: span(1) },
+    { label: t.toolbarHighlight, onSelect: highlight },
   ];
   if (!blocks) return marks;
   return [

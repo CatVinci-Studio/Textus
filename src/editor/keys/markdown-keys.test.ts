@@ -111,6 +111,26 @@ it("Mod+B and Mod+I on a selection keep it selected, so they add up and come off
   expect(t.markdown()).toBe("hello world");
 });
 
+it("Mod+Shift+H highlights a selection, keeps it selected and takes the highlight off again", async () => {
+  const t = await open();
+  t.type("hello world");
+  t.caretAt("world", 0, 5);
+  t.press("Mod+Shift+h");
+  expect(t.selected()).toBe("world");
+  expect(t.markdown()).toBe("hello ==world==");
+  t.press("Mod+Shift+h");
+  expect(t.markdown()).toBe("hello world");
+});
+
+it("Mod+Shift+H with no selection opens a highlight to type into, and pressed again ends it", async () => {
+  const t = await open();
+  t.press("Mod+Shift+h");
+  t.type("marked");
+  t.press("Mod+Shift+h");
+  t.type(" after");
+  expect(t.markdown()).toBe("==marked== after");
+});
+
 it("~~ and == stay as typed until their closing pair makes a strikethrough or a highlight", async () => {
   const t = await open();
   t.type("~~");

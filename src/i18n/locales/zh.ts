@@ -425,6 +425,7 @@ export default {
   toolbarHeading: "标题",
   toolbarBold: "加粗",
   toolbarItalic: "斜体",
+  toolbarHighlight: "高亮",
   toolbarMore: "更多",
   zenExitHint: "按 Esc 退出禅模式",
   zenExitButton: "退出禅模式",
