@@ -789,6 +789,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
   white-space: normal;
 }
 
+/* Markdown inside <div align="center"> and its kin, as GitHub aligns it. */
+.milkdown .html-align-center {
+  text-align: center;
+}
+.milkdown .html-align-right {
+  text-align: right;
+}
+
 /* Its words take a text cursor: a click there edits them in place. */
 .raw-html-edit-box {
   cursor: text;

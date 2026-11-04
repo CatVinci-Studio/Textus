@@ -236,3 +236,32 @@ test("a table's words are edited where they're drawn, its tags kept", async ({
   await page.keyboard.press("Escape");
   await expect(late).toHaveText("late");
 });
+
+test("markdown inside <div align=center> is centred, as on GitHub", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(
+    page,
+    [
+      "Before",
+      "",
+      '<div align="center">',
+      "",
+      "# Moyu",
+      "",
+      "The mascot of Textus.",
+      "",
+      "</div>",
+      "",
+      "After",
+    ].join("\n"),
+  );
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor.locator("h1")).toHaveCSS("text-align", "center");
+  await expect(editor.getByText("The mascot of Textus.")).toHaveCSS(
+    "text-align",
+    "center",
+  );
+  await expect(editor.getByText("After")).toHaveCSS("text-align", "start");
+});
