@@ -179,6 +179,8 @@ export interface Settings {
   languageChosen: boolean;
   /// Appearance: follow the OS, or pin light/dark.
   theme: ThemeMode;
+  /// Show the document through the window bar, blurred, as it scrolls under.
+  frostedTitleBar: boolean;
   /** Off, Textus AI makes no request to any AI service, whatever the
    *  features below are set to; they keep their values. Rust reads it too. */
   textusAi: boolean;
@@ -364,6 +366,7 @@ export const DEFAULT_SETTINGS: Settings = {
   language: "en",
   languageChosen: false,
   theme: "system",
+  frostedTitleBar: false,
   textusAi: true,
   textusAiResumeAt: null,
   enableCompletion: true,

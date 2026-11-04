@@ -1369,6 +1369,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   appearanceSystem: "システムに従う",
   appearanceLight: "ライト",
   appearanceDark: "ダーク",
+  frostedTitleBarLabel: "タイトルバーのすりガラス",
+  frostedTitleBarHelp:
+    "コンテンツがタイトルバーの下にスクロールすると、ぼかして透けて見えます。",
   pdfPreparing: "PDF を準備中…",
   pdfFailed: "PDF を準備できませんでした：",
   languageWelcomeTitle: "言語を選択",

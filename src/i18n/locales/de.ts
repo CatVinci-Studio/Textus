@@ -1424,6 +1424,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   appearanceSystem: "Systemeinstellung",
   appearanceLight: "Hell",
   appearanceDark: "Dunkel",
+  frostedTitleBarLabel: "Milchige Titelleiste",
+  frostedTitleBarHelp:
+    "Inhalte scheinen unscharf durch, wenn sie unter die Titelleiste scrollen.",
   pdfPreparing: "PDF wird vorbereitet…",
   pdfFailed: "PDF konnte nicht vorbereitet werden:",
   languageWelcomeTitle: "Sprache wählen",

@@ -1302,6 +1302,8 @@ export default {
   appearanceSystem: "依照系統",
   appearanceLight: "淺色",
   appearanceDark: "深色",
+  frostedTitleBarLabel: "標題列毛玻璃",
+  frostedTitleBarHelp: "內容捲動到標題列下方時，透出並模糊顯示。",
   pdfPreparing: "正在準備 PDF…",
   pdfFailed: "無法準備 PDF：",
   languageWelcomeTitle: "選擇你的語言",

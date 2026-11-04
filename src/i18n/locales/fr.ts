@@ -1449,6 +1449,9 @@ utiliser une.
   appearanceSystem: "Selon le système",
   appearanceLight: "Clair",
   appearanceDark: "Sombre",
+  frostedTitleBarLabel: "Barre de titre translucide",
+  frostedTitleBarHelp:
+    "Le contenu apparaît flouté lorsqu’il défile sous la barre de titre.",
   pdfPreparing: "Préparation du PDF…",
   pdfFailed: "Impossible de préparer le PDF\u00a0:",
   languageWelcomeTitle: "Choisissez votre langue",

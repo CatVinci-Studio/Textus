@@ -14,7 +14,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../ui/Select";
-import { LinkRow, RowHelp, SettingRow } from "./controls";
+import { LinkRow, RowHelp, SettingRow, ToggleRow } from "./controls";
 import {
   AvailableThemes,
   galleryUpdates,
@@ -159,8 +159,8 @@ function useThemeAction() {
   return { busy, error, run };
 }
 
-/** Settings › Editor & Appearance › Theme: which form (light, dark) and
- *  which theme, nothing else. */
+/** Settings › Editor & Appearance › Theme: which form (light, dark), which
+ *  theme, and whether the title bar frosts what scrolls beneath it. */
 export function ThemeSection({
   t,
   onMore,
@@ -231,6 +231,13 @@ export function ThemeSection({
           ))}
         </div>
       </SettingRow>
+
+      <ToggleRow
+        label={t.frostedTitleBarLabel}
+        help={t.frostedTitleBarHelp}
+        checked={settings.frostedTitleBar}
+        onChange={(on) => setSettings({ frostedTitleBar: on })}
+      />
 
       <SettingRow label={t.contentThemeLabel}>
         <Select

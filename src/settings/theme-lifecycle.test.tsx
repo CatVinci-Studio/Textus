@@ -29,6 +29,12 @@ function Controls() {
         Default
       </button>
       <button onClick={() => setSettings({ theme: "dark" })}>Dark</button>
+      <button onClick={() => setSettings({ frostedTitleBar: true })}>
+        Frost
+      </button>
+      <button onClick={() => setSettings({ frostedTitleBar: false })}>
+        Opaque
+      </button>
     </>
   );
 }
@@ -55,6 +61,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
   document.getElementById("textus-custom-theme")?.remove();
   document.getElementById("textus-imported-chrome")?.remove();
+  document.documentElement.removeAttribute("data-frosted-title-bar");
+});
+it("puts the frosted title bar choice on the page, and takes it off again", () => {
+  render(
+    <SettingsProvider>
+      <AppearanceSync />
+      <Controls />
+    </SettingsProvider>,
+  );
+  const root = document.documentElement;
+  expect(root.hasAttribute("data-frosted-title-bar")).toBe(false);
+  fireEvent.click(screen.getByText("Frost"));
+  expect(root.getAttribute("data-frosted-title-bar")).toBe("");
+  fireEvent.click(screen.getByText("Opaque"));
+  expect(root.hasAttribute("data-frosted-title-bar")).toBe(false);
 });
 it("applies imported chrome and removes both styles on returning to default", async () => {
   vi.mocked(themes.loadThemeCss).mockResolvedValue("body { color: green; }");

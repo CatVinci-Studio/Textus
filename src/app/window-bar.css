@@ -1,6 +1,7 @@
 /* The window's title strip, drawn by the app: the drag region, the filename
-   and the status readouts. Opaque, so scrolling text ends at it instead of
-   colliding with the title. Below every overlay so it never steals clicks. */
+   and the status readouts. Opaque by default, so scrolling text ends at it
+   instead of colliding with the title; see the frosted option below. Below
+   every overlay so it never steals clicks. */
 .window-bar {
   position: fixed;
   top: 0;
@@ -14,6 +15,23 @@
      top-left corner. */
   padding: 0 12px 0 76px;
   background: var(--ui-bg);
+}
+
+/* Opted in, the bar shows the document scrolling under it: a tinted material
+   that blurs what passes beneath. The radius is smaller than the 20px the
+   other materials use: in a bar this short, 20px averaged a line of text into
+   the page, so words vanished while pictures and code blocks still showed. At
+   5px both read as blurred content. Without backdrop-filter the opaque fill
+   above stands, so the choice only changes how it looks where it can. The
+   doubled :root outranks the phone's own fill. */
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root:root[data-frosted-title-bar] .window-bar {
+    background: color-mix(in srgb, var(--ui-bg) 72%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(5px);
+    backdrop-filter: saturate(180%) blur(5px);
+  }
 }
 
 /* Where the app owns the frame, the menu button and caption buttons sit

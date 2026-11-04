@@ -1297,6 +1297,8 @@ export default {
   appearanceSystem: "跟随系统",
   appearanceLight: "浅色",
   appearanceDark: "深色",
+  frostedTitleBarLabel: "标题栏毛玻璃",
+  frostedTitleBarHelp: "内容滚动到标题栏下方时，透出并模糊显示。",
   pdfPreparing: "正在准备 PDF…",
   pdfFailed: "无法准备 PDF：",
   languageWelcomeTitle: "选择你的语言",

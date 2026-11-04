@@ -1408,6 +1408,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   appearanceSystem: "Seguir o sistema",
   appearanceLight: "Claro",
   appearanceDark: "Escuro",
+  frostedTitleBarLabel: "Barra de título translúcida",
+  frostedTitleBarHelp:
+    "O conteúdo aparece desfocado ao rolar por baixo da barra de título.",
   pdfPreparing: "Preparando o PDF…",
   pdfFailed: "Não foi possível preparar o PDF:",
   languageWelcomeTitle: "Escolha seu idioma",

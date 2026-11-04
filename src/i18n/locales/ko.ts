@@ -1355,6 +1355,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   appearanceSystem: "시스템 설정 따르기",
   appearanceLight: "라이트",
   appearanceDark: "다크",
+  frostedTitleBarLabel: "제목 표시줄 흐림 효과",
+  frostedTitleBarHelp:
+    "콘텐츠가 제목 표시줄 아래로 스크롤되면 흐리게 비쳐 보입니다.",
   pdfPreparing: "PDF 준비 중…",
   pdfFailed: "PDF를 준비하지 못했습니다:",
   languageWelcomeTitle: "언어를 선택하세요",
