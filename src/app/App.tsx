@@ -111,7 +111,8 @@ function App() {
             // window's centre, and half the AI panel's width left of it. The
             // window bar's title follows both to stay over the column. The
             // sidebar's half is kept apart so it can ride the sidebar's
-            // slide; the panel's takes effect at once, as the panel does.
+            // slide; the panel's so it can follow the room the editor makes
+            // or takes back, at the page's pace.
             "--window-bar-title-slide": `${
               panelOpen ? sidebarWidth.width / 2 : 0
             }px`,
