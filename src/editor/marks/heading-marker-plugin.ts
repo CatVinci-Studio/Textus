@@ -4,6 +4,7 @@ import { $prose } from "@milkdown/kit/utils";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import { stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
+import { revealMoved, revealSelection } from "../pointer-hold";
 
 const headingMarkerKey = new PluginKey("heading-marker");
 
@@ -16,7 +17,7 @@ function makeMarkerEl(prefix: string): HTMLElement {
 }
 
 function buildDecorations(state: EditorState): DecorationSet {
-  const { selection } = state;
+  const selection = revealSelection(state);
   const decorations: Decoration[] = [];
 
   state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
@@ -52,8 +53,8 @@ export const headingMarkerPlugin = $prose(
       key: headingMarkerKey,
       state: {
         init: (_config, state) => buildDecorations(state),
-        apply(tr, prev, _oldState, newState) {
-          if (!tr.docChanged && !tr.selectionSet) return prev;
+        apply(tr, prev, oldState, newState) {
+          if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
           return buildDecorations(newState);
         },
       },

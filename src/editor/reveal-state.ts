@@ -2,7 +2,6 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   TextSelection,
   type EditorState,
-  type Selection,
   type Transaction,
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -14,6 +13,7 @@ import {
   touchedBlocks,
 } from "./changed-ranges";
 import { cursorTouches } from "./marks/enclosure";
+import { revealMoved, revealSelection } from "./pointer-hold";
 
 /**
  * Plugin state for the "render it, reveal the source under the caret"
@@ -46,7 +46,7 @@ export interface Reveal {
 // The touched ranges are never drawn; one spec marks them all.
 const TOUCHED = { revealTouched: true };
 
-function recorder(selection: Selection) {
+function recorder(selection: { from: number; to: number }) {
   const ranges: Decoration[] = [];
   const touches: Touches = (from, to) => {
     ranges.push(
@@ -70,7 +70,7 @@ export function revealAll(
   reveal: Reveal,
   before?: (touches: Touches, decorations: Decoration[]) => void,
 ): RevealState {
-  const { touches, ranges } = recorder(state.selection);
+  const { touches, ranges } = recorder(revealSelection(state));
   const decorations: Decoration[] = [];
   before?.(touches, decorations);
   state.doc.descendants((node, pos) => {
@@ -108,10 +108,10 @@ export function revealChanges(
       }
     : prev;
   const ranges: [number, number][] = tr.docChanged ? changedRanges(tr) : [];
-  const before = oldState.selection;
+  const before = revealSelection(oldState);
   const a = tr.mapping.map(before.from, -1);
   const b = tr.mapping.map(before.to, 1);
-  const { from, to } = newState.selection;
+  const { from, to } = revealSelection(newState);
   for (const range of [
     ...mapped.touched.find(a, b),
     ...mapped.touched.find(from, to),
@@ -132,7 +132,7 @@ export function redrawReveal(
   reveal: Reveal,
 ): RevealState {
   if (blocks.length === 0) return mapped;
-  const { touches, ranges } = recorder(state.selection);
+  const { touches, ranges } = recorder(revealSelection(state));
   const set = redrawBlocks(
     mapped.set,
     state.doc,
@@ -165,7 +165,7 @@ export function applyReveal(
 ): RevealState {
   if (reveal.config && reveal.config() !== prev.config)
     return revealAll(newState, reveal);
-  if (!tr.docChanged && !tr.selectionSet) return prev;
+  if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
   const { mapped, blocks } = revealChanges(tr, prev, oldState, newState);
   return redrawReveal(mapped, newState, blocks, reveal);
 }

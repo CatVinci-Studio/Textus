@@ -31,6 +31,7 @@ import {
 } from "./enclosure-caret";
 import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
+import { revealMoved, revealSelection } from "../pointer-hold";
 export {
   isEnclosureName,
   cursorTouches,
@@ -108,7 +109,8 @@ function buildDecorations(state: EditorState): DecorationSet {
 
   // Only enclosures the cursor touches are decorated, so only the selection
   // (widened for adjacency) is walked, on every keystroke.
-  const { selection, doc } = state;
+  const { doc } = state;
+  const selection = revealSelection(state);
   // Two for a span nested whole, touched through its outer one.
   const scanFrom = Math.max(0, selection.from - 2);
   const scanTo = Math.min(doc.content.size, selection.to + 2);
@@ -120,8 +122,8 @@ function buildDecorations(state: EditorState): DecorationSet {
     // the outer one's: one `***` pair.
     const whole = !!parent && isSoleEnclosureChild(parent);
     if (
-      !cursorTouches(state.selection, from, to) &&
-      !(whole && cursorTouches(state.selection, from - 1, to + 1))
+      !cursorTouches(selection, from, to) &&
+      !(whole && cursorTouches(selection, from - 1, to + 1))
     )
       return;
 
@@ -213,8 +215,8 @@ export const enclosurePlugin = $prose(() => {
     key: enclosureKey,
     state: {
       init: (_config, state) => buildDecorations(state),
-      apply(tr, prev, _oldState, newState) {
-        if (!tr.docChanged && !tr.selectionSet) return prev;
+      apply(tr, prev, oldState, newState) {
+        if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
         return buildDecorations(newState);
       },
     },
