@@ -16,7 +16,9 @@ import {
 } from "./floating-views";
 
 /** Kept this far inside the window's edges, so a view can't be lost. */
-const MARGIN = 8;
+const MARGIN = 16;
+/** Let go this near an edge, it settles against it. */
+const SNAP = 48;
 
 /**
  * Plugins' floating views shown in this window: each a frame of its own
@@ -55,13 +57,19 @@ function clamp(value: number, size: number, room: number) {
   );
 }
 
+function snap(value: number, size: number, room: number) {
+  const far = room - size - MARGIN;
+  if (value - MARGIN < SNAP) return MARGIN;
+  return far - value < SNAP ? far : value;
+}
+
 /** Its top-left in pixels: where it was left, else the bottom-right
  *  corner. */
 function position(view: FloatingView, width: number, height: number) {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  const x = view.x === null ? w - width - 24 : view.x * w;
-  const y = view.y === null ? h - height - 48 : view.y * h;
+  const x = view.x === null ? w : view.x * w;
+  const y = view.y === null ? h : view.y * h;
   return { left: clamp(x, width, w), top: clamp(y, height, h) };
 }
 
@@ -111,8 +119,8 @@ function FloatingBox({
   const end = () => {
     if (drag && live) {
       moveFloating(view.view, {
-        x: live.left / window.innerWidth,
-        y: live.top / window.innerHeight,
+        x: snap(live.left, width, window.innerWidth) / window.innerWidth,
+        y: snap(live.top, height, window.innerHeight) / window.innerHeight,
       });
       touchFloating(view.view, "moved");
     } else if (drag && !view.folded) touchFloating(view.view, "poke");

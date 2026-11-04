@@ -80,6 +80,12 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   const view = page.getByRole("dialog", { name: "Pet" });
   await expect(view).toBeVisible();
   await expect(view).toHaveCSS("width", "120px");
+  // It starts in the corner, as far from the right edge as the bottom.
+  const start = (await view.boundingBox())!;
+  const viewport = page.viewportSize()!;
+  expect(viewport.width - start.x - start.width).toBe(
+    viewport.height - start.y - start.height,
+  );
   // The page is transparent: only what the plugin draws floats.
   const pet = view.frameLocator("iframe").locator("#pet");
   await expect(pet).toBeVisible();
@@ -97,6 +103,8 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   const after = (await view.boundingBox())!;
   expect(after.x).toBeLessThan(before.x - 150);
   expect(after.y).toBeLessThan(before.y - 50);
+  // Let go near the edge, it settles the same distance in as the corner.
+  expect(after.x).toBe(viewport.width - start.x - start.width);
   // Now in the left half: a character there turns to face the middle.
   await expect(page.getByText("on the left")).toBeVisible();
   // Petting her with quick clicks never selects her like text.
