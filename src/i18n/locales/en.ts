@@ -461,6 +461,7 @@ type /name in a conversation to use one.
   toolbarHeading: "Heading",
   toolbarBold: "Bold",
   toolbarItalic: "Italic",
+  toolbarHighlight: "Highlight",
   toolbarMore: "More",
   zenExitHint: "Esc to leave zen mode",
   zenExitButton: "Leave Zen Mode",

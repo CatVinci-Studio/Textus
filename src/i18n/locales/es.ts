@@ -476,6 +476,7 @@ para usar una.
   toolbarHeading: "Encabezado",
   toolbarBold: "Negrita",
   toolbarItalic: "Cursiva",
+  toolbarHighlight: "Resaltar",
   toolbarMore: "Más",
   zenExitHint: "Esc para salir del modo zen",
   zenExitButton: "Salir del modo zen",

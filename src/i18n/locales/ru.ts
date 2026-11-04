@@ -467,6 +467,7 @@ export default {
   toolbarHeading: "Заголовок",
   toolbarBold: "Жирный",
   toolbarItalic: "Курсив",
+  toolbarHighlight: "Выделение цветом",
   toolbarMore: "Ещё",
   zenExitHint: "Esc — выйти из режима дзен",
   zenExitButton: "Выйти из режима дзен",

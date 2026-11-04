@@ -39,7 +39,7 @@ export const INSERT_BLOCK_KINDS: readonly string[] = [
 /// toggle rather than only insert.
 export const TOGGLE_BLOCK_EVENT = "textus:toggle-block";
 
-/// detail: "bold" | "italic": toggles the mark on the selection.
+/// detail: "bold" | "italic" | "highlight": toggles the mark on the selection.
 export const TOGGLE_MARK_EVENT = "textus:toggle-mark";
 
 /// detail: a TableAction ("row-below", "delete-column"…) for the table under the caret.

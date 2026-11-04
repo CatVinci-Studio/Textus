@@ -130,7 +130,7 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic}`,
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight}`,
     ]);
   });
 
@@ -163,7 +163,7 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | - | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight} | - | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
       `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });

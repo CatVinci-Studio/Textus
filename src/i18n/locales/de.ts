@@ -468,6 +468,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolbarHeading: "Überschrift",
   toolbarBold: "Fett",
   toolbarItalic: "Kursiv",
+  toolbarHighlight: "Hervorheben",
   toolbarMore: "Mehr",
   zenExitHint: "Esc beendet den Zen-Modus",
   zenExitButton: "Zen-Modus beenden",

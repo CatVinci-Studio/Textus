@@ -98,6 +98,8 @@ const UPDATES_ID: &str = "check-updates";
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
+/// Format > Highlight, sent as the inline mark to toggle.
+const HIGHLIGHT_ID: &str = "toggle-mark:highlight";
 
 /// Emit a menu event only to the focused window. `emit_to`, not `emit` on a
 /// window handle: that one looks scoped but broadcasts to every window.
@@ -353,6 +355,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         quit(app_handle);
     } else if let Some(kind) = id.strip_prefix(INSERT_BLOCK_PREFIX) {
         emit_to_focused_payload(app_handle, "menu-insert-block", kind);
+    } else if id == HIGHLIGHT_ID {
+        emit_to_focused_payload(app_handle, "menu-toggle-mark", "highlight");
     } else if id == TOGGLE_SOURCE_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-source-mode");
     } else if id == TOGGLE_TYPEWRITER_MODE_ID {
