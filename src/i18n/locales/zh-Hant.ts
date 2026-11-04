@@ -1081,6 +1081,8 @@ export default {
   imageAlignLeft: "靠左",
   docTextSizeLabel: "內文字級",
   docTextSizeAuto: "跟隨主題",
+  docTextLabel: "內文文字",
+  docTextCustom: "已調整",
   docLineSpacingLabel: "行距",
   docLineSpacingAuto: "跟隨主題",
   docLineSpacingCompact: "緊湊",
@@ -1103,8 +1105,7 @@ export default {
   autosaveLabel: "自動儲存",
   autosaveHint: "開啟資料夾時，未命名文件也會以標題為名存進這個資料夾。",
   settingsFileLabel: "設定檔",
-  settingsFileHint:
-    "備份設定，或帶到另一台電腦上，也可以連同 AI 對話和記憶一起。API 金鑰和 MCP 權杖留在本機。",
+  settingsFileSummary: "匯入/匯出軟體的設定以及 AI 歷史紀錄",
   settingsFileExport: "匯出…",
   settingsFileImport: "匯入…",
   settingsFileImportConfirm:
@@ -1359,6 +1360,7 @@ export default {
   extensionsFold: "收合",
   extensionsUnfold: "展開",
   themePreviewEnlarge: "檢視大圖",
+  themeBackToList: "全部主題",
   extensionsThemesGet: "取得主題",
   extensionsSkillsHelp: `Skill 告訴 ${AI_NAME} 怎樣做好某一類事。開著的 Skill 會提供給 ${AI_NAME}，也會出現在 / 選單裡；新安裝預設開五個，其餘的在這裡加入。`,
   extensionsSkillsMoved:

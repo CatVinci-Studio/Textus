@@ -9,25 +9,14 @@ use serde_json::{json, Value};
 use std::path::Path;
 use std::sync::Arc;
 
-/// What a research context borrows: no document, no conventions.
-#[derive(Default)]
-pub(super) struct Bare {
-    empty: crate::ai::doc_blocks::Document,
-    conventions: crate::ai::rules::Conventions,
-}
-
-impl Bare {
-    /// The shared tools and their context, over `root` and a paper folder.
-    pub(super) fn kit<'t>(
-        &'t self,
-        root: Option<&'t Path>,
-        paper_folder: Option<&'t Path>,
-        installed: Vec<Tool<'t>>,
-    ) -> (ToolRegistry<'t>, ToolContext<'t>) {
-        let tools = research::shared_tools(root, paper_folder.is_some(), false, installed);
-        let ctx = research::context(&self.empty, &self.conventions, root, paper_folder, false);
-        (tools, ctx)
-    }
+/// The shared tools and their context, over `root` and a paper folder.
+pub(super) fn kit<'t>(
+    root: Option<&'t Path>,
+    paper_folder: Option<&'t Path>,
+    installed: Vec<Tool<'t>>,
+) -> (ToolRegistry<'t>, ToolContext<'t>) {
+    let tools = research::shared_tools(root, paper_folder.is_some(), false, installed);
+    (tools, research::context(root, paper_folder, false))
 }
 
 fn paper() -> Paper {
@@ -113,8 +102,7 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
     .unwrap();
     let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
     let web = crate::ai::web::WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
-    let bare = Bare::default();
-    let (tools, ctx) = bare.kit(None, Some(folder.path()), Vec::new());
+    let (tools, ctx) = kit(None, Some(folder.path()), Vec::new());
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,
@@ -192,8 +180,7 @@ async fn the_tools_plugins_and_mcp_servers_offer_reach_the_researchers() {
         modes: EVERY_MODE,
         run: Run::Text(plugin_echo),
     }];
-    let bare = Bare::default();
-    let (tools, ctx) = bare.kit(None, None, installed);
+    let (tools, ctx) = kit(None, None, installed);
     let kit = research::Kit {
         tools: &tools,
         ctx: &ctx,

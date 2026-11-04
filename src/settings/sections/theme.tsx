@@ -21,6 +21,7 @@ import {
   useGalleryCatalog,
   useGalleryInstall,
 } from "./theme-gallery";
+import { ThemeGalleryPage } from "./theme-gallery-page";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
@@ -328,6 +329,7 @@ export function ThemesTab({ t }: { t: Strings }) {
   const { busy, error, run } = useThemeAction();
   const importTheme = useImportTheme(run);
   const [query, setQuery] = useState("");
+  const [openTheme, setOpenTheme] = useState<string | null>(null);
   const gallery = useGalleryCatalog();
   const install = useGalleryInstall(t);
   const updates = galleryUpdates(gallery.catalog, settings.userThemes);
@@ -342,6 +344,16 @@ export function ThemesTab({ t }: { t: Strings }) {
         ...(latest.current.themeId === id ? { themeId: "default" } : {}),
       });
     });
+  const opened = gallery.catalog?.find((theme) => theme.id === openTheme);
+  if (opened)
+    return (
+      <ThemeGalleryPage
+        t={t}
+        theme={opened}
+        install={install}
+        onBack={() => setOpenTheme(null)}
+      />
+    );
   return (
     <ExtensionsTabLayout
       t={t}
@@ -425,6 +437,7 @@ export function ThemesTab({ t }: { t: Strings }) {
           query={query}
           gallery={gallery}
           install={install}
+          onOpen={(theme) => setOpenTheme(theme.id)}
         />
       }
       advanced={<CustomCssRow t={t} />}

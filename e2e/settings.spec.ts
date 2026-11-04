@@ -606,8 +606,10 @@ test.describe("desktop", () => {
     await expect(files.locator(".settings-row-label")).toHaveText([
       t.autosaveLabel,
       t.autoSuggestFilenameLabel,
-      t.settingsFileLabel,
     ]);
+    // The settings file can carry the AI history away: it sits with privacy.
+    await open(t.navPrivacy);
+    await expect(titles.last()).toHaveText(t.settingsFileLabel);
 
     await open(t.navEditor);
     await expect(titles).toHaveText([

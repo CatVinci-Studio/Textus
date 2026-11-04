@@ -161,13 +161,7 @@ async fn ai_agent_message_inner(
     // history as it came, before it is cut down for sending.
     let web_plan = WebPlan::new(
         web_search,
-        web::native_search(
-            &provider,
-            model
-                .as_deref()
-                .or(entry.agent_default_model)
-                .unwrap_or_default(),
-        ),
+        web::native_search_for(&provider, model.as_deref()),
         web_service,
         &history,
     );
@@ -451,10 +445,7 @@ async fn flattened_chat_turn(
         }
     }
 
-    let user_turn = AgentTurn::User {
-        text: message,
-        images: Vec::new(),
-    };
+    let user_turn = AgentTurn::user(message);
     let mut transcript: Vec<String> = history.iter().filter_map(turn_to_plain_text).collect();
     if let Some(t) = turn_to_plain_text(&user_turn) {
         transcript.push(t);

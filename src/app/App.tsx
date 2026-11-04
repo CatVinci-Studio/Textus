@@ -1,9 +1,8 @@
+import { Suspense } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { isIOSApp } from "../platform/capabilities";
 import { SettingsLayer } from "./SettingsLayer";
-import { DocumentList } from "../mobile/DocumentList";
-import { KeyboardToolbar } from "../mobile/KeyboardToolbar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
@@ -34,6 +33,16 @@ import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
 import { ReportProblemHost } from "./report/report-open";
+import { lazyModule } from "../lazy/lazy-module";
+import { lazyComponent } from "../lazy/lazy-component";
+
+// The phone's own parts load on the phone, not with every desktop window.
+const phoneParts = lazyModule(
+  "phone-parts",
+  () => import("../mobile/phone-parts"),
+);
+const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
+const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -102,7 +111,8 @@ function App() {
             // window's centre, and half the AI panel's width left of it. The
             // window bar's title follows both to stay over the column. The
             // sidebar's half is kept apart so it can ride the sidebar's
-            // slide; the panel's takes effect at once, as the panel does.
+            // slide; the panel's so it can follow the room the editor makes
+            // or takes back, at the page's pace.
             "--window-bar-title-slide": `${
               panelOpen ? sidebarWidth.width / 2 : 0
             }px`,
@@ -213,20 +223,26 @@ function App() {
           t={t}
         />
 
-        {isIOSApp && <KeyboardToolbar />}
+        {isIOSApp && (
+          <Suspense fallback={null}>
+            <KeyboardToolbar />
+          </Suspense>
+        )}
         <Presence show={isIOSApp && documentsOpen} exitMs={320}>
           {isIOSApp && documentsOpen && (
-            <DocumentList
-              activePath={activeTab.path}
-              onClose={() => setDocumentsOpen(false)}
-              onOpen={openFromDocuments}
-              onRenamed={documentRenamed}
-              onDeleted={documentDeleted}
-              onOpenOther={() => {
-                setDocumentsOpen(false);
-                void openFileDialog();
-              }}
-            />
+            <Suspense fallback={null}>
+              <DocumentList
+                activePath={activeTab.path}
+                onClose={() => setDocumentsOpen(false)}
+                onOpen={openFromDocuments}
+                onRenamed={documentRenamed}
+                onDeleted={documentDeleted}
+                onOpenOther={() => {
+                  setDocumentsOpen(false);
+                  void openFileDialog();
+                }}
+              />
+            </Suspense>
           )}
         </Presence>
         <AppDialogHost okLabel={t.dialogOk} />

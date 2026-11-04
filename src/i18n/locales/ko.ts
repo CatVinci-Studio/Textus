@@ -1124,6 +1124,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageAlignLeft: "왼쪽",
   docTextSizeLabel: "본문 글자 크기",
   docTextSizeAuto: "테마 기본값",
+  docTextLabel: "본문 글자",
+  docTextCustom: "사용자 지정",
   docLineSpacingLabel: "줄 간격",
   docLineSpacingAuto: "테마 기본값",
   docLineSpacingCompact: "좁게",
@@ -1147,8 +1149,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   autosaveHint:
     "폴더가 열려 있으면 제목 없는 문서도 제목을 이름으로 그 폴더에 저장합니다.",
   settingsFileLabel: "설정 파일",
-  settingsFileHint:
-    "설정을 백업하거나 다른 컴퓨터로 옮길 수 있고, 원하면 AI 대화와 메모리도 함께 옮길 수 있습니다. API 키와 MCP 토큰은 이 컴퓨터에 남습니다.",
+  settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",
   settingsFileExport: "내보내기…",
   settingsFileImport: "가져오기…",
   settingsFileImportConfirm:
@@ -1417,6 +1418,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsFold: "접기",
   extensionsUnfold: "펼치기",
   themePreviewEnlarge: "크게 보기",
+  themeBackToList: "모든 테마",
   extensionsThemesGet: "테마 받기",
   extensionsSkillsHelp: `스킬은 ${AI_NAME}에게 한 가지 일을 잘하는 방법을 알려 줍니다. 켜 둔 스킬은 ${AI_NAME}와 / 메뉴에서 쓸 수 있고, 새로 설치하면 다섯 개가 켜져 있으며 나머지는 여기서 추가합니다.`,
   extensionsSkillsMoved:

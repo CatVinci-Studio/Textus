@@ -883,16 +883,13 @@ pub fn run_conversation(
         let started = Instant::now();
         let result = block_on(run_agent_loop(
             compact_history(history.clone()),
-            AgentTurn::User {
-                text: request_message(
-                    ws,
-                    setup.mode,
-                    setup.ui_language,
-                    &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
-                    &message_sent,
-                ),
-                images: Vec::new(),
-            },
+            AgentTurn::user(request_message(
+                ws,
+                setup.mode,
+                setup.ui_language,
+                &request_context(ws, &document, true, &message_sent, focus_heading.as_deref()),
+                &message_sent,
+            )),
             MAX_STEPS,
             |h: Vec<AgentTurn>| {
                 let (instructions, specs, usage, postfix) =
@@ -1151,10 +1148,7 @@ pub fn run_conversation(
                 &exchange,
                 &Default::default(),
                 |instructions, input| async move {
-                    let turn = [AgentTurn::User {
-                        text: input,
-                        images: Vec::new(),
-                    }];
+                    let turn = [AgentTurn::user(input)];
                     let (step, used) = agent.step(&instructions, &turn, &[], &|_| {}).await?;
                     charge(setup.model, &used.unwrap_or_default());
                     let text = match step {
@@ -1242,10 +1236,7 @@ pub fn judge(
         else {
             continue;
         };
-        let (Some(start), Some(end)) = (raw.find('{'), raw.rfind('}')) else {
-            continue;
-        };
-        let Ok(v) = serde_json::from_str::<Value>(&raw[start..=end]) else {
+        let Some(v) = crate::ai::json_reply::object::<Value>(&raw) else {
             continue;
         };
         let mut verdict = Verdict {

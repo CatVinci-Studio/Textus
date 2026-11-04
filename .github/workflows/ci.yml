@@ -128,15 +128,19 @@ jobs:
       # dropped a whole design-system rule once, unnoticed for three releases.
       # Both builds are `vite build` without the `tsc` that `npm run build`
       # puts in front of it: `npm run check` has just type-checked the same
-      # project.
+      # project. `set -o pipefail` because the step's shell otherwise takes
+      # the exit status of `tee`: a build that failed - over the startup
+      # budget, say (vite.startup-budget.ts) - passed here.
       - name: Build, failing on CSS syntax warnings
         run: |
+          set -o pipefail
           npx vite build 2>&1 | tee build.log
           ! grep -q 'css-syntax-error' build.log
       # The browser playground (src/playground/) shares the editor: a change
       # that breaks its build shows up here, before it is deployed.
       - name: Build the playground
         run: |
+          set -o pipefail
           npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 

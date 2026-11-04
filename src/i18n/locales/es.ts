@@ -1189,6 +1189,8 @@ para usar una.
   imageAlignLeft: "A la izquierda",
   docTextSizeLabel: "Tamaño del texto",
   docTextSizeAuto: "El del tema",
+  docTextLabel: "Texto del documento",
+  docTextCustom: "Personalizado",
   docLineSpacingLabel: "Interlineado",
   docLineSpacingAuto: "El del tema",
   docLineSpacingCompact: "Compacto",
@@ -1212,8 +1214,8 @@ para usar una.
   autosaveHint:
     "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   settingsFileLabel: "Archivo de ajustes",
-  settingsFileHint:
-    "Haz una copia de tus ajustes o llévalos a otro ordenador, con tus conversaciones y memorias de IA si quieres. Las claves de API y los tokens MCP se quedan aquí.",
+  settingsFileSummary:
+    "Importa o exporta los ajustes de la app y el historial de IA",
   settingsFileExport: "Exportar…",
   settingsFileImport: "Importar…",
   settingsFileImportConfirm:
@@ -1492,6 +1494,7 @@ para usar una.
   extensionsFold: "Ocultar",
   extensionsUnfold: "Mostrar",
   themePreviewEnlarge: "Ver más grande",
+  themeBackToList: "Todos los temas",
   extensionsThemesGet: "Conseguir temas",
   extensionsSkillsHelp: `Una habilidad le dice a ${AI_NAME} cómo hacer bien un tipo de tarea. Las activadas se ofrecen a ${AI_NAME} y en el menú /; una instalación nueva empieza con cinco activadas, y el resto se añade aquí.`,
   extensionsSkillsMoved:

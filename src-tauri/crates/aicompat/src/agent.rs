@@ -73,6 +73,14 @@ pub struct Source {
 }
 
 impl AgentTurn {
+    /// A message from the user with no pictures attached.
+    pub fn user(text: impl Into<String>) -> Self {
+        AgentTurn::User {
+            text: text.into(),
+            images: Vec::new(),
+        }
+    }
+
     /// A final reply that cites no web sources.
     pub fn assistant(text: impl Into<String>) -> Self {
         AgentTurn::Assistant {
