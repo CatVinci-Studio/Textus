@@ -1,4 +1,3 @@
-import type { Selection } from "@milkdown/kit/prose/state";
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { spanDelimText } from "./md-span-schema";
 
@@ -42,7 +41,7 @@ export function enclosureDelims(node: ProseNode): {
  * The math preview must use this same predicate, or the two would overlap.
  */
 export function cursorTouches(
-  selection: Selection,
+  selection: { from: number; to: number },
   from: number,
   to: number,
 ): boolean {
