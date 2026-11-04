@@ -994,8 +994,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
   outline-offset: 3px;
 }
 
-/* Mid-sentence, an image sits on the text like a glyph would. */
-.milkdown :not(.image-paragraph) > .image-view {
+/* Mid-sentence, an image sits on the text like a glyph would. A link
+   around one in a row of images (a README's badges) keeps it in the row. */
+.milkdown .image-view:not(.image-paragraph .image-view) {
   vertical-align: text-bottom;
 }
 

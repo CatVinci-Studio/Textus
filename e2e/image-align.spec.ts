@@ -21,3 +21,20 @@ test("the setting puts it on the left", async ({ page }) => {
   await openApp(page, { settings: { language: "en", imageAlign: "left" } });
   expect(await imageAlign(page)).toBe("left");
 });
+
+test("a row of images lines up whether or not each is a link", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(
+    page,
+    `[![linked](${PIXEL})](https://example.com)![plain](${PIXEL})`,
+  );
+  await expect(page.locator(`${editor} p.image-paragraph`)).toHaveCount(1);
+  const [linked, plain] = await page
+    .locator(`${editor} p.image-paragraph .image-view`)
+    .evaluateAll((views) =>
+      views.map((view) => view.getBoundingClientRect().bottom),
+    );
+  expect(linked).toBeCloseTo(plain, 0);
+});
