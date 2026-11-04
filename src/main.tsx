@@ -48,6 +48,15 @@ const ChatWindowApp = lazyComponent(
   (m) => m.ChatWindowApp,
 );
 
+// A plugin's floating view over the desktop, in a window of its own.
+const FloatingWindowApp = lazyComponent(
+  lazyModule(
+    "floating-window",
+    () => import("./plugins/views/FloatingWindowApp"),
+  ),
+  (m) => m.FloatingWindowApp,
+);
+
 // For Help > Report a Problem, from the first moment.
 watchErrors();
 
@@ -70,14 +79,18 @@ if (view === "background") {
           <AppErrorBoundary>
             <SettingsProvider>
               <AppearanceSync />
-              {view === "chat" ? (
+              {view === "floating" ? (
+                <Suspense fallback={null}>
+                  <FloatingWindowApp />
+                </Suspense>
+              ) : view === "chat" ? (
                 <Suspense fallback={null}>
                   <ChatWindowApp />
                 </Suspense>
               ) : (
                 <App />
               )}
-              <WindowEdges />
+              {view !== "floating" && <WindowEdges />}
             </SettingsProvider>
           </AppErrorBoundary>
         </React.StrictMode>,

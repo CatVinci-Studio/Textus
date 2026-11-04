@@ -29,6 +29,22 @@ import {
   type WebviewRecord,
 } from "./webviews";
 
+/** A webview's whole page, in the window's theme, and its frame's title. */
+export function webviewPage(record: WebviewRecord, html: string) {
+  const plugin = pluginRecord(record.plugin);
+  return {
+    srcdoc: webviewDocument(html, {
+      themeCss: webviewThemeCss(),
+      dark: windowIsDark(),
+      frameHosts: grantedHosts(plugin?.granted ?? []),
+      language: windowInfo().language(),
+      l10n: plugin?.manifest?.l10n ?? {},
+      floating: record.kind === "floating",
+    }),
+    title: plugin ? pluginName(plugin) : record.plugin,
+  };
+}
+
 /** The tallest a code block's frame grows; past it, it scrolls. */
 const MAX_CODE_BLOCK_HEIGHT = 1200;
 
@@ -63,17 +79,8 @@ export function PluginWebview({
     const box = boxRef.current;
     const current = webview(id);
     if (!box || html === null || !current) return;
-    const plugin = pluginRecord(current.plugin);
-    const frame = sandboxedFrame(
-      webviewDocument(html, {
-        themeCss: webviewThemeCss(),
-        dark: windowIsDark(),
-        frameHosts: grantedHosts(plugin?.granted ?? []),
-        language: windowInfo().language(),
-        l10n: plugin?.manifest?.l10n ?? {},
-      }),
-      plugin ? pluginName(plugin) : current.plugin,
-    );
+    const page = webviewPage(current, html);
+    const frame = sandboxedFrame(page.srcdoc, page.title);
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
     const disconnect = connectFrame(
@@ -154,7 +161,7 @@ export function PluginWebview({
 
 /** A webview made when this mounts, given to the plugin to fill, and closed
  *  when this unmounts. */
-function useResolvedWebview(
+export function useResolvedWebview(
   plugin: string,
   kind: WebviewKind,
   key: string,
@@ -204,7 +211,7 @@ function WebviewOrProblem({
   return <PluginWebview id={record.id} className={className} />;
 }
 
-/** A sidebar tab's panel, or a view in a tab of its own. */
+/** A sidebar tab's panel, a view in a tab of its own, or a floating view. */
 export function PluginWebviewPanel({
   plugin,
   view,
@@ -212,7 +219,7 @@ export function PluginWebviewPanel({
 }: {
   plugin: string;
   view: string;
-  kind: "sidebar" | "view";
+  kind: "sidebar" | "view" | "floating";
 }) {
   const { record, error } = useResolvedWebview(
     plugin,

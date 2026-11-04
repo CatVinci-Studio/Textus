@@ -127,6 +127,10 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   settings: null,
   editorKey: "editor.input",
   appState: null,
+  aiState: null,
+  activity: null,
+  floating: null,
+  floatingTouch: null,
 };
 
 export class PluginHost {
@@ -340,7 +344,11 @@ export class PluginHost {
           event,
           event === "settings" || event === "editorKey"
             ? () => {}
-            : onPluginEvent(event, (data) => this.event(event, data)),
+            : event === "floating" || event === "floatingTouch"
+              ? onPluginEvent(event, (data) => {
+                  if (data.plugin === this.id) this.event(event, data);
+                })
+              : onPluginEvent(event, (data) => this.event(event, data)),
         );
       },
       "plugin.readFile": ({ path }: Params) =>

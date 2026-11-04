@@ -16,6 +16,8 @@ pub mod default_editor;
 pub mod documents;
 pub mod drafts;
 pub mod export;
+#[cfg(desktop)]
+pub mod floating_window;
 pub mod folder;
 pub mod fonts;
 pub mod fs;

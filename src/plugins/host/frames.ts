@@ -67,6 +67,9 @@ export function webviewDocument(
     /** The UI's language and the plugin's strings, there before its scripts run. */
     language: string;
     l10n: Record<string, Record<string, string>>;
+    /** A floating view's page: no background of its own, so what the
+     *  plugin draws floats on its own. */
+    floating?: boolean;
   },
 ): string {
   const locale = JSON.stringify({
@@ -97,6 +100,7 @@ export function webviewDocument(
   const platformAttrs = [
     windowChrome ? ` data-window-chrome="${windowChrome}"` : "",
     platform ? ` data-platform="${platform}"` : "",
+    options.floating ? " data-floating" : "",
   ].join("");
   return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
     tag.replace(
