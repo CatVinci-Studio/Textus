@@ -197,9 +197,12 @@ declare global {
        *  "textus.offerPlugin" with { id, reason } suggests an official
        *  plugin from the market: the user is asked to install it, or turn
        *  it on, with its name, description and your reason (plain text, up
-       *  to 120 characters); resolves whether it is on. True at once when
-       *  it already is; false for another plugin's id, when declined (not
-       *  asked again until Textus restarts) or while an offer is open. */
+       *  to 120 characters) under your plugin's name; resolves
+       *  whether it is on. True at once when it already is; false for
+       *  another plugin's id, while another offer is open, when the install
+       *  fails, or when declined - after which your plugin's offers aren't
+       *  shown again until Textus restarts. Don't await it in activate:
+       *  activation has 10 seconds, and the user may take longer. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 

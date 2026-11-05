@@ -5,6 +5,7 @@ import { openApp } from "./helpers";
 // however often it asks, and the answer comes back to it.
 
 const HOST = `
+// Not awaited in activate: activation has 10 s, the user may take longer.
 exports.activate = function () {
   var ask = function (id) {
     return textus.commands.execute("textus.offerPlugin", {
@@ -71,6 +72,9 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   await openWithOfferingPlugin(page);
   const dialog = page.locator(".app-dialog");
   await expect(dialog).toContainText("Install the Kanban plugin?");
+  // Who asks, and a key typed as it opens lands on Cancel.
+  await expect(dialog.locator(".app-dialog-title")).toHaveText("Offer");
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
   await expect(dialog).toContainText("“Boards for the pages you import.”");
   await expect(dialog).toHaveCount(1);
   await dialog.getByRole("button", { name: "Install", exact: true }).click();

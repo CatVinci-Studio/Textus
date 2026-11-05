@@ -58,6 +58,11 @@ export interface BrokerDeps {
   setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
   runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** textus.offerPlugin, from the plugin `caller`: whether it is on. */
+  offerPlugin(
+    caller: { id: string; name: string },
+    request: unknown,
+  ): Promise<boolean>;
   /** The command palette with the plugin's items first (ui.pick's
    *  `commands`): the item's value, `{ typed }`, or null. */
   pickWithCommands(

@@ -1,6 +1,6 @@
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm, showMessage } from "../../ui/app-dialog";
 import { showNotice } from "../../ui/notices";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import {
@@ -19,6 +19,7 @@ import {
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
 import { pluginOffer } from "./offer-plugin";
+import { explainError } from "../../utils/error-explain";
 
 /**
  * A file nothing opens (a PDF, a picture) when an official plugin would:
@@ -144,4 +145,9 @@ export const offerPlugin = pluginOffer({
   confirm: showConfirm,
   install: installFromCatalog,
   turnOn: (id) => setPluginEnabled(id, true),
+  failed: (error, t) =>
+    void showMessage(explainError(error, t), {
+      title: t.pluginsTitle,
+      tone: "error",
+    }),
 });

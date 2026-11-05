@@ -9,8 +9,8 @@ export interface CommandDef {
   id: string;
   title: (t: Strings) => string;
   /** Run from a shortcut or a menu with no arguments; a plugin's
-   *  executeCommand may pass some, and is given what it returns. */
-  run: (...args: unknown[]) => unknown;
+   *  executeCommand may pass some. */
+  run: (...args: unknown[]) => void;
   /** A combo as Settings writes them ("mod+shift+k"), or none. */
   shortcut?: string;
   /** Whether it can run now; left out, always. */
@@ -41,17 +41,10 @@ export function commands(): readonly CommandDef[] {
 /** Runs the command with this id, if it is there and can run now; whether
  *  it ran. */
 export function runCommand(id: string, args: unknown[] = []): boolean {
-  return callCommand(id, args) !== null;
-}
-
-/** Runs it as runCommand does; what it returned, or null when it didn't run. */
-export function callCommand(
-  id: string,
-  args: unknown[] = [],
-): { result: unknown } | null {
   const command = registered.find((c) => c.id === id);
-  if (!command || command.enabled?.() === false) return null;
-  return { result: command.run(...args) };
+  if (!command || command.enabled?.() === false) return false;
+  command.run(...args);
+  return true;
 }
 
 /** A command's key: the user's override ("" for none), else its own. */
