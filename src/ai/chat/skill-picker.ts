@@ -13,20 +13,14 @@ import type { AgentMode } from "../../prefs/settings-types";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 
-/**
- * The composer's two pickers: when they open, what they list, and what a
- * typed `/word` means. CJK IMEs type the slash as `、`, `／` or `・` and the
- * at-sign as `＠`, so those open them too.
- */
-
-/** The input is one `/word` still being typed: the skill picker is open. */
-export const SKILL_TRIGGER = /^[/／、・](\S*)$/;
-/** A whole `/word rest…` message: the word, then whatever follows it. */
-export const SKILL_COMMAND = /^[/／、・](\S+)(?:\s+([\s\S]*))?$/;
-/** An `@path` being typed at the end of the input: the file picker. */
-export const MENTION_TRIGGER = /(?:^|\s)[@＠]([^\s@＠]*)$/;
-/** The same `@path`, for removing it once a file is picked. */
-export const MENTION_TOKEN = /(^|\s)[@＠][^\s@＠]*$/;
+/** The composer's two pickers: when they open, what they list, and what a
+ *  typed `/word` means. */
+export {
+  MENTION_TOKEN,
+  MENTION_TRIGGER,
+  SKILL_COMMAND,
+  SKILL_TRIGGER,
+} from "./skill-syntax";
 
 /** How many recently used skills lead the menu. */
 const RECENT_LIMIT = 5;

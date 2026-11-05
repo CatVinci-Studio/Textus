@@ -1,5 +1,8 @@
-import { afterEach, expect, it } from "vitest";
+import { afterEach, beforeAll, expect, it } from "vitest";
 import { addSlashItems, slashItemsFor } from "./slash-commands";
+import { pinyinEngine } from "../../utils/pinyin";
+
+beforeAll(() => pinyinEngine.load());
 
 let remove: (() => void) | null = null;
 afterEach(() => remove?.());
