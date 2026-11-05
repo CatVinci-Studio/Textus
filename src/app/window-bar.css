@@ -330,13 +330,15 @@
   --header-height: 64px;
 }
 
-/* Both rows clear the window bar by 2px and leave 3px under their tabs, so
-   the sidebar's tabs and the document's centre on one line. */
 :root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
   box-sizing: border-box;
   height: var(--header-height);
-  padding-top: 30px;
-  padding-bottom: 3px;
+}
+
+/* Its tabs centre on the document bar's: both clear the window bar and leave
+   the same 4px under the row. */
+:root:not([data-window-chrome="mobile"]) .sidebar-header {
+  padding-bottom: 4px;
 }
 
 :root:not([data-window-chrome="mobile"]) .agent-panel-header {
