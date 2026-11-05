@@ -81,6 +81,9 @@ export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
 export interface OpenFileInTab {
   path: string;
   anchor?: string;
+  /** A link to a file of any type: one Textus can't show is offered to the
+   *  system's app for it instead, after asking. */
+  linked?: boolean;
 }
 
 /** Zen mode turned on/off (detail: boolean). */

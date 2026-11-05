@@ -1,7 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { exportDoc, fs, links } from "../../platform/ipc";
+import { fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
@@ -12,9 +12,6 @@ import { revealedLinkHref } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
 import { windowFolder } from "../../platform/window-folder";
-import { currentStrings } from "../../i18n/current";
-import { showConfirm } from "../../ui/app-dialog";
-import { basename } from "../../utils/path";
 
 /** The link under a mouse event in this editor, if any. */
 function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
@@ -51,26 +48,17 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   }
   // A link to a file that isn't there opens nothing.
   if ((await fs.fileMtimeMs(target.path)) === null) return;
-  if (target.kind === "document")
-    window.dispatchEvent(
-      new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
-        detail: { path: target.path, anchor: target.anchor },
-      }),
-    );
-  // Asked first: a document's link shouldn't open things unseen. A program
-  // is only shown in its folder, which the backend decides.
-  else {
-    const t = currentStrings();
-    const name = basename(target.path);
-    const open = await showConfirm(
-      t.linkOpenFileConfirm.replace("{name}", name),
-      {
-        okLabel: t.linkOpenFileOk,
-        cancelLabel: t.closePromptCancel,
-      },
-    );
-    if (open) await exportDoc.openLinkedFile(target.path);
-  }
+  // A Markdown file opens in a tab; another kind in a tab too when Textus
+  // shows it (a Word file, a plugin's PDF), else the app asks to open it
+  // outside.
+  window.dispatchEvent(
+    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
+      detail:
+        target.kind === "document"
+          ? { path: target.path, anchor: target.anchor }
+          : { path: target.path, linked: true },
+    }),
+  );
 }
 
 /** A wikilink: `[[#Heading]]` scrolls here, `[[Note]]` opens the vault's
