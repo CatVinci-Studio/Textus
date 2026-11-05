@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, {
     read_text_file:
-      "See [the paper](<./papers/a b.zip>) and [the report](./Report.docx).",
+      "See [the paper](<./papers/a b.zip>), [the report](./Report.docx) and [the scan](./scan.pdf).",
     open_word_document: { markdown: "# Report\n\nQuarterly numbers." },
     file_mtime_ms: 1,
     open_linked_file: null,
@@ -36,7 +36,7 @@ test.beforeEach(async ({ page }) => {
       position: { x: 0, y: 0 },
     }),
   );
-  await expect(page.locator(`${editor} a`)).toHaveCount(2);
+  await expect(page.locator(`${editor} a`)).toHaveCount(3);
 });
 
 test("Ctrl/Cmd+click on a local file asks, then opens it in its app", async ({
@@ -77,5 +77,20 @@ test("Ctrl/Cmd+click on a Word file opens it in a tab, without asking", async ({
   );
   await expect(page.locator(editor)).toContainText("Quarterly numbers.");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await calls(page, "open_linked_file")).toEqual([]);
+});
+
+test("a file only an official plugin opens offers that plugin, and opens with it", async ({
+  page,
+}) => {
+  await page
+    .locator(`${editor} a`, { hasText: "the scan" })
+    .click({ modifiers: ["ControlOrMeta"] });
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("scan.pdf");
+  await dialog.getByRole("button", { name: "Install and open" }).click();
+  await expect(page.locator(".tab-pill-active .tab-pill-title")).toHaveText(
+    /scan\.pdf/,
+  );
   expect(await calls(page, "open_linked_file")).toEqual([]);
 });

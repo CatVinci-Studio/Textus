@@ -151,9 +151,10 @@ export function useFileOpening(opts: {
         if (asDocument) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
-        const now = (await offerPluginToOpen(path, t))
-          ? customEditorFor(path)
-          : null;
+        const now =
+          (await offerPluginToOpen(path, t)) === "on"
+            ? customEditorFor(path)
+            : null;
         if (now) return pluginTab(path, now, place);
         throw err;
       }
@@ -293,15 +294,20 @@ export function useFileOpening(opts: {
     else void openPathInTab(path, { anchor });
   });
 
-  // A linked file: in a tab when Textus shows it, else, once the user agrees,
-  // in the system's app (a document's link shouldn't open things unseen; a
-  // program is only shown in its folder, which the backend decides).
+  // A linked file: in a tab when Textus shows it, or when an official plugin
+  // would and the user installs it; else, once the user agrees, in the
+  // system's app (a document's link shouldn't open things unseen; a program
+  // is only shown in its folder, which the backend decides).
   const openLinkedFile = async (path: string) => {
     await loadPlugins().catch(() => {});
     if (isWordDocument(path) || customEditorFor(path)) {
       await openPathInTab(path);
       return;
     }
+    const { offerPluginToOpen } = await import("../plugins/store/open-offer");
+    const offered = await offerPluginToOpen(path, t);
+    if (offered === "on") await openPathInTab(path);
+    if (offered !== "none") return;
     const open = await showConfirm(
       t.linkOpenFileConfirm.replace("{name}", basename(path)),
       { okLabel: t.linkOpenFileOk, cancelLabel: t.closePromptCancel },
