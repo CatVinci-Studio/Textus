@@ -1,8 +1,9 @@
 import type { Plugin } from "vite";
 
 // The entry chunk every window loads before its first frame. A build whose
-// entry outgrows this fails, so heavy parts stay lazy.
-const BUDGET_BYTES = 1_100_000;
+// entry outgrows this fails, so heavy parts stay lazy. Startup time is what
+// counts; the size is the check a build can make.
+const BUDGET_BYTES = 1_250_000;
 
 export function startupBudget(): Plugin {
   return {

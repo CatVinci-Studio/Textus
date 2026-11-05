@@ -1,4 +1,4 @@
-import tinyPinyin from "tiny-pinyin";
+import { lazyModule } from "../lazy/lazy-module";
 
 /**
  * Finding Chinese names by pinyin, as Chinese file managers and launchers
@@ -7,6 +7,14 @@ import tinyPinyin from "tiny-pinyin";
  */
 
 const HAN = /\p{Script=Han}/u;
+
+/** The readings' source, loaded once the window is idle rather than before
+ *  its first frame; a search waits for it. */
+export const pinyinEngine = lazyModule(
+  "pinyin",
+  () => import("tiny-pinyin").then((module) => module.default),
+  { warm: true },
+);
 
 /** Common characters read more than one way: the collation's one reading
  *  is often the other. */
@@ -54,10 +62,11 @@ const MORE_READINGS: Record<string, string[]> = {
 };
 
 /** Each character's readings in lower case, a character that isn't Han
- *  standing for itself; null for text without Han, or where the system
- *  can't tell. */
+ *  standing for itself; null for text without Han, where the system can't
+ *  tell, or before pinyinEngine has loaded. */
 export function readings(text: string): string[][] | null {
-  if (!HAN.test(text) || !tinyPinyin.isSupported()) return null;
+  const tinyPinyin = pinyinEngine.peek();
+  if (!HAN.test(text) || !tinyPinyin?.isSupported()) return null;
   return tinyPinyin.parse(text).map((token) => {
     if (token.type !== 2) return [token.source.toLowerCase()];
     const read = token.target.toLowerCase();

@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { quickPickMatches } from "./quick-pick";
+import { pinyinEngine } from "../utils/pinyin";
+
+beforeAll(() => pinyinEngine.load());
 
 describe("the quick pick's filter", () => {
   it("matches every word typed, or a Chinese label spelled in pinyin", () => {

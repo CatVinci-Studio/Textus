@@ -982,6 +982,11 @@ para usar una.
   autoCloseBracketsLabel: "Cerrar (), [] y «»",
   plainTextMenuLabel: "Copiar y pegar sin formato en el menú contextual",
   pdfPageNumbersLabel: "Mostrar números de página al exportar",
+  docxTemplateLabel: "Plantilla de Word",
+  docxTemplateHelp:
+    "Los archivos de Word exportados toman los estilos, fuentes y márgenes de este archivo.",
+  docxTemplateNone: "Predeterminada de Pandoc",
+  docxTemplateClear: "Usar predeterminada",
   pdfLightColorsLabel: "Exportar PDF con colores claros",
   infoTipLabel: "Más sobre «{label}»",
   infoTipLabelPlain: "Más información",
@@ -1299,6 +1304,8 @@ para usar una.
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",
   closePromptCancel: "Cancelar",
+  linkOpenFileConfirm: "¿Abrir «{name}» en su aplicación?",
+  linkOpenFileOk: "Abrir",
   cancel: "Cancelar",
   draftRestoredMessage:
     "Se recuperó contenido sin guardar de la sesión anterior.",

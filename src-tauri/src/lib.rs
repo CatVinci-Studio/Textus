@@ -27,6 +27,8 @@ mod settings;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
+#[cfg(windows)]
+mod webview_memory;
 mod window_frame;
 
 use ai::agent::ai_agent_message;
@@ -60,7 +62,8 @@ use tauri::{Emitter, Manager, State};
 use commands::cli::{cli_command_status, install_cli_command};
 #[cfg(desktop)]
 use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
+    detect_pandoc, export_pdf_native, export_via_pandoc, open_linked_file,
+    open_pandoc_install_page, reveal_in_dir,
 };
 #[cfg(desktop)]
 use commands::session::{cancel_session_quit, update_session_paths, SessionTabsState};
@@ -100,6 +103,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
+            #[cfg(windows)]
+            webview_memory::follow_minimized(window, event);
             if matches!(
                 event,
                 tauri::WindowEvent::Focused(_) | tauri::WindowEvent::Destroyed
@@ -527,6 +532,8 @@ pub fn run() {
             open_pandoc_install_page,
             #[cfg(desktop)]
             reveal_in_dir,
+            #[cfg(desktop)]
+            open_linked_file,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

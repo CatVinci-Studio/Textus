@@ -4,6 +4,7 @@ import type { HoverTarget } from "../extension-points";
 import { linkTarget } from "../markdown/link-target";
 import { parseWikilink } from "../markdown/wikilink";
 import { windowFolder } from "../../platform/window-folder";
+import { zoomedRectScale } from "../../ui/zoomed-rects";
 
 /** A citation as Pandoc and Zotero write it: `[@key]`, `[@key, p. 4]`,
  *  `[see @key]`, or several in one, `[@a; @b]`. */
@@ -14,12 +15,29 @@ const CITE_KEY = /@([\w:.#$%&+?<>~/-]+)/g;
 export interface HoverSpot {
   /** What stays the same while the pointer moves within it. */
   key: string;
+  /** As drawn on screen, inside the document's zoom or not. */
   rect: DOMRect;
   resolve: () => Promise<HoverTarget | null>;
 }
 
 /** The link, wikilink or citation under `event` in this editor, if any. */
 export function hoverSpot(
+  view: EditorView,
+  event: MouseEvent,
+  docPath: string | null,
+): HoverSpot | null {
+  const spot = spotAt(view, event, docPath);
+  if (!spot) return null;
+  const scale = zoomedRectScale(view.dom);
+  if (scale === 1) return spot;
+  const { left, top, width, height } = spot.rect;
+  return {
+    ...spot,
+    rect: new DOMRect(left * scale, top * scale, width * scale, height * scale),
+  };
+}
+
+function spotAt(
   view: EditorView,
   event: MouseEvent,
   docPath: string | null,

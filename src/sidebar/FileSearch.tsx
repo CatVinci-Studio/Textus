@@ -19,6 +19,7 @@ import {
   type SearchEntry,
   type SearchScope,
 } from "./file-search";
+import { pinyinEngine } from "../utils/pinyin";
 import type { Strings } from "../i18n/strings";
 import { isImeKeydown } from "../utils/ime";
 
@@ -58,8 +59,11 @@ function useFolderIndex(
     builtAt.current = Date.now();
     const id = ++request.current;
     setIndex((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
-    fs.indexFolder(root).then(
-      (result) => {
+    Promise.all([
+      fs.indexFolder(root),
+      pinyinEngine.load().catch(() => null),
+    ]).then(
+      ([result]) => {
         if (id !== request.current) return;
         setIndex({
           kind: "ready",

@@ -191,6 +191,8 @@ pub(crate) fn hide_native_menu_bar(window: &tauri::WebviewWindow) {
     let _ = window;
 }
 
+/// From a command, only an async one: a sync command building a window can
+/// deadlock WebView2 on Windows.
 #[cfg(desktop)]
 pub(crate) fn build_window(
     app: &tauri::AppHandle,

@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { mayBePinyin, pinyinIndexOf, readings } from "./pinyin";
+import { beforeAll, describe, expect, it } from "vitest";
+import { mayBePinyin, pinyinEngine, pinyinIndexOf, readings } from "./pinyin";
+
+beforeAll(() => pinyinEngine.load());
 
 const find = (name: string, query: string) =>
   pinyinIndexOf(readings(name) ?? [], query);

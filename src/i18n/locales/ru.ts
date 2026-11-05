@@ -976,6 +976,11 @@ export default {
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
   plainTextMenuLabel: "Копировать/вставить как текст в контекстном меню",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
+  docxTemplateLabel: "Шаблон Word",
+  docxTemplateHelp:
+    "Экспортированные файлы Word берут стили, шрифты и поля из этого файла.",
+  docxTemplateNone: "По умолчанию Pandoc",
+  docxTemplateClear: "По умолчанию",
   pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",
   infoTipLabelPlain: "Подробнее",
@@ -1291,6 +1296,8 @@ export default {
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",
   closePromptCancel: "Отменить",
+  linkOpenFileConfirm: "Открыть «{name}» в его приложении?",
+  linkOpenFileOk: "Открыть",
   cancel: "Отменить",
   draftRestoredMessage:
     "Восстановлено несохранённое содержимое прошлого сеанса.",
