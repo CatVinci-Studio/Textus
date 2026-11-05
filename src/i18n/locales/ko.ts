@@ -1232,6 +1232,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closePromptSave: "저장",
   closePromptDiscard: "저장 안 함",
   closePromptCancel: "취소",
+  linkOpenFileConfirm: "‘{name}’을(를) 기본 앱으로 열까요?",
+  linkOpenFileOk: "열기",
   cancel: "취소",
   draftRestoredMessage: "지난 세션에서 저장하지 않은 내용을 복구했습니다.",
   draftRestoredDismiss: "확인",

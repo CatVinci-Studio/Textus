@@ -187,6 +187,12 @@ export const commands = {
 	open_pandoc_install_page: () => __TAURI_INVOKE<null>("open_pandoc_install_page"),
 	/**  Shows the exported file in Finder, as visible feedback for the export. */
 	reveal_in_dir: (path: string) => __TAURI_INVOKE<null>("reveal_in_dir", { path }),
+	/**
+	 *  A local file a document links to, opened in the app the system picks for
+	 *  it, after the user agreed in the editor; one the system would run is only
+	 *  shown in its folder.
+	 */
+	open_linked_file: (path: string) => __TAURI_INVOKE<null>("open_linked_file", { path }),
 	save_theme_css: (id: string, variant: string, css: string) => __TAURI_INVOKE<null>("save_theme_css", { id, variant, css }),
 	load_theme_css: (id: string, variant: string) => __TAURI_INVOKE<string | null>("load_theme_css", { id, variant }),
 	delete_theme: (id: string) => __TAURI_INVOKE<null>("delete_theme", { id }),

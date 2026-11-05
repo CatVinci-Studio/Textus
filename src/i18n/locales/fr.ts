@@ -1322,6 +1322,8 @@ utiliser une.
   closePromptSave: "Enregistrer",
   closePromptDiscard: "Ne pas enregistrer",
   closePromptCancel: "Annuler",
+  linkOpenFileConfirm: "Ouvrir « {name} » dans son application ?",
+  linkOpenFileOk: "Ouvrir",
   cancel: "Annuler",
   draftRestoredMessage:
     "Le contenu non enregistré de la dernière session a été récupéré.",

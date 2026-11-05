@@ -1184,6 +1184,8 @@ export default {
   closePromptSave: "儲存",
   closePromptDiscard: "不儲存",
   closePromptCancel: "取消",
+  linkOpenFileConfirm: "用預設程式開啟「{name}」？",
+  linkOpenFileOk: "開啟",
   cancel: "取消",
   draftRestoredMessage: "已復原上次工作階段中未儲存的內容。",
   draftRestoredDismiss: "知道了",

@@ -1304,6 +1304,8 @@ para usar una.
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",
   closePromptCancel: "Cancelar",
+  linkOpenFileConfirm: "¿Abrir «{name}» en su aplicación?",
+  linkOpenFileOk: "Abrir",
   cancel: "Cancelar",
   draftRestoredMessage:
     "Se recuperó contenido sin guardar de la sesión anterior.",

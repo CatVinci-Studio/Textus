@@ -62,7 +62,8 @@ use tauri::{Emitter, Manager, State};
 use commands::cli::{cli_command_status, install_cli_command};
 #[cfg(desktop)]
 use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
+    detect_pandoc, export_pdf_native, export_via_pandoc, open_linked_file,
+    open_pandoc_install_page, reveal_in_dir,
 };
 #[cfg(desktop)]
 use commands::session::{cancel_session_quit, update_session_paths, SessionTabsState};
@@ -531,6 +532,7 @@ pub fn run() {
             open_pandoc_install_page,
             #[cfg(desktop)]
             reveal_in_dir,
+            open_linked_file,
         ])
         .build(tauri::generate_context!())
         .expect("error while running tauri application")

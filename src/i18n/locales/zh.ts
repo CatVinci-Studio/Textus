@@ -1183,6 +1183,8 @@ export default {
   closePromptSave: "保存",
   closePromptDiscard: "不保存",
   closePromptCancel: "取消",
+  linkOpenFileConfirm: "用默认程序打开「{name}」？",
+  linkOpenFileOk: "打开",
   cancel: "取消",
   draftRestoredMessage: "已恢复上次会话中未保存的内容。",
   draftRestoredDismiss: "知道了",

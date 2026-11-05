@@ -1296,6 +1296,8 @@ export default {
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",
   closePromptCancel: "Отменить",
+  linkOpenFileConfirm: "Открыть «{name}» в его приложении?",
+  linkOpenFileOk: "Открыть",
   cancel: "Отменить",
   draftRestoredMessage:
     "Восстановлено несохранённое содержимое прошлого сеанса.",

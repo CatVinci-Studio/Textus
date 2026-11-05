@@ -12,6 +12,9 @@ import { revealedLinkHref } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { parseWikilink } from "./wikilink";
 import { windowFolder } from "../../platform/window-folder";
+import { currentStrings } from "../../i18n/current";
+import { showConfirm } from "../../ui/app-dialog";
+import { basename } from "../../utils/path";
 
 /** The link under a mouse event in this editor, if any. */
 function linkAt(view: EditorView, event: MouseEvent): HTMLAnchorElement | null {
@@ -54,9 +57,20 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
         detail: { path: target.path, anchor: target.anchor },
       }),
     );
-  // Shown, not opened: the system would run a linked program as readily as it
-  // shows a PDF.
-  else return exportDoc.revealInDir(target.path);
+  // Asked first: a document's link shouldn't open things unseen. A program
+  // is only shown in its folder, which the backend decides.
+  else {
+    const t = currentStrings();
+    const name = basename(target.path);
+    const open = await showConfirm(
+      t.linkOpenFileConfirm.replace("{name}", name),
+      {
+        okLabel: t.linkOpenFileOk,
+        cancelLabel: t.closePromptCancel,
+      },
+    );
+    if (open) await exportDoc.openLinkedFile(target.path);
+  }
 }
 
 /** A wikilink: `[[#Heading]]` scrolls here, `[[Note]]` opens the vault's
