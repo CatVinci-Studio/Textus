@@ -13,11 +13,11 @@ exports.activate = function () {
       reason: "Boards for the pages you import.",
     });
   };
-  // Not an official plugin of the market's: no dialog.
-  ask("test.offer")
-    .then(function (own) {
+  // Listed, but not official: no dialog.
+  ask("catvinci.database")
+    .then(function (listed) {
       return Promise.all([
-        own,
+        listed,
         ask("catvinci.kanban"),
         ask("catvinci.kanban"),
         ask("catvinci.kanban"),
@@ -60,6 +60,8 @@ async function openWithOfferingPlugin(page: Page) {
         allOn: true,
         plugins: { [manifest.id]: { enabled: true, granted: [] } },
       };
+      // As a community plugin is listed.
+      w.__devCatalogStats = { "catvinci.database": { official: false } };
     },
     { manifest: MANIFEST, host: HOST },
   );
@@ -79,10 +81,9 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   await expect(dialog).toHaveCount(1);
   await dialog.getByRole("button", { name: "Install", exact: true }).click();
   // Its permissions, as any install asks.
-  const allow = page.locator(".app-dialog").getByRole("button", {
-    name: "Allow",
-  });
-  if (await allow.isVisible().catch(() => false)) await allow.click();
+  const ask = page.locator(".app-dialog");
+  await expect(ask).toContainText("Kanban asks to:");
+  await ask.getByRole("button", { name: "Allow" }).click();
   await expect(page.getByText("answers: false,true,false,false")).toBeVisible();
 });
 
