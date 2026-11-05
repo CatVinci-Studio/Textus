@@ -36,9 +36,11 @@ const REASON_MAX = 120;
 export function shortReason(reason: unknown): string {
   const line =
     typeof reason === "string" ? reason.replace(/\s+/g, " ").trim() : "";
-  return line.length > REASON_MAX
-    ? `${line.slice(0, REASON_MAX - 1).trimEnd()}…`
-    : line;
+  // By code point, so an emoji at the cut isn't split in half.
+  const chars = Array.from(line);
+  if (chars.length <= REASON_MAX) return line;
+  const cut = chars.slice(0, REASON_MAX - 1).join("");
+  return `${cut.trimEnd()}…`;
 }
 
 // One pass, so a name or reason holding "{description}" or "$&" stays as written.

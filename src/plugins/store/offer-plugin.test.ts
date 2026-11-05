@@ -177,4 +177,10 @@ describe("shortReason", () => {
     expect(long.endsWith("…")).toBe(true);
     expect(shortReason(undefined)).toBe("");
   });
+
+  it("doesn't cut an emoji in half", () => {
+    expect(shortReason(`${"x".repeat(118)}😀yyyyy`)).toBe(
+      `${"x".repeat(118)}😀…`,
+    );
+  });
 });
