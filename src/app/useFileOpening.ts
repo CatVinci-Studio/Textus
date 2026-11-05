@@ -16,7 +16,7 @@ import {
   windowIsUntouched,
   type DocTab,
 } from "../document/doc-tabs";
-import { fs, session, windowIpc } from "../platform/ipc";
+import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import {
   DROP_IMAGE_FILES_EVENT,
@@ -30,7 +30,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
-import { showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../ui/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";
@@ -151,9 +151,10 @@ export function useFileOpening(opts: {
         if (asDocument) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
-        const now = (await offerPluginToOpen(path, t))
-          ? customEditorFor(path)
-          : null;
+        const now =
+          (await offerPluginToOpen(path, t)) === "on"
+            ? customEditorFor(path)
+            : null;
         if (now) return pluginTab(path, now, place);
         throw err;
       }
@@ -286,10 +287,33 @@ export function useFileOpening(opts: {
   // replacing the document being written.
   useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) => {
     const detail = (e as CustomEvent<string | OpenFileInTab>).detail;
-    const { path, anchor } =
-      typeof detail === "string" ? { path: detail, anchor: undefined } : detail;
-    if (typeof path === "string" && path) void openPathInTab(path, { anchor });
+    const { path, anchor, linked } =
+      typeof detail === "string" ? { path: detail } : detail;
+    if (typeof path !== "string" || !path) return;
+    if (linked) void openLinkedFile(path);
+    else void openPathInTab(path, { anchor });
   });
+
+  // A linked file: in a tab when Textus shows it, or when an official plugin
+  // would and the user installs it; else, once the user agrees, in the
+  // system's app (a document's link shouldn't open things unseen; a program
+  // is only shown in its folder, which the backend decides).
+  const openLinkedFile = async (path: string) => {
+    await loadPlugins().catch(() => {});
+    if (isWordDocument(path) || customEditorFor(path)) {
+      await openPathInTab(path);
+      return;
+    }
+    const { offerPluginToOpen } = await import("../plugins/store/open-offer");
+    const offered = await offerPluginToOpen(path, t);
+    if (offered === "on") await openPathInTab(path);
+    if (offered !== "none") return;
+    const open = await showConfirm(
+      t.linkOpenFileConfirm.replace("{name}", basename(path)),
+      { okLabel: t.linkOpenFileOk, cancelLabel: t.closePromptCancel },
+    );
+    if (open) await exportDoc.openLinkedFile(path);
+  };
   // The detached chat window reopened a past conversation.
   useEffect(
     () =>

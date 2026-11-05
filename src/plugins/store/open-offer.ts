@@ -43,17 +43,18 @@ export function catalogEditorFor(
   );
 }
 
-/** Asks to install or turn on the plugin that opens `path`; true when it
- *  is on now, so the file can be opened with it. */
+/** Asks to install or turn on the plugin that opens `path`: "on" when it
+ *  is on now, so the file can be opened with it; "declined" when the user
+ *  said no; "none" when no official plugin opens it. */
 export async function offerPluginToOpen(
   path: string,
   t: Strings,
-): Promise<boolean> {
+): Promise<"on" | "declined" | "none"> {
   await loadCatalog().catch(() => {});
   const catalog = catalogSnapshot();
-  if (catalog.status !== "ready") return false;
+  if (catalog.status !== "ready") return "none";
   const item = catalogEditorFor(path, catalog.items);
-  if (!item) return false;
+  if (!item) return "none";
   const installed = pluginRecord(item.id);
   const name = pluginName({ id: item.id, manifest: item.manifest });
   const file = basename(path);
@@ -66,10 +67,10 @@ export async function offerPluginToOpen(
       cancelLabel: t.cancel,
     },
   );
-  if (!ok) return false;
+  if (!ok) return "declined";
   if (installed) await setPluginEnabled(item.id, true);
   else await installFromCatalog(item.id);
-  return pluginRecord(item.id)?.status === "on";
+  return pluginRecord(item.id)?.status === "on" ? "on" : "declined";
 }
 
 /** How each kind a plugin can be suggested for shows in a document. */
