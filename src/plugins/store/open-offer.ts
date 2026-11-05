@@ -18,6 +18,7 @@ import {
 } from "../manager";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
+import { pluginOffer } from "./offer-plugin";
 
 /**
  * A file nothing opens (a PDF, a picture) when an official plugin would:
@@ -122,3 +123,25 @@ export async function offerForContent(content: string, t: Strings) {
 const OFFER_TEXT: Record<SuggestKind, (t: Strings) => string> = {
   wikilinks: (t) => t.wikilinksPluginOffer,
 };
+
+/** textus.offerPlugin, with the market catalog and the app's dialogs. */
+export const offerPlugin = pluginOffer({
+  official: async (id) => {
+    await loadCatalog().catch(() => {});
+    const catalog = catalogSnapshot();
+    const item =
+      catalog.status === "ready"
+        ? catalog.items.find((i) => i.official && i.id === id)
+        : undefined;
+    if (!item) return null;
+    const { manifest } = item;
+    return {
+      name: pluginName({ id, manifest }),
+      description: pluginText({ manifest }, manifest.description),
+    };
+  },
+  status: (id) => pluginRecord(id)?.status,
+  confirm: showConfirm,
+  install: installFromCatalog,
+  turnOn: (id) => setPluginEnabled(id, true),
+});

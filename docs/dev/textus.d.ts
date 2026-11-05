@@ -193,7 +193,13 @@ declare global {
        *  "textus.closeTab" ({ save: true } closes once saved) and
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
-       *  "blockquote", "code-block", "math-block", "rule" or "table". */
+       *  "blockquote", "code-block", "math-block", "rule" or "table".
+       *  "textus.offerPlugin" with { id, reason } suggests an official
+       *  plugin from the market: the user is asked to install it, or turn
+       *  it on, with its name, description and your reason (plain text, up
+       *  to 120 characters); resolves whether it is on. True at once when
+       *  it already is; false for another plugin's id, when declined (not
+       *  asked again until Textus restarts) or while an offer is open. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 

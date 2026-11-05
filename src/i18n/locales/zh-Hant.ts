@@ -1479,6 +1479,10 @@ export default {
   pluginOpenTurnOn:
     "外掛「{name}」可以開啟「{file}」，但它目前已關閉。要開啟外掛並開啟這個檔案嗎？",
   pluginOpenTurnOnButton: "開啟並開啟檔案",
+  pluginOfferInstall: "安裝外掛「{name}」？\n{description}",
+  pluginOfferTurnOn:
+    "外掛「{name}」已安裝但目前已關閉。要開啟嗎？\n{description}",
+  pluginOfferReason: "來自外掛的建議：「{reason}」",
   pluginScreenshot: "{name} 使用截圖",
   pluginsMine: "我做的外掛",
   pluginsNone: "尚無。",

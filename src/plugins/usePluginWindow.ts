@@ -200,12 +200,24 @@ export function usePluginWindow({
           );
       },
     });
+    // An official plugin from the market, suggested by another plugin; the
+    // user confirms each install, so it needs no permission.
+    const offerPlugin = registerCommand({
+      id: "textus.offerPlugin",
+      title: (t) => t.pluginInstall,
+      palette: false,
+      run: (request) =>
+        import("./store/open-offer").then((offer) =>
+          offer.offerPlugin(request, tRef.current),
+        ),
+    });
     return () => {
       save();
       close();
       insertBlock();
+      offerPlugin();
     };
-  }, [saveRef, closeRef]);
+  }, [saveRef, closeRef, tRef]);
 
   // A plugin a developer loaded from a folder, loaded again as it changes.
   useEffect(() => watchDevPlugins(), []);

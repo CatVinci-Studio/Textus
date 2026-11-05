@@ -1607,6 +1607,10 @@ export default {
   pluginOpenTurnOn:
     "Плагин «{name}» открывает «{file}», но он выключен. Включить его и открыть файл?",
   pluginOpenTurnOnButton: "Включить и открыть",
+  pluginOfferInstall: "Установить плагин {name}?\n{description}",
+  pluginOfferTurnOn:
+    "Плагин {name} установлен, но выключен. Включить?\n{description}",
+  pluginOfferReason: "Предложено плагином: «{reason}»",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
   pluginsNone: "Пока нет.",

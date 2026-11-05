@@ -13,7 +13,7 @@ import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import type { PluginFile } from "../platform/ipc";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
-import { registerCommand, runCommand } from "../app/commands";
+import { callCommand, registerCommand } from "../app/commands";
 import { pickWithCommands } from "../app/command-palette-entry";
 import { showConfirm, showMessage } from "../ui/app-dialog";
 import { getActiveDocument } from "./app-bridge";
@@ -195,9 +195,9 @@ async function host(record: PluginRecord): Promise<PluginHost> {
             (r) => r.status === "on" && command.startsWith(`${r.id}.`),
           );
           if (owner) return runPluginCommand(owner.id, command, args);
-          if (!runCommand(command, args))
-            throw new Error(`No command ${command}.`);
-          return null;
+          const ran = callCommand(command, args);
+          if (!ran) throw new Error(`No command ${command}.`);
+          return (await ran.result) ?? null;
         },
         commandRegistered: (id, command, editor) => {
           const manifest = pluginRecord(id)?.manifest;
