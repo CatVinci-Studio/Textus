@@ -932,6 +932,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autoCloseBracketsLabel: "()、[]、「」を補完",
   plainTextMenuLabel: "右クリックメニューにプレーンテキストでコピー/ペースト",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
+  docxTemplateLabel: "Word テンプレート",
+  docxTemplateHelp:
+    "書き出した Word ファイルに、このファイルのスタイル・フォント・余白を使います。",
+  docxTemplateNone: "Pandoc の既定",
+  docxTemplateClear: "既定に戻す",
   pdfLightColorsLabel: "PDF を明るい配色で書き出す",
   infoTipLabel: "「{label}」について",
   infoTipLabelPlain: "詳細",

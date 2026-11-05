@@ -4,7 +4,7 @@ import { useKatexHtml } from "../math/useKatexHtml";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
 import { useSettings } from "../../prefs/SettingsContext";
-import { SourceTextarea } from "./SourceTextarea";
+import { DocSourceTextarea } from "./DocSourceTextarea";
 import "./SplitView.css";
 
 /**
@@ -105,10 +105,11 @@ export function SplitView({
 
   return (
     <div className="split-view">
-      <SourceTextarea
+      <DocSourceTextarea
         ref={sourceRef}
         className="split-source"
         value={content}
+        docPath={filePath}
         typewriter={typewriter}
         onChange={onChange}
         readOnly={readOnly}

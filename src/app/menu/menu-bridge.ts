@@ -39,6 +39,7 @@ export interface MenuBridgeHandlers {
   pdfPageNumbers: boolean;
   pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
+  docxReferenceDoc: string;
   onOpenSettings: () => void;
   /** Textus › Check for Updates…: Settings › About, checking. */
   onCheckUpdates: () => void;
@@ -154,7 +155,13 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           void exporters
             .load()
             .then((m) =>
-              m.exportViaPandoc(tab, event.payload, h().t, h().diagramEngine),
+              m.exportViaPandoc(
+                tab,
+                event.payload,
+                h().t,
+                h().diagramEngine,
+                h().docxReferenceDoc,
+              ),
             );
       }),
       listenToThisWindow("menu-toggle-source-mode", () =>

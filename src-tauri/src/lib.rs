@@ -27,6 +27,8 @@ mod settings;
 #[cfg(desktop)]
 mod tab_drag;
 mod walk;
+#[cfg(windows)]
+mod webview_memory;
 mod window_frame;
 
 use ai::agent::ai_agent_message;
@@ -100,6 +102,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
+            #[cfg(windows)]
+            webview_memory::follow_minimized(window, event);
             if matches!(
                 event,
                 tauri::WindowEvent::Focused(_) | tauri::WindowEvent::Destroyed

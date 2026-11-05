@@ -970,6 +970,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoCloseBracketsLabel: "(), [] und „“ schließen",
   plainTextMenuLabel: "Als reinen Text kopieren/einfügen im Kontextmenü",
   pdfPageNumbersLabel: "Seitenzahlen beim Exportieren anzeigen",
+  docxTemplateLabel: "Word-Vorlage",
+  docxTemplateHelp:
+    "Exportierte Word-Dateien übernehmen Formatvorlagen, Schriften und Ränder dieser Datei.",
+  docxTemplateNone: "Pandoc-Standard",
+  docxTemplateClear: "Standard verwenden",
   pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",
   infoTipLabelPlain: "Mehr erfahren",

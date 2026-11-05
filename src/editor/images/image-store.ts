@@ -271,6 +271,21 @@ export function onlyLinkHrefs(slice: Slice): string[] {
   return other ? [] : hrefs;
 }
 
+/** The images `clipboardImageSources` found, to store. */
+export function pastedImages(sources: {
+  files: File[];
+  paths: string[];
+}): PastedImage[] {
+  return [
+    ...sources.files.map((file) => ({
+      name: file.name,
+      type: file.type,
+      base64: () => blobToBase64(file),
+    })),
+    ...sources.paths.map(fileImage),
+  ];
+}
+
 /** An image file on disk, read through the backend once it's stored. */
 export function fileImage(path: string): PastedImage {
   return {

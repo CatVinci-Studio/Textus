@@ -69,3 +69,29 @@ export function imageFilesFromClipboard(clipboard: {
     ? paths
     : [];
 }
+
+/**
+ * What a paste carries as images, read while the paste event lasts:
+ * pictures (a screenshot, a copied image), else image files copied in a
+ * file manager. `linkHrefs`: the paste's only content was these links.
+ */
+export function clipboardImageSources(
+  data: DataTransfer | null,
+  linkHrefs: string[] = [],
+): { files: File[]; paths: string[] } {
+  const isImage = (file: File | null): file is File =>
+    file !== null && file.type.startsWith("image/");
+  let files = Array.from(data?.items ?? [])
+    .filter((item) => item.kind === "file")
+    .map((item) => item.getAsFile())
+    .filter(isImage);
+  // Some webviews list a pasted file under `files` alone.
+  if (files.length === 0) files = Array.from(data?.files ?? []).filter(isImage);
+  if (files.length > 0) return { files, paths: [] };
+  const paths = imageFilesFromClipboard({
+    uriList: data?.getData("text/uri-list"),
+    gnomeCopiedFiles: data?.getData("x-special/gnome-copied-files"),
+    linkHrefs,
+  });
+  return { files: [], paths };
+}
