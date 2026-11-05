@@ -327,7 +327,7 @@
 /* Every column's top row ends on one line: the sidebar's, each pane's tab
    bar and the AI panel's header (which starts below the 28px window bar). */
 :root {
-  --header-height: 69px;
+  --header-height: 64px;
 }
 
 :root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
