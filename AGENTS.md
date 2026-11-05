@@ -97,6 +97,14 @@ If another copy of the e2e suite may be running (another worktree), set
   pastes do to the document as an editor integration test
   (`src/document-view/editor-view-kit.ts`), not an e2e flow; an e2e spec
   only for what needs a browser. Name tests as the claim they make.
+- The startup layer is what a window loads before its first frame: the
+  entry chunk (`vite.startup-budget.ts` fails the build past its size).
+  Anything first used after a click or a keystroke - a dialog, a settings
+  page, AI, the plugin store, search, an exporter, onboarding steps - loads
+  through `lazyModule` (`src/lazy/lazy-module.ts`, `warm` when it's likely
+  soon), and the startup layer imports none of it, not even one constant
+  from such a module. A pull request that grows the entry chunk says by how
+  much, and why it can't wait.
 - Every user-visible string goes into all ten locale files in
   `src/i18n/locales/` (en, zh, zh-Hant, ja, ko, es, fr, de, ru, pt).
 - Shapes shared by Rust and TypeScript carry a comment on both sides naming
