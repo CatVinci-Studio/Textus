@@ -4,7 +4,7 @@
 #[cfg(desktop)]
 use std::io::Write;
 #[cfg(desktop)]
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 #[cfg(desktop)]
 use std::process::{Command, Stdio};
 
@@ -88,6 +88,7 @@ pub async fn export_via_pandoc(
     format: String,
     resource_dir: Option<String>,
     title: String,
+    reference_doc: Option<String>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let mut cmd = Command::new(&pandoc_path);
@@ -100,6 +101,10 @@ pub async fn export_via_pandoc(
         if let Some(dir) = &resource_dir {
             cmd.arg("--resource-path").arg(dir);
             cmd.current_dir(dir);
+        }
+        // A template since moved or deleted leaves Pandoc's own styles.
+        if let Some(doc) = reference_doc.filter(|d| Path::new(d).is_file()) {
+            cmd.arg("--reference-doc").arg(doc);
         }
         let mut child = cmd.spawn().map_err(|e| e.to_string())?;
         child

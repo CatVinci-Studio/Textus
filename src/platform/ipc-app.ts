@@ -244,6 +244,7 @@ export const exportDoc = {
     format: string;
     resourceDir: string | null;
     title: string;
+    referenceDoc: string | null;
   }) =>
     desktopActionCommand(
       "export_via_pandoc",
@@ -253,6 +254,7 @@ export const exportDoc = {
       args.format,
       args.resourceDir,
       args.title,
+      args.referenceDoc,
     ),
   openPandocInstallPage: () =>
     desktopQueryCommand("open_pandoc_install_page", undefined),

@@ -23,6 +23,7 @@ import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
+import { DocxTemplateRow } from "../sections/docx-template";
 import { Select } from "../../ui/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf } from "../../platform/capabilities";
@@ -199,6 +200,7 @@ export function EditorPage({
               onChange={(v) => setSettings({ pdfLightColors: v })}
             />
           )}
+          <DocxTemplateRow t={t} />
         </SettingsGroup>
       )}
       {/* Rarely changed: how diagrams are drawn, colour swatches, and the

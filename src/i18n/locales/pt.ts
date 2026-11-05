@@ -964,6 +964,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoCloseBracketsLabel: "Fechar (), [] e “”",
   plainTextMenuLabel: "Copiar/colar como texto simples no menu de contexto",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
+  docxTemplateLabel: "Modelo do Word",
+  docxTemplateHelp:
+    "Os arquivos do Word exportados usam os estilos, fontes e margens deste arquivo.",
+  docxTemplateNone: "Padrão do Pandoc",
+  docxTemplateClear: "Usar padrão",
   pdfLightColorsLabel: "Exportar PDFs em cores claras",
   infoTipLabel: "Mais sobre “{label}”",
   infoTipLabelPlain: "Mais informações",

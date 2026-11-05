@@ -7,7 +7,7 @@ import {
 } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { SourceTextarea } from "../editor/modes/SourceTextarea";
+import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
@@ -291,8 +291,9 @@ export function MainPane({
                 />
               </Suspense>
             ) : tab.sourceMode ? (
-              <SourceTextarea
+              <DocSourceTextarea
                 value={tab.content}
+                docPath={tab.path}
                 typewriter={typewriter}
                 onChange={(markdown) => onChange(tab.id, markdown)}
                 readOnly={tabReadOnly(tab)}

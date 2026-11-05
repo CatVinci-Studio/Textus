@@ -293,6 +293,8 @@ export async function exportViaPandoc(
   format: string,
   t: Strings,
   diagramEngine: DiagramEngine,
+  /** Settings › Editor › Word template, "" for none. */
+  referenceDoc = "",
 ): Promise<void> {
   const info = PANDOC_FORMATS[format];
   if (!info || !canExportWithPandoc) return;
@@ -335,6 +337,7 @@ export async function exportViaPandoc(
       format,
       resourceDir: tab.path ? dirname(tab.path) : null,
       title: base,
+      referenceDoc: format === "docx" && referenceDoc ? referenceDoc : null,
     });
     void exportDoc.revealInDir(picked);
   } catch (err) {

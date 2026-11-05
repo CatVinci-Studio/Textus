@@ -155,6 +155,7 @@ export function useWindowWiring({
     pdfPageNumbers: settings.pdfPageNumbers,
     pdfLightColors: settings.pdfLightColors,
     diagramEngine: settings.diagramEngine,
+    docxReferenceDoc: settings.docxReferenceDoc,
     onOpenSettings: shell.settingsOpening.openSettings,
     onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,

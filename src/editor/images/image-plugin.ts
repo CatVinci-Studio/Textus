@@ -16,7 +16,6 @@ import {
   canRevealInFileManager,
 } from "../../platform/capabilities";
 import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
-import { imageFilesFromClipboard } from "./pasted-files";
 import {
   MISSING_IMAGE_CLASS,
   imageDisplayName,
@@ -39,8 +38,8 @@ import { isLargeDoc } from "../large-doc";
 import {
   type ImageStore,
   blobImageSrcs,
-  blobToBase64,
   changedRanges,
+  clipboardImages,
   fileImage,
   onlyLinkHrefs,
   replaceImage,
@@ -345,41 +344,12 @@ export function createImagePlugin(options: ImageStore) {
       props: {
         decorations: (state) => imageParagraphKey.getState(state),
         handlePaste(view, event, slice) {
-          const data = event.clipboardData;
-          const items = Array.from(data?.items ?? []);
-          let files = items
-            .filter(
-              (item) => item.kind === "file" && item.type.startsWith("image/"),
-            )
-            .map((item) => item.getAsFile())
-            .filter((f): f is File => f !== null);
-          // Some webviews list a pasted file under `files` alone.
-          if (files.length === 0)
-            files = Array.from(data?.files ?? []).filter((f) =>
-              f.type.startsWith("image/"),
-            );
-          if (files.length > 0) {
-            void saveAndInsertImages(
-              view,
-              files.map((file) => ({
-                name: file.name,
-                type: file.type,
-                base64: () => blobToBase64(file),
-              })),
-              options,
-            );
-            return true;
-          }
-
-          // Image files copied in a file manager: inserted as images and
-          // stored like a pasted bitmap, instead of as file:// links.
-          const paths = imageFilesFromClipboard({
-            uriList: data?.getData("text/uri-list"),
-            gnomeCopiedFiles: data?.getData("x-special/gnome-copied-files"),
-            linkHrefs: onlyLinkHrefs(slice),
-          });
-          if (paths.length > 0) {
-            void saveAndInsertImages(view, paths.map(fileImage), options);
+          const images = clipboardImages(
+            event.clipboardData,
+            onlyLinkHrefs(slice),
+          );
+          if (images.length > 0) {
+            void saveAndInsertImages(view, images, options);
             return true;
           }
 

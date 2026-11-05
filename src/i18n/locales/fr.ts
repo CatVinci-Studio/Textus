@@ -994,6 +994,11 @@ utiliser une.
   autoCloseBracketsLabel: "Fermer (), [] et « »",
   plainTextMenuLabel: "Copier/coller en texte brut dans le menu contextuel",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
+  docxTemplateLabel: "Modèle Word",
+  docxTemplateHelp:
+    "Les fichiers Word exportés reprennent les styles, polices et marges de ce fichier.",
+  docxTemplateNone: "Par défaut de Pandoc",
+  docxTemplateClear: "Par défaut",
   pdfLightColorsLabel: "Exporter les PDF en couleurs claires",
   infoTipLabel: "En savoir plus sur « {label} »",
   infoTipLabelPlain: "En savoir plus",
