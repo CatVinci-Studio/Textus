@@ -335,6 +335,12 @@
   height: var(--header-height);
 }
 
+/* Its tabs centre on the document bar's: both clear the window bar and leave
+   the same 4px under the row. */
+:root:not([data-window-chrome="mobile"]) .sidebar-header {
+  padding-bottom: 4px;
+}
+
 :root:not([data-window-chrome="mobile"]) .agent-panel-header {
   height: calc(var(--header-height) - 28px);
 }

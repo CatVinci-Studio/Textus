@@ -35,17 +35,10 @@
   min-width: 90px;
   max-width: 200px;
   padding: 4px 8px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
   font-size: var(--text-secondary);
-  color: var(--ui-muted);
-  cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   animation: motion-pop-in var(--dur-base) var(--ease-out);
-  transition:
-    background-color var(--dur-fast) var(--ease-standard),
-    color var(--dur-fast) var(--ease-standard);
 }
 
 .tab-pill[data-entered]:not(.tab-pill-ghost) {
@@ -73,18 +66,9 @@
   outline-offset: -2px;
 }
 
-.tab-pill:hover {
-  background: var(--ui-hover);
-}
-
 .tab-pill-ghost {
   --exit-scale: var(--scale-enter);
   animation: motion-exit var(--dur-fast) var(--ease-in) forwards;
-}
-
-.tab-pill-active {
-  background: var(--ui-selected);
-  color: var(--ui-selected-text);
 }
 
 /* An incoming tab riding this bar mid-drag. No pop-in: a pill still scaling
