@@ -1267,6 +1267,8 @@ type /name in a conversation to use one.
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",
   closePromptCancel: "Cancel",
+  linkOpenFileConfirm: "Open “{name}” in its app?",
+  linkOpenFileOk: "Open",
   cancel: "Cancel",
   draftRestoredMessage: "Recovered unsaved content from the last session.",
   draftRestoredDismiss: "Got it",

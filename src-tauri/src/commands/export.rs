@@ -207,6 +207,106 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
         .map_err(|e| e.to_string())
 }
 
+/// Kinds of file the system would run rather than show: a link to one is
+/// only shown in its folder, whatever the document asked for.
+#[cfg(desktop)]
+const RUNNABLE: &[&str] = &[
+    "exe",
+    "msi",
+    "bat",
+    "cmd",
+    "com",
+    "scr",
+    "pif",
+    "cpl",
+    "msc",
+    "ps1",
+    "psm1",
+    "vbs",
+    "vbe",
+    "js",
+    "jse",
+    "wsf",
+    "wsh",
+    "hta",
+    "reg",
+    "lnk",
+    "url",
+    "jar",
+    "sh",
+    "bash",
+    "zsh",
+    "fish",
+    "csh",
+    "command",
+    "tool",
+    "app",
+    "pkg",
+    "run",
+    "bin",
+    "appimage",
+    "desktop",
+    "py",
+    "pyw",
+    "pl",
+    "rb",
+    "php",
+    "scpt",
+    "applescript",
+    "workflow",
+    "action",
+];
+
+#[cfg(desktop)]
+fn is_runnable(path: &str) -> bool {
+    std::path::Path::new(path)
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| RUNNABLE.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
+/// A local file a document links to, opened in the app the system picks for
+/// it, after the user agreed in the editor; one the system would run is only
+/// shown in its folder.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn open_linked_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let opener = app.opener();
+    if is_runnable(&path) || std::path::Path::new(&path).is_dir() {
+        opener.reveal_item_in_dir(&path)
+    } else {
+        opener.open_path(&path, None::<&str>)
+    }
+    .map_err(|e| e.to_string())
+}
+
+#[cfg(all(test, desktop))]
+mod linked_file_tests {
+    use super::is_runnable;
+
+    #[test]
+    fn programs_and_scripts_are_only_shown() {
+        for path in [
+            "C:\\x\\setup.EXE",
+            "/tmp/run.sh",
+            "/Applications/A.app",
+            "a.ps1",
+        ] {
+            assert!(is_runnable(path), "{path}");
+        }
+        for path in [
+            "D:/论文/原文.pdf",
+            "/tmp/notes.docx",
+            "/tmp/photo.png",
+            "/tmp/noext",
+        ] {
+            assert!(!is_runnable(path), "{path}");
+        }
+    }
+}
+
 // macOS can't use window.print() (wry's NSPrintPanel flashes and dismisses
 // itself) or NSPrintOperation (no @page margins), so WKWebView's createPDF
 // renders the paginated page at 1 px = 1 pt and PDFKit cuts it into A4 sheets.

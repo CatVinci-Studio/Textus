@@ -261,6 +261,10 @@ export const exportDoc = {
   /** Nothing to show the file in on iOS; resolves without doing anything. */
   revealInDir: (path: string) =>
     desktopQueryCommand("reveal_in_dir", undefined, path),
+  /** A linked file in the system's app for it (a program only shown in its
+   *  folder); nothing on iOS. */
+  openLinkedFile: (path: string) =>
+    desktopQueryCommand("open_linked_file", undefined, path),
   // Renders the paginated themed HTML offscreen and writes the PDF straight
   // to `path`, with no print dialog. pageNumbers stamps the finished file.
   exportPdfNative: (args: {

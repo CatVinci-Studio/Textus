@@ -1296,6 +1296,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",
   closePromptCancel: "Abbrechen",
+  linkOpenFileConfirm: "„{name}“ in seiner App öffnen?",
+  linkOpenFileOk: "Öffnen",
   cancel: "Abbrechen",
   draftRestoredMessage:
     "Nicht gespeicherte Inhalte der letzten Sitzung wurden wiederhergestellt.",

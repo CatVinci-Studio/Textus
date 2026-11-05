@@ -1286,6 +1286,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",
   closePromptCancel: "Cancelar",
+  linkOpenFileConfirm: "Abrir “{name}” no app dele?",
+  linkOpenFileOk: "Abrir",
   cancel: "Cancelar",
   draftRestoredMessage: "O conteúdo não salvo da última sessão foi recuperado.",
   draftRestoredDismiss: "Entendi",

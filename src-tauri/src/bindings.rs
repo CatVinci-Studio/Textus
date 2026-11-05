@@ -120,6 +120,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::export::export_pdf_native,
                 crate::commands::export::open_pandoc_install_page,
                 crate::commands::export::reveal_in_dir,
+                crate::commands::export::open_linked_file,
                 crate::commands::themes::save_theme_css,
                 crate::commands::themes::load_theme_css,
                 crate::commands::themes::delete_theme,
