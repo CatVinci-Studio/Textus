@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { isDocumentName, matchFiles, searchEntries } from "./file-search";
 import { nameCollator } from "../utils/name-order";
+import { pinyinEngine } from "../utils/pinyin";
+
+await pinyinEngine.load();
 
 const index = searchEntries(
   [

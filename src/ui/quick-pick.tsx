@@ -3,7 +3,12 @@ import { formatCombo } from "../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
 import { isImeKeydown } from "../utils/ime";
-import { mayBePinyin, pinyinIndexOf, readings } from "../utils/pinyin";
+import {
+  mayBePinyin,
+  pinyinEngine,
+  pinyinIndexOf,
+  readings,
+} from "../utils/pinyin";
 import { searchFold } from "../utils/search-fold";
 
 /** A list to choose one item from, or several ticked, filtered by what is
@@ -85,9 +90,9 @@ export function quickPickMatches(item: QuickPickItem, query: string): boolean {
   const words = searchFold(query).split(/\s+/).filter(Boolean);
   if (words.every((word) => haystack.includes(word))) return true;
   if (!mayBePinyin(query)) return false;
-  if (!labelReadings.has(item.label))
-    labelReadings.set(item.label, readings(item.label));
-  const chars = labelReadings.get(item.label);
+  // Kept once the readings' source has loaded; until then, worked out again.
+  const chars = labelReadings.get(item.label) ?? readings(item.label);
+  if (pinyinEngine.peek()) labelReadings.set(item.label, chars);
   return !!chars && pinyinIndexOf(chars, query) >= 0;
 }
 

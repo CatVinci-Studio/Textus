@@ -1,7 +1,7 @@
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { withoutCitationMarkers } from "../citation-markers";
 import { skillBlock } from "./user-message";
-import { SKILL_COMMAND } from "./skill-picker";
+import { SKILL_COMMAND } from "./skill-syntax";
 import { parseImageProposal } from "../revision/generated-images";
 import {
   EDIT_ACTIONS,
