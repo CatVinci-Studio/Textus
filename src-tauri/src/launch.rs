@@ -169,7 +169,7 @@ pub(crate) fn take_pending_open_folder() -> Option<String> {
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
+pub(crate) async fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
     queue_paths_to_open(&app, paths);
 }
 
@@ -178,7 +178,7 @@ pub(crate) fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn open_path_in_new_window(app: tauri::AppHandle, path: String) {
+pub(crate) async fn open_path_in_new_window(app: tauri::AppHandle, path: String) {
     queue_pending(&app, vec![path]);
     let _ = crate::editor_windows::open_new_window(&app);
 }

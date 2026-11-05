@@ -60,9 +60,9 @@ pub fn take_detached_tab(
 /// window, which takes it as it opens.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn move_tab_to_new_window(
+pub async fn move_tab_to_new_window(
     app: tauri::AppHandle,
-    pending: State<PendingDetachedTabs>,
+    pending: State<'_, PendingDetachedTabs>,
     tab: DetachedTab,
 ) -> Result<(), String> {
     let label = format!("window-{}", crate::editor_windows::next_window_id());
