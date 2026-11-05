@@ -532,6 +532,7 @@ pub fn run() {
             open_pandoc_install_page,
             #[cfg(desktop)]
             reveal_in_dir,
+            #[cfg(desktop)]
             open_linked_file,
         ])
         .build(tauri::generate_context!())
