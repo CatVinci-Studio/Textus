@@ -53,21 +53,24 @@ export {
  */
 
 /** The linked text as it was before it was shown as source, while the
- *  source still reads as it did. */
-const keptCache = new Map<string, Fragment>();
+ *  source still reads as it did. Kept per schema: every editor has its own,
+ *  and a node of another editor's schema drops out of a document. */
+const keptCaches = new WeakMap<Schema, Map<string, Fragment>>();
 
 function keptContent(schema: Schema, node: ProseNode): Fragment | null {
   const { restore, source } = node.attrs as { restore: string; source: string };
   if (!restore || node.textContent !== source) return null;
-  let kept = keptCache.get(restore);
+  let cache = keptCaches.get(schema);
+  if (!cache) keptCaches.set(schema, (cache = new Map()));
+  let kept = cache.get(restore);
   if (!kept) {
     try {
       kept = Fragment.fromJSON(schema, JSON.parse(restore));
     } catch {
       return null;
     }
-    if (keptCache.size > 32) keptCache.clear();
-    keptCache.set(restore, kept);
+    if (cache.size > 32) cache.clear();
+    cache.set(restore, kept);
   }
   return kept;
 }
