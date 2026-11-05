@@ -6,11 +6,7 @@ import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../ui/app-dialog";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
-import {
-  IMAGE_FILE_EXTENSIONS,
-  imageFilesFromClipboard,
-  imageMimeForPath,
-} from "./pasted-files";
+import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
@@ -275,34 +271,19 @@ export function onlyLinkHrefs(slice: Slice): string[] {
   return other ? [] : hrefs;
 }
 
-/**
- * The images a paste carries: pictures (a screenshot, a copied image), or
- * image files copied in a file manager, to be stored like a picture
- * instead of linked. `linkHrefs`: the paste's only content was these links.
- */
-export function clipboardImages(
-  data: DataTransfer | null,
-  linkHrefs: string[] = [],
-): PastedImage[] {
-  const isImage = (file: File | null): file is File =>
-    file !== null && file.type.startsWith("image/");
-  let files = Array.from(data?.items ?? [])
-    .filter((item) => item.kind === "file")
-    .map((item) => item.getAsFile())
-    .filter(isImage);
-  // Some webviews list a pasted file under `files` alone.
-  if (files.length === 0) files = Array.from(data?.files ?? []).filter(isImage);
-  if (files.length > 0)
-    return files.map((file) => ({
+/** The images `clipboardImageSources` found, to store. */
+export function pastedImages(sources: {
+  files: File[];
+  paths: string[];
+}): PastedImage[] {
+  return [
+    ...sources.files.map((file) => ({
       name: file.name,
       type: file.type,
       base64: () => blobToBase64(file),
-    }));
-  return imageFilesFromClipboard({
-    uriList: data?.getData("text/uri-list"),
-    gnomeCopiedFiles: data?.getData("x-special/gnome-copied-files"),
-    linkHrefs,
-  }).map(fileImage);
+    })),
+    ...sources.paths.map(fileImage),
+  ];
 }
 
 /** An image file on disk, read through the backend once it's stored. */

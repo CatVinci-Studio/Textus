@@ -3,12 +3,8 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { Presence } from "../../ui/usePresence";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { ImageNameDialog } from "../images/ImageNameDialog";
-import {
-  clipboardImages,
-  reportFailure,
-  storeImage,
-  type ImageStore,
-} from "../images/image-store";
+import type { ImageStore } from "../images/image-store";
+import { clipboardImageSources } from "../images/pasted-files";
 import { useImageNameRequest } from "../images/useImageNameRequest";
 
 /** `![](src)`, the src in angle brackets where it has a space or a bracket. */
@@ -42,12 +38,16 @@ export function useSourceImagePaste(docPath: string | null) {
 
   const onPaste = (event: ClipboardEvent<HTMLTextAreaElement>) => {
     if (event.currentTarget.readOnly) return;
-    const images = clipboardImages(event.clipboardData);
-    if (images.length === 0) return;
+    // Read now: the clipboard is gone once the event is over.
+    const sources = clipboardImageSources(event.clipboardData);
+    if (sources.files.length + sources.paths.length === 0) return;
     event.preventDefault();
     const el = event.currentTarget;
     void (async () => {
-      for (const image of images) {
+      // Not at startup: the store brings the Markdown writer along.
+      const { pastedImages, reportFailure, storeImage } =
+        await import("../images/image-store");
+      for (const image of pastedImages(sources)) {
         try {
           const src = await storeImage(image, store);
           if (src !== null) insertAtCaret(el, imageMarkdown(src));

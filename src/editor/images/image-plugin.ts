@@ -26,6 +26,7 @@ import {
   revealNearest,
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
+import { clipboardImageSources } from "./pasted-files";
 import {
   imageWidthOf,
   readImagePresentation,
@@ -39,7 +40,7 @@ import {
   type ImageStore,
   blobImageSrcs,
   changedRanges,
-  clipboardImages,
+  pastedImages,
   fileImage,
   onlyLinkHrefs,
   replaceImage,
@@ -344,9 +345,8 @@ export function createImagePlugin(options: ImageStore) {
       props: {
         decorations: (state) => imageParagraphKey.getState(state),
         handlePaste(view, event, slice) {
-          const images = clipboardImages(
-            event.clipboardData,
-            onlyLinkHrefs(slice),
+          const images = pastedImages(
+            clipboardImageSources(event.clipboardData, onlyLinkHrefs(slice)),
           );
           if (images.length > 0) {
             void saveAndInsertImages(view, images, options);
