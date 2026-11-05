@@ -327,18 +327,16 @@
 /* Every column's top row ends on one line: the sidebar's, each pane's tab
    bar and the AI panel's header (which starts below the 28px window bar). */
 :root {
-  --header-height: 69px;
+  --header-height: 64px;
 }
 
+/* Both rows clear the window bar by 2px and leave 3px under their tabs, so
+   the sidebar's tabs and the document's centre on one line. */
 :root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
   box-sizing: border-box;
   height: var(--header-height);
-}
-
-/* Its tabs centre on the document bar's: both clear the window bar and leave
-   the same 4px under the row. */
-:root:not([data-window-chrome="mobile"]) .sidebar-header {
-  padding-bottom: 4px;
+  padding-top: 30px;
+  padding-bottom: 3px;
 }
 
 :root:not([data-window-chrome="mobile"]) .agent-panel-header {
