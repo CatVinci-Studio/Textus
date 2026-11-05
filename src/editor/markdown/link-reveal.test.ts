@@ -333,6 +333,16 @@ describe("a link the caret leaves", () => {
     expect(para.child(0).text).toBe("  ");
     expect(para.child(1).marks[0].attrs.href).toBe("u");
   });
+  it("is still there when the same link was shown in another editor first", async () => {
+    const markdown = "see [foo](<D:/a b/x.pdf>)[J] end\n";
+    for (let i = 0; i < 2; i++) {
+      const { view, saved } = await open(markdown);
+      caretAt(view, at(view.state.doc, "foo", 1));
+      caretAt(view, at(view.state.doc, " end", 2));
+      expect(sources(view)).toEqual([]);
+      expect(saved()).toBe(markdown);
+    }
+  });
 });
 
 describe("saving while a link is shown", () => {
