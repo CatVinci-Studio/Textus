@@ -1556,6 +1556,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginOpenTurnOn:
     "「{file}」はプラグイン「{name}」で開けますが、オフになっています。オンにして開きますか？",
   pluginOpenTurnOnButton: "オンにして開く",
+  pluginOfferInstall:
+    "{name} プラグインをインストールしますか？\n{description}",
+  pluginOfferTurnOn:
+    "{name} プラグインはインストール済みですがオフです。オンにしますか？\n{description}",
+  pluginOfferReason: "プラグインからの提案：「{reason}」",
   pluginScreenshot: "{name} の画面",
   pluginsMine: "自分で作ったもの",
   pluginsNone: "まだありません。",

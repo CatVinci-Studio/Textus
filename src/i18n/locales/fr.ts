@@ -1641,6 +1641,10 @@ utiliser une.
   pluginOpenTurnOn:
     "L’extension {name} ouvre « {file} », mais elle est désactivée. L’activer et ouvrir le fichier ?",
   pluginOpenTurnOnButton: "Activer et ouvrir",
+  pluginOfferInstall: "Installer le plugin {name} ?\n{description}",
+  pluginOfferTurnOn:
+    "Le plugin {name} est installé mais désactivé. L’activer ?\n{description}",
+  pluginOfferReason: "Suggéré par un plugin : « {reason} »",
   pluginScreenshot: "{name} en action",
   pluginsMine: "Créées par vous",
   pluginsNone: "Aucune pour l’instant.",

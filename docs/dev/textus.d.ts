@@ -193,7 +193,18 @@ declare global {
        *  "textus.closeTab" ({ save: true } closes once saved) and
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
-       *  "blockquote", "code-block", "math-block", "rule" or "table". */
+       *  "blockquote", "code-block", "math-block", "rule" or "table".
+       *  "textus.offerPlugin" with { id, reason } suggests an official
+       *  plugin from the market: the user is asked to install it, or turn
+       *  it on, with its name, description and your reason (plain text, up
+       *  to 120 characters) under your plugin's name; resolves
+       *  whether it is on. True at once when it already is; false for an
+       *  id the market has no official plugin for (or when the market
+       *  can't be reached), for an installed plugin that can't be turned
+       *  on, while another offer is open, when the install fails, or when
+       *  declined - after which your plugin's offers aren't shown again in
+       *  that window. Don't await it in activate: activation has 10
+       *  seconds, and the user may take longer. From 1.3.9. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 

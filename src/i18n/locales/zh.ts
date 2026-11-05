@@ -1472,6 +1472,9 @@ export default {
   pluginOpenTurnOn:
     "插件「{name}」可以打开“{file}”，但它现在关着。开启插件并打开这个文件吗？",
   pluginOpenTurnOnButton: "开启并打开",
+  pluginOfferInstall: "安装「{name}」插件？\n{description}",
+  pluginOfferTurnOn: "「{name}」插件已安装但未开启。要开启吗？\n{description}",
+  pluginOfferReason: "来自插件的建议：“{reason}”",
   pluginScreenshot: "{name} 使用截图",
   pluginsMine: "我做的插件",
   pluginsNone: "还没有。",
