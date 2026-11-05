@@ -52,7 +52,7 @@ function fill(template: string, values: Record<string, string>): string {
  * textus.offerPlugin({ id, reason }): a plugin suggests an official one,
  * and the user installs it or turns it on - or not. Resolves whether it is
  * on. One dialog at a time, and a plugin the user said no to once isn't
- * heard again while Textus runs, so it can't walk them through the catalog.
+ * heard again in this window, so it can't walk them through the catalog.
  */
 export function pluginOffer(deps: OfferDeps) {
   let asking = false;
