@@ -253,6 +253,32 @@ test("in an Obsidian vault a moved note's links follow at once", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
+test("in an Obsidian vault the split preview breaks the line at a single newline", async ({
+  page,
+}) => {
+  await open(page, {
+    "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/a.md": "# Alpha\n\none\ntwo",
+  });
+  await emit(page, "menu-toggle-split-view");
+  const tops = () =>
+    page.evaluate(() => {
+      const p = document.querySelector(
+        '[data-active-tab="true"] .split-preview-breaks p',
+      );
+      if (!p) return null;
+      const text = (node: ChildNode) => {
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        return range.getBoundingClientRect().top;
+      };
+      return [text(p.firstChild!), text(p.lastChild!)];
+    });
+  await expect.poll(tops).not.toBeNull();
+  const [one, two] = (await tops())!;
+  expect(two).toBeGreaterThan(one);
+});
+
 test("a tree that follows the document says so, and Close Folder closes the opened folder's documents", async ({
   page,
 }) => {
