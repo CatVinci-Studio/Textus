@@ -1461,6 +1461,27 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   createMakePlugin: "Crie seu plugin",
   createMakeSkill: "Crie sua habilidade",
   createNew: "Novo",
+  createdTitle: "Feito aqui",
+  createdMenu: "Feito aqui ({count})",
+  createdOn: "Ligado",
+  createdOff: "Desligado",
+  createdBroken: "Precisa de correção",
+  createdInUse: "Em uso",
+  createdUse: "Usar",
+  createdTurnOn: "Ligar",
+  createdTurnOff: "Desligar",
+  createdOpen: "Abrir",
+  createdEdit: "Alterar com IA",
+  createdRemove: "Remover",
+  createdRemoveAll: "Remover tudo",
+  createdRemoveAsk:
+    "Remover {name}? Uma habilidade vai para o Lixo; os arquivos de um plugin ou tema são apagados.",
+  createdRemoveAllAsk:
+    "Remover as {count} coisas feitas aqui? Habilidades vão para o Lixo; os arquivos de plugins e temas são apagados.",
+  createdEditTheme:
+    "Altere meu tema {name}. O CSS dele agora:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Altere minha habilidade {name}. As instruções dela agora:\n```markdown\n{source}\n```\n",
   createAiOff: "Ative a Textus AI para criar.",
   createExamples: "Experimente",
   createExamplePluginTodo:

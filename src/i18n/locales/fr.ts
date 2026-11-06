@@ -1503,6 +1503,27 @@ utiliser une.
   createMakePlugin: "Créer votre plugin",
   createMakeSkill: "Créer votre compétence",
   createNew: "Nouveau",
+  createdTitle: "Fait ici",
+  createdMenu: "Fait ici ({count})",
+  createdOn: "Activé",
+  createdOff: "Désactivé",
+  createdBroken: "À corriger",
+  createdInUse: "Utilisé",
+  createdUse: "Utiliser",
+  createdTurnOn: "Activer",
+  createdTurnOff: "Désactiver",
+  createdOpen: "Ouvrir",
+  createdEdit: "Modifier avec l’IA",
+  createdRemove: "Retirer",
+  createdRemoveAll: "Tout retirer",
+  createdRemoveAsk:
+    "Retirer {name} ? Une compétence va à la corbeille ; les fichiers d’un plugin ou d’un thème sont supprimés.",
+  createdRemoveAllAsk:
+    "Retirer les {count} éléments faits ici ? Les compétences vont à la corbeille ; les fichiers des plugins et thèmes sont supprimés.",
+  createdEditTheme:
+    "Modifie mon thème {name}. Son CSS actuel :\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Modifie ma compétence {name}. Ses instructions actuelles :\n```markdown\n{source}\n```\n",
   createAiOff: "Activez Textus AI pour créer.",
   createExamples: "Essayez",
   createExamplePluginTodo:

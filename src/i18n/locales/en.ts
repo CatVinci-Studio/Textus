@@ -1445,6 +1445,27 @@ type /name in a conversation to use one.
   createMakePlugin: "Make your plugin",
   createMakeSkill: "Make your skill",
   createNew: "New",
+  createdTitle: "Made here",
+  createdMenu: "Made here ({count})",
+  createdOn: "On",
+  createdOff: "Off",
+  createdBroken: "Needs a fix",
+  createdInUse: "In use",
+  createdUse: "Use",
+  createdTurnOn: "Turn on",
+  createdTurnOff: "Turn off",
+  createdOpen: "Open",
+  createdEdit: "Change with AI",
+  createdRemove: "Remove",
+  createdRemoveAll: "Remove all",
+  createdRemoveAsk:
+    "Remove {name}? A skill goes to the Trash; a plugin's or theme's files are deleted.",
+  createdRemoveAllAsk:
+    "Remove all {count} things made here? Skills go to the Trash; plugins' and themes' files are deleted.",
+  createdEditTheme:
+    "Change my {name} theme. Its CSS now:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Change my {name} skill. Its instructions now:\n```markdown\n{source}\n```\n",
   createAiOff: "Turn on Textus AI to create.",
   createExamples: "Try one",
   createExamplePluginTodo:

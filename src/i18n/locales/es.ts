@@ -1481,6 +1481,27 @@ para usar una.
   createMakePlugin: "Crea tu plugin",
   createMakeSkill: "Crea tu habilidad",
   createNew: "Nuevo",
+  createdTitle: "Hecho aquí",
+  createdMenu: "Hecho aquí ({count})",
+  createdOn: "Activado",
+  createdOff: "Desactivado",
+  createdBroken: "Necesita arreglo",
+  createdInUse: "En uso",
+  createdUse: "Usar",
+  createdTurnOn: "Activar",
+  createdTurnOff: "Desactivar",
+  createdOpen: "Abrir",
+  createdEdit: "Cambiar con IA",
+  createdRemove: "Quitar",
+  createdRemoveAll: "Quitar todo",
+  createdRemoveAsk:
+    "¿Quitar {name}? Una habilidad va a la Papelera; los archivos de un plugin o tema se eliminan.",
+  createdRemoveAllAsk:
+    "¿Quitar las {count} cosas hechas aquí? Las habilidades van a la Papelera; los archivos de plugins y temas se eliminan.",
+  createdEditTheme:
+    "Cambia mi tema {name}. Su CSS actual:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Cambia mi habilidad {name}. Sus instrucciones actuales:\n```markdown\n{source}\n```\n",
   createAiOff: "Activa Textus AI para crear.",
   createExamples: "Prueba uno",
   createExamplePluginTodo:

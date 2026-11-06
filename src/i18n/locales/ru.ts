@@ -1473,6 +1473,27 @@ export default {
   createMakePlugin: "Создать свой плагин",
   createMakeSkill: "Создать свой навык",
   createNew: "Новое",
+  createdTitle: "Сделано здесь",
+  createdMenu: "Сделано здесь ({count})",
+  createdOn: "Вкл.",
+  createdOff: "Выкл.",
+  createdBroken: "Нужно исправить",
+  createdInUse: "Используется",
+  createdUse: "Использовать",
+  createdTurnOn: "Включить",
+  createdTurnOff: "Выключить",
+  createdOpen: "Открыть",
+  createdEdit: "Изменить с ИИ",
+  createdRemove: "Удалить",
+  createdRemoveAll: "Удалить всё",
+  createdRemoveAsk:
+    "Удалить {name}? Навык попадёт в корзину; файлы плагина или темы будут удалены.",
+  createdRemoveAllAsk:
+    "Удалить все {count} сделанных здесь? Навыки попадут в корзину; файлы плагинов и тем будут удалены.",
+  createdEditTheme:
+    "Измени мою тему {name}. Её CSS сейчас:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Измени мой навык {name}. Его инструкции сейчас:\n```markdown\n{source}\n```\n",
   createAiOff: "Включите Textus AI, чтобы создавать.",
   createExamples: "Примеры",
   createExamplePluginTodo:

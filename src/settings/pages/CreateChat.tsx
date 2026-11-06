@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 import type { Strings } from "../../i18n/strings";
@@ -16,12 +16,19 @@ import {
 } from "../../ai/chat/create-request";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useBoxSlide } from "./useBoxSlide";
+import type { ExtensionsTab } from "./extensions-tab";
 import {
   CREATE_EXAMPLES,
   createKinds,
   createMessage,
   type CreateKind,
 } from "./create-studio";
+
+// With the plugin manager behind it, as the reply's plugin card is: only
+// once something was made.
+const Creations = lazy(() =>
+  import("./Creations").then((m) => ({ default: m.Creations })),
+);
 
 /** Nothing is being written: what is made goes in the reply, and is
  *  installed from the card under it. */
@@ -38,7 +45,14 @@ const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
  * conversation. Loaded with the chat, not with Settings. "Fix with AI" and
  * the like fill in the box before it starts, and are the next message after.
  */
-export function CreateChat({ t }: { t: Strings }) {
+export function CreateChat({
+  t,
+  onOpenTab,
+}: {
+  t: Strings;
+  /** Shows one of Extensions' other tabs. */
+  onOpenTab: (tab: ExtensionsTab) => void;
+}) {
   const { settings } = useSettings();
   const conversation = useAgentConversation(
     null,
@@ -82,6 +96,22 @@ export function CreateChat({ t }: { t: Strings }) {
     skill: t.extensionsTabSkills,
   };
   const labels = chatLabels(t, settings.language);
+  const creations = (inBar: boolean) =>
+    settings.creations.length > 0 && (
+      <Suspense fallback={null}>
+        <Creations
+          t={t}
+          kindLabel={kindLabel}
+          inBar={inBar}
+          onOpenTab={onOpenTab}
+          onEdit={(k, text) => {
+            conversation.reset();
+            setKind(k);
+            composer.current?.restore(text);
+          }}
+        />
+      </Suspense>
+    );
 
   return (
     <div
@@ -90,6 +120,7 @@ export function CreateChat({ t }: { t: Strings }) {
     >
       {!empty && (
         <div className="create-studio-bar">
+          {creations(true)}
           <button
             type="button"
             className="text-button settings-inline-button"
@@ -180,6 +211,7 @@ export function CreateChat({ t }: { t: Strings }) {
           ))}
         </ul>
       )}
+      {empty && creations(false)}
     </div>
   );
 }

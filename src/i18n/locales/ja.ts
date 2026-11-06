@@ -1422,6 +1422,27 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   createMakePlugin: "プラグインを作る",
   createMakeSkill: "スキルを作る",
   createNew: "新規",
+  createdTitle: "作ったもの",
+  createdMenu: "作ったもの（{count}）",
+  createdOn: "オン",
+  createdOff: "オフ",
+  createdBroken: "修正が必要",
+  createdInUse: "使用中",
+  createdUse: "使う",
+  createdTurnOn: "オンにする",
+  createdTurnOff: "オフにする",
+  createdOpen: "開く",
+  createdEdit: "AI で変更",
+  createdRemove: "削除",
+  createdRemoveAll: "すべて削除",
+  createdRemoveAsk:
+    "{name} を削除しますか？スキルはゴミ箱へ移動し、プラグインやテーマのファイルは削除されます。",
+  createdRemoveAllAsk:
+    "ここで作った {count} 件をすべて削除しますか？スキルはゴミ箱へ移動し、プラグインとテーマのファイルは削除されます。",
+  createdEditTheme:
+    "テーマ「{name}」を変更してください。現在の CSS：\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "スキル「{name}」を変更してください。現在の指示：\n```markdown\n{source}\n```\n",
   createAiOff: "作成するには Textus AI をオンにしてください。",
   createExamples: "例",
   createExamplePluginTodo:

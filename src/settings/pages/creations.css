@@ -1,0 +1,112 @@
+/* Create's "Made here": what its reply cards installed, one row each. */
+.creations {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 40%;
+  min-height: 0;
+  padding: 0 var(--space-2);
+}
+.create-studio-empty > .creations {
+  animation: motion-fade-in var(--dur-base) var(--ease-out);
+}
+.creations-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.creations-title {
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-weight: 600;
+}
+.creations-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.creations-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 32px;
+  border-bottom: 1px solid var(--ui-border);
+  font-size: var(--text-secondary);
+}
+.creations-item:last-child {
+  border-bottom: 0;
+}
+.creations-kind {
+  flex: none;
+  padding: 0 var(--space-2);
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
+  color: var(--ui-accent);
+  font-size: var(--text-footnote);
+  line-height: 18px;
+}
+.creations-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.creations-status {
+  flex: none;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.creations-actions {
+  flex: none;
+  display: flex;
+  gap: var(--space-1);
+}
+.creations-actions > button {
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--shape-pill);
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-footnote);
+  line-height: 24px;
+  cursor: pointer;
+}
+.creations-actions > button:hover {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+}
+.create-studio-bar {
+  gap: var(--space-2);
+}
+.creations-menu {
+  position: relative;
+  margin-right: auto;
+}
+.creations-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  width: min(560px, 80vw);
+  max-height: 320px;
+  padding: var(--space-2) 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  background: var(--ui-bg);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top left;
+  animation: motion-pop-in var(--dur-base) var(--ease-out);
+}
+.creations-popover > .creations {
+  flex: 1;
+  max-height: none;
+}

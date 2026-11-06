@@ -110,7 +110,7 @@ export function ExtensionsPage(props: SettingsPageProps) {
             />
           )}
           {tab === "mcp" && <McpSection t={t} />}
-          {tab === "create" && <CreateTab t={t} />}
+          {tab === "create" && <CreateTab t={t} onOpenTab={setTab} />}
         </div>
       )}
     </>

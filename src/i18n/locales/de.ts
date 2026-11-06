@@ -1477,6 +1477,27 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   createMakePlugin: "Eigenes Plugin erstellen",
   createMakeSkill: "Eigenen Skill erstellen",
   createNew: "Neu",
+  createdTitle: "Hier gemacht",
+  createdMenu: "Hier gemacht ({count})",
+  createdOn: "An",
+  createdOff: "Aus",
+  createdBroken: "Muss behoben werden",
+  createdInUse: "In Verwendung",
+  createdUse: "Verwenden",
+  createdTurnOn: "Einschalten",
+  createdTurnOff: "Ausschalten",
+  createdOpen: "Öffnen",
+  createdEdit: "Mit KI ändern",
+  createdRemove: "Entfernen",
+  createdRemoveAll: "Alle entfernen",
+  createdRemoveAsk:
+    "{name} entfernen? Ein Skill kommt in den Papierkorb; die Dateien eines Plugins oder Themes werden gelöscht.",
+  createdRemoveAllAsk:
+    "Alle {count} hier gemachten Dinge entfernen? Skills kommen in den Papierkorb; die Dateien von Plugins und Themes werden gelöscht.",
+  createdEditTheme:
+    "Ändere mein Theme {name}. Sein CSS jetzt:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "Ändere meinen Skill {name}. Seine Anweisungen jetzt:\n```markdown\n{source}\n```\n",
   createAiOff: "Schalte Textus AI ein, um etwas zu erstellen.",
   createExamples: "Beispiele",
   createExamplePluginTodo:

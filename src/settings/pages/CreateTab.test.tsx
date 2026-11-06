@@ -56,11 +56,19 @@ vi.mock("../../ai/chat/chat-labels", () => ({
 }));
 vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => ({
-    settings: { aiProvider: "x", agentModels: {}, textusAi: true },
+    settings: {
+      aiProvider: "x",
+      agentModels: {},
+      textusAi: true,
+      creations: [],
+      userThemes: [],
+      themeId: "default",
+    },
   }),
 }));
 vi.mock("../../platform/ipc", () => ({
   ai: {
+    listSkills: () => Promise.resolve([]),
     loadAgentWorkspace: () =>
       Promise.resolve({
         skills: [{ name: "theme", description: "", prompt: "Make a theme." }],
@@ -71,7 +79,7 @@ vi.mock("../../platform/ipc", () => ({
 afterEach(cleanup);
 
 it("starts a Create conversation with the starting point's kind's skill loaded", async () => {
-  render(<CreateTab t={en} />);
+  render(<CreateTab t={en} onOpenTab={() => {}} />);
   // Each starting point says what it makes.
   const amber = await screen.findByText(en.createExampleThemeAmber);
   expect(amber.closest("button")?.textContent).toContain(
@@ -90,7 +98,7 @@ it("starts a Create conversation with the starting point's kind's skill loaded",
 it("fills in a request made before it opened, for the user to finish", async () => {
   const { requestCreate } = await import("../../ai/chat/create-request");
   requestCreate("Change the Todo plugin (local.todo): ", "plugin");
-  render(<CreateTab t={en} />);
+  render(<CreateTab t={en} onOpenTab={() => {}} />);
   await act(async () => {});
   expect(screen.getByLabelText(en.createPlaceholder)).toHaveProperty(
     "value",

@@ -1407,6 +1407,27 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   createMakePlugin: "플러그인 만들기",
   createMakeSkill: "스킬 만들기",
   createNew: "새로 만들기",
+  createdTitle: "만든 것",
+  createdMenu: "만든 것 ({count})",
+  createdOn: "켜짐",
+  createdOff: "꺼짐",
+  createdBroken: "수정 필요",
+  createdInUse: "사용 중",
+  createdUse: "사용",
+  createdTurnOn: "켜기",
+  createdTurnOff: "끄기",
+  createdOpen: "열기",
+  createdEdit: "AI로 변경",
+  createdRemove: "제거",
+  createdRemoveAll: "모두 제거",
+  createdRemoveAsk:
+    "{name}을(를) 제거할까요? 스킬은 휴지통으로 옮겨지고, 플러그인이나 테마 파일은 삭제됩니다.",
+  createdRemoveAllAsk:
+    "여기서 만든 {count}개를 모두 제거할까요? 스킬은 휴지통으로 옮겨지고, 플러그인과 테마 파일은 삭제됩니다.",
+  createdEditTheme:
+    "내 {name} 테마를 바꿔 주세요. 지금의 CSS:\n```css\n{source}\n```\n",
+  createdEditSkill:
+    "내 {name} 스킬을 바꿔 주세요. 지금의 지침:\n```markdown\n{source}\n```\n",
   createAiOff: "만들려면 Textus AI를 켜세요.",
   createExamples: "예시",
   createExamplePluginTodo:
