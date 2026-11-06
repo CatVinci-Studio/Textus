@@ -1,3 +1,4 @@
+import { slashed } from "../../utils/path";
 import { headingIndex } from "../../editor/markdown/link-target";
 import {
   plugins as pluginsIpc,
@@ -69,8 +70,6 @@ interface FolderIndex {
   byPath: Map<string, MetaDocument>;
   paths: PathIndex;
 }
-
-const norm = (path: string) => path.replace(/\\/g, "/");
 
 /** `resolveTarget`'s path, for a target that exists. `wiki`: `link` is a
  *  wiki link's inside, without its brackets. */
@@ -170,7 +169,7 @@ export async function folderIndex(
     current = {
       root,
       documents: docs,
-      byPath: new Map(docs.map((d) => [norm(d.path), d])),
+      byPath: new Map(docs.map((d) => [slashed(d.path), d])),
       paths,
     };
     if (!first && changed.length)
@@ -188,7 +187,7 @@ export function targetLine(
   index: FolderIndex,
   target: NoteTarget,
 ): number | null {
-  const doc = index.byPath.get(norm(target.path));
+  const doc = index.byPath.get(slashed(target.path));
   if (!doc) return null;
   if (target.block)
     return doc.blockIds.find((b) => b.id === target.block)?.line ?? null;
@@ -201,10 +200,10 @@ export function targetLine(
 }
 
 export function backlinksIn(index: FolderIndex, path: string) {
-  const target = norm(path);
+  const target = slashed(path);
   return index.documents.flatMap((d) =>
     d.links
-      .filter((l) => l.resolved && norm(l.resolved) === target)
+      .filter((l) => l.resolved && slashed(l.resolved) === target)
       .map((l) => ({ path: d.path, line: l.line, text: l.text })),
   );
 }
@@ -229,7 +228,7 @@ export function tasksIn(
 ): MetaTask[] {
   const tag = filter.tag?.replace(/^#/, "").toLowerCase();
   return index.documents.flatMap((d) =>
-    filter.path && norm(filter.path) !== norm(d.path)
+    filter.path && slashed(filter.path) !== slashed(d.path)
       ? []
       : d.tasks.filter(
           (t) =>

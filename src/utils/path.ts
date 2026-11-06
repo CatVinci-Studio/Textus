@@ -60,6 +60,9 @@ export function hasUrlScheme(src: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(src);
 }
 
+/** `path` with "/" between its parts, as links and the folder index keep it. */
+export const slashed = (path: string): string => path.replace(/\\/g, "/");
+
 const NOTE_FILE = /\.(md|markdown)$/i;
 
 /** A note: a Markdown file, which a wikilink names without its extension. */
@@ -70,8 +73,8 @@ export const noteStem = (path: string): string => path.replace(NOTE_FILE, "");
 
 /** `to`, written relative to the folder `fromDir`, with "/". */
 export function relativePath(fromDir: string, to: string): string {
-  const a = fromDir.replace(/\\/g, "/").split("/").filter(Boolean);
-  const b = to.replace(/\\/g, "/").split("/").filter(Boolean);
+  const a = slashed(fromDir).split("/").filter(Boolean);
+  const b = slashed(to).split("/").filter(Boolean);
   let i = 0;
   while (i < a.length && i < b.length && a[i] === b[i]) i++;
   const up = a.slice(i).map(() => "..");

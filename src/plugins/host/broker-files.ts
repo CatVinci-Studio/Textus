@@ -1,5 +1,5 @@
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { basename } from "../../utils/path";
+import { basename, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import { emitPluginEvent, getWindowAccess, notePathMoved } from "../app-bridge";
@@ -303,7 +303,7 @@ export function fileHandlers(p: PluginScope) {
 
 /** `path` in the folder `root`, `/`-separated. */
 export function relOf(root: string, path: string): string {
-  const r = root.replace(/\\/g, "/").replace(/\/$/, "");
-  const full = path.replace(/\\/g, "/");
+  const r = slashed(root).replace(/\/$/, "");
+  const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
 }

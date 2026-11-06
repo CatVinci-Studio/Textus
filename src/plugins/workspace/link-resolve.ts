@@ -4,7 +4,7 @@ import {
   parseNoteLink,
   type NoteLink,
 } from "../../utils/note-link";
-import { isNoteFile, noteStem, relativePath } from "../../utils/path";
+import { isNoteFile, noteStem, relativePath, slashed } from "../../utils/path";
 
 /**
  * Where a link to a note leads, among a folder's files: the one resolver for
@@ -113,7 +113,7 @@ export function pickNote(
   link: NoteLink,
   from: string,
 ): string | null {
-  const note = link.note.replace(/\\/g, "/");
+  const note = slashed(link.note);
   if (!note) return from;
   const fromDir = folderOf(from);
   if (note.startsWith("/")) return direct(index, joined("", note));
@@ -157,7 +157,7 @@ export function resolveNoteIn(
   const parsed = parseNoteLink(link);
   if (!parsed) return null;
   const found = pickNote(index, parsed, from);
-  const note = parsed.note.replace(/\\/g, "/");
+  const note = slashed(parsed.note);
   const path =
     found ??
     joined(
@@ -178,8 +178,6 @@ export function resolveNoteIn(
   };
 }
 
-const norm = (path: string) => path.replace(/\\/g, "/");
-
 /** A folder's notes looked up by path and by name, built once per index:
  *  a big folder's links each found without a walk over every file. */
 export interface PathIndex {
@@ -192,13 +190,13 @@ export function pathIndex(root: string, paths: readonly string[]): PathIndex {
 }
 
 function relativeTo(root: string, path: string): string {
-  const base = norm(root).replace(/\/+$/, "");
-  const full = norm(path);
+  const base = slashed(root).replace(/\/+$/, "");
+  const full = slashed(path);
   return full.startsWith(`${base}/`) ? full.slice(base.length + 1) : full;
 }
 
 const absolute = (paths: PathIndex, rel: string) =>
-  `${norm(paths.root).replace(/\/+$/, "")}/${rel}`;
+  `${slashed(paths.root).replace(/\/+$/, "")}/${rel}`;
 
 /** Where `link` (a `[[wiki link]]` or a Markdown link's target, as written)
  *  from the document at `from` leads, as a click takes it; null when it

@@ -1,3 +1,4 @@
+import { slashed } from "../../utils/path";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
@@ -62,7 +63,7 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
       depth: 1,
       chain: [embedKey(docPath)],
       signal: state.asks.signal,
-      read: (path) => state.read.add(path.replace(/\\/g, "/")),
+      read: (path) => state.read.add(slashed(path)),
     }).then(() => {
       if (!state.asks.signal.aborted)
         lastShown.set(`${docPath}\n${source}`, el.innerHTML);
@@ -134,7 +135,7 @@ export function createNoteEmbedPlugin(docPath: () => string | null) {
       },
       view(view) {
         const stop = onEmbedsChange((path) => {
-          if (path && !state.read.has(path.replace(/\\/g, "/"))) return;
+          if (path && !state.read.has(slashed(path))) return;
           state.asks.abort();
           state.asks = new AbortController();
           state.read.clear();

@@ -1,6 +1,6 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
-import { isNoteFile, noteStem, relativePath } from "../../utils/path";
+import { isNoteFile, noteStem, relativePath, slashed } from "../../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
@@ -24,10 +24,6 @@ export interface LinkMove {
   linkRoot?: string | null;
 }
 
-function sep(path: string): string {
-  return path.replace(/\\/g, "/");
-}
-
 function dirOf(path: string): string {
   const i = path.lastIndexOf("/");
   return i > 0 ? path.slice(0, i) : "/";
@@ -41,8 +37,8 @@ const isRelative = (link: string) => /^\.\.?\//.test(link);
 
 /** `link` from the folder `dir`, `.` and `..` folded. */
 function join(dir: string, link: string): string {
-  const parts = sep(dir).split("/");
-  for (const part of sep(link).split("/")) {
+  const parts = slashed(dir).split("/");
+  for (const part of slashed(link).split("/")) {
     if (part === "" || part === ".") continue;
     if (part === "..") parts.pop();
     else parts.push(part);
@@ -84,14 +80,14 @@ interface Context {
 function contextOf(move: LinkMove): Context {
   const moved = (path: string) => {
     const to = move.moved(path);
-    return to === null ? null : sep(to);
+    return to === null ? null : slashed(to);
   };
-  const files = move.files.map(sep);
-  const root = sep(move.root).replace(/\/+$/, "") || "/";
+  const files = move.files.map(slashed);
+  const root = slashed(move.root).replace(/\/+$/, "") || "/";
   const linkRoot = move.linkRoot === undefined ? root : move.linkRoot;
   return {
     root,
-    linkRoot: linkRoot === null ? null : sep(linkRoot).replace(/\/+$/, ""),
+    linkRoot: linkRoot === null ? null : slashed(linkRoot).replace(/\/+$/, ""),
     before: pathIndex(root, files),
     after: pathIndex(
       root,
@@ -131,7 +127,7 @@ function rewriteWith(
   ctx: Context,
 ): { text: string; count: number } {
   const { before, after, moved, root } = ctx;
-  const oldDoc = sep(doc);
+  const oldDoc = slashed(doc);
   const newDoc = moved(oldDoc) ?? oldDoc;
   const docMoved = newDoc !== oldDoc;
   const oldDir = dirOf(oldDoc);
@@ -197,7 +193,7 @@ function rewriteWith(
     const hash = bare.indexOf("#");
     const file = hash < 0 ? bare : bare.slice(0, hash);
     const fragment = hash < 0 ? "" : bare.slice(hash);
-    const decoded = sep(decode(file));
+    const decoded = slashed(decode(file));
     if (!decoded) continue;
     const path = markdownTarget(file, decoded);
     edit(
@@ -272,10 +268,10 @@ export function rewriteMovedLinks(
 
 /** Where `path` went when `from` became `to` (a file, or a folder and all in it). */
 export function movedBy(from: string, to: string) {
-  const a = sep(from);
-  const b = sep(to);
+  const a = slashed(from);
+  const b = slashed(to);
   return (path: string): string | null => {
-    const p = sep(path);
+    const p = slashed(path);
     if (p === a) return b;
     return p.startsWith(`${a}/`) ? b + p.slice(a.length) : null;
   };
@@ -305,8 +301,8 @@ export function linkPlanner(
   plan: LinkPlan,
 ): (doc: { path: string; text: string }) => LinkUpdate | null {
   const back = movedBy(plan.to, plan.from);
-  const oldFiles = files.map((f) => back(f) ?? sep(f));
-  const from = sep(plan.from);
+  const oldFiles = files.map((f) => back(f) ?? slashed(f));
+  const from = slashed(plan.from);
   // A hidden or ignored file isn't indexed, but its links still count.
   if (!oldFiles.some((f) => f === from || f.startsWith(`${from}/`)))
     oldFiles.push(from);
@@ -317,7 +313,7 @@ export function linkPlanner(
     linkRoot: plan.linkRoot,
   });
   return (doc) => {
-    const oldPath = back(doc.path) ?? sep(doc.path);
+    const oldPath = back(doc.path) ?? slashed(doc.path);
     const { text, count } = rewriteWith(doc.text, oldPath, ctx);
     return count > 0 ? { path: doc.path, text, count } : null;
   };
