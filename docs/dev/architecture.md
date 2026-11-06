@@ -164,3 +164,37 @@ split this way in 1.0.2, from about 2,260 and 1,520 lines. When you add to
 them, add a hook or component in the same way - as `WindowBar`,
 `useDraftAutosave` or `useApplyAppearance` are - rather than more code in
 the file itself, and keep the hooks' call order.
+
+## The window's Content Security Policy
+
+Every window's page loads under the policy in `src-tauri/tauri.conf.json`
+(`app.security.csp`). It keeps the network out of everything a stylesheet
+or a document can make the page load - an imported or gallery theme, Custom
+CSS, a document's HTML - while the app's own traffic goes through Rust:
+the AI providers, the theme gallery, the plugin catalog and the updater all
+use `reqwest`, so the page itself never needs a remote origin. A desktop
+`npm run tauri dev` loads the Vite page directly, without Tauri's header,
+so the dev server sends the same policy (`vite.csp.ts`), and the e2e flows
+run under it too. `src/plugins/host/window-csp.test.ts` checks the rules
+below.
+
+| Directive     | Allows                                                                                              | Because                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default-src` | `'self'`                                                                                            | Anything not listed: the app's own files only.                                                                                                       |
+| `script-src`  | `'self'`, `'unsafe-inline'`, `'wasm-unsafe-eval'`, `data:`, `blob:`, the plugins' files             | A plugin's page is a `srcdoc` frame, which takes the window's policy on top of its own, so the window allows what `webviewCsp` (`frames.ts`) allows. |
+| `style-src`   | `'self'`, `'unsafe-inline'`, `data:`, the plugins' files                                            | Themes and Custom CSS are `<style>` elements, and the editor sets `style=""`. No remote `@import`.                                                   |
+| `img-src`     | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files, `https:`, `http:`               | A document shows its pictures from the web as written. A stylesheet's `url()` picture is one too; CSP can't tell the two apart.                      |
+| `font-src`    | `'self'`, `data:`, the asset protocol, the plugins' files                                           | KaTeX's fonts are bundled; an imported theme's fonts are inlined as `data:` (`theme-import.ts`). No web fonts.                                       |
+| `media-src`   | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files                                  | What a plugin's page may play.                                                                                                                       |
+| `connect-src` | `'self'`, `ipc:` / `http://ipc.localhost`, `data:`, `blob:`, the asset protocol, the plugins' files | Tauri's IPC, and reading a picture's bytes back for export and copy. No `fetch` to the web.                                                          |
+| `worker-src`  | `'self'`, `data:`, `blob:`, the plugins' files                                                      | A plugin's page may start a worker from its own files.                                                                                               |
+| `frame-src`   | `'self'`, `https:`, `http:`                                                                         | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
+| `object-src`  | `'none'`                                                                                            | No plugins of the old kind.                                                                                                                          |
+| `base-uri`    | `'self'`                                                                                            | A `<base>` can't move where relative URLs go.                                                                                                        |
+
+Each scheme appears twice where it is served: `asset:` and
+`textus-plugin:` on macOS, Linux and iOS, `http://asset.localhost` and
+`http://textus-plugin.localhost` on Windows. `dangerousDisableAssetCspModification`
+stops Tauri adding hashes of the pages' inline `<style>` and `<script>` to
+the policy: with a hash in a directive the browser ignores
+`'unsafe-inline'`, and themes and plugin frames would stop working.
