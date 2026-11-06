@@ -951,6 +951,25 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "書き出した Word ファイルに、このファイルのスタイル・フォント・余白を使います。",
   docxTemplateNone: "Pandoc の既定",
   docxTemplateClear: "既定に戻す",
+  exportTocLabel: "Pandoc の書き出しに目次を付ける",
+  exportNumberHeadingsLabel: "Pandoc の書き出しで見出しに番号を付ける",
+  exportNumberHeadingsHelp:
+    "見出し番号プラグインと同じ付け方です。最上位の見出しが一つだけなら、それを題名とみなして番号を付けません。",
+  exportBibliographyLabel: "参考文献",
+  exportBibliographyHelp:
+    ".bib ファイルを選びます。Word や EPUB など Pandoc で書き出すと、[@key] の引用が参考文献になり、一覧が末尾に付きます。",
+  exportBibliographyNone: "なし",
+  exportBibliographyClear: "外す",
+  exportCslLabel: "引用スタイル",
+  exportCslHelp:
+    "参考文献の .csl ファイル。選ばない場合、Pandoc はシカゴ（著者・年）形式を使います。",
+  pandocArgsLabel: "Pandoc の引数",
+  pandocArgsHelp:
+    "この形式の Pandoc コマンドに語ごとに加えます。シェルは通しません。空白を含む値は引用符で囲んでください。--from、--to、--output は Textus が設定します。",
+  pandocArgsAll: "すべての形式",
+  pandocArgsOwned: "{arg} は Textus が設定します。外してください。",
+  pandocErrorSettings:
+    "Pandoc の設定は 設定 › {page} › {group} と、その詳細設定の引数にあります。",
   pdfLightColorsLabel: "PDF を明るい配色で書き出す",
   infoTipLabel: "「{label}」について",
   infoTipLabelPlain: "詳細",

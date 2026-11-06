@@ -992,6 +992,25 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Exportierte Word-Dateien übernehmen Formatvorlagen, Schriften und Ränder dieser Datei.",
   docxTemplateNone: "Pandoc-Standard",
   docxTemplateClear: "Standard verwenden",
+  exportTocLabel: "Inhaltsverzeichnis bei Pandoc-Exporten",
+  exportNumberHeadingsLabel: "Nummerierte Überschriften bei Pandoc-Exporten",
+  exportNumberHeadingsHelp:
+    "Nummeriert wie mit dem Plugin Heading Numbers: Die einzige Überschrift der obersten Ebene ist der Titel und bleibt ohne Nummer.",
+  exportBibliographyLabel: "Literaturverzeichnis",
+  exportBibliographyHelp:
+    "Eine .bib-Datei. Pandoc-Exporte (Word, EPUB …) machen aus [@schlüssel]-Zitaten Literaturangaben, mit der Liste am Ende.",
+  exportBibliographyNone: "Keine",
+  exportBibliographyClear: "Entfernen",
+  exportCslLabel: "Zitierstil",
+  exportCslHelp:
+    "Eine .csl-Datei für das Literaturverzeichnis. Ohne sie nutzt Pandoc Chicago Autor-Jahr.",
+  pandocArgsLabel: "Pandoc-Argumente",
+  pandocArgsHelp:
+    "Werden dem Pandoc-Befehl für dieses Format Wort für Wort angefügt, nie über eine Shell. Werte mit Leerzeichen in Anführungszeichen setzen. --from, --to und --output setzt Textus selbst.",
+  pandocArgsAll: "Alle Formate",
+  pandocArgsOwned: "{arg} setzt Textus selbst; bitte entfernen.",
+  pandocErrorSettings:
+    "Deine Pandoc-Optionen findest du unter Einstellungen › {page} › {group} und in den erweiterten Argumenten.",
   pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",
   infoTipLabelPlain: "Mehr erfahren",

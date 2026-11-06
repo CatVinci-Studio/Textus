@@ -1,20 +1,72 @@
 // The Markdown handed to pandoc for export, rewritten where the editor's
-// syntax has no pandoc equivalent: highlights, sized images and GitHub
-// alerts with localized labels. Code is left untouched.
+// syntax has no pandoc equivalent: highlights, sized images, callouts,
+// `[[links]]` and embeds, `~sub~`/`^sup^`, citations; `%%comments%%` go.
+// Code and math are left untouched.
 
 import { parseImageTag } from "../editor/images/image-html";
+import { parseEmbed } from "../editor/images/obsidian-embed";
+import { shownWikilink } from "../editor/markdown/wikilink-reveal";
+import {
+  calloutHeading,
+  readCalloutLine,
+  type AlertType,
+} from "../editor/markdown/callout-syntax";
+import { OBJECT, findInlineSyntax } from "../editor/markdown/inline-syntax";
+import type { NoteLinkOut } from "./note-links";
 
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
+const MATH_FENCE = /^\s*\$\$/;
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE_WIDTH =
   /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{textus-width=(\d{1,3})%\}"\)/g;
-const HIGHLIGHT = /==(?=\S)(.+?)(?<=\S)==/g;
-const ALERT = /^(\s*>\s*)\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*$/;
+const QUOTE = /^(?:[ \t]*>)+[ \t]?/;
+// A block a comment can't run on into: a list item, heading or table row.
+const BLOCK_START = /^\s*(?:[-+*]\s|\d{1,9}[.)]\s|#{1,6}\s|\|)/;
 
-export type AlertLabels = Record<
-  "NOTE" | "TIP" | "IMPORTANT" | "WARNING" | "CAUTION",
-  string
->;
+// Code and math, never rewritten.
+const CODE_MATH =
+  /(`+)[\s\S]*?(?<!`)\1(?!`)|(?<!\\)\$\$[^$\n]+?\$\$|(?<!\\)\$(?!\s)[^$\n]+?(?<!\s)\$(?!\d)/g;
+// Wikilinks and embeds (rewritten whole), a link's destination and URLs.
+const LINKS =
+  /!?\[\[[^[\]\n]+\]\](?!\()|\]\([^)\s]*|<[a-z][a-z0-9+.-]*:[^>\s]*>|\bhttps?:\/\/[^\s<>)]+/gi;
+
+// One pass over the words, so nothing a rewrite writes is read again.
+// Groups: 1 citation, 2 highlight, 3 superscript, 4 tilde span.
+const INLINE =
+  /(\[(?:[^[\]\n]*?[\s;])?-?@[\p{L}\p{N}_][^[\]\n]*\](?![([:]))|==(?=\S)(.+?)(?<=\S)==|(?<![\^[\\])\^(?![[^])([^\s^]+)\^|(?<![~\\])~([^~\s](?:[^~\n]*[^~\s])?)~(?!~)/gu;
+
+/** `text` with `outside` applied between the matches of `spans`, and
+ *  `inside` (by default, nothing) to each match. */
+function between(
+  text: string,
+  spans: RegExp,
+  outside: (text: string) => string,
+  inside: (span: string) => string = (span) => span,
+): string {
+  let out = "";
+  let at = 0;
+  for (const m of text.matchAll(spans)) {
+    out += outside(text.slice(at, m.index)) + inside(m[0]);
+    at = m.index + m[0].length;
+  }
+  return out + outside(text.slice(at));
+}
+
+export type AlertLabels = Record<AlertType, string>;
+
+export interface PandocRewrite {
+  /** The editor's labels for GitHub's alerts; without them a callout stays. */
+  alertLabels?: AlertLabels;
+  /** Where each `[[link]]` and `![[embed]]` leads; any other is its text. */
+  noteLinks?: ReadonlyMap<string, NoteLinkOut | null>;
+  /** A bibliography is set: `[@key]` goes to Pandoc's citeproc. */
+  citations?: boolean;
+}
+
+/** Every ASCII punctuation mark escaped: the text reads as written. */
+const literal = (text: string) => text.replace(/[!-/:-@[-`{-~]/g, "\\$&");
+const bracketsEscaped = (text: string) => text.replace(/([[\]])/g, "\\$1");
+const destination = (path: string) => `<${path.replace(/[<>]/g, encodeURI)}>`;
 
 /** An `<img>` tag as a pandoc image, or the tag itself when no image node
  *  carries it. */
@@ -30,65 +82,157 @@ function imageTag(tag: string): string {
   return `![${alt}](${src}${title})${width ? `{width=${width}}` : ""}`;
 }
 
-function rewriteProse(text: string): string {
-  return text
-    .replace(IMG_TAG, imageTag)
-    .replace(IMAGE_WIDTH, (_m, alt: string, src: string, title: string, w) => {
-      const kept = title.trim() ? ` "${title.trim()}"` : "";
-      return `![${alt}](${src}${kept}){width=${w}%}`;
-    })
-    .replace(HIGHLIGHT, "[$1]{.mark}");
+function noteLink(source: string, options: PandocRewrite): string {
+  const out = options.noteLinks?.get(source) ?? null;
+  const embed = parseEmbed(source);
+  if (out && "image" in out) {
+    const width = embed?.width ? `{width=${embed.width}px}` : "";
+    return `![${literal(out.alt)}](${destination(out.image)})${width}`;
+  }
+  const text = embed ? embed.alt || embed.path : shownWikilink(source);
+  return out ? `[${literal(text)}](${destination(out.href)})` : literal(text);
 }
 
-/** Rewrites one line outside code blocks, skipping its inline code spans. */
-function rewriteLine(line: string): string {
+function rewriteText(text: string, options: PandocRewrite): string {
+  return text.replace(
+    INLINE,
+    (whole, cite, mark, sup, tilde, offset: number) => {
+      if (cite) return options.citations ? `\`${cite}\`{=textuscite}` : whole;
+      if (mark) return `[${rewriteText(mark, options)}]{.mark}`;
+      if (sup) return `[${bracketsEscaped(sup)}]{.textus-sup}`;
+      // The editor's rule: one tilde after a letter or digit, around text
+      // with no space, is a subscript; anywhere else it strikes through.
+      const subscript =
+        /[\p{L}\p{N}]/u.test(text[offset - 1] ?? "") && !/\s/.test(tilde);
+      return subscript
+        ? `[${bracketsEscaped(tilde)}]{.textus-sub}`
+        : `~~${tilde}~~`;
+    },
+  );
+}
+
+/** Rewrites prose: what code, math and URLs hold is left as written. */
+function rewriteProse(line: string, options: PandocRewrite): string {
+  return between(line, CODE_MATH, (prose) =>
+    between(
+      prose
+        .replace(IMG_TAG, imageTag)
+        .replace(
+          IMAGE_WIDTH,
+          (_m, alt: string, src: string, title: string, w) => {
+            const kept = title.trim() ? ` "${title.trim()}"` : "";
+            return `![${alt}](${src}${kept}){width=${w}%}`;
+          },
+        ),
+      LINKS,
+      (words) => rewriteText(words, options),
+      (span) => (span.endsWith("]]") ? noteLink(span, options) : span),
+    ),
+  );
+}
+
+/** `text` without its `%%comments%%`, found as the editor finds them in
+ *  one paragraph; a line that was all comment goes with it. */
+function withoutComments(text: string): string {
+  const mask = (span: string) => OBJECT.repeat(span.length);
+  const masked = between(
+    text,
+    CODE_MATH,
+    (prose) => between(prose, LINKS, (words) => words, mask),
+    mask,
+  );
+  const comments = findInlineSyntax(masked).filter((s) => s.kind === "comment");
+  if (!comments.length) return text;
   let out = "";
-  let i = 0;
-  while (i < line.length) {
-    const tick = line.indexOf("`", i);
-    if (tick < 0) {
-      out += rewriteProse(line.slice(i));
-      break;
+  let at = 0;
+  for (const comment of comments) {
+    let { from, to } = comment;
+    const start = text.lastIndexOf("\n", from - 1) + 1;
+    const end =
+      text.indexOf("\n", to) < 0 ? text.length : text.indexOf("\n", to);
+    const lead = text.slice(start, from).replace(QUOTE, "");
+    if (!lead.trim() && !text.slice(to, end).trim()) {
+      from = start > 0 ? start - 1 : start;
+      to = start > 0 || end === text.length ? end : end + 1;
     }
-    out += rewriteProse(line.slice(i, tick));
-    const run = /^`+/.exec(line.slice(tick))![0];
-    const close = line.indexOf(run, tick + run.length);
-    if (close < 0) {
-      out += line.slice(tick);
-      break;
+    out += text.slice(at, Math.max(at, from));
+    at = to;
+  }
+  return out + text.slice(at);
+}
+
+const quoteDepth = (line: string) =>
+  (QUOTE.exec(line)?.[0].match(/>/g) ?? []).length;
+
+/** A callout's first line as a bold heading of its own, with the editor's
+ *  label; only where a quote starts, as the editor reads it. */
+function callout(
+  line: string,
+  previous: string,
+  options: PandocRewrite,
+): string | null {
+  const labels = options.alertLabels;
+  const prefix = QUOTE.exec(line)?.[0];
+  if (!labels || !prefix || quoteDepth(previous) >= quoteDepth(line))
+    return null;
+  const found = readCalloutLine(line.slice(prefix.length));
+  if (!found) return null;
+  const heading = calloutHeading(found, (type) => labels[type]);
+  return `${prefix}**${rewriteProse(heading, options)}**\n${prefix.trimEnd()}`;
+}
+
+/** Splits `markdown` into runs of code lines and runs of prose paragraphs. */
+function blocks(markdown: string): { code: boolean; text: string }[] {
+  const out: { code: boolean; text: string }[] = [];
+  let fence: string | null = null;
+  let math = false;
+  const push = (code: boolean, line: string, joins: boolean) => {
+    const last = out.at(-1);
+    if (last && last.code === code && joins) last.text += `\n${line}`;
+    else out.push({ code, text: line });
+  };
+  for (const line of markdown.split("\n")) {
+    const match = FENCE.exec(line);
+    if (fence || math) {
+      if (
+        fence &&
+        match?.[1][0] === fence[0] &&
+        match[1].length >= fence.length
+      )
+        fence = null;
+      if (math && line.includes("$$")) math = false;
+      push(true, line, true);
+    } else if (match || (MATH_FENCE.test(line) && !/\$\$.*\$\$/.test(line))) {
+      if (match) fence = match[1];
+      else math = true;
+      push(true, line, true);
+    } else {
+      const joins =
+        !!line.trim() &&
+        !!out.at(-1)?.text.split("\n").at(-1)?.trim() &&
+        !BLOCK_START.test(line) &&
+        quoteDepth(line) === quoteDepth(out.at(-1)!.text.split("\n").at(-1)!);
+      push(false, line, joins);
     }
-    out += line.slice(tick, close + run.length);
-    i = close + run.length;
   }
   return out;
 }
 
 export function toPandocMarkdown(
   markdown: string,
-  alertLabels?: AlertLabels,
+  options: PandocRewrite = {},
 ): string {
-  let fence: string | null = null;
-  return markdown
-    .split("\n")
-    .map((line) => {
-      const match = FENCE.exec(line);
-      if (fence) {
-        if (
-          match &&
-          match[1][0] === fence[0] &&
-          match[1].length >= fence.length
+  return blocks(markdown)
+    .map(({ code, text }) => {
+      if (code) return text;
+      const lines = withoutComments(text).split("\n");
+      return lines
+        .map(
+          (line, i) =>
+            callout(line, lines[i - 1] ?? "", options) ??
+            rewriteProse(line, options),
         )
-          fence = null;
-        return line;
-      }
-      if (match) {
-        fence = match[1];
-        return line;
-      }
-      const alert = alertLabels && ALERT.exec(line);
-      if (alert)
-        return `${alert[1]}**${alertLabels[alert[2] as keyof AlertLabels]}**`;
-      return rewriteLine(line);
+        .join("\n");
     })
     .join("\n");
 }

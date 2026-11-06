@@ -899,6 +899,25 @@ export default {
   docxTemplateHelp: "导出的 Word 文件沿用这个文件的样式、字体和页边距。",
   docxTemplateNone: "Pandoc 默认",
   docxTemplateClear: "恢复默认",
+  exportTocLabel: "Pandoc 导出时加目录",
+  exportNumberHeadingsLabel: "Pandoc 导出时给标题编号",
+  exportNumberHeadingsHelp:
+    "编号方式和“标题编号”插件一样：文档里只有一个最高级标题时，它算作题目，不编号。",
+  exportBibliographyLabel: "参考文献",
+  exportBibliographyHelp:
+    "选一个 .bib 文件。导出为 Word、EPUB 等 Pandoc 格式时，[@key] 引用会变成参考文献，文献列表放在文末。",
+  exportBibliographyNone: "无",
+  exportBibliographyClear: "移除",
+  exportCslLabel: "引用格式",
+  exportCslHelp:
+    "参考文献用的 .csl 文件。不选时，Pandoc 用芝加哥作者-日期格式。",
+  pandocArgsLabel: "Pandoc 参数",
+  pandocArgsHelp:
+    "按词加进这个格式的 Pandoc 命令，不经过 shell。带空格的值请加引号。--from、--to 和 --output 由 Textus 设定。",
+  pandocArgsAll: "所有格式",
+  pandocArgsOwned: "{arg} 由 Textus 设定，请去掉。",
+  pandocErrorSettings:
+    "你设的 Pandoc 选项在 设置 › {page} › {group}，以及它的高级参数里。",
   pdfLightColorsLabel: "导出 PDF 时使用浅色",
   infoTipLabel: "关于“{label}”的说明",
   infoTipLabelPlain: "说明",

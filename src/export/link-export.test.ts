@@ -25,3 +25,36 @@ describe("an exported link", () => {
     );
   });
 });
+
+describe("an exported wikilink", () => {
+  it("is a link to where it leads, to a heading of the page, or its text", async () => {
+    const t = await openView(
+      "## Part two\n\nsee [[Plan|the plan]], [[#Part two]] and [[Gone]]\n\nend",
+      { enableCompletion: false },
+    );
+    t.caretAt("end", 1);
+    const html = cloneEditorContent(
+      t.view.dom,
+      "document",
+      undefined,
+      new Map([
+        ["[[Plan|the plan]]", { href: "Plan.md" }],
+        ["[[Gone]]", null],
+      ]),
+    );
+    expect(html).toContain('see <a href="Plan.md">the plan</a>, ');
+    expect(html).toMatch(/<a href="#part-two">#Part two<\/a> and Gone/);
+  });
+});
+
+describe("an exported %%comment%%", () => {
+  it("is left out, shown or folded away", async () => {
+    const t = await openView("a %%secret%% b\n\n%%whole%%\n\nc %%near%% d", {
+      enableCompletion: false,
+    });
+    t.caretAt("near", 1);
+    const html = cloneEditorContent(t.view.dom, "document");
+    expect(html).not.toMatch(/secret|whole|near/);
+    expect(html).toContain("a  b");
+  });
+});

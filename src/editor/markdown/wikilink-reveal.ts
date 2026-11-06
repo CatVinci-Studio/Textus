@@ -39,6 +39,17 @@ export function hiddenParts(text: string): [number, number][] | null {
       ];
 }
 
+/** A wikilink's source as the editor shows it: its alias, else its target. */
+export function shownWikilink(source: string): string {
+  let shown = "";
+  let at = 0;
+  for (const [from, to] of hiddenParts(source) ?? []) {
+    shown += source.slice(at, from);
+    at = to;
+  }
+  return shown + source.slice(at);
+}
+
 const reveal: Reveal = {
   match: isWikilink,
   decorate(node, pos, touches) {

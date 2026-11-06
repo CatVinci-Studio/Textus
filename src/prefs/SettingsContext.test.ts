@@ -28,6 +28,18 @@ describe("newcomer guide eligibility", () => {
     expect(loadSettings().pdfPageNumbers).toBe(true);
   });
 
+  it("keeps stored Pandoc arguments as string lists of known formats", () => {
+    expect(loadSettings().pandocArgs).toEqual({});
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({
+        language: "en",
+        pandocArgs: { docx: ["-V", 3, "lang=de"], all: "--toc", pdf: ["-x"] },
+      }),
+    );
+    expect(loadSettings().pandocArgs).toEqual({ docx: ["-V", "lang=de"] });
+  });
+
   it("updates from the stable channel unless beta was chosen", () => {
     expect(loadSettings().updateChannel).toBe("stable");
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ language: "zh" }));

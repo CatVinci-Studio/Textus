@@ -985,6 +985,25 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Os arquivos do Word exportados usam os estilos, fontes e margens deste arquivo.",
   docxTemplateNone: "Padrão do Pandoc",
   docxTemplateClear: "Usar padrão",
+  exportTocLabel: "Sumário nas exportações com Pandoc",
+  exportNumberHeadingsLabel: "Títulos numerados nas exportações com Pandoc",
+  exportNumberHeadingsHelp:
+    "Numerados como no plugin Heading Numbers: se o documento tem um único título de nível mais alto, ele é o título e fica sem número.",
+  exportBibliographyLabel: "Bibliografia",
+  exportBibliographyHelp:
+    "Um arquivo .bib. Exportações com Pandoc (Word, EPUB…) transformam as citações [@chave] em referências, com a lista no fim.",
+  exportBibliographyNone: "Nenhuma",
+  exportBibliographyClear: "Remover",
+  exportCslLabel: "Estilo de citação",
+  exportCslHelp:
+    "Um arquivo .csl para a bibliografia. Sem ele, o Pandoc usa Chicago autor-data.",
+  pandocArgsLabel: "Argumentos do Pandoc",
+  pandocArgsHelp:
+    "Adicionados ao comando do Pandoc para este formato, palavra por palavra e nunca por um shell. Coloque entre aspas um valor com espaços. O Textus define --from, --to e --output.",
+  pandocArgsAll: "Todos os formatos",
+  pandocArgsOwned: "{arg} é definido pelo Textus; remova-o.",
+  pandocErrorSettings:
+    "Suas opções do Pandoc estão em Ajustes › {page} › {group} e nos argumentos avançados.",
   pdfLightColorsLabel: "Exportar PDFs em cores claras",
   infoTipLabel: "Mais sobre “{label}”",
   infoTipLabelPlain: "Mais informações",

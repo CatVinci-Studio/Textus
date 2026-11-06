@@ -939,6 +939,25 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   docxTemplateHelp: "내보낸 Word 파일에 이 파일의 스타일, 글꼴, 여백을 씁니다.",
   docxTemplateNone: "Pandoc 기본값",
   docxTemplateClear: "기본값으로",
+  exportTocLabel: "Pandoc 내보내기에 목차 넣기",
+  exportNumberHeadingsLabel: "Pandoc 내보내기에서 제목에 번호 붙이기",
+  exportNumberHeadingsHelp:
+    "제목 번호 플러그인과 같은 방식입니다. 가장 높은 수준의 제목이 하나뿐이면 문서 제목으로 보고 번호를 붙이지 않습니다.",
+  exportBibliographyLabel: "참고 문헌",
+  exportBibliographyHelp:
+    ".bib 파일을 고르세요. Word, EPUB 등 Pandoc으로 내보내면 [@key] 인용이 참고 문헌이 되고, 목록이 끝에 붙습니다.",
+  exportBibliographyNone: "없음",
+  exportBibliographyClear: "제거",
+  exportCslLabel: "인용 스타일",
+  exportCslHelp:
+    "참고 문헌에 쓸 .csl 파일. 고르지 않으면 Pandoc은 시카고 저자-연도 형식을 씁니다.",
+  pandocArgsLabel: "Pandoc 인수",
+  pandocArgsHelp:
+    "이 형식의 Pandoc 명령에 단어 단위로 더합니다. 셸을 거치지 않습니다. 공백이 있는 값은 따옴표로 감싸세요. --from, --to, --output은 Textus가 정합니다.",
+  pandocArgsAll: "모든 형식",
+  pandocArgsOwned: "{arg}는 Textus가 정합니다. 빼 주세요.",
+  pandocErrorSettings:
+    "Pandoc 옵션은 설정 › {page} › {group}과 그 고급 인수에 있습니다.",
   pdfLightColorsLabel: "PDF를 밝은 색으로 내보내기",
   infoTipLabel: "‘{label}’ 설명",
   infoTipLabelPlain: "설명",
