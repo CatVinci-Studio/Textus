@@ -16,6 +16,7 @@ import {
   type Touches,
 } from "../reveal-state";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
+import { katexNow } from "../math/katex-loader";
 import { htmlTextEditing, inHtmlTextEdit } from "./html-text-edit";
 import { sanitizeStyle } from "./html-policy";
 import {
@@ -325,6 +326,11 @@ function decorateTextblock(
 
 const isTextblock = (node: ProseNode) => node.isTextblock;
 
+/** What the drawing depends on besides the document: the path, and KaTeX
+ *  having arrived to draw formulas in HTML. */
+const drawnFor = (docPath: () => string | null) =>
+  `${docPath() ?? ""}\n${katexNow() ? 1 : 0}`;
+
 /** Raw HTML drawn per textblock; `handled` holds the HTML nodes a
  *  <details> fold draws instead. */
 function textblockReveal(
@@ -338,8 +344,9 @@ function textblockReveal(
       decorateTextblock(node, pos, touches, decorations, docPath, handled);
       return decorations;
     },
-    // Part of the widgets' keys, and where a relative <img> is found.
-    config: docPath,
+    // Part of the widgets' keys, and where a relative <img> is found; KaTeX
+    // arriving draws the formulas in HTML.
+    config: () => drawnFor(docPath),
   };
 }
 
@@ -433,7 +440,7 @@ export function createRawHtmlPreviewPlugin(
               open = new Map(open);
               for (const [pos, value] of toggle.set) open.set(pos, value);
             }
-            if (toggle || docPath() !== prev.reveal.config)
+            if (toggle || drawnFor(docPath) !== prev.reveal.config)
               return drawAll(newState, docPath, open);
             if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
             const { mapped, blocks } = revealChanges(

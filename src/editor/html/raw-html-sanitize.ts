@@ -4,6 +4,8 @@
  */
 
 import { ALLOWED_TAGS, INLINE_TAGS, sanitizeNodes } from "./html-policy";
+import { drawHtmlMath, mayHaveHtmlMath } from "./html-math";
+import { loadKatex } from "../math/katex-loader";
 
 type RenderedHtml = { html: string; inline: boolean } | null;
 
@@ -15,15 +17,20 @@ const RENDER_CACHE_MAX = 500;
 export function renderWhitelistedHtml(raw: string): RenderedHtml {
   const cached = renderCache.get(raw);
   if (cached !== undefined) return cached;
-  const rendered = renderUncached(raw);
+  const { rendered, final } = renderUncached(raw);
+  // Formulas waiting for KaTeX: drawn again on a later pass, not cached.
+  if (!final) return rendered;
   if (renderCache.size >= RENDER_CACHE_MAX) renderCache.clear();
   renderCache.set(raw, rendered);
   return rendered;
 }
 
-function renderUncached(raw: string): RenderedHtml {
+function renderUncached(raw: string): {
+  rendered: RenderedHtml;
+  final: boolean;
+} {
   const trimmed = raw.trim();
-  if (!trimmed) return null;
+  if (!trimmed) return { rendered: null, final: true };
 
   const parsed = new DOMParser().parseFromString(trimmed, "text/html");
   const body = parsed.body;
@@ -31,16 +38,22 @@ function renderUncached(raw: string): RenderedHtml {
     (n) => n.nodeType === Node.ELEMENT_NODE,
   ) as Element | undefined;
   if (!firstElement || !ALLOWED_TAGS.has(firstElement.localName.toLowerCase()))
-    return null;
+    return { rendered: null, final: true };
 
   // Built in the inert parsed document: an <img> made in the live page would
   // start loading before it was shown.
   const wrapper = parsed.createElement("div");
   sanitizeNodes(Array.from(body.childNodes), wrapper, { linkTarget: true });
+  // KaTeX's output after the allow-list, which would strip its classes.
+  let final = true;
+  if (mayHaveHtmlMath(wrapper.textContent ?? "") && !drawHtmlMath(wrapper)) {
+    final = false;
+    void loadKatex();
+  }
   // Inline iff nothing block-level survived at the top, as GitHub renders a
   // lone <img> or <kbd>.
   const inline = Array.from(wrapper.children).every((el) =>
     INLINE_TAGS.has(el.tagName.toLowerCase()),
   );
-  return { html: wrapper.innerHTML, inline };
+  return { rendered: { html: wrapper.innerHTML, inline }, final };
 }
