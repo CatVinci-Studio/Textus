@@ -571,30 +571,7 @@ pub fn run() {
             // iOS delivers "Open in Textus" the same way.
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             if let tauri::RunEvent::Opened { urls } = event {
-                // iOS hands over a security-scoped URL, kept as a URL so the textus-files
-                // plugin can open its scope.
-                #[cfg(target_os = "ios")]
-                let paths: Vec<String> = urls
-                    .iter()
-                    .filter(|url| url.scheme() == "file")
-                    .map(|url| url.to_string())
-                    .collect();
-                #[cfg(not(target_os = "ios"))]
-                let paths: Vec<String> = urls
-                    .iter()
-                    .filter_map(|url| url.to_file_path().ok())
-                    .map(|p| p.to_string_lossy().to_string())
-                    .collect();
-                // Still launching: setup opens them (LAUNCH_OPENED).
-                #[cfg(target_os = "macos")]
-                let paths = match LAUNCH_OPENED.lock().unwrap().as_mut() {
-                    Some(early) => {
-                        early.extend(paths);
-                        Vec::new()
-                    }
-                    None => paths,
-                };
-                queue_paths_to_open(app_handle, paths);
+                open_urls(app_handle, urls);
             }
             #[cfg(not(any(target_os = "macos", target_os = "ios")))]
             let _ = event;

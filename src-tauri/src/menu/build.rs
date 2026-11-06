@@ -232,9 +232,10 @@ pub(crate) fn build(
         MenuItemBuilder::with_id(STRIKETHROUGH_ID, l(STRIKETHROUGH_ID, "Strikethrough"))
             .accelerator("Ctrl+Shift+`")
             .build(app)?;
-    let inline_code_item = MenuItemBuilder::with_id(INLINE_CODE_ID, l(INLINE_CODE_ID, "Inline Code"))
-        .accelerator("Ctrl+`")
-        .build(app)?;
+    let inline_code_item =
+        MenuItemBuilder::with_id(INLINE_CODE_ID, l(INLINE_CODE_ID, "Inline Code"))
+            .accelerator("Ctrl+`")
+            .build(app)?;
     let insert_link_item = MenuItemBuilder::with_id(INSERT_LINK_ID, l(INSERT_LINK_ID, "Link"))
         .accelerator("CmdOrCtrl+K")
         .build(app)?;
