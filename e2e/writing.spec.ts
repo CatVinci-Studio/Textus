@@ -1016,6 +1016,19 @@ test("mod+wheel in source mode keeps the line under the pointer", async ({
     page.locator('[data-active-tab="true"] .source-view .cm-content'),
   ).toBeFocused();
   await source.evaluate((el) => (el.scrollTop = el.scrollHeight / 3));
+  // Focus comes before the caret is centred, and CodeMirror measures on its
+  // own frame, so wait for the scroll to come to rest rather than for focus.
+  await expect
+    .poll(() =>
+      source.evaluate(async (el) => {
+        const top = el.scrollTop;
+        await new Promise((rest) =>
+          requestAnimationFrame(() => requestAnimationFrame(rest)),
+        );
+        return el.scrollTop === top;
+      }),
+    )
+    .toBe(true);
   const box = (await source.boundingBox())!;
   const y = box.y + box.height * 0.3;
   const before = await sourceLineAt(page, y);
