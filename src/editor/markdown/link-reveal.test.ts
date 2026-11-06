@@ -190,6 +190,18 @@ describe("typing in a link", () => {
   });
 });
 
+describe("bold on a selection in a link", () => {
+  it("wraps it in the label, never in the URL", async () => {
+    const t = await open("A [docs](https://x.org) b");
+    t.caretAt("docs", 0, 4);
+    t.press("Mod+b");
+    expect(t.markdown()).toBe("A [**docs**](https://x.org) b");
+    t.caretAt("x.org", 0, 1);
+    t.press("Mod+b");
+    expect(t.markdown()).toBe("A [**docs**](https://x.org) b");
+  });
+});
+
 describe("a link in a table cell", () => {
   it("saves each | typed in it escaped, so the row keeps its cells", async () => {
     const t = await open("| a | b |\n| - | - |\n| [x](u) | z |");

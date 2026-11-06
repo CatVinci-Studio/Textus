@@ -5,9 +5,11 @@ import {
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { caretAt } from "../live-selection";
+import { LINK } from "../markdown/link-source";
+import { parseLink } from "../markdown/link-syntax";
 
 /**
- * Bold or italic on a selection in a link's source: its delimiters typed
+ * Bold or italic on a selection in a link's label: its delimiters typed
  * around it, or taken off when they are already there. Null outside one.
  */
 export function wrapInLinkSource(
@@ -15,11 +17,14 @@ export function wrapInLinkSource(
   delim: string,
 ): Transaction | null {
   const { $from, $to, from, to, empty } = state.selection;
-  if (empty || $from.parent.type.name !== "link" || !$from.sameParent($to))
+  if (empty || $from.parent.type.name !== LINK || !$from.sameParent($to))
     return null;
   const text = $from.parent.textContent;
   const start = $from.parentOffset;
   const end = $to.parentOffset;
+  // In the URL, delimiters would change where it points.
+  const label = parseLink(text)?.label;
+  if (!label || start < label[0] || end > label[1]) return null;
   const n = delim.length;
   const tr = state.tr;
   if (
