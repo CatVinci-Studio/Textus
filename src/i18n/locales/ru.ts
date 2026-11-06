@@ -1627,6 +1627,7 @@ export default {
   pluginsCatalogKept:
     "Показан список с прошлого раза - новый получить не удалось: {reason}",
   pluginInstall: "Установить",
+  pluginNeedsTextus: "Нужен Textus {version}",
   pluginInstalling: "Установка…",
   pluginsSortLabel: "Сортировка",
   pluginsSortPopular: "Самые популярные",

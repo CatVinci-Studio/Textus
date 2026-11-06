@@ -1547,6 +1547,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsCatalogKept:
     "지난번 목록을 보여 주고 있습니다. 새 목록을 가져오지 못했습니다: {reason}",
   pluginInstall: "설치",
+  pluginNeedsTextus: "Textus {version} 필요",
   pluginInstalling: "설치 중…",
   pluginsSortLabel: "정렬",
   pluginsSortPopular: "설치 많은 순",

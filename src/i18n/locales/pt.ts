@@ -1612,6 +1612,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsCatalogKept:
     "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
   pluginInstall: "Instalar",
+  pluginNeedsTextus: "Requer o Textus {version}",
   pluginInstalling: "Instalando…",
   pluginsSortLabel: "Ordenar por",
   pluginsSortPopular: "Mais instalados",

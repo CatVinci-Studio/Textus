@@ -1590,6 +1590,7 @@ type /name in a conversation to use one.
   pluginsCatalogKept:
     "Showing the list from last time - couldn’t get a newer one: {reason}",
   pluginInstall: "Install",
+  pluginNeedsTextus: "Needs Textus {version}",
   pluginInstalling: "Installing…",
   pluginsSortLabel: "Sort by",
   pluginsSortPopular: "Most installed",

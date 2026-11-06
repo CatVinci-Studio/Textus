@@ -1657,6 +1657,7 @@ utiliser une.
   pluginsCatalogKept:
     "Voici la liste de la dernière fois - impossible d’en obtenir une plus récente : {reason}",
   pluginInstall: "Installer",
+  pluginNeedsTextus: "Nécessite Textus {version}",
   pluginInstalling: "Installation…",
   pluginsSortLabel: "Trier par",
   pluginsSortPopular: "Les plus installés",
