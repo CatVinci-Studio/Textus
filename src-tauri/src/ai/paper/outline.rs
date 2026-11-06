@@ -5,6 +5,7 @@
 
 use super::genre::Scale;
 use super::handover::{hand_over, Checked, Task};
+use super::prompts;
 use super::research::Model;
 use super::stream::{after_key, AfterKey, LastSent, ThinkingTail};
 use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
@@ -248,6 +249,50 @@ fn submit_outline_spec() -> ToolSpec {
     }
 }
 
+/// What the outline's step is told, for an outline shaped as `shape`.
+pub(crate) fn instructions(paper: &Paper, shape: &Shape) -> String {
+    let profile = paper.genre.profile();
+    let unit = if counts_characters(&paper.language) {
+        "characters"
+    } else {
+        "words"
+    };
+    let figures = match shape.figure_every {
+        None => prompts::get("outline.no-figures").to_string(),
+        Some(every) => prompts::fill(
+            "outline.figures",
+            &[
+                (
+                    "every",
+                    &match every {
+                        2 => "two".to_string(),
+                        3 => "three".to_string(),
+                        n => n.to_string(),
+                    },
+                ),
+                ("max_figures", &shape.max_figures),
+                ("max_web", &shape.max_web),
+                ("images", &shape.images),
+            ],
+        ),
+    };
+    prompts::fill(
+        "outline.instructions",
+        &[
+            ("genre", &profile.name),
+            ("topic", &paper.topic),
+            ("language", &paper.language),
+            ("target", &target_units(paper)),
+            ("unit", &unit),
+            ("thesis", &profile.thesis),
+            ("least", &shape.min_sections),
+            ("most", &shape.max_sections),
+            ("order", &profile.outline_order),
+            ("figures", &figures),
+        ],
+    )
+}
+
 /// The outline for `paper` from its dossier.
 pub(crate) async fn make_outline(
     model: &dyn Model,
@@ -256,37 +301,12 @@ pub(crate) async fn make_outline(
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Outline, String> {
     let profile = paper.genre.profile();
-    let target = target_units(paper);
-    let unit = if counts_characters(&paper.language) {
-        "characters"
-    } else {
-        "words"
-    };
     let shape = Shape::of(
         &profile.scale,
         paper.target_chars,
         paper.budget.remaining().images,
     );
-    let (images_left, min_sections, max_sections, max_figures, max_web) = (
-        shape.images,
-        shape.min_sections,
-        shape.max_sections,
-        shape.max_figures,
-        shape.max_web,
-    );
-    let instructions = format!(
-        "You outline a {} on \"{}\", written in the language tagged \"{}\", of about {target} {unit}, from the research notes the user's researchers gathered. Give it {} and {min_sections}-{max_sections} sections, each long enough to develop its point, {} - not a list of the questions. Every section draws on the notes that support it, by id; use every strong note somewhere, and give no section points the notes can't support. Its `targetWords` is its length in {unit}; together about {target}. {figures} Write titles, key points and specs in the {}'s language. Hand it over with submit_outline.",
-        profile.name,
-        paper.topic,
-        paper.language,
-        profile.thesis,
-        profile.outline_order,
-        profile.name,
-        figures = match shape.figure_every {
-            None => "It has no figures: leave every section's `figures` empty.".to_string(),
-            Some(every) => format!("Plan figures that carry information - at least one for every {} sections and at most {max_figures} in all: `mermaid` for a process, structure, timeline or comparison (say what it shows); `chart` for numbers in the notes (name the notes and the numbers); and pictures where a picture says more than words - a real one first: `web` for a photograph, map, artwork or document Wikimedia Commons would have (a generated picture takes its place when none is found), at most {max_web}; `generated` only for an illustration nothing real could show (describe it), at most {images_left} of them.", match every { 2 => "two".to_string(), 3 => "three".to_string(), n => n.to_string() }),
-        },
-    );
+    let instructions = instructions(paper, &shape);
     let message = format!(
         "Topic: {}\n\nThe research notes:\n{}",
         paper.topic,
@@ -310,7 +330,7 @@ pub(crate) async fn make_outline(
                 ))
             }
         };
-        let wrong = problems(&outline, dossier, target, &shape);
+        let wrong = problems(&outline, dossier, target_units(paper), &shape);
         if wrong.is_empty() {
             return Checked::Kept(outline);
         }

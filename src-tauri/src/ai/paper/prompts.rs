@@ -15,6 +15,10 @@ use std::sync::OnceLock;
 const FILES: &[(&str, &str)] = &[
     ("choose", include_str!("prompts/choose.md")),
     ("finish", include_str!("prompts/finish.md")),
+    ("research", include_str!("prompts/research.md")),
+    ("outline", include_str!("prompts/outline.md")),
+    ("draft", include_str!("prompts/draft.md")),
+    ("review", include_str!("prompts/review.md")),
 ];
 
 /// The prompts in `text`, the file `file`, by their full names.

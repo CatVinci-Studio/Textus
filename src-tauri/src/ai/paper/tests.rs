@@ -2409,6 +2409,26 @@ fn every_prompt_fills_in_for_every_genre() {
                 ..paper()
             };
             unfilled(&finish::opening_instructions(&paper));
+            unfilled(&research::plan_instructions(&paper));
+            unfilled(&research::helper_instructions(
+                &paper,
+                &research::material_prompt(&["notes.md".into()], true),
+            ));
+            for images in [0, 3] {
+                let shape = outline::Shape::of(&genre.profile().scale, paper.target_chars, images);
+                unfilled(&outline::instructions(&paper, &shape));
+            }
+            unfilled(&draft::writer_instructions(&paper));
+            unfilled(&draft::revision_message(
+                &paper,
+                &outline(),
+                0,
+                &dossier(),
+                "Earlier.",
+                &["Shorter.".into()],
+            ));
+            unfilled(&review::instructions(&paper));
         }
     }
+    unfilled(&review::message(&outline(), &["One.".into()]));
 }

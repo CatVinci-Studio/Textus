@@ -10,6 +10,7 @@ use super::model::ask;
 pub(crate) use super::model::{clip, Model, Watch};
 use super::notes::NoteTaker;
 pub(crate) use super::notes::ADD_NOTE_TOOL;
+use super::prompts;
 use super::sources::link_safe;
 use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
@@ -52,22 +53,30 @@ impl Kit<'_, '_> {
 
     /// What a researcher is told about the user's own material.
     fn prompt(&self) -> String {
-        let mut out = String::new();
-        let attached = self.attached();
-        if !attached.is_empty() {
-            out.push_str(&format!(
-                " The user attached files of their own for this piece - {}: read what bears on your question with read_file before searching, and cite a file by its path in add_note's sources - it is the material the user chose.",
-                attached.join("; ")
-            ));
-        }
-        if self
-            .tools
-            .offers(crate::ai::tools::SEARCH_REFERENCES_TOOL_NAME)
-        {
-            out.push_str(" The user has a reference library of their own papers, books and notes: search it first with search_references, read around a passage with read_file, and cite a file from it by its path (references/...) in add_note's sources - it is the material the user chose.");
-        }
-        out
+        material_prompt(
+            &self.attached(),
+            self.tools
+                .offers(crate::ai::tools::SEARCH_REFERENCES_TOOL_NAME),
+        )
     }
+}
+
+/// What a researcher is told about the user's own material: the files
+/// `attached`, and their reference library if `library`.
+pub(crate) fn material_prompt(attached: &[String], library: bool) -> String {
+    let mut out = String::new();
+    if !attached.is_empty() {
+        out.push(' ');
+        out.push_str(&prompts::fill(
+            "research.material.attached",
+            &[("files", &attached.join("; "))],
+        ));
+    }
+    if library {
+        out.push(' ');
+        out.push_str(prompts::get("research.material.library"));
+    }
+    out
 }
 
 /// The researchers' shared tools: the file tools while there is a project
@@ -117,15 +126,7 @@ pub(crate) async fn plan_questions(
     watch: Watch<'_>,
 ) -> Result<Vec<String>, String> {
     let profile = paper.genre.profile();
-    let instructions = format!(
-        "You plan the research for a {} of about {} characters, written in the language tagged \"{}\". Split its topic into {least}-{most} research questions that together cover it in breadth and depth: {} - as fits the topic. Each question is one sentence, specific enough to search for, and none repeats another. Reply with a JSON array of the questions as strings and nothing else.",
-        profile.name,
-        paper.target_chars,
-        paper.language,
-        profile.research_angles,
-        least = profile.scale.questions.0,
-        most = profile.scale.questions.1,
-    );
+    let instructions = plan_instructions(paper);
     let mut message = format!("Topic: {}", paper.topic);
     for path in kit.attached() {
         // Enough of each to plan by; the helpers read them whole.
@@ -144,6 +145,22 @@ pub(crate) async fn plan_questions(
         return Err("The research plan came back empty - try again.".into());
     }
     Ok(questions)
+}
+
+/// What the research plan's step is told.
+pub(crate) fn plan_instructions(paper: &Paper) -> String {
+    let profile = paper.genre.profile();
+    prompts::fill(
+        "research.plan",
+        &[
+            ("genre", &profile.name),
+            ("chars", &paper.target_chars),
+            ("language", &paper.language),
+            ("least", &profile.scale.questions.0),
+            ("most", &profile.scale.questions.1),
+            ("angles", &profile.research_angles),
+        ],
+    )
 }
 
 /// The questions in a reply: its JSON array of strings, or failing that its
@@ -171,6 +188,22 @@ pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
     out
 }
 
+/// What a question's helper is told; `own` is what it is told about the
+/// user's own material.
+pub(crate) fn helper_instructions(paper: &Paper, own: &str) -> String {
+    let profile = paper.genre.profile();
+    prompts::fill(
+        "research.helper",
+        &[
+            ("genre", &profile.name),
+            ("topic", &paper.topic),
+            ("language", &paper.language),
+            ("sources", &profile.research_sources),
+            ("material", &own),
+        ],
+    )
+}
+
 /// One question's helper: its notes, in the order it kept them. Its own
 /// registry has the web tools, ranked by its question, and add_note; the
 /// rest it shares with the other helpers through `kit`.
@@ -185,14 +218,7 @@ async fn research_question(
     share: Share,
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Vec<Note>, String> {
-    let instructions = format!(
-        "You are one of several researchers gathering material for a {name} on \"{}\", written in the language tagged \"{}\". Your part is one question. {} Aim for four to eight notes, written in the {name}'s language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{}",
-        paper.topic,
-        paper.language,
-        paper.genre.profile().research_sources,
-        kit.prompt(),
-        name = paper.genre.profile().name,
-    );
+    let instructions = helper_instructions(paper, &kit.prompt());
     let notes = Mutex::new(Vec::new());
     let taker = NoteTaker {
         question,
