@@ -12,8 +12,7 @@ use crate::ai::web::commons;
 use aicompat::images::GeneratedImage;
 use std::future::Future;
 
-/// Search results tried for one mark before it is left out.
-const TRIES: usize = 3;
+use super::tuning::COMMONS_TRIES as TRIES;
 
 /// A mark's caption and the words to search for (the caption itself when
 /// the mark gives none). None for any other line.

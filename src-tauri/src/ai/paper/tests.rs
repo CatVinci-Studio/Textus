@@ -668,7 +668,7 @@ fn a_section_is_checked_for_length_citations_and_figures() {
     );
     assert_eq!(
         draft::problems(&good, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 
     let bad = format!(
@@ -1267,7 +1267,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     let sources = vec![(1, dossier.sources[0].url.clone())];
     assert_eq!(
         draft::problems(&cited, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
     let listed = finish::references(
         std::slice::from_ref(&cited),
@@ -1410,15 +1410,17 @@ fn each_question_gets_an_even_share_of_the_research() {
 
 #[test]
 fn only_length_and_missing_figures_are_soft() {
-    assert!(draft::is_soft(
-        "It is 900 long; the section is to be about 400."
-    ));
-    assert!(draft::is_soft("1 planned chart(s), 0 ```chart block(s)."));
-    assert!(!draft::is_soft("[4] isn't one of this section's sources."));
-    assert!(!draft::is_soft("Chart 1: its JSON doesn't parse (x)."));
-    assert!(!draft::is_soft(
-        "Nothing is cited: mark each fact from the notes with its source, [n](address)."
-    ));
+    let mut section = outline().sections.remove(0);
+    section.target_words = 100;
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let found = |text: &str| draft::problems(text, &section, &sources, "en");
+    // Too long, a planned figure missing: soft, whatever the wording.
+    let long = found(&section_text(127, ""));
+    assert!(!long.is_empty() && draft::all_soft(&long), "{long:?}");
+    // A source that isn't the section's, nothing cited: never soft.
+    let wrong = found(&section_text(100, "").replace("[3]", "[4]"));
+    assert!(!draft::all_soft(&wrong), "{wrong:?}");
+    assert!(draft::all_soft(&[]));
 }
 
 /// Always hands over a section three times too long, citing its source.
@@ -1516,22 +1518,22 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
     section.target_words = 100;
     section.figures.clear();
     let sources = vec![(3, "https://example.org/study".to_string())];
-    let found = |words: usize| {
-        draft::problems(&section_text(words, ""), &section, &sources, "en").join(" ")
-    };
+    let problems =
+        |words: usize| draft::problems(&section_text(words, ""), &section, &sources, "en");
+    let found = |words: usize| problems(words).join(" ");
     assert_eq!(found(107), "");
     assert!(
         found(127).starts_with("It is 130 long; the section is to be about 100 (at most 120)"),
         "{}",
         found(127)
     );
-    assert!(draft::is_soft(&found(127)));
+    assert!(draft::all_soft(&problems(127)));
     assert!(
         found(147).starts_with("Far too long: 150 against about 100 - cut it to at most 120"),
         "{}",
         found(147)
     );
-    assert!(!draft::is_soft(&found(147)));
+    assert!(!draft::all_soft(&problems(147)));
     assert!(found(57).starts_with("It is 60 long"), "{}", found(57));
     assert!(found(37).starts_with("Far too short"), "{}", found(37));
     assert_eq!(draft::most(900), 1080);
@@ -1606,11 +1608,11 @@ fn an_address_with_parentheses_is_cited_whole() {
     // Either way of writing it is the same source.
     assert_eq!(
         draft::problems(&cited, &section, &[(66, safe.clone())], "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
     assert_eq!(
         draft::problems(&cited, &section, &[(66, doi.to_string())], "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 }
 
@@ -1711,17 +1713,18 @@ fn a_figure_named_by_number_is_sent_back_and_a_slash_doesn_t_matter() {
     let sources = vec![(3, "https://example.org/study".to_string())];
     let numbered =
         "Roofs cool by day, as 图1 shows, and so on here [3](https://example.org/study/).";
-    let found = draft::problems(numbered, &section, &sources, "en").join(" ");
+    let wrong = draft::problems(numbered, &section, &sources, "en");
+    let found = wrong.join(" ");
     assert!(
         found.contains("\"图1\" names a figure by a number"),
         "{found}"
     );
-    assert!(!draft::is_soft(&found));
+    assert!(!draft::all_soft(&wrong));
     let fine =
         "Roofs cool by day, as the chart below shows and more [3](https://example.org/study/).";
     assert_eq!(
         draft::problems(fine, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 }
 
@@ -2224,8 +2227,8 @@ fn a_thread_post_too_long_for_one_post_is_sent_back_softly() {
     );
     let found = draft::long_posts(&posts, &thread);
     assert_eq!(found.len(), 1, "{found:?}");
-    assert!(found[0].contains("post 2"), "{found:?}");
-    assert!(checks::is_soft(&found[0]));
+    assert!(found[0].text.contains("post 2"), "{found:?}");
+    assert!(checks::all_soft(&found));
     let chinese = Paper {
         genre: Genre::Thread,
         ..paper()

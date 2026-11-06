@@ -127,7 +127,7 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
     assert!(
         !problems
             .iter()
-            .any(|p| p.starts_with("Nothing is cited") || p.contains("links to")),
+            .any(|p| p.text.starts_with("Nothing is cited") || p.text.contains("links to")),
         "{problems:?}"
     );
 }

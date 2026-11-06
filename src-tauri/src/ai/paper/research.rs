@@ -21,14 +21,7 @@ use futures_util::stream::{self, StreamExt};
 use std::path::Path;
 use std::sync::Mutex;
 
-/// Helpers researching at once.
-const AT_ONCE: usize = 4;
-/// A helper's steps: a few searches and reads, and its notes.
-const HELPER_STEPS: usize = 10;
-/// Questions a reply may give at most, whatever the genre.
-const MAX_QUESTIONS: usize = 10;
-/// Characters of each attached file the research plan sees.
-const PLAN_GLIMPSE: usize = 1_500;
+use super::tuning::{HELPER_STEPS, MAX_QUESTIONS, PLAN_GLIMPSE, RESEARCHERS_AT_ONCE as AT_ONCE};
 
 /// The mode whose tools a researcher is offered: it reads, and changes
 /// nothing of the user's.

@@ -49,11 +49,19 @@ impl Shape {
         let max_sections = n.clamp(least, most);
         let figures = scale.figure_every.is_some();
         Shape {
-            min_sections: max_sections.saturating_sub(2).max(least),
+            min_sections: max_sections.saturating_sub(SECTIONS_SLACK).max(least),
             max_sections,
             figure_every: scale.figure_every,
-            max_figures: if figures { max_sections + 1 } else { 0 },
-            max_web: if figures { max_sections.div_ceil(3) } else { 0 },
+            max_figures: if figures {
+                max_sections + FIGURES_BEYOND_SECTIONS
+            } else {
+                0
+            },
+            max_web: if figures {
+                max_sections.div_ceil(SECTIONS_PER_WEB_PICTURE)
+            } else {
+                0
+            },
             images: if figures { images } else { 0 },
         }
     }
@@ -63,8 +71,10 @@ impl Shape {
             .map_or(0, |every| sections.div_ceil(every))
     }
 }
-/// Tries at an outline that holds.
-const OUTLINE_STEPS: usize = 5;
+use super::tuning::{
+    FIGURES_BEYOND_SECTIONS, OUTLINE_LENGTH, OUTLINE_STEPS, SECTIONS_PER_WEB_PICTURE,
+    SECTIONS_SLACK,
+};
 
 /// Whether `language` is written without spaces, so its length is counted
 /// in characters rather than words.
@@ -162,7 +172,9 @@ pub(crate) fn problems(
         ));
     }
     let total: u32 = outline.sections.iter().map(|s| s.target_words).sum();
-    if n > 0 && (total < target / 2 || total > target * 8 / 5) {
+    let (least, most) = OUTLINE_LENGTH;
+    let ratio = total as f64 / target.max(1) as f64;
+    if n > 0 && !(least..=most).contains(&ratio) {
         out.push(format!(
             "The sections' lengths add up to {total}; the paper is about {target}."
         ));

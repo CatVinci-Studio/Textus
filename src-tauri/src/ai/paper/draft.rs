@@ -8,7 +8,9 @@
 #[cfg(test)]
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
-pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
+pub(crate) use super::checks::{
+    all_soft, cited_link, length, most, problems, Problem, WEB_FIGURE_MARK,
+};
 use super::handover::{hand_over, Checked, Task};
 use super::research::Model;
 use super::stream::{string_value, LastSent};
@@ -21,10 +23,7 @@ use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
-/// Sections written at once.
-const AT_ONCE: usize = 3;
-/// A writer's tries at a section that holds.
-const WRITER_STEPS: usize = 5;
+use super::tuning::{WRITERS_AT_ONCE as AT_ONCE, WRITER_STEPS};
 /// How each kind of figure is written into the section.
 fn figure_line(figure: &FigurePlan) -> String {
     let how = match figure.kind {
@@ -157,7 +156,7 @@ pub(crate) async fn write_section(
                 wrong.join(" | ")
             );
         }
-        if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
+        if !markdown.is_empty() && all_soft(&wrong) {
             *soft.lock().unwrap() = Some(markdown);
         }
         Checked::not_kept("section", &wrong)
@@ -205,7 +204,7 @@ pub(crate) async fn write_section(
 /// The posts of a thread too long for one post: its genre's most
 /// characters, half that in Chinese, Japanese and Korean, whose
 /// characters count double. Soft, as a length is.
-pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
+pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<Problem> {
     let Some(most) = paper.genre.profile().scale.post_chars else {
         return Vec::new();
     };
@@ -222,10 +221,10 @@ pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
         .enumerate()
         .filter(|(_, n)| *n > most)
         .map(|(i, n)| {
-            format!(
+            Problem::soft(format!(
                 "It is too long in post {}: {n} characters, against at most {most} - split it or cut it.",
                 i + 1
-            )
+            ))
         })
         .collect()
 }
@@ -254,7 +253,7 @@ fn replied_section(
             }
         );
     }
-    wrong.iter().all(|p| is_soft(p)).then(|| body.to_string())
+    all_soft(&wrong).then(|| body.to_string())
 }
 
 /// The writer's last reply, without the heading it may have given it; None

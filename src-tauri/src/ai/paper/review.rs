@@ -15,13 +15,9 @@ use serde_json::{json, Value};
 
 pub(crate) const REPORT_ISSUES_TOOL: &str = "report_issues";
 
-/// Tries at a report that reads.
-const REVIEW_STEPS: usize = 3;
-/// Points kept against one section: the most important, as the reviewer
-/// ordered them.
-const MAX_PER_SECTION: usize = 3;
-/// Sections revised at once.
-const AT_ONCE: usize = 3;
+use super::tuning::{
+    MAX_POINTS_PER_SECTION as MAX_PER_SECTION, REVIEW_STEPS, REVISERS_AT_ONCE as AT_ONCE,
+};
 
 /// One point against a section.
 #[derive(Debug, Clone, PartialEq)]

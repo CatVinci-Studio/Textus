@@ -24,6 +24,7 @@ pub mod status;
 mod store;
 mod stream;
 mod timeline;
+mod tuning;
 mod web_figures;
 
 use budget::KeepSpent;
