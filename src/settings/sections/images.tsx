@@ -57,7 +57,7 @@ export function ImageStorageSection({
   );
 }
 
-/** The picture folder the document's project sets (its
+/** The sentence naming the picture folder the document's project sets (its
  *  .textus/settings.json, or another app's settings it follows), which
  *  wins over Settings there; null when it sets none. */
 function useProjectPictures(docPath: string | null, t: Strings): string | null {
@@ -103,16 +103,15 @@ function ImageFolderRow({
   );
   const valid = isImageSubfolder(name);
   const example = imageFolderExample(same ? SAME_FOLDER : name, "photo.png");
+  // The project decides there: nothing here would apply.
+  if (project) return <SettingRow label={t.imageFolderLabel} hint={project} />;
   return (
     <SettingRow
       label={t.imageFolderLabel}
       hint={
-        <>
-          {project && <div>{project}</div>}
-          {example !== null && (
-            <code className="image-folder-example">{`![](${example})`}</code>
-          )}
-        </>
+        example === null ? undefined : (
+          <code className="image-folder-example">{`![](${example})`}</code>
+        )
       }
       error={!same && !valid ? t.imageFolderInvalid : null}
     >

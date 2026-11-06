@@ -1169,7 +1169,6 @@ export default {
   startPageRecentFiles: "最近的檔案",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   autosaveLabel: "自動儲存",
-  autosaveHint: "開啟資料夾時，未命名文件也會以標題為名存進這個資料夾。",
   settingsFileLabel: "設定檔",
   settingsFileSummary: "匯入/匯出軟體的設定以及 AI 歷史紀錄",
   settingsFileExport: "匯出…",
@@ -1294,8 +1293,7 @@ export default {
   imageFolderSubfolder: "子資料夾",
   imageFolderSameFolder: "與文件相同的資料夾",
   imageFolderNameLabel: "子資料夾名稱",
-  imageFolderProjectNote:
-    "此專案依 {source} 的設定，把圖片存放在 {folder}。這裡的設定用於其他文件。",
+  imageFolderProjectNote: "此專案的圖片存放在 {folder}（由 {source} 指定）。",
   imageFolderInvalid: "填寫文件所在資料夾裡的資料夾，例如 img。",
   imageHostLabel: "圖床",
   imageHostCustom: "自訂",

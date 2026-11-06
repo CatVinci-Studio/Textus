@@ -1282,8 +1282,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
-  autosaveHint:
-    "Ist ein Ordner geöffnet, bekommen auch unbenannte Dokumente dort eine Datei, nach ihrem Titel benannt.",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:
     "Einstellungen der App und den KI-Verlauf importieren oder exportieren",
@@ -1429,7 +1427,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageFolderSameFolder: "Derselbe Ordner wie das Dokument",
   imageFolderNameLabel: "Name des Unterordners",
   imageFolderProjectNote:
-    "Dieses Projekt speichert Bilder in {folder}, so steht es in {source}. Diese Einstellung gilt für andere Dokumente.",
+    "Dieses Projekt legt Bilder in {folder} ab (festgelegt in {source}).",
   imageFolderInvalid: "Gib einen Ordner im Ordner des Dokuments an, etwa img.",
   imageHostLabel: "Bild-Hoster",
   imageHostCustom: "Eigener Server",

@@ -1307,8 +1307,6 @@ utiliser une.
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
   autosaveLabel: "Enregistrer automatiquement",
-  autosaveHint:
-    "Avec un dossier ouvert, les documents sans titre y sont aussi enregistrés, nommés d’après leur titre.",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:
     "Importez ou exportez les réglages de l’app et l’historique de l’IA",
@@ -1453,7 +1451,7 @@ utiliser une.
   imageFolderSameFolder: "Même dossier que le document",
   imageFolderNameLabel: "Nom du sous-dossier",
   imageFolderProjectNote:
-    "Ce projet enregistre les images dans {folder}, comme l’indique {source}. Ce réglage vaut pour les autres documents.",
+    "Ce projet range les images dans {folder} (défini dans {source}).",
   imageFolderInvalid:
     "Indiquez un dossier situé dans celui du document, comme img.",
   imageHostLabel: "Hébergeur d'images",

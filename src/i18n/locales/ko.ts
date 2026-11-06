@@ -1219,8 +1219,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
-  autosaveHint:
-    "폴더가 열려 있으면 제목 없는 문서도 제목을 이름으로 그 폴더에 저장합니다.",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",
   settingsFileExport: "내보내기…",
@@ -1353,7 +1351,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageFolderSameFolder: "문서와 같은 폴더",
   imageFolderNameLabel: "하위 폴더 이름",
   imageFolderProjectNote:
-    "이 프로젝트는 {source} 설정에 따라 그림을 {folder}에 저장합니다. 이 설정은 다른 문서에 적용됩니다.",
+    "이 프로젝트는 그림을 {folder}에 저장합니다({source}에서 지정).",
   imageFolderInvalid: "문서 폴더 안의 폴더로 입력하세요(예: img).",
   imageHostLabel: "이미지 호스팅",
   imageHostCustom: "사용자 지정",

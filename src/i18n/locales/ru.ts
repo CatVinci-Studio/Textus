@@ -1290,8 +1290,6 @@ export default {
   startPageRecentFiles: "Недавние файлы",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
-  autosaveHint:
-    "Если открыта папка, безымянные документы тоже сохраняются в ней под своим заголовком.",
   settingsFileLabel: "Файл настроек",
   settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",
   settingsFileExport: "Экспортировать…",
@@ -1429,7 +1427,7 @@ export default {
   imageFolderSameFolder: "Та же папка, что и документ",
   imageFolderNameLabel: "Имя вложенной папки",
   imageFolderProjectNote:
-    "Этот проект сохраняет картинки в {folder}, как указано в {source}. Эта настройка действует для других документов.",
+    "Этот проект хранит картинки в {folder} (задано в {source}).",
   imageFolderInvalid: "Укажите папку внутри папки документа, например img.",
   imageHostLabel: "Хостинг изображений",
   imageHostCustom: "Свой сервер",

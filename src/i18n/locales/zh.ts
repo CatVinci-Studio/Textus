@@ -1167,7 +1167,6 @@ export default {
   startPageRecentFiles: "最近的文件",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",
-  autosaveHint: "打开文件夹时，未命名文档也会以标题为名存进这个文件夹。",
   settingsFileLabel: "设置文件",
   settingsFileSummary: "导入/导出软件的设置以及 AI 历史记录",
   settingsFileExport: "导出…",
@@ -1291,8 +1290,7 @@ export default {
   imageFolderSubfolder: "子文件夹",
   imageFolderSameFolder: "与文档同一文件夹",
   imageFolderNameLabel: "子文件夹名称",
-  imageFolderProjectNote:
-    "此项目按 {source} 的设置，把图片存放在 {folder}。这里的设置用于其他文档。",
+  imageFolderProjectNote: "此项目的图片存放在 {folder}（由 {source} 指定）。",
   imageFolderInvalid: "填写文档所在文件夹里的文件夹，例如 img。",
   imageHostLabel: "图床",
   imageHostCustom: "自定义",

@@ -1230,8 +1230,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   startPageRecentFiles: "最近のファイル",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
   autosaveLabel: "自動保存",
-  autosaveHint:
-    "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
   settingsFileLabel: "設定ファイル",
   settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",
   settingsFileExport: "書き出す…",
@@ -1366,7 +1364,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageFolderSameFolder: "ドキュメントと同じフォルダー",
   imageFolderNameLabel: "サブフォルダー名",
   imageFolderProjectNote:
-    "このプロジェクトは {source} の設定どおり、画像を {folder} に保存します。この設定はほかの文書に使われます。",
+    "このプロジェクトは画像を {folder} に保存します（{source} で指定）。",
   imageFolderInvalid:
     "ドキュメントのフォルダー内のフォルダーを指定します（例：img）。",
   imageHostLabel: "画像ホスティング",

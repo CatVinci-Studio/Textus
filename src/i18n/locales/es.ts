@@ -1295,8 +1295,6 @@ para usar una.
   startPageRecentFiles: "Archivos recientes",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
-  autosaveHint:
-    "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:
     "Importa o exporta los ajustes de la app y el historial de IA",
@@ -1435,7 +1433,7 @@ para usar una.
   imageFolderSameFolder: "La misma carpeta que el documento",
   imageFolderNameLabel: "Nombre de la subcarpeta",
   imageFolderProjectNote:
-    "Este proyecto guarda las imágenes en {folder}, según {source}. Este ajuste se aplica a los demás documentos.",
+    "Este proyecto guarda las imágenes en {folder} (lo indica {source}).",
   imageFolderInvalid: "Usa una carpeta dentro de la del documento, como img.",
   imageHostLabel: "Alojamiento de imágenes",
   imageHostCustom: "Personalizado",

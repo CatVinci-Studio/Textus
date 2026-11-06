@@ -26,6 +26,7 @@ import {
   revealNearest,
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
+import { rootedImagePath } from "./rooted-image";
 import { LINK } from "../markdown/link-source";
 import { parseLink } from "../markdown/link-syntax";
 import { clipboardImageSources } from "./pasted-files";
@@ -94,6 +95,13 @@ export function showDocImage(
     void scopedImageSrc(src, doc)
       .then((url) => {
         if (stillWanted()) img.src = url;
+      })
+      .catch(() => {});
+  } else if (doc && !isScopedUrl(doc) && /^\/(?!\/)/.test(src)) {
+    img.removeAttribute("src");
+    void rootedImagePath(src, doc)
+      .then((path) => {
+        if (stillWanted()) img.src = fileSrc(path);
       })
       .catch(() => {});
   } else {

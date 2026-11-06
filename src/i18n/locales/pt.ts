@@ -1275,8 +1275,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   startPageRecentFiles: "Arquivos recentes",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
-  autosaveHint:
-    "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:
     "Importe ou exporte as configurações do app e o histórico de IA",
@@ -1414,7 +1412,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageFolderSameFolder: "A mesma pasta do documento",
   imageFolderNameLabel: "Nome da subpasta",
   imageFolderProjectNote:
-    "Este projeto guarda as imagens em {folder}, conforme {source}. Esta opção vale para os outros documentos.",
+    "Este projeto guarda as imagens em {folder} (definido em {source}).",
   imageFolderInvalid: "Use uma pasta dentro da pasta do documento, como img.",
   imageHostLabel: "Hospedagem de imagens",
   imageHostCustom: "Personalizado",

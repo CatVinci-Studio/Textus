@@ -108,7 +108,6 @@ export function GeneralPage({
       <SettingsGroup title={t.settingsFilesGroup}>
         <ToggleRow
           label={t.autosaveLabel}
-          hint={t.autosaveHint}
           checked={settings.autosave}
           onChange={(v) => setSettings({ autosave: v })}
         />

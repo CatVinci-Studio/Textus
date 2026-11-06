@@ -1254,8 +1254,6 @@ type /name in a conversation to use one.
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
-  autosaveHint:
-    "With a folder open, untitled documents get a file there too, named after their title.",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",
   settingsFileExport: "Export…",
@@ -1392,7 +1390,7 @@ type /name in a conversation to use one.
   imageFolderSameFolder: "Same folder as the document",
   imageFolderNameLabel: "Subfolder name",
   imageFolderProjectNote:
-    "This project saves pictures in {folder} (set in {source}). This setting covers other documents.",
+    "This project keeps pictures in {folder} (set in {source}).",
   imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Image host",
   imageHostCustom: "Custom",
