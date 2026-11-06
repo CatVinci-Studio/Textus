@@ -900,28 +900,6 @@ button.mcp-homepage:hover {
   transform: rotate(90deg);
   opacity: 0.7;
 }
-.plugin-status-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  min-width: 180px;
-  padding: 4px;
-  transform-origin: top right;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-.plugin-status-menu-title {
-  padding: 4px 8px;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
-.plugin-status-menu-separator {
-  height: 1px;
-  margin: 4px 0;
-  background: var(--ui-border);
-}
 
 /* Plugins' floating views in the window: over the editor, under menus and
    dialogs. The page is transparent and looked at, not clicked: a layer over

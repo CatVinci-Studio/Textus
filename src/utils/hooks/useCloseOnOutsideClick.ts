@@ -5,12 +5,13 @@ import { isImeKeydown } from "../ime";
 /// one way every overlay closes; attach the ref to the element holding both
 /// the overlay and its opener. `open` matters: a mounted closed menu would
 /// otherwise swallow every Escape. `inside`: more elements that count as
-/// inside (a review note's badge).
+/// inside - a selector (a review note's badge) or the element itself (the
+/// button a menu hangs from).
 export function useCloseOnOutsideClick<T extends HTMLElement>(
   onClose: () => void,
   closeOnEscape = false,
   open = true,
-  inside = "",
+  inside: string | HTMLElement | null = "",
 ) {
   const ref = useRef<T>(null);
 
@@ -30,13 +31,7 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       const target = e.target as Node;
       // Selects, the app menu and InfoTips are portalled to <body>; a click in
       // them still counts as inside.
-      if (
-        target instanceof Element &&
-        target.closest(
-          `[data-floating-select], [data-floating-menu], [data-floating-tip]${inside && `, ${inside}`}`,
-        )
-      )
-        return;
+      if (isInside(target)) return;
       // Without an element of its own, `inside` alone says what is in.
       if (ref.current ? !ref.current.contains(target) : !!inside) {
         closed = true;
@@ -55,15 +50,18 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
     // bubbles so a field in the overlay keeps it.
     function onKeyDownOutside(e: KeyboardEvent) {
       const target = e.target as Node;
-      if (ref.current?.contains(target)) return;
-      if (
-        target instanceof Element &&
-        target.closest(
-          `[data-floating-select], [data-floating-menu], [data-floating-tip]${inside && `, ${inside}`}`,
-        )
-      )
-        return;
+      if (ref.current?.contains(target) || isInside(target)) return;
       onKeyDown(e);
+    }
+    function isInside(target: Node) {
+      if (inside instanceof HTMLElement && inside.contains(target)) return true;
+      const named = typeof inside === "string" && inside ? `, ${inside}` : "";
+      return (
+        target instanceof Element &&
+        !!target.closest(
+          `[data-floating-select], [data-floating-menu], [data-floating-tip]${named}`,
+        )
+      );
     }
     const id = setTimeout(() => {
       document.addEventListener("mousedown", onPointerDown, true);
