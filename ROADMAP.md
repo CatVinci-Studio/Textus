@@ -107,12 +107,12 @@ says how the two lines work.
   ([#217](https://github.com/CatVinci-Studio/Textus/issues/217)) and Open
   Recent ([#201](https://github.com/CatVinci-Studio/Textus/issues/201)).
 - **The Playground** is live at
-  [textus.catvinci.com/playground](https://textus.catvinci.com/playground/):
+  [textus.md/playground](https://textus.md/playground/):
   try the editor in your browser before installing anything.
   [#88](https://github.com/CatVinci-Studio/Textus/issues/88)
 - **Theme sharing** is open: post your theme as a comment on one pinned issue;
   once one of us has looked it over, it shows up on
-  [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) for
+  [textus.md/themes](https://textus.md/themes/) for
   everyone, free. [#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 ## Next: Textus 1.3.0, plugins

@@ -49,7 +49,7 @@ touching the backend (attachments, windows, AI requests) needs the real app.
 ### The browser playground
 
 `src/playground/` is a web edition of the editor alone (no AI, sidebar or
-settings), served at <https://textus.catvinci.com/playground/>. It reuses the
+settings), served at <https://textus.md/playground/>. It reuses the
 editor core (`editor/editor-extensions.ts`) with image storage and clipboard
 history left out, and keeps its one document in the browser's localStorage.
 
@@ -335,6 +335,6 @@ translations keep the English file's headings, code blocks and links;
 ## Stuck?
 
 Ask. Open a draft pull request with what you have, or an issue, or find us
-on [Discord](https://textus.catvinci.com/discord) (English) or in the QQ and
+on [Discord](https://textus.md/discord) (English) or in the QQ and
 WeChat groups listed in the README (Chinese). A half-finished pull request
 with a question is better than a finished one that went the wrong way.

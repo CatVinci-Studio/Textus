@@ -89,7 +89,7 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
   });
   await expect(
     page.getByRole("banner").getByRole("link", { name: "Download Textus" }),
-  ).toHaveAttribute("href", "https://textus.catvinci.com/#download");
+  ).toHaveAttribute("href", "https://textus.md/#download");
   await expect(
     page.getByText("Your documents are kept in this browser only."),
   ).toBeVisible();

@@ -2,7 +2,11 @@
 name = "textus-feedback"
 main = "worker.ts"
 compatibility_date = "2026-10-01"
-routes = [{ pattern = "textus.catvinci.com/api/feedback", zone_name = "catvinci.com" }]
+routes = [
+  { pattern = "textus.md/api/feedback", zone_name = "textus.md" },
+  # Installed versions before 1.3.9 post here.
+  { pattern = "textus.catvinci.com/api/feedback", zone_name = "catvinci.com" },
+]
 
 [vars]
 REPO = "CatVinci-Studio/Textus"

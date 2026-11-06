@@ -34,7 +34,7 @@ import sampleEn from "./samples/en.md?raw";
 import sampleZh from "./samples/zh.md?raw";
 import mark from "../../src-tauri/icons/128x128.png";
 
-export const DOWNLOAD_URL = "https://textus.catvinci.com/#download";
+export const DOWNLOAD_URL = "https://textus.md/#download";
 
 /** The first visit's document, in the UI language where there is one. */
 function sample(lang: Lang): string {

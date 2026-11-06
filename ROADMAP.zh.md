@@ -41,8 +41,8 @@ Textus AI 能做的更多，编辑器更顺手，也修了很多问题。现在�
 
 - **Textus 1.1.0**：Textus AI 的三种模式：写作、审阅、修订（[#179](https://github.com/CatVinci-Studio/Textus/pull/179)），会记住你要求的 Textus AI（[#180](https://github.com/CatVinci-Studio/Textus/pull/180)），在对话里做主题，全新的新手教程（[#90](https://github.com/CatVinci-Studio/Textus/issues/90)），Windows 和 Linux 的原生 ARM64 安装包，设为默认 Markdown 编辑器（[#183](https://github.com/CatVinci-Studio/Textus/issues/183)），文档里支持更多 HTML，测试版通道，自动保存（[#133](https://github.com/CatVinci-Studio/Textus/issues/133)），在 App 里使用主题分享平台（[#89](https://github.com/CatVinci-Studio/Textus/issues/89)），`![[image.png]]` 形式的图片嵌入（[#135](https://github.com/CatVinci-Studio/Textus/issues/135)），以及自选图片文件夹或图床（[#147](https://github.com/CatVinci-Studio/Textus/issues/147)）。
 - **Textus 1.1.1**：修订的高亮更柔和；加载不了的图片显示一张说明卡片；图片右键可以**在文件夹中显示**；图片宽度改用其他应用也认的写法；修好了输入的链接和图片（[#189](https://github.com/CatVinci-Studio/Textus/issues/189)）、打字机模式下的点击（[#217](https://github.com/CatVinci-Studio/Textus/issues/217)）和最近打开（[#201](https://github.com/CatVinci-Studio/Textus/issues/201)）。
-- **Playground 已上线**：[textus.catvinci.com/playground](https://textus.catvinci.com/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
-- **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.catvinci.com/themes](https://textus.catvinci.com/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
+- **Playground 已上线**：[textus.md/playground](https://textus.md/playground/)，不用安装就能在浏览器里试试编辑器。[#88](https://github.com/CatVinci-Studio/Textus/issues/88)
+- **主题分享已开放**：在置顶的 issue 里发一条评论，我们看过之后，你的主题就会出现在 [textus.md/themes](https://textus.md/themes/) 上，大家都能免费下载。[#89](https://github.com/CatVinci-Studio/Textus/issues/89)
 
 ## 接下来：Textus 1.3.0，插件
 

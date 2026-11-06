@@ -256,8 +256,8 @@ describe("typing a bracket or quote", () => {
   it("still turns a typed [text](url) into a link", async () => {
     const { view, save } = await openView("");
     caretAfter(view, "");
-    type(view, "[Textus](https://textus.catvinci.com) and on");
-    expect(save()).toBe("[Textus](https://textus.catvinci.com) and on\n");
+    type(view, "[Textus](https://textus.md) and on");
+    expect(save()).toBe("[Textus](https://textus.md) and on\n");
   });
 
   it("opens bold, italic and code inside a pair as at a line's end", async () => {

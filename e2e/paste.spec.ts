@@ -224,7 +224,7 @@ async function clipboardNow(page: Page) {
   });
 }
 
-const LINKED = "See [Textus](https://textus.catvinci.com) and **bold** text.";
+const LINKED = "See [Textus](https://textus.md) and **bold** text.";
 
 test("a copy's plain text is its Markdown source, and code copied inside a code block is the code alone", async ({
   page,
@@ -239,7 +239,7 @@ test("a copy's plain text is its Markdown source, and code copied inside a code 
   const clip = await clipboardNow(page);
   expect(clip["text/plain"]).toBe(LINKED + "\n\n```js\nlet x = 1;\n```");
   // The formatting travels in the HTML, for apps that take it.
-  expect(clip["text/html"]).toContain('href="https://textus.catvinci.com');
+  expect(clip["text/html"]).toContain('href="https://textus.md');
 
   await page.evaluate((sel) => {
     const code = document.querySelector(`${sel} pre code`)!;
@@ -280,7 +280,7 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
         .then((c) => c["text/plain"])
         .catch(() => ""),
     )
-    .toBe("See Textus (https://textus.catvinci.com) and bold text.");
+    .toBe("See Textus (https://textus.md) and bold text.");
 });
 
 test("the context menu's Copy and Paste keep the formatting, as Cmd+C and Cmd+V do", async ({

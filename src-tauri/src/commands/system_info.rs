@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 /// The Worker that files a report as a GitHub issue (services/feedback).
-const FEEDBACK_URL: &str = "https://textus.catvinci.com/api/feedback";
+const FEEDBACK_URL: &str = "https://textus.md/api/feedback";
 
 #[derive(Serialize)]
 #[cfg_attr(test, derive(specta::Type))]

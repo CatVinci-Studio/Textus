@@ -19,8 +19,8 @@ async function plain(markdown: string): Promise<string> {
 
 describe("plainTextOf", () => {
   it("keeps a link's address after its text, once", async () => {
-    expect(await plain("See [Textus](https://textus.catvinci.com) now.")).toBe(
-      "See Textus (https://textus.catvinci.com) now.",
+    expect(await plain("See [Textus](https://textus.md) now.")).toBe(
+      "See Textus (https://textus.md) now.",
     );
     expect(
       await plain("[https://x.org/a](https://x.org/a) and <https://x.org/b>"),

@@ -15,9 +15,10 @@ const PACKAGE_PREFIX: &str = "https://github.com/CatVinci-Studio/textus-plugins/
 
 /// Where the app reads them: Textus's own site passes each release file on,
 /// so the store works where GitHub can't be reached.
-const MIRROR_PREFIX: &str = "https://textus.catvinci.com/plugin-release/";
-const CATALOG_URL: &str = "https://textus.catvinci.com/plugin-release/catalog/index.json";
-const DOWNLOAD_HOSTS: [&str; 1] = ["textus.catvinci.com"];
+const MIRROR_PREFIX: &str = "https://textus.md/plugin-release/";
+const CATALOG_URL: &str = "https://textus.md/plugin-release/catalog/index.json";
+/// The site's address, and the one it had before (which still serves).
+const DOWNLOAD_HOSTS: [&str; 2] = ["textus.md", "textus.catvinci.com"];
 
 /// A release file's address on the site; None for one from elsewhere.
 fn mirrored(url: &str) -> Option<String> {

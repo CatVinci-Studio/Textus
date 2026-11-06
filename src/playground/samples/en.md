@@ -42,4 +42,4 @@ flowchart LR
 
 ---
 
-This is the editor alone. The desktop app adds Textus AI to write and revise with you, folders, themes, images, export to PDF, Word, HTML and more. [Download Textus](https://textus.catvinci.com/#download), free for macOS, Windows and Linux.
+This is the editor alone. The desktop app adds Textus AI to write and revise with you, folders, themes, images, export to PDF, Word, HTML and more. [Download Textus](https://textus.md/#download), free for macOS, Windows and Linux.

@@ -11,7 +11,7 @@ use std::future::Future;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
-const ENDPOINT: &str = "https://textus.catvinci.com/api/ext/";
+const ENDPOINT: &str = "https://textus.md/api/ext/";
 /// Which extensions were ever installed on this device, so a second install
 /// counts as a reinstall. Kept in app data, never synced.
 const RECORD: &str = "ext-installed.json";
@@ -231,7 +231,7 @@ fn remember_in(file: &Path, kind: Kind, id: &str) {
 mod tests {
     use super::*;
 
-    const DIRECT: &str = "https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip";
+    const DIRECT: &str = "https://textus.md/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip";
 
     fn plugin() -> Download<'static> {
         Download {
@@ -270,7 +270,7 @@ mod tests {
         let url = Url::parse(&url).unwrap();
         assert_eq!(
             url.as_str().split('?').next(),
-            Some("https://textus.catvinci.com/api/ext/download")
+            Some("https://textus.md/api/ext/download")
         );
         let fields: BTreeMap<String, String> = url.query_pairs().into_owned().collect();
         assert_eq!(
@@ -283,7 +283,7 @@ mod tests {
             kind: Kind::Theme,
             id: "plain",
             version: "2026-10-18T04:55:06Z",
-            direct: "https://textus.catvinci.com/theme-gallery/themes/plain/theme.css",
+            direct: "https://textus.md/theme-gallery/themes/plain/theme.css",
             ..plugin()
         };
         let url = download_url(ENDPOINT, &theme, Event::Update).unwrap();
@@ -315,11 +315,9 @@ mod tests {
     #[test]
     fn only_a_redirected_answer_is_the_package() {
         let at = |url: &str| is_endpoint(&Url::parse(url).unwrap(), ENDPOINT);
-        assert!(at(
-            "https://textus.catvinci.com/api/ext/download?kind=plugin"
-        ));
+        assert!(at("https://textus.md/api/ext/download?kind=plugin"));
         assert!(!at(DIRECT));
-        assert!(!at("https://textus.catvinci.com/download"));
+        assert!(!at("https://textus.md/download"));
     }
 
     #[test]
