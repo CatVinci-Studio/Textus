@@ -39,6 +39,10 @@ pub enum StreamEvent {
         width: u32,
         height: u32,
     },
+    /// How Research's run (`ai::paper`) is going: its phase, its sections,
+    /// its budget, its outline. Research's commands stream on the same
+    /// channel as a chat message, each update as one of these.
+    Paper { event: crate::ai::paper::PaperEvent },
 }
 
 /// Where a request's live events go: the window's channel on the desktop,

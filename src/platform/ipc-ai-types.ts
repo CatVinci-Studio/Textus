@@ -37,8 +37,9 @@ export type GeneratedImageData = GeneratedImage;
  *  service web_search uses, null when none is set up. */
 export type WebSearchStatus = WebSearchStatus_Serialize;
 
-/** One live fragment of an in-flight ai_agent_message. Display only: the
- *  command still resolves with the authoritative turn list. */
+/** One live fragment of an in-flight ai_agent_message, or one update of
+ *  Research's run (`paper`). Display only: the command still resolves with
+ *  the authoritative result. */
 export type StreamEvent = StreamEvent_Serialize;
 
 /** Where the cursor sits, beyond the raw text around it, so a completion

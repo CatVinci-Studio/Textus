@@ -13,7 +13,7 @@ export const commands = {
 	 *  kept in `.textus/papers/<id>/`; a paper begun before goes on from what
 	 *  it kept. Stopped like any request, by `ai_cancel` with `request_id`.
 	 */
-	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<Paper_Serialize>("ai_paper_run", { request, channel }),
+	ai_paper_run: (request: PaperRequest_Deserialize, channel: Channel<StreamEvent_Deserialize>) => __TAURI_INVOKE<Paper_Serialize>("ai_paper_run", { request, channel }),
 	/**
 	 *  The outline as the user edited it on the card, kept for drafting. Notes
 	 *  it names that the dossier doesn't have are dropped; it needs a section,
@@ -27,12 +27,57 @@ export const commands = {
 	 *  before the review, so no proposal is replaced after it. Stopped like any
 	 *  request, by `ai_cancel` with `request_id`.
 	 */
-	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),
+	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<StreamEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),
 	/**  Paper `id` as it was kept, for its card to go on from where it stopped. */
 	ai_paper_status: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<PaperProgress_Serialize>("ai_paper_status", { docPath, workspaceRoot, id }),
 };
 
 /* Types */
+/**  One entry in an agent conversation, kept provider-agnostic. */
+export type AgentTurn = AgentTurn_Serialize | AgentTurn_Deserialize;
+
+/**  One entry in an agent conversation, kept provider-agnostic. */
+export type AgentTurn_Deserialize = { kind: "User"; text: string; 
+/**  Defaulted so conversations saved before images existed still deserialize. */
+images?: ImageAttachment[] } | { kind: "Assistant"; text: string; 
+/**
+ *  The web pages the reply cites as [n], numbered once per conversation.
+ *  Defaulted and skipped when empty so older saves still deserialize.
+ */
+sources?: WebSource[] } | { kind: "ToolCall"; call_id: string; name: string; arguments: string; 
+/**
+ *  The model's reasoning for the step this call opens, in the provider's
+ *  wire shape, on the step's first call only. Thinking with tools requires
+ *  it sent back; it never outlives the exchange.
+ */
+reasoning?: Value | null } | { kind: "ToolResult"; call_id: string; output: string; 
+/**
+ *  Images the tool showed the model, for the request in flight only. Each
+ *  dialect delivers them in the tool result or as a user message after it.
+ */
+images?: ImageAttachment[] };
+
+/**  One entry in an agent conversation, kept provider-agnostic. */
+export type AgentTurn_Serialize = { kind: "User"; text: string; 
+/**  Defaulted so conversations saved before images existed still deserialize. */
+images: ImageAttachment[] } | { kind: "Assistant"; text: string; 
+/**
+ *  The web pages the reply cites as [n], numbered once per conversation.
+ *  Defaulted and skipped when empty so older saves still deserialize.
+ */
+sources?: WebSource[] } | { kind: "ToolCall"; call_id: string; name: string; arguments: string; 
+/**
+ *  The model's reasoning for the step this call opens, in the provider's
+ *  wire shape, on the step's first call only. Thinking with tools requires
+ *  it sent back; it never outlives the exchange.
+ */
+reasoning?: Value } | { kind: "ToolResult"; call_id: string; output: string; 
+/**
+ *  Images the tool showed the model, for the request in flight only. Each
+ *  dialect delivers them in the tool result or as a user message after it.
+ */
+images?: ImageAttachment[] };
+
 /**  A count of each thing research spends. */
 export type BudgetCounts = {
 	searches: number,
@@ -152,6 +197,16 @@ export type GenreForm = {
 	 *  piece of one section, all under its title.
 	 */
 	headings: boolean,
+};
+
+/**
+ *  An image riding along with a user turn. Images have no text to extract,
+ *  so they reach the model as the provider's own image content part.
+ */
+export type ImageAttachment = {
+	name: string,
+	mime: string,
+	dataBase64: string,
 };
 
 /**
@@ -524,5 +579,95 @@ export type SectionStatus = "drafting" | "drafted" | "revising";
 export type SourceEntry = {
 	n: number,
 	entry: string,
+};
+
+/**
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
+ */
+export type StreamEvent = StreamEvent_Serialize | StreamEvent_Deserialize;
+
+/**
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
+ */
+export type StreamEvent_Deserialize = 
+/**  A chunk of the assistant's prose for the turn being generated. */
+{ type: "delta"; text: string } | 
+/**  The model opened a tool call; its arguments follow as ToolArgsDelta. */
+{ type: "toolStart"; callId: string; name: string } | 
+/**  A raw fragment of a tool call's JSON `arguments` string. */
+{ type: "toolArgsDelta"; callId: string; delta: string } | 
+/**  A completed intermediate turn (ToolCall/ToolResult) as it lands. */
+{ type: "turn"; turn: AgentTurn_Deserialize } | 
+/**
+ *  The step being streamed came back garbled and is asked for again: drop
+ *  what it streamed and show the new attempt instead.
+ */
+{ type: "retry" } | 
+/**
+ *  The model is thinking: a fragment of its reasoning, or "" when the
+ *  provider only says that it is. Shown above the reply, never kept.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  A picture written into a propose_edit's text (images::inline) is
+ *  being made: its `line` there stands for picture `id` from now on.
+ *  Sent before the fragment that completes the line.
+ */
+{ type: "picture"; callId: string; line: string; id: string; width: number; height: number } | 
+/**
+ *  How Research's run (`ai::paper`) is going: its phase, its sections,
+ *  its budget, its outline. Research's commands stream on the same
+ *  channel as a chat message, each update as one of these.
+ */
+{ type: "paper"; event: PaperEvent_Deserialize };
+
+/**
+ *  One live fragment of an in-flight `ai_agent_message`. Display only: the
+ *  command still resolves with the complete turn list, so a dropped event costs
+ *  liveness, never correctness.
+ */
+export type StreamEvent_Serialize = 
+/**  A chunk of the assistant's prose for the turn being generated. */
+{ type: "delta"; text: string } | 
+/**  The model opened a tool call; its arguments follow as ToolArgsDelta. */
+{ type: "toolStart"; callId: string; name: string } | 
+/**  A raw fragment of a tool call's JSON `arguments` string. */
+{ type: "toolArgsDelta"; callId: string; delta: string } | 
+/**  A completed intermediate turn (ToolCall/ToolResult) as it lands. */
+{ type: "turn"; turn: AgentTurn_Serialize } | 
+/**
+ *  The step being streamed came back garbled and is asked for again: drop
+ *  what it streamed and show the new attempt instead.
+ */
+{ type: "retry" } | 
+/**
+ *  The model is thinking: a fragment of its reasoning, or "" when the
+ *  provider only says that it is. Shown above the reply, never kept.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  A picture written into a propose_edit's text (images::inline) is
+ *  being made: its `line` there stands for picture `id` from now on.
+ *  Sent before the fragment that completes the line.
+ */
+{ type: "picture"; callId: string; line: string; id: string; width: number; height: number } | 
+/**
+ *  How Research's run (`ai::paper`) is going: its phase, its sections,
+ *  its budget, its outline. Research's commands stream on the same
+ *  channel as a chat message, each update as one of these.
+ */
+{ type: "paper"; event: PaperEvent_Serialize };
+
+export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+/**  One web page a reply cites as `[n]`. Exported as WebSource. */
+export type WebSource = {
+	n: number,
+	url: string,
+	title: string,
 };
 

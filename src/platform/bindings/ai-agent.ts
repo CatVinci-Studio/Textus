@@ -101,6 +101,16 @@ reasoning?: Value } | { kind: "ToolResult"; call_id: string; output: string;
  */
 images?: ImageAttachment[] };
 
+/**  A count of each thing research spends. */
+export type BudgetCounts = {
+	searches: number,
+	fetches: number,
+	paperLookups: number,
+	images: number,
+	/**  Calls to the writing model, in every stage together. */
+	modelSteps: number,
+};
+
 /**
  *  A chat attachment: whatever the user picked, turned into something a model
  *  can read. Failures carry a real reason for the user to see.
@@ -118,6 +128,24 @@ path: string } | { kind: "image"; name: string;
 /**  "image/png", ... - what the provider is told this is. */
 mime: string; dataBase64: string; path: string };
 
+export type FigureKind = 
+/**  A picture made by the image service (`textus-picture:`). */
+"generated" | "mermaid" | 
+/**  A ```chart block from the dossier's data. */
+"chart" | 
+/**  A picture found on the web, with its source and licence. */
+"web";
+
+/**  A figure the section will have, and how it is made. */
+export type FigurePlan = {
+	kind: FigureKind,
+	/**
+	 *  What to draw: a picture prompt, the diagram or chart to make from
+	 *  which notes, or the picture to look for.
+	 */
+	spec: string,
+};
+
 /**  A pending picture as the frontend takes it. */
 export type GeneratedImageData = {
 	mime: string,
@@ -125,6 +153,61 @@ export type GeneratedImageData = {
 	dataBase64: string,
 	width: number,
 	height: number,
+};
+
+/**  The kind of piece. Mirrored in src/platform/bindings/ai-paper.ts. */
+export type Genre = 
+/**
+ *  A researched paper with a thesis, an abstract and numbered
+ *  references.
+ */
+"paper" | 
+/**
+ *  A literature review: what the research on a question has found,
+ *  strand by strand, and what it leaves open.
+ */
+"review" | 
+/**
+ *  A long read for the general reader, as a news organisation writes
+ *  one: a headline, a standfirst, and its sources named in the text.
+ */
+"report" | 
+/**
+ *  An analysis for decision-makers - of a market, an industry or a
+ *  policy: an executive summary, the findings first, recommendations.
+ */
+"analysis" | 
+/**
+ *  A feature for a newsletter or a WeChat official account: a few
+ *  thousand characters, crossheads, a headline and a standfirst.
+ */
+"article" | 
+/**
+ *  A thread of numbered posts for X (Twitter) or Weibo, each short
+ *  enough for one post.
+ */
+"thread" | 
+/**
+ *  A short news story of a few hundred characters: the news first,
+ *  for quick, automated reporting.
+ */
+"brief";
+
+/**
+ *  What the app does differently for a genre. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type GenreForm = {
+	/**
+	 *  Whether the user approves its outline; false for a piece written
+	 *  straight on.
+	 */
+	checkpoint: boolean,
+	/**
+	 *  Whether its sections go under headings of their own; false for a
+	 *  piece of one section, all under its title.
+	 */
+	headings: boolean,
 };
 
 /**  How a service is asked for a picture. */
@@ -225,6 +308,171 @@ export type ImageProviderEntry_Serialize = {
 	signInFor: string | null,
 };
 
+/**  The plan the user approves before drafting. Kept as `outline.json`. */
+export type Outline = {
+	thesis: string,
+	sections: OutlineSection[],
+};
+
+export type OutlineSection = {
+	title: string,
+	keyPoints: string[],
+	/**  The dossier notes it draws on, by id. */
+	evidence: string[],
+	targetWords: number,
+	figures: FigurePlan[],
+};
+
+/**  One update from `ai_paper_run`. Display only: what is kept is on disk. */
+export type PaperEvent = PaperEvent_Serialize | PaperEvent_Deserialize;
+
+/**  One update from `ai_paper_run`. Display only: what is kept is on disk. */
+export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } | 
+/**  Section `index` of the outline is now `status`. */
+{ type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
+/**
+ *  The paper is written: its title and abstract, its sections and its
+ *  reference list, as one text to propose.
+ */
+{ type: "ready"; markdown: string } | 
+/**  The outline is ready for the user to edit and approve. */
+{ type: "outlineReady"; outline: Outline } | 
+/**  A stage failed; `section` when it was one section's. */
+{ type: "error"; message: string; section?: number | null } | 
+/**
+ *  What the planner is thinking or writing, as it comes: the tail of
+ *  it so far, sent a few times a second at most.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  Whether research can search the web: false when the model has no
+ *  search of its own and Settings names no search service, so only the
+ *  scholarly indexes and the user's library are searched.
+ */
+{ type: "webSearch"; available: boolean } | 
+/**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
+/**
+ *  The research questions the topic was split into, in the order the
+ *  helpers take them.
+ */
+{ type: "questions"; questions: string[] } | 
+/**
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
+ */
+{ type: "activity"; question: number; tool: string; arguments: string } | 
+/**
+ *  The outline as the outliner writes it: its thesis once whole, and
+ *  the titles of the sections given so far. `attempt` counts its tries;
+ *  a try after the first follows one that was sent back.
+ */
+{ type: "outlineDraft"; attempt: number; thesis?: string | null; titles: string[] } | 
+/**
+ *  What section `index`'s writer has written so far, as it writes it:
+ *  the whole of it, sent a few times a second at most. A try that starts
+ *  over starts the text over. Sent once more with the section as kept
+ *  when it is drafted or revised.
+ */
+{ type: "sectionText"; index: number; text: string } | 
+/**
+ *  The sources the sections may cite, each as the reference list gives
+ *  it after its number, and the list's heading: sent as drafting
+ *  starts, so the document numbers its citations and lists them while
+ *  the sections are written.
+ */
+{ type: "sources"; heading: string; sources: SourceEntry[] } | 
+/**
+ *  Question `question`'s helper finished, keeping `notes` notes;
+ *  `failed` when it stopped on an error.
+ */
+{ type: "questionDone"; question: number; notes: number; failed: boolean };
+
+/**  One update from `ai_paper_run`. Display only: what is kept is on disk. */
+export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } | 
+/**  Section `index` of the outline is now `status`. */
+{ type: "section"; index: number; status: SectionStatus } | { type: "budget"; used: BudgetCounts; remaining: BudgetCounts } | 
+/**
+ *  The paper is written: its title and abstract, its sections and its
+ *  reference list, as one text to propose.
+ */
+{ type: "ready"; markdown: string } | 
+/**  The outline is ready for the user to edit and approve. */
+{ type: "outlineReady"; outline: Outline } | 
+/**  A stage failed; `section` when it was one section's. */
+{ type: "error"; message: string; section: number | null } | 
+/**
+ *  What the planner is thinking or writing, as it comes: the tail of
+ *  it so far, sent a few times a second at most.
+ */
+{ type: "thinking"; text: string } | 
+/**
+ *  Whether research can search the web: false when the model has no
+ *  search of its own and Settings names no search service, so only the
+ *  scholarly indexes and the user's library are searched.
+ */
+{ type: "webSearch"; available: boolean } | 
+/**
+ *  The kind of piece the request was found to call for, and its
+ *  length in characters: sent once, before research, for a new piece.
+ */
+{ type: "genre"; genre: Genre; targetChars: number; form: GenreForm } | 
+/**
+ *  The research questions the topic was split into, in the order the
+ *  helpers take them.
+ */
+{ type: "questions"; questions: string[] } | 
+/**
+ *  A research helper did something: the tool question `question` (its
+ *  index) called, and its arguments as JSON, which the card words as
+ *  the chat does a tool call.
+ */
+{ type: "activity"; question: number; tool: string; arguments: string } | 
+/**
+ *  The outline as the outliner writes it: its thesis once whole, and
+ *  the titles of the sections given so far. `attempt` counts its tries;
+ *  a try after the first follows one that was sent back.
+ */
+{ type: "outlineDraft"; attempt: number; thesis: string | null; titles: string[] } | 
+/**
+ *  What section `index`'s writer has written so far, as it writes it:
+ *  the whole of it, sent a few times a second at most. A try that starts
+ *  over starts the text over. Sent once more with the section as kept
+ *  when it is drafted or revised.
+ */
+{ type: "sectionText"; index: number; text: string } | 
+/**
+ *  The sources the sections may cite, each as the reference list gives
+ *  it after its number, and the list's heading: sent as drafting
+ *  starts, so the document numbers its citations and lists them while
+ *  the sections are written.
+ */
+{ type: "sources"; heading: string; sources: SourceEntry[] } | 
+/**
+ *  Question `question`'s helper finished, keeping `notes` notes;
+ *  `failed` when it stopped on an error.
+ */
+{ type: "questionDone"; question: number; notes: number; failed: boolean };
+
+export type PaperPhase = "planning" | "researching" | "outlining" | 
+/**  Waiting for the user to approve the outline. */
+"awaitingOutline" | "drafting" | "reviewing" | "finishing" | "done";
+
+export type SectionStatus = "drafting" | "drafted" | "revising";
+
+/**
+ *  A source of the paper: its number in the research's numbering, and its
+ *  entry in the reference list.
+ */
+export type SourceEntry = {
+	n: number,
+	entry: string,
+};
+
 /**
  *  One live fragment of an in-flight `ai_agent_message`. Display only: the
  *  command still resolves with the complete turn list, so a dropped event costs
@@ -261,7 +509,13 @@ export type StreamEvent_Deserialize =
  *  being made: its `line` there stands for picture `id` from now on.
  *  Sent before the fragment that completes the line.
  */
-{ type: "picture"; callId: string; line: string; id: string; width: number; height: number };
+{ type: "picture"; callId: string; line: string; id: string; width: number; height: number } | 
+/**
+ *  How Research's run (`ai::paper`) is going: its phase, its sections,
+ *  its budget, its outline. Research's commands stream on the same
+ *  channel as a chat message, each update as one of these.
+ */
+{ type: "paper"; event: PaperEvent_Deserialize };
 
 /**
  *  One live fragment of an in-flight `ai_agent_message`. Display only: the
@@ -292,7 +546,13 @@ export type StreamEvent_Serialize =
  *  being made: its `line` there stands for picture `id` from now on.
  *  Sent before the fragment that completes the line.
  */
-{ type: "picture"; callId: string; line: string; id: string; width: number; height: number };
+{ type: "picture"; callId: string; line: string; id: string; width: number; height: number } | 
+/**
+ *  How Research's run (`ai::paper`) is going: its phase, its sections,
+ *  its budget, its outline. Research's commands stream on the same
+ *  channel as a chat message, each update as one of these.
+ */
+{ type: "paper"; event: PaperEvent_Serialize };
 
 /**
  *  How hard the model is asked to think. The user sees one button, Deep

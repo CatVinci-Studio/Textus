@@ -111,9 +111,10 @@ it, lazily loaded. Each stage and helper is one run of
   spend one budget, and is what their `WebPlan`s count against
   (`WebPlan::with_budget`); without one a request keeps chat's five
   searches and five page reads (`web/budget.rs`).
-- **Events** (`paper/events.rs`): `PaperEvent` over a Tauri Channel - the
-  phase, each section's state, the budget, the outline when it is ready,
-  errors. Display only; what matters is on disk.
+- **Events** (`paper/events.rs`): `PaperEvent` - the phase, each section's
+  state, the budget, the outline when it is ready, errors - on the chat's
+  channel, each as a `StreamEvent::Paper` (ipc.ts's `paperChannel` unwraps
+  it). Display only; what matters is on disk.
 - **On disk** (`paper/store.rs`): `papers/<id>/paper.json`,
   `dossier.json`, `outline.json` in the project's data folder in the
   config folder (`ai/project_data.rs`), or in the scratch space

@@ -106,6 +106,18 @@ export {
   type RememberedChange,
 } from "./ipc-ai-types";
 
+/** The channel Research's commands stream on: the chat's, each of its
+ *  updates a `paper` event. */
+function paperChannel(
+  onEvent: (event: PaperEvent) => void,
+): Channel<StreamEvent> {
+  const channel = new Channel<StreamEvent>();
+  channel.onmessage = (event) => {
+    if (event.type === "paper") onEvent(event.event);
+  };
+  return channel;
+}
+
 /**
  * Typed wrappers around every Tauri command the frontend calls, grouped by
  * domain across the ipc-*.ts files and all re-exported from here.
@@ -263,8 +275,7 @@ export const ai = {
   /** A paper researched and outlined (src-tauri/src/ai/paper), its progress
    *  through `onEvent`; it stops at the outline for the user to approve. */
   paperRun: (request: PaperRequest, onEvent: (event: PaperEvent) => void) => {
-    const channel = new Channel<PaperEvent>();
-    channel.onmessage = onEvent;
+    const channel = paperChannel(onEvent);
     return aiCall<Paper>("ai_paper_run", { request, channel });
   },
   /** The outline as the user edited it, kept for drafting. */
@@ -289,8 +300,7 @@ export const ai = {
   /** The approved paper drafted, reviewed and finished; it arrives whole
    *  as a `ready` event. */
   paperDraft: (request: DraftRequest, onEvent: (event: PaperEvent) => void) => {
-    const channel = new Channel<PaperEvent>();
-    channel.onmessage = onEvent;
+    const channel = paperChannel(onEvent);
     return aiCall<null>("ai_paper_draft", { request, channel });
   },
 

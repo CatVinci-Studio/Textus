@@ -225,7 +225,7 @@ pub struct PaperRequest {
 pub async fn ai_paper_run(
     app: tauri::AppHandle,
     request: PaperRequest,
-    channel: Channel<PaperEvent>,
+    channel: Channel<crate::ai::agent::StreamEvent>,
 ) -> Result<Paper, String> {
     let PaperRequest {
         provider,
@@ -274,7 +274,7 @@ pub async fn ai_paper_run(
     let can_search = native.is_some() || service.is_some();
     let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
     let send = |event: PaperEvent| {
-        let _ = channel.send(event);
+        crate::ai::agent::EventSink::send(&channel, crate::ai::agent::StreamEvent::Paper { event });
     };
     send(PaperEvent::WebSearch {
         available: can_search,

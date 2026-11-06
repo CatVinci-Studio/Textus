@@ -31,7 +31,7 @@ pub struct DraftRequest {
 pub async fn ai_paper_draft(
     app: tauri::AppHandle,
     request: DraftRequest,
-    channel: Channel<PaperEvent>,
+    channel: Channel<crate::ai::agent::StreamEvent>,
 ) -> Result<(), String> {
     let session = Session::open(
         &app,
@@ -47,7 +47,7 @@ pub async fn ai_paper_draft(
         .clone()
         .ok_or_else(|| "This paper has no outline yet.".to_string())?;
     let send = |event: PaperEvent| {
-        let _ = channel.send(event);
+        crate::ai::agent::EventSink::send(&channel, crate::ai::agent::StreamEvent::Paper { event });
     };
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(None).await?;

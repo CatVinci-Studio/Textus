@@ -1065,3 +1065,22 @@ fn events_go_to_any_sink() {
     report(&sink)(LoopEvent::Retry);
     assert_eq!(*sink.0.lock().unwrap(), ["delta", "toolStart", "retry"]);
 }
+
+/// Research's updates go out on the chat's channel, each wrapped whole:
+/// the frontend unwraps `event` and reads it as before.
+#[test]
+fn a_paper_update_is_a_stream_event() {
+    let event = StreamEvent::Paper {
+        event: crate::ai::paper::PaperEvent::Section {
+            index: 2,
+            status: crate::ai::paper::SectionStatus::Drafted,
+        },
+    };
+    assert_eq!(
+        serde_json::to_value(&event).unwrap(),
+        serde_json::json!({
+            "type": "paper",
+            "event": {"type": "section", "index": 2, "status": "drafted"},
+        })
+    );
+}
