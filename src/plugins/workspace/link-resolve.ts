@@ -177,3 +177,37 @@ export function resolveNoteIn(
     ...(parsed.alias ? { alias: parsed.alias } : {}),
   };
 }
+
+const norm = (path: string) => path.replace(/\\/g, "/");
+
+/** A folder's notes looked up by path and by name, built once per index:
+ *  a big folder's links each found without a walk over every file. */
+export interface PathIndex {
+  root: string;
+  notes: NoteIndex;
+}
+
+export function pathIndex(root: string, paths: readonly string[]): PathIndex {
+  return { root, notes: noteIndex(paths.map((p) => relativeTo(root, p))) };
+}
+
+function relativeTo(root: string, path: string): string {
+  const base = norm(root).replace(/\/+$/, "");
+  const full = norm(path);
+  return full.startsWith(`${base}/`) ? full.slice(base.length + 1) : full;
+}
+
+const absolute = (paths: PathIndex, rel: string) =>
+  `${norm(paths.root).replace(/\/+$/, "")}/${rel}`;
+
+/** Where `link` (a `[[wiki link]]` or a Markdown link's target, as written)
+ *  from the document at `from` leads, as a click takes it; null when it
+ *  goes to no file of the folder. */
+export function resolveTarget(
+  paths: PathIndex,
+  link: string,
+  from: string,
+): NoteTarget | null {
+  const target = resolveNoteIn(paths.notes, link, relativeTo(paths.root, from));
+  return target && { ...target, path: absolute(paths, target.path) };
+}
