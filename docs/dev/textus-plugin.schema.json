@@ -421,7 +421,7 @@
         },
         "completions": {
           "type": "array",
-          "description": "Completions suggested as you type (document.read), answered by textus.editor.registerCompletionProvider(id).",
+          "description": "Completions suggested as you type (document.read), answered by textus.editor.registerCompletion(id).",
           "items": {
             "type": "object",
             "required": ["id", "pattern"],
@@ -482,7 +482,7 @@
         },
         "suggestFor": {
           "type": "array",
-          "description": "What a document can hold that the plugin works with. An official plugin is suggested, once, for a document that holds one when no installed plugin works with it.",
+          "description": "What a document can hold that the plugin works with. An official plugin is suggested on the suggestion card for a document that holds one when no installed plugin works with it.",
           "items": {
             "enum": ["wikilinks"]
           }
