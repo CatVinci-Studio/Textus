@@ -80,8 +80,10 @@ export function blockPos(doc: ProseNode, id: string): number | null {
   return found;
 }
 
-/** The HTML element with `id` or `name` `anchor` (`<a id="note1"></a>`),
- *  the way a hand-made table of contents links to a spot in the text. */
+/** The start of the line holding the HTML element with `id` or `name`
+ *  `anchor` (`<a id="note1"></a>`), the way a hand-made table of contents
+ *  links to a spot in the text. Not the element itself: its source is
+ *  hidden while the caret is elsewhere, so it has no place on screen. */
 export function htmlAnchorPos(doc: ProseNode, anchor: string): number | null {
   const quoted = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const named = new RegExp(
@@ -91,8 +93,13 @@ export function htmlAnchorPos(doc: ProseNode, anchor: string): number | null {
   let found: number | null = null;
   doc.descendants((node, pos) => {
     if (found !== null) return false;
-    if (node.type.name === "html" && named.test(node.textContent))
-      found = pos + 1;
+    if (node.isTextblock) {
+      node.forEach((child) => {
+        if (child.type.name === "html" && named.test(child.textContent))
+          found = pos + 1;
+      });
+      return false;
+    }
     return true;
   });
   return found;

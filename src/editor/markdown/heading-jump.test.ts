@@ -123,8 +123,8 @@ describe("htmlAnchorPos", () => {
     schema.node("paragraph", null, [html("<a name=old.2>")]),
   ]);
 
-  it("finds an element by its id or name", () => {
-    expect(htmlAnchorPos(page, "note1")).toBe(13);
+  it("finds the line holding an element by its id or name", () => {
+    expect(htmlAnchorPos(page, "note1")).toBe(8);
     expect(htmlAnchorPos(page, "old.2")).not.toBeNull();
   });
 
