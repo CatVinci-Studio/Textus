@@ -14,6 +14,8 @@ built with Tauri 2.
 - `src/` - React + TypeScript frontend; the editor is Milkdown/ProseMirror.
   [docs/dev/architecture.md](docs/dev/architecture.md) maps the folders and
   their layers; ESLint enforces the import direction.
+  [docs/dev/reuse.md](docs/dev/reuse.md) lists the one place for each
+  common need (surfaces, menus, lists, links, paths, Textus AI): reuse it.
 - `src-tauri/src/` - Rust backend: windows, files, menus, updater, the AI
   agent. `src-tauri/crates/aicompat/` - the AI provider client.
 - `e2e/` - Playwright flows; `e2e/shots/` - screenshot generators (not tests).
