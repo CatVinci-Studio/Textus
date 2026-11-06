@@ -196,14 +196,11 @@ pub enum FigureKind {
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PaperRequest {
-    pub provider: String,
-    pub model: Option<String>,
-    pub doc_path: Option<String>,
-    pub workspace_root: Option<String>,
-    /// What web_search uses when the model can't search by itself.
-    pub search_service: Option<String>,
-    pub searxng_url: Option<String>,
-    pub request_id: String,
+    /// What every request names: provider, project, image model, the
+    /// conversation whose attached files its research reads (copied into
+    /// the paper's folder when it starts, so going on with it needs none).
+    #[serde(flatten)]
+    pub request: crate::ai::agent::AgentRequest,
     /// The paper to go on with, or the id a new one is kept under; None
     /// for a new id.
     pub id: Option<String>,
@@ -218,14 +215,6 @@ pub struct PaperRequest {
     /// choice.
     #[serde(default)]
     pub target_chars: Option<u32>,
-    /// The image model, for the pictures the outline may plan; None for
-    /// none.
-    pub image_model: Option<crate::ai::images::ImageModel>,
-    /// The conversation whose attached files its research reads: copied
-    /// into the paper's folder when it starts, so going on with it needs
-    /// none.
-    #[serde(default)]
-    pub conversation: Option<String>,
     /// Research hands parts of a question to helpers of its own.
     #[serde(default)]
     pub sub_helpers: bool,
@@ -243,32 +232,17 @@ pub async fn ai_paper_run(
     channel: Channel<PaperEvent>,
 ) -> Result<Paper, String> {
     let PaperRequest {
-        provider,
-        model,
-        doc_path,
-        workspace_root,
-        search_service,
-        searxng_url,
-        request_id,
+        request,
         id,
         topic,
         genre,
         language,
         target_chars,
-        image_model,
-        conversation,
         sub_helpers,
     } = request;
-    let session = Session::open(
-        &app,
-        &provider,
-        model,
-        doc_path.as_deref(),
-        workspace_root.as_deref(),
-    )?;
+    let session = request.session(&app)?;
     let root = session_root(&session, id.as_deref())?;
-    let project =
-        crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
+    let project = crate::ai::workspace::project_root(session.doc_path, session.workspace_root);
     let entry = session.entry;
     // A paper begun before goes on from what it kept: its research, its
     // outline, what its research may still spend.
@@ -280,13 +254,12 @@ pub async fn ai_paper_run(
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
     let mut images = research_budget.limits.images;
     let image_cap = session
-        .pictures(image_model.as_ref())
+        .pictures(request.image_model.as_ref())
         .map_or(0, |run| run.limit as u32);
     research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = session.native_search();
-    let service =
-        crate::ai::web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref());
+    let service = request.search_service(&app);
     let can_search = native.is_some() || service.is_some();
     let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
     let send = |event: PaperEvent| {
@@ -295,7 +268,7 @@ pub async fn ai_paper_run(
     send(PaperEvent::WebSearch {
         available: can_search,
     });
-    crate::ai::cancel::cancellable(request_id, async {
+    crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(native).await?;
         let throttled = throttle::Throttled::new(&agent, entry.paper_at_once);
         let agent = model::Metered {
@@ -337,7 +310,7 @@ pub async fn ai_paper_run(
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
-        let conversation = crate::ai::scratch::with_attachments(conversation.as_deref());
+        let conversation = crate::ai::scratch::with_attachments(request.conversation.as_deref());
         let paper_folder =
             store::keep_attachments(&root, &files.paper.id, conversation.as_deref())?;
         let mut keep_spent = KeepSpent {

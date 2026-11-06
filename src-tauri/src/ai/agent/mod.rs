@@ -34,6 +34,7 @@ pub(crate) use history::*;
 pub(crate) use model::*;
 pub(crate) use past::*;
 pub(crate) use prompt::*;
+pub use session::AgentRequest;
 pub(crate) use session::Session;
 
 /// The system prompt with what it says about the web, when search is on.
@@ -88,20 +89,27 @@ pub async fn ai_agent_message(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    let web_service = web_search
-        .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
-        .flatten();
+    // What every request names, as Research's requests carry it too.
+    let request = AgentRequest {
+        provider,
+        model,
+        doc_path,
+        workspace_root,
+        conversation,
+        search_service,
+        searxng_url,
+        request_id,
+        image_model,
+    };
+    let web_service = web_search.then(|| request.search_service(&app)).flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
     cancel::cancellable(
-        request_id,
+        request.request_id.clone(),
         ai_agent_message_inner(
             app,
             window.label().to_string(),
-            provider,
+            &request,
             Document::from_blocks(blocks),
-            doc_path,
-            workspace_root,
-            conversation,
             history,
             message,
             images,
@@ -109,10 +117,8 @@ pub async fn ai_agent_message(
             web_service,
             thinking.unwrap_or_default(),
             mode,
-            model,
             focus_heading,
             ui_language,
-            image_model,
             &on_event,
         ),
     )
@@ -124,11 +130,8 @@ async fn ai_agent_message_inner(
     app: AppHandle,
     // The window that asked: only its plugins' tools are offered.
     window: String,
-    provider: String,
+    request: &AgentRequest,
     document: Document,
-    doc_path: Option<String>,
-    workspace_root: Option<String>,
-    conversation: Option<String>,
     history: Vec<AgentTurn>,
     message: String,
     images: Vec<ImageAttachment>,
@@ -136,22 +139,14 @@ async fn ai_agent_message_inner(
     web_service: Option<web::search::Service>,
     thinking: ThinkingLevel,
     mode: AgentMode,
-    model: Option<String>,
     focus_heading: Option<String>,
     ui_language: String,
-    image_model: Option<crate::ai::images::ImageModel>,
     on_event: &dyn EventSink,
 ) -> Result<Vec<AgentTurn>, String> {
-    let session = Session::open(
-        &app,
-        &provider,
-        model,
-        doc_path.as_deref(),
-        workspace_root.as_deref(),
-    )?;
-    let (entry, model) = (session.entry, session.model.as_deref());
+    let session = request.session(&app)?;
+    let (entry, model, doc_path) = (session.entry, session.model.as_deref(), session.doc_path);
     let mut workspace = session.workspace();
-    let scratch = crate::ai::scratch::with_attachments(conversation.as_deref());
+    let scratch = crate::ai::scratch::with_attachments(request.conversation.as_deref());
     workspace.attached = scratch.is_some();
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
     let library = crate::ai::conventions::library_names(&workspace);
@@ -179,7 +174,7 @@ async fn ai_agent_message_inner(
     // Markdown: "what's in this picture", "redo it brighter".
     let mut images = images;
     if entry.supports_vision {
-        images.extend(selected_picture(&focus, doc_path.as_deref()));
+        images.extend(selected_picture(&focus, doc_path));
     }
     // Refuse rather than drop: the model would answer confidently about a
     // picture it never saw. The frontend hides attach for these providers.
@@ -201,14 +196,14 @@ async fn ai_agent_message_inner(
         &focus,
         focus_heading.as_deref(),
     );
-    crate::ai::project::record_library_use(doc_path.as_deref(), &sent_library);
+    crate::ai::project::record_library_use(doc_path, &sent_library);
     let user_turn = AgentTurn::User {
         text: request_message(&workspace, mode, &ui_language, &context, &message),
         images,
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = session.pictures(image_model.as_ref());
+    let image_run = session.pictures(request.image_model.as_ref());
 
     let agent = session.provider(thinking, web.native).await?;
     let result = match agent {
@@ -357,7 +352,7 @@ async fn ai_agent_message_inner(
                     };
                     flattened_chat_turn(
                         &app,
-                        &provider,
+                        &request.provider,
                         &instructions,
                         history,
                         message,
@@ -371,7 +366,15 @@ async fn ai_agent_message_inner(
         None => {
             let instructions =
                 build_instructions(&workspace, &document, false, mode, &focus, &ui_language);
-            flattened_chat_turn(&app, &provider, &instructions, history, message, model).await
+            flattened_chat_turn(
+                &app,
+                &request.provider,
+                &instructions,
+                history,
+                message,
+                model,
+            )
+            .await
         }
     };
     // History keeps the message as the user wrote it: replaying the document

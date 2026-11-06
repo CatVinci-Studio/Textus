@@ -10,15 +10,12 @@ use tauri::ipc::Channel;
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct DraftRequest {
-    pub provider: String,
-    pub model: Option<String>,
-    pub doc_path: Option<String>,
-    pub workspace_root: Option<String>,
-    pub request_id: String,
+    /// What every request names; its image model is the one the paper's
+    /// pictures are made with.
+    #[serde(flatten)]
+    pub request: crate::ai::agent::AgentRequest,
     /// The paper, outlined and its outline approved.
     pub id: String,
-    /// The image model the paper's pictures are made with; None for none.
-    pub image_model: Option<crate::ai::images::ImageModel>,
 }
 
 /// Drafts paper `id` from its saved outline: every section written and kept
@@ -33,15 +30,10 @@ pub async fn ai_paper_draft(
     request: DraftRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<(), String> {
-    let session = Session::open(
-        &app,
-        &request.provider,
-        request.model.clone(),
-        request.doc_path.as_deref(),
-        request.workspace_root.as_deref(),
-    )?;
-    let root = super::session_root(&session, Some(&request.id))?;
-    let files = load(&root, &request.id)?;
+    let DraftRequest { request, id } = request;
+    let session = request.session(&app)?;
+    let root = super::session_root(&session, Some(&id))?;
+    let files = load(&root, &id)?;
     let outline = files
         .outline
         .clone()

@@ -9,6 +9,61 @@ use crate::ai::workspace::AgentWorkspace;
 use aicompat::capabilities::{NativeSearch, ThinkingLevel};
 use aicompat::providers::AgentProvider;
 
+/// What every request names, whatever it asks: the provider and model,
+/// the document and project, the conversation, the search service, the
+/// image model, and the id it is stopped by (`ai::cancel`). A chat
+/// message's command takes these as its own parameters; Research's
+/// requests carry them flattened, beside what they add.
+#[derive(serde::Deserialize, Debug, Default)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct AgentRequest {
+    pub provider: String,
+    pub model: Option<String>,
+    pub doc_path: Option<String>,
+    pub workspace_root: Option<String>,
+    /// The conversation, whose scratch folder holds its attached files.
+    #[serde(default)]
+    pub conversation: Option<String>,
+    /// "auto" or a service id, and the SearXNG address: what web_search
+    /// uses when the model can't search by itself.
+    #[serde(default)]
+    pub search_service: Option<String>,
+    #[serde(default)]
+    pub searxng_url: Option<String>,
+    pub request_id: String,
+    /// The image model; None for none.
+    #[serde(default)]
+    pub image_model: Option<ImageModel>,
+}
+
+impl AgentRequest {
+    /// The request's session: refused while Textus AI is off, or for a
+    /// provider the catalog doesn't have.
+    pub(crate) fn session<'a>(&'a self, app: &'a tauri::AppHandle) -> Result<Session<'a>, String> {
+        Session::open(
+            app,
+            &self.provider,
+            self.model.clone(),
+            self.doc_path.as_deref(),
+            self.workspace_root.as_deref(),
+        )
+    }
+
+    /// The search service web_search uses when the model can't search by
+    /// itself; None when none is set up.
+    pub(crate) fn search_service(
+        &self,
+        app: &tauri::AppHandle,
+    ) -> Option<crate::ai::web::search::Service> {
+        crate::ai::web::resolve_service(
+            app,
+            self.search_service.as_deref(),
+            self.searxng_url.as_deref(),
+        )
+    }
+}
+
 /// The provider and the project a request names.
 pub(crate) struct Session<'a> {
     pub app: &'a tauri::AppHandle,
