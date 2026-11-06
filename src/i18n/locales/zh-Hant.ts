@@ -479,8 +479,8 @@ export default {
   treeEmptyDraft: "儲存這份文件後，它所在的資料夾會顯示在這裡。",
   outlineEmpty: "還沒有標題，以 # 開頭的行會顯示在這裡。",
   treeRefresh: "重新整理",
-  menuOpenFolder: "開啟資料夾…",
-  menuCloseFolder: "關閉資料夾",
+  menuOpenFolder: "開啟專案…",
+  menuCloseFolder: "關閉專案",
   menuCopyPath: "複製路徑",
   folderTooBroad:
     "這個資料夾的範圍太大（你的個人資料夾或整個磁碟），無法開啟。改選範圍更小的資料夾。",
@@ -489,7 +489,7 @@ export default {
   treeSearchNoMatches: "沒有符合的檔案名稱。",
   treeSearchCapped: "只搜尋了前 {n} 個檔案。開啟範圍更小的資料夾就能全部搜尋。",
   treeSearchTooBroad:
-    "這個資料夾的範圍太大，無法搜尋。請用「檔案 › 開啟資料夾…」開啟範圍更小的資料夾。",
+    "這個資料夾的範圍太大，無法搜尋。請用「檔案 › 開啟專案…」開啟範圍更小的資料夾。",
   treeSearchFailed: "無法讀取這個資料夾。",
   treeSearchScope: "顯示",
   treeSearchScopeAll: "所有檔案",

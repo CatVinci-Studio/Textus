@@ -540,8 +540,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   outlineEmpty:
     "Noch keine Überschriften – Zeilen, die mit # beginnen, erscheinen hier.",
   treeRefresh: "Aktualisieren",
-  menuOpenFolder: "Ordner öffnen…",
-  menuCloseFolder: "Ordner schließen",
+  menuOpenFolder: "Projekt öffnen…",
+  menuCloseFolder: "Projekt schließen",
   menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
@@ -551,7 +551,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchCapped:
     "Nur die ersten {n} Dateien wurden durchsucht. Öffne einen kleineren Ordner, um alles zu durchsuchen.",
   treeSearchTooBroad:
-    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Ordner öffnen… einen spezifischeren.",
+    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Projekt öffnen… einen spezifischeren.",
   treeSearchFailed: "Dieser Ordner kann nicht gelesen werden.",
   treeSearchScope: "Anzeigen",
   treeSearchScopeAll: "Alle Dateien",

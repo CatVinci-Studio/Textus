@@ -507,8 +507,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   outlineEmpty:
     "아직 제목이 없습니다. # 기호로 시작하는 줄이 여기에 표시됩니다.",
   treeRefresh: "새로 고침",
-  menuOpenFolder: "폴더 열기…",
-  menuCloseFolder: "폴더 닫기",
+  menuOpenFolder: "프로젝트 열기…",
+  menuCloseFolder: "프로젝트 닫기",
   menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
@@ -518,7 +518,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSearchCapped:
     "처음 {n}개 파일만 검색했습니다. 전체를 검색하려면 더 작은 폴더를 여세요.",
   treeSearchTooBroad:
-    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 폴더 열기…로 더 구체적인 폴더를 여세요.",
+    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 프로젝트 열기…로 더 구체적인 폴더를 여세요.",
   treeSearchFailed: "이 폴더를 읽을 수 없습니다.",
   treeSearchScope: "표시",
   treeSearchScopeAll: "모든 파일",

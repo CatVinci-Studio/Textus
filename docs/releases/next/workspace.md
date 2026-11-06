@@ -6,7 +6,7 @@
 
 ### Improved
 
-- Says in the sidebar when the file tree only follows the current document, with **Open as Project** to make it the window's folder; **Close Folder** then also closes that folder's saved documents.
+- Says in the sidebar when the file tree only follows the current document, with **Open as Project** to make it the window's folder; **Close Project** then also closes that folder's saved documents.
 - Dims the files and folders a `.gitignore` leaves out, and build folders such as `node_modules`, in the file tree, as the file search already leaves them out.
 
 ### Fixed

@@ -69,7 +69,7 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
             where_to_choose_the_project_folder(true)
         ),
         (None, RootSource::TooBroad) => format!("Project folder: none - the folder chosen is the user's home folder or a whole drive, which is too broad to open to you, so you can't read the user's files, and there is no project menu.{attached} If the user refers to another file, say so, ask them to attach it or paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),
-        (None, _) => format!("Project folder: none - no folder is open in Textus and none has been chosen, so you can't read the user's other files, and the project bar and its menu don't appear until there is a project folder.{attached} If the user refers to another file, say that this is why, and tell them to attach it with + or to open its folder (File > Open Folder…) or choose a project folder in {}.", where_to_choose_the_project_folder(false)),
+        (None, _) => format!("Project folder: none - no folder is open in Textus and none has been chosen, so you can't read the user's other files, and the project bar and its menu don't appear until there is a project folder.{attached} If the user refers to another file, say that this is why, and tell them to attach it with + or to open its folder (File > Open Project…) or choose a project folder in {}.", where_to_choose_the_project_folder(false)),
     };
     let names = match UiNames::of(ui_language) {
         Some(ui) => {

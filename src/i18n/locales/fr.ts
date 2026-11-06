@@ -550,8 +550,8 @@ utiliser une.
   outlineEmpty:
     "Aucun titre pour l'instant. Les lignes commençant par # apparaîtront ici.",
   treeRefresh: "Actualiser",
-  menuOpenFolder: "Ouvrir un dossier…",
-  menuCloseFolder: "Fermer le dossier",
+  menuOpenFolder: "Ouvrir un projet…",
+  menuCloseFolder: "Fermer le projet",
   menuCopyPath: "Copier le chemin",
   folderTooBroad:
     "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
@@ -561,7 +561,7 @@ utiliser une.
   treeSearchCapped:
     "Seuls les {n} premiers fichiers ont été parcourus. Ouvrez un dossier plus petit pour tout rechercher.",
   treeSearchTooBroad:
-    "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un dossier…",
+    "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un projet…",
   treeSearchFailed: "Impossible de lire ce dossier.",
   treeSearchScope: "Afficher",
   treeSearchScopeAll: "Tous les fichiers",

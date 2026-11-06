@@ -535,8 +535,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeEmptyDraft: "Salve este documento para ver a pasta dele aqui.",
   outlineEmpty: "Ainda não há títulos. Linhas que começam com # aparecem aqui.",
   treeRefresh: "Atualizar",
-  menuOpenFolder: "Abrir Pasta…",
-  menuCloseFolder: "Fechar Pasta",
+  menuOpenFolder: "Abrir Projeto…",
+  menuCloseFolder: "Fechar Projeto",
   menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
@@ -546,7 +546,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchCapped:
     "A busca percorreu só os primeiros {n} arquivos. Abra uma pasta menor para buscar em tudo.",
   treeSearchTooBroad:
-    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Pasta…",
+    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Projeto…",
   treeSearchFailed: "Não foi possível ler esta pasta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos os arquivos",

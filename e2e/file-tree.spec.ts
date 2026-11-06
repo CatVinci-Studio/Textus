@@ -288,12 +288,12 @@ test("a tree that follows the document says so, and Close Folder closes the open
   await open(page);
   const following = page.locator(".sidebar .tree-following");
   await expect(following).toContainText("Current document's folder");
-  await expect(page.getByRole("button", { name: "Close Folder" })).toHaveCount(
+  await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
     0,
   );
   await following.getByRole("button", { name: "Open as Project" }).click();
   await expect(following).toHaveCount(0);
-  await page.getByRole("button", { name: "Close Folder" }).click();
+  await page.getByRole("button", { name: "Close Project" }).click();
   // a.md was saved and inside the folder: it closes, the window stays.
   await expect(page.locator(".window-bar-title-text")).not.toHaveText("a.md");
   await expect(page.locator(editor)).toBeVisible();

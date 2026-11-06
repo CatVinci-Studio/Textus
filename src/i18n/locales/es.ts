@@ -548,8 +548,8 @@ para usar una.
   outlineEmpty:
     "Aún no hay encabezados. Las líneas que empiezan con # aparecen aquí.",
   treeRefresh: "Actualizar",
-  menuOpenFolder: "Abrir carpeta…",
-  menuCloseFolder: "Cerrar carpeta",
+  menuOpenFolder: "Abrir proyecto…",
+  menuCloseFolder: "Cerrar proyecto",
   menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
@@ -559,7 +559,7 @@ para usar una.
   treeSearchCapped:
     "Solo se buscó en los primeros {n} archivos. Abre una carpeta más pequeña para buscar en toda.",
   treeSearchTooBroad:
-    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir carpeta…",
+    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir proyecto…",
   treeSearchFailed: "No se puede leer esta carpeta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos los archivos",

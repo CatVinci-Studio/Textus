@@ -530,8 +530,8 @@ type /name in a conversation to use one.
   treeEmptyDraft: "Save this document and its folder shows up here.",
   outlineEmpty: "No headings yet - lines starting with # appear here.",
   treeRefresh: "Refresh",
-  menuOpenFolder: "Open Folder…",
-  menuCloseFolder: "Close Folder",
+  menuOpenFolder: "Open Project…",
+  menuCloseFolder: "Close Project",
   menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
@@ -541,7 +541,7 @@ type /name in a conversation to use one.
   treeSearchCapped:
     "Searched the first {n} files only. Open a smaller folder to search all of it.",
   treeSearchTooBroad:
-    "This folder is too broad to search. Open a more specific one with File › Open Folder…",
+    "This folder is too broad to search. Open a more specific one with File › Open Project…",
   treeSearchFailed: "This folder can't be read.",
   treeSearchScope: "Show",
   treeSearchScopeAll: "All files",

@@ -479,8 +479,8 @@ export default {
   treeEmptyDraft: "保存文档后，这里会显示它所在的文件夹。",
   outlineEmpty: "文档里还没有标题，以 # 开头的行会显示在这里。",
   treeRefresh: "刷新",
-  menuOpenFolder: "打开文件夹…",
-  menuCloseFolder: "关闭文件夹",
+  menuOpenFolder: "打开项目…",
+  menuCloseFolder: "关闭项目",
   menuCopyPath: "复制路径",
   folderTooBroad:
     "这个文件夹范围太大（主目录或整个磁盘），不能打开，请选择更具体的文件夹。",
@@ -489,7 +489,7 @@ export default {
   treeSearchNoMatches: "没有匹配的文件名。",
   treeSearchCapped: "只搜索了前 {n} 个文件。打开范围更小的文件夹就能全部搜索。",
   treeSearchTooBroad:
-    "这个文件夹范围太大，不能搜索。请用“文件 › 打开文件夹…”打开更具体的文件夹。",
+    "这个文件夹范围太大，不能搜索。请用“文件 › 打开项目…”打开更具体的文件夹。",
   treeSearchFailed: "无法读取这个文件夹。",
   treeSearchScope: "显示",
   treeSearchScopeAll: "所有文件",
