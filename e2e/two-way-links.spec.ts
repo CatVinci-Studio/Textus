@@ -104,7 +104,8 @@ test("an embed shows its note read-only and follows its changes", async ({
   await open(
     page,
     {
-      "/notes/Doc.md": "Above\n\n![[Ideas#Plan]]\n\nBelow\n",
+      "/notes/Doc.md":
+        "Above\n\n![[Ideas#Plan]]\n\nSee [[Ideas]], not [[Gone]].\n",
       "/notes/Ideas.md": "# Ideas\n\n## Plan\n\nFirst point.\n",
     },
     "/notes/Doc.md",
@@ -114,6 +115,11 @@ test("an embed shows its note read-only and follows its changes", async ({
   await expect(embed.locator(".note-embed-body")).toContainText("First point.");
   await expect(embed).toHaveAttribute("contenteditable", "false");
   await expect(page.locator(`${editor} .obsidian-embed-source`)).toBeHidden();
+  // A link to a note not written yet is dimmed; one that exists is not.
+  const dimmed = page.locator(`${editor} .wikilink`, {
+    has: page.locator(".wikilink-missing"),
+  });
+  await expect(dimmed).toHaveText("[[Gone]]");
 
   // Its note changes - here, a plugin writes it - and the embed follows.
   await page.evaluate(() => {

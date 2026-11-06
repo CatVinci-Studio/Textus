@@ -135,6 +135,7 @@ import {
 } from "./images/obsidian-embed";
 import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
 import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
@@ -280,6 +281,7 @@ export function withEditorCore(
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
       .use(wikilinkRevealPlugin)
+      .use(createMissingLinksPlugin(() => docPath.current))
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,

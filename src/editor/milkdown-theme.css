@@ -704,6 +704,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
+/* A link to a note that doesn't exist yet: a click makes it. */
+.wikilink-missing {
+  color: var(--doc-muted);
+}
+
 /* A picture that won't load: a card in place of the broken-image icon. The
    picture's own parts stay in the DOM for export and print. */
 @media screen {
