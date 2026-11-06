@@ -610,6 +610,10 @@ export default {
   searchServiceSendsTo: "搜尋內容會傳送給 {name}。",
   searchServiceNone: "還沒有可用的搜尋：請選擇一個服務並填入它的金鑰。",
   searxngUrlLabel: "SearXNG 網址",
+  researchAtOnceLabel: "研究：同時請求數",
+  researchAtOnceAuto: "自動",
+  researchAtOnceHelp:
+    "研究模式同時向模型發出的請求數，用於並行研究問題、撰寫各節。「自動」依服務商的常見限額設定；如遇頻率限制錯誤，請調低。",
   editAnimationLabel: "以動畫顯示修改預覽",
   agentWorkspaceLabel: "全域設定資料夾",
   agentWorkspaceOpenButton: "打開",

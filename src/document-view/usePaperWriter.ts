@@ -74,6 +74,7 @@ export function usePaperWriter({
       docPath,
       workspaceRoot: s.agentWorkspaceRoot || null,
       imageModel: imageModelOf(s),
+      atOnce: s.researchAtOnce || null,
     };
   };
 
@@ -108,6 +109,7 @@ export function usePaperWriter({
               model: base.model,
               docPath: base.docPath,
               workspaceRoot: base.workspaceRoot,
+              atOnce: base.atOnce,
               requestId,
               id,
               imageModel: base.imageModel,

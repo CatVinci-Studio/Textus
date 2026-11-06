@@ -105,6 +105,18 @@ impl<M: Model> Model for Throttled<'_, M> {
     }
 }
 
+/// How many model calls a paper makes at once: the user's choice
+/// (`Settings.researchAtOnce`), else the provider's; 0 or None is the
+/// provider's.
+pub(crate) fn at_once(
+    chosen: Option<u32>,
+    entry: &crate::ai::catalog::ProviderCatalogEntry,
+) -> usize {
+    chosen
+        .filter(|n| *n > 0)
+        .map_or(entry.paper_at_once, |n| n as usize)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,6 +233,14 @@ mod tests {
         for entry in crate::ai::catalog::PROVIDER_CATALOG {
             assert!(entry.paper_at_once >= 1, "{}", entry.id);
         }
+    }
+
+    #[test]
+    fn the_users_choice_goes_before_the_providers() {
+        let ollama = crate::ai::catalog::find("ollama").unwrap();
+        assert_eq!(at_once(None, ollama), ollama.paper_at_once);
+        assert_eq!(at_once(Some(0), ollama), ollama.paper_at_once);
+        assert_eq!(at_once(Some(7), ollama), 7);
     }
 
     #[test]

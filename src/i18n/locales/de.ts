@@ -670,6 +670,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   searchServiceNone:
     "Noch nichts zum Suchen eingerichtet – wähle einen Dienst und gib seinen Schlüssel ein.",
   searxngUrlLabel: "SearXNG-Adresse",
+  researchAtOnceLabel: "Recherche: gleichzeitige Anfragen",
+  researchAtOnceAuto: "Automatisch",
+  researchAtOnceHelp:
+    "Wie viele Anfragen der Recherchemodus gleichzeitig an das Modell sendet, um Fragen zu recherchieren und Abschnitte parallel zu schreiben. Automatisch passt zu Ihrem Anbieter; senken Sie den Wert bei Fehlern wegen Ratenbegrenzung.",
   editAnimationLabel: "Änderungsvorschau animieren",
   agentWorkspaceLabel: "Globaler Konfigurationsordner",
   agentWorkspaceOpenButton: "Anzeigen",

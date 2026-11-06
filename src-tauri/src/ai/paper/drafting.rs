@@ -19,6 +19,10 @@ pub struct DraftRequest {
     pub id: String,
     /// The image model the paper's pictures are made with; None for none.
     pub image_model: Option<crate::ai::images::ImageModel>,
+    /// Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+    /// provider's.
+    #[serde(default)]
+    pub at_once: Option<u32>,
 }
 
 /// Drafts paper `id` from its saved outline: every section written and kept
@@ -51,7 +55,8 @@ pub async fn ai_paper_draft(
     };
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(None).await?;
-        let throttled = throttle::Throttled::new(&agent, session.entry.paper_at_once);
+        let throttled =
+            throttle::Throttled::new(&agent, throttle::at_once(request.at_once, session.entry));
         let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
         let mut keep_spent = KeepSpent {
             root: &root,

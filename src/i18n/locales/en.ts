@@ -659,6 +659,10 @@ type /name in a conversation to use one.
   searchServiceNone:
     "Nothing to search with yet - choose a service and add its key.",
   searxngUrlLabel: "SearXNG address",
+  researchAtOnceLabel: "Research: calls at once",
+  researchAtOnceAuto: "Automatic",
+  researchAtOnceHelp:
+    "How many requests to the model Research mode sends at the same time, to research questions and write sections side by side. Automatic suits your provider; lower it if you see rate-limit errors.",
   editAnimationLabel: "Animate edit previews",
   agentWorkspaceLabel: "Global config folder",
   agentWorkspaceOpenButton: "Show",

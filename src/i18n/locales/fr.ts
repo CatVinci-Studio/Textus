@@ -685,6 +685,10 @@ utiliser une.
   searchServiceNone:
     "Rien pour chercher pour l'instant : choisissez un service et ajoutez sa clé.",
   searxngUrlLabel: "Adresse de SearXNG",
+  researchAtOnceLabel: "Recherche : requêtes simultanées",
+  researchAtOnceAuto: "Automatique",
+  researchAtOnceHelp:
+    "Le nombre de requêtes que le mode Recherche envoie en même temps au modèle, pour étudier les questions et rédiger les sections en parallèle. Automatique convient à votre fournisseur ; baissez-le si des erreurs de limite de débit apparaissent.",
   editAnimationLabel: "Animer l'aperçu des modifications",
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",

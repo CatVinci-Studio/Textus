@@ -664,6 +664,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   searchServiceNone:
     "Ainda não há como buscar: escolha um serviço e adicione a chave dele.",
   searxngUrlLabel: "Endereço do SearXNG",
+  researchAtOnceLabel: "Pesquisa: pedidos em simultâneo",
+  researchAtOnceAuto: "Automático",
+  researchAtOnceHelp:
+    "Quantos pedidos o modo Pesquisa envia ao modelo ao mesmo tempo, para pesquisar perguntas e escrever secções em paralelo. Automático adequa-se ao seu fornecedor; reduza-o se vir erros de limite de pedidos.",
   editAnimationLabel: "Animar prévias de edição",
   agentWorkspaceLabel: "Pasta de configuração global",
   agentWorkspaceOpenButton: "Mostrar",
