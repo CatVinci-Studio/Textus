@@ -1751,4 +1751,8 @@ utiliser une.
     "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
   pluginKeysTaken:
     "{name} ne peut pas prendre le clavier : {holder} l’utilise. Désactivez l’un des deux dans Réglages › Extensions.",
+  shortcutIndentListItem: "Indenter l’élément de liste",
+  shortcutOutdentListItem: "Désindenter l’élément de liste",
+  pluginKeyTaken:
+    "{name} : {key} appartient à « {owner} » et n’a donc pas été attribué à « {command} ». Choisissez un raccourci dans Réglages › Raccourcis.",
 } satisfies Translation;

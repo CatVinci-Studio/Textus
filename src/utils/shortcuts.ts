@@ -2,6 +2,7 @@
 /// "mod" is Cmd on Apple platforms and Ctrl elsewhere.
 import { modIsMeta } from "../platform/os";
 import { isImeKeydown } from "./ime";
+import { isMacSystemCombo } from "./system-keys";
 const MODIFIER_KEYS = new Set(["control", "meta", "alt", "shift", "altgraph"]);
 
 /// Builds a normalized combo string from a KeyboardEvent. Returns null while
@@ -120,6 +121,13 @@ const RESERVED_COMBOS = new Set([
   "alt+enter",
   "alt+[",
   "alt+]",
+  // The editor's own block keys (fixed-shortcuts.ts lists them): paragraph,
+  // headings, lists, code block, quote, list indent.
+  ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `mod+alt+${n}`),
+  "mod+alt+c",
+  "mod+shift+b",
+  "mod+[",
+  "mod+]",
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
   // Round the window's regions, and through Textus AI's changes.
@@ -139,6 +147,8 @@ const MAC_RESERVED_COMBOS = new Set([
 export function isReservedCombo(combo: string): boolean {
   return (
     RESERVED_COMBOS.has(combo) ||
-    (modIsMeta() ? MAC_RESERVED_COMBOS.has(combo) : combo === "alt+f4")
+    (modIsMeta()
+      ? MAC_RESERVED_COMBOS.has(combo) || isMacSystemCombo(combo)
+      : combo === "alt+f4")
   );
 }

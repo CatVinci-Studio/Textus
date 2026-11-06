@@ -53,6 +53,8 @@ export interface UiState {
   /** The plugins whose first scheduled job brought up the notice about
    *  background mode, once each. */
   pluginsToldOfSchedule: string[];
+  /** "plugin key" pairs whose manifest key was someone else's, told once. */
+  pluginKeysTold: string[];
   /** The split the window was left in, its panes by their documents'
    *  paths (app/split/split-restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */

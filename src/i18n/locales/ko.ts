@@ -1643,4 +1643,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
   pluginKeysTaken:
     "{name}이(가) 키보드를 쓸 수 없습니다. {holder}이(가) 사용 중입니다. 설정 › 확장 기능에서 하나를 끄세요.",
+  shortcutIndentListItem: "목록 항목 들여쓰기",
+  shortcutOutdentListItem: "목록 항목 내어쓰기",
+  pluginKeyTaken:
+    "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",
 } satisfies Translation;

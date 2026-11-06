@@ -77,12 +77,16 @@ export function usePluginWindow({
       strings: () => tRef.current,
       language: () => languageRef.current,
       dark: windowIsDark,
+      keys: () => ({
+        shortcuts: settingsRef.current.settings.shortcuts,
+        overrides: settingsRef.current.settings.commandShortcuts,
+      }),
     });
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
     void loadPlugins()
       .then(() => migrateOfficialPlugins())
       .catch(() => {});
-  }, [tRef, languageRef]);
+  }, [tRef, languageRef, settingsRef]);
 
   useEffect(() => {
     const addTab = (tab: Partial<DocTab>, where: Where = "tab") => {

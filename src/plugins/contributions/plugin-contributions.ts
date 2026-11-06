@@ -26,6 +26,7 @@ import {
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
+import { pluginKey } from "./plugin-keys";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -86,7 +87,11 @@ export function applyContributions(
       registerCommand({
         id: command.command,
         title: () => text(command.title),
-        shortcut: keybindings.find((k) => k.command === command.command)?.key,
+        shortcut: pluginKey(
+          { id, name: text(manifest.name) },
+          { id: command.command, title: text(command.title) },
+          keybindings.find((k) => k.command === command.command)?.key,
+        ),
         run: (...args) =>
           command.runs
             ? runCommand(command.runs.command, command.runs.args)

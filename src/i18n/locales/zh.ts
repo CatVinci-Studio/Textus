@@ -1568,4 +1568,8 @@ export default {
     "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
   pluginKeysTaken:
     "「{name}」无法接管键盘：「{holder}」正在使用。请在 设置 › 扩展 中关掉其中一个。",
+  shortcutIndentListItem: "列表项缩进",
+  shortcutOutdentListItem: "列表项取消缩进",
+  pluginKeyTaken:
+    "「{name}」：{key} 已被「{owner}」使用，所以没有绑定到“{command}”。可在 设置 › 快捷键 中另设。",
 } satisfies Translation;

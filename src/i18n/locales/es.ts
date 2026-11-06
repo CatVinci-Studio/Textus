@@ -1727,4 +1727,8 @@ para usar una.
     "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
   pluginKeysTaken:
     "{name} no puede usar el teclado: lo tiene {holder}. Desactiva uno de los dos en Ajustes › Extensiones.",
+  shortcutIndentListItem: "Aumentar sangría del elemento",
+  shortcutOutdentListItem: "Reducir sangría del elemento",
+  pluginKeyTaken:
+    "{name}: {key} ya es de «{owner}», así que no se asignó a «{command}». Elige otro en Ajustes › Atajos de teclado.",
 } satisfies Translation;
