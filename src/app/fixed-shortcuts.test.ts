@@ -89,6 +89,12 @@ describe("the fixed shortcuts in Settings", () => {
       "f7",
       "shift+f7",
       "mod+backspace",
+      // The editor's own keymaps.
+      ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `mod+alt+${n}`),
+      "mod+alt+c",
+      "mod+shift+b",
+      "mod+[",
+      "mod+]",
     ]);
     expect(mac.filter((combo) => !outsideMenuRs.has(combo)).sort()).toEqual(
       [...new Set(native)].sort(),
@@ -114,6 +120,26 @@ describe("the fixed shortcuts in Settings", () => {
       expect(fixedCombos(platform)).toEqual(
         expect.arrayContaining(["mod+b", "mod+i", "mod+enter", "mod+z"]),
       );
+  });
+
+  it("list the editor's own block keys, which no menu item names", () => {
+    for (const platform of PLATFORMS)
+      expect(fixedCombos(platform)).toEqual(
+        expect.arrayContaining([
+          "mod+alt+1",
+          "mod+alt+c",
+          "mod+shift+b",
+          "mod+[",
+        ]),
+      );
+  });
+
+  it("keep macOS's own keys from being bound on a Mac only", () => {
+    onPlatform("macos");
+    expect(isReservedCombo("mod+alt+d")).toBe(true);
+    expect(isReservedCombo("mod+h")).toBe(true);
+    onPlatform("windows");
+    expect(isReservedCombo("mod+alt+d")).toBe(false);
   });
 
   it.each(PLATFORMS)("can't be bound to an action (%s)", (platform) => {

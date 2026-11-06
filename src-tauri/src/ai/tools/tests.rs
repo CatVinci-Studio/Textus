@@ -292,9 +292,9 @@ fn measure_text_counts_exactly() {
 }
 
 #[test]
-fn the_rules_tools_are_in_every_mode() {
-    for mode in [AgentMode::Review, AgentMode::Write, AgentMode::Write] {
-        let names = names(&builtin_tools(false, false, mode, false));
+fn the_rules_tools_are_in_the_document_modes() {
+    for mode in [AgentMode::Review, AgentMode::Write] {
+        let names = names(&ToolRegistry::builtin(false, false, mode, false).tools);
         assert!(
             names.iter().any(|n| n == "check_conventions")
                 && names.iter().any(|n| n == "measure_text"),
@@ -304,15 +304,56 @@ fn the_rules_tools_are_in_every_mode() {
 }
 
 #[test]
+fn create_mode_is_offered_skills_and_project_files_only() {
+    // Create makes themes, plugins and skills: nothing that reads, checks
+    // or changes the document.
+    assert_eq!(
+        names(&ToolRegistry::builtin(true, true, AgentMode::Create, false).tools),
+        ["use_skill", "find_files", "search_files", "read_file"]
+    );
+    assert!(names(&ToolRegistry::builtin(false, false, AgentMode::Create, false).tools).is_empty());
+}
+
+#[test]
 fn the_project_file_tools_are_offered_only_with_a_project_folder() {
     let names = |has_root: bool| -> Vec<String> {
-        names(&builtin_tools(false, has_root, AgentMode::Write, false))
+        names(&ToolRegistry::builtin(false, has_root, AgentMode::Write, false).tools)
             .into_iter()
             .filter(|n| n.ends_with("_files") || n == READ_FILE_TOOL_NAME)
             .collect()
     };
     assert_eq!(names(true), ["find_files", "search_files", "read_file"]);
     assert!(names(false).is_empty());
+}
+
+#[test]
+fn a_shared_registry_takes_only_the_tools_every_mode_offers() {
+    let mut tools = ToolRegistry::shared();
+    tools.add(runtime_tool("comments", Access::Proposes, DOCUMENT_MODES));
+    tools.add(runtime_tool("edits", Access::Proposes, EDITING_MODES));
+    tools.add(runtime_tool("lookup", Access::ReadOnly, EVERY_MODE));
+    assert_eq!(names(&tools.tools), ["lookup"]);
+}
+
+#[test]
+fn the_file_registry_has_the_project_files_and_nothing_of_the_document() {
+    assert_eq!(
+        names(&ToolRegistry::files(false).tools),
+        ["find_files", "search_files", "read_file"]
+    );
+}
+
+#[test]
+fn every_document_tool_left_out_of_a_mode_is_left_out_of_the_shared_registry() {
+    let mut shared = ToolRegistry::shared();
+    shared.extend(document_tools());
+    for mode in EVERY_MODE {
+        let in_mode = names(&ToolRegistry::builtin(false, false, *mode, false).tools);
+        for name in names(&shared.tools) {
+            assert!(in_mode.contains(&name), "{name} isn't offered in {mode:?}");
+        }
+    }
+    assert!(!shared.offers(PROPOSE_EDIT_TOOL_NAME) && !shared.offers(ADD_COMMENT_TOOL_NAME));
 }
 
 #[test]
@@ -411,7 +452,8 @@ fn read_document_reads_an_inclusive_line_range() {
 #[test]
 fn review_mode_does_not_receive_the_edit_tool() {
     let edit_tool = |mode| {
-        builtin_tools(true, true, mode, false)
+        ToolRegistry::builtin(true, true, mode, false)
+            .tools
             .into_iter()
             .find(|tool| tool.spec.name == PROPOSE_EDIT_TOOL_NAME)
     };

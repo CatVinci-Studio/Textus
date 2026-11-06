@@ -57,6 +57,7 @@ export const iosFiles = {
       path: e.url,
       is_dir: e.folder,
       hidden: e.name.startsWith("."),
+      ignored: false,
     })),
   /** Picked files and folders that survive a relaunch. */
   remembered: async () =>

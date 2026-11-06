@@ -64,6 +64,9 @@ pub struct SavedImage {
     /// What goes into the markdown: a path relative to the document, or an
     /// absolute path for a draft that has no folder yet.
     pub(crate) src: String,
+    /// In an Obsidian vault that writes wiki links: the `![[…]]` to insert
+    /// instead of a Markdown image.
+    pub(crate) embed: Option<String>,
 }
 
 /// Where the images of a document with no file yet are kept. They move into

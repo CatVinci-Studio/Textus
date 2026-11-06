@@ -55,6 +55,8 @@ export interface DocTab {
   /** A plugin's view or custom editor shown instead of a document; a custom
    *  editor's file is its `resource`, which the plugin saves itself. */
   view?: PluginTabView;
+  /** The start page, shown until something opens in this tab. */
+  start?: boolean;
 }
 
 // The document part of a tab in flight between windows.
@@ -78,6 +80,7 @@ export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
 // A tab's display name everywhere one is shown.
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
+  if (showsStartPage(tab)) return t.startPageTab;
   if (tab.view)
     return (
       tab.view.title ??
@@ -89,6 +92,16 @@ export function tabTitle(tab: DocTab, t: Strings): string {
     return basename(tab.importedFrom).replace(/\.docx$/i, "");
   if (tab.draftTitle) return tab.draftTitle;
   return t.untitledTab;
+}
+
+/** A tab showing the start page: opening anything here takes its place. */
+export function makeStartTab(): DocTab {
+  return { ...makeBlankTab(), start: true };
+}
+
+/** Whether `tab` still shows the start page: nothing has opened in it. */
+export function showsStartPage(tab: DocTab): boolean {
+  return !!tab.start && tabIsUntouchedDraft(tab);
 }
 
 export function makeBlankTab(): DocTab {

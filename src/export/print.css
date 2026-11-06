@@ -17,7 +17,7 @@
   .tab-bar,
   .window-bar,
   .close-prompt-overlay,
-  .update-toast,
+  .corner-stack,
   .pdf-export-overlay {
     display: none !important;
   }

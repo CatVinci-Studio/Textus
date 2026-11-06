@@ -42,4 +42,4 @@ flowchart LR
 
 ---
 
-这里只有编辑器本身。桌面版还有 Textus AI 陪你写作和修改，以及文件夹、主题、图片，导出 PDF、Word、HTML 等更多功能。[下载 Textus](https://textus.catvinci.com/#download)，免费支持 macOS、Windows 和 Linux。
+这里只有编辑器本身。桌面版还有 Textus AI 陪你写作和修改，以及文件夹、主题、图片，导出 PDF、Word、HTML 等更多功能。[下载 Textus](https://textus.md/#download)，免费支持 macOS、Windows 和 Linux。

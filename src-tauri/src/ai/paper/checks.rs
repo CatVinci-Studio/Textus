@@ -7,12 +7,7 @@ use regex::Regex;
 use serde_json::Value;
 use std::sync::OnceLock;
 
-/// How far a section's length may be from its target, as fractions of it:
-/// within PASS it holds; within SOFT it is kept if nothing else is wrong
-/// (a writer's last try); beyond, it is sent back. The first real runs came
-/// back at twice their targets.
-pub(super) const PASS: (f64, f64) = (0.7, 1.2);
-pub(super) const SOFT: (f64, f64) = (0.5, 1.4);
+use super::tuning::{PASS, SOFT};
 
 /// The most a section of `target` may run to, as writers are told.
 pub(crate) fn most(target: u32) -> u32 {
@@ -55,29 +50,48 @@ pub(super) fn bare_number() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]($|[^(\d])").unwrap())
 }
 
-/// `markdown`'s fenced blocks, as (language, body).
-pub(super) fn fences(markdown: &str) -> Vec<(String, String)> {
+/// A closed fenced block: its language, body, and opening and closing lines.
+pub(super) struct Fence {
+    pub language: String,
+    pub body: String,
+    pub open: usize,
+    pub close: usize,
+}
+
+/// `markdown`'s closed fenced blocks, its lines counted as `split('\n')` counts them.
+pub(super) fn fence_spans(markdown: &str) -> Vec<Fence> {
     let mut out = Vec::new();
-    let mut open: Option<(String, String)> = None;
-    for line in markdown.lines() {
+    let mut open: Option<Fence> = None;
+    for (i, line) in markdown.split('\n').enumerate() {
+        let line = line.strip_suffix('\r').unwrap_or(line);
         let trimmed = line.trim_start();
         match open.take() {
             None if trimmed.starts_with("```") => {
-                open = Some((
-                    trimmed.trim_start_matches('`').trim().to_lowercase(),
-                    String::new(),
-                ));
+                open = Some(Fence {
+                    language: trimmed.trim_start_matches('`').trim().to_lowercase(),
+                    body: String::new(),
+                    open: i,
+                    close: i,
+                });
             }
             None => {}
-            Some(block) if trimmed.starts_with("```") => out.push(block),
-            Some((lang, mut body)) => {
-                body.push_str(line);
-                body.push('\n');
-                open = Some((lang, body));
+            Some(fence) if trimmed.starts_with("```") => out.push(Fence { close: i, ..fence }),
+            Some(mut fence) => {
+                fence.body.push_str(line);
+                fence.body.push('\n');
+                open = Some(fence);
             }
         }
     }
     out
+}
+
+/// `markdown`'s fenced blocks, as (language, body).
+pub(super) fn fences(markdown: &str) -> Vec<(String, String)> {
+    fence_spans(markdown)
+        .into_iter()
+        .map(|f| (f.language, f.body))
+        .collect()
 }
 
 /// The section's prose, without its fences, pictures and marks: what its
@@ -117,25 +131,67 @@ pub(crate) fn prose_length(markdown: &str, language: &str) -> u32 {
     length(&prose(markdown), language)
 }
 
-/// Whether a chart block's JSON has what the chart renderer needs.
+/// The most series and points a series the chart renderer draws
+/// (`MAX_SERIES` and `MAX_POINTS` in `src/editor/chart/chart-spec.ts`).
+const MOST_SERIES: usize = 8;
+const MOST_POINTS: usize = 1000;
+
+/// Whether a chart block's JSON is one the chart renderer draws: it refuses
+/// all `parseChartSpec` (`src/editor/chart/chart-spec.ts`) refuses, which
+/// `src/editor/chart/chart-cases.json` holds both to. A chart that passed
+/// here but not there reached a paper as its JSON source.
 pub(super) fn chart_holds(body: &str) -> Result<(), String> {
     let spec: Value =
         serde_json::from_str(body).map_err(|e| format!("its JSON doesn't parse ({e})"))?;
-    let kind = spec["type"].as_str().unwrap_or("bar");
+    if !spec.is_object() {
+        return Err("it must be one JSON object".into());
+    }
+    let kind = match &spec["type"] {
+        Value::Null => "bar",
+        kind => kind.as_str().unwrap_or("?"),
+    };
     if !["bar", "line", "area", "pie", "scatter"].contains(&kind) {
         return Err(format!(
-            "\"type\" {kind:?} isn't bar, line, area, pie or scatter"
+            "\"type\" {} isn't bar, line, area, pie or scatter",
+            spec["type"]
         ));
     }
     let series = spec["series"]
         .as_array()
         .filter(|s| !s.is_empty())
         .ok_or("it needs a non-empty \"series\"")?;
-    if series
-        .iter()
-        .any(|s| s["data"].as_array().is_none_or(|d| d.is_empty()))
-    {
-        return Err("every series needs a non-empty \"data\" list".into());
+    if series.len() > MOST_SERIES {
+        return Err(format!("at most {MOST_SERIES} series"));
+    }
+    let number = |v: &Value| v.as_f64().is_some_and(f64::is_finite);
+    for (i, s) in series.iter().enumerate() {
+        let n = i + 1;
+        let data = s["data"]
+            .as_array()
+            .filter(|d| !d.is_empty())
+            .ok_or("every series needs a non-empty \"data\" list")?;
+        if data.len() > MOST_POINTS {
+            return Err(format!("at most {MOST_POINTS} points a series"));
+        }
+        if kind == "scatter" {
+            let pair = |p: &Value| {
+                p.as_array()
+                    .is_some_and(|p| p.len() == 2 && p.iter().all(number))
+            };
+            if !data.iter().all(pair) {
+                return Err(format!("series {n}: \"data\" must be [x, y] number pairs"));
+            }
+        } else if !data.iter().all(number) {
+            return Err(format!(
+                "series {n}: \"data\" must be plain numbers - no units, percent signs, quotes or nulls"
+            ));
+        }
+        if !s["name"].is_null() && !s["name"].is_string() {
+            return Err(format!("series {n}: \"name\" must be text"));
+        }
+        if kind == "pie" && i == 0 && data.iter().any(|v| v.as_f64() < Some(0.0)) {
+            return Err("a pie's values can't be negative".into());
+        }
     }
     if spec["x"].is_array() {
         return Err("\"x\" is the x axis' title, one text; the categories go in \"labels\"".into());
@@ -150,15 +206,16 @@ pub(super) fn chart_holds(body: &str) -> Result<(), String> {
         .filter_map(|s| s["data"].as_array().map(Vec::len))
         .max()
         .unwrap_or(0);
-    if kind != "scatter" {
-        if let Some(labels) = spec["labels"].as_array() {
-            if labels.len() < points {
-                return Err(format!(
-                    "{} \"labels\" for {points} data points: one label each",
-                    labels.len()
-                ));
-            }
+    match &spec["labels"] {
+        Value::Null => {}
+        Value::Array(labels) if kind != "scatter" && labels.len() < points => {
+            return Err(format!(
+                "{} \"labels\" for {points} data points: one label each",
+                labels.len()
+            ));
         }
+        Value::Array(_) => {}
+        _ => return Err("\"labels\" must be a list".into()),
     }
     if spec["source"]
         .as_str()
@@ -177,69 +234,103 @@ pub(super) fn note_id() -> &'static Regex {
 }
 
 /// What is wrong with `markdown` as section `section` of `paper`, all at once.
-/// `sources`: the numbers this section may cite, with their addresses.
-/// Whether a problem `problems` found is soft: the length off its target,
-/// or a planned figure missing. A section with only these is kept rather
-/// than lose the paper; a wrong citation or a chart that can't be drawn is
-/// never kept.
-pub(crate) fn is_soft(problem: &str) -> bool {
-    problem.starts_with("It is ") || problem.contains(" planned ")
+/// One thing wrong with a drafted section, as its writer is told it.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Problem {
+    pub text: String,
+    /// Whether a section with only soft problems is kept rather than lose
+    /// the paper: its length off its target, a planned figure missing, a
+    /// post too long. A wrong citation or a chart that can't be drawn is
+    /// never kept.
+    pub soft: bool,
 }
 
+impl Problem {
+    pub(crate) fn hard(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            soft: false,
+        }
+    }
+
+    pub(crate) fn soft(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            soft: true,
+        }
+    }
+}
+
+/// So a list of problems joins as text, as the writer is sent it.
+impl std::borrow::Borrow<str> for Problem {
+    fn borrow(&self) -> &str {
+        &self.text
+    }
+}
+
+/// Whether every problem in `wrong` is soft (none at all is too).
+pub(crate) fn all_soft(wrong: &[Problem]) -> bool {
+    wrong.iter().all(|p| p.soft)
+}
+
+/// What is wrong with a drafted section, every problem at once.
+/// `sources`: the numbers this section may cite, with their addresses.
 pub(crate) fn problems(
     markdown: &str,
     section: &OutlineSection,
     sources: &[(u32, String)],
     language: &str,
-) -> Vec<String> {
+) -> Vec<Problem> {
     let mut out = Vec::new();
     let length = length(&prose(markdown), language);
     let target = section.target_words as f64;
     let ratio = length as f64 / target.max(1.0);
     let most = most(section.target_words);
     if ratio > SOFT.1 {
-        out.push(format!(
+        out.push(Problem::hard(format!(
             "Far too long: {length} against about {} - cut it to at most {most}, keeping the strongest evidence.",
             section.target_words
-        ));
+        )));
     } else if ratio < SOFT.0 {
-        out.push(format!(
+        out.push(Problem::hard(format!(
             "Far too short: {length} against about {} - develop the key points with the notes' evidence.",
             section.target_words
-        ));
+        )));
     } else if ratio < PASS.0 || ratio > PASS.1 {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "It is {length} long; the section is to be about {} (at most {most}).",
             section.target_words
-        ));
+        )));
     }
     let mut cited = 0;
     for c in cited_link().captures_iter(markdown) {
         let n: u32 = c[1].parse().unwrap_or(0);
         match sources.iter().find(|(m, _)| *m == n) {
             Some((_, url)) if same_address(url, &c[2]) => cited += 1,
-            Some((_, url)) => {
-                out.push(format!("[{n}] links to {} but source {n} is {url}.", &c[2]))
-            }
-            None => out.push(format!("[{n}] isn't one of this section's sources.")),
+            Some((_, url)) => out.push(Problem::hard(format!(
+                "[{n}] links to {} but source {n} is {url}.",
+                &c[2]
+            ))),
+            None => out.push(Problem::hard(format!(
+                "[{n}] isn't one of this section's sources."
+            ))),
         }
     }
     if bare_number().is_match(&prose(markdown)) {
-        out.push(
-            "A citation is written as [n] alone: write it [n](address), with the source's address."
-                .into(),
-        );
-    }
-    if let Some(found) = numbered_figure().find(&prose(markdown)) {
-        out.push(format!(
-            "\"{}\" names a figure by a number: the figures are numbered afterwards - call it the diagram, chart or picture below or above.",
-            found.as_str()
+        out.push(Problem::hard(
+            "A citation is written as [n] alone: write it [n](address), with the source's address.",
         ));
     }
+    if let Some(found) = numbered_figure().find(&prose(markdown)) {
+        out.push(Problem::hard(format!(
+            "\"{}\" names a figure by a number: the figures are numbered afterwards - call it the diagram, chart or picture below or above.",
+            found.as_str()
+        )));
+    }
     if cited == 0 && !sources.is_empty() {
-        out.push(
-            "Nothing is cited: mark each fact from the notes with its source, [n](address).".into(),
-        );
+        out.push(Problem::hard(
+            "Nothing is cited: mark each fact from the notes with its source, [n](address).",
+        ));
     }
     let blocks = fences(markdown);
     let count = |kind: FigureKind| section.figures.iter().filter(|f| f.kind == kind).count();
@@ -248,10 +339,10 @@ pub(crate) fn problems(
         .filter(|(lang, body)| lang == "mermaid" && !body.trim().is_empty())
         .count();
     if mermaid < count(FigureKind::Mermaid) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned diagram(s), {mermaid} ```mermaid block(s).",
             count(FigureKind::Mermaid)
-        ));
+        )));
     }
     let charts: Vec<&String> = blocks
         .iter()
@@ -260,29 +351,60 @@ pub(crate) fn problems(
         .collect();
     for (i, body) in charts.iter().enumerate() {
         if let Err(why) = chart_holds(body) {
-            out.push(format!("Chart {}: {why}.", i + 1));
+            out.push(Problem::hard(format!("Chart {}: {why}.", i + 1)));
         }
     }
     if charts.len() < count(FigureKind::Chart) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned chart(s), {} ```chart block(s).",
             count(FigureKind::Chart),
             charts.len()
-        ));
+        )));
     }
     let pictures = markdown.matches("](textus-picture:").count();
     if pictures < count(FigureKind::Generated) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned picture(s), {pictures} textus-picture line(s).",
             count(FigureKind::Generated)
-        ));
+        )));
     }
     let web = markdown.matches(WEB_FIGURE_MARK).count();
     if web < count(FigureKind::Web) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned web picture(s), {web} mark(s).",
             count(FigureKind::Web)
-        ));
+        )));
     }
     out
+}
+
+#[cfg(test)]
+mod chart_tests {
+    use super::chart_holds;
+    use serde_json::Value;
+
+    #[test]
+    fn a_chart_passes_only_if_the_renderer_would_draw_it() {
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../src/editor/chart/chart-cases.json"
+        ))
+        .unwrap();
+        for case in cases["cases"].as_array().unwrap() {
+            let spec = case["spec"].to_string();
+            let draws = case["draws"].as_bool().unwrap();
+            assert_eq!(
+                chart_holds(&spec).is_ok(),
+                draws,
+                "{spec}: {:?}",
+                chart_holds(&spec)
+            );
+        }
+    }
+
+    #[test]
+    fn a_series_past_the_renderer_s_points_is_refused() {
+        let data: Vec<u32> = (0..1001).collect();
+        let spec = serde_json::json!({ "series": [{ "data": data }] }).to_string();
+        assert!(chart_holds(&spec).unwrap_err().contains("at most 1000"));
+    }
 }

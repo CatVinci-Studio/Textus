@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for taking the time to report this. Please search [existing issues](https://github.com/CatVinci-Studio/Textus/issues?q=is%3Aissue) first; if yours is there, a 👍 helps more than a new issue.
 
-        Not sure it's a bug? **Help › Markdown Guide** and **Help › AI Features Guide** in the app cover most features, and [Discord](https://textus.catvinci.com/discord) is the place for "how do I…" questions.
+        Not sure it's a bug? **Help › Markdown Guide** and **Help › AI Features Guide** in the app cover most features, and [Discord](https://textus.md/discord) is the place for "how do I…" questions.
 
   - type: textarea
     id: description

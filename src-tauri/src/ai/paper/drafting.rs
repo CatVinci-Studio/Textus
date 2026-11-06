@@ -49,8 +49,13 @@ pub async fn ai_paper_draft(
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };
+    // Each section's diagrams and charts are drawn by the window it is
+    // written for before it is kept.
+    let figures_channel = channel.clone();
+    let draw = figures::by_window(move |event| figures_channel.send(event).is_ok());
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(None).await?;
+        let throttled = throttle::Throttled::new(&agent, session.entry.paper_at_once);
         let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
         let mut keep_spent = KeepSpent {
             root: &root,
@@ -60,7 +65,7 @@ pub async fn ai_paper_draft(
             done: false,
         };
         let metered = model::Metered {
-            inner: &agent,
+            inner: &throttled,
             budget: &budget,
         };
         let guidance = session.guidance(&files.paper.topic);
@@ -93,10 +98,8 @@ pub async fn ai_paper_draft(
         let written = (0..outline.sections.len())
             .map(|i| load_section(&root, &files.paper.id, i))
             .collect::<Result<Vec<_>, _>>()?;
-        let mut sections: Vec<String> = Vec::with_capacity(outline.sections.len());
-        let mut drafted = |i: usize, markdown: &str| {
+        let mut finished = |i: usize, markdown: &str| {
             save_section(&root, &files.paper.id, i, markdown)?;
-            sections.push(markdown.to_string());
             // The stream's last words may have been held back.
             send(PaperEvent::SectionText {
                 index: i as u32,
@@ -108,15 +111,16 @@ pub async fn ai_paper_draft(
             });
             Ok(())
         };
-        draft::draft(
+        let mut sections = draft::draft(
             &agent,
             &files.paper,
             &outline,
             &files.dossier,
             &written,
             &started,
-            &mut drafted,
+            &mut finished,
             &send,
+            Some(&draw),
         )
         .await?;
 
@@ -145,6 +149,7 @@ pub async fn ai_paper_draft(
                 &issues,
                 &revising,
                 &send,
+                Some(&draw),
             )
             .await;
             for i in changed {
@@ -167,9 +172,7 @@ pub async fn ai_paper_draft(
         let language = &files.paper.language;
         // Web pictures first: one Commons has nothing for becomes a picture
         // to generate, begun with the planned ones.
-        for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
-        }
+        let mut sections = web_figures::resolve(&sections, web_figures::find_on_commons).await;
         // Pictures begun before the figures are numbered, so one that can't
         // be made leaves no caption behind.
         let pictures = session.pictures(request.image_model.as_ref());
@@ -179,20 +182,31 @@ pub async fn ai_paper_draft(
                 None => finish::without_pictures(section),
             };
         }
+        // A figure no check saw drawn is drawn now, and taken out if it
+        // can't be: the paper never shows a diagram or chart as its code.
+        for section in &mut sections {
+            *section = figures::drawable(Some(&draw), section).await;
+        }
         finish::number_figures(&mut sections, language);
         // Numbered first, so only the sources cited are looked up.
         let mut dossier = finish::number_citations(&mut sections, &files.dossier);
-        finish::title_sources(&mut dossier).await;
+        let plain: Vec<String> = sections
+            .iter()
+            .map(|s| finish::plain_citations(s))
+            .collect();
+        // The opening reads the text, not the reference list: it is written
+        // while the sources' titles are looked up.
+        let ((), opening) = futures_util::future::join(
+            finish::title_sources(&mut dossier),
+            finish::opening(&agent, &files.paper, &outline, &plain),
+        )
+        .await;
         let references = finish::references(
             &sections,
             &dossier,
             finish::references_heading(language, files.paper.genre),
         );
-        let sections: Vec<String> = sections
-            .iter()
-            .map(|s| finish::plain_citations(s))
-            .collect();
-        let opening = finish::opening(&agent, &files.paper, &outline, &sections).await;
+        let sections = plain;
         send(PaperEvent::Ready {
             markdown: finish::assemble(&opening, &sections, references.as_deref()),
         });

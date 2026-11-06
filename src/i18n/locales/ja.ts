@@ -341,6 +341,17 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグイン「{name}」に次の問題があります：\n{problems}\nコードから原因を見つけて直してください。",
   chatSaveSkill: "このスキルを保存",
   chatUpdateSkill: "スキルを更新",
+  skillSaveAnyway: "それでも保存",
+  skillWarnCreateAsked:
+    "作成モードでの実行を求めています。そこではスキルを自分で書けます。作成はオフのままです。すべての行を信頼できる場合だけオンにしてください。",
+  skillWarnCreateMode:
+    "作成モードでは、スキルを自分で書いたり変えたりできます。すべての行を信頼できる場合だけ残してください。",
+  skillWarnPromptInjection:
+    "指示が Textus AI 自身の指示を上書きしようとしているように見えます（「以前の指示を無視」など）。保存する前に読んでください。",
+  skillWarnHiddenText:
+    "見えない文字が含まれており、指示が隠れている可能性があります。保存する前に読んでください。",
+  chatShowCode: "コードを見る",
+  chatShowSkill: "スキルの全文を見る",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",
@@ -412,6 +423,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperSectionDrafted: "執筆済み",
   paperSectionRevising: "修正中",
   paperSectionFailed: "失敗",
+  paperSectionsAtOnce: {
+    other: "{n} 節を同時に執筆中 · {of} 節中 {done} 節完了",
+  },
+  paperRevisingAtOnce: {
+    other: "{n} 節を同時に修正中 · {of} 節中 {done} 節完了",
+  },
+  paperQuestionsAtOnce: {
+    other: "{n} 件の問いを同時に調査中 · {of} 件中 {done} 件完了",
+  },
+  paperDoneOf: "{of} 件中 {done} 件完了",
   paperOutlineRetry:
     "第 {n} 稿：前の案がチェックを通らなかったため、作り直しています…",
   paperPapersOnly:
@@ -429,6 +450,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webSources: "出典",
   proposalSourcesAsFootnotes: "出典を脚注として追加",
   menuToggleSplitView: "ソースとプレビュー",
+  splitPreview: "プレビュー",
   menuToggleZenMode: "禅モード",
   menuSplitRight: "右に分割",
   menuCommandPalette: "コマンドパレット…",
@@ -492,8 +514,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeEmptyDraft: "文書を保存すると、そのフォルダーがここに表示されます。",
   outlineEmpty: "まだ見出しがありません。# で始まる行がここに表示されます。",
   treeRefresh: "更新",
-  menuOpenFolder: "フォルダーを開く…",
-  menuCloseFolder: "フォルダーを閉じる",
+  menuOpenFolder: "プロジェクトを開く…",
+  menuCloseFolder: "プロジェクトを閉じる",
   menuCopyPath: "パスをコピー",
   folderTooBroad:
     "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
@@ -503,7 +525,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchCapped:
     "最初の {n} 件のファイルだけを検索しました。すべて検索するには、もっと小さいフォルダーを開いてください。",
   treeSearchTooBroad:
-    "このフォルダーは範囲が広すぎるため検索できません。「ファイル › フォルダーを開く…」でもっと具体的なフォルダーを開いてください。",
+    "このフォルダーは範囲が広すぎるため検索できません。「ファイル › プロジェクトを開く…」でもっと具体的なフォルダーを開いてください。",
   treeSearchFailed: "このフォルダーを読み込めません。",
   treeSearchScope: "表示",
   treeSearchScopeAll: "すべてのファイル",
@@ -521,6 +543,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeRenameItem: "名前を変更…",
   treeRename: "名前を変更",
   treeRenamePrompt: "新しい名前",
+  treeUpdateLinksConfirm:
+    "「{name}」へのリンクと、その中のリンクを更新して使えるままにしますか？",
+  treeUpdateLinks: "リンクを更新",
+  treeKeepLinks: "更新しない",
+  treeUpdateLinksFailed: "次の書類のリンクを更新できませんでした: {names}",
+  treeDocumentFolder: "現在の書類のフォルダー",
+  treeOpenAsFolder: "プロジェクトとして開く",
   treeTrashItem: "ゴミ箱に入れる",
   treeTrash: "ゴミ箱に入れる",
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
@@ -582,6 +611,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   alertWarning: "警告",
   alertCaution: "注意",
   tocLabel: "目次",
+  completionCommands: "コマンド",
+  completionEmoji: "絵文字",
+  completionNotes: "ノート",
   tocEmpty: "見出しはまだありません",
   settingsTitle: "設定",
   settingsSearchPlaceholder: "設定を検索",
@@ -747,6 +779,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   deleteRow: "行を削除",
   deleteColumn: "列を削除",
   deleteTable: "表を削除",
+  tableToMarkdown: "Markdown の表に変換",
+  tableToMarkdownMerged: "Markdown の表に変換（結合されたセルがあります）",
+  tableToMarkdownBlocks: "Markdown の表に変換（セルにリストや段落があります）",
   apiKeyLabelTemplate: "{name}のAPIキー",
   apiKeyOptionalHintTemplate:
     "APIキーは不要です。{name}で認証を有効にした場合のみ入力します。",
@@ -937,6 +972,25 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "書き出した Word ファイルに、このファイルのスタイル・フォント・余白を使います。",
   docxTemplateNone: "Pandoc の既定",
   docxTemplateClear: "既定に戻す",
+  exportTocLabel: "Pandoc の書き出しに目次を付ける",
+  exportNumberHeadingsLabel: "Pandoc の書き出しで見出しに番号を付ける",
+  exportNumberHeadingsHelp:
+    "見出し番号プラグインと同じ付け方です。最上位の見出しが一つだけなら、それを題名とみなして番号を付けません。",
+  exportBibliographyLabel: "参考文献",
+  exportBibliographyHelp:
+    ".bib ファイルを選びます。Word や EPUB など Pandoc で書き出すと、[@key] の引用が参考文献になり、一覧が末尾に付きます。",
+  exportBibliographyNone: "なし",
+  exportBibliographyClear: "外す",
+  exportCslLabel: "引用スタイル",
+  exportCslHelp:
+    "参考文献の .csl ファイル。選ばない場合、Pandoc はシカゴ（著者・年）形式を使います。",
+  pandocArgsLabel: "Pandoc の引数",
+  pandocArgsHelp:
+    "この形式の Pandoc コマンドに語ごとに加えます。シェルは通しません。空白を含む値は引用符で囲んでください。--from、--to、--output は Textus が設定します。",
+  pandocArgsAll: "すべての形式",
+  pandocArgsOwned: "{arg} は Textus が設定します。外してください。",
+  pandocErrorSettings:
+    "Pandoc の設定は 設定 › {page} › {group} と、その詳細設定の引数にあります。",
   pdfLightColorsLabel: "PDF を明るい配色で書き出す",
   infoTipLabel: "「{label}」について",
   infoTipLabelPlain: "詳細",
@@ -998,6 +1052,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuUndo: "取り消す",
   menuRedo: "やり直す",
   menuFindReplace: "検索と置換…",
+  menuReplace: "置換…",
+  menuFindNext: "次を検索",
+  menuStrikethrough: "取り消し線",
+  menuInlineCode: "インラインコード",
+  menuInsertLink: "リンク",
   menuHeadingTemplate: "見出し {n}",
   menuBulletList: "箇条書き",
   menuOrderedList: "番号付きリスト",
@@ -1159,11 +1218,18 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   newDocumentModeLabel: "文書を開く方法",
   newDocumentModeWindow: "新しいウィンドウ",
   newDocumentModeTab: "このウィンドウの新しいタブ",
-  restoreSessionLabel: "起動時に前回のセッションを復元",
+  startPageTab: "スタート",
+  startupOpenLabel: "起動時に開く",
+  startupOpenSession: "前回の書類",
+  startupOpenStartPage: "スタートページ",
+  startupOpenBlank: "空の書類",
+  closeLastLabel: "最後の書類を閉じたとき",
+  closeLastWindow: "ウインドウを閉じる",
+  closeLastStartPage: "スタートページを表示",
+  startPageRecentProjects: "最近のプロジェクト",
+  startPageRecentFiles: "最近のファイル",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
   autosaveLabel: "自動保存",
-  autosaveHint:
-    "フォルダを開いているときは、名称未設定の書類もタイトルを名前にしてそのフォルダに保存します。",
   settingsFileLabel: "設定ファイル",
   settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",
   settingsFileExport: "書き出す…",
@@ -1260,6 +1326,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   fileChangedOnDiskMessage:
     "このファイルは他のプログラムによって変更されています。保存するとその変更が上書きされます。",
   fileChangedOnDiskOverwrite: "上書き",
+  fileGoneOnDiskTitle: "ファイルが移動または削除されました",
+  fileGoneOnDiskMessage:
+    "このファイルは開いたときの場所にありません。ほかのアプリで移動、名前変更、または削除された可能性があります。保存すると元の場所に作り直します。",
+  fileGoneOnDiskRecreate: "元の場所に保存",
   saveFailedTitle: "保存できませんでした",
   saveFailedMessage:
     "「{name}」は保存されていません。変更内容はそのまま残っています。",
@@ -1293,6 +1363,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageFolderSubfolder: "サブフォルダー",
   imageFolderSameFolder: "ドキュメントと同じフォルダー",
   imageFolderNameLabel: "サブフォルダー名",
+  imageFolderProjectNote:
+    "このプロジェクトは画像を {folder} に保存します（{source} で指定）。",
   imageFolderInvalid:
     "ドキュメントのフォルダー内のフォルダーを指定します（例：img）。",
   imageHostLabel: "画像ホスティング",
@@ -1548,19 +1620,20 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsOpenScripts: "スクリプトフォルダを開く",
   pluginPackageFilter: "Textus プラグイン",
   pluginsInstalledGroup: "インストール済み",
-  pluginOpenOffer:
-    "「{file}」はプラグイン「{name}」で開けます。インストールして開きますか？",
   pluginOpenInstall: "インストールして開く",
-  wikilinksPluginOffer:
-    "この文書は [[ウィキリンク]] を使っています。プラグイン「{name}」：{description}",
-  pluginOpenTurnOn:
-    "「{file}」はプラグイン「{name}」で開けますが、オフになっています。オンにして開きますか？",
   pluginOpenTurnOnButton: "オンにして開く",
-  pluginOfferInstall:
-    "{name} プラグインをインストールしますか？\n{description}",
-  pluginOfferTurnOn:
-    "{name} プラグインはインストール済みですがオフです。オンにしますか？\n{description}",
-  pluginOfferReason: "プラグインからの提案：「{reason}」",
+  pluginCardLine: "おすすめのプラグイン：{name}",
+  conventionsCardLine:
+    "このフォルダの {app} 設定では、画像を {folder} に保存します",
+  conventionsCardDetails:
+    "現在の設定：{current}。採用すると、このフォルダの .textus/settings.json に保存され、プロジェクトと共に保持されます。",
+  conventionsFolderRoot: "フォルダの最上位",
+  conventionsFollow: "採用",
+  conventionsDecline: "現在の設定を維持",
+  pluginCardSystemApp: "システムのアプリで開く",
+  pluginCardNever: "今後は表示しない",
+  pluginCardsMuted: "オフにしたプラグインの提案：{n} 件",
+  pluginCardsRestore: "再び表示",
   pluginScreenshot: "{name} の画面",
   pluginsMine: "自分で作ったもの",
   pluginsNone: "まだありません。",
@@ -1641,4 +1714,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webPageShowBar: "アドレスバーを表示",
   webPageHint:
     "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
+  pluginKeysTaken:
+    "「{name}」はキーボードを使えません。「{holder}」が使用中です。設定 › 拡張機能 でどちらかをオフにしてください。",
+  shortcutIndentListItem: "リスト項目をインデント",
+  shortcutOutdentListItem: "リスト項目のインデントを戻す",
+  pluginKeyTaken:
+    "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",
 } satisfies Translation;

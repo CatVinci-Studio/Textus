@@ -11,6 +11,7 @@ import { stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
 import { cursorTouches, isEnclosure } from "../marks/enclosure-runs";
 import { hiddenParts } from "../markdown/wikilink-reveal";
+import { hiddenLinkParts } from "../markdown/link-syntax";
 
 /** A link's source, a wikilink, an embed or raw HTML: text edited as
  *  written, in a node of its own. (Bold, code and maths have their own
@@ -42,28 +43,50 @@ export const deleteIntoSource: Command = (state, dispatch) => {
   return true;
 };
 
-/** A caret on the outer side of a wikilink's or embed's brackets, but in
- *  it: where it belongs, after or before the node; null elsewhere. With
- *  `hidden`, the brackets weren't drawn, so the name's own ends count. */
+/** Each bracketed source's edges as offsets in its text, the shown part's
+ *  while `hidden`; -1 or Infinity for an edge it lacks. */
+const SOURCE_EDGES: Record<
+  string,
+  (text: string, hidden: boolean) => [number, number]
+> = {
+  wikilink: (text, hidden) => {
+    const parts = hidden ? hiddenParts(text) : null;
+    return [
+      /^\[\[/.test(text) ? (parts ? parts[0][1] : 0) : -1,
+      text.endsWith("]]") ? (parts ? parts[1][0] : text.length) : Infinity,
+    ];
+  },
+  obsidian_embed: (text) => [
+    /^!\[\[/.test(text) ? 0 : -1,
+    text.endsWith("]]") ? text.length : Infinity,
+  ],
+  link: (text, hidden) => {
+    const parts = hiddenLinkParts(text);
+    if (!parts) return [-1, Infinity];
+    if (!hidden || parts.length < 2) return [0, text.length];
+    return [parts[0][1], parts[parts.length - 1][0]];
+  },
+};
+
+/** A caret on the outer side of a wikilink's, embed's or link's brackets,
+ *  but in it: where it belongs, after or before the node; null elsewhere.
+ *  With `hidden`, the brackets weren't drawn, so the shown text's own ends
+ *  count. */
 export function outsideBrackets(
   $pos: ResolvedPos,
   hidden = false,
 ): number | null {
   const node = $pos.parent;
-  if (node.type.name !== "wikilink" && node.type.name !== "obsidian_embed")
-    return null;
-  const text = node.textContent;
-  const parts = hidden && node.type.name === "wikilink" && hiddenParts(text);
-  const nameStart = parts ? parts[0][1] : 0;
-  const nameEnd = parts ? parts[1][0] : node.content.size;
-  if ($pos.parentOffset >= nameEnd && text.endsWith("]]")) return $pos.after();
-  if ($pos.parentOffset <= nameStart && /^!?\[\[/.test(text))
-    return $pos.before();
+  const edges = SOURCE_EDGES[node.type.name];
+  if (!edges) return null;
+  const [start, end] = edges(node.textContent, hidden);
+  if ($pos.parentOffset >= end) return $pos.after();
+  if ($pos.parentOffset <= start) return $pos.before();
   return null;
 }
 
-/** WebKit puts a click at a link's end inside it, so what was typed next
- *  joined the link and Enter split it; the click lands outside instead. */
+/** WebKit puts a click at a wikilink's or link's end inside it, so what was
+ *  typed next joined it and Enter split it; the click lands outside instead. */
 export function clickOutsideBrackets(
   transactions: readonly Transaction[],
   oldState: EditorState,

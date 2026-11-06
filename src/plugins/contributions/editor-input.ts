@@ -39,6 +39,7 @@ export interface KeyCapture {
 
 interface Owner {
   plugin: string;
+  name: string;
   capture: KeyCapture;
   deliver: (key: string) => void;
   lastKeyAt: number;
@@ -78,20 +79,26 @@ function syncRomanInput(again = false) {
 }
 
 /** Gives `plugin` the keys `capture` names, delivered to `deliver`; null
- *  gives the keyboard back. */
+ *  gives back its own capture. False while another plugin holds them. */
 export function setKeyCapture(
   plugin: string,
   capture: KeyCapture | null,
   deliver: (key: string) => void,
-): void {
+  name = plugin,
+): boolean {
+  if (owner && owner.plugin !== plugin) return false;
   if (!capture) {
-    if (owner?.plugin === plugin) owner = null;
-    setCursorStyle("bar");
-    syncRomanInput();
-    return;
+    if (owner) releaseKeys(plugin);
+    return true;
   }
-  owner = { plugin, capture, deliver, lastKeyAt: owner?.lastKeyAt ?? 0 };
+  owner = { plugin, name, capture, deliver, lastKeyAt: owner?.lastKeyAt ?? 0 };
   syncRomanInput();
+  return true;
+}
+
+/** The plugin holding the keyboard, if one does. */
+export function keyHolder(): { id: string; name: string } | null {
+  return owner && { id: owner.plugin, name: owner.name };
 }
 
 /** Lets go of whatever `plugin` held: it stopped. */
@@ -316,9 +323,8 @@ export interface EditorOpResult {
   empty: boolean;
 }
 
-function copyText(text: string) {
+const copyText = (text: string) =>
   void navigator.clipboard?.writeText(text).catch(() => {});
-}
 
 /** Runs one action in the editor that last had the keyboard; refused unless
  *  `plugin` holds the keys and one of its keys came just before. */

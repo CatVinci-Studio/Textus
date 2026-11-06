@@ -1,10 +1,17 @@
+const citation = (inner: string) => /^[\d,\s-]*$/.test(inner);
+
+/** Whether `\[…\]`'s inside reads as LaTeX: CommonMark takes `\[x\]` for
+ *  escaped brackets ("[optional]" in a README), and `\[1\]` cites. */
+export const looksLikeLatex = (inner: string) =>
+  !citation(inner) && /[\\^_{}=+\-*/<>|]/.test(inner);
+
 /**
  * Rewrites LaTeX's `\(...\)` / `\[...\]` as `$...$` / `$$...$$` for AI
  * replies, pastes and rendered HTML; LLMs use the backslash form even when
- * asked not to. A citation-like `\[1\]` stays, and fenced code is skipped.
+ * asked not to. `\[…\]` must look like LaTeX, a `\(…\)` not like a
+ * citation, and fenced code is skipped.
  */
 export function normalizeMathDelimiters(text: string): string {
-  const citation = (inner: string) => /^[\d,\s-]*$/.test(inner);
   return text
     .split(/(```[\s\S]*?```)/)
     .map((segment, i) =>
@@ -14,12 +21,12 @@ export function normalizeMathDelimiters(text: string): string {
             .replace(
               /^([ \t]*)\\\[((?:(?!\\\])[\s\S])*?)\\\][ \t]*$/gm,
               (whole, indent: string, inner: string) =>
-                citation(inner)
+                !looksLikeLatex(inner)
                   ? whole
                   : `${indent}$$\n${inner.trim()}\n${indent}$$`,
             )
             .replace(/\\\[([\s\S]*?)\\\]/g, (whole, inner: string) =>
-              citation(inner) ? whole : `$$${inner.trim()}$$`,
+              !looksLikeLatex(inner) ? whole : `$$${inner.trim()}$$`,
             )
             .replace(/\\\(([\s\S]*?)\\\)/g, (whole, inner: string) =>
               citation(inner) ? whole : `$${inner.trim()}$`,

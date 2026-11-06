@@ -2,7 +2,7 @@ name: Deploy playground
 
 # Builds the browser playground (src/playground/) at a release tag and
 # uploads it to the Cloudflare Worker `textus-playground`, which serves
-# textus.catvinci.com/playground/ (wrangler.playground.jsonc). The page
+# textus.md/playground/ (wrangler.playground.jsonc). The page
 # follows the latest stable release: release.yml calls this after
 # publishing one, and it can be run by hand for a tag.
 #
@@ -61,13 +61,13 @@ jobs:
       # The page names its script by content hash, so the live page naming
       # the one just built means this build is what visitors get. The edge
       # can take a few seconds to serve the new version.
-      - name: Check textus.catvinci.com/playground/
+      - name: Check textus.md/playground/
         run: |
           script=$(grep -o '/playground/assets/playground-[^"]*\.js' dist-playground/playground/index.html)
           echo "Built: $script"
           for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
             status=$(curl -sS -o live.html -w '%{http_code}' -H 'Cache-Control: no-cache' \
-              "https://textus.catvinci.com/playground/?deploy=${GITHUB_RUN_ID}-${attempt}" || true)
+              "https://textus.md/playground/?deploy=${GITHUB_RUN_ID}-${attempt}" || true)
             if [ "$status" = 200 ] && grep -qF "$script" live.html; then
               echo "Live and serving $script"
               exit 0
@@ -75,5 +75,5 @@ jobs:
             echo "Attempt $attempt: HTTP $status, not the new page yet"
             sleep 10
           done
-          echo "::error::textus.catvinci.com/playground/ doesn't serve the new build (last HTTP status $status)."
+          echo "::error::textus.md/playground/ doesn't serve the new build (last HTTP status $status)."
           exit 1

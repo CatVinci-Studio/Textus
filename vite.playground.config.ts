@@ -19,8 +19,9 @@ function servedAsIndex(): Plugin {
     enforce: "post",
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url === "/playground/" || req.url === "/playground/index.html")
-          req.url = `/playground/${ENTRY}`;
+        const [path, query] = (req.url ?? "").split("?");
+        if (path === "/playground/" || path === "/playground/index.html")
+          req.url = `/playground/${ENTRY}${query ? `?${query}` : ""}`;
         next();
       });
     },

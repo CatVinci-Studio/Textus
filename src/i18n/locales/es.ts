@@ -367,6 +367,17 @@ para usar una.
     "El complemento {name} tiene estos problemas:\n{problems}\nEncuentra la causa en su código y corrígela.",
   chatSaveSkill: "Guardar esta habilidad",
   chatUpdateSkill: "Actualizar la habilidad",
+  skillSaveAnyway: "Guardar de todos modos",
+  skillWarnCreateAsked:
+    "Pide el modo Crear, donde podría escribir habilidades por sí misma. Crear queda sin marcar: márcalo solo si confías en cada línea.",
+  skillWarnCreateMode:
+    "En el modo Crear podría escribir o cambiar habilidades por sí misma. Déjala ahí solo si confías en cada línea.",
+  skillWarnPromptInjection:
+    "Sus instrucciones parecen intentar anular las de Textus AI («ignora las instrucciones anteriores»). Léela antes de guardarla.",
+  skillWarnHiddenText:
+    "Contiene caracteres invisibles, que pueden ocultar instrucciones. Léela antes de guardarla.",
+  chatShowCode: "Ver el código",
+  chatShowSkill: "Ver la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",
@@ -439,6 +450,22 @@ para usar una.
   paperSectionDrafted: "Redactado",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falló",
+  paperSectionsAtOnce: {
+    one: "Escribiendo {n} sección a la vez · {done} de {of} listas",
+    many: "Escribiendo {n} de secciones a la vez · {done} de {of} listas",
+    other: "Escribiendo {n} secciones a la vez · {done} de {of} listas",
+  },
+  paperRevisingAtOnce: {
+    one: "Revisando {n} sección a la vez · {done} de {of} listas",
+    many: "Revisando {n} de secciones a la vez · {done} de {of} listas",
+    other: "Revisando {n} secciones a la vez · {done} de {of} listas",
+  },
+  paperQuestionsAtOnce: {
+    one: "Investigando {n} pregunta a la vez · {done} de {of} listas",
+    many: "Investigando {n} de preguntas a la vez · {done} de {of} listas",
+    other: "Investigando {n} preguntas a la vez · {done} de {of} listas",
+  },
+  paperDoneOf: "{done} de {of} listas",
   paperOutlineRetry:
     "Versión {n}: la anterior no pasó las comprobaciones; se está rehaciendo…",
   paperPapersOnly:
@@ -456,6 +483,7 @@ para usar una.
   webSources: "Fuentes",
   proposalSourcesAsFootnotes: "Añadir las fuentes como notas al pie",
   menuToggleSplitView: "Código y vista previa",
+  splitPreview: "Vista previa",
   menuToggleZenMode: "Modo zen",
   menuSplitRight: "Dividir a la derecha",
   menuCommandPalette: "Paleta de comandos…",
@@ -520,8 +548,8 @@ para usar una.
   outlineEmpty:
     "Aún no hay encabezados. Las líneas que empiezan con # aparecen aquí.",
   treeRefresh: "Actualizar",
-  menuOpenFolder: "Abrir carpeta…",
-  menuCloseFolder: "Cerrar carpeta",
+  menuOpenFolder: "Abrir proyecto…",
+  menuCloseFolder: "Cerrar proyecto",
   menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
@@ -531,7 +559,7 @@ para usar una.
   treeSearchCapped:
     "Solo se buscó en los primeros {n} archivos. Abre una carpeta más pequeña para buscar en toda.",
   treeSearchTooBroad:
-    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir carpeta…",
+    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir proyecto…",
   treeSearchFailed: "No se puede leer esta carpeta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos los archivos",
@@ -549,6 +577,14 @@ para usar una.
   treeRenameItem: "Cambiar nombre…",
   treeRename: "Cambiar nombre",
   treeRenamePrompt: "Nombre nuevo",
+  treeUpdateLinksConfirm:
+    "¿Actualizar los enlaces hacia y desde «{name}» para que sigan funcionando?",
+  treeUpdateLinks: "Actualizar enlaces",
+  treeKeepLinks: "No actualizar",
+  treeUpdateLinksFailed:
+    "No se pudieron actualizar los enlaces de estos documentos: {names}",
+  treeDocumentFolder: "Carpeta del documento actual",
+  treeOpenAsFolder: "Abrir como proyecto",
   treeTrashItem: "Mover a la papelera",
   treeTrash: "Mover a la papelera",
   treeTrashConfirm:
@@ -614,6 +650,9 @@ para usar una.
   alertWarning: "Advertencia",
   alertCaution: "Precaución",
   tocLabel: "Índice",
+  completionCommands: "Comandos",
+  completionEmoji: "Emoji",
+  completionNotes: "Notas",
   tocEmpty: "Aún no hay encabezados",
   settingsTitle: "Ajustes",
   settingsSearchPlaceholder: "Buscar en Ajustes",
@@ -779,6 +818,11 @@ para usar una.
   deleteRow: "Eliminar fila",
   deleteColumn: "Eliminar columna",
   deleteTable: "Eliminar tabla",
+  tableToMarkdown: "Convertir en tabla Markdown",
+  tableToMarkdownMerged:
+    "Convertir en tabla Markdown (tiene celdas combinadas)",
+  tableToMarkdownBlocks:
+    "Convertir en tabla Markdown (una celda tiene listas o párrafos)",
   apiKeyLabelTemplate: "Clave de API de {name}",
   apiKeyOptionalHintTemplate:
     "No hace falta una clave de API; añade una solo si {name} está protegido.",
@@ -987,6 +1031,26 @@ para usar una.
     "Los archivos de Word exportados toman los estilos, fuentes y márgenes de este archivo.",
   docxTemplateNone: "Predeterminada de Pandoc",
   docxTemplateClear: "Usar predeterminada",
+  exportTocLabel: "Índice en las exportaciones con Pandoc",
+  exportNumberHeadingsLabel:
+    "Encabezados numerados en las exportaciones con Pandoc",
+  exportNumberHeadingsHelp:
+    "Se numeran como en el complemento Heading Numbers: si el documento tiene un solo encabezado de nivel superior, es el título y no se numera.",
+  exportBibliographyLabel: "Bibliografía",
+  exportBibliographyHelp:
+    "Un archivo .bib. Al exportar con Pandoc (Word, EPUB…), las citas [@clave] se convierten en referencias, con la lista al final.",
+  exportBibliographyNone: "Ninguna",
+  exportBibliographyClear: "Quitar",
+  exportCslLabel: "Estilo de cita",
+  exportCslHelp:
+    "Un archivo .csl para la bibliografía. Sin él, Pandoc usa Chicago autor-fecha.",
+  pandocArgsLabel: "Argumentos de Pandoc",
+  pandocArgsHelp:
+    "Se añaden al comando de Pandoc para este formato, palabra por palabra y nunca a través de una shell. Pon entre comillas un valor con espacios. Textus fija --from, --to y --output.",
+  pandocArgsAll: "Todos los formatos",
+  pandocArgsOwned: "{arg} lo fija Textus; quítalo.",
+  pandocErrorSettings:
+    "Tus opciones de Pandoc están en Ajustes › {page} › {group}, y en sus argumentos avanzados.",
   pdfLightColorsLabel: "Exportar PDF con colores claros",
   infoTipLabel: "Más sobre «{label}»",
   infoTipLabelPlain: "Más información",
@@ -1048,6 +1112,11 @@ para usar una.
   menuUndo: "Deshacer",
   menuRedo: "Rehacer",
   menuFindReplace: "Buscar y reemplazar…",
+  menuReplace: "Reemplazar…",
+  menuFindNext: "Buscar siguiente",
+  menuStrikethrough: "Tachado",
+  menuInlineCode: "Código en línea",
+  menuInsertLink: "Enlace",
   menuHeadingTemplate: "Encabezado {n}",
   menuBulletList: "Lista con viñetas",
   menuOrderedList: "Lista numerada",
@@ -1214,11 +1283,18 @@ para usar una.
   newDocumentModeLabel: "Abrir documentos en",
   newDocumentModeWindow: "Una ventana nueva",
   newDocumentModeTab: "Una pestaña de esta ventana",
-  restoreSessionLabel: "Restaurar la sesión anterior al iniciar",
+  startPageTab: "Inicio",
+  startupOpenLabel: "Al abrir, mostrar",
+  startupOpenSession: "Los últimos documentos",
+  startupOpenStartPage: "La página de inicio",
+  startupOpenBlank: "Un documento en blanco",
+  closeLastLabel: "Al cerrar el último documento",
+  closeLastWindow: "Cerrar la ventana",
+  closeLastStartPage: "Mostrar la página de inicio",
+  startPageRecentProjects: "Proyectos recientes",
+  startPageRecentFiles: "Archivos recientes",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
-  autosaveHint:
-    "Con una carpeta abierta, los documentos sin título también se guardan en ella, con su título como nombre.",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:
     "Importa o exporta los ajustes de la app y el historial de IA",
@@ -1320,6 +1396,10 @@ para usar una.
   fileChangedOnDiskMessage:
     "Otro programa modificó este archivo en el disco. Si guardas, se sobrescribirán esos cambios.",
   fileChangedOnDiskOverwrite: "Sobrescribir",
+  fileGoneOnDiskTitle: "Archivo movido o eliminado",
+  fileGoneOnDiskMessage:
+    "Este archivo ya no está donde se abrió. Puede que otro programa lo haya movido, renombrado o eliminado. Al guardar se volverá a crear en el lugar anterior.",
+  fileGoneOnDiskRecreate: "Guardar en el lugar anterior",
   saveFailedTitle: "No se pudo guardar",
   saveFailedMessage: "«{name}» no se guardó. Tus cambios siguen aquí.",
   saveReadOnlyHint:
@@ -1352,6 +1432,8 @@ para usar una.
   imageFolderSubfolder: "Subcarpeta",
   imageFolderSameFolder: "La misma carpeta que el documento",
   imageFolderNameLabel: "Nombre de la subcarpeta",
+  imageFolderProjectNote:
+    "Este proyecto guarda las imágenes en {folder} (lo indica {source}).",
   imageFolderInvalid: "Usa una carpeta dentro de la del documento, como img.",
   imageHostLabel: "Alojamiento de imágenes",
   imageHostCustom: "Personalizado",
@@ -1610,18 +1692,20 @@ para usar una.
   pluginsOpenScripts: "Abrir la carpeta de scripts",
   pluginPackageFilter: "Complemento de Textus",
   pluginsInstalledGroup: "Instalados",
-  pluginOpenOffer:
-    "El complemento {name} abre «{file}». ¿Instalarlo y abrir el archivo?",
   pluginOpenInstall: "Instalar y abrir",
-  wikilinksPluginOffer:
-    "Este documento usa [[wikilinks]]. El complemento {name}: {description}",
-  pluginOpenTurnOn:
-    "El complemento {name} abre «{file}», pero está desactivado. ¿Activarlo y abrir el archivo?",
   pluginOpenTurnOnButton: "Activar y abrir",
-  pluginOfferInstall: "¿Instalar el plugin {name}?\n{description}",
-  pluginOfferTurnOn:
-    "El plugin {name} está instalado pero desactivado. ¿Activarlo?\n{description}",
-  pluginOfferReason: "Sugerido por un plugin: «{reason}»",
+  pluginCardLine: "Plugin recomendado: {name}",
+  conventionsCardLine:
+    "Los ajustes de {app} de esta carpeta guardan las imágenes en {folder}",
+  conventionsCardDetails:
+    "Ajuste actual: {current}. Al adoptarlo se guarda en .textus/settings.json de esta carpeta y se conserva con el proyecto.",
+  conventionsFolderRoot: "la carpeta misma",
+  conventionsFollow: "Adoptar",
+  conventionsDecline: "Mantener el actual",
+  pluginCardSystemApp: "Abrir con la app del sistema",
+  pluginCardNever: "No volver a sugerir",
+  pluginCardsMuted: "Sugerencias de plugins desactivadas: {n}",
+  pluginCardsRestore: "Mostrar de nuevo",
   pluginScreenshot: "{name} en uso",
   pluginsMine: "Hechos por ti",
   pluginsNone: "Ninguno todavía.",
@@ -1703,4 +1787,10 @@ para usar una.
   webPageShowBar: "Mostrar la barra de dirección",
   webPageHint:
     "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
+  pluginKeysTaken:
+    "{name} no puede usar el teclado: lo tiene {holder}. Desactiva uno de los dos en Ajustes › Extensiones.",
+  shortcutIndentListItem: "Aumentar sangría del elemento",
+  shortcutOutdentListItem: "Reducir sangría del elemento",
+  pluginKeyTaken:
+    "{name}: {key} ya es de «{owner}», así que no se asignó a «{command}». Elige otro en Ajustes › Atajos de teclado.",
 } satisfies Translation;

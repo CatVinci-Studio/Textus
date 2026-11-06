@@ -26,9 +26,13 @@ import {
   revealNearest,
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
+import { rootedImagePath } from "./rooted-image";
+import { LINK } from "../markdown/link-source";
+import { parseLink } from "../markdown/link-syntax";
 import { clipboardImageSources } from "./pasted-files";
 import {
-  imageWidthOf,
+  shownImageWidth,
+  splitAltSize,
   readImagePresentation,
   withImageWidth,
 } from "./image-html";
@@ -93,6 +97,13 @@ export function showDocImage(
         if (stillWanted()) img.src = url;
       })
       .catch(() => {});
+  } else if (doc && !isScopedUrl(doc) && /^\/(?!\/)/.test(src)) {
+    img.removeAttribute("src");
+    void rootedImagePath(src, doc)
+      .then((path) => {
+        if (stillWanted()) img.src = fileSrc(path);
+      })
+      .catch(() => {});
   } else {
     img.src = resolveImageSrc(src, doc);
   }
@@ -104,8 +115,18 @@ function cssWidth(width: string): string {
   return /^\d+$/.test(width) ? `${width}px` : width;
 }
 
+/** A link whose label is one image, `[![alt](src)](url)`: a badge. */
+function isLinkedImage(source: string): boolean {
+  const link = parseLink(source);
+  if (!link) return false;
+  // The label's range may hold its brackets: they're allowed around it.
+  return /^\[?!\[[^\]]*\]\([^)]*\)\]?$/.test(
+    source.slice(...link.label).trim(),
+  );
+}
+
 /** A paragraph of only images and line breaks, laid out as a centred figure.
- *  Obsidian image embeds count. */
+ *  Obsidian image embeds and linked images count. */
 function isImageParagraph(node: ProseNode): boolean {
   if (node.type.name !== "paragraph" || node.childCount === 0) return false;
   let images = 0;
@@ -114,7 +135,8 @@ function isImageParagraph(node: ProseNode): boolean {
     if (
       child.type.name === "image" ||
       (child.type.name === "obsidian_embed" &&
-        parseEmbed(child.textContent)?.isImage)
+        parseEmbed(child.textContent)?.isImage) ||
+      (child.type.name === LINK && isLinkedImage(child.textContent))
     )
       images++;
     else if (child.type.name !== "hardbreak") return false;
@@ -216,14 +238,14 @@ function createImageView(
     // Another picture: the card goes, until that one fails too.
     if (shown() !== before) clearMissing();
     const { title } = readImagePresentation(n.attrs.title as string);
-    const width = imageWidthOf(n.attrs);
+    const width = shownImageWidth(n.attrs);
     showDocImage(
       img,
       (n.attrs.src as string) ?? "",
       docPath(),
       () => current === n,
     );
-    img.alt = (n.attrs.alt as string) ?? "";
+    img.alt = splitAltSize((n.attrs.alt as string) ?? "").alt;
     if (title) img.title = title;
     else img.removeAttribute("title");
     dom.style.width = width ? cssWidth(width) : "";

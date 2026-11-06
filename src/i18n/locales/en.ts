@@ -353,6 +353,17 @@ type /name in a conversation to use one.
     "The plugin {name} has these problems:\n{problems}\nFind the cause in its code and fix it.",
   chatSaveSkill: "Save this skill",
   chatUpdateSkill: "Update the skill",
+  skillSaveAnyway: "Save anyway",
+  skillWarnCreateAsked:
+    "It asked for Create mode, where it could write skills itself. Create is left unticked: tick it only if you trust every line.",
+  skillWarnCreateMode:
+    "In Create mode it could write or change skills itself. Keep it there only if you trust every line.",
+  skillWarnPromptInjection:
+    'Its instructions read like they try to override Textus AI\'s own ("ignore previous instructions"). Read it before you save it.',
+  skillWarnHiddenText:
+    "It holds invisible characters, which can hide instructions. Read it before you save it.",
+  chatShowCode: "Show the code",
+  chatShowSkill: "Show the skill",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",
@@ -424,6 +435,19 @@ type /name in a conversation to use one.
   paperSectionDrafted: "Written",
   paperSectionRevising: "Revising",
   paperSectionFailed: "Failed",
+  paperSectionsAtOnce: {
+    one: "Writing {n} section at once · {done} of {of} done",
+    other: "Writing {n} sections at once · {done} of {of} done",
+  },
+  paperRevisingAtOnce: {
+    one: "Revising {n} section at once · {done} of {of} done",
+    other: "Revising {n} sections at once · {done} of {of} done",
+  },
+  paperQuestionsAtOnce: {
+    one: "Researching {n} question at once · {done} of {of} done",
+    other: "Researching {n} questions at once · {done} of {of} done",
+  },
+  paperDoneOf: "{done} of {of} done",
   paperOutlineRetry:
     "Draft {n}: the last one didn't pass its checks, so it is being redone…",
   paperPapersOnly:
@@ -441,6 +465,7 @@ type /name in a conversation to use one.
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Add sources as footnotes",
   menuToggleSplitView: "Source and Preview",
+  splitPreview: "Preview",
   menuToggleZenMode: "Zen Mode",
   menuSplitRight: "Split Right",
   menuCommandPalette: "Command Palette…",
@@ -505,8 +530,8 @@ type /name in a conversation to use one.
   treeEmptyDraft: "Save this document and its folder shows up here.",
   outlineEmpty: "No headings yet - lines starting with # appear here.",
   treeRefresh: "Refresh",
-  menuOpenFolder: "Open Folder…",
-  menuCloseFolder: "Close Folder",
+  menuOpenFolder: "Open Project…",
+  menuCloseFolder: "Close Project",
   menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
@@ -516,7 +541,7 @@ type /name in a conversation to use one.
   treeSearchCapped:
     "Searched the first {n} files only. Open a smaller folder to search all of it.",
   treeSearchTooBroad:
-    "This folder is too broad to search. Open a more specific one with File › Open Folder…",
+    "This folder is too broad to search. Open a more specific one with File › Open Project…",
   treeSearchFailed: "This folder can't be read.",
   treeSearchScope: "Show",
   treeSearchScopeAll: "All files",
@@ -534,6 +559,13 @@ type /name in a conversation to use one.
   treeRenameItem: "Rename…",
   treeRename: "Rename",
   treeRenamePrompt: "New name",
+  treeUpdateLinksConfirm:
+    "Update the links to and from “{name}” so they keep working?",
+  treeUpdateLinks: "Update Links",
+  treeKeepLinks: "Don't Update",
+  treeUpdateLinksFailed: "These documents' links couldn't be updated: {names}",
+  treeDocumentFolder: "Current document's folder",
+  treeOpenAsFolder: "Open as Project",
   treeTrashItem: "Move to Trash",
   treeTrash: "Move to Trash",
   treeTrashConfirm:
@@ -594,6 +626,9 @@ type /name in a conversation to use one.
   alertWarning: "Warning",
   alertCaution: "Caution",
   tocLabel: "Table of contents",
+  completionCommands: "Commands",
+  completionEmoji: "Emoji",
+  completionNotes: "Notes",
   tocEmpty: "No headings yet",
   settingsTitle: "Settings",
   settingsSearchPlaceholder: "Search settings",
@@ -756,6 +791,10 @@ type /name in a conversation to use one.
   deleteRow: "Delete Row",
   deleteColumn: "Delete Column",
   deleteTable: "Delete Table",
+  tableToMarkdown: "Convert to Markdown Table",
+  tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",
+  tableToMarkdownBlocks:
+    "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
@@ -952,6 +991,25 @@ type /name in a conversation to use one.
     "Exported Word files take this file's styles, fonts and margins.",
   docxTemplateNone: "Pandoc's default",
   docxTemplateClear: "Use default",
+  exportTocLabel: "Table of contents in Pandoc exports",
+  exportNumberHeadingsLabel: "Numbered headings in Pandoc exports",
+  exportNumberHeadingsHelp:
+    "Numbered as the Heading Numbers plugin numbers them: a document's one top heading is its title and stays unnumbered.",
+  exportBibliographyLabel: "Bibliography",
+  exportBibliographyHelp:
+    "A .bib file. Word, EPUB and other Pandoc exports turn [@key] citations into references, with the list at the end.",
+  exportBibliographyNone: "None",
+  exportBibliographyClear: "Remove",
+  exportCslLabel: "Citation style",
+  exportCslHelp:
+    "A .csl file for the bibliography. Without one, Pandoc uses Chicago author-date.",
+  pandocArgsLabel: "Pandoc arguments",
+  pandocArgsHelp:
+    "Added to Pandoc's command for this format, word by word and never through a shell. Quote a value that has spaces. Textus sets --from, --to and --output itself.",
+  pandocArgsAll: "All formats",
+  pandocArgsOwned: "{arg} is set by Textus; take it out.",
+  pandocErrorSettings:
+    "Your Pandoc options are in Settings › {page} › {group}, and its Advanced arguments.",
   pdfLightColorsLabel: "Export PDFs in light colors",
   infoTipLabel: "More about {label}",
   infoTipLabelPlain: "More information",
@@ -1014,6 +1072,11 @@ type /name in a conversation to use one.
   menuUndo: "Undo",
   menuRedo: "Redo",
   menuFindReplace: "Find & Replace…",
+  menuReplace: "Replace…",
+  menuFindNext: "Find Next",
+  menuStrikethrough: "Strikethrough",
+  menuInlineCode: "Inline Code",
+  menuInsertLink: "Link",
   menuHeadingTemplate: "Heading {n}",
   menuBulletList: "Bullet List",
   menuOrderedList: "Numbered List",
@@ -1179,11 +1242,18 @@ type /name in a conversation to use one.
   newDocumentModeLabel: "Open documents in",
   newDocumentModeWindow: "A new window",
   newDocumentModeTab: "A tab in this window",
-  restoreSessionLabel: "Restore previous session on startup",
+  startPageTab: "Start",
+  startupOpenLabel: "On launch, open",
+  startupOpenSession: "Last documents",
+  startupOpenStartPage: "Start page",
+  startupOpenBlank: "A blank document",
+  closeLastLabel: "When the last document closes",
+  closeLastWindow: "Close the window",
+  closeLastStartPage: "Show the start page",
+  startPageRecentProjects: "Recent Projects",
+  startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
-  autosaveHint:
-    "With a folder open, untitled documents get a file there too, named after their title.",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",
   settingsFileExport: "Export…",
@@ -1283,6 +1353,10 @@ type /name in a conversation to use one.
   fileChangedOnDiskMessage:
     "This file has been changed on disk by another program. Saving will overwrite those changes.",
   fileChangedOnDiskOverwrite: "Overwrite",
+  fileGoneOnDiskTitle: "File Moved or Deleted",
+  fileGoneOnDiskMessage:
+    "This file is no longer where it was opened from. It may have been moved, renamed or deleted in another program. Saving puts it back at the old place.",
+  fileGoneOnDiskRecreate: "Save at Old Place",
   saveFailedTitle: "Couldn't Save",
   saveFailedMessage: "“{name}” wasn't saved. Your changes are still here.",
   saveReadOnlyHint:
@@ -1315,6 +1389,8 @@ type /name in a conversation to use one.
   imageFolderSubfolder: "Subfolder",
   imageFolderSameFolder: "Same folder as the document",
   imageFolderNameLabel: "Subfolder name",
+  imageFolderProjectNote:
+    "This project keeps pictures in {folder} (set in {source}).",
   imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Image host",
   imageHostCustom: "Custom",
@@ -1570,18 +1646,20 @@ type /name in a conversation to use one.
   pluginsOpenScripts: "Open Scripts Folder",
   pluginPackageFilter: "Textus plugin",
   pluginsInstalledGroup: "Installed",
-  pluginOpenOffer:
-    "The {name} plugin opens “{file}”. Install it and open the file?",
   pluginOpenInstall: "Install and open",
-  wikilinksPluginOffer:
-    "This document uses [[wikilinks]]. The {name} plugin: {description}",
-  pluginOpenTurnOn:
-    "The {name} plugin opens “{file}”, but it is off. Turn it on and open the file?",
   pluginOpenTurnOnButton: "Turn on and open",
-  pluginOfferInstall: "Install the {name} plugin?\n{description}",
-  pluginOfferTurnOn:
-    "The {name} plugin is installed but off. Turn it on?\n{description}",
-  pluginOfferReason: "Suggested by a plugin: “{reason}”",
+  pluginCardLine: "Plugin suggestion: {name}",
+  conventionsCardLine:
+    "This folder's {app} settings store pictures in {folder}",
+  conventionsCardDetails:
+    "Current setting: {current}. Adopting saves it in this folder's .textus/settings.json, so it stays with the project.",
+  conventionsFolderRoot: "the folder itself",
+  conventionsFollow: "Adopt",
+  conventionsDecline: "Keep Current",
+  pluginCardSystemApp: "Open with system app",
+  pluginCardNever: "Don't suggest this again",
+  pluginCardsMuted: "Plugin suggestions you turned off: {n}",
+  pluginCardsRestore: "Show again",
   pluginScreenshot: "{name} at work",
   pluginsMine: "Made by you",
   pluginsNone: "None yet.",
@@ -1661,6 +1739,12 @@ type /name in a conversation to use one.
   webPageShowBar: "Show the address bar",
   webPageHint:
     "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
+  pluginKeysTaken:
+    "{name} can't take the keyboard: {holder} has it. Turn one of them off in Settings › Extensions.",
+  shortcutIndentListItem: "Indent List Item",
+  shortcutOutdentListItem: "Outdent List Item",
+  pluginKeyTaken:
+    "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

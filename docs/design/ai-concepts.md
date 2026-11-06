@@ -212,8 +212,11 @@ description.**
   `name` and `description` (block scalars allowed), Textus-only keys under
   `metadata:` (`textus-invocation`, `textus-category`, `textus-modes`,
   `textus-packs`, `textus-label-<lang>`, `textus-hint-<lang>`,
-  `textus-aliases-<lang>`, `textus-version`, `textus-based-on`), then the
-  instructions. `<!-- -->` comments in the instructions are never sent.
+  `textus-aliases-<lang>`, `textus-version`, `textus-based-on`,
+  `textus-index`), then the instructions. `<!-- -->` comments in the
+  instructions are never sent. A built-in's `textus-index` is what the
+  model's skill index shows in place of its description: the "Use when"
+  clause without the request words in other languages.
 - **Modes:** a skill applies in the modes its `textus-modes` names (Write
   when it says none); the `/` menu and the skill index offer only the
   current mode's. The user changes a non-built-in skill's modes in

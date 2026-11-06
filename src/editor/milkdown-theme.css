@@ -641,13 +641,20 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.85em;
 }
 
-/* A link shown as its Markdown while the caret is on it. */
-.link-source {
-  color: var(--doc-accent);
+/* A link: its Markdown syntax hidden while the caret is away, muted while
+   it shows. */
+.link-source-hidden {
+  display: none;
 }
 
 .link-source-syntax {
   color: var(--doc-muted);
+}
+
+/* An image in a link's text, drawn while its source is hidden. */
+.link-image {
+  max-width: 100%;
+  vertical-align: middle;
 }
 
 /* `:smile:` drawn as its emoji; the caret on it shows the source. */
@@ -695,6 +702,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .wikilink-source-hidden {
   display: none;
+}
+
+/* A link to a note that doesn't exist yet: a click makes it. */
+.wikilink-missing {
+  color: var(--doc-muted);
 }
 
 /* A picture that won't load: a card in place of the broken-image icon. The
@@ -1049,6 +1061,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+/* A linked image in a row of pictures sits on the same line as the rest. */
+.milkdown p.image-paragraph :is(.image-view, .link-image) {
+  vertical-align: bottom;
+}
+
 :root[data-image-align="left"] .milkdown p.image-paragraph {
   text-align: left;
 }
@@ -1153,7 +1170,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .math-float-preview {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-popover);
   max-width: 420px;
   padding: 0.5em 0.7em;
   border: 1px solid var(--doc-border);
@@ -1199,6 +1216,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+.milkdown .math-fence-hidden {
+  display: none;
+}
+
 /* Not drawn yet (off screen): about a display formula's height. */
 .math-block-rendered[data-draw-pending] {
   min-height: 2.6em;
@@ -1236,6 +1257,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .milkdown blockquote.md-alert-caution {
   --doc-alert-accent: var(--doc-alert-caution);
 }
+.milkdown blockquote.md-alert-quote {
+  --doc-alert-accent: var(--doc-muted);
+}
 
 .milkdown blockquote.md-alert {
   border-left-color: var(--doc-alert-accent);
@@ -1255,6 +1279,60 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .md-alert-marker-hidden {
+  display: none;
+}
+
+/* Obsidian's inline syntax, drawn while the caret is away. */
+.md-syntax-hidden {
+  display: none;
+}
+.md-comment,
+.md-block-id {
+  color: var(--doc-muted);
+}
+.md-block-id {
+  opacity: 0.6;
+}
+/* All comment: kept in the flow so the caret can still reach it. */
+.milkdown .md-comment-block {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.md-inline-footnote {
+  font-size: 0.8em;
+  vertical-align: super;
+  color: var(--doc-muted);
+}
+.milkdown mark.md-mark-red {
+  background: var(--tone-red-tint);
+}
+.milkdown mark.md-mark-orange {
+  background: var(--tone-orange-tint);
+}
+.milkdown mark.md-mark-yellow {
+  background: var(--tone-yellow-tint);
+}
+.milkdown mark.md-mark-green {
+  background: var(--tone-green-tint);
+}
+.milkdown mark.md-mark-blue {
+  background: var(--tone-blue-tint);
+}
+.milkdown mark.md-mark-purple {
+  background: var(--tone-purple-tint);
+}
+
+/* Obsidian's "-" / "+": the chevron folds the body away in the view only. */
+.md-alert-fold {
+  display: inline-flex;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.md-alert-fold[data-folded="true"] {
+  transform: rotate(-90deg);
+}
+.milkdown blockquote.md-alert-folded > :not(:first-child) {
   display: none;
 }
 
@@ -1405,6 +1483,12 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-shadow: none;
 }
 
+/* The wrapper is the block's box: a Typora theme's margin on its CodeMirror
+   box, mapped to this <pre>, would open bands inside it. */
+#write .md-fences > pre {
+  margin: 0;
+}
+
 /* "```" typed on a line of its own: the fence, not inline code
    (md-span-autopair-plugin.ts). */
 #write code.is-fence {
@@ -1418,46 +1502,14 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font: inherit;
 }
 
-/* Syntax highlighting tokens (via refractor/Prism token classes) */
+/* Syntax highlighting tokens (via refractor/Prism token classes); the colour
+   rules are in content-base.css's layer, so a theme's own token rules win. */
 :root {
   --doc-token-string: #457236;
   --doc-token-number: #8f5a1c;
   --doc-token-keyword: #8a46a8;
   --doc-token-function: #3462cc;
   --doc-token-tag: #a83a4b;
-}
-
-.milkdown .token.comment,
-.milkdown .token.prolog,
-.milkdown .token.doctype {
-  color: var(--doc-muted);
-  font-style: italic;
-}
-.milkdown .token.string,
-.milkdown .token.attr-value {
-  color: var(--doc-token-string);
-}
-.milkdown .token.number,
-.milkdown .token.boolean,
-.milkdown .token.constant {
-  color: var(--doc-token-number);
-}
-.milkdown .token.keyword,
-.milkdown .token.operator,
-.milkdown .token.rule {
-  color: var(--doc-token-keyword);
-}
-.milkdown .token.function,
-.milkdown .token.class-name {
-  color: var(--doc-token-function);
-}
-.milkdown .token.tag,
-.milkdown .token.selector,
-.milkdown .token.attr-name {
-  color: var(--doc-token-tag);
-}
-.milkdown .token.punctuation {
-  color: var(--doc-muted);
 }
 
 @media (prefers-color-scheme: dark) {

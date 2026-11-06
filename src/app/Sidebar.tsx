@@ -5,7 +5,7 @@ import type { Strings } from "../i18n/strings";
 import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
-import { Tooltip } from "../ui/Tooltip";
+import { SidebarTabBar } from "./SidebarTabBar";
 import { sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../plugins/views/plugin-views";
 
@@ -20,6 +20,7 @@ export function Sidebar({
   openFolder,
   activePath,
   activeContent,
+  activeTabId,
   onToggle,
   onClose,
   onOpenFile,
@@ -37,6 +38,7 @@ export function Sidebar({
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  activeTabId: string;
   onToggle: () => void;
   onClose: () => void;
   /** `beside`: in a split beside the document in front. */
@@ -68,19 +70,12 @@ export function Sidebar({
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
-              <div className="sidebar-tabs">
-                {sidebarTabs().map(({ id, label, Icon }) => (
-                  <Tooltip key={id} text={label(t)}>
-                    <button
-                      className={`sidebar-tab ${shown.id === id ? "sidebar-tab-active" : ""}`}
-                      onClick={() => onModeChange(id)}
-                      aria-label={label(t)}
-                    >
-                      <Icon />
-                    </button>
-                  </Tooltip>
-                ))}
-              </div>
+              <SidebarTabBar
+                tabs={sidebarTabs()}
+                shownId={shown.id}
+                onSelect={onModeChange}
+                t={t}
+              />
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
               <ViewTitleActions view={shown.id} />
@@ -89,6 +84,7 @@ export function Sidebar({
                 openFolder={openFolder}
                 activePath={activePath}
                 activeContent={activeContent}
+                activeTabId={activeTabId}
                 onOpenFile={onOpenFile}
                 onClose={onClose}
                 onEntryMoved={onEntryMoved}

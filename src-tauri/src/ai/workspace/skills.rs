@@ -74,6 +74,7 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
     skill.off = meta("off") == Some("true");
     skill.version = meta("version").map(str::to_string);
     skill.based_on = meta("based-on").map(str::to_string);
+    skill.index_line = meta("index").map(str::to_string);
     let words = |v: Option<&str>| {
         v.map(|v| v.split_whitespace().map(str::to_string).collect())
             .unwrap_or_default()
@@ -350,11 +351,14 @@ pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
 const MAX_WRITTEN_SKILL: usize = 64 * 1024;
 
 /// Writes a skill file from a reply into `skills_dir` with `modes`: a new
-/// file, or over the one holding the skill of that name already.
+/// file, or over the one holding the skill of that name already. A skill
+/// with warnings (`skill_warnings`) is saved only once `confirmed`; until
+/// then the error is `SKILL_NEEDS_CONFIRM:` and the warnings, `,`-joined.
 pub(crate) fn save_written_in(
     skills_dir: &Path,
     text: &str,
     modes: &[AgentMode],
+    confirmed: bool,
 ) -> Result<PathBuf, String> {
     if text.len() > MAX_WRITTEN_SKILL {
         return Err("That skill is too long to save.".to_string());
@@ -365,6 +369,12 @@ pub(crate) fn save_written_in(
     }
     if modes.is_empty() {
         return Err("A skill needs at least one mode.".to_string());
+    }
+    // The description is shown to the model too, in the list of skills.
+    let read = format!("{}\n{}", skill.description, skill.prompt);
+    let warnings = skill_warnings(&read, modes);
+    if !confirmed && !warnings.is_empty() {
+        return Err(format!("{SKILL_NEEDS_CONFIRM}:{}", warnings.join(",")));
     }
     std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
     let path = match read_skill_files(skills_dir)

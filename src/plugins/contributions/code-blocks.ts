@@ -1,54 +1,56 @@
+import {
+  claim,
+  claimKey,
+  claimsStartingWith,
+  onOwnersChanged,
+  ownerOf,
+} from "./owners";
+
 /**
  * The code blocks plugins draw in the document: which plugin draws a
  * language, and for each block shown, the way to change its source.
  */
 
-/** Language -> the plugin that draws it. */
-const languages = new Map<string, string>();
-/** Languages drawn without the box round them. */
+/** "language plugin" -> drawn without the box round it. */
 const frameless = new Set<string>();
-const languageListeners = new Set<() => void>();
 
-function languagesChanged() {
-  for (const listener of languageListeners) listener();
-}
+const claimOf = claimKey.codeBlock;
 
-/** A plugin draws `language` until the returned function is called. */
+/** A plugin draws `language` until the returned function is called; while
+ *  another one draws it, this one waits its turn. */
 export function addCodeBlockLanguage(
   language: string,
   plugin: string,
   frame?: "none",
 ): () => void {
-  languages.set(language, plugin);
-  if (frame === "none") frameless.add(language);
-  else frameless.delete(language);
-  languagesChanged();
+  const key = `${language.toLowerCase()} ${plugin}`;
+  if (frame === "none") frameless.add(key);
+  else frameless.delete(key);
+  const release = claim(claimOf(language), plugin);
   return () => {
-    if (languages.get(language) !== plugin) return;
-    languages.delete(language);
-    frameless.delete(language);
-    languagesChanged();
+    frameless.delete(key);
+    release();
   };
 }
 
 /** Whether `language`'s blocks go without the box round them. */
 export function codeBlockFrameless(language: string): boolean {
-  return frameless.has(language.toLowerCase());
+  const owner = codeBlockPlugin(language);
+  return !!owner && frameless.has(`${language.toLowerCase()} ${owner}`);
 }
 
 /** The plugin that draws `language`, if one does. */
 export function codeBlockPlugin(language: string): string | null {
-  return languages.get(language.toLowerCase()) ?? null;
+  return ownerOf(claimOf(language));
 }
 
 export function hasCodeBlockLanguages(): boolean {
-  return languages.size > 0;
+  return claimsStartingWith(claimKey.codeBlock("")).length > 0;
 }
 
 /** The editor redraws when a plugin starts or stops drawing a language. */
 export function onCodeBlockLanguages(listener: () => void): () => void {
-  languageListeners.add(listener);
-  return () => languageListeners.delete(listener);
+  return onOwnersChanged(listener);
 }
 
 /**

@@ -29,14 +29,17 @@ const WEBKIT_SPECS = [
   "sidebar-toggle.spec.ts",
   "tab-scroll.spec.ts",
   "markdown-keys.spec.ts",
+  "completion-panel.spec.ts",
   "code-block.spec.ts",
   "link-reveal.spec.ts",
   "sidebar-resize.spec.ts",
   "keyboard.spec.ts",
   "file-tree.spec.ts",
   "user-css.spec.ts",
+  "typora-theme.spec.ts",
   "plugins.spec.ts",
   "large-doc-lazy.spec.ts",
+  "two-way-links.spec.ts",
 ];
 
 export default defineConfig({

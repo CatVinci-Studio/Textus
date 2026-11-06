@@ -8,9 +8,9 @@ import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
 import { noteJump } from "../../utils/nav-history";
-import { revealedLinkHref } from "./link-reveal";
+import { linkHrefAt } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
-import { parseWikilink } from "./wikilink";
+import { followNoteLink } from "./note-link-follow";
 import { windowFolder } from "../../platform/window-folder";
 
 /** The link under a mouse event in this editor, if any. */
@@ -35,7 +35,12 @@ function isFollowClick(event: MouseEvent): boolean {
   return event.button === 0 && (modIsMeta() ? event.metaKey : event.ctrlKey);
 }
 
-async function follow(view: EditorView, target: LinkTarget): Promise<void> {
+async function follow(
+  view: EditorView,
+  href: string,
+  target: LinkTarget,
+  docPath: string | null,
+): Promise<void> {
   if (target.kind === "heading") {
     noteJump();
     revealHeading(view, target.anchor);
@@ -46,8 +51,11 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
     if (editorExtensions().openLink(target.url)) return;
     return links.openWebLink(target.url);
   }
-  // A link to a file that isn't there opens nothing.
-  if ((await fs.fileMtimeMs(target.path)) === null) return;
+  // From "/" the project's root, else the path as written; a path that
+  // finds nothing goes by name (`[t](Note)`, a note in another folder).
+  const fromRoot = /^\/(?!\/)/.test(href.trim());
+  if (fromRoot || (await fs.fileMtimeMs(target.path)) === null)
+    return followNoteLink(view, href, docPath, windowFolder());
   // A Markdown file opens in a tab; another kind in a tab too when Textus
   // shows it (a Word file, a plugin's PDF), else the app asks to open it
   // outside.
@@ -61,38 +69,13 @@ async function follow(view: EditorView, target: LinkTarget): Promise<void> {
   );
 }
 
-/** A wikilink: `[[#Heading]]` scrolls here, `[[Note]]` opens the vault's
- *  note by that name, `[[Note#Heading]]` at that heading. */
-async function followWikilink(
-  view: EditorView,
-  source: string,
-  docPath: string | null,
-): Promise<void> {
-  const target = parseWikilink(source);
-  if (!target) return;
-  if (!target.note) {
-    if (target.heading) {
-      noteJump();
-      revealHeading(view, target.heading);
-    }
-    return;
-  }
-  if (!docPath) return;
-  const path = await fs.resolveVaultNote(docPath, target.note, windowFolder());
-  if (path)
-    window.dispatchEvent(
-      new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
-        detail: { path, anchor: target.heading || undefined },
-      }),
-    );
-}
-
-/** The URL of the link under a mouse event, or of one the caret shows as
- *  its source. */
+/** The URL of the link under a mouse event: a link's own, read from its
+ *  source, or a raw HTML anchor's. */
 function hrefAt(view: EditorView, event: MouseEvent): string | null {
+  const own = linkHrefAt(view, event.target);
+  if (own !== null) return own;
   const link = linkAt(view, event);
-  if (link) return link.getAttribute("href") ?? "";
-  return revealedLinkHref(view, event.target);
+  return link ? (link.getAttribute("href") ?? "") : null;
 }
 
 /**
@@ -120,12 +103,14 @@ export function createLinkClickPlugin(docPath: () => string | null) {
             click(view, event) {
               const doc = docPath();
               // An iOS Files document has no folder this app may read beside it.
-              const folder = doc && !isScopedUrl(doc) ? doc : null;
+              const local = doc && !isScopedUrl(doc) ? doc : null;
               const wikilink = wikilinkAt(view, event);
               if (wikilink && isFollowClick(event)) {
                 event.preventDefault();
                 const source = wikilink.textContent ?? "";
-                void followWikilink(view, source, folder).catch(() => {});
+                void followNoteLink(view, source, local, windowFolder()).catch(
+                  () => {},
+                );
                 return true;
               }
               const link = linkAt(view, event);
@@ -134,8 +119,9 @@ export function createLinkClickPlugin(docPath: () => string | null) {
               const href = hrefAt(view, event);
               if (href === null) return false;
               event.preventDefault();
-              const target = linkTarget(href, folder);
-              if (target) void follow(view, target).catch(() => {});
+              const target = linkTarget(href, local);
+              if (target)
+                void follow(view, href, target, local).catch(() => {});
               return true;
             },
             auxclick(view, event) {

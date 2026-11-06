@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { headingSlug, linkTarget } from "./link-target";
+import { headingIndex, headingSlug, linkTarget } from "./link-target";
 
 const doc = (path: string) => ({ kind: "document", path });
 
@@ -123,5 +123,20 @@ describe("headingSlug", () => {
     expect(headingSlug("What's new in 1.0.4?")).toBe("whats-new-in-104");
     expect(headingSlug("第一章：開始")).toBe("第一章開始");
     expect(headingSlug("getting-started")).toBe("getting-started");
+  });
+});
+
+describe("headingIndex", () => {
+  const headings = ["Intro", "My Plan: v2", "Intro"];
+
+  it("names a heading by its words or its slug", () => {
+    expect(headingIndex(headings, "My Plan: v2")).toBe(1);
+    expect(headingIndex(headings, "my-plan-v2")).toBe(1);
+  });
+
+  it("numbers a repeat the way GitHub does", () => {
+    expect(headingIndex(headings, "intro")).toBe(0);
+    expect(headingIndex(headings, "intro-1")).toBe(2);
+    expect(headingIndex(headings, "outro")).toBe(-1);
   });
 });

@@ -170,3 +170,16 @@ fn a_package_comes_through_the_install_counter() {
         checked(tasks, &bytes).expect("the package the catalog lists");
     });
 }
+
+#[test]
+fn downloads_come_from_the_site_at_either_of_its_addresses() {
+    let ok = |u: &str| download_host(&reqwest::Url::parse(u).unwrap());
+    assert!(ok(
+        "https://textus.md/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip"
+    ));
+    assert!(ok(
+        "https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip"
+    ));
+    assert!(!ok("http://textus.md/plugin-release/x.zip"));
+    assert!(!ok("https://example.com/x.zip"));
+}

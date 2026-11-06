@@ -5,6 +5,7 @@ import { usePanelSelection } from "./usePanelSelection";
 import { useChatSelectionHighlight } from "./useChatSelectionHighlight";
 import { useQuickAskReview } from "./useQuickAskReview";
 import { useQuickAskControls } from "./useQuickAskControls";
+import { useHeldWhileBusy } from "./useHeldWhileBusy";
 import type { EditorSetup } from "./useEditorSetup";
 import type { SelectionChipHandlers } from "../ai/chat/ChatComposer";
 import { useAgentPanel } from "../ai/chat/panel/agent-panel";
@@ -49,6 +50,13 @@ export function useEditorChat({
     requestImageName: setup.imageName.requestImageName,
   });
   const { pendingEdits, conversation, quickConversation } = proposals;
+  useHeldWhileBusy({
+    tabId: setup.tabId,
+    filePath,
+    chats: [conversation, quickConversation],
+    quickAskOpen: inlineChat.visible,
+    statuses: pendingEdits.allStatuses,
+  });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
 
   const bridge = useChatContextBridge({

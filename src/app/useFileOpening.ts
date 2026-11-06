@@ -151,10 +151,12 @@ export function useFileOpening(opts: {
         if (asDocument) throw err;
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
-        const now =
-          (await offerPluginToOpen(path, t)) === "on"
-            ? customEditorFor(path)
-            : null;
+        const offered = await offerPluginToOpen(path, t);
+        if (offered === "system") {
+          await exportDoc.openLinkedFile(path);
+          return null;
+        }
+        const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
         throw err;
       }
@@ -307,6 +309,8 @@ export function useFileOpening(opts: {
     const { offerPluginToOpen } = await import("../plugins/store/open-offer");
     const offered = await offerPluginToOpen(path, t);
     if (offered === "on") await openPathInTab(path);
+    // The card's "Open with system app" was the user's say-so.
+    if (offered === "system") await exportDoc.openLinkedFile(path);
     if (offered !== "none") return;
     const open = await showConfirm(
       t.linkOpenFileConfirm.replace("{name}", basename(path)),

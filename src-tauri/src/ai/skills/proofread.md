@@ -11,6 +11,7 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
+  textus-index: "Use when asked to proofread, check for typos or errors, or check against a standard."
   textus-category: "check"
   textus-modes: "review"
   textus-packs: "contract standards#typography standards#numbers standards#words"

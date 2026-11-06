@@ -1,5 +1,6 @@
 import { $inputRule, $nodeSchema, $remark } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
+import type { Transaction } from "@milkdown/kit/prose/state";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type {
   Code,
@@ -38,28 +39,6 @@ declare module "mdast" {
   interface RootContentMap {
     wikilink: Wikilink;
   }
-}
-
-const WIKILINK_SOURCE = /^\[\[([^[\]\n]+)\]\]$/;
-
-export interface WikilinkTarget {
-  /** The note as written, without `#heading` and `|text`; empty for a heading
-   *  of this document. */
-  note: string;
-  heading: string | null;
-}
-
-/** What a wikilink's source (`[[Note#Heading|text]]`) points at; null
- *  when it isn't one. */
-export function parseWikilink(source: string): WikilinkTarget | null {
-  const match = WIKILINK_SOURCE.exec(source);
-  if (!match) return null;
-  const [target] = match[1].split("|");
-  const hash = target.indexOf("#");
-  const note = (hash < 0 ? target : target.slice(0, hash)).trim();
-  const heading = hash < 0 ? null : target.slice(hash + 1).trim() || null;
-  if (!note && !heading) return null;
-  return { note, heading };
 }
 
 const OPEN = 91; // "["
@@ -183,3 +162,25 @@ export const wikilinkInputRule = $inputRule(
       );
     }),
 );
+
+const WHOLE_WIKILINK = /(^|[^!])(\[\[[^[\]\n]+\]\])/g;
+
+/** `[[...]]` put in as text in one go - a completion taken - made the
+ *  wikilinks typing their last "]" makes, so a save keeps their brackets. */
+export function wikilinksIn(tr: Transaction, from: number, to: number): void {
+  const type = tr.doc.type.schema.nodes.wikilink;
+  if (!type) return;
+  const text = tr.doc.textBetween(from, to, "\n", "\n");
+  const found: [number, number, string][] = [];
+  for (const m of text.matchAll(WHOLE_WIKILINK)) {
+    const start = from + m.index + m[1].length;
+    found.push([start, start + m[2].length, m[2]]);
+  }
+  // From the end, so the earlier positions still hold.
+  for (const [start, end, source] of found.reverse())
+    tr.replaceWith(
+      start,
+      end,
+      type.create({}, tr.doc.type.schema.text(source)),
+    );
+}

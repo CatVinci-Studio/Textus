@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { END, openApp } from "./helpers";
 
 /**
  * Code blocks a plugin draws (textus.views.registerCodeBlock): the page
@@ -94,7 +94,7 @@ test("a plugin draws its code block, follows its source and can change it", asyn
   await page.locator(`${editor} .plugin-code-block`).hover();
   await page.getByRole("button", { name: "Edit Source" }).click();
   await expect(page.locator(`${editor} pre`)).toBeVisible();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" there");
   await expect(frame.locator("#out")).toHaveText("HELLO THERE!");
 

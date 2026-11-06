@@ -30,26 +30,6 @@
   padding: 2.5rem 1.75rem 6rem;
 }
 
-/* Not ProseMirror content, just styled like it: the base sheet's
-   white-space: break-spaces drew the blocks' newlines as blank lines. */
-.split-preview .split-preview-body {
-  outline: none;
-  white-space: normal;
-  min-height: 0;
-}
-
-.split-preview-body img {
-  max-width: 100%;
-}
-
-/* The preview's plain <pre> gets the editor's code-block box. */
-.split-preview-body pre {
-  background: var(--doc-code-bg);
-  border: 1px solid var(--doc-border);
-  border-radius: var(--doc-radius);
-  margin: var(--doc-gap-box) 0;
-}
-
 /* Narrow windows stack the panes instead of squeezing both. */
 @media (max-width: 760px) {
   .split-view {
@@ -59,4 +39,11 @@
     border-right: none;
     border-bottom: 1px solid var(--ui-border);
   }
+}
+
+/* An Obsidian vault without strict line breaks breaks the line at a single
+   newline, which the editor shows as a space. */
+.split-preview-breaks [data-type="hardbreak"][data-is-inline="true"]::after {
+  content: "\A";
+  white-space: pre;
 }

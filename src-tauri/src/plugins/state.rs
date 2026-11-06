@@ -122,11 +122,24 @@ pub fn plugin_set(
     granted: Vec<String>,
 ) -> Result<(), String> {
     require_id(&id)?;
+    // Only what its manifest asks for can be granted, whoever calls.
+    let declared = super::install::plugins_installed(app.clone())?
+        .into_iter()
+        .find(|p| p.id == id)
+        .map(|p| super::manifest::declared_permissions(&p.manifest))
+        .unwrap_or_default();
     update(&app, |state| {
         let entry = state.plugins.entry(id).or_default();
         entry.enabled = enabled;
-        entry.granted = granted;
+        entry.granted = only_declared(granted, &declared);
     })
+}
+
+fn only_declared(granted: Vec<String>, declared: &[String]) -> Vec<String> {
+    granted
+        .into_iter()
+        .filter(|g| declared.contains(g))
+        .collect()
 }
 
 #[cfg(test)]
@@ -145,6 +158,24 @@ mod tests {
             },
         );
         PluginsState { all_on, plugins }
+    }
+
+    #[test]
+    fn only_what_the_manifest_asks_for_is_granted() {
+        let declared = super::super::manifest::declared_permissions(
+            r#"{"permissions": ["files.read", "network:api.example.com", "shell"]}"#,
+        );
+        assert_eq!(declared, ["files.read", "network:api.example.com"]);
+        let asked = [
+            "files.read",
+            "files.write",
+            "shell",
+            "network:api.example.com",
+        ];
+        assert_eq!(
+            only_declared(asked.iter().map(|s| s.to_string()).collect(), &declared),
+            ["files.read", "network:api.example.com"]
+        );
     }
 
     #[test]

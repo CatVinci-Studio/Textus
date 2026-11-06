@@ -66,9 +66,9 @@ describe("the Windows app menu", () => {
     expect(entries.map((entry) => entry.accel)).not.toContain("mod+q");
   });
 
-  it("keeps a browser's tab keys: Ctrl+T, Ctrl+N, Ctrl+W, Ctrl+Shift+T", () => {
-    expect(accelOf(t.menuNewTab)).toBe("mod+t");
-    expect(accelOf(t.menuNewWindow)).toBe("mod+n");
+  it("has other editors' keys: Ctrl+N a new tab, Ctrl+Shift+N a window, Ctrl+W, Ctrl+Shift+T", () => {
+    expect(accelOf(t.menuNewTab)).toBe("mod+n");
+    expect(accelOf(t.menuNewWindow)).toBe("mod+shift+n");
     expect(accelOf(t.menuCloseTab)).toBe("mod+w");
     expect(accelOf(t.menuReopenClosedTab)).toBe("mod+shift+t");
   });

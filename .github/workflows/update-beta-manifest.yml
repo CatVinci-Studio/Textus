@@ -1,7 +1,7 @@
 name: Update beta manifest
 
 # The app's beta update channel reads textus-beta.json from our own R2
-# bucket (textus.catvinci.com/download/textus-beta.json), because GitHub's
+# bucket (textus.md/download/textus-beta.json), because GitHub's
 # releases/latest skips pre-releases. This copies a published release's
 # textus-latest.json there - release candidates and stable releases alike,
 # but never an older version than the one already there

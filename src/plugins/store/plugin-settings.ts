@@ -1,4 +1,7 @@
-import { fs } from "../../platform/ipc";
+import {
+  readProjectSettings,
+  updateProjectSettings,
+} from "../../storage/project-settings";
 import { isRecord } from "../../prefs/settings-sync";
 import {
   loadSettings,
@@ -35,20 +38,6 @@ export function onPluginSettingsChange(fn: () => void): () => void {
   };
 }
 
-const projectFile = (root: string) => `${root}/.textus/settings.json`;
-
-/** The project's settings file as a whole, or nothing. */
-async function readProjectFile(root: string): Promise<Record<string, unknown>> {
-  try {
-    const parsed: unknown = JSON.parse(
-      await fs.readTextFile(projectFile(root)),
-    );
-    return isRecord(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
 /** Reads the plugin settings of the folder now open (null: none). */
 export async function loadProjectPluginSettings(
   root: string | null,
@@ -61,7 +50,7 @@ export async function loadProjectPluginSettings(
     return;
   }
   if (project?.root === root) return;
-  const plugins = (await readProjectFile(root)).plugins;
+  const plugins = (await readProjectSettings(root)).plugins;
   project = {
     root,
     values: isRecord(plugins)
@@ -136,14 +125,12 @@ export async function setPluginValue(
   }
   if (!project) throw new Error("No folder is open.");
   const { root } = project;
-  const file = await readProjectFile(root);
-  const plugins = isRecord(file.plugins) ? (file.plugins as Layer) : {};
-  const next = { ...plugins, [id]: put(plugins[id]) };
-  if (Object.keys(next[id]).length === 0) delete next[id];
-  await fs.writeTextFile(
-    projectFile(root),
-    JSON.stringify({ ...file, plugins: next }, null, 2) + "\n",
-  );
+  let next: Layer = {};
+  await updateProjectSettings(root, "plugins", (plugins) => {
+    next = { ...(plugins as Layer), [id]: put((plugins as Layer)[id]) };
+    if (Object.keys(next[id]).length === 0) delete next[id];
+    return next;
+  });
   project = { root, values: next };
   notify();
 }

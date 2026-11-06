@@ -23,7 +23,7 @@ Hinweise im GitHub-Stil:
 
 ## Textauszeichnung
 
-**Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`.
+**Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`. ``Ctrl+` `` (auch auf dem Mac Control) macht die Auswahl zu Inline-Code, ``Ctrl+Shift+` `` streicht sie durch, und `Cmd+K` macht sie zum Link, mit dem Cursor dort, wo die Adresse hinkommt.
 
 Emoji-Kurzcodes wie auf GitHub erscheinen als Emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). Die Datei behält den Kurzcode; setzen Sie den Cursor darauf, um ihn zu bearbeiten.
 
@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Einstellungen → Editor & Design → Diagramm-Engine** legt fest, was diese Blöcke zeichnet: Mermaid, die Voreinstellung, oder Pele, das schneller ist, Diagramme aber auf seine eigene Art anordnet und einige Funktionen weglässt; ein Diagramm, das Pele nicht zeichnen kann, zeichnet Mermaid.
 
+Die Farben folgen dem Erscheinungsbild — im hellen eine ruhige graue Palette, im dunklen seine dunkle — und ein importiertes Theme oder eigenes CSS kann mit `--doc-mermaid-theme: forest` eine andere eingebaute Palette wählen.
+
 ## Bilder
 
 Füge ein Bild direkt aus der Zwischenablage ein – Textus speichert es und fügt den Verweis ein. Wohin, legst du unter **Einstellungen → Editor & Design → Bilder** fest. **Auf diesem Computer** ist es ein **Unterordner** im Ordner des Dokuments, standardmäßig `assets/`, dessen Namen du ändern kannst, oder **Derselbe Ordner wie das Dokument**; die Einstellungen zeigen den Link, den ein eingefügtes Bild bekommt. Mit **Zu einem Bildhoster hochladen** geht es an PicGo / PicList, SM.MS, Imgur oder deinen eigenen Endpunkt (**Eigener Server**).
@@ -160,7 +162,7 @@ Alle findest du im Menü **Ansicht** und unter **Einstellungen → Editor & Desi
 
 **Ansicht → Schreibgeschützt** (auch im Rechtsklickmenü eines Tabs) schützt ein Dokument vor Änderungen – durch Tippen, Einfügen, Ablegen, Rückgängig, Textus AI oder Plugins. Ein Vorhängeschloss neben dem Titel zeigt es an; ein Klick darauf macht das Dokument wieder bearbeitbar.
 
-**Ansicht → Befehlspalette…** (`Cmd+Shift+P`) findet alles, was die Menüs können, und jeden Befehl, den ein Plugin hinzufügt, wenn du ein paar Buchstaben seines Namens tippst. Sie wechselt außerdem das Erscheinungsbild (hell, dunkel oder wie das System) und das Editor-Design und schaltet Textus AI ein oder aus.
+**Ansicht → Befehlspalette…** (`Cmd+Shift+P`) findet alles, was die Menüs können, und jeden Befehl, den ein Plugin hinzufügt, wenn du ein paar Buchstaben seines Namens tippst. Sie wechselt außerdem das Erscheinungsbild (hell, dunkel oder wie das System) und das Editor-Design und schaltet Textus AI ein oder aus. **Bearbeiten → Suchen & Ersetzen…** (`Cmd+F`) sucht im Dokument, **Bearbeiten → Ersetzen…** (`Cmd+Option+F`) öffnet es mit der Ersetzen-Zeile, und `Cmd+G` springt zum nächsten Treffer.
 
 Der Tab **Gliederung** der Seitenleiste listet die Überschriften des Dokuments auf; ein Klick auf eine führt dorthin. Ein Rechtsklick auf die Gliederung bietet **Alle aufklappen** und **Alle zuklappen**, oder klappe mit `Option`-Klick (`Alt`-Klick) auf den Pfeil einer Überschrift alle auf einmal auf oder zu.
 
@@ -177,11 +179,11 @@ Der Tab **Gliederung** der Seitenleiste listet die Überschriften des Dokuments 
 
 ## Tabs und Fenster
 
-`Cmd+T` öffnet einen neuen Tab, `Cmd+N` ein neues Fenster, und **Datei → Geschlossenen Tab wieder öffnen** (`Cmd+Shift+T`) holt die Dokumente zurück, die du geschlossen hast, das zuletzt geschlossene zuerst. Ein Mittelklick schließt einen Tab; das Rechtsklickmenü eines Tabs hat **Andere schließen**, **Tabs links schließen** und **Tabs rechts schließen** (Tabs mit ungespeicherten Änderungen bleiben offen), **Pfad kopieren** und **In neues Fenster verschieben**. Du kannst einen Tab auch aus dem Fenster ziehen, um ihm ein eigenes Fenster zu geben. Wenn Textus wieder öffnet, kommt jedes Fenster mit seinen eigenen Tabs zurück.
+`Cmd+N` (oder `Cmd+T`) öffnet einen neuen Tab, `Cmd+Shift+N` ein neues Fenster, und **Datei → Geschlossenen Tab wieder öffnen** (`Cmd+Shift+T`) holt die Dokumente zurück, die du geschlossen hast, das zuletzt geschlossene zuerst. Ein Mittelklick schließt einen Tab; das Rechtsklickmenü eines Tabs hat **Andere schließen**, **Tabs links schließen** und **Tabs rechts schließen** (Tabs mit ungespeicherten Änderungen bleiben offen), **Pfad kopieren** und **In neues Fenster verschieben**. Du kannst einen Tab auch aus dem Fenster ziehen, um ihm ein eigenes Fenster zu geben. Wenn Textus wieder öffnet, kommt jedes Fenster mit seinen eigenen Tabs zurück.
 
 ## Ordner und Dateisuche
 
-**Datei → Ordner öffnen…** öffnet einen ganzen Ordner in der Seitenleiste: Der Dateibaum bleibt dort, während du Dokumente darin öffnest, der Ordner kommt mit deiner Sitzung zurück, und **Datei → Ordner schließen** lässt den Baum wieder dem Dokument folgen. Das Feld oben im Tab **Dateien** der Seitenleiste sucht Dateinamen im ganzen Ordner; `Cmd+Shift+O` springt dorthin. Tippe zum Filtern, `↑`/`↓` zum Bewegen, `Enter` zum Öffnen, `Esc` zum Leeren. Beides gibt es nur auf dem Desktop.
+**Datei → Projekt öffnen…** öffnet einen ganzen Ordner in der Seitenleiste: Der Dateibaum bleibt dort, während du Dokumente darin öffnest, der Ordner kommt mit deiner Sitzung zurück, und **Datei → Projekt schließen** lässt den Baum wieder dem Dokument folgen. Das Feld oben im Tab **Dateien** der Seitenleiste sucht Dateinamen im ganzen Ordner; `Cmd+Shift+O` springt dorthin. Tippe zum Filtern, `↑`/`↓` zum Bewegen, `Enter` zum Öffnen, `Esc` zum Leeren. Beides gibt es nur auf dem Desktop.
 
 Der Baum ist auch eine kleine Dateiverwaltung. Der Name des übergeordneten Ordners darüber führt eine Ebene hinauf. **Sortieren** ordnet ihn nach Name oder nach Änderungsdatum, und der Filter neben dem Suchfeld, **Alle Dateien** oder **Nur Dokumente**, gilt für den Baum wie für die Suche. Ein Rechtsklick auf einen Ordner, eine Datei oder die leere Fläche darunter legt dort ein **Neues Dokument** oder einen **Neuen Ordner** an, und eine Datei oder ein Ordner, auf einen anderen Ordner gezogen, wird dorthin verschoben; ein geöffnetes Dokument folgt an den neuen Ort. Nichts wird ersetzt: Ein vergebener Name wird abgelehnt.
 

@@ -4,9 +4,10 @@
  */
 
 /** What covers: menus, dialogs and pickers. A hover card or note popover
- *  sits by its words in a document, never over a page. */
+ *  sits by its words in a document, and a plugin's floating view (the desk
+ *  pet) stays up for good: neither hides a page. */
 const COVERS =
-  '[role="dialog"]:not(.hover-card, .review-note-popover), [role="alertdialog"], [role="menu"], [role="listbox"]';
+  '[role="dialog"]:not(.hover-card, .review-note-popover, .floating-view), [role="alertdialog"], [role="menu"], [role="listbox"]';
 
 const listeners = new Set<() => void>();
 let observer: MutationObserver | null = null;

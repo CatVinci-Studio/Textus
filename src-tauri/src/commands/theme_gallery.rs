@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::time::Duration;
 
-const GALLERY_BASE: &str = "https://textus.catvinci.com/theme-gallery/";
+const GALLERY_BASE: &str = "https://textus.md/theme-gallery/";
 const CATALOG_PATH: &str = "index.json";
 
 /// The gallery accepts a stylesheet up to 200 KB and screenshots up to 2 MB;
@@ -347,7 +347,7 @@ mod tests {
     fn only_theme_files_in_the_gallery_repository_are_fetched() {
         assert_eq!(
             css_url("themes/plain/theme.css").as_deref(),
-            Some("https://textus.catvinci.com/theme-gallery/themes/plain/theme.css")
+            Some("https://textus.md/theme-gallery/themes/plain/theme.css")
         );
         assert!(preview_url("themes/midnight-ink/preview.png").is_some());
         assert!(preview_url("themes/lumen/preview-2.WEBP").is_some());

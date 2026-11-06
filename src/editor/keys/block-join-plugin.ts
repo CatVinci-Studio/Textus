@@ -60,6 +60,12 @@ function startOfText($pos: ResolvedPos): number {
   return body ? body.from : $pos.pos;
 }
 
+const opensWrapper = ($pos: ResolvedPos) =>
+  $pos.depth > 1 &&
+  $pos.index(-1) === 0 &&
+  !inTableCell($pos) &&
+  !opensAlert($pos);
+
 const isEmptyLine = (node: Node) =>
   node.content.size === 0 && !isVerbatim(node);
 
@@ -76,6 +82,9 @@ export const backspaceKeepingApart: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || !$from.parent.isTextblock || $from.parentOffset !== 0)
     return false;
+  // A list item's or quote's first line: the default takes it out of its
+  // list or quote, which never runs it into the code above.
+  if (opensWrapper($from)) return false;
   const $prev = neighbour($from, -1);
   if (!$prev || !keptApart($from, $prev)) return false;
   // An empty code block goes, as by default.

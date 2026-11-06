@@ -23,6 +23,7 @@ pub mod fonts;
 pub mod fs;
 pub mod image_host;
 pub mod input_source;
+pub mod link_root;
 pub mod links;
 #[cfg(desktop)]
 pub mod native_edit;
@@ -39,6 +40,7 @@ pub mod theme_gallery;
 pub mod themes;
 #[cfg(desktop)]
 pub mod tree_ops;
+pub mod undo_files;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;

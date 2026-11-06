@@ -1,5 +1,5 @@
 //! Tools plugins give Textus AI: each window reports its plugins' tools, a
-//! request offers them, and a call goes back to the offering window. Like MCP
+//! request offers the asking window's, and a call goes back there. Like MCP
 //! tools, calls run one at a time, in order.
 
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
@@ -108,23 +108,44 @@ fn model_name(plugin: &str, name: &str) -> String {
     out
 }
 
-/// Every tool the windows' plugins offer, for this request.
-pub fn tools_for_request<'a>(app: &AppHandle) -> Vec<Tool<'a>> {
+/// The tools the asking window's plugins offer, for this request. A detached
+/// chat asks for the editor window it serves.
+pub fn tools_for_request<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
+    #[cfg(desktop)]
+    let window = app
+        .try_state::<crate::commands::chat_window::OpenChatWindows>()
+        .and_then(|open| crate::commands::chat_window::editor_for_chat(asking, &open))
+        .unwrap_or_else(|| asking.to_string());
+    // The phone has one window and no detached chats.
+    #[cfg(mobile)]
+    let window = asking.to_string();
     let hub = app.state::<PluginAiTools>();
     let offered = hub.offered.lock().unwrap_or_else(|e| e.into_inner());
+    window_tools(&offered, &window)
+        .into_iter()
+        .map(|(name, tool)| plugin_tool(app.clone(), window.clone(), name, tool.clone()))
+        .collect()
+}
+
+/// `window`'s tools, each with the model's name for it, kept distinct.
+fn window_tools<'t>(
+    offered: &'t HashMap<String, Vec<PluginAiTool>>,
+    window: &str,
+) -> Vec<(String, &'t PluginAiTool)> {
     let mut taken: Vec<String> = Vec::new();
-    let mut tools = Vec::new();
-    for (window, list) in offered.iter() {
-        for tool in list {
+    offered
+        .get(window)
+        .into_iter()
+        .flatten()
+        .map(|tool| {
             let mut name = model_name(&tool.plugin, &tool.name);
             while taken.contains(&name) {
                 name.push('_');
             }
             taken.push(name.clone());
-            tools.push(plugin_tool(app.clone(), window.clone(), name, tool.clone()));
-        }
-    }
-    tools
+            (name, tool)
+        })
+        .collect()
 }
 
 fn plugin_tool<'a>(app: AppHandle, window: String, name: String, tool: PluginAiTool) -> Tool<'a> {
@@ -243,6 +264,27 @@ mod tests {
             "plugin_word-count_count_words"
         );
         assert!(model_name("a.b", &"x".repeat(100)).len() <= 64);
+    }
+
+    fn tool(plugin: &str, name: &str) -> PluginAiTool {
+        PluginAiTool {
+            plugin: plugin.into(),
+            name: name.into(),
+            description: String::new(),
+            parameters: json!({}),
+        }
+    }
+
+    #[test]
+    fn a_request_is_offered_its_own_windows_tools_once() {
+        let mut offered: HashMap<String, Vec<PluginAiTool>> = HashMap::new();
+        offered.insert("main".into(), vec![tool("a.count", "words")]);
+        offered.insert("window-2".into(), vec![tool("a.count", "words")]);
+        let names: Vec<String> = window_tools(&offered, "main")
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect();
+        assert_eq!(names, vec!["plugin_count_words".to_string()]);
     }
 
     #[test]

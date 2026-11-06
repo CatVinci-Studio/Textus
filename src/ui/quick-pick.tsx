@@ -4,12 +4,12 @@ import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
 import { isImeKeydown } from "../utils/ime";
 import {
-  mayBePinyin,
-  pinyinEngine,
-  pinyinIndexOf,
-  readings,
-} from "../utils/pinyin";
-import { searchFold } from "../utils/search-fold";
+  preparePinyin,
+  prepareList,
+  rankList,
+  type Filterable,
+  type PreparedList,
+} from "../utils/list-filter";
 
 /** A list to choose one item from, or several ticked, filtered by what is
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
@@ -80,20 +80,29 @@ function answer(request: Request, value: unknown) {
   request.resolve(value);
 }
 
-const labelReadings = new Map<string, string[][] | null>();
+type Entry = Filterable & { item: QuickPickItem };
+const prepared = new WeakMap<readonly QuickPickItem[], PreparedList<Entry>>();
 
-/** Whether every word typed is in the item's label or description (case
- *  and accents aside), or the
- *  label is a Chinese one the query spells in pinyin. */
-export function quickPickMatches(item: QuickPickItem, query: string): boolean {
-  const haystack = searchFold(`${item.label} ${item.description ?? ""}`);
-  const words = searchFold(query).split(/\s+/).filter(Boolean);
-  if (words.every((word) => haystack.includes(word))) return true;
-  if (!mayBePinyin(query)) return false;
-  // Kept once the readings' source has loaded; until then, worked out again.
-  const chars = labelReadings.get(item.label) ?? readings(item.label);
-  if (pinyinEngine.peek()) labelReadings.set(item.label, chars);
-  return !!chars && pinyinIndexOf(chars, query) >= 0;
+/** The items `query` finds, best first, by the filter the / panel uses:
+ *  the label, then every word in the label or description, or a Chinese
+ *  label spelled in pinyin. */
+export function quickPickFilter(
+  items: readonly QuickPickItem[],
+  query: string,
+): QuickPickItem[] {
+  let list = prepared.get(items);
+  if (!list) {
+    list = prepareList(
+      items.map((item) => ({
+        label: item.label,
+        keywords: item.description,
+        item,
+      })),
+    );
+    prepared.set(items, list);
+  }
+  preparePinyin(list, Infinity);
+  return rankList(list, query, Infinity).map((entry) => entry.item);
 }
 
 export function QuickPickHost({
@@ -144,11 +153,10 @@ function QuickPick({
       ? query.slice(request.query.length)
       : query;
     const words = /\p{L}/u.test(rest);
-    return request.items.filter(
-      (item) =>
-        quickPickMatches(item, query) ||
-        (words && quickPickMatches(item, rest)),
-    );
+    const found = quickPickFilter(request.items, query);
+    return words
+      ? [...new Set([...found, ...quickPickFilter(request.items, rest)])]
+      : found;
   }, [request.items, request.query, query]);
   const dialog = useModalDialog(
     () => answer(request, null),

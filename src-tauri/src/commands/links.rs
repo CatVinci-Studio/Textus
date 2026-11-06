@@ -1,7 +1,7 @@
 //! Pages the app opens in the system browser. Each URL is fixed here, so the
 //! frontend can't send the browser elsewhere; document links are held to web and mail.
 
-const SITE: &str = "https://textus.catvinci.com";
+const SITE: &str = "https://textus.md";
 
 /// The website's community page in the UI's `language`; without one, /join
 /// picks by the browser's languages. The page, not an invite, so changes need no update.
@@ -82,10 +82,10 @@ pub fn open_community(app: &tauri::AppHandle, language: Option<&str>) -> Result<
 fn about_url(page: &str) -> Option<&'static str> {
     match page {
         "github" => Some("https://github.com/CatVinci-Studio/Textus"),
-        "discord" => Some("https://textus.catvinci.com/discord"),
-        "qq" => Some("https://textus.catvinci.com/qq"),
+        "discord" => Some("https://textus.md/discord"),
+        "qq" => Some("https://textus.md/qq"),
         // Settings › Browse themes, when the gallery can't be reached.
-        "themes" => Some("https://textus.catvinci.com/themes/"),
+        "themes" => Some("https://textus.md/themes/"),
         // The market's How to list yours: what gets listed, and how.
         "listing" => Some("https://github.com/CatVinci-Studio/textus-plugins/blob/main/LISTING.md"),
         _ => None,
@@ -156,15 +156,15 @@ mod tests {
         }
         assert_eq!(
             tutorials_url(Some("grammar"), Some("en")).as_deref(),
-            Some("https://textus.catvinci.com/tutorials/#grammar")
+            Some("https://textus.md/tutorials/#grammar")
         );
         assert_eq!(
             tutorials_url(Some("ai-panel"), Some("zh-Hant")).as_deref(),
-            Some("https://textus.catvinci.com/zh-hant/tutorials/#ai-panel")
+            Some("https://textus.md/zh-hant/tutorials/#ai-panel")
         );
         assert_eq!(
             tutorials_url(None, Some("ja")).as_deref(),
-            Some("https://textus.catvinci.com/ja/tutorials/")
+            Some("https://textus.md/ja/tutorials/")
         );
     }
 
@@ -176,11 +176,11 @@ mod tests {
         // An unknown language gets the English page, never a made-up folder.
         assert_eq!(
             tutorials_url(Some("memory"), Some("../evil")).as_deref(),
-            Some("https://textus.catvinci.com/tutorials/#memory")
+            Some("https://textus.md/tutorials/#memory")
         );
         assert_eq!(
             tutorials_url(None, None).as_deref(),
-            Some("https://textus.catvinci.com/tutorials/")
+            Some("https://textus.md/tutorials/")
         );
     }
 
@@ -195,12 +195,9 @@ mod tests {
         }
         assert_eq!(
             community_url(Some("zh-Hant")),
-            "https://textus.catvinci.com/zh-hant/community/"
+            "https://textus.md/zh-hant/community/"
         );
-        assert_eq!(
-            community_url(Some("en")),
-            "https://textus.catvinci.com/community/"
-        );
+        assert_eq!(community_url(Some("en")), "https://textus.md/community/");
     }
 
     #[test]
@@ -233,10 +230,7 @@ mod tests {
 
     #[test]
     fn an_unknown_language_lets_the_site_choose() {
-        assert_eq!(community_url(None), "https://textus.catvinci.com/join");
-        assert_eq!(
-            community_url(Some("../evil")),
-            "https://textus.catvinci.com/join"
-        );
+        assert_eq!(community_url(None), "https://textus.md/join");
+        assert_eq!(community_url(Some("../evil")), "https://textus.md/join");
     }
 }

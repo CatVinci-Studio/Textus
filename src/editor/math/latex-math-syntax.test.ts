@@ -47,15 +47,15 @@ describe("LaTeX math delimiters in a file", () => {
   it.each([
     ["inline", "a \\(x^2\\) b", ["math_inline:x^2"]],
     ["inline with spaces kept", "a \\( x \\) b", ["math_inline: x "]],
-    ["display inside a paragraph", "a \\[x\\] b", ["math_inline:x"]],
+    ["display inside a paragraph", "a \\[x^2\\] b", ["math_inline:x^2"]],
     ["display alone on a line", "\\[x = 1\\]", ["math_block:x = 1"]],
     ["display on lines of its own", "\\[\nx = 1\n\\]", ["math_block:x = 1"]],
     [
       "display between lines of text",
-      "a\n\\[\nx\n\\]\nb",
-      ["math_inline:\nx\n"],
+      "a\n\\[\nx_1\n\\]\nb",
+      ["math_inline:\nx_1\n"],
     ],
-    ["display in a list item", "- \\[x\\]", ["math_block:x"]],
+    ["display in a list item", "- \\[x^2\\]", ["math_block:x^2"]],
     [
       "a LaTeX command inside",
       "\\(\\frac{a}{b} \\\\ c\\)",
@@ -82,6 +82,7 @@ describe("LaTeX math delimiters in a file", () => {
     ["a pair across paragraphs", "\\(a\n\nb\\)"],
     ["a pair across a blank line", "\\[\nx\n\n\\]"],
     ["an escaped backslash", "\\\\(x\\\\)"],
+    ["brackets with no LaTeX in them", "see \\[optional\\] here"],
   ])("leaves %s as text", async (_name, markdown) => {
     expect((await open(markdown)).math).toEqual([]);
   });
@@ -89,15 +90,15 @@ describe("LaTeX math delimiters in a file", () => {
   it.each([
     ["inline", "a \\(x^2\\) b\n"],
     ["inline with spaces", "a \\( x \\) b\n"],
-    ["display inside a paragraph", "a \\[x\\] b\n"],
+    ["display inside a paragraph", "a \\[x^2\\] b\n"],
     ["display alone on a line", "\\[x = 1\\]\n"],
     ["display on lines of its own", "\\[\nx = 1\n\\]\n"],
-    ["display in a quote", "> \\[\n> x\n> \\]\n"],
-    ["display between lines of text", "a\n\\[\nx\n\\]\nb\n"],
+    ["display in a quote", "> \\[\n> x^2\n> \\]\n"],
+    ["display between lines of text", "a\n\\[\nx_1\n\\]\nb\n"],
     ["a multi-line formula", "\\[\na \\\\\nb\n\\]\n"],
     [
       "both kinds with dollars",
-      "$a$ \\(b\\) $$c$$\n\n$$\nd\n$$\n\n\\[\ne\n\\]\n",
+      "$a$ \\(b\\) $$c$$\n\n$$\nd\n$$\n\n\\[\ne^2\n\\]\n",
     ],
   ])("writes %s back as it was after an edit", async (_name, markdown) => {
     const saved = await editAndSave(markdown);
@@ -123,10 +124,10 @@ describe("LaTeX math delimiters in a file", () => {
     const editor = await createTestEditor("");
     editors.push(editor);
     const saved = editor.action((ctx) => {
-      const doc = parseMarkdownSource(ctx, "a \\(x\\) b\n\n\\[y\\]\n");
+      const doc = parseMarkdownSource(ctx, "a \\(x\\) b\n\n\\[y^2\\]\n");
       return doc && ctx.get(serializerCtx)(doc);
     });
-    expect(saved).toBe("a $x$ b\n\n$$\ny\n$$\n");
+    expect(saved).toBe("a $x$ b\n\n$$\ny^2\n$$\n");
   });
 
   it("writes math the editor makes in dollars", async () => {

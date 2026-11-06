@@ -194,17 +194,17 @@ declare global {
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
-       *  "textus.offerPlugin" with { id, reason } suggests an official
-       *  plugin from the market: the user is asked to install it, or turn
-       *  it on, with its name, description and your reason (plain text, up
-       *  to 120 characters) under your plugin's name; resolves
-       *  whether it is on. True at once when it already is; false for an
-       *  id the market has no official plugin for (or when the market
-       *  can't be reached), for an installed plugin that can't be turned
-       *  on, while another offer is open, when the install fails, or when
-       *  declined - after which your plugin's offers aren't shown again in
-       *  that window. Don't await it in activate: activation has 10
-       *  seconds, and the user may take longer. From 1.3.9. */
+       *  "textus.offerPlugin" with { id } suggests an official plugin from
+       *  the market: a card at the bottom right with its name. It never
+       *  blocks editing and stays until the user acts; its permissions are
+       *  still asked before it installs.
+       *  Resolves true once it is installed and on (at once when it already
+       *  is); false for an id the market has no official plugin for (or
+       *  when the market can't be reached), for an installed plugin that
+       *  can't be turned on, while another card is shown, when the install
+       *  fails, on "Later", and on × - after which your plugin's offers of
+       *  that plugin aren't shown again (the user can bring them back in
+       *  Settings › Extensions). Don't await it in activate. From 1.3.9. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 
@@ -423,10 +423,46 @@ declare global {
           render(block: CodeBlock, webview: Webview): void | Promise<void>;
         },
       ): Disposable;
+      /** The content of `![[...]]` embeds of the kinds `contributes.embeds`
+       *  names, asked only for embeds in sight; Textus draws it read-only
+       *  and expands embeds inside it itself. One plugin draws each kind:
+       *  the first turned on. From 1.3.9 (files.read). */
+      registerEmbed(id: string, provider: EmbedProvider): EmbedHandle;
       /** The plugin's page in Settings (`contributes.settingsPage`). */
       registerSettingsPage(provider: {
         resolve(webview: Webview): void | Promise<void>;
       }): Disposable;
+    }
+
+    interface EmbedProvider {
+      /** null: nothing to show (Textus shows the link's name, dimmed). */
+      provideEmbed(
+        target: EmbedTarget,
+        context: { signal: AbortSignal },
+      ): EmbedContent | null | Promise<EmbedContent | null>;
+    }
+
+    /** What `![[...]]` points at, as `metadata.resolveNote` resolves it. */
+    interface EmbedTarget {
+      path: string;
+      heading?: string;
+      block?: string;
+      alias?: string;
+    }
+
+    interface EmbedContent {
+      /** Markdown, drawn read-only. Links and pictures in it are read from
+       *  `target.path`'s folder. Leave `![[...]]` in it as is: Textus draws
+       *  those itself, at most 5 deep and never in a loop. */
+      markdown: string;
+      /** Shown over it, opening the source when clicked; the link's name
+       *  without it. */
+      title?: string;
+    }
+
+    interface EmbedHandle extends Disposable {
+      /** Asks again for every embed shown. */
+      refresh(): void;
     }
 
     interface ListProvider {
@@ -551,7 +587,9 @@ declare global {
       ): Promise<boolean>;
       /** Completions as you type, for one of `contributes.completions`
        *  (editor.read): asked when what is before the caret matches its
-       *  `pattern`. `insert` replaces the match; `$0` marks the caret. */
+       *  `pattern`. `insert` replaces the match; `$0` marks the caret.
+       *  Shown in the / panel, grouped by plugin. 1.2: every matching
+       *  provider is asked at once, and none holds up typing. */
       registerCompletion(id: string, provider: CompletionProvider): Disposable;
       /** A card for what the pointer rests on (editor.read). */
       registerHover(provider: {
@@ -618,27 +656,71 @@ declare global {
     }
 
     interface CompletionProvider {
-      provideCompletions(context: {
-        /** Before the caret, in its paragraph or formula. */
-        text: string;
-        /** The part `pattern` matched, which an item replaces. */
-        match: string;
-        inMath: boolean;
-      }):
+      provideCompletions(
+        context: CompletionContext,
+      ):
         | CompletionItem[]
+        | CompletionList
         | null
         | undefined
-        | Promise<CompletionItem[] | null | undefined>;
+        | Promise<CompletionItem[] | CompletionList | null | undefined>;
+    }
+
+    interface CompletionContext {
+      /** Before the caret, in its paragraph or formula. */
+      text: string;
+      /** The part `pattern` matched, which an item replaces. */
+      match: string;
+      inMath: boolean;
+      /** From 1.3.9: the pattern's last capture group (the query); the
+       *  match without one. */
+      query: string;
+      /** From 1.3.9: after the caret, to the end of its block (at most 200
+       *  characters): the "]]" Textus pairs with "[[". */
+      after: string;
+      /** From 1.3.9: the document's path; null for an unsaved one. */
+      path: string | null;
+      /** From 1.3.9: aborts when Textus no longer needs the answer (the
+       *  text moved on, the panel closed). An answer after that is dropped. */
+      signal: AbortSignal;
+    }
+
+    /** From 1.3.9: a whole list (up to 20,000 items) Textus filters itself
+     *  as typing goes on, without asking again while the same pattern keeps
+     *  matching from the same place. An array is the provider's own
+     *  filtering: asked again on each key, at most 50 kept. */
+    interface CompletionList {
+      items: CompletionItem[];
+      complete: true;
     }
 
     interface CompletionItem {
       label: string;
+      /** Replaces the match; `$0` marks the caret. */
       insert: string;
       detail?: string;
+      /** From 1.3.9: one of the app's icons ("file", "link", "tag",
+       *  "calendar", "clock", "star", "heading", "block", "quote",
+       *  "emoji") or an SVG of the plugin's. */
+      icon?: string;
+      /** From 1.3.9: also found by (an English name, an alias). */
+      keywords?: string;
+      /** From 1.3.9: characters after the caret it replaces too: 2 for the
+       *  "]]" in `after`. */
+      replaceAfter?: number;
+      /** From 1.3.9: run once it is inserted - the plugin's own command or
+       *  one of Textus's. */
+      command?: { id: string; args?: unknown[] };
     }
 
     type HoverTarget =
-      | { type: "document"; path: string; heading: string | null }
+      | {
+          type: "document";
+          path: string;
+          heading: string | null;
+          /** From 1.3.9: a "^id" block the link points at, without "^". */
+          block?: string | null;
+        }
       | { type: "link"; url: string }
       | { type: "citation"; key: string };
 
@@ -662,12 +744,29 @@ declare global {
       before?: boolean;
     }
 
+    /** A document about to be saved. */
+    interface WillSave {
+      path: string;
+      text: string;
+      trigger: "manual" | "auto";
+      /** Its blocks in order; `from`/`to` are offsets into `text`. */
+      blocks: (Block & { from: number; to: number })[];
+    }
+
+    /** A block's new Markdown, by its id. */
+    interface BlockEdit {
+      block: string;
+      markdown: string;
+    }
+
     interface EditorKeys {
       /** Takes the editor's keys: "all" but the app's shortcuts, or "some" -
-       *  only `keys`. null gives them back. */
+       *  only `keys`. null gives back your own capture. One plugin at a time:
+       *  false while another holds them (its id is in your log). The boolean
+       *  is from 1.3.9; older Textus answers undefined. */
       capture(
         capture: { mode: "all" | "some"; keys: string[] } | null,
-      ): Promise<void>;
+      ): Promise<boolean>;
       onKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }
@@ -741,6 +840,13 @@ declare global {
        * write nothing.
        */
       process(path: string, change: (text: string) => string): Promise<string>;
+      /** The `^id` of the block at `line` (from 0) of `path`, adding a new
+       *  one (6 lowercase hex characters) where Obsidian reads it - the end
+       *  of a paragraph's, heading's or list item's last line; a line of its
+       *  own after a table, quote or code block - through `process`, every
+       *  other byte kept. null when no block is there. From 1.3.9
+       *  (files.write). */
+      blockId(path: string, line: number): Promise<string | null>;
       /** With `updateLinks`, links to it in the folder's documents follow. */
       rename(
         from: string,
@@ -755,13 +861,20 @@ declare global {
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
       onDidDelete: Event<{ path: string }>;
-      /** A document is about to be saved: return its text changed to save
-       *  that instead (within a second; files.write). */
+      /** A document is about to be saved (files.write). Plugins are asked
+       *  one after another in plugin id order, each given the text as the
+       *  one before left it, at most a second each. Return the blocks you
+       *  changed (`{ block, markdown }`, by the ids in `blocks`) - only
+       *  those are written back - or the whole text, which is written back
+       *  block by block. Code, math, HTML and link definition blocks stay
+       *  as the user wrote them, and each block keeps its line endings. A
+       *  change that would change again when run a second time is skipped
+       *  for this save. `trigger`, `blocks` and `BlockEdit[]` answers are
+       *  from 1.3.9. */
       onWillSave(
-        listener: (e: {
-          path: string;
-          text: string;
-        }) => string | void | Promise<string | void>,
+        listener: (
+          e: WillSave,
+        ) => string | BlockEdit[] | void | Promise<string | BlockEdit[] | void>,
       ): Disposable;
       /** 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for
        *  autosave. */
@@ -771,6 +884,59 @@ declare global {
         trigger: "manual" | "auto";
       }>;
       onDidChangeRoot: Event<{ path: string | null }>;
+      /** How the folder of `path` (a document or folder, from the root;
+       *  the open folder when left out) is written, whichever app made it -
+       *  Obsidian, Logseq, Foam, Dendron, a site generator, git, or the
+       *  folder's own `.textus/settings.json` "conventions". Read it
+       *  instead of other apps' settings files; a field no app sets is
+       *  null, for Textus's own settings. From 1.3.9 (files.read). */
+      conventions(path?: string): Promise<FolderConventions>;
+      /** The open folder's conventions changed: another folder, or its
+       *  app's settings edited. From 1.3.9. */
+      onDidChangeConventions: Event<{ root: string }>;
+    }
+
+    /** One setting of a folder and where it came from. */
+    interface ConventionSetting<T> {
+      value: T;
+      /** "textus", "typora", "obsidian", "logseq", "dendron", "foam",
+       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto" or
+       *  "git". */
+      app: string;
+      /** The folder these settings belong to. */
+      root: string;
+    }
+
+    interface FolderConventions {
+      /** The apps found, nearest first. */
+      sources: { app: string; root: string }[];
+      /** "wiki" or "markdown". */
+      linkStyle: ConventionSetting<string> | null;
+      /** "shortest", "relative" or "absolute". */
+      linkPath: ConventionSetting<string> | null;
+      /** The folder a link starting with "/" is read from. */
+      linkRoot: ConventionSetting<string> | null;
+      /** On a rename: "always", "ask" or "never". */
+      updateLinks: ConventionSetting<string> | null;
+      /** Where pictures go: "/" the root, "./" beside the document, "./sub"
+       *  below it, else a folder from the root; `${filename}` the
+       *  document's name. */
+      attachments: ConventionSetting<string> | null;
+      /** Whether a single newline shows as a line break. */
+      softBreaks: ConventionSetting<boolean> | null;
+      /** The templates folder, a full path. */
+      templates: ConventionSetting<string> | null;
+      /** Daily notes: folder (full path), file name format (moment.js
+       *  tokens, `[literal]` text), template file (full path). */
+      daily: ConventionSetting<{
+        folder: string;
+        format: string;
+        template: string | null;
+      }> | null;
+      /** Where new notes go, as `attachments` names a folder. */
+      newNotes: ConventionSetting<string> | null;
+      /** Paths the app hides. */
+      ignore: string[];
     }
 
     interface FileEntry {
@@ -810,8 +976,32 @@ declare global {
         path: string,
       ): Promise<{ path: string; line: number; text: string }[]>;
       /** Where a link written in `from` goes: a [[wiki link]] or a relative
-       *  path; null for none. */
+       *  path; null for none. 1.2: the same as `(await resolveNote(link,
+       *  from))?.path` for a target that exists. */
       resolveLink(link: string, from: string): Promise<string | null>;
+      /** Where a link goes, exactly as a click takes it: `link` as written -
+       *  "[[Note#^id|alias]]", "![[Note#Heading]]", "[[#^id]]", or a Markdown
+       *  link's target "Note.md#my-heading" / "../a/Note" - from the document
+       *  `from` (needed for relative links and same-note anchors). null when
+       *  `link` is no link to a file (a web URL). From 1.3.9 (files.read). */
+      resolveNote(link: string, from: string): Promise<ResolvedLink | null>;
+      /** The link Textus writes to `to` from `from`: the folder's style (in
+       *  an Obsidian vault, its "new link format" and wiki or Markdown
+       *  links; `[[wiki]]` by the shortest name elsewhere), with `#heading`,
+       *  `#^block` and `|alias` as given - `[[#Heading]]` within one note.
+       *  `style` overrides wiki or Markdown; `embed` adds "!". From 1.3.9
+       *  (files.read). */
+      linkTo(
+        to: string,
+        from: string,
+        options?: {
+          heading?: string;
+          block?: string;
+          alias?: string;
+          style?: "wiki" | "markdown";
+          embed?: boolean;
+        },
+      ): Promise<string>;
       tags(): Promise<{ tag: string; count: number }[]>;
       tasks(filter?: {
         done?: boolean;
@@ -830,6 +1020,22 @@ declare global {
       onDidChange: Event<{ paths: string[] }>;
     }
 
+    interface ResolvedLink {
+      /** Absolute. For a note that doesn't exist: where a click creates it. */
+      path: string;
+      exists: boolean;
+      /** "note": a Markdown document; "file": anything else (a PDF, a picture). */
+      kind: "note" | "file";
+      /** The last level of "#A#B"; never a "^id". */
+      heading?: string;
+      /** A "^id", without the "^". */
+      block?: string;
+      alias?: string;
+      /** Where the heading or block is; null for the top, or when it isn't
+       *  found (the note opens at its top, as a click does). */
+      line: number | null;
+    }
+
     interface DocumentMetadata {
       path: string;
       rel: string;
@@ -842,9 +1048,17 @@ declare global {
         resolved: string | null;
         line: number;
         text: string;
+        /** From 1.3.9: a `[[wiki link]]` or `![[embed]]`, so `target` is a
+         *  name to pass to resolveNote as "[[" + target + "]]". */
+        wiki: boolean;
       }[];
       tags: string[];
       tasks: Task[];
+      /** From 1.3.9: the block ids ("^abc123") in it, with the first words of
+       *  their block - for [[Note#^ completion. Also from `all`. */
+      blockIds: { id: string; line: number; text: string }[];
+      /** From 1.3.9: front matter `aliases` / `alias`, as strings. */
+      aliases: string[];
       /** Only from `get`. */
       blocks?: { id: string; kind: Block["kind"]; line: number }[];
       modifiedMs: number | null;
@@ -928,8 +1142,9 @@ declare global {
     interface Export {
       /** An HTML or PDF export's page, before it is written (editor.read):
        *  `css` is added to its styles, `html` replaces its content. Scripts
-       *  and handlers in the HTML are taken out. Each plugin is waited for
-       *  at most two seconds. */
+       *  and handlers in the HTML are taken out. Plugins are asked in plugin
+       *  id order, each given the HTML as the one before left it, and
+       *  waited for at most two seconds. */
       onWillExport(
         listener: (page: {
           format: "html" | "pdf";

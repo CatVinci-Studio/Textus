@@ -327,7 +327,10 @@ for (const lang of LANGS) {
         },
       });
       await canned(page, {
-        resolve_vault_note: fileIn(s.folder, s.previewLink),
+        resolve_note_link: {
+          path: fileIn(s.folder, s.previewLink),
+          exists: true,
+        },
       });
       const editor = page.locator('[data-active-tab="true"] .ProseMirror');
       await expect(editor.locator("h1")).toContainText(titles[0]);

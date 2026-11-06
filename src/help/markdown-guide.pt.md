@@ -23,7 +23,7 @@ Alertas no estilo do GitHub:
 
 ## Estilos de texto
 
-**Negrito** (`**texto**`), *itálico* (`*texto*`), ***negrito e itálico***, ~~tachado~~ (`~~texto~~`), ==destaque== (`==texto==`) e `código no texto`.
+**Negrito** (`**texto**`), *itálico* (`*texto*`), ***negrito e itálico***, ~~tachado~~ (`~~texto~~`), ==destaque== (`==texto==`) e `código no texto`. ``Ctrl+` `` (Control também no Mac) transforma a seleção em código no texto, ``Ctrl+Shift+` `` a risca e `Cmd+K` a coloca num link, com o cursor onde vai o endereço.
 
 Códigos curtos de emoji como no GitHub aparecem como o emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). O arquivo mantém o código; coloque o cursor sobre ele para editá-lo.
 
@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Ajustes → Editor e aparência → Motor de diagramas** escolhe quem desenha esses blocos: o Mermaid, padrão, ou o Pele, mais rápido, mas que organiza os diagramas do seu próprio jeito e deixa de fora alguns recursos; um diagrama que o Pele não consegue desenhar é desenhado pelo Mermaid.
 
+As cores seguem o aspecto — uma paleta cinza e sóbria no claro e a escura no escuro — e um tema importado ou o CSS personalizado pode escolher outra paleta interna com `--doc-mermaid-theme: forest`.
+
 ## Imagens
 
 Cole uma imagem direto da área de transferência: o Textus a salva e insere a referência. O destino se escolhe em **Ajustes → Editor e aparência → Imagens**. **Neste computador**, é uma **Subpasta** da pasta do documento, `assets/` por padrão, cujo nome você pode mudar, ou **A mesma pasta do documento**; os ajustes mostram o link que a imagem colada recebe. Com **Enviar para uma hospedagem de imagens**, ela vai para PicGo / PicList, SM.MS, Imgur ou um endpoint seu (**Personalizado**).
@@ -160,7 +162,7 @@ Todos estão no menu **Visualizar** e em **Ajustes → Editor e aparência → V
 
 **Visualizar → Só leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para tornar o documento editável de novo.
 
-**Visualizar → Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI.
+**Visualizar → Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI. **Editar → Buscar e Substituir…** (`Cmd+F`) procura no documento, **Editar → Substituir…** (`Cmd+Option+F`) abre a barra com a linha de substituição e `Cmd+G` vai para a próxima ocorrência.
 
 A aba **Estrutura** da barra lateral lista os títulos do documento; clique em um para ir até ele. Clique com o botão direito na estrutura para **Expandir tudo** e **Recolher tudo**, ou clique com `Option` (`Alt`) na seta de um título para recolher ou expandir todos de uma vez.
 
@@ -177,11 +179,11 @@ A aba **Estrutura** da barra lateral lista os títulos do documento; clique em u
 
 ## Abas e janelas
 
-`Cmd+T` abre uma nova aba, `Cmd+N` uma nova janela, e **Arquivo → Reabrir Aba Fechada** (`Cmd+Shift+T`) traz de volta os documentos que você fechou, do mais recente para o mais antigo. Um clique com o botão do meio fecha uma aba; o menu de contexto de uma aba tem **Fechar as outras**, **Fechar abas à esquerda** e **Fechar abas à direita** (abas com alterações não salvas continuam abertas), **Copiar caminho** e **Mover para nova janela**. Você também pode arrastar uma aba para fora da janela para dar a ela uma janela própria. Quando o Textus reabre, cada janela volta com as suas próprias abas.
+`Cmd+N` (ou `Cmd+T`) abre uma nova aba, `Cmd+Shift+N` uma nova janela, e **Arquivo → Reabrir Aba Fechada** (`Cmd+Shift+T`) traz de volta os documentos que você fechou, do mais recente para o mais antigo. Um clique com o botão do meio fecha uma aba; o menu de contexto de uma aba tem **Fechar as outras**, **Fechar abas à esquerda** e **Fechar abas à direita** (abas com alterações não salvas continuam abertas), **Copiar caminho** e **Mover para nova janela**. Você também pode arrastar uma aba para fora da janela para dar a ela uma janela própria. Quando o Textus reabre, cada janela volta com as suas próprias abas.
 
 ## Pastas e busca de arquivos
 
-**Arquivo → Abrir Pasta…** abre uma pasta inteira na barra lateral: a árvore de arquivos fica nela enquanto você abre documentos lá dentro, a pasta volta com a sua sessão e **Arquivo → Fechar Pasta** faz a árvore voltar a acompanhar o documento. A caixa no topo da aba **Arquivos** da barra lateral busca nomes de arquivo na pasta inteira; `Cmd+Shift+O` leva direto a ela. Digite para filtrar, use `↑`/`↓` para se mover, `Enter` para abrir e `Esc` para limpar. Os dois recursos são só do desktop.
+**Arquivo → Abrir Projeto…** abre uma pasta inteira na barra lateral: a árvore de arquivos fica nela enquanto você abre documentos lá dentro, a pasta volta com a sua sessão e **Arquivo → Fechar Projeto** faz a árvore voltar a acompanhar o documento. A caixa no topo da aba **Arquivos** da barra lateral busca nomes de arquivo na pasta inteira; `Cmd+Shift+O` leva direto a ela. Digite para filtrar, use `↑`/`↓` para se mover, `Enter` para abrir e `Esc` para limpar. Os dois recursos são só do desktop.
 
 A árvore também é um pequeno gerenciador de arquivos. O nome da pasta superior, acima dela, leva você um nível acima. **Ordenar** a organiza por nome ou por data de modificação, e o filtro ao lado da caixa de busca, **Todos os arquivos** ou **Só documentos**, vale para a árvore e para a busca. Clique com o botão direito em uma pasta, um arquivo ou no espaço vazio abaixo para criar ali um **Novo documento** ou uma **Nova pasta**, e arraste um arquivo ou uma pasta sobre outra pasta para movê-lo; um documento aberto vai junto para o novo lugar. Nada é substituído: um nome já usado é recusado.
 

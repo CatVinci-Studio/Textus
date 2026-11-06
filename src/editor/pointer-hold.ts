@@ -1,3 +1,4 @@
+import { isReadOnly } from "./read-only-plugin";
 import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 
@@ -19,8 +20,25 @@ export function revealSelection(state: EditorState): {
   from: number;
   to: number;
 } {
+  // Read-only, as in the split view's preview, nothing shows as source: the
+  // caret can't change it, so `###` or `**` would only be in the way.
+  if (noRevealKey.getState(state) || isReadOnly(state)) return NOWHERE;
   return pointerHoldKey.getState(state) ?? state.selection;
 }
+
+const noRevealKey = new PluginKey<boolean>("no-reveal");
+// Before every position, so no range is ever touched.
+const NOWHERE = { from: -2, to: -2 };
+
+/** A view that is only read (the split view's preview): every syntax drawn,
+ *  none shown as source wherever its selection lands. */
+export const noRevealPlugin = $prose(
+  () =>
+    new Plugin<boolean>({
+      key: noRevealKey,
+      state: { init: () => true, apply: (_tr, on) => on },
+    }),
+);
 
 /** Whether what was drawn for `before`'s selection is stale in `after`. */
 export function revealMoved(before: EditorState, after: EditorState): boolean {

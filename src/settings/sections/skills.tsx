@@ -356,7 +356,7 @@ export function BuiltinSkillsSection({
     </>
   );
   return (
-    <details className="settings-advanced settings-builtin-skills">
+    <details className="disclosure settings-advanced settings-builtin-skills">
       <summary>
         <span className="settings-builtin-skills-title">
           {t.agentSkillsBuiltin}

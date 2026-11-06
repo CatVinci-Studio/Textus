@@ -1,3 +1,4 @@
+import { revealPosition } from "../../editor/reveal-position";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { closeHistory } from "@milkdown/kit/prose/history";
@@ -114,7 +115,8 @@ export function revealPlace(ctx: Ctx, place: DocumentPlace): boolean {
   const selection = $pos.parent.inlineContent
     ? TextSelection.create(view.state.doc, $pos.pos)
     : Selection.near($pos);
-  view.dispatch(view.state.tr.setSelection(selection).scrollIntoView());
+  view.dispatch(view.state.tr.setSelection(selection));
+  revealPosition(view, selection.from);
   view.focus();
   return true;
 }

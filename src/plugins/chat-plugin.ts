@@ -1,4 +1,5 @@
 import type { PluginFile } from "../platform/ipc";
+import { replyFiles } from "../ai/chat/reply-files";
 import { parseManifest, type PluginManifest } from "./store/manifest";
 
 /**
@@ -13,25 +14,15 @@ export interface ReplyPlugin {
 }
 
 const MANIFEST = "textus-plugin.json";
-const FENCE = /^(`{3,})([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$/gm;
-
-/** The path a fence's info string names: its last word with a dot or a
- *  slash in it ("js host.js" → host.js), or null for a plain language. */
-function pathOf(info: string): string | null {
-  const words = info.trim().split(/\s+/);
-  const last = words[words.length - 1] ?? "";
-  return words.length > 1 && /[./]/.test(last) ? last : null;
-}
 
 /** The plugins `text` writes - one per manifest, with the named files
  *  after it up to the next manifest. */
 export function pluginsInReply(text: string): ReplyPlugin[] {
   const plugins: ReplyPlugin[] = [];
   let current: PluginFile[] | null = null;
-  for (const m of text.matchAll(FENCE)) {
-    const path = pathOf(m[2]);
+  for (const { path, text: body } of replyFiles(text)) {
     if (!path) continue;
-    const file = { path, text: m[3] + "\n" };
+    const file = { path, text: body };
     if (path === MANIFEST) {
       current = [file];
       plugins.push({ manifest: null, error: null, files: current });

@@ -234,3 +234,25 @@ test("Select All in a document that opens with a code block selects its text", a
   });
   expect(ends).toEqual([3, 3, CODE]);
 });
+
+for (const [kind, item, selector] of [
+  ["list", "- a", "ul"],
+  ["task list", "- [ ] a", "ul"],
+  ["numbered list", "1. a", "ol"],
+] as const) {
+  test(`Backspace in an empty ${kind} item under a code block ends the list`, async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await pasteMarkdown(page, "```python\nprint(1)\n```\n\n" + item);
+    const line = page.locator(`${editor} ${selector} li`).last();
+    await line.click();
+    await page.keyboard.press(END);
+    await page.keyboard.press("Backspace");
+    await page.keyboard.press("Backspace");
+    await expect(page.locator(`${editor} ${selector}`)).toHaveCount(0);
+    await page.keyboard.type("z");
+    await expect(page.locator(`${editor} > p`).last()).toHaveText("z");
+    await expect(page.locator(block)).toContainText("print(1)");
+  });
+}

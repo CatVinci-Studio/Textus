@@ -18,6 +18,7 @@ import {
   appearanceIsDark,
   diagramRenderer,
   DIAGRAM_LANGUAGES,
+  mermaidTheme,
   type DrawnDiagram,
 } from "./diagram-engine";
 import {
@@ -210,10 +211,13 @@ export function createMermaidPreviewPlugin(options: {
           const engine = options.engine();
           const dark = appearanceIsDark();
           // A Pele drawing takes its colours from CSS variables, so an appearance
-          // switch keeps it; a Mermaid one has its palette baked in.
+          // switch keeps it; a Mermaid one has its palette baked in. The theme
+          // name is in the key too, so switching an imported theme that sets
+          // --doc-mermaid-theme redraws Mermaid's diagrams in its palette.
           const layout = `${width}|${fontFamily}|${engine}`;
+          const mermaidStyle = `${layout}|${dark}|${mermaidTheme(dark)}`;
           const styleOf = (by: Drawn["engine"]) =>
-            by === "pele" ? layout : `${layout}|${dark}`;
+            by === "pele" ? layout : mermaidStyle;
           // The editor's largest optional dependencies, fetched only when a real
           // diagram has to be drawn.
           const draw = diagramRenderer(engine, { width, fontFamily, dark });

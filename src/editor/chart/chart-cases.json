@@ -1,0 +1,152 @@
+{
+  "_": "Chart specs the renderer (chart-spec.ts) draws or refuses. The research writer's check (src-tauri/src/ai/paper/checks.rs, chart_holds) reads this file too: it must refuse every spec here the renderer refuses, so no chart reaches a paper undrawn.",
+  "cases": [
+    {
+      "draws": true,
+      "spec": {
+        "type": "bar",
+        "labels": ["a", "b"],
+        "series": [{ "name": "N", "data": [1, -2.5] }]
+      }
+    },
+    {
+      "draws": true,
+      "spec": {
+        "type": "pie",
+        "labels": ["a", "b"],
+        "series": [{ "data": [3, 0] }]
+      }
+    },
+    {
+      "draws": true,
+      "spec": {
+        "type": "scatter",
+        "series": [
+          {
+            "data": [
+              [1, 2],
+              [3.5, 4]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "draws": true,
+      "spec": {
+        "type": "line",
+        "title": "T",
+        "x": "Year",
+        "y": "%",
+        "labels": ["2020"],
+        "series": [{ "data": [4] }],
+        "caption": "C",
+        "source": "S"
+      }
+    },
+    { "draws": false, "spec": [1, 2] },
+    { "draws": false, "spec": "bar" },
+    {
+      "draws": false,
+      "spec": { "type": "radar", "series": [{ "data": [1] }] }
+    },
+    { "draws": false, "spec": { "type": 3, "series": [{ "data": [1] }] } },
+    { "draws": false, "spec": { "type": "bar", "series": [] } },
+    { "draws": false, "spec": { "type": "bar", "series": [1] } },
+    { "draws": false, "spec": { "type": "bar", "series": [{ "data": [] }] } },
+    {
+      "draws": false,
+      "spec": {
+        "type": "bar",
+        "labels": ["a", "b"],
+        "series": [{ "data": ["12%", "30"] }]
+      }
+    },
+    {
+      "draws": false,
+      "spec": { "type": "bar", "labels": ["a"], "series": [{ "data": [null] }] }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "line",
+        "labels": ["a", "b"],
+        "series": [
+          {
+            "data": [
+              [1, 2],
+              [3, 4]
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "draws": false,
+      "spec": { "type": "scatter", "series": [{ "data": [1, 2] }] }
+    },
+    {
+      "draws": false,
+      "spec": { "type": "scatter", "series": [{ "data": [[1, 2, 3]] }] }
+    },
+    {
+      "draws": false,
+      "spec": { "type": "scatter", "series": [{ "data": [["1", 2]] }] }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "pie",
+        "labels": ["a", "b"],
+        "series": [{ "data": [3, -1] }]
+      }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "bar",
+        "labels": ["a"],
+        "series": [{ "name": 7, "data": [1] }]
+      }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "bar",
+        "labels": "a, b",
+        "series": [{ "data": [1, 2] }]
+      }
+    },
+    {
+      "draws": false,
+      "spec": { "type": "bar", "labels": ["a"], "series": [{ "data": [1, 2] }] }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "bar",
+        "labels": ["a"],
+        "series": [{ "data": [1] }],
+        "title": 5
+      }
+    },
+    {
+      "draws": false,
+      "spec": {
+        "type": "bar",
+        "labels": ["a"],
+        "series": [
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] },
+          { "data": [1] }
+        ]
+      }
+    }
+  ]
+}

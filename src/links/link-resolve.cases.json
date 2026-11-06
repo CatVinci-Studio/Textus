@@ -1,0 +1,136 @@
+{
+  "files": [
+    "Note.md",
+    "a/Note.md",
+    "a/Other.md",
+    "folder/Note.md",
+    "folder/Deep/Plan.md",
+    "Note v1.2.md",
+    "Mixed Case.md",
+    "docs/file.pdf",
+    "img/image.png",
+    "b/Guide.md",
+    "near/Plan.markdown"
+  ],
+  "cases": [
+    {
+      "name": "a bare name: the note in the linking file's own folder first",
+      "from": "a/Other.md",
+      "note": "Note",
+      "wiki": true,
+      "expect": "a/Note.md"
+    },
+    {
+      "name": "a bare name from elsewhere: the nearest, then the shortest",
+      "from": "b/Guide.md",
+      "note": "Note",
+      "wiki": true,
+      "expect": "Note.md"
+    },
+    {
+      "name": "a folder in the name: from the vault root",
+      "from": "a/Other.md",
+      "note": "folder/Note",
+      "wiki": true,
+      "expect": "folder/Note.md"
+    },
+    {
+      "name": "a path's tail found below the root",
+      "from": "Note.md",
+      "note": "Deep/Plan",
+      "wiki": true,
+      "expect": "folder/Deep/Plan.md"
+    },
+    {
+      "name": "a .markdown note nearer than a .md one wins",
+      "from": "near/x.md",
+      "note": "Plan",
+      "wiki": true,
+      "expect": "near/Plan.markdown"
+    },
+    {
+      "name": "a dotted name is a note, not a .2 file",
+      "from": "Note.md",
+      "note": "Note v1.2",
+      "wiki": true,
+      "expect": "Note v1.2.md"
+    },
+    {
+      "name": "without case, answered in the case on disk",
+      "from": "Note.md",
+      "note": "mixed CASE",
+      "wiki": true,
+      "expect": "Mixed Case.md"
+    },
+    {
+      "name": "a folder spelled in another case",
+      "from": "Note.md",
+      "note": "FOLDER/note",
+      "wiki": true,
+      "expect": "folder/Note.md"
+    },
+    {
+      "name": "a PDF by name",
+      "from": "a/Other.md",
+      "note": "file.pdf",
+      "wiki": true,
+      "expect": "docs/file.pdf"
+    },
+    {
+      "name": "a picture by name",
+      "from": "a/Other.md",
+      "note": "image.png",
+      "wiki": true,
+      "expect": "img/image.png"
+    },
+    {
+      "name": "a missing note",
+      "from": "a/Other.md",
+      "note": "Nobody",
+      "wiki": true,
+      "expect": null
+    },
+    {
+      "name": "a relative wikilink only from the linking file",
+      "from": "a/Other.md",
+      "note": "../b/Guide",
+      "wiki": true,
+      "expect": "b/Guide.md"
+    },
+    {
+      "name": "a Markdown link without .md",
+      "from": "a/Other.md",
+      "note": "Note",
+      "wiki": false,
+      "expect": "a/Note.md"
+    },
+    {
+      "name": "a Markdown link to a note in another folder",
+      "from": "b/Guide.md",
+      "note": "Other.md",
+      "wiki": false,
+      "expect": "a/Other.md"
+    },
+    {
+      "name": "a Markdown link with a path is a path",
+      "from": "b/Guide.md",
+      "note": "../folder/Deep/Plan.md",
+      "wiki": false,
+      "expect": "folder/Deep/Plan.md"
+    },
+    {
+      "name": "a Markdown link with a wrong path finds nothing",
+      "from": "b/Guide.md",
+      "note": "x/Other.md",
+      "wiki": false,
+      "expect": null
+    },
+    {
+      "name": "a / path from the root",
+      "from": "folder/Deep/Plan.md",
+      "note": "/b/Guide.md",
+      "wiki": false,
+      "expect": "b/Guide.md"
+    }
+  ]
+}

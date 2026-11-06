@@ -16,6 +16,8 @@ export interface SidebarTabProps {
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  /** The tab in front, for a jump inside its document. */
+  activeTabId: string;
   /** `beside`: in a split beside the document in front. */
   onOpenFile: (path: string, beside?: boolean) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
@@ -63,6 +65,7 @@ function FilesPanel({
         onOpenFile(path, beside);
       }}
       onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
+      onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}
       searchFocusRequest={searchFocusRequest}
@@ -82,7 +85,9 @@ const BUILT_IN: SidebarTabDef[] = [
     id: "outline",
     label: (t) => t.outlineTab,
     Icon: OutlineTabIcon,
-    Panel: ({ activeContent }) => <Outline content={activeContent} />,
+    Panel: ({ activeContent, activeTabId }) => (
+      <Outline content={activeContent} tabId={activeTabId} />
+    ),
   },
   {
     id: "clipboard",

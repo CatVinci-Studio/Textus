@@ -40,16 +40,18 @@ test("a wikilink shows its name, and its brackets while the caret is on it", asy
   await expect.poll(() => shown(page)).toBe("two");
 });
 
-test("a document with wikilinks offers Backlinks, once", async ({ page }) => {
+test("a document with wikilinks suggests Two-way Links on the card", async ({
+  page,
+}) => {
   test.skip(
     !hasPlugin("catvinci.backlinks"),
     "Backlinks isn't in the checkout",
   );
   await open(page);
-  const notice = page.locator(".notice", { hasText: "[[wikilinks]]" });
-  await expect(notice).toBeVisible();
-  await notice.getByRole("button", { name: "Install" }).click();
-  await expect(notice).toHaveCount(0);
+  const card = page.locator(".suggest-card");
+  await expect(card).toContainText("Plugin suggestion:");
+  await card.getByRole("button", { name: "Install", exact: true }).click();
+  await expect(card).toHaveCount(0);
   // It reads the folder's notes, and asks to.
   await page
     .locator(".app-dialog")
@@ -66,10 +68,10 @@ test("a document with wikilinks offers Backlinks, once", async ({ page }) => {
       ),
     )
     .toContain("catvinci.backlinks");
-  // Offered once ever: the next window doesn't.
+  // Installed, it isn't suggested again.
   await page.reload();
   await openPath(page, "/notes/one.md");
   await expect(page.locator(`${editor} h1`)).toContainText("One");
   await page.waitForTimeout(500);
-  await expect(page.locator(".notice")).toHaveCount(0);
+  await expect(page.locator(".suggest-card")).toHaveCount(0);
 });

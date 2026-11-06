@@ -1,26 +1,8 @@
-.image-name-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 450;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ui-overlay);
-}
-
+/* The dialog box is the app's (.close-prompt); only its width is its own. */
 .image-name-dialog {
-  max-height: calc(100% - 32px);
-  overflow: auto;
   box-sizing: border-box;
-
   width: min(390px, calc(100vw - 40px));
-  padding: 16px 20px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-l);
-  background: var(--ui-bg);
-  box-shadow: var(--shadow-dialog);
-  color: var(--ui-text);
-  font-size: var(--text-body-large);
+  max-width: none;
 }
 
 .image-name-title {

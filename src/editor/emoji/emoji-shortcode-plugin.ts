@@ -43,8 +43,7 @@ function shortcodes(names: Names, block: ProseNode, blockPos: number) {
     parent.forEach((child, offset) => {
       const pos = contentPos + offset;
       if (child.type.name === "md_span") return read(child, pos + 1);
-      if (!child.isText || child.marks.some((m) => m.type.name === "link"))
-        return;
+      if (!child.isText) return;
       for (const match of child.text!.matchAll(SHORTCODE)) {
         const emoji = names[match[1]];
         if (!emoji) continue;

@@ -2,7 +2,7 @@
 # Points the beta update channel at a published release: copies that
 # release's textus-latest.json to textus-beta.json in our R2 bucket
 # (textus-downloads), which the app's beta channel reads through
-# textus.catvinci.com/download/textus-beta.json (src-tauri/src/commands/update.rs).
+# textus.md/download/textus-beta.json (src-tauri/src/commands/update.rs).
 # GitHub can't serve it: releases/latest skips pre-releases.
 #
 #   scripts/update-beta-manifest.sh v1.0.5-rc.1

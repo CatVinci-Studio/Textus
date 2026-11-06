@@ -83,11 +83,11 @@ pub(crate) fn build(
 
     // Windows draws its menu in the webview, so New/Open are routed by the
     // frontend; native accelerators there would be lost or fire twice.
-    // Cmd+T, Cmd+N and Cmd+Shift+T as in a browser: a new tab, a new window,
-    // the tab just closed.
+    // Cmd+N a new document, as other editors have it; Cmd+T, which the window
+    // answers, too. Cmd+Shift+N a new window, Cmd+Shift+T the tab just closed.
     let new_file_builder = MenuItemBuilder::with_id(NEW_FILE_ID, l(NEW_FILE_ID, "New Tab"));
     #[cfg(not(windows))]
-    let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+T");
+    let new_file_builder = new_file_builder.accelerator("CmdOrCtrl+N");
     let new_file_item = new_file_builder.build(app)?;
 
     let open_file_builder = MenuItemBuilder::with_id(OPEN_FILE_ID, l(OPEN_FILE_ID, "Open…"));
@@ -97,9 +97,10 @@ pub(crate) fn build(
     // No accelerator: Cmd+Shift+O is the sidebar's file search, handled by the
     // frontend.
     let open_folder_item =
-        MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Folder…")).build(app)?;
+        MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Project…")).build(app)?;
     let close_folder_item =
-        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Folder")).build(app)?;
+        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Project"))
+            .build(app)?;
     // Built empty; rebuild_recent_menu fills it.
     let open_recent_menu =
         SubmenuBuilder::new(app, l("menu:open-recent", "Open Recent")).build()?;
@@ -172,6 +173,13 @@ pub(crate) fn build(
     let find_replace_item =
         MenuItemBuilder::with_id(FIND_REPLACE_ID, l(FIND_REPLACE_ID, "Find & Replace…"))
             .build(app)?;
+    // Fixed, as in Typora, Obsidian and VS Code.
+    let replace_item = MenuItemBuilder::with_id(REPLACE_ID, l(REPLACE_ID, "Replace…"))
+        .accelerator("CmdOrCtrl+Alt+F")
+        .build(app)?;
+    let find_next_item = MenuItemBuilder::with_id(FIND_NEXT_ID, l(FIND_NEXT_ID, "Find Next"))
+        .accelerator("CmdOrCtrl+G")
+        .build(app)?;
     let copy_as_plain_text_item = MenuItemBuilder::with_id(
         COPY_AS_PLAIN_TEXT_ID,
         l(COPY_AS_PLAIN_TEXT_ID, "Copy as Plain Text"),
@@ -209,14 +217,34 @@ pub(crate) fn build(
     let edit_menu = edit_menu.item(&select_all_item?);
     #[cfg(not(target_os = "macos"))]
     let edit_menu = edit_menu.select_all_with_text(l("predefined:select-all", "Select All"));
-    let edit_menu = edit_menu.separator().item(&find_replace_item).build()?;
+    let edit_menu = edit_menu
+        .separator()
+        .item(&find_replace_item)
+        .item(&replace_item)
+        .item(&find_next_item)
+        .build()?;
 
     // Fixed, as Bold's and Italic's are; the editor answers the key the same way.
     let highlight_item = MenuItemBuilder::with_id(HIGHLIGHT_ID, l(HIGHLIGHT_ID, "Highlight"))
         .accelerator("CmdOrCtrl+Shift+H")
         .build(app)?;
+    // Typora's: Control on a Mac too, where Cmd+` is the system's.
+    let strikethrough_item =
+        MenuItemBuilder::with_id(STRIKETHROUGH_ID, l(STRIKETHROUGH_ID, "Strikethrough"))
+            .accelerator("Ctrl+Shift+`")
+            .build(app)?;
+    let inline_code_item =
+        MenuItemBuilder::with_id(INLINE_CODE_ID, l(INLINE_CODE_ID, "Inline Code"))
+            .accelerator("Ctrl+`")
+            .build(app)?;
+    let insert_link_item = MenuItemBuilder::with_id(INSERT_LINK_ID, l(INSERT_LINK_ID, "Link"))
+        .accelerator("CmdOrCtrl+K")
+        .build(app)?;
     let mut format_menu_builder = SubmenuBuilder::new(app, l("menu:format", "Format"))
         .item(&highlight_item)
+        .item(&strikethrough_item)
+        .item(&inline_code_item)
+        .item(&insert_link_item)
         .separator();
     for (kind, label) in [
         ("h1", "Heading 1"),
@@ -317,8 +345,8 @@ pub(crate) fn build(
         builder.build()?
     };
 
-    // Cmd/Ctrl+N, as a browser opens a window (New Tab has Cmd+T).
-    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+N";
+    // Cmd/Ctrl+Shift+N: Cmd+N is New Tab's.
+    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
     let new_window_item = item(NEW_WINDOW_ID, "New Window")
         .accelerator(NEW_WINDOW_ACCEL)
         .build(app)?;

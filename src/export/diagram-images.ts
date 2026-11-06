@@ -1,4 +1,8 @@
-import { diagramRenderer, type MermaidApi } from "../editor/diagram-engine";
+import {
+  diagramRenderer,
+  mermaidTheme,
+  type MermaidApi,
+} from "../editor/diagram-engine";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 
 // Word, OpenDocument and EPUB don't know mermaid or chart blocks, so each is
@@ -108,10 +112,12 @@ export async function diagramsToImages(
   const fontFamily = getComputedStyle(document.body).fontFamily;
   // A page is white, and labels must be SVG text (not HTML) to draw on a
   // canvas. The editor re-applies its own settings before its next render.
+  // The page is light whatever the window's appearance; a theme's
+  // --doc-mermaid-theme still picks the palette.
   const configure = (mermaid: MermaidApi) =>
     mermaid.initialize({
       startOnLoad: false,
-      theme: "neutral",
+      theme: mermaidTheme(false),
       securityLevel: "strict",
       suppressErrorRendering: true,
       htmlLabels: false,

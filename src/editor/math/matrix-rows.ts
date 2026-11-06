@@ -30,10 +30,12 @@ export function renderFormula(
   source: string,
   options: KatexOptions,
 ): string {
-  const spaced = spaceMatrixRows(source);
+  // GitHub's $`x`$: the backticks are part of the delimiter.
+  const bare = /^`[\s\S]+`$/.test(source) ? source.slice(1, -1) : source;
+  const spaced = spaceMatrixRows(bare);
   const html = katex.renderToString(spaced, options);
   // A formula KaTeX can't read is shown as its source: the one typed.
-  return spaced !== source && html.includes("katex-error")
-    ? katex.renderToString(source, options)
+  return spaced !== bare && html.includes("katex-error")
+    ? katex.renderToString(bare, options)
     : html;
 }

@@ -129,7 +129,11 @@ test("the split view renders the same HTML the same way", async ({ page }) => {
   await preview.locator("details summary").first().click();
   await expect(preview.getByText("Hidden markdown inside.")).toBeVisible();
   await expect(preview.locator("th")).toHaveAttribute("colspan", "2");
-  await expect(preview.getByText("late")).toHaveCSS("color", "rgb(200, 0, 0)");
+  // The preview is the editor itself: the HTML's source is there too, hidden.
+  await expect(preview.getByRole("cell", { name: "late" })).toHaveCSS(
+    "color",
+    "rgb(200, 0, 0)",
+  );
   await expect(preview.getByText("green", { exact: true })).toHaveCSS(
     "color",
     "rgb(0, 128, 0)",

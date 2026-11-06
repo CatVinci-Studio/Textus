@@ -1,7 +1,7 @@
-import { Fragment, useMemo, useState, useSyncExternalStore } from "react";
+import { useMenuButton } from "../ui/useMenuButton";
+import { Fragment, useMemo, useSyncExternalStore } from "react";
 import { Tooltip } from "../ui/Tooltip";
 import { ChevronIcon } from "../ui/icons";
-import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,
@@ -87,68 +87,35 @@ function StatusGroupButton({
   group: StatusGroup;
   name: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setOpen(false),
-    true,
-    open,
+  const { button, menu } = useMenuButton(
+    () => [
+      ...group.items.map((item) => ({
+        label: item.text,
+        disabled: !item.command,
+        onSelect: () => item.command && runCommand(item.command),
+      })),
+      ...(group.commands.length ? (["separator"] as const) : []),
+      ...group.commands.map((entry) => ({
+        label: entry.label,
+        onSelect: () => runCommand(entry.command),
+      })),
+    ],
+    { title: name, alignEnd: true },
   );
-  const run = (command: string) => {
-    setOpen(false);
-    runCommand(command);
-  };
   return (
-    <div className="plugin-status-group" ref={ref}>
+    <div className="plugin-status-group">
       <Tooltip text={name}>
         <button
           type="button"
           className="plugin-status-item plugin-status-button"
           data-status-plugin={group.plugin}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
+          {...button}
         >
           {group.items[0].text}
           <ChevronIcon className="plugin-status-more" />
         </button>
       </Tooltip>
-      {open && (
-        <div
-          className="plugin-status-menu floating-surface"
-          role="menu"
-          aria-label={name}
-        >
-          <div className="plugin-status-menu-title">{name}</div>
-          {group.items.map((item) => (
-            <button
-              key={item.key}
-              type="button"
-              role="menuitem"
-              className="context-menu-item"
-              data-status={item.key}
-              title={item.tooltip}
-              disabled={!item.command}
-              onClick={() => item.command && run(item.command)}
-            >
-              {item.text}
-            </button>
-          ))}
-          {group.commands.length > 0 && (
-            <div className="plugin-status-menu-separator" role="separator" />
-          )}
-          {group.commands.map((entry) => (
-            <button
-              key={entry.command}
-              type="button"
-              role="menuitem"
-              className="context-menu-item"
-              onClick={() => run(entry.command)}
-            >
-              {entry.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {menu}
     </div>
   );
 }

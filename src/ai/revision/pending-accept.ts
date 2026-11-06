@@ -2,7 +2,6 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import { reanchoredPicture } from "./joined-edit";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { editorViewCtx } from "@milkdown/kit/core";
-import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { isAnchored, plainText, resolveAnchored } from "./pending-place";
 import {
   composeMarkdownEdit,
@@ -69,7 +68,7 @@ export function writeAccept(
   // Defensive: the plugin already drops stale previews, but a silent no-op
   // here would be worse.
   if (
-    visibleTextBetween(state.doc, preview.from, preview.to, " ") !==
+    state.doc.textBetween(preview.from, preview.to, " ") !==
     preview.expectedText
   )
     return done();
@@ -230,7 +229,7 @@ export function writeAccept(
         proposal,
         from: range.from,
         to: range.to,
-        expectedText: visibleTextBetween(doc, range.from, range.to, " "),
+        expectedText: doc.textBetween(range.from, range.to, " "),
         replacement: text,
         strikeFrom: strikeRange?.from,
         strikeTo: strikeRange?.to,

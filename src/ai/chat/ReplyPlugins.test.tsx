@@ -23,6 +23,8 @@ const labels: ReplyPluginLabels = {
   pluginInstalled: "Installed",
   usageGuide: "Guide",
   exportPlugin: "Export",
+  showCode: "Show code",
+  permissionsAsk: "{name} asks to:",
   pluginCantInstall: "Can't: {reason}",
   pluginCheck: {
     dom: "Draws on the page.",
@@ -32,7 +34,7 @@ const labels: ReplyPluginLabels = {
     fix: "Fix with AI",
     fixRequest: "{name} has:\n{problems}",
   },
-  permission: (p) => p,
+  permission: (p) => `may ${p}`,
   language: "en",
 };
 
@@ -64,4 +66,32 @@ it("says what a plugin's code will get wrong and asks the AI to fix it", () => {
     "Toggle (local.toggle) has:\n- Draws on the page.",
     "create",
   );
+});
+
+it("lists each permission on a line of its own, in words", () => {
+  const asking = reply.replace(
+    '"permissions":[]',
+    '"permissions":["editor.write","network:api.example.com"]',
+  );
+  const { container } = render(<ReplyPlugins text={asking} labels={labels} />);
+  expect(screen.getByText("Toggle asks to:")).toBeTruthy();
+  const items = [...container.querySelectorAll(".agent-plugin-permissions li")];
+  expect(items.map((li) => li.textContent)).toEqual([
+    "may editor.write",
+    "may network:api.example.com",
+  ]);
+});
+
+it("shows the code Install would run, folded until asked", () => {
+  const { container } = render(<ReplyPlugins text={reply} labels={labels} />);
+  expect(container.querySelector(".agent-reply-file")).toBeNull();
+  const details = container.querySelector("details")!;
+  details.open = true;
+  fireEvent(details, new Event("toggle"));
+  const paths = [...container.querySelectorAll(".agent-reply-file-path")];
+  expect(paths.map((p) => p.textContent)).toEqual([
+    "textus-plugin.json",
+    "host.js",
+  ]);
+  expect(container.textContent).toContain("exports.activate");
 });

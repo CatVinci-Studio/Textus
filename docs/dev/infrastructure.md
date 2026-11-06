@@ -19,7 +19,7 @@ All under the [CatVinci-Studio](https://github.com/CatVinci-Studio) organization
 | [textus-themes](https://github.com/CatVinci-Studio/textus-themes)               | The theme gallery: themes shared through issue #1, reviewed with `/approve`                                       |
 | [homebrew-tap](https://github.com/CatVinci-Studio/homebrew-tap)                 | Retired: its `tap_migrations.json` moves old tap installs to Homebrew's official `textus` cask                    |
 | [arch-repo](https://github.com/CatVinci-Studio/arch-repo)                       | The signed `[catvinci]` pacman repository that serves `textus-bin`                                                |
-| [textus-website](https://github.com/CatVinci-Studio/textus-website)             | textus.catvinci.com                                                                                               |
+| [textus-website](https://github.com/CatVinci-Studio/textus-website)             | textus.md                                                                                                         |
 | [catvinci-homepage](https://github.com/CatVinci-Studio/catvinci-homepage)       | catvinci.com                                                                                                      |
 
 ## Automation
@@ -34,7 +34,7 @@ In this repository (`.github/workflows/`):
 | `mirror-downloads.yml`     | after a stable release, or by hand                | copies the installers to the website's download bucket                             |
 | `update-beta-manifest.yml` | after every release, rc included, or by hand      | points the beta update channel's `textus-beta.json` at the newest release          |
 | `update-arch-repo.yml`     | after a stable release, or by hand                | asks `arch-repo` to serve the new `textus-bin`                                     |
-| `deploy-playground.yml`    | `release.yml`, after the newest stable release    | deploys textus.catvinci.com/playground/ at that tag ([below](#playground))         |
+| `deploy-playground.yml`    | `release.yml`, after the newest stable release    | deploys textus.md/playground/ at that tag ([below](#playground))                   |
 | `ios-release.yml`          | an `ios-vX.Y.Z` tag                               | builds the iOS app and uploads it to TestFlight ([ios-release.md](ios-release.md)) |
 | `sync-models.yml`          | Mondays 03:00 UTC                                 | refreshes the AI providers' model lists and opens a pull request if they changed   |
 | `audit.yml`                | Mondays 04:00 UTC                                 | checks npm and Rust dependencies for advisories; opens an issue if it finds any    |
@@ -60,7 +60,7 @@ Elsewhere:
 Both sites are Cloudflare Pages projects that deploy on every push to their
 repository's `main`:
 
-- **textus.catvinci.com** - project `textus-homepage`. Its Functions also
+- **textus.md** - project `textus-homepage`. Its Functions also
   serve `/download/` from the R2 bucket `textus-downloads` (filled by
   `mirror-downloads.yml`, and `textus-beta.json` by `update-beta-manifest.yml`),
   and the short links `/discord`, `/qq`, `/wechat`
@@ -76,9 +76,9 @@ repository's `main`:
 
 ### Playground
 
-**textus.catvinci.com/playground/** is not part of the website's Pages
+**textus.md/playground/** is not part of the website's Pages
 project: it is the Cloudflare Worker `textus-playground`, static assets only,
-on the route `textus.catvinci.com/playground*` (zone catvinci.com). Its
+on the route `textus.md/playground*` (zone catvinci.com). Its
 configuration is `wrangler.playground.jsonc`; `npm run build:playground`
 writes the page into `dist-playground/playground/`, and the Worker serves
 `dist-playground/` as the site root, so the files keep their `/playground/`

@@ -4,7 +4,7 @@
   background: var(--ui-overlay);
   /* Modal tier: above the find bar, popovers and toasts (200-300), which
      would otherwise draw over the backdrop and take clicks. */
-  z-index: 400;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,24 +247,6 @@
   font-weight: 600;
   cursor: pointer;
   list-style: none;
-}
-
-.settings-advanced > summary::-webkit-details-marker {
-  display: none;
-}
-
-.settings-advanced > summary::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.settings-advanced[open] > summary::before {
-  transform: rotate(90deg);
 }
 
 .settings-advanced[open] > summary {
@@ -664,10 +646,6 @@ button.settings-inline-button {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  background: var(--ui-bg);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  box-shadow: var(--shadow-popover);
   overflow: hidden;
 }
 

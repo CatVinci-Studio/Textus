@@ -1,7 +1,7 @@
 name: Mirror downloads
 
 # The website's download buttons serve the installers from our own R2
-# bucket (textus.catvinci.com/download/), not from GitHub, which is slow or
+# bucket (textus.md/download/), not from GitHub, which is slow or
 # unreachable from some networks. Copies a published release there and
 # points the bucket's manifest.json at it (scripts/mirror-downloads.sh).
 # release.yml calls this after publishing the newest stable tag; run it by
@@ -44,7 +44,7 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Copy the installers to textus.catvinci.com/download
+      - name: Copy the installers to textus.md/download
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
             echo "::error::CLOUDFLARE_API_TOKEN is not set: the website still downloads the previous version. Run scripts/mirror-downloads.sh $RELEASE_TAG by hand."

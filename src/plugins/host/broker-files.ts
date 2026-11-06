@@ -1,5 +1,6 @@
+import { notesRoot } from "../../links/link-style";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
-import { basename } from "../../utils/path";
+import { basename, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
 import { emitPluginEvent, getWindowAccess, notePathMoved } from "../app-bridge";
@@ -8,8 +9,9 @@ import {
   parseFrontmatter,
   withFrontmatter,
   type Frontmatter,
-} from "../workspace/frontmatter";
-import { rewriteLinks } from "../workspace/link-rewrite";
+} from "../../utils/frontmatter";
+import { linkPlanner } from "../../links/link-rewrite";
+import { blockIdAt } from "../../links/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -97,6 +99,15 @@ export function fileHandlers(p: PluginScope) {
         pattern ? pattern.test(f.rel) : isDocumentPath(f.path),
       );
     },
+    "files.conventions": ({ path }: Params) => {
+      const root = p.root();
+      const at = optionalStr(path) || root;
+      return fs.folderConventions(
+        /^([\\/]|[A-Za-z]:)/.test(at)
+          ? at
+          : `${root.replace(/[\\/]+$/, "")}/${at}`,
+      );
+    },
     "files.stat": async ({ path }: Params) => {
       const root = p.root();
       const stat = await pluginsIpc.fsStat(p.id, root, str(path, "path"));
@@ -132,6 +143,18 @@ export function fileHandlers(p: PluginScope) {
     },
     "files.processWrite": ({ path, text, token }: Params) =>
       writeVersion(str(path, "path"), str(text, "text"), str(token, "token")),
+    "files.blockId": async ({ path, line }: Params) => {
+      const target = str(path, "path");
+      if (typeof line !== "number" || line < 0)
+        throw new Error("line must be a line number from 0.");
+      let id: string | null = null;
+      await change(target, (text) => {
+        const found = blockIdAt(text, Math.floor(line));
+        id = found?.id ?? null;
+        return found?.text ?? text;
+      });
+      return id;
+    },
     "files.rename": async ({ from, to, updateLinks }: Params) => {
       const root = write();
       const source = str(from, "from");
@@ -142,12 +165,33 @@ export function fileHandlers(p: PluginScope) {
       );
       await notePathMoved(source, target);
       if (updateLinks !== true) return;
-      const { documents } = await pluginsIpc.fsDocuments(p.id, root);
+      // A plugin may name the files from the folder.
+      const abs = (path: string) =>
+        /^([\\/]|[A-Za-z]:)/.test(path)
+          ? path
+          : `${root.replace(/[\\/]+$/, "")}/${path}`;
+      const [{ documents }, { files }, conventions, linkRoot] =
+        await Promise.all([
+          pluginsIpc.fsDocuments(p.id, root),
+          fs.indexFolder(root),
+          fs.folderConventions(root).catch(() => null),
+          fs.documentLinkRoot(abs(target), root).catch(() => null),
+        ]);
+      const planner = linkPlanner(
+        files.map((f) => f.path),
+        {
+          root: notesRoot(conventions) ?? root,
+          from: abs(source),
+          to: abs(target),
+          linkRoot,
+        },
+      );
       for (const doc of documents) {
-        if (rewriteLinks(doc.text, doc.path, source, target) === doc.text)
-          continue;
-        await change(doc.path, (text) =>
-          rewriteLinks(text, doc.path, source, target),
+        if (!planner(doc)) continue;
+        // Planned again on the text as it is now: it may have changed.
+        await change(
+          doc.path,
+          (text) => planner({ path: doc.path, text })?.text ?? text,
         );
       }
     },
@@ -180,8 +224,8 @@ export function fileHandlers(p: PluginScope) {
       );
     },
     "files.willSave": ({ on }: Params) => {
-      setWillSave(p.id, on === true, (path, text) =>
-        p.request<string | null>("$willSave", { path, text }),
+      setWillSave(p.id, on === true, (request) =>
+        p.request<string | null>("$willSave", request),
       );
     },
     "export.willExport": ({ on }: Params) => {
@@ -270,7 +314,7 @@ export function fileHandlers(p: PluginScope) {
 
 /** `path` in the folder `root`, `/`-separated. */
 export function relOf(root: string, path: string): string {
-  const r = root.replace(/\\/g, "/").replace(/\/$/, "");
-  const full = path.replace(/\\/g, "/");
+  const r = slashed(root).replace(/\/$/, "");
+  const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);
 }

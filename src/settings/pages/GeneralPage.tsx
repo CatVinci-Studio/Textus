@@ -61,11 +61,44 @@ export function GeneralPage({
                 <option value="tab">{t.newDocumentModeTab}</option>
               </Select>
             </SettingRow>
-            <ToggleRow
-              label={t.restoreSessionLabel}
-              checked={settings.restoreSessionOnStartup}
-              onChange={(v) => setSettings({ restoreSessionOnStartup: v })}
-            />
+            <SettingRow label={t.startupOpenLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.startupOpenLabel}
+                value={
+                  settings.restoreSessionOnStartup
+                    ? "session"
+                    : settings.startPageOnLaunch
+                      ? "start"
+                      : "blank"
+                }
+                onChange={(e) =>
+                  setSettings({
+                    restoreSessionOnStartup: e.target.value === "session",
+                    startPageOnLaunch: e.target.value === "start",
+                  })
+                }
+              >
+                <option value="session">{t.startupOpenSession}</option>
+                <option value="start">{t.startupOpenStartPage}</option>
+                <option value="blank">{t.startupOpenBlank}</option>
+              </Select>
+            </SettingRow>
+            <SettingRow label={t.closeLastLabel}>
+              <Select
+                className="settings-select"
+                aria-label={t.closeLastLabel}
+                value={settings.closeLastToStartPage ? "start" : "window"}
+                onChange={(e) =>
+                  setSettings({
+                    closeLastToStartPage: e.target.value === "start",
+                  })
+                }
+              >
+                <option value="window">{t.closeLastWindow}</option>
+                <option value="start">{t.closeLastStartPage}</option>
+              </Select>
+            </SettingRow>
           </>
         )}
       </SettingsGroup>
@@ -75,7 +108,6 @@ export function GeneralPage({
       <SettingsGroup title={t.settingsFilesGroup}>
         <ToggleRow
           label={t.autosaveLabel}
-          hint={t.autosaveHint}
           checked={settings.autosave}
           onChange={(v) => setSettings({ autosave: v })}
         />

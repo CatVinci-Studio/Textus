@@ -14,9 +14,11 @@ installPolyfills();
 installNativeStandIn();
 installScrollReveal();
 
-// The app's defaults, in the browser's language: no Settings panel, no
-// stored settings. Light or dark follows the system.
-const language = detectLang(navigator.language);
+// The app's defaults, in the language the link names (`?lang=`), else the
+// browser's: no Settings panel, no stored settings. Light or dark follows
+// the system.
+const asked = new URLSearchParams(window.location.search).get("lang");
+const language = detectLang(asked ?? navigator.language);
 const settings = { ...normaliseSettings(null), language };
 document.documentElement.lang = localeOf(language);
 

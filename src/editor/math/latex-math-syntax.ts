@@ -12,6 +12,7 @@ import type {
   CompileContext,
   Extension as FromMarkdownExtension,
 } from "mdast-util-from-markdown";
+import { looksLikeLatex } from "../../utils/markdown-math";
 
 /** The mdast shapes this file reads and makes (remark-math's own types live
  *  in a package Textus doesn't depend on directly). */
@@ -49,10 +50,15 @@ function isCitationCode(code: number): boolean {
   );
 }
 
+/** A code that makes `\[...\]` read as LaTeX rather than escaped brackets:
+ *  as `looksLikeLatex`, `\ ^ _ { } = + - * / < > |`. */
+const LATEX_CODES = new Set([..."\\^_{}=+-*/<>|"].map((c) => c.charCodeAt(0)));
+
 /**
  * micromark syntax: `\(...\)` and `\[...\]` in text, so never across blocks
  * or in code, and stopping at a backtick. A pair holding only citation
- * characters is an escaped bracket, `\[1\]`. Registered ahead of character
+ * characters is an escaped bracket, `\[1\]`, and so is a `\[...\]` with no
+ * LaTeX in it, `\[optional\]`. Registered ahead of character
  * escapes; when this fails the backslash is an escape.
  */
 export function latexMathSyntax(): Extension {
@@ -67,6 +73,7 @@ function tokenize(
 ): State {
   let close = 0;
   let citation = true;
+  let latex = false;
   return start;
 
   // The formula is chunks of one line each, with line endings between, as a
@@ -100,6 +107,7 @@ function tokenize(
       return escaped;
     }
     citation &&= isCitationCode(code);
+    latex ||= LATEX_CODES.has(code);
     effects.consume(code);
     return inside;
   }
@@ -108,13 +116,14 @@ function tokenize(
   // `\alpha`), whose next character can't close the formula.
   function escaped(code: Code): State | undefined {
     if (code === close) {
-      if (citation) return nok(code);
+      if (citation || (close === 93 && !latex)) return nok(code);
       effects.consume(code);
       effects.exit("latexMathChunk");
       effects.exit("latexMath");
       return ok;
     }
     citation = false;
+    latex = true;
     if (code === null || code === GRAVE || isLineEnding(code))
       return inside(code);
     effects.consume(code);
@@ -140,6 +149,7 @@ export function writeLatexMath(
   if (!close) return null;
   if (
     [...value].every((c) => /[\d,\s-]/.test(c)) ||
+    (close === "]" && !looksLikeLatex(value)) ||
     value.includes("`") ||
     /\n[ \t]*\n/.test(value)
   )

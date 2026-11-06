@@ -1,3 +1,4 @@
+import { useMutedCards } from "../../plugins/store/usePluginCard";
 import {
   useEffect,
   useState,
@@ -9,7 +10,7 @@ import type { SettingsPageProps } from "./types";
 import { Byline, PluginPage, statusText } from "./PluginPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { usePluginActions } from "./PluginAction";
-import { ToggleRow } from "../sections/controls";
+import { SettingRow, ToggleRow } from "../sections/controls";
 import { links, plugins as pluginsIpc } from "../../platform/ipc";
 import { AvailablePlugins } from "./AvailablePlugins";
 import { MarketPluginPage } from "./MarketPluginPage";
@@ -153,12 +154,15 @@ export function PluginsPage({ t }: SettingsPageProps) {
           : []
       }
       top={
-        <ToggleRow
-          label={t.pluginsAllLabel}
-          help={t.pluginsAllHelp}
-          checked={snapshot.allOn}
-          onChange={(on) => void attempt(() => setAllPlugins(on))}
-        />
+        <>
+          <ToggleRow
+            label={t.pluginsAllLabel}
+            help={t.pluginsAllHelp}
+            checked={snapshot.allOn}
+            onChange={(on) => void attempt(() => setAllPlugins(on))}
+          />
+          <MutedSuggestions t={t} />
+        </>
       }
       off={!snapshot.allOn}
       query={query}
@@ -197,6 +201,20 @@ export function PluginsPage({ t }: SettingsPageProps) {
       }
       footer={<ListYours t={t} />}
     />
+  );
+}
+
+/** The suggestion cards put away with × or Later, and bringing them back;
+ *  nothing while there are none. */
+function MutedSuggestions({ t }: { t: Strings }) {
+  const { count, restore } = useMutedCards();
+  if (!count) return null;
+  return (
+    <SettingRow label={t.pluginCardsMuted.replace("{n}", String(count))}>
+      <button type="button" onClick={restore}>
+        {t.pluginCardsRestore}
+      </button>
+    </SettingRow>
   );
 }
 

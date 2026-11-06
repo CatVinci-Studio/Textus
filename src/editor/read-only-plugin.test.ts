@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
-import { createReadOnlyPlugin, readOnlyTr } from "./read-only-plugin";
+import {
+  createReadOnlyPlugin,
+  createReadOnlyState,
+  readOnlyTr,
+} from "./read-only-plugin";
 
 const schema = new Schema({
   nodes: {
@@ -17,7 +21,7 @@ const start = () =>
     doc: schema.node("doc", null, [
       schema.node("paragraph", null, schema.text("kept")),
     ]),
-    plugins: [createReadOnlyPlugin()],
+    plugins: [createReadOnlyState(), createReadOnlyPlugin()],
   });
 
 describe("a read-only document", () => {

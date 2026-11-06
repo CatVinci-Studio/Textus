@@ -23,6 +23,7 @@ import { toggleSpan } from "./marks/span-commands";
 import { HIGHLIGHT, toggleFormat } from "./keys/format-shortcut-plugin";
 import type { Strings } from "../i18n/strings";
 import {
+  htmlTableItems,
   inTable,
   moveCaretToClickedCell,
   tableLayoutItems,
@@ -218,7 +219,9 @@ export function buildContextMenuItems(
       ]
     : [];
   // What was clicked on comes first; the rest waits in submenus.
-  const first = inTable(run) ? tableMenuItems(run, t) : imageItems;
+  const first = inTable(run)
+    ? tableMenuItems(run, t)
+    : joinGroups(htmlTableItems(run, t), imageItems);
   const format: MenuEntry[] = [
     { label: t.menuFormat, items: formatItems(run, options, !inTable(run)) },
   ];

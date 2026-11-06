@@ -1,6 +1,9 @@
 import { Plugin } from "@milkdown/kit/prose/state";
+import type { Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { LINK } from "../markdown/link-source";
+import { linkSource, parseLink } from "../markdown/link-syntax";
 
 /**
  * A pasted URL becomes `[url](url)`: remark writes a bare autolink back as
@@ -16,43 +19,47 @@ export function bareUrl(text: string): string | null {
     : null;
 }
 
-/** Pastes `url` as a link: over selected text, that text links to it; inside
- *  an existing link, as its text (a new link would split it in three); else a
- *  new link. False where no link mark is allowed. */
+/** What a selection reads as: a link as its label. */
+function labelText(slice: Slice): string {
+  let text = "";
+  slice.content.descendants((node) => {
+    if (node.type.name === LINK) {
+      const source = node.textContent;
+      const parts = parseLink(source);
+      text += parts ? source.slice(...parts.label) : source;
+      return false;
+    }
+    if (node.isText) text += node.text;
+    return true;
+  });
+  return text;
+}
+
+/** Pastes `url` as a link: over selected text, that text links to it; else
+ *  a new link. Inside a link's source, or after a typed `](`, it is text.
+ *  False where no link may go. */
 export function insertUrlLink(view: EditorView, url: string): boolean {
   const { state } = view;
-  const link = state.schema.marks.link;
+  const link = state.schema.nodes[LINK];
   const { $from, $to, empty, from, to } = state.selection;
   if (
     !link ||
     $from.parent.type.spec.code ||
-    !$from.parent.type.allowsMarkType(link)
+    !$from.parent.type.contentMatch.matchType(link)
   )
     return false;
-  const tr = state.tr;
-  if (
-    !empty &&
-    $from.sameParent($to) &&
-    state.doc.textBetween(from, to).trim()
-  ) {
-    // An old link on the selected words is replaced rather than nested.
-    tr.removeMark(from, to, link).addMark(from, to, link.create({ href: url }));
-    view.dispatch(tr.setMeta("uiEvent", "paste").scrollIntoView());
+  // The address of a link being typed: `)` makes the link of it all.
+  if (empty && $from.parent.textBetween(0, $from.parentOffset).endsWith("](")) {
+    view.dispatch(state.tr.insertText(url).setMeta("uiEvent", "paste"));
     return true;
   }
-  const inLink =
-    empty &&
-    link.isInSet($from.marks()) &&
-    $from.nodeAfter !== null &&
-    link.isInSet($from.nodeAfter.marks);
-  if (inLink) tr.replaceSelectionWith(state.schema.text(url), true);
-  else
-    tr.replaceSelectionWith(
-      state.schema.text(url, [link.create({ href: url })]),
-      false,
-    )
-      // Typing straight after the pasted URL should not extend the link.
-      .setStoredMarks([]);
+  const label =
+    !empty && $from.sameParent($to) ? labelText(state.doc.slice(from, to)) : "";
+  const node = link.create(
+    null,
+    state.schema.text(linkSource(label.trim() ? label : url, url)),
+  );
+  const tr = state.tr.replaceSelectionWith(node, false);
   view.dispatch(tr.setMeta("uiEvent", "paste").scrollIntoView());
   return true;
 }

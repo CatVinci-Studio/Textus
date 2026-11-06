@@ -5,6 +5,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
+import { confirmedFor, SkillWarnings, warningsIn } from "./skill-warnings";
 
 /** The call an offer stands in the conversation as. */
 export const OFFER_SKILL = "offer_skill";
@@ -43,12 +44,26 @@ export function SkillOfferChip({
   const { t } = useSettings();
   const [modes, setModes] = useState<AgentMode[]>(["write"]);
   const [state, setState] = useState<
-    { kind: "offered" } | { kind: "saved" } | { kind: "failed"; why: string }
+    | { kind: "offered" }
+    | { kind: "saved" }
+    | { kind: "failed"; why: string }
+    | { kind: "confirm"; warnings: string[]; modes: AgentMode[] }
   >({ kind: "offered" });
+  const confirming = confirmedFor(
+    state.kind === "confirm" ? state : null,
+    modes,
+  );
   const save = (scope: "personal" | "project") => {
-    ai.saveOfferedSkill(offer, scope, docPath, null, modes).then(
+    ai.saveOfferedSkill(offer, scope, docPath, null, modes, !!confirming).then(
       () => setState({ kind: "saved" }),
-      (err: unknown) => setState({ kind: "failed", why: explainError(err, t) }),
+      (err: unknown) => {
+        const warnings = warningsIn(err);
+        setState(
+          warnings
+            ? { kind: "confirm", warnings, modes }
+            : { kind: "failed", why: explainError(err, t) },
+        );
+      },
     );
   };
   return (
@@ -62,11 +77,12 @@ export function SkillOfferChip({
       {state.kind === "failed" && (
         <span className="skill-offer-description">{state.why}</span>
       )}
+      <SkillWarnings t={t} confirming={confirming} />
       {state.kind !== "saved" && (
         <span className="agent-memory-chip-actions">
           <ModeChoice t={t} modes={modes} onChange={setModes} />
           <button type="button" onClick={() => save("personal")}>
-            {t.skillOfferSave}
+            {confirming ? t.skillSaveAnyway : t.skillOfferSave}
           </button>
           {docPath && (
             <button type="button" onClick={() => save("project")}>

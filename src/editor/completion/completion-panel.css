@@ -1,0 +1,124 @@
+/* The / panel. One width and one row height while it is open, so a list
+   arriving or narrowing never moves what is under the pointer. */
+.completion-list {
+  --completion-row: var(--control-height);
+  position: fixed;
+  z-index: var(--z-popover);
+  box-sizing: border-box;
+  width: min(320px, calc(100vw - 16px));
+  max-height: calc(var(--completion-row) * 10 + 8px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px;
+  color: var(--ui-text);
+  font-size: var(--text-secondary);
+}
+
+.completion-list[hidden] {
+  display: none;
+}
+
+.completion-item,
+.completion-group,
+.completion-loading {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  height: var(--completion-row);
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.completion-item {
+  gap: 8px;
+  border-radius: var(--shape-s);
+  cursor: pointer;
+}
+
+/* The option the keys are on: selected, as in the command palette and the
+   chat's / and @ lists; a menu's row is hovered instead. */
+.completion-item[aria-selected="true"] {
+  background: var(--ui-selected);
+}
+
+.completion-group {
+  height: var(--control-height-sm);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+.completion-loading {
+  color: var(--ui-muted);
+}
+
+.completion-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completion-detail {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+/* Room kept for the icon on every row, so labels line up with or without. */
+.completion-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  text-align: center;
+  color: var(--ui-muted);
+}
+
+.completion-icon[data-icon]:not([data-icon="glyph"]) {
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.completion-icon[data-icon="file"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 2.5h5l3 3v8H4z'/%3E%3Cpath d='M9 2.5v3h3'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="link"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 9a3 3 0 0 0 4.2 0l2-2A3 3 0 0 0 9 2.8l-.8.8'/%3E%3Cpath d='M9 7a3 3 0 0 0-4.2 0l-2 2A3 3 0 0 0 7 13.2l.8-.8'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="tag"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5.5 2.5 4.5 13.5M11.5 2.5l-1 11M2.5 6h11M2 10h11'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="calendar"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3.5' width='11' height='10' rx='2'/%3E%3Cpath d='M2.5 6.8h11M5.5 2v3M10.5 2v3'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="clock"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='5.5'/%3E%3Cpath d='M8 5v3l2 1.5'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="star"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 2.5 1.7 3.5 3.8.5-2.8 2.6.7 3.8L8 11.1l-3.4 1.8.7-3.8L2.5 6.5l3.8-.5z'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="heading"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 3v10M12 3v10M4 8h8'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="block"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='2.5' y='3.5' width='11' height='9' rx='2'/%3E%3Cpath d='M5 6.5h6M5 9.5h4'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="quote"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 3.5v9M6.5 5h6M6.5 8h6M6.5 11h4'/%3E%3C/svg%3E");
+}
+.completion-icon[data-icon="emoji"] {
+  --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='5.5'/%3E%3Cpath d='M5.8 9.5a2.6 2.6 0 0 0 4.4 0M6 6.5h.01M10 6.5h.01'/%3E%3C/svg%3E");
+}
+
+/* A formula's drawn preview shows under it, where the panel does: it steps
+   aside while the panel is open. */
+.completion-open .math-float-preview {
+  /* Not opacity: its pop-in animation sets that. */
+  visibility: hidden;
+}

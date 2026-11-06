@@ -1,15 +1,19 @@
-//! A paper drafted from its approved outline: a writer per section, three at
-//! a time, each with the thesis, what the other sections cover, and its own
+//! A paper drafted from its approved outline: a writer per section, as many
+//! at a time as the model takes, each with the thesis, what the other sections cover, and its own
 //! notes and their sources. A writer hands its section over with
 //! submit_section, which checks its length, its citations and its figures and
-//! sends back what is wrong. Sections are handed on in the outline's order,
-//! each as it and those before it are done.
+//! sends back what is wrong. Each section is kept as soon as it is written;
+//! sections are handed on in the outline's order.
 
 #[cfg(test)]
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
-pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
-use super::handover::{hand_over, Checked, Task};
+pub(crate) use super::checks::{
+    all_soft, cited_link, length, most, problems, Problem, WEB_FIGURE_MARK,
+};
+use super::figures::Draw;
+use super::handover::{hand_over_checked, Checked, Task};
+use super::prompts;
 use super::research::Model;
 use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
@@ -21,18 +25,15 @@ use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
-/// Sections written at once.
-const AT_ONCE: usize = 3;
-/// A writer's tries at a section that holds.
-const WRITER_STEPS: usize = 5;
+use super::tuning::WRITER_STEPS;
 /// How each kind of figure is written into the section.
 fn figure_line(figure: &FigurePlan) -> String {
-    let how = match figure.kind {
-        FigureKind::Mermaid => "a ```mermaid block narrow enough for a page's column: a flowchart top-down (TB) with at most four boxes side by side and short labels, a timeline as `timeline`, each period's further events on lines of their own starting with `:`",
-        FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only - \"x\" and \"y\" are the axes' titles, \"labels\" one category per number, \"source\" the sources cited as [n](address), never the notes' ids",
-        FigureKind::Generated => "a line ![caption](textus-picture:16:9 what the picture shows, in detail)",
-        FigureKind::Web => "a line <!-- textus-figure web: caption | a few English words to search Wikimedia Commons for --> where it goes; a real photograph or figure is found for it there later, so ask for something Commons would have (a place, an object, a species, a historical image), not an abstract idea",
-    };
+    let how = prompts::get(match figure.kind {
+        FigureKind::Mermaid => "draft.figure.mermaid",
+        FigureKind::Chart => "draft.figure.chart",
+        FigureKind::Generated => "draft.figure.generated",
+        FigureKind::Web => "draft.figure.web",
+    });
     format!("- {} - as {how}", figure.spec)
 }
 
@@ -74,17 +75,46 @@ fn writer_message(paper: &Paper, outline: &Outline, index: usize, dossier: &Doss
         })
         .collect();
     let figures: Vec<String> = section.figures.iter().map(figure_line).collect();
-    format!(
-        "Paper: \"{}\"\nThesis: {}\n\nThe sections:\n{}\n\nYour section: \"{}\", about {} long and at most {} - longer is sent back.\nKey points:\n- {}\n\nYour notes:\n{}\n\nFigures to put where they belong:\n{}",
-        paper.topic,
-        outline.thesis,
-        others.join("\n"),
-        section.title,
-        section.target_words,
-        most(section.target_words),
-        section.key_points.join("\n- "),
-        if notes.is_empty() { "(none)".into() } else { notes.join("\n") },
-        if figures.is_empty() { "(none)".into() } else { figures.join("\n") },
+    let listed = |lines: Vec<String>| {
+        if lines.is_empty() {
+            "(none)".to_string()
+        } else {
+            lines.join("\n")
+        }
+    };
+    prompts::fill(
+        "draft.message",
+        &[
+            ("topic", &paper.topic),
+            ("thesis", &outline.thesis),
+            ("sections", &others.join("\n")),
+            ("title", &section.title),
+            ("target", &section.target_words),
+            ("most", &most(section.target_words)),
+            ("points", &section.key_points.join("\n- ")),
+            ("notes", &listed(notes)),
+            ("figures", &listed(figures)),
+        ],
+    )
+}
+
+/// A reviser's message: the writer's message, its earlier draft and the
+/// reviewer's points against it.
+pub(crate) fn revision_message(
+    paper: &Paper,
+    outline: &Outline,
+    index: usize,
+    dossier: &Dossier,
+    earlier: &str,
+    points: &[String],
+) -> String {
+    prompts::fill(
+        "draft.revision",
+        &[
+            ("message", &writer_message(paper, outline, index, dossier)),
+            ("earlier", &earlier),
+            ("points", &points.join("\n- ")),
+        ],
     )
 }
 
@@ -100,7 +130,28 @@ fn submit_section_spec() -> ToolSpec {
     }
 }
 
+/// What a section's writer is told.
+pub(crate) fn writer_instructions(paper: &Paper) -> String {
+    let profile = paper.genre.profile();
+    let unit = if length("字", &paper.language) == 1 {
+        "characters"
+    } else {
+        "words"
+    };
+    prompts::fill(
+        "draft.instructions",
+        &[
+            ("genre", &profile.name),
+            ("language", &paper.language),
+            ("voice", &profile.voice),
+            ("cite", &profile.cite),
+            ("unit", &unit),
+        ],
+    )
+}
+
 /// Section `index` written: its Markdown under its heading.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn write_section(
     model: &dyn Model,
     paper: &Paper,
@@ -110,19 +161,13 @@ pub(crate) async fn write_section(
     // A revision: the earlier draft and the reviewer's points against it.
     revision: Option<(&str, &[String])>,
     send: &(dyn Fn(PaperEvent) + Sync),
+    // Draws the section's figures as the document would; None checks them
+    // by their JSON and syntax alone.
+    draw: Option<Draw<'_>>,
 ) -> Result<String, String> {
     let watch = SectionWatch::new(index as u32, send);
     let section = &outline.sections[index];
-    let profile = paper.genre.profile();
-    let unit = if length("字", &paper.language) == 1 {
-        "characters"
-    } else {
-        "words"
-    };
-    let instructions = format!(
-        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
-        profile.name, paper.language, profile.voice, profile.cite
-    );
+    let instructions = writer_instructions(paper);
     let sources: Vec<(u32, String)> = dossier
         .notes
         .iter()
@@ -138,11 +183,16 @@ pub(crate) async fn write_section(
     // holds or is only soft - a paper with one weaker section beats one
     // that stops there.
     let last: Mutex<Option<String>> = Mutex::new(None);
-    let check = |arguments: &str| {
-        let args: Value = serde_json::from_str(arguments).unwrap_or_default();
+    let (sources_ref, soft_ref, last_ref) = (&sources, &soft, &last);
+    let check = |arguments: String| async move {
+        let (sources, soft, last) = (sources_ref, soft_ref, last_ref);
+        let args: Value = serde_json::from_str(&arguments).unwrap_or_default();
         let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
-        let mut wrong = problems(&markdown, section, &sources, &paper.language);
+        let mut wrong = problems(&markdown, section, sources, &paper.language);
         wrong.extend(long_posts(&markdown, paper));
+        // Drawn even when other things are wrong, so the writer fixes all
+        // at once.
+        wrong.extend(super::figures::undrawn(draw, &markdown).await);
         if !markdown.is_empty() {
             *last.lock().unwrap() = Some(markdown.clone());
         }
@@ -157,7 +207,7 @@ pub(crate) async fn write_section(
                 wrong.join(" | ")
             );
         }
-        if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
+        if !markdown.is_empty() && all_soft(&wrong) {
             *soft.lock().unwrap() = Some(markdown);
         }
         Checked::not_kept("section", &wrong)
@@ -167,17 +217,15 @@ pub(crate) async fn write_section(
         instructions: &instructions,
         message: match revision {
             None => writer_message(paper, outline, index, dossier),
-            Some((earlier, points)) => format!(
-                "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works and no longer than before, and hand over the whole section again.",
-                writer_message(paper, outline, index, dossier),
-                points.join("\n- ")
-            ),
+            Some((earlier, points)) => {
+                revision_message(paper, outline, index, dossier, earlier, points)
+            }
         },
         tool: submit_section_spec(),
         steps: WRITER_STEPS,
         watch: Some(&push),
     };
-    let (kept, turns) = hand_over(model, task, check).await?;
+    let (kept, turns) = hand_over_checked(model, task, check).await?;
     let body = kept
         .or(soft.into_inner().unwrap())
         .or_else(|| replied_section(&turns, section, &sources, &paper.language))
@@ -205,7 +253,7 @@ pub(crate) async fn write_section(
 /// The posts of a thread too long for one post: its genre's most
 /// characters, half that in Chinese, Japanese and Korean, whose
 /// characters count double. Soft, as a length is.
-pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
+pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<Problem> {
     let Some(most) = paper.genre.profile().scale.post_chars else {
         return Vec::new();
     };
@@ -222,10 +270,10 @@ pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
         .enumerate()
         .filter(|(_, n)| *n > most)
         .map(|(i, n)| {
-            format!(
+            Problem::soft(format!(
                 "It is too long in post {}: {n} characters, against at most {most} - split it or cut it.",
                 i + 1
-            )
+            ))
         })
         .collect()
 }
@@ -254,7 +302,7 @@ fn replied_section(
             }
         );
     }
-    wrong.iter().all(|p| is_soft(p)).then(|| body.to_string())
+    all_soft(&wrong).then(|| body.to_string())
 }
 
 /// The writer's last reply, without the heading it may have given it; None
@@ -327,11 +375,12 @@ pub(crate) fn repaired(markdown: &str, sources: &[(u32, String)]) -> String {
     text.trim().to_string()
 }
 
-/// Every section of `outline` written, three at a time, and handed to
-/// `drafted` in order: section n once it and every one before it is done.
-/// One `written` has already (by a run that stopped) is handed on as it is.
+/// Every section of `outline` written, as many at a time as the model
+/// takes. Each goes to `finished` as soon as it is written - kept, so a stop
+/// costs no section done - and the whole comes back in the outline's order.
+/// One `written` has already (by a run that stopped) is finished as it is.
 /// `started` hears of each as its writer begins. A section that fails stops
-/// the ones after it from being handed on, since the paper would have a gap.
+/// any more from starting; those under way are finished, then it fails.
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn draft(
     model: &dyn Model,
@@ -340,25 +389,44 @@ pub(crate) async fn draft(
     dossier: &Dossier,
     written: &[Option<String>],
     started: &(dyn Fn(usize) + Sync),
-    drafted: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
+    finished: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
     send: &(dyn Fn(PaperEvent) + Sync),
-) -> Result<(), String> {
+    draw: Option<Draw<'_>>,
+) -> Result<Vec<String>, String> {
+    let failed = std::sync::atomic::AtomicBool::new(false);
+    let failed = &failed;
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
             if let Some(text) = written.get(i).cloned().flatten() {
                 return (i, Ok(text));
             }
+            if failed.load(std::sync::atomic::Ordering::Relaxed) {
+                return (i, Err(String::new()));
+            }
             started(i);
-            (
-                i,
-                write_section(model, paper, outline, i, dossier, None, send).await,
-            )
+            let text = write_section(model, paper, outline, i, dossier, None, send, draw).await;
+            failed.fetch_or(text.is_err(), std::sync::atomic::Ordering::Relaxed);
+            (i, text)
         })
-        .buffered(AT_ONCE);
-    while let Some((i, written)) = sections.next().await {
-        drafted(i, &written?)?;
+        .buffer_unordered(model.at_once());
+    let mut done: Vec<Option<String>> = vec![None; outline.sections.len()];
+    let mut first_error: Option<(usize, String)> = None;
+    while let Some((i, text)) = sections.next().await {
+        match text {
+            Ok(text) => {
+                finished(i, &text)?;
+                done[i] = Some(text);
+            }
+            Err(e) if !e.is_empty() && first_error.as_ref().is_none_or(|(j, _)| i < *j) => {
+                first_error = Some((i, e))
+            }
+            Err(_) => {}
+        }
     }
-    Ok(())
+    if let Some((_, e)) = first_error {
+        return Err(e);
+    }
+    Ok(done.into_iter().flatten().collect())
 }
 
 /// The least time between two SectionText events for one section.

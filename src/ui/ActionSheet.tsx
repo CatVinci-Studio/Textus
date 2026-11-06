@@ -1,7 +1,5 @@
-import { useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
-import { usePresenceProps } from "./usePresence";
+import { Sheet } from "./Sheet";
 import "./ActionSheet.css";
 
 export interface ActionSheetItem {
@@ -25,17 +23,6 @@ export function ActionSheet({
   onClose: () => void;
 }) {
   const { t } = useSettings();
-  const presence = usePresenceProps<HTMLDivElement>();
-  const open = presence["data-state"] === "open";
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, open]);
-
   // Separators split the list into groups, as UIKit draws them.
   const groups: ActionSheetItem[][] = [[]];
   for (const item of items) {
@@ -43,47 +30,38 @@ export function ActionSheet({
     else groups[groups.length - 1].push(item);
   }
 
-  return createPortal(
-    <div
-      {...presence}
-      className="action-sheet-scrim"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="action-sheet" role="menu" aria-label={title}>
-        <div className="action-sheet-group">
-          {title && <div className="action-sheet-title">{title}</div>}
-          {groups
-            .filter((group) => group.length > 0)
-            .map((group, g) => (
-              <div key={g} className="action-sheet-section">
-                {group.map((item, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    role="menuitem"
-                    className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
-                    onClick={() => {
-                      onClose();
-                      item.onSelect();
-                    }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            ))}
-        </div>
-        <button
-          type="button"
-          className="action-sheet-item action-sheet-cancel"
-          onClick={onClose}
-        >
-          {t.cancel}
-        </button>
+  return (
+    <Sheet role="menu" label={title} className="action-sheet" onClose={onClose}>
+      <div className="action-sheet-group">
+        {title && <div className="action-sheet-title">{title}</div>}
+        {groups
+          .filter((group) => group.length > 0)
+          .map((group, g) => (
+            <div key={g} className="action-sheet-section">
+              {group.map((item, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  role="menuitem"
+                  className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
+                  onClick={() => {
+                    onClose();
+                    item.onSelect();
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
       </div>
-    </div>,
-    document.body,
+      <button
+        type="button"
+        className="action-sheet-item action-sheet-cancel"
+        onClick={onClose}
+      >
+        {t.cancel}
+      </button>
+    </Sheet>
   );
 }

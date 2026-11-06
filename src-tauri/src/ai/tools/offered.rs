@@ -15,15 +15,10 @@ pub(crate) const READ_FILE_DESCRIPTION: &str = "Read a text file, or the text of
 
 pub(crate) const READ_FILE_DESCRIPTION_WITH_IMAGES: &str = "Read a text file, or the text of a PDF, Word, PowerPoint, spreadsheet, EPUB or RTF file (as Markdown), from the project folder, by the relative path find_files or search_files shows - or look at an image there (PNG, JPEG, GIF or WebP, up to 6 MB: a map, a photo, a chart, a scanned page). A long file comes back in parts: the answer says which lines of how many it shows and where to read on; pass start_line and end_line to read a part - say, a few dozen lines around a line search_files found.";
 
-/// The tools available to an agent conversation. Skill and file tools are
-/// only offered when there's something for them to work on, or they would
-/// waste the model's steps reporting "nothing there".
-pub fn builtin_tools<'a>(
-    has_skills: bool,
-    has_root: bool,
-    mode: AgentMode,
-    sees_images: bool,
-) -> Vec<Tool<'a>> {
+/// The tools that work on the open document - reading it, checking it,
+/// commenting on and editing it - in every mode any of them is offered in.
+/// A helper with no document (a paper's researcher) is given none of them.
+pub(super) fn document_tools<'a>() -> Vec<Tool<'a>> {
     let mut tools = vec![Tool {
             spec: ToolSpec {
                 name: SEARCH_TOOL_NAME.into(),
@@ -40,7 +35,7 @@ pub fn builtin_tools<'a>(
                 }),
             },
             access: Access::ReadOnly,
-            modes: EVERY_MODE,
+            modes: DOCUMENT_MODES,
             run: Run::Text(search_document),
         }, Tool {
             spec: ToolSpec {
@@ -65,11 +60,12 @@ pub fn builtin_tools<'a>(
                 }),
             },
             access: Access::ReadOnly,
-            modes: EVERY_MODE,
+            modes: DOCUMENT_MODES,
             run: Run::Text(read_document),
         }];
 
-    // The rules engine's read-only tools: every mode has them.
+    // The rules engine's read-only tools: they judge the document and text
+    // bound for it, so only the document modes have them.
     tools.push(Tool {
         spec: ToolSpec {
             name: CHECK_CONVENTIONS_TOOL_NAME.into(),
@@ -101,7 +97,7 @@ pub fn builtin_tools<'a>(
             }),
         },
         access: Access::ReadOnly,
-        modes: EVERY_MODE,
+        modes: DOCUMENT_MODES,
         run: Run::Text(check_conventions),
     });
     tools.push(Tool {
@@ -125,7 +121,7 @@ pub fn builtin_tools<'a>(
             }),
         },
         access: Access::ReadOnly,
-        modes: EVERY_MODE,
+        modes: DOCUMENT_MODES,
         run: Run::Text(measure_text),
     });
 
@@ -222,7 +218,19 @@ pub fn builtin_tools<'a>(
         modes: EDITING_MODES,
         run: Run::Text(propose_edit),
     });
+    tools
+}
 
+/// The tools that work on the project rather than the document: skills and
+/// the project folder's files. Each is only offered when there's something
+/// for it to work on, or it would waste the model's steps reporting
+/// "nothing there".
+pub(super) fn project_tools<'a>(
+    has_skills: bool,
+    has_root: bool,
+    sees_images: bool,
+) -> Vec<Tool<'a>> {
+    let mut tools = Vec::new();
     if has_skills {
         tools.push(Tool {
             spec: ToolSpec {
@@ -319,7 +327,5 @@ pub fn builtin_tools<'a>(
             run: Run::Seeing(read_file),
         });
     }
-
-    tools.retain(|tool| tool.modes.contains(&mode));
     tools
 }

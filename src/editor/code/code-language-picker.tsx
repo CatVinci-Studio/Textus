@@ -1,5 +1,5 @@
+import { SelectMenu } from "../../ui/SelectMenu";
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
-import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { isIOSApp } from "../../platform/capabilities";
 import { Select } from "../../ui/Select";
@@ -154,61 +154,55 @@ function LanguageMenu({
       >
         <span className="ui-select-value">{optionLabel(value)}</span>
       </button>
-      {presence.mounted &&
-        createPortal(
-          <ul
-            ref={listRef}
-            id={listId}
-            data-state={presence.state}
-            inert={presence.state === "closing" || undefined}
-            className="ui-select-menu floating-surface code-language-menu"
-            role="listbox"
-            aria-label={label}
-            tabIndex={-1}
-            style={place}
-            data-floating-select=""
+      {presence.mounted && (
+        <SelectMenu
+          listRef={listRef}
+          id={listId}
+          state={presence.state}
+          className="code-language-menu"
+          label={label}
+          place={place}
+        >
+          <li
+            role="presentation"
+            className="code-language-search"
+            data-pinned=""
           >
+            <input
+              ref={search}
+              type="text"
+              value={query}
+              placeholder={searchLabel}
+              aria-label={searchLabel}
+              aria-activedescendant={
+                shown.length ? `${listId}-${active}` : undefined
+              }
+              spellCheck={false}
+              autoComplete="off"
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setActive(0);
+              }}
+              onKeyDown={onKey}
+            />
+          </li>
+          {shown.map((lang, index) => (
             <li
-              role="presentation"
-              className="code-language-search"
-              data-pinned=""
+              key={lang}
+              id={`${listId}-${index}`}
+              data-index={index}
+              role="option"
+              aria-selected={lang === value}
+              className={`ui-select-option${index === active ? " is-active" : ""}`}
+              onMouseEnter={() => setActive(index)}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => choose(lang)}
             >
-              <input
-                ref={search}
-                type="text"
-                value={query}
-                placeholder={searchLabel}
-                aria-label={searchLabel}
-                aria-activedescendant={
-                  shown.length ? `${listId}-${active}` : undefined
-                }
-                spellCheck={false}
-                autoComplete="off"
-                onChange={(e) => {
-                  setQuery(e.target.value);
-                  setActive(0);
-                }}
-                onKeyDown={onKey}
-              />
+              {optionLabel(lang)}
             </li>
-            {shown.map((lang, index) => (
-              <li
-                key={lang}
-                id={`${listId}-${index}`}
-                data-index={index}
-                role="option"
-                aria-selected={lang === value}
-                className={`ui-select-option${index === active ? " is-active" : ""}`}
-                onMouseEnter={() => setActive(index)}
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choose(lang)}
-              >
-                {optionLabel(lang)}
-              </li>
-            ))}
-          </ul>,
-          document.body,
-        )}
+          ))}
+        </SelectMenu>
+      )}
     </>
   );
 }

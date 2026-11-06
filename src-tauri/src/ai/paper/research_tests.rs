@@ -107,9 +107,17 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&Reader, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &Reader,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     assert_eq!(dossier.sources.len(), 1);
     let address = &dossier.sources[0].url;
@@ -127,7 +135,7 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
     assert!(
         !problems
             .iter()
-            .any(|p| p.starts_with("Nothing is cited") || p.contains("links to")),
+            .any(|p| p.text.starts_with("Nothing is cited") || p.text.contains("links to")),
         "{problems:?}"
     );
 }
@@ -187,9 +195,17 @@ async fn the_tools_plugins_and_mcp_servers_offer_reach_the_researchers() {
     };
     let events = std::sync::Mutex::new(Vec::new());
     let send = |e: PaperEvent| events.lock().unwrap().push(e);
-    let dossier = research::research(&PluginUser, &paper(), &web, &budget, &send, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &PluginUser,
+        &paper(),
+        &web,
+        &budget,
+        &send,
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     let ran = events
         .into_inner()
@@ -243,4 +259,159 @@ fn an_older_paper_s_materials_become_attached_files() {
         "Hourly."
     );
     assert!(!dir.join("materials.json").exists());
+}
+
+/// Plans two questions; answers the first from a.example and fails the
+/// second unless `second` - a run stopped after one question, then going on.
+struct Halfway {
+    second: bool,
+}
+
+impl research::Model for Halfway {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [AgentTurn],
+        tools: &'a [ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<StepResult, String>> {
+        let step = (|| {
+            if tools.is_empty() {
+                assert!(!self.second, "going on planned the research again");
+                return Ok(StepResult::Done(
+                    r#"["Why do tides rise?", "Where are tides highest?"]"#.into(),
+                ));
+            }
+            let AgentTurn::User { text, .. } = &turns[0] else {
+                panic!("no question");
+            };
+            let first = text.contains("Why do tides rise?");
+            assert!(
+                !(first && self.second),
+                "going on asked a finished question again"
+            );
+            if !first && !self.second {
+                return Err("stopped".to_string());
+            }
+            Ok(if turns.len() == 1 {
+                let (claim, url) = if first {
+                    ("The moon pulls the sea.", "https://a.example/")
+                } else {
+                    ("Fundy's tides are highest.", "https://b.example/")
+                };
+                StepResult::ToolCalls(vec![call(
+                    "n",
+                    ADD_NOTE_TOOL,
+                    json!({"claim": claim, "evidence": "Measured.", "sources": [url]}),
+                )])
+            } else {
+                StepResult::Done("Covered.".into())
+            })
+        })();
+        Box::pin(async move { step })
+    }
+}
+
+#[tokio::test]
+async fn research_stopped_halfway_goes_on_from_the_questions_it_finished() {
+    let root = tempfile::tempdir().unwrap();
+    let id = paper().id;
+    let run = |second: bool| {
+        let (root, id) = (root.path().to_path_buf(), id.clone());
+        async move {
+            let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
+            let web =
+                crate::ai::web::WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
+            // A fresh book: something else numbered first, as another run's
+            // pages would be.
+            web.add_source("https://other.example/", "Other");
+            let (tools, ctx) = kit(None, None, Vec::new());
+            let kit = research::Kit {
+                tools: &tools,
+                ctx: &ctx,
+            };
+            let keep = |p: &research::ResearchProgress| {
+                store::save_research(&root, &id, p).unwrap();
+            };
+            let progress = research::Progress {
+                kept: store::load_research(&root, &id),
+                keep: &keep,
+            };
+            research::research(
+                &Halfway { second },
+                &paper(),
+                &web,
+                &budget,
+                &|_| {},
+                &kit,
+                progress,
+            )
+            .await
+        }
+    };
+
+    // The first run: one question answered, the other failed.
+    let first = run(false).await.unwrap();
+    assert_eq!(first.notes.len(), 1);
+    let kept = store::load_research(root.path(), &id);
+    assert_eq!(kept.questions.len(), 2);
+    assert!(kept.answered[0].is_some() && kept.answered[1].is_none());
+    assert_eq!(kept.sources.len(), 1);
+    assert_eq!(kept.sources[0].url, "https://a.example/");
+
+    // Going on asks only the open question, and the kept note's source
+    // keeps pointing at its page under the new book's numbers.
+    let dossier = run(true).await.unwrap();
+    let claims: Vec<&str> = dossier.notes.iter().map(|n| n.claim.as_str()).collect();
+    assert_eq!(
+        claims,
+        ["The moon pulls the sea.", "Fundy's tides are highest."]
+    );
+    assert_eq!(dossier.notes[0].id, "n1");
+    let url = |n: u32| {
+        dossier
+            .sources
+            .iter()
+            .find(|s| s.n == n)
+            .map(|s| s.url.clone())
+    };
+    assert_eq!(
+        url(dossier.notes[0].sources[0]).as_deref(),
+        Some("https://a.example/")
+    );
+    assert_eq!(
+        url(dossier.notes[1].sources[0]).as_deref(),
+        Some("https://b.example/")
+    );
+
+    store::clear_research(root.path(), &id).unwrap();
+    assert!(store::load_research(root.path(), &id).questions.is_empty());
+}
+
+#[test]
+fn research_with_no_questions_leaves_no_file() {
+    let root = tempfile::tempdir().unwrap();
+    let kept = research::ResearchProgress {
+        questions: vec!["Why?".into()],
+        ..Default::default()
+    };
+    store::save_research(root.path(), "p1", &kept).unwrap();
+    let before = walk(root.path());
+    store::save_research(root.path(), "p1", &Default::default()).unwrap();
+    assert!(before.iter().any(|p| p.ends_with("research.json")));
+    assert!(!walk(root.path())
+        .iter()
+        .any(|p| p.ends_with("research.json")));
+}
+
+fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir).unwrap().flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            out.extend(walk(&path));
+        } else {
+            out.push(path);
+        }
+    }
+    out
 }

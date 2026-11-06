@@ -176,9 +176,15 @@ export const commands = {
 	detect_pandoc: () => __TAURI_INVOKE<string | null>("detect_pandoc"),
 	/**
 	 *  Converts the document text to `format` via a user-installed pandoc, through
-	 *  stdin; --resource-path lets relative images resolve.
+	 *  stdin; --resource-path lets relative images resolve. The user's arguments
+	 *  come first, so the export's own win; none is passed through a shell.
 	 */
-	export_via_pandoc: (pandocPath: string, markdown: string, outputPath: string, format: string, resourceDir: string | null, title: string, referenceDoc: string | null) => __TAURI_INVOKE<null>("export_via_pandoc", { pandocPath, markdown, outputPath, format, resourceDir, title, referenceDoc }),
+	export_via_pandoc: (pandocPath: string, markdown: string, outputPath: string, format: string, resourceDir: string | null, title: string, referenceDoc: string | null, options: PandocOptions_Deserialize) => __TAURI_INVOKE<null>("export_via_pandoc", { pandocPath, markdown, outputPath, format, resourceDir, title, referenceDoc, options }),
+	/**
+	 *  The first of the user's Pandoc arguments the export keeps for itself
+	 *  (`--output`, `--from`, `--to`, an input file), or None.
+	 */
+	check_pandoc_args: (args: string[]) => __TAURI_INVOKE<string | null>("check_pandoc_args", { args }),
 	/**
 	 *  Writes the themed, paginated document to a PDF at `output_path`, offscreen
 	 *  with no print dialog. Same text on every variant: it is the generated TS doc.
@@ -411,6 +417,40 @@ export type PageBounds = {
 	y: number | null,
 	width: number | null,
 	height: number | null,
+};
+
+/**
+ *  What a Pandoc export takes from Settings besides the Word template.
+ *  Shared with `PandocOptions` in `src/export/pandoc-options.ts`.
+ */
+export type PandocOptions = PandocOptions_Serialize | PandocOptions_Deserialize;
+
+/**
+ *  What a Pandoc export takes from Settings besides the Word template.
+ *  Shared with `PandocOptions` in `src/export/pandoc-options.ts`.
+ */
+export type PandocOptions_Deserialize = {
+	toc: boolean,
+	numberSections: boolean,
+	/**  A .bib (or CSL JSON/YAML) file; citeproc runs only with one. */
+	bibliography?: string | null,
+	csl?: string | null,
+	/**  The user's arguments for this format, as an argv list. */
+	extraArgs: string[],
+};
+
+/**
+ *  What a Pandoc export takes from Settings besides the Word template.
+ *  Shared with `PandocOptions` in `src/export/pandoc-options.ts`.
+ */
+export type PandocOptions_Serialize = {
+	toc: boolean,
+	numberSections: boolean,
+	/**  A .bib (or CSL JSON/YAML) file; citeproc runs only with one. */
+	bibliography: string | null,
+	csl: string | null,
+	/**  The user's arguments for this format, as an argv list. */
+	extraArgs: string[],
 };
 
 /**  A report as services/feedback/issue.ts reads it. */

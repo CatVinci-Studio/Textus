@@ -179,7 +179,8 @@ pub(crate) fn request_message(
     message: &str,
 ) -> String {
     let mut preamble = request_preamble(workspace, mode, ui_language);
-    if mode != AgentMode::Review && asks_for_a_length(message) {
+    // Only Write has propose_edit, which the note is about.
+    if mode == AgentMode::Write && asks_for_a_length(message) {
         preamble.push_str("\n\n");
         preamble.push_str(LENGTH_TARGET_NOTE);
     }
@@ -188,7 +189,7 @@ pub(crate) fn request_message(
 
 /// Said with a request that asks for a length: told only in the system prompt,
 /// models wrote the piece out unseen in measure_text before proposing it.
-const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into propose_edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
+pub(super) const LENGTH_TARGET_NOTE: &str = "This request asks for a length: write the text straight into propose_edit, where the user watches it come in - don't write it out first in measure_text or check_conventions. propose_edit's result says how long it came out; if that misses the length, say so in your reply.";
 
 /// Whether the user's own words ask for a length: a number and a unit of
 /// text ("1200 字", "500 words", "三千字", "2,000 characters").

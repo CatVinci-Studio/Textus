@@ -17,7 +17,14 @@ import {
   setImageWidth,
 } from "../editor/editor-menu";
 import { toggleSpan } from "../editor/marks/span-commands";
-import { HIGHLIGHT, toggleFormat } from "../editor/keys/format-shortcut-plugin";
+import {
+  HIGHLIGHT,
+  STRIKETHROUGH,
+  insertLink,
+  toggleCodeSpan,
+  toggleFormat,
+} from "../editor/keys/format-shortcut-plugin";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   insertMathBlock,
   insertRule,
@@ -48,6 +55,9 @@ import {
   INSERT_BLOCK_EVENT,
   TOGGLE_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
+  SHOW_REPLACE_EVENT,
+  FIND_NEXT_EVENT,
+  INSERT_LINK_EVENT,
   TABLE_ACTION_EVENT,
   IMAGE_ACTION_EVENT,
   EDITOR_MORE_EVENT,
@@ -68,6 +78,16 @@ const CLIPBOARD_ACTIONS: Record<string, (clipboard: EditorClipboard) => void> =
 
 /** The window events one tab's editor answers: menu commands, shortcuts,
  *  the iPhone keyboard toolbar and the sidebar panels. */
+
+/** The marks a menu or toolbar toggles by name. */
+const MARKS: Record<string, (view: EditorView) => unknown> = {
+  bold: (view) => toggleSpan(view, 2),
+  italic: (view) => toggleSpan(view, 1),
+  highlight: (view) => toggleFormat(view, HIGHLIGHT),
+  strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
+  code: toggleCodeSpan,
+};
+
 export function useEditorWindowEvents({
   run,
   settings,
@@ -136,6 +156,11 @@ export function useEditorWindowEvents({
     () => isOnScreen() && findReplace.show(),
   );
   useWindowEvent(CLOSE_FIND_REPLACE_EVENT, () => findReplace.dismiss());
+  useWindowEvent(
+    SHOW_REPLACE_EVENT,
+    () => isOnScreen() && findReplace.showReplace(),
+  );
+  useWindowEvent(FIND_NEXT_EVENT, () => isOnScreen() && findReplace.findNext());
 
   // Clipboard-history panel clicks, with the text as detail.
   useWindowEvent(INSERT_CLIPBOARD_TEXT_EVENT, (e) => {
@@ -205,16 +230,23 @@ export function useEditorWindowEvents({
     });
   });
 
-  // The iPhone keyboard toolbar's bold and italic, and Format › Highlight.
+  // The iPhone keyboard toolbar's bold and italic, and Format › Highlight,
+  // Strikethrough, Inline Code and Link: each as its key does it.
   useWindowEvent(TOGGLE_MARK_EVENT, (e) => {
     if (!isOnScreen()) return;
-    const mark = (e as CustomEvent<string>).detail;
-    if (mark !== "bold" && mark !== "italic" && mark !== "highlight") return;
+    const toggle = MARKS[(e as CustomEvent<string>).detail];
+    if (!toggle) return;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      // Highlight as its key does it; bold and italic as the toolbar's.
-      if (mark === "highlight") toggleFormat(view, HIGHLIGHT);
-      else toggleSpan(view, mark === "bold" ? 2 : 1);
+      toggle(view);
+      view.focus();
+    });
+  });
+  useWindowEvent(INSERT_LINK_EVENT, () => {
+    if (!isOnScreen()) return;
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      insertLink(view);
       view.focus();
     });
   });

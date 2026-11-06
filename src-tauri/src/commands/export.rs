@@ -54,7 +54,8 @@ pub async fn detect_pandoc() -> Option<String> {
 }
 
 /// pandoc's arguments for exporting to `format`, before --output. The reader is
-/// commonmark_x trimmed to the editor's dialect (no smart quotes, `~sub~`, or `:::`).
+/// commonmark_x trimmed to the editor's dialect (no smart quotes or `:::`);
+/// the editor's `~sub~` and `^sup^` arrive as spans the Lua filter turns.
 /// Only epub gets the filename as its title, since it refuses to build without one.
 #[cfg(desktop)]
 fn pandoc_args(format: &str, title: &str) -> Vec<String> {
@@ -76,11 +77,21 @@ fn pandoc_args(format: &str, title: &str) -> Vec<String> {
     ]
 }
 
+/// The first of the user's Pandoc arguments the export keeps for itself
+/// (`--output`, `--from`, `--to`, an input file), or None.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn check_pandoc_args(args: Vec<String>) -> Option<String> {
+    pandoc_options::owned_arg(&args).map(str::to_string)
+}
+
 /// Converts the document text to `format` via a user-installed pandoc, through
-/// stdin; --resource-path lets relative images resolve.
+/// stdin; --resource-path lets relative images resolve. The user's arguments
+/// come first, so the export's own win; none is passed through a shell.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
+#[allow(clippy::too_many_arguments)]
 pub async fn export_via_pandoc(
     pandoc_path: String,
     markdown: String,
@@ -89,10 +100,26 @@ pub async fn export_via_pandoc(
     resource_dir: Option<String>,
     title: String,
     reference_doc: Option<String>,
+    options: pandoc_options::PandocOptions,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
+        if let Some(arg) = pandoc_options::owned_arg(&options.extra_args) {
+            return Err(format!("The Pandoc argument {arg} is set by Textus."));
+        }
+        let mut args = pandoc_args(&format, &title);
+        if resource_dir
+            .as_deref()
+            .is_some_and(|d| crate::conventions::soft_breaks_show(Path::new(d)))
+        {
+            args[1].push_str("+hard_line_breaks");
+        }
+        let filter = pandoc_options::lua_filter_path().map_err(|e| e.to_string())?;
         let mut cmd = Command::new(&pandoc_path);
-        cmd.args(pandoc_args(&format, &title))
+        cmd.arg("--lua-filter")
+            .arg(filter)
+            .args(&options.extra_args)
+            .args(args)
+            .args(pandoc_options::settings_args(&options))
             .arg("--output")
             .arg(&output_path)
             .stdin(Stdio::piped())
@@ -400,6 +427,8 @@ mod pdf_offscreen;
 
 #[cfg(target_os = "macos")]
 mod pdf_macos;
+
+mod pandoc_options;
 
 #[cfg(all(test, desktop))]
 mod tests;

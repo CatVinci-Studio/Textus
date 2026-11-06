@@ -4,7 +4,12 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { readFileSync } from "node:fs";
-import { IMAGE_EXTENSIONS, parseEmbed, withEmbedPath } from "./obsidian-embed";
+import {
+  IMAGE_EXTENSIONS,
+  embedForPicked,
+  parseEmbed,
+  withEmbedPath,
+} from "./obsidian-embed";
 import { exportSrc } from "./obsidian-embed-preview";
 
 describe("an embed's src in an HTML export", () => {
@@ -148,5 +153,22 @@ describe("an Obsidian embed in a document", () => {
     const { embeds, saved } = await open("![alt](a.png)\n");
     expect(embeds).toEqual([]);
     expect(saved).toBe("![alt](a.png)\n");
+  });
+});
+
+describe("embedForPicked", () => {
+  it("keeps an embed by the vault's name in a wiki-link vault", () => {
+    expect(
+      embedForPicked("![[gone.png|A cat|300]]", {
+        src: "../assets/new.png",
+        embed: "![[new.png]]",
+      }),
+    ).toEqual({ embed: "![[new.png|A cat|300]]" });
+  });
+
+  it("writes a Markdown image from the document elsewhere", () => {
+    expect(
+      embedForPicked("![[gone.png|A cat|300]]", { src: "assets/new.png" }),
+    ).toEqual({ src: "assets/new.png", alt: "A cat|300" });
   });
 });

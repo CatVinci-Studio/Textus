@@ -45,12 +45,13 @@ export function useSourceImagePaste(docPath: string | null) {
     const el = event.currentTarget;
     void (async () => {
       // Not at startup: the store brings the Markdown writer along.
-      const { pastedImages, reportFailure, storeImage } =
+      const { pastedImages, reportFailure, storeImageAs } =
         await import("../images/image-store");
       for (const image of pastedImages(sources)) {
         try {
-          const src = await storeImage(image, store);
-          if (src !== null) insertAtCaret(el, imageMarkdown(src));
+          const stored = await storeImageAs(image, store);
+          if (stored)
+            insertAtCaret(el, stored.embed ?? imageMarkdown(stored.src));
         } catch (err) {
           reportFailure(err, store);
         }

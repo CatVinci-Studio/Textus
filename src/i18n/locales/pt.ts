@@ -346,6 +346,17 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatUpdatePlugin: "Atualizar o plugin",
   chatSaveSkill: "Guardar esta habilidade",
   chatUpdateSkill: "Atualizar a habilidade",
+  skillSaveAnyway: "Guardar mesmo assim",
+  skillWarnCreateAsked:
+    "Pede o modo Criar, onde poderia escrever habilidades por si mesma. Criar fica desmarcado: marque-o só se confiar em cada linha.",
+  skillWarnCreateMode:
+    "No modo Criar, poderia escrever ou mudar habilidades por si mesma. Deixe-a lá só se confiar em cada linha.",
+  skillWarnPromptInjection:
+    "As instruções parecem tentar anular as do Textus AI («ignore as instruções anteriores»). Leia-a antes de a guardar.",
+  skillWarnHiddenText:
+    "Contém caracteres invisíveis, que podem esconder instruções. Leia-a antes de a guardar.",
+  chatShowCode: "Ver o código",
+  chatShowSkill: "Ver a habilidade",
   chatPluginCantInstall: "Este plugin não pode ser instalado: {reason}",
   chatPluginCheckDom:
     "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",
@@ -427,6 +438,22 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperSectionDrafted: "Escrito",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falhou",
+  paperSectionsAtOnce: {
+    one: "Escrevendo {n} seção ao mesmo tempo · {done} de {of} prontas",
+    many: "Escrevendo {n} de seções ao mesmo tempo · {done} de {of} prontas",
+    other: "Escrevendo {n} seções ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperRevisingAtOnce: {
+    one: "Revisando {n} seção ao mesmo tempo · {done} de {of} prontas",
+    many: "Revisando {n} de seções ao mesmo tempo · {done} de {of} prontas",
+    other: "Revisando {n} seções ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperQuestionsAtOnce: {
+    one: "Pesquisando {n} pergunta ao mesmo tempo · {done} de {of} prontas",
+    many: "Pesquisando {n} de perguntas ao mesmo tempo · {done} de {of} prontas",
+    other: "Pesquisando {n} perguntas ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperDoneOf: "{done} de {of} prontas",
   paperOutlineRetry:
     "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
   paperPapersOnly:
@@ -444,6 +471,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webSources: "Fontes",
   proposalSourcesAsFootnotes: "Adicionar as fontes como notas de rodapé",
   menuToggleSplitView: "Código e pré-visualização",
+  splitPreview: "Pré-visualização",
   menuToggleZenMode: "Modo Zen",
   menuSplitRight: "Dividir à direita",
   menuCommandPalette: "Paleta de comandos…",
@@ -507,8 +535,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeEmptyDraft: "Salve este documento para ver a pasta dele aqui.",
   outlineEmpty: "Ainda não há títulos. Linhas que começam com # aparecem aqui.",
   treeRefresh: "Atualizar",
-  menuOpenFolder: "Abrir Pasta…",
-  menuCloseFolder: "Fechar Pasta",
+  menuOpenFolder: "Abrir Projeto…",
+  menuCloseFolder: "Fechar Projeto",
   menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
@@ -518,7 +546,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchCapped:
     "A busca percorreu só os primeiros {n} arquivos. Abra uma pasta menor para buscar em tudo.",
   treeSearchTooBroad:
-    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Pasta…",
+    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Projeto…",
   treeSearchFailed: "Não foi possível ler esta pasta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos os arquivos",
@@ -536,6 +564,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeRenameItem: "Renomear…",
   treeRename: "Renomear",
   treeRenamePrompt: "Novo nome",
+  treeUpdateLinksConfirm:
+    "Atualizar os links para e de “{name}” para que continuem funcionando?",
+  treeUpdateLinks: "Atualizar links",
+  treeKeepLinks: "Não atualizar",
+  treeUpdateLinksFailed:
+    "Não foi possível atualizar os links destes documentos: {names}",
+  treeDocumentFolder: "Pasta do documento atual",
+  treeOpenAsFolder: "Abrir como projeto",
   treeTrashItem: "Mover para a lixeira",
   treeTrash: "Mover para a lixeira",
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
@@ -599,6 +635,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   alertWarning: "Aviso",
   alertCaution: "Cuidado",
   tocLabel: "Sumário",
+  completionCommands: "Comandos",
+  completionEmoji: "Emoji",
+  completionNotes: "Notas",
   tocEmpty: "Ainda não há títulos",
   settingsTitle: "Ajustes",
   settingsSearchPlaceholder: "Buscar nos ajustes",
@@ -762,6 +801,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   deleteRow: "Apagar Linha",
   deleteColumn: "Apagar Coluna",
   deleteTable: "Apagar Tabela",
+  tableToMarkdown: "Converter em Tabela Markdown",
+  tableToMarkdownMerged: "Converter em Tabela Markdown (tem células mescladas)",
+  tableToMarkdownBlocks:
+    "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
   apiKeyLabelTemplate: "Chave de API do provedor {name}",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
@@ -969,6 +1012,25 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Os arquivos do Word exportados usam os estilos, fontes e margens deste arquivo.",
   docxTemplateNone: "Padrão do Pandoc",
   docxTemplateClear: "Usar padrão",
+  exportTocLabel: "Sumário nas exportações com Pandoc",
+  exportNumberHeadingsLabel: "Títulos numerados nas exportações com Pandoc",
+  exportNumberHeadingsHelp:
+    "Numerados como no plugin Heading Numbers: se o documento tem um único título de nível mais alto, ele é o título e fica sem número.",
+  exportBibliographyLabel: "Bibliografia",
+  exportBibliographyHelp:
+    "Um arquivo .bib. Exportações com Pandoc (Word, EPUB…) transformam as citações [@chave] em referências, com a lista no fim.",
+  exportBibliographyNone: "Nenhuma",
+  exportBibliographyClear: "Remover",
+  exportCslLabel: "Estilo de citação",
+  exportCslHelp:
+    "Um arquivo .csl para a bibliografia. Sem ele, o Pandoc usa Chicago autor-data.",
+  pandocArgsLabel: "Argumentos do Pandoc",
+  pandocArgsHelp:
+    "Adicionados ao comando do Pandoc para este formato, palavra por palavra e nunca por um shell. Coloque entre aspas um valor com espaços. O Textus define --from, --to e --output.",
+  pandocArgsAll: "Todos os formatos",
+  pandocArgsOwned: "{arg} é definido pelo Textus; remova-o.",
+  pandocErrorSettings:
+    "Suas opções do Pandoc estão em Ajustes › {page} › {group} e nos argumentos avançados.",
   pdfLightColorsLabel: "Exportar PDFs em cores claras",
   infoTipLabel: "Mais sobre “{label}”",
   infoTipLabelPlain: "Mais informações",
@@ -1030,6 +1092,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuUndo: "Desfazer",
   menuRedo: "Refazer",
   menuFindReplace: "Buscar e Substituir…",
+  menuReplace: "Substituir…",
+  menuFindNext: "Localizar seguinte",
+  menuStrikethrough: "Tachado",
+  menuInlineCode: "Código em linha",
+  menuInsertLink: "Link",
   menuHeadingTemplate: "Título {n}",
   menuBulletList: "Lista com Marcadores",
   menuOrderedList: "Lista Numerada",
@@ -1196,11 +1263,18 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   newDocumentModeLabel: "Abrir documentos em",
   newDocumentModeWindow: "Uma nova janela",
   newDocumentModeTab: "Uma aba nesta janela",
-  restoreSessionLabel: "Restaurar a sessão anterior ao iniciar",
+  startPageTab: "Início",
+  startupOpenLabel: "Ao abrir, mostrar",
+  startupOpenSession: "Os últimos documentos",
+  startupOpenStartPage: "A página inicial",
+  startupOpenBlank: "Um documento em branco",
+  closeLastLabel: "Ao fechar o último documento",
+  closeLastWindow: "Fechar a janela",
+  closeLastStartPage: "Mostrar a página inicial",
+  startPageRecentProjects: "Projetos recentes",
+  startPageRecentFiles: "Arquivos recentes",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
-  autosaveHint:
-    "Com uma pasta aberta, documentos sem título também são salvos nela, com o título como nome.",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:
     "Importe ou exporte as configurações do app e o histórico de IA",
@@ -1301,6 +1375,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   fileChangedOnDiskMessage:
     "Outro programa alterou este arquivo no disco. Se você salvar, essas alterações serão substituídas.",
   fileChangedOnDiskOverwrite: "Substituir",
+  fileGoneOnDiskTitle: "Arquivo movido ou excluído",
+  fileGoneOnDiskMessage:
+    "Este arquivo não está mais onde foi aberto. Talvez tenha sido movido, renomeado ou excluído em outro programa. Salvar o recria no local antigo.",
+  fileGoneOnDiskRecreate: "Salvar no local antigo",
   saveFailedTitle: "Não foi possível salvar",
   saveFailedMessage: "“{name}” não foi salvo. Suas alterações continuam aqui.",
   saveReadOnlyHint:
@@ -1333,6 +1411,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageFolderSubfolder: "Subpasta",
   imageFolderSameFolder: "A mesma pasta do documento",
   imageFolderNameLabel: "Nome da subpasta",
+  imageFolderProjectNote:
+    "Este projeto guarda as imagens em {folder} (definido em {source}).",
   imageFolderInvalid: "Use uma pasta dentro da pasta do documento, como img.",
   imageHostLabel: "Hospedagem de imagens",
   imageHostCustom: "Personalizado",
@@ -1588,18 +1668,20 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsOpenScripts: "Abrir pasta de scripts",
   pluginPackageFilter: "Plugin do Textus",
   pluginsInstalledGroup: "Instalados",
-  pluginOpenOffer:
-    "O plugin {name} abre “{file}”. Instalá-lo e abrir o arquivo?",
   pluginOpenInstall: "Instalar e abrir",
-  wikilinksPluginOffer:
-    "Este documento usa [[wikilinks]]. O plugin {name}: {description}",
-  pluginOpenTurnOn:
-    "O plugin {name} abre “{file}”, mas está desligado. Ligá-lo e abrir o arquivo?",
   pluginOpenTurnOnButton: "Ligar e abrir",
-  pluginOfferInstall: "Instalar o plugin {name}?\n{description}",
-  pluginOfferTurnOn:
-    "O plugin {name} está instalado, mas desligado. Ligá-lo?\n{description}",
-  pluginOfferReason: "Sugerido por um plugin: “{reason}”",
+  pluginCardLine: "Plugin recomendado: {name}",
+  conventionsCardLine:
+    "As configurações do {app} desta pasta guardam as imagens em {folder}",
+  conventionsCardDetails:
+    "Configuração atual: {current}. Ao adotar, ela é salva em .textus/settings.json desta pasta e fica com o projeto.",
+  conventionsFolderRoot: "a própria pasta",
+  conventionsFollow: "Adotar",
+  conventionsDecline: "Manter a atual",
+  pluginCardSystemApp: "Abrir com o app do sistema",
+  pluginCardNever: "Não sugerir de novo",
+  pluginCardsMuted: "Sugestões de plugins desativadas: {n}",
+  pluginCardsRestore: "Mostrar de novo",
   pluginScreenshot: "{name} em uso",
   pluginsMine: "Feitos por você",
   pluginsNone: "Nenhum ainda.",
@@ -1681,4 +1763,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageShowBar: "Mostrar a barra de endereço",
   webPageHint:
     "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
+  pluginKeysTaken:
+    "{name} não pode usar o teclado: {holder} está com ele. Desative um dos dois em Ajustes › Extensões.",
+  shortcutIndentListItem: "Aumentar recuo do item",
+  shortcutOutdentListItem: "Diminuir recuo do item",
+  pluginKeyTaken:
+    "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",
 } satisfies Translation;

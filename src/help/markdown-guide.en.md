@@ -23,7 +23,7 @@ GitHub-style alerts:
 
 ## Inline styles
 
-**Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
+**Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`. ``Ctrl+` `` (Control on a Mac too) makes the selection inline code, ``Ctrl+Shift+` `` strikes it through, and `Cmd+K` puts it in a link with the caret where the address goes.
 
 Emoji shortcodes as on GitHub show as their emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). The file keeps the shortcode; put the caret on one to edit it.
 
@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Settings → Editor & Appearance → Diagram engine** chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
 
+Their colours follow the appearance — a calm grey palette in the light, its dark one in the dark — and an imported theme or custom CSS can pick another built-in palette with `--doc-mermaid-theme: forest`.
+
 ## Images
 
 Paste an image straight from the clipboard — Textus saves it and inserts the reference. Where it goes is set in **Settings → Editor & Appearance → Images**. **On this computer**, it is a **Subfolder** of the document's folder, `assets/` by default, whose name you can change; **Same folder as the document** is the other choice. Settings shows the link a pasted image gets. **Upload to an image host** sends it to PicGo / PicList, SM.MS, Imgur or an endpoint of your own (**Custom**) instead.
@@ -160,7 +162,7 @@ All of them are in the **View** menu and in **Settings → Editor & Appearance �
 
 **View → Read Only** (also in a tab's right-click menu) keeps a document from being changed - by typing, pasting, dropping, undo, Textus AI or plugins. A padlock beside the title shows it; click it to make the document editable again.
 
-**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off.
+**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off. **Edit → Find & Replace…** (`Cmd+F`) searches the document, **Edit → Replace…** (`Cmd+Option+F`) opens it with the replace row, and `Cmd+G` goes to the next match.
 
 The **Outline** tab of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
@@ -177,11 +179,11 @@ The **Outline** tab of the sidebar lists the document's headings; click one to g
 
 ## Tabs and windows
 
-`Cmd+T` opens a new tab, `Cmd+N` a new window, and **File → Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left** and **Close Tabs to the Right** (tabs with unsaved changes stay open), **Copy Path** and **Move to New Window**. You can also drag a tab out of the window to give it a window of its own. When Textus reopens, each window comes back with its own tabs.
+`Cmd+N` (or `Cmd+T`) opens a new tab, `Cmd+Shift+N` a new window, and **File → Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left** and **Close Tabs to the Right** (tabs with unsaved changes stay open), **Copy Path** and **Move to New Window**. You can also drag a tab out of the window to give it a window of its own. When Textus reopens, each window comes back with its own tabs.
 
 ## Folders and file search
 
-**File → Open Folder…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File → Close Folder** lets the tree follow the document again. The box at the top of the sidebar's **Files** tab searches file names across the folder; `Cmd+Shift+O` jumps to it. Type to filter, `↑`/`↓` to move, `Enter` to open, `Esc` to clear. Both are on the desktop only.
+**File → Open Project…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File → Close Project** lets the tree follow the document again. The box at the top of the sidebar's **Files** tab searches file names across the folder; `Cmd+Shift+O` jumps to it. Type to filter, `↑`/`↓` to move, `Enter` to open, `Esc` to clear. Both are on the desktop only.
 
 The tree is a small file manager too. The parent folder's name above it takes you up a level. **Sort** orders it by name or by date modified, and the filter beside the search box, **All files** or **Documents only**, applies to the tree as well as to the search. Right-click a folder, a file or the empty space below to make a **New Document** or a **New Folder** there, and drag a file or folder onto another folder to move it; an open document follows it to its new place. Nothing is ever replaced: a name already taken is refused.
 

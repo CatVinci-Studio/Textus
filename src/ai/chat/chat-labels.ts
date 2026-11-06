@@ -92,6 +92,8 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     useTheme: t.chatUseTheme,
     themeInUse: t.themeGalleryInUse,
     themeFallbackName: t.navTheme,
+    showCode: t.chatShowCode,
+    permissionsAsk: t.pluginPermissionsAsk,
     installPlugin: t.chatInstallPlugin,
     updatePlugin: t.chatUpdatePlugin,
     pluginInstalled: t.themeGalleryInstalled,

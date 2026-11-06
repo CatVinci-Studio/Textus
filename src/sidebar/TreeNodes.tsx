@@ -25,6 +25,8 @@ import { useTree } from "./tree-shared";
 interface DirNodeProps {
   path: string;
   depth: number;
+  /** Left out by a .gitignore: shown dimmed, as the search leaves it out. */
+  ignored?: boolean;
   activePath: string | null;
   onFileSelect: (path: string) => void;
   /** Re-roots the tree at a folder (double-click on its row). */
@@ -39,13 +41,14 @@ function byModified(a: DirEntryInfo, b: DirEntryInfo): number {
 export function DirNode({
   path,
   depth,
+  ignored = false,
   activePath,
   onFileSelect,
   onEnter,
 }: DirNodeProps) {
   const tree = useTree();
   const version = tree.versions[path] ?? 0;
-  const listing = `${version}:${tree.stale[path] ?? 0}`;
+  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
   // The root is always open, and so is a folder on the way down to the open
   // document.
   const [open, setOpen] = useState(
@@ -100,7 +103,7 @@ export function DirNode({
     <div className="dir-node">
       {depth > 0 && (
         <div
-          className={`tree-row${tree.dropInto === path ? " tree-row-drop" : ""}`}
+          className={`tree-row${tree.dropInto === path ? " tree-row-drop" : ""}${ignored ? " tree-row-ignored" : ""}`}
           role="treeitem"
           aria-level={depth}
           aria-expanded={open}
@@ -136,6 +139,7 @@ export function DirNode({
                 key={entry.path}
                 path={entry.path}
                 depth={depth + 1}
+                ignored={entry.ignored}
                 activePath={activePath}
                 onFileSelect={onFileSelect}
                 onEnter={onEnter}
@@ -174,7 +178,7 @@ function FileNode({
   return (
     <>
       <div
-        className={`tree-row ${active ? "tree-row-active" : ""}`}
+        className={`tree-row${active ? " tree-row-active" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
         role="treeitem"
         aria-level={depth}
         aria-selected={active}

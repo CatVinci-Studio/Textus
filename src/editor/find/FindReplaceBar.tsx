@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
 import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
@@ -29,8 +29,8 @@ interface FindReplaceBarProps {
 }
 
 export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
-  const [replaceOpen, setReplaceOpen] = useState(false);
-  const { query, replacement, caseSensitive, useRegex, status } = findReplace;
+  const { query, replacement, caseSensitive, useRegex, status, replaceOpen } =
+    findReplace;
   const presence = usePresenceProps<HTMLDivElement>();
   const dockedWidth = useDockedPanelWidth();
   const findInput = useRef<HTMLInputElement>(null);
@@ -88,7 +88,7 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
             type="button"
             aria-label={labels.replace}
             className={`find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`}
-            onClick={() => setReplaceOpen((v) => !v)}
+            onClick={() => findReplace.setReplaceOpen(!replaceOpen)}
           >
             <ChevronIcon />
           </button>

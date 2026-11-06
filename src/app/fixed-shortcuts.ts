@@ -1,4 +1,5 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
+import { EDITOR_BLOCK_COMBOS } from "../utils/shortcuts";
 import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
@@ -33,6 +34,31 @@ export function macTabStep(e: KeyboardEvent, mac: boolean): 1 | -1 | null {
   if (e.code === "BracketRight") return 1;
   if (e.code === "BracketLeft") return -1;
   return null;
+}
+
+/** The editor's own block keys, named for Settings. */
+function editorKeys(t: Strings): FixedShortcut[] {
+  const heading = (n: number) =>
+    t.menuHeadingTemplate.replace("{n}", String(n));
+  const labels: Record<keyof typeof EDITOR_BLOCK_COMBOS, string> = {
+    paragraph: t.shortcutParagraph,
+    h1: heading(1),
+    h2: heading(2),
+    h3: heading(3),
+    h4: heading(4),
+    h5: heading(5),
+    h6: heading(6),
+    orderedList: t.menuOrderedList,
+    bulletList: t.menuBulletList,
+    codeBlock: t.menuCodeBlock,
+    blockquote: t.menuBlockquote,
+    indent: t.shortcutIndentListItem,
+    outdent: t.shortcutOutdentListItem,
+  };
+  return Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
+    label: labels[key as keyof typeof labels],
+    combos: [combo],
+  }));
 }
 
 /** Every configurable shortcut unbound: what is left in the menu is fixed. */
@@ -98,7 +124,8 @@ export function fixedShortcutGroups(
   }
 
   // One Format group, where it has always been: Bold and Italic, the
-  // menu's own keys (Highlight), then the editor's block keys.
+  // menu's own keys (Highlight), then the editor's block keys - its own
+  // keymaps' too, which no menu item names.
   const menuFormat = groups.findIndex((group) => group.title === t.menuFormat);
   const formatItems =
     menuFormat < 0 ? [] : groups.splice(menuFormat, 1)[0].items;
@@ -108,6 +135,7 @@ export function fixedShortcutGroups(
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
       ...formatItems,
+      ...editorKeys(t),
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
       { label: t.shortcutMoveBlockUp, combos: ["alt+arrowup"] },
       { label: t.shortcutMoveBlockDown, combos: ["alt+arrowdown"] },

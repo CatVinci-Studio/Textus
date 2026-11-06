@@ -1,0 +1,44 @@
+/* The code an install card would install, folded under its buttons, at
+   caption size in a box that scrolls rather than growing the reply. */
+.agent-reply-files {
+  flex-basis: 100%;
+  min-width: 0;
+}
+
+.agent-reply-files > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ui-accent);
+  cursor: pointer;
+}
+
+.agent-reply-files > summary::before {
+  margin: 0 2px;
+}
+
+.agent-reply-files > summary:hover {
+  text-decoration: underline;
+}
+
+.agent-reply-file {
+  margin-top: var(--space-1);
+}
+
+.agent-reply-file-path {
+  color: var(--ui-text);
+  font-family: var(--font-mono);
+}
+
+.agent-reply-file pre {
+  max-height: min(320px, 45vh);
+  margin: 0;
+  padding: 4px 8px;
+  overflow: auto;
+  border-radius: var(--shape-s);
+  background: var(--doc-code-bg);
+  color: var(--ui-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  white-space: pre;
+}

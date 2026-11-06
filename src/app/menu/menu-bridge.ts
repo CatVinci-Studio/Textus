@@ -21,9 +21,13 @@ import {
   TOGGLE_FIND_REPLACE_EVENT,
   INSERT_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
+  SHOW_REPLACE_EVENT,
+  FIND_NEXT_EVENT,
+  INSERT_LINK_EVENT,
 } from "../../utils/events";
 import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
+import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette-entry";
@@ -39,7 +43,8 @@ export interface MenuBridgeHandlers {
   pdfPageNumbers: boolean;
   pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
-  docxReferenceDoc: string;
+  /** Settings › Editor › Export, for a Pandoc export. */
+  pandocSettings: PandocSettings;
   onOpenSettings: () => void;
   /** Textus › Check for Updates…: Settings › About, checking. */
   onCheckUpdates: () => void;
@@ -160,7 +165,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
                 event.payload,
                 h().t,
                 h().diagramEngine,
-                h().docxReferenceDoc,
+                h().pandocSettings,
               ),
             );
       }),
@@ -209,6 +214,15 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       ),
       listenToThisWindow("menu-find-replace", () =>
         window.dispatchEvent(new CustomEvent(TOGGLE_FIND_REPLACE_EVENT)),
+      ),
+      listenToThisWindow("menu-replace", () =>
+        window.dispatchEvent(new CustomEvent(SHOW_REPLACE_EVENT)),
+      ),
+      listenToThisWindow("menu-find-next", () =>
+        window.dispatchEvent(new CustomEvent(FIND_NEXT_EVENT)),
+      ),
+      listenToThisWindow("menu-insert-link", () =>
+        window.dispatchEvent(new CustomEvent(INSERT_LINK_EVENT)),
       ),
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),

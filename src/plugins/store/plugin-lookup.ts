@@ -1,5 +1,6 @@
 import { basename } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
+import { claimKey, ownerOf } from "../contributions/owners";
 import {
   pluginsSnapshot,
   windowInfo,
@@ -11,8 +12,8 @@ import {
  * running them: a file's custom editor, the Plugins and tray menus' commands.
  */
 
-/** The plugin that opens `path` in a tab of its own, if one is on:
- *  the first whose custom editor matches with priority "default". */
+/** The plugin that opens `path` in a tab of its own, if one is on: the
+ *  owner of the first pattern that matches with priority "default". */
 export function customEditorFor(
   path: string,
 ): { plugin: string; viewType: string; title: string } | null {
@@ -23,7 +24,11 @@ export function customEditorFor(
     for (const editor of record.manifest.contributes.customEditors)
       if (
         editor.priority === "default" &&
-        editor.filenamePatterns.some((p) => matchesFilename(p, name))
+        editor.filenamePatterns.some(
+          (p) =>
+            matchesFilename(p, name) &&
+            (ownerOf(claimKey.editor(p)) ?? record.id) === record.id,
+        )
       )
         return { plugin: record.id, viewType: editor.viewType, title: name };
   }

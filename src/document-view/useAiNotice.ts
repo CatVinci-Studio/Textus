@@ -1,25 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import { showNotice } from "../ui/notices";
 
-/** Self-dismissing notice for on-demand AI triggers. Not alert(): that
- *  blocks the whole webview over often benign messages. */
+/** What the editor says about an AI trigger that can't go ahead: a note at
+ *  the bottom that goes by itself (the one NoticeHost), never alert(). */
 export function useAiNotice() {
-  const [aiNotice, setAiNotice] = useState<string | null>(null);
-  const noticeTimer = useRef<number | undefined>(undefined);
-  // When it goes, so a pointer resting on it can hold it.
-  const noticeDeadline = useRef(0);
   const showAiNotice = useCallback((message: string | null) => {
-    setAiNotice(message);
-    window.clearTimeout(noticeTimer.current);
-    if (!message) return;
-    noticeDeadline.current = Date.now() + 4000;
-    noticeTimer.current = window.setTimeout(() => setAiNotice(null), 4000);
+    if (message) showNotice(message);
   }, []);
-  useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
-  const holdAiNotice = () => window.clearTimeout(noticeTimer.current);
-  const releaseAiNotice = () => {
-    const left = Math.max(1500, noticeDeadline.current - Date.now());
-    noticeDeadline.current = Date.now() + left;
-    noticeTimer.current = window.setTimeout(() => setAiNotice(null), left);
-  };
-  return { aiNotice, showAiNotice, holdAiNotice, releaseAiNotice };
+  return { showAiNotice };
 }

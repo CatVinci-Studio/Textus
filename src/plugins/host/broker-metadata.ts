@@ -3,10 +3,13 @@ import {
   backlinksIn,
   documentOf,
   folderIndex,
-  resolveIn,
+  resolveTarget,
+  targetLine,
   tagsIn,
   tasksIn,
 } from "../workspace/metadata-cache";
+import { linkToTarget, type LinkToOptions } from "../../links/link-resolve";
+import { linkStyleAt } from "../../links/link-style";
 import {
   optionalStr,
   str,
@@ -32,13 +35,42 @@ export function metadataHandlers(p: PluginScope) {
     "metadata.backlinks": async ({ path }: Params) =>
       backlinksIn(await index(), str(path, "path")),
     "metadata.resolveLink": async ({ link, from }: Params) => {
-      const { paths } = await index();
-      const target = str(link, "link");
-      return resolveIn(
-        paths,
-        target.replace(/^\[\[|\]\]$/g, ""),
+      const target = resolveTarget(
+        (await index()).paths,
+        str(link, "link"),
         str(from, "from"),
-        target.startsWith("[["),
+      );
+      return target?.exists ? target.path : null;
+    },
+    "metadata.resolveNote": async ({ link, from }: Params) => {
+      const folder = await index();
+      const target = resolveTarget(
+        folder.paths,
+        str(link, "link"),
+        str(from, "from"),
+      );
+      return target && { ...target, line: targetLine(folder, target) };
+    },
+    "metadata.linkTo": async ({ to, from, options }: Params) => {
+      const source = str(from, "from");
+      const o = (options ?? {}) as Record<string, unknown>;
+      const text = (key: string) =>
+        typeof o[key] === "string" && o[key] ? (o[key] as string) : undefined;
+      const [folder, style] = await Promise.all([index(), linkStyleAt(source)]);
+      const wanted: LinkToOptions = {
+        heading: text("heading"),
+        block: text("block")?.replace(/^\^/, ""),
+        alias: text("alias"),
+        embed: o.embed === true,
+      };
+      return linkToTarget(
+        folder.paths,
+        str(to, "to"),
+        source,
+        o.style === "wiki" || o.style === "markdown"
+          ? { ...style, wiki: o.style === "wiki" }
+          : style,
+        wanted,
       );
     },
     "metadata.tags": async () => tagsIn(await index()),

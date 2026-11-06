@@ -1,6 +1,7 @@
 //! Installing a plugin from a folder or a `.textusplugin` zip, developer-mode
-//! loading, listing and uninstalling. Only the manifest's id and version are
-//! read here; the window checks the rest before the plugin runs.
+//! loading, listing and uninstalling. A manifest is checked in full
+//! (`manifest::check`) before a plugin is put in place or loaded; listing
+//! reads only its id and version, so Settings can still show what is wrong.
 
 use super::state::{self, PluginEntry};
 use super::{data_dir, plugins_root, require_id, MANIFEST};
@@ -31,7 +32,7 @@ struct ManifestId {
     version: String,
 }
 
-/// A folder's manifest, with its id checked.
+/// A folder's manifest, with its id checked: enough to list it.
 fn read_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
     let text = std::fs::read_to_string(dir.join(MANIFEST))
         .map_err(|_| format!("No {MANIFEST} in {}.", dir.display()))?;
@@ -40,6 +41,13 @@ fn read_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
     if head.version.trim().is_empty() {
         return Err(format!("{MANIFEST}: no version."));
     }
+    Ok((head, text))
+}
+
+/// A folder's manifest, checked in full: what installing or loading needs.
+fn read_checked_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
+    let (head, text) = read_manifest(dir)?;
+    super::manifest::check(&text).map_err(|e| format!("{MANIFEST}: {e}"))?;
     Ok((head, text))
 }
 
@@ -60,7 +68,8 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
     let mut out: Vec<InstalledPlugin> = Vec::new();
     for (id, entry) in state::read(&app).plugins {
         if let Some(path) = entry.dev_path {
-            if let Ok((head, text)) = read_manifest(Path::new(&path)) {
+            // Checked again each time: its author may have changed it.
+            if let Ok((head, text)) = read_checked_manifest(Path::new(&path)) {
                 if head.id == id {
                     out.push(installed(id, Path::new(&path), text, true));
                 }
@@ -129,7 +138,7 @@ pub(super) fn install_sync(
         }
         // A zip may hold the plugin's folder rather than its files.
         let dir = plugin_dir_in(&staging)?;
-        let (head, text) = read_manifest(&dir)?;
+        let (head, text) = read_checked_manifest(&dir)?;
         let target = root.join(&head.id);
         if target.exists() {
             std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
@@ -326,7 +335,7 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
     let dir = PathBuf::from(&path);
-    let (head, text) = read_manifest(&dir)?;
+    let (head, text) = read_checked_manifest(&dir)?;
     let id = head.id.clone();
     state::update(&app, |state| {
         state
@@ -484,6 +493,20 @@ mod tests {
         assert!(read_manifest(tmp.path()).is_err());
         std::fs::write(tmp.path().join(MANIFEST), r#"{"id":"a.b","version":" "}"#).unwrap();
         assert!(read_manifest(tmp.path()).is_err());
+    }
+
+    #[test]
+    fn installing_checks_the_whole_manifest() {
+        let tmp = tempfile::tempdir().unwrap();
+        let good = r#"{"id":"a.b","version":"1.0.0","name":"X","publisher":"a",
+            "engines":{"textus":"^1.3.0"},"permissions":["files.read"]}"#;
+        std::fs::write(tmp.path().join(MANIFEST), good).unwrap();
+        assert!(read_checked_manifest(tmp.path()).is_ok());
+        let bad = good.replace("files.read", "shell");
+        std::fs::write(tmp.path().join(MANIFEST), bad).unwrap();
+        // Listed, so Settings can say what is wrong, but never installed.
+        assert!(read_manifest(tmp.path()).is_ok());
+        assert!(read_checked_manifest(tmp.path()).is_err_and(|e| e.contains("No permission")));
     }
 
     #[test]

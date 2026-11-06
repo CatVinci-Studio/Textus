@@ -50,7 +50,7 @@ export const commands = {
 	 *  Persists an image pasted into the editor. Saved documents get it in their
 	 *  image folder with a relative src; unsaved drafts use the app's assets folder, absolute.
 	 */
-	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage>("save_pasted_image", { docPath, dataBase64, ext, folder }),
+	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
@@ -67,6 +67,11 @@ export const commands = {
 	 *  folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
+	/**
+	 *  Every Markdown document under `root` with its text, for the links a rename
+	 *  in the sidebar updates. Refuses what `index_folder` refuses.
+	 */
+	folder_documents: (root: string) => __TAURI_INVOKE<WorkspaceDocuments>("folder_documents", { root }),
 	/**
 	 *  File > Open Folder…: a folder picker. The home folder or a drive root is
 	 *  refused with "TOO_BROAD" for the frontend to explain.
@@ -94,10 +99,17 @@ export const commands = {
 	 */
 	resolve_vault_image: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_image", { docPath, link, folder }),
 	/**
-	 *  The note an Obsidian wikilink names, as an absolute path; None when it isn't
-	 *  in the vault.
+	 *  The file a wikilink's or a Markdown link's note part names, as an absolute
+	 *  path; for one that isn't there, where following it creates it.
 	 */
-	resolve_vault_note: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link, folder }),
+	resolve_note_link: (docPath: string, link: string, folder: string | null, wiki: boolean) => __TAURI_INVOKE<NoteLinkTarget | null>("resolve_note_link", { docPath, link, folder, wiki }),
+	/**
+	 *  `link_root` for the window: where `/img/a.png` and `[a](/docs/a.md)` are
+	 *  read from.
+	 */
+	document_link_root: (docPath: string, folder: string | null) => __TAURI_INVOKE<string | null>("document_link_root", { docPath, folder }),
+	/**  A document's or folder's conventions, for the editor and for plugins. */
+	folder_conventions: (path: string) => __TAURI_INVOKE<Conventions_Serialize>("folder_conventions", { path }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
@@ -116,6 +128,12 @@ export const commands = {
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
+	/**  Keeps `history` for the document at `path` whose text hashes to `hash`. */
+	undo_file_save: (path: string, hash: string, history: string) => __TAURI_INVOKE<null>("undo_file_save", { path, hash, history }),
+	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
+	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
+	/**  The history kept for `from` follows the document to `to`. */
+	undo_file_move: (from: string, to: string) => __TAURI_INVOKE<null>("undo_file_move", { from, to }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.
@@ -183,6 +201,99 @@ export type AiRecords = {
 	memories: MemoryFile[],
 };
 
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions = Conventions_Serialize | Conventions_Deserialize;
+
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions_Deserialize = {
+	/**  The apps whose settings were found, nearest first. */
+	sources: Source[],
+	/**  "wiki" or "markdown". */
+	linkStyle?: Setting<string> | null,
+	/**  "shortest", "relative" or "absolute". */
+	linkPath?: Setting<string> | null,
+	/**  The folder a link starting with "/" is read from. */
+	linkRoot?: Setting<string> | null,
+	/**  On a rename: "always", "ask" or "never". */
+	updateLinks?: Setting<string> | null,
+	/**
+	 *  Where pictures go: "/" the root, "./" beside the document, "./sub"
+	 *  below it, else a folder from the root; `${filename}` the document's
+	 *  name.
+	 */
+	attachments?: Setting<string> | null,
+	/**  Whether a single newline shows as a line break. */
+	softBreaks?: Setting<boolean> | null,
+	/**  The templates folder, a full path. */
+	templates?: Setting<string> | null,
+	daily?: Setting<Daily_Deserialize> | null,
+	/**  Where new notes go, as `attachments` names a folder. */
+	newNotes?: Setting<string> | null,
+	/**  Paths the app hides (Obsidian's excluded files). */
+	ignore: string[],
+	/**
+	 *  Another app's settings found here and not yet taken or turned down:
+	 *  offered to the user, who may copy them into `.textus/settings.json`.
+	 *  They never apply by themselves.
+	 */
+	detected?: Conventions_Deserialize | null,
+};
+
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions_Serialize = {
+	/**  The apps whose settings were found, nearest first. */
+	sources: Source[],
+	/**  "wiki" or "markdown". */
+	linkStyle: Setting<string> | null,
+	/**  "shortest", "relative" or "absolute". */
+	linkPath: Setting<string> | null,
+	/**  The folder a link starting with "/" is read from. */
+	linkRoot: Setting<string> | null,
+	/**  On a rename: "always", "ask" or "never". */
+	updateLinks: Setting<string> | null,
+	/**
+	 *  Where pictures go: "/" the root, "./" beside the document, "./sub"
+	 *  below it, else a folder from the root; `${filename}` the document's
+	 *  name.
+	 */
+	attachments: Setting<string> | null,
+	/**  Whether a single newline shows as a line break. */
+	softBreaks: Setting<boolean> | null,
+	/**  The templates folder, a full path. */
+	templates: Setting<string> | null,
+	daily: Setting<Daily_Serialize> | null,
+	/**  Where new notes go, as `attachments` names a folder. */
+	newNotes: Setting<string> | null,
+	/**  Paths the app hides (Obsidian's excluded files). */
+	ignore: string[],
+	/**
+	 *  Another app's settings found here and not yet taken or turned down:
+	 *  offered to the user, who may copy them into `.textus/settings.json`.
+	 *  They never apply by themselves.
+	 */
+	detected: Conventions_Serialize | null,
+};
+
+export type Daily = Daily_Serialize | Daily_Deserialize;
+
+export type Daily_Deserialize = {
+	/**  The folder, a full path. */
+	folder: string,
+	/**  The file name's date format, in moment.js tokens. */
+	format: string,
+	/**  The template file, a full path. */
+	template?: string | null,
+};
+
+export type Daily_Serialize = {
+	/**  The folder, a full path. */
+	folder: string,
+	/**  The file name's date format, in moment.js tokens. */
+	format: string,
+	/**  The template file, a full path. */
+	template: string | null,
+};
+
 export type DirEntryInfo = DirEntryInfo_Serialize | DirEntryInfo_Deserialize;
 
 export type DirEntryInfo_Deserialize = {
@@ -199,6 +310,11 @@ export type DirEntryInfo_Deserialize = {
 	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
+	/**
+	 *  Left out by a `.gitignore` or as build output, as the file search
+	 *  leaves it out; the tree shows it dimmed.
+	 */
+	ignored: boolean,
 };
 
 export type DirEntryInfo_Serialize = {
@@ -215,6 +331,11 @@ export type DirEntryInfo_Serialize = {
 	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
+	/**
+	 *  Left out by a `.gitignore` or as build output, as the file search
+	 *  leaves it out; the tree shows it dimmed.
+	 */
+	ignored: boolean,
 };
 
 export type DraftSnapshot = DraftSnapshot_Serialize | DraftSnapshot_Deserialize;
@@ -289,22 +410,69 @@ export type MemoryFile = {
 };
 
 /**
+ *  Where a link to a note leads: the file, or for one that doesn't exist,
+ *  where following it creates it. Shared with `NoteLinkTarget` in
+ *  `src/platform/ipc-files.ts`.
+ */
+export type NoteLinkTarget = {
+	path: string,
+	exists: boolean,
+};
+
+/**
  *  What is kept for a document: its own notes (a list), or its tracked changes
  *  (an object).
  */
 export type OwnPart = "notes" | "revisions";
 
-export type SavedImage = {
+export type SavedImage = SavedImage_Serialize | SavedImage_Deserialize;
+
+export type SavedImage_Deserialize = {
 	/**
 	 *  What goes into the markdown: a path relative to the document, or an
 	 *  absolute path for a draft that has no folder yet.
 	 */
 	src: string,
+	/**
+	 *  In an Obsidian vault that writes wiki links: the `![[…]]` to insert
+	 *  instead of a Markdown image.
+	 */
+	embed?: string | null,
+};
+
+export type SavedImage_Serialize = {
+	/**
+	 *  What goes into the markdown: a path relative to the document, or an
+	 *  absolute path for a draft that has no folder yet.
+	 */
+	src: string,
+	/**
+	 *  In an Obsidian vault that writes wiki links: the `![[…]]` to insert
+	 *  instead of a Markdown image.
+	 */
+	embed: string | null,
+};
+
+/**  One setting and where it came from. */
+export type Setting<T> = {
+	value: T,
+	/**
+	 *  "textus", "typora", "obsidian", "logseq", "dendron", "foam",
+	 *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto", "git".
+	 */
+	app: string,
+	/**  The folder whose settings these are. */
+	root: string,
 };
 
 export type Snapshot = {
 	value: Value,
 	rev: number,
+};
+
+export type Source = {
+	app: string,
+	root: string,
 };
 
 export type UploadedImage = {
@@ -316,5 +484,19 @@ export type Value = null | boolean | number | string | Value[] | { [key in strin
 /**  What `open_word_document` hands the frontend. */
 export type WordDocument = {
 	markdown: string,
+};
+
+/**  One document and its text. */
+export type WorkspaceDocument = {
+	path: string,
+	/**  From the folder, `/`-separated. */
+	rel: string,
+	text: string,
+};
+
+export type WorkspaceDocuments = {
+	documents: WorkspaceDocument[],
+	/**  The folder holds more than was read: a limit was reached. */
+	truncated: boolean,
 };
 

@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
+import { linkHref } from "./link-syntax";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { parseWikilink } from "./wikilink";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -28,30 +28,6 @@ function wikilinks(doc: ProseNode): string[] {
   return found;
 }
 
-describe("parseWikilink", () => {
-  it("reads a note, a heading in it and the text shown", () => {
-    expect(parseWikilink("[[Page]]")).toEqual({ note: "Page", heading: null });
-    expect(parseWikilink("[[folder/Page|shown]]")).toEqual({
-      note: "folder/Page",
-      heading: null,
-    });
-    expect(parseWikilink("[[Page#Part two|see]]")).toEqual({
-      note: "Page",
-      heading: "Part two",
-    });
-  });
-
-  it("reads a heading of this document", () => {
-    expect(parseWikilink("[[#Intro]]")).toEqual({ note: "", heading: "Intro" });
-  });
-
-  it("reads nothing else", () => {
-    expect(parseWikilink("[[]]")).toBeNull();
-    expect(parseWikilink("[Page]")).toBeNull();
-    expect(parseWikilink("[[a]] b")).toBeNull();
-  });
-});
-
 describe("a wikilink in a file", () => {
   it("is read as one and saved as written", async () => {
     const markdown = "See [[Page]], [[a_b|the *b*]] and [[Note#Heading]].\n";
@@ -73,11 +49,9 @@ describe("a wikilink in a file", () => {
   it("leaves a link whose text has brackets a link", async () => {
     const { doc } = await open("[[1]](https://x.org)\n");
     expect(wikilinks(doc)).toEqual([]);
-    const text = doc.firstChild!.firstChild!;
-    expect(text.text).toBe("[1]");
-    expect(text.marks.map((mark) => mark.attrs.href)).toEqual([
-      "https://x.org",
-    ]);
+    const link = doc.firstChild!.firstChild!;
+    expect(link.type.name).toBe("link");
+    expect(linkHref(link.textContent)).toBe("https://x.org");
   });
 
   it("leaves an embed an embed", async () => {

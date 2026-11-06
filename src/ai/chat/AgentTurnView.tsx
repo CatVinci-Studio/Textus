@@ -74,7 +74,7 @@ export function AgentTurnView({
       );
     case "ToolResult":
       return (
-        <details className="agent-tool-result">
+        <details className="disclosure agent-tool-result">
           <summary>{labels.toolResult}</summary>
           <pre>{turn.output}</pre>
         </details>

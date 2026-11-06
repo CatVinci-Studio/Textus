@@ -2,9 +2,9 @@ use super::budget::BudgetKind;
 use super::*;
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use serde_json::json;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
-fn paper() -> Paper {
+pub(super) fn paper() -> Paper {
     Paper {
         id: "abc123".into(),
         topic: "城市热岛效应".into(),
@@ -319,9 +319,17 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &Scripted,
+        &paper(),
+        &web,
+        &budget,
+        &send,
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
 
     // One note per question kept; the unknown number and the unsourced one
     // were refused.
@@ -477,14 +485,22 @@ async fn research_that_keeps_nothing_fails_with_a_reason() {
         tools: &tools,
         ctx: &ctx,
     };
-    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap_err();
+    let err = research::research(
+        &Empty,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap_err();
     assert!(err.contains("found nothing to write from"), "{err}");
 }
 
 /// `outline()` with `n` copies of its section, each `words` long.
-fn outline_of(n: usize, words: u32) -> Outline {
+pub(super) fn outline_of(n: usize, words: u32) -> Outline {
     let mut o = outline();
     let section = OutlineSection {
         target_words: words,
@@ -626,7 +642,7 @@ fn an_edited_outline_drops_what_it_can_t_use_and_needs_titles() {
     assert!(outline::as_edited(Outline::default(), &d).is_err());
 }
 
-fn drafting_dossier() -> Dossier {
+pub(super) fn drafting_dossier() -> Dossier {
     Dossier {
         sources: vec![aicompat::agent::Source {
             n: 3,
@@ -638,7 +654,7 @@ fn drafting_dossier() -> Dossier {
 }
 
 /// A section of `n` words citing source 3, with `extra` after it.
-fn section_text(n: usize, extra: &str) -> String {
+pub(super) fn section_text(n: usize, extra: &str) -> String {
     format!(
         "{} roofs cool [3](https://example.org/study).\n\n{extra}",
         "Green ".repeat(n)
@@ -668,7 +684,7 @@ fn a_section_is_checked_for_length_citations_and_figures() {
     );
     assert_eq!(
         draft::problems(&good, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 
     let bad = format!(
@@ -771,6 +787,7 @@ async fn sections_are_handed_on_in_order_under_their_headings() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -899,6 +916,7 @@ async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft
         &issues,
         &|i| revising.lock().unwrap().push(i),
         &|_| {},
+        None,
     )
     .await;
     assert_eq!(changed, [0]);
@@ -1246,9 +1264,17 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&Librarian, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &Librarian,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     assert_eq!(dossier.notes[0].sources, vec![1]);
     assert_eq!(dossier.notes[1].sources, vec![1]);
@@ -1267,7 +1293,7 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     let sources = vec![(1, dossier.sources[0].url.clone())];
     assert_eq!(
         draft::problems(&cited, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
     let listed = finish::references(
         std::slice::from_ref(&cited),
@@ -1315,7 +1341,9 @@ async fn web_picture_marks_become_kept_pictures_with_credits_or_generated_ones()
             Err("nothing".to_string())
         }
     };
-    let resolved = web_figures::resolve(section, find).await;
+    let resolved = web_figures::resolve(&[section.to_string()], find)
+        .await
+        .remove(0);
     let lines: Vec<&str> = resolved.split("\n\n").collect();
     assert_eq!(lines[0], "Intro.");
     let id = lines[1]
@@ -1410,15 +1438,17 @@ fn each_question_gets_an_even_share_of_the_research() {
 
 #[test]
 fn only_length_and_missing_figures_are_soft() {
-    assert!(draft::is_soft(
-        "It is 900 long; the section is to be about 400."
-    ));
-    assert!(draft::is_soft("1 planned chart(s), 0 ```chart block(s)."));
-    assert!(!draft::is_soft("[4] isn't one of this section's sources."));
-    assert!(!draft::is_soft("Chart 1: its JSON doesn't parse (x)."));
-    assert!(!draft::is_soft(
-        "Nothing is cited: mark each fact from the notes with its source, [n](address)."
-    ));
+    let mut section = outline().sections.remove(0);
+    section.target_words = 100;
+    let sources = vec![(3, "https://example.org/study".to_string())];
+    let found = |text: &str| draft::problems(text, &section, &sources, "en");
+    // Too long, a planned figure missing: soft, whatever the wording.
+    let long = found(&section_text(127, ""));
+    assert!(!long.is_empty() && draft::all_soft(&long), "{long:?}");
+    // A source that isn't the section's, nothing cited: never soft.
+    let wrong = found(&section_text(100, "").replace("[3]", "[4]"));
+    assert!(!draft::all_soft(&wrong), "{wrong:?}");
+    assert!(draft::all_soft(&[]));
 }
 
 /// Always hands over a section three times too long, citing its source.
@@ -1457,6 +1487,7 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1499,6 +1530,7 @@ async fn a_section_written_as_the_reply_is_checked_and_kept() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1516,22 +1548,22 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
     section.target_words = 100;
     section.figures.clear();
     let sources = vec![(3, "https://example.org/study".to_string())];
-    let found = |words: usize| {
-        draft::problems(&section_text(words, ""), &section, &sources, "en").join(" ")
-    };
+    let problems =
+        |words: usize| draft::problems(&section_text(words, ""), &section, &sources, "en");
+    let found = |words: usize| problems(words).join(" ");
     assert_eq!(found(107), "");
     assert!(
         found(127).starts_with("It is 130 long; the section is to be about 100 (at most 120)"),
         "{}",
         found(127)
     );
-    assert!(draft::is_soft(&found(127)));
+    assert!(draft::all_soft(&problems(127)));
     assert!(
         found(147).starts_with("Far too long: 150 against about 100 - cut it to at most 120"),
         "{}",
         found(147)
     );
-    assert!(!draft::is_soft(&found(147)));
+    assert!(!draft::all_soft(&problems(147)));
     assert!(found(57).starts_with("It is 60 long"), "{}", found(57));
     assert!(found(37).starts_with("Far too short"), "{}", found(37));
     assert_eq!(draft::most(900), 1080);
@@ -1552,6 +1584,7 @@ async fn a_section_far_too_long_is_kept_only_as_the_last_resort() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     // Every try was sent back: the last is kept, so the paper goes on.
@@ -1606,11 +1639,11 @@ fn an_address_with_parentheses_is_cited_whole() {
     // Either way of writing it is the same source.
     assert_eq!(
         draft::problems(&cited, &section, &[(66, safe.clone())], "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
     assert_eq!(
         draft::problems(&cited, &section, &[(66, doi.to_string())], "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 }
 
@@ -1689,9 +1722,17 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &SearchCiter,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert!(
         dossier.notes.iter().all(|n| n.sources == vec![2]),
         "{:?}",
@@ -1711,17 +1752,18 @@ fn a_figure_named_by_number_is_sent_back_and_a_slash_doesn_t_matter() {
     let sources = vec![(3, "https://example.org/study".to_string())];
     let numbered =
         "Roofs cool by day, as 图1 shows, and so on here [3](https://example.org/study/).";
-    let found = draft::problems(numbered, &section, &sources, "en").join(" ");
+    let wrong = draft::problems(numbered, &section, &sources, "en");
+    let found = wrong.join(" ");
     assert!(
         found.contains("\"图1\" names a figure by a number"),
         "{found}"
     );
-    assert!(!draft::is_soft(&found));
+    assert!(!draft::all_soft(&wrong));
     let fine =
         "Roofs cool by day, as the chart below shows and more [3](https://example.org/study/).";
     assert_eq!(
         draft::problems(fine, &section, &sources, "en"),
-        Vec::<String>::new()
+        Vec::<draft::Problem>::new()
     );
 }
 
@@ -1858,6 +1900,7 @@ async fn a_draft_goes_on_from_the_sections_already_written() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1955,6 +1998,7 @@ async fn a_section_that_never_holds_is_kept_repaired_and_the_paper_goes_on() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -2224,8 +2268,8 @@ fn a_thread_post_too_long_for_one_post_is_sent_back_softly() {
     );
     let found = draft::long_posts(&posts, &thread);
     assert_eq!(found.len(), 1, "{found:?}");
-    assert!(found[0].contains("post 2"), "{found:?}");
-    assert!(checks::is_soft(&found[0]));
+    assert!(found[0].text.contains("post 2"), "{found:?}");
+    assert!(checks::all_soft(&found));
     let chinese = Paper {
         genre: Genre::Thread,
         ..paper()
@@ -2388,4 +2432,177 @@ async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres
     assert!(line("review").contains("文献综述"), "{instructions}");
     assert!(line("analysis").contains("调研报告"), "{instructions}");
     assert!(!line("report").contains("调研报告"), "{instructions}");
+}
+
+/// Every stage's prompt fills in for every genre and language: the
+/// prompt files and the code agree on what goes in them.
+#[test]
+fn every_prompt_fills_in_for_every_genre() {
+    let unfilled = |text: &str| assert!(!text.contains("{{"), "{text}");
+    for asked in [None, Some(3000)] {
+        unfilled(&choose::instructions(asked));
+    }
+    for genre in Genre::ALL {
+        for language in ["en", "zh"] {
+            let paper = Paper {
+                genre,
+                language: language.into(),
+                ..paper()
+            };
+            unfilled(&finish::opening_instructions(&paper));
+            unfilled(&research::plan_instructions(&paper));
+            unfilled(&research::helper_instructions(
+                &paper,
+                &research::material_prompt(&["notes.md".into()], true),
+            ));
+            for images in [0, 3] {
+                let shape = outline::Shape::of(&genre.profile().scale, paper.target_chars, images);
+                unfilled(&outline::instructions(&paper, &shape));
+            }
+            unfilled(&draft::writer_instructions(&paper));
+            unfilled(&draft::revision_message(
+                &paper,
+                &outline(),
+                0,
+                &dossier(),
+                "Earlier.",
+                &["Shorter.".into()],
+            ));
+            unfilled(&review::instructions(&paper));
+        }
+    }
+    unfilled(&review::message(&outline(), &["One.".into()]));
+}
+
+/// Each genre's profile is its own, read whole from its file.
+#[test]
+fn every_genre_s_profile_is_read_from_its_file() {
+    for genre in Genre::ALL {
+        let p = genre.profile();
+        assert_eq!(
+            serde_json::to_value(genre).unwrap(),
+            json!(p.name),
+            "{genre:?}"
+        );
+        for part in [
+            p.when,
+            p.research_angles,
+            p.research_sources,
+            p.thesis,
+            p.outline_order,
+            p.voice,
+            p.cite,
+            p.review_for,
+            p.opening,
+        ] {
+            assert!(
+                !part.is_empty() && !part.contains("{{"),
+                "{genre:?}: {part}"
+            );
+        }
+    }
+    // A part one genre takes from another, and a rule taken from shared.md.
+    assert_eq!(Genre::Review.profile().cite, Genre::Paper.profile().cite);
+    assert!(Genre::Report
+        .profile()
+        .voice
+        .contains("no 此外, 综上所述 or 值得注意的是, and dates"));
+}
+
+/// Hands over a section whose diagram doesn't draw, then - told so - one
+/// whose diagram does; keeps what it was told.
+struct Redrawing(Mutex<Vec<String>>);
+
+impl research::Model for Redrawing {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let told: Vec<String> = turns
+            .iter()
+            .filter_map(|t| match t {
+                AgentTurn::ToolResult { output, .. } => Some(output.clone()),
+                _ => None,
+            })
+            .collect();
+        let step = if told.iter().any(|t| t.starts_with("Kept.")) {
+            StepResult::Done("Done.".into())
+        } else {
+            let diagram = if told.is_empty() { "A[bad" } else { "A --> B" };
+            StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                call_id: format!("c{}", turns.len()),
+                name: draft::SUBMIT_SECTION_TOOL.into(),
+                arguments: json!({"markdown": section_text(97, &format!(
+                    "```mermaid\nflowchart TB\n  {diagram}\n```\n\n```chart\n{{\"series\": [{{\"data\": [1]}}]}}\n```"
+                ))})
+                .to_string(),
+                reasoning: None,
+            }])
+        };
+        *self.0.lock().unwrap() = told;
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn a_diagram_the_window_can_t_draw_is_sent_back_with_the_renderer_s_words() {
+    let plan = outline_of(1, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let drawn = Mutex::new(Vec::new());
+    let draw = |blocks: Vec<figures::FigureBlock>| {
+        drawn.lock().unwrap().push(blocks.len());
+        let errors: Vec<Option<String>> = blocks
+            .iter()
+            .map(|b| {
+                b.code
+                    .contains("A[bad")
+                    .then(|| "Parse error on line 2".to_string())
+            })
+            .collect();
+        Box::pin(async move { Some(errors) }) as futures_util::future::BoxFuture<'static, _>
+    };
+    let model = Redrawing(Mutex::new(Vec::new()));
+    let written = draft::write_section(
+        &model,
+        &english,
+        &plan,
+        0,
+        &drafting_dossier(),
+        None,
+        &|_| {},
+        Some(&draw),
+    )
+    .await
+    .unwrap();
+    assert!(written.contains("A --> B"), "{written}");
+    let told = model.0.into_inner().unwrap();
+    assert!(
+        told[0].contains("Diagram 1 doesn't draw (Parse error on line 2)"),
+        "{}",
+        told[0]
+    );
+    // The diagram and the chart, each time.
+    assert_eq!(drawn.into_inner().unwrap(), [2, 2]);
+}
+
+#[test]
+fn a_web_picture_search_widens_by_dropping_its_last_words() {
+    assert_eq!(
+        web_figures::fewer_words("green roof Zurich city"),
+        ["green roof Zurich city", "green roof Zurich", "green roof"]
+    );
+    assert_eq!(
+        web_figures::fewer_words("green roof Zurich"),
+        ["green roof Zurich", "green roof"]
+    );
+    assert_eq!(
+        web_figures::fewer_words("Basel rooftops"),
+        ["Basel rooftops"]
+    );
 }

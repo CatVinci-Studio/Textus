@@ -10,6 +10,7 @@ import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
+import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
 import { changeGlimpse } from "./change-glimpse";
 import {
@@ -531,7 +532,13 @@ export function NotePopover({
   onEdit: (note: ReviewNote) => void;
   onClose: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  // A click outside it, or on another badge, or Escape closes it.
+  const ref = useCloseOnOutsideClick<HTMLDivElement>(
+    onClose,
+    true,
+    true,
+    ".review-badge",
+  );
   // Kept within the document's column, off the AI panel.
   const pos = useViewportClamp(ref, x, y, {
     right: () =>
@@ -539,21 +546,6 @@ export function NotePopover({
         .querySelector('[data-active-tab="true"] > .editor-scroll')
         ?.getBoundingClientRect().right,
   });
-  useLayoutEffect(() => {
-    const away = (e: PointerEvent) => {
-      const target = e.target as HTMLElement;
-      if (ref.current?.contains(target) || target.closest?.(".review-badge"))
-        return;
-      onClose();
-    };
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", esc);
-    return () => {
-      window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", esc);
-    };
-  }, [onClose]);
   return createPortal(
     <div
       ref={ref}

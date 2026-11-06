@@ -77,7 +77,7 @@ export function AdvancedFold({
   children: ReactNode;
 }) {
   return (
-    <details className="settings-advanced">
+    <details className="disclosure settings-advanced">
       <summary>{t.agentAdvancedGroupLabel}</summary>
       <div className="settings-advanced-body">{children}</div>
     </details>

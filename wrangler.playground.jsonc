@@ -1,9 +1,9 @@
-// The browser playground's Worker: textus.catvinci.com/playground/.
+// The browser playground's Worker: textus.md/playground/.
 // Static assets only, no script. Deployed by .github/workflows/deploy-playground.yml
 // after `npm run build:playground`; docs/dev/infrastructure.md#playground.
 //
 // Reproduces the Worker as it was first uploaded by hand (version 1,
-// 2026-10-18). The route textus.catvinci.com/playground* (zone catvinci.com)
+// 2026-10-18). The route textus.md/playground* (zone catvinci.com)
 // is deliberately not listed: the deploy token can't manage routes, and a
 // deploy without `routes` leaves the existing one as it is. Add or change the
 // route in the dashboard.

@@ -21,6 +21,11 @@ export function emitMenuEvent(id: NativeMenuId): void {
               id === "settings" ? "menu-open-settings" : `menu-${id}`,
               undefined,
             ];
+  emitToThisWindow(event, payload);
+}
+
+/** A menu event sent to this window only, as its own menu item would. */
+export function emitToThisWindow(event: string, payload?: unknown): void {
   // Addressed to the WebviewWindow: a bare label is AnyLabel, which on iOS
   // delivered the event twice, so every toggle undid itself.
   const { label } = getCurrentWebviewWindow();

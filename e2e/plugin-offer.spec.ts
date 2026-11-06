@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// A plugin suggests an official one with textus.offerPlugin: one dialog
+// A plugin suggests an official one with textus.offerPlugin: one card
 // however often it asks, and the answer comes back to it.
 
 const HOST = `
@@ -13,7 +13,7 @@ exports.activate = function () {
       reason: "Boards for the pages you import.",
     });
   };
-  // Listed, but not official: no dialog.
+  // Listed, but not official: no card.
   ask("catvinci.database")
     .then(function (listed) {
       return Promise.all([
@@ -72,29 +72,45 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   page,
 }) => {
   await openWithOfferingPlugin(page);
-  const dialog = page.locator(".app-dialog");
-  await expect(dialog).toContainText("Install the Kanban plugin?");
-  // Who asks, and a key typed as it opens lands on Cancel.
-  await expect(dialog.locator(".app-dialog-title")).toHaveText("Offer");
-  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
-  await expect(dialog).toContainText("“Boards for the pages you import.”");
-  await expect(dialog).toHaveCount(1);
-  await dialog.getByRole("button", { name: "Install", exact: true }).click();
+  const card = page.locator(".suggest-card");
+  // One line naming the plugin; the editor keeps the focus.
+  await expect(card).toContainText("Plugin suggestion: Kanban");
+  await expect(card).toHaveCount(1);
+  await expect(card.locator(":focus")).toHaveCount(0);
+  await card.locator(".corner-toast-summary").click();
+  await expect(card).toContainText("Boards of cards in lists");
+  await card.getByRole("button", { name: "Install", exact: true }).click();
   // Its permissions, as any install asks.
   const ask = page.locator(".app-dialog");
   await expect(ask).toContainText("Kanban asks to:");
   await ask.getByRole("button", { name: "Allow" }).click();
   await expect(page.getByText("answers: false,true,false,false")).toBeVisible();
+  await expect(card).toHaveCount(0);
 });
 
-test("declined, nothing is installed and the plugin hears false", async ({
+test("Later: nothing is installed and the plugin hears false", async ({
   page,
 }) => {
   await openWithOfferingPlugin(page);
-  const dialog = page.locator(".app-dialog");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  const card = page.locator(".suggest-card");
+  await card.getByRole("button", { name: "Later" }).click();
   await expect(
     page.getByText("answers: false,false,false,false"),
   ).toBeVisible();
+  await expect(card).toHaveCount(0);
   await expect(page.locator(".app-dialog")).toHaveCount(0);
+});
+
+test("× puts the suggestion away, after a reload too", async ({ page }) => {
+  await openWithOfferingPlugin(page);
+  await page
+    .locator(".suggest-card")
+    .getByRole("button", { name: "Don't suggest this again" })
+    .click();
+  await expect(page.locator(".suggest-card")).toHaveCount(0);
+  await page.reload();
+  await expect(
+    page.getByText("answers: false,false,false,false"),
+  ).toBeVisible();
+  await expect(page.locator(".suggest-card")).toHaveCount(0);
 });

@@ -1,8 +1,13 @@
-import { quickPickMatches } from "../../ui/quick-pick";
+import {
+  addCompletionSource,
+  type PanelItem,
+} from "../../editor/extension-points";
+import { windowInfo } from "../store/plugin-records";
 
 /**
- * The `/` menu: plugin commands offered at the caret when a word starts with
- * "/". Taking one removes what was typed and runs the command.
+ * The `/` commands: plugin commands offered at the caret when a word starts
+ * with "/" - the core's `textus.slash` source of the / panel. Taking one
+ * removes what was typed and runs the command.
  */
 export interface SlashItem {
   label: string;
@@ -25,30 +30,33 @@ export function addSlashItems(plugin: string, list: SlashItem[]): () => void {
   };
 }
 
-export function hasSlashItems(): boolean {
-  return items.size > 0;
+/** The items offered now, as the panel lists them. */
+export function slashPanelItems(): PanelItem[] {
+  const out: PanelItem[] = [];
+  for (const list of items.values())
+    for (const item of list)
+      if (item.shown())
+        out.push({
+          label: item.label,
+          insert: "",
+          detail: item.detail,
+          keywords: item.keywords,
+          run: item.run,
+        });
+  return out;
 }
 
-/** "/" at a word's start, then what is typed after it. */
-const SLASH = /(?:^|\s)(\/([\p{L}\p{N}-]*))$/u;
-
-/** The items `text` (what is before the caret) asks for, and how much of
- *  it they replace; null when it isn't a "/" word or nothing matches. */
-export function slashItemsFor(
-  text: string,
-): { replace: number; items: SlashItem[] } | null {
-  const match = SLASH.exec(text);
-  if (!match) return null;
-  const query = match[2];
-  // As the palette finds them: by any word, or a Chinese name by pinyin.
-  const found = [...items.values()]
-    .flat()
-    .filter(
-      (item) =>
-        quickPickMatches(
-          { label: item.label, description: item.keywords },
-          query,
-        ) && item.shown(),
-    );
-  return found.length ? { replace: match[1].length, items: found } : null;
-}
+addCompletionSource({
+  id: "textus.slash",
+  owner: "core",
+  where: "text",
+  // "/" at a word's start, then what is typed after it.
+  pattern: /(?:^|\s)(\/([\p{L}\p{N}-]*))$/u,
+  replaceGroup: 1,
+  title: () => windowInfo().strings().completionCommands,
+  provide: () => {
+    if (!items.size) return null;
+    const list = slashPanelItems();
+    return list.length ? { items: list, complete: true } : null;
+  },
+});

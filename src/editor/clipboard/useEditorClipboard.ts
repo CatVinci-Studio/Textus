@@ -8,6 +8,7 @@ import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 import { pastePlainText } from "./paste-plain";
 import { clipboardIpc } from "../../platform/ipc";
 import { plainTextOf } from "./plain-text";
+import { definitionsIn } from "../markdown/link-reveal";
 import { bareUrl, insertUrlLink } from "./paste-url";
 import {
   selectedPictureAsPng,
@@ -86,7 +87,10 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   const copyAsPlainText = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const text = plainTextOf(view.state.selection.content().content);
+      const { doc, selection } = view.state;
+      const text = plainTextOf(selection.content().content, () =>
+        definitionsIn(doc),
+      );
       if (!text) return;
       void (async () => {
         await navigator.clipboard.writeText(text).catch(() => {});

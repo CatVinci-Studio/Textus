@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://textus.catvinci.com"><strong>官網</strong></a> ·
+  <a href="https://textus.md"><strong>官網</strong></a> ·
   <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>下載</strong></a>
 </p>
 
@@ -31,8 +31,8 @@
   <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><img alt="version" src="https://img.shields.io/github/v/release/CatVinci-Studio/Textus"></a>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-yellow"></a>
   <a href="https://github.com/CatVinci-Studio/Textus/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/CatVinci-Studio/Textus/ci.yml?branch=main&label=CI"></a>
-  <a href="https://textus.catvinci.com/qq"><img alt="QQ" src="https://img.shields.io/badge/QQ-1128285004-12B7F5?logo=qq&logoColor=white"></a>
-  <a href="https://textus.catvinci.com/wechat"><img alt="WeChat" src="https://img.shields.io/badge/WeChat-group-07C160?logo=wechat&logoColor=white"></a>
+  <a href="https://textus.md/qq"><img alt="QQ" src="https://img.shields.io/badge/QQ-1128285004-12B7F5?logo=qq&logoColor=white"></a>
+  <a href="https://textus.md/wechat"><img alt="WeChat" src="https://img.shields.io/badge/WeChat-group-07C160?logo=wechat&logoColor=white"></a>
   <a href="https://github.com/jaywcjlove/awesome-mac"><img alt="Awesome Mac" src="https://img.shields.io/badge/Awesome-Mac-FC60A8?logo=awesomelists&logoColor=white"></a>
 </p>
 
@@ -147,9 +147,9 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 ## 社群
 
-- [QQ 群](https://textus.catvinci.com/qq)：1128285004
-- [微信群](https://textus.catvinci.com/wechat)：掃碼加入
-- [Discord](https://textus.catvinci.com/discord)：英文交流
+- [QQ 群](https://textus.md/qq)：1128285004
+- [微信群](https://textus.md/wechat)：掃碼加入
+- [Discord](https://textus.md/discord)：英文交流
 
 錯誤回報與功能建議也歡迎提到 [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues)。
 

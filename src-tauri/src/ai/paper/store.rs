@@ -2,6 +2,7 @@
 //! (ai::project_data), `papers/<id>/`, so a stopped run can resume and the
 //! user can read what the research found.
 
+use super::research::ResearchProgress;
 use super::{Dossier, Outline, Paper};
 use crate::ai::scratch::ATTACHED;
 use crate::ai::workspace::project_dir;
@@ -12,6 +13,10 @@ const PAPERS_FOLDER: &str = "papers";
 const PAPER_FILE: &str = "paper.json";
 const DOSSIER_FILE: &str = "dossier.json";
 const OUTLINE_FILE: &str = "outline.json";
+/// The research while it is under way: its questions and what each helper
+/// that finished found, so a stop mid-research costs only the questions
+/// still open.
+const RESEARCH_FILE: &str = "research.json";
 /// The paper's attachments, as `files/attached/...`.
 const FILES: &str = "files";
 const MATERIALS_FILE: &str = "materials.json";
@@ -118,6 +123,38 @@ pub(crate) fn save(root: &Path, files: &PaperFiles) -> Result<(), String> {
         write_json(&dir.join(OUTLINE_FILE), outline)?;
     }
     Ok(())
+}
+
+/// The research so far, written whole or not at all; none (no questions)
+/// takes the file away.
+pub(crate) fn save_research(
+    root: &Path,
+    id: &str,
+    progress: &ResearchProgress,
+) -> Result<(), String> {
+    if progress.questions.is_empty() {
+        return clear_research(root, id);
+    }
+    let dir = paper_dir(root, id)?;
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    write_json(&dir.join(RESEARCH_FILE), progress)
+}
+
+/// The research a stopped run kept; empty when there is none, or it can't
+/// be read - researched again then, as before it was kept.
+pub(crate) fn load_research(root: &Path, id: &str) -> ResearchProgress {
+    paper_dir(root, id)
+        .ok()
+        .and_then(|dir| read_json(&dir.join(RESEARCH_FILE)).ok().flatten())
+        .unwrap_or_default()
+}
+
+/// The research in progress taken away: whole, it is the dossier.
+pub(crate) fn clear_research(root: &Path, id: &str) -> Result<(), String> {
+    match std::fs::remove_file(paper_dir(root, id)?.join(RESEARCH_FILE)) {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
+        _ => Ok(()),
+    }
 }
 
 /// Section `index`'s draft, as `section-<index + 1>.md` beside the paper,

@@ -36,13 +36,13 @@ fn touch(root: &Path, rel: &str) -> PathBuf {
 }
 
 fn resolve(doc: &Path, link: &str) -> Option<PathBuf> {
-    resolve_with(doc, None, link, LinkKind::Image, &mut |root, _| {
+    resolve_with(doc, None, link, LinkKind::Image, true, &mut |root, _| {
         Arc::new(index_vault(root))
     })
 }
 
 fn resolve_note(doc: &Path, link: &str) -> Option<PathBuf> {
-    resolve_with(doc, None, link, LinkKind::Note, &mut |root, _| {
+    resolve_with(doc, None, link, LinkKind::Note, true, &mut |root, _| {
         Arc::new(index_vault(root))
     })
 }
@@ -70,12 +70,107 @@ fn a_wikilink_finds_a_note_anywhere_in_the_vault_by_name() {
 }
 
 #[test]
-fn a_wikilink_names_notes_not_pictures() {
-    let dir = tempdir("a_wikilink_names_notes_not_pictures");
+fn a_wikilink_to_a_picture_or_a_pdf_finds_the_file() {
+    let dir = tempdir("a_wikilink_to_a_picture_or_a_pdf_finds_the_file");
     fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
     let doc = touch(dir.path(), "a.md");
-    touch(dir.path(), "pic.png");
-    assert_eq!(resolve_note(&doc, "pic.png"), None);
+    let pic = touch(dir.path(), "pics/pic.png");
+    let pdf = touch(dir.path(), "docs/paper.pdf");
+    assert_eq!(resolve_note(&doc, "pic.png"), Some(pic));
+    assert_eq!(resolve_note(&doc, "paper.pdf"), Some(pdf));
+}
+
+#[derive(serde::Deserialize)]
+struct CaseTable {
+    files: Vec<String>,
+    cases: Vec<Case>,
+}
+
+#[derive(serde::Deserialize)]
+struct Case {
+    name: String,
+    from: String,
+    note: String,
+    wiki: bool,
+    expect: Option<String>,
+}
+
+#[test]
+fn links_resolve_as_the_shared_case_table_says() {
+    let table: CaseTable = serde_json::from_str(include_str!(
+        "../../../../src/links/link-resolve.cases.json"
+    ))
+    .unwrap();
+    let dir = tempdir("links_resolve_as_the_shared_case_table_says");
+    fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+    for file in &table.files {
+        touch(dir.path(), file);
+    }
+    for case in &table.cases {
+        let found = resolve_with(
+            &dir.path().join(&case.from),
+            None,
+            &case.note,
+            LinkKind::Note,
+            case.wiki,
+            &mut |root, _| Arc::new(index_vault(root)),
+        );
+        let want = case.expect.as_ref().map(|rel| dir.path().join(rel));
+        assert_eq!(found, want, "{}", case.name);
+    }
+}
+
+#[test]
+fn a_missing_note_is_created_where_the_vault_puts_new_notes() {
+    let dir = tempdir("a_missing_note_is_created_where_the_vault_puts_new_notes");
+    fs::create_dir_all(dir.path().join(".obsidian")).unwrap();
+    let doc = touch(dir.path(), "notes/a.md");
+    let new = |link: &str, wiki: bool| new_note_path(&doc, None, link, wiki);
+    assert_eq!(new("Idea", true), Some(dir.path().join("Idea.md")));
+    assert_eq!(new("sub/Idea", true), Some(dir.path().join("sub/Idea.md")));
+    assert_eq!(new("Idea", false), Some(dir.path().join("notes/Idea.md")));
+    fs::write(
+        dir.path().join(".obsidian/app.json"),
+        r#"{"newFileLocation":"folder","newFileFolderPath":"Inbox"}"#,
+    )
+    .unwrap();
+    assert_eq!(new("Idea", true), Some(dir.path().join("Inbox/Idea.md")));
+    fs::write(
+        dir.path().join(".obsidian/app.json"),
+        r#"{"newFileLocation":"current"}"#,
+    )
+    .unwrap();
+    assert_eq!(new("Idea", true), Some(dir.path().join("notes/Idea.md")));
+    assert_eq!(new("../../out", true), None);
+}
+
+#[test]
+fn outside_a_vault_a_new_note_goes_beside_the_document() {
+    let dir = tempdir("outside_a_vault_a_new_note_goes_beside_the_document");
+    let doc = touch(dir.path(), "notes/a.md");
+    assert_eq!(
+        new_note_path(&doc, Some(dir.path()), "Idea", true),
+        Some(dir.path().join("notes/Idea.md"))
+    );
+}
+
+#[test]
+fn a_link_from_slash_is_read_from_the_repository() {
+    let dir = tempdir("a_link_from_slash_is_read_from_the_repository");
+    fs::create_dir_all(dir.path().join(".git")).unwrap();
+    let doc = touch(dir.path(), "docs/guide/a.md");
+    let image = touch(dir.path(), "assets/logo.png");
+    let note = touch(dir.path(), "docs/b.md");
+    assert_eq!(resolve(&doc, "/assets/logo.png"), Some(image));
+    let found = resolve_with(
+        &doc,
+        None,
+        "/docs/b",
+        LinkKind::Note,
+        false,
+        &mut |root, _| Arc::new(index_vault(root)),
+    );
+    assert_eq!(found, Some(note));
 }
 
 #[test]
@@ -108,6 +203,7 @@ fn without_dot_obsidian_the_open_folder_holding_the_document_is_the_vault() {
         Some(dir.path()),
         "Ann",
         LinkKind::Note,
+        true,
         &mut |root, _| Arc::new(index_vault(root)),
     );
     assert_eq!(found, Some(other));
@@ -238,7 +334,11 @@ fn hidden_folders_and_node_modules_are_not_indexed() {
     indexed.sort();
     assert_eq!(
         indexed,
-        vec!["notes/kept.png".to_string(), "notes/readme.md".to_string()]
+        vec![
+            "notes/data.csv".to_string(),
+            "notes/kept.png".to_string(),
+            "notes/readme.md".to_string()
+        ]
     );
 }
 
@@ -255,6 +355,7 @@ fn a_new_file_is_found_after_a_miss_rebuilds_the_index() {
         None,
         "new.png",
         LinkKind::Image,
+        true,
         &mut |root, fresh| {
             if fresh {
                 asked_fresh = true;

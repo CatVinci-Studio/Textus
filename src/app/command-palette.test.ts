@@ -13,7 +13,7 @@ const MENU: MenuNode[] = [
       },
       "separator",
       {
-        label: "Close Folder",
+        label: "Close Project",
         disabled: true,
         action: { native: "close-folder" },
       },

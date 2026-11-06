@@ -9,6 +9,9 @@ export interface ViewportClampOptions {
   /** A right edge short of the window's (the editor beside the AI panel),
    *  read at each clamp. */
   right?: () => number | undefined;
+  /** `x` is the popup's right edge (a menu under a button at the end of a
+   *  bar), not its left. */
+  alignEnd?: boolean;
 }
 
 /**
@@ -22,7 +25,7 @@ export function useViewportClamp(
   y: number,
   options: ViewportClampOptions = {},
 ): { left: number; top: number } {
-  const { margin = 8, grow = "down", right } = options;
+  const { margin = 8, grow = "down", right, alignEnd = false } = options;
   const rightRef = useRef(right);
   rightRef.current = right;
   const [pos, setPos] = useState({ left: x, top: y });
@@ -58,7 +61,7 @@ export function useViewportClamp(
         left: Math.max(
           margin,
           Math.min(
-            x,
+            alignEnd ? x - width : x,
             (rightRef.current?.() ?? window.innerWidth) - width - margin,
           ),
         ),
@@ -70,7 +73,7 @@ export function useViewportClamp(
     const observer = new ResizeObserver(clamp);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [ref, x, y, margin, grow]);
+  }, [ref, x, y, margin, grow, alignEnd]);
 
   return pos;
 }

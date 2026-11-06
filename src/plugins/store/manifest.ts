@@ -190,7 +190,10 @@ export interface AiToolContribution {
 export interface CompletionContribution {
   id: string;
   where: "math" | "text" | "any";
+  /** Anchored at the caret; its last capture group is the query. */
   pattern: string;
+  /** The panel group's heading ("%notes%"); the plugin's name without it. */
+  title?: string;
 }
 
 /** Links a plugin opens on Ctrl/Cmd+click instead of the browser: a URL
@@ -219,6 +222,19 @@ export interface FloatingViewContribution {
  *  for a document that does: [[wikilinks]]. */
 export type SuggestKind = "wikilinks";
 
+/** What `![[...]]` embeds point at. */
+export type EmbedKind = "note" | "heading" | "block";
+
+/** `![[...]]` embeds whose content the plugin gives as Markdown; Textus
+ *  draws it, read-only. Needs files.read. */
+export interface EmbedContribution {
+  id: string;
+  targets: EmbedKind[];
+}
+
+/** The hover cards a plugin gives. */
+export type HoverContribution = "document" | "link" | "citation";
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -232,6 +248,8 @@ export interface Contributes {
   themes: ThemeContribution[];
   aiTools: AiToolContribution[];
   completions: CompletionContribution[];
+  embeds: EmbedContribution[];
+  hovers: HoverContribution[];
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
   floatingViews: FloatingViewContribution[];
@@ -273,7 +291,9 @@ const ID = /^[a-z0-9][a-z0-9-]{0,63}\.[a-z0-9][a-z0-9-]{0,63}$/;
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 /** The manifest in `raw` (the file's text or its parsed JSON), checked;
- *  throws ManifestError saying what is wrong. */
+ *  throws ManifestError saying what is wrong. Everything but `contributes`
+ *  is checked again by `plugins::manifest::check` in Rust before a plugin is
+ *  installed or loaded; change both. */
 export function parseManifest(raw: string | unknown): PluginManifest {
   let json: unknown = raw;
   if (typeof raw === "string") {
@@ -338,6 +358,9 @@ export function parseManifest(raw: string | unknown): PluginManifest {
         ),
       );
     }
+  const contributes = parseContributes(m.contributes, id);
+  if (contributes.embeds.length && !permissions.includes("files.read"))
+    throw new ManifestError("contributes.embeds needs files.read.");
   return {
     id,
     name: text(m.name, "name"),
@@ -357,7 +380,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     ),
     permissions,
     requires,
-    contributes: parseContributes(m.contributes, id),
+    contributes,
     l10n,
   };
 }

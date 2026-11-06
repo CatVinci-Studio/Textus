@@ -1,3 +1,6 @@
+import { useKeptLoaded } from "../utils/kept-loaded";
+import { editorHeld } from "../document/editor-held";
+import type { ReactNode } from "react";
 import { Suspense, type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
@@ -8,7 +11,12 @@ import {
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
-import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
+import {
+  showsStartPage,
+  tabIsDirty,
+  tabTitle,
+  type DocTab,
+} from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
@@ -37,6 +45,11 @@ import { copyPathItem } from "../clipboard/copy-path";
 type TabBarProps = ComponentProps<typeof TabBar>;
 
 // Its Markdown renderer loads when a tab first shows it, not with the window.
+// Shown only when the user chose it, so kept out of the startup chunk.
+const StartPage = lazyComponent(
+  lazyModule("start-page", () => import("./StartPage")),
+  (m) => m.StartPage,
+);
 const SplitView = lazyComponent(
   lazyModule("split-view", () => import("../editor/modes/SplitView")),
   (m) => m.SplitView,
@@ -53,6 +66,40 @@ function pluginTabItems(
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
 /** The document column: the tab bar over every open tab's editor. */
+
+/** A plugin's page in a tab out of sight is let go after a while (three
+ *  at most kept); shown again, it loads afresh, its saved state restored. */
+function KeptWhileHidden({
+  shown,
+  children,
+}: {
+  shown: boolean;
+  children: ReactNode;
+}) {
+  return useKeptLoaded("plugin-view", shown) ? children : null;
+}
+
+/** A document's editor out of sight ten minutes is let go, unless Textus
+ *  AI or undecided changes live in it, or it has no file to come back
+ *  from; shown again, it opens at its text with its undo history. */
+const EDITOR_HIDDEN_MS = 10 * 60_000;
+
+function EditorKept({
+  tabId,
+  shown,
+  children,
+}: {
+  tabId: string;
+  shown: boolean;
+  children: ReactNode;
+}) {
+  const loaded = useKeptLoaded("editor", shown, {
+    hiddenMs: EDITOR_HIDDEN_MS,
+    max: Infinity,
+    hold: () => editorHeld(tabId),
+  });
+  return loaded ? children : null;
+}
 
 export function MainPane({
   tabs,
@@ -233,8 +280,8 @@ export function MainPane({
           )
         : showTabBar && tabBar(tabs, activeTabId, null)}
 
-      {/* Every tab's editor stays mounted, just hidden, so switching keeps
-        undo history, scroll position and in-flight AI state. */}
+      {/* A tab's editor stays mounted while hidden, so switching keeps its
+        state; one out of sight a long while is let go (EditorKept). */}
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = shownIn.get(tab.id);
@@ -265,21 +312,29 @@ export function MainPane({
             {tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
             ) : tab.view?.kind === "list" ? (
-              <PluginListPane
-                plugin={tab.view.plugin}
-                view={tab.view.view}
-                className="plugin-list-tab"
-              />
+              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
+                <PluginListPane
+                  plugin={tab.view.plugin}
+                  view={tab.view.view}
+                  className="plugin-list-tab"
+                />
+              </KeptWhileHidden>
             ) : tab.view && tab.view.kind !== "web" ? (
-              <PluginTabPane
-                tabId={tab.id}
-                plugin={tab.view.plugin}
-                view={tab.view.view}
-                kind={tab.view.kind}
-                resource={tab.view.resource}
-                state={tab.view.state}
-                target={tab.view.target}
-              />
+              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
+                <PluginTabPane
+                  tabId={tab.id}
+                  plugin={tab.view.plugin}
+                  view={tab.view.view}
+                  kind={tab.view.kind}
+                  resource={tab.view.resource}
+                  state={tab.view.state}
+                  target={tab.view.target}
+                />
+              </KeptWhileHidden>
+            ) : showsStartPage(tab) ? (
+              <Suspense fallback={null}>
+                <StartPage t={t} />
+              </Suspense>
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>
                 <SplitView
@@ -299,18 +354,23 @@ export function MainPane({
                 readOnly={tabReadOnly(tab)}
               />
             ) : (
-              <EditorPane
-                key={`${tab.id}-${tab.reloadKey}`}
+              <EditorKept
                 tabId={tab.id}
-                filePath={tab.path}
-                docTitle={tabTitle(tab, t)}
-                initialValue={tab.content}
-                onChange={onChange}
-                isActive={tab.id === activeTabId}
-                tour={tour && tab.id === tour.tabId ? tour.ai : null}
-                tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
-                readOnly={tabReadOnly(tab)}
-              />
+                shown={tab.id === activeTabId || !!pane || !tab.path}
+              >
+                <EditorPane
+                  key={`${tab.id}-${tab.reloadKey}`}
+                  tabId={tab.id}
+                  filePath={tab.path}
+                  docTitle={tabTitle(tab, t)}
+                  initialValue={tab.content}
+                  onChange={onChange}
+                  isActive={tab.id === activeTabId}
+                  tour={tour && tab.id === tour.tabId ? tour.ai : null}
+                  tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
+                  readOnly={tabReadOnly(tab)}
+                />
+              </EditorKept>
             )}
           </div>
         );

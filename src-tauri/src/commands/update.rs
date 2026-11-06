@@ -8,7 +8,7 @@ use tauri::{Manager, Runtime, Url, Webview};
 use tauri_plugin_updater::UpdaterExt;
 
 /// Where the beta channel's manifest lives; the release workflow uploads it.
-pub const BETA_MANIFEST_URL: &str = "https://textus.catvinci.com/download/textus-beta.json";
+pub const BETA_MANIFEST_URL: &str = "https://textus.md/download/textus-beta.json";
 
 /// The endpoints to ask, in order, for `channel` ("stable" or "beta"; an
 /// unknown value is stable). `configured` is tauri.conf.json's list.

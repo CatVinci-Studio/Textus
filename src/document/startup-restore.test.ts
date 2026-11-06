@@ -70,6 +70,7 @@ const INITIAL: DocTab = {
 async function restore(
   newDocumentMode: "tab" | "window" = "tab",
   restoreCarets = true,
+  launchStartPage = false,
 ) {
   // `drained` is module state (one drain per window): a fresh module each.
   vi.resetModules();
@@ -94,6 +95,7 @@ async function restore(
       openFile,
       replaceTabWithFile,
       restoreCarets,
+      launchStartPage,
       startTutorial: vi.fn(),
       stopTutorial: vi.fn(),
     }),
@@ -125,6 +127,22 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("startup restore into the initial tab", () => {
+  it("shows the start page in a window nothing opens in, when chosen", async () => {
+    const { tabs } = await restore("tab", true, true);
+    await waitFor(() =>
+      expect(tabs()).toEqual([expect.objectContaining({ start: true })]),
+    );
+  });
+
+  it("but not over a document opened at launch", async () => {
+    ipc.takePendingOpenPaths.mockResolvedValue(["/docs/a.md"]);
+    const { tabs } = await restore("tab", true, true);
+    await waitFor(() =>
+      expect(tabs()).toEqual([expect.objectContaining({ path: "/docs/a.md" })]),
+    );
+    expect(tabs()[0].start).toBeUndefined();
+  });
+
   // The initial tab's editor can mount before the restore finishes and reads
   // its content only at mount, so reloadKey must move.
   it("remounts the initial tab's editor on the first restored document", async () => {

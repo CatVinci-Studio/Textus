@@ -7,6 +7,7 @@ import {
   helpDocContent,
   makeBlankTab,
   readDocFromDisk,
+  tabIsUntouchedDraft,
   type DocTab,
   type HelpDoc,
 } from "./doc-tabs";
@@ -47,6 +48,8 @@ export interface StartupRestoreOptions {
   replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
   /** Reopened documents come back at the caret they were left at. */
   restoreCarets: boolean;
+  /** Nothing to open: the start page instead of a blank document. */
+  launchStartPage: boolean;
   startTutorial: (tabId: string) => void;
   stopTutorial: () => void;
 }
@@ -292,6 +295,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       if (!opts.onboardingShown) {
         if (!isIOSApp) opts.startTutorial(opts.activeTabId);
         opts.markOnboardingShown();
+      } else if (opts.launchStartPage && canUseWindows) {
+        opts.setTabs((prev) =>
+          prev.map((tab) =>
+            tab.id === opts.activeTabId && tabIsUntouchedDraft(tab)
+              ? { ...tab, start: true }
+              : tab,
+          ),
+        );
       }
     })().finally(keptTabsRestored);
   }, [latest]);

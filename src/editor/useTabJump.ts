@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "./useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
-import { revealHeading } from "./markdown/heading-jump";
+import { revealHeading, revealNthHeading } from "./markdown/heading-jump";
 import { applyEditorCaret, placeEditorCaret } from "./modes/mode-switch";
 import { onTabJump, takeTabJump, type TabJump } from "./tab-jump";
 import type { Ctx } from "@milkdown/kit/ctx";
@@ -28,6 +28,8 @@ export function useTabJump(
         // A heading the document doesn't have leaves it at its top.
         if (jump.kind === "heading")
           revealHeading(ctx.get(editorViewCtx), jump.anchor);
+        else if (jump.kind === "outline")
+          revealNthHeading(ctx.get(editorViewCtx), jump.index);
         else if (jump.kind === "place") revealPlace(ctx, jump.place);
         // An offset past the end lands at the end. In Typewriter Mode the caret's
         // line goes to the middle.

@@ -2,6 +2,7 @@
 /// "mod" is Cmd on Apple platforms and Ctrl elsewhere.
 import { modIsMeta } from "../platform/os";
 import { isImeKeydown } from "./ime";
+import { isMacSystemCombo } from "./system-keys";
 const MODIFIER_KEYS = new Set(["control", "meta", "alt", "shift", "altgraph"]);
 
 /// Builds a normalized combo string from a KeyboardEvent. Returns null while
@@ -60,6 +61,24 @@ export function formatCombo(combo: string): string {
 }
 
 // These combinations are owned by the app/native menu, before user bindings.
+/** The editor's own block keys (Milkdown's keymaps): reserved here, and
+ *  listed in Settings by fixed-shortcuts.ts. */
+export const EDITOR_BLOCK_COMBOS = {
+  paragraph: "mod+alt+0",
+  h1: "mod+alt+1",
+  h2: "mod+alt+2",
+  h3: "mod+alt+3",
+  h4: "mod+alt+4",
+  h5: "mod+alt+5",
+  h6: "mod+alt+6",
+  orderedList: "mod+alt+7",
+  bulletList: "mod+alt+8",
+  codeBlock: "mod+alt+c",
+  blockquote: "mod+shift+b",
+  indent: "mod+]",
+  outdent: "mod+[",
+} as const;
+
 const RESERVED_COMBOS = new Set([
   "mod+p",
   "mod+=",
@@ -68,7 +87,17 @@ const RESERVED_COMBOS = new Set([
   "mod+s",
   "mod+shift+s",
   "mod+n",
+  "mod+shift+n",
   "mod+t",
+  "mod+k",
+  "mod+g",
+  "mod+alt+f",
+  // Inline code and strikethrough, by the shifted key a combo records too.
+  "ctrl+`",
+  "ctrl+shift+`",
+  "ctrl+shift+~",
+  "mod+`",
+  "mod+shift+~",
   "mod+shift+t",
   "mod+o",
   "mod+w",
@@ -110,6 +139,7 @@ const RESERVED_COMBOS = new Set([
   "alt+enter",
   "alt+[",
   "alt+]",
+  ...Object.values(EDITOR_BLOCK_COMBOS),
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
   // Round the window's regions, and through Textus AI's changes.
@@ -129,6 +159,8 @@ const MAC_RESERVED_COMBOS = new Set([
 export function isReservedCombo(combo: string): boolean {
   return (
     RESERVED_COMBOS.has(combo) ||
-    (modIsMeta() ? MAC_RESERVED_COMBOS.has(combo) : combo === "alt+f4")
+    (modIsMeta()
+      ? MAC_RESERVED_COMBOS.has(combo) || isMacSystemCombo(combo)
+      : combo === "alt+f4")
   );
 }

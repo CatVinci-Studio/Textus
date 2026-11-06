@@ -1,4 +1,3 @@
-import { headingIdGenerator } from "@milkdown/kit/preset/commonmark";
 import {
   ParserReady,
   editorStateTimerCtx,
@@ -9,8 +8,14 @@ import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey, type Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { shownText } from "./link-source";
 
 const isHeading = (node: ProseNode) => node.type.name === "heading";
+
+/** Milkdown's heading id, from the heading's text as it reads: a link's
+ *  source would put its URL in the id. */
+const headingId = (node: ProseNode) =>
+  shownText(node).toLowerCase().trim().replace(/\s+/g, "-");
 
 /** Whether `tr` wrote into a heading, or removed or added one. */
 export function touchesHeading(tr: Transaction): boolean {
@@ -99,9 +104,7 @@ export const headingIdsOnParse: MilkdownPlugin = (ctx) => {
   return async () => {
     await ctx.wait(ParserReady);
     const parse = ctx.get(parserCtx);
-    ctx.set(parserCtx, (text) =>
-      withHeadingIds(parse(text), ctx.get(headingIdGenerator.key)),
-    );
+    ctx.set(parserCtx, (text) => withHeadingIds(parse(text), headingId));
     ctx.done(HeadingIdsParsed);
     return () => {
       ctx.clearTimer(HeadingIdsParsed);
@@ -118,10 +121,10 @@ const SYNC_DELAY_MS = 300;
  * recomputed only after a change to a heading, once typing rests (that
  * plugin walked the whole document after every change).
  */
-export const headingIdPlugin = $prose((ctx) => {
+export const headingIdPlugin = $prose(() => {
   const sync = (view: EditorView) => {
     const tr = view.state.tr.setMeta("addToHistory", false).setMeta(key, true);
-    eachId(view.state.doc, ctx.get(headingIdGenerator.key), (node, pos, id) => {
+    eachId(view.state.doc, headingId, (node, pos, id) => {
       if (node.attrs.id !== id)
         tr.setNodeMarkup(pos, undefined, { ...node.attrs, id });
     });

@@ -2,12 +2,13 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 // The editor's key handlers run in the order they're registered, and some
-// must see a key before others: a plugin holding the keyboard first, the
+// must see a key before others: the open / panel first, then a plugin
+// holding the keyboard, the
 // table's arrows before gfm's own, the inline delimiters before the block
 // keys, Read Only last of all.
 const ORDER = [
-  "editorExtensions().keyInput",
   "createCompletionPlugin",
+  "editorExtensions().keyInput",
   "macNavigationPlugin",
   "linuxImeEnterPlugin",
   "compositionPruneGuardPlugin",
@@ -20,7 +21,7 @@ const ORDER = [
   "enclosurePlugin",
   "mathAutopairPlugin",
   "headingMarkerPlugin",
-  "linkRevealPlugin",
+  "createLinkRevealPlugin",
   "pastePlainTextKeyPlugin",
   "blockKeysPlugin",
   "tabExtendPlugin",

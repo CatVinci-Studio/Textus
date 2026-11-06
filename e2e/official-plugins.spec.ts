@@ -207,14 +207,16 @@ test("a selected link opens in a web page tab of its own", async ({ page }) => {
   );
 });
 
-test("a web link Ctrl/Cmd+clicked opens in Web View, not the browser", async ({
+test("with its setting on, a web link Ctrl/Cmd+clicked opens in Web View", async ({
   page,
 }) => {
   await page.route("https://example.test/**", (route) =>
     route.fulfill({ contentType: "text/html", body: "<h1>Linked page</h1>" }),
   );
+  // Off by default: links go to the browser unless the user opts in.
   await openWithPlugins(page, {
     plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
+    settings: { "catvinci.web-view": { clickLinks: true } },
   });
   await pasteMarkdown(page, "See [the page](https://example.test/linked).");
   const link = page.locator('[data-active-tab="true"] .ProseMirror a');

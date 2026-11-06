@@ -23,6 +23,7 @@ import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
 import { currentAppState } from "../background/app-state";
 import { forgetListViews } from "../contributions/list-views";
+import { forgetEmbeds } from "../contributions/embeds";
 import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
@@ -122,6 +123,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   activeTab: null,
   layout: null,
   root: "files.read",
+  conventions: "files.read",
   fileCreate: "files.read",
   fileChange: "files.read",
   fileRename: "files.read",
@@ -213,6 +215,7 @@ export class PluginHost {
     stopPluginUi(this.id);
     stopPluginEditor(this.id);
     forgetListViews(this.id);
+    forgetEmbeds(this.id);
     forgetWillSave(this.id);
     forgetWillExport(this.id);
     unwatchMetadata(this.id);
