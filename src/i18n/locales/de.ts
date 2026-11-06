@@ -782,8 +782,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   deleteColumn: "Spalte löschen",
   deleteTable: "Tabelle löschen",
   tableToMarkdown: "In Markdown-Tabelle umwandeln",
-  tableToMarkdownMerged: "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
-  tableToMarkdownBlocks: "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
+  tableToMarkdownMerged:
+    "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
+  tableToMarkdownBlocks:
+    "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",
@@ -1332,6 +1334,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   fileChangedOnDiskMessage:
     "Diese Datei wurde von einem anderen Programm geändert. Beim Speichern werden diese Änderungen überschrieben.",
   fileChangedOnDiskOverwrite: "Überschreiben",
+  fileGoneOnDiskTitle: "Datei verschoben oder gelöscht",
+  fileGoneOnDiskMessage:
+    "Diese Datei liegt nicht mehr dort, wo sie geöffnet wurde. Sie wurde vielleicht in einem anderen Programm verschoben, umbenannt oder gelöscht. Beim Sichern wird sie am alten Ort neu angelegt.",
+  fileGoneOnDiskRecreate: "Am alten Ort sichern",
   saveFailedTitle: "Speichern fehlgeschlagen",
   saveFailedMessage:
     "„{name}“ wurde nicht gespeichert. Deine Änderungen sind noch da.",

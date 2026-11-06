@@ -213,6 +213,19 @@ describe("autosaveTab", () => {
     expect(fs.writeTextFile).not.toHaveBeenCalled();
   });
 
+  it("asks before recreating a file deleted or moved elsewhere", async () => {
+    vi.mocked(fs.fileMtimeMs).mockResolvedValue(null);
+    vi.mocked(showConfirm).mockResolvedValue(false);
+    const result = setup(doc);
+    await act(async () => {
+      expect(await result.current.autosaveTab("a")).toBe("conflict");
+    });
+    expect(vi.mocked(showConfirm).mock.calls[0][1].title).toBe(
+      "File Moved or Deleted",
+    );
+    expect(fs.writeTextFile).not.toHaveBeenCalled();
+  });
+
   it("starts an autosave's conflict prompt on Cancel, a manual save's on Overwrite", async () => {
     vi.mocked(fs.fileMtimeMs).mockResolvedValue(5);
     vi.mocked(showConfirm).mockResolvedValue(false);

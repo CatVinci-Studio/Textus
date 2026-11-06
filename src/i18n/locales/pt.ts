@@ -776,7 +776,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   deleteTable: "Apagar Tabela",
   tableToMarkdown: "Converter em Tabela Markdown",
   tableToMarkdownMerged: "Converter em Tabela Markdown (tem células mescladas)",
-  tableToMarkdownBlocks: "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
+  tableToMarkdownBlocks:
+    "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
   apiKeyLabelTemplate: "Chave de API do provedor {name}",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
@@ -1321,6 +1322,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   fileChangedOnDiskMessage:
     "Outro programa alterou este arquivo no disco. Se você salvar, essas alterações serão substituídas.",
   fileChangedOnDiskOverwrite: "Substituir",
+  fileGoneOnDiskTitle: "Arquivo movido ou excluído",
+  fileGoneOnDiskMessage:
+    "Este arquivo não está mais onde foi aberto. Talvez tenha sido movido, renomeado ou excluído em outro programa. Salvar o recria no local antigo.",
+  fileGoneOnDiskRecreate: "Salvar no local antigo",
   saveFailedTitle: "Não foi possível salvar",
   saveFailedMessage: "“{name}” não foi salvo. Suas alterações continuam aqui.",
   saveReadOnlyHint:

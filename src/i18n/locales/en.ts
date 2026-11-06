@@ -769,7 +769,8 @@ type /name in a conversation to use one.
   deleteTable: "Delete Table",
   tableToMarkdown: "Convert to Markdown Table",
   tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",
-  tableToMarkdownBlocks: "Convert to Markdown Table (a cell holds lists or paragraphs)",
+  tableToMarkdownBlocks:
+    "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
@@ -1302,6 +1303,10 @@ type /name in a conversation to use one.
   fileChangedOnDiskMessage:
     "This file has been changed on disk by another program. Saving will overwrite those changes.",
   fileChangedOnDiskOverwrite: "Overwrite",
+  fileGoneOnDiskTitle: "File Moved or Deleted",
+  fileGoneOnDiskMessage:
+    "This file is no longer where it was opened from. It may have been moved, renamed or deleted in another program. Saving puts it back at the old place.",
+  fileGoneOnDiskRecreate: "Save at Old Place",
   saveFailedTitle: "Couldn't Save",
   saveFailedMessage: "“{name}” wasn't saved. Your changes are still here.",
   saveReadOnlyHint:

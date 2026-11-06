@@ -236,17 +236,23 @@ export function useSaveTabs(opts: {
     async (tabId: string, auto: boolean): Promise<SaveOutcome> => {
       const tab = liveTabs().find((tb) => tb.id === tabId);
       if (!tab?.path) return "skipped";
-      // Changed on disk since it was read: ask before overwriting. A null
-      // mtime means it was deleted, and writing recreates it.
+      // Changed, moved or deleted on disk since it was read: ask before
+      // writing, so a file renamed elsewhere isn't recreated under its old name.
       if (tab.diskMtime !== null) {
         const current = await statMtime(tab.path);
-        if (current !== null && current !== tab.diskMtime) {
-          const overwrite = await showConfirm(t.fileChangedOnDiskMessage, {
-            title: t.fileChangedOnDiskTitle,
-            okLabel: t.fileChangedOnDiskOverwrite,
-            cancelLabel: t.closePromptCancel,
-            focusCancel: auto,
-          });
+        if (current !== tab.diskMtime) {
+          const gone = current === null;
+          const overwrite = await showConfirm(
+            gone ? t.fileGoneOnDiskMessage : t.fileChangedOnDiskMessage,
+            {
+              title: gone ? t.fileGoneOnDiskTitle : t.fileChangedOnDiskTitle,
+              okLabel: gone
+                ? t.fileGoneOnDiskRecreate
+                : t.fileChangedOnDiskOverwrite,
+              cancelLabel: t.closePromptCancel,
+              focusCancel: auto,
+            },
+          );
           if (!overwrite) return "conflict";
         }
       }

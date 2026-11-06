@@ -792,8 +792,10 @@ para usar una.
   deleteColumn: "Eliminar columna",
   deleteTable: "Eliminar tabla",
   tableToMarkdown: "Convertir en tabla Markdown",
-  tableToMarkdownMerged: "Convertir en tabla Markdown (tiene celdas combinadas)",
-  tableToMarkdownBlocks: "Convertir en tabla Markdown (una celda tiene listas o párrafos)",
+  tableToMarkdownMerged:
+    "Convertir en tabla Markdown (tiene celdas combinadas)",
+  tableToMarkdownBlocks:
+    "Convertir en tabla Markdown (una celda tiene listas o párrafos)",
   apiKeyLabelTemplate: "Clave de API de {name}",
   apiKeyOptionalHintTemplate:
     "No hace falta una clave de API; añade una solo si {name} está protegido.",
@@ -1340,6 +1342,10 @@ para usar una.
   fileChangedOnDiskMessage:
     "Otro programa modificó este archivo en el disco. Si guardas, se sobrescribirán esos cambios.",
   fileChangedOnDiskOverwrite: "Sobrescribir",
+  fileGoneOnDiskTitle: "Archivo movido o eliminado",
+  fileGoneOnDiskMessage:
+    "Este archivo ya no está donde se abrió. Puede que otro programa lo haya movido, renombrado o eliminado. Al guardar se volverá a crear en el lugar anterior.",
+  fileGoneOnDiskRecreate: "Guardar en el lugar anterior",
   saveFailedTitle: "No se pudo guardar",
   saveFailedMessage: "«{name}» no se guardó. Tus cambios siguen aquí.",
   saveReadOnlyHint:

@@ -1279,6 +1279,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   fileChangedOnDiskMessage:
     "このファイルは他のプログラムによって変更されています。保存するとその変更が上書きされます。",
   fileChangedOnDiskOverwrite: "上書き",
+  fileGoneOnDiskTitle: "ファイルが移動または削除されました",
+  fileGoneOnDiskMessage:
+    "このファイルは開いたときの場所にありません。ほかのアプリで移動、名前変更、または削除された可能性があります。保存すると元の場所に作り直します。",
+  fileGoneOnDiskRecreate: "元の場所に保存",
   saveFailedTitle: "保存できませんでした",
   saveFailedMessage:
     "「{name}」は保存されていません。変更内容はそのまま残っています。",

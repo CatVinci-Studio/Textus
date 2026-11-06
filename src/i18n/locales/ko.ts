@@ -1266,6 +1266,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   fileChangedOnDiskMessage:
     "다른 프로그램이 디스크에 있는 이 파일을 변경했습니다. 저장하면 그 변경 내용을 덮어씁니다.",
   fileChangedOnDiskOverwrite: "덮어쓰기",
+  fileGoneOnDiskTitle: "파일이 이동되었거나 삭제됨",
+  fileGoneOnDiskMessage:
+    "이 파일이 연 위치에 더 이상 없습니다. 다른 프로그램에서 이동, 이름 변경 또는 삭제되었을 수 있습니다. 저장하면 원래 위치에 다시 만듭니다.",
+  fileGoneOnDiskRecreate: "원래 위치에 저장",
   saveFailedTitle: "저장하지 못함",
   saveFailedMessage:
     "‘{name}’ 문서를 저장하지 못했습니다. 변경 내용은 그대로 남아 있습니다.",

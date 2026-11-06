@@ -1218,6 +1218,10 @@ export default {
   fileChangedOnDiskMessage:
     "其他程式已修改磁碟上的這個檔案。儲存會覆寫那些變更。",
   fileChangedOnDiskOverwrite: "覆寫",
+  fileGoneOnDiskTitle: "檔案已移動或刪除",
+  fileGoneOnDiskMessage:
+    "該檔案已不在開啟時的位置，可能在其他程式中被移動、改名或刪除。儲存會在原位置重新建立它。",
+  fileGoneOnDiskRecreate: "在原位置儲存",
   saveFailedTitle: "無法儲存",
   saveFailedMessage: "「{name}」沒有儲存，你的修改仍保留在這裡。",
   saveReadOnlyHint: "這個檔案是唯讀的。可以用「另存新檔」把修改儲存到新檔案。",

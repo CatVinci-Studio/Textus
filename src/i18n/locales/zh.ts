@@ -1215,6 +1215,10 @@ export default {
   fileChangedOnDiskTitle: "文件已在磁盘上被修改",
   fileChangedOnDiskMessage: "该文件已被其他程序修改。保存将覆盖磁盘上的更改。",
   fileChangedOnDiskOverwrite: "覆盖",
+  fileGoneOnDiskTitle: "文件已移动或删除",
+  fileGoneOnDiskMessage:
+    "该文件已不在打开时的位置，可能在其他程序中被移动、改名或删除。保存会在原位置重新建立它。",
+  fileGoneOnDiskRecreate: "在原位置保存",
   saveFailedTitle: "无法保存",
   saveFailedMessage: "“{name}”没有保存，你的修改仍然保留在这里。",
   saveReadOnlyHint: "这个文件是只读的。可以用“另存为”把修改保存到新文件。",

@@ -43,7 +43,7 @@ export function useExternalChangeReload(
         for (const tab of liveTabs()) {
           if (!tab.path || (only && !only.has(tab.id))) continue;
           const mtime = await statMtime(tab.path);
-          // Deleted or unreadable: keep the buffer as-is; Save recreates it.
+          // Deleted or unreadable: keep the buffer as-is; Save asks before recreating.
           if (mtime === null) continue;
           if (tab.diskMtime === null) {
             updateTab(tab.id, { diskMtime: mtime });

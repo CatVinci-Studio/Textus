@@ -782,8 +782,10 @@ export default {
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
-  tableToMarkdownMerged: "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
-  tableToMarkdownBlocks: "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
+  tableToMarkdownMerged:
+    "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
+  tableToMarkdownBlocks:
+    "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
@@ -1332,6 +1334,10 @@ export default {
   fileChangedOnDiskMessage:
     "Этот файл изменён на диске другой программой. При сохранении эти изменения будут перезаписаны.",
   fileChangedOnDiskOverwrite: "Перезаписать",
+  fileGoneOnDiskTitle: "Файл перемещён или удалён",
+  fileGoneOnDiskMessage:
+    "Этого файла больше нет там, откуда он был открыт. Возможно, его переместили, переименовали или удалили в другой программе. При сохранении он будет создан заново на старом месте.",
+  fileGoneOnDiskRecreate: "Сохранить на старом месте",
   saveFailedTitle: "Не удалось сохранить",
   saveFailedMessage: "«{name}» не сохранён. Ваши изменения остались на месте.",
   saveReadOnlyHint:

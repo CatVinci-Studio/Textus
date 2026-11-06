@@ -799,8 +799,10 @@ utiliser une.
   deleteColumn: "Supprimer la colonne",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
-  tableToMarkdownMerged: "Convertir en tableau Markdown (il a des cellules fusionnées)",
-  tableToMarkdownBlocks: "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
+  tableToMarkdownMerged:
+    "Convertir en tableau Markdown (il a des cellules fusionnées)",
+  tableToMarkdownBlocks:
+    "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
@@ -1358,6 +1360,10 @@ utiliser une.
   fileChangedOnDiskMessage:
     "Ce fichier a été modifié sur le disque par une autre application. L'enregistrer écrasera ces modifications.",
   fileChangedOnDiskOverwrite: "Écraser",
+  fileGoneOnDiskTitle: "Fichier déplacé ou supprimé",
+  fileGoneOnDiskMessage:
+    "Ce fichier n’est plus à l’endroit où il a été ouvert. Il a peut-être été déplacé, renommé ou supprimé dans une autre application. L’enregistrer le recrée à l’ancien emplacement.",
+  fileGoneOnDiskRecreate: "Enregistrer à l’ancien emplacement",
   saveFailedTitle: "Enregistrement impossible",
   saveFailedMessage:
     "«\u00a0{name}\u00a0» n'a pas été enregistré. Vos modifications sont conservées.",
