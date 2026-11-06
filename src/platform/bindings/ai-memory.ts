@@ -32,7 +32,7 @@ export const commands = {
 	 *  The offered skill saved, for every document or this project's. Returns
 	 *  its file's path.
 	 */
-	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot, modes }),
+	save_offered_skill: (offer: SkillOffer, scope: string, docPath: string | null, workspaceRoot: string | null, modes: AgentMode_Deserialize[], confirmed: boolean) => __TAURI_INVOKE<string>("save_offered_skill", { offer, scope, docPath, workspaceRoot, modes, confirmed }),
 	/**  The Memory tab's Delete, for a memory or a library entry. */
 	memory_delete: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<null>("memory_delete", { docPath, workspaceRoot, id }),
 	/**

@@ -374,15 +374,24 @@ export const ai = {
     exchange: { messages: string[]; reply: string };
   }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
   /** An offered skill saved, for every document or this project's, in
-   *  `modes`. */
+   *  `modes`; checked as saveWrittenSkill is. */
   saveOfferedSkill: (
     offer: SkillOffer,
     scope: "personal" | "project",
     docPath: string | null,
     workspaceRoot: string | null,
     modes: AgentMode[],
+    confirmed = false,
   ) =>
-    command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
+    command(
+      "save_offered_skill",
+      offer,
+      scope,
+      docPath,
+      workspaceRoot,
+      modes,
+      confirmed,
+    ),
   /** A skill file a reply wrote, saved in the global skills folder in
    *  `modes`, over an earlier version. Its path. One in Create mode or that
    *  reads like a prompt injection fails with `SKILL_NEEDS_CONFIRM:` and its

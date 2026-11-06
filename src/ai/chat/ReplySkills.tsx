@@ -6,31 +6,7 @@ import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
-import { errorText } from "../../utils/error-text";
-import type { Strings, TextKey } from "../../i18n/strings";
-
-/** What save_written_skill fails with, then `:` and its warnings, until the
- *  save is confirmed (Rust: ai/workspace/skill_checks.rs). */
-const NEEDS_CONFIRM = "SKILL_NEEDS_CONFIRM:";
-
-const WARNINGS: Record<string, TextKey> = {
-  "prompt-injection": "skillWarnPromptInjection",
-  "hidden-text": "skillWarnHiddenText",
-  "create-mode": "skillWarnCreateMode",
-};
-
-/** The warnings in a NEEDS_CONFIRM error, or null for any other error. */
-function warningsIn(err: unknown): string[] | null {
-  const text = errorText(err);
-  return text.startsWith(NEEDS_CONFIRM)
-    ? text.slice(NEEDS_CONFIRM.length).split(",").filter(Boolean)
-    : null;
-}
-
-function warningText(t: Strings, warning: string): string {
-  const key = WARNINGS[warning];
-  return key ? t[key] : warning;
-}
+import { confirmedFor, warningsIn, warningText } from "./skill-warnings";
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
@@ -73,10 +49,10 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       live = false;
     };
   }, [skill.name]);
-  // Confirmed only for the modes the warnings were shown for: ticking
-  // Create afterwards asks again.
-  const confirming =
-    state.kind === "confirm" && sameModes(state.modes, modes) ? state : null;
+  const confirming = confirmedFor(
+    state.kind === "confirm" ? state : null,
+    modes,
+  );
   const save = () =>
     ai.saveWrittenSkill(skill.text, modes, confirming !== null).then(
       () => setState({ kind: "saved" }),
@@ -145,8 +121,4 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       />
     </div>
   );
-}
-
-function sameModes(a: AgentMode[], b: AgentMode[]): boolean {
-  return a.length === b.length && a.every((m) => b.includes(m));
 }
