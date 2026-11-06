@@ -104,6 +104,11 @@ pub struct AgentSkill {
     /// attach when the request names one (translate).
     #[serde(skip)]
     pub target_packs: Vec<String>,
+    /// `textus-index`: what the model's skill index says of a built-in skill,
+    /// in place of its description, which also carries the request words in
+    /// other languages for tools that read the file elsewhere.
+    #[serde(skip)]
+    pub index_line: Option<String>,
 }
 
 impl Default for AgentSkill {
@@ -123,6 +128,7 @@ impl Default for AgentSkill {
             packs: Vec::new(),
             version: None,
             based_on: None,
+            index_line: None,
             builtin_updated: false,
             target_packs: Vec::new(),
         }

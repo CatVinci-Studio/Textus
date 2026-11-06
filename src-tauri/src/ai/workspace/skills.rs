@@ -74,6 +74,7 @@ pub(crate) fn parse_skill_file(file_stem: &str, content: &str) -> AgentSkill {
     skill.off = meta("off") == Some("true");
     skill.version = meta("version").map(str::to_string);
     skill.based_on = meta("based-on").map(str::to_string);
+    skill.index_line = meta("index").map(str::to_string);
     let words = |v: Option<&str>| {
         v.map(|v| v.split_whitespace().map(str::to_string).collect())
             .unwrap_or_default()

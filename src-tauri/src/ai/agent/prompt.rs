@@ -286,39 +286,6 @@ pub(crate) fn request_preamble(
     sections.join("\n\n")
 }
 
-/// What the index says of a built-in skill: its description's "Use when ..."
-/// part, without the multilingual request words, which were half the index.
-pub(super) fn index_line(description: &str) -> String {
-    let from = description.find("Use when").unwrap_or(0);
-    let mut line = String::with_capacity(description.len() - from);
-    let mut depth = 0usize;
-    let mut group = String::new();
-    for c in description[from..].chars() {
-        match c {
-            '(' => {
-                depth += 1;
-                group.push(c);
-            }
-            ')' if depth > 0 => {
-                depth -= 1;
-                group.push(c);
-                if depth == 0 {
-                    if group.is_ascii() {
-                        line.push_str(&group);
-                    } else if line.ends_with(' ') {
-                        line.pop();
-                    }
-                    group.clear();
-                }
-            }
-            _ if depth > 0 => group.push(c),
-            _ => line.push(c),
-        }
-    }
-    line.push_str(&group);
-    line.trim().to_string()
-}
-
 /// Longest description the skill index shows; a longer one (a user's
 /// skill) is cut with "…".
 pub(super) const INDEX_DESCRIPTION_CHARS: usize = 500;
@@ -376,8 +343,10 @@ pub(crate) fn skill_index(
                     _ => String::new(),
                 },
             };
-            let description = match s.source {
-                SkillSource::Builtin => index_line(&s.description),
+            // A built-in's description also carries its request words in
+            // other languages; its `textus-index` line is the short form.
+            let description = match (&s.source, &s.index_line) {
+                (SkillSource::Builtin, Some(line)) => line.clone(),
                 _ => s.description.clone(),
             };
             let description = if description.chars().count() > INDEX_DESCRIPTION_CHARS {

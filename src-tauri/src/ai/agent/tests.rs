@@ -443,17 +443,6 @@ fn style_and_mentioned_library_entries_reach_the_prompt() {
     assert!(!prompt.contains("海边城市"), "not mentioned anywhere");
 }
 
-#[test]
-fn a_built_in_skill_is_indexed_by_when_to_use_it() {
-    assert_eq!(
-        index_line(
-            "Fixes typos. Use when asked to proofread (校对, relire) or check (by hand) errors."
-        ),
-        "Use when asked to proofread or check (by hand) errors."
-    );
-    assert_eq!(index_line("No trigger clause."), "No trigger clause.");
-}
-
 /// Without use_skill the guide stays in the prompt; with it, the prompt
 /// points at it and use_skill loads it.
 #[test]
@@ -506,9 +495,12 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     // eight languages; the user's own keep their description.
     let review = skill_index(&ws, AgentMode::Review, "en");
     assert!(
-        review.contains("- proofread: Use when asked to proofread"),
+        review.contains(
+            "- proofread: Use when asked to proofread, check for typos or errors, or check against a standard."
+        ),
         "{review}"
     );
+    assert!(!review.contains("校对"), "{review}");
     // In another UI a built-in carries that UI's name for it.
     let zh = skill_index(&ws, AgentMode::Review, "zh");
     assert!(zh.contains("- proofread [/校对 in their UI]: "), "{zh}");
