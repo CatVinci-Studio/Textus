@@ -5,6 +5,7 @@
 use super::draft::WEB_FIGURE_MARK;
 use super::genre::Frame;
 use super::model::ask;
+use super::prompts;
 use super::research::Model;
 use super::{Dossier, Genre, Outline, Paper};
 use regex::Regex;
@@ -274,10 +275,7 @@ pub(crate) async fn opening(
         Frame::Executive => executive_summary(&paper.language),
         _ => words(&paper.language).0,
     };
-    let instructions = format!(
-        "You write the title and the abstract of a finished {}, in the language tagged \"{}\". {} Reply with a JSON object {{\"title\": …, \"abstract\": …}} and nothing else.",
-        profile.name, paper.language, profile.opening
-    );
+    let instructions = opening_instructions(paper);
     let message = format!("Thesis: {}\n\n{}", outline.thesis, sections.join("\n\n"));
     let reply = ask(model, &instructions, message, &|_| {})
         .await
@@ -300,6 +298,19 @@ pub(crate) async fn opening(
         Some(text) => format!("# {title}\n\n**{abstract_word}:** {text}"),
         None => format!("# {title}"),
     }
+}
+
+/// What the step writing the title and abstract is told.
+pub(crate) fn opening_instructions(paper: &Paper) -> String {
+    let profile = paper.genre.profile();
+    prompts::fill(
+        "finish.opening",
+        &[
+            ("genre", &profile.name),
+            ("language", &paper.language),
+            ("opening", &profile.opening),
+        ],
+    )
 }
 
 /// `section` with each citation `[n](address)` as `[n]` in the paper's

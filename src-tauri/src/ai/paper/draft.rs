@@ -8,8 +8,11 @@
 #[cfg(test)]
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
-pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
+pub(crate) use super::checks::{
+    all_soft, cited_link, length, most, problems, Problem, WEB_FIGURE_MARK,
+};
 use super::handover::{hand_over, Checked, Task};
+use super::prompts;
 use super::research::Model;
 use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
@@ -21,18 +24,15 @@ use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
-/// Sections written at once.
-const AT_ONCE: usize = 3;
-/// A writer's tries at a section that holds.
-const WRITER_STEPS: usize = 5;
+use super::tuning::{WRITERS_AT_ONCE as AT_ONCE, WRITER_STEPS};
 /// How each kind of figure is written into the section.
 fn figure_line(figure: &FigurePlan) -> String {
-    let how = match figure.kind {
-        FigureKind::Mermaid => "a ```mermaid block narrow enough for a page's column: a flowchart top-down (TB) with at most four boxes side by side and short labels, a timeline as `timeline`, each period's further events on lines of their own starting with `:`",
-        FigureKind::Chart => "a ```chart block: JSON {\"type\": \"bar\"|\"line\"|\"area\"|\"pie\"|\"scatter\", \"title\", \"x\", \"y\", \"labels\": [...], \"series\": [{\"name\", \"data\": [numbers]}], \"caption\", \"source\"}, with the notes' own numbers only - \"x\" and \"y\" are the axes' titles, \"labels\" one category per number, \"source\" the sources cited as [n](address), never the notes' ids",
-        FigureKind::Generated => "a line ![caption](textus-picture:16:9 what the picture shows, in detail)",
-        FigureKind::Web => "a line <!-- textus-figure web: caption | a few English words to search Wikimedia Commons for --> where it goes; a real photograph or figure is found for it there later, so ask for something Commons would have (a place, an object, a species, a historical image), not an abstract idea",
-    };
+    let how = prompts::get(match figure.kind {
+        FigureKind::Mermaid => "draft.figure.mermaid",
+        FigureKind::Chart => "draft.figure.chart",
+        FigureKind::Generated => "draft.figure.generated",
+        FigureKind::Web => "draft.figure.web",
+    });
     format!("- {} - as {how}", figure.spec)
 }
 
@@ -74,17 +74,46 @@ fn writer_message(paper: &Paper, outline: &Outline, index: usize, dossier: &Doss
         })
         .collect();
     let figures: Vec<String> = section.figures.iter().map(figure_line).collect();
-    format!(
-        "Paper: \"{}\"\nThesis: {}\n\nThe sections:\n{}\n\nYour section: \"{}\", about {} long and at most {} - longer is sent back.\nKey points:\n- {}\n\nYour notes:\n{}\n\nFigures to put where they belong:\n{}",
-        paper.topic,
-        outline.thesis,
-        others.join("\n"),
-        section.title,
-        section.target_words,
-        most(section.target_words),
-        section.key_points.join("\n- "),
-        if notes.is_empty() { "(none)".into() } else { notes.join("\n") },
-        if figures.is_empty() { "(none)".into() } else { figures.join("\n") },
+    let listed = |lines: Vec<String>| {
+        if lines.is_empty() {
+            "(none)".to_string()
+        } else {
+            lines.join("\n")
+        }
+    };
+    prompts::fill(
+        "draft.message",
+        &[
+            ("topic", &paper.topic),
+            ("thesis", &outline.thesis),
+            ("sections", &others.join("\n")),
+            ("title", &section.title),
+            ("target", &section.target_words),
+            ("most", &most(section.target_words)),
+            ("points", &section.key_points.join("\n- ")),
+            ("notes", &listed(notes)),
+            ("figures", &listed(figures)),
+        ],
+    )
+}
+
+/// A reviser's message: the writer's message, its earlier draft and the
+/// reviewer's points against it.
+pub(crate) fn revision_message(
+    paper: &Paper,
+    outline: &Outline,
+    index: usize,
+    dossier: &Dossier,
+    earlier: &str,
+    points: &[String],
+) -> String {
+    prompts::fill(
+        "draft.revision",
+        &[
+            ("message", &writer_message(paper, outline, index, dossier)),
+            ("earlier", &earlier),
+            ("points", &points.join("\n- ")),
+        ],
     )
 }
 
@@ -100,6 +129,26 @@ fn submit_section_spec() -> ToolSpec {
     }
 }
 
+/// What a section's writer is told.
+pub(crate) fn writer_instructions(paper: &Paper) -> String {
+    let profile = paper.genre.profile();
+    let unit = if length("字", &paper.language) == 1 {
+        "characters"
+    } else {
+        "words"
+    };
+    prompts::fill(
+        "draft.instructions",
+        &[
+            ("genre", &profile.name),
+            ("language", &paper.language),
+            ("voice", &profile.voice),
+            ("cite", &profile.cite),
+            ("unit", &unit),
+        ],
+    )
+}
+
 /// Section `index` written: its Markdown under its heading.
 pub(crate) async fn write_section(
     model: &dyn Model,
@@ -113,16 +162,7 @@ pub(crate) async fn write_section(
 ) -> Result<String, String> {
     let watch = SectionWatch::new(index as u32, send);
     let section = &outline.sections[index];
-    let profile = paper.genre.profile();
-    let unit = if length("字", &paper.language) == 1 {
-        "characters"
-    } else {
-        "words"
-    };
-    let instructions = format!(
-        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
-        profile.name, paper.language, profile.voice, profile.cite
-    );
+    let instructions = writer_instructions(paper);
     let sources: Vec<(u32, String)> = dossier
         .notes
         .iter()
@@ -157,7 +197,7 @@ pub(crate) async fn write_section(
                 wrong.join(" | ")
             );
         }
-        if !markdown.is_empty() && wrong.iter().all(|p| is_soft(p)) {
+        if !markdown.is_empty() && all_soft(&wrong) {
             *soft.lock().unwrap() = Some(markdown);
         }
         Checked::not_kept("section", &wrong)
@@ -167,11 +207,9 @@ pub(crate) async fn write_section(
         instructions: &instructions,
         message: match revision {
             None => writer_message(paper, outline, index, dossier),
-            Some((earlier, points)) => format!(
-                "{}\n\nYou wrote this section before:\n<draft>\n{earlier}\n</draft>\n\nA reviewer who read the whole paper asks for these changes:\n- {}\n\nRevise the section to meet them, keeping what works and no longer than before, and hand over the whole section again.",
-                writer_message(paper, outline, index, dossier),
-                points.join("\n- ")
-            ),
+            Some((earlier, points)) => {
+                revision_message(paper, outline, index, dossier, earlier, points)
+            }
         },
         tool: submit_section_spec(),
         steps: WRITER_STEPS,
@@ -205,7 +243,7 @@ pub(crate) async fn write_section(
 /// The posts of a thread too long for one post: its genre's most
 /// characters, half that in Chinese, Japanese and Korean, whose
 /// characters count double. Soft, as a length is.
-pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
+pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<Problem> {
     let Some(most) = paper.genre.profile().scale.post_chars else {
         return Vec::new();
     };
@@ -222,10 +260,10 @@ pub(crate) fn long_posts(markdown: &str, paper: &Paper) -> Vec<String> {
         .enumerate()
         .filter(|(_, n)| *n > most)
         .map(|(i, n)| {
-            format!(
+            Problem::soft(format!(
                 "It is too long in post {}: {n} characters, against at most {most} - split it or cut it.",
                 i + 1
-            )
+            ))
         })
         .collect()
 }
@@ -254,7 +292,7 @@ fn replied_section(
             }
         );
     }
-    wrong.iter().all(|p| is_soft(p)).then(|| body.to_string())
+    all_soft(&wrong).then(|| body.to_string())
 }
 
 /// The writer's last reply, without the heading it may have given it; None

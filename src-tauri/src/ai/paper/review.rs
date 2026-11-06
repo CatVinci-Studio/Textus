@@ -7,6 +7,7 @@
 
 use super::draft::write_section;
 use super::handover::{hand_over, Checked, Task};
+use super::prompts;
 use super::research::Model;
 use super::{Dossier, Outline, Paper, PaperEvent};
 use aicompat::agent::ToolSpec;
@@ -15,13 +16,9 @@ use serde_json::{json, Value};
 
 pub(crate) const REPORT_ISSUES_TOOL: &str = "report_issues";
 
-/// Tries at a report that reads.
-const REVIEW_STEPS: usize = 3;
-/// Points kept against one section: the most important, as the reviewer
-/// ordered them.
-const MAX_PER_SECTION: usize = 3;
-/// Sections revised at once.
-const AT_ONCE: usize = 3;
+use super::tuning::{
+    MAX_POINTS_PER_SECTION as MAX_PER_SECTION, REVIEW_STEPS, REVISERS_AT_ONCE as AT_ONCE,
+};
 
 /// One point against a section.
 #[derive(Debug, Clone, PartialEq)]
@@ -88,23 +85,21 @@ pub(crate) fn read_issues(arguments: &str, sections: usize) -> Result<Vec<Issue>
     Ok(out)
 }
 
-/// The points against the drafted `sections` (each under its heading). A
-/// reviewer that reports nothing it can read has no points: the drafts
-/// passed their own checks.
-pub(crate) async fn review(
-    model: &dyn Model,
-    paper: &Paper,
-    outline: &Outline,
-    sections: &[String],
-) -> Result<Vec<Issue>, String> {
+/// What the reviewer is told.
+pub(crate) fn instructions(paper: &Paper) -> String {
     let profile = paper.genre.profile();
-    let instructions = format!(
-        "You review a drafted {}, in the language tagged \"{}\", before the author sees it. Each section was written apart and has passed checks of its length, its citations and its figures; find what only reading them together shows: {}. Report only what is worth a revision, most important first, with what its writer should do - not style preferences. Report with report_issues once; an empty list if the {} needs nothing.",
-        profile.name,
-        paper.language,
-        profile.review_for,
-        profile.name
-    );
+    prompts::fill(
+        "review.instructions",
+        &[
+            ("genre", &profile.name),
+            ("language", &paper.language),
+            ("review_for", &profile.review_for),
+        ],
+    )
+}
+
+/// The reviewer's message: the thesis, the outline and the drafts.
+pub(crate) fn message(outline: &Outline, sections: &[String]) -> String {
     let outline_text: Vec<String> = outline
         .sections
         .iter()
@@ -116,12 +111,27 @@ pub(crate) async fn review(
         .enumerate()
         .map(|(i, s)| format!("<section number=\"{}\">\n{s}\n</section>", i + 1))
         .collect();
-    let message = format!(
-        "Thesis: {}\n\nThe outline:\n{}\n\nThe drafts:\n{}",
-        outline.thesis,
-        outline_text.join("\n"),
-        drafts.join("\n\n")
-    );
+    prompts::fill(
+        "review.message",
+        &[
+            ("thesis", &outline.thesis),
+            ("outline", &outline_text.join("\n")),
+            ("drafts", &drafts.join("\n\n")),
+        ],
+    )
+}
+
+/// The points against the drafted `sections` (each under its heading). A
+/// reviewer that reports nothing it can read has no points: the drafts
+/// passed their own checks.
+pub(crate) async fn review(
+    model: &dyn Model,
+    paper: &Paper,
+    outline: &Outline,
+    sections: &[String],
+) -> Result<Vec<Issue>, String> {
+    let instructions = instructions(paper);
+    let message = message(outline, sections);
     let task = Task {
         instructions: &instructions,
         message,

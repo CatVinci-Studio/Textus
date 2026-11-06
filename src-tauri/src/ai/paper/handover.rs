@@ -18,7 +18,7 @@ pub(crate) enum Checked<T> {
 
 impl<T> Checked<T> {
     /// Sent back with every problem at once, for the whole `what` again.
-    pub(crate) fn not_kept(what: &str, wrong: &[String]) -> Self {
+    pub(crate) fn not_kept<S: std::borrow::Borrow<str>>(what: &str, wrong: &[S]) -> Self {
         Self::Refused(format!(
             "Not kept - fix these and send the whole {what} again:\n- {}",
             wrong.join("\n- ")
@@ -134,7 +134,7 @@ mod tests {
     fn at_least_two(arguments: &str) -> Checked<usize> {
         match arguments.parse::<usize>() {
             Ok(n) if n >= 2 => Checked::Kept(n),
-            _ => Checked::not_kept("number", &["It is less than 2.".into()]),
+            _ => Checked::not_kept("number", &["It is less than 2."]),
         }
     }
 

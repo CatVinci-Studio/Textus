@@ -7,12 +7,7 @@ use regex::Regex;
 use serde_json::Value;
 use std::sync::OnceLock;
 
-/// How far a section's length may be from its target, as fractions of it:
-/// within PASS it holds; within SOFT it is kept if nothing else is wrong
-/// (a writer's last try); beyond, it is sent back. The first real runs came
-/// back at twice their targets.
-pub(super) const PASS: (f64, f64) = (0.7, 1.2);
-pub(super) const SOFT: (f64, f64) = (0.5, 1.4);
+use super::tuning::{PASS, SOFT};
 
 /// The most a section of `target` may run to, as writers are told.
 pub(crate) fn most(target: u32) -> u32 {
@@ -177,69 +172,103 @@ pub(super) fn note_id() -> &'static Regex {
 }
 
 /// What is wrong with `markdown` as section `section` of `paper`, all at once.
-/// `sources`: the numbers this section may cite, with their addresses.
-/// Whether a problem `problems` found is soft: the length off its target,
-/// or a planned figure missing. A section with only these is kept rather
-/// than lose the paper; a wrong citation or a chart that can't be drawn is
-/// never kept.
-pub(crate) fn is_soft(problem: &str) -> bool {
-    problem.starts_with("It is ") || problem.contains(" planned ")
+/// One thing wrong with a drafted section, as its writer is told it.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Problem {
+    pub text: String,
+    /// Whether a section with only soft problems is kept rather than lose
+    /// the paper: its length off its target, a planned figure missing, a
+    /// post too long. A wrong citation or a chart that can't be drawn is
+    /// never kept.
+    pub soft: bool,
 }
 
+impl Problem {
+    pub(crate) fn hard(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            soft: false,
+        }
+    }
+
+    pub(crate) fn soft(text: impl Into<String>) -> Self {
+        Self {
+            text: text.into(),
+            soft: true,
+        }
+    }
+}
+
+/// So a list of problems joins as text, as the writer is sent it.
+impl std::borrow::Borrow<str> for Problem {
+    fn borrow(&self) -> &str {
+        &self.text
+    }
+}
+
+/// Whether every problem in `wrong` is soft (none at all is too).
+pub(crate) fn all_soft(wrong: &[Problem]) -> bool {
+    wrong.iter().all(|p| p.soft)
+}
+
+/// What is wrong with a drafted section, every problem at once.
+/// `sources`: the numbers this section may cite, with their addresses.
 pub(crate) fn problems(
     markdown: &str,
     section: &OutlineSection,
     sources: &[(u32, String)],
     language: &str,
-) -> Vec<String> {
+) -> Vec<Problem> {
     let mut out = Vec::new();
     let length = length(&prose(markdown), language);
     let target = section.target_words as f64;
     let ratio = length as f64 / target.max(1.0);
     let most = most(section.target_words);
     if ratio > SOFT.1 {
-        out.push(format!(
+        out.push(Problem::hard(format!(
             "Far too long: {length} against about {} - cut it to at most {most}, keeping the strongest evidence.",
             section.target_words
-        ));
+        )));
     } else if ratio < SOFT.0 {
-        out.push(format!(
+        out.push(Problem::hard(format!(
             "Far too short: {length} against about {} - develop the key points with the notes' evidence.",
             section.target_words
-        ));
+        )));
     } else if ratio < PASS.0 || ratio > PASS.1 {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "It is {length} long; the section is to be about {} (at most {most}).",
             section.target_words
-        ));
+        )));
     }
     let mut cited = 0;
     for c in cited_link().captures_iter(markdown) {
         let n: u32 = c[1].parse().unwrap_or(0);
         match sources.iter().find(|(m, _)| *m == n) {
             Some((_, url)) if same_address(url, &c[2]) => cited += 1,
-            Some((_, url)) => {
-                out.push(format!("[{n}] links to {} but source {n} is {url}.", &c[2]))
-            }
-            None => out.push(format!("[{n}] isn't one of this section's sources.")),
+            Some((_, url)) => out.push(Problem::hard(format!(
+                "[{n}] links to {} but source {n} is {url}.",
+                &c[2]
+            ))),
+            None => out.push(Problem::hard(format!(
+                "[{n}] isn't one of this section's sources."
+            ))),
         }
     }
     if bare_number().is_match(&prose(markdown)) {
-        out.push(
-            "A citation is written as [n] alone: write it [n](address), with the source's address."
-                .into(),
-        );
-    }
-    if let Some(found) = numbered_figure().find(&prose(markdown)) {
-        out.push(format!(
-            "\"{}\" names a figure by a number: the figures are numbered afterwards - call it the diagram, chart or picture below or above.",
-            found.as_str()
+        out.push(Problem::hard(
+            "A citation is written as [n] alone: write it [n](address), with the source's address.",
         ));
     }
+    if let Some(found) = numbered_figure().find(&prose(markdown)) {
+        out.push(Problem::hard(format!(
+            "\"{}\" names a figure by a number: the figures are numbered afterwards - call it the diagram, chart or picture below or above.",
+            found.as_str()
+        )));
+    }
     if cited == 0 && !sources.is_empty() {
-        out.push(
-            "Nothing is cited: mark each fact from the notes with its source, [n](address).".into(),
-        );
+        out.push(Problem::hard(
+            "Nothing is cited: mark each fact from the notes with its source, [n](address).",
+        ));
     }
     let blocks = fences(markdown);
     let count = |kind: FigureKind| section.figures.iter().filter(|f| f.kind == kind).count();
@@ -248,10 +277,10 @@ pub(crate) fn problems(
         .filter(|(lang, body)| lang == "mermaid" && !body.trim().is_empty())
         .count();
     if mermaid < count(FigureKind::Mermaid) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned diagram(s), {mermaid} ```mermaid block(s).",
             count(FigureKind::Mermaid)
-        ));
+        )));
     }
     let charts: Vec<&String> = blocks
         .iter()
@@ -260,29 +289,29 @@ pub(crate) fn problems(
         .collect();
     for (i, body) in charts.iter().enumerate() {
         if let Err(why) = chart_holds(body) {
-            out.push(format!("Chart {}: {why}.", i + 1));
+            out.push(Problem::hard(format!("Chart {}: {why}.", i + 1)));
         }
     }
     if charts.len() < count(FigureKind::Chart) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned chart(s), {} ```chart block(s).",
             count(FigureKind::Chart),
             charts.len()
-        ));
+        )));
     }
     let pictures = markdown.matches("](textus-picture:").count();
     if pictures < count(FigureKind::Generated) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned picture(s), {pictures} textus-picture line(s).",
             count(FigureKind::Generated)
-        ));
+        )));
     }
     let web = markdown.matches(WEB_FIGURE_MARK).count();
     if web < count(FigureKind::Web) {
-        out.push(format!(
+        out.push(Problem::soft(format!(
             "{} planned web picture(s), {web} mark(s).",
             count(FigureKind::Web)
-        ));
+        )));
     }
     out
 }

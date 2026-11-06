@@ -60,6 +60,9 @@ it, lazily loaded. Each stage and helper is one run of
   outline's order, the writers' voice, what the review reads for, what
   opens the piece - while each stage keeps its own checks. `Paper` and
   `PaperRequest` carry it; a paper kept before genres is a paper.
+  A genre's words live in `paper/prompts/genres/<genre>.md`, one part
+  under each heading; its name, lengths, frame and scale stay in
+  `genre.rs`.
   A **report** is a long read for the general reader, as the BBC or
   Reuters writes one: its research looks for people, cases, quotes and
   what happens next; its outline is ordered as a story with plain
@@ -282,6 +285,23 @@ it, lazily loaded. Each stage and helper is one run of
   longer splits a source. `paper/live.rs` runs a whole paper on a real provider
   (`cargo test --lib live_paper -- --ignored --nocapture`), printing every
   rejection.
+
+- **Prompts and tuning** (`paper/prompts.rs`, `paper/prompts/`,
+  `paper/tuning.rs`): every stage's prompt is Markdown in
+  `paper/prompts/<stage>.md` - a `## name` heading begins each prompt,
+  its `{{key}}`s filled in by the code; a dotted `{{shared.zh-filler}}`
+  or `{{genre.paper.cite}}` takes in another prompt as the files are
+  read, so a rule the genres share is written once (`shared.md`). The
+  tests fill every prompt for every genre and fail on a key without a
+  value or a value without a key. The numbers the stages are tuned by -
+  the length bands, steps, how many run at once, the outline's figure
+  limits - are in `tuning.rs`, each with the run it came from; a
+  section's problems carry whether they are soft (`Problem { soft }`),
+  so rewording a check can't change what is kept. To try other wording
+  without building again, point `TEXTUS_PAPER_PROMPTS` at a folder laid
+  out as `prompts/` with only the files to change (a debug build reads
+  it; a release build never does); `live_paper` keeps each run under its
+  prompts' fingerprint, so two wordings can be run and compared.
 
 ### To come
 

@@ -16,6 +16,7 @@ mod handover;
 mod model;
 mod notes;
 mod outline;
+mod prompts;
 mod research;
 mod review;
 mod session;
@@ -24,6 +25,7 @@ pub mod status;
 mod store;
 mod stream;
 mod timeline;
+mod tuning;
 mod web_figures;
 
 use budget::KeepSpent;
