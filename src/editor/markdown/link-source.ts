@@ -10,7 +10,13 @@ import type {
   Options as ToMarkdownExtension,
 } from "mdast-util-to-markdown";
 import type { Literal, Parents } from "mdast";
-import { linkHref, linkSource, parseLink } from "./link-syntax";
+import {
+  escapeLabel,
+  labelMarkdown,
+  labelNodes,
+  labelText,
+} from "./link-label";
+import { inlineLink, linkHref, linkSource, parseLink } from "./link-syntax";
 
 /**
  * A link is a node holding its Markdown as text, `[text](url "title")`,
@@ -138,16 +144,16 @@ export function linkClipboardDOM(node: ProseNode): DOMOutputSpec {
   const parts = parseLink(source);
   const href = linkHref(source);
   if (!parts || href === null) return ["span", source];
-  return [
-    "a",
-    {
-      href,
-      ...(parts.title && { title: parts.title }),
-      "data-type": LINK,
-      "data-source": source,
-    },
-    source.slice(...parts.label) || href,
-  ];
+  const a = document.createElement("a");
+  a.href = href;
+  if (parts.title) a.title = parts.title;
+  a.dataset.type = LINK;
+  a.dataset.source = source;
+  const label = source.slice(...parts.label);
+  if (label && parts.kind !== "bare" && parts.kind !== "autolink")
+    a.append(...labelNodes(label));
+  else a.textContent = label || href;
+  return a;
 }
 
 export const linkSchema = $nodeSchema(LINK, () => ({
@@ -176,8 +182,10 @@ export const linkSchema = $nodeSchema(LINK, () => ({
       getContent: (dom, schema) => {
         const el = dom as HTMLElement;
         const href = el.getAttribute("href") ?? "";
-        const label = el.textContent ?? "";
-        return Fragment.from(schema.text(linkSource(label || href, href)));
+        const label = labelMarkdown(el).trim();
+        return Fragment.from(
+          schema.text(inlineLink(label || escapeLabel(href), href, el.title)),
+        );
       },
     },
   ],
@@ -208,7 +216,9 @@ export function shownText(node: ProseNode): string {
     if (child.type.name === LINK) {
       const source = child.textContent;
       const parts = parseLink(source);
-      text += parts ? source.slice(...parts.label) || parts.dest : source;
+      text += parts
+        ? labelText(source.slice(...parts.label)) || parts.dest
+        : source;
       return false;
     }
     if (child.isText) text += child.text;

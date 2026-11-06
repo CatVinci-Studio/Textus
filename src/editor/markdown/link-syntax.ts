@@ -254,10 +254,11 @@ export function inlinedReference(
   if (parts?.kind !== "reference") return null;
   const definition = definitionFor(parts.dest, definitions);
   if (!definition) return null;
-  const { url, title } = definition;
-  const dest = /[\s()<>]/.test(url) ? `<${url}>` : url;
-  const titled = title ? ` "${title.replace(/"/g, '\\"')}"` : "";
-  return `[${text.slice(...parts.label)}](${dest}${titled})`;
+  return inlineLink(
+    text.slice(...parts.label),
+    definition.url,
+    definition.title,
+  );
 }
 
 /** `text` around the first link in it: what comes before and after, which
@@ -279,10 +280,15 @@ export function splitAroundLink(
   return null;
 }
 
-/** A link's source for `label` pointing at `url`, the label's brackets
- *  escaped. */
-export function linkSource(label: string, url: string): string {
-  const text = label.replace(/([\\[\]])/g, "\\$1");
+/** An inline link's source: `markdown` as its label, then `url` and
+ *  `title`. */
+export function inlineLink(markdown: string, url: string, title = ""): string {
   const dest = /[\s()<>]/.test(url) ? `<${url}>` : url;
-  return `[${text}](${dest})`;
+  const titled = title ? ` "${title.replace(/"/g, '\\"')}"` : "";
+  return `[${markdown}](${dest}${titled})`;
 }
+
+/** A link's source for the text `label` pointing at `url`, the label's
+ *  brackets escaped. */
+export const linkSource = (label: string, url: string): string =>
+  inlineLink(label.replace(/([\\[\]])/g, "\\$1"), url);

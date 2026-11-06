@@ -220,6 +220,15 @@ describe("a link in a heading", () => {
     expect(headingPos(t.view.state.doc, "see-the-docs")).toBe(1);
     expect(tocEntries(t.view.state.doc)[0].text).toBe("See the docs");
   });
+
+  it("reads a formatted label without its delimiters", async () => {
+    const t = await open(
+      "# See [the **docs** `x`](u)\n\n[go](#see-the-docs-x)",
+    );
+    expect(t.view.state.doc.firstChild!.attrs.id).toBe("see-the-docs-x");
+    expect(headingPos(t.view.state.doc, "see-the-docs-x")).toBe(1);
+    expect(tocEntries(t.view.state.doc)[0].text).toBe("See the docs x");
+  });
 });
 
 describe("linkHrefAt", () => {

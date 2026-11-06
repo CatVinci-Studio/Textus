@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
+import { definitionsIn } from "../markdown/link-reveal";
 import { plainTextOf } from "./plain-text";
 
 let editor: Editor | null = null;
@@ -24,6 +25,18 @@ describe("plainTextOf", () => {
     expect(
       await plain("[https://x.org/a](https://x.org/a) and <https://x.org/b>"),
     ).toBe("https://x.org/a and https://x.org/b");
+  });
+
+  it("reads a link's label as text, a reference's URL from its definition", async () => {
+    expect(await plain("See [the **docs**](https://x.org) here.")).toBe(
+      "See the docs (https://x.org) here.",
+    );
+    const t = await createTestEditor("A [a][r] b\n\n[r]: https://r.org");
+    editor = t;
+    const { doc } = t.ctx.get(editorViewCtx).state;
+    expect(plainTextOf(doc.firstChild!.content, () => definitionsIn(doc))).toBe(
+      "A a (https://r.org) b",
+    );
   });
 
   it("drops the Markdown marks", async () => {
