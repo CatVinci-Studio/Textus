@@ -451,7 +451,10 @@ export type PaperRequest_Serialize = {
 
 /**  How far a paper has come. */
 export type PaperStage = 
-/**  Begun: its research, if any, is not kept until it is whole. */
+/**
+ *  Begun: its research is kept question by question in
+ *  `research.json`, and as the dossier once it is whole.
+ */
 "researching" | 
 /**  Researched and outlined; waiting for the outline to be approved. */
 "outlined" | 
