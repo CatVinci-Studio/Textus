@@ -18,11 +18,12 @@ export async function updateLinksAfterMove(
   base: string,
   t: Strings,
 ): Promise<void> {
-  const [vault, linkRoot] = await Promise.all([
-    fs.obsidianVault(to).catch(() => null),
+  const [conventions, linkRoot] = await Promise.all([
+    fs.folderConventions(to).catch(() => null),
     fs.documentLinkRoot(to, base).catch(() => null),
   ]);
-  const root = vault?.root ?? base;
+  // Links by name are found in the folder of the app that writes them.
+  const root = conventions?.linkStyle?.root ?? base;
   let documents: { path: string; text: string }[];
   let files: string[];
   try {
@@ -44,7 +45,9 @@ export async function updateLinksAfterMove(
   }));
   const updates = current.flatMap((doc) => planner(doc) ?? []);
   if (updates.length === 0) return;
-  const automatic = !!vault && vault.alwaysUpdateLinks !== false;
+  const update = conventions?.updateLinks?.value;
+  if (update === "never") return;
+  const automatic = update === "always";
   if (
     !automatic &&
     !(await showConfirm(

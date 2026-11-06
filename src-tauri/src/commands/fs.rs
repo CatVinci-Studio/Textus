@@ -314,9 +314,9 @@ pub async fn save_pasted_image(
     }
     let bytes = STANDARD.decode(&data_base64).map_err(|e| e.to_string())?;
 
-    let (folder, vault) = match doc_path.as_deref() {
-        Some(doc) => match super::vault::convention_folder(Path::new(doc)) {
-            Some((folder, vault)) => (Some(folder), vault),
+    let (folder, conventions) = match doc_path.as_deref() {
+        Some(doc) => match crate::conventions::attachment_folder(Path::new(doc)) {
+            Some((folder, conventions)) => (Some(folder), Some(conventions)),
             None => (Some(ImageFolder::resolve(Path::new(doc), &folder)?), None),
         },
         None => (None, None),
@@ -335,8 +335,8 @@ pub async fn save_pasted_image(
         .await
         .map_err(|e| e.to_string())?;
 
-    let embed = vault.as_ref().and_then(|vault| {
-        super::vault::vault_embed(vault, Path::new(doc_path.as_deref()?), &dir.join(&name))
+    let embed = conventions.as_ref().and_then(|c| {
+        crate::conventions::wiki_embed(c, Path::new(doc_path.as_deref()?), &dir.join(&name))
     });
     let src = match folder {
         Some(folder) => folder.src(&name),

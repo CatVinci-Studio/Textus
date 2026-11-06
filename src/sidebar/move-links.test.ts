@@ -7,7 +7,7 @@ import { updateLinksAfterMove } from "./move-links";
 
 vi.mock("../platform/ipc", () => ({
   fs: {
-    obsidianVault: vi.fn(),
+    folderConventions: vi.fn(),
     documentLinkRoot: vi.fn(),
     folderDocuments: vi.fn(),
     indexFolder: vi.fn(),
@@ -27,18 +27,30 @@ const disk: Record<string, string> = {
   "/w/index.md": "﻿# Index\r\n[p](plan.md) and [[plan]]\r\n",
   "/w/archive/plan.md": "![](pic.png)\n",
 };
-const vault = {
-  root: "/w",
-  useMarkdownLinks: false,
-  newLinkFormat: "shortest",
-  attachmentFolder: "/",
-  strictLineBreaks: false,
-  alwaysUpdateLinks: null as boolean | null,
-};
+const at = <T>(value: T) => ({ value, app: "obsidian", root: "/w" });
+/** A vault's conventions: wikilinks, and updates on a rename as given. */
+const vault = (update = "always") => ({
+  sources: [{ app: "obsidian", root: "/w" }],
+  linkStyle: at("wiki"),
+  linkPath: at("shortest"),
+  linkRoot: null,
+  updateLinks: at(update),
+  attachments: at("/"),
+  softBreaks: at(true),
+  templates: null,
+  daily: null,
+  newNotes: null,
+  ignore: [],
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(fs.obsidianVault).mockResolvedValue(null);
+  vi.mocked(fs.folderConventions).mockResolvedValue({
+    ...vault(),
+    sources: [],
+    linkStyle: null,
+    updateLinks: null,
+  });
   vi.mocked(fs.documentLinkRoot).mockResolvedValue("/w");
   vi.mocked(fs.folderDocuments).mockResolvedValue({
     documents: Object.entries(disk).map(([path, text]) => ({
@@ -79,16 +91,13 @@ it("rewrites only the targets' bytes once the user agrees", async () => {
 });
 
 it("updates at once in an Obsidian vault unless the vault turned that off", async () => {
-  vi.mocked(fs.obsidianVault).mockResolvedValue(vault);
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault());
   await updateLinksAfterMove("/w/plan.md", "/w/archive/plan.md", "/w", t);
   expect(showConfirm).not.toHaveBeenCalled();
   expect(Object.keys(written())).toHaveLength(2);
 
   vi.mocked(fs.writeTextFile).mockClear();
-  vi.mocked(fs.obsidianVault).mockResolvedValue({
-    ...vault,
-    alwaysUpdateLinks: false,
-  });
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault("ask"));
   vi.mocked(showConfirm).mockResolvedValue(false);
   await updateLinksAfterMove("/w/plan.md", "/w/archive/plan.md", "/w", t);
   expect(showConfirm).toHaveBeenCalledOnce();
@@ -96,7 +105,7 @@ it("updates at once in an Obsidian vault unless the vault turned that off", asyn
 });
 
 it("edits a document with unsaved changes in its tab, not on disk", async () => {
-  vi.mocked(fs.obsidianVault).mockResolvedValue(vault);
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault());
   const replaceText = vi.fn(() => true);
   vi.mocked(getWindowAccess).mockReturnValue({
     documentAt: (path: string) =>

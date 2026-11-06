@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
 import { fs } from "../../platform/ipc";
 
-/** Whether the document's Obsidian vault shows a single newline as a line
- *  break (its "Strict line breaks" off, Obsidian's default). Read-only; false
- *  outside a vault or before the answer comes. */
+/** Whether the document's folder shows a single newline as a line break
+ *  (an Obsidian vault with "Strict line breaks" off, a Logseq graph, VS
+ *  Code's preview setting). Read-only; false where no app says so, or
+ *  before the answer comes. */
 export function useVaultLineBreaks(docPath: string | null): boolean {
-  const [vault, setVault] = useState<{ path: string; breaks: boolean }>();
+  const [found, setFound] = useState<{ path: string; breaks: boolean }>();
   useEffect(() => {
     if (!docPath) return;
     let current = true;
-    fs.obsidianVault(docPath).then(
-      (found) =>
-        current &&
-        setVault({ path: docPath, breaks: !!found && !found.strictLineBreaks }),
+    fs.folderConventions(docPath).then(
+      (c) =>
+        current && setFound({ path: docPath, breaks: !!c.softBreaks?.value }),
       () => {},
     );
     return () => {
       current = false;
     };
   }, [docPath]);
-  return vault?.path === docPath && vault.breaks;
+  return found?.path === docPath && found.breaks;
 }

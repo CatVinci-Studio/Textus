@@ -108,11 +108,8 @@ export const commands = {
 	 *  read from.
 	 */
 	document_link_root: (docPath: string, folder: string | null) => __TAURI_INVOKE<string | null>("document_link_root", { docPath, folder }),
-	/**
-	 *  The Obsidian vault a document or folder is in, with its settings; None
-	 *  outside one.
-	 */
-	obsidian_vault: (path: string) => __TAURI_INVOKE<ObsidianVault_Serialize | null>("obsidian_vault", { path }),
+	/**  A document's or folder's conventions, for the editor and for plugins. */
+	folder_conventions: (path: string) => __TAURI_INVOKE<Conventions_Serialize>("folder_conventions", { path }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
@@ -196,6 +193,87 @@ export type AiRecords = {
 	/**  Whole conversations, turns included, as the chat history keeps them. */
 	conversations: Value[],
 	memories: MemoryFile[],
+};
+
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions = Conventions_Serialize | Conventions_Deserialize;
+
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions_Deserialize = {
+	/**  The apps whose settings were found, nearest first. */
+	sources: Source[],
+	/**  "wiki" or "markdown". */
+	linkStyle?: Setting<string> | null,
+	/**  "shortest", "relative" or "absolute". */
+	linkPath?: Setting<string> | null,
+	/**  The folder a link starting with "/" is read from. */
+	linkRoot?: Setting<string> | null,
+	/**  On a rename: "always", "ask" or "never". */
+	updateLinks?: Setting<string> | null,
+	/**
+	 *  Where pictures go: "/" the root, "./" beside the document, "./sub"
+	 *  below it, else a folder from the root; `${filename}` the document's
+	 *  name.
+	 */
+	attachments?: Setting<string> | null,
+	/**  Whether a single newline shows as a line break. */
+	softBreaks?: Setting<boolean> | null,
+	/**  The templates folder, a full path. */
+	templates?: Setting<string> | null,
+	daily?: Setting<Daily_Deserialize> | null,
+	/**  Where new notes go, as `attachments` names a folder. */
+	newNotes?: Setting<string> | null,
+	/**  Paths the app hides (Obsidian's excluded files). */
+	ignore: string[],
+};
+
+/**  A folder's conventions; a field no app sets is left to Textus's settings. */
+export type Conventions_Serialize = {
+	/**  The apps whose settings were found, nearest first. */
+	sources: Source[],
+	/**  "wiki" or "markdown". */
+	linkStyle: Setting<string> | null,
+	/**  "shortest", "relative" or "absolute". */
+	linkPath: Setting<string> | null,
+	/**  The folder a link starting with "/" is read from. */
+	linkRoot: Setting<string> | null,
+	/**  On a rename: "always", "ask" or "never". */
+	updateLinks: Setting<string> | null,
+	/**
+	 *  Where pictures go: "/" the root, "./" beside the document, "./sub"
+	 *  below it, else a folder from the root; `${filename}` the document's
+	 *  name.
+	 */
+	attachments: Setting<string> | null,
+	/**  Whether a single newline shows as a line break. */
+	softBreaks: Setting<boolean> | null,
+	/**  The templates folder, a full path. */
+	templates: Setting<string> | null,
+	daily: Setting<Daily_Serialize> | null,
+	/**  Where new notes go, as `attachments` names a folder. */
+	newNotes: Setting<string> | null,
+	/**  Paths the app hides (Obsidian's excluded files). */
+	ignore: string[],
+};
+
+export type Daily = Daily_Serialize | Daily_Deserialize;
+
+export type Daily_Deserialize = {
+	/**  The folder, a full path. */
+	folder: string,
+	/**  The file name's date format, in moment.js tokens. */
+	format: string,
+	/**  The template file, a full path. */
+	template?: string | null,
+};
+
+export type Daily_Serialize = {
+	/**  The folder, a full path. */
+	folder: string,
+	/**  The file name's date format, in moment.js tokens. */
+	format: string,
+	/**  The template file, a full path. */
+	template: string | null,
 };
 
 export type DirEntryInfo = DirEntryInfo_Serialize | DirEntryInfo_Deserialize;
@@ -323,43 +401,6 @@ export type NoteLinkTarget = {
 	exists: boolean,
 };
 
-/**  An Obsidian vault and the settings of it Textus follows. */
-export type ObsidianVault = ObsidianVault_Serialize | ObsidianVault_Deserialize;
-
-/**  An Obsidian vault and the settings of it Textus follows. */
-export type ObsidianVault_Deserialize = {
-	root: string,
-	/**  "Use [[Wikilinks]]" off. */
-	useMarkdownLinks: boolean,
-	/**  "shortest", "relative" or "absolute". */
-	newLinkFormat: string,
-	/**
-	 *  "/" the vault root, "./" the note's folder, "./sub" below it, else a
-	 *  folder from the root.
-	 */
-	attachmentFolder: string,
-	strictLineBreaks: boolean,
-	/**  "Automatically update internal links"; None when the vault doesn't say. */
-	alwaysUpdateLinks?: boolean | null,
-};
-
-/**  An Obsidian vault and the settings of it Textus follows. */
-export type ObsidianVault_Serialize = {
-	root: string,
-	/**  "Use [[Wikilinks]]" off. */
-	useMarkdownLinks: boolean,
-	/**  "shortest", "relative" or "absolute". */
-	newLinkFormat: string,
-	/**
-	 *  "/" the vault root, "./" the note's folder, "./sub" below it, else a
-	 *  folder from the root.
-	 */
-	attachmentFolder: string,
-	strictLineBreaks: boolean,
-	/**  "Automatically update internal links"; None when the vault doesn't say. */
-	alwaysUpdateLinks: boolean | null,
-};
-
 /**
  *  What is kept for a document: its own notes (a list), or its tracked changes
  *  (an object).
@@ -394,9 +435,26 @@ export type SavedImage_Serialize = {
 	embed: string | null,
 };
 
+/**  One setting and where it came from. */
+export type Setting<T> = {
+	value: T,
+	/**
+	 *  "textus", "typora", "obsidian", "logseq", "dendron", "foam",
+	 *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto", "git".
+	 */
+	app: string,
+	/**  The folder whose settings these are. */
+	root: string,
+};
+
 export type Snapshot = {
 	value: Value,
 	rev: number,
+};
+
+export type Source = {
+	app: string,
+	root: string,
 };
 
 export type UploadedImage = {

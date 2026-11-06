@@ -109,7 +109,7 @@ pub async fn export_via_pandoc(
         let mut args = pandoc_args(&format, &title);
         if resource_dir
             .as_deref()
-            .is_some_and(|d| super::vault::soft_breaks_show(Path::new(d)))
+            .is_some_and(|d| crate::conventions::soft_breaks_show(Path::new(d)))
         {
             args[1].push_str("+hard_line_breaks");
         }

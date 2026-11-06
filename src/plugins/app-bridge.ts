@@ -158,6 +158,7 @@ export interface PluginEventMap {
   activeTab: PluginTabInfo | null;
   layout: null;
   root: { path: string | null };
+  conventions: { root: string };
   fileCreate: { path: string };
   fileChange: { path: string };
   fileRename: { from: string; to: string };

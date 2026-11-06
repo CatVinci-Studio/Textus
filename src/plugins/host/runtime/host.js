@@ -766,6 +766,11 @@
       stat: function (path) {
         return call("files.stat", { path: String(path) });
       },
+      conventions: function (path) {
+        return call("files.conventions", {
+          path: path === undefined ? null : String(path),
+        });
+      },
       read: function (path) {
         return call("files.read", { path: String(path) });
       },
@@ -848,6 +853,7 @@
       },
       onDidSave: on("didSave"),
       onDidChangeRoot: on("root"),
+      onDidChangeConventions: on("conventions"),
     },
     metadata: {
       get: function (path) {

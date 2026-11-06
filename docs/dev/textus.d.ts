@@ -884,6 +884,59 @@ declare global {
         trigger: "manual" | "auto";
       }>;
       onDidChangeRoot: Event<{ path: string | null }>;
+      /** How the folder of `path` (a document or folder, from the root;
+       *  the open folder when left out) is written, whichever app made it -
+       *  Obsidian, Logseq, Foam, Dendron, a site generator, git, or the
+       *  folder's own `.textus/settings.json` "conventions". Read it
+       *  instead of other apps' settings files; a field no app sets is
+       *  null, for Textus's own settings. From 1.3.9 (files.read). */
+      conventions(path?: string): Promise<FolderConventions>;
+      /** The open folder's conventions changed: another folder, or its
+       *  app's settings edited. From 1.3.9. */
+      onDidChangeConventions: Event<{ root: string }>;
+    }
+
+    /** One setting of a folder and where it came from. */
+    interface ConventionSetting<T> {
+      value: T;
+      /** "textus", "typora", "obsidian", "logseq", "dendron", "foam",
+       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto" or
+       *  "git". */
+      app: string;
+      /** The folder these settings belong to. */
+      root: string;
+    }
+
+    interface FolderConventions {
+      /** The apps found, nearest first. */
+      sources: { app: string; root: string }[];
+      /** "wiki" or "markdown". */
+      linkStyle: ConventionSetting<string> | null;
+      /** "shortest", "relative" or "absolute". */
+      linkPath: ConventionSetting<string> | null;
+      /** The folder a link starting with "/" is read from. */
+      linkRoot: ConventionSetting<string> | null;
+      /** On a rename: "always", "ask" or "never". */
+      updateLinks: ConventionSetting<string> | null;
+      /** Where pictures go: "/" the root, "./" beside the document, "./sub"
+       *  below it, else a folder from the root; `${filename}` the
+       *  document's name. */
+      attachments: ConventionSetting<string> | null;
+      /** Whether a single newline shows as a line break. */
+      softBreaks: ConventionSetting<boolean> | null;
+      /** The templates folder, a full path. */
+      templates: ConventionSetting<string> | null;
+      /** Daily notes: folder (full path), file name format (moment.js
+       *  tokens, `[literal]` text), template file (full path). */
+      daily: ConventionSetting<{
+        folder: string;
+        format: string;
+        template: string | null;
+      }> | null;
+      /** Where new notes go, as `attachments` names a folder. */
+      newNotes: ConventionSetting<string> | null;
+      /** Paths the app hides. */
+      ignore: string[];
     }
 
     interface FileEntry {

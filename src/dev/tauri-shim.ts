@@ -726,8 +726,22 @@ export function installDevTauriShim(): void {
           }));
         return Promise.resolve({ documents, truncated: false });
       }
-      // A vault is a folder with a file under `.obsidian/`.
-      case "obsidian_vault": {
+      // An Obsidian vault (a folder with a file under `.obsidian/`) is the
+      // one app the browser flows stand in for.
+      case "folder_conventions": {
+        const none = {
+          sources: [],
+          linkStyle: null,
+          linkPath: null,
+          linkRoot: null,
+          updateLinks: null,
+          attachments: null,
+          softBreaks: null,
+          templates: null,
+          daily: null,
+          newNotes: null,
+          ignore: [],
+        };
         for (let dir = path; dir.includes("/");) {
           if (
             Object.keys(files).some((f) => f.startsWith(`${dir}/.obsidian/`))
@@ -738,21 +752,24 @@ export function installDevTauriShim(): void {
             } catch {
               /* Obsidian's defaults */
             }
+            const at = <T>(value: T) => ({ value, app: "obsidian", root: dir });
             return Promise.resolve({
-              root: dir,
-              useMarkdownLinks: app.useMarkdownLinks === true,
-              newLinkFormat: String(app.newLinkFormat ?? "shortest"),
-              attachmentFolder: String(app.attachmentFolderPath ?? "/"),
-              strictLineBreaks: app.strictLineBreaks === true,
-              alwaysUpdateLinks:
-                typeof app.alwaysUpdateLinks === "boolean"
-                  ? app.alwaysUpdateLinks
-                  : null,
+              ...none,
+              sources: [{ app: "obsidian", root: dir }],
+              linkStyle: at(
+                app.useMarkdownLinks === true ? "markdown" : "wiki",
+              ),
+              linkPath: at(String(app.newLinkFormat ?? "shortest")),
+              attachments: at(String(app.attachmentFolderPath ?? "/")),
+              softBreaks: at(app.strictLineBreaks !== true),
+              updateLinks: at(
+                app.alwaysUpdateLinks === false ? "ask" : "always",
+              ),
             });
           }
           dir = dir.slice(0, dir.lastIndexOf("/"));
         }
-        return Promise.resolve(null);
+        return Promise.resolve(none);
       }
       // The folder's notes, by the rules Rust's vault.rs shares with
       // link-resolve.ts.

@@ -13,6 +13,7 @@ pub mod cli;
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
+mod conventions;
 mod distribution;
 mod ext_stats;
 mod extract;
@@ -280,7 +281,7 @@ pub fn run() {
             commands::vault::resolve_vault_image,
             commands::vault::resolve_note_link,
             commands::link_root::document_link_root,
-            commands::vault::obsidian_vault,
+            conventions::folder_conventions,
             upload_image,
             migrate_draft_images,
             save_theme_css,

@@ -4,9 +4,6 @@
 
 use std::path::{Path, PathBuf};
 
-/// How far up from the document a marker folder is looked for.
-const MAX_ASCENT: usize = 32;
-
 /// How much of a document is read for its front matter.
 const FRONT_MATTER_BYTES: usize = 8 * 1024;
 
@@ -29,34 +26,16 @@ pub(crate) fn front_matter_value(doc_path: &Path, key: &str) -> Option<String> {
     (!value.is_empty()).then(|| value.to_string())
 }
 
-/// `typora-root-url` from the document's front matter, from its folder.
-fn typora_root(doc_path: &Path) -> Option<PathBuf> {
-    let value = front_matter_value(doc_path, "typora-root-url")?;
-    let root = doc_path.parent()?.join(value);
-    root.is_dir().then_some(root)
-}
-
-/// The nearest folder above the document holding `marker`.
-fn nearest_with(doc_path: &Path, marker: &str) -> Option<PathBuf> {
-    doc_path
-        .ancestors()
-        .skip(1)
-        .take(MAX_ASCENT)
-        .find(|dir| dir.join(marker).exists())
-        .map(Path::to_path_buf)
-}
-
-/// `/`'s folder for the document: its `typora-root-url`, the nearest git
-/// repository, the nearest Obsidian vault, the folder open in the window
-/// holding it; None for the disk's root, as before.
+/// `/`'s folder for the document: its `typora-root-url`, a site's or the
+/// git repository's (the folder's conventions), the nearest notes app's, the
+/// folder open in the window holding it; None for the disk's root.
 pub fn link_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
-    typora_root(doc_path)
-        .or_else(|| nearest_with(doc_path, ".git"))
-        .or_else(|| {
-            doc_path
-                .parent()
-                .and_then(crate::commands::vault::find_vault)
-        })
+    let conventions = crate::conventions::of_document(doc_path);
+    conventions
+        .link_root
+        .as_ref()
+        .map(|r| PathBuf::from(&r.value))
+        .or_else(|| conventions.notes_root())
         .or_else(|| {
             folder
                 .filter(|f| doc_path.starts_with(f))

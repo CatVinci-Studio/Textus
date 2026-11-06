@@ -123,6 +123,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   activeTab: null,
   layout: null,
   root: "files.read",
+  conventions: "files.read",
   fileCreate: "files.read",
   fileChange: "files.read",
   fileRename: "files.read",

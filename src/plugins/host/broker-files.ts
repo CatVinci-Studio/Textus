@@ -98,6 +98,15 @@ export function fileHandlers(p: PluginScope) {
         pattern ? pattern.test(f.rel) : isDocumentPath(f.path),
       );
     },
+    "files.conventions": ({ path }: Params) => {
+      const root = p.root();
+      const at = optionalStr(path) || root;
+      return fs.folderConventions(
+        /^([\\/]|[A-Za-z]:)/.test(at)
+          ? at
+          : `${root.replace(/[\\/]+$/, "")}/${at}`,
+      );
+    },
     "files.stat": async ({ path }: Params) => {
       const root = p.root();
       const stat = await pluginsIpc.fsStat(p.id, root, str(path, "path"));
@@ -160,16 +169,17 @@ export function fileHandlers(p: PluginScope) {
         /^([\\/]|[A-Za-z]:)/.test(path)
           ? path
           : `${root.replace(/[\\/]+$/, "")}/${path}`;
-      const [{ documents }, { files }, vault, linkRoot] = await Promise.all([
-        pluginsIpc.fsDocuments(p.id, root),
-        fs.indexFolder(root),
-        fs.obsidianVault(root).catch(() => null),
-        fs.documentLinkRoot(abs(target), root).catch(() => null),
-      ]);
+      const [{ documents }, { files }, conventions, linkRoot] =
+        await Promise.all([
+          pluginsIpc.fsDocuments(p.id, root),
+          fs.indexFolder(root),
+          fs.folderConventions(root).catch(() => null),
+          fs.documentLinkRoot(abs(target), root).catch(() => null),
+        ]);
       const planner = linkPlanner(
         files.map((f) => f.path),
         {
-          root: vault?.root ?? root,
+          root: conventions?.linkStyle?.root ?? root,
           from: abs(source),
           to: abs(target),
           linkRoot,

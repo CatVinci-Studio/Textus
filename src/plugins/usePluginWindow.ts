@@ -1,3 +1,4 @@
+import { watchConventions } from "./contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { watchDevPlugins } from "./store/dev-reload";
 import { watchPluginAiTools } from "./contributions/ai-tools";
@@ -241,6 +242,7 @@ export function usePluginWindow({
   }, []);
   useEffect(() => {
     emitPluginEvent("root", { path: rootPath });
+    watchConventions(rootPath);
     // The folder's own plugin settings, over the general ones.
     void setPluginProject(rootPath);
   }, [rootPath]);

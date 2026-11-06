@@ -7,7 +7,7 @@ import { fs } from "../../platform/ipc";
 import { SplitView } from "./SplitView";
 
 vi.mock("../../platform/ipc", () => ({
-  fs: { obsidianVault: vi.fn(), savePastedImage: vi.fn() },
+  fs: { folderConventions: vi.fn(), savePastedImage: vi.fn() },
 }));
 vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => ({
@@ -17,13 +17,20 @@ vi.mock("../../prefs/SettingsContext", () => ({
 }));
 afterEach(cleanup);
 
-const vault = {
-  root: "/v",
-  useMarkdownLinks: false,
-  newLinkFormat: "shortest",
-  attachmentFolder: "/",
-  alwaysUpdateLinks: null,
-};
+/** A vault's conventions with "Strict line breaks" set as given. */
+const vault = (strict: boolean) => ({
+  sources: [{ app: "obsidian", root: "/v" }],
+  linkStyle: null,
+  linkPath: null,
+  linkRoot: null,
+  updateLinks: null,
+  attachments: null,
+  softBreaks: { value: !strict, app: "obsidian", root: "/v" },
+  templates: null,
+  daily: null,
+  newNotes: null,
+  ignore: [],
+});
 
 function preview(filePath: string) {
   const { container } = render(
@@ -42,10 +49,7 @@ function preview(filePath: string) {
 const SOFT_BREAK = '[data-type="hardbreak"][data-is-inline="true"]';
 
 it("breaks the line at a single newline in a vault without strict line breaks", async () => {
-  vi.mocked(fs.obsidianVault).mockResolvedValue({
-    ...vault,
-    strictLineBreaks: false,
-  });
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault(false));
   const pane = preview("/v/a.md");
   await waitFor(() =>
     expect(pane()?.classList.contains("split-preview-breaks")).toBe(true),
@@ -54,12 +58,11 @@ it("breaks the line at a single newline in a vault without strict line breaks", 
 });
 
 it("keeps one paragraph line where the vault asks for strict line breaks", async () => {
-  vi.mocked(fs.obsidianVault).mockResolvedValue({
-    ...vault,
-    strictLineBreaks: true,
-  });
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault(true));
   const pane = preview("/v/b.md");
-  await waitFor(() => expect(fs.obsidianVault).toHaveBeenCalledWith("/v/b.md"));
+  await waitFor(() =>
+    expect(fs.folderConventions).toHaveBeenCalledWith("/v/b.md"),
+  );
   await new Promise((r) => setTimeout(r, 0));
   expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull();
   expect(pane()?.classList.contains("split-preview-breaks")).toBe(false);

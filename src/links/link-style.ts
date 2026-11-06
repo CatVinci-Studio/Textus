@@ -1,31 +1,23 @@
 import { fs } from "../platform/ipc";
-import type { ObsidianVault } from "../platform/ipc-files";
-import { dirname } from "../utils/path";
+import type { Conventions } from "../platform/ipc-files";
 import { DEFAULT_LINK_STYLE, type LinkStyle } from "./link-resolve";
 
-/** How links are written in a document of `vault`; Textus's own outside one. */
-export function vaultLinkStyle(vault: ObsidianVault | null): LinkStyle {
-  if (!vault) return DEFAULT_LINK_STYLE;
-  const format = vault.newLinkFormat;
+/** How links are written where `conventions` hold; Textus's own where no
+ *  app says. */
+export function folderLinkStyle(conventions: Conventions | null): LinkStyle {
+  const style = conventions?.linkStyle?.value;
+  if (!style) return DEFAULT_LINK_STYLE;
+  const path = conventions?.linkPath?.value;
   return {
-    wiki: !vault.useMarkdownLinks,
-    format:
-      format === "relative" || format === "absolute" ? format : "shortest",
+    wiki: style === "wiki",
+    format: path === "relative" || path === "absolute" ? path : "shortest",
   };
 }
 
-/** A vault's settings change rarely: read again after this. */
-const FRESH_MS = 10_000;
-const styles = new Map<string, { at: number; style: Promise<LinkStyle> }>();
-
-/** The link style of the folder holding the document `path`. */
+/** The link style of the folder holding the document `path` (the core keeps
+ *  each folder's answer a moment). */
 export function linkStyleAt(path: string): Promise<LinkStyle> {
-  const dir = dirname(path);
-  const known = styles.get(dir);
-  if (known && Date.now() - known.at < FRESH_MS) return known.style;
-  const style = fs
-    .obsidianVault(path)
-    .then(vaultLinkStyle, () => DEFAULT_LINK_STYLE);
-  styles.set(dir, { at: Date.now(), style });
-  return style;
+  return fs
+    .folderConventions(path)
+    .then(folderLinkStyle, () => DEFAULT_LINK_STYLE);
 }

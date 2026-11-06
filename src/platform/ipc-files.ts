@@ -14,7 +14,7 @@ export type {
   NoteLinkTarget,
   SavedImage,
   IndexedFile,
-  ObsidianVault,
+  Conventions,
   FolderIndex,
   WordDocument,
 } from "./bindings/files";
@@ -140,9 +140,10 @@ export const fs = {
    *  repository, the vault, the open folder); null for the disk's root. */
   documentLinkRoot: (docPath: string, folder: string | null) =>
     command("document_link_root", docPath, folder),
-  /** The Obsidian vault a document or folder is in, with the settings
-   *  Textus follows; null outside one. Never written. */
-  obsidianVault: (path: string) => command("obsidian_vault", path),
+  /** How the folder of a document (or a folder) is written, whichever app
+   *  made it: links, pictures, line breaks, templates, daily notes. Read
+   *  only; a field no app sets is left to Textus's settings. */
+  folderConventions: (path: string) => command("folder_conventions", path),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (

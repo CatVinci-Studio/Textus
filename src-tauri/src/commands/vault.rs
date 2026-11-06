@@ -24,16 +24,14 @@ const MAX_DEPTH: usize = 24;
 const INDEX_TTL: Duration = Duration::from_secs(60);
 const MISS_REBUILD_AFTER: Duration = Duration::from_secs(2);
 
-/// How far up from the document a `.obsidian/` folder is looked for.
-const MAX_VAULT_ASCENT: usize = 32;
-
-/// The vault a document belongs to: the nearest folder above it holding
-/// `.obsidian/`, else `folder` (the one open in the window) when the document
-/// is inside it, else the document's own folder.
+/// The folder a document's links are resolved in: the nearest app that
+/// links notes by name (an Obsidian vault, a Logseq graph...), else `folder`
+/// (the one open in the window) when the document is inside it, else the
+/// document's own folder.
 fn vault_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
     let doc_dir = doc_path.parent()?;
-    if let Some(vault) = find_vault(doc_dir) {
-        return Some(vault);
+    if let Some(root) = crate::conventions::of_folder(doc_dir).notes_root() {
+        return Some(root);
     }
     if let Some(folder) = folder.filter(|f| doc_dir.starts_with(f)) {
         return Some(folder.to_path_buf());
@@ -318,7 +316,7 @@ fn touch_cached(cache: &mut Vec<CachedIndex>, root: &Path, fresh: Option<CachedI
 
 /// The vault's index, built again when it is older than INDEX_TTL - or, for
 /// a lookup that just missed (`fresh`), older than MISS_REBUILD_AFTER.
-fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
+pub(crate) fn cached_index(root: &Path, fresh: bool) -> Arc<Vec<String>> {
     let limit = if fresh { MISS_REBUILD_AFTER } else { INDEX_TTL };
     if let Ok(mut cache) = INDEXES.lock() {
         let hit = cache
@@ -450,9 +448,6 @@ pub async fn resolve_note_link(
     .await
     .map_err(|e| e.to_string())
 }
-
-mod conventions;
-pub use conventions::*;
 
 #[cfg(test)]
 mod tests;
