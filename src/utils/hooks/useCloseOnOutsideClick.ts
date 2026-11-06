@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
 import { isImeKeydown } from "../ime";
 
-/// "Click outside (or press Escape) to close" for menus and popovers; attach
-/// the ref to the element holding both the overlay and its opener. `open`
-/// matters: a mounted closed menu would otherwise swallow every Escape.
+/// "Click outside (or press Escape) to close" for menus and popovers - the
+/// one way every overlay closes; attach the ref to the element holding both
+/// the overlay and its opener. `open` matters: a mounted closed menu would
+/// otherwise swallow every Escape. `inside`: more elements that count as
+/// inside (a review note's badge).
 export function useCloseOnOutsideClick<T extends HTMLElement>(
   onClose: () => void,
   closeOnEscape = false,
   open = true,
+  inside = "",
 ) {
   const ref = useRef<T>(null);
 
@@ -30,11 +33,12 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       if (
         target instanceof Element &&
         target.closest(
-          "[data-floating-select], [data-floating-menu], [data-floating-tip]",
+          `[data-floating-select], [data-floating-menu], [data-floating-tip]${inside && `, ${inside}`}`,
         )
       )
         return;
-      if (ref.current && !ref.current.contains(target)) {
+      // Without an element of its own, `inside` alone says what is in.
+      if (ref.current ? !ref.current.contains(target) : !!inside) {
         closed = true;
         onClose();
       }
@@ -55,7 +59,7 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       if (
         target instanceof Element &&
         target.closest(
-          "[data-floating-select], [data-floating-menu], [data-floating-tip]",
+          `[data-floating-select], [data-floating-menu], [data-floating-tip]${inside && `, ${inside}`}`,
         )
       )
         return;
@@ -80,7 +84,7 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
         document.removeEventListener("keydown", onKeyDown);
       }
     };
-  }, [onClose, closeOnEscape, open]);
+  }, [onClose, closeOnEscape, open, inside]);
 
   return ref;
 }
