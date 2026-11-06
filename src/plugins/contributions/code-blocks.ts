@@ -1,4 +1,10 @@
-import { claim, claimsStartingWith, onOwnersChanged, ownerOf } from "./owners";
+import {
+  claim,
+  claimKey,
+  claimsStartingWith,
+  onOwnersChanged,
+  ownerOf,
+} from "./owners";
 
 /**
  * The code blocks plugins draw in the document: which plugin draws a
@@ -8,7 +14,7 @@ import { claim, claimsStartingWith, onOwnersChanged, ownerOf } from "./owners";
 /** "language plugin" -> drawn without the box round it. */
 const frameless = new Set<string>();
 
-const claimOf = (language: string) => `codeBlock:${language.toLowerCase()}`;
+const claimOf = claimKey.codeBlock;
 
 /** A plugin draws `language` until the returned function is called; while
  *  another one draws it, this one waits its turn. */
@@ -39,7 +45,7 @@ export function codeBlockPlugin(language: string): string | null {
 }
 
 export function hasCodeBlockLanguages(): boolean {
-  return claimsStartingWith("codeBlock:").length > 0;
+  return claimsStartingWith(claimKey.codeBlock("")).length > 0;
 }
 
 /** The editor redraws when a plugin starts or stops drawing a language. */

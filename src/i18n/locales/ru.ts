@@ -1644,18 +1644,8 @@ export default {
   pluginsOpenScripts: "Открыть папку скриптов",
   pluginPackageFilter: "Плагин Textus",
   pluginsInstalledGroup: "Установленные",
-  pluginOpenOffer:
-    "Плагин «{name}» открывает «{file}». Установить его и открыть файл?",
   pluginOpenInstall: "Установить и открыть",
-  wikilinksPluginOffer:
-    "В этом документе есть [[вики-ссылки]]. Плагин «{name}»: {description}",
-  pluginOpenTurnOn:
-    "Плагин «{name}» открывает «{file}», но он выключен. Включить его и открыть файл?",
   pluginOpenTurnOnButton: "Включить и открыть",
-  pluginOfferInstall: "Установить плагин {name}?\n{description}",
-  pluginOfferTurnOn:
-    "Плагин {name} установлен, но выключен. Включить?\n{description}",
-  pluginOfferReason: "Предложено плагином: «{reason}»",
   pluginCardLine: "Рекомендуемый плагин: {name}",
   pluginCardSystemApp: "Открыть в системном приложении",
   pluginCardNever: "Больше не предлагать",

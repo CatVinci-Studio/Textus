@@ -1678,18 +1678,8 @@ utiliser une.
   pluginsOpenScripts: "Ouvrir le dossier des scripts",
   pluginPackageFilter: "Extension Textus",
   pluginsInstalledGroup: "Installées",
-  pluginOpenOffer:
-    "L’extension {name} ouvre « {file} ». L’installer et ouvrir le fichier ?",
   pluginOpenInstall: "Installer et ouvrir",
-  wikilinksPluginOffer:
-    "Ce document utilise des [[liens wiki]]. L’extension {name} : {description}",
-  pluginOpenTurnOn:
-    "L’extension {name} ouvre « {file} », mais elle est désactivée. L’activer et ouvrir le fichier ?",
   pluginOpenTurnOnButton: "Activer et ouvrir",
-  pluginOfferInstall: "Installer le plugin {name} ?\n{description}",
-  pluginOfferTurnOn:
-    "Le plugin {name} est installé mais désactivé. L’activer ?\n{description}",
-  pluginOfferReason: "Suggéré par un plugin : « {reason} »",
   pluginCardLine: "Plugin suggéré : {name}",
   pluginCardSystemApp: "Ouvrir avec l’app du système",
   pluginCardNever: "Ne plus suggérer",

@@ -1650,18 +1650,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsOpenScripts: "Skriptordner öffnen",
   pluginPackageFilter: "Textus-Plugin",
   pluginsInstalledGroup: "Installiert",
-  pluginOpenOffer:
-    "Das Plugin {name} öffnet „{file}“. Installieren und die Datei öffnen?",
   pluginOpenInstall: "Installieren und öffnen",
-  wikilinksPluginOffer:
-    "Dieses Dokument nutzt [[Wikilinks]]. Das Plugin {name}: {description}",
-  pluginOpenTurnOn:
-    "Das Plugin {name} öffnet „{file}“, ist aber aus. Einschalten und die Datei öffnen?",
   pluginOpenTurnOnButton: "Einschalten und öffnen",
-  pluginOfferInstall: "Plugin {name} installieren?\n{description}",
-  pluginOfferTurnOn:
-    "Das Plugin {name} ist installiert, aber aus. Einschalten?\n{description}",
-  pluginOfferReason: "Von einem Plugin vorgeschlagen: „{reason}“",
   pluginCardLine: "Plugin-Empfehlung: {name}",
   pluginCardSystemApp: "Mit System-App öffnen",
   pluginCardNever: "Nicht mehr vorschlagen",

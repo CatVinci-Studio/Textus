@@ -61,6 +61,24 @@ export function formatCombo(combo: string): string {
 }
 
 // These combinations are owned by the app/native menu, before user bindings.
+/** The editor's own block keys (Milkdown's keymaps): reserved here, and
+ *  listed in Settings by fixed-shortcuts.ts. */
+export const EDITOR_BLOCK_COMBOS = {
+  paragraph: "mod+alt+0",
+  h1: "mod+alt+1",
+  h2: "mod+alt+2",
+  h3: "mod+alt+3",
+  h4: "mod+alt+4",
+  h5: "mod+alt+5",
+  h6: "mod+alt+6",
+  orderedList: "mod+alt+7",
+  bulletList: "mod+alt+8",
+  codeBlock: "mod+alt+c",
+  blockquote: "mod+shift+b",
+  indent: "mod+]",
+  outdent: "mod+[",
+} as const;
+
 const RESERVED_COMBOS = new Set([
   "mod+p",
   "mod+=",
@@ -121,13 +139,7 @@ const RESERVED_COMBOS = new Set([
   "alt+enter",
   "alt+[",
   "alt+]",
-  // The editor's own block keys (fixed-shortcuts.ts lists them): paragraph,
-  // headings, lists, code block, quote, list indent.
-  ...[0, 1, 2, 3, 4, 5, 6, 7, 8].map((n) => `mod+alt+${n}`),
-  "mod+alt+c",
-  "mod+shift+b",
-  "mod+[",
-  "mod+]",
+  ...Object.values(EDITOR_BLOCK_COMBOS),
   // Fullscreen by convention (and the app's own handler on Windows).
   "f11",
   // Round the window's regions, and through Textus AI's changes.

@@ -27,6 +27,15 @@ function changed() {
   for (const listener of listeners) listener();
 }
 
+/** Each kind of claim's key: one language, file pattern, hover or embed
+ *  kind. */
+export const claimKey = {
+  codeBlock: (language: string) => `codeBlock:${language.toLowerCase()}`,
+  editor: (pattern: string) => `editor:${pattern.toLowerCase()}`,
+  hover: (kind: string) => `hover:${kind}`,
+  embed: (kind: string) => `embed:${kind}`,
+};
+
 /** The plugin that does `claim` now, if any is on. */
 export function ownerOf(claim: string): string | null {
   const list = claimants.get(claim);
@@ -76,8 +85,8 @@ export function onOwnersChanged(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-/** The claims a manifest makes besides its code blocks: the file patterns
- *  it opens by default, and the hover cards it declares (1.3.9). */
+/** The claims a manifest makes besides its code blocks and embeds: the
+ *  file patterns it opens by default, and the hover cards it declares. */
 export function ownedClaims(
   contributes: PluginManifest["contributes"],
 ): string[] {
@@ -85,7 +94,7 @@ export function ownedClaims(
     ...contributes.customEditors
       .filter((editor) => editor.priority === "default")
       .flatMap((editor) => editor.filenamePatterns)
-      .map((pattern) => `editor:${pattern.toLowerCase()}`),
-    ...contributes.hovers.map((kind) => `hover:${kind}`),
+      .map(claimKey.editor),
+    ...contributes.hovers.map(claimKey.hover),
   ];
 }

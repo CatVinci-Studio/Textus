@@ -1590,19 +1590,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsOpenScripts: "スクリプトフォルダを開く",
   pluginPackageFilter: "Textus プラグイン",
   pluginsInstalledGroup: "インストール済み",
-  pluginOpenOffer:
-    "「{file}」はプラグイン「{name}」で開けます。インストールして開きますか？",
   pluginOpenInstall: "インストールして開く",
-  wikilinksPluginOffer:
-    "この文書は [[ウィキリンク]] を使っています。プラグイン「{name}」：{description}",
-  pluginOpenTurnOn:
-    "「{file}」はプラグイン「{name}」で開けますが、オフになっています。オンにして開きますか？",
   pluginOpenTurnOnButton: "オンにして開く",
-  pluginOfferInstall:
-    "{name} プラグインをインストールしますか？\n{description}",
-  pluginOfferTurnOn:
-    "{name} プラグインはインストール済みですがオフです。オンにしますか？\n{description}",
-  pluginOfferReason: "プラグインからの提案：「{reason}」",
   pluginCardLine: "おすすめのプラグイン：{name}",
   pluginCardSystemApp: "システムのアプリで開く",
   pluginCardNever: "今後は表示しない",

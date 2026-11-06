@@ -6,7 +6,6 @@ import { useMutedCards, usePluginCard } from "./usePluginCard";
 
 const request: CardRequest = {
   plugin: "pdf",
-  reason: "a.pdf",
   situation: { type: "open", path: "/a.pdf" },
   installed: false,
 };

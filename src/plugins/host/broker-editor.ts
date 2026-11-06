@@ -12,7 +12,6 @@ import {
   type EditorOp,
 } from "../contributions/editor-input";
 import { outlineOf } from "../contributions/status-items";
-import { ownedClaims } from "../contributions/owners";
 import { getActiveDocument, type ActiveDocumentAccess } from "../app-bridge";
 import {
   addHoverProvider,
@@ -150,9 +149,7 @@ export function editorHandlers(p: PluginScope) {
       addHoverProvider(
         p.id,
         (target) => p.request<HoverCard | null>("$provideHover", { target }),
-        ownedClaims(p.manifest().contributes).some((c) =>
-          c.startsWith("hover:"),
-        ),
+        p.manifest().contributes.hovers.length > 0,
       );
     },
     "editor.registerDecorations": () => {

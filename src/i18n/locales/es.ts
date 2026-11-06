@@ -1656,18 +1656,8 @@ para usar una.
   pluginsOpenScripts: "Abrir la carpeta de scripts",
   pluginPackageFilter: "Complemento de Textus",
   pluginsInstalledGroup: "Instalados",
-  pluginOpenOffer:
-    "El complemento {name} abre «{file}». ¿Instalarlo y abrir el archivo?",
   pluginOpenInstall: "Instalar y abrir",
-  wikilinksPluginOffer:
-    "Este documento usa [[wikilinks]]. El complemento {name}: {description}",
-  pluginOpenTurnOn:
-    "El complemento {name} abre «{file}», pero está desactivado. ¿Activarlo y abrir el archivo?",
   pluginOpenTurnOnButton: "Activar y abrir",
-  pluginOfferInstall: "¿Instalar el plugin {name}?\n{description}",
-  pluginOfferTurnOn:
-    "El plugin {name} está instalado pero desactivado. ¿Activarlo?\n{description}",
-  pluginOfferReason: "Sugerido por un plugin: «{reason}»",
   pluginCardLine: "Plugin recomendado: {name}",
   pluginCardSystemApp: "Abrir con la app del sistema",
   pluginCardNever: "No volver a sugerir",

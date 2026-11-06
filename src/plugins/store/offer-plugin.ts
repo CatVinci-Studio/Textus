@@ -24,21 +24,8 @@ export interface OfferCaller {
   name: string;
 }
 
-const REASON_MAX = 120;
-
-/** The caller's reason as one short line of plain text. */
-export function shortReason(reason: unknown): string {
-  const line =
-    typeof reason === "string" ? reason.replace(/\s+/g, " ").trim() : "";
-  // By code point, so an emoji at the cut isn't split in half.
-  const chars = Array.from(line);
-  if (chars.length <= REASON_MAX) return line;
-  const cut = chars.slice(0, REASON_MAX - 1).join("");
-  return `${cut.trimEnd()}…`;
-}
-
 /**
- * textus.offerPlugin({ id, reason }): a plugin suggests an official one on
+ * textus.offerPlugin({ id }): a plugin suggests an official one on
  * the suggestion card, and the user installs it or turns it on - or not.
  * Resolves whether it is on. The card shows one at a time, and once the
  * user says × (or Later three times) that plugin's offer of it isn't shown
@@ -50,7 +37,7 @@ export function pluginOffer(deps: OfferDeps) {
     request: unknown,
     t: Strings,
   ): Promise<boolean> => {
-    const { id, reason } = (request ?? {}) as Record<string, unknown>;
+    const { id } = (request ?? {}) as Record<string, unknown>;
     if (typeof id !== "string") return false;
     if (!(await deps.official(id))) return false;
     const status = deps.status(id);
@@ -58,7 +45,6 @@ export function pluginOffer(deps: OfferDeps) {
     if (status && !canSwitch(status)) return false;
     const answer = await deps.card({
       plugin: id,
-      reason: shortReason(reason),
       situation: { type: "offer", caller },
       installed: !!status,
     });

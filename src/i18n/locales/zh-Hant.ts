@@ -1514,17 +1514,8 @@ export default {
   pluginsOpenScripts: "打開腳本資料夾",
   pluginPackageFilter: "Textus 外掛程式",
   pluginsInstalledGroup: "已安裝",
-  pluginOpenOffer: "外掛「{name}」可以開啟「{file}」。要安裝並開啟嗎？",
   pluginOpenInstall: "安裝並開啟",
-  wikilinksPluginOffer:
-    "這份文件用了 [[雙向連結]]。外掛程式「{name}」：{description}",
-  pluginOpenTurnOn:
-    "外掛「{name}」可以開啟「{file}」，但它目前已關閉。要開啟外掛並開啟這個檔案嗎？",
   pluginOpenTurnOnButton: "開啟並開啟檔案",
-  pluginOfferInstall: "安裝外掛「{name}」？\n{description}",
-  pluginOfferTurnOn:
-    "外掛「{name}」已安裝但目前已關閉。要開啟嗎？\n{description}",
-  pluginOfferReason: "來自外掛的建議：「{reason}」",
   pluginCardLine: "外掛推薦：{name}",
   pluginCardSystemApp: "用系統應用程式開啟",
   pluginCardNever: "不再建議",

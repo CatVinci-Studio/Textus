@@ -6,7 +6,7 @@
  */
 
 import type { HoverCard, HoverTarget } from "../../editor/extension-points";
-import { ownerOf } from "./owners";
+import { claimKey, ownerOf } from "./owners";
 export type { HoverCard, HoverTarget };
 
 type Provide = (target: HoverTarget) => Promise<HoverCard | null>;
@@ -51,7 +51,7 @@ export async function provideHover(
   target: HoverTarget,
 ): Promise<HoverCard | null> {
   if (waiting > 0 && startWaiting) await startWaiting().catch(() => {});
-  const owner = ownerOf(`hover:${target.type}`);
+  const owner = ownerOf(claimKey.hover(target.type));
   const asked = owner
     ? [providers.get(owner)?.provide]
     : [...providers.values()].filter((p) => !p.declared).map((p) => p.provide);

@@ -1,4 +1,5 @@
 import { APP_NAME, type Strings } from "../i18n/strings";
+import { EDITOR_BLOCK_COMBOS } from "../utils/shortcuts";
 import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
 import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 
@@ -35,23 +36,29 @@ export function macTabStep(e: KeyboardEvent, mac: boolean): 1 | -1 | null {
   return null;
 }
 
-/** The editor's own block keys (Milkdown's keymaps), as EDITOR_COMBOS in
- *  utils/shortcuts.ts reserves them. */
+/** The editor's own block keys, named for Settings. */
 function editorKeys(t: Strings): FixedShortcut[] {
-  const heading = (n: number): FixedShortcut => ({
-    label: t.menuHeadingTemplate.replace("{n}", String(n)),
-    combos: [`mod+alt+${n}`],
-  });
-  return [
-    { label: t.shortcutParagraph, combos: ["mod+alt+0"] },
-    ...[1, 2, 3, 4, 5, 6].map(heading),
-    { label: t.menuOrderedList, combos: ["mod+alt+7"] },
-    { label: t.menuBulletList, combos: ["mod+alt+8"] },
-    { label: t.menuCodeBlock, combos: ["mod+alt+c"] },
-    { label: t.menuBlockquote, combos: ["mod+shift+b"] },
-    { label: t.shortcutIndentListItem, combos: ["mod+]"] },
-    { label: t.shortcutOutdentListItem, combos: ["mod+["] },
-  ];
+  const heading = (n: number) =>
+    t.menuHeadingTemplate.replace("{n}", String(n));
+  const labels: Record<keyof typeof EDITOR_BLOCK_COMBOS, string> = {
+    paragraph: t.shortcutParagraph,
+    h1: heading(1),
+    h2: heading(2),
+    h3: heading(3),
+    h4: heading(4),
+    h5: heading(5),
+    h6: heading(6),
+    orderedList: t.menuOrderedList,
+    bulletList: t.menuBulletList,
+    codeBlock: t.menuCodeBlock,
+    blockquote: t.menuBlockquote,
+    indent: t.shortcutIndentListItem,
+    outdent: t.shortcutOutdentListItem,
+  };
+  return Object.entries(EDITOR_BLOCK_COMBOS).map(([key, combo]) => ({
+    label: labels[key as keyof typeof labels],
+    combos: [combo],
+  }));
 }
 
 /** Every configurable shortcut unbound: what is left in the menu is fixed. */

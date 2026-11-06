@@ -1,6 +1,6 @@
 import { basename } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
-import { ownerOf } from "../contributions/owners";
+import { claimKey, ownerOf } from "../contributions/owners";
 import {
   pluginsSnapshot,
   windowInfo,
@@ -27,7 +27,7 @@ export function customEditorFor(
         editor.filenamePatterns.some(
           (p) =>
             matchesFilename(p, name) &&
-            (ownerOf(`editor:${p.toLowerCase()}`) ?? record.id) === record.id,
+            (ownerOf(claimKey.editor(p)) ?? record.id) === record.id,
         )
       )
         return { plugin: record.id, viewType: editor.viewType, title: name };

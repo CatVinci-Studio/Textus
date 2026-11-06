@@ -7,13 +7,7 @@ import {
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import {
-  pluginName,
-  pluginRecord,
-  pluginsSnapshot,
-  pluginText,
-  setPluginEnabled,
-} from "../manager";
+import { pluginRecord, pluginsSnapshot, setPluginEnabled } from "../manager";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
 import { pluginOffer } from "./offer-plugin";
@@ -75,9 +69,6 @@ export async function offerPluginToOpen(
   const installed = !!pluginRecord(item.id);
   const request: CardRequest = {
     plugin: item.id,
-    reason: (installed ? t.pluginOpenTurnOn : t.pluginOpenOffer)
-      .replace("{name}", pluginName({ id: item.id, manifest: item.manifest }))
-      .replace("{file}", basename(path)),
     situation: { type: "open", path },
     installed,
   };
@@ -114,21 +105,13 @@ export async function offerForContent(content: string, t: Strings) {
       !pluginRecord(i.id),
   );
   if (!item || covered(kind)) return;
-  const { manifest } = item;
   const request: CardRequest = {
     plugin: item.id,
-    reason: OFFER_TEXT[kind](t)
-      .replace("{name}", pluginName({ id: item.id, manifest }))
-      .replace("{description}", pluginText({ manifest }, manifest.description)),
     situation: { type: "content", kind },
     installed: false,
   };
   if ((await showPluginCard(request)) === "install") await takeUp(request, t);
 }
-
-const OFFER_TEXT: Record<SuggestKind, (t: Strings) => string> = {
-  wikilinks: (t) => t.wikilinksPluginOffer,
-};
 
 /** textus.offerPlugin, with the market catalog and the suggestion card. */
 export const offerPlugin = pluginOffer({

@@ -18,8 +18,6 @@ export type CardSituation =
 export interface CardRequest {
   /** The suggested plugin's id, in the catalog. */
   plugin: string;
-  /** Plain text: a plugin's reason, or what the document holds. */
-  reason: string;
   situation: CardSituation;
   /** Installed but off: the card turns it on. */
   installed: boolean;

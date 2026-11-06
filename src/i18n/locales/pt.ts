@@ -1632,18 +1632,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsOpenScripts: "Abrir pasta de scripts",
   pluginPackageFilter: "Plugin do Textus",
   pluginsInstalledGroup: "Instalados",
-  pluginOpenOffer:
-    "O plugin {name} abre “{file}”. Instalá-lo e abrir o arquivo?",
   pluginOpenInstall: "Instalar e abrir",
-  wikilinksPluginOffer:
-    "Este documento usa [[wikilinks]]. O plugin {name}: {description}",
-  pluginOpenTurnOn:
-    "O plugin {name} abre “{file}”, mas está desligado. Ligá-lo e abrir o arquivo?",
   pluginOpenTurnOnButton: "Ligar e abrir",
-  pluginOfferInstall: "Instalar o plugin {name}?\n{description}",
-  pluginOfferTurnOn:
-    "O plugin {name} está instalado, mas desligado. Ligá-lo?\n{description}",
-  pluginOfferReason: "Sugerido por um plugin: “{reason}”",
   pluginCardLine: "Plugin recomendado: {name}",
   pluginCardSystemApp: "Abrir com o app do sistema",
   pluginCardNever: "Não sugerir de novo",

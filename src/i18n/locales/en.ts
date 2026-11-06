@@ -1613,18 +1613,8 @@ type /name in a conversation to use one.
   pluginsOpenScripts: "Open Scripts Folder",
   pluginPackageFilter: "Textus plugin",
   pluginsInstalledGroup: "Installed",
-  pluginOpenOffer:
-    "The {name} plugin opens “{file}”. Install it and open the file?",
   pluginOpenInstall: "Install and open",
-  wikilinksPluginOffer:
-    "This document uses [[wikilinks]]. The {name} plugin: {description}",
-  pluginOpenTurnOn:
-    "The {name} plugin opens “{file}”, but it is off. Turn it on and open the file?",
   pluginOpenTurnOnButton: "Turn on and open",
-  pluginOfferInstall: "Install the {name} plugin?\n{description}",
-  pluginOfferTurnOn:
-    "The {name} plugin is installed but off. Turn it on?\n{description}",
-  pluginOfferReason: "Suggested by a plugin: “{reason}”",
   pluginCardLine: "Plugin suggestion: {name}",
   pluginCardSystemApp: "Open with system app",
   pluginCardNever: "Don't suggest this again",

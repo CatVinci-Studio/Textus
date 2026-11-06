@@ -2,12 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import en from "../../i18n/locales/en";
 import type { Strings } from "../../i18n/strings";
 import type { PluginStatus } from "./lifecycle";
-import {
-  pluginOffer,
-  shortReason,
-  type OfferCaller,
-  type OfferDeps,
-} from "./offer-plugin";
+import { pluginOffer, type OfferCaller, type OfferDeps } from "./offer-plugin";
 import type { CardResult } from "./plugin-card";
 
 const t = en as unknown as Strings;
@@ -66,13 +61,11 @@ describe("textus.offerPlugin", () => {
     expect(deps.card).not.toHaveBeenCalled();
   });
 
-  it("shows the card under the caller's name with its reason, then installs", async () => {
+  it("shows the card for the caller, then installs", async () => {
     const { deps, offer } = setup();
-    const reason = "<b>{name}</b> $&\nTrack the pages you imported.";
-    expect(await offer({ id: "kanban", reason })).toBe(true);
+    expect(await offer({ id: "kanban", reason: "ignored" })).toBe(true);
     expect(deps.card).toHaveBeenCalledWith({
       plugin: "kanban",
-      reason: "<b>{name}</b> $& Track the pages you imported.",
       situation: { type: "offer", caller: IMPORTER },
       installed: false,
     });
@@ -94,21 +87,5 @@ describe("textus.offerPlugin", () => {
     deps.install.mockRejectedValueOnce(error);
     expect(await offer({ id: "kanban" })).toBe(false);
     expect(deps.failed).toHaveBeenCalledWith(error, t);
-  });
-});
-
-describe("shortReason", () => {
-  it("keeps one line of at most 120 characters", () => {
-    expect(shortReason("  two\nlines  ")).toBe("two lines");
-    const long = shortReason("x".repeat(300));
-    expect(long).toHaveLength(120);
-    expect(long.endsWith("…")).toBe(true);
-    expect(shortReason(undefined)).toBe("");
-  });
-
-  it("doesn't cut an emoji in half", () => {
-    expect(shortReason(`${"x".repeat(118)}😀yyyyy`)).toBe(
-      `${"x".repeat(118)}😀…`,
-    );
   });
 });

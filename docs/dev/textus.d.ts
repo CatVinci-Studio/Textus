@@ -194,11 +194,10 @@ declare global {
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
-       *  "textus.offerPlugin" with { id, reason } suggests an official
-       *  plugin from the market: a card at the bottom right, under your
-       *  plugin's name, with its name and your reason (plain text, up to
-       *  120 characters). It never blocks editing and stays until the user
-       *  acts; its permissions are still asked before it installs.
+       *  "textus.offerPlugin" with { id } suggests an official plugin from
+       *  the market: a card at the bottom right with its name. It never
+       *  blocks editing and stays until the user acts; its permissions are
+       *  still asked before it installs.
        *  Resolves true once it is installed and on (at once when it already
        *  is); false for an id the market has no official plugin for (or
        *  when the market can't be reached), for an installed plugin that

@@ -12,19 +12,16 @@ import {
 
 const offer: CardRequest = {
   plugin: "kanban",
-  reason: "Boards",
   situation: { type: "offer", caller: { id: "importer", name: "Importer" } },
   installed: false,
 };
 const content: CardRequest = {
   plugin: "two-way-links",
-  reason: "[[links]]",
   situation: { type: "content", kind: "wikilinks" },
   installed: false,
 };
 const open: CardRequest = {
   plugin: "pdf",
-  reason: "a.PDF",
   situation: { type: "open", path: "/d/a.PDF" },
   installed: true,
 };

@@ -1574,18 +1574,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsOpenScripts: "스크립트 폴더 열기",
   pluginPackageFilter: "Textus 플러그인",
   pluginsInstalledGroup: "설치됨",
-  pluginOpenOffer:
-    "“{file}”은(는) {name} 플러그인으로 열 수 있습니다. 설치하고 열까요?",
   pluginOpenInstall: "설치하고 열기",
-  wikilinksPluginOffer:
-    "이 문서는 [[위키링크]]를 씁니다. 플러그인 {name}: {description}",
-  pluginOpenTurnOn:
-    "“{file}”은(는) {name} 플러그인으로 열 수 있지만 꺼져 있습니다. 켜고 열까요?",
   pluginOpenTurnOnButton: "켜고 열기",
-  pluginOfferInstall: "{name} 플러그인을 설치할까요?\n{description}",
-  pluginOfferTurnOn:
-    "{name} 플러그인이 설치되어 있지만 꺼져 있습니다. 켤까요?\n{description}",
-  pluginOfferReason: "플러그인의 제안: “{reason}”",
   pluginCardLine: "추천 플러그인: {name}",
   pluginCardSystemApp: "시스템 앱으로 열기",
   pluginCardNever: "다시 제안하지 않기",

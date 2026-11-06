@@ -8,7 +8,7 @@ import {
 } from "../../editor/extension-points";
 
 import { onPluginEvent } from "../app-bridge";
-import { claim, onOwnersChanged, ownerOf } from "./owners";
+import { claim, claimKey, onOwnersChanged, ownerOf } from "./owners";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 
 /** The embed providers each running plugin registered, to take away. */
@@ -20,7 +20,7 @@ let watching = false;
 function watchSaves(): void {
   if (watching) return;
   watching = true;
-  setEmbedOwners((kind) => ownerOf(`embed:${kind}`));
+  setEmbedOwners((kind) => ownerOf(claimKey.embed(kind)));
   onOwnersChanged(() => refreshEmbeds());
   onPluginEvent("didSave", ({ path }) => refreshEmbeds(path));
   window.addEventListener(FILE_WRITTEN_EVENT, (event) => {
@@ -38,7 +38,7 @@ export function setPluginEmbed(
 ): void {
   forgetEmbed(plugin, id);
   watchSaves();
-  const claims = kinds.map((kind) => claim(`embed:${kind}`, plugin));
+  const claims = kinds.map((kind) => claim(claimKey.embed(kind), plugin));
   const removeProvider = addEmbedProvider({
     owner: plugin,
     id,
