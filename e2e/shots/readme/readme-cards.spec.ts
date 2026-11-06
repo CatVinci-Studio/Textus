@@ -674,7 +674,10 @@ for (const lang of LANGS) {
         "catvinci.quick-preview": ["editor.read", "files.read"],
       });
       await canned(page, {
-        resolve_vault_note: fileIn(sample.folder, sample.previewLink),
+        resolve_note_link: {
+          path: fileIn(sample.folder, sample.previewLink),
+          exists: true,
+        },
       });
       const link = doc(page)
         .locator('[data-type="wikilink"]', { hasText: sample.previewLink })

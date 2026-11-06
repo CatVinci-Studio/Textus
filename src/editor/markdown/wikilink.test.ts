@@ -4,7 +4,6 @@ import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { parseWikilink } from "./wikilink";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -27,30 +26,6 @@ function wikilinks(doc: ProseNode): string[] {
   });
   return found;
 }
-
-describe("parseWikilink", () => {
-  it("reads a note, a heading in it and the text shown", () => {
-    expect(parseWikilink("[[Page]]")).toEqual({ note: "Page", heading: null });
-    expect(parseWikilink("[[folder/Page|shown]]")).toEqual({
-      note: "folder/Page",
-      heading: null,
-    });
-    expect(parseWikilink("[[Page#Part two|see]]")).toEqual({
-      note: "Page",
-      heading: "Part two",
-    });
-  });
-
-  it("reads a heading of this document", () => {
-    expect(parseWikilink("[[#Intro]]")).toEqual({ note: "", heading: "Intro" });
-  });
-
-  it("reads nothing else", () => {
-    expect(parseWikilink("[[]]")).toBeNull();
-    expect(parseWikilink("[Page]")).toBeNull();
-    expect(parseWikilink("[[a]] b")).toBeNull();
-  });
-});
 
 describe("a wikilink in a file", () => {
   it("is read as one and saved as written", async () => {

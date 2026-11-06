@@ -11,6 +11,7 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
  */
 
 export type {
+  NoteLinkTarget,
   SavedImage,
   IndexedFile,
   FolderIndex,
@@ -122,9 +123,19 @@ export const fs = {
    *  null; `folder` is the one open in the window. */
   resolveVaultImage: (docPath: string, link: string, folder: string | null) =>
     command("resolve_vault_image", docPath, link, folder),
-  /** The note an Obsidian wikilink names in the document's vault, or null. */
-  resolveVaultNote: (docPath: string, link: string, folder: string | null) =>
-    command("resolve_vault_note", docPath, link, folder),
+  /** Where a link's note part leads in the document's vault (a wikilink's
+   *  name, or a Markdown link's path): the file, or where following it
+   *  creates it; null outside the vault. */
+  resolveNoteLink: (
+    docPath: string,
+    link: string,
+    folder: string | null,
+    wiki: boolean,
+  ) => command("resolve_note_link", docPath, link, folder, wiki),
+  /** The folder a link from `/` is read from (typora-root-url, the git
+   *  repository, the vault, the open folder); null for the disk's root. */
+  documentLinkRoot: (docPath: string, folder: string | null) =>
+    command("document_link_root", docPath, folder),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (

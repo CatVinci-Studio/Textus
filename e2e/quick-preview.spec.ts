@@ -56,7 +56,9 @@ test("a wikilink shows the note's opening, without its front matter", async ({
   page,
 }) => {
   await open(page);
-  await mockInvoke(page, { resolve_vault_note: "/notes/two.md" });
+  await mockInvoke(page, {
+    resolve_note_link: { path: "/notes/two.md", exists: true },
+  });
   await restOn(page, page.locator(`${editor} [data-type="wikilink"]`));
   await expect(card(page).locator(".hover-card-title")).toHaveText("two");
   await expect(card(page)).toContainText("The opening of two.");
@@ -69,7 +71,7 @@ test("a wikilink shows the note's opening, without its front matter", async ({
           __devInvokeCalls?: { cmd: string; folder?: string }[];
         }
       ).__devInvokeCalls ?? []
-    ).find((call) => call.cmd === "resolve_vault_note"),
+    ).find((call) => call.cmd === "resolve_note_link"),
   );
   expect(asked?.folder).toBe("/notes");
 });

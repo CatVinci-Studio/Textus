@@ -1,0 +1,75 @@
+//! The folder a link starting with `/` is read from: GitHub reads it from the
+//! repository, VS Code from the workspace and Typora from `typora-root-url`,
+//! never from the disk's root. Read only; nothing is written.
+
+use std::path::{Path, PathBuf};
+
+/// How far up from the document a marker folder is looked for.
+const MAX_ASCENT: usize = 32;
+
+/// How much of a document is read for its front matter.
+const FRONT_MATTER_BYTES: usize = 8 * 1024;
+
+/// `typora-root-url` from the document's front matter, from its folder.
+fn typora_root(doc_path: &Path) -> Option<PathBuf> {
+    let text = std::fs::read(doc_path).ok()?;
+    let text = String::from_utf8_lossy(&text[..text.len().min(FRONT_MATTER_BYTES)]).into_owned();
+    let mut lines = text.lines();
+    if lines.next()?.trim_end() != "---" {
+        return None;
+    }
+    let value = lines
+        .take_while(|l| l.trim_end() != "---")
+        .find_map(|l| l.strip_prefix("typora-root-url:"))?
+        .trim()
+        .trim_matches(['"', '\'']);
+    if value.is_empty() {
+        return None;
+    }
+    let root = doc_path.parent()?.join(value);
+    root.is_dir().then_some(root)
+}
+
+/// The nearest folder above the document holding `marker`.
+fn nearest_with(doc_path: &Path, marker: &str) -> Option<PathBuf> {
+    doc_path
+        .ancestors()
+        .skip(1)
+        .take(MAX_ASCENT)
+        .find(|dir| dir.join(marker).exists())
+        .map(Path::to_path_buf)
+}
+
+/// `/`'s folder for the document: its `typora-root-url`, the nearest git
+/// repository, the nearest Obsidian vault, the folder open in the window
+/// holding it; None for the disk's root, as before.
+pub fn link_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
+    typora_root(doc_path)
+        .or_else(|| nearest_with(doc_path, ".git"))
+        .or_else(|| nearest_with(doc_path, ".obsidian"))
+        .or_else(|| {
+            folder
+                .filter(|f| doc_path.starts_with(f))
+                .map(Path::to_path_buf)
+        })
+}
+
+/// `link_root` for the window: where `/img/a.png` and `[a](/docs/a.md)` are
+/// read from.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn document_link_root(
+    doc_path: String,
+    folder: Option<String>,
+) -> Result<Option<String>, String> {
+    super::fs::require_non_empty(&doc_path)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        link_root(Path::new(&doc_path), folder.as_deref().map(Path::new))
+            .map(|p| p.to_string_lossy().to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests;

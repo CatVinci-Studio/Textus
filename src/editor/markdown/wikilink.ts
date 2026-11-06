@@ -40,28 +40,6 @@ declare module "mdast" {
   }
 }
 
-const WIKILINK_SOURCE = /^\[\[([^[\]\n]+)\]\]$/;
-
-export interface WikilinkTarget {
-  /** The note as written, without `#heading` and `|text`; empty for a heading
-   *  of this document. */
-  note: string;
-  heading: string | null;
-}
-
-/** What a wikilink's source (`[[Note#Heading|text]]`) points at; null
- *  when it isn't one. */
-export function parseWikilink(source: string): WikilinkTarget | null {
-  const match = WIKILINK_SOURCE.exec(source);
-  if (!match) return null;
-  const [target] = match[1].split("|");
-  const hash = target.indexOf("#");
-  const note = (hash < 0 ? target : target.slice(0, hash)).trim();
-  const heading = hash < 0 ? null : target.slice(hash + 1).trim() || null;
-  if (!note && !heading) return null;
-  return { note, heading };
-}
-
 const OPEN = 91; // "["
 const CLOSE = 93; // "]"
 const PAREN = 40; // "("

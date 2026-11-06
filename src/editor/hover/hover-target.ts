@@ -2,7 +2,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import type { HoverTarget } from "../extension-points";
 import { linkTarget } from "../markdown/link-target";
-import { parseWikilink } from "../markdown/wikilink";
+import { parseNoteLink } from "../../utils/note-link";
 import { windowFolder } from "../../platform/window-folder";
 import { zoomedRectScale } from "../../ui/zoomed-rects";
 
@@ -50,15 +50,18 @@ function spotAt(
       key: `wiki:${source}`,
       rect: wikilink.getBoundingClientRect(),
       resolve: async () => {
-        const parsed = parseWikilink(source);
+        const parsed = parseNoteLink(source);
         if (!parsed?.note || !docPath) return null;
-        const path = await fs.resolveVaultNote(
+        const found = await fs.resolveNoteLink(
           docPath,
           parsed.note,
           windowFolder(),
+          true,
         );
-        return path
-          ? { type: "document", path, heading: parsed.heading || null }
+        // A ^id is a block, never a heading's name.
+        const heading = parsed.block ? null : (parsed.headings.at(-1) ?? null);
+        return found?.exists
+          ? { type: "document", path: found.path, heading }
           : null;
       },
     };
@@ -81,7 +84,7 @@ function linkHover(href: string, docPath: string | null): HoverTarget | null {
     return {
       type: "document",
       path: target.path,
-      heading: target.anchor ?? null,
+      heading: target.anchor?.startsWith("^") ? null : (target.anchor ?? null),
     };
   if (target?.kind === "heading" || target?.kind === "file") return null;
   // The web, and other apps' links (zotero://select/...).
