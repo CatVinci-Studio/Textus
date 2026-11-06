@@ -433,6 +433,15 @@ fn prompt_injection_is_told_from_ordinary_writing_instructions() {
     }
     let hidden = "Write a report.\u{200B}";
     assert_eq!(skill_warnings(hidden, &[]), ["hidden-text"]);
+    for c in ['\u{00AD}', '\u{034F}', '\u{180E}', '\u{3164}', '\u{E0101}'] {
+        assert_eq!(
+            skill_warnings(&format!("Write{c} a report."), &[]),
+            ["hidden-text"],
+            "{c:?}"
+        );
+    }
+    // An emoji's own variation selector is text the reader sees.
+    assert!(skill_warnings("Sign off with \u{2764}\u{FE0F}.", &[]).is_empty());
     assert!(skill_warnings("Write a report.", &[crate::ai::agent::AgentMode::Write]).is_empty());
 }
 

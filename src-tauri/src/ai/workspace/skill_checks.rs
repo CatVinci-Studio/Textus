@@ -45,16 +45,25 @@ static INJECTION: LazyLock<Vec<Regex>> = LazyLock::new(|| {
     .collect()
 });
 
-/// Zero-width spaces and joiners, direction overrides and isolates, and a
-/// byte-order mark past the start: text that reads differently than it shows.
+/// Zero-width spaces and joiners, direction overrides and isolates, soft
+/// hyphens, invisible fillers, a byte-order mark, tag characters and the
+/// supplementary variation selectors (an emoji's own are left alone): text
+/// that reads differently than it shows.
 fn is_hidden_char(c: char) -> bool {
     matches!(c,
-        '\u{200B}'..='\u{200F}'
+        '\u{00AD}'
+        | '\u{034F}'
+        | '\u{115F}'..='\u{1160}'
+        | '\u{180E}'
+        | '\u{200B}'..='\u{200F}'
         | '\u{202A}'..='\u{202E}'
         | '\u{2060}'..='\u{2064}'
         | '\u{2066}'..='\u{2069}'
+        | '\u{3164}'
         | '\u{FEFF}'
-        | '\u{E0000}'..='\u{E007F}')
+        | '\u{FFA0}'
+        | '\u{E0000}'..='\u{E007F}'
+        | '\u{E0100}'..='\u{E01EF}')
 }
 
 /// Whether `prompt` reads like it overrides the instructions around it.
