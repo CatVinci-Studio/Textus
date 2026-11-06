@@ -1,15 +1,11 @@
 .hover-card {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
   width: min(360px, calc(100vw - 16px));
   max-height: min(320px, calc(100vh - 16px));
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-bg);
   color: var(--ui-text);
-  box-shadow: var(--shadow-popover);
   opacity: 0;
   transform: translateY(4px);
   transition:

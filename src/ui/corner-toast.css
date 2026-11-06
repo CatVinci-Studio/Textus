@@ -27,10 +27,6 @@
   gap: 8px;
   max-width: min(520px, calc(100vw - 32px));
   padding: 4px 8px 4px 12px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-bg);
-  box-shadow: var(--shadow-popover);
   font-size: var(--text-body);
   user-select: none;
 }

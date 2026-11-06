@@ -154,7 +154,7 @@ export class CompletionPanel {
 
   private create(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "completion-list";
+    el.className = "completion-list floating-surface";
     el.setAttribute("role", "listbox");
     el.hidden = true;
     document.body.append(el);

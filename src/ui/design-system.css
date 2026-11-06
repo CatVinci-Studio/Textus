@@ -915,6 +915,7 @@ input[type="checkbox"].ui-check:checked {
 ) {
   :root:root:is([data-platform="macos"], [data-platform="ios"])
     :is(
+      .floating-surface,
       .app-menu-list,
       .ui-select-menu,
       .context-menu,

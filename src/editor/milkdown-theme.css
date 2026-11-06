@@ -1170,7 +1170,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .math-float-preview {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-popover);
   max-width: 420px;
   padding: 0.5em 0.7em;
   border: 1px solid var(--doc-border);

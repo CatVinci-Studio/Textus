@@ -108,7 +108,7 @@ export function ProviderListPanel({
           <ChevronIcon className="combobox-caret" />
         </button>
         {open && (
-          <div className="combobox-popover" id={popoverId}>
+          <div className="combobox-popover floating-surface" id={popoverId}>
             <input
               type="text"
               className="combobox-search"

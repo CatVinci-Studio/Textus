@@ -118,7 +118,7 @@ body {
   width: fit-content;
   max-width: calc(100% - 32px);
   margin-inline: auto;
-  z-index: 220;
+  z-index: var(--z-toast);
   padding: var(--space-2) var(--space-3);
   color: var(--ui-text);
   font-size: var(--text-body);

@@ -156,7 +156,7 @@
 
 .tree-drag-ghost {
   position: fixed;
-  z-index: 100;
+  z-index: var(--z-popover);
   padding: 4px 8px;
   font-size: var(--text-footnote);
   pointer-events: none;

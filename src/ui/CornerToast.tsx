@@ -53,7 +53,7 @@ export function CornerToast({
     <Presence show={show} exitMs={120}>
       {show && (
         <PresenceDiv
-          className={`corner-toast${name ? ` ${name}` : ""}`}
+          className={`corner-toast floating-surface${name ? ` ${name}` : ""}`}
           role={label ? "region" : undefined}
           aria-label={label}
           data-open={open || undefined}

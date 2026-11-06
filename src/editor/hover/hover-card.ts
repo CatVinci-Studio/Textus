@@ -60,7 +60,7 @@ export function hideHoverCard(now = false) {
 function build(card: HoverCard): HTMLElement {
   const t = currentStrings();
   const el = document.createElement("div");
-  el.className = "hover-card";
+  el.className = "hover-card floating-surface";
   el.setAttribute("role", "dialog");
   el.setAttribute("aria-label", card.title ?? t.hoverCard);
   const head = document.createElement("div");

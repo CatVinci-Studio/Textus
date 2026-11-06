@@ -1,7 +1,7 @@
 .image-name-overlay {
   position: fixed;
   inset: 0;
-  z-index: 450;
+  z-index: var(--z-alert);
   display: flex;
   align-items: center;
   justify-content: center;

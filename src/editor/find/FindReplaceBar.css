@@ -4,7 +4,7 @@
   position: fixed;
   top: 40px;
   right: calc(24px + var(--docked-panel-width, 0px));
-  z-index: 300;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 4px;

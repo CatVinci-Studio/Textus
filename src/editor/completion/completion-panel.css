@@ -10,11 +10,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 4px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-bg);
   color: var(--ui-text);
-  box-shadow: var(--shadow-popover);
   font-size: var(--text-secondary);
 }
 

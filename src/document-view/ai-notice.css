@@ -7,7 +7,7 @@
   right: 0;
   width: fit-content;
   margin-inline: auto;
-  z-index: 220;
+  z-index: var(--z-toast);
   max-width: 60ch;
   white-space: pre-line;
   padding: var(--space-2) var(--space-3);

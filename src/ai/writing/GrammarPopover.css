@@ -2,7 +2,7 @@
    note, the fix as the button. */
 .grammar-popover {
   position: fixed;
-  z-index: 210;
+  z-index: var(--z-popover);
   display: flex;
   flex-direction: column;
   gap: 8px;
