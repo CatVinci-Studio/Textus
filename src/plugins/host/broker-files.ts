@@ -9,7 +9,7 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../workspace/frontmatter";
-import { rewriteLinks } from "../workspace/link-rewrite";
+import { planLinkUpdates } from "../workspace/link-rewrite";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -142,13 +142,32 @@ export function fileHandlers(p: PluginScope) {
       );
       await notePathMoved(source, target);
       if (updateLinks !== true) return;
-      const { documents } = await pluginsIpc.fsDocuments(p.id, root);
-      for (const doc of documents) {
-        if (rewriteLinks(doc.text, doc.path, source, target) === doc.text)
-          continue;
-        await change(doc.path, (text) =>
-          rewriteLinks(text, doc.path, source, target),
-        );
+      const [{ documents }, { files }, vault] = await Promise.all([
+        pluginsIpc.fsDocuments(p.id, root),
+        fs.indexFolder(root),
+        fs.obsidianVault(root).catch(() => null),
+      ]);
+      // A plugin may name the files from the folder.
+      const abs = (path: string) =>
+        /^([\\/]|[A-Za-z]:)/.test(path)
+          ? path
+          : `${root.replace(/[\\/]+$/, "")}/${path}`;
+      const plan = {
+        root: vault?.root ?? root,
+        from: abs(source),
+        to: abs(target),
+        vault: !!vault,
+      };
+      const paths = files.map((f) => f.path);
+      for (const doc of planLinkUpdates(documents, paths, plan)) {
+        await change(doc.path, (text) => {
+          const [again] = planLinkUpdates(
+            [{ path: doc.path, text }],
+            paths,
+            plan,
+          );
+          return again?.text ?? text;
+        });
       }
     },
     "files.trash": async ({ path }: Params) => {
