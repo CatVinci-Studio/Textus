@@ -116,7 +116,8 @@ async fn search_results_are_numbered_and_the_reply_lists_what_it_cites() {
         backend: Backend::Tavily,
         credential: "k".into(),
         endpoint: Some(endpoint),
-    }));
+    }))
+    .keeping_seen_text();
     let out = web
         .execute(
             WEB_SEARCH_TOOL,
@@ -133,6 +134,14 @@ async fn search_results_are_numbered_and_the_reply_lists_what_it_cites() {
         "{out}"
     );
     assert!(out.contains("[2] Moon"), "{out}");
+    // What each result said is kept for the paper's notes.
+    assert_eq!(
+        web.seen(1),
+        Some(Seen {
+            text: "Tides\nTwice a day.".into(),
+            reach: Reach::Snippet,
+        })
+    );
 
     let mut turns = vec![
         AgentTurn::ToolCall {
@@ -358,4 +367,16 @@ fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
         commons::picture_type("application/octet-stream", "https://x/a"),
         ("image/jpeg", "jpg")
     );
+}
+
+#[test]
+fn only_a_plan_that_keeps_seen_text_keeps_it() {
+    let chat = plan(None);
+    let n = chat.add_source("https://sea.example/", "Sea");
+    chat.saw(n, "Tides turn.", Reach::Read);
+    assert_eq!(chat.seen(n), None);
+    let paper = plan(None).keeping_seen_text();
+    let n = paper.add_source("https://sea.example/", "Sea");
+    paper.saw(n, "Tides turn.", Reach::Read);
+    assert_eq!(paper.seen(n).map(|s| s.reach), Some(Reach::Read));
 }
