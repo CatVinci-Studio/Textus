@@ -27,7 +27,16 @@ pub(crate) trait Model: Sync {
     ) -> BoxFuture<'a, Result<StepResult, String>> {
         self.step(instructions, turns, tools)
     }
+
+    /// How many steps it takes at once: what a stage starts together. A
+    /// model that doesn't say takes as many as the stages always did.
+    fn at_once(&self) -> usize {
+        AT_ONCE
+    }
 }
+
+/// Steps at once for a model without a cap of its own.
+pub(crate) const AT_ONCE: usize = 3;
 
 impl Model for aicompat::providers::AgentProvider {
     fn step<'a>(
@@ -104,6 +113,10 @@ impl<M: Model> Model for Metered<'_, M> {
                 .await
         })
     }
+
+    fn at_once(&self) -> usize {
+        self.inner.at_once()
+    }
 }
 
 /// A model whose every step is told what the user asks of all the writing
@@ -150,6 +163,10 @@ impl<M: Model> Model for Guided<'_, M> {
                 .step_watched(&instructions, turns, tools, watch)
                 .await
         })
+    }
+
+    fn at_once(&self) -> usize {
+        self.inner.at_once()
     }
 }
 

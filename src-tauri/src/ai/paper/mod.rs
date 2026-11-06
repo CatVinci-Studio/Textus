@@ -387,6 +387,8 @@ pub async fn ai_paper_run(
 }
 
 #[cfg(test)]
+mod draft_tests;
+#[cfg(test)]
 mod live;
 #[cfg(test)]
 mod research_tests;

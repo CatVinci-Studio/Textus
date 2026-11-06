@@ -10,8 +10,8 @@
 //!
 //! MiniMax by default, its key read in place from the app's key file (or
 //! MINIMAX_API_KEY); TEXTUS_PAPER_TOPIC, TEXTUS_PAPER_GENRE ("paper",
-//! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS and
-//! TEXTUS_EVAL_AGENT_MODEL change the run.
+//! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS,
+//! TEXTUS_PAPER_AT_ONCE and TEXTUS_EVAL_AGENT_MODEL change the run.
 
 use super::*;
 use aicompat::capabilities::ThinkingLevel;
@@ -65,6 +65,15 @@ fn live_paper() {
         native_search: None,
         enforce_binding: false,
     };
+    // As the app steps it: TEXTUS_PAPER_AT_ONCE calls at once, else
+    // MiniMax's.
+    let at_once = env_or("TEXTUS_PAPER_AT_ONCE", "0")
+        .parse()
+        .ok()
+        .filter(|n| *n > 0)
+        .unwrap_or(entry.paper_at_once);
+    let agent = throttle::Throttled::new(&agent, at_once);
+    eprintln!("live_paper: {at_once} model calls at once");
     let mut budget = ResearchBudget::for_paper();
     // No image model in this run: AI pictures cost money and need a service.
     budget.limits.images = 0;
@@ -146,8 +155,7 @@ fn live_paper() {
         stats.insert("sections_planned".into(), json!(outline.sections.len()));
 
         let t = Instant::now();
-        let mut sections: Vec<String> = Vec::new();
-        draft::draft(
+        let mut sections = draft::draft(
             &agent,
             &paper,
             &outline,
@@ -160,7 +168,6 @@ fn live_paper() {
                     i + 1,
                     draft::prose_length(md, &paper.language)
                 );
-                sections.push(md.to_string());
                 Ok(())
             },
             &|_| {},

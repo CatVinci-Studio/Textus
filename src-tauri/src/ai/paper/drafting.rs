@@ -94,10 +94,8 @@ pub async fn ai_paper_draft(
         let written = (0..outline.sections.len())
             .map(|i| load_section(&root, &files.paper.id, i))
             .collect::<Result<Vec<_>, _>>()?;
-        let mut sections: Vec<String> = Vec::with_capacity(outline.sections.len());
-        let mut drafted = |i: usize, markdown: &str| {
+        let mut finished = |i: usize, markdown: &str| {
             save_section(&root, &files.paper.id, i, markdown)?;
-            sections.push(markdown.to_string());
             // The stream's last words may have been held back.
             send(PaperEvent::SectionText {
                 index: i as u32,
@@ -109,14 +107,14 @@ pub async fn ai_paper_draft(
             });
             Ok(())
         };
-        draft::draft(
+        let mut sections = draft::draft(
             &agent,
             &files.paper,
             &outline,
             &files.dossier,
             &written,
             &started,
-            &mut drafted,
+            &mut finished,
             &send,
         )
         .await?;

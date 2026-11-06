@@ -1,9 +1,9 @@
-//! A paper drafted from its approved outline: a writer per section, three at
-//! a time, each with the thesis, what the other sections cover, and its own
+//! A paper drafted from its approved outline: a writer per section, as many
+//! at a time as the model takes, each with the thesis, what the other sections cover, and its own
 //! notes and their sources. A writer hands its section over with
 //! submit_section, which checks its length, its citations and its figures and
-//! sends back what is wrong. Sections are handed on in the outline's order,
-//! each as it and those before it are done.
+//! sends back what is wrong. Each section is kept as soon as it is written;
+//! sections are handed on in the outline's order.
 
 #[cfg(test)]
 pub(crate) use super::checks::prose_length;
@@ -21,8 +21,6 @@ use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
-/// Sections written at once.
-const AT_ONCE: usize = 3;
 /// A writer's tries at a section that holds.
 const WRITER_STEPS: usize = 5;
 /// How each kind of figure is written into the section.
@@ -327,11 +325,12 @@ pub(crate) fn repaired(markdown: &str, sources: &[(u32, String)]) -> String {
     text.trim().to_string()
 }
 
-/// Every section of `outline` written, three at a time, and handed to
-/// `drafted` in order: section n once it and every one before it is done.
-/// One `written` has already (by a run that stopped) is handed on as it is.
+/// Every section of `outline` written, as many at a time as the model
+/// takes. Each goes to `finished` as soon as it is written - kept, so a stop
+/// costs no section done - and the whole comes back in the outline's order.
+/// One `written` has already (by a run that stopped) is finished as it is.
 /// `started` hears of each as its writer begins. A section that fails stops
-/// the ones after it from being handed on, since the paper would have a gap.
+/// any more from starting; those under way are finished, then it fails.
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn draft(
     model: &dyn Model,
@@ -340,25 +339,43 @@ pub(crate) async fn draft(
     dossier: &Dossier,
     written: &[Option<String>],
     started: &(dyn Fn(usize) + Sync),
-    drafted: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
+    finished: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
     send: &(dyn Fn(PaperEvent) + Sync),
-) -> Result<(), String> {
+) -> Result<Vec<String>, String> {
+    let failed = std::sync::atomic::AtomicBool::new(false);
+    let failed = &failed;
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
             if let Some(text) = written.get(i).cloned().flatten() {
                 return (i, Ok(text));
             }
+            if failed.load(std::sync::atomic::Ordering::Relaxed) {
+                return (i, Err(String::new()));
+            }
             started(i);
-            (
-                i,
-                write_section(model, paper, outline, i, dossier, None, send).await,
-            )
+            let text = write_section(model, paper, outline, i, dossier, None, send).await;
+            failed.fetch_or(text.is_err(), std::sync::atomic::Ordering::Relaxed);
+            (i, text)
         })
-        .buffered(AT_ONCE);
-    while let Some((i, written)) = sections.next().await {
-        drafted(i, &written?)?;
+        .buffer_unordered(model.at_once());
+    let mut done: Vec<Option<String>> = vec![None; outline.sections.len()];
+    let mut first_error: Option<(usize, String)> = None;
+    while let Some((i, text)) = sections.next().await {
+        match text {
+            Ok(text) => {
+                finished(i, &text)?;
+                done[i] = Some(text);
+            }
+            Err(e) if !e.is_empty() && first_error.as_ref().is_none_or(|(j, _)| i < *j) => {
+                first_error = Some((i, e))
+            }
+            Err(_) => {}
+        }
     }
-    Ok(())
+    if let Some((_, e)) = first_error {
+        return Err(e);
+    }
+    Ok(done.into_iter().flatten().collect())
 }
 
 /// The least time between two SectionText events for one section.

@@ -45,13 +45,16 @@ fn wait(n: u32, spread: u64) -> Duration {
 pub(crate) struct Throttled<'a, M: Model> {
     inner: &'a M,
     slots: Semaphore,
+    at_once: usize,
 }
 
 impl<'a, M: Model> Throttled<'a, M> {
     pub(crate) fn new(inner: &'a M, at_once: usize) -> Self {
+        let at_once = at_once.max(1);
         Self {
             inner,
-            slots: Semaphore::new(at_once.max(1)),
+            slots: Semaphore::new(at_once),
+            at_once,
         }
     }
 
@@ -95,6 +98,10 @@ impl<M: Model> Model for Throttled<'_, M> {
         watch: Watch<'a>,
     ) -> BoxFuture<'a, Result<StepResult, String>> {
         Box::pin(self.run(move || self.inner.step_watched(instructions, turns, tools, watch)))
+    }
+
+    fn at_once(&self) -> usize {
+        self.at_once
     }
 }
 

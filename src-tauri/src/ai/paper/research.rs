@@ -1,6 +1,6 @@
 //! A paper's research: the topic split into questions, then a helper per
-//! question - four at a time - searching the web and the literature and
-//! keeping what it finds as notes with add_note, with the tools every mode
+//! question - two for each call the model takes at once - searching the web
+//! and the literature and keeping what it finds as notes with add_note, with the tools every mode
 //! shares (the files, the reference library, plugins' and MCP servers'
 //! tools) beside the web's. The helpers share one WebPlan, so a source has
 //! one number for the whole paper and the paper's budget is spent by all of
@@ -21,8 +21,10 @@ use futures_util::stream::{self, StreamExt};
 use std::path::Path;
 use std::sync::Mutex;
 
-/// Helpers researching at once.
-const AT_ONCE: usize = 4;
+/// Helpers researching at once for each step the model takes at once: a
+/// helper spends much of its time on searches and page reads, its model
+/// slot free for another.
+const HELPERS_PER_STEP: usize = 2;
 /// A helper's steps: a few searches and reads, and its notes.
 const HELPER_STEPS: usize = 10;
 /// Questions a reply may give at most, whatever the genre.
@@ -296,7 +298,7 @@ pub(crate) async fn research(
     send(PaperEvent::Phase {
         phase: PaperPhase::Researching,
     });
-    let results: Vec<(String, Result<Vec<Note>, String>)> = stream::iter(questions)
+    let mut results: Vec<(usize, String, Result<Vec<Note>, String>)> = stream::iter(questions)
         .enumerate()
         .map(|(i, question)| async move {
             let notes = research_question(
@@ -320,13 +322,16 @@ pub(crate) async fn research(
                 notes: notes.as_ref().map_or(0, |n| n.len() as u32),
                 failed: notes.is_err(),
             });
-            (question, notes)
+            (i, question, notes)
         })
-        .buffered(AT_ONCE)
+        // Each helper free to finish before those started ahead of it, its
+        // notes put back in the questions' order.
+        .buffer_unordered(model.at_once() * HELPERS_PER_STEP)
         .collect()
         .await;
+    results.sort_by_key(|(i, ..)| *i);
     let mut dossier = Dossier::default();
-    for (question, result) in results {
+    for (_, question, result) in results {
         match result {
             Ok(notes) => dossier.notes.extend(notes),
             Err(message) => send(PaperEvent::Error {

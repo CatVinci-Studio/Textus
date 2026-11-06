@@ -20,8 +20,6 @@ const REVIEW_STEPS: usize = 3;
 /// Points kept against one section: the most important, as the reviewer
 /// ordered them.
 const MAX_PER_SECTION: usize = 3;
-/// Sections revised at once.
-const AT_ONCE: usize = 3;
 
 /// One point against a section.
 #[derive(Debug, Clone, PartialEq)]
@@ -139,7 +137,8 @@ pub(crate) async fn review(
     Ok(issues.unwrap_or_default())
 }
 
-/// `sections` with each one `issues` names revised once, three at a time.
+/// `sections` with each one `issues` names revised once, as many at a time as
+/// the model takes.
 /// `revising` hears of each as it begins; a revision that fails leaves the
 /// draft. Returns which sections changed.
 #[allow(clippy::too_many_arguments)]
@@ -181,7 +180,7 @@ pub(crate) async fn revise(
                 .await,
             )
         })
-        .buffer_unordered(AT_ONCE)
+        .buffer_unordered(model.at_once())
         .collect()
         .await;
     let mut changed = Vec::new();
