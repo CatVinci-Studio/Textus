@@ -378,6 +378,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolSearchPapers: "Sucht Fachartikel zu „{arg}“",
   toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   toolAddNote: "Notiert: {arg}",
+  toolDelegateTask: "Übergeben: {arg}",
   paperOutlineTitle: "Gliederung",
   paperOutlineTotal: "Insgesamt etwa {n} {unit}",
   paperOutlineThesis: "These",

@@ -377,6 +377,7 @@ export default {
   toolSearchPapers: "Поиск статей: «{arg}»",
   toolSearchReferences: "Поиск в источниках: «{arg}»",
   toolAddNote: "Записано: {arg}",
+  toolDelegateTask: "Передано: {arg}",
   paperOutlineTitle: "План",
   paperOutlineTotal: "Всего около {n} {unit}",
   paperOutlineThesis: "Тезис",

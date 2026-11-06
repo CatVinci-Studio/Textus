@@ -30,6 +30,8 @@ export function toolActivityLabels(t: Strings): Record<string, string> {
     search_papers: t.toolSearchPapers,
     // Research's own: a note.
     add_note: t.toolAddNote,
+    // …and a part of its question handed to a helper of its own.
+    delegate_task: t.toolDelegateTask,
     // Any MCP server's tool.
     mcp: t.toolMcp,
     // Any tool without its own line: a word, not its internal name.
@@ -74,6 +76,7 @@ export function toolActivityText(
       args.path,
       args.name,
       args.claim,
+      args.question,
     ].find((v): v is string => typeof v === "string" && v.length > 0) ??
     (typeof args.start_line === "number"
       ? `${args.start_line}–${typeof args.end_line === "number" ? args.end_line : ""}`

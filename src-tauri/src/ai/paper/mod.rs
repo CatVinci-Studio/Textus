@@ -7,6 +7,7 @@
 mod budget;
 mod checks;
 mod choose;
+mod delegate;
 mod draft;
 pub mod drafting;
 mod events;

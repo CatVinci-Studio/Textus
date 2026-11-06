@@ -337,6 +337,7 @@ export default {
   toolSearchPapers: "检索论文「{arg}」",
   toolSearchReferences: "在参考资料中检索「{arg}」",
   toolAddNote: "记下：{arg}",
+  toolDelegateTask: "分派：{arg}",
   paperOutlineTitle: "大纲",
   paperOutlineTotal: "合计约 {n} {unit}",
   paperOutlineThesis: "论点",

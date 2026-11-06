@@ -373,6 +373,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolSearchPapers: "Buscando artigos sobre “{arg}”",
   toolSearchReferences: "Buscando “{arg}” nas referências",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esboço",
   paperOutlineTotal: "Cerca de {n} {unit} no total",
   paperOutlineThesis: "Tese",

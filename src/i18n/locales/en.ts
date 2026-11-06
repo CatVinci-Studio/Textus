@@ -371,6 +371,7 @@ type /name in a conversation to use one.
   toolSearchPapers: "Searching papers for “{arg}”",
   toolSearchReferences: "Searching references for “{arg}”",
   toolAddNote: "Noted: {arg}",
+  toolDelegateTask: "Handing over: {arg}",
   paperOutlineTitle: "Outline",
   paperOutlineTotal: "About {n} {unit} in all",
   paperOutlineThesis: "Thesis",

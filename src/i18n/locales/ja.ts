@@ -359,6 +359,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolSearchPapers: "論文で「{arg}」を検索",
   toolSearchReferences: "参考資料で「{arg}」を検索",
   toolAddNote: "メモ：{arg}",
+  toolDelegateTask: "分担：{arg}",
   paperOutlineTitle: "アウトライン",
   paperOutlineTotal: "合計 約 {n} {unit}",
   paperOutlineThesis: "主題文",

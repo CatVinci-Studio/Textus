@@ -388,6 +388,7 @@ utiliser une.
   toolSearchPapers: "Recherche d’articles sur « {arg} »",
   toolSearchReferences: "Recherche de « {arg} » dans les références",
   toolAddNote: "Noté : {arg}",
+  toolDelegateTask: "Confié : {arg}",
   paperOutlineTitle: "Plan",
   paperOutlineTotal: "Environ {n} {unit} au total",
   paperOutlineThesis: "Thèse",

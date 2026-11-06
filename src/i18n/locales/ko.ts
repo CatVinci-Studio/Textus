@@ -353,6 +353,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolSearchPapers: "논문에서 “{arg}” 검색 중",
   toolSearchReferences: "참고 자료에서 “{arg}” 검색 중",
   toolAddNote: "메모: {arg}",
+  toolDelegateTask: "위임: {arg}",
   paperOutlineTitle: "개요",
   paperOutlineTotal: "모두 약 {n} {unit}",
   paperOutlineThesis: "논지",

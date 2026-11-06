@@ -385,6 +385,7 @@ para usar una.
   toolSearchPapers: "Buscando artículos sobre «{arg}»",
   toolSearchReferences: "Buscando «{arg}» en las referencias",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esquema",
   paperOutlineTotal: "Unas {n} {unit} en total",
   paperOutlineThesis: "Tesis",
