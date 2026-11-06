@@ -51,6 +51,7 @@ pub async fn ai_paper_draft(
     };
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(None).await?;
+        let throttled = throttle::Throttled::new(&agent, session.entry.paper_at_once);
         let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
         let mut keep_spent = KeepSpent {
             root: &root,
@@ -60,7 +61,7 @@ pub async fn ai_paper_draft(
             done: false,
         };
         let metered = model::Metered {
-            inner: &agent,
+            inner: &throttled,
             budget: &budget,
         };
         let guidance = session.guidance(&files.paper.topic);

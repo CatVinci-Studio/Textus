@@ -289,6 +289,8 @@ tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 # Throwaway folders for the walker's tests (src/walk.rs), removed when
 # dropped. Already in the tree through tauri-plugin-updater.
 tempfile = "3"
+# A paused clock for the tests that time concurrent work (start_paused).
+tokio = { version = "1", features = ["test-util"] }
 # The TypeScript side of the commands the frontend calls
 # (src/platform/bindings/), generated from their Rust signatures by a test
 # (src/bindings.rs) so the two cannot drift. Test-only: the attributes are

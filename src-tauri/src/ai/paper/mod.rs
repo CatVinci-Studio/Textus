@@ -23,6 +23,7 @@ mod sources;
 pub mod status;
 mod store;
 mod stream;
+mod throttle;
 mod timeline;
 mod web_figures;
 
@@ -276,8 +277,9 @@ pub async fn ai_paper_run(
     });
     crate::ai::cancel::cancellable(request_id, async {
         let agent = session.agent(native).await?;
+        let throttled = throttle::Throttled::new(&agent, entry.paper_at_once);
         let agent = model::Metered {
-            inner: &agent,
+            inner: &throttled,
             budget: &budget,
         };
         let mut files = match kept {
