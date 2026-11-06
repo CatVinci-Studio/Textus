@@ -236,6 +236,15 @@ export const drafts = {
   clearAllDrafts: () => command("clear_all_drafts"),
 };
 
+/** A document's undo history kept beside the app's data while its editor
+ *  is let go, used when it opens at the same text again. */
+export const undoFiles = {
+  save: (path: string, hash: string, history: string) =>
+    command("undo_file_save", path, hash, history),
+  load: (path: string, hash: string) => command("undo_file_load", path, hash),
+  move: (from: string, to: string) => command("undo_file_move", from, to),
+};
+
 /** What the writer keeps on a document beside the app's data, as JSON:
  *  their notes, or the changes they track. */
 export const ownNotes = {

@@ -26,3 +26,17 @@ it("lets a view out of sight go after a while, and keeps three at most", () => {
   vi.advanceTimersByTime(KEEP_HIDDEN_MS);
   expect(gone).toEqual([0, 1]);
 });
+
+it("keeps one held while it must stay, and lets it go once it needn't", () => {
+  vi.useFakeTimers();
+  const unload = vi.fn();
+  let held = true;
+  const view = keepLoaded("held", unload, { hold: () => held });
+  view.shown();
+  view.hidden();
+  vi.advanceTimersByTime(KEEP_HIDDEN_MS * 3);
+  expect(unload).not.toHaveBeenCalled();
+  held = false;
+  vi.advanceTimersByTime(KEEP_HIDDEN_MS);
+  expect(unload).toHaveBeenCalledTimes(1);
+});

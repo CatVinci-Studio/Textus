@@ -135,6 +135,7 @@ import {
 } from "./images/obsidian-embed";
 import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
 import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createUndoFilePlugin } from "./undo-file";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
@@ -391,6 +392,7 @@ export function withEditorCore(
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
       .use(history)
+      .use(disk ? createUndoFilePlugin(() => docPath.current) : [])
       .use(ownUndoStepPlugin)
       .use(changeSourcePlugin)
       .use(

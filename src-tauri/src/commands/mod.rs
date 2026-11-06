@@ -40,6 +40,7 @@ pub mod theme_gallery;
 pub mod themes;
 #[cfg(desktop)]
 pub mod tree_ops;
+pub mod undo_files;
 #[cfg(desktop)]
 pub mod update;
 pub mod vault;

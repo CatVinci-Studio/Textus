@@ -106,6 +106,7 @@ export function useEditorSetup({
   useSettingsRedraw(run, settings);
 
   return {
+    tabId,
     run,
     reporting,
     clipboard,

@@ -11,6 +11,7 @@ export const KEEP_HIDDEN_MS = 5 * 60_000;
 interface Kept {
   visible: boolean;
   seen: number;
+  hold: () => boolean;
   unload: () => void;
 }
 
@@ -25,10 +26,17 @@ export interface KeptHandle {
   drop(): void;
 }
 
+export interface KeepOptions {
+  hiddenMs?: number;
+  max?: number;
+  /** True while it must stay loaded though hidden: asked again later. */
+  hold?: () => boolean;
+}
+
 export function keepLoaded(
   group: string,
   unload: () => void,
-  { hiddenMs = KEEP_HIDDEN_MS, max = 3 } = {},
+  { hiddenMs = KEEP_HIDDEN_MS, max = 3, hold = () => false }: KeepOptions = {},
 ): KeptHandle {
   const kept = groups.get(group) ?? new Map<object, Kept>();
   groups.set(group, kept);
@@ -37,11 +45,16 @@ export function keepLoaded(
   const entry: Kept = {
     visible: false,
     seen: Date.now(),
+    hold,
     unload: () => {
       kept.delete(key);
       clearTimeout(timer);
       unload();
     },
+  };
+  const later = () => {
+    if (hold()) timer = window.setTimeout(later, hiddenMs);
+    else entry.unload();
   };
   return {
     shown() {
@@ -50,7 +63,7 @@ export function keepLoaded(
       clearTimeout(timer);
       kept.set(key, entry);
       const hidden = [...kept.values()]
-        .filter((k) => !k.visible)
+        .filter((k) => !k.visible && !k.hold())
         .sort((a, b) => a.seen - b.seen);
       while (kept.size > max && hidden.length) hidden.shift()!.unload();
     },
@@ -58,7 +71,7 @@ export function keepLoaded(
       entry.visible = false;
       entry.seen = Date.now();
       clearTimeout(timer);
-      timer = window.setTimeout(entry.unload, hiddenMs);
+      timer = window.setTimeout(later, hiddenMs);
     },
     drop() {
       clearTimeout(timer);
@@ -69,9 +82,15 @@ export function keepLoaded(
 
 /** Whether a view of `group` should be mounted: true while `visible`, and
  *  for a while after; false once let go, until shown again. */
-export function useKeptLoaded(group: string, visible: boolean): boolean {
+export function useKeptLoaded(
+  group: string,
+  visible: boolean,
+  options?: KeepOptions,
+): boolean {
   const [loaded, setLoaded] = useState(visible);
-  const [handle] = useState(() => keepLoaded(group, () => setLoaded(false)));
+  const [handle] = useState(() =>
+    keepLoaded(group, () => setLoaded(false), options),
+  );
   useEffect(() => {
     if (visible) {
       setLoaded(true);

@@ -281,6 +281,23 @@ export function installDevTauriShim(): void {
         else kept[key] = String(args.value);
         return Promise.resolve(null);
       }
+      case "undo_file_save": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        kept[String(args.path)] = [String(args.hash), String(args.history)];
+        return Promise.resolve(null);
+      }
+      case "undo_file_load": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        const [hash, history] = kept[String(args.path)] ?? [];
+        return Promise.resolve(hash === args.hash ? history : null);
+      }
+      case "undo_file_move": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        const from = String(args.from);
+        if (kept[from]) kept[String(args.to)] = kept[from];
+        delete kept[from];
+        return Promise.resolve(null);
+      }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
       case "floating_desktop_supported":

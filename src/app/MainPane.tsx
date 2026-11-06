@@ -1,4 +1,5 @@
 import { useKeptLoaded } from "../utils/kept-loaded";
+import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
 import { Suspense, type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -66,6 +67,28 @@ function KeptWhileHidden({
   children: ReactNode;
 }) {
   return useKeptLoaded("plugin-view", shown) ? children : null;
+}
+
+/** A document's editor out of sight ten minutes is let go, unless Textus
+ *  AI or undecided changes live in it, or it has no file to come back
+ *  from; shown again, it opens at its text with its undo history. */
+const EDITOR_HIDDEN_MS = 10 * 60_000;
+
+function EditorKept({
+  tabId,
+  shown,
+  children,
+}: {
+  tabId: string;
+  shown: boolean;
+  children: ReactNode;
+}) {
+  const loaded = useKeptLoaded("editor", shown, {
+    hiddenMs: EDITOR_HIDDEN_MS,
+    max: Infinity,
+    hold: () => editorHeld(tabId),
+  });
+  return loaded ? children : null;
 }
 
 export function MainPane({
@@ -247,8 +270,8 @@ export function MainPane({
           )
         : showTabBar && tabBar(tabs, activeTabId, null)}
 
-      {/* Every tab's editor stays mounted, just hidden, so switching keeps
-        undo history, scroll position and in-flight AI state. */}
+      {/* A tab's editor stays mounted while hidden, so switching keeps its
+        state; one out of sight a long while is let go (EditorKept). */}
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = shownIn.get(tab.id);
@@ -317,18 +340,23 @@ export function MainPane({
                 readOnly={tabReadOnly(tab)}
               />
             ) : (
-              <EditorPane
-                key={`${tab.id}-${tab.reloadKey}`}
+              <EditorKept
                 tabId={tab.id}
-                filePath={tab.path}
-                docTitle={tabTitle(tab, t)}
-                initialValue={tab.content}
-                onChange={onChange}
-                isActive={tab.id === activeTabId}
-                tour={tour && tab.id === tour.tabId ? tour.ai : null}
-                tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
-                readOnly={tabReadOnly(tab)}
-              />
+                shown={tab.id === activeTabId || !!pane || !tab.path}
+              >
+                <EditorPane
+                  key={`${tab.id}-${tab.reloadKey}`}
+                  tabId={tab.id}
+                  filePath={tab.path}
+                  docTitle={tabTitle(tab, t)}
+                  initialValue={tab.content}
+                  onChange={onChange}
+                  isActive={tab.id === activeTabId}
+                  tour={tour && tab.id === tour.tabId ? tour.ai : null}
+                  tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
+                  readOnly={tabReadOnly(tab)}
+                />
+              </EditorKept>
             )}
           </div>
         );

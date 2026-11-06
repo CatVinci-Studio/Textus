@@ -2,6 +2,7 @@ import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
 import type { SentBlock } from "../ai/doc-blocks";
 import { moveDocumentData } from "./store/document-data";
+import { undoFiles } from "../platform/ipc-files";
 import type { EditProposal } from "../ai/types";
 import type { ChangeSource } from "../editor/change-source";
 import type { AppState } from "../platform/ipc-schedule";
@@ -200,9 +201,10 @@ export function emitPluginEvent<K extends keyof PluginEventMap>(
 }
 
 /** A document or folder was renamed or moved: plugins hear it, and what they
- *  keep for its documents moves with it. */
+ *  and the editor (its undo history) keep for its documents moves with it. */
 export async function notePathMoved(from: string, to: string): Promise<void> {
   emitPluginEvent("fileRename", { from, to });
+  void undoFiles.move(from, to).catch(() => {});
   await moveDocumentData(from, to);
 }
 

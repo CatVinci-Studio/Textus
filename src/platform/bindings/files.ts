@@ -128,6 +128,12 @@ export const commands = {
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
+	/**  Keeps `history` for the document at `path` whose text hashes to `hash`. */
+	undo_file_save: (path: string, hash: string, history: string) => __TAURI_INVOKE<null>("undo_file_save", { path, hash, history }),
+	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
+	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
+	/**  The history kept for `from` follows the document to `to`. */
+	undo_file_move: (from: string, to: string) => __TAURI_INVOKE<null>("undo_file_move", { from, to }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.
