@@ -86,6 +86,17 @@ export type DiagramEngine = (typeof DIAGRAM_ENGINES)[number];
 
 /// Colour swatches: none; in code (inline code and code-block literals);
 /// everywhere (that and colour codes in the text).
+/** The formats Settings › Advanced takes Pandoc arguments for: Pandoc's
+ *  writer names, with "all" for every Pandoc export. */
+export const PANDOC_ARGS_FORMATS = [
+  "all",
+  "docx",
+  "latex",
+  "epub",
+  "odt",
+] as const;
+export type PandocArgsFormat = (typeof PANDOC_ARGS_FORMATS)[number];
+
 export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
 export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
@@ -334,6 +345,12 @@ export interface Settings {
   /// Whether startup reopens last session's documents. Rust reads it before
   /// any webview exists; it also lets an update relaunch reopen what was open.
   restoreSessionOnStartup: boolean;
+  /** A window nothing opens in at launch shows the start page instead of a
+   *  blank document (with restoreSessionOnStartup off). */
+  startPageOnLaunch: boolean;
+  /** Closing the last document shows the start page instead of closing
+   *  the window. */
+  closeLastToStartPage: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
   /** Write a document that has a file back to it once typing rests. */
@@ -346,6 +363,17 @@ export interface Settings {
   /** A Word file whose styles, fonts and margins a Word export takes
    *  (Pandoc's reference document); "" for Pandoc's own. */
   docxReferenceDoc: string;
+  /** Pandoc exports open with a table of contents. */
+  exportToc: boolean;
+  /** Pandoc exports number their headings as Heading Numbers does. */
+  exportNumberHeadings: boolean;
+  /** A .bib file Pandoc's citeproc reads `[@key]` from; "" for none. */
+  exportBibliography: string;
+  /** The citation style (.csl) for it; "" for Pandoc's (Chicago). */
+  exportCsl: string;
+  /** The user's own Pandoc arguments by format ("all" for every one), as
+   *  argv lists; never run through a shell. */
+  pandocArgs: Partial<Record<PandocArgsFormat, string[]>>;
   /** Which releases the updater offers: "stable", or "beta" for release
    *  candidates as well. */
   updateChannel: UpdateChannel;
@@ -437,11 +465,18 @@ export const DEFAULT_SETTINGS: Settings = {
   userThemes: [],
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
+  startPageOnLaunch: false,
+  closeLastToStartPage: false,
   autoSuggestFilename: true,
   autosave: false,
   pdfPageNumbers: false,
   pdfLightColors: false,
   docxReferenceDoc: "",
+  exportToc: false,
+  exportNumberHeadings: false,
+  exportBibliography: "",
+  exportCsl: "",
+  pandocArgs: {},
   updateChannel: "stable",
   onboardingShown: false,
   enableChatHistory: true,

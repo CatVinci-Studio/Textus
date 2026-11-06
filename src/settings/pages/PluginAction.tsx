@@ -1,4 +1,5 @@
-import { useState, useSyncExternalStore } from "react";
+import { useMenuButton } from "../../ui/useMenuButton";
+import { useSyncExternalStore } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
   pluginName,
@@ -12,7 +13,6 @@ import {
   updateFor,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePluginInstall } from "./usePluginInstall";
 
 /** The plugin actions, and `actionFor(id)`: plugin `id`'s button, from
@@ -79,12 +79,6 @@ export function PluginAction({
   onEnable: (on: boolean) => void;
   onUninstall: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setOpen(false),
-    true,
-    open,
-  );
   let main: Action;
   const menu: Action[] = [];
   if (!record) {
@@ -117,8 +111,13 @@ export function PluginAction({
     } else main = toggle ?? uninstall;
     if (main !== uninstall) menu.push(uninstall);
   }
+  const more = useMenuButton(
+    () =>
+      menu.map((a) => ({ label: a.label, danger: a.danger, onSelect: a.run })),
+    { alignEnd: true },
+  );
   return (
-    <div className="plugin-action" ref={ref}>
+    <div className="plugin-action">
       <button
         type="button"
         className={`text-button plugin-action-main${menu.length ? " is-split" : ""}${main.danger ? " danger" : ""}`}
@@ -132,34 +131,15 @@ export function PluginAction({
           type="button"
           className="text-button plugin-action-more"
           aria-label={t.pluginMoreFor.replace("{name}", name)}
-          aria-haspopup="menu"
-          aria-expanded={open}
           disabled={installing}
-          onClick={() => setOpen((v) => !v)}
+          {...more.button}
         >
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M4 6l4 4 4-4" />
           </svg>
         </button>
       )}
-      {open && (
-        <div className="extensions-more-menu floating-surface" role="menu">
-          {menu.map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              role="menuitem"
-              className={`context-menu-item${action.danger ? " danger" : ""}`}
-              onClick={() => {
-                setOpen(false);
-                action.run();
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {more.menu}
     </div>
   );
 }

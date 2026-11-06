@@ -58,3 +58,10 @@
 .context-submenu {
   animation: none;
 }
+
+/* A menu's name above its items, when it hangs from a named button. */
+.context-menu-heading {
+  padding: 4px 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}

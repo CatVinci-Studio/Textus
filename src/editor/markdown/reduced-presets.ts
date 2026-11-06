@@ -18,6 +18,10 @@ import {
   toggleInlineCodeCommand,
   htmlSchema,
   htmlAttr,
+  linkSchema,
+  linkAttr,
+  toggleLinkCommand,
+  updateLinkCommand,
   remarkInlineLinkPlugin,
   remarkPreserveEmptyLinePlugin,
   syncHeadingIdPlugin,
@@ -52,6 +56,7 @@ import { isLinuxPlatform } from "../../platform/os";
 // - remarkPreserveEmptyLinePlugin: it saved empty paragraphs as `<br />`;
 // - htmlSchema: replaced by a real-text node, and the parser takes the first
 //   matching schema, so the stock one must be gone;
+// - the link mark and its commands: a link is a node holding its source;
 // - syncListOrderPlugin: its late attr change replaced the <li> mid-IME
 //   composition; numbering is a CSS counter anyway;
 // - syncHeadingIdPlugin: it walked the whole document after every edit;
@@ -79,6 +84,10 @@ const excludedCommonmarkPieces = [
   toggleInlineCodeCommand,
   htmlSchema,
   htmlAttr,
+  linkSchema,
+  linkAttr,
+  toggleLinkCommand,
+  updateLinkCommand,
   remarkPreserveEmptyLinePlugin,
   syncListOrderPlugin,
   syncHeadingIdPlugin,

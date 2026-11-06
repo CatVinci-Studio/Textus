@@ -1,10 +1,12 @@
 /**
  * What the pointer rests on in the editor (a document link, another link, or
- * a `[@key]` citation), and the plugins with a card for it. The first plugin
- * that answers is shown.
+ * a `[@key]` citation), and the plugins with a card for it. A kind a plugin
+ * declares (contributes.hovers) is asked of its owner alone; any other, of
+ * the plugins that declared none, the first that answers shown.
  */
 
 import type { HoverCard, HoverTarget } from "../../editor/extension-points";
+import { claimKey, ownerOf } from "./owners";
 export type { HoverCard, HoverTarget };
 
 type Provide = (target: HoverTarget) => Promise<HoverCard | null>;
@@ -12,10 +14,15 @@ type Provide = (target: HoverTarget) => Promise<HoverCard | null>;
 /** How long a plugin has to answer before the next is asked. */
 const ANSWER_MS = 1500;
 
-const providers = new Map<string, Provide>();
+/** By plugin, with the kinds its manifest declares. */
+const providers = new Map<string, { provide: Provide; declared: boolean }>();
 
-export function addHoverProvider(plugin: string, provide: Provide): void {
-  providers.set(plugin, provide);
+export function addHoverProvider(
+  plugin: string,
+  provide: Provide,
+  declared = false,
+): void {
+  providers.set(plugin, { provide, declared });
 }
 
 export function removeHoverProvider(plugin: string): void {
@@ -44,7 +51,12 @@ export async function provideHover(
   target: HoverTarget,
 ): Promise<HoverCard | null> {
   if (waiting > 0 && startWaiting) await startWaiting().catch(() => {});
-  for (const provide of [...providers.values()]) {
+  const owner = ownerOf(claimKey.hover(target.type));
+  const asked = owner
+    ? [providers.get(owner)?.provide]
+    : [...providers.values()].filter((p) => !p.declared).map((p) => p.provide);
+  for (const provide of asked) {
+    if (!provide) continue;
     const card = await Promise.race([
       provide(target).catch(() => null),
       new Promise<null>((resolve) =>

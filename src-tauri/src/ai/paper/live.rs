@@ -10,8 +10,11 @@
 //!
 //! MiniMax by default, its key read in place from the app's key file (or
 //! MINIMAX_API_KEY); TEXTUS_PAPER_TOPIC, TEXTUS_PAPER_GENRE ("paper",
-//! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS and
-//! TEXTUS_EVAL_AGENT_MODEL change the run.
+//! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS,
+//! TEXTUS_PAPER_AT_ONCE and TEXTUS_EVAL_AGENT_MODEL change the run. TEXTUS_PAPER_PROMPTS runs it on
+//! prompts of another wording, read from a folder laid out as prompts/ is
+//! (prompts.rs): copy the files to change, edit them, and compare the two
+//! runs' output - each is kept under its prompts' fingerprint.
 
 use super::*;
 use aicompat::capabilities::ThinkingLevel;
@@ -65,6 +68,15 @@ fn live_paper() {
         native_search: None,
         enforce_binding: false,
     };
+    // As the app steps it: TEXTUS_PAPER_AT_ONCE calls at once, else
+    // MiniMax's.
+    let at_once = env_or("TEXTUS_PAPER_AT_ONCE", "0")
+        .parse()
+        .ok()
+        .filter(|n| *n > 0)
+        .unwrap_or(entry.paper_at_once);
+    let agent = throttle::Throttled::new(&agent, at_once);
+    eprintln!("live_paper: {at_once} model calls at once");
     let mut budget = ResearchBudget::for_paper();
     // No image model in this run: AI pictures cost money and need a service.
     budget.limits.images = 0;
@@ -80,10 +92,14 @@ fn live_paper() {
     };
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../tmp/live-paper")
-        .join(format!("{}-{}", paper.id, model));
+        .join(format!("{}-{}-{}", paper.id, model, prompts::fingerprint()));
     std::fs::create_dir_all(&out).unwrap();
     let write = |name: &str, text: &str| std::fs::write(out.join(name), text).unwrap();
     let mut stats = serde_json::Map::new();
+    stats.insert("prompts".into(), json!(prompts::fingerprint()));
+    if let Ok(folder) = std::env::var("TEXTUS_PAPER_PROMPTS") {
+        stats.insert("prompts_from".into(), json!(folder));
+    }
     let started = Instant::now();
     let lap =
         |stats: &mut serde_json::Map<String, serde_json::Value>, stage: &str, since: Instant| {
@@ -118,9 +134,17 @@ fn live_paper() {
             tools: &tools,
             ctx: &ctx,
         };
-        let dossier = research::research(&agent, &paper, &web, &shared, &send, &kit)
-            .await
-            .expect("research");
+        let dossier = research::research(
+            &agent,
+            &paper,
+            &web,
+            &shared,
+            &send,
+            &kit,
+            research::Progress::none(),
+        )
+        .await
+        .expect("research");
         lap(&mut stats, "research", t);
         write(
             "dossier.json",
@@ -146,8 +170,7 @@ fn live_paper() {
         stats.insert("sections_planned".into(), json!(outline.sections.len()));
 
         let t = Instant::now();
-        let mut sections: Vec<String> = Vec::new();
-        draft::draft(
+        let mut sections = draft::draft(
             &agent,
             &paper,
             &outline,
@@ -160,10 +183,10 @@ fn live_paper() {
                     i + 1,
                     draft::prose_length(md, &paper.language)
                 );
-                sections.push(md.to_string());
                 Ok(())
             },
             &|_| {},
+            None,
         )
         .await
         .expect("drafting");
@@ -191,6 +214,7 @@ fn live_paper() {
             &issues,
             &|_| {},
             &|_| {},
+            None,
         )
         .await;
         lap(&mut stats, "review", t);
@@ -198,23 +222,34 @@ fn live_paper() {
         stats.insert("sections_revised".into(), json!(changed));
 
         let t = Instant::now();
+        let mut sections: Vec<String> =
+            web_figures::resolve(&sections, web_figures::find_on_commons)
+                .await
+                .iter()
+                .map(|s| finish::without_pictures(s))
+                .collect();
+        // No window draws here: only figures known not to draw go.
         for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
-            *section = finish::without_pictures(section);
+            *section = super::figures::drawable(None, section).await;
         }
         let figures = finish::number_figures(&mut sections, &paper.language);
         let mut dossier = finish::number_citations(&mut sections, &dossier);
-        finish::title_sources(&mut dossier).await;
+        let plain: Vec<String> = sections
+            .iter()
+            .map(|s| finish::plain_citations(s))
+            .collect();
+        // As ai_paper_draft finishes: the opening while titles are looked up.
+        let ((), opening) = futures_util::future::join(
+            finish::title_sources(&mut dossier),
+            finish::opening(&agent, &paper, &outline, &plain),
+        )
+        .await;
         let references = finish::references(
             &sections,
             &dossier,
             finish::references_heading(&paper.language, paper.genre),
         );
-        let sections: Vec<String> = sections
-            .iter()
-            .map(|s| finish::plain_citations(s))
-            .collect();
-        let opening = finish::opening(&agent, &paper, &outline, &sections).await;
+        let sections = plain;
         let markdown = finish::assemble(&opening, &sections, references.as_deref());
         lap(&mut stats, "finish", t);
         stats.insert("figures".into(), json!(figures));

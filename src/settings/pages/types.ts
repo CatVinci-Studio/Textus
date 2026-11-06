@@ -40,6 +40,8 @@ export interface SettingsPageProps {
   onClose: () => void;
   /** Files a settings action deleted, for the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
+  /** The document in front, for what its project sets. */
+  docPath?: string | null;
   /** The shortcuts that can't be changed. */
   fixedShortcuts: FixedShortcutGroup[];
   /** The commands plugins add, whose keys can be set. */

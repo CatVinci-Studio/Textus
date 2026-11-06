@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://textus.catvinci.com"><strong>Sitio web</strong></a> ·
+  <a href="https://textus.md"><strong>Sitio web</strong></a> ·
   <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><strong>Descargar</strong></a>
 </p>
 
@@ -31,7 +31,7 @@
   <a href="https://github.com/CatVinci-Studio/Textus/releases/latest"><img alt="version" src="https://img.shields.io/github/v/release/CatVinci-Studio/Textus"></a>
   <a href="./LICENSE"><img alt="license" src="https://img.shields.io/badge/license-MIT-yellow"></a>
   <a href="https://github.com/CatVinci-Studio/Textus/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/CatVinci-Studio/Textus/ci.yml?branch=main&label=CI"></a>
-  <a href="https://textus.catvinci.com/discord"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white"></a>
+  <a href="https://textus.md/discord"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white"></a>
   <a href="https://github.com/jaywcjlove/awesome-mac"><img alt="Awesome Mac" src="https://img.shields.io/badge/Awesome-Mac-FC60A8?logo=awesomelists&logoColor=white"></a>
 </p>
 
@@ -146,8 +146,8 @@ Sí: archivos .md normales, con tablas, listas de tareas, notas al pie, fórmula
 
 ## Comunidad
 
-- [Discord](https://textus.catvinci.com/discord): novedades, ayuda y comentarios, en inglés.
-- En chino: [grupo de QQ](https://textus.catvinci.com/qq) (1128285004) · [grupo de WeChat](https://textus.catvinci.com/wechat)
+- [Discord](https://textus.md/discord): novedades, ayuda y comentarios, en inglés.
+- En chino: [grupo de QQ](https://textus.md/qq) (1128285004) · [grupo de WeChat](https://textus.md/wechat)
 
 Los errores y las sugerencias son bienvenidos en [GitHub Issues](https://github.com/CatVinci-Studio/Textus/issues).
 

@@ -2,7 +2,7 @@
 
 {description}
 
-A plugin for [Textus](https://textus.catvinci.com).
+A plugin for [Textus](https://textus.md).
 
 ## Install
 

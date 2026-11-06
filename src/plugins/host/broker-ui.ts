@@ -36,11 +36,14 @@ export function uiHandlers(p: PluginScope) {
     "commands.unregister": ({ command }: Params) => {
       p.deps.commandUnregistered(p.id, str(command, "command"));
     },
-    "commands.execute": ({ command, args }: Params) =>
-      p.deps.runCommand(
-        str(command, "command"),
-        Array.isArray(args) ? args : [],
-      ),
+    "commands.execute": ({ command, args }: Params) => {
+      const id = str(command, "command");
+      const list = Array.isArray(args) ? args : [];
+      // Here rather than an app command, so the dialog can say who asks.
+      if (id === "textus.offerPlugin")
+        return p.deps.offerPlugin({ id: p.id, name: p.name() }, list[0]);
+      return p.deps.runCommand(id, list);
+    },
     "ui.notice": ({ text, tone: kind }: Params) => {
       showNotice(str(text, "text"), { tone: tone(kind), source: p.name() });
     },

@@ -24,7 +24,7 @@ type-only import may cross, since it leaves nothing behind at runtime.
    plugins/            the plugin system: plugs into the shell's commands, tabs, panes
    playground/         the browser playground: the editor core in a web page
    document-view/      the document on screen: MilkdownEditor + its AI, assembled
-4  ai/  editor/  export/  sidebar/  mobile/  onboarding/  document/  clipboard/
+4  ai/  editor/  export/  links/  sidebar/  mobile/  onboarding/  document/  clipboard/
    settings/  theme/   features (editor is below ai: ai builds on it);
                        settings/ is the Settings window
 3  ui/                 shared widgets: dialogs, Select, icons, sheets, motion
@@ -33,7 +33,7 @@ type-only import may cross, since it leaves nothing behind at runtime.
 1  platform/  i18n/  utils/   the backend bridge, OS facts, strings, pure helpers
 ```
 
-Inside layer 4, `editor/` never imports `ai/`, `document/`, `export/`,
+Inside layer 4, `editor/` never imports `ai/`, `document/`, `export/`, `links/`,
 `sidebar/`, `mobile/` or `onboarding/`: the Markdown editor works on its own,
 and the features attach to it, not the other way round. `main.tsx` picks the
 window to render (the editor window, or the detached chat window).
@@ -99,6 +99,7 @@ remembering them:
 | `export/`        | File > Export: PDF and HTML from the rendered page (`exporters`, `paginate`, `print.css`), everything else through pandoc (`pandoc-markdown` rewrites what pandoc can't read; `diagram-images` draws diagrams as pictures for Word, OpenDocument, EPUB and RTF).                                                                                                                                                                                                                                                          |
 | `theme/`         | How documents look and how themes are read: the default look, the document CSS (`content-base.css`), importing a Typora theme (`theme-import`, `typora-compat`), installing one from the public theme gallery (`theme-gallery`) or from an AI reply (`chat-theme`), deriving window colours from it (`theme-chrome`), exporting one (`theme-export`), and putting the appearance settings on the page (`apply-appearance`).                                                                                               |
 | `settings/`      | The settings model and store (`SettingsContext`, `settings-sync`), the Settings window and its sections.                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `links/`         | Notes and the links between them, for the whole app: one resolver for every way a link is followed (`link-resolve`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder or vault does (`link-style`), rewriting links when a note moves (`link-rewrite`), block ids (`block-id`).                                                                                                                                                                                                          |
 | `sidebar/`       | File tree, outline, clipboard history.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `clipboard/`     | The clipboard history: the list and the editor plugin that records copies.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `mobile/`        | Phone-only screens: the document list and the keyboard toolbar; `styles/` holds the phone layout's CSS.                                                                                                                                                                                                                                                                                                                                                                                                                   |

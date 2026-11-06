@@ -349,6 +349,17 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUpdatePlugin: "Plugin aktualisieren",
   chatSaveSkill: "Diese Fähigkeit speichern",
   chatUpdateSkill: "Fähigkeit aktualisieren",
+  skillSaveAnyway: "Trotzdem speichern",
+  skillWarnCreateAsked:
+    "Sie verlangt den Erstellen-Modus, in dem sie selbst Fähigkeiten schreiben könnte. Erstellen bleibt abgewählt: Wählen Sie es nur, wenn Sie jeder Zeile vertrauen.",
+  skillWarnCreateMode:
+    "Im Erstellen-Modus könnte sie selbst Fähigkeiten schreiben oder ändern. Lassen Sie sie dort nur, wenn Sie jeder Zeile vertrauen.",
+  skillWarnPromptInjection:
+    "Ihre Anweisungen wirken, als wollten sie die von Textus AI aushebeln („vorherige Anweisungen ignorieren“). Lesen Sie sie vor dem Speichern.",
+  skillWarnHiddenText:
+    "Sie enthält unsichtbare Zeichen, die Anweisungen verbergen können. Lesen Sie sie vor dem Speichern.",
+  chatShowCode: "Code ansehen",
+  chatShowSkill: "Fähigkeit ansehen",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
   chatPluginCheckDom:
@@ -431,6 +442,22 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperSectionDrafted: "Geschrieben",
   paperSectionRevising: "Wird überarbeitet",
   paperSectionFailed: "Fehlgeschlagen",
+  paperSectionsAtOnce: {
+    one: "{n} Abschnitt wird gleichzeitig geschrieben · {done} von {of} fertig",
+    other:
+      "{n} Abschnitte werden gleichzeitig geschrieben · {done} von {of} fertig",
+  },
+  paperRevisingAtOnce: {
+    one: "{n} Abschnitt wird gleichzeitig überarbeitet · {done} von {of} fertig",
+    other:
+      "{n} Abschnitte werden gleichzeitig überarbeitet · {done} von {of} fertig",
+  },
+  paperQuestionsAtOnce: {
+    one: "{n} Frage wird gleichzeitig recherchiert · {done} von {of} fertig",
+    other:
+      "{n} Fragen werden gleichzeitig recherchiert · {done} von {of} fertig",
+  },
+  paperDoneOf: "{done} von {of} fertig",
   paperOutlineRetry:
     "Entwurf {n}: Der letzte hat die Prüfung nicht bestanden und wird neu erstellt…",
   paperPapersOnly:
@@ -448,6 +475,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webSources: "Quellen",
   proposalSourcesAsFootnotes: "Quellen als Fußnoten einfügen",
   menuToggleSplitView: "Quelltext und Vorschau",
+  splitPreview: "Vorschau",
   menuToggleZenMode: "Zen-Modus",
   menuSplitRight: "Rechts teilen",
   menuCommandPalette: "Befehlspalette…",
@@ -512,8 +540,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   outlineEmpty:
     "Noch keine Überschriften – Zeilen, die mit # beginnen, erscheinen hier.",
   treeRefresh: "Aktualisieren",
-  menuOpenFolder: "Ordner öffnen…",
-  menuCloseFolder: "Ordner schließen",
+  menuOpenFolder: "Projekt öffnen…",
+  menuCloseFolder: "Projekt schließen",
   menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
@@ -523,7 +551,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchCapped:
     "Nur die ersten {n} Dateien wurden durchsucht. Öffne einen kleineren Ordner, um alles zu durchsuchen.",
   treeSearchTooBroad:
-    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Ordner öffnen… einen spezifischeren.",
+    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Projekt öffnen… einen spezifischeren.",
   treeSearchFailed: "Dieser Ordner kann nicht gelesen werden.",
   treeSearchScope: "Anzeigen",
   treeSearchScopeAll: "Alle Dateien",
@@ -541,6 +569,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeRenameItem: "Umbenennen…",
   treeRename: "Umbenennen",
   treeRenamePrompt: "Neuer Name",
+  treeUpdateLinksConfirm:
+    "Links zu und aus „{name}“ aktualisieren, damit sie weiter funktionieren?",
+  treeUpdateLinks: "Links aktualisieren",
+  treeKeepLinks: "Nicht aktualisieren",
+  treeUpdateLinksFailed:
+    "Die Links dieser Dokumente konnten nicht aktualisiert werden: {names}",
+  treeDocumentFolder: "Ordner des aktuellen Dokuments",
+  treeOpenAsFolder: "Als Projekt öffnen",
   treeTrashItem: "In den Papierkorb",
   treeTrash: "In den Papierkorb",
   treeTrashConfirm:
@@ -604,6 +640,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   alertWarning: "Warnung",
   alertCaution: "Vorsicht",
   tocLabel: "Inhaltsverzeichnis",
+  completionCommands: "Befehle",
+  completionEmoji: "Emoji",
+  completionNotes: "Notizen",
   tocEmpty: "Noch keine Überschriften",
   settingsTitle: "Einstellungen",
   settingsSearchPlaceholder: "Einstellungen durchsuchen",
@@ -769,6 +808,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   deleteRow: "Zeile löschen",
   deleteColumn: "Spalte löschen",
   deleteTable: "Tabelle löschen",
+  tableToMarkdown: "In Markdown-Tabelle umwandeln",
+  tableToMarkdownMerged:
+    "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
+  tableToMarkdownBlocks:
+    "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",
@@ -975,6 +1019,25 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Exportierte Word-Dateien übernehmen Formatvorlagen, Schriften und Ränder dieser Datei.",
   docxTemplateNone: "Pandoc-Standard",
   docxTemplateClear: "Standard verwenden",
+  exportTocLabel: "Inhaltsverzeichnis bei Pandoc-Exporten",
+  exportNumberHeadingsLabel: "Nummerierte Überschriften bei Pandoc-Exporten",
+  exportNumberHeadingsHelp:
+    "Nummeriert wie mit dem Plugin Heading Numbers: Die einzige Überschrift der obersten Ebene ist der Titel und bleibt ohne Nummer.",
+  exportBibliographyLabel: "Literaturverzeichnis",
+  exportBibliographyHelp:
+    "Eine .bib-Datei. Pandoc-Exporte (Word, EPUB …) machen aus [@schlüssel]-Zitaten Literaturangaben, mit der Liste am Ende.",
+  exportBibliographyNone: "Keine",
+  exportBibliographyClear: "Entfernen",
+  exportCslLabel: "Zitierstil",
+  exportCslHelp:
+    "Eine .csl-Datei für das Literaturverzeichnis. Ohne sie nutzt Pandoc Chicago Autor-Jahr.",
+  pandocArgsLabel: "Pandoc-Argumente",
+  pandocArgsHelp:
+    "Werden dem Pandoc-Befehl für dieses Format Wort für Wort angefügt, nie über eine Shell. Werte mit Leerzeichen in Anführungszeichen setzen. --from, --to und --output setzt Textus selbst.",
+  pandocArgsAll: "Alle Formate",
+  pandocArgsOwned: "{arg} setzt Textus selbst; bitte entfernen.",
+  pandocErrorSettings:
+    "Deine Pandoc-Optionen findest du unter Einstellungen › {page} › {group} und in den erweiterten Argumenten.",
   pdfLightColorsLabel: "PDFs in hellen Farben exportieren",
   infoTipLabel: "Mehr zu „{label}“",
   infoTipLabelPlain: "Mehr erfahren",
@@ -1036,6 +1099,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuUndo: "Rückgängig",
   menuRedo: "Wiederholen",
   menuFindReplace: "Suchen & Ersetzen…",
+  menuReplace: "Ersetzen…",
+  menuFindNext: "Weitersuchen",
+  menuStrikethrough: "Durchgestrichen",
+  menuInlineCode: "Inline-Code",
+  menuInsertLink: "Link",
   menuHeadingTemplate: "Überschrift {n}",
   menuBulletList: "Aufzählung",
   menuOrderedList: "Nummerierte Liste",
@@ -1201,12 +1269,19 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   newDocumentModeLabel: "Dokumente öffnen",
   newDocumentModeWindow: "In neuem Fenster",
   newDocumentModeTab: "Als Tab in diesem Fenster",
-  restoreSessionLabel: "Letzte Sitzung beim Start wiederherstellen",
+  startPageTab: "Start",
+  startupOpenLabel: "Beim Start öffnen",
+  startupOpenSession: "Die letzten Dokumente",
+  startupOpenStartPage: "Die Startseite",
+  startupOpenBlank: "Ein leeres Dokument",
+  closeLastLabel: "Wenn das letzte Dokument geschlossen wird",
+  closeLastWindow: "Fenster schließen",
+  closeLastStartPage: "Startseite zeigen",
+  startPageRecentProjects: "Letzte Projekte",
+  startPageRecentFiles: "Letzte Dateien",
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   autosaveLabel: "Automatisch speichern",
-  autosaveHint:
-    "Ist ein Ordner geöffnet, bekommen auch unbenannte Dokumente dort eine Datei, nach ihrem Titel benannt.",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:
     "Einstellungen der App und den KI-Verlauf importieren oder exportieren",
@@ -1312,6 +1387,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   fileChangedOnDiskMessage:
     "Diese Datei wurde von einem anderen Programm geändert. Beim Speichern werden diese Änderungen überschrieben.",
   fileChangedOnDiskOverwrite: "Überschreiben",
+  fileGoneOnDiskTitle: "Datei verschoben oder gelöscht",
+  fileGoneOnDiskMessage:
+    "Diese Datei liegt nicht mehr dort, wo sie geöffnet wurde. Sie wurde vielleicht in einem anderen Programm verschoben, umbenannt oder gelöscht. Beim Sichern wird sie am alten Ort neu angelegt.",
+  fileGoneOnDiskRecreate: "Am alten Ort sichern",
   saveFailedTitle: "Speichern fehlgeschlagen",
   saveFailedMessage:
     "„{name}“ wurde nicht gespeichert. Deine Änderungen sind noch da.",
@@ -1347,6 +1426,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageFolderSubfolder: "Unterordner",
   imageFolderSameFolder: "Derselbe Ordner wie das Dokument",
   imageFolderNameLabel: "Name des Unterordners",
+  imageFolderProjectNote:
+    "Dieses Projekt legt Bilder in {folder} ab (festgelegt in {source}).",
   imageFolderInvalid: "Gib einen Ordner im Ordner des Dokuments an, etwa img.",
   imageHostLabel: "Bild-Hoster",
   imageHostCustom: "Eigener Server",
@@ -1605,14 +1686,20 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsOpenScripts: "Skriptordner öffnen",
   pluginPackageFilter: "Textus-Plugin",
   pluginsInstalledGroup: "Installiert",
-  pluginOpenOffer:
-    "Das Plugin {name} öffnet „{file}“. Installieren und die Datei öffnen?",
   pluginOpenInstall: "Installieren und öffnen",
-  wikilinksPluginOffer:
-    "Dieses Dokument nutzt [[Wikilinks]]. Das Plugin {name}: {description}",
-  pluginOpenTurnOn:
-    "Das Plugin {name} öffnet „{file}“, ist aber aus. Einschalten und die Datei öffnen?",
   pluginOpenTurnOnButton: "Einschalten und öffnen",
+  pluginCardLine: "Plugin-Empfehlung: {name}",
+  conventionsCardLine:
+    "Die {app}-Einstellungen dieses Ordners legen Bilder in {folder} ab",
+  conventionsCardDetails:
+    "Aktuelle Einstellung: {current}. Beim Übernehmen wird sie in der .textus/settings.json dieses Ordners gespeichert und bleibt beim Projekt.",
+  conventionsFolderRoot: "dem Ordner selbst",
+  conventionsFollow: "Übernehmen",
+  conventionsDecline: "Aktuelle behalten",
+  pluginCardSystemApp: "Mit System-App öffnen",
+  pluginCardNever: "Nicht mehr vorschlagen",
+  pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge: {n}",
+  pluginCardsRestore: "Wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
   pluginsMine: "Von dir erstellt",
   pluginsNone: "Noch keine.",
@@ -1694,4 +1781,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageShowBar: "Adressleiste einblenden",
   webPageHint:
     "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
+  pluginKeysTaken:
+    "{name} kann die Tastatur nicht übernehmen: {holder} nutzt sie. Schalte eines davon unter Einstellungen › Erweiterungen aus.",
+  shortcutIndentListItem: "Listenelement einrücken",
+  shortcutOutdentListItem: "Listenelement ausrücken",
+  pluginKeyTaken:
+    "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",
 } satisfies Translation;

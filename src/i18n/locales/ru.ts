@@ -349,6 +349,17 @@ export default {
   chatUpdatePlugin: "Обновить плагин",
   chatSaveSkill: "Сохранить этот навык",
   chatUpdateSkill: "Обновить навык",
+  skillSaveAnyway: "Всё равно сохранить",
+  skillWarnCreateAsked:
+    "Он просит режим «Создание», где мог бы сам писать навыки. «Создание» не отмечено: отмечайте, только если доверяете каждой строке.",
+  skillWarnCreateMode:
+    "В режиме «Создание» он может сам писать или менять навыки. Оставляйте его там, только если доверяете каждой строке.",
+  skillWarnPromptInjection:
+    "Его инструкции похожи на попытку отменить инструкции Textus AI («игнорируй предыдущие инструкции»). Прочитайте его перед сохранением.",
+  skillWarnHiddenText:
+    "В нём есть невидимые символы, которые могут скрывать инструкции. Прочитайте его перед сохранением.",
+  chatShowCode: "Показать код",
+  chatShowSkill: "Показать навык",
   chatPluginCantInstall: "Этот плагин нельзя установить: {reason}",
   chatPluginCheckDom:
     "Он рисует прямо на странице, а плагин так не может: ничего не появится.",
@@ -430,6 +441,25 @@ export default {
   paperSectionDrafted: "Написано",
   paperSectionRevising: "Правится",
   paperSectionFailed: "Ошибка",
+  paperSectionsAtOnce: {
+    one: "Пишется {n} раздел одновременно · готово {done} из {of}",
+    few: "Пишутся {n} раздела одновременно · готово {done} из {of}",
+    many: "Пишутся {n} разделов одновременно · готово {done} из {of}",
+    other: "Пишутся {n} раздела одновременно · готово {done} из {of}",
+  },
+  paperRevisingAtOnce: {
+    one: "Правится {n} раздел одновременно · готово {done} из {of}",
+    few: "Правятся {n} раздела одновременно · готово {done} из {of}",
+    many: "Правятся {n} разделов одновременно · готово {done} из {of}",
+    other: "Правятся {n} раздела одновременно · готово {done} из {of}",
+  },
+  paperQuestionsAtOnce: {
+    one: "Исследуется {n} вопрос одновременно · готово {done} из {of}",
+    few: "Исследуются {n} вопроса одновременно · готово {done} из {of}",
+    many: "Исследуются {n} вопросов одновременно · готово {done} из {of}",
+    other: "Исследуются {n} вопроса одновременно · готово {done} из {of}",
+  },
+  paperDoneOf: "готово {done} из {of}",
   paperOutlineRetry:
     "Вариант {n}: предыдущий не прошёл проверку, план составляется заново…",
   paperPapersOnly:
@@ -447,6 +477,7 @@ export default {
   webSources: "Источники",
   proposalSourcesAsFootnotes: "Добавить источники как сноски",
   menuToggleSplitView: "Исходник и просмотр",
+  splitPreview: "Предпросмотр",
   menuToggleZenMode: "Режим дзен",
   menuSplitRight: "Разделить вправо",
   menuCommandPalette: "Палитра команд…",
@@ -511,8 +542,8 @@ export default {
   outlineEmpty:
     "Заголовков пока нет — здесь появятся строки, начинающиеся с #.",
   treeRefresh: "Обновить",
-  menuOpenFolder: "Открыть папку…",
-  menuCloseFolder: "Закрыть папку",
+  menuOpenFolder: "Открыть проект…",
+  menuCloseFolder: "Закрыть проект",
   menuCopyPath: "Копировать путь",
   folderTooBroad:
     "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
@@ -522,7 +553,7 @@ export default {
   treeSearchCapped:
     "Поиск только по первым {n} файлам. Откройте папку поменьше, чтобы искать по всей.",
   treeSearchTooBroad:
-    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть папку…",
+    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть проект…",
   treeSearchFailed: "Не удаётся прочитать эту папку.",
   treeSearchScope: "Показывать",
   treeSearchScopeAll: "Все файлы",
@@ -540,6 +571,14 @@ export default {
   treeRenameItem: "Переименовать…",
   treeRename: "Переименовать",
   treeRenamePrompt: "Новое имя",
+  treeUpdateLinksConfirm:
+    "Обновить ссылки на «{name}» и из него, чтобы они продолжали работать?",
+  treeUpdateLinks: "Обновить ссылки",
+  treeKeepLinks: "Не обновлять",
+  treeUpdateLinksFailed:
+    "Не удалось обновить ссылки в этих документах: {names}",
+  treeDocumentFolder: "Папка текущего документа",
+  treeOpenAsFolder: "Открыть как проект",
   treeTrashItem: "Переместить в корзину",
   treeTrash: "Переместить в корзину",
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",
@@ -605,6 +644,9 @@ export default {
   alertWarning: "Предупреждение",
   alertCaution: "Осторожно",
   tocLabel: "Содержание",
+  completionCommands: "Команды",
+  completionEmoji: "Эмодзи",
+  completionNotes: "Заметки",
   tocEmpty: "Заголовков пока нет",
   settingsTitle: "Настройки",
   settingsSearchPlaceholder: "Поиск по настройкам",
@@ -769,6 +811,11 @@ export default {
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
+  tableToMarkdown: "Преобразовать в таблицу Markdown",
+  tableToMarkdownMerged:
+    "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
+  tableToMarkdownBlocks:
+    "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
@@ -981,6 +1028,25 @@ export default {
     "Экспортированные файлы Word берут стили, шрифты и поля из этого файла.",
   docxTemplateNone: "По умолчанию Pandoc",
   docxTemplateClear: "По умолчанию",
+  exportTocLabel: "Оглавление при экспорте через Pandoc",
+  exportNumberHeadingsLabel: "Нумерация заголовков при экспорте через Pandoc",
+  exportNumberHeadingsHelp:
+    "Нумерация как в плагине Heading Numbers: единственный заголовок верхнего уровня считается названием и не нумеруется.",
+  exportBibliographyLabel: "Список литературы",
+  exportBibliographyHelp:
+    "Файл .bib. При экспорте через Pandoc (Word, EPUB…) цитаты [@ключ] становятся ссылками, а список — в конце.",
+  exportBibliographyNone: "Нет",
+  exportBibliographyClear: "Убрать",
+  exportCslLabel: "Стиль цитирования",
+  exportCslHelp:
+    "Файл .csl для списка литературы. Без него Pandoc использует Chicago «автор—дата».",
+  pandocArgsLabel: "Аргументы Pandoc",
+  pandocArgsHelp:
+    "Добавляются к команде Pandoc для этого формата по словам, без оболочки. Значение с пробелами возьмите в кавычки. --from, --to и --output задаёт Textus.",
+  pandocArgsAll: "Все форматы",
+  pandocArgsOwned: "{arg} задаёт Textus; уберите его.",
+  pandocErrorSettings:
+    "Ваши параметры Pandoc — в Настройки › {page} › {group} и в её дополнительных аргументах.",
   pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",
   infoTipLabelPlain: "Подробнее",
@@ -1042,6 +1108,11 @@ export default {
   menuUndo: "Отменить",
   menuRedo: "Повторить",
   menuFindReplace: "Найти и заменить…",
+  menuReplace: "Заменить…",
+  menuFindNext: "Найти далее",
+  menuStrikethrough: "Зачёркнутый",
+  menuInlineCode: "Код в строке",
+  menuInsertLink: "Ссылка",
   menuHeadingTemplate: "Заголовок {n}",
   menuBulletList: "Маркированный список",
   menuOrderedList: "Нумерованный список",
@@ -1207,11 +1278,18 @@ export default {
   newDocumentModeLabel: "Открывать документы",
   newDocumentModeWindow: "В новом окне",
   newDocumentModeTab: "Во вкладке этого окна",
-  restoreSessionLabel: "Восстанавливать прошлый сеанс при запуске",
+  startPageTab: "Начало",
+  startupOpenLabel: "При запуске открывать",
+  startupOpenSession: "Последние документы",
+  startupOpenStartPage: "Начальную страницу",
+  startupOpenBlank: "Пустой документ",
+  closeLastLabel: "Когда закрыт последний документ",
+  closeLastWindow: "Закрыть окно",
+  closeLastStartPage: "Показать начальную страницу",
+  startPageRecentProjects: "Недавние проекты",
+  startPageRecentFiles: "Недавние файлы",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
-  autosaveHint:
-    "Если открыта папка, безымянные документы тоже сохраняются в ней под своим заголовком.",
   settingsFileLabel: "Файл настроек",
   settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",
   settingsFileExport: "Экспортировать…",
@@ -1312,6 +1390,10 @@ export default {
   fileChangedOnDiskMessage:
     "Этот файл изменён на диске другой программой. При сохранении эти изменения будут перезаписаны.",
   fileChangedOnDiskOverwrite: "Перезаписать",
+  fileGoneOnDiskTitle: "Файл перемещён или удалён",
+  fileGoneOnDiskMessage:
+    "Этого файла больше нет там, откуда он был открыт. Возможно, его переместили, переименовали или удалили в другой программе. При сохранении он будет создан заново на старом месте.",
+  fileGoneOnDiskRecreate: "Сохранить на старом месте",
   saveFailedTitle: "Не удалось сохранить",
   saveFailedMessage: "«{name}» не сохранён. Ваши изменения остались на месте.",
   saveReadOnlyHint:
@@ -1344,6 +1426,8 @@ export default {
   imageFolderSubfolder: "Вложенная папка",
   imageFolderSameFolder: "Та же папка, что и документ",
   imageFolderNameLabel: "Имя вложенной папки",
+  imageFolderProjectNote:
+    "Этот проект хранит картинки в {folder} (задано в {source}).",
   imageFolderInvalid: "Укажите папку внутри папки документа, например img.",
   imageHostLabel: "Хостинг изображений",
   imageHostCustom: "Свой сервер",
@@ -1599,14 +1683,20 @@ export default {
   pluginsOpenScripts: "Открыть папку скриптов",
   pluginPackageFilter: "Плагин Textus",
   pluginsInstalledGroup: "Установленные",
-  pluginOpenOffer:
-    "Плагин «{name}» открывает «{file}». Установить его и открыть файл?",
   pluginOpenInstall: "Установить и открыть",
-  wikilinksPluginOffer:
-    "В этом документе есть [[вики-ссылки]]. Плагин «{name}»: {description}",
-  pluginOpenTurnOn:
-    "Плагин «{name}» открывает «{file}», но он выключен. Включить его и открыть файл?",
   pluginOpenTurnOnButton: "Включить и открыть",
+  pluginCardLine: "Рекомендуемый плагин: {name}",
+  conventionsCardLine:
+    "Настройки {app} этой папки сохраняют изображения в {folder}",
+  conventionsCardDetails:
+    "Текущая настройка: {current}. При применении она сохраняется в .textus/settings.json этой папки и остаётся с проектом.",
+  conventionsFolderRoot: "саму папку",
+  conventionsFollow: "Применить",
+  conventionsDecline: "Оставить текущую",
+  pluginCardSystemApp: "Открыть в системном приложении",
+  pluginCardNever: "Больше не предлагать",
+  pluginCardsMuted: "Отключённые предложения плагинов: {n}",
+  pluginCardsRestore: "Показать снова",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
   pluginsNone: "Пока нет.",
@@ -1689,4 +1779,10 @@ export default {
   webPageShowBar: "Показать адресную строку",
   webPageHint:
     "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
+  pluginKeysTaken:
+    "{name} не может перехватить клавиатуру: она у {holder}. Отключите один из них в Настройки › Расширения.",
+  shortcutIndentListItem: "Увеличить отступ пункта",
+  shortcutOutdentListItem: "Уменьшить отступ пункта",
+  pluginKeyTaken:
+    "{name}: {key} уже занято «{owner}», поэтому не назначено команде «{command}». Задайте другое в Настройки › Сочетания клавиш.",
 } satisfies Translation;

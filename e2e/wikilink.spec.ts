@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await mockInvoke(page, {
     read_text_file: "See [[Page|the page]] here.\n",
     file_mtime_ms: 1,
-    resolve_vault_note: "/home/me/notes/Page.md",
+    resolve_note_link: { path: "/home/me/notes/Page.md", exists: true },
   });
   await page.evaluate(() =>
     (

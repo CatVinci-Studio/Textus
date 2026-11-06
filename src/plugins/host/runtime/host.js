@@ -10,7 +10,7 @@
 /* global createEndpoint */
 (function () {
   "use strict";
-  var API_VERSION = "1.1";
+  var API_VERSION = "1.2";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -22,9 +22,27 @@
   var hoverProviders = [];
   var decorationProviders = [];
   var completionProviders = new Map();
+  // Asks the panel may still call off, by request.
+  var completionAsks = new Map();
+  var embedProviders = new Map();
+  var embedAsks = new Map();
   var aiTools = new Map();
   var uriHandlers = [];
   var willSave = [];
+  /** `text` with each `{ block, markdown }` put in its block, last first. */
+  function withBlockEdits(text, blocks, edits) {
+    var byId = {};
+    for (var e = 0; e < edits.length; e++)
+      if (edits[e] && typeof edits[e].markdown === "string")
+        byId[edits[e].block] = edits[e].markdown;
+    for (var b = blocks.length - 1; b >= 0; b--)
+      if (Object.prototype.hasOwnProperty.call(byId, blocks[b].id))
+        text =
+          text.slice(0, blocks[b].from) +
+          byId[blocks[b].id] +
+          text.slice(blocks[b].to);
+    return text;
+  }
   var willExport = [];
   var settingsProvider = null;
   var webviews = new Map();
@@ -635,6 +653,20 @@
             codeBlockProviders.delete(key);
         });
       },
+      registerEmbed: function (id, provider) {
+        var key = String(id);
+        embedProviders.set(key, provider);
+        quiet(call("views.registerEmbed", { id: key }));
+        var handle = disposable(function () {
+          if (embedProviders.get(key) !== provider) return;
+          embedProviders.delete(key);
+          quiet(call("views.unregisterEmbed", { id: key }));
+        });
+        handle.refresh = function () {
+          notify("views.embedRefresh", { id: key });
+        };
+        return handle;
+      },
       registerSettingsPage: function (provider) {
         settingsProvider = provider;
         return disposable(function () {
@@ -734,6 +766,11 @@
       stat: function (path) {
         return call("files.stat", { path: String(path) });
       },
+      conventions: function (path) {
+        return call("files.conventions", {
+          path: path === undefined ? null : String(path),
+        });
+      },
       read: function (path) {
         return call("files.read", { path: String(path) });
       },
@@ -767,6 +804,12 @@
         throw new Error(
           String(path) + " kept changing while it was processed.",
         );
+      },
+      blockId: function (path, line) {
+        return call("files.blockId", {
+          path: String(path),
+          line: Number(line),
+        });
       },
       rename: function (from, to, options) {
         return call("files.rename", {
@@ -810,6 +853,7 @@
       },
       onDidSave: on("didSave"),
       onDidChangeRoot: on("root"),
+      onDidChangeConventions: on("conventions"),
     },
     metadata: {
       get: function (path) {
@@ -825,6 +869,19 @@
         return call("metadata.resolveLink", {
           link: String(link),
           from: String(from),
+        });
+      },
+      resolveNote: function (link, from) {
+        return call("metadata.resolveNote", {
+          link: String(link),
+          from: String(from),
+        });
+      },
+      linkTo: function (to, from, options) {
+        return call("metadata.linkTo", {
+          to: String(to),
+          from: String(from),
+          options: plain(options || {}),
         });
       },
       tags: function () {
@@ -1089,12 +1146,53 @@
     $provideCompletions: async function (params) {
       var provider = completionProviders.get(params.id);
       if (!provider) return null;
-      var items = await provider.provideCompletions({
-        text: params.text,
-        match: params.match,
-        inMath: params.inMath,
-      });
-      return Array.isArray(items) ? plain(items) : null;
+      var controller = new AbortController();
+      completionAsks.set(params.request, controller);
+      try {
+        var answer = await provider.provideCompletions({
+          text: params.text,
+          match: params.match,
+          inMath: params.inMath,
+          query: params.query,
+          after: params.after,
+          path: params.path,
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return null;
+        if (Array.isArray(answer)) return plain(answer);
+        if (answer && answer.complete === true && Array.isArray(answer.items))
+          return { items: plain(answer.items), complete: true };
+        return null;
+      } finally {
+        completionAsks.delete(params.request);
+      }
+    },
+    $cancelCompletions: function (params) {
+      var controller = completionAsks.get(params.request);
+      if (controller) controller.abort();
+    },
+    $provideEmbed: async function (params) {
+      var provider = embedProviders.get(params.id);
+      if (!provider) return null;
+      var controller = new AbortController();
+      embedAsks.set(params.request, controller);
+      try {
+        var content = await provider.provideEmbed(params.target, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted || !content) return null;
+        if (typeof content.markdown !== "string") return null;
+        return {
+          markdown: content.markdown,
+          title: content.title == null ? null : String(content.title),
+        };
+      } finally {
+        embedAsks.delete(params.request);
+      }
+    },
+    $cancelEmbed: function (params) {
+      var controller = embedAsks.get(params.request);
+      if (controller) controller.abort();
     },
     $provideHover: async function (params) {
       for (var i = 0; i < hoverProviders.length; i++) {
@@ -1118,8 +1216,15 @@
     $willSave: async function (params) {
       var current = params.text;
       for (var i = 0; i < willSave.length; i++) {
-        var next = await willSave[i]({ path: params.path, text: current });
+        var next = await willSave[i]({
+          path: params.path,
+          text: current,
+          trigger: params.trigger,
+          blocks: current === params.text ? plain(params.blocks) : [],
+        });
         if (typeof next === "string") current = next;
+        else if (Array.isArray(next) && current === params.text)
+          current = withBlockEdits(current, params.blocks, next);
       }
       return current === params.text ? null : current;
     },

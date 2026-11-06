@@ -4,6 +4,11 @@ export const TRIGGER_COMPLETION_EVENT = "textus:trigger-completion";
 export const TRIGGER_GRAMMAR_CHECK_EVENT = "textus:trigger-grammar-check";
 export const TOGGLE_FLOATING_CHAT_EVENT = "textus:toggle-floating-chat";
 export const TOGGLE_FIND_REPLACE_EVENT = "textus:toggle-find-replace";
+/** Edit › Replace… and Find Next. */
+export const SHOW_REPLACE_EVENT = "textus:show-replace";
+export const FIND_NEXT_EVENT = "textus:find-next";
+/** Format › Link: a link around the selection. */
+export const INSERT_LINK_EVENT = "textus:insert-link";
 /// Closes the find bar: the iPhone's sidebar drawer opens over it.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
@@ -81,6 +86,9 @@ export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
 export interface OpenFileInTab {
   path: string;
   anchor?: string;
+  /** A link to a file of any type: one Textus can't show is offered to the
+   *  system's app for it instead, after asking. */
+  linked?: boolean;
 }
 
 /** Zen mode turned on/off (detail: boolean). */

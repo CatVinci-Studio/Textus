@@ -21,6 +21,7 @@ import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
+import { pathIndex, resolveTarget } from "../links/link-resolve";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -280,6 +281,23 @@ export function installDevTauriShim(): void {
         else kept[key] = String(args.value);
         return Promise.resolve(null);
       }
+      case "undo_file_save": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        kept[String(args.path)] = [String(args.hash), String(args.history)];
+        return Promise.resolve(null);
+      }
+      case "undo_file_load": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        const [hash, history] = kept[String(args.path)] ?? [];
+        return Promise.resolve(hash === args.hash ? history : null);
+      }
+      case "undo_file_move": {
+        const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
+        const from = String(args.from);
+        if (kept[from]) kept[String(args.to)] = kept[from];
+        delete kept[from];
+        return Promise.resolve(null);
+      }
       case "chat_history_archived":
         return Promise.resolve(store.archivedChats);
       case "floating_desktop_supported":
@@ -507,6 +525,9 @@ export function installDevTauriShim(): void {
       }
       // Save this skill (Create mode): the file and its modes, logged.
       case "save_written_skill":
+        // As the app does: Create mode saves only once confirmed.
+        if ((args.modes as string[]).includes("create") && !args.confirmed)
+          return Promise.reject("SKILL_NEEDS_CONFIRM:create-mode");
         skills.log.push(`${cmd}:${String(args.modes)}`);
         skills.files.set(skillCopyPath("written"), String(args.text ?? ""));
         return Promise.resolve(skillCopyPath("written"));
@@ -614,6 +635,10 @@ export function installDevTauriShim(): void {
               path: `${path}/${name}`,
               is_dir: isDir,
               hidden: name.startsWith("."),
+              // `__devIgnored`: paths a .gitignore would leave out.
+              ignored: (
+                (w.__devIgnored as string[] | undefined) ?? []
+              ).includes(`${path}/${name}`),
               modified_ms:
                 (w.__devMtimes as Record<string, number> | undefined)?.[
                   `${path}/${name}`
@@ -704,6 +729,119 @@ export function installDevTauriShim(): void {
         }
         trashed.push(path);
         return Promise.resolve(null);
+      }
+      case "folder_documents": {
+        const documents = Object.keys(files)
+          .filter(
+            (file) =>
+              file.startsWith(`${path}/`) &&
+              !file.slice(path.length).includes("/.") &&
+              /\.(md|markdown)$/i.test(file),
+          )
+          .sort()
+          .map((file) => ({
+            path: file,
+            rel: file.slice(path.length + 1),
+            text: files[file],
+          }));
+        return Promise.resolve({ documents, truncated: false });
+      }
+      case "folder_conventions": {
+        const none = {
+          sources: [],
+          linkStyle: null,
+          linkPath: null,
+          linkRoot: null,
+          updateLinks: null,
+          attachments: null,
+          softBreaks: null,
+          templates: null,
+          daily: null,
+          newNotes: null,
+          ignore: [],
+          detected: null,
+        };
+        // The project's own .textus/settings.json applies; an Obsidian vault
+        // (a folder with a file under `.obsidian/`) is the one other app the
+        // browser flows stand in for, offered until the project answers.
+        let ours: Record<string, unknown> | null = null;
+        let oursRoot = "";
+        for (let dir = path; dir.includes("/") && !ours;) {
+          try {
+            const file = JSON.parse(
+              files[`${dir}/.textus/settings.json`] ?? "{}",
+            ) as { conventions?: Record<string, unknown> };
+            if (file.conventions) {
+              ours = file.conventions;
+              oursRoot = dir;
+            }
+          } catch {
+            /* not ours */
+          }
+          dir = dir.slice(0, dir.lastIndexOf("/"));
+        }
+        const mine = <T>(key: string) =>
+          ours && ours[key] !== undefined
+            ? { value: ours[key] as T, app: "textus", root: oursRoot }
+            : null;
+        const applied = {
+          ...none,
+          linkStyle: mine<string>("linkStyle"),
+          linkPath: mine<string>("linkPath"),
+          attachments: mine<string>("attachments"),
+          softBreaks: mine<boolean>("softBreaks"),
+          updateLinks: mine<string>("updateLinks"),
+        };
+        for (let dir = path; dir.includes("/");) {
+          if (
+            Object.keys(files).some((f) => f.startsWith(`${dir}/.obsidian/`))
+          ) {
+            let app: Record<string, unknown> = {};
+            try {
+              app = JSON.parse(files[`${dir}/.obsidian/app.json`] ?? "{}");
+            } catch {
+              /* Obsidian's defaults */
+            }
+            const at = <T>(value: T) => ({ value, app: "obsidian", root: dir });
+            return Promise.resolve({
+              ...applied,
+              sources: [{ app: "obsidian", root: dir }],
+              detected: ours?.detected
+                ? null
+                : {
+                    ...none,
+                    linkStyle: at(
+                      app.useMarkdownLinks === true ? "markdown" : "wiki",
+                    ),
+                    linkPath: at(String(app.newLinkFormat ?? "shortest")),
+                    attachments: at(String(app.attachmentFolderPath ?? "/")),
+                    softBreaks: at(app.strictLineBreaks !== true),
+                    updateLinks: at(
+                      app.alwaysUpdateLinks === false ? "ask" : "always",
+                    ),
+                  },
+            });
+          }
+          dir = dir.slice(0, dir.lastIndexOf("/"));
+        }
+        return Promise.resolve(applied);
+      }
+      // The folder's notes, by the rules Rust's vault.rs shares with
+      // link-resolve.ts.
+      case "resolve_note_link": {
+        const doc = String(args.docPath);
+        const root = String(args.folder ?? doc.slice(0, doc.lastIndexOf("/")));
+        const target = resolveTarget(
+          pathIndex(
+            root,
+            Object.keys(files).filter((f) => f.startsWith(`${root}/`)),
+          ),
+          args.wiki ? `[[${String(args.link)}]]` : String(args.link),
+          doc,
+        );
+        return Promise.resolve(
+          target && { path: target.path, exists: target.exists },
+        );
       }
       case "index_folder": {
         // The backend refuses these; the shim's "home" is /home/me.

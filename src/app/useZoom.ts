@@ -187,6 +187,10 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       snapped = true,
       point: { clientX: number; clientY: number } | null = null,
     ) => {
+      // The start page has no document to zoom; changing the zoom there
+      // would only show on the next one opened.
+      if (document.querySelector('[data-active-tab="true"] .start-page'))
+        return;
       anchorClientX = point?.clientX ?? null;
       anchorClientY = point?.clientY ?? null;
       zoomRef.current = snapped ? snap(zoom) : clamp(zoom);

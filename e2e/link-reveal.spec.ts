@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { END, HOME, mockInvoke, openApp, selectionRead } from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
-// it is a link again, as edited. Ctrl/Cmd+click still opens it. The file is
-// opened the way a dropped file is.
+// it reads as a link again, as edited. Ctrl/Cmd+click still opens it. The
+// file is opened the way a dropped file is. A link's text always holds its
+// source, so what it reads as is its innerText.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const source = `${editor} .link-source`;
@@ -63,7 +64,11 @@ async function clickAfterChar(page: Page, label: string, index: number) {
     .locator(`${editor} a`, { hasText: label })
     .evaluate((a, i) => {
       const range = document.createRange();
-      const text = a.firstChild!;
+      // The label's text, after the hidden "[".
+      const walker = document.createTreeWalker(a, NodeFilter.SHOW_TEXT);
+      let text = walker.nextNode()!;
+      while (text.parentElement!.closest(".link-source-hidden"))
+        text = walker.nextNode()!;
       range.setStart(text, i);
       range.setEnd(text, i + 1);
       const rect = range.getBoundingClientRect();
@@ -203,7 +208,7 @@ test("the URL and the text are edited in place, and saved as typed", async ({
   await expect(page.locator(source)).toHaveCount(0);
   await expect(
     page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveText("New resource");
+  ).toHaveText("New resource", { useInnerText: true });
   expect(await sourceOf(page)).toBe(
     `${DOC.replace("[resource](https://a.org/r)", "[New resource](https://a.org/r/x)")}\n`,
   );
@@ -303,5 +308,6 @@ test("Chinese typed with an input method goes into the link's text", async ({
   await leave(page);
   await expect(page.locator(`${editor} a[href="https://a.org/r"]`)).toHaveText(
     "res中文ource",
+    { useInnerText: true },
   );
 });

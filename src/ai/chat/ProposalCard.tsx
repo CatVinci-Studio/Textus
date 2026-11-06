@@ -207,7 +207,10 @@ export function ProposalCard({
                   {removed}
                 </span>
               )}
-              <span className="agent-diff-caret" aria-hidden="true" />
+              <span
+                className="disclosure-caret agent-diff-caret"
+                aria-hidden="true"
+              />
             </button>
           </Tooltip>
         )}

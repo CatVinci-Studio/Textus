@@ -2,13 +2,11 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
-import {
-  DOMParser,
-  DOMSerializer,
-  Fragment,
-  type Mark,
-} from "@milkdown/kit/prose/model";
+import { DOMParser } from "@milkdown/kit/prose/model";
+import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "../../document-view/editor-test-harness";
+import { definitionsIn } from "./link-reveal";
+import { linkHref } from "./link-syntax";
 
 const editors: Editor[] = [];
 afterEach(async () => {
@@ -26,14 +24,14 @@ const save = (editor: Editor) =>
     ctx.get(serializerCtx)(ctx.get(editorViewCtx).state.doc),
   );
 
-/** The first link mark in the document. */
-function firstLink(editor: Editor): Mark | null {
+/** The first link node in the document and where it is. */
+function firstLink(editor: Editor): { node: ProseNode; pos: number } {
   return editor.action((ctx) => {
-    let found: Mark | null = null;
-    ctx.get(editorViewCtx).state.doc.descendants((node) => {
-      found ??= node.marks.find((mark) => mark.type.name === "link") ?? null;
+    let found: { node: ProseNode; pos: number } | null = null;
+    ctx.get(editorViewCtx).state.doc.descendants((node, pos) => {
+      if (node.type.name === "link") found ??= { node, pos };
     });
-    return found;
+    return found!;
   });
 }
 
@@ -52,11 +50,11 @@ describe("reference links", () => {
   });
 
   it("reads a reference as a link to its definition's URL", async () => {
-    const editor = await open('A [link][r].\n\n[r]: https://x.org "T"\n');
-    expect(firstLink(editor)?.attrs).toMatchObject({
-      href: "https://x.org",
-      title: "T",
-    });
+    const editor = await open('A [link][R].\n\n[r]: https://x.org "T"\n');
+    const doc = editor.action((ctx) => ctx.get(editorViewCtx).state.doc);
+    expect(
+      linkHref(firstLink(editor).node.textContent, () => definitionsIn(doc)),
+    ).toBe("https://x.org");
   });
 
   it("shows a definition as its source", async () => {
@@ -71,11 +69,15 @@ describe("reference links", () => {
     // Pasted where its definition isn't, a reference would link nowhere.
     const editor = await open("A [link][r].\n\n[r]: https://x.org\n");
     const pasted = editor.action((ctx) => {
-      const { doc, schema } = ctx.get(editorViewCtx).state;
-      const paragraph = doc.child(0).copy(doc.child(0).content);
-      const dom = DOMSerializer.fromSchema(schema).serializeFragment(
-        Fragment.from(paragraph),
-      );
+      const view = ctx.get(editorViewCtx);
+      const { doc, schema } = view.state;
+      let slice = doc.slice(0, doc.child(0).nodeSize);
+      view.someProp("transformCopied", (f) => {
+        slice = f(slice, view);
+      });
+      const dom = view
+        .someProp("clipboardSerializer")!
+        .serializeFragment(slice.content);
       return ctx.get(serializerCtx)(DOMParser.fromSchema(schema).parse(dom));
     });
     expect(pasted).toBe("A [link](https://x.org).\n");
@@ -85,19 +87,13 @@ describe("reference links", () => {
     const editor = await open("A [link][r].\n\n[r]: https://x.org\n");
     editor.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const { doc, schema } = view.state;
-      const mark = firstLink(editor)!;
-      const from = 3;
-      const to = from + "link".length;
-      expect(doc.textBetween(from, to)).toBe("link");
+      const { node, pos } = firstLink(editor);
       view.dispatch(
-        view.state.tr
-          .removeMark(from, to, mark)
-          .addMark(
-            from,
-            to,
-            schema.marks.link.create({ ...mark.attrs, href: "https://y.org" }),
-          ),
+        view.state.tr.replaceWith(
+          pos + 1,
+          pos + node.nodeSize - 1,
+          view.state.schema.text("[link](https://y.org)"),
+        ),
       );
     });
     expect(await save(editor)).toBe(

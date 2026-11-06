@@ -199,6 +199,10 @@ async function host(record: PluginRecord): Promise<PluginHost> {
             throw new Error(`No command ${command}.`);
           return null;
         },
+        offerPlugin: (caller, request) =>
+          import("./store/open-offer").then((offer) =>
+            offer.offerPlugin(caller, request, windowInfo().strings()),
+          ),
         commandRegistered: (id, command, editor) => {
           const manifest = pluginRecord(id)?.manifest;
           const declared = manifest?.contributes.commands.some(

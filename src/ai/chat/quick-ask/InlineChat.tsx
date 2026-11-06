@@ -1,3 +1,5 @@
+import { IconButton } from "../../../ui/IconButton";
+import { PanelHeader } from "../../../ui/PanelHeader";
 import type { DocumentSnapshot } from "../../doc-markdown";
 import { useRef } from "react";
 import type { AgentConversation } from "../useAgentConversation";
@@ -12,7 +14,6 @@ import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
 import type { AgentMode } from "../../../prefs/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
-import { Tooltip } from "../../../ui/Tooltip";
 import { isImeKeydown } from "../../../utils/ime";
 
 export interface InlineChatLabels extends ChatBodyLabels, CloseConfirmLabels {
@@ -124,37 +125,28 @@ export function InlineChat({
     <>
       {/* Nothing to start over from on a fresh panel. */}
       {(conversation.history.length > 0 || conversation.busy) && (
-        <Tooltip text={labels.newConversation}>
-          <button
-            type="button"
-            className="inline-chat-header-button"
-            aria-label={labels.newConversation}
-            onClick={onNewConversation}
-          >
-            <PlusIcon />
-          </button>
-        </Tooltip>
-      )}
-      <Tooltip text={labels.continueInPanel}>
-        <button
-          type="button"
+        <IconButton
           className="inline-chat-header-button"
-          aria-label={labels.continueInPanel}
-          onClick={onDetach}
+          label={labels.newConversation}
+          onClick={onNewConversation}
         >
-          <DetachIcon />
-        </button>
-      </Tooltip>
-      <Tooltip text={labels.close}>
-        <button
-          type="button"
-          className="inline-chat-header-button inline-chat-close"
-          aria-label={labels.close}
-          onClick={onRequestClose}
-        >
-          <CloseIcon />
-        </button>
-      </Tooltip>
+          <PlusIcon />
+        </IconButton>
+      )}
+      <IconButton
+        className="inline-chat-header-button"
+        label={labels.continueInPanel}
+        onClick={onDetach}
+      >
+        <DetachIcon />
+      </IconButton>
+      <IconButton
+        className="inline-chat-header-button inline-chat-close"
+        label={labels.close}
+        onClick={onRequestClose}
+      >
+        <CloseIcon />
+      </IconButton>
     </>
   );
 
@@ -177,9 +169,12 @@ export function InlineChat({
         {/* Docked, the buttons share the composer's top row with the
             quoted selection instead of floating over the text. */}
         {!docked && (
-          <div className="inline-chat-header">
-            <div className="inline-chat-header-actions">{actions}</div>
-          </div>
+          <PanelHeader
+            className="inline-chat-header"
+            actionsClassName="inline-chat-header-actions"
+          >
+            {actions}
+          </PanelHeader>
         )}
         <ChatBody
           document={document}

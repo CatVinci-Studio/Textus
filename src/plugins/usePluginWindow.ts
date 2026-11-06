@@ -1,3 +1,4 @@
+import { watchConventions } from "./contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
 import { watchDevPlugins } from "./store/dev-reload";
 import { watchPluginAiTools } from "./contributions/ai-tools";
@@ -77,12 +78,16 @@ export function usePluginWindow({
       strings: () => tRef.current,
       language: () => languageRef.current,
       dark: windowIsDark,
+      keys: () => ({
+        shortcuts: settingsRef.current.settings.shortcuts,
+        overrides: settingsRef.current.settings.commandShortcuts,
+      }),
     });
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
     void loadPlugins()
       .then(() => migrateOfficialPlugins())
       .catch(() => {});
-  }, [tRef, languageRef]);
+  }, [tRef, languageRef, settingsRef]);
 
   useEffect(() => {
     const addTab = (tab: Partial<DocTab>, where: Where = "tab") => {
@@ -219,20 +224,25 @@ export function usePluginWindow({
   }, []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
-  // The completions plugins suggest as you type.
+  // The completions plugins suggest as you type, and calling off those the
+  // panel no longer needs.
   useEffect(() => {
-    setCompletionAsker((id, source, context) =>
-      askPlugin(
-        id,
-        "$provideCompletions",
-        { id: source, ...context },
-        "editor.read",
-      ),
+    setCompletionAsker(
+      (id, source, context) =>
+        askPlugin(
+          id,
+          "$provideCompletions",
+          { id: source, ...context },
+          "editor.read",
+        ),
+      (id, request) =>
+        void askPlugin(id, "$cancelCompletions", { request }).catch(() => {}),
     );
     return () => setCompletionAsker(null);
   }, []);
   useEffect(() => {
     emitPluginEvent("root", { path: rootPath });
+    watchConventions(rootPath);
     // The folder's own plugin settings, over the general ones.
     void setPluginProject(rootPath);
   }, [rootPath]);

@@ -1,3 +1,6 @@
+import { SuggestCard } from "./SuggestCard";
+import { ConventionsCard } from "./ConventionsCard";
+import { CornerStack } from "../ui/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
@@ -148,6 +151,7 @@ function App() {
           openFolder={openFolder}
           activePath={activeTab.path}
           activeContent={activeTab.content}
+          activeTabId={activeTab.id}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
           onOpenFile={(path, beside) =>
@@ -203,6 +207,7 @@ function App() {
           opening={settingsOpening}
           onOpenFile={(path) => void openFile(path)}
           onFilesDeleted={skillFilesDeleted}
+          docPath={activeTab.path}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
           pluginCommands={commands()
             // Textus's own (Save, Close Tab) have their keys under File.
@@ -258,19 +263,24 @@ function App() {
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 
-        <DraftRestoredToast
-          count={draftsRestoredCount}
-          onDismiss={() => setDraftsRestoredCount(0)}
-          t={t}
-        />
+        <CornerStack corner="start">
+          <WordImportNotice
+            path={wordImported.path}
+            onDismiss={wordImported.dismiss}
+            t={t}
+          />
+          <DraftRestoredToast
+            count={draftsRestoredCount}
+            onDismiss={() => setDraftsRestoredCount(0)}
+            t={t}
+          />
+        </CornerStack>
 
-        <WordImportNotice
-          path={wordImported.path}
-          onDismiss={wordImported.dismiss}
-          t={t}
-        />
-
-        <UpdateToast appUpdate={appUpdate} t={t} />
+        <CornerStack corner="end">
+          <SuggestCard t={t} />
+          <ConventionsCard path={activeTab.path} settings={settings} t={t} />
+          <UpdateToast appUpdate={appUpdate} t={t} />
+        </CornerStack>
 
         <OnboardingLayers
           tutorial={tutorial}

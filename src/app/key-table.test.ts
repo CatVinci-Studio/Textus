@@ -23,6 +23,7 @@ import {
   type Platform,
 } from "./native-menu-keys";
 import {
+  FIND_KEYS,
   LINUX_MENU_ACCELERATORS,
   WEBVIEW_FILE_COMMANDS,
 } from "./useGlobalShortcuts";
@@ -71,8 +72,10 @@ const menuThenEditor = (id: string) => ({
 /** Every fixed combo. The configurable ones are the settings' defaults. */
 const KEYS: Record<string, Key> = {
   // File
-  "mod+t": { does: "New Tab", ...menuThenWindow("new-file") },
-  "mod+n": { does: "New Window", ...menuThenWindow("new-window") },
+  "mod+n": { does: "New Tab", ...menuThenWindow("new-file") },
+  // No menu item carries it: the window runs New Tab.
+  "mod+t": { does: "New Tab", ...everywhere("window") },
+  "mod+shift+n": { does: "New Window", ...menuThenWindow("new-window") },
   "mod+o": { does: "Open…", ...menuThenWindow("open-file") },
   "mod+s": { does: "Save", ...menuThenWindow("save-file") },
   "mod+shift+s": { does: "Save As…", ...menuOrLinuxWindow("save-file-as") },
@@ -87,6 +90,8 @@ const KEYS: Record<string, Key> = {
     ...menuOrLinuxWindow("close-window"),
   },
   "mod+,": { does: "Settings…", ...menuThenWindow("settings") },
+  "mod+alt+f": { does: "Replace…", ...menuThenWindow("replace") },
+  "mod+g": { does: "Find Next", ...menuThenWindow("find-next") },
   // Windows quits with Alt+F4, the system's.
   "mod+q": { does: "Quit", macos: "menu:quit", linux: "window" },
   // Edit. On a Mac the app's own items, so the editor's history runs.
@@ -120,6 +125,12 @@ const KEYS: Record<string, Key> = {
     does: "Highlight",
     ...menuThenEditor("toggle-mark:highlight"),
   },
+  "mod+k": { does: "Link", ...menuThenEditor("insert-link") },
+  "ctrl+`": { does: "Inline Code", ...menuThenEditor("toggle-mark:code") },
+  "ctrl+shift+`": {
+    does: "Strikethrough",
+    ...menuThenEditor("toggle-mark:strikethrough"),
+  },
   "mod+enter": { does: "Leave the block", ...everywhere("editor") },
   "alt+arrowup": { does: "Move the block up", ...everywhere("editor") },
   "alt+arrowdown": { does: "Move the block down", ...everywhere("editor") },
@@ -133,8 +144,10 @@ function windowKeys(platform: Platform): Set<string> {
   return new Set([
     "mod+s",
     "mod+w",
+    "mod+t",
     "f6",
     "shift+f6",
+    ...Object.keys(FIND_KEYS),
     ...(platform === "macos"
       ? []
       : ["f11", ...Object.keys(WEBVIEW_FILE_COMMANDS)]),

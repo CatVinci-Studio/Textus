@@ -1,7 +1,6 @@
 import type { Transaction } from "@milkdown/kit/prose/state";
 import { isHistoryTransaction } from "@milkdown/kit/prose/history";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import type {
   AppliedEdit,
   PendingPreview,
@@ -73,7 +72,7 @@ export function mapPreviews(
       changed = true;
       continue;
     }
-    const text = visibleTextBetween(tr.doc, from, to, " ");
+    const text = tr.doc.textBetween(from, to, " ");
     // Typing elsewhere: the same preview, so nothing is redrawn.
     if (text === p.expectedText && from === p.from && to === p.to) {
       survivors.push(p);
@@ -128,7 +127,7 @@ export function rebase(
   const stands = (c: PendingSentence) =>
     c.from <= c.to &&
     c.to <= doc.content.size &&
-    visibleTextBetween(doc, c.from, c.to, " ") === c.expected;
+    doc.textBetween(c.from, c.to, " ") === c.expected;
   const all = [...s.changes, ...(s.parked ?? [])].sort(
     (a, b) => a.from - b.from,
   );

@@ -13,6 +13,7 @@ pub mod cli;
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
+mod conventions;
 mod distribution;
 mod ext_stats;
 mod extract;
@@ -59,6 +60,8 @@ use std::sync::Mutex;
 use tauri::{Emitter, Manager, State};
 
 #[cfg(desktop)]
+use commands::chat_window::{OpenChatWindows, PendingChatHandoffs};
+#[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 #[cfg(desktop)]
 use commands::export::{
@@ -90,12 +93,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(PendingDetachedTabs(Mutex::new(HashMap::new())))
         .manage(DragTrackers::default())
         .manage(SessionTabsState(Mutex::new(HashMap::new())))
-        .manage(commands::chat_window::PendingChatHandoffs(Mutex::new(
-            HashMap::new(),
-        )))
-        .manage(commands::chat_window::OpenChatWindows(Mutex::new(
-            Vec::new(),
-        )))
+        .manage(PendingChatHandoffs(Mutex::new(HashMap::new())))
+        .manage(OpenChatWindows(Mutex::new(Vec::new())))
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
@@ -120,7 +119,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     // The last editor window keeps its documents in the session file.
                     commands::session::forget_window(app, window.label(), &state);
                 }
-                if let Some(state) = app.try_state::<commands::chat_window::OpenChatWindows>() {
+                if let Some(state) = app.try_state::<OpenChatWindows>() {
                     commands::chat_window::forget_chat_window(app, window.label(), &state);
                 }
                 // File > Quit closes every window so dirty editors can cancel; macOS would
@@ -272,6 +271,7 @@ pub fn run() {
             save_file_dialog,
             list_dir,
             commands::folder::index_folder,
+            commands::folder::folder_documents,
             read_text_file,
             commands::word_import::open_word_document,
             file_mtime_ms,
@@ -279,7 +279,9 @@ pub fn run() {
             write_text_file,
             save_pasted_image,
             commands::vault::resolve_vault_image,
-            commands::vault::resolve_vault_note,
+            commands::vault::resolve_note_link,
+            commands::link_root::document_link_root,
+            conventions::folder_conventions,
             upload_image,
             migrate_draft_images,
             save_theme_css,
@@ -301,6 +303,7 @@ pub fn run() {
             crate::ai::paper::ai_paper_run,
             crate::ai::paper::status::ai_paper_save_outline,
             crate::ai::paper::drafting::ai_paper_draft,
+            crate::ai::paper::figures::ai_paper_figures_drawn,
             crate::ai::paper::status::ai_paper_status,
             fetch_agent_models,
             set_ai_proxy,
@@ -362,6 +365,9 @@ pub fn run() {
             take_draft_snapshots,
             clear_draft_snapshot,
             clear_all_drafts,
+            commands::undo_files::undo_file_save,
+            commands::undo_files::undo_file_load,
+            commands::undo_files::undo_file_move,
             commands::own_notes::own_notes_read,
             commands::own_notes::own_notes_write,
             distribution::app_distribution,
@@ -522,6 +528,7 @@ pub fn run() {
             detect_pandoc,
             #[cfg(desktop)]
             export_via_pandoc,
+            commands::export::check_pandoc_args,
             #[cfg(desktop)]
             export_pdf_native,
             commands::links::open_community_page,
@@ -569,30 +576,7 @@ pub fn run() {
             // iOS delivers "Open in Textus" the same way.
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             if let tauri::RunEvent::Opened { urls } = event {
-                // iOS hands over a security-scoped URL, kept as a URL so the textus-files
-                // plugin can open its scope.
-                #[cfg(target_os = "ios")]
-                let paths: Vec<String> = urls
-                    .iter()
-                    .filter(|url| url.scheme() == "file")
-                    .map(|url| url.to_string())
-                    .collect();
-                #[cfg(not(target_os = "ios"))]
-                let paths: Vec<String> = urls
-                    .iter()
-                    .filter_map(|url| url.to_file_path().ok())
-                    .map(|p| p.to_string_lossy().to_string())
-                    .collect();
-                // Still launching: setup opens them (LAUNCH_OPENED).
-                #[cfg(target_os = "macos")]
-                let paths = match LAUNCH_OPENED.lock().unwrap().as_mut() {
-                    Some(early) => {
-                        early.extend(paths);
-                        Vec::new()
-                    }
-                    None => paths,
-                };
-                queue_paths_to_open(app_handle, paths);
+                open_urls(app_handle, urls);
             }
             #[cfg(not(any(target_os = "macos", target_os = "ios")))]
             let _ = event;

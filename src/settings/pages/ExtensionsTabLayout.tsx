@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useMenuButton } from "../../ui/useMenuButton";
+import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { RowHelp } from "../sections/controls";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 
 export interface ExtensionsAction {
   label: string;
@@ -97,7 +97,7 @@ export function ExtensionsTabLayout({
         {footer}
       </div>
       {advanced && (
-        <details className="settings-advanced extensions-advanced">
+        <details className="disclosure settings-advanced extensions-advanced">
           <summary>{t.agentAdvancedGroupLabel}</summary>
           <div className="settings-advanced-body">{advanced}</div>
         </details>
@@ -109,42 +109,21 @@ export function ExtensionsTabLayout({
 /** The tab's other actions - install from a file, import, add by hand -
  *  behind one "…" button. */
 function MoreMenu({ t, actions }: { t: Strings; actions: ExtensionsAction[] }) {
-  const [open, setOpen] = useState(false);
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setOpen(false),
-    true,
-    open,
+  const { button, menu } = useMenuButton(
+    () => actions.map((a) => ({ label: a.label, onSelect: a.onSelect })),
+    { alignEnd: true },
   );
   return (
-    <div className="extensions-more" ref={ref}>
+    <div className="extensions-more">
       <button
         type="button"
         className="text-button settings-inline-button extensions-more-button"
         aria-label={t.toolbarMore}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        {...button}
       >
         ⋯
       </button>
-      {open && (
-        <div className="extensions-more-menu floating-surface" role="menu">
-          {actions.map((action) => (
-            <button
-              key={action.label}
-              type="button"
-              role="menuitem"
-              className="context-menu-item"
-              onClick={() => {
-                setOpen(false);
-                action.onSelect();
-              }}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {menu}
     </div>
   );
 }

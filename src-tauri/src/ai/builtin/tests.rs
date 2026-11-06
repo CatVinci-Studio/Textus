@@ -98,6 +98,19 @@ fn every_builtin_skill_parses_and_follows_the_format() {
             "{stem}: no < or > in the description"
         );
         assert!(d.contains("Use when"), "{stem}: says when to use it");
+        // The index shows `textus-index` instead of the description: the
+        // description's "Use when" clause without the request words in
+        // other languages, kept in step with it.
+        let line = skill
+            .index_line
+            .as_deref()
+            .unwrap_or_else(|| panic!("{stem}: metadata textus-index"));
+        assert!(line.starts_with("Use when"), "{stem}: index line {line:?}");
+        assert!(line.is_ascii(), "{stem}: index line has no request words");
+        assert!(
+            d.contains(line.trim_end_matches('.')),
+            "{stem}: index line {line:?} is the description's clause"
+        );
         assert_eq!(
             fm.fields.get("license").map(String::as_str),
             Some("MIT"),
@@ -105,6 +118,7 @@ fn every_builtin_skill_parses_and_follows_the_format() {
         );
         for key in [
             "textus-version",
+            "textus-index",
             "textus-invocation",
             "textus-category",
             "textus-packs",

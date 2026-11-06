@@ -23,6 +23,7 @@ import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
 import { currentAppState } from "../background/app-state";
 import { forgetListViews } from "../contributions/list-views";
+import { forgetEmbeds } from "../contributions/embeds";
 import { forgetWillExport } from "../contributions/will-export";
 import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
@@ -58,6 +59,11 @@ export interface BrokerDeps {
   setSetting(id: string, key: string, value: unknown): Promise<void>;
   /** Runs any command - the app's, or a plugin's. */
   runCommand(command: string, args: unknown[]): Promise<unknown>;
+  /** textus.offerPlugin, from the plugin `caller`: whether it is on. */
+  offerPlugin(
+    caller: { id: string; name: string },
+    request: unknown,
+  ): Promise<boolean>;
   /** The command palette with the plugin's items first (ui.pick's
    *  `commands`): the item's value, `{ typed }`, or null. */
   pickWithCommands(
@@ -117,6 +123,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   activeTab: null,
   layout: null,
   root: "files.read",
+  conventions: "files.read",
   fileCreate: "files.read",
   fileChange: "files.read",
   fileRename: "files.read",
@@ -208,6 +215,7 @@ export class PluginHost {
     stopPluginUi(this.id);
     stopPluginEditor(this.id);
     forgetListViews(this.id);
+    forgetEmbeds(this.id);
     forgetWillSave(this.id);
     forgetWillExport(this.id);
     unwatchMetadata(this.id);

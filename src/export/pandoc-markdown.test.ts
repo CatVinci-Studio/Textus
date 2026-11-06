@@ -2,6 +2,14 @@
 import { describe, expect, it } from "vitest";
 import { toPandocMarkdown } from "./pandoc-markdown";
 
+const alertLabels = {
+  NOTE: "Note",
+  TIP: "Tip",
+  IMPORTANT: "Important",
+  WARNING: "Warning",
+  CAUTION: "Caution",
+};
+
 describe("toPandocMarkdown", () => {
   it("turns highlights into marked spans", () => {
     expect(toPandocMarkdown("一段==高亮==文字，==two words== here")).toBe(
@@ -56,9 +64,9 @@ describe("toPandocMarkdown", () => {
       WARNING: "警告",
       CAUTION: "注意",
     };
-    expect(toPandocMarkdown("> [!WARNING]\n> 小心", labels)).toBe(
-      "> **警告**\n> 小心",
-    );
+    expect(
+      toPandocMarkdown("> [!WARNING]\n> 小心", { alertLabels: labels }),
+    ).toBe("> **警告**\n>\n> 小心");
     expect(toPandocMarkdown("> [!WARNING]\n> 小心")).toBe(
       "> [!WARNING]\n> 小心",
     );
@@ -88,6 +96,104 @@ describe("toPandocMarkdown", () => {
         "~~~~",
         "[after]{.mark}",
       ].join("\n"),
+    );
+  });
+
+  it("reads callouts by the editor's rule: titles, folds, any type, nesting", () => {
+    const md = [
+      "> [!faq]- Why so?",
+      "> Because.",
+      "",
+      "> [!tip]",
+      "> > [!my-type]",
+      "> > inner",
+      "",
+      "> text",
+      "> [!note] not a callout here",
+      "",
+      "> [!note]x",
+    ].join("\n");
+    expect(toPandocMarkdown(md, { alertLabels })).toBe(
+      [
+        "> **Why so?**",
+        ">",
+        "> Because.",
+        "",
+        "> **Tip**",
+        ">",
+        "> > **My-type**",
+        "> >",
+        "> > inner",
+        "",
+        "> text",
+        "> [!note] not a callout here",
+        "",
+        "> [!note]x",
+      ].join("\n"),
+    );
+  });
+
+  it("leaves %%comments%% out, as the editor hides them", () => {
+    expect(toPandocMarkdown("a %%secret%% b")).toBe("a  b");
+    expect(toPandocMarkdown("one\n%%whole line%%\ntwo")).toBe("one\ntwo");
+    expect(toPandocMarkdown("start %%runs\non%% end")).toBe("start  end");
+    expect(toPandocMarkdown("> q %%x\n> y%% z")).toBe("> q  z");
+    // Not across paragraphs, list items or code, as in the editor.
+    expect(toPandocMarkdown("a %%x\n\nb%% c")).toBe("a %%x\n\nb%% c");
+    expect(toPandocMarkdown("- a %%x\n- b%%")).toBe("- a %%x\n- b%%");
+    expect(toPandocMarkdown("`%%code%%` and $a%%b%%$")).toBe(
+      "`%%code%%` and $a%%b%%$",
+    );
+    expect(toPandocMarkdown("```\n%%kept%%\n```")).toBe("```\n%%kept%%\n```");
+  });
+
+  it("writes the editor's subscript, superscript and one-tilde strikethrough", () => {
+    expect(toPandocMarkdown("H~2~O, x^2^, ~gone~ and ~~old~~")).toBe(
+      "H[2]{.textus-sub}O, x[2]{.textus-sup}, ~~gone~~ and ~~old~~",
+    );
+    expect(
+      toPandocMarkdown("a ~b~ but ~a b~ and 2^10 and [^1] and ^[note]"),
+    ).toBe("a ~~b~~ but ~~a b~~ and 2^10 and [^1] and ^[note]");
+    expect(
+      toPandocMarkdown("$a~b~c^2^$ `x~y~` [l](https://x.org/~a/~b) \\~n~"),
+    ).toBe("$a~b~c^2^$ `x~y~` [l](https://x.org/~a/~b) \\~n~");
+  });
+
+  it("writes a wikilink as its shown text, linked where it leads", () => {
+    const noteLinks = new Map([
+      ["[[Plan|the plan]]", { href: "Plan%20A.md" }],
+      ["[[Missing]]", null],
+    ]);
+    expect(
+      toPandocMarkdown(
+        "See [[Plan|the plan]], [[Missing]] and [[Note#Part]].",
+        {
+          noteLinks,
+        },
+      ),
+    ).toBe("See [the plan](<Plan%20A.md>), Missing and Note\\#Part.");
+    expect(toPandocMarkdown("| [[A\\|b_c]] |")).toBe("| b\\_c |");
+  });
+
+  it("puts an embedded picture in, sized, and links an embedded note", () => {
+    const noteLinks = new Map([
+      ["![[pic.png|300]]", { image: "/v/assets/pic.png", width: 300, alt: "" }],
+      ["![[Note]]", { href: "Note.md" }],
+    ]);
+    expect(
+      toPandocMarkdown("![[pic.png|300]] ![[Note]] ![[gone.png]]", {
+        noteLinks,
+      }),
+    ).toBe(
+      "![](</v/assets/pic.png>){width=300px} [Note](<Note.md>) gone\\.png",
+    );
+  });
+
+  it("hands citations to citeproc only with a bibliography", () => {
+    const md = "As [@doe99, p. 3] and [see @a; @b] say; mail [x a@b.c].";
+    expect(toPandocMarkdown(md)).toBe(md);
+    expect(toPandocMarkdown(md, { citations: true })).toBe(
+      "As `[@doe99, p. 3]`{=textuscite} and `[see @a; @b]`{=textuscite} say; mail [x a@b.c].",
     );
   });
 });

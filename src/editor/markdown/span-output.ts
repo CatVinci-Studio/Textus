@@ -1,6 +1,7 @@
 import { type Handle } from "mdast-util-to-markdown";
 import { writeLatexMath } from "../math/latex-math-syntax";
 import type { PeekingHandle } from "./link-output";
+import { escapeCellPipes } from "../tables/cell-pipes";
 
 /** Bold, italic, strikethrough, highlight and maths written so they read
  *  back the same. */
@@ -38,20 +39,25 @@ export function withInlineMathAsWritten(inlineMath: Handle): Handle {
   const peek = (inlineMath as Partial<PeekingHandle>).peek;
   return Object.assign(
     ((node, parent, state, info) => {
-      const written = latex(node);
-      if (written) return written;
-      const out = inlineMath(node, parent, state, info);
-      const wanted = (node.data as MathData)?.mathDelimiter;
-      const used = /^\$+/.exec(out)?.[0] ?? "";
-      return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
-        ? wanted + out.slice(used.length, out.length - used.length) + wanted
-        : out;
+      const written = latex(node) ?? asWritten(node, parent, state, info);
+      // A bare "|" would end a table's cell; the formula reads `\|` back.
+      return state.stack.includes("tableCell")
+        ? escapeCellPipes(written)
+        : written;
     }) as Handle,
     {
       peek: ((node, parent, state, info) =>
         latex(node) ? "\\" : peek?.(node, parent, state, info)) as Handle,
     },
   );
+  function asWritten(...[node, parent, state, info]: Parameters<Handle>) {
+    const out = inlineMath(node, parent, state, info);
+    const wanted = (node.data as MathData)?.mathDelimiter;
+    const used = /^\$+/.exec(out)?.[0] ?? "";
+    return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
+      ? wanted + out.slice(used.length, out.length - used.length) + wanted
+      : out;
+  }
 }
 
 /** A math block read as `\[...\]` is written that way again, on one line

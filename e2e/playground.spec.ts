@@ -12,14 +12,14 @@ const PNG =
 
 /** Opens the playground, failing the test on any request that leaves the
  *  page's own server. */
-async function openPlayground(page: Page) {
+async function openPlayground(page: Page, query = "") {
   const origin = new URL(test.info().project.use.baseURL!).origin;
   page.on("request", (request) => {
     const url = request.url();
     if (!/^(data|blob):/.test(url))
       expect(new URL(url).origin, url).toBe(origin);
   });
-  await page.goto("/playground/");
+  await page.goto(`/playground/${query}`);
   await expect(page.locator(`${editor} h1`)).toBeVisible();
 }
 
@@ -89,7 +89,7 @@ test("the first visit shows the sample, rendered", async ({ page }) => {
   });
   await expect(
     page.getByRole("banner").getByRole("link", { name: "Download Textus" }),
-  ).toHaveAttribute("href", "https://textus.catvinci.com/#download");
+  ).toHaveAttribute("href", "https://textus.md/#download");
   await expect(
     page.getByText("Your documents are kept in this browser only."),
   ).toBeVisible();
@@ -295,4 +295,18 @@ test.describe("in Chinese", () => {
     await expect(page.getByRole("button", { name: "打开…" })).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   });
+});
+
+test("a link names the language, and the page switches to another", async ({
+  page,
+}) => {
+  await openPlayground(page, "?lang=de");
+  await expect(page.locator(`${editor} h1`)).toContainText(
+    "Willkommen bei Textus",
+  );
+  await expect(page.locator("html")).toHaveAttribute("lang", "de");
+  await page.getByRole("combobox", { name: "Sprache" }).click();
+  await page.getByRole("option", { name: "日本語" }).click();
+  await expect(page).toHaveURL(/lang=ja/);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
 });

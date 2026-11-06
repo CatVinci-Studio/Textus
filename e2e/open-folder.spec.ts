@@ -118,9 +118,9 @@ test("Close Folder goes back to following the document", async ({ page }) => {
   await openFolderFromMenu(page, "/work/notes");
   await openInTab(page, "/work/elsewhere/c.md");
   await expect(page.locator(rootLabel)).toHaveText("notes");
-  await page.getByRole("button", { name: "Close Folder" }).click();
+  await page.getByRole("button", { name: "Close Project" }).click();
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
-  await expect(page.getByRole("button", { name: "Close Folder" })).toHaveCount(
+  await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
     0,
   );
   expect(
@@ -133,7 +133,7 @@ test("a recent folder opens from File > Open Recent", async ({ page }) => {
   await emit(page, "menu-open-recent-folder", "/work/notes");
   await expect(page.locator(rootLabel)).toHaveText("notes");
   await expect(
-    page.getByRole("button", { name: "Close Folder" }),
+    page.getByRole("button", { name: "Close Project" }),
   ).toBeVisible();
 });
 
@@ -146,7 +146,7 @@ test("the folder comes back with the session", async ({ page }) => {
   });
   await expect(page.locator(rootLabel)).toHaveText("notes");
   await expect(
-    page.getByRole("button", { name: "Close Folder" }),
+    page.getByRole("button", { name: "Close Project" }),
   ).toBeVisible();
 });
 
@@ -183,7 +183,7 @@ test.describe("the AI's project folder", () => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");
     await expect.poll(() => agentRoot(page)).toBe("/work/notes");
-    await page.getByRole("button", { name: "Close Folder" }).click();
+    await page.getByRole("button", { name: "Close Project" }).click();
     await expect.poll(() => agentRoot(page)).toBe("");
   });
 

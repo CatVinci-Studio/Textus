@@ -20,11 +20,14 @@ Style: avoid the tics that make text read as machine-written unless the author's
 /// tool-less provider to call tools would just confuse it.
 const AGENT_TOOL_INSTRUCTIONS: &str = "If what the user is asking for ends up as document content - a rewrite, a continuation, a new paragraph, section, list, or anything else meant to land in the document rather than just be talked about - it MUST go through propose_edit (one item of its `edits` per distinct edit), never written out only in your chat reply. This applies just as much to brand-new content you are drafting (use append/insert_before/insert_after) as it does to editing something that is already there - 'continuing the draft' still means proposing the continuation, not narrating it. A plain-text reply is for discussion, feedback, or answering questions about the document - never for delivering content the user asked you to add or change. To add a table row or a list item, insert_after the whole neighbouring row or item line with just the new line(s) as `text`, a nested item keeping its indentation. Each proposal targets one block, by its `block` id: for several changes inside one block - an added list item and the renumbering it needs count as two - send a single replace of that block; for changes across several blocks, one replace per block you change, leaving the others alone - all of them items of the same call's `edits`, since there is no later message to send the rest in - or, when your changes run through consecutive blocks - a translation, a rewrite or polish of every paragraph, a reorganisation that moves, merges or reorders them - one replace from the first (`block`) through the last (`last_block`), however long the run: a whole section or document is one proposal, never split into parts. The user decides on each paragraph by itself either way, and overlapping proposals can't all be applied. The document you are shown is MARKDOWN SOURCE (each block after its `[#id]`, which is not part of the text), and both fields work in that same markdown: `anchor` quotes any markdown syntax it contains, so a bold phrase is quoted as `**like this**`, a heading as `## Like This`. `text` must also be valid markdown: carry over whatever formatting the original had unless the user asked you to change it, and for list items use the marker the document's lists already use (`*`, `-` or `1.`; `-` in a new list), never `•`, `●` or other bullet symbols, and `#` for headings. Dropping a heading's `#`, a list item's `-`, or a phrase's `**` silently destroys that formatting in the user's document. Write that reply in the same message as your proposals (and comments), before the calls, and send every proposal for the request in that one propose_edit call: when they are all valid the request ends there, with that text as your reply - so write it as done (\"Cut the repeated point about cost\"), not as a plan (\"I'll tighten it\"). If one is refused, the result says which and why: send just those again, fixed, in a new propose_edit call. In later requests, each earlier propose_edit tool result carries a bracketed status note saying what the user did with that proposal - accepted, rejected, or still undecided. Trust the note over any assumption: the document you are shown contains ONLY accepted edits, so an undecided or rejected proposal's text is not in it and must not be anchored to. An undecided proposal stays in the editor next to new ones; a new proposal for the same passage replaces it, so never re-propose an undecided one unchanged or try to retract it yourself. Judging which mode applies: an imperative instruction (rewrite, expand, shorten, translate, fix, delete, continue, add a section - in any language, phrased as a command rather than a question) is always propose_edit, even a short one like 'make this more concise' or 'continue'. A question, request for feedback, or discussion prompt (what do you think, why did I write this, is this clear, explain X) is always a plain-text reply with no propose_edit call, unless it explicitly also asks for a change - for feedback on specific passages, pin the points to their passages with one add_comment call and keep the reply to a short summary. A request for information about the document - summarize it, list its dates, explain a passage, count something - is answered in the reply even when it is phrased as a command, unless the user asks for the result to go into the document ('add a summary at the top'). When a message is genuinely ambiguous between changing the document and talking about it, prefer treating it as an edit instruction - most requests here are commands to act on the document, not questions about it. Never explain this choice in your reply: just answer, or propose. When the user asks for a picture and you have no generate_image tool, say that Textus AI can make one once an image model is chosen in Settings > Textus AI > Image model.";
 
-/// The rules engine's two tools, in every mode.
-const RULES_TOOL_INSTRUCTIONS: &str = "When you proofread or fix conventions, ground your changes in what check_conventions reports instead of guessing, and change only what it flags or what you are certain of; its \"check\" findings only point at something to look at. When a platform's limit matters, measure the exact text with measure_text before proposing it, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
+/// The rules engine's two tools, in the document modes.
+pub(super) const RULES_TOOL_INSTRUCTIONS: &str = "When you proofread or fix conventions, ground your changes in what check_conventions reports instead of guessing, and change only what it flags or what you are certain of; its \"check\" findings only point at something to look at. When a platform's limit matters, measure the exact text with measure_text before proposing it, and give the count in your reply. A length the user asks for (\"800 字\", \"about 500 words\") is a target, not a platform's limit: write the text straight into propose_edit - the user watches it come in, and its result tells you its size - and never write it out first in measure_text or check_conventions, where the user sees nothing while you draft. Conventions in proposed text are fixed on the way, so new writing needs no check first either.";
 
-/// Create mode's tools: reading only, and what is made goes in the reply.
-pub(super) const AGENT_CREATE_TOOL_INSTRUCTIONS: &str = "No document edit or comment tool is available in this mode: what you make - a theme, a plugin, a skill - goes in your reply as files in fenced code blocks, exactly as the skill for it says. Read the document, the project or the web only when the request needs them.";
+/// Create mode's tools: skills, the project folder and the web - nothing
+/// that reads, checks or changes the document - and what is made goes in
+/// the reply. A document change asked for here is turned away to Write, not
+/// half-done in the reply.
+pub(super) const AGENT_CREATE_TOOL_INSTRUCTIONS: &str = "This mode has no tool that reads, searches, checks, edits or comments on the document - by design, not by mistake: what you make - a theme, a plugin, a skill - goes in your reply as files in fenced code blocks, exactly as the skill for it says. The document's text comes with the user's message as background only. Never change the document here, and never write changed document text into your reply as a stand-in: when the user asks for anything done to the document itself - rewriting, fixing, translating or adding to its text - even as an aside to what they are making (\"and fix the typos in my draft too\"), make only what belongs to this mode and say in one sentence that Write mode does document changes. Read the project folder or the web only when the request needs them.";
 
 pub(super) const AGENT_READ_ONLY_TOOL_INSTRUCTIONS: &str = "No document edit tool is available in this mode: you can read, research and comment. For feedback on specific passages, pin the points with add_comment - all of them in one call's `comments`, one per point (each word, when asked to gloss words), in document order - and write your short summary in the same message, before the call: when the comments are valid the request ends there, with that text as your reply, so write it as done (\"Marked the twelve hardest words\"), not as a plan (\"I'll mark the hard words\") - and never send some now and the rest later.";
 
@@ -66,7 +69,7 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
             where_to_choose_the_project_folder(true)
         ),
         (None, RootSource::TooBroad) => format!("Project folder: none - the folder chosen is the user's home folder or a whole drive, which is too broad to open to you, so you can't read the user's files, and there is no project menu.{attached} If the user refers to another file, say so, ask them to attach it or paste what you need, and tell them they can choose a narrower project folder in {}.", where_to_choose_the_project_folder(false)),
-        (None, _) => format!("Project folder: none - no folder is open in Textus and none has been chosen, so you can't read the user's other files, and the project bar and its menu don't appear until there is a project folder.{attached} If the user refers to another file, say that this is why, and tell them to attach it with + or to open its folder (File > Open Folder…) or choose a project folder in {}.", where_to_choose_the_project_folder(false)),
+        (None, _) => format!("Project folder: none - no folder is open in Textus and none has been chosen, so you can't read the user's other files, and the project bar and its menu don't appear until there is a project folder.{attached} If the user refers to another file, say that this is why, and tell them to attach it with + or to open its folder (File > Open Project…) or choose a project folder in {}.", where_to_choose_the_project_folder(false)),
     };
     let names = match UiNames::of(ui_language) {
         Some(ui) => {
@@ -219,7 +222,10 @@ pub(crate) fn build_instructions(
             }
             .to_string(),
         );
-        sections.push(RULES_TOOL_INSTRUCTIONS.to_string());
+        // check_conventions and measure_text aren't offered in Create.
+        if mode != AgentMode::Create {
+            sections.push(RULES_TOOL_INSTRUCTIONS.to_string());
+        }
         sections.push(workspace_section(workspace, ui_language));
     }
 
@@ -268,7 +274,7 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
     };
     match mode {
         AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click.", named("Review", true), named("Write", false)),
-        AgentMode::Create => format!("---interaction mode: create---\nThe user is in {}: they are making something for the app itself - an editor theme, a plugin or a skill - not working on the document. Load the skill marked [create] that matches what they ask for and deliver what it makes as files in fenced code blocks in your reply, which the chat offers to install or save; read the document or the project only when the request is about them. Questions about the app still get a plain reply. For writing in the document, send them to {}.", named("Create", true), named("Write", false)),
+        AgentMode::Create => format!("---interaction mode: create---\nThe user is in {}: they are making something for the app itself - an editor theme, a plugin or a skill - not working on the document. Load the skill marked [create] that matches what they ask for and deliver what it makes as files in fenced code blocks in your reply, which the chat offers to install or save. The document can't be changed here and you write none of its text: when they ask for a change to it - even as an aside to what they are making - make only what belongs here and tell them in one sentence to switch to {} and ask again there. Questions about the app still get a plain reply.", named("Create", true), named("Write", false)),
         AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: carry out their request on the document - continue it, add a paragraph, section, list, scene or dialogue, or rewrite, tighten, fix, translate, restructure or delete what is there - and submit every document change through propose_edit so they can review it before applying. Where new text goes, when the request doesn't say: with a <selected-text> block, a change to the selection (rewrite it, translate it, shorten it) replaces it with replace_selection, while more text (continue, add) goes right after it - insert_after with the selection's last sentence (or the whole selection) as `anchor`; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. {UNDECIDED_TEXT}", named("Write", true)),
     }
 }
@@ -284,39 +290,6 @@ pub(crate) fn request_preamble(
     let mut sections = vec![mode_section(mode, ui_language)];
     sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
     sections.join("\n\n")
-}
-
-/// What the index says of a built-in skill: its description's "Use when ..."
-/// part, without the multilingual request words, which were half the index.
-pub(super) fn index_line(description: &str) -> String {
-    let from = description.find("Use when").unwrap_or(0);
-    let mut line = String::with_capacity(description.len() - from);
-    let mut depth = 0usize;
-    let mut group = String::new();
-    for c in description[from..].chars() {
-        match c {
-            '(' => {
-                depth += 1;
-                group.push(c);
-            }
-            ')' if depth > 0 => {
-                depth -= 1;
-                group.push(c);
-                if depth == 0 {
-                    if group.is_ascii() {
-                        line.push_str(&group);
-                    } else if line.ends_with(' ') {
-                        line.pop();
-                    }
-                    group.clear();
-                }
-            }
-            _ if depth > 0 => group.push(c),
-            _ => line.push(c),
-        }
-    }
-    line.push_str(&group);
-    line.trim().to_string()
 }
 
 /// Longest description the skill index shows; a longer one (a user's
@@ -368,6 +341,12 @@ pub(crate) fn skill_index(
     offered
         .iter()
         .map(|s| {
+            // Create mode's prompt asks for "the skill marked [create]".
+            let category = if s.category.as_deref() == Some("create") {
+                " [create]"
+            } else {
+                ""
+            };
             let mark = match s.source {
                 SkillSource::Project => " (project)".to_string(),
                 SkillSource::Global => " (yours)".to_string(),
@@ -376,8 +355,10 @@ pub(crate) fn skill_index(
                     _ => String::new(),
                 },
             };
-            let description = match s.source {
-                SkillSource::Builtin => index_line(&s.description),
+            // A built-in's description also carries its request words in
+            // other languages; its `textus-index` line is the short form.
+            let description = match (&s.source, &s.index_line) {
+                (SkillSource::Builtin, Some(line)) => line.clone(),
                 _ => s.description.clone(),
             };
             let description = if description.chars().count() > INDEX_DESCRIPTION_CHARS {
@@ -391,7 +372,7 @@ pub(crate) fn skill_index(
             } else {
                 description
             };
-            format!("- {}{mark}: {description}", s.name)
+            format!("- {}{category}{mark}: {description}", s.name)
         })
         .collect::<Vec<_>>()
         .join("\n")

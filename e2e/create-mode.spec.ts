@@ -99,3 +99,50 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
   );
   expect(log).toContain("save_written_skill:write,review");
 });
+
+test("a written skill that asks for Create starts without it, and saves there only on a second click", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (n: string) => void }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  const settings = page.getByRole("dialog", { name: "Settings" });
+  await settings
+    .locator(".settings-nav-item", { hasText: "Extensions" })
+    .click();
+  await settings.getByRole("tab", { name: "Create" }).click();
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "a skill for my weekly report" },
+      {
+        kind: "Assistant",
+        text: `Here it is.\n\n\`\`\`markdown weekly-report.md\n${skill.replace('"write"', '"write create"')}\n\`\`\``,
+      },
+    ],
+  });
+  const panel = settings.locator(".create-studio");
+  const input = panel.locator(".inline-chat-input");
+  await input.fill("a skill for my weekly report");
+  await input.press("Enter");
+
+  const chip = panel.locator('.skill-offer-chip[data-skill="weekly-report"]');
+  const modes = chip.getByRole("button", { name: /Modes it works in/ });
+  // What it asked for is said, and Create left unticked.
+  await expect(modes).toHaveText("Write");
+  await expect(chip).toContainText("It asked for Create mode");
+  await modes.click();
+  await chip.getByRole("menuitemcheckbox", { name: "Create" }).click();
+  await expect(chip).toContainText("In Create mode it could write");
+  await chip.getByRole("button", { name: "Save this skill" }).click();
+  // Not saved: the first click says why, the second saves.
+  await chip.getByRole("button", { name: "Save anyway" }).click();
+  await expect(chip).toContainText("Kept as /weekly-report");
+  const log = await page.evaluate(
+    () =>
+      (window as unknown as { __devSkills: { log: string[] } }).__devSkills.log,
+  );
+  expect(log).toEqual(["save_written_skill:write,create"]);
+});

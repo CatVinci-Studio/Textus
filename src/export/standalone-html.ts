@@ -1,3 +1,4 @@
+import { headingIndex } from "../editor/markdown/link-target";
 import {
   decodeUrlPath,
   dirname,
@@ -5,6 +6,7 @@ import {
   isDrivePath,
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
+import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
 import { escapeHtml } from "../utils/html";
 import { lazyModule } from "../lazy/lazy-module";
@@ -26,6 +28,11 @@ import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
 } from "../editor/marks/color-swatch-classes";
+import { LINK } from "../editor/markdown/link-source";
+import { COMMENT_SELECTOR } from "../editor/markdown/inline-syntax-plugin";
+import { shownWikilink } from "../editor/markdown/wikilink-reveal";
+import { parseNoteLink } from "../utils/note-link";
+import type { NoteLinkOut } from "./note-links";
 
 /**
  * The document as one HTML file: the editor's content without its chrome,
@@ -138,8 +145,8 @@ export function gatherDetails(root: HTMLElement): void {
 // markdown's paths; "inline" embeds the pixels, read from data-doc-src.
 export type ExportImages = "document" | "inline";
 
-// A link shown as its Markdown while the caret is on it.
-export const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
+// A link: its Markdown in the document, its syntax hidden by the editor.
+const LINK_SELECTOR = `[data-type="${LINK}"]`;
 
 const renderHtml = lazyModule(
   "render-html",
@@ -150,8 +157,59 @@ const renderHtml = lazyModule(
 export async function linkRenderer(
   editor: Element,
 ): Promise<((markdown: string) => string) | undefined> {
-  if (!editor.querySelector(LINK_SOURCE_SELECTOR)) return undefined;
+  if (!editor.querySelector(LINK_SELECTOR)) return undefined;
   return (await renderHtml.load()).renderMarkdownInlineHtml;
+}
+
+/** A link's source as the page's <a>, or as text when it is no link. */
+function exportedLink(
+  source: string,
+  definitions: string[],
+  renderLink?: (markdown: string) => string,
+): Node {
+  const parts = parseLink(source);
+  const href = linkHref(source, () => definitions);
+  if (!parts || href === null) return document.createTextNode(source);
+  const label = source.slice(...parts.label) || href;
+  const link = document.createElement("a");
+  link.setAttribute("href", href);
+  if (parts.title) link.title = parts.title;
+  if (parts.kind === "inline" || parts.kind === "reference")
+    link.innerHTML = renderLink?.(label) ?? "";
+  if (!link.childNodes.length) link.textContent = label;
+  return link;
+}
+
+export const WIKILINK_SELECTOR = '[data-type="wikilink"]';
+
+/** A wikilink as the page's <a>: to its note, to a heading of this page,
+ *  or its text when it leads nowhere the page can go. */
+function exportedWikilink(
+  source: string,
+  root: HTMLElement,
+  noteLinks?: ReadonlyMap<string, NoteLinkOut | null>,
+): Node {
+  const text = document.createTextNode(shownWikilink(source));
+  const out = noteLinks?.get(source);
+  let href = out && "href" in out ? out.href : null;
+  const link = parseNoteLink(source);
+  const heading = link?.headings.at(-1);
+  if (!href && link && !link.note && heading) {
+    const headings = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+    const target =
+      headings[
+        headingIndex(
+          headings.map((h) => h.textContent ?? ""),
+          heading,
+        )
+      ];
+    if (target?.id) href = `#${encodeURIComponent(target.id)}`;
+  }
+  if (!href) return text;
+  const a = document.createElement("a");
+  a.setAttribute("href", href);
+  a.append(text);
+  return a;
 }
 
 // Clones the editor subtree, stripping contenteditable so the export is inert.
@@ -159,12 +217,15 @@ export function cloneEditorContent(
   editor: Element,
   images: ExportImages = "document",
   renderLink?: (markdown: string) => string,
+  noteLinks?: ReadonlyMap<string, NoteLinkOut | null>,
 ): string {
   const clone = editor.cloneNode(true) as HTMLElement;
   clone
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  // `%%comments%%` are the writer's own, never the reader's.
+  clone.querySelectorAll(COMMENT_SELECTOR).forEach((el) => el.remove());
   clone
     .querySelectorAll(EDITOR_MARK_SELECTOR)
     .forEach((el) => el.replaceWith(...el.childNodes));
@@ -177,13 +238,15 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${CODE_LINE_NUMBERS_CLASS}`)
     .forEach((el) => el.classList.remove(CODE_LINE_NUMBERS_CLASS));
-  // The link the caret is on shows as its Markdown; the page has the link.
-  clone.querySelectorAll(LINK_SOURCE_SELECTOR).forEach((el) => {
-    const link = document.createElement("span");
-    link.innerHTML = renderLink?.(el.textContent ?? "") ?? "";
-    el.replaceWith(
-      ...(link.childNodes.length ? link.childNodes : [el.textContent ?? ""]),
-    );
+  // The page has the link its Markdown makes, whatever the editor showed.
+  const definitions = [
+    ...clone.querySelectorAll('[data-type="link_definition"]'),
+  ].map((el) => el.textContent ?? "");
+  clone.querySelectorAll(LINK_SELECTOR).forEach((el) => {
+    el.replaceWith(exportedLink(el.textContent ?? "", definitions, renderLink));
+  });
+  clone.querySelectorAll(WIKILINK_SELECTOR).forEach((el) => {
+    el.replaceWith(exportedWikilink(el.textContent ?? "", clone, noteLinks));
   });
   // A colour code in plain text draws its swatch before its first
   // character; the character goes back into the text around it.

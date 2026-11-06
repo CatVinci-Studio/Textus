@@ -76,11 +76,11 @@ describe("formKey", () => {
 });
 
 describe("matchableMarkdown", () => {
-  it("is what the document shows of a footnote mark or a reference link", () => {
+  it("drops a footnote mark and keeps a reference link's source", () => {
     expect(matchableMarkdown("The umbrella was hers.[^1]")).toBe(
       "The umbrella was hers.",
     );
-    expect(matchableMarkdown("See the [map][m].")).toBe("See the map.");
+    expect(matchableMarkdown("See the [map][m].")).toBe("See the [map][m].");
     expect(matchableMarkdown("[^1]: Kept.")).toBe("[^1]: Kept.");
   });
 });

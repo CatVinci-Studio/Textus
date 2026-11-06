@@ -43,13 +43,17 @@ export function InsertTableDialog({
   }
 
   return (
-    <div {...presence} className="insert-table-overlay" onClick={onClose}>
+    <div
+      {...presence}
+      className="close-prompt-overlay insert-table-overlay"
+      onClick={onClose}
+    >
       <div
         {...modal}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="insert-table-dialog"
+        className="close-prompt insert-table-dialog"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
           modal.onKeyDown(e);

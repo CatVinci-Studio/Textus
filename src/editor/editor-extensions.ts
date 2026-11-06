@@ -24,6 +24,7 @@ import {
   frontmatterSchema,
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
+import { inlineSyntaxPlugin } from "./markdown/inline-syntax-plugin";
 import { installProseMirrorSpeedups } from "./prosemirror-speedups";
 import {
   headingIdPlugin,
@@ -60,10 +61,7 @@ import { selectAllKeyPlugin } from "./keys/select-all";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
-import {
-  configureMarkdownOutput,
-  linksOnSpansSerializer,
-} from "./markdown/markdown-output";
+import { configureMarkdownOutput } from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
 import {
   linkDefinitionSchema,
@@ -87,7 +85,7 @@ import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
 import { marginClickPlugin } from "./keys/margin-click-plugin";
-import { pointerHoldPlugin } from "./pointer-hold";
+import { noRevealPlugin, pointerHoldPlugin } from "./pointer-hold";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -111,8 +109,9 @@ import {
 import { pasteMarkdownSourcePlugin } from "./clipboard/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { linkSettlePlugin } from "./markdown/link-settle";
-import { remarkLinkSourcePlugin } from "./markdown/link-source";
-import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
+import { linkSchema, remarkLinkSourcePlugin } from "./markdown/link-source";
+import { createLinkRevealPlugin } from "./markdown/link-reveal";
+import { linkNormalizePlugin } from "./markdown/link-normalize";
 import {
   footnoteInputRule,
   htmlTagInputRule,
@@ -123,6 +122,7 @@ import { changeSourcePlugin } from "./change-source";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
+import { addEmojiCompletion } from "./emoji/emoji-completion";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { copyTextPlugin } from "./clipboard/copy-text-plugin";
 import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
@@ -134,6 +134,9 @@ import {
   remarkObsidianEmbedPlugin,
 } from "./images/obsidian-embed";
 import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
+import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createUndoFilePlugin } from "./undo-file";
+import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
@@ -143,7 +146,7 @@ import {
   lazyBlocksPlugin,
   withLazyBlockViews,
 } from "./lazy-blocks/lazy-blocks-editor";
-import { readOnlyPlugin } from "./read-only-plugin";
+import { readOnlyPlugin, readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 
@@ -191,6 +194,8 @@ export function withEditorCore(
   options: {
     settings: { readonly current: Settings };
     docPath: { readonly current: string | null };
+    /** Only read, every syntax drawn (the split view's preview). */
+    preview?: boolean;
   } & (
     | {
         /** A pasted image failed to save to disk: the localized message for a
@@ -210,17 +215,24 @@ export function withEditorCore(
 ): Editor {
   const { settings, docPath } = options;
   const disk = !("noDiskImages" in options);
+  addEmojiCompletion(
+    () => resolveStrings(settings.current.language).completionEmoji,
+  );
   return (
     editor
+      // First: the plugins that read it are asked in order.
+      .use(options.preview ? noRevealPlugin : [])
+      // Read-only's state before every plugin that reads it applying the
+      // same transaction (what shows as source); its keys come last.
+      .use(readOnlyStatePlugin)
       .config(configureMarkdownOutput)
       // Which part of the file each block was read from, so a save writes the
       // blocks the user didn't touch as they were.
       .use(openedParseRecorder)
-      .use(linksOnSpansSerializer)
-      // A plugin holding the keyboard (Vim's normal mode) has its keys first.
+      // The open / panel takes the arrows, Enter, Tab and Esc first, even
+      // from a plugin holding the keyboard (Vim's normal mode).
+      .use(createCompletionPlugin(() => docPath.current))
       .use(editorExtensions().keyInput)
-      // A plugin's completions take Enter, Tab and the arrows while open.
-      .use(createCompletionPlugin())
       .use(macNavigationPlugin)
       // Before the margin's clicks: held before they move the selection.
       .use(pointerHoldPlugin)
@@ -264,7 +276,7 @@ export function withEditorCore(
       .use(remarkReferenceLinksPlugin)
       .use(linkDefinitionSchema)
       .use(remarkLinkSourcePlugin)
-      .use(linkSourceSchema)
+      .use(linkSchema)
 
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
@@ -273,12 +285,14 @@ export function withEditorCore(
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
       .use(wikilinkRevealPlugin)
+      .use(createMissingLinksPlugin(() => docPath.current))
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,
           settings: () => settings.current,
         }),
       )
+      .use(createNoteEmbedPlugin(() => docPath.current))
 
       .use(
         createGithubAlertPlugin((type) => {
@@ -292,6 +306,8 @@ export function withEditorCore(
           }[type];
         }),
       )
+
+      .use(inlineSyntaxPlugin)
 
       // CommonMark's flanking rules reject "**" next to CJK punctuation, which
       // would break reopening bold made here. Parse side only.
@@ -376,6 +392,7 @@ export function withEditorCore(
       // handlePaste props run in registration order: images first, then a lone
       // URL, then markdown source, then milkdown's own clipboard plugin.
       .use(history)
+      .use(disk ? createUndoFilePlugin(() => docPath.current) : [])
       .use(ownUndoStepPlugin)
       .use(changeSourcePlugin)
       .use(
@@ -389,7 +406,8 @@ export function withEditorCore(
             }),
       )
       .use(linkInputRule)
-      .use(linkRevealPlugin)
+      .use(createLinkRevealPlugin(() => docPath.current))
+      .use(linkNormalizePlugin)
       .use(imageInputRule)
       .use(linkSettlePlugin)
       .use(htmlTagInputRule)

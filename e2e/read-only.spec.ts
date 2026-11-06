@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, pasteMarkdown } from "./helpers";
 
 // View › Read Only: nothing changes the document, a padlock beside the
 // title turns it off, and the file is still read-only when opened again.
@@ -59,7 +59,7 @@ test("a read-only document takes no change, and its padlock turns it off", async
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
   // Typing is refused, and the writer hears why.
-  await expect(page.locator(".ai-notice")).toContainText("read-only");
+  await expect(page.locator(".notice")).toContainText("read-only");
   await paste(page, " pasted");
   await expect(page.locator(editor)).toHaveText("Kept as it is.");
   // Selecting and copying still work.
@@ -89,4 +89,16 @@ test("a file left read-only is read-only when opened again", async ({
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
   await expect(page.locator(editor)).toHaveText("Kept as it is.");
+});
+
+test("a read-only document shows no source under the caret", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "### A heading\n\nSome **bold** text.");
+  await emit(page, "menu-toggle-read-only");
+  await page.locator(`${editor} h3`).click();
+  await page.locator(`${editor} strong`).click();
+  await expect(page.locator(`${editor} .heading-marker`)).toHaveCount(0);
+  await expect(page.locator(editor)).not.toContainText("**");
 });

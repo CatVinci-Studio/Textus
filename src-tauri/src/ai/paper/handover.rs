@@ -6,6 +6,7 @@
 
 use super::model::{Model, Watch};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolOutput, ToolRun, ToolSpec};
+use std::future::Future;
 use std::sync::Mutex;
 
 /// What a stage's check makes of a hand-over.
@@ -18,7 +19,7 @@ pub(crate) enum Checked<T> {
 
 impl<T> Checked<T> {
     /// Sent back with every problem at once, for the whole `what` again.
-    pub(crate) fn not_kept(what: &str, wrong: &[String]) -> Self {
+    pub(crate) fn not_kept<S: std::borrow::Borrow<str>>(what: &str, wrong: &[S]) -> Self {
         Self::Refused(format!(
             "Not kept - fix these and send the whole {what} again:\n- {}",
             wrong.join("\n- ")
@@ -45,6 +46,19 @@ pub(crate) async fn hand_over<T: Send>(
     task: Task<'_>,
     check: impl Fn(&str) -> Checked<T> + Sync,
 ) -> Result<(Option<T>, Vec<AgentTurn>), String> {
+    hand_over_checked(model, task, |arguments| {
+        std::future::ready(check(&arguments))
+    })
+    .await
+}
+
+/// `hand_over` with a check that waits on something - a section's figures
+/// drawn by the window.
+pub(crate) async fn hand_over_checked<T: Send, F: Future<Output = Checked<T>>>(
+    model: &dyn Model,
+    task: Task<'_>,
+    check: impl Fn(String) -> F + Sync,
+) -> Result<(Option<T>, Vec<AgentTurn>), String> {
     let kept = Mutex::new(None);
     let specs = [task.tool];
     let (instructions, watch) = (task.instructions, task.watch);
@@ -62,17 +76,21 @@ pub(crate) async fn hand_over<T: Send>(
             }
         },
         |call| {
-            std::future::ready(match check(&call.arguments) {
-                Checked::Kept(value) => {
-                    *kept.lock().unwrap() = Some(value);
-                    ToolOutput {
-                        text: "Kept. Reply with one short line.".into(),
-                        settled: true,
-                        ..ToolOutput::default()
+            let checked = check(call.arguments);
+            let kept = &kept;
+            async move {
+                match checked.await {
+                    Checked::Kept(value) => {
+                        *kept.lock().unwrap() = Some(value);
+                        ToolOutput {
+                            text: "Kept. Reply with one short line.".into(),
+                            settled: true,
+                            ..ToolOutput::default()
+                        }
                     }
+                    Checked::Refused(why) => ToolOutput::from(why),
                 }
-                Checked::Refused(why) => ToolOutput::from(why),
-            })
+            }
         },
         |_| ToolRun::InOrder,
         |_| {},
@@ -134,7 +152,7 @@ mod tests {
     fn at_least_two(arguments: &str) -> Checked<usize> {
         match arguments.parse::<usize>() {
             Ok(n) if n >= 2 => Checked::Kept(n),
-            _ => Checked::not_kept("number", &["It is less than 2.".into()]),
+            _ => Checked::not_kept("number", &["It is less than 2."]),
         }
     }
 

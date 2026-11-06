@@ -1,23 +1,19 @@
+import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
-import { showConfirm } from "../../ui/app-dialog";
-import { showNotice } from "../../ui/notices";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { showMessage } from "../../ui/app-dialog";
 import {
   catalogSnapshot,
   installFromCatalog,
   loadCatalog,
   type CatalogItem,
 } from "./catalog";
-import {
-  pluginName,
-  pluginRecord,
-  pluginsSnapshot,
-  pluginText,
-  setPluginEnabled,
-} from "../manager";
+import { pluginRecord, pluginsSnapshot, setPluginEnabled } from "../manager";
 import { matchesFilename, type SuggestKind } from "./manifest";
 import { SUGGEST_KINDS } from "./manifest-parse";
+import { pluginOffer } from "./offer-plugin";
+import { showPluginCard, type CardRequest } from "./plugin-card";
+import { explainError } from "../../utils/error-explain";
 
 /**
  * A file nothing opens (a PDF, a picture) when an official plugin would:
@@ -43,49 +39,56 @@ export function catalogEditorFor(
   );
 }
 
-/** Asks to install or turn on the plugin that opens `path`; true when it
- *  is on now, so the file can be opened with it. */
+/** Installs the card's plugin, or turns it on, asking for its permissions
+ *  first; whether it is on now. */
+async function takeUp(request: CardRequest, t: Strings): Promise<boolean> {
+  try {
+    if (request.installed) await setPluginEnabled(request.plugin, true);
+    else await installFromCatalog(request.plugin);
+  } catch (error) {
+    void showMessage(explainError(error, t), {
+      title: t.pluginsTitle,
+      tone: "error",
+    });
+  }
+  return pluginRecord(request.plugin)?.status === "on";
+}
+
+/** Suggests the plugin that opens `path` on the card: "on" when it is on
+ *  now, so the file can be opened with it; "system" when the user chose
+ *  the system's app; "declined" for Later or ×; "none" when no official
+ *  plugin opens it. */
 export async function offerPluginToOpen(
   path: string,
   t: Strings,
-): Promise<boolean> {
+): Promise<"on" | "system" | "declined" | "none"> {
   await loadCatalog().catch(() => {});
   const catalog = catalogSnapshot();
-  if (catalog.status !== "ready") return false;
+  if (catalog.status !== "ready") return "none";
   const item = catalogEditorFor(path, catalog.items);
-  if (!item) return false;
-  const installed = pluginRecord(item.id);
-  const name = pluginName({ id: item.id, manifest: item.manifest });
-  const file = basename(path);
-  const ok = await showConfirm(
-    (installed ? t.pluginOpenTurnOn : t.pluginOpenOffer)
-      .replace("{name}", name)
-      .replace("{file}", file),
-    {
-      okLabel: installed ? t.pluginOpenTurnOnButton : t.pluginOpenInstall,
-      cancelLabel: t.cancel,
-    },
-  );
-  if (!ok) return false;
-  if (installed) await setPluginEnabled(item.id, true);
-  else await installFromCatalog(item.id);
-  return pluginRecord(item.id)?.status === "on";
+  if (!item) return "none";
+  const installed = !!pluginRecord(item.id);
+  const request: CardRequest = {
+    plugin: item.id,
+    situation: { type: "open", path },
+    installed,
+  };
+  const answer = await showPluginCard(request);
+  if (answer === "system") return "system";
+  if (answer !== "install") return "declined";
+  return (await takeUp(request, t)) ? "on" : "declined";
 }
 
 /** How each kind a plugin can be suggested for shows in a document. */
 const HOLDS: Record<SuggestKind, RegExp> = {
-  wikilinks: /\[\[[^[\]\n]+\]\]/,
+  wikilinks: new RegExp(WIKILINK_SOURCE),
 };
 
 /** A document opened with something an official plugin works with
- *  (contributes.suggestFor) and no installed plugin that does: a note
- *  offers it, once ever for each kind. */
+ *  (contributes.suggestFor) and no installed plugin that does: the card
+ *  suggests it, each kind until the user says × or Later three times. */
 export async function offerForContent(content: string, t: Strings) {
-  const offered = getUiState("pluginsOfferedFor");
-  const shown = Array.isArray(offered) ? offered : [];
-  const kinds = SUGGEST_KINDS.filter(
-    (kind) => !shown.includes(kind) && HOLDS[kind].test(content),
-  );
+  const kinds = SUGGEST_KINDS.filter((kind) => HOLDS[kind].test(content));
   if (!kinds.length) return;
   const covered = (kind: SuggestKind) =>
     pluginsSnapshot().records.some((r) =>
@@ -103,21 +106,31 @@ export async function offerForContent(content: string, t: Strings) {
       !pluginRecord(i.id),
   );
   if (!item || covered(kind)) return;
-  setUiState("pluginsOfferedFor", [...shown, kind]);
-  const { manifest } = item;
-  showNotice(
-    OFFER_TEXT[kind](t)
-      .replace("{name}", pluginName({ id: item.id, manifest }))
-      .replace("{description}", pluginText({ manifest }, manifest.description)),
-    {
-      action: {
-        label: t.pluginInstall,
-        run: () => void installFromCatalog(item.id).catch(() => {}),
-      },
-    },
-  );
+  const request: CardRequest = {
+    plugin: item.id,
+    situation: { type: "content", kind },
+    installed: false,
+  };
+  if ((await showPluginCard(request)) === "install") await takeUp(request, t);
 }
 
-const OFFER_TEXT: Record<SuggestKind, (t: Strings) => string> = {
-  wikilinks: (t) => t.wikilinksPluginOffer,
-};
+/** textus.offerPlugin, with the market catalog and the suggestion card. */
+export const offerPlugin = pluginOffer({
+  official: async (id) => {
+    await loadCatalog().catch(() => {});
+    const catalog = catalogSnapshot();
+    return (
+      catalog.status === "ready" &&
+      catalog.items.some((i) => i.official && i.id === id)
+    );
+  },
+  status: (id) => pluginRecord(id)?.status,
+  card: showPluginCard,
+  install: installFromCatalog,
+  turnOn: (id) => setPluginEnabled(id, true),
+  failed: (error, t) =>
+    void showMessage(explainError(error, t), {
+      title: t.pluginsTitle,
+      tone: "error",
+    }),
+});

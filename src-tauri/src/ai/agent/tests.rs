@@ -443,17 +443,6 @@ fn style_and_mentioned_library_entries_reach_the_prompt() {
     assert!(!prompt.contains("海边城市"), "not mentioned anywhere");
 }
 
-#[test]
-fn a_built_in_skill_is_indexed_by_when_to_use_it() {
-    assert_eq!(
-        index_line(
-            "Fixes typos. Use when asked to proofread (校对, relire) or check (by hand) errors."
-        ),
-        "Use when asked to proofread or check (by hand) errors."
-    );
-    assert_eq!(index_line("No trigger clause."), "No trigger clause.");
-}
-
 /// Without use_skill the guide stays in the prompt; with it, the prompt
 /// points at it and use_skill loads it.
 #[test]
@@ -506,9 +495,12 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     // eight languages; the user's own keep their description.
     let review = skill_index(&ws, AgentMode::Review, "en");
     assert!(
-        review.contains("- proofread: Use when asked to proofread"),
+        review.contains(
+            "- proofread: Use when asked to proofread, check for typos or errors, or check against a standard."
+        ),
         "{review}"
     );
+    assert!(!review.contains("校对"), "{review}");
     // In another UI a built-in carries that UI's name for it.
     let zh = skill_index(&ws, AgentMode::Review, "zh");
     assert!(zh.contains("- proofread [/校对 in their UI]: "), "{zh}");
@@ -517,8 +509,11 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     assert!(!zh.contains("- house-headline"));
     let create = skill_index(&ws, AgentMode::Create, "en");
     for name in ["theme", "plugin", "skill"] {
-        assert!(create.contains(&format!("- {name}:")), "{name}");
+        // Marked the way Create mode's prompt asks for them.
+        assert!(create.contains(&format!("- {name} [create]:")), "{create}");
     }
+    let create_zh = skill_index(&ws, AgentMode::Create, "zh");
+    assert!(create_zh.contains("- theme [create] [/"), "{create_zh}");
     assert!(!create.contains("- proofread:"));
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.
@@ -734,6 +729,35 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     assert!(prompt.contains(&format!("Settings > {AI_NAME} > Project Folder")));
     // The backend's own pointer to Settings names the same page.
     assert!(crate::ai::route::NOT_CONFIGURED.contains(&format!("Settings > {AI_NAME}.")));
+}
+
+#[test]
+fn create_mode_is_told_its_tools_and_turns_document_changes_away() {
+    let workspace = AgentWorkspace::default();
+    let prompt = build_instructions(&workspace, &md("draft"), true, AgentMode::Create, "", "en");
+    assert!(prompt.contains(AGENT_CREATE_TOOL_INSTRUCTIONS));
+    // check_conventions and measure_text aren't offered in Create.
+    assert!(!prompt.contains(RULES_TOOL_INSTRUCTIONS));
+    assert!(
+        build_instructions(&workspace, &md("draft"), true, AgentMode::Write, "", "en")
+            .contains(RULES_TOOL_INSTRUCTIONS)
+    );
+
+    let message = request_message(
+        &workspace,
+        AgentMode::Create,
+        "en",
+        "",
+        "Make a skill for 500-word posts.",
+    );
+    assert!(message.contains("interaction mode: create"));
+    assert!(message.contains("switch to Write mode"), "{message}");
+    // The length note points at propose_edit, which only Write has.
+    assert!(!message.contains(LENGTH_TARGET_NOTE));
+    assert!(
+        request_message(&workspace, AgentMode::Write, "en", "", "Write 500 words.")
+            .contains(LENGTH_TARGET_NOTE)
+    );
 }
 
 #[test]
@@ -1064,4 +1088,15 @@ fn events_go_to_any_sink() {
     );
     report(&sink)(LoopEvent::Retry);
     assert_eq!(*sink.0.lock().unwrap(), ["delta", "toolStart", "retry"]);
+}
+
+#[test]
+fn only_a_mode_that_reads_the_document_is_told_to() {
+    use crate::ai::tools::READ_DOCUMENT_TOOL_NAME;
+    let reads =
+        |mode| ToolRegistry::builtin(false, false, mode, false).offers(READ_DOCUMENT_TOOL_NAME);
+    assert!(reads(AgentMode::Write) && reads(AgentMode::Review));
+    assert!(!reads(AgentMode::Create));
+    let doc = "# Title\n\n".to_string() + &"A long paragraph of words. ".repeat(4000);
+    assert!(!document_section(&md(&doc), false, None).contains("read_document"));
 }

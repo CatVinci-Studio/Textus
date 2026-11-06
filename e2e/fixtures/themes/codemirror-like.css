@@ -1,0 +1,53 @@
+/* A test theme in the manner of Typora's dark themes: code coloured through
+   CodeMirror's cm-* classes, Typora's variables for the code font and the
+   selection, and Typora's task, front matter and image classes. Written for
+   the e2e suite (typora-theme.spec.ts); not a copy of any shipped theme. */
+:root {
+  --bg-color: #22252b;
+  --text-color: #d7dae0;
+  --monospace: "Courier New", monospace;
+  --select-text-bg-color: rgb(64, 96, 160);
+  --select-text-font-color: rgb(250, 250, 250);
+}
+
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+pre.md-fences {
+  background: #1b1d22;
+}
+
+.cm-s-inner.CodeMirror {
+  color: rgb(171, 178, 191);
+}
+
+.md-fences .cm-s-inner.CodeMirror {
+  margin: 1.5rem 0;
+}
+
+.cm-s-inner .cm-keyword {
+  color: rgb(198, 120, 221);
+}
+
+/* Bare, as some themes write them: Textus's own token colours must not win. */
+.cm-string {
+  color: rgb(152, 195, 121);
+}
+
+.cm-s-inner .cm-comment {
+  color: rgb(92, 99, 112);
+}
+
+#write li.md-task-list-item.task-list-done {
+  background-color: rgb(40, 60, 40);
+}
+
+#write pre.md-meta-block {
+  background-color: rgb(60, 40, 40);
+}
+
+#write .md-image {
+  background-color: rgb(40, 40, 60);
+}

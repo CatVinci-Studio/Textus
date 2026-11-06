@@ -93,6 +93,8 @@ export function useWindowWiring({
     openFile,
     replaceTabWithFile: docs.replaceTabWithFile,
     restoreCarets: settings.restoreSessionOnStartup,
+    launchStartPage:
+      settings.startPageOnLaunch && !settings.restoreSessionOnStartup,
     startTutorial: tutorial.start,
     stopTutorial: tutorial.exit,
   });
@@ -155,7 +157,7 @@ export function useWindowWiring({
     pdfPageNumbers: settings.pdfPageNumbers,
     pdfLightColors: settings.pdfLightColors,
     diagramEngine: settings.diagramEngine,
-    docxReferenceDoc: settings.docxReferenceDoc,
+    pandocSettings: settings,
     onOpenSettings: shell.settingsOpening.openSettings,
     onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,

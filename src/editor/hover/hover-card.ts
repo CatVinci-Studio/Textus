@@ -1,3 +1,4 @@
+import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
 import { renderMarkdownHtml } from "../markdown/render-html";
@@ -10,7 +11,6 @@ import { duration } from "../../ui/motion";
  */
 
 const GAP = 6;
-const MARGIN = 8;
 
 /** The card on screen and not pinned, if any. */
 let floating: { el: HTMLElement; key: string } | null = null;
@@ -60,7 +60,7 @@ export function hideHoverCard(now = false) {
 function build(card: HoverCard): HTMLElement {
   const t = currentStrings();
   const el = document.createElement("div");
-  el.className = "hover-card";
+  el.className = "hover-card floating-surface";
   el.setAttribute("role", "dialog");
   el.setAttribute("aria-label", card.title ?? t.hoverCard);
   const head = document.createElement("div");
@@ -110,16 +110,12 @@ function build(card: HoverCard): HTMLElement {
 
 /** Below the link, or above it when there is no room; inside the window. */
 function place(el: HTMLElement, rect: DOMRect) {
-  const { innerWidth: w, innerHeight: h } = window;
   const box = el.getBoundingClientRect();
-  const below = rect.bottom + GAP;
-  const top =
-    below + box.height <= h - MARGIN || rect.top - GAP - box.height < MARGIN
-      ? Math.min(below, h - MARGIN - box.height)
-      : rect.top - GAP - box.height;
-  const left = Math.min(Math.max(MARGIN, rect.left), w - MARGIN - box.width);
-  el.style.top = `${Math.max(MARGIN, top)}px`;
-  el.style.left = `${Math.max(MARGIN, left)}px`;
+  const top = opensBelow(rect, box.height, GAP)
+    ? Math.min(rect.bottom + GAP, window.innerHeight - EDGE - box.height)
+    : rect.top - GAP - box.height;
+  el.style.top = `${Math.max(EDGE, top)}px`;
+  el.style.left = `${clampLeft(rect.left, box.width)}px`;
 }
 
 function movable(el: HTMLElement, handle: HTMLElement) {

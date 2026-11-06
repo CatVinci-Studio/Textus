@@ -31,7 +31,7 @@ import {
   type ImageLocation,
   type MissingReason,
 } from "./missing-image";
-import { parseEmbed, withEmbedPath, type EmbedTarget } from "./obsidian-embed";
+import { embedForPicked, parseEmbed, type EmbedTarget } from "./obsidian-embed";
 import { explainError } from "../../utils/error-explain";
 import { windowFolder } from "../../platform/window-folder";
 
@@ -55,8 +55,10 @@ export function exportSrc(file: string, docPath: string): string {
 
 /**
  * "Choose image…" on a missing embed's card: the picked file is copied into
- * the image folder (never uploaded: an embed names a vault file) and the
- * embed names it by its path, still as `![[...]]`. One undo step.
+ * the image folder (never uploaded: an embed names a vault file). A vault
+ * that writes wiki links keeps an embed, by the name it gives; elsewhere it
+ * becomes a Markdown image with a path from the document, which can't name
+ * another note's `assets/x.png`. One undo step.
  */
 async function replaceEmbed(
   view: EditorView,
@@ -68,22 +70,27 @@ async function replaceEmbed(
   const path = await pickImageFile(settings().language);
   if (!path) return;
   try {
-    const src = await copyToImageFolder(path, {
+    const stored = await copyToImageFolder(path, {
       docPath: () => docPath,
       settings,
     });
     const widgetPos = getPos();
-    if (src === null || widgetPos === undefined) return;
+    if (stored === null || widgetPos === undefined) return;
     // The widget sits right after its embed (side -1).
     const node = view.state.doc.resolve(widgetPos).nodeBefore;
     if (node?.type.name !== "obsidian_embed") return;
-    const source = withEmbedPath(node.textContent, src);
+    const { schema } = view.state;
+    const picked = embedForPicked(node.textContent, stored);
+    const replacement =
+      "embed" in picked
+        ? node.type.create(node.attrs, schema.text(picked.embed))
+        : schema.nodes.image.create(picked);
     view.dispatch(
       closeHistory(
         view.state.tr.replaceWith(
-          widgetPos - node.nodeSize + 1,
-          widgetPos - 1,
-          view.state.schema.text(source),
+          widgetPos - node.nodeSize,
+          widgetPos,
+          replacement,
         ),
       ),
     );

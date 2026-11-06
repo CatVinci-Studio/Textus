@@ -213,11 +213,14 @@ The rest of this section goes by what you want to do. The
 `commands.register(id, run)` for a command of the manifest's;
 `commands.execute(id, ...args)` runs any command - Textus's own
 (`textus.save`, `textus.closeTab` with `{ save: true }`) or another
-plugin's. `ui` draws Textus's own dialogs: `message`, `notice` (a note
-that goes by itself), `confirm`, `input`, `pick` (one or several of a
-list), `form` (a few fields at once), `withProgress` (a bar with Cancel)
-and `statusItem` (a short status in the window bar that runs a command
-when clicked).
+plugin's. `textus.offerPlugin` with `{ id, reason }` suggests an official
+plugin that works well with yours - the user decides, and it resolves
+whether that plugin is on (best from something the user does; never
+await it in `activate`, which has 10 seconds). `ui` draws Textus's own
+dialogs: `message`, `notice` (a note that goes by itself), `confirm`,
+`input`, `pick` (one or several of a list), `form` (a few fields at once),
+`withProgress` (a bar with Cancel) and `statusItem` (a short status in
+the window bar that runs a command when clicked).
 
 ### The document in front - `editor`
 

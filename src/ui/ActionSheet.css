@@ -1,41 +1,11 @@
 /* UIKit's action sheet: grouped rows rising from the bottom edge, Cancel set
    apart beneath them. */
-.action-sheet-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-sheet-menu, var(--z-sheet));
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-/* The dimming is a layer of its own, so it can fade while the sheet in
-   front of it stays opaque. */
-.action-sheet-scrim::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--ui-overlay);
-  animation: motion-fade-in var(--dur-base) var(--ease-standard);
-}
-
-/* Rises on a spring, goes back down without lingering; the dimming comes
-   and goes with it. */
 .action-sheet {
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
-  animation: motion-sheet-in var(--dur-sheet) var(--ease-spring);
-}
-
-.action-sheet-scrim[data-state="closing"]::before {
-  animation: motion-fade-out var(--dur-medium) var(--ease-in) forwards;
-}
-
-.action-sheet-scrim[data-state="closing"] > .action-sheet {
-  animation: motion-sheet-out var(--dur-medium) var(--ease-in) forwards;
 }
 
 .action-sheet-group,

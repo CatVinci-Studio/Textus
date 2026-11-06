@@ -75,7 +75,7 @@ In **GitHub repository › Settings › Secrets and variables › Actions**, add
   You can take them in the simulator (iPhone 17 Pro Max, 13-inch iPad Pro).
 
 - **Description, keywords, subtitle, promotional text:** You can adapt them from the "Features" section of the README.
-- **Support URL:** `https://textus.catvinci.com`. **Privacy policy URL:** `https://textus.catvinci.com/privacy/`.
+- **Support URL:** `https://textus.md`. **Privacy policy URL:** `https://textus.md/privacy/`.
 - **App Privacy** questionnaire: Textus does not collect data, so choose "Data Not Collected". AI requests go to a provider that the user sets up, straight from the device. They do not pass through our servers.
 - **Age rating:** 4+.
 - **Export compliance:** The app uses only standard encryption such as HTTPS. `src-tauri/Info.ios.plist` declares `ITSAppUsesNonExemptEncryption = false` (standard encryption such as HTTPS only), so App Store Connect does not ask again after upload.

@@ -6,12 +6,15 @@ import { showMessage } from "../../ui/app-dialog";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { ReplyFilesPreview } from "./ReplyFilesPreview";
 
 export interface ReplyThemeLabels {
   useTheme: string;
   themeInUse: string;
   /** The name a theme gets when its CSS doesn't give one. */
   themeFallbackName: string;
+  /** Unfolds the CSS Use would apply. */
+  showCode: string;
 }
 
 /**
@@ -83,6 +86,10 @@ function ReplyThemeChip({
       <button type="button" disabled={busy || inUse} onClick={() => void use()}>
         {inUse ? labels.themeInUse : labels.useTheme}
       </button>
+      <ReplyFilesPreview
+        label={labels.showCode}
+        files={[{ path: null, text: theme.css }]}
+      />
     </div>
   );
 }

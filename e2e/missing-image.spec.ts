@@ -143,7 +143,7 @@ test("Choose image… points the image at the chosen file, as one undo step", as
   );
 });
 
-test("an embed whose file isn't in the vault gets the card, and keeps its syntax when replaced", async ({
+test("an embed whose file isn't in the vault gets the card, and becomes a Markdown image when replaced", async ({
   page,
 }) => {
   const doc = await openDoc(
@@ -170,15 +170,15 @@ test("an embed whose file isn't in the vault gets the card, and keeps its syntax
 
   // A button press is the card's, not a click into the embed's source.
   await card.getByRole("button", { name: "Choose image…" }).click();
-  await expect(doc.locator(".obsidian-embed-rendered img")).toBeVisible();
-  // Copied into the image folder whatever the storage mode: an embed
-  // names a file in the vault.
+  await expect(doc.getByRole("img", { name: "Our cat" })).toBeVisible();
+  // Copied into the image folder whatever the storage mode; outside a vault
+  // that writes wiki links it is linked from the document, alt and size kept.
   expect((await calls(page, "save_pasted_image"))[0].args).toMatchObject({
     docPath: DOC_PATH,
     folder: "assets",
   });
   expect(await sourceOf(page)).toBe(
-    "# Trip\n\n![[assets/image-1.png|Our cat|120]]\n\nThe end.",
+    "# Trip\n\n![Our cat|120](assets/image-1.png)\n\nThe end.",
   );
 });
 

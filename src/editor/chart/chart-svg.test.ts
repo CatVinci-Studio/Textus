@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { parseChartSpec } from "./chart-spec";
 import { niceTicks, renderChart, wrapText } from "./chart-svg";
+import chartCases from "./chart-cases.json";
 
 const BAR = JSON.stringify({
   type: "bar",
@@ -48,6 +49,16 @@ describe("parseChartSpec", () => {
   ])("refuses %s", (source, message) => {
     expect(() => parseChartSpec(source)).toThrow(message);
   });
+
+  // The research writer's check (checks.rs, chart_holds) reads these too.
+  it.each(chartCases.cases.map((c) => [JSON.stringify(c.spec), c.draws]))(
+    "draws %s: %s, as the research writer's check expects",
+    (source, draws) => {
+      const parse = () => renderChart(source as string, { width: 600 });
+      if (draws) expect(parse).not.toThrow();
+      else expect(parse).toThrow();
+    },
+  );
 });
 
 describe("niceTicks", () => {

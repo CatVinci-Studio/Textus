@@ -1,3 +1,4 @@
+import { prepareList, rankList } from "../../utils/list-filter";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import {
@@ -64,6 +65,15 @@ import { explainError } from "../../utils/error-explain";
  * The input row: textarea, attachments, selection chip, send button and the
  * `/` and `@` pickers. Owns its input state; the caller hears only onSend.
  */
+/** The project's files `query` finds by the shared list filter: by name
+ *  first, then anywhere in the path. */
+function matchFiles(paths: string[], query: string): string[] {
+  const list = prepareList(
+    paths.map((path) => ({ label: basename(path), keywords: path, path })),
+  );
+  return rankList(list, query, Infinity).map((entry) => entry.path);
+}
+
 export function ChatComposer({
   docPath,
   workspaceRoot,
@@ -143,11 +153,7 @@ export function ChatComposer({
   const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
   const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
   const matchingFiles = mentionQuery
-    ? (projectFiles ?? [])
-        .filter((path) =>
-          path.toLowerCase().includes(mentionQuery[1].toLowerCase()),
-        )
-        .slice(0, FILE_LIMIT)
+    ? matchFiles(projectFiles ?? [], mentionQuery[1]).slice(0, FILE_LIMIT)
     : [];
 
   async function pickFile(path: string) {
@@ -187,21 +193,20 @@ export function ChatComposer({
     const query = skillTrigger[1].toLowerCase();
     pickerSections = [
       {
-        rows: kinds
-          .filter(
-            (k) =>
-              k.key.includes(query) || k.label.toLowerCase().includes(query),
-          )
-          .map((k) => ({
-            key: k.key,
-            primary: k.label,
-            secondary: `/${k.key}`,
-            pick: () => {
-              setInput("");
-              setPickerIndex(0);
-              k.pick();
-            },
-          })),
+        rows: rankList(
+          prepareList(kinds.map((k) => ({ ...k, keywords: k.key }))),
+          query,
+          Infinity,
+        ).map((k) => ({
+          key: k.key,
+          primary: k.label,
+          secondary: `/${k.key}`,
+          pick: () => {
+            setInput("");
+            setPickerIndex(0);
+            k.pick();
+          },
+        })),
       },
     ];
     pickerEmpty = [picker.skillNoMatch.replace("{query}", query)];

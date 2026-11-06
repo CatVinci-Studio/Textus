@@ -246,18 +246,18 @@ describe("typing a bracket or quote", () => {
     const linked = await openView("[a link](https://x.org) after\n");
     linked.view.dispatch(
       linked.view.state.tr.setSelection(
-        TextSelection.create(linked.view.state.doc, 4),
+        TextSelection.create(linked.view.state.doc, 6),
       ),
     );
     type(linked.view, "(");
-    expect(withCaret(linked.view)).toBe("a l(|ink after");
+    expect(withCaret(linked.view)).toBe("[a l(|ink](https://x.org)");
   });
 
   it("still turns a typed [text](url) into a link", async () => {
     const { view, save } = await openView("");
     caretAfter(view, "");
-    type(view, "[Textus](https://textus.catvinci.com) and on");
-    expect(save()).toBe("[Textus](https://textus.catvinci.com) and on\n");
+    type(view, "[Textus](https://textus.md) and on");
+    expect(save()).toBe("[Textus](https://textus.md) and on\n");
   });
 
   it("opens bold, italic and code inside a pair as at a line's end", async () => {

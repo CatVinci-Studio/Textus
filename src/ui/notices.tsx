@@ -41,7 +41,33 @@ function remove(id: number) {
   publish();
 }
 
+/** Removes a note after `ms`; a pointer resting on it holds it (hold). */
+function arm(id: number, ms: number) {
+  clearTimeout(timers.get(id));
+  timers.set(
+    id,
+    setTimeout(() => remove(id), ms),
+  );
+}
+
+function hold(id: number) {
+  clearTimeout(timers.get(id));
+  timers.delete(id);
+}
+
+/** What a note has left once the pointer moves off it. */
+const AFTER_HOLD_MS = 1500;
+
 function add(notice: Omit<Notice, "id">): number {
+  // Said again while showing: the one note stays, its time starts over.
+  const same = notices.find(
+    (n) =>
+      !n.progress &&
+      !notice.progress &&
+      n.text === notice.text &&
+      n.source === notice.source,
+  );
+  if (same) return same.id;
   const id = nextId++;
   notices = [...notices, { ...notice, id }];
   // The oldest note that isn't a progress bar makes room.
@@ -75,10 +101,7 @@ export function showNotice(
       },
     },
   });
-  timers.set(
-    id,
-    setTimeout(() => remove(id), action ? ACTION_NOTICE_MS : NOTICE_MS),
-  );
+  arm(id, action ? ACTION_NOTICE_MS : NOTICE_MS);
 }
 
 /** A progress bar that stays until endProgress; `onCancel` adds a way to
@@ -143,6 +166,10 @@ export function NoticeHost() {
           key={notice.id}
           className="notice floating-surface"
           data-tone={notice.tone}
+          onMouseEnter={notice.progress ? undefined : () => hold(notice.id)}
+          onMouseLeave={
+            notice.progress ? undefined : () => arm(notice.id, AFTER_HOLD_MS)
+          }
         >
           <div className="notice-text">
             {notice.source && (

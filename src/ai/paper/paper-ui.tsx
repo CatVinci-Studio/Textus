@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Strings } from "../../i18n/strings";
+import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
 import { OutlineCard } from "./OutlineCard";
 import type { SectionStatus } from "../../platform/bindings/ai-paper";
@@ -16,13 +16,68 @@ import { citationOrder } from "./paper-document";
 import "./outline-card.css";
 import { toolActivityLabels, toolActivityText } from "../chat/tool-activity";
 
+/** How much of the work at hand is under way at once, and how much done:
+ *  the questions while researching, the sections while drafting and
+ *  reviewing. Null in the other phases, or before there is a list. */
+export interface PaperConcurrency {
+  of: "questions" | "sections";
+  active: number;
+  done: number;
+  total: number;
+}
+
+export function paperConcurrency(run: PaperRunState): PaperConcurrency | null {
+  if (run.phase === "researching") {
+    const total = run.questions.length;
+    if (total === 0) return null;
+    let active = 0;
+    let done = 0;
+    for (const q of run.questions) {
+      if (q.state === "active") active++;
+      else if (q.state === "done" || q.state === "failed") done++;
+    }
+    return { of: "questions", active, done, total };
+  }
+  if (run.phase === "drafting" || run.phase === "reviewing") {
+    const total = run.outline?.sections.length ?? 0;
+    if (total === 0) return null;
+    let active = 0;
+    let done = 0;
+    // Keyed by index, so sections finishing out of order count the same;
+    // an index past the outline (one edited shorter) counts for nothing.
+    for (const [index, status] of Object.entries(run.sections)) {
+      if (Number(index) >= total) continue;
+      if (status === "drafted") done++;
+      else active++;
+    }
+    return { of: "sections", active, done, total };
+  }
+  return null;
+}
+
+/** The concurrency as the card words it: how many at once when more than
+ *  one, else only how many are done. */
+export function concurrencyLine(
+  c: PaperConcurrency,
+  phase: PaperRunState["phase"],
+  t: Strings,
+  lang: Lang,
+): string {
+  const forms =
+    c.of === "questions"
+      ? t.paperQuestionsAtOnce
+      : phase === "reviewing"
+        ? t.paperRevisingAtOnce
+        : t.paperSectionsAtOnce;
+  const text = c.active > 1 ? plural(forms, c.active, lang) : t.paperDoneOf;
+  return text
+    .replace("{done}", String(c.done))
+    .replace("{of}", String(c.total));
+}
+
 /** One line of what the run is doing now. */
-function progressLine(run: PaperRunState, t: Strings): string {
+function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
   if (run.paused) return t.paperPaused;
-  const sections = run.outline?.sections.length ?? 0;
-  const written = Object.values(run.sections).filter(
-    (s) => s === "drafted" || s === "revising",
-  ).length;
   switch (run.phase) {
     case "starting":
     case "planning":
@@ -36,10 +91,13 @@ function progressLine(run: PaperRunState, t: Strings): string {
       return t.paperOutlining;
     case "awaitingOutline":
       return run.approving ? t.paperOutlineApproving : "";
-    case "drafting":
+    case "drafting": {
+      const c = paperConcurrency(run);
+      if (c && c.active > 1) return concurrencyLine(c, run.phase, t, lang);
       return t.paperDrafting
-        .replace("{n}", String(written))
-        .replace("{of}", String(sections));
+        .replace("{n}", String(c?.done ?? 0))
+        .replace("{of}", String(c?.total ?? 0));
+    }
     case "reviewing":
       return t.paperReviewing;
     case "finishing":
@@ -235,7 +293,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
 /** A paper in the conversation: its progress, its outline to approve, then
  *  where its proposal went. */
 export function PaperCard({ info }: { info: PaperCardInfo }) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
   const run = usePaperRun(info.key);
   // A card back from History, or after a restart, asks how far its paper
   // came.
@@ -248,8 +306,14 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
     !run.paused &&
     (!run.written || run.picturesLeft > 0) &&
     (run.phase !== "awaitingOutline" || run.approving);
-  const line = run ? progressLine(run, t) : t.paperEnded;
+  const line = run ? progressLine(run, t, settings.language) : t.paperEnded;
   const busy = Boolean(running) && run?.phase !== "awaitingOutline";
+  // Drafting says it in its progress line; reviewing only once sections
+  // are being revised.
+  const concurrency =
+    run && busy && run.phase !== "drafting" ? paperConcurrency(run) : null;
+  const showConcurrency =
+    concurrency && (run?.phase !== "reviewing" || concurrency.active > 0);
   const elapsed = useElapsed(run?.phaseSince ?? 0, busy);
   return (
     <div className="paper-card">
@@ -280,6 +344,11 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
             {busy && <span className="paper-card-elapsed">{elapsed}</span>}
           </p>
         )
+      )}
+      {run && concurrency && showConcurrency && (
+        <p className="paper-card-note">
+          {concurrencyLine(concurrency, run.phase, t, settings.language)}
+        </p>
       )}
       {run?.webSearch === false &&
         busy &&

@@ -121,10 +121,10 @@ in the next one, through the merge back.
      `darwin-aarch64`, `darwin-x86_64`, `linux-x86_64`, `linux-aarch64`,
      `windows-x86_64` and `windows-aarch64`, each also with its installer
      suffix;
-   - <https://textus.catvinci.com/download/manifest.json> names the new
+   - <https://textus.md/download/manifest.json> names the new
      files under all ten keys, `windows-arm64`, `linux-arm64`, `deb-arm64`
      and `rpm-arm64` included;
-   - <https://textus.catvinci.com/download/textus-beta.json> has the new
+   - <https://textus.md/download/textus-beta.json> has the new
      version;
    - the Arch repository has `textus-bin-X.Y.Z-1`;
    - later that day, `brew info --cask textus` shows the new version. If
@@ -220,7 +220,7 @@ The app has two (`src-tauri/src/commands/update.rs`):
 - **Stable** reads the newest stable GitHub release's `textus-latest.json`,
   the endpoint in `tauri.conf.json`.
 - **Beta** reads `textus-beta.json` from the website's download bucket
-  (<https://textus.catvinci.com/download/textus-beta.json>), and falls back
+  (<https://textus.md/download/textus-beta.json>), and falls back
   to the stable endpoint when that fails. GitHub has no fixed URL for the
   newest pre-release, so the beta manifest lives on our own bucket.
 

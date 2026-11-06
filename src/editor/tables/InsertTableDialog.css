@@ -1,26 +1,13 @@
+/* The dialog box is the app's (.close-prompt); only its layer and size are
+   its own. */
 .insert-table-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 400;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--ui-overlay);
+  z-index: var(--z-modal);
 }
 
 .insert-table-dialog {
-  max-width: calc(100vw - 32px);
-  max-height: calc(100% - 32px);
-  overflow: auto;
   box-sizing: border-box;
-
   min-width: 260px;
-  padding: 16px 20px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-l);
-  background: var(--ui-bg);
-  box-shadow: var(--shadow-dialog);
-  font-size: var(--text-body-large);
+  max-width: calc(100vw - 32px);
 }
 
 .insert-table-title {

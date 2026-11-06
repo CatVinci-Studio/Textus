@@ -1,6 +1,7 @@
+import { IconButton } from "../../../ui/IconButton";
+import { PanelHeader } from "../../../ui/PanelHeader";
 import type { ReactNode } from "react";
 import { DetachIcon, PlusIcon, ProjectIcon } from "../../../ui/icons";
-import { Tooltip } from "../../../ui/Tooltip";
 
 export interface AgentPanelLabels {
   title: string;
@@ -46,52 +47,46 @@ export function AgentPanelView({
   const showingMemory = tab === "memory" && !!memory;
   return (
     <section className="agent-panel-view" aria-label={labels.title}>
-      <header className="agent-panel-header">
-        {showingMemory && (
-          <h2 className="agent-panel-heading">{labels.project}</h2>
+      <PanelHeader
+        className="agent-panel-header"
+        actionsClassName="agent-panel-actions"
+        title={
+          showingMemory && (
+            <h2 className="agent-panel-heading">{labels.project}</h2>
+          )
+        }
+      >
+        {memory && (
+          <IconButton
+            className="inline-chat-header-button"
+            label={labels.project}
+            pressed={showingMemory}
+            onClick={() => setTab(showingMemory ? "chat" : "memory")}
+          >
+            <ProjectIcon />
+          </IconButton>
         )}
-        <div className="agent-panel-actions">
-          {memory && (
-            <Tooltip text={labels.project}>
-              <button
-                type="button"
-                className="inline-chat-header-button"
-                aria-label={labels.project}
-                aria-pressed={showingMemory}
-                onClick={() => setTab(showingMemory ? "chat" : "memory")}
-              >
-                <ProjectIcon />
-              </button>
-            </Tooltip>
-          )}
-          {history}
-          <Tooltip text={labels.newConversation}>
-            <button
-              type="button"
-              className="inline-chat-header-button"
-              aria-label={labels.newConversation}
-              onClick={() => {
-                setTab("chat");
-                onNewConversation();
-              }}
-            >
-              <PlusIcon />
-            </button>
-          </Tooltip>
-          {onPopOut && (
-            <Tooltip text={labels.popOut}>
-              <button
-                type="button"
-                className="inline-chat-header-button"
-                aria-label={labels.popOut}
-                onClick={onPopOut}
-              >
-                <DetachIcon />
-              </button>
-            </Tooltip>
-          )}
-        </div>
-      </header>
+        {history}
+        <IconButton
+          className="inline-chat-header-button"
+          label={labels.newConversation}
+          onClick={() => {
+            setTab("chat");
+            onNewConversation();
+          }}
+        >
+          <PlusIcon />
+        </IconButton>
+        {onPopOut && (
+          <IconButton
+            className="inline-chat-header-button"
+            label={labels.popOut}
+            onClick={onPopOut}
+          >
+            <DetachIcon />
+          </IconButton>
+        )}
+      </PanelHeader>
       <div className="agent-panel-body" hidden={showingMemory}>
         {children}
       </div>

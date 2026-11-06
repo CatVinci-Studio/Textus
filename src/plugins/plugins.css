@@ -189,9 +189,6 @@ button.plugin-card-open:hover .plugin-card-name {
   stroke: currentColor;
   stroke-width: 1.6;
 }
-.plugin-action .extensions-more-menu {
-  min-width: 140px;
-}
 /* Turned off: its words and icon quieter. */
 .plugin-card.is-off .plugin-card-open {
   opacity: 0.6;
@@ -673,18 +670,6 @@ button.plugin-card-open:hover .plugin-card-name {
   min-width: 32px;
   letter-spacing: 1px;
 }
-.extensions-more-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  min-width: 200px;
-  padding: 4px;
-  transform-origin: top right;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
 .extensions-advanced {
   margin-top: var(--space-4);
 }
@@ -899,28 +884,6 @@ button.mcp-homepage:hover {
 .plugin-status-more {
   transform: rotate(90deg);
   opacity: 0.7;
-}
-.plugin-status-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  min-width: 180px;
-  padding: 4px;
-  transform-origin: top right;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-.plugin-status-menu-title {
-  padding: 4px 8px;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
-.plugin-status-menu-separator {
-  height: 1px;
-  margin: 4px 0;
-  background: var(--ui-border);
 }
 
 /* Plugins' floating views in the window: over the editor, under menus and

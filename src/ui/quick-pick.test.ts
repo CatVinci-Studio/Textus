@@ -1,5 +1,10 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { quickPickMatches } from "./quick-pick";
+import { quickPickFilter } from "./quick-pick";
+
+const quickPickMatches = (
+  item: { label: string; description?: string },
+  query: string,
+) => quickPickFilter([item], query).length > 0;
 import { pinyinEngine } from "../utils/pinyin";
 
 beforeAll(() => pinyinEngine.load());
@@ -14,5 +19,13 @@ describe("the quick pick's filter", () => {
     expect(
       quickPickMatches({ label: "Thème de l’éditeur…" }, "theme edi"),
     ).toBe(true);
+  });
+
+  it("puts a label starting with the query first", () => {
+    const items = [{ label: "Export PDF" }, { label: "PDF Viewer" }];
+    expect(quickPickFilter(items, "pdf").map((i) => i.label)).toEqual([
+      "PDF Viewer",
+      "Export PDF",
+    ]);
   });
 });

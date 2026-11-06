@@ -1,8 +1,10 @@
 import { setExportStep, type ExportPage } from "../../export/export-step";
+import { inIdOrder } from "./will-save";
 
 /**
  * Plugins that add CSS to an HTML or PDF export or change its HTML. Each is
- * asked in turn and given at most two seconds, so none holds an export up.
+ * asked in turn, in plugin id order, given the HTML as the one before left
+ * it and at most two seconds, so none holds an export up.
  */
 type Answer = { html?: string | null; css?: string | null } | null;
 type Ask = (page: ExportPage) => Promise<Answer>;
@@ -27,7 +29,7 @@ async function runWillExport(
 ): Promise<{ html: string; css: string }> {
   let html = page.html;
   let css = "";
-  for (const ask of listeners.values()) {
+  for (const [, ask] of inIdOrder(listeners)) {
     const answer = await Promise.race([
       ask({ ...page, html }).catch(() => null),
       new Promise<null>((resolve) =>

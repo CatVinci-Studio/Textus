@@ -1,7 +1,7 @@
 # textus-ext-stats
 
 How often plugins, themes and skills are installed, for the market to show.
-Served at `https://textus.catvinci.com/api/ext/`.
+Served at `https://textus.md/api/ext/`.
 
 - `GET download?kind=&id=&version=&event=` - the app downloads a package
   through this: it adds one to today's total and redirects (302) to the
@@ -31,7 +31,7 @@ From this folder, with `CLOUDFLARE_ACCOUNT_ID` set:
 1. `npx wrangler@4 d1 create textus-ext-stats`, and put the `database_id` it
    prints in `wrangler.toml` in place of the placeholder.
 2. `npx wrangler@4 d1 migrations apply textus-ext-stats --remote`.
-3. `npx wrangler@4 deploy` (the route `textus.catvinci.com/api/ext/*`).
+3. `npx wrangler@4 deploy` (the route `textus.md/api/ext/*`).
 
 To try it locally: `npx wrangler@4 d1 migrations apply textus-ext-stats
 --local`, then `npx wrangler@4 dev` and

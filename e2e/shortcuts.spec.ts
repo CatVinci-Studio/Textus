@@ -41,8 +41,9 @@ test("Settings › Shortcuts lists the fixed shortcuts, read-only, by menu", asy
       has: page.getByText(label, { exact: true }),
     });
   await expect(row("Save").locator("kbd")).toHaveText("Ctrl+S");
-  await expect(row("New Tab").locator("kbd")).toHaveText("Ctrl+T");
-  await expect(row("New Window").locator("kbd")).toHaveText("Ctrl+N");
+  // Ctrl+N is a new document (a tab), as in Typora and VS Code.
+  await expect(row("New Tab").locator("kbd")).toHaveText("Ctrl+N");
+  await expect(row("New Window").locator("kbd")).toHaveText("Ctrl+Shift+N");
   await expect(row("Reopen Closed Tab").locator("kbd")).toHaveText(
     "Ctrl+Shift+T",
   );

@@ -17,8 +17,8 @@ import type { Literal } from "mdast";
 
 /**
  * Obsidian's embeds, `![[file]]`, kept as written (the source is the node's
- * text) so saving writes them back unchanged. Pandoc exports keep the embed
- * as text: rewriting it to `![](path)` would change what was written.
+ * text) so saving writes them back unchanged. A Pandoc export writes its
+ * own copy as a standard image (`src/export/pandoc-markdown.ts`).
  */
 
 declare module "micromark-util-types" {
@@ -65,6 +65,19 @@ const EMBED_SOURCE = /^!\[\[([^[\]\n]+)\]\]$/;
 export function withEmbedPath(source: string, path: string): string {
   const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
   return `![[${[path, ...options].join("|")}]]`;
+}
+
+/** What a missing embed (`source`) becomes once a picked file is stored:
+ *  a vault that writes wiki links keeps an embed by the name it gives;
+ *  else a Markdown image from the document, alt and `|300` size kept. */
+export function embedForPicked(
+  source: string,
+  stored: { src: string; embed?: string | null },
+): { embed: string } | { src: string; alt: string } {
+  const named = stored.embed && parseEmbed(stored.embed)?.path;
+  if (named) return { embed: withEmbedPath(source, named) };
+  const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
+  return { src: stored.src, alt: options.join("|") };
 }
 
 export interface EmbedTarget {

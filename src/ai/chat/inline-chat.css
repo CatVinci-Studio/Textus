@@ -382,9 +382,9 @@
   background: var(--ui-hover);
 }
 
-/* The keyboard's row: the accent's tint, as a selected list row. */
+/* The keyboard's row: selected, as in the / panel and command palette. */
 .inline-chat-skill-item-active {
-  background: color-mix(in srgb, var(--ui-accent) 13%, transparent);
+  background: var(--ui-selected);
 }
 
 .inline-chat-skill-name {
@@ -781,17 +781,7 @@
 }
 
 .agent-diff-caret {
-  width: 0;
-  height: 0;
   margin-left: 2px;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.agent-diff-summary[aria-expanded="true"] .agent-diff-caret {
-  transform: rotate(90deg);
 }
 
 .agent-diff-summary:hover {

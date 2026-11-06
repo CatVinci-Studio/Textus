@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   defaultShortcuts,
-  type HeadingAction,
   type ShortcutAction,
   type Shortcuts,
 } from "../../prefs/SettingsContext";
@@ -14,23 +13,13 @@ import {
   isReservedCombo,
 } from "../../utils/shortcuts";
 import { isImeKeydown } from "../../utils/ime";
+import { modIsMeta } from "../../platform/os";
+import { keyOwner } from "../../prefs/key-owner";
+
+export { headingLabels, plain } from "../../prefs/key-owner";
 
 // Settings › Shortcuts' rows: one that records a key combination, for the
 // app's own actions and for the commands plugins add.
-
-/** The heading shortcuts' names: the Format menu's own, and Paragraph. */
-export function headingLabels(t: Strings): Record<HeadingAction, string> {
-  const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));
-  return {
-    setHeading1: level(1),
-    setHeading2: level(2),
-    setHeading3: level(3),
-    setHeading4: level(4),
-    setHeading5: level(5),
-    setHeading6: level(6),
-    setParagraph: t.shortcutParagraph,
-  };
-}
 
 /** The shortcuts that can't be changed, read-only, by menu. */
 export function FixedShortcutList({
@@ -61,44 +50,6 @@ export function FixedShortcutList({
   );
 }
 
-/** A menu item's name as an action's: without the "…" of one that asks
- *  for more. The shortcuts use the menu's names, so the two never differ. */
-export const plain = (label: string) => label.replace(/…$/, "");
-
-/** Every action's name, for a conflict's message. */
-function actionLabels(t: Strings): Record<ShortcutAction, string> {
-  return {
-    triggerCompletion: t.shortcutTriggerCompletion,
-    triggerGrammarCheck: t.shortcutTriggerGrammarCheck,
-    toggleFloatingChat: t.shortcutToggleFloatingChat,
-    toggleTextusAi: t.shortcutToggleTextusAi,
-    findReplace: plain(t.menuFindReplace),
-    toggleSidebar: t.menuToggleSidebar,
-    toggleAgentPanel: t.menuToggleAgentPanel,
-    toggleSplitView: t.menuToggleSplitView,
-    toggleZenMode: t.menuToggleZenMode,
-    splitEditor: t.shortcutSplitEditor,
-    commandPalette: t.shortcutCommandPalette,
-    toggleSourceMode: t.menuViewSource,
-    toggleTypewriterMode: t.menuViewTypewriter,
-    searchFiles: t.shortcutSearchFiles,
-    nextTab: t.shortcutNextTab,
-    previousTab: t.shortcutPreviousTab,
-    ...headingLabels(t),
-  };
-}
-
-/** The fixed shortcut that has `combo`, by its label. A key one of them owns
- *  can't be bound, as it would never fire. */
-function fixedOwner(
-  fixed: FixedShortcutGroup[],
-  combo: string,
-): string | undefined {
-  return fixed
-    .flatMap((group) => group.items)
-    .find((item) => item.combos.includes(combo))?.label;
-}
-
 export function ShortcutRow({
   label,
   action,
@@ -114,17 +65,13 @@ export function ShortcutRow({
   t: Strings;
   fixed?: FixedShortcutGroup[];
 }) {
-  const labels = useMemo(() => actionLabels(t), [t]);
   return (
     <ShortcutRecorder
       label={label}
       combo={shortcuts[action]}
       fallback={defaultShortcuts()[action]}
       ownerOf={(next) =>
-        fixedOwner(fixed, next) ??
-        (Object.keys(shortcuts) as ShortcutAction[])
-          .filter((other) => other !== action && shortcuts[other] === next)
-          .map((other) => labels[other])[0]
+        keyOwner(next, { t, fixed, shortcuts, mac: modIsMeta(), self: action })
       }
       onChange={(next) =>
         setSettings({ shortcuts: { ...shortcuts, [action]: next } })
@@ -158,18 +105,13 @@ export function CommandShortcutRow({
   t: Strings;
   fixed?: FixedShortcutGroup[];
 }) {
-  const labels = useMemo(() => actionLabels(t), [t]);
   return (
     <ShortcutRecorder
       label={label}
       combo={overrides[command] ?? fallback ?? ""}
       fallback={fallback}
       ownerOf={(next) =>
-        fixedOwner(fixed, next) ??
-        (Object.keys(shortcuts) as ShortcutAction[])
-          .filter((action) => shortcuts[action] === next)
-          .map((action) => labels[action])[0] ??
-        others.find((other) => other.combo === next)?.label
+        keyOwner(next, { t, fixed, shortcuts, mac: modIsMeta(), others })
       }
       onChange={(next) => {
         const rest = { ...overrides };

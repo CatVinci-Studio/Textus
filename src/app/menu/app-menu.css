@@ -88,7 +88,7 @@
 
 .app-menu-flyout {
   position: fixed;
-  z-index: 311;
+  z-index: var(--z-menu);
   --enter-x: calc(var(--motion-distance-sm) * -1);
   animation: motion-enter var(--dur-fast) var(--ease-out);
 }

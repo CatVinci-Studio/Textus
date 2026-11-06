@@ -1,7 +1,7 @@
 # textus-feedback
 
 The Worker behind **Help › Report a Problem**: the app posts a report to
-`https://textus.catvinci.com/api/feedback`, and the Worker files it as an
+`https://textus.md/api/feedback`, and the Worker files it as an
 issue on CatVinci-Studio/Textus, as the Textus Feedback GitHub App, with
 labels for what it is (`bug`, `enhancement`, `question`), the part of the
 app (`area: …`) and, for a bug, how bad it is (`severity: …`).

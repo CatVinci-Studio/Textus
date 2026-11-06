@@ -1,5 +1,6 @@
 import type { AgentMode } from "../../prefs/settings-types";
 import { storedAgentMode } from "../../prefs/settings-types";
+import { replyFiles } from "./reply-files";
 
 /**
  * A skill Textus AI wrote in a reply: one fenced block such as
@@ -10,13 +11,15 @@ export interface ReplySkill {
   description: string;
   /** What it says it is called in each UI language (`textus-label-<code>`). */
   labels: Record<string, string>;
-  /** The modes its file asks for; Write when it doesn't say. */
+  /** The modes its file asks for, Create left out - a skill there could
+   *  write the next skill, so only the user ticks it; Write when none. */
   modes: AgentMode[];
+  /** Its file asked for Create mode. */
+  asksForCreate: boolean;
   /** The whole file, as it is saved. */
   text: string;
 }
 
-const FENCE = /^(`{3,})([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$/gm;
 const FRONT = /^---\n([\s\S]*?)\n---\n/;
 
 /** A front matter value: `key: value` or `key: "value"`, at any indent. */
@@ -41,10 +44,8 @@ function description(front: string): string {
 /** The skills `text` writes: each `.md` block that is a skill file. */
 export function skillsInReply(text: string): ReplySkill[] {
   const skills: ReplySkill[] = [];
-  for (const m of text.matchAll(FENCE)) {
-    const words = m[2].trim().split(/\s+/);
-    if (words.length < 2 || !words[words.length - 1].endsWith(".md")) continue;
-    const file = m[3] + "\n";
+  for (const { path, text: file } of replyFiles(text)) {
+    if (!path?.endsWith(".md")) continue;
     const front = FRONT.exec(file);
     if (!front) continue;
     const name = field(front[1], "name");
@@ -56,11 +57,13 @@ export function skillsInReply(text: string): ReplySkill[] {
       .split(/[\s,]+/)
       .map(storedAgentMode)
       .filter((mode): mode is AgentMode => mode !== null);
+    const picked = [...new Set(modes)].filter((mode) => mode !== "create");
     skills.push({
       name,
       description: description(front[1]),
       labels,
-      modes: modes.length ? [...new Set(modes)] : ["write"],
+      modes: picked.length ? picked : ["write"],
+      asksForCreate: modes.includes("create"),
       text: file,
     });
   }

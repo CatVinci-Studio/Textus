@@ -245,6 +245,7 @@ export const exportDoc = {
     resourceDir: string | null;
     title: string;
     referenceDoc: string | null;
+    options: Generated.PandocOptions_Deserialize;
   }) =>
     desktopActionCommand(
       "export_via_pandoc",
@@ -255,7 +256,10 @@ export const exportDoc = {
       args.resourceDir,
       args.title,
       args.referenceDoc,
+      args.options,
     ),
+  /** The first argument the export keeps for itself, or null. */
+  checkPandocArgs: (args: string[]) => command("check_pandoc_args", args),
   openPandocInstallPage: () =>
     desktopQueryCommand("open_pandoc_install_page", undefined),
   /** Nothing to show the file in on iOS; resolves without doing anything. */

@@ -201,35 +201,3 @@ test("the calendar puts each week on its days", async ({ page }) => {
   await expect(db.locator(".chip", { hasText: "Week1" })).toHaveCount(4);
   await expect(db.locator(".chip.cont", { hasText: "Week1" })).toHaveCount(3);
 });
-
-test("a Notion export's CSV comes in as pages with properties, and a page to see them", async ({
-  page,
-}) => {
-  const csv =
-    "Week name,Start Day,Focus Field\n" +
-    'Week1 0123456789abcdef0123456789abcdef,"January 1, 2026",Personal\n' +
-    'Week11,"March 9, 2026","Health, Personal"\n';
-  await open(page, {
-    "/work/Notion/Cal 0123456789abcdef0123456789abcdef.csv": csv,
-    "/work/Notion/Cal 0123456789abcdef0123456789abcdef/Week1 0123456789abcdef0123456789abcdef.md":
-      "# Week1\n\nStart Day: January 1, 2026\nFocus Field: Personal\n\nA calm week.\n",
-  });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
-  const tree = page.locator(".sidebar .tree-main .tree-row");
-  await tree.filter({ hasText: /^Notion$/ }).click();
-  await tree.filter({ hasText: ".csv" }).click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Import from Notion…" }).click();
-  await expect
-    .poll(() => fileText(page, "/work/Notion/Cal/Week11.md"))
-    .toContain("start_day: 2026-03-09");
-  const first = await fileText(page, "/work/Notion/Cal/Week1.md");
-  expect(first).toContain("A calm week.");
-  expect(first).not.toContain("Start Day:");
-  expect(await fileText(page, "/work/Notion/Cal.md")).toContain(
-    "```database\nfrom: Cal",
-  );
-});

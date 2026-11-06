@@ -213,6 +213,9 @@ export function applyPaperEvent(key: string, event: PaperEvent) {
             notes: event.notes,
           })),
         };
+      case "drawFigures":
+        // Answered by the writer's hook, not shown.
+        return {};
     }
   });
 }

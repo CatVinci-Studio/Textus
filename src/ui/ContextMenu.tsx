@@ -74,6 +74,15 @@ interface ContextMenuProps {
   /** Opened from the keyboard: focus moves to the first item and back once
    *  the menu closes. */
   keyboard?: boolean;
+  /** The button it hangs from (useMenuButton): a press on it is the
+   *  button's, which closes the menu, not an outside click. */
+  anchor?: HTMLElement | null;
+  /** Hanging from a button at the end of a bar: `x` is the menu's right
+   *  edge. */
+  alignEnd?: boolean;
+  /** A heading row naming the menu (a plugin's status menu); also its
+   *  accessible name. */
+  heading?: string;
 }
 
 /** A menu at the pointer, or on a phone an action sheet. Render it inside a
@@ -91,12 +100,26 @@ export function ContextMenu(props: ContextMenuProps) {
   return <PointerMenu {...props} />;
 }
 
-function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
+function PointerMenu({
+  x,
+  y,
+  items,
+  onClose,
+  keyboard,
+  anchor,
+  alignEnd,
+  heading,
+}: ContextMenuProps) {
   // On its way out it no longer answers Escape: the next press belongs to
   // whatever is under it (the find bar, a dialog).
   const open = usePresenceState() === "open";
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(onClose, true, open);
-  const pos = useViewportClamp(ref, x, y);
+  const ref = useCloseOnOutsideClick<HTMLDivElement>(
+    onClose,
+    true,
+    open,
+    anchor ?? "",
+  );
+  const pos = useViewportClamp(ref, x, y, { alignEnd });
   const presence = usePresenceProps(ref);
   // It grows out of the point that was clicked - a corner, unless the menu
   // was pulled back from a window edge.
@@ -151,6 +174,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       {...presence}
       className="context-menu floating-surface"
       role="menu"
+      aria-label={heading}
       style={{ ...pos, ...origin }}
       onKeyDown={onKeyDown}
       onMouseMove={aim.move}
@@ -158,6 +182,7 @@ function PointerMenu({ x, y, items, onClose, keyboard }: ContextMenuProps) {
       // and once the menu closed it fell to the page.
       onMouseDown={(e) => e.preventDefault()}
     >
+      {heading && <div className="context-menu-heading">{heading}</div>}
       {items.map((item, i) =>
         item === "separator" ? (
           <div key={i} className="context-menu-separator" role="separator" />

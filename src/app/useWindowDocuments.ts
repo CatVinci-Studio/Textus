@@ -1,4 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  registerNoteCompletion,
+  setNoteCompletionRoot,
+} from "../sidebar/note-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
@@ -13,6 +17,7 @@ import { useDraftTitles } from "../ai/doc-title";
 import { useZenMode } from "./useZenMode";
 import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
+import { folderTabsToClose } from "./close-folder";
 import { usePracticeTab } from "./onboarding-wiring";
 import { usePluginWindow } from "../plugins/usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
@@ -80,10 +85,16 @@ export function useWindowDocuments({
     onWordDocumentOpened: shell.wordImported.opened,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  const folderRoot = openFolder.folder ?? openFolder.treeRoot;
+  // `[[` lists the folder's notes while no plugin completes it.
+  useEffect(() => {
+    setNoteCompletionRoot(folderRoot);
+    return registerNoteCompletion(() => t.completionNotes);
+  }, [folderRoot, t]);
   usePluginWindow({
     t,
     language: settings.language,
-    rootPath: openFolder.folder ?? openFolder.treeRoot,
+    rootPath: folderRoot,
     activePath: activeTab.path,
     tabState,
     openPathInTab: opening.openPathInTab,
@@ -145,8 +156,21 @@ export function useWindowDocuments({
     cancelDraftFlushes: shell.cancelDraftFlushes,
     flushAutosave,
     setPendingClose,
+    closeLastToStartPage: settings.closeLastToStartPage,
     t,
   });
+
+  // Close Project also closes the project's saved documents; with none left,
+  // the start page.
+  const { folder, closeFolder: forgetFolder } = openFolder;
+  const { addStartTab } = tabState;
+  const closeFolder = useCallback(() => {
+    forgetFolder();
+    if (!folder) return;
+    const { close, blank } = folderTabsToClose(liveTabs(), folder);
+    if (blank) addStartTab();
+    for (const id of close) removeTab(id);
+  }, [folder, forgetFolder, liveTabs, addStartTab, removeTab]);
 
   // Tabs moving between windows, in both directions.
   const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
@@ -165,7 +189,7 @@ export function useWindowDocuments({
 
   return {
     ...active,
-    openFolder,
+    openFolder: { ...openFolder, closeFolder },
     searchFocusRequest,
     clearSearchFocusRequest,
     searchFiles,

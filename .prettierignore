@@ -18,6 +18,8 @@ src-tauri/src/ai/live_eval/docs/*.md
 # Built-in skills and packs are sent to the model verbatim (two spaces before
 # a Korean 끝 matter); prettier would rewrite them.
 src-tauri/src/ai/skills/**/*.md
+# The paper's prompts, filled in and sent as they are written.
+src-tauri/src/ai/paper/prompts/**/*.md
 .claude
 # Generated from the Rust commands (src-tauri/src/bindings.rs), which
 # compares them byte for byte.

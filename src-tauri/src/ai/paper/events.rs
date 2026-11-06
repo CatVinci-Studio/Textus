@@ -31,6 +31,12 @@ pub enum PaperEvent {
     Ready {
         markdown: String,
     },
+    /// Draw these diagram and chart blocks as the document would, and say
+    /// with `ai_paper_figures_drawn` `call_id` which can't be drawn.
+    DrawFigures {
+        call_id: String,
+        blocks: Vec<super::figures::FigureBlock>,
+    },
     /// The outline is ready for the user to edit and approve.
     OutlineReady {
         outline: Outline,

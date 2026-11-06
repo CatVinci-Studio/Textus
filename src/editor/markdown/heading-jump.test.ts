@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
-import { headingPos, referencePos } from "./heading-jump";
+import { headingPos, htmlAnchorPos, referencePos } from "./heading-jump";
 
 const schema = new Schema({
   nodes: {
     doc: { content: "block+" },
-    paragraph: { content: "text*", group: "block" },
+    paragraph: { content: "inline*", group: "block" },
     heading: { content: "text*", group: "block" },
-    text: {},
+    text: { group: "inline" },
+    html: { content: "text*", group: "inline", inline: true },
   },
 });
 
@@ -65,5 +66,70 @@ describe("referencePos", () => {
   it("finds nothing for another anchor or a source not listed", () => {
     expect(referencePos(paper, "references")).toBeNull();
     expect(referencePos(paper, "ref-7")).toBeNull();
+  });
+});
+
+describe("headingPos for wikilinks' blocks and levels", () => {
+  const leveled = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { content: "text*", group: "block" },
+      heading: {
+        content: "text*",
+        group: "block",
+        attrs: { level: { default: 1 } },
+      },
+      list: { content: "paragraph+", group: "block" },
+      text: {},
+    },
+  });
+  const p = (text: string) =>
+    leveled.node("paragraph", null, text ? [leveled.text(text)] : []);
+  const h = (level: number, text: string) =>
+    leveled.node("heading", { level }, [leveled.text(text)]);
+  const book = leveled.node("doc", null, [
+    h(1, "A"), // 0
+    h(2, "B"), // 3
+    h(1, "C"), // 6
+    h(2, "B"), // 9
+    p("A line ^abc123"), // 12
+    leveled.node("list", null, [p("one"), p("two")]),
+    p("^list1"),
+    h(2, "abc123"),
+  ]);
+
+  it("finds B under C, not the first B", () => {
+    expect(headingPos(book, "C#B")).toBe(10);
+    expect(headingPos(book, "A#B")).toBe(4);
+    expect(headingPos(book, "A#C")).toBeNull();
+  });
+
+  it("finds a block by its ^id, never a heading of that name", () => {
+    expect(headingPos(book, "^abc123")).toBe(13);
+    expect(headingPos(book, "^list1")).toBe(29);
+    expect(headingPos(book, "^nope")).toBeNull();
+  });
+});
+
+describe("htmlAnchorPos", () => {
+  const html = (source: string) =>
+    schema.node("html", null, [schema.text(source)]);
+  const page = schema.node("doc", null, [
+    schema.node("paragraph", null, [schema.text("Intro")]),
+    schema.node("paragraph", null, [
+      schema.text("See "),
+      html('<a id="note1"></a>'),
+    ]),
+    schema.node("paragraph", null, [html("<a name=old.2>")]),
+  ]);
+
+  it("finds the line holding an element by its id or name", () => {
+    expect(htmlAnchorPos(page, "note1")).toBe(8);
+    expect(htmlAnchorPos(page, "old.2")).not.toBeNull();
+  });
+
+  it("matches the whole id only", () => {
+    expect(htmlAnchorPos(page, "note")).toBeNull();
+    expect(htmlAnchorPos(page, "old")).toBeNull();
   });
 });

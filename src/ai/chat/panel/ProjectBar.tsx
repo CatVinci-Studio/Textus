@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Tooltip } from "../../../ui/Tooltip";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
 import {
   canPickFolder,
@@ -415,14 +416,15 @@ export function ProjectBar({
           <ChevronIcon className="project-bar-chevron" />
         </button>
         {info?.style && !memory && (
-          <button
-            type="button"
-            className="project-bar-chip"
-            title={t.projectOpenStyle}
-            onClick={openStyle}
-          >
-            {t.projectStyleChip}
-          </button>
+          <Tooltip text={t.projectOpenStyle}>
+            <button
+              type="button"
+              className="project-bar-chip"
+              onClick={openStyle}
+            >
+              {t.projectStyleChip}
+            </button>
+          </Tooltip>
         )}
         {(info?.library.length ?? 0) > 0 && !memory && (
           <span className="project-bar-chip project-bar-chip-static">

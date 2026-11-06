@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -265,19 +266,8 @@ export function useMarginRoom(
  *  on hover, or a cut card would cover the cards the pointer goes on to. */
 export function useOpenedCard<T>() {
   const [opened, setOpened] = useState<T | null>(null);
-  useEffect(() => {
-    if (opened === null) return;
-    const away = (e: PointerEvent) => {
-      if (!(e.target as Element).closest?.(".review-note")) setOpened(null);
-    };
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpened(null);
-    window.addEventListener("pointerdown", away, true);
-    window.addEventListener("keydown", esc);
-    return () => {
-      window.removeEventListener("pointerdown", away, true);
-      window.removeEventListener("keydown", esc);
-    };
-  }, [opened]);
+  const close = useCallback(() => setOpened(null), []);
+  useCloseOnOutsideClick(close, true, opened !== null, ".review-note");
   return [opened, setOpened] as const;
 }
 

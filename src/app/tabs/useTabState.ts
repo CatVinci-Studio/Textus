@@ -7,7 +7,12 @@ import {
   type SetStateAction,
 } from "react";
 import { flushEditor } from "../../editor/editor-flush";
-import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
+import {
+  makeBlankTab,
+  makeStartTab,
+  showsStartPage,
+  type DocTab,
+} from "../../document/doc-tabs";
 import { lastViewMode } from "../../editor/modes/view-mode";
 
 export interface TabState {
@@ -22,6 +27,8 @@ export interface TabState {
   updateTab: (id: string, patch: Partial<DocTab>) => void;
   reorderTab: (id: string, index: number) => void;
   addBlankTab: () => void;
+  /** Opens the start page in a tab of its own. */
+  addStartTab: () => void;
 }
 
 /**
@@ -67,10 +74,29 @@ export function useTabState(): TabState {
     });
   }, []);
 
+  // A start page open turns into the new document instead of staying beside it.
   const addBlankTab = useCallback(() => {
+    const start = tabsRef.current.find(showsStartPage);
+    if (start) {
+      setTabs((prev) =>
+        prev.map((tab) =>
+          tab.id === start.id
+            ? { ...tab, start: false, ...lastViewMode() }
+            : tab,
+        ),
+      );
+      setActiveTabId(start.id);
+      return;
+    }
     const blank = { ...makeBlankTab(), ...lastViewMode() };
     setTabs((prev) => [...prev, blank]);
     setActiveTabId(blank.id);
+  }, []);
+
+  const addStartTab = useCallback(() => {
+    const start = makeStartTab();
+    setTabs((prev) => [...prev.filter((tab) => !showsStartPage(tab)), start]);
+    setActiveTabId(start.id);
   }, []);
 
   return {
@@ -83,5 +109,6 @@ export function useTabState(): TabState {
     updateTab,
     reorderTab,
     addBlankTab,
+    addStartTab,
   };
 }

@@ -31,10 +31,11 @@ test("a row of images lines up whether or not each is a link", async ({
     `[![linked](${PIXEL})](https://example.com)![plain](${PIXEL})`,
   );
   await expect(page.locator(`${editor} p.image-paragraph`)).toHaveCount(1);
+  // A linked image is drawn inside its link; a plain one in its image view.
   const [linked, plain] = await page
-    .locator(`${editor} p.image-paragraph .image-view`)
-    .evaluateAll((views) =>
-      views.map((view) => view.getBoundingClientRect().bottom),
+    .locator(`${editor} p.image-paragraph :is(img.link-image, .image-view img)`)
+    .evaluateAll((images) =>
+      images.map((image) => image.getBoundingClientRect().bottom),
     );
   expect(linked).toBeCloseTo(plain, 0);
 });

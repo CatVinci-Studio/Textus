@@ -11,8 +11,10 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
  */
 
 export type {
+  NoteLinkTarget,
   SavedImage,
   IndexedFile,
+  Conventions,
   FolderIndex,
   WordDocument,
 } from "./bindings/files";
@@ -78,6 +80,9 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
+  /** Every Markdown document under `root` with its text, for the links a
+   *  rename updates. Rejects as `indexFolder` does. */
+  folderDocuments: (root: string) => command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>
@@ -122,9 +127,23 @@ export const fs = {
    *  null; `folder` is the one open in the window. */
   resolveVaultImage: (docPath: string, link: string, folder: string | null) =>
     command("resolve_vault_image", docPath, link, folder),
-  /** The note an Obsidian wikilink names in the document's vault, or null. */
-  resolveVaultNote: (docPath: string, link: string, folder: string | null) =>
-    command("resolve_vault_note", docPath, link, folder),
+  /** Where a link's note part leads in the document's vault (a wikilink's
+   *  name, or a Markdown link's path): the file, or where following it
+   *  creates it; null outside the vault. */
+  resolveNoteLink: (
+    docPath: string,
+    link: string,
+    folder: string | null,
+    wiki: boolean,
+  ) => command("resolve_note_link", docPath, link, folder, wiki),
+  /** The folder a link from `/` is read from (typora-root-url, the git
+   *  repository, the vault, the open folder); null for the disk's root. */
+  documentLinkRoot: (docPath: string, folder: string | null) =>
+    command("document_link_root", docPath, folder),
+  /** How the folder of a document (or a folder) is written, whichever app
+   *  made it: links, pictures, line breaks, templates, daily notes. Read
+   *  only; a field no app sets is left to Textus's settings. */
+  folderConventions: (path: string) => command("folder_conventions", path),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (
@@ -215,6 +234,15 @@ export const drafts = {
   takeDraftSnapshots: () => command("take_draft_snapshots"),
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
+};
+
+/** A document's undo history kept beside the app's data while its editor
+ *  is let go, used when it opens at the same text again. */
+export const undoFiles = {
+  save: (path: string, hash: string, history: string) =>
+    command("undo_file_save", path, hash, history),
+  load: (path: string, hash: string) => command("undo_file_load", path, hash),
+  move: (from: string, to: string) => command("undo_file_move", from, to),
 };
 
 /** What the writer keeps on a document beside the app's data, as JSON:

@@ -20,8 +20,8 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);
   corner-shape: round;
-  background: var(--surface-floating);
-  box-shadow: var(--shadow-floating);
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-popover);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;

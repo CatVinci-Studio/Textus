@@ -23,7 +23,7 @@ Alertas al estilo de GitHub:
 
 ## Estilos de texto
 
-**Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`.
+**Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`. ``Ctrl+` `` (Control también en Mac) convierte la selección en código en línea, ``Ctrl+Shift+` `` la tacha y `Cmd+K` la pone en un enlace con el cursor donde va la dirección.
 
 Los códigos cortos de emoji de GitHub se muestran como su emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). El archivo guarda el código; pon el cursor encima para editarlo.
 
@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Ajustes → Editor y aspecto → Motor de diagramas** elige quién dibuja estos bloques: Mermaid, el predeterminado, o Pele, que es más rápido pero distribuye los diagramas a su manera y omite algunas funciones; un diagrama que Pele no puede dibujar lo dibuja Mermaid.
 
+Sus colores siguen el aspecto: una paleta gris y sobria en el claro y la oscura en el oscuro; un tema importado o el CSS personalizado pueden elegir otra paleta integrada con `--doc-mermaid-theme: forest`.
+
 ## Imágenes
 
 Pega una imagen directamente desde el portapapeles: Textus la guarda e inserta la referencia. Dónde va se decide en **Ajustes → Editor y aspecto → Imágenes**. **En este equipo**, va a una **Subcarpeta** de la carpeta del documento, `assets/` por defecto, cuyo nombre puedes cambiar, o a **La misma carpeta que el documento**; Ajustes muestra el enlace que recibe la imagen pegada. Con **Subir a un servidor de imágenes**, se envía a PicGo / PicList, SM.MS, Imgur o a un endpoint tuyo (**Personalizado**).
@@ -160,7 +162,7 @@ Todos están en el menú **Visualización** y en **Ajustes → Editor y aspecto 
 
 **Visualización → Solo lectura** (también en el menú contextual de una pestaña) impide que un documento cambie, ya sea al escribir, pegar, soltar, deshacer, por Textus AI o por los complementos. Un candado junto al título lo indica; haz clic en él para que el documento vuelva a ser editable.
 
-**Visualización → Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI.
+**Visualización → Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI. **Edición → Buscar y reemplazar…** (`Cmd+F`) busca en el documento, **Edición → Reemplazar…** (`Cmd+Option+F`) lo abre con la fila de reemplazo y `Cmd+G` va a la siguiente coincidencia.
 
 La pestaña **Esquema** de la barra lateral muestra los encabezados del documento; haz clic en uno para ir a él. Haz clic derecho en el esquema para **Expandir todo** y **Contraer todo**, o haz `Option`-clic (`Alt`-clic) en la flecha de un encabezado para plegarlos o desplegarlos todos a la vez.
 
@@ -177,11 +179,11 @@ La pestaña **Esquema** de la barra lateral muestra los encabezados del document
 
 ## Pestañas y ventanas
 
-`Cmd+T` abre una pestaña nueva, `Cmd+N` una ventana nueva, y **Archivo → Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda** y **Cerrar pestañas a la derecha** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mover a una ventana nueva**. También puedes arrastrar una pestaña fuera de la ventana para darle una ventana propia. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
+`Cmd+N` (o `Cmd+T`) abre una pestaña nueva, `Cmd+Shift+N` una ventana nueva, y **Archivo → Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda** y **Cerrar pestañas a la derecha** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mover a una ventana nueva**. También puedes arrastrar una pestaña fuera de la ventana para darle una ventana propia. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
 
 ## Carpetas y búsqueda de archivos
 
-**Archivo → Abrir carpeta…** abre una carpeta entera en la barra lateral: el árbol de archivos se queda en ella mientras abres los documentos que contiene, la carpeta vuelve con tu sesión y **Archivo → Cerrar carpeta** hace que el árbol vuelva a seguir al documento. El cuadro de la parte superior de la pestaña **Archivos** de la barra lateral busca nombres de archivo en toda la carpeta; `Cmd+Shift+O` salta a él. Escribe para filtrar, usa `↑`/`↓` para moverte, `Enter` para abrir y `Esc` para borrar. Ambas funciones son solo de escritorio.
+**Archivo → Abrir proyecto…** abre una carpeta entera en la barra lateral: el árbol de archivos se queda en ella mientras abres los documentos que contiene, la carpeta vuelve con tu sesión y **Archivo → Cerrar proyecto** hace que el árbol vuelva a seguir al documento. El cuadro de la parte superior de la pestaña **Archivos** de la barra lateral busca nombres de archivo en toda la carpeta; `Cmd+Shift+O` salta a él. Escribe para filtrar, usa `↑`/`↓` para moverte, `Enter` para abrir y `Esc` para borrar. Ambas funciones son solo de escritorio.
 
 El árbol también es un pequeño gestor de archivos. El nombre de la carpeta superior, encima, te lleva un nivel arriba. **Ordenar** lo ordena por nombre o por fecha de modificación, y el filtro junto al cuadro de búsqueda, **Todos los archivos** o **Solo documentos**, se aplica al árbol igual que a la búsqueda. Haz clic derecho en una carpeta, un archivo o el espacio vacío de abajo para crear allí un **Nuevo documento** o una **Nueva carpeta**, y arrastra un archivo o carpeta sobre otra carpeta para moverlo; un documento abierto lo sigue a su nuevo lugar. Nunca se reemplaza nada: un nombre ya usado se rechaza.
 

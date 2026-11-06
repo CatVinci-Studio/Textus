@@ -1,3 +1,5 @@
+import { onMemoryIdle } from "../../utils/memory-idle";
+import { clampLeft } from "../../ui/placement";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -26,6 +28,7 @@ const KATEX_READY = "katex-ready";
 // the expensive part; renders are pure in (source, mode), so they're cached.
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
+onMemoryIdle(() => renderCache.clear());
 
 const cacheKeyOf = (value: string, displayMode: boolean) =>
   `${displayMode ? "B" : "I"}${value}`;
@@ -61,8 +64,15 @@ function blockRoom(): HTMLElement {
   return el;
 }
 
+/** GitHub's ```math fence, drawn as a display formula. */
+const isMathFence = (node: ProseNode) =>
+  node.type.name === "code_block" &&
+  String(node.attrs.language).toLowerCase() === "math";
+
 const isMath = (node: ProseNode) =>
-  node.type.name === "math_inline" || node.type.name === "math_block";
+  node.type.name === "math_inline" ||
+  node.type.name === "math_block" ||
+  isMathFence(node);
 
 function decorateMath(
   node: ProseNode,
@@ -73,7 +83,9 @@ function decorateMath(
   const to = pos + node.nodeSize;
   // While the cursor touches the node, enclosure reveals the source; the
   // KaTeX swap stays out of the way for exactly that range.
+  const fence = isMathFence(node);
   if (touches(from, to)) {
+    if (fence) return [];
     // A block's preview room: there whenever the source is revealed, because
     // this set is only redrawn when cursorTouches flips.
     return node.type.name === "math_block"
@@ -89,10 +101,12 @@ function decorateMath(
 
   // KaTeX still loading: the source stays in view until it is drawn.
   if (!katexNow()) return [];
-  const displayMode = node.type.name === "math_block";
+  const displayMode = fence || node.type.name === "math_block";
   const source = node.textContent;
   return [
-    Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
+    fence
+      ? Decoration.node(from, to, { class: "math-fence-hidden" })
+      : Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
     Decoration.widget(
       to,
       (view: EditorView, getPos: () => number | undefined) => {
@@ -315,7 +329,7 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
               top = view.coordsAtPos(end, -1).bottom + 10;
               left = caret.left;
             }
-            left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+            left = clampLeft(left, width);
 
             // A block's room, sized from its own top and in layout px: the column is
             // zoomed with CSS zoom, the box in <body> is not.

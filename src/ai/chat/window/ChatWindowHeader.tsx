@@ -3,7 +3,8 @@ import { reopenConversation, type ReopenTarget } from "../reopen-conversation";
 import type { ChatContext } from "./chat-bridge";
 import { PinIcon, PlusIcon } from "../../../ui/icons";
 import { WindowCaptionButtons } from "../../../ui/WindowCaptionButtons";
-import { Tooltip } from "../../../ui/Tooltip";
+import { IconButton } from "../../../ui/IconButton";
+import { PanelHeader } from "../../../ui/PanelHeader";
 import type { Strings } from "../../../i18n/strings";
 
 /**
@@ -29,38 +30,39 @@ export function ChatWindowHeader({
   t: Strings;
 }) {
   return (
-    <div className="chat-window-header" data-tauri-drag-region>
-      <span className="chat-window-doc" title={context?.docPath ?? undefined}>
-        {context?.docTitle ?? ""}
-      </span>
+    <PanelHeader
+      className="chat-window-header"
+      actionsClassName="chat-window-actions"
+      dragRegion
+      title={
+        <span className="chat-window-doc" title={context?.docPath ?? undefined}>
+          {context?.docTitle ?? ""}
+        </span>
+      }
+    >
       <ChatHistoryMenu
         buttonClassName="inline-chat-header-button"
         disabled={busy || !context}
         onReopen={(entry) => void reopenConversation(entry, t, reopenTarget)}
       />
-      <Tooltip text={t.chatNewConversation}>
-        <button
-          type="button"
-          className="inline-chat-header-button"
-          aria-label={t.chatNewConversation}
-          disabled={busy}
-          onClick={onNewConversation}
-        >
-          <PlusIcon />
-        </button>
-      </Tooltip>
-      <Tooltip text={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}>
-        <button
-          type="button"
-          className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
-          aria-pressed={pinned}
-          aria-label={t.chatWindowPin}
-          onClick={onPin}
-        >
-          <PinIcon />
-        </button>
-      </Tooltip>
+      <IconButton
+        className="inline-chat-header-button"
+        label={t.chatNewConversation}
+        disabled={busy}
+        onClick={onNewConversation}
+      >
+        <PlusIcon />
+      </IconButton>
+      <IconButton
+        className={`inline-chat-header-button ${pinned ? "chat-window-pin-on" : ""}`}
+        label={t.chatWindowPin}
+        hint={pinned ? t.chatWindowUnpinHint : t.chatWindowPinHint}
+        pressed={pinned}
+        onClick={onPin}
+      >
+        <PinIcon />
+      </IconButton>
       <WindowCaptionButtons />
-    </div>
+    </PanelHeader>
   );
 }

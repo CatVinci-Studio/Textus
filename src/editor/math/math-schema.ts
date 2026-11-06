@@ -3,6 +3,7 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type { Root } from "mdast";
 import remarkMath from "remark-math";
+import { unescapeCellPipes } from "../tables/cell-pipes";
 import {
   displayLatexBlocks,
   latexMathFromMarkdown,
@@ -60,6 +61,18 @@ function recordDollarRuns(tree: MdastNode, source: string): void {
   walk(tree);
 }
 
+/**
+ * In a table, GFM needs every "|" written `\|`, and the formula reads its
+ * escape: `$|x|$` would end the cell. The node holds the plain bar, so
+ * KaTeX draws one bar, not ‖; saving writes `\|` again.
+ */
+function unescapeTablePipes(node: MdastNode, inTable = false): void {
+  if (inTable && node.type === "inlineMath" && node.value)
+    node.value = unescapeCellPipes(node.value);
+  const table = inTable || node.type === "table";
+  node.children?.forEach((child) => unescapeTablePipes(child, table));
+}
+
 /** The delimiter a math node was read with, or null for the default. */
 const delimiterOf = (node: { data?: unknown }) =>
   (node.data as { mathDelimiter?: string } | undefined)?.mathDelimiter ?? null;
@@ -76,6 +89,7 @@ function remarkMathWithPandocDollars(
     const tree = root as MdastNode;
     revertCurrencyDollars(tree, String(file.value));
     recordDollarRuns(tree, String(file.value));
+    unescapeTablePipes(tree);
     displayLatexBlocks(tree);
   };
 }

@@ -2,7 +2,12 @@ import { useCallback, useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
 import { unlistenAll } from "../platform/events";
-import { tabIsDirty, type DocTab } from "../document/doc-tabs";
+import {
+  makeStartTab,
+  showsStartPage,
+  tabIsDirty,
+  type DocTab,
+} from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../ui/useModalDialog";
@@ -47,20 +52,34 @@ export function useTabRemoval(opts: {
   cancelDraftFlushes: () => void;
   flushAutosave: (ids?: string[]) => Promise<void>;
   setPendingClose: (close: PendingClose) => void;
+  /** Closing the last document shows the start page, not closing the window. */
+  closeLastToStartPage: boolean;
   t: Strings;
 }) {
   const { tabState, cancelDraftFlushes, flushAutosave, setPendingClose, t } =
     opts;
+  const toStartPage = useLatest(opts.closeLastToStartPage);
   const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
 
-  // No prompt here. Closing the last tab closes the window; the active tab
-  // hands focus to its right-hand neighbor.
+  // No prompt here. Closing the last tab closes the window, or shows the
+  // start page (closing that closes the window); the active tab hands focus
+  // to its right-hand neighbor.
   const removeTab = useCallback(
     (id: string) => {
       const closedIndex = tabsRef.current.findIndex((tb) => tb.id === id);
+      const closing = tabsRef.current.find((tb) => tb.id === id);
+      const start =
+        canUseWindows &&
+        toStartPage.current &&
+        tabsRef.current.length === 1 &&
+        closing &&
+        !showsStartPage(closing)
+          ? makeStartTab()
+          : null;
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
         if (next.length === 0) {
+          if (start) return [start];
           // No window to close on iOS: the last tab simply stays.
           if (!canUseWindows) return prev;
           // Destroying the window skips the draft cleanup effect, so clear
@@ -77,11 +96,11 @@ export function useTabRemoval(opts: {
       setActiveTabId((prevActive) => {
         if (prevActive !== id) return prevActive;
         const remaining = tabsRef.current.filter((tb) => tb.id !== id);
-        if (remaining.length === 0) return prevActive;
+        if (remaining.length === 0) return start?.id ?? prevActive;
         return remaining[Math.min(closedIndex, remaining.length - 1)].id;
       });
     },
-    [cancelDraftFlushes, tabsRef, setTabs, setActiveTabId],
+    [cancelDraftFlushes, tabsRef, setTabs, setActiveTabId, toStartPage],
   );
 
   const requestCloseTab = useCallback(

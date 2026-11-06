@@ -2,22 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../ui/icons";
 import { useSettings } from "../prefs/SettingsContext";
-import { scrollBehavior } from "../ui/motion";
-import { unfoldElement } from "../editor/html/details-fold";
-import {
-  SMOOTH_SCROLL_MS,
-  drawnForJump,
-} from "../editor/lazy-blocks/lazy-blocks-drawer";
 import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { noteJump } from "../utils/nav-history";
+import { setTabJump } from "../editor/tab-jump";
 import "./FileTree.css";
 
 interface OutlineProps {
   content: string;
+  /** The tab whose document it lists, which scrolls to a row's heading. */
+  tabId: string;
 }
 
 // A long document's headings out of sight are placeholders, in their place.
@@ -43,26 +40,6 @@ function currentHeading(): number {
   return current;
 }
 
-function scrollToHeading(index: number) {
-  // Every tab's editor stays mounted, so scope to the active one. Top-level
-  // headings only, as parseHeadings counts them.
-  const root = document.querySelector(
-    '[data-active-tab="true"] .editor-content .ProseMirror',
-  );
-  const found = root?.querySelectorAll(HEADINGS)[index];
-  const behavior = scrollBehavior();
-  // Drawn first if it is a placeholder, and what is around it.
-  const heading =
-    found && drawnForJump(found, behavior === "smooth" ? SMOOTH_SCROLL_MS : 0);
-  // One inside a folded <details> opens it first: hidden, it had no place
-  // to scroll to.
-  if (heading) {
-    noteJump();
-    unfoldElement(heading);
-  }
-  heading?.scrollIntoView({ behavior, block: "start" });
-}
-
 /** A heading's source as it reads in the document: inline code, emphasis
  *  and link syntax dropped, so "`text-spacing`" shows as text-spacing. */
 export function headingLabel(text: string): string {
@@ -73,8 +50,13 @@ export function headingLabel(text: string): string {
     .replace(/([*_])(?=\S)(.+?)(?<=\S)\1/g, "$2");
 }
 
-export function Outline({ content }: OutlineProps) {
+export function Outline({ content, tabId }: OutlineProps) {
   const { t } = useSettings();
+  // The editor scrolls there as every jump does (revealPosition).
+  const goTo = (index: number) => {
+    noteJump();
+    setTabJump(tabId, { kind: "outline", index }, true);
+  };
   const headings = useMemo(() => {
     // Collapse is keyed by level + text + repeat, not index, so a new heading
     // above doesn't move it.
@@ -149,7 +131,7 @@ export function Outline({ content }: OutlineProps) {
             aria-expanded={h.hasChildren ? !isCollapsed : undefined}
             aria-current={h.index === current ? "location" : undefined}
             style={{ paddingLeft: (h.level - 1) * 14 }}
-            onClick={() => scrollToHeading(h.index)}
+            onClick={() => goTo(h.index)}
           >
             {h.hasChildren ? (
               <Tooltip text={isCollapsed ? t.outlineExpand : t.outlineCollapse}>

@@ -406,6 +406,8 @@ pub async fn save_offered_skill(
     workspace_root: Option<String>,
     // The panel modes it is to apply in.
     modes: Vec<crate::ai::agent::AgentMode>,
+    // The warnings it was saved with were shown and saved through.
+    confirmed: bool,
 ) -> Result<String, String> {
     let dir = match Scope::parse(&scope).ok_or("Unknown scope.")? {
         Scope::Personal => global_agent_dir(&app)?.join("skills"),
@@ -415,7 +417,7 @@ pub async fn save_offered_skill(
         )
         .join("skills"),
     };
-    tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer, &modes))
+    tauri::async_runtime::spawn_blocking(move || save_offer_in(&dir, &offer, &modes, confirmed))
         .await
         .map_err(|e| e.to_string())?
         .map(|p| p.to_string_lossy().into_owned())

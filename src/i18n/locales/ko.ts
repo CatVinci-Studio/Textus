@@ -335,6 +335,17 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 {name}에 다음 문제가 있습니다:\n{problems}\n코드에서 원인을 찾아 고쳐 주세요.",
   chatSaveSkill: "이 스킬 저장",
   chatUpdateSkill: "스킬 업데이트",
+  skillSaveAnyway: "그래도 저장",
+  skillWarnCreateAsked:
+    "만들기 모드에서 실행되기를 요청합니다. 그 모드에서는 스스로 스킬을 쓸 수 있습니다. 만들기는 선택 해제되어 있습니다. 모든 줄을 신뢰할 때만 선택하세요.",
+  skillWarnCreateMode:
+    "만들기 모드에서는 스스로 스킬을 쓰거나 바꿀 수 있습니다. 모든 줄을 신뢰할 때만 유지하세요.",
+  skillWarnPromptInjection:
+    '지시가 Textus AI 자체의 지시를 덮어쓰려는 것처럼 보입니다("이전 지시를 무시" 등). 저장하기 전에 읽어 보세요.',
+  skillWarnHiddenText:
+    "보이지 않는 문자가 있어 지시를 숨기고 있을 수 있습니다. 저장하기 전에 읽어 보세요.",
+  chatShowCode: "코드 보기",
+  chatShowSkill: "스킬 전체 보기",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",
@@ -406,6 +417,16 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperSectionDrafted: "작성 완료",
   paperSectionRevising: "수정 중",
   paperSectionFailed: "실패",
+  paperSectionsAtOnce: {
+    other: "{n}개 절을 동시에 쓰는 중 · {of}개 중 {done}개 완료",
+  },
+  paperRevisingAtOnce: {
+    other: "{n}개 절을 동시에 고치는 중 · {of}개 중 {done}개 완료",
+  },
+  paperQuestionsAtOnce: {
+    other: "{n}개 질문을 동시에 조사하는 중 · {of}개 중 {done}개 완료",
+  },
+  paperDoneOf: "{of}개 중 {done}개 완료",
   paperOutlineRetry: "{n}번째 안: 이전 안이 검사를 통과하지 못해 다시 짜는 중…",
   paperPapersOnly:
     "웹 검색을 쓸 수 없어 이 글의 조사는 학술 논문(OpenAlex, arXiv)과 자료실만 검색합니다.",
@@ -422,6 +443,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webSources: "출처",
   proposalSourcesAsFootnotes: "출처를 각주로 추가",
   menuToggleSplitView: "소스와 미리보기",
+  splitPreview: "미리 보기",
   menuToggleZenMode: "젠 모드",
   menuSplitRight: "오른쪽으로 분할",
   menuCommandPalette: "명령 팔레트…",
@@ -485,8 +507,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   outlineEmpty:
     "아직 제목이 없습니다. # 기호로 시작하는 줄이 여기에 표시됩니다.",
   treeRefresh: "새로 고침",
-  menuOpenFolder: "폴더 열기…",
-  menuCloseFolder: "폴더 닫기",
+  menuOpenFolder: "프로젝트 열기…",
+  menuCloseFolder: "프로젝트 닫기",
   menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
@@ -496,7 +518,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSearchCapped:
     "처음 {n}개 파일만 검색했습니다. 전체를 검색하려면 더 작은 폴더를 여세요.",
   treeSearchTooBroad:
-    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 폴더 열기…로 더 구체적인 폴더를 여세요.",
+    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 프로젝트 열기…로 더 구체적인 폴더를 여세요.",
   treeSearchFailed: "이 폴더를 읽을 수 없습니다.",
   treeSearchScope: "표시",
   treeSearchScopeAll: "모든 파일",
@@ -514,6 +536,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeRenameItem: "이름 바꾸기…",
   treeRename: "이름 바꾸기",
   treeRenamePrompt: "새 이름",
+  treeUpdateLinksConfirm:
+    "“{name}”(으)로 가는 링크와 그 안의 링크가 계속 작동하도록 업데이트할까요?",
+  treeUpdateLinks: "링크 업데이트",
+  treeKeepLinks: "업데이트 안 함",
+  treeUpdateLinksFailed: "다음 문서의 링크를 업데이트하지 못했습니다: {names}",
+  treeDocumentFolder: "현재 문서가 있는 폴더",
+  treeOpenAsFolder: "프로젝트로 열기",
   treeTrashItem: "휴지통으로 옮기기",
   treeTrash: "휴지통으로 옮기기",
   treeTrashConfirm:
@@ -574,6 +603,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   alertWarning: "경고",
   alertCaution: "주의",
   tocLabel: "목차",
+  completionCommands: "명령",
+  completionEmoji: "이모지",
+  completionNotes: "노트",
   tocEmpty: "아직 제목이 없습니다",
   settingsTitle: "설정",
   settingsSearchPlaceholder: "설정 검색",
@@ -735,6 +767,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   deleteRow: "행 삭제",
   deleteColumn: "열 삭제",
   deleteTable: "표 삭제",
+  tableToMarkdown: "Markdown 표로 변환",
+  tableToMarkdownMerged: "Markdown 표로 변환 (병합된 셀이 있음)",
+  tableToMarkdownBlocks: "Markdown 표로 변환 (셀에 목록이나 문단이 있음)",
   apiKeyLabelTemplate: "{name} API 키",
   apiKeyOptionalHintTemplate:
     "API 키가 필요하지 않습니다. {name}에 인증을 설정한 경우에만 입력하세요.",
@@ -925,6 +960,25 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   docxTemplateHelp: "내보낸 Word 파일에 이 파일의 스타일, 글꼴, 여백을 씁니다.",
   docxTemplateNone: "Pandoc 기본값",
   docxTemplateClear: "기본값으로",
+  exportTocLabel: "Pandoc 내보내기에 목차 넣기",
+  exportNumberHeadingsLabel: "Pandoc 내보내기에서 제목에 번호 붙이기",
+  exportNumberHeadingsHelp:
+    "제목 번호 플러그인과 같은 방식입니다. 가장 높은 수준의 제목이 하나뿐이면 문서 제목으로 보고 번호를 붙이지 않습니다.",
+  exportBibliographyLabel: "참고 문헌",
+  exportBibliographyHelp:
+    ".bib 파일을 고르세요. Word, EPUB 등 Pandoc으로 내보내면 [@key] 인용이 참고 문헌이 되고, 목록이 끝에 붙습니다.",
+  exportBibliographyNone: "없음",
+  exportBibliographyClear: "제거",
+  exportCslLabel: "인용 스타일",
+  exportCslHelp:
+    "참고 문헌에 쓸 .csl 파일. 고르지 않으면 Pandoc은 시카고 저자-연도 형식을 씁니다.",
+  pandocArgsLabel: "Pandoc 인수",
+  pandocArgsHelp:
+    "이 형식의 Pandoc 명령에 단어 단위로 더합니다. 셸을 거치지 않습니다. 공백이 있는 값은 따옴표로 감싸세요. --from, --to, --output은 Textus가 정합니다.",
+  pandocArgsAll: "모든 형식",
+  pandocArgsOwned: "{arg}는 Textus가 정합니다. 빼 주세요.",
+  pandocErrorSettings:
+    "Pandoc 옵션은 설정 › {page} › {group}과 그 고급 인수에 있습니다.",
   pdfLightColorsLabel: "PDF를 밝은 색으로 내보내기",
   infoTipLabel: "‘{label}’ 설명",
   infoTipLabelPlain: "설명",
@@ -986,6 +1040,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuUndo: "실행 취소",
   menuRedo: "다시 실행",
   menuFindReplace: "찾기 및 바꾸기…",
+  menuReplace: "바꾸기…",
+  menuFindNext: "다음 찾기",
+  menuStrikethrough: "취소선",
+  menuInlineCode: "인라인 코드",
+  menuInsertLink: "링크",
   menuHeadingTemplate: "제목 {n}",
   menuBulletList: "글머리 기호 목록",
   menuOrderedList: "번호 매기기 목록",
@@ -1148,11 +1207,18 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   newDocumentModeLabel: "문서 열기 위치",
   newDocumentModeWindow: "새 창",
   newDocumentModeTab: "현재 창의 새 탭",
-  restoreSessionLabel: "시작할 때 이전 세션 복원",
+  startPageTab: "시작",
+  startupOpenLabel: "시작할 때 열기",
+  startupOpenSession: "지난번 문서",
+  startupOpenStartPage: "시작 페이지",
+  startupOpenBlank: "빈 문서",
+  closeLastLabel: "마지막 문서를 닫을 때",
+  closeLastWindow: "창 닫기",
+  closeLastStartPage: "시작 페이지 표시",
+  startPageRecentProjects: "최근 프로젝트",
+  startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
-  autosaveHint:
-    "폴더가 열려 있으면 제목 없는 문서도 제목을 이름으로 그 폴더에 저장합니다.",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",
   settingsFileExport: "내보내기…",
@@ -1247,6 +1313,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   fileChangedOnDiskMessage:
     "다른 프로그램이 디스크에 있는 이 파일을 변경했습니다. 저장하면 그 변경 내용을 덮어씁니다.",
   fileChangedOnDiskOverwrite: "덮어쓰기",
+  fileGoneOnDiskTitle: "파일이 이동되었거나 삭제됨",
+  fileGoneOnDiskMessage:
+    "이 파일이 연 위치에 더 이상 없습니다. 다른 프로그램에서 이동, 이름 변경 또는 삭제되었을 수 있습니다. 저장하면 원래 위치에 다시 만듭니다.",
+  fileGoneOnDiskRecreate: "원래 위치에 저장",
   saveFailedTitle: "저장하지 못함",
   saveFailedMessage:
     "‘{name}’ 문서를 저장하지 못했습니다. 변경 내용은 그대로 남아 있습니다.",
@@ -1280,6 +1350,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageFolderSubfolder: "하위 폴더",
   imageFolderSameFolder: "문서와 같은 폴더",
   imageFolderNameLabel: "하위 폴더 이름",
+  imageFolderProjectNote:
+    "이 프로젝트는 그림을 {folder}에 저장합니다({source}에서 지정).",
   imageFolderInvalid: "문서 폴더 안의 폴더로 입력하세요(예: img).",
   imageHostLabel: "이미지 호스팅",
   imageHostCustom: "사용자 지정",
@@ -1532,14 +1604,19 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsOpenScripts: "스크립트 폴더 열기",
   pluginPackageFilter: "Textus 플러그인",
   pluginsInstalledGroup: "설치됨",
-  pluginOpenOffer:
-    "“{file}”은(는) {name} 플러그인으로 열 수 있습니다. 설치하고 열까요?",
   pluginOpenInstall: "설치하고 열기",
-  wikilinksPluginOffer:
-    "이 문서는 [[위키링크]]를 씁니다. 플러그인 {name}: {description}",
-  pluginOpenTurnOn:
-    "“{file}”은(는) {name} 플러그인으로 열 수 있지만 꺼져 있습니다. 켜고 열까요?",
   pluginOpenTurnOnButton: "켜고 열기",
+  pluginCardLine: "추천 플러그인: {name}",
+  conventionsCardLine: "이 폴더의 {app} 설정은 그림을 {folder}에 저장합니다",
+  conventionsCardDetails:
+    "현재 설정: {current}. 적용하면 이 폴더의 .textus/settings.json에 저장되어 프로젝트와 함께 유지됩니다.",
+  conventionsFolderRoot: "폴더 최상위",
+  conventionsFollow: "적용",
+  conventionsDecline: "현재 설정 유지",
+  pluginCardSystemApp: "시스템 앱으로 열기",
+  pluginCardNever: "다시 제안하지 않기",
+  pluginCardsMuted: "끈 플러그인 제안: {n}개",
+  pluginCardsRestore: "다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
   pluginsNone: "아직 없습니다.",
@@ -1618,4 +1695,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webPageShowBar: "주소 표시줄 보기",
   webPageHint:
     "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
+  pluginKeysTaken:
+    "{name}이(가) 키보드를 쓸 수 없습니다. {holder}이(가) 사용 중입니다. 설정 › 확장 기능에서 하나를 끄세요.",
+  shortcutIndentListItem: "목록 항목 들여쓰기",
+  shortcutOutdentListItem: "목록 항목 내어쓰기",
+  pluginKeyTaken:
+    "{name}: {key}는 {owner}에서 쓰고 있어 “{command}”에 지정하지 않았습니다. 설정 › 단축키에서 다른 키를 지정하세요.",
 } satisfies Translation;

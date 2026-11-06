@@ -31,7 +31,7 @@ const ctx = {
 
 async function call(path: string, init: RequestInit = {}) {
   const response = await worker.fetch(
-    new Request(`https://textus.catvinci.com/api/ext/${path}`, init),
+    new Request(`https://textus.md/api/ext/${path}`, init),
     { DB: store.binding },
     ctx,
   );
@@ -111,13 +111,13 @@ describe("the package a download asks for", () => {
   it("is on Textus's own site when the app asks for it there", () => {
     const site = { via: "site", version: "1.0.0" };
     expect(packageUrl({ ...site, kind: "plugin", id: "a.b" })).toBe(
-      "https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip",
+      "https://textus.md/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip",
     );
     expect(packageUrl({ ...site, kind: "skill", id: "press-release" })).toBe(
-      "https://textus.catvinci.com/plugin-release/catalog/skill-press-release.md",
+      "https://textus.md/plugin-release/catalog/skill-press-release.md",
     );
     expect(packageUrl({ ...site, kind: "theme", id: "plain" })).toBe(
-      "https://textus.catvinci.com/theme-gallery/themes/plain/theme.css",
+      "https://textus.md/theme-gallery/themes/plain/theme.css",
     );
   });
 });

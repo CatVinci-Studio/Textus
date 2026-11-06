@@ -39,12 +39,12 @@ export function ImageNameDialog({
   return (
     <div
       {...presence}
-      className="image-name-overlay"
+      className="close-prompt-overlay image-name-overlay"
       onClick={() => onClose(null)}
     >
       <div
         {...modal}
-        className="image-name-dialog"
+        className="close-prompt image-name-dialog"
         role="dialog"
         aria-modal="true"
         aria-label={title}

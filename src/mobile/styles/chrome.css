@@ -309,15 +309,13 @@
     background: none;
   }
 
-  /* ---- The AI notice toast ---- */
+  /* ---- Notes at the bottom ---- */
 
   /* Clear of the keyboard toolbar and the home indicator alike: one height,
-     since a toast a little high is still readable. */
-  :root[data-window-chrome="mobile"] .ai-notice {
+     since a note a little high is still readable. */
+  :root[data-window-chrome="mobile"] .notice-stack {
     bottom: calc(44px + 12px + env(safe-area-inset-bottom, 0px));
-    width: max-content;
     max-width: calc(100vw - 32px);
-    text-align: center;
   }
 
   /* ---- Tabs: a row a thumb scrolls. ---- */

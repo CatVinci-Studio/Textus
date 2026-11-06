@@ -9,8 +9,17 @@ const MAX_SCALE = 8;
 /** The zoom a wheel notch gives; a trackpad pinch takes the same rule per
  *  pixel. */
 export function nextScale(scale: number, deltaY: number): number {
-  const factor = Math.exp(-deltaY * 0.0015);
-  return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * factor));
+  return clampScale(scale * Math.exp(-deltaY * 0.0015));
+}
+
+export const clampScale = (scale: number) =>
+  Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
+
+/** WebKit's pinch: the zoom since the fingers went down, and where. */
+interface PinchEvent extends UIEvent {
+  scale: number;
+  clientX: number;
+  clientY: number;
 }
 
 const ARROW_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
@@ -98,22 +107,29 @@ export function openDiagramViewer(
     apply();
   };
 
-  // Over the whole layer, and no further: a pinch is a wheel event, and the
-  // window's own zoom would take it too.
+  /** Zooms to `next`, the point under the pointer staying under it. */
+  const zoomAt = (clientX: number, clientY: number, next: number) => {
+    const room = stage.getBoundingClientRect();
+    const px = clientX - room.left;
+    const py = clientY - room.top;
+    x = px - ((px - x) * next) / scale;
+    y = py - ((py - y) * next) / scale;
+    scale = next;
+    apply();
+  };
+  // The scale a WebKit pinch started from, while it lasts.
+  let pinchFrom: number | null = null;
+
+  // Over the whole layer, and no further: a pinch is a wheel event in
+  // Chromium, and the window's own zoom would take it too.
   layer.addEventListener(
     "wheel",
     (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const room = stage.getBoundingClientRect();
-      const px = event.clientX - room.left;
-      const py = event.clientY - room.top;
-      const next = nextScale(scale, event.deltaY);
-      // The point under the pointer stays under it.
-      x = px - ((px - x) * next) / scale;
-      y = py - ((py - y) * next) / scale;
-      scale = next;
-      apply();
+      // WebKit's pinch comes as gestures below; its wheel twin is skipped.
+      if (pinchFrom !== null && event.ctrlKey) return;
+      zoomAt(event.clientX, event.clientY, nextScale(scale, event.deltaY));
     },
     { passive: false },
   );
@@ -134,12 +150,20 @@ export function openDiagramViewer(
     drag = null;
     stage.classList.remove("diagram-viewer-dragging");
   };
-  // WebKit's pinch gestures belong to the viewer too, not the window's zoom
-  // (its ctrl-wheel events scale the picture above).
+  // WebKit's pinch zooms the picture, never the window.
   for (const type of ["gesturestart", "gesturechange", "gestureend"])
     layer.addEventListener(type, (event) => {
       event.preventDefault();
       event.stopPropagation();
+      const pinch = event as PinchEvent;
+      if (type === "gesturestart") pinchFrom = scale;
+      else if (type === "gestureend") pinchFrom = null;
+      else if (pinchFrom !== null && Number.isFinite(pinch.scale))
+        zoomAt(
+          pinch.clientX,
+          pinch.clientY,
+          clampScale(pinchFrom * pinch.scale),
+        );
     });
   stage.addEventListener("pointerup", endDrag);
   stage.addEventListener("pointercancel", endDrag);

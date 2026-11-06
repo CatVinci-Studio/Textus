@@ -10,8 +10,8 @@ const GITHUB = {
 /** Textus's own site, which passes the same files on (via=site; older
  *  versions of the app go to GitHub). */
 const SITE = {
-  plugins: "https://textus.catvinci.com/plugin-release/",
-  themes: "https://textus.catvinci.com/theme-gallery/themes/",
+  plugins: "https://textus.md/plugin-release/",
+  themes: "https://textus.md/theme-gallery/themes/",
 };
 
 const KINDS = ["plugin", "theme", "skill"] as const;

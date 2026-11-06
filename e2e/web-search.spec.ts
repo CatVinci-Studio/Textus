@@ -192,7 +192,8 @@ test("a proposal's sources become footnotes when the card says so", async ({
   const text = await documentMarkdownText(page);
   expect(text).toContain("Spring tides come at new and full moon");
   expect(text).toContain("Tide tables");
-  expect(text).not.toContain("](https");
+  // The inline citation is gone; the footnote's own link stays.
+  expect(text).not.toContain("[1](https");
 });
 
 test("without footnotes, a proposal goes in without its citations", async ({

@@ -20,6 +20,8 @@ import {
   TRIGGER_GRAMMAR_CHECK_EVENT,
   TOGGLE_FLOATING_CHAT_EVENT,
   TOGGLE_FIND_REPLACE_EVENT,
+  SHOW_REPLACE_EVENT,
+  FIND_NEXT_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
 import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
@@ -53,12 +55,22 @@ export const LINUX_MENU_ACCELERATORS: Record<string, string> = {
 /** File commands routed through the backend where the app draws the window
  *  frame, so they work while focus is in the webview. */
 export const WEBVIEW_FILE_COMMANDS: Record<string, string> = {
-  "mod+t": "new-file",
-  "mod+n": "new-window",
+  "mod+n": "new-file",
+  "mod+shift+n": "new-window",
   "mod+shift+t": "reopen-closed-tab",
   "mod+o": "open-file",
   "mod+p": "export-pdf",
   "mod+,": "settings",
+};
+
+/** New Tab's second key, which no menu item carries. */
+const NEW_TAB_TOO = "mod+t";
+
+/** Edit › Replace… and Find Next where the page sees keys first; a Mac's
+ *  menu items take them before. */
+export const FIND_KEYS: Record<string, string> = {
+  "mod+alt+f": SHOW_REPLACE_EVENT,
+  "mod+g": FIND_NEXT_EVENT,
 };
 
 /** The window-wide keyboard shortcuts, fixed and configurable. */
@@ -123,8 +135,9 @@ export function useGlobalShortcuts(opts: {
 
       // The hidden native menu misses these while focus is in the webview, and
       // WebView2 would print the window itself on Ctrl+P.
-      const fileCommand = WEBVIEW_FILE_COMMANDS[combo];
-      if (appDrawsWindowFrame && fileCommand) {
+      const fileCommand =
+        combo === NEW_TAB_TOO ? "new-file" : WEBVIEW_FILE_COMMANDS[combo];
+      if (fileCommand && (appDrawsWindowFrame || combo === NEW_TAB_TOO)) {
         e.preventDefault();
         void menuIpc.triggerMenuItem(fileCommand);
         return;
@@ -138,6 +151,13 @@ export function useGlobalShortcuts(opts: {
           void runMenuItemHere(menuId);
           return;
         }
+      }
+
+      const findEvent = FIND_KEYS[combo];
+      if (findEvent) {
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent(findEvent));
+        return;
       }
 
       if (combo === "mod+w") {

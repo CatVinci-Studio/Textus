@@ -122,7 +122,7 @@ The project menu creates `.textus/` and its files for you the first time you ask
 
 ### The project folder
 
-**The project folder is the folder Textus AI works in.** It is the folder you open in the sidebar (**File > Open Folder…**), or one you choose — or else the nearest folder above the document that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`. A document you open on its own has no project folder: Textus AI then reads only the document and the files you attach, so a file in Downloads or on the Desktop never opens that whole folder to it.
+**The project folder is the folder Textus AI works in.** It is the folder you open in the sidebar (**File > Open Project…**), or one you choose — or else the nearest folder above the document that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`. A document you open on its own has no project folder: Textus AI then reads only the document and the files you attach, so a file in Downloads or on the Desktop never opens that whole folder to it.
 
 - Textus AI can list, find by name, read and search the files in it to find a character's earlier scenes, a term, or your notes: text files (Markdown, plain text and similar formats) up to 16 MB — a long one it reads a part at a time — and the text of PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files. With a provider that can see images, it can also look at the PNG, JPEG, GIF and WebP images in it, up to 6 MB each. Hidden files and folders, what a `.gitignore` or `.ignore` file leaves out (as in the sidebar's file search), build and dependency folders (such as `node_modules`) and scanned PDFs without a text layer are left out.
 - Typing `@` in the chat input attaches one of its files to your message.

@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from "react";
+import { Tooltip } from "../../ui/Tooltip";
 import { FlipOnChange } from "../../ui/flip";
 import { InlineMarkdownText } from "../MarkdownText";
 import type { AgentTurn } from "../types";
@@ -147,16 +148,21 @@ export function CommentGroup({
       <ol className="agent-comment-rows">
         {rows.map(({ id, comment, num }) => (
           <li key={id} className="agent-comment-row">
-            <button
-              type="button"
-              className="agent-comment-row-quote"
-              title={labels.commentLocate}
-              disabled={!onLocateText}
-              onClick={() => onLocateText?.(comment.anchor, comment.block)}
-            >
-              {num !== null && <span className="agent-comment-num">{num}</span>}
-              <span className="agent-comment-row-anchor">{comment.anchor}</span>
-            </button>
+            <Tooltip text={labels.commentLocate}>
+              <button
+                type="button"
+                className="agent-comment-row-quote"
+                disabled={!onLocateText}
+                onClick={() => onLocateText?.(comment.anchor, comment.block)}
+              >
+                {num !== null && (
+                  <span className="agent-comment-num">{num}</span>
+                )}
+                <span className="agent-comment-row-anchor">
+                  {comment.anchor}
+                </span>
+              </button>
+            </Tooltip>
             <div className="agent-comment-text">
               <InlineMarkdownText text={comment.comment} />
             </div>

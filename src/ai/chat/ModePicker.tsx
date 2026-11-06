@@ -1,5 +1,5 @@
+import { SelectMenu } from "../../ui/SelectMenu";
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
-import { createPortal } from "react-dom";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
@@ -199,57 +199,51 @@ export function ModePicker({
           </span>
         )}
       </button>
-      {presence.mounted &&
-        createPortal(
-          <ul
-            ref={presenceRef}
-            id={listId}
-            data-state={presence.state}
-            inert={presence.state === "closing" || undefined}
-            className="ui-select-menu mode-picker-menu floating-surface"
-            role="listbox"
-            aria-label={labels.picker}
-            aria-activedescendant={`${listId}-${active}`}
-            tabIndex={-1}
-            style={place}
-            data-floating-select=""
-            onKeyDown={onListKey}
-          >
-            {groups.length > 0 && shownModes.length > 0 && (
-              <li role="presentation" className="ui-select-group">
-                {labels.mode}
-              </li>
-            )}
-            {shownModes.map((choice, i) => option({ kind: "mode", choice }, i))}
-            {groups.length > 0 && shownModes.length > 0 && (
-              <li
-                role="presentation"
-                className="ui-select-group mode-picker-models"
-              >
-                {labels.model}
-              </li>
-            )}
-            {groups.map((g) => {
-              const start = items.findIndex(
-                (item) => item.kind === "model" && item.provider === g.provider,
-              );
-              return (
-                <Fragment key={g.provider}>
-                  <li role="presentation" className="mode-picker-provider">
-                    {g.label}
-                  </li>
-                  {g.models.map((m, i) =>
-                    option(
-                      { kind: "model", provider: g.provider, model: m },
-                      start + i,
-                    ),
-                  )}
-                </Fragment>
-              );
-            })}
-          </ul>,
-          document.body,
-        )}
+      {presence.mounted && (
+        <SelectMenu
+          listRef={presenceRef}
+          id={listId}
+          state={presence.state}
+          className="mode-picker-menu"
+          label={labels.picker}
+          activeId={`${listId}-${active}`}
+          place={place}
+          onKeyDown={onListKey}
+        >
+          {groups.length > 0 && shownModes.length > 0 && (
+            <li role="presentation" className="ui-select-group">
+              {labels.mode}
+            </li>
+          )}
+          {shownModes.map((choice, i) => option({ kind: "mode", choice }, i))}
+          {groups.length > 0 && shownModes.length > 0 && (
+            <li
+              role="presentation"
+              className="ui-select-group mode-picker-models"
+            >
+              {labels.model}
+            </li>
+          )}
+          {groups.map((g) => {
+            const start = items.findIndex(
+              (item) => item.kind === "model" && item.provider === g.provider,
+            );
+            return (
+              <Fragment key={g.provider}>
+                <li role="presentation" className="mode-picker-provider">
+                  {g.label}
+                </li>
+                {g.models.map((m, i) =>
+                  option(
+                    { kind: "model", provider: g.provider, model: m },
+                    start + i,
+                  ),
+                )}
+              </Fragment>
+            );
+          })}
+        </SelectMenu>
+      )}
     </>
   );
 }

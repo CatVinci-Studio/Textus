@@ -1,3 +1,4 @@
+import { SelectMenu } from "./SelectMenu";
 import {
   Children,
   Fragment,
@@ -8,7 +9,6 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { createPortal } from "react-dom";
 import { isIOSApp } from "../platform/capabilities";
 import { useMergedRef, usePresence } from "./usePresence";
 import { useFloatingList } from "./useFloatingList";
@@ -260,50 +260,43 @@ function DrawnSelect({
       >
         <span className="ui-select-value">{closedLabel(current)}</span>
       </button>
-      {presence.mounted &&
-        createPortal(
-          <ul
-            ref={presenceRef}
-            id={listId}
-            data-state={presence.state}
-            inert={presence.state === "closing" || undefined}
-            className="ui-select-menu floating-surface"
-            role="listbox"
-            aria-label={ariaLabel}
-            aria-activedescendant={`${listId}-${active}`}
-            tabIndex={-1}
-            style={place}
-            data-floating-select=""
-            onKeyDown={onListKey}
-          >
-            {runs(options).map((run, r) => (
-              <Fragment key={`run-${r}`}>
-                {run.group !== undefined && (
-                  <li role="presentation" className="ui-select-group">
-                    {run.group}
-                  </li>
-                )}
-                {run.items.map(({ option, index }) => (
-                  <li
-                    key={`${option.value}-${index}`}
-                    id={`${listId}-${index}`}
-                    data-index={index}
-                    role="option"
-                    aria-selected={index === selectedIndex}
-                    aria-disabled={option.disabled || undefined}
-                    className={`ui-select-option${index === active ? " is-active" : ""}`}
-                    onMouseEnter={() => !option.disabled && setActive(index)}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => choose(index)}
-                  >
-                    {option.label}
-                  </li>
-                ))}
-              </Fragment>
-            ))}
-          </ul>,
-          document.body,
-        )}
+      {presence.mounted && (
+        <SelectMenu
+          listRef={presenceRef}
+          id={listId}
+          state={presence.state}
+          label={ariaLabel}
+          activeId={`${listId}-${active}`}
+          place={place}
+          onKeyDown={onListKey}
+        >
+          {runs(options).map((run, r) => (
+            <Fragment key={`run-${r}`}>
+              {run.group !== undefined && (
+                <li role="presentation" className="ui-select-group">
+                  {run.group}
+                </li>
+              )}
+              {run.items.map(({ option, index }) => (
+                <li
+                  key={`${option.value}-${index}`}
+                  id={`${listId}-${index}`}
+                  data-index={index}
+                  role="option"
+                  aria-selected={index === selectedIndex}
+                  aria-disabled={option.disabled || undefined}
+                  className={`ui-select-option${index === active ? " is-active" : ""}`}
+                  onMouseEnter={() => !option.disabled && setActive(index)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => choose(index)}
+                >
+                  {option.label}
+                </li>
+              ))}
+            </Fragment>
+          ))}
+        </SelectMenu>
+      )}
     </>
   );
 }
