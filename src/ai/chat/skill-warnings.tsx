@@ -20,9 +20,28 @@ export function warningsIn(err: unknown): string[] | null {
     : null;
 }
 
-export function warningText(t: Strings, warning: string): string {
+function warningText(t: Strings, warning: string): string {
   const key = WARNINGS[warning];
   return key ? t[key] : warning;
+}
+
+/** Why a skill needs a second look, one line each. */
+export function SkillWarnings({
+  t,
+  confirming,
+}: {
+  t: Strings;
+  confirming: Confirming | null;
+}) {
+  return confirming?.warnings.map((w) => (
+    <span
+      key={w}
+      className="skill-offer-description skill-offer-warning"
+      role="alert"
+    >
+      {warningText(t, w)}
+    </span>
+  ));
 }
 
 /** Warnings shown for these modes; confirmed only for them, so ticking

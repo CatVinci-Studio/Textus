@@ -6,7 +6,7 @@ import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
-import { confirmedFor, warningsIn, warningText } from "./skill-warnings";
+import { confirmedFor, SkillWarnings, warningsIn } from "./skill-warnings";
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
@@ -94,15 +94,7 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
           {createNote}
         </span>
       )}
-      {confirming?.warnings.map((w) => (
-        <span
-          key={w}
-          className="skill-offer-description skill-offer-warning"
-          role="alert"
-        >
-          {warningText(t, w)}
-        </span>
-      ))}
+      <SkillWarnings t={t} confirming={confirming} />
       {state.kind !== "saved" && (
         <span className="agent-memory-chip-actions">
           <ModeChoice t={t} modes={modes} onChange={setModes} />
