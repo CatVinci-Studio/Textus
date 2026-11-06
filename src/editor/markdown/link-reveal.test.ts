@@ -159,6 +159,25 @@ describe("typing in a link", () => {
     expect(t.markdown()).toBe("A [li你nk](u) c");
   });
 
+  it("an IME composition at its end stays in it until the composition ends", async () => {
+    const t = await open("A [b](u) c");
+    const { pos, node } = firstLink(t.view.state.doc);
+    const end = pos + node.nodeSize - 1;
+    caret(t.view, end);
+    t.view.dispatch(
+      t.view.state.tr.insertText("ni", end).setMeta("composition", 1),
+    );
+    t.view.dispatch(
+      t.view.state.tr.insertText("你", end, end + 2).setMeta("composition", 1),
+    );
+    expect(firstLink(t.view.state.doc).node.textContent).toBe("[b](u)你");
+    // The commit's first plain transaction moves the text out, once.
+    t.view.dispatch(t.view.state.tr);
+    expect(firstLink(t.view.state.doc).node.textContent).toBe("[b](u)");
+    expect(t.view.state.doc.textContent).toBe("A [b](u)你 c");
+    expect(t.markdown()).toBe("A [b](u)你 c");
+  });
+
   it("edited into no link, reads as what it is once the caret leaves", async () => {
     const t = await open("A [b](u) c");
     t.caretAt("](u)", 1);
@@ -278,16 +297,22 @@ describe("Left and Right at a link's edges", () => {
 });
 
 describe("two editors on one file", () => {
-  it("each shows and saves its links on its own", async () => {
+  // A second pane on the same file is its own editor: a save in one reloads
+  // the other, clean, from the file.
+  it("a save while one shows a link's source reloads the other as text", async () => {
     const a = await open(MARKDOWN);
-    const b = await open(MARKDOWN);
-    a.caretAt("docs");
-    b.caretAtEnd();
-    expect(shown(a.view)).toBe('[the **docs**](https://x.org "T")');
-    expect(shown(b.view)).toBe("the docs");
     a.caretAt("x.org", 1);
     a.type("y");
+    a.press("Mod+z");
+    const saved = a.markdown();
+    expect(saved).toBe(MARKDOWN);
+    const b = await open(saved);
+    b.caretAtEnd();
+    expect(shown(b.view)).toBe("the docs");
     expect(b.markdown()).toBe(MARKDOWN);
+    // Saving left A's own reveal and redo as they were.
+    expect(shown(a.view)).toBe('[the **docs**](https://x.org "T")');
+    a.press("Mod+Shift+z");
     expect(a.markdown()).toBe('See [the **docs**](https://xy.org "T") here.');
   });
 });
