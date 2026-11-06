@@ -18,7 +18,6 @@ mod notes;
 mod outline;
 mod research;
 mod review;
-mod session;
 mod sources;
 pub mod status;
 mod store;
@@ -26,11 +25,11 @@ mod stream;
 mod timeline;
 mod web_figures;
 
+use crate::ai::agent::Session;
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
-use session::Session;
 #[cfg(test)]
 use status::progress;
 pub(crate) use store::{
@@ -39,6 +38,12 @@ pub(crate) use store::{
 
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
+
+/// The folder paper `id` is kept in, in the session's project; None for a
+/// new id.
+fn session_root(session: &Session, id: Option<&str>) -> Result<std::path::PathBuf, String> {
+    paper_root(session.app, session.doc_path, session.workspace_root, id)
+}
 
 /// One paper being written. Kept as `.textus/papers/<id>/paper.json`.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -245,7 +250,7 @@ pub async fn ai_paper_run(
         doc_path.as_deref(),
         workspace_root.as_deref(),
     )?;
-    let root = session.root(id.as_deref())?;
+    let root = session_root(&session, id.as_deref())?;
     let project =
         crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
     let entry = session.entry;

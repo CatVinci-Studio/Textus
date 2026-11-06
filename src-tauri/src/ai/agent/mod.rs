@@ -1,13 +1,11 @@
 use crate::ai::cancel;
-use crate::ai::catalog;
 use crate::ai::doc_blocks::{self, Document};
 use crate::ai::images::InlinePictures;
-use crate::ai::route;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext, ToolRegistry};
 use crate::ai::ui_language::{UiLanguage, UiNames};
 use crate::ai::web::{self, WebPlan};
-use crate::ai::workspace::{self, AgentWorkspace};
+use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{
     run_agent_loop, AgentTurn, ImageAttachment, LoopEvent, ProviderEvent, StepResult,
 };
@@ -29,12 +27,14 @@ pub(crate) mod lists;
 mod model;
 mod past;
 mod prompt;
+mod session;
 pub(crate) use chapters::*;
 pub(crate) use context::*;
 pub(crate) use history::*;
 pub(crate) use model::*;
 pub(crate) use past::*;
 pub(crate) use prompt::*;
+pub(crate) use session::Session;
 
 /// The system prompt with what it says about the web, when search is on.
 fn with_web_section(instructions: String, web: &WebPlan) -> String {
@@ -87,7 +87,6 @@ pub async fn ai_agent_message(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
-    crate::ai::ensure_on(&app)?;
     let web_service = web_search
         .then(|| web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref()))
         .flatten();
@@ -139,7 +138,15 @@ async fn ai_agent_message_inner(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: &dyn EventSink,
 ) -> Result<Vec<AgentTurn>, String> {
-    let mut workspace = workspace::load(&app, doc_path.as_deref(), workspace_root.as_deref());
+    let session = Session::open(
+        &app,
+        &provider,
+        model,
+        doc_path.as_deref(),
+        workspace_root.as_deref(),
+    )?;
+    let (entry, model) = (session.entry, session.model.as_deref());
+    let mut workspace = session.workspace();
     let scratch = crate::ai::scratch::with_attachments(conversation.as_deref());
     workspace.attached = scratch.is_some();
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);
@@ -158,15 +165,9 @@ async fn ai_agent_message_inner(
         &ui_language,
         crate::ai::builtin::chosen_profile(&conventions, &document).as_deref(),
     );
-    let entry = catalog::find(&provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
     // Numbered on from the sources earlier replies cited - so from the
     // history as it came, before it is cut down for sending.
-    let web_plan = WebPlan::new(
-        web_search,
-        web::native_search_for(&provider, model.as_deref()),
-        web_service,
-        &history,
-    );
+    let web_plan = WebPlan::new(web_search, session.native_search(), web_service, &history);
     let web = &web_plan;
     let history = compact_history(web::with_sources_in_text(history));
 
@@ -200,10 +201,9 @@ async fn ai_agent_message_inner(
     };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
-    let image_run = crate::ai::images::ImageRun::resolve(&app, image_model.as_ref(), entry.id)
-        .map(|run| run.in_folder(doc_path.as_deref()));
+    let image_run = session.pictures(image_model.as_ref());
 
-    let agent = route::agent_provider(&app, entry, model.clone(), thinking, web.native).await?;
+    let agent = session.provider(thinking, web.native).await?;
     let result = match agent {
         Some(agent) => {
             let instructions = with_web_section(
@@ -364,15 +364,7 @@ async fn ai_agent_message_inner(
         None => {
             let instructions =
                 build_instructions(&workspace, &document, false, mode, &focus, &ui_language);
-            flattened_chat_turn(
-                &app,
-                &provider,
-                &instructions,
-                history,
-                message,
-                model.as_deref(),
-            )
-            .await
+            flattened_chat_turn(&app, &provider, &instructions, history, message, model).await
         }
     };
     // History keeps the message as the user wrote it: replaying the document

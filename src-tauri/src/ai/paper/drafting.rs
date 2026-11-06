@@ -40,7 +40,7 @@ pub async fn ai_paper_draft(
         request.doc_path.as_deref(),
         request.workspace_root.as_deref(),
     )?;
-    let root = session.root(Some(&request.id))?;
+    let root = super::session_root(&session, Some(&request.id))?;
     let files = load(&root, &request.id)?;
     let outline = files
         .outline

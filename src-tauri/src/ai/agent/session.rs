@@ -1,17 +1,15 @@
-//! What every paper command opens before its stages run, from the parts
-//! the chat's requests use: the provider from the catalog, its model from
-//! route::agent_provider - one that calls tools, which every stage hands
-//! its work over with - its own web search, the folder the paper is kept
-//! in, and the user's guidance from the workspace.
+//! What every request opens before it runs - a chat message and each of
+//! Research's commands alike: the provider from the catalog, its model
+//! from route::agent_provider, its own web search, the user's workspace
+//! and guidance, and the pictures' run.
 
-use super::paper_root;
 use crate::ai::catalog::ProviderCatalogEntry;
 use crate::ai::images::{ImageModel, ImageRun};
-use aicompat::capabilities::NativeSearch;
+use crate::ai::workspace::AgentWorkspace;
+use aicompat::capabilities::{NativeSearch, ThinkingLevel};
 use aicompat::providers::AgentProvider;
-use std::path::PathBuf;
 
-/// The provider and the project a paper command names.
+/// The provider and the project a request names.
 pub(crate) struct Session<'a> {
     pub app: &'a tauri::AppHandle,
     pub entry: &'static ProviderCatalogEntry,
@@ -42,44 +40,49 @@ impl<'a> Session<'a> {
         })
     }
 
-    /// The folder paper `id` is kept in; None for a new id.
-    pub(crate) fn root(&self, id: Option<&str>) -> Result<PathBuf, String> {
-        paper_root(self.app, self.doc_path, self.workspace_root, id)
-    }
-
     /// The model's own web search, if it has one.
     pub(crate) fn native_search(&self) -> Option<NativeSearch> {
         crate::ai::web::native_search_for(self.entry.id, self.model.as_deref())
     }
 
-    /// The model the stages step, searching the web by itself with
-    /// `native`. Refused for one that can't call tools.
+    /// The model a request steps, thinking as hard as `thinking` and
+    /// searching the web by itself with `native`; None for one that can't
+    /// call tools, which the chat answers in one plain completion.
+    pub(crate) async fn provider(
+        &self,
+        thinking: ThinkingLevel,
+        native: Option<NativeSearch>,
+    ) -> Result<Option<AgentProvider>, String> {
+        crate::ai::route::agent_provider(self.app, self.entry, self.model.clone(), thinking, native)
+            .await
+    }
+
+    /// The model Research's stages step: `provider`, refused for one that
+    /// can't call tools, which every stage hands its work over with.
     pub(crate) async fn agent(
         &self,
         native: Option<NativeSearch>,
     ) -> Result<AgentProvider, String> {
-        crate::ai::route::agent_provider(
-            self.app,
-            self.entry,
-            self.model.clone(),
-            Default::default(),
-            native,
-        )
-        .await?
-        .ok_or_else(|| {
-            format!(
-                "{} can't call tools, which writing a paper needs.",
-                self.entry.label
-            )
-        })
+        self.provider(Default::default(), native)
+            .await?
+            .ok_or_else(|| {
+                format!(
+                    "{} can't call tools, which writing a paper needs.",
+                    self.entry.label
+                )
+            })
+    }
+
+    /// The user's workspace: their instructions, memories, skills and
+    /// style, and the project's.
+    pub(crate) fn workspace(&self) -> AgentWorkspace {
+        crate::ai::workspace::load(self.app, self.doc_path, self.workspace_root)
     }
 
     /// What the user asks of all the writing done for them - their
     /// instructions, memories, style and library - for a piece on `topic`.
     pub(crate) fn guidance(&self, topic: &str) -> String {
-        let mut workspace =
-            crate::ai::workspace::load(self.app, self.doc_path, self.workspace_root);
-        crate::ai::agent::writing_guidance(&mut workspace, topic)
+        super::writing_guidance(&mut self.workspace(), topic)
     }
 
     /// The pictures' run with `model`, made beside the document; None

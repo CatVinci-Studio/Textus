@@ -19,6 +19,12 @@ Pure logic sits inside each layer; side effects - the network, files, the
 editor, the frontend channel - only at its edge (`agent/mod.rs`'s step and
 `forward`, the tools' runners, the editor plugins).
 
+Every request - a chat message and each of Research's commands
+([ai-paper.md](ai-paper.md)) - opens one `agent::Session`
+(`agent/session.rs`) before it runs: Textus AI on, the provider from the
+catalog, its model from `route::agent_provider`, its own web search, the
+user's workspace and guidance, and the pictures' run.
+
 Every model step - the chat's, its chapter helpers', and Research's stages
 ([ai-paper.md](ai-paper.md)) - goes through one trait, `agent::Model`
 (`agent/model.rs`): a provider steps through it on the desktop, a scripted
