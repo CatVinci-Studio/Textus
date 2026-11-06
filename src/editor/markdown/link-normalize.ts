@@ -12,9 +12,14 @@ import {
 import { $prose } from "@milkdown/kit/utils";
 import { changedRanges } from "../changed-ranges";
 import { cursorTouches } from "../marks/enclosure";
-import { definitionsIn } from "./link-reveal";
+import { definedLabels, definitionsIn } from "./link-reveal";
 import { LINK } from "./link-source";
-import { linkAt, parseLink, splitAroundLink } from "./link-syntax";
+import {
+  isDanglingReference,
+  linkAt,
+  parseLink,
+  splitAroundLink,
+} from "./link-syntax";
 
 /**
  * Keeps a link node one link as its source is typed in: text typed before
@@ -103,13 +108,18 @@ function normalize(
   reparse: (source: string, doc: ProseNode) => Fragment,
 ): Transaction | null {
   const tr = state.tr;
+  let labels: Set<string> | null = null;
+  // A reference without its definition reopens as text, so it reads as one.
+  const isLinkText = (text: string) =>
+    !!parseLink(text) &&
+    !isDanglingReference(text, (labels ??= definedLabels(state.doc)));
   for (const pos of [...positions].sort((a, b) => b - a)) {
     const node = tr.doc.nodeAt(pos);
     if (node?.type.name !== LINK) continue;
     const text = node.textContent;
     const end = pos + node.nodeSize;
     if (!text) tr.delete(pos, end);
-    else if (parseLink(text)) continue;
+    else if (isLinkText(text)) continue;
     else if (splitEdges(tr, pos, node)) continue;
     else if (!cursorTouches(tr.selection, pos, end))
       tr.replaceWith(pos, end, reparse(text, tr.doc));

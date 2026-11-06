@@ -207,7 +207,7 @@ export function readDefinition(
 }
 
 /** Labels match without case, inner white space folded. */
-const normalLabel = (label: string) =>
+export const normalLabel = (label: string) =>
   label.trim().replace(/\s+/g, " ").toLowerCase();
 
 /** The definition among `definitions` (their sources) for `label`. */
@@ -242,6 +242,16 @@ export function linkHref(
     return parts.dest.includes(":") ? parts.dest : `mailto:${parts.dest}`;
   if (parts.kind === "inline") return unescape(parts.dest);
   return definitionFor(parts.dest, definitions)?.url ?? null;
+}
+
+/** A reference link whose definition isn't among `labels` (normalLabel
+ *  of each): it reads as text once the file is opened again. */
+export function isDanglingReference(
+  text: string,
+  labels: Set<string>,
+): boolean {
+  const parts = parseLink(text);
+  return parts?.kind === "reference" && !labels.has(normalLabel(parts.dest));
 }
 
 /** A reference link written out as an inline one, for where its definition

@@ -6,6 +6,7 @@ import {
   PluginKey,
   TextSelection,
   type EditorState,
+  type Transaction,
 } from "@milkdown/kit/prose/state";
 import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -23,8 +24,11 @@ import { LINK } from "./link-source";
 import {
   hiddenLinkParts,
   inlinedReference,
+  isDanglingReference,
   linkHref,
+  normalLabel,
   parseLink,
+  readDefinition,
 } from "./link-syntax";
 
 /**
@@ -36,17 +40,47 @@ import {
 const key = new PluginKey<RevealState>("link-reveal");
 
 const isLink = (node: ProseNode) => node.type.name === LINK;
+const DEFINITION = "link_definition";
 
 /** The source of every `[ref]: url` definition in `doc`. */
 export function definitionsIn(doc: ProseNode): string[] {
   const found: string[] = [];
   doc.descendants((node) => {
     if (!node.isTextblock) return true;
-    if (node.firstChild?.type.name === "link_definition")
+    if (node.firstChild?.type.name === DEFINITION)
       found.push(node.firstChild.textContent);
     return false;
   });
   return found;
+}
+
+/** The labels `doc` defines, as normalLabel reads them. */
+export function definedLabels(doc: ProseNode): Set<string> {
+  const labels = definitionsIn(doc).map((source) => readDefinition(source));
+  return new Set(
+    labels.flatMap((found) => (found ? [normalLabel(found.label)] : [])),
+  );
+}
+
+/** Whether `tr` changed a definition's line, before or after its steps. */
+function touchesDefinition(tr: Transaction): boolean {
+  const inRange = (doc: ProseNode, from: number, to: number) => {
+    let hit = false;
+    doc.nodesBetween(from, Math.min(to, doc.content.size), (node) => {
+      hit ||= node.isTextblock && node.firstChild?.type.name === DEFINITION;
+      return !hit && !node.isTextblock;
+    });
+    return hit;
+  };
+  return tr.steps.some((step, i) => {
+    let hit = false;
+    step.getMap().forEach((oldFrom, oldTo, newFrom, newTo) => {
+      hit ||=
+        inRange(tr.docs[i], oldFrom, oldTo) ||
+        inRange(tr.docs[i + 1] ?? tr.doc, newFrom, newTo);
+    });
+    return hit;
+  });
 }
 
 /** Each label's parts, kept while it is drawn: labels repeat and rarely
@@ -96,9 +130,12 @@ function labelDecorations(
 function linkReveal(
   label: (text: string) => LabelPart[],
   docPath: () => string | null,
+  defined: () => Set<string>,
 ): Reveal {
   return {
     match: isLink,
+    // A definition added or removed changes which references are links.
+    config: defined,
     decorate(node, pos, touches) {
       const text = node.textContent;
       const end = pos + node.nodeSize;
@@ -111,7 +148,10 @@ function linkReveal(
           ...(shown && { class: "link-source" }),
         }),
       ];
-      const parts = hiddenLinkParts(text);
+      // With no definition, a reference reopens as text: its source shows.
+      const parts = isDanglingReference(text, defined())
+        ? null
+        : hiddenLinkParts(text);
       if (!parts) return out;
       for (const [from, to] of parts)
         out.push(
@@ -249,16 +289,26 @@ function enterInLink(view: EditorView): void {
 
 export function createLinkRevealPlugin(docPath: () => string | null) {
   return $prose((ctx) => {
+    let defined = new Set<string>();
     const reveal = linkReveal(
       cachedLabels((markdown) => ctx.get(remarkCtx).parse(markdown)),
       docPath,
+      () => defined,
     );
     return new Plugin<RevealState>({
       key,
       state: {
-        init: (_config, state) => revealAll(state, reveal),
-        apply: (tr, prev, oldState, newState) =>
-          applyReveal(tr, prev, oldState, newState, reveal),
+        init: (_config, state) => {
+          defined = definedLabels(state.doc);
+          return revealAll(state, reveal);
+        },
+        apply: (tr, prev, oldState, newState) => {
+          if (tr.docChanged && touchesDefinition(tr)) {
+            const now = definedLabels(newState.doc);
+            if ([...now].join("\n") !== [...defined].join("\n")) defined = now;
+          }
+          return applyReveal(tr, prev, oldState, newState, reveal);
+        },
       },
       props: {
         decorations: (state) => key.getState(state)?.set,

@@ -160,12 +160,40 @@ describe("typing in a link", () => {
     expect(t.view.state.doc.textContent).toBe("A [b]u) c");
   });
 
+  it("edited into a reference with no definition, reads as text once left", async () => {
+    const t = await open("A [b](u) c");
+    t.caretAt("](u)", 1);
+    t.press("Delete");
+    t.press("Delete");
+    t.press("Delete");
+    expect(firstLink(t.view.state.doc).node.textContent).toBe("[b]");
+    t.caretAtEnd();
+    expect(firstLink(t.view.state.doc)).toBeNull();
+    expect(t.markdown()).toBe("A \\[b] c");
+  });
+
   it("Enter inside it splits its source as text", async () => {
     const t = await open("A [bc](u) d");
     t.caretAt("bc", 1);
     t.press("Enter");
     expect(t.view.state.doc.childCount).toBe(2);
     expect(firstLink(t.view.state.doc)).toBeNull();
+  });
+});
+
+describe("a reference link", () => {
+  it("shows its source once its definition is gone, as the file would reopen", async () => {
+    const t = await open("A [a][r] b\n\n[r]: https://r.org\n\nEnd");
+    t.caretAtEnd();
+    expect(shown(t.view)).toBe("a");
+    const { doc } = t.view.state;
+    const second = doc.firstChild!.nodeSize;
+    t.view.dispatch(
+      t.view.state.tr.delete(second, second + doc.child(1).nodeSize),
+    );
+    expect(shown(t.view)).toBe("[a][r]");
+    t.press("Mod+z");
+    expect(shown(t.view)).toBe("a");
   });
 });
 
