@@ -16,8 +16,10 @@ use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
+use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, Source, ToolCall};
 use futures_util::stream::{self, StreamExt};
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -268,9 +270,69 @@ async fn research_question(
     Ok(kept)
 }
 
+/// The research so far, kept as `research.json` while it is under way: the
+/// planned questions, each finished helper's notes, and the sources those
+/// notes cite, numbered as the notes cite them.
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ResearchProgress {
+    pub questions: Vec<String>,
+    /// Question i's notes once its helper finished; None while it is open
+    /// or its helper failed, so going on asks it again.
+    pub answered: Vec<Option<Vec<Note>>>,
+    pub sources: Vec<Source>,
+}
+
+/// What research goes on from, and how it keeps what it has as it goes.
+pub(crate) struct Progress<'p> {
+    pub kept: ResearchProgress,
+    pub keep: &'p (dyn Fn(&ResearchProgress) + Sync),
+}
+
+impl Progress<'static> {
+    /// Nothing kept before and nothing kept now.
+    #[cfg(test)]
+    pub(crate) fn none() -> Self {
+        Progress {
+            kept: ResearchProgress::default(),
+            keep: &|_| {},
+        }
+    }
+}
+
+/// The kept sources given their numbers in `web`'s book, and the kept notes
+/// citing them by those: a book begun afresh numbers from 1 again.
+fn seed_sources(web: &WebPlan, progress: &mut ResearchProgress) {
+    let mut kept = std::mem::take(&mut progress.sources);
+    kept.sort_by_key(|s| s.n);
+    let numbers: HashMap<u32, u32> = kept
+        .iter()
+        .map(|s| (s.n, web.add_source(&s.url, &s.title)))
+        .collect();
+    for note in progress.answered.iter_mut().flatten().flatten() {
+        note.sources = note
+            .sources
+            .iter()
+            .filter_map(|n| numbers.get(n).copied())
+            .collect();
+    }
+}
+
+/// The sources in `web`'s book that `notes` cite.
+fn cited<'n>(web: &WebPlan, notes: impl Iterator<Item = &'n Note>) -> Vec<Source> {
+    let cited: HashSet<u32> = notes.flat_map(|n| n.sources.iter().copied()).collect();
+    web.sources()
+        .into_iter()
+        .filter(|s| cited.contains(&s.n))
+        .collect()
+}
+
 /// The paper researched: its questions planned, then answered by helpers at
 /// once. A helper that fails costs its question, not the paper; the paper
-/// fails only when no helper kept a note.
+/// fails only when no helper kept a note. Each finished question is kept
+/// with `progress` as it ends, and research going on from a kept one asks
+/// only the questions still open.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn research(
     model: &dyn Model,
     paper: &Paper,
@@ -278,80 +340,114 @@ pub(crate) async fn research(
     budget: &SharedBudget,
     send: &(dyn Fn(PaperEvent) + Sync),
     kit: &Kit<'_, '_>,
+    progress: Progress<'_>,
 ) -> Result<Dossier, String> {
-    send(PaperEvent::Phase {
-        phase: PaperPhase::Planning,
-    });
-    let thinking = ThinkingTail::new(send);
-    let questions = plan_questions(model, paper, kit, &|streamed| {
-        if let ProviderEvent::Thinking(text) | ProviderEvent::Text(text) = streamed {
-            thinking.push(text)
-        }
-    })
-    .await?;
-    let share = Share::of(budget.snapshot().limits, questions.len());
+    let Progress { mut kept, keep } = progress;
+    if kept.questions.is_empty() {
+        send(PaperEvent::Phase {
+            phase: PaperPhase::Planning,
+        });
+        let thinking = ThinkingTail::new(send);
+        kept = ResearchProgress {
+            questions: plan_questions(model, paper, kit, &|streamed| {
+                if let ProviderEvent::Thinking(text) | ProviderEvent::Text(text) = streamed {
+                    thinking.push(text)
+                }
+            })
+            .await?,
+            ..ResearchProgress::default()
+        };
+    }
+    kept.answered.resize(kept.questions.len(), None);
+    seed_sources(web, &mut kept);
+    keep(&kept);
+    let open: Vec<usize> = (0..kept.questions.len())
+        .filter(|&i| kept.answered[i].is_none())
+        .collect();
+    // What is left, split among the questions still open.
+    let share = Share::of(budget.snapshot().remaining(), open.len());
     send(PaperEvent::Questions {
-        questions: questions.clone(),
+        questions: kept.questions.clone(),
     });
     send(PaperEvent::Phase {
         phase: PaperPhase::Researching,
     });
-    let results: Vec<(String, Result<Vec<Note>, String>)> = stream::iter(questions)
-        .enumerate()
-        .map(|(i, question)| async move {
-            let notes = research_question(
-                model,
-                paper,
-                web,
-                budget,
-                kit,
-                (i as u32, &question),
-                share,
-                send,
-            )
-            .await;
-            let spent = budget.snapshot();
-            send(PaperEvent::Budget {
-                used: spent.used,
-                remaining: spent.remaining(),
-            });
+    for (i, notes) in kept.answered.iter().enumerate() {
+        if let Some(notes) = notes {
             send(PaperEvent::QuestionDone {
                 question: i as u32,
-                notes: notes.as_ref().map_or(0, |n| n.len() as u32),
-                failed: notes.is_err(),
+                notes: notes.len() as u32,
+                failed: false,
             });
-            (question, notes)
-        })
-        .buffered(AT_ONCE)
-        .collect()
-        .await;
-    let mut dossier = Dossier::default();
-    for (question, result) in results {
-        match result {
-            Ok(notes) => dossier.notes.extend(notes),
-            Err(message) => send(PaperEvent::Error {
-                message: format!("{question}: {message}"),
-                section: None,
-            }),
         }
     }
+    let questions = kept.questions.clone();
+    let progress = Mutex::new(kept);
+    let failed: Vec<(usize, String)> = stream::iter(open)
+        .map(|i| {
+            let (question, progress) = (&questions[i], &progress);
+            async move {
+                let notes = research_question(
+                    model,
+                    paper,
+                    web,
+                    budget,
+                    kit,
+                    (i as u32, question),
+                    share,
+                    send,
+                )
+                .await;
+                let spent = budget.snapshot();
+                send(PaperEvent::Budget {
+                    used: spent.used,
+                    remaining: spent.remaining(),
+                });
+                send(PaperEvent::QuestionDone {
+                    question: i as u32,
+                    notes: notes.as_ref().map_or(0, |n| n.len() as u32),
+                    failed: notes.is_err(),
+                });
+                match notes {
+                    Ok(notes) => {
+                        // Kept as it ends, so a stop later doesn't cost it.
+                        let mut p = progress.lock().unwrap();
+                        p.answered[i] = Some(notes);
+                        p.sources = cited(web, p.answered.iter().flatten().flatten());
+                        keep(&p);
+                        None
+                    }
+                    Err(message) => Some((i, message)),
+                }
+            }
+        })
+        .buffered(AT_ONCE)
+        .filter_map(std::future::ready)
+        .collect()
+        .await;
+    for (i, message) in failed {
+        send(PaperEvent::Error {
+            message: format!("{}: {message}", questions[i]),
+            section: None,
+        });
+    }
+    let kept = progress.into_inner().unwrap();
+    let mut dossier = Dossier {
+        notes: kept.answered.into_iter().flatten().flatten().collect(),
+        sources: Vec::new(),
+    };
     if dossier.notes.is_empty() {
+        // Nothing to go on from: going on plans the research again.
+        keep(&ResearchProgress::default());
         return Err("The research found nothing to write from - check the search service in Settings, or try a broader topic.".into());
     }
     for (i, note) in dossier.notes.iter_mut().enumerate() {
         note.id = format!("n{}", i + 1);
     }
     // Only what the notes cite: everything a search showed would bury them.
-    let cited: std::collections::HashSet<u32> = dossier
-        .notes
-        .iter()
-        .flat_map(|n| n.sources.iter().copied())
-        .collect();
-    dossier.sources = web
-        .sources()
+    dossier.sources = cited(web, dossier.notes.iter())
         .into_iter()
-        .filter(|s| cited.contains(&s.n))
-        .map(|s| aicompat::agent::Source {
+        .map(|s| Source {
             url: link_safe(&s.url),
             ..s
         })

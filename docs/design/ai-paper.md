@@ -128,6 +128,8 @@ it, lazily loaded. Each stage and helper is one run of
   The helpers share one `WebPlan`: one source numbering for the paper (kept
   as `Dossier::sources`, for the reference list) and one budget. The stages
   run on the `Model` trait, so tests drive them with a scripted model.
+  Each question is kept as its helper ends (`research::Progress`), not
+  when all have.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a
@@ -189,8 +191,13 @@ it, lazily loaded. Each stage and helper is one run of
   before, it goes on from what that kept: its research and its outline are
   not made again.
 - **Going on later**: a paper keeps its `stage` in `paper.json` -
-  `researching` (kept at once, its research only when whole, so a stop there
-  researches again), `outlined`, `drafting` (set when the outline is
+  `researching` (kept at once; its research kept question by question in
+  `research.json` - the questions planned, each finished helper's notes and
+  the sources they cite - so a stop there, a failure or spent model calls
+  cost only the questions still open: going on doesn't plan again, gives
+  the kept sources their numbers in the new run's book, and asks the rest
+  with what is left of the budget; the file goes once the dossier is kept),
+  `outlined`, `drafting` (set when the outline is
   approved, which drops sections drafted from an earlier outline), `done`.
   `ai_paper_status` reads it with the outline and how many sections are
   written; `ai_paper_draft` hands on the sections already written as they

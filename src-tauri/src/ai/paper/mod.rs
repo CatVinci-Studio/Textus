@@ -68,7 +68,8 @@ pub struct Paper {
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum PaperStage {
-    /// Begun: its research, if any, is not kept until it is whole.
+    /// Begun: its research is kept question by question in
+    /// `research.json`, and as the dossier once it is whole.
     #[default]
     Researching,
     /// Researched and outlined; waiting for the outline to be approved.
@@ -340,9 +341,22 @@ pub async fn ai_paper_run(
                 tools: &tools,
                 ctx: &ctx,
             };
+            // What a run stopped mid-research kept: its questions, and the
+            // notes of those it finished.
+            let id = files.paper.id.clone();
+            let keep = |p: &research::ResearchProgress| {
+                // Best kept: a write that fails costs only going on from it.
+                let _ = store::save_research(&root, &id, p);
+            };
+            let progress = research::Progress {
+                kept: store::load_research(&root, &id),
+                keep: &keep,
+            };
             let dossier =
-                research::research(&agent, &files.paper, &web, &budget, &send, &kit).await?;
-            // Questions cut short would leave it thin: going on researches again.
+                research::research(&agent, &files.paper, &web, &budget, &send, &kit, progress)
+                    .await?;
+            // Questions cut short would leave it thin: going on asks them again,
+            // the finished ones kept.
             if agent.spent() {
                 return Err(budget::STEPS_SPENT.to_string());
             }
@@ -351,6 +365,8 @@ pub async fn ai_paper_run(
             // Kept before the outline, so a failed outline doesn't cost the
             // research.
             save(&root, &files)?;
+            // Whole now, in the dossier; one left behind is never read again.
+            let _ = store::clear_research(&root, &files.paper.id);
         }
         let outline = match files.outline.clone() {
             Some(outline) => outline,
