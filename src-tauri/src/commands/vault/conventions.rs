@@ -84,25 +84,6 @@ pub(crate) fn soft_breaks_show(dir: &Path) -> bool {
     find_vault(dir).is_some_and(|root| !read_vault(&root).strict_line_breaks)
 }
 
-/// `typora-copy-images-to` from the document's front matter on disk.
-fn typora_images_to(doc: &Path) -> Option<String> {
-    let text = std::fs::read_to_string(doc).ok()?;
-    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
-    let body = text
-        .strip_prefix("---\n")
-        .or_else(|| text.strip_prefix("---\r\n"))?;
-    for line in body.lines() {
-        if line.trim_end() == "---" {
-            break;
-        }
-        if let Some(value) = line.strip_prefix("typora-copy-images-to:") {
-            let value = value.trim().trim_matches(|c| c == '"' || c == '\'');
-            return (!value.is_empty()).then(|| value.to_string());
-        }
-    }
-    None
-}
-
 /// `rel` under `base`, `.` and `..` folded; None for an absolute path.
 fn fold(base: &Path, rel: &str) -> Option<PathBuf> {
     let mut out = base.to_path_buf();
@@ -142,8 +123,8 @@ pub(crate) fn convention_folder(doc: &Path) -> Option<(ImageFolder, Option<Obsid
         src_prefix: relative(doc_dir, &dir),
         dir,
     };
-    if let Some(dir) =
-        typora_images_to(doc).and_then(|to| fold(doc_dir, &to.replace("${filename}", &stem)))
+    if let Some(dir) = crate::commands::link_root::front_matter_value(doc, "typora-copy-images-to")
+        .and_then(|to| fold(doc_dir, &to.replace("${filename}", &stem)))
     {
         return Some((at(dir), None));
     }

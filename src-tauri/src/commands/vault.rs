@@ -163,7 +163,7 @@ fn folders(rel: &str) -> Vec<&str> {
 }
 
 /// The indexed file at `rel` in any of its spellings, without case.
-fn direct<'a>(index: &'a [String], rel: Option<String>, kind: LinkKind) -> Option<&'a str> {
+fn direct(index: &[String], rel: Option<String>, kind: LinkKind) -> Option<&str> {
     let rel = rel?;
     file_names(&rel, kind).iter().find_map(|name| {
         let lower = name.to_lowercase();

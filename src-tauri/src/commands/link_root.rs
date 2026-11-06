@@ -10,22 +10,28 @@ const MAX_ASCENT: usize = 32;
 /// How much of a document is read for its front matter.
 const FRONT_MATTER_BYTES: usize = 8 * 1024;
 
-/// `typora-root-url` from the document's front matter, from its folder.
-fn typora_root(doc_path: &Path) -> Option<PathBuf> {
-    let text = std::fs::read(doc_path).ok()?;
-    let text = String::from_utf8_lossy(&text[..text.len().min(FRONT_MATTER_BYTES)]).into_owned();
+/// The value of `key` in the document's front matter (`typora-root-url`,
+/// `typora-copy-images-to`), quotes dropped; None when unset or empty. The
+/// one reader for Typora's per-document settings.
+pub(crate) fn front_matter_value(doc_path: &Path, key: &str) -> Option<String> {
+    let bytes = std::fs::read(doc_path).ok()?;
+    let text = String::from_utf8_lossy(&bytes[..bytes.len().min(FRONT_MATTER_BYTES)]).into_owned();
+    let text = text.strip_prefix('\u{feff}').unwrap_or(&text);
     let mut lines = text.lines();
     if lines.next()?.trim_end() != "---" {
         return None;
     }
     let value = lines
         .take_while(|l| l.trim_end() != "---")
-        .find_map(|l| l.strip_prefix("typora-root-url:"))?
+        .find_map(|l| l.strip_prefix(key)?.strip_prefix(':'))?
         .trim()
         .trim_matches(['"', '\'']);
-    if value.is_empty() {
-        return None;
-    }
+    (!value.is_empty()).then(|| value.to_string())
+}
+
+/// `typora-root-url` from the document's front matter, from its folder.
+fn typora_root(doc_path: &Path) -> Option<PathBuf> {
+    let value = front_matter_value(doc_path, "typora-root-url")?;
     let root = doc_path.parent()?.join(value);
     root.is_dir().then_some(root)
 }
@@ -46,7 +52,11 @@ fn nearest_with(doc_path: &Path, marker: &str) -> Option<PathBuf> {
 pub fn link_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
     typora_root(doc_path)
         .or_else(|| nearest_with(doc_path, ".git"))
-        .or_else(|| nearest_with(doc_path, ".obsidian"))
+        .or_else(|| {
+            doc_path
+                .parent()
+                .and_then(crate::commands::vault::find_vault)
+        })
         .or_else(|| {
             folder
                 .filter(|f| doc_path.starts_with(f))
