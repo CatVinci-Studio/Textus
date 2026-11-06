@@ -1,3 +1,4 @@
+import { notesRoot } from "../../links/link-style";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { basename, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
@@ -179,7 +180,7 @@ export function fileHandlers(p: PluginScope) {
       const planner = linkPlanner(
         files.map((f) => f.path),
         {
-          root: conventions?.linkStyle?.root ?? root,
+          root: notesRoot(conventions) ?? root,
           from: abs(source),
           to: abs(target),
           linkRoot,

@@ -16,22 +16,30 @@ fn value<T: Clone>(s: &Option<Setting<T>>) -> Option<T> {
     s.as_ref().map(|s| s.value.clone())
 }
 
+/// Another app's settings, as offered: they don't apply by themselves.
+fn detected(c: &Conventions) -> Conventions {
+    assert!(c.link_style.is_none() && c.attachments.is_none());
+    *c.detected.clone().expect("offered")
+}
+
 #[test]
 fn reads_an_obsidian_vault_and_its_defaults() {
     let dir = folder_with(&[(
         ".obsidian/app.json",
         r#"{"useMarkdownLinks":true,"newLinkFormat":"relative","strictLineBreaks":true,"alwaysUpdateLinks":false,"userIgnoreFilters":["Archive/"]}"#,
     )]);
-    let c = of_folder(&dir.path().join("notes"));
+    let found = of_folder(&dir.path().join("notes"));
+    assert_eq!(found.sources[0].app, "obsidian");
+    assert_eq!(found.notes_root(), Some(dir.path().to_path_buf()));
+    let c = detected(&found);
     assert_eq!(value(&c.link_style).as_deref(), Some("markdown"));
     assert_eq!(value(&c.link_path).as_deref(), Some("relative"));
     assert_eq!(value(&c.soft_breaks), Some(false));
     assert_eq!(value(&c.update_links).as_deref(), Some("ask"));
     assert_eq!(c.ignore, vec!["Archive/"]);
-    assert_eq!(c.sources[0].app, "obsidian");
 
     let plain = folder_with(&[(".obsidian/app.json", "not json")]);
-    let c = of_folder(&plain.path().join("notes"));
+    let c = detected(&of_folder(&plain.path().join("notes")));
     assert_eq!(value(&c.link_style).as_deref(), Some("wiki"));
     assert_eq!(value(&c.soft_breaks), Some(true));
     assert_eq!(value(&c.update_links).as_deref(), Some("always"));
@@ -52,7 +60,7 @@ fn reads_templates_and_daily_notes_with_their_plugins_as_fallback() {
         ),
     ]);
     let root = dir.path();
-    let c = of_folder(root);
+    let c = detected(&of_folder(root));
     assert_eq!(
         value(&c.templates),
         Some(root.join("Meta/Templates").to_string_lossy().into_owned())
@@ -72,7 +80,7 @@ fn reads_logseq_foam_and_our_own_settings() {
         "logseq/config.edn",
         "{:journals-directory \"days\"\n :journal/file-name-format \"yyyy-MM-dd\"}",
     )]);
-    let c = of_folder(logseq.path());
+    let c = detected(&of_folder(logseq.path()));
     let daily = value(&c.daily).unwrap();
     assert!(daily.folder.ends_with("days"));
     assert_eq!(daily.format, "YYYY-MM-DD");
@@ -82,23 +90,25 @@ fn reads_logseq_foam_and_our_own_settings() {
         ".vscode/settings.json",
         "{ // Foam\n \"foam.completion.linkFormat\": \"link\",\n \"markdown.preview.breaks\": true, }",
     )]);
-    let c = of_folder(foam.path());
-    assert_eq!(c.sources[0].app, "foam");
+    let found = of_folder(foam.path());
+    assert_eq!(found.sources[0].app, "foam");
+    let c = detected(&found);
     assert_eq!(value(&c.link_style).as_deref(), Some("markdown"));
     assert_eq!(value(&c.soft_breaks), Some(true));
 
-    // Ours stand over the vault's in the same folder.
+    // The project's own settings apply; once answered, nothing is offered.
     let ours = folder_with(&[
         (".obsidian/app.json", "{}"),
         (
             ".textus/settings.json",
-            r#"{"conventions":{"linkStyle":"markdown","attachments":"./img"}}"#,
+            r#"{"conventions":{"linkStyle":"markdown","attachments":"./img","detected":"followed"}}"#,
         ),
     ]);
     let c = of_folder(ours.path());
     assert_eq!(value(&c.link_style).as_deref(), Some("markdown"));
-    assert_eq!(value(&c.link_path).as_deref(), Some("shortest"));
+    assert_eq!(value(&c.link_path), None);
     assert_eq!(value(&c.attachments).as_deref(), Some("./img"));
+    assert!(c.detected.is_none());
 }
 
 #[test]
@@ -128,18 +138,16 @@ fn the_nearest_folder_decides_and_sites_say_where_slash_points() {
 
 #[test]
 fn puts_pictures_where_the_folder_keeps_attachments() {
+    let conventions =
+        |attachments: &str| format!(r#"{{"conventions":{{"attachments":"{attachments}"}}}}"#);
     let cases = [
-        ("{}", "", "../"),
-        (r#"{"attachmentFolderPath":"./"}"#, "notes", ""),
-        (r#"{"attachmentFolderPath":"./att"}"#, "notes/att", "att/"),
-        (
-            r#"{"attachmentFolderPath":"Files/img"}"#,
-            "Files/img",
-            "../Files/img/",
-        ),
+        ("/", "", "../"),
+        ("./", "notes", ""),
+        ("./att", "notes/att", "att/"),
+        ("Files/img", "Files/img", "../Files/img/"),
     ];
-    for (app, dir, prefix) in cases {
-        let vault = folder_with(&[(".obsidian/app.json", app)]);
+    for (setting, dir, prefix) in cases {
+        let vault = folder_with(&[(".textus/settings.json", &conventions(setting))]);
         let doc = vault.path().join("notes/a.md");
         fs::write(&doc, "x").unwrap();
         let (folder, _) = attachment_folder(&doc).unwrap();
@@ -147,9 +155,9 @@ fn puts_pictures_where_the_folder_keeps_attachments() {
             folder.dir,
             vault.path().join(dir).components().collect::<PathBuf>()
         );
-        assert_eq!(folder.src("p.png"), format!("{prefix}p.png"), "{app}");
+        assert_eq!(folder.src("p.png"), format!("{prefix}p.png"), "{setting}");
     }
-    let escapes = folder_with(&[(".obsidian/app.json", r#"{"attachmentFolderPath":"../out"}"#)]);
+    let escapes = folder_with(&[(".textus/settings.json", &conventions("../out"))]);
     let doc = escapes.path().join("notes/a.md");
     fs::write(&doc, "x").unwrap();
     assert!(attachment_folder(&doc).is_none());
@@ -164,6 +172,7 @@ fn follows_typora_copy_images_to_before_the_vault() {
         "---\r\ntitle: x\r\ntypora-copy-images-to: '../img/${filename}.assets'\r\n---\r\nbody",
     )
     .unwrap();
+    // The document's own setting applies without asking.
     let (folder, c) = attachment_folder(&doc).unwrap();
     assert_eq!(c.attachments.unwrap().app, "typora");
     assert_eq!(folder.dir, vault.path().join("img/My Doc.assets"));
@@ -176,7 +185,10 @@ fn follows_typora_copy_images_to_before_the_vault() {
 
 #[test]
 fn writes_an_embed_in_the_folders_link_form() {
-    let vault = folder_with(&[(".obsidian/app.json", r#"{"newLinkFormat":"shortest"}"#)]);
+    let vault = folder_with(&[(
+        ".textus/settings.json",
+        r#"{"conventions":{"linkStyle":"wiki","linkPath":"shortest"}}"#,
+    )]);
     let doc = vault.path().join("notes/a.md");
     let file = vault.path().join("img/p.png");
     fs::create_dir_all(file.parent().unwrap()).unwrap();

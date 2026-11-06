@@ -29,28 +29,31 @@ const disk: Record<string, string> = {
 };
 const at = <T>(value: T) => ({ value, app: "obsidian", root: "/w" });
 /** A vault's conventions: wikilinks, and updates on a rename as given. */
-const vault = (update = "always") => ({
-  sources: [{ app: "obsidian", root: "/w" }],
-  linkStyle: at("wiki"),
-  linkPath: at("shortest"),
+const none = {
+  sources: [],
+  linkStyle: null,
+  linkPath: null,
   linkRoot: null,
-  updateLinks: at(update),
-  attachments: at("/"),
-  softBreaks: at(true),
+  updateLinks: null,
+  attachments: null,
+  softBreaks: null,
   templates: null,
   daily: null,
   newNotes: null,
   ignore: [],
+  detected: null,
+};
+/** An Obsidian vault whose settings weren't taken into .textus: renames
+ *  still follow its "update links" (the owner's rule for vaults). */
+const vault = (update = "always") => ({
+  ...none,
+  sources: [{ app: "obsidian", root: "/w" }],
+  detected: { ...none, linkStyle: at("wiki"), updateLinks: at(update) },
 });
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(fs.folderConventions).mockResolvedValue({
-    ...vault(),
-    sources: [],
-    linkStyle: null,
-    updateLinks: null,
-  });
+  vi.mocked(fs.folderConventions).mockResolvedValue(none);
   vi.mocked(fs.documentLinkRoot).mockResolvedValue("/w");
   vi.mocked(fs.folderDocuments).mockResolvedValue({
     documents: Object.entries(disk).map(([path, text]) => ({

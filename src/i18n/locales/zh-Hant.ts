@@ -1517,6 +1517,12 @@ export default {
   pluginOpenInstall: "安裝並開啟",
   pluginOpenTurnOnButton: "開啟並開啟檔案",
   pluginCardLine: "外掛推薦：{name}",
+  conventionsCardLine: "此資料夾的 {app} 設定將圖片存放在 {folder}",
+  conventionsCardDetails:
+    "目前設定：{current}。採用後將儲存到此資料夾的 .textus/settings.json，隨專案保留。",
+  conventionsFolderRoot: "資料夾根目錄",
+  conventionsFollow: "採用",
+  conventionsDecline: "保留目前設定",
   pluginCardSystemApp: "用系統應用程式開啟",
   pluginCardNever: "不再建議",
   pluginCardsMuted: "已關閉的外掛建議：{n} 則",

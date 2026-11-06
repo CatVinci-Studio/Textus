@@ -1510,6 +1510,12 @@ export default {
   pluginOpenInstall: "安装并打开",
   pluginOpenTurnOnButton: "开启并打开",
   pluginCardLine: "插件推荐：{name}",
+  conventionsCardLine: "此文件夹的 {app} 设置将图片存放在 {folder}",
+  conventionsCardDetails:
+    "当前设置：{current}。采用后将保存到此文件夹的 .textus/settings.json，随项目保留。",
+  conventionsFolderRoot: "文件夹根目录",
+  conventionsFollow: "采用",
+  conventionsDecline: "保留当前设置",
   pluginCardSystemApp: "用系统应用打开",
   pluginCardNever: "不再建议",
   pluginCardsMuted: "已关闭的插件建议：{n} 条",

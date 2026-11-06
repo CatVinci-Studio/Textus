@@ -1653,6 +1653,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginOpenInstall: "Installieren und öffnen",
   pluginOpenTurnOnButton: "Einschalten und öffnen",
   pluginCardLine: "Plugin-Empfehlung: {name}",
+  conventionsCardLine:
+    "Die {app}-Einstellungen dieses Ordners legen Bilder in {folder} ab",
+  conventionsCardDetails:
+    "Aktuelle Einstellung: {current}. Beim Übernehmen wird sie in der .textus/settings.json dieses Ordners gespeichert und bleibt beim Projekt.",
+  conventionsFolderRoot: "dem Ordner selbst",
+  conventionsFollow: "Übernehmen",
+  conventionsDecline: "Aktuelle behalten",
   pluginCardSystemApp: "Mit System-App öffnen",
   pluginCardNever: "Nicht mehr vorschlagen",
   pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge: {n}",

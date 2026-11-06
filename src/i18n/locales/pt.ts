@@ -1635,6 +1635,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginOpenInstall: "Instalar e abrir",
   pluginOpenTurnOnButton: "Ligar e abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  conventionsCardLine:
+    "As configurações do {app} desta pasta guardam as imagens em {folder}",
+  conventionsCardDetails:
+    "Configuração atual: {current}. Ao adotar, ela é salva em .textus/settings.json desta pasta e fica com o projeto.",
+  conventionsFolderRoot: "a própria pasta",
+  conventionsFollow: "Adotar",
+  conventionsDecline: "Manter a atual",
   pluginCardSystemApp: "Abrir com o app do sistema",
   pluginCardNever: "Não sugerir de novo",
   pluginCardsMuted: "Sugestões de plugins desativadas: {n}",

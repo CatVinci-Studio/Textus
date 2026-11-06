@@ -1593,6 +1593,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginOpenInstall: "インストールして開く",
   pluginOpenTurnOnButton: "オンにして開く",
   pluginCardLine: "おすすめのプラグイン：{name}",
+  conventionsCardLine:
+    "このフォルダの {app} 設定では、画像を {folder} に保存します",
+  conventionsCardDetails:
+    "現在の設定：{current}。採用すると、このフォルダの .textus/settings.json に保存され、プロジェクトと共に保持されます。",
+  conventionsFolderRoot: "フォルダの最上位",
+  conventionsFollow: "採用",
+  conventionsDecline: "現在の設定を維持",
   pluginCardSystemApp: "システムのアプリで開く",
   pluginCardNever: "今後は表示しない",
   pluginCardsMuted: "オフにしたプラグインの提案：{n} 件",

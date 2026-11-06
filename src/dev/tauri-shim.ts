@@ -726,8 +726,6 @@ export function installDevTauriShim(): void {
           }));
         return Promise.resolve({ documents, truncated: false });
       }
-      // An Obsidian vault (a folder with a file under `.obsidian/`) is the
-      // one app the browser flows stand in for.
       case "folder_conventions": {
         const none = {
           sources: [],
@@ -741,6 +739,38 @@ export function installDevTauriShim(): void {
           daily: null,
           newNotes: null,
           ignore: [],
+          detected: null,
+        };
+        // The project's own .textus/settings.json applies; an Obsidian vault
+        // (a folder with a file under `.obsidian/`) is the one other app the
+        // browser flows stand in for, offered until the project answers.
+        let ours: Record<string, unknown> | null = null;
+        let oursRoot = "";
+        for (let dir = path; dir.includes("/") && !ours;) {
+          try {
+            const file = JSON.parse(
+              files[`${dir}/.textus/settings.json`] ?? "{}",
+            ) as { conventions?: Record<string, unknown> };
+            if (file.conventions) {
+              ours = file.conventions;
+              oursRoot = dir;
+            }
+          } catch {
+            /* not ours */
+          }
+          dir = dir.slice(0, dir.lastIndexOf("/"));
+        }
+        const mine = <T>(key: string) =>
+          ours && ours[key] !== undefined
+            ? { value: ours[key] as T, app: "textus", root: oursRoot }
+            : null;
+        const applied = {
+          ...none,
+          linkStyle: mine<string>("linkStyle"),
+          linkPath: mine<string>("linkPath"),
+          attachments: mine<string>("attachments"),
+          softBreaks: mine<boolean>("softBreaks"),
+          updateLinks: mine<string>("updateLinks"),
         };
         for (let dir = path; dir.includes("/");) {
           if (
@@ -754,22 +784,27 @@ export function installDevTauriShim(): void {
             }
             const at = <T>(value: T) => ({ value, app: "obsidian", root: dir });
             return Promise.resolve({
-              ...none,
+              ...applied,
               sources: [{ app: "obsidian", root: dir }],
-              linkStyle: at(
-                app.useMarkdownLinks === true ? "markdown" : "wiki",
-              ),
-              linkPath: at(String(app.newLinkFormat ?? "shortest")),
-              attachments: at(String(app.attachmentFolderPath ?? "/")),
-              softBreaks: at(app.strictLineBreaks !== true),
-              updateLinks: at(
-                app.alwaysUpdateLinks === false ? "ask" : "always",
-              ),
+              detected: ours?.detected
+                ? null
+                : {
+                    ...none,
+                    linkStyle: at(
+                      app.useMarkdownLinks === true ? "markdown" : "wiki",
+                    ),
+                    linkPath: at(String(app.newLinkFormat ?? "shortest")),
+                    attachments: at(String(app.attachmentFolderPath ?? "/")),
+                    softBreaks: at(app.strictLineBreaks !== true),
+                    updateLinks: at(
+                      app.alwaysUpdateLinks === false ? "ask" : "always",
+                    ),
+                  },
             });
           }
           dir = dir.slice(0, dir.lastIndexOf("/"));
         }
-        return Promise.resolve(none);
+        return Promise.resolve(applied);
       }
       // The folder's notes, by the rules Rust's vault.rs shares with
       // link-resolve.ts.

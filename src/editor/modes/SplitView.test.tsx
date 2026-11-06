@@ -30,6 +30,7 @@ const vault = (strict: boolean) => ({
   daily: null,
   newNotes: null,
   ignore: [],
+  detected: null,
 });
 
 function preview(filePath: string) {

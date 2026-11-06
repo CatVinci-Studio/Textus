@@ -225,6 +225,12 @@ export type Conventions_Deserialize = {
 	newNotes?: Setting<string> | null,
 	/**  Paths the app hides (Obsidian's excluded files). */
 	ignore: string[],
+	/**
+	 *  Another app's settings found here and not yet taken or turned down:
+	 *  offered to the user, who may copy them into `.textus/settings.json`.
+	 *  They never apply by themselves.
+	 */
+	detected?: Conventions_Deserialize | null,
 };
 
 /**  A folder's conventions; a field no app sets is left to Textus's settings. */
@@ -254,6 +260,12 @@ export type Conventions_Serialize = {
 	newNotes: Setting<string> | null,
 	/**  Paths the app hides (Obsidian's excluded files). */
 	ignore: string[],
+	/**
+	 *  Another app's settings found here and not yet taken or turned down:
+	 *  offered to the user, who may copy them into `.textus/settings.json`.
+	 *  They never apply by themselves.
+	 */
+	detected: Conventions_Serialize | null,
 };
 
 export type Daily = Daily_Serialize | Daily_Deserialize;

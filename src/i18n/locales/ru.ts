@@ -1647,6 +1647,13 @@ export default {
   pluginOpenInstall: "Установить и открыть",
   pluginOpenTurnOnButton: "Включить и открыть",
   pluginCardLine: "Рекомендуемый плагин: {name}",
+  conventionsCardLine:
+    "Настройки {app} этой папки сохраняют изображения в {folder}",
+  conventionsCardDetails:
+    "Текущая настройка: {current}. При применении она сохраняется в .textus/settings.json этой папки и остаётся с проектом.",
+  conventionsFolderRoot: "саму папку",
+  conventionsFollow: "Применить",
+  conventionsDecline: "Оставить текущую",
   pluginCardSystemApp: "Открыть в системном приложении",
   pluginCardNever: "Больше не предлагать",
   pluginCardsMuted: "Отключённые предложения плагинов: {n}",

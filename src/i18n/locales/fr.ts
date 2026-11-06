@@ -1681,6 +1681,13 @@ utiliser une.
   pluginOpenInstall: "Installer et ouvrir",
   pluginOpenTurnOnButton: "Activer et ouvrir",
   pluginCardLine: "Plugin suggéré : {name}",
+  conventionsCardLine:
+    "Les réglages {app} de ce dossier placent les images dans {folder}",
+  conventionsCardDetails:
+    "Réglage actuel : {current}. L’adopter l’enregistre dans le .textus/settings.json de ce dossier, avec le projet.",
+  conventionsFolderRoot: "le dossier lui-même",
+  conventionsFollow: "Adopter",
+  conventionsDecline: "Garder l’actuel",
   pluginCardSystemApp: "Ouvrir avec l’app du système",
   pluginCardNever: "Ne plus suggérer",
   pluginCardsMuted: "Suggestions de plugins désactivées : {n}",

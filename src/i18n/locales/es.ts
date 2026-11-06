@@ -1659,6 +1659,13 @@ para usar una.
   pluginOpenInstall: "Instalar y abrir",
   pluginOpenTurnOnButton: "Activar y abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  conventionsCardLine:
+    "Los ajustes de {app} de esta carpeta guardan las imágenes en {folder}",
+  conventionsCardDetails:
+    "Ajuste actual: {current}. Al adoptarlo se guarda en .textus/settings.json de esta carpeta y se conserva con el proyecto.",
+  conventionsFolderRoot: "la carpeta misma",
+  conventionsFollow: "Adoptar",
+  conventionsDecline: "Mantener el actual",
   pluginCardSystemApp: "Abrir con la app del sistema",
   pluginCardNever: "No volver a sugerir",
   pluginCardsMuted: "Sugerencias de plugins desactivadas: {n}",

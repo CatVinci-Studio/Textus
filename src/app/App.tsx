@@ -1,4 +1,5 @@
 import { SuggestCard } from "./SuggestCard";
+import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../ui/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
@@ -276,6 +277,7 @@ function App() {
 
         <CornerStack corner="end">
           <SuggestCard t={t} />
+          <ConventionsCard path={activeTab.path} settings={settings} t={t} />
           <UpdateToast appUpdate={appUpdate} t={t} />
         </CornerStack>
 

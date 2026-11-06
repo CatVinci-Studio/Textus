@@ -85,6 +85,8 @@ fn textus(dir: &Path) -> Option<Conventions> {
         })
     });
     out.ignore = strings(c.get("ignore"));
+    // "followed" or "declined": the other app's settings were answered.
+    out.decided = s("detected").is_some();
     Some(out)
 }
 

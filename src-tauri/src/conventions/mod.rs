@@ -83,6 +83,14 @@ pub struct Conventions {
     pub new_notes: Option<Setting<String>>,
     /// Paths the app hides (Obsidian's excluded files).
     pub ignore: Vec<String>,
+    /// Another app's settings found here and not yet taken or turned down:
+    /// offered to the user, who may copy them into `.textus/settings.json`.
+    /// They never apply by themselves.
+    pub detected: Option<Box<Conventions>>,
+    /// `.textus/settings.json` says whether the other app's settings were
+    /// taken or turned down: nothing more to offer.
+    #[serde(skip)]
+    pub(crate) decided: bool,
 }
 
 impl Conventions {
@@ -106,14 +114,34 @@ impl Conventions {
         if self.ignore.is_empty() {
             self.ignore = other.ignore;
         }
+        self.decided |= other.decided;
+        if self.detected.is_none() {
+            self.detected = other.detected;
+        }
         self.sources.extend(other.sources);
         self
     }
 
     /// The nearest app that keeps notes linked by name, whose folder a
-    /// wikilink is resolved in.
+    /// wikilink is resolved in - read whether or not its settings were taken,
+    /// since it only says where links are found.
     pub(crate) fn notes_root(&self) -> Option<PathBuf> {
-        self.link_style.as_ref().map(|s| PathBuf::from(&s.root))
+        const NOTE_APPS: [&str; 4] = ["obsidian", "logseq", "dendron", "foam"];
+        self.sources
+            .iter()
+            .find(|s| NOTE_APPS.contains(&s.app.as_str()))
+            .map(|s| PathBuf::from(&s.root))
+            .or_else(|| self.link_style.as_ref().map(|s| PathBuf::from(&s.root)))
+    }
+
+    fn has_settings(&self) -> bool {
+        self.link_style.is_some()
+            || self.link_path.is_some()
+            || self.attachments.is_some()
+            || self.soft_breaks.is_some()
+            || self.templates.is_some()
+            || self.daily.is_some()
+            || self.new_notes.is_some()
     }
 }
 
@@ -146,11 +174,33 @@ pub(crate) fn of_folder(dir: &Path) -> Conventions {
     found
 }
 
+/// The folder's conventions in three tiers: the project's own
+/// `.textus/settings.json` applies; other apps' settings are only detected,
+/// to offer; where `/` points and where wikilinks are found are read from
+/// any app, since they only make links open.
 fn read_folder(dir: &Path) -> Conventions {
-    dir.ancestors()
+    let mut ours = Conventions::default();
+    let mut theirs = Conventions::default();
+    for found in dir
+        .ancestors()
         .take(MAX_ASCENT)
         .flat_map(|d| readers::READERS.iter().filter_map(move |read| read(d)))
-        .fold(Conventions::default(), Conventions::or)
+    {
+        if found.sources.first().is_some_and(|s| s.app == "textus") {
+            ours = ours.or(found);
+        } else {
+            if ours.link_root.is_none() {
+                ours.link_root = found.link_root.clone();
+            }
+            ours.sources.extend(found.sources.clone());
+            theirs = theirs.or(found);
+        }
+    }
+    theirs.link_root = None;
+    if !ours.decided && theirs.has_settings() {
+        ours.detected = Some(Box::new(theirs));
+    }
+    ours
 }
 
 /// The conventions for the document `doc`: its own Typora front matter

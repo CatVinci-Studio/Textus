@@ -1,3 +1,4 @@
+import { notesRoot, renameRule } from "../links/link-style";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { getWindowAccess } from "../plugins/app-bridge";
@@ -23,7 +24,7 @@ export async function updateLinksAfterMove(
     fs.documentLinkRoot(to, base).catch(() => null),
   ]);
   // Links by name are found in the folder of the app that writes them.
-  const root = conventions?.linkStyle?.root ?? base;
+  const root = notesRoot(conventions) ?? base;
   let documents: { path: string; text: string }[];
   let files: string[];
   try {
@@ -45,7 +46,7 @@ export async function updateLinksAfterMove(
   }));
   const updates = current.flatMap((doc) => planner(doc) ?? []);
   if (updates.length === 0) return;
-  const update = conventions?.updateLinks?.value;
+  const update = renameRule(conventions);
   if (update === "never") return;
   const automatic = update === "always";
   if (

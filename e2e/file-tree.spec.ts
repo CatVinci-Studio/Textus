@@ -253,11 +253,14 @@ test("in an Obsidian vault a moved note's links follow at once", async ({
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("in an Obsidian vault the split preview breaks the line at a single newline", async ({
+test("in a vault whose settings the project took, the split preview breaks the line at a single newline", async ({
   page,
 }) => {
   await open(page, {
     "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/.textus/settings.json": JSON.stringify({
+      conventions: { softBreaks: true, detected: "followed" },
+    }),
     "/work/notes/a.md": "# Alpha\n\none\ntwo",
   });
   await emit(page, "menu-toggle-split-view");

@@ -1616,6 +1616,13 @@ type /name in a conversation to use one.
   pluginOpenInstall: "Install and open",
   pluginOpenTurnOnButton: "Turn on and open",
   pluginCardLine: "Plugin suggestion: {name}",
+  conventionsCardLine:
+    "This folder's {app} settings store pictures in {folder}",
+  conventionsCardDetails:
+    "Current setting: {current}. Adopting saves it in this folder's .textus/settings.json, so it stays with the project.",
+  conventionsFolderRoot: "the folder itself",
+  conventionsFollow: "Adopt",
+  conventionsDecline: "Keep Current",
   pluginCardSystemApp: "Open with system app",
   pluginCardNever: "Don't suggest this again",
   pluginCardsMuted: "Plugin suggestions you turned off: {n}",

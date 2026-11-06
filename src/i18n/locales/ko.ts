@@ -1577,6 +1577,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginOpenInstall: "설치하고 열기",
   pluginOpenTurnOnButton: "켜고 열기",
   pluginCardLine: "추천 플러그인: {name}",
+  conventionsCardLine: "이 폴더의 {app} 설정은 그림을 {folder}에 저장합니다",
+  conventionsCardDetails:
+    "현재 설정: {current}. 적용하면 이 폴더의 .textus/settings.json에 저장되어 프로젝트와 함께 유지됩니다.",
+  conventionsFolderRoot: "폴더 최상위",
+  conventionsFollow: "적용",
+  conventionsDecline: "현재 설정 유지",
   pluginCardSystemApp: "시스템 앱으로 열기",
   pluginCardNever: "다시 제안하지 않기",
   pluginCardsMuted: "끈 플러그인 제안: {n}개",
