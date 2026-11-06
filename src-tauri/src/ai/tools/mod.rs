@@ -140,11 +140,33 @@ pub enum Run<'a> {
     Async(Box<dyn Fn(ToolCall) -> ToolFuture<'a> + Send + Sync + 'a>),
 }
 
+/// Whom a registry's tools are for, which decides what [`ToolRegistry::add`]
+/// lets in - the one place a tool's `modes` are read.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Offer {
+    /// A conversation in this mode: the tools offered in it.
+    Mode(AgentMode),
+    /// A helper outside any conversation (a paper's researcher): only the
+    /// tools every mode offers, so neither the document's nor editing get
+    /// in. A plugin's or MCP server's tool is offered in every mode, so it
+    /// does.
+    Shared,
+}
+
+impl Offer {
+    fn admits(self, modes: &[AgentMode]) -> bool {
+        match self {
+            Offer::Mode(mode) => modes.contains(&mode),
+            Offer::Shared => EVERY_MODE.iter().all(|mode| modes.contains(mode)),
+        }
+    }
+}
+
 /// The tools one request offers, assembled for its mode: the built-ins with
 /// something to work on, then what the request adds. The one place a tool is
 /// looked up by name.
 pub struct ToolRegistry<'a> {
-    mode: AgentMode,
+    offer: Offer,
     tools: Vec<Tool<'a>>,
 }
 
@@ -152,30 +174,34 @@ impl<'a> ToolRegistry<'a> {
     /// No tools yet: what `mode` offers is added to it.
     pub fn new(mode: AgentMode) -> Self {
         Self {
-            mode,
+            offer: Offer::Mode(mode),
             tools: Vec::new(),
         }
     }
 
-    /// The built-in tools for `mode` (see [`builtin_tools`] for the rest).
+    /// No tools yet: only what every mode offers is added to it.
+    pub fn shared() -> Self {
+        Self {
+            offer: Offer::Shared,
+            tools: Vec::new(),
+        }
+    }
+
+    /// The built-in tools for `mode`: the document's, then the project's
+    /// ([`project_tools`] says when each is offered), in the modes that
+    /// offer them.
     pub fn builtin(has_skills: bool, has_root: bool, mode: AgentMode, sees_images: bool) -> Self {
         let mut registry = Self::new(mode);
-        registry.tools = builtin_tools(has_skills, has_root, mode, sees_images);
+        registry.extend(document_tools());
+        registry.extend(project_tools(has_skills, has_root, sees_images));
         registry
     }
 
-    /// Only the project and attached files' tools: what a paper's researcher
-    /// reads with.
-    pub fn files(mode: AgentMode, sees_images: bool) -> Self {
-        let mut registry = Self::builtin(false, true, mode, sees_images);
-        registry.tools.retain(|t| {
-            [
-                FIND_FILES_TOOL_NAME,
-                SEARCH_FILES_TOOL_NAME,
-                READ_FILE_TOOL_NAME,
-            ]
-            .contains(&&*t.spec.name)
-        });
+    /// The project folder's file tools, for a helper with no document (a
+    /// paper's researcher): [`Self::shared`] with the project's tools.
+    pub fn files(sees_images: bool) -> Self {
+        let mut registry = Self::shared();
+        registry.extend(project_tools(false, true, sees_images));
         registry
     }
 
@@ -190,10 +216,16 @@ impl<'a> ToolRegistry<'a> {
         self.tools.retain(|t| t.spec.name != name);
     }
 
-    /// Adds `tool` if this request's mode offers it.
+    /// Adds `tool` if this registry offers it ([`Offer`]).
     pub fn add(&mut self, tool: Tool<'a>) {
-        if tool.modes.contains(&self.mode) {
+        if self.offer.admits(tool.modes) {
             self.tools.push(tool);
+        }
+    }
+
+    pub fn extend(&mut self, tools: impl IntoIterator<Item = Tool<'a>>) {
+        for tool in tools {
+            self.add(tool);
         }
     }
 

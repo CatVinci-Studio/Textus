@@ -1089,3 +1089,14 @@ fn events_go_to_any_sink() {
     report(&sink)(LoopEvent::Retry);
     assert_eq!(*sink.0.lock().unwrap(), ["delta", "toolStart", "retry"]);
 }
+
+#[test]
+fn only_a_mode_that_reads_the_document_is_told_to() {
+    use crate::ai::tools::READ_DOCUMENT_TOOL_NAME;
+    let reads =
+        |mode| ToolRegistry::builtin(false, false, mode, false).offers(READ_DOCUMENT_TOOL_NAME);
+    assert!(reads(AgentMode::Write) && reads(AgentMode::Review));
+    assert!(!reads(AgentMode::Create));
+    let doc = "# Title\n\n".to_string() + &"A long paragraph of words. ".repeat(4000);
+    assert!(!document_section(&md(&doc), false, None).contains("read_document"));
+}

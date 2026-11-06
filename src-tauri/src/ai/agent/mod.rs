@@ -187,11 +187,14 @@ async fn ai_agent_message_inner(
         ));
     }
     // Tool-calling paths: the document rides in this message. The tool-less
-    // fallback rebuilds its own turn.
+    // fallback rebuilds its own turn. Create can't read the document, so it
+    // isn't told to.
+    let reads_document =
+        ToolRegistry::builtin(false, false, mode, false).offers(tools::READ_DOCUMENT_TOOL_NAME);
     let (context, sent_library) = request_context_and_library(
         &workspace,
         &document,
-        true,
+        reads_document,
         &focus,
         focus_heading.as_deref(),
     );
