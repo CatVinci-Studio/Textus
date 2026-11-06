@@ -1294,6 +1294,8 @@ export default {
   imageFolderSubfolder: "子資料夾",
   imageFolderSameFolder: "與文件相同的資料夾",
   imageFolderNameLabel: "子資料夾名稱",
+  imageFolderProjectNote:
+    "此專案依 {source} 的設定，把圖片存放在 {folder}。這裡的設定用於其他文件。",
   imageFolderInvalid: "填寫文件所在資料夾裡的資料夾，例如 img。",
   imageHostLabel: "圖床",
   imageHostCustom: "自訂",

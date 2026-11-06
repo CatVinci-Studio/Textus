@@ -56,6 +56,8 @@ export interface SettingsPanelProps {
   /** Files a settings action deleted (Reset on a customized skill), for
    *  the editor to close their tabs. */
   onFilesDeleted?: (paths: string[]) => void;
+  /** The document in front, for what its project sets. */
+  docPath?: string | null;
   /** The shortcuts that can't be changed, listed under the ones that can. */
   fixedShortcuts?: FixedShortcutGroup[];
   /** The commands plugins add, under Shortcuts' own. */
@@ -101,6 +103,7 @@ export function SettingsPanel({
   onClose,
   onOpenFile,
   onFilesDeleted,
+  docPath = null,
   fixedShortcuts = [],
   pluginCommands = [],
   initialCategory = "general",
@@ -156,6 +159,7 @@ export function SettingsPanel({
     openHelp,
     onOpenFile,
     onFilesDeleted,
+    docPath,
     onClose,
     fixedShortcuts,
     pluginCommands,

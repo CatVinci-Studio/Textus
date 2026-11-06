@@ -1413,6 +1413,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageFolderSubfolder: "Subpasta",
   imageFolderSameFolder: "A mesma pasta do documento",
   imageFolderNameLabel: "Nome da subpasta",
+  imageFolderProjectNote:
+    "Este projeto guarda as imagens em {folder}, conforme {source}. Esta opção vale para os outros documentos.",
   imageFolderInvalid: "Use uma pasta dentro da pasta do documento, como img.",
   imageHostLabel: "Hospedagem de imagens",
   imageHostCustom: "Personalizado",

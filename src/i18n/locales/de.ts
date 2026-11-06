@@ -1428,6 +1428,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageFolderSubfolder: "Unterordner",
   imageFolderSameFolder: "Derselbe Ordner wie das Dokument",
   imageFolderNameLabel: "Name des Unterordners",
+  imageFolderProjectNote:
+    "Dieses Projekt speichert Bilder in {folder}, so steht es in {source}. Diese Einstellung gilt für andere Dokumente.",
   imageFolderInvalid: "Gib einen Ordner im Ordner des Dokuments an, etwa img.",
   imageHostLabel: "Bild-Hoster",
   imageHostCustom: "Eigener Server",

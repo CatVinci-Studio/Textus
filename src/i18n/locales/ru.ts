@@ -1428,6 +1428,8 @@ export default {
   imageFolderSubfolder: "Вложенная папка",
   imageFolderSameFolder: "Та же папка, что и документ",
   imageFolderNameLabel: "Имя вложенной папки",
+  imageFolderProjectNote:
+    "Этот проект сохраняет картинки в {folder}, как указано в {source}. Эта настройка действует для других документов.",
   imageFolderInvalid: "Укажите папку внутри папки документа, например img.",
   imageHostLabel: "Хостинг изображений",
   imageHostCustom: "Свой сервер",

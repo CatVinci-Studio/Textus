@@ -1365,6 +1365,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageFolderSubfolder: "サブフォルダー",
   imageFolderSameFolder: "ドキュメントと同じフォルダー",
   imageFolderNameLabel: "サブフォルダー名",
+  imageFolderProjectNote:
+    "このプロジェクトは {source} の設定どおり、画像を {folder} に保存します。この設定はほかの文書に使われます。",
   imageFolderInvalid:
     "ドキュメントのフォルダー内のフォルダーを指定します（例：img）。",
   imageHostLabel: "画像ホスティング",

@@ -1434,6 +1434,8 @@ para usar una.
   imageFolderSubfolder: "Subcarpeta",
   imageFolderSameFolder: "La misma carpeta que el documento",
   imageFolderNameLabel: "Nombre de la subcarpeta",
+  imageFolderProjectNote:
+    "Este proyecto guarda las imágenes en {folder}, según {source}. Este ajuste se aplica a los demás documentos.",
   imageFolderInvalid: "Usa una carpeta dentro de la del documento, como img.",
   imageHostLabel: "Alojamiento de imágenes",
   imageHostCustom: "Personalizado",

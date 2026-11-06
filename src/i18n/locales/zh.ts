@@ -1291,6 +1291,8 @@ export default {
   imageFolderSubfolder: "子文件夹",
   imageFolderSameFolder: "与文档同一文件夹",
   imageFolderNameLabel: "子文件夹名称",
+  imageFolderProjectNote:
+    "此项目按 {source} 的设置，把图片存放在 {folder}。这里的设置用于其他文档。",
   imageFolderInvalid: "填写文档所在文件夹里的文件夹，例如 img。",
   imageHostLabel: "图床",
   imageHostCustom: "自定义",

@@ -39,6 +39,7 @@ export function EditorPage({
   phone,
   percent,
   openPage,
+  docPath = null,
 }: SettingsPageProps) {
   const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
   const readOnly = useSyncExternalStore(subscribeReadOnly, readOnlyShown);
@@ -184,7 +185,7 @@ export function EditorPage({
             <option value="left">{t.imageAlignLeft}</option>
           </Select>
         </SettingRow>
-        <ImageStorageSection t={t} />
+        <ImageStorageSection t={t} docPath={docPath} />
       </SettingsGroup>
       {/* No PDF export on the phone, so no group there either. */}
       {canExportPdf && (

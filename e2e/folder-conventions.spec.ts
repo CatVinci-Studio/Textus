@@ -69,3 +69,22 @@ test("turned down, nothing applies and the folder isn't asked again", async ({
     )
     .toEqual({ conventions: { detected: "declined" } });
 });
+
+test("Settings says where the project puts pictures", async ({ page }) => {
+  await open(page, {
+    "/vault/.textus/settings.json": JSON.stringify({
+      conventions: { attachments: "./pics" },
+    }),
+    "/vault/notes/a.md": "# Alpha\n",
+  });
+  await page.evaluate(() =>
+    (
+      window as unknown as { __devEmitTauriEvent: (name: string) => void }
+    ).__devEmitTauriEvent("menu-open-settings"),
+  );
+  const panel = page.getByRole("dialog", { name: "Settings" });
+  await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  await expect(panel).toContainText(
+    "This project saves pictures in pics/ (set in .textus/settings.json).",
+  );
+});

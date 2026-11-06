@@ -1452,6 +1452,8 @@ utiliser une.
   imageFolderSubfolder: "Sous-dossier",
   imageFolderSameFolder: "Même dossier que le document",
   imageFolderNameLabel: "Nom du sous-dossier",
+  imageFolderProjectNote:
+    "Ce projet enregistre les images dans {folder}, comme l’indique {source}. Ce réglage vaut pour les autres documents.",
   imageFolderInvalid:
     "Indiquez un dossier situé dans celui du document, comme img.",
   imageHostLabel: "Hébergeur d'images",

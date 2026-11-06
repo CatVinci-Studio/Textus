@@ -1391,6 +1391,8 @@ type /name in a conversation to use one.
   imageFolderSubfolder: "Subfolder",
   imageFolderSameFolder: "Same folder as the document",
   imageFolderNameLabel: "Subfolder name",
+  imageFolderProjectNote:
+    "This project saves pictures in {folder} (set in {source}). This setting covers other documents.",
   imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Image host",
   imageHostCustom: "Custom",

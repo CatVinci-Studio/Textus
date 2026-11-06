@@ -1352,6 +1352,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageFolderSubfolder: "하위 폴더",
   imageFolderSameFolder: "문서와 같은 폴더",
   imageFolderNameLabel: "하위 폴더 이름",
+  imageFolderProjectNote:
+    "이 프로젝트는 {source} 설정에 따라 그림을 {folder}에 저장합니다. 이 설정은 다른 문서에 적용됩니다.",
   imageFolderInvalid: "문서 폴더 안의 폴더로 입력하세요(예: img).",
   imageHostLabel: "이미지 호스팅",
   imageHostCustom: "사용자 지정",

@@ -1,3 +1,5 @@
+import type { Strings } from "../i18n/strings";
+
 /** `imageFolder` when images go in the document's own folder; any other
  *  value names a subfolder of it (Settings > Images > Folder). */
 export const SAME_FOLDER = "./";
@@ -50,4 +52,24 @@ export function storedImageFolder(stored: unknown): string {
   if (prefix === "") return SAME_FOLDER;
   if (prefix && !prefix.includes("/") && !prefix.includes("${")) return prefix;
   return DEFAULT_IMAGE_SUBFOLDER;
+}
+
+/** Names as each app calls itself; Textus's own as the file it keeps. */
+const APP_NAMES: Record<string, string> = {
+  textus: ".textus/settings.json",
+  obsidian: "Obsidian",
+  logseq: "Logseq",
+  dendron: "Dendron",
+  foam: "Foam",
+  vscode: "VS Code",
+};
+
+export const conventionsAppName = (app: string) => APP_NAMES[app] ?? app;
+
+/** A folder's `attachments` rule as words: "img/", the document's own
+ *  folder, or the root. */
+export function attachmentsFolderName(rule: string, t: Strings): string {
+  if (rule === "/" || rule === "") return t.conventionsFolderRoot;
+  if (rule === "./") return t.imageFolderSameFolder;
+  return `${rule.replace(/^\.\//, "").replace(/\/?$/, "")}/`;
 }

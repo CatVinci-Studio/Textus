@@ -3,18 +3,13 @@ import { fs } from "../platform/ipc";
 import type { Conventions } from "../platform/ipc-files";
 import { updateProjectSettings } from "../storage/project-settings";
 import { CornerToast } from "../ui/CornerToast";
-import { SAME_FOLDER } from "../prefs/image-folder";
+import {
+  SAME_FOLDER,
+  attachmentsFolderName,
+  conventionsAppName,
+} from "../prefs/image-folder";
 import type { Settings } from "../prefs/settings-types";
 import type { Strings } from "../i18n/strings";
-
-/** Names as each app calls itself. */
-const APP_NAMES: Record<string, string> = {
-  obsidian: "Obsidian",
-  logseq: "Logseq",
-  dendron: "Dendron",
-  foam: "Foam",
-  vscode: "VS Code",
-};
 
 /** The other app's picture folder and the user's, as the card names
  *  them; null when they agree, or pictures are uploaded. */
@@ -29,12 +24,7 @@ function picturesOf(
     settings.imageFolder === SAME_FOLDER
       ? t.imageFolderSameFolder
       : `${settings.imageFolder.replace(/\/?$/, "")}/`;
-  const theirs =
-    rule === "/" || rule === ""
-      ? t.conventionsFolderRoot
-      : rule === "./"
-        ? t.imageFolderSameFolder
-        : `${rule.replace(/^\.\//, "").replace(/\/?$/, "")}/`;
+  const theirs = attachmentsFolderName(rule, t);
   return theirs === ours ? null : { theirs, ours };
 }
 
@@ -98,7 +88,7 @@ export function ConventionsCard({
         : { ...now, detected: "declined" },
     ).catch(() => {});
   };
-  const app = offer ? (APP_NAMES[offer.app] ?? offer.app) : "";
+  const app = offer ? conventionsAppName(offer.app) : "";
   const line = offer
     ? t.conventionsCardLine
         .replace("{app}", app)

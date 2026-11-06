@@ -207,6 +207,7 @@ function App() {
           opening={settingsOpening}
           onOpenFile={(path) => void openFile(path)}
           onFilesDeleted={skillFilesDeleted}
+          docPath={activeTab.path}
           fixedShortcuts={fixedShortcutGroups(t, platformName())}
           pluginCommands={commands()
             // Textus's own (Save, Close Tab) have their keys under File.

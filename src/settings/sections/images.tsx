@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from "react";
-import { imageHostAuth } from "../../platform/ipc";
+import { fs, imageHostAuth } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import {
   useSettings,
@@ -10,6 +10,8 @@ import {
 import {
   DEFAULT_IMAGE_SUBFOLDER,
   SAME_FOLDER,
+  attachmentsFolderName,
+  conventionsAppName,
   imageFolderExample,
   isImageSubfolder,
 } from "../../prefs/image-folder";
@@ -19,7 +21,14 @@ import { explainError } from "../../utils/error-explain";
 
 /** Settings > Images: one choice - this computer or an image host - and
  *  then only what that choice needs. */
-export function ImageStorageSection({ t }: { t: Strings }) {
+export function ImageStorageSection({
+  t,
+  docPath,
+}: {
+  t: Strings;
+  /** The document in front: its project may name its own folder. */
+  docPath: string | null;
+}) {
   const { settings, setSettings } = useSettings();
   const remote = settings.imageStorageMode === "image-host";
   return (
@@ -39,16 +48,55 @@ export function ImageStorageSection({ t }: { t: Strings }) {
           <option value="image-host">{t.imageStorageRemote}</option>
         </Select>
       </SettingRow>
-      {remote ? <ImageHostRows t={t} /> : <ImageFolderRow t={t} />}
+      {remote ? (
+        <ImageHostRows t={t} />
+      ) : (
+        <ImageFolderRow t={t} docPath={docPath} />
+      )}
     </>
   );
+}
+
+/** The picture folder the document's project sets (its
+ *  .textus/settings.json, or another app's settings it follows), which
+ *  wins over Settings there; null when it sets none. */
+function useProjectPictures(docPath: string | null, t: Strings): string | null {
+  const [found, setFound] = useState<string | null>(null);
+  useEffect(() => {
+    setFound(null);
+    if (!docPath) return;
+    let current = true;
+    void fs
+      .folderConventions(docPath)
+      .then((c) => {
+        const rule = c.attachments;
+        if (current && rule)
+          setFound(
+            t.imageFolderProjectNote
+              .replace("{folder}", attachmentsFolderName(rule.value, t))
+              .replace("{source}", conventionsAppName(rule.app)),
+          );
+      })
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [docPath, t]);
+  return found;
 }
 
 /** Where a saved document's images go, with the link a paste writes shown
  *  under it. A name is stored only once the backend would take it, so a
  *  half-typed one never reaches a paste. */
-function ImageFolderRow({ t }: { t: Strings }) {
+function ImageFolderRow({
+  t,
+  docPath,
+}: {
+  t: Strings;
+  docPath: string | null;
+}) {
   const { settings, setSettings } = useSettings();
+  const project = useProjectPictures(docPath, t);
   const same = settings.imageFolder === SAME_FOLDER;
   const [name, setName] = useState(() =>
     same ? DEFAULT_IMAGE_SUBFOLDER : settings.imageFolder,
@@ -59,9 +107,12 @@ function ImageFolderRow({ t }: { t: Strings }) {
     <SettingRow
       label={t.imageFolderLabel}
       hint={
-        example === null ? undefined : (
-          <code className="image-folder-example">{`![](${example})`}</code>
-        )
+        <>
+          {project && <div>{project}</div>}
+          {example !== null && (
+            <code className="image-folder-example">{`![](${example})`}</code>
+          )}
+        </>
       }
       error={!same && !valid ? t.imageFolderInvalid : null}
     >
