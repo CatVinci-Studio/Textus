@@ -45,7 +45,7 @@ export function DirNode({
 }: DirNodeProps) {
   const tree = useTree();
   const version = tree.versions[path] ?? 0;
-  const listing = `${version}:${tree.stale[path] ?? 0}`;
+  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
   // The root is always open, and so is a folder on the way down to the open
   // document.
   const [open, setOpen] = useState(

@@ -270,6 +270,22 @@ test("a tree that follows the document says so, and Close Folder closes the open
   await expect(page.locator(editor)).toBeVisible();
 });
 
+test("the tree shows files another app made once the window is back in front", async ({
+  page,
+}) => {
+  await open(page);
+  await expect(row(page, "a.md")).toBeVisible();
+  await page.evaluate(() => {
+    const files = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    files["/work/notes/from-git.md"] = "# New";
+    delete files["/work/notes/b.md"];
+    window.dispatchEvent(new Event("focus"));
+  });
+  await expect(row(page, "from-git.md")).toBeVisible();
+  await expect(row(page, "b.md")).toHaveCount(0);
+});
+
 test("⌘/Ctrl-click on a file opens it in a new window, this one unchanged (#348)", async ({
   page,
 }) => {

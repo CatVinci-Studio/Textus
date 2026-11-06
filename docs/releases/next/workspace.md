@@ -10,4 +10,6 @@
 
 ### Fixed
 
+- Shows files that Git, Obsidian or a file manager added, moved or deleted as soon as you come back to the window, without pressing **Refresh**.
+
 - Renaming a note through a plugin no longer changes links that lead to another note with the same name, or rewrites `/docs/a.md` as a relative path.

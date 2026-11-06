@@ -129,6 +129,7 @@ export function FileTree({
       showHidden,
       versions,
       stale: view.stale,
+      refreshed: view.refreshed,
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
@@ -141,6 +142,7 @@ export function FileTree({
       showHidden,
       versions,
       view.stale,
+      view.refreshed,
       drag?.into,
       desktop,
       onRowMenu,
@@ -354,6 +356,7 @@ function useTreeView(base: string) {
     setStale((prev) => bump(prev, dirs));
   }, []);
   usePluginWrites(base, refresh);
+  const refreshed = useRefreshOnFocus();
   return {
     generation,
     setGeneration,
@@ -369,7 +372,20 @@ function useTreeView(base: string) {
     reload,
     stale,
     refresh,
+    refreshed,
   };
+}
+
+/** A count bumped each time the window comes back to the front, when Git,
+ *  Obsidian or a file manager may have changed the folder. */
+function useRefreshOnFocus(): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const onFocus = () => setCount((n) => n + 1);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+  return count;
 }
 
 function bump(counts: Record<string, number>, dirs: string[]) {
