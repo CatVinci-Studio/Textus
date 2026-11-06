@@ -109,12 +109,26 @@ export function htmlTableToMarkdown(html: string): TableConversion {
   const width = Math.max(1, ...text.map((row) => row.length));
   const line = (row: string[]) =>
     `| ${Array.from({ length: width }, (_, i) => row[i] ?? "").join(" | ")} |`;
-  const aligns = Array.from({ length: width }, (_, i) => alignOf(cells[0][i]));
+  const head = headerRow(rows, cells);
+  const aligns = Array.from({ length: width }, (_, i) =>
+    alignOf(cells[head][i]),
+  );
   return {
     markdown: [
-      line(text[0]),
+      line(text[head]),
       `| ${aligns.join(" | ")} |`,
-      ...text.slice(1).map(line),
+      ...text.filter((_, i) => i !== head).map(line),
     ].join("\n"),
   };
+}
+
+/** The row Markdown heads the table with: the one in <thead> or made of
+ *  <th> cells, else the first. */
+function headerRow(rows: Element[], cells: Element[][]): number {
+  const found = rows.findIndex(
+    (tr, i) =>
+      tr.parentElement?.localName === "thead" ||
+      (cells[i].length > 0 && cells[i].every((c) => c.localName === "th")),
+  );
+  return Math.max(0, found);
 }

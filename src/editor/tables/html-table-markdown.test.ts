@@ -43,6 +43,16 @@ describe("htmlTableToMarkdown", () => {
     ).toEqual({ markdown: "| a | b\\|c |\n| --- | --- |\n| 1 |  |" });
   });
 
+  it("heads the table with its <th> row, wherever it stands", () => {
+    expect(
+      htmlTableToMarkdown(
+        "<table><tr><td>Note</td><td>2025</td></tr><tr><th>Name</th><th>Year</th></tr><tr><td>A</td><td>1</td></tr></table>",
+      ),
+    ).toEqual({
+      markdown: "| Name | Year |\n| --- | --- |\n| Note | 2025 |\n| A | 1 |",
+    });
+  });
+
   it("leaves a price's dollar sign alone", () => {
     const result = htmlTableToMarkdown(
       "<table><tr><td>h</td></tr><tr><td>$5 and $6</td></tr></table>",
