@@ -1625,7 +1625,9 @@ type /name in a conversation to use one.
   pluginOfferTurnOn:
     "The {name} plugin is installed but off. Turn it on?\n{description}",
   pluginOfferReason: "Suggested by a plugin: “{reason}”",
-  pluginCardOfferLine: "{caller} suggests {name}: “{reason}”",
+  pluginCardOfferLine: "{name}: “{reason}”",
+  pluginCardTitle: "Plugin suggestion",
+  pluginCardFrom: "Suggested by {caller}",
   pluginCardSystemApp: "Open with system app",
   pluginCardNever: "Don't suggest this again",
   pluginCardsMuted: "Plugin suggestions you turned off: {n}",

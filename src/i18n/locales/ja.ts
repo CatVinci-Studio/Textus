@@ -1603,7 +1603,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginOfferTurnOn:
     "{name} プラグインはインストール済みですがオフです。オンにしますか？\n{description}",
   pluginOfferReason: "プラグインからの提案：「{reason}」",
-  pluginCardOfferLine: "{caller} が{name}をおすすめしています：「{reason}」",
+  pluginCardOfferLine: "{name}：「{reason}」",
+  pluginCardTitle: "おすすめのプラグイン",
+  pluginCardFrom: "{caller} のおすすめ",
   pluginCardSystemApp: "システムのアプリで開く",
   pluginCardNever: "今後は表示しない",
   pluginCardsMuted: "オフにしたプラグインの提案：{n} 件",

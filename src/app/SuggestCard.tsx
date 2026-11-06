@@ -12,13 +12,11 @@ import { PluginIcon } from "../settings/pages/PluginArt";
 import type { CardRequest } from "../plugins/store/plugin-card";
 import type { Strings } from "../i18n/strings";
 
-/** The card's one line: a plugin's own reason says who asks and which
- *  plugin; the app's reasons already name both. */
+/** The card's one line: a plugin's own reason with the plugin it names;
+ *  the app's reasons already name it. */
 function cardLine(request: CardRequest, name: string, t: Strings): string {
-  const s = request.situation;
-  return s.type === "offer"
+  return request.situation.type === "offer"
     ? t.pluginCardOfferLine
-        .replace("{caller}", s.caller.name)
         .replace("{name}", name)
         .replace("{reason}", request.reason)
     : request.reason;
@@ -47,7 +45,8 @@ export function SuggestCard({ t }: { t: Strings }) {
     : "";
   useEffect(() => {
     setOpen(false);
-    if (request) announce(cardLine(request, name, t));
+    if (request)
+      announce(`${t.pluginCardTitle}: ${cardLine(request, name, t)}`);
   }, [request, name, t]);
   const item = card?.item ?? null;
   const installs = item ? installsText(item, t) : null;
@@ -73,6 +72,7 @@ export function SuggestCard({ t }: { t: Strings }) {
               url={item?.icon}
             />
             <span className="suggest-card-line">
+              <span className="suggest-card-title">{t.pluginCardTitle}</span>
               {cardLine(request, name, t)}
             </span>
           </button>
@@ -114,6 +114,14 @@ export function SuggestCard({ t }: { t: Strings }) {
           {open && (
             <div className="suggest-card-more" id={moreId}>
               <strong className="suggest-card-name">{name}</strong>
+              {request.situation.type === "offer" && (
+                <p>
+                  {t.pluginCardFrom.replace(
+                    "{caller}",
+                    request.situation.caller.name,
+                  )}
+                </p>
+              )}
               {item && (
                 <>
                   <p>{pluginText(item, item.manifest.description)}</p>

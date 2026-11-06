@@ -1656,7 +1656,9 @@ export default {
   pluginOfferTurnOn:
     "Плагин {name} установлен, но выключен. Включить?\n{description}",
   pluginOfferReason: "Предложено плагином: «{reason}»",
-  pluginCardOfferLine: "{caller} предлагает {name}: «{reason}»",
+  pluginCardOfferLine: "{name}: «{reason}»",
+  pluginCardTitle: "Рекомендуемый плагин",
+  pluginCardFrom: "Рекомендует {caller}",
   pluginCardSystemApp: "Открыть в системном приложении",
   pluginCardNever: "Больше не предлагать",
   pluginCardsMuted: "Отключённые предложения плагинов: {n}",

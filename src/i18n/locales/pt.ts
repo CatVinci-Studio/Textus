@@ -1644,7 +1644,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginOfferTurnOn:
     "O plugin {name} está instalado, mas desligado. Ligá-lo?\n{description}",
   pluginOfferReason: "Sugerido por um plugin: “{reason}”",
-  pluginCardOfferLine: "{caller} sugere {name}: “{reason}”",
+  pluginCardOfferLine: "{name}: “{reason}”",
+  pluginCardTitle: "Plugin recomendado",
+  pluginCardFrom: "Recomendado por {caller}",
   pluginCardSystemApp: "Abrir com o app do sistema",
   pluginCardNever: "Não sugerir de novo",
   pluginCardsMuted: "Sugestões de plugins desativadas: {n}",
