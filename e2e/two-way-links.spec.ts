@@ -139,6 +139,40 @@ test("an embed shows its note read-only and follows its changes", async ({
   await expect(embed).toHaveCount(0);
 });
 
+test("an embed folds under its title and stays folded when drawn again", async ({
+  page,
+}) => {
+  await open(
+    page,
+    {
+      "/notes/Doc.md": "Above\n\n![[Ideas#Plan]]\n",
+      "/notes/Ideas.md": "# Ideas\n\n## Plan\n\nFirst point.\n",
+    },
+    "/notes/Doc.md",
+  );
+  const embed = page.locator(`${editor} .note-embed`);
+  const body = embed.locator(".note-embed-body");
+  await expect(body).toBeVisible();
+  await embed.getByRole("button", { name: "Collapse" }).click();
+  await expect(body).toBeHidden();
+  // Folding opens nothing and leaves the source hidden.
+  await expect(page.locator(`${editor} .obsidian-embed-source`)).toBeHidden();
+  await expect(embed.locator(".note-embed-title")).toHaveText("Ideas › Plan");
+
+  // Its note changes and it is drawn again: still folded.
+  await page.evaluate(() => {
+    const w = window as unknown as { __devFs: Record<string, string> };
+    w.__devFs["/notes/Ideas.md"] = "# Ideas\n\n## Plan\n\nA new point.\n";
+    window.dispatchEvent(
+      new CustomEvent("textus:file-written", { detail: "/notes/Ideas.md" }),
+    );
+  });
+  await expect(embed.getByRole("button", { name: "Expand" })).toBeVisible();
+  await expect(body).toBeHidden();
+  await embed.getByRole("button", { name: "Expand" }).press("Enter");
+  await expect(body).toContainText("A new point.");
+});
+
 test("a section that embeds itself is drawn once", async ({ page }) => {
   await open(
     page,

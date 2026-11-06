@@ -12,7 +12,9 @@ import {
   embedKind,
   fillEmbed,
   noteEmbedOf,
+  setFolded,
 } from "./note-embed-render";
+import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
 import "./note-embed.css";
 import {
@@ -41,6 +43,16 @@ interface EmbedView {
   asks: AbortController;
 }
 
+/** Folds the embed under its title, or shows it again; remembered here. */
+function toggleFold(fold: HTMLElement): void {
+  const embed = fold.closest<HTMLElement>(".note-embed");
+  const key = fold.dataset.key;
+  if (!embed || !key) return;
+  const folded = embed.dataset.folded === undefined;
+  setFolded(embed, folded);
+  setEmbedFolded(key, folded);
+}
+
 /** Opens the embed's source at its heading or block. */
 function openSource(el: HTMLElement): void {
   const path = el.closest<HTMLElement>(".note-embed")?.dataset.path;
@@ -59,7 +71,13 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
     el.className = "note-embed";
     el.contentEditable = "false";
     const remembered = lastShown.get(`${docPath}\n${source}`);
-    if (remembered) el.innerHTML = remembered;
+    if (remembered) {
+      el.innerHTML = remembered;
+      // Folded before: folded again at once, not after a flash of it all.
+      const key =
+        el.querySelector<HTMLElement>(".note-embed-fold")?.dataset.key;
+      if (key) setFolded(el, embedFolded(key));
+    }
     const link = noteEmbedOf(source)!;
     void fillEmbed(el, link, {
       docPath,
@@ -77,8 +95,18 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         lastShown.delete(lastShown.keys().next().value!);
     });
     el.addEventListener("click", (event) => {
-      const title = (event.target as Element).closest?.(".note-embed-title");
+      const target = event.target as Element;
+      const fold = target.closest?.(".note-embed-fold");
+      if (fold instanceof HTMLElement) return toggleFold(fold);
+      const title = target.closest?.(".note-embed-title");
       if (title instanceof HTMLElement) openSource(title);
+    });
+    el.addEventListener("keydown", (event) => {
+      const fold = (event.target as Element).closest?.(".note-embed-fold");
+      if (!(fold instanceof HTMLElement)) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      toggleFold(fold);
     });
     // The body puts the caret on the source; a title or a held link is a click.
     caretToSourceOnClick(

@@ -96,3 +96,29 @@ test("with the default, closing the last document doesn't show the start page", 
   await emit(page, "menu-close-tab");
   await expect(startPage(page)).toHaveCount(0);
 });
+
+test("zooming on the start page leaves the documents' zoom as it was", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      closeLastToStartPage: true,
+    },
+  });
+  await drop(page, "/notes/one.md", "# One");
+  await emit(page, "menu-close-tab");
+  await expect(startPage(page)).toBeVisible();
+  const zoom = () =>
+    page.evaluate(() =>
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--content-zoom")
+        .trim(),
+    );
+  const before = await zoom();
+  await emit(page, "menu-zoom-in");
+  await emit(page, "menu-zoom-in");
+  await page.waitForTimeout(300);
+  expect(await zoom()).toBe(before);
+});

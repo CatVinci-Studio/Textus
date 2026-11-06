@@ -48,6 +48,9 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
+  /** The note embeds folded, by the document they are in and what they
+   *  show, oldest first. */
+  foldedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
    *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
   pluginCardAnswers: Record<string, number | "never">;
@@ -180,6 +183,11 @@ const LOCAL: {
   },
   readOnlyPaths: {
     key: "textus-read-only-paths",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  foldedEmbeds: {
+    key: "textus-folded-embeds",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

@@ -1,14 +1,23 @@
-import { useEffect, useState } from "react";
-import { readRecents } from "./menu/recents";
+import { useEffect, useState, type ReactNode } from "react";
 import { emitToThisWindow } from "../platform/menu-events";
 import { NO_RECENTS, type RecentLists } from "./menu/app-menu-model";
+import { readRecents } from "./menu/recents";
 import { basename, dirname } from "../utils/path";
 import { formatCombo } from "../utils/shortcuts";
+import {
+  FolderIcon,
+  GenericFileIcon,
+  OpenFolderIcon,
+  PlusIcon,
+  ProjectIcon,
+} from "../ui/icons";
+import { Tooltip } from "../ui/Tooltip";
 import type { Strings } from "../i18n/strings";
+import mark from "../../src-tauri/icons/128x128.png";
 import "./start-page.css";
 
 /** Recent projects and files each list this many at most. */
-const RECENT_SHOWN = 5;
+const RECENT_SHOWN = 6;
 
 /** The recent projects and files, read once as the page opens. */
 function useRecents(): RecentLists {
@@ -27,32 +36,51 @@ function useRecents(): RecentLists {
   return recents;
 }
 
+/** Where a recent item is, short: the home folder as ~ and only the last
+ *  two folders, so the name stays readable. */
+export function shortPlace(path: string): string {
+  const parent = dirname(path.replace(/[\\/]+$/, ""));
+  const home = parent.replace(
+    /^(\/Users\/[^/]+|\/home\/[^/]+|[A-Za-z]:\\Users\\[^\\]+)/,
+    "~",
+  );
+  const sep = home.includes("\\") && !home.includes("/") ? "\\" : "/";
+  const parts = home.split(sep).filter(Boolean);
+  return parts.length > 3 ? `…${sep}${parts.slice(-2).join(sep)}` : home;
+}
+
 function RecentList({
   title,
   paths,
   event,
+  icon,
 }: {
   title: string;
   paths: string[];
   /** The menu event that opens one, here. */
   event: string;
+  icon: ReactNode;
 }) {
   if (paths.length === 0) return null;
   return (
     <section className="start-page-recent" aria-label={title}>
       <h2 className="start-page-heading">{title}</h2>
       {paths.slice(0, RECENT_SHOWN).map((path) => (
-        <button
-          key={path}
-          type="button"
-          className="start-page-row"
-          onClick={() => emitToThisWindow(event, path)}
-        >
-          <span className="start-page-name">
-            {basename(path.replace(/[\\/]+$/, "")) || path}
-          </span>
-          <span className="start-page-where">{dirname(path)}</span>
-        </button>
+        <Tooltip key={path} text={path} description={null}>
+          <button
+            type="button"
+            className="start-page-row"
+            onClick={() => emitToThisWindow(event, path)}
+          >
+            <span className="start-page-row-icon" aria-hidden="true">
+              {icon}
+            </span>
+            <span className="start-page-name">
+              {basename(path.replace(/[\\/]+$/, "")) || path}
+            </span>
+            <span className="start-page-where">{shortPlace(path)}</span>
+          </button>
+        </Tooltip>
       ))}
     </section>
   );
@@ -67,40 +95,69 @@ export function StartPage({ t }: { t: Strings }) {
   const recents = useRecents();
   // Run here as the menu items' events, not through the native menu: in a
   // window-per-document setup that would open another window.
-  const actions: { label: string; event: string; combo?: string }[] = [
-    { label: t.menuNewFile, event: "menu-new-file", combo: "mod+n" },
-    { label: t.menuOpenFile, event: "menu-open-file", combo: "mod+o" },
-    { label: t.menuOpenFolder, event: "menu-open-folder" },
+  const actions = [
+    {
+      label: t.menuNewFile,
+      event: "menu-new-file",
+      combo: "mod+n",
+      icon: <PlusIcon />,
+    },
+    {
+      label: t.menuOpenFile,
+      event: "menu-open-file",
+      combo: "mod+o",
+      icon: <OpenFolderIcon />,
+    },
+    {
+      label: t.menuOpenFolder,
+      event: "menu-open-folder",
+      icon: <ProjectIcon />,
+    },
   ];
+  const anyRecent = recents.folders.length > 0 || recents.files.length > 0;
   return (
     <div className="start-page" role="region" aria-label={t.startPageTab}>
       <div className="start-page-body">
-        <h1 className="start-page-title">Textus</h1>
+        <h1 className="start-page-title">
+          <img src={mark} alt="" width={64} height={64} />
+          Textus
+        </h1>
         <div className="start-page-actions">
           {actions.map((a) => (
             <button
               key={a.event}
               type="button"
-              className="start-page-row"
+              className="start-page-action"
               onClick={() => emitToThisWindow(a.event)}
             >
-              <span className="start-page-name">{a.label}</span>
+              <span className="start-page-action-icon" aria-hidden="true">
+                {a.icon}
+              </span>
+              <span className="start-page-action-label">{a.label}</span>
               {a.combo && (
-                <span className="start-page-where">{formatCombo(a.combo)}</span>
+                <kbd className="start-page-action-keys">
+                  {formatCombo(a.combo)}
+                </kbd>
               )}
             </button>
           ))}
         </div>
-        <RecentList
-          title={t.startPageRecentProjects}
-          paths={recents.folders}
-          event="menu-open-recent-folder"
-        />
-        <RecentList
-          title={t.startPageRecentFiles}
-          paths={recents.files}
-          event="menu-open-recent"
-        />
+        {anyRecent && (
+          <div className="start-page-recents">
+            <RecentList
+              title={t.startPageRecentProjects}
+              paths={recents.folders}
+              event="menu-open-recent-folder"
+              icon={<FolderIcon />}
+            />
+            <RecentList
+              title={t.startPageRecentFiles}
+              paths={recents.files}
+              event="menu-open-recent"
+              icon={<GenericFileIcon />}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

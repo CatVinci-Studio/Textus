@@ -1,4 +1,6 @@
 import { fs } from "../../platform/ipc";
+import { embedFolded } from "./embed-folds";
+import { currentStrings } from "../../i18n/current";
 import {
   parseNoteLink,
   type NoteLink,
@@ -150,7 +152,20 @@ export async function fillEmbed(
 
   const title = document.createElement("span");
   title.className = "note-embed-title";
-  title.textContent = content.title || name;
+  const foldKey = `${place.docPath}\n${found.path}#${heading ?? ""}^${link.block ?? ""}`;
+  const fold = document.createElement("span");
+  fold.className = "note-embed-fold";
+  fold.setAttribute("role", "button");
+  fold.tabIndex = 0;
+  fold.dataset.key = foldKey;
+  fold.append(
+    Object.assign(document.createElement("span"), {
+      className: "disclosure-caret",
+    }),
+  );
+  const named = document.createElement("span");
+  named.textContent = content.title || name;
+  title.append(fold, named);
   const body = document.createElement("span");
   body.className = "note-embed-body";
   body.innerHTML = renderDocumentHtml(content.markdown);
@@ -174,6 +189,7 @@ export async function fillEmbed(
   el.dataset.path = found.path;
   el.dataset.anchor = link.block ? `^${link.block}` : (heading ?? "");
   el.replaceChildren(title, body);
+  setFolded(el, embedFolded(foldKey));
   const below = {
     ...place,
     docPath: found.path,
@@ -191,4 +207,17 @@ export async function fillEmbed(
       return fillEmbed(span, inner, below);
     }),
   );
+}
+
+/** Shows `el`'s body or folds it under its title, the toggle saying which. */
+export function setFolded(el: HTMLElement, folded: boolean): void {
+  if (folded) el.dataset.folded = "";
+  else delete el.dataset.folded;
+  const fold = el.querySelector<HTMLElement>(
+    ":scope > .note-embed-title > .note-embed-fold",
+  );
+  if (!fold) return;
+  const t = currentStrings();
+  fold.setAttribute("aria-expanded", String(!folded));
+  fold.setAttribute("aria-label", folded ? t.outlineExpand : t.outlineCollapse);
 }
