@@ -33,6 +33,65 @@ export const commands = {
 };
 
 /* Types */
+/**
+ *  What every request names, whatever it asks: the provider and model,
+ *  the document and project, the conversation, the search service, the
+ *  image model, and the id it is stopped by (`ai::cancel`). A chat
+ *  message's command takes these as its own parameters; Research's
+ *  requests carry them flattened, beside what they add.
+ */
+export type AgentRequest = AgentRequest_Serialize | AgentRequest_Deserialize;
+
+/**
+ *  What every request names, whatever it asks: the provider and model,
+ *  the document and project, the conversation, the search service, the
+ *  image model, and the id it is stopped by (`ai::cancel`). A chat
+ *  message's command takes these as its own parameters; Research's
+ *  requests carry them flattened, beside what they add.
+ */
+export type AgentRequest_Deserialize = {
+	provider: string,
+	model?: string | null,
+	docPath?: string | null,
+	workspaceRoot?: string | null,
+	/**  The conversation, whose scratch folder holds its attached files. */
+	conversation?: string | null,
+	/**
+	 *  "auto" or a service id, and the SearXNG address: what web_search
+	 *  uses when the model can't search by itself.
+	 */
+	searchService?: string | null,
+	searxngUrl?: string | null,
+	requestId: string,
+	/**  The image model; None for none. */
+	imageModel?: ImageModel_Deserialize | null,
+};
+
+/**
+ *  What every request names, whatever it asks: the provider and model,
+ *  the document and project, the conversation, the search service, the
+ *  image model, and the id it is stopped by (`ai::cancel`). A chat
+ *  message's command takes these as its own parameters; Research's
+ *  requests carry them flattened, beside what they add.
+ */
+export type AgentRequest_Serialize = {
+	provider: string,
+	model: string | null,
+	docPath: string | null,
+	workspaceRoot: string | null,
+	/**  The conversation, whose scratch folder holds its attached files. */
+	conversation: string | null,
+	/**
+	 *  "auto" or a service id, and the SearXNG address: what web_search
+	 *  uses when the model can't search by itself.
+	 */
+	searchService: string | null,
+	searxngUrl: string | null,
+	requestId: string,
+	/**  The image model; None for none. */
+	imageModel: ImageModel_Serialize | null,
+};
+
 /**  One entry in an agent conversation, kept provider-agnostic. */
 export type AgentTurn = AgentTurn_Serialize | AgentTurn_Deserialize;
 
@@ -99,32 +158,18 @@ export type DraftRequest = DraftRequest_Serialize | DraftRequest_Deserialize;
  *  src/platform/bindings/ai-paper.ts.
  */
 export type DraftRequest_Deserialize = {
-	provider: string,
-	model?: string | null,
-	docPath?: string | null,
-	workspaceRoot?: string | null,
-	requestId: string,
 	/**  The paper, outlined and its outline approved. */
 	id: string,
-	/**  The image model the paper's pictures are made with; None for none. */
-	imageModel?: ImageModel_Deserialize | null,
-};
+} & AgentRequest_Deserialize;
 
 /**
  *  What drafting an outlined paper takes. Mirrored in
  *  src/platform/bindings/ai-paper.ts.
  */
 export type DraftRequest_Serialize = {
-	provider: string,
-	model: string | null,
-	docPath: string | null,
-	workspaceRoot: string | null,
-	requestId: string,
 	/**  The paper, outlined and its outline approved. */
 	id: string,
-	/**  The image model the paper's pictures are made with; None for none. */
-	imageModel: ImageModel_Serialize | null,
-};
+} & AgentRequest_Serialize;
 
 export type FigureKind = 
 /**  A picture made by the image service (`textus-picture:`). */
@@ -424,14 +469,6 @@ export type PaperRequest = PaperRequest_Serialize | PaperRequest_Deserialize;
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
 export type PaperRequest_Deserialize = {
-	provider: string,
-	model?: string | null,
-	docPath?: string | null,
-	workspaceRoot?: string | null,
-	/**  What web_search uses when the model can't search by itself. */
-	searchService?: string | null,
-	searxngUrl?: string | null,
-	requestId: string,
 	/**
 	 *  The paper to go on with, or the id a new one is kept under; None
 	 *  for a new id.
@@ -450,29 +487,10 @@ export type PaperRequest_Deserialize = {
 	 *  choice.
 	 */
 	targetChars?: number | null,
-	/**
-	 *  The image model, for the pictures the outline may plan; None for
-	 *  none.
-	 */
-	imageModel?: ImageModel_Deserialize | null,
-	/**
-	 *  The conversation whose attached files its research reads: copied
-	 *  into the paper's folder when it starts, so going on with it needs
-	 *  none.
-	 */
-	conversation?: string | null,
-};
+} & AgentRequest_Deserialize;
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
 export type PaperRequest_Serialize = {
-	provider: string,
-	model: string | null,
-	docPath: string | null,
-	workspaceRoot: string | null,
-	/**  What web_search uses when the model can't search by itself. */
-	searchService: string | null,
-	searxngUrl: string | null,
-	requestId: string,
 	/**
 	 *  The paper to go on with, or the id a new one is kept under; None
 	 *  for a new id.
@@ -491,18 +509,7 @@ export type PaperRequest_Serialize = {
 	 *  choice.
 	 */
 	targetChars: number | null,
-	/**
-	 *  The image model, for the pictures the outline may plan; None for
-	 *  none.
-	 */
-	imageModel: ImageModel_Serialize | null,
-	/**
-	 *  The conversation whose attached files its research reads: copied
-	 *  into the paper's folder when it starts, so going on with it needs
-	 *  none.
-	 */
-	conversation: string | null,
-};
+} & AgentRequest_Serialize;
 
 /**  How far a paper has come. */
 export type PaperStage = 

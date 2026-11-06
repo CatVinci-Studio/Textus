@@ -2389,3 +2389,42 @@ async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres
     assert!(line("analysis").contains("调研报告"), "{instructions}");
     assert!(!line("report").contains("调研报告"), "{instructions}");
 }
+
+/// Research's requests carry what every request names flattened, so the
+/// frontend sends them as one flat object, as before.
+#[test]
+fn a_paper_request_names_what_every_request_does() {
+    let run: PaperRequest = serde_json::from_value(serde_json::json!({
+        "provider": "openai",
+        "model": null,
+        "docPath": "/notes/tides.md",
+        "workspaceRoot": null,
+        "searchService": "auto",
+        "searxngUrl": "",
+        "requestId": "r1",
+        "id": null,
+        "topic": "Tides",
+        "language": "en",
+        "imageModel": null,
+        "conversation": "c1",
+    }))
+    .unwrap();
+    assert_eq!(run.request.provider, "openai");
+    assert_eq!(run.request.doc_path.as_deref(), Some("/notes/tides.md"));
+    assert_eq!(run.request.conversation.as_deref(), Some("c1"));
+    assert_eq!(run.request.request_id, "r1");
+    assert_eq!(run.topic, "Tides");
+    let draft: drafting::DraftRequest = serde_json::from_value(serde_json::json!({
+        "provider": "openai",
+        "model": "gpt-5",
+        "docPath": null,
+        "workspaceRoot": null,
+        "requestId": "r2",
+        "id": "p1",
+        "imageModel": null,
+    }))
+    .unwrap();
+    assert_eq!(draft.request.model.as_deref(), Some("gpt-5"));
+    assert_eq!(draft.request.search_service, None);
+    assert_eq!(draft.id, "p1");
+}

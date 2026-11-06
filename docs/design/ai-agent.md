@@ -23,7 +23,12 @@ Every request - a chat message and each of Research's commands
 ([ai-paper.md](ai-paper.md)) - opens one `agent::Session`
 (`agent/session.rs`) before it runs: Textus AI on, the provider from the
 catalog, its model from `route::agent_provider`, its own web search, the
-user's workspace and guidance, and the pictures' run.
+user's workspace and guidance, and the pictures' run. What it opens it
+from is one `agent::AgentRequest` - provider, model, document, project,
+conversation, search service, image model, request id: `ai_agent_message`
+builds it from its own parameters, and Research's `PaperRequest` and
+`DraftRequest` carry it flattened beside what they add, so their JSON stays
+one flat object.
 
 Every model step - the chat's, its chapter helpers', and Research's stages
 ([ai-paper.md](ai-paper.md)) - goes through one trait, `agent::Model`
