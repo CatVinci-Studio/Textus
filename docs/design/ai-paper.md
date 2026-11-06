@@ -164,7 +164,15 @@ it, lazily loaded. Each stage and helper is one run of
   only), citations (`[n](address)` for this section's sources only, never a
   bare `[n]`) and its planned figures: a `mermaid block, a `chart block
   whose JSON the renderer can draw, a `textus-picture:` line, or a
-  `<!-- textus-figure web: … -->` mark until a web picture is found. Sections
+  `<!-- textus-figure web: … -->` mark until a web picture is found. Its
+  diagrams and charts are then drawn (`paper/figures.rs`): the run sends
+  them as `drawFigures`, the window draws each with Mermaid itself - which
+  Pele falls back to and exports use - and the chart renderer
+  (`ai/paper/figure-check.ts`), and answers with `ai_paper_figures_drawn`;
+  one that doesn't draw goes back to its writer with the renderer's error,
+  a hard problem. The chart check holds every rule of the renderer's
+  (`src/editor/chart/chart-cases.json` is read by both test suites). No
+  answer in 30 seconds, or no window, leaves the section to these checks. Sections
   are kept as `section-<n>.md` and, after the review, sent as
   `sectionDrafted` in the outline's order; a section whose writer fails (its model's error; a section handed over at all is kept) stops the ones after it, so the paper has no gap.
 - **Review** (`paper/review.rs`): once every section is drafted, a reader
@@ -178,7 +186,11 @@ it, lazily loaded. Each stage and helper is one run of
   image model (`images::place_pictures`, up to its per-send limit, which
   also caps the pictures the outline may plan) and become
   `textus-generated:` pictures; without an image model they are dropped.
-  Then every diagram, chart, picture and web-picture mark gets a numbered
+  Then every diagram and chart is drawn once more, for sections no
+  writer's check saw drawn (kept from an earlier run, repaired, or kept on
+  a last try), and one that still doesn't draw is taken out - before the
+  numbering, so the numbers have no gap and no figure reaches the paper as
+  its code. Then every diagram, chart, picture and web-picture mark gets a numbered
   caption, counted through the paper (a chart's caption or title, a
   picture's alt text; a chart's caption then leaves its JSON, so it is
   said once); the reference list holds the sources the text cites,

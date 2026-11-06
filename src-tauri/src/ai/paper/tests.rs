@@ -2,7 +2,7 @@ use super::budget::BudgetKind;
 use super::*;
 use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use serde_json::json;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 fn paper() -> Paper {
     Paper {
@@ -787,6 +787,7 @@ async fn sections_are_handed_on_in_order_under_their_headings() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -915,6 +916,7 @@ async fn faulted_sections_are_revised_once_and_a_failed_revision_keeps_the_draft
         &issues,
         &|i| revising.lock().unwrap().push(i),
         &|_| {},
+        None,
     )
     .await;
     assert_eq!(changed, [0]);
@@ -1483,6 +1485,7 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1525,6 +1528,7 @@ async fn a_section_written_as_the_reply_is_checked_and_kept() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1578,6 +1582,7 @@ async fn a_section_far_too_long_is_kept_only_as_the_last_resort() {
         &drafting_dossier(),
         None,
         &|_| {},
+        None,
     )
     .await
     // Every try was sent back: the last is kept, so the paper goes on.
@@ -1893,6 +1898,7 @@ async fn a_draft_goes_on_from_the_sections_already_written() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -1990,6 +1996,7 @@ async fn a_section_that_never_holds_is_kept_repaired_and_the_paper_goes_on() {
             Ok(())
         },
         &|_| {},
+        None,
     )
     .await
     .unwrap();
@@ -2498,4 +2505,86 @@ fn every_genre_s_profile_is_read_from_its_file() {
         .profile()
         .voice
         .contains("no 此外, 综上所述 or 值得注意的是, and dates"));
+}
+
+/// Hands over a section whose diagram doesn't draw, then - told so - one
+/// whose diagram does; keeps what it was told.
+struct Redrawing(Mutex<Vec<String>>);
+
+impl research::Model for Redrawing {
+    fn step<'a>(
+        &'a self,
+        _instructions: &'a str,
+        turns: &'a [aicompat::agent::AgentTurn],
+        _tools: &'a [aicompat::agent::ToolSpec],
+    ) -> futures_util::future::BoxFuture<'a, Result<aicompat::agent::StepResult, String>> {
+        use aicompat::agent::{AgentTurn, StepResult};
+        let told: Vec<String> = turns
+            .iter()
+            .filter_map(|t| match t {
+                AgentTurn::ToolResult { output, .. } => Some(output.clone()),
+                _ => None,
+            })
+            .collect();
+        let step = if told.iter().any(|t| t.starts_with("Kept.")) {
+            StepResult::Done("Done.".into())
+        } else {
+            let diagram = if told.is_empty() { "A[bad" } else { "A --> B" };
+            StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                call_id: format!("c{}", turns.len()),
+                name: draft::SUBMIT_SECTION_TOOL.into(),
+                arguments: json!({"markdown": section_text(97, &format!(
+                    "```mermaid\nflowchart TB\n  {diagram}\n```\n\n```chart\n{{\"series\": [{{\"data\": [1]}}]}}\n```"
+                ))})
+                .to_string(),
+                reasoning: None,
+            }])
+        };
+        *self.0.lock().unwrap() = told;
+        Box::pin(async move { Ok(step) })
+    }
+}
+
+#[tokio::test]
+async fn a_diagram_the_window_can_t_draw_is_sent_back_with_the_renderer_s_words() {
+    let plan = outline_of(1, 100);
+    let english = Paper {
+        language: "en".into(),
+        ..paper()
+    };
+    let drawn = Mutex::new(Vec::new());
+    let draw = |blocks: Vec<figures::FigureBlock>| {
+        drawn.lock().unwrap().push(blocks.len());
+        let errors: Vec<Option<String>> = blocks
+            .iter()
+            .map(|b| {
+                b.code
+                    .contains("A[bad")
+                    .then(|| "Parse error on line 2".to_string())
+            })
+            .collect();
+        Box::pin(async move { Some(errors) }) as futures_util::future::BoxFuture<'static, _>
+    };
+    let model = Redrawing(Mutex::new(Vec::new()));
+    let written = draft::write_section(
+        &model,
+        &english,
+        &plan,
+        0,
+        &drafting_dossier(),
+        None,
+        &|_| {},
+        Some(&draw),
+    )
+    .await
+    .unwrap();
+    assert!(written.contains("A --> B"), "{written}");
+    let told = model.0.into_inner().unwrap();
+    assert!(
+        told[0].contains("Diagram 1 doesn't draw (Parse error on line 2)"),
+        "{}",
+        told[0]
+    );
+    // The diagram and the chart, each time.
+    assert_eq!(drawn.into_inner().unwrap(), [2, 2]);
 }

@@ -293,6 +293,10 @@ export const ai = {
     channel.onmessage = onEvent;
     return aiCall<null>("ai_paper_draft", { request, channel });
   },
+  /** Which of a `drawFigures` event's blocks couldn't be drawn: for each,
+   *  why, or null. */
+  paperFiguresDrawn: (callId: string, errors: (string | null)[]) =>
+    aiCall<null>("ai_paper_figures_drawn", { callId, errors }),
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),

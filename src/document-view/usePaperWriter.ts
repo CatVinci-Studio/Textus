@@ -25,6 +25,7 @@ import {
   updatePaperRun,
 } from "../ai/paper/paper-store";
 import { withoutPictures } from "../ai/paper/paper-document";
+import { figureErrors } from "../ai/paper/figure-check";
 import { usePaperDocument } from "./usePaperDocument";
 
 /**
@@ -113,6 +114,14 @@ export function usePaperWriter({
               imageModel: base.imageModel,
             },
             (event) => {
+              if (event.type === "drawFigures") {
+                // A writer's figures, drawn before its section is kept; no
+                // answer leaves them to Rust's own checks.
+                void figureErrors(event.blocks).then((errors) =>
+                  ai.paperFiguresDrawn(event.callId, errors).catch(() => {}),
+                );
+                return;
+              }
               applyPaperEvent(key, event);
               if (event.type === "sectionText")
                 latest.current.paperDocument.update(key);

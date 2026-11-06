@@ -10,6 +10,7 @@ mod choose;
 mod draft;
 pub mod drafting;
 mod events;
+pub mod figures;
 mod finish;
 mod genre;
 mod handover;

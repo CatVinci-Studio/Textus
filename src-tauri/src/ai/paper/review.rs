@@ -162,6 +162,7 @@ pub(crate) async fn revise(
     issues: &[Issue],
     revising: &(dyn Fn(usize) + Sync),
     send: &(dyn Fn(PaperEvent) + Sync),
+    draw: Option<super::figures::Draw<'_>>,
 ) -> Vec<usize> {
     let mut named: Vec<usize> = issues.iter().map(|i| i.section).collect();
     named.sort_unstable();
@@ -187,6 +188,7 @@ pub(crate) async fn revise(
                     dossier,
                     Some((body, &points)),
                     send,
+                    draw,
                 )
                 .await,
             )
