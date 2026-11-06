@@ -179,11 +179,14 @@ pub(super) fn note_id() -> &'static Regex {
 /// What is wrong with `markdown` as section `section` of `paper`, all at once.
 /// `sources`: the numbers this section may cite, with their addresses.
 /// Whether a problem `problems` found is soft: the length off its target,
-/// or a planned figure missing. A section with only these is kept rather
+/// a planned figure missing, or a figure its notes don't give (which the
+/// figures' own checks catch only by their form). A section with only these is kept rather
 /// than lose the paper; a wrong citation or a chart that can't be drawn is
 /// never kept.
 pub(crate) fn is_soft(problem: &str) -> bool {
-    problem.starts_with("It is ") || problem.contains(" planned ")
+    problem.starts_with("It is ")
+        || problem.contains(" planned ")
+        || problem.starts_with(super::grounding::UNSUPPORTED_FIGURE)
 }
 
 pub(crate) fn problems(

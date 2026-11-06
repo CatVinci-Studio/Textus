@@ -9,6 +9,7 @@
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
 pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
+use super::grounding::{figures_by_source, unsupported_figures};
 use super::handover::{hand_over, Checked, Task};
 use super::research::Model;
 use super::stream::{string_value, LastSent};
@@ -134,6 +135,12 @@ pub(crate) async fn write_section(
         .filter_map(|s| dossier.sources.iter().find(|x| x.n == *s))
         .map(|s| (s.n, s.url.clone()))
         .collect();
+    let given = figures_by_source(
+        dossier
+            .notes
+            .iter()
+            .filter(|n| section.evidence.contains(&n.id)),
+    );
     // The latest section handed over whose problems were all soft: kept at
     // the end if no try holds.
     let soft: Mutex<Option<String>> = Mutex::new(None);
@@ -146,6 +153,7 @@ pub(crate) async fn write_section(
         let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
         let mut wrong = problems(&markdown, section, &sources, &paper.language);
         wrong.extend(long_posts(&markdown, paper));
+        wrong.extend(unsupported_figures(&markdown, &given));
         if !markdown.is_empty() {
             *last.lock().unwrap() = Some(markdown.clone());
         }

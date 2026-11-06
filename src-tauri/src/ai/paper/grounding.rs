@@ -4,8 +4,10 @@
 //! source never shown (one the provider's own search cited, an address a
 //! plugin gave) can't be checked, and isn't.
 
+use super::checks::cited_link;
+use super::Note;
 use regex::Regex;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 /// The most of a source's words kept beside a note.
@@ -79,12 +81,26 @@ fn pairs(text: &str) -> HashSet<(char, char)> {
     chars.windows(2).map(|w| (w[0], w[1])).collect()
 }
 
-/// `words`' sentences and lines.
-fn passages(words: &str) -> impl Iterator<Item = &str> {
-    words
-        .split_inclusive(['.', '!', '?', '。', '！', '？', '\n'])
-        .map(str::trim)
-        .filter(|p| !p.is_empty())
+/// `text`'s sentences and lines, trimmed: a sentence ends at a full stop,
+/// question or exclamation mark followed by a space or the end - so "3.5"
+/// stays whole - or at one of the CJK marks, which need none.
+pub(super) fn sentences(text: &str) -> Vec<&str> {
+    let mut out = Vec::new();
+    let mut start = 0;
+    let mut chars = text.char_indices().peekable();
+    while let Some((i, c)) = chars.next() {
+        let next_is_space = chars.peek().is_none_or(|(_, n)| n.is_whitespace());
+        let ends = matches!(c, '。' | '！' | '？' | '\n')
+            || (matches!(c, '.' | '!' | '?') && next_is_space);
+        if ends {
+            let end = i + c.len_utf8();
+            out.push(text[start..end].trim());
+            start = end;
+        }
+    }
+    out.push(text[start..].trim());
+    out.retain(|s| !s.is_empty());
+    out
 }
 
 /// The passage of `words` a note saying `said` most likely rests on - the
@@ -93,7 +109,7 @@ fn passages(words: &str) -> impl Iterator<Item = &str> {
 pub(super) fn excerpt(words: &str, said: &str) -> Option<String> {
     let wanted_pairs = pairs(said);
     let wanted_figures = figures(said);
-    let list: Vec<&str> = passages(words).collect();
+    let list = sentences(words);
     let score = |p: &str| {
         let figures = figures(p)
             .iter()
@@ -120,11 +136,99 @@ pub(super) fn excerpt(words: &str, said: &str) -> Option<String> {
     Some(clip(&text))
 }
 
+/// What starts a section's problem with a figure its sources don't give -
+/// a soft problem, as its length is.
+pub(super) const UNSUPPORTED_FIGURE: &str = "A figure its sources don't give";
+/// The most such problems told at once.
+const MAX_UNSUPPORTED: usize = 5;
+
+/// The figures each source's notes give - their claims, evidence, quotes
+/// and excerpts, less the figures their sources were found not to give.
+pub(super) fn figures_by_source<'a>(
+    notes: impl IntoIterator<Item = &'a Note>,
+) -> HashMap<u32, HashSet<String>> {
+    let mut out: HashMap<u32, HashSet<String>> = HashMap::new();
+    for note in notes {
+        let said = format!(
+            "{} {} {} {}",
+            note.claim,
+            note.evidence,
+            note.quote.as_deref().unwrap_or(""),
+            note.excerpt.as_deref().unwrap_or("")
+        );
+        let given: Vec<String> = figures(&said)
+            .into_iter()
+            .filter(|f| !note.unmatched.contains(f))
+            .collect();
+        for n in &note.sources {
+            out.entry(*n).or_default().extend(given.iter().cloned());
+        }
+    }
+    out
+}
+
+/// A section's cited sentences that give a figure none of the sources they
+/// cite gave in their notes, as problems for its writer. Code, pictures and
+/// marks aside; a sentence that cites nothing isn't read.
+pub(super) fn unsupported_figures(
+    markdown: &str,
+    given: &HashMap<u32, HashSet<String>>,
+) -> Vec<String> {
+    let mut text = String::new();
+    let mut in_fence = false;
+    for line in markdown.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+        } else if !(in_fence || trimmed.starts_with("![") || trimmed.starts_with("<!--")) {
+            text.push_str(line);
+            text.push('\n');
+        }
+    }
+    let empty = HashSet::new();
+    let mut out = Vec::new();
+    for sentence in sentences(&text) {
+        let cited: Vec<u32> = cited_link()
+            .captures_iter(sentence)
+            .filter_map(|c| c[1].parse().ok())
+            .collect();
+        if cited.is_empty() {
+            continue;
+        }
+        let missing: Vec<String> = figures(sentence)
+            .into_iter()
+            .filter(|f| {
+                !cited
+                    .iter()
+                    .any(|n| given.get(n).unwrap_or(&empty).contains(f))
+            })
+            .collect();
+        if missing.is_empty() {
+            continue;
+        }
+        let plain = cited_link().replace_all(sentence, "");
+        let cites: String = cited.iter().map(|n| format!("[{n}]")).collect();
+        out.push(format!(
+            "{UNSUPPORTED_FIGURE}: \"{}\" has {} but the notes of {cites} don't - give the figure as the notes do, cite the source that gives it, or leave it out.",
+            clip_to(plain.trim(), 120),
+            missing.join(", ")
+        ));
+        if out.len() == MAX_UNSUPPORTED {
+            break;
+        }
+    }
+    out
+}
+
 fn clip(text: &str) -> String {
-    if text.chars().count() <= EXCERPT_CHARS {
+    clip_to(text, EXCERPT_CHARS)
+}
+
+fn clip_to(text: &str, most: usize) -> String {
+    if text.chars().count() <= most {
         return text.to_string();
     }
-    let cut: String = text.chars().take(EXCERPT_CHARS).collect();
+    let cut: String = text.chars().take(most).collect();
     format!("{}…", cut.trim_end())
 }
 
@@ -156,6 +260,43 @@ mod tests {
             ),
             vec!["2019"]
         );
+    }
+
+    #[test]
+    fn sentences_end_at_their_marks_but_not_inside_a_number() {
+        assert_eq!(
+            sentences("Up 3.5 m. Why? 涨了。再涨\nNext"),
+            vec!["Up 3.5 m.", "Why?", "涨了。", "再涨", "Next"]
+        );
+    }
+
+    #[test]
+    fn a_cited_sentence_gives_only_its_sources_figures() {
+        let notes = [
+            Note {
+                claim: "Roofs were 30 °C cooler.".into(),
+                evidence: "12 roofs, since 2019.".into(),
+                sources: vec![1],
+                unmatched: vec!["2019".into()],
+                ..Default::default()
+            },
+            Note {
+                claim: "It cost 4.5 million.".into(),
+                sources: vec![2],
+                ..Default::default()
+            },
+        ];
+        let given = figures_by_source(&notes);
+        let section = "Roofs were 30 °C cooler on 12 roofs [1](https://a.example/1). They cost 4.5 million [1](https://a.example/1). Since 2019 [1](https://a.example/1), and 40 more uncited.\n\n```chart\n{\"data\": [77]}\n```";
+        let found = unsupported_figures(section, &given);
+        assert_eq!(found.len(), 2, "{found:?}");
+        assert_eq!(
+            found[0],
+            "A figure its sources don't give: \"They cost 4.5 million .\" has 4.5 but the notes of [1] don't - give the figure as the notes do, cite the source that gives it, or leave it out."
+        );
+        assert!(found[1].contains("has 2019"), "{}", found[1]);
+        // Sent back, but kept on a writer's last try, as a length is.
+        assert!(crate::ai::paper::checks::is_soft(&found[0]));
     }
 
     #[test]
