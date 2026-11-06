@@ -282,6 +282,13 @@ mod tests {
             assert!(!found.is_empty(), "{file}.md has no ## prompts");
             for (name, body) in found {
                 assert!(!body.is_empty(), "{name} is empty");
+                // A `## ` heading inside a prompt would start another: use `###`.
+                let key = &name[file.len() + 1..];
+                assert!(
+                    key.chars()
+                        .all(|c| c.is_ascii_alphanumeric() || "._-".contains(c)),
+                    "{file}.md: \"## {key}\" isn't a prompt's name"
+                );
             }
         }
     }

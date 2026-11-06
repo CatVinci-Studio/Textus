@@ -1,6 +1,4 @@
-//! The numbers the paper's stages are tuned by, in one place. Most were
-//! set from a real run that went wrong without them; each says which, as
-//! "Tuned on a real run" in docs/design/ai-paper.md tells it. A genre's
+//! The numbers the paper's stages are tuned by, in one place. A genre's
 //! own sizes - its questions, sections and research budget - are in its
 //! `Scale` (genre.rs); these hold for every genre.
 
@@ -23,8 +21,7 @@ pub(super) const OUTLINE_STEPS: usize = 5;
 /// The fewest sections an outline may have below its most: a few fewer,
 /// longer sections are fine, a list of short ones isn't.
 pub(super) const SECTIONS_SLACK: usize = 2;
-/// Figures an outline may plan beyond one a section. A run planned 12
-/// sections and 15 figures.
+/// Figures an outline may plan beyond one a section.
 pub(super) const FIGURES_BEYOND_SECTIONS: usize = 1;
 /// Web pictures: at most one for every this many sections - each needs a
 /// match on Commons, and too many crowd out the figures of the paper's own
@@ -40,8 +37,7 @@ pub(super) const OUTLINE_LENGTH: (f64, f64) = (0.5, 1.6);
 pub(super) const WRITER_STEPS: usize = 5;
 /// How far a section's length may be from its target, as fractions of it:
 /// within PASS it holds; within SOFT it is kept if nothing else is wrong
-/// (a writer's last try); beyond, it is sent back. The first real runs came
-/// back at twice and three times their targets.
+/// (a writer's last try); beyond, it is sent back.
 pub(super) const PASS: (f64, f64) = (0.7, 1.2);
 pub(super) const SOFT: (f64, f64) = (0.5, 1.4);
 
