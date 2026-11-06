@@ -54,3 +54,13 @@ export function isDrivePath(path: string): boolean {
 export function hasUrlScheme(src: string): boolean {
   return /^[a-z][a-z0-9+.-]*:/i.test(src);
 }
+
+/** `to`, written relative to the folder `fromDir`, with "/". */
+export function relativePath(fromDir: string, to: string): string {
+  const a = fromDir.replace(/\\/g, "/").split("/").filter(Boolean);
+  const b = to.replace(/\\/g, "/").split("/").filter(Boolean);
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  const up = a.slice(i).map(() => "..");
+  return [...up, ...b.slice(i)].join("/") || ".";
+}

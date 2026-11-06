@@ -6,12 +6,8 @@ import {
   stringifyYaml,
   withFrontmatter,
 } from "./frontmatter";
-import {
-  movedBy,
-  planLinkUpdates,
-  relativePath,
-  rewriteMovedLinks,
-} from "./link-rewrite";
+import { movedBy, planLinkUpdates, rewriteMovedLinks } from "./link-rewrite";
+import { relativePath } from "../../utils/path";
 
 describe("a glob", () => {
   const matches = (glob: string, path: string) => globToRegExp(glob).test(path);
