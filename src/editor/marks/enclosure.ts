@@ -32,6 +32,7 @@ import {
 import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
 import { revealMoved, revealSelection } from "../pointer-hold";
+import { LINK } from "../markdown/link-source";
 export {
   isEnclosureName,
   cursorTouches,
@@ -64,7 +65,7 @@ const SOURCE_INLINE_NODES = new Set([
   "wikilink",
   "obsidian_embed",
   "html",
-  "link",
+  LINK,
 ]);
 
 /**

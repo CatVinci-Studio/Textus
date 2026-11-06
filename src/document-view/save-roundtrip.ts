@@ -16,6 +16,7 @@ import {
   makeEdit,
   random,
 } from "./save-roundtrip-edits";
+import { LINK } from "../editor/markdown/link-source";
 export {
   EDIT_KINDS,
   type EditKind,
@@ -82,7 +83,7 @@ export function contentText(doc: ProseNode): string {
               ? child.text!.replace(/\r?\n/g, " ")
               : child.text!,
           );
-        } else if (child.type.name === "link") {
+        } else if (child.type.name === LINK) {
           // The form a link is written in may change; what it says may not.
           const source = child.textContent;
           const parts = parseLink(source);

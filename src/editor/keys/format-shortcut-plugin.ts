@@ -11,6 +11,7 @@ import { isEnclosureName } from "../marks/enclosure";
 import { wrapInLinkSource } from "../marks/span-commands";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
+import { LINK } from "../markdown/link-source";
 
 export interface FormatSpec {
   delim: string;
@@ -29,7 +30,7 @@ const SHIFT_SHORTCUTS: Record<string, FormatSpec> = { h: HIGHLIGHT };
 
 /** Inline nodes besides text a selection may hold to be made bold or
  *  italic: verbatim ones, with no formatting of their own to clash. */
-const WRAPPABLE = new Set(["md_code_span", "math_inline", "link"]);
+const WRAPPABLE = new Set(["md_code_span", "math_inline", LINK]);
 
 /**
  * The shortcut pressed again on its own formatting takes it off; a `***`

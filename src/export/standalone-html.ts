@@ -27,6 +27,7 @@ import {
   COLOR_SWATCH_CLASS,
   COLOR_SWATCH_TEXT_CLASS,
 } from "../editor/marks/color-swatch-classes";
+import { LINK } from "../editor/markdown/link-source";
 
 /**
  * The document as one HTML file: the editor's content without its chrome,
@@ -140,7 +141,7 @@ export function gatherDetails(root: HTMLElement): void {
 export type ExportImages = "document" | "inline";
 
 // A link: its Markdown in the document, its syntax hidden by the editor.
-const LINK_SELECTOR = '[data-type="link"]';
+const LINK_SELECTOR = `[data-type="${LINK}"]`;
 
 const renderHtml = lazyModule(
   "render-html",

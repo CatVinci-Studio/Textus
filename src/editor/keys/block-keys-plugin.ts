@@ -21,6 +21,7 @@ import { isImeKeyEvent } from "./ime";
 import { modIsMeta } from "../../platform/os";
 import { paragraphToRule } from "../marks/md-span-blocks";
 import { leadingWhitespaceOfLastLine } from "../code/code-indent";
+import { LINK } from "../markdown/link-source";
 
 /**
  * Enter, Shift+Enter and Mod+Enter across Textus's container blocks, decided
@@ -261,7 +262,7 @@ export const splitInlineCode: Command = (state, dispatch) => {
   const parent = $from.parent;
   if (!empty || !parent.isInline || !parent.type.spec.code) return false;
   // Inline math and a link have their own Enter.
-  if (parent.type.name === "math_inline" || parent.type.name === "link")
+  if (parent.type.name === "math_inline" || parent.type.name === LINK)
     return false;
   return splitBlock(state, dispatch);
 };

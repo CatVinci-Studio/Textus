@@ -11,6 +11,7 @@ import { unwrittenImageSrcs } from "../markdown/markdown-output";
 import { linkHref } from "../markdown/link-syntax";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { LINK } from "../markdown/link-source";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -260,7 +261,7 @@ export function onlyLinkHrefs(slice: Slice): string[] {
   let other = false;
   slice.content.descendants((node) => {
     if (other) return false;
-    if (node.type.name === "link") {
+    if (node.type.name === LINK) {
       const href = linkHref(node.textContent);
       if (href && hrefs[hrefs.length - 1] !== href) hrefs.push(href);
       return false;

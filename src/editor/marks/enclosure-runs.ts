@@ -1,5 +1,6 @@
 import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import { spanDelimText } from "./md-span-schema";
+import { LINK } from "../markdown/link-source";
 
 /**
  * What an enclosure is (a node shown with its delimiters, `**bold**`), and
@@ -53,7 +54,7 @@ export function cursorTouches(
  * whole, as `**a `b` c**` holds its code; left out, a "**" typed after the
  * code never paired with the one before it.
  */
-export const RUN_ATOMS = new Set(["md_code_span", "math_inline", "link"]);
+export const RUN_ATOMS = new Set(["md_code_span", "math_inline", LINK]);
 
 /** A RUN_ATOMS node in a run: one character per position, so text offsets
  *  stay document offsets. Neither a delimiter nor a space. */
