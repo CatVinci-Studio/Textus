@@ -16,7 +16,8 @@ interface Token {
 }
 
 const ASCII_PUNCTUATION = /[!-/:-@[-`{-~]/;
-const ENTITY = /^&(?:#[xX]([0-9a-fA-F]{1,6})|#([0-9]{1,7})|([a-zA-Z][a-zA-Z0-9]{0,31}));/;
+const ENTITY =
+  /^&(?:#[xX]([0-9a-fA-F]{1,6})|#([0-9]{1,7})|([a-zA-Z][a-zA-Z0-9]{0,31}));/;
 
 function entityAt(text: string, at: number): Token | null {
   const match = ENTITY.exec(text.slice(at, at + 40));
@@ -34,7 +35,7 @@ function entityAt(text: string, at: number): Token | null {
 
 function tokenize(text: string): Token[] {
   const tokens: Token[] = [];
-  for (let at = 0; at < text.length; ) {
+  for (let at = 0; at < text.length;) {
     const c = text[at];
     const next = text[at + 1];
     const token: Token =
@@ -96,8 +97,7 @@ function backtrack(
   for (let d = trace.length - 1; d >= 0 && (x > 0 || y > 0); d--) {
     const v = trace[d];
     const k = x - y;
-    const down =
-      k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1]);
+    const down = k === -d || (k !== d && v[offset + k - 1] < v[offset + k + 1]);
     const prevK = down ? k + 1 : k - 1;
     const prevX = d === 0 ? 0 : v[offset + prevK];
     const prevY = d === 0 ? 0 : prevX - prevK;

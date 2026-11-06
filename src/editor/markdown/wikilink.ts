@@ -178,5 +178,9 @@ export function wikilinksIn(tr: Transaction, from: number, to: number): void {
   }
   // From the end, so the earlier positions still hold.
   for (const [start, end, source] of found.reverse())
-    tr.replaceWith(start, end, type.create({}, tr.doc.type.schema.text(source)));
+    tr.replaceWith(
+      start,
+      end,
+      type.create({}, tr.doc.type.schema.text(source)),
+    );
 }

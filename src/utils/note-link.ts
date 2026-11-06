@@ -1,3 +1,5 @@
+import { hasUrlScheme, isDrivePath, isNoteFile } from "./path";
+
 /**
  * What a link to a note says, read one way for every reader: a click, a
  * hover, metadata, backlinks, rename. Where it leads is `link-resolve.ts`'s
@@ -20,8 +22,6 @@ export interface NoteLink {
 }
 
 const WIKI = /^(!?)\[\[([^[\]\n]+)\]\]$/;
-const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
-const DRIVE = /^[a-z]:[\\/]/i;
 
 function decode(text: string, whole: boolean): string {
   try {
@@ -71,7 +71,7 @@ export function parseNoteLink(written: string): NoteLink | null {
   if (/^!?\[\[/.test(text)) return null;
   const bare =
     text.startsWith("<") && text.endsWith(">") ? text.slice(1, -1) : text;
-  if (!bare || (!DRIVE.test(bare) && SCHEME.test(bare))) return null;
+  if (!bare || (!isDrivePath(bare) && hasUrlScheme(bare))) return null;
   const hash = bare.indexOf("#");
   const note = decode(hash < 0 ? bare : bare.slice(0, hash), false);
   const parts = anchorParts(hash < 0 ? "" : decode(bare.slice(hash + 1), true));
@@ -79,13 +79,11 @@ export function parseNoteLink(written: string): NoteLink | null {
   return { wiki: false, embed: false, note, ...parts, alias: null };
 }
 
-const MARKDOWN = /\.(md|markdown)$/i;
-
 /**
  * The file names a link's note may be, in the order they are tried: a
  * Markdown note first (`[[Note v1.2]]` is `Note v1.2.md`, not a ".2" file),
  * then the name as written (`[[file.pdf]]`).
  */
 export function noteFileNames(note: string): string[] {
-  return MARKDOWN.test(note) ? [note] : [`${note}.md`, `${note}.markdown`, note];
+  return isNoteFile(note) ? [note] : [`${note}.md`, `${note}.markdown`, note];
 }

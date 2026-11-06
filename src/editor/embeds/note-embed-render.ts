@@ -1,6 +1,6 @@
 import { fs } from "../../platform/ipc";
 import { parseNoteLink, type NoteLink } from "../../utils/note-link";
-import { basename } from "../../utils/path";
+import { basename, isNoteFile, noteStem } from "../../utils/path";
 import { showDocImage } from "../images/image-plugin";
 import { renderDocumentHtml } from "../markdown/render-html";
 import { embedProvider, type EmbedKind } from "./embed-sources";
@@ -14,7 +14,6 @@ import { embedProvider, type EmbedKind } from "./embed-sources";
 
 export const MAX_DEPTH = 5;
 const ANSWER_MS = 3000;
-const MARKDOWN = /\.(md|markdown)$/i;
 /** `![[x.pdf]]`, `![[pic.png]]`: files, not notes ("v1.2" is a note). */
 const OTHER_FILE = /\.(?!md$|markdown$)[a-z][a-z0-9]{1,4}$/i;
 const EMBED = /!\[\[[^[\]\n]+\]\]/g;
@@ -49,7 +48,7 @@ export const embedKey = (path: string, heading = "", block = "") =>
 
 /** The link's name as a chip shows it: "Note › Heading". */
 function nameOf(link: NoteLink, path: string): string {
-  const note = link.note || basename(path).replace(MARKDOWN, "");
+  const note = link.note || noteStem(basename(path));
   const part = link.block ? `^${link.block}` : link.headings.at(-1);
   return link.alias || (part ? `${note} › ${part}` : note);
 }
@@ -119,7 +118,7 @@ export async function fillEmbed(
         .catch(() => null)
     : { path: place.docPath, exists: true };
   if (place.signal.aborted) return;
-  if (!found?.exists || !MARKDOWN.test(found.path) || !provider)
+  if (!found?.exists || !isNoteFile(found.path) || !provider)
     return chip(el, nameOf(link, place.docPath), !found?.exists);
   place.read(found.path);
   const heading = link.headings.at(-1);

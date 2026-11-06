@@ -2,11 +2,9 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { noteJump } from "../../utils/nav-history";
-import { basename, dirname } from "../../utils/path";
+import { basename, dirname, isNoteFile } from "../../utils/path";
 import { parseNoteLink, type NoteLink } from "../../utils/note-link";
 import { revealHeading } from "./heading-jump";
-
-const MARKDOWN = /\.(md|markdown)$/i;
 
 /** Where in a note a link points: `^id` for a block, `A#B` for nested
  *  headings; undefined for its top. */
@@ -63,7 +61,7 @@ export async function followNoteLink(
     link.wiki,
   );
   if (!target) return;
-  if (!MARKDOWN.test(target.path)) {
+  if (!isNoteFile(target.path)) {
     if (target.exists) open({ path: target.path, linked: true });
     return;
   }

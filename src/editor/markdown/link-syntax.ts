@@ -1,3 +1,5 @@
+import { noteStem } from "../../utils/path";
+
 /**
  * A link's Markdown, read: the link node holds its source as text, and what
  * it points at, what to draw and what to hide all come from that text.
@@ -327,9 +329,7 @@ export function noteLinkSource(link: NoteLinkParts): string {
   const bang = link.embed ? "!" : "";
   if (link.wiki)
     return `${bang}[[${link.target}${anchor}${link.alias ? `|${link.alias}` : ""}]]`;
-  const name = link.target
-    .slice(link.target.lastIndexOf("/") + 1)
-    .replace(/\.(md|markdown)$/i, "");
+  const name = noteStem(link.target.slice(link.target.lastIndexOf("/") + 1));
   const label =
     link.alias || (link.target ? name : (link.heading ?? `^${link.block}`));
   // Obsidian's Markdown links write a space as %20, nothing else encoded.

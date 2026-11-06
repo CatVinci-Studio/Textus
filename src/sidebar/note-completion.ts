@@ -1,3 +1,4 @@
+import { isNoteFile, noteStem } from "../utils/path";
 import {
   addCompletionSource,
   type PanelItem,
@@ -37,8 +38,6 @@ export function setNoteCompletionRoot(next: string | null): void {
   root = next;
 }
 
-const stem = (name: string) => name.replace(/\.(md|markdown)$/i, "");
-
 /** Each note, linked from `from` (an unsaved document: the folder's top)
  *  as `metadata.linkTo` writes a wiki link there. */
 export function noteItems(
@@ -52,11 +51,11 @@ export function noteItems(
     files.map((f) => f.path),
   );
   return files
-    .filter((f) => /\.(md|markdown)$/i.test(f.rel))
+    .filter((f) => isNoteFile(f.rel))
     .map((f) => {
       const slash = f.rel.lastIndexOf("/");
       return {
-        label: stem(f.rel.slice(slash + 1)),
+        label: noteStem(f.rel.slice(slash + 1)),
         insert: linkToTarget(paths, f.path, from, { ...style, wiki: true }),
         icon: "file",
         ...(slash > 0 ? { detail: f.rel.slice(0, slash) } : {}),

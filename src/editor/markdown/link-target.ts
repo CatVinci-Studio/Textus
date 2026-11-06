@@ -3,6 +3,7 @@ import {
   dirname,
   hasUrlScheme,
   isDrivePath,
+  isNoteFile,
 } from "../../utils/path";
 
 /** Where a followed link leads. */
@@ -15,8 +16,6 @@ export type LinkTarget =
   | { kind: "document"; path: string; anchor?: string }
   /** Any other local file, to show in the file manager. */
   | { kind: "file"; path: string };
-
-const MARKDOWN_FILE = /\.(md|markdown)$/i;
 
 /**
  * Where `href`, a link in the document at `docPath`, leads, or null. Of URL
@@ -44,7 +43,7 @@ export function linkTarget(
   if (!resolved) return null;
   // Any other file is only shown in the file manager, where an anchor leads
   // nowhere.
-  if (!MARKDOWN_FILE.test(resolved)) return { kind: "file", path: resolved };
+  if (!isNoteFile(resolved)) return { kind: "file", path: resolved };
   const anchor = hash < 0 ? "" : decodeUrlPath(link.slice(hash + 1));
   return anchor
     ? { kind: "document", path: resolved, anchor }

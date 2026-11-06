@@ -4,7 +4,7 @@ import {
   parseNoteLink,
   type NoteLink,
 } from "../../utils/note-link";
-import { relativePath } from "../../utils/path";
+import { isNoteFile, noteStem, relativePath } from "../../utils/path";
 
 /**
  * Where a link to a note leads, among a folder's files: the one resolver for
@@ -144,8 +144,6 @@ export interface NoteTarget {
   alias?: string;
 }
 
-const MARKDOWN = /\.(md|markdown)$/i;
-
 /**
  * `link` as written, from the file `from`, among `index`'s files - all paths
  * from the same root. A link to nothing that exists is placed where a click
@@ -173,7 +171,7 @@ export function resolveNoteIn(
   return {
     path,
     exists: found !== null,
-    kind: MARKDOWN.test(path) ? "note" : "file",
+    kind: isNoteFile(path) ? "note" : "file",
     ...(heading ? { heading } : {}),
     ...(parsed.block ? { block: parsed.block } : {}),
     ...(parsed.alias ? { alias: parsed.alias } : {}),
@@ -238,8 +236,7 @@ function namedAs(
   from: string,
   style: LinkStyle,
 ): string {
-  const shown = (path: string) =>
-    style.wiki ? path.replace(MARKDOWN, "") : path;
+  const shown = (path: string) => (style.wiki ? noteStem(path) : path);
   if (style.format === "relative")
     return shown(relativePath(folderOf(from), to));
   const file = to.slice(to.lastIndexOf("/") + 1);

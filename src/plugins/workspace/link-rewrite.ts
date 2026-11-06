@@ -1,6 +1,6 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
-import { relativePath } from "../../utils/path";
+import { isNoteFile, noteStem, relativePath } from "../../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
@@ -37,8 +37,6 @@ function nameOf(path: string): string {
   return path.slice(path.lastIndexOf("/") + 1);
 }
 
-const isNote = (path: string) => /\.(md|markdown)$/i.test(path);
-const stripNote = (path: string) => path.replace(/\.(md|markdown)$/i, "");
 const isRelative = (link: string) => /^\.\.?\//.test(link);
 
 /** `link` from the folder `dir`, `.` and `..` folded. */
@@ -146,9 +144,9 @@ function rewriteWith(
   // `.md` stays only where it was written: "[[Note v1.2]]" has none.
   const spelling = (target: string, found: string, written: string) =>
     nameOf(found).toLowerCase() === nameOf(written).toLowerCase() ||
-    !isNote(target)
+    !isNoteFile(target)
       ? (path: string) => path
-      : stripNote;
+      : noteStem;
 
   /** A Markdown link's new path, or null to leave it. */
   const markdownTarget = (file: string, decoded: string): string | null => {
