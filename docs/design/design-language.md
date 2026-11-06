@@ -290,9 +290,10 @@ Only the open and save file dialogs and the macOS system menu bar stay native.
 ### 14.1 What a theme may change
 
 - MAY: every `--doc-*` variable (colours, fonts, the document's typography, its default `--doc-font-size` and `--doc-line-height`), the interface inputs through them (3.1), any `--ui-*` colour, the tones (3.4), and `--revision-*` (how a proposed AI change is drawn).
-- MUST NOT: sizes, spacing, radii, elevation, motion, or the editor's structure (the caret, the selection, revision marks, plugin block frames).
+- MUST NOT: the app's sizes, spacing, radii, elevation or motion tokens, or the editor's structure (the caret, the selection, revision marks, plugin block frames). The document's own blocks may have their margins, padding and corners.
 - A theme with only one colour scheme keeps it; it is not forced into dark.
 - Remote `@import`, image backgrounds and layouts that depend on Typora's DOM are outside the compatibility promise.
+- A theme from an AI reply is held to this list when it is installed: `src/theme/theme-allowlist.ts` parses it with the webview's CSS parser and keeps only rules for `:root`, `html`, `body` and the document (`#write`, `.milkdown`), the variables above, and the document's colour, typography, border and spacing properties; everything else is dropped. A theme that would load anything but a `data:` URI is not offered.
 
 ### 14.2 What a theme MUST provide
 
