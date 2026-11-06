@@ -1,3 +1,4 @@
+import { clampLeft } from "../../ui/placement";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -326,7 +327,7 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
               top = view.coordsAtPos(end, -1).bottom + 10;
               left = caret.left;
             }
-            left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+            left = clampLeft(left, width);
 
             // A block's room, sized from its own top and in layout px: the column is
             // zoomed with CSS zoom, the box in <body> is not.

@@ -1,3 +1,4 @@
+import { clampLeft, opensBelow } from "../../ui/placement";
 import "./completion-panel.css";
 import type { PanelRow } from "./panel-rows";
 
@@ -16,7 +17,6 @@ const ICONS = new Set([
   "quote",
   "emoji",
 ]);
-const MARGIN = 8;
 
 /** A plugin's SVG as the icon's mask: drawn in the text colour, and as an
  *  image nothing in it runs. */
@@ -138,12 +138,9 @@ export class CompletionPanel {
     el: HTMLElement,
     at: { left: number; top: number; bottom: number },
   ) {
-    const width = el.offsetWidth;
     const tall = parseFloat(getComputedStyle(el).maxHeight) || 0;
-    const left = Math.min(at.left, window.innerWidth - width - MARGIN);
-    el.style.left = `${Math.max(MARGIN, left)}px`;
-    const below = window.innerHeight - at.bottom - MARGIN;
-    if (below >= tall || below >= at.top) {
+    el.style.left = `${clampLeft(at.left, el.offsetWidth)}px`;
+    if (opensBelow(at, tall, 4)) {
       el.style.top = `${at.bottom + 4}px`;
       el.style.bottom = "";
     } else {
