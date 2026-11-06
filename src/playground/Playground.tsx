@@ -30,15 +30,29 @@ import { documentName, useWebDocuments } from "./useWebDocuments";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { ChevronIcon } from "../ui/icons";
-import sampleEn from "./samples/en.md?raw";
-import sampleZh from "./samples/zh.md?raw";
+import { LANGS, LANG_NAMES } from "../i18n/langs";
+import { Select } from "../ui/Select";
 import mark from "../../src-tauri/icons/128x128.png";
 
 export const DOWNLOAD_URL = "https://textus.md/#download";
 
-/** The first visit's document, in the UI language where there is one. */
+const SAMPLES = import.meta.glob<string>("./samples/*.md", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+/** The first visit's document, in the UI language. */
 function sample(lang: Lang): string {
-  return lang === "zh" ? sampleZh : sampleEn;
+  return SAMPLES[`./samples/${lang}.md`] ?? SAMPLES["./samples/en.md"];
+}
+
+/** Another language: the page again with `?lang=`, which a link from the
+ *  site's own language pages sets too. */
+function switchLanguage(lang: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("lang", lang);
+  window.location.assign(url.toString());
 }
 
 /** What the page itself listens for: files dropped anywhere on it, Mod+/,
@@ -267,6 +281,18 @@ function WebEditor({
           >
             {t.playgroundSave}
           </button>
+          <Select
+            className="playground-language"
+            aria-label={t.languageLabel}
+            value={settings.language}
+            onChange={(e) => switchLanguage(e.target.value)}
+          >
+            {LANGS.map((lang) => (
+              <option key={lang} value={lang}>
+                {LANG_NAMES[lang]}
+              </option>
+            ))}
+          </Select>
           <a className="playground-download" href={DOWNLOAD_URL}>
             {t.playgroundDownload}
           </a>
