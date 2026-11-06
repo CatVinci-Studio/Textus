@@ -12,13 +12,6 @@ import type { PluginManifest } from "../store/manifest";
 
 const claimants = new Map<string, string[]>();
 const listeners = new Set<() => void>();
-/** Told when a claim is held by another plugin: the claim and both. */
-let contested: (
-  claim: string,
-  plugin: string,
-  owner: string,
-) => void = () => {};
-
 /** The user's picks, read once; kept here too where UI state isn't. */
 let picked: Record<string, string> | null = null;
 
@@ -61,7 +54,6 @@ export function claim(claim: string, plugin: string): () => void {
   const owner = ownerOf(claim);
   if (owner && owner !== plugin) {
     logPluginMessage(plugin, "info", `${claim} is ${owner}'s.`);
-    contested(claim, plugin, owner);
   }
   changed();
   return () => {
@@ -82,12 +74,6 @@ export function pickOwner(claim: string, plugin: string): void {
 export function onOwnersChanged(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
-}
-
-export function onContested(
-  listener: (claim: string, plugin: string, owner: string) => void,
-): void {
-  contested = listener;
 }
 
 /** The claims a manifest makes besides its code blocks: the file patterns
