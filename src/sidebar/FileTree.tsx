@@ -41,6 +41,7 @@ import {
 import { useRowDrag } from "./useRowDrag";
 import { updateLinksAfterMove } from "./move-links";
 import { DirNode } from "./TreeNodes";
+import { TreeFollowing } from "./TreeFollowing";
 import "./FileTree.css";
 import { copyPathItem } from "../clipboard/copy-path";
 export type { TreeSort } from "./tree-shared";
@@ -58,6 +59,8 @@ interface FileTreeProps {
   onFileSelect: (path: string, beside?: boolean) => void;
   /** File > Open Folder… and Close Folder; Open is left out on iOS. */
   onOpenFolder?: () => void;
+  /** Opens the folder the tree shows as the window's folder; desktop only. */
+  onOpenAsFolder?: (path: string) => void;
   onCloseFolder: () => void;
   /** A file or folder was dragged into another folder: open tabs follow
    *  it to its new path. */
@@ -82,6 +85,7 @@ export function FileTree({
   activePath,
   onFileSelect,
   onOpenFolder,
+  onOpenAsFolder,
   onCloseFolder,
   onEntryMoved,
   searchFocusRequest,
@@ -275,6 +279,14 @@ export function FileTree({
               </button>
             </Tooltip>
           </div>
+          {!folder && onOpenAsFolder && (
+            <TreeFollowing
+              t={t}
+              root={root}
+              activePath={activePath}
+              onOpenAsFolder={onOpenAsFolder}
+            />
+          )}
           <div
             ref={treeRef}
             role="tree"

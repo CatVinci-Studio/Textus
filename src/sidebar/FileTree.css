@@ -286,3 +286,39 @@
   min-width: 0;
   padding-left: 2px;
 }
+
+/* No folder open: the tree follows the document, and says so. */
+.tree-following {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 0 2px 4px 6px;
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+}
+
+.tree-following-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tree-following-open {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: none;
+  color: var(--ui-accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tree-following-open:hover {
+  background: var(--ui-hover);
+}
