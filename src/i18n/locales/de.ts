@@ -1743,4 +1743,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageShowBar: "Adressleiste einblenden",
   webPageHint:
     "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
+  pluginKeysTaken:
+    "{name} kann die Tastatur nicht übernehmen: {holder} nutzt sie. Schalte eines davon unter Einstellungen › Erweiterungen aus.",
+  shortcutIndentListItem: "Listenelement einrücken",
+  shortcutOutdentListItem: "Listenelement ausrücken",
+  pluginKeyTaken:
+    "{name}: {key} gehört zu „{owner}“ und wurde „{command}“ daher nicht zugewiesen. Lege unter Einstellungen › Tastenkürzel eine andere Taste fest.",
 } satisfies Translation;

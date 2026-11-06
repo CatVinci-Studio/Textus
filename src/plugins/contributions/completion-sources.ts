@@ -89,30 +89,36 @@ export function pluginCompletionSources(): readonly CompletionSource[] {
     ? []
     : snapshot.records.flatMap((r) => {
         const manifest = r.manifest;
-        if (r.status !== "on" || !manifest || !r.granted.includes("editor.read"))
+        if (
+          r.status !== "on" ||
+          !manifest ||
+          !r.granted.includes("editor.read")
+        )
           return [];
-        return manifest.contributes.completions.map(
-          (c): CompletionSource => ({
-            id: c.id,
-            owner: r.id,
-            where: c.where,
-            // Anchored at the caret: what is typed last.
-            pattern: new RegExp(`(?:${c.pattern})$`, "u"),
-            title: () =>
-              localize(manifest, c.title ?? manifest.name, windowInfo().language()),
-            provide: (context, signal) => {
-              if (!ask) return null;
-              const request = nextRequest++;
-              signal.addEventListener("abort", () => cancel?.(r.id, request), {
-                once: true,
-              });
-              return ask(r.id, c.id, { ...context, request }).then(
-                (value) => pluginAnswer(r.id, value),
-                () => null,
-              );
-            },
-          }),
-        );
+        return manifest.contributes.completions.map((c): CompletionSource => ({
+          id: c.id,
+          owner: r.id,
+          where: c.where,
+          // Anchored at the caret: what is typed last.
+          pattern: new RegExp(`(?:${c.pattern})$`, "u"),
+          title: () =>
+            localize(
+              manifest,
+              c.title ?? manifest.name,
+              windowInfo().language(),
+            ),
+          provide: (context, signal) => {
+            if (!ask) return null;
+            const request = nextRequest++;
+            signal.addEventListener("abort", () => cancel?.(r.id, request), {
+              once: true,
+            });
+            return ask(r.id, c.id, { ...context, request }).then(
+              (value) => pluginAnswer(r.id, value),
+              () => null,
+            );
+          },
+        }));
       });
   return cached;
 }

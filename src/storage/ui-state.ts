@@ -48,11 +48,17 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
-  /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
-  pluginsOfferedFor: string[];
+  /** The plugin suggestion card's answers by situation: how many times
+   *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
+  pluginCardAnswers: Record<string, number | "never">;
   /** The plugins whose first scheduled job brought up the notice about
    *  background mode, once each. */
   pluginsToldOfSchedule: string[];
+  /** "plugin key" pairs whose manifest key was someone else's, told once. */
+  pluginKeysTold: string[];
+  /** Who the user chose to do what more than one plugin on claims
+   *  ("codeBlock:chart" -> plugin id). */
+  pluginOwners: Record<string, string>;
   /** The split the window was left in, its panes by their documents'
    *  paths (app/split/split-restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */
@@ -167,8 +173,8 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
-  pluginsOfferedFor: {
-    key: "textus-plugins-offered-for",
+  pluginCardAnswers: {
+    key: "textus-plugin-card-answers",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

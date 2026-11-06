@@ -6,6 +6,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { isMacPlatform } from "../../platform/os";
+import { extname } from "../../utils/path";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
   registerContextItems,
@@ -27,6 +28,8 @@ import {
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
+import { pluginKey } from "./plugin-keys";
+import { claim, ownedClaims } from "./owners";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -44,8 +47,6 @@ export interface ContributionDeps {
 }
 
 const contributions = new Map<string, (() => void)[]>();
-
-const extname = (path: string) => /\.[^./\\]+$/.exec(path)?.[0] ?? "";
 
 /** Adds an undo to what goes when the plugin is withdrawn. */
 export function addContribution(id: string, undo: () => void): void {
@@ -87,7 +88,11 @@ export function applyContributions(
       registerCommand({
         id: command.command,
         title: () => text(command.title),
-        shortcut: keybindings.find((k) => k.command === command.command)?.key,
+        shortcut: pluginKey(
+          { id, name: text(manifest.name) },
+          { id: command.command, title: text(command.title) },
+          keybindings.find((k) => k.command === command.command)?.key,
+        ),
         run: (...args) =>
           command.runs
             ? runCommand(command.runs.command, command.runs.args)
@@ -195,6 +200,8 @@ export function applyContributions(
     );
   for (const block of codeBlocks)
     undo.push(addCodeBlockLanguage(block.language, id, block.frame));
+  for (const key of ownedClaims(manifest.contributes))
+    undo.push(claim(key, id));
   // Floating views left open last time open again; turned off, they go.
   // Their code loads only for a plugin that has some.
   const floating = manifest.contributes.floatingViews;

@@ -1,5 +1,6 @@
 import { matchesWords } from "../../utils/match-words";
 import type { Strings } from "../../i18n/strings";
+import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { PluginOrigin } from "./files";
 import { localize, type Permission, type PluginManifest } from "./manifest";
 import type { PluginStatus } from "./lifecycle";
@@ -36,6 +37,9 @@ export interface WindowInfo {
   strings: () => Strings;
   language: () => string;
   dark: () => boolean;
+  /** The app's shortcuts and the user's keys for commands, as Settings has
+   *  them; the defaults when left out. */
+  keys?: () => { shortcuts: Shortcuts; overrides: Record<string, string> };
 }
 
 let info: WindowInfo = {

@@ -1725,4 +1725,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageShowBar: "Mostrar a barra de endereço",
   webPageHint:
     "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
+  pluginKeysTaken:
+    "{name} não pode usar o teclado: {holder} está com ele. Desative um dos dois em Ajustes › Extensões.",
+  shortcutIndentListItem: "Aumentar recuo do item",
+  shortcutOutdentListItem: "Diminuir recuo do item",
+  pluginKeyTaken:
+    "{name}: {key} já é de “{owner}”, então não foi atribuído a “{command}”. Escolha outro em Ajustes › Atalhos.",
 } satisfies Translation;

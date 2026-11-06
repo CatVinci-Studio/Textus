@@ -195,16 +195,17 @@ declare global {
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
        *  "textus.offerPlugin" with { id, reason } suggests an official
-       *  plugin from the market: the user is asked to install it, or turn
-       *  it on, with its name, description and your reason (plain text, up
-       *  to 120 characters) under your plugin's name; resolves
-       *  whether it is on. True at once when it already is; false for an
-       *  id the market has no official plugin for (or when the market
-       *  can't be reached), for an installed plugin that can't be turned
-       *  on, while another offer is open, when the install fails, or when
-       *  declined - after which your plugin's offers aren't shown again in
-       *  that window. Don't await it in activate: activation has 10
-       *  seconds, and the user may take longer. From 1.3.9. */
+       *  plugin from the market: a card at the bottom right, under your
+       *  plugin's name, with its name and your reason (plain text, up to
+       *  120 characters). It never blocks editing and stays until the user
+       *  acts; its permissions are still asked before it installs.
+       *  Resolves true once it is installed and on (at once when it already
+       *  is); false for an id the market has no official plugin for (or
+       *  when the market can't be reached), for an installed plugin that
+       *  can't be turned on, while another card is shown, when the install
+       *  fails, on "Later", and on × - after which your plugin's offers of
+       *  that plugin aren't shown again (the user can bring them back in
+       *  Settings › Extensions). Don't await it in activate. From 1.3.9. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 
@@ -744,12 +745,29 @@ declare global {
       before?: boolean;
     }
 
+    /** A document about to be saved. */
+    interface WillSave {
+      path: string;
+      text: string;
+      trigger: "manual" | "auto";
+      /** Its blocks in order; `from`/`to` are offsets into `text`. */
+      blocks: (Block & { from: number; to: number })[];
+    }
+
+    /** A block's new Markdown, by its id. */
+    interface BlockEdit {
+      block: string;
+      markdown: string;
+    }
+
     interface EditorKeys {
       /** Takes the editor's keys: "all" but the app's shortcuts, or "some" -
-       *  only `keys`. null gives them back. */
+       *  only `keys`. null gives back your own capture. One plugin at a time:
+       *  false while another holds them (its id is in your log). The boolean
+       *  is from 1.3.9; older Textus answers undefined. */
       capture(
         capture: { mode: "all" | "some"; keys: string[] } | null,
-      ): Promise<void>;
+      ): Promise<boolean>;
       onKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }
@@ -844,13 +862,20 @@ declare global {
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
       onDidDelete: Event<{ path: string }>;
-      /** A document is about to be saved: return its text changed to save
-       *  that instead (within a second; files.write). */
+      /** A document is about to be saved (files.write). Plugins are asked
+       *  one after another in plugin id order, each given the text as the
+       *  one before left it, at most a second each. Return the blocks you
+       *  changed (`{ block, markdown }`, by the ids in `blocks`) - only
+       *  those are written back - or the whole text, which is written back
+       *  block by block. Code, math, HTML and link definition blocks stay
+       *  as the user wrote them, and each block keeps its line endings. A
+       *  change that would change again when run a second time is skipped
+       *  for this save. `trigger`, `blocks` and `BlockEdit[]` answers are
+       *  from 1.3.9. */
       onWillSave(
-        listener: (e: {
-          path: string;
-          text: string;
-        }) => string | void | Promise<string | void>,
+        listener: (
+          e: WillSave,
+        ) => string | BlockEdit[] | void | Promise<string | BlockEdit[] | void>,
       ): Disposable;
       /** 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for
        *  autosave. */
@@ -1065,8 +1090,9 @@ declare global {
     interface Export {
       /** An HTML or PDF export's page, before it is written (editor.read):
        *  `css` is added to its styles, `html` replaces its content. Scripts
-       *  and handlers in the HTML are taken out. Each plugin is waited for
-       *  at most two seconds. */
+       *  and handlers in the HTML are taken out. Plugins are asked in plugin
+       *  id order, each given the HTML as the one before left it, and
+       *  waited for at most two seconds. */
       onWillExport(
         listener: (page: {
           format: "html" | "pdf";

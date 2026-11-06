@@ -35,6 +35,25 @@ export function macTabStep(e: KeyboardEvent, mac: boolean): 1 | -1 | null {
   return null;
 }
 
+/** The editor's own block keys (Milkdown's keymaps), as EDITOR_COMBOS in
+ *  utils/shortcuts.ts reserves them. */
+function editorKeys(t: Strings): FixedShortcut[] {
+  const heading = (n: number): FixedShortcut => ({
+    label: t.menuHeadingTemplate.replace("{n}", String(n)),
+    combos: [`mod+alt+${n}`],
+  });
+  return [
+    { label: t.shortcutParagraph, combos: ["mod+alt+0"] },
+    ...[1, 2, 3, 4, 5, 6].map(heading),
+    { label: t.menuOrderedList, combos: ["mod+alt+7"] },
+    { label: t.menuBulletList, combos: ["mod+alt+8"] },
+    { label: t.menuCodeBlock, combos: ["mod+alt+c"] },
+    { label: t.menuBlockquote, combos: ["mod+shift+b"] },
+    { label: t.shortcutIndentListItem, combos: ["mod+]"] },
+    { label: t.shortcutOutdentListItem, combos: ["mod+["] },
+  ];
+}
+
 /** Every configurable shortcut unbound: what is left in the menu is fixed. */
 function unbound(): Shortcuts {
   const shortcuts = defaultShortcuts();
@@ -98,7 +117,8 @@ export function fixedShortcutGroups(
   }
 
   // One Format group, where it has always been: Bold and Italic, the
-  // menu's own keys (Highlight), then the editor's block keys.
+  // menu's own keys (Highlight), then the editor's block keys - its own
+  // keymaps' too, which no menu item names.
   const menuFormat = groups.findIndex((group) => group.title === t.menuFormat);
   const formatItems =
     menuFormat < 0 ? [] : groups.splice(menuFormat, 1)[0].items;
@@ -108,6 +128,7 @@ export function fixedShortcutGroups(
       { label: t.toolbarBold, combos: ["mod+b"] },
       { label: t.toolbarItalic, combos: ["mod+i"] },
       ...formatItems,
+      ...editorKeys(t),
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },
       { label: t.shortcutMoveBlockUp, combos: ["alt+arrowup"] },
       { label: t.shortcutMoveBlockDown, combos: ["alt+arrowdown"] },

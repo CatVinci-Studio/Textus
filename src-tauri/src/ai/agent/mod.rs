@@ -52,6 +52,7 @@ pub(crate) const MAX_STEPS: usize = 12;
 #[tauri::command]
 pub async fn ai_agent_message(
     app: AppHandle,
+    window: tauri::Window,
     provider: String,
     // The document, block by block as the editor has it.
     blocks: Vec<doc_blocks::SentBlock>,
@@ -94,6 +95,7 @@ pub async fn ai_agent_message(
         request_id,
         ai_agent_message_inner(
             app,
+            window.label().to_string(),
             provider,
             Document::from_blocks(blocks),
             doc_path,
@@ -119,6 +121,8 @@ pub async fn ai_agent_message(
 #[allow(clippy::too_many_arguments)]
 async fn ai_agent_message_inner(
     app: AppHandle,
+    // The window that asked: only its plugins' tools are offered.
+    window: String,
     provider: String,
     document: Document,
     doc_path: Option<String>,
@@ -286,7 +290,7 @@ async fn ai_agent_message_inner(
             }
             // The user's earlier conversations, when they refer to one.
             tools.add(search_conversations_tool(&stores.chat));
-            for tool in installed_tools(&app).await {
+            for tool in installed_tools(&app, &window).await {
                 tools.add(tool);
             }
             // Create mode reads the plugins installed, to change one.
@@ -383,13 +387,14 @@ async fn ai_agent_message_inner(
     })
 }
 
-/// The tools of the MCP servers the user turned on, and of the plugins the
-/// user gave ai.tools: what every mode and Research's researchers offer.
-pub(crate) async fn installed_tools<'a>(app: &AppHandle) -> Vec<tools::Tool<'a>> {
+/// The tools of the MCP servers the user turned on, and of the asking
+/// window's plugins the user gave ai.tools: what every mode and Research's
+/// researchers offer.
+pub(crate) async fn installed_tools<'a>(app: &AppHandle, window: &str) -> Vec<tools::Tool<'a>> {
     let mut installed = Vec::new();
     #[cfg(desktop)]
     installed.extend(crate::mcp::tools_for_request(app).await);
-    installed.extend(crate::plugins::ai_tools::tools_for_request(app));
+    installed.extend(crate::plugins::ai_tools::tools_for_request(app, window));
     installed
 }
 

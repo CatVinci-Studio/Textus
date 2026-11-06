@@ -1683,4 +1683,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webPageShowBar: "アドレスバーを表示",
   webPageHint:
     "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
+  pluginKeysTaken:
+    "「{name}」はキーボードを使えません。「{holder}」が使用中です。設定 › 拡張機能 でどちらかをオフにしてください。",
+  shortcutIndentListItem: "リスト項目をインデント",
+  shortcutOutdentListItem: "リスト項目のインデントを戻す",
+  pluginKeyTaken:
+    "「{name}」：{key} は「{owner}」が使っているため、「{command}」には割り当てませんでした。設定 › ショートカット で別のキーを設定できます。",
 } satisfies Translation;

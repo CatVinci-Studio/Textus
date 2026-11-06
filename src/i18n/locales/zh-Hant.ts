@@ -1598,4 +1598,10 @@ export default {
   webPageShowBar: "展開網址列",
   webPageHint:
     "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
+  pluginKeysTaken:
+    "「{name}」無法接管鍵盤：「{holder}」正在使用。請在 設定 › 擴充功能 中關閉其中一個。",
+  shortcutIndentListItem: "清單項目縮排",
+  shortcutOutdentListItem: "清單項目取消縮排",
+  pluginKeyTaken:
+    "「{name}」：{key} 已被「{owner}」使用，所以沒有綁定到「{command}」。可在 設定 › 快速鍵 中另設。",
 } satisfies Translation;

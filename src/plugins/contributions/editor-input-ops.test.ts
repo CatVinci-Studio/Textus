@@ -5,6 +5,7 @@ import { EditorState, TextSelection } from "@milkdown/kit/prose/state";
 import { EditorView } from "@milkdown/kit/prose/view";
 import {
   createEditorInputPlugin,
+  keyHolder,
   releaseKeys,
   runEditorOp,
   setKeyCapture,
@@ -57,5 +58,22 @@ it("deleteChars copies what it takes, unless told not to", () => {
   runEditorOp("p", { op: "deleteChars", back: true, copy: false });
   expect(writeText).not.toHaveBeenCalled();
   expect(view.state.doc.textContent).toBe("alp");
+  view.destroy();
+});
+
+it("lets one plugin hold the keyboard; another can neither take it nor reset its cursor", () => {
+  const view = heldEditor();
+  runEditorOp("p", { op: "cursor", style: "block" });
+  expect(setKeyCapture("q", { mode: "all", keys: [] }, () => {})).toBe(false);
+  expect(setKeyCapture("q", null, () => {})).toBe(false);
+  expect(keyHolder()?.id).toBe("p");
+  expect(view.dom.classList.contains("plugin-cursor-block")).toBe(true);
+  expect(setKeyCapture("p", null, () => {})).toBe(true);
+  expect(keyHolder()).toBeNull();
+  expect(view.dom.classList.contains("plugin-cursor-block")).toBe(false);
+  expect(setKeyCapture("q", { mode: "some", keys: ["j"] }, () => {})).toBe(
+    true,
+  );
+  releaseKeys("q");
   view.destroy();
 });

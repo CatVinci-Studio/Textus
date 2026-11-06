@@ -1704,6 +1704,12 @@ type /name in a conversation to use one.
   webPageShowBar: "Show the address bar",
   webPageHint:
     "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
+  pluginKeysTaken:
+    "{name} can't take the keyboard: {holder} has it. Turn one of them off in Settings › Extensions.",
+  shortcutIndentListItem: "Indent List Item",
+  shortcutOutdentListItem: "Outdent List Item",
+  pluginKeyTaken:
+    "{name}: {key} is {owner}'s, so it wasn't given to “{command}”. Set a key in Settings › Shortcuts.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

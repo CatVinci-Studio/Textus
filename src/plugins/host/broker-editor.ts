@@ -5,12 +5,14 @@ import {
   type EditProposal,
 } from "../../ai/types";
 import {
+  keyHolder,
   releaseKeys,
   runEditorOp,
   setKeyCapture,
   type EditorOp,
 } from "../contributions/editor-input";
 import { outlineOf } from "../contributions/status-items";
+import { ownedClaims } from "../contributions/owners";
 import { getActiveDocument, type ActiveDocumentAccess } from "../app-bridge";
 import {
   addHoverProvider,
@@ -24,6 +26,8 @@ import {
 } from "../contributions/decorations";
 import { optionalStr, type Params, type PluginScope } from "./broker-scope";
 import { FILE_RELOADED_EVENT } from "../../utils/events";
+import { showNotice } from "../../ui/notices";
+import { logPluginMessage } from "../store/plugin-log";
 import { emitPluginEvent } from "../app-bridge";
 
 // The document in front read again from disk: plugins hear its new text
@@ -35,6 +39,25 @@ window.addEventListener(FILE_RELOADED_EVENT, (e) => {
 });
 
 let proposalCounter = 0;
+
+/** Plugins already told this session that another has the keyboard. */
+const toldKeysTaken = new Set<string>();
+
+/** One way of typing at a time: the later plugin is refused, told once. */
+function keysTaken(p: PluginScope) {
+  const holder = keyHolder();
+  if (!holder) return;
+  logPluginMessage(p.id, "warn", `The keyboard is held by ${holder.id}.`);
+  if (toldKeysTaken.has(p.id)) return;
+  toldKeysTaken.add(p.id);
+  showNotice(
+    p
+      .t()
+      .pluginKeysTaken.replace("{name}", p.name())
+      .replace("{holder}", holder.name),
+    { tone: "warning" },
+  );
+}
 
 /** A change as the runtime sends it, placed by block ids against the
  *  document as it is now, as Textus AI's edits are. */
@@ -124,8 +147,12 @@ export function editorHandlers(p: PluginScope) {
       });
     },
     "editor.registerHover": () => {
-      addHoverProvider(p.id, (target) =>
-        p.request<HoverCard | null>("$provideHover", { target }),
+      addHoverProvider(
+        p.id,
+        (target) => p.request<HoverCard | null>("$provideHover", { target }),
+        ownedClaims(p.manifest().contributes).some((c) =>
+          c.startsWith("hover:"),
+        ),
       );
     },
     "editor.registerDecorations": () => {
@@ -135,14 +162,17 @@ export function editorHandlers(p: PluginScope) {
     },
     "editor.unregisterDecorations": () => removeDecorationProvider(p.id),
     "editor.captureKeys": (capture: Params | null) => {
-      setKeyCapture(
+      const held = setKeyCapture(
         p.id,
         capture && {
           mode: capture.mode === "all" ? "all" : "some",
           keys: Array.isArray(capture.keys) ? capture.keys.map(String) : [],
         },
         (key) => p.event("editorKey", key),
+        p.name(),
       );
+      if (!held && capture) keysTaken(p);
+      return held;
     },
     "editor.exec": (op: EditorOp) => {
       return runEditorOp(p.id, op);

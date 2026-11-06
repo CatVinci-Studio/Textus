@@ -213,8 +213,8 @@ export function fileHandlers(p: PluginScope) {
       );
     },
     "files.willSave": ({ on }: Params) => {
-      setWillSave(p.id, on === true, (path, text) =>
-        p.request<string | null>("$willSave", { path, text }),
+      setWillSave(p.id, on === true, (request) =>
+        p.request<string | null>("$willSave", request),
       );
     },
     "export.willExport": ({ on }: Params) => {

@@ -1,3 +1,3 @@
 ### New
 
-- Plugins can suggest an official plugin that works well with them - an importer, say, recommending the plugins that pair with it. Textus asks you first, naming the plugin that suggests it, what it does and why, and installs or turns it on only if you agree; once you decline, that plugin's suggestions aren't shown again in that window.
+- Plugin suggestions come on one card at the bottom right: when a document uses something an official plugin handles, when a file nothing opens could be opened by one, and when a plugin recommends another that pairs with it. The card never blocks typing or goes away by itself; Install asks for the plugin's permissions first, Later asks again next time (up to three times), and × stops that suggestion for good - Settings › Extensions brings them back.
