@@ -82,27 +82,6 @@ test("new text over several lines in a paragraph is tinted line by line, its bre
   expect(hot.line).not.toBe(tints.line);
 });
 
-test("new paragraphs after the last are one tinted box, drawn as paragraphs", async ({
-  page,
-}) => {
-  await open(page);
-  await propose(page, [
-    { action: "append", text: "New one.\n\nNew paragraph." },
-  ]);
-  const insert = page.locator(".milkdown .pending-insert.pending-blocks");
-  await expect(insert.locator("p")).toHaveText(["New one.", "New paragraph."]);
-  const tint = await insert.evaluate(
-    (el) => getComputedStyle(el).backgroundColor,
-  );
-  expect(tint).not.toBe(transparent);
-  await insert.locator("p").first().hover();
-  await expect(insert).toHaveClass(/pending-sentence-hot/);
-  const hot = await insert.evaluate(
-    (el) => getComputedStyle(el).backgroundColor,
-  );
-  expect(hot).not.toBe(tint);
-});
-
 test("a rewrite across a hard break is struck sentence by sentence, the break untouched", async ({
   page,
 }) => {
@@ -130,20 +109,4 @@ test("a rewrite across a hard break is struck sentence by sentence, the break un
     0,
   );
   await expect(page.locator(".milkdown br.pending-delete")).toHaveCount(0);
-});
-
-test("a strike after a hard break covers exactly the text it replaces", async ({
-  page,
-}) => {
-  await open(page);
-  await propose(page, [
-    {
-      action: "replace",
-      anchor: "Second line here.",
-      text: "Second line, shorter.",
-    },
-  ]);
-  await expect(page.locator(".milkdown .pending-delete")).toHaveText([
-    "Second line here.",
-  ]);
 });

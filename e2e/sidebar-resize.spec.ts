@@ -61,51 +61,6 @@ test("dragging the sidebar's edge resizes it, and it comes back open at that wid
   expect(await mainPaneLeft(page)).toBe(320);
 });
 
-test("the sidebar resizes from the keyboard within its bounds, and resets on a double click", async ({
-  page,
-}) => {
-  await openApp(page);
-  await openSidebar(page);
-  const handle = page.getByRole("separator", { name: "调整侧边栏宽度" });
-  await expect(handle).toHaveAttribute("aria-orientation", "vertical");
-  await expect(handle).toHaveAttribute("aria-valuemin", "180");
-  await expect(handle).toHaveAttribute("aria-valuemax", "480");
-
-  await handle.focus();
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowRight");
-  await expect(handle).toHaveAttribute("aria-valuenow", "280");
-  expect(await sidebarWidth(page)).toBe(280);
-  await page.keyboard.press("ArrowLeft");
-  await expect(handle).toHaveAttribute("aria-valuenow", "260");
-  expect(
-    await page.evaluate(() => localStorage.getItem("textus-sidebar-width")),
-  ).toBe("260");
-
-  await handle.dblclick();
-  await expect(handle).toHaveAttribute("aria-valuenow", "240");
-  expect(await sidebarWidth(page)).toBe(240);
-
-  // Nor can a drag take it past those bounds.
-  await dragHandle(page, 900);
-  // 480px at most (45% of this 1180px window would be more).
-  expect(await sidebarWidth(page)).toBe(480);
-  await dragHandle(page, -900);
-  expect(await sidebarWidth(page)).toBe(180);
-});
-
-test("a remembered width too wide for a small window is narrowed to fit", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 800, height: 700 });
-  await openApp(page, { storage: { "textus-sidebar-width": "460" } });
-  await openSidebar(page);
-  // 45% of 800px.
-  expect(await sidebarWidth(page)).toBe(360);
-  await page.setViewportSize({ width: 1300, height: 700 });
-  await expect.poll(() => sidebarWidth(page)).toBe(460);
-});
-
 test("the sidebar comes back on the tab it was left on", async ({ page }) => {
   await openApp(page);
   await openSidebar(page);

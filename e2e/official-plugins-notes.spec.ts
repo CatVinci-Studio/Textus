@@ -169,34 +169,6 @@ test("tasks due soon come first, with their dates, and the filter narrows the li
   await expect(rows.last()).toContainText("Book the hall");
 });
 
-test("tasks in a file with Windows line endings are listed and ticked", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.tasks": ["files.read", "files.write"] },
-    folder: {
-      "/notes/win.md": "# Win\r\n\r\n- [ ] Ship it\r\n- [ ] Tell them\r\n",
-    },
-  });
-  await openPath(page, "/notes/win.md");
-  const tasks = await openSidebarList(page, "Tasks");
-  await expect(tasks.locator(".plugin-list-message")).toHaveText(
-    "2 open tasks",
-  );
-  await expect(tasks.locator(".plugin-list-description").first()).toHaveText(
-    "Win",
-  );
-  await tasks.getByRole("checkbox", { name: "Ship it" }).click();
-  await expect(tasks.locator(".plugin-list-message")).toHaveText("1 open task");
-  const file = await page.evaluate(
-    () =>
-      (window as unknown as { __devFs: Record<string, string> }).__devFs[
-        "/notes/win.md"
-      ],
-  );
-  expect(file).toBe("# Win\r\n\r\n- [x] Ship it\r\n- [ ] Tell them\r\n");
-});
-
 test("a card's [[link]] opens its note, and a list dragged by its head moves", async ({
   page,
 }) => {

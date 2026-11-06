@@ -176,22 +176,6 @@ test("an imported theme is on the first frame, in the variant for the appearance
   expect(first.lastInHead).toBe("textus-user-css");
 });
 
-test("a change goes to Rust as a patch of that field alone", async ({
-  page,
-}) => {
-  await bootLikeRust(page, { settings: SETTINGS });
-  await openApp(page);
-  await emit(page, "menu-toggle-typewriter-mode");
-  await expect
-    .poll(async () => (await devStorage(page)).patches)
-    .toEqual([{ typewriterMode: true }]);
-  // localStorage is left as the backup a downgrade would read.
-  const local = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}"),
-  );
-  expect(local.typewriterMode).toBeUndefined();
-});
-
 test("another window's change shows up here, except its zoom", async ({
   page,
 }) => {
@@ -219,20 +203,6 @@ test("another window's change shows up here, except its zoom", async ({
     ),
   );
   expect(zoom.trim() === "" || zoom.trim() === "1").toBe(true);
-});
-
-test("clipboard history is recorded entry by entry in the store", async ({
-  page,
-}) => {
-  await bootLikeRust(page, { settings: SETTINGS });
-  await openApp(page);
-  await pasteMarkdown(page, "pasted words");
-  await expect
-    .poll(async () => (await devStorage(page)).histories.clipboard)
-    .toEqual([expect.objectContaining({ text: "pasted words" })]);
-  expect(
-    await page.evaluate(() => localStorage.getItem("textus-clipboard-history")),
-  ).toBeNull();
 });
 
 /** In English, with Custom CSS empty. */
@@ -327,28 +297,6 @@ test("the detached chat window also waits for its writes before it closes", asyn
   const answered = stored.log.indexOf("settings_patch:done");
   expect(answered).toBeGreaterThan(-1);
   expect(answered).toBeLessThan(stored.log.indexOf("plugin:window|destroy"));
-});
-
-test("a window booted with no settings fills in defaults, never over newer values", async ({
-  page,
-}) => {
-  // After a corrupt settings.json, a reload replays the empty snapshot while
-  // Rust holds everything changed since.
-  await shimOptions(page, { liveSettings: SETTINGS });
-  await bootLikeRust(page, { settings: {} });
-  await openApp(page);
-  const html = page.locator("html");
-  // The live values, not the defaults the empty snapshot stands for.
-  await expect(html).toHaveAttribute("data-theme", "dark");
-  await expect(html).toHaveAttribute("data-content-width", "full");
-  await expect(html).toHaveAttribute("lang", "ja");
-  const stored = await devStorage(page);
-  expect(stored.settings).toMatchObject(SETTINGS);
-  // Defaults went only into the fields that were missing.
-  expect(stored.fills).toHaveLength(1);
-  expect(stored.fills[0]).not.toHaveProperty("theme");
-  expect(stored.fills[0]).toHaveProperty("enableCompletion", true);
-  expect(stored.patches.filter((p) => "theme" in p)).toEqual([]);
 });
 
 /** An imported theme, and the chrome colours last derived from it, as

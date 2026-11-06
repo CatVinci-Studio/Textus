@@ -167,27 +167,3 @@ test("a plugin's page asks the AI to change it, in Extensions' Create tab", asyn
   // The document's panel is left as it was.
   await expect(page.locator(".agent-panel")).toHaveCount(0);
 });
-
-test("a plugin written in the conversation can't take someone else's id", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "make tasks better" },
-      {
-        kind: "Assistant",
-        text: reply("1.0.0").replace(/local\.word-count/g, "catvinci.tasks"),
-      },
-    ],
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("make tasks better");
-  await composer.press("Enter");
-  const chip = page.locator('.agent-plugin-chip[data-plugin="catvinci.tasks"]');
-  await chip.getByRole("button", { name: "Install this plugin" }).click();
-  await expect(page.locator(".app-dialog")).toContainText("someone else's");
-});

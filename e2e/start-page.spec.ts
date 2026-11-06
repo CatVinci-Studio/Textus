@@ -93,7 +93,26 @@ test("with the default, closing the last document doesn't show the start page", 
     settings: { language: "en", newDocumentMode: "tab" },
   });
   await drop(page, "/notes/one.md", "# One");
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, ...rest: unknown[]) => unknown;
+      };
+      __closed?: boolean;
+    };
+    const invoke = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, ...rest) => {
+      if (cmd.includes("destroy")) w.__closed = true;
+      return invoke(cmd, ...rest);
+    };
+  });
   await emit(page, "menu-close-tab");
+  // The close has run: the window was closed, not turned into a start page.
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as { __closed?: boolean }).__closed),
+    )
+    .toBe(true);
   await expect(startPage(page)).toHaveCount(0);
 });
 

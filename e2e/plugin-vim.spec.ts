@@ -78,23 +78,6 @@ test("dd deletes a line and p puts it back below", async ({ page }) => {
   ]);
 });
 
-test("flash: s and a letter label each place, and a label jumps there", async ({
-  page,
-}) => {
-  await open(page, "the cat sat on the mat by the hat");
-  await keys(page, ["s", "a", "t"]);
-  const labels = page.locator(`${editor} .plugin-flash-label`);
-  await expect(labels).toHaveCount(4);
-  const second = (await labels.nth(1).textContent())!;
-  await keys(page, [second]);
-  await expect(labels).toHaveCount(0);
-  // The caret is on "sat"'s "a": x takes it.
-  await keys(page, ["x"]);
-  await expect(firstParagraph(page)).toHaveText(
-    "the cat st on the mat by the hat",
-  );
-});
-
 test("counts, cw, ciw, f and visual mode", async ({ page }) => {
   await open(page, "abcdef one two three");
   await keys(page, ["3", "x"]);

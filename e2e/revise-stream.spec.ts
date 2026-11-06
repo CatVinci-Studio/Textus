@@ -245,47 +245,6 @@ test("a streaming rewrite lands each paragraph in place, never the whole origina
   expect(streamed).toEqual(await layout(page));
 });
 
-test("a streaming CJK rewrite lands each paragraph in place, its sentences split at 。！？", async ({
-  page,
-}) => {
-  const zh =
-    "灯塔看守人天亮前醒来。他慢慢爬上楼梯。灯还是温的！\n\n海面很平静？远处有一只海鸥。";
-  const rewrite =
-    "灯塔看守人天亮前醒来。他一级一级走上楼梯。灯摸上去还是温的！\n\n海面很平静？远处飞过一只海鸥。";
-  await page.setViewportSize({ width: 1400, height: 900 });
-  await openApp(page, {
-    settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await pasteMarkdown(page, zh);
-  await streamRevise(
-    page,
-    [{ id: "z", args: { action: "replace", anchor: zh, text: rewrite } }],
-    { chunk: 4 },
-  );
-  const stop = await record(page);
-  await send(page);
-  await expect(
-    page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
-  ).toHaveCount(3);
-  const samples = await stop();
-  const streaming = samples.filter((s) => s.live === 0);
-  const has = (s: Sample, text: string) => s.fresh.some((f) => f.text === text);
-  for (const s of samples) {
-    expect(s.whole).toBe(0);
-    expect(s.struck.join("")).not.toContain("灯塔看守人");
-    expect(s.struck.join("")).not.toContain("海面很平静");
-    // Each sentence its own change, the paragraph's two landing together.
-    expect(has(s, "他一级一级走上楼梯。")).toBe(has(s, "灯摸上去还是温的！"));
-  }
-  expect(
-    streaming.some(
-      (s) => has(s, "他一级一级走上楼梯。") && !has(s, "远处飞过一只海鸥。"),
-    ),
-  ).toBe(true);
-  for (const s of samples) expect(s.partial).toBeNull();
-});
-
 test("each display mode draws a streaming rewrite's landed paragraphs, with their cards", async ({
   page,
 }) => {

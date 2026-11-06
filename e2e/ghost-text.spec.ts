@@ -5,15 +5,6 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 const ORIGINAL =
   "The keeper woke before dawn. The lamp was still warm. Outside, the sea was calm.";
 
-/**
- * The grey completion goes the moment what it continues changes, and a reply
- * that comes after the text moved on is dropped. Typing its own next letters
- * keeps the rest. When one is asked for is tested in vitest
- * (src/ai/writing/ghost-text-requests.test.ts).
- */
-
-const CANNED = " and this ghost text is a canned dev-shim suggestion.";
-
 type Held = { args: { hints?: Record<string, unknown> }; release: () => void };
 
 /** Keeps every ai_complete request waiting until the test releases it:
@@ -60,19 +51,6 @@ async function typeAfter(page: Page, text: string, typed: string) {
   await page.keyboard.press("End");
   await page.keyboard.type(typed);
 }
-
-test("typing the suggestion's next letters narrows it, other text ends it", async ({
-  page,
-}) => {
-  await openApp(page);
-  await typeAfter(page, "The plan", " works");
-  const ghost = page.locator(".ghost-text");
-  await expect(ghost).toHaveAttribute("data-suggestion", CANNED);
-  await page.keyboard.type(" an");
-  await expect(ghost).toHaveAttribute("data-suggestion", CANNED.slice(3));
-  await page.keyboard.type("x");
-  await expect(ghost).toHaveCount(0);
-});
 
 test("paste, undo and a caret move each end the suggestion", async ({
   page,

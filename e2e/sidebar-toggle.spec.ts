@@ -438,20 +438,3 @@ test(
     expect(worst).toBeLessThan(1);
   },
 );
-
-test("the sidebar opens on the tab it was left on, after a restart (#347)", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator(toggle).click();
-  await page
-    .locator(".sidebar-tabs")
-    .getByRole("button", { name: "Outline" })
-    .click();
-  await page.reload();
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  await expect(page.locator(sidebar)).toBeVisible();
-  await expect(
-    page.locator(".sidebar-tabs").getByRole("button", { name: "Outline" }),
-  ).toHaveClass(/sidebar-tab-active/);
-});

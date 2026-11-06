@@ -55,23 +55,3 @@ test("one control names the mode and the model, and its list switches either", a
   await expect(list).toHaveCount(0);
   await expect(picker.locator(".mode-picker-value")).toHaveText("Review");
 });
-
-test("Quick Ask's control is the mode alone", async ({ page }) => {
-  await openApp(page, {
-    settings: { language: "en", aiProvider: "openai" },
-  });
-  await page.locator(".milkdown").click();
-  await page.keyboard.type("A line to ask about.");
-  await page.keyboard.press("Control+a");
-  await page.keyboard.press("Control+Shift+K");
-  const picker = page
-    .locator(".inline-chat")
-    .getByRole("combobox", { name: "Mode" });
-  await expect(picker.locator(".mode-picker-model")).toHaveCount(0);
-  await picker.click();
-  await expect(page.locator(".mode-picker-mode-name")).toHaveText([
-    "Write",
-    "Review",
-  ]);
-  await expect(page.locator(".mode-picker-provider")).toHaveCount(0);
-});

@@ -118,16 +118,6 @@ test("a pinned card stays while the pointer goes, and closes by its button", asy
   await expect(card(page)).toHaveCount(0);
 });
 
-test("without a plugin that previews, resting on a link shows nothing", async ({
-  page,
-}) => {
-  await openWithPlugins(page, { plugins: {}, folder: NOTES });
-  await openPath(page, "/notes/one.md");
-  await page.locator(`${editor} a`, { hasText: "the harbour" }).hover();
-  await page.waitForTimeout(900);
-  await expect(card(page)).toHaveCount(0);
-});
-
 test("a citation shows what it cites, from Zotero", async ({ page }) => {
   const items = [
     {

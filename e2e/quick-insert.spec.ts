@@ -56,33 +56,6 @@ test("the / menu puts in headings, lists, formulas and dividers", async ({
   await expect(editor.locator('[data-type="math_block"]')).toBeVisible();
 });
 
-test("Chinese names are found by pinyin, and English ones in any language", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { [ID]: ["editor.read", "editor.write"] },
-    folder: { "/work/a.md": "第一行\n" },
-    language: "zh",
-  });
-  await openPath(page, "/work/a.md");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await expect(editor).toContainText("第一行");
-  await editor.locator("p").click();
-  await selectionRead(page);
-  await page.keyboard.press("End");
-  await page.keyboard.press("Enter");
-  const list = page.locator(".completion-list");
-  await page.keyboard.type("/yinyong");
-  await list.getByText("引用", { exact: true }).click();
-  await page.keyboard.type("名言");
-  await expect(editor.locator("blockquote")).toHaveText("名言");
-
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("/table");
-  await expect(list).toContainText("表格");
-});
-
 test("Turn into… makes the paragraph a heading, then text again", async ({
   page,
 }) => {

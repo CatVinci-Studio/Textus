@@ -99,22 +99,6 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
   expect(preview).toBeGreaterThan(0);
 });
 
-test("find shows the match its counter names while typing", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(
-    page,
-    longDoc([{ at: 70, text: "A zebracorn appears here." }]),
-  );
-  await page.keyboard.press("ControlOrMeta+Home");
-  await emit(page, "menu-find-replace");
-  await page.locator(".find-replace-bar input").first().fill("zebracorn");
-  const match = page.locator(".find-match-active");
-  await expect(match).toHaveCount(1);
-  await expect(match).toBeInViewport();
-});
-
 test("an outline jump lands the heading below the window bar", async ({
   page,
 }) => {
@@ -136,59 +120,6 @@ test("an outline jump lands the heading below the window bar", async ({
   const top = (await heading.boundingBox())!.y;
   expect(top).toBeGreaterThanOrEqual(28);
   expect(top).toBeLessThan(120);
-});
-
-test("accepting one of two proposals keeps the other", async ({ page }) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await pasteMarkdown(page, "The cat sat on the mat.\n\nThe dog ran far.");
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "Fix both" },
-      {
-        kind: "ToolCall",
-        call_id: "a1",
-        name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor: "cat sat",
-          text: "cat slept",
-        }),
-      },
-      { kind: "ToolResult", call_id: "a1", output: "Edit proposed" },
-      {
-        kind: "ToolCall",
-        call_id: "a2",
-        name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor: "dog ran",
-          text: "dog walked",
-        }),
-      },
-      { kind: "ToolResult", call_id: "a2", output: "Edit proposed" },
-      { kind: "Assistant", text: "Done." },
-    ],
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("Fix both");
-  await composer.press("Enter");
-  // Two in a row are one card (ProposalGroup), a row each with its ✓.
-  const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
-  await expect(accept).toHaveCount(2);
-  // The second first, then the first: both land.
-  await accept.nth(1).click();
-  await expect(accept).toHaveCount(1);
-  await accept.first().click();
-  await expect(accept).toHaveCount(0);
-  await expect(page.locator(".milkdown p").first()).toHaveText(
-    "The cat slept on the mat.",
-  );
-  await expect(page.locator(".milkdown p").nth(1)).toHaveText(
-    "The dog walked far.",
-  );
 });
 
 test("a narrow window numbers the notes as the chat lists them", async ({

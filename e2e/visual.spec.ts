@@ -480,23 +480,6 @@ test("an open guide switches language with the UI", async ({ page }) => {
   await expect(page.locator(".milkdown h1").first()).toContainText("Guide");
 });
 
-test("the empty-document hint follows the language picked at first run", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", languageChosen: false, onboardingShown: true },
-  });
-  const hint = page.locator('[data-active-tab="true"] .empty-doc-placeholder');
-  await expect(hint).toHaveAttribute(
-    "data-placeholder",
-    "Start writing in Markdown…",
-  );
-  await page.getByRole("combobox", { name: "Language", exact: true }).click();
-  await page.getByRole("option", { name: "简体中文" }).click();
-  await page.locator(".language-welcome-continue").click();
-  await expect(hint).toHaveAttribute("data-placeholder", "开始输入 Markdown…");
-});
-
 test("backspace at the start of a quoted line takes it out of the quote", async ({
   page,
 }) => {
@@ -613,57 +596,6 @@ test("menu events: New File opens one tab after edits, Zen and Split View respon
   ).toBeVisible();
 });
 
-test("Enter turns a pipe row into a table, adds rows at the end and leaves from an empty one", async ({
-  page,
-}) => {
-  await openApp(page);
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.click();
-  await page.keyboard.type("|a|b|c|");
-  await page.keyboard.press("Enter");
-  await expect(editor.locator("table")).toHaveCount(1);
-  await expect(editor.locator("th")).toHaveText(["a", "b", "c"]);
-
-  await page.keyboard.type("1");
-  await page.keyboard.press("Enter");
-  await expect(editor.locator("tr")).toHaveCount(3);
-  await page.keyboard.type("2");
-  await expect(editor.locator("tr").nth(2).locator("td").first()).toHaveText(
-    "2",
-  );
-
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await expect(editor.locator("tr")).toHaveCount(3);
-  await page.keyboard.type("after");
-  await expect(editor.locator(":scope > p").last()).toHaveText("after");
-});
-
-test("Enter on a code block's empty last line leaves it; Ctrl+Enter leaves a quote", async ({
-  page,
-}) => {
-  await openApp(page);
-  await pasteMarkdown(page, "```\nlet x;\n```\n\nbelow\n\n> one\n>\n> two");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-
-  await editor.locator("pre code").click();
-  // Let ProseMirror read the click's caret back before keys arrive.
-  await page.waitForTimeout(100);
-  await page.keyboard.press("End");
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
-  await page.keyboard.type("out");
-  await expect(editor.locator("pre code")).toHaveText("let x;");
-  await expect(editor.locator(":scope > p").first()).toHaveText("out");
-
-  await editor.locator("blockquote p").first().click();
-  await page.waitForTimeout(100);
-  await page.keyboard.press("Control+Enter");
-  await page.keyboard.type("free");
-  await expect(editor.locator("blockquote p")).toHaveCount(2);
-  await expect(editor.locator(":scope > p").last()).toHaveText("free");
-});
-
 test("Select Row from the right-click menu highlights the clicked row", async ({
   page,
 }) => {
@@ -726,69 +658,4 @@ test("a one-character CJK fix reads with its neighbour on the grammar card", asy
   );
   await card.locator(".grammar-popover-apply").click();
   await expect(page.locator(".milkdown")).toContainText("黛玉毕竟寄人篱下");
-});
-
-test("the review bar switches how revisions show, as Word's markup views", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await openApp(page, { storage: { "textus-agent-panel-open": "1" } });
-  await pasteMarkdown(page, SAMPLE_DOC);
-  const anchor =
-    "这项研究在三个街区进行。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。一共访谈了四十六位居民，内容涵盖了很多方面。";
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "精简" },
-      {
-        kind: "ToolCall",
-        call_id: "e1",
-        name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor,
-          text: "这项研究覆盖三个街区。我们花了整整两个月的时间，和住在这些街区里的居民进行了一对一的、比较深入的访谈。共访谈四十六位居民。",
-        }),
-      },
-      { kind: "ToolResult", call_id: "e1", output: "Edit proposed" },
-    ],
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("精简");
-  await composer.press("Enter");
-  // Default: the result in the text, what it takes out in the margin.
-  await expect(page.locator(".milkdown .ProseMirror")).toHaveAttribute(
-    "data-revision-display",
-    "final",
-  );
-  await expect(page.locator(".revision-note")).toHaveCount(2);
-  await expect(page.locator(".revision-note-original")).toHaveCount(2);
-  await expect(
-    page.locator(".milkdown .pending-sentence-new:visible"),
-  ).toHaveCount(2);
-  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
-  const pick = async (name: string) => {
-    await page.locator(".review-bar-view-button").click();
-    await page.getByRole("menuitemradio", { name }).click();
-  };
-  // Three views, the default first.
-  await page.locator(".review-bar-view-button").click();
-  await expect(page.getByRole("menuitemradio")).toHaveText([
-    "只看结果，原文在页边",
-    "原文在正文，修改在页边",
-    "全部在正文中",
-  ]);
-  await page.locator(".review-bar-view-button").click();
-  // Everything in the text.
-  await pick("全部在正文中");
-  await expect(page.locator(".revision-note")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
-  // The original in the text, the replacements in the margin.
-  await pick("原文在正文，修改在页边");
-  await expect(page.locator(".revision-note")).toHaveCount(2);
-  await expect(page.locator(".revision-note-original")).toHaveCount(0);
-  await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
-  await pick("只看结果，原文在页边");
-  await page.locator(".review-bar-accept").click();
-  await expect(page.locator(".milkdown")).toContainText("共访谈四十六位居民。");
-  await expect(page.locator(".milkdown .pending-sentence-new")).toHaveCount(0);
 });

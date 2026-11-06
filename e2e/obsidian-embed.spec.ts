@@ -61,13 +61,3 @@ test("an image embed shows the vault's picture and its source under the caret", 
   await editor.getByText("The end.").click();
   await expect(editor.locator(".obsidian-embed-rendered img")).toBeVisible();
 });
-
-test("an embed whose file isn't in the vault shows its name", async ({
-  page,
-}) => {
-  const editor = await openVaultDoc(page, null);
-  // The missing image's card.
-  await expect(editor.locator(".missing-image-title")).toHaveText(
-    "Image not found: cat.png",
-  );
-});

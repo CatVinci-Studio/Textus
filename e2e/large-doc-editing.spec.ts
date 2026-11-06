@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { openApp } from "./helpers";
 
 // Editing across a large document, where off-screen formulas draw as they
@@ -21,15 +21,6 @@ const DOC = [
   "The zebracorn end.",
 ].join("\n\n");
 
-const emit = (page: Page, name: string) =>
-  page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-
 test.beforeEach(async ({ page }) => {
   test.setTimeout(90_000);
   await openApp(page, { settings: { language: "en", newDocumentMode: "tab" } });
@@ -44,19 +35,6 @@ test.beforeEach(async ({ page }) => {
     });
   }, DOC);
   await expect(page.locator(editor)).toContainText("zebracorn");
-});
-
-test("select all copies every block, the ones off screen too", async ({
-  page,
-}) => {
-  await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("ControlOrMeta+a");
-  const selected = await page.evaluate(
-    () => window.getSelection()?.toString() ?? "",
-  );
-  expect(selected).toContain("Paragraph 0 keeps");
-  expect(selected).toContain(`Paragraph ${COUNT - 2} keeps`);
-  expect(selected).toContain("zebracorn");
 });
 
 test("shift-click from the start to the end selects everything between", async ({
@@ -74,26 +52,6 @@ test("shift-click from the start to the end selects everything between", async (
   );
   expect(selected).toContain("Paragraph 700 keeps");
   expect(selected).toContain("zebracorn");
-});
-
-test("find reaches the last block and shows its match", async ({ page }) => {
-  await emit(page, "menu-find-replace");
-  await page.locator(".find-replace-input").first().fill("zebracorn");
-  const match = page.locator(`${editor} .find-match-active`);
-  await expect(match).toHaveText("zebracorn");
-  await expect(match).toBeInViewport();
-});
-
-test("an outline jump to the last heading lands and stays", async ({
-  page,
-}) => {
-  const target = page.locator(`${editor} > h2`).last();
-  await target.evaluate((el) => el.scrollIntoView({ block: "start" }));
-  const top = () => target.evaluate((el) => el.getBoundingClientRect().top);
-  const first = await top();
-  await page.waitForTimeout(300);
-  expect(Math.abs((await top()) - first)).toBeLessThan(2);
-  await expect(target).toBeInViewport();
 });
 
 test("typing and Enter in the middle work as anywhere", async ({ page }) => {

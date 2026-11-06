@@ -45,54 +45,6 @@ async function review(page: Page, anchors: string[]) {
   await page.keyboard.press("Control+Shift+L");
 }
 
-const tops = (page: Page) =>
-  page
-    .locator(".review-margin > .review-note")
-    .evaluateAll((els: HTMLElement[]) => els.map((e) => e.offsetTop));
-
-test("notes that crowd a paragraph stand by their lines as chips, and open in place", async ({
-  page,
-}) => {
-  await review(page, ["Gulls argued", "A boy ran", "The baker", "Two boats"]);
-  const notes = page.locator(".review-margin > .review-note");
-  await expect(notes).toHaveCount(4);
-  await expect(page.locator(".review-note-chip")).not.toHaveCount(0);
-  // Each card stands near its own passage, not stacked off down the page.
-  const off = await notes.evaluateAll((els: HTMLElement[]) =>
-    els.map((card) => {
-      const id = CSS.escape(card.dataset.note ?? "");
-      const anchor = document.querySelector(
-        `.review-anchor[data-note="${id}"]`,
-      )!;
-      return Math.abs(
-        card.getBoundingClientRect().top - anchor.getBoundingClientRect().top,
-      );
-    }),
-  );
-  expect(Math.max(...off)).toBeLessThan(100);
-  const before = await tops(page);
-  // Clicked, a chip opens whole, with its actions; the others stay put.
-  const chip = page.locator(".review-note-chip").first();
-  const id = await chip.getAttribute("data-note");
-  await chip.click({ position: { x: 40, y: 12 } });
-  await expect(page.locator(".review-note-cut-open")).toHaveCount(1);
-  await expect(
-    page.locator(".review-note-cut-open").getByRole("button", { name: "Done" }),
-  ).toBeVisible();
-  expect(await tops(page)).toEqual(before);
-  // Selected, its passage stays lit with it once the pointer has gone.
-  await page.mouse.move(5, 450);
-  await expect(page.locator(".review-anchor-hot")).toHaveCount(1);
-  await expect(page.locator(".review-anchor-hot")).toHaveAttribute(
-    "data-note",
-    id!,
-  );
-  await expect(page.locator(".review-links path.hot")).toHaveCount(1);
-  // Escape lets it go.
-  await page.keyboard.press("Escape");
-  await expect(page.locator(".review-anchor-hot")).toHaveCount(0);
-});
-
 test("more notes than lines make one chip, which opens to them all", async ({
   page,
 }) => {

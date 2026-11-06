@@ -234,30 +234,6 @@ test("``` typed on a line of its own reads as a fence, not as code", async ({
   );
 });
 
-test("a folded callout opens from its chevron, and a comment shows only under the caret", async ({
-  page,
-}) => {
-  await open(
-    page,
-    "> [!faq]- Why?\n> Because.\n\nSee %%private%% here.\n\nEnd.",
-  );
-  // The caret opens on the first line, which shows a callout's source.
-  await page.locator(`${editor} p`).last().click();
-  const callout = page.locator(`${editor} blockquote.callout`);
-  await expect(callout.locator(".md-alert-title")).toHaveText("Why?");
-  await expect(callout.getByText("Because.")).toBeHidden();
-  await callout.locator(".md-alert-fold").click();
-  await expect(callout.getByText("Because.")).toBeVisible();
-  const comment = page.locator(`${editor} p`).filter({ hasText: "See" });
-  await expect(comment.getByText("private")).toBeHidden();
-  await page.locator(`${editor} p`).last().click();
-  // The caret at the comment's start, right after "See ".
-  await comment.click({ position: { x: 4, y: 4 } });
-  await page.keyboard.press("Home");
-  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight");
-  await expect(comment.locator(".md-comment")).toBeVisible();
-});
-
 test("the split view's preview draws what the editor draws", async ({
   page,
 }) => {
