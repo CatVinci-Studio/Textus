@@ -21,6 +21,7 @@ import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
+import { pathIndex, resolveTarget } from "../plugins/workspace/link-resolve";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -752,6 +753,23 @@ export function installDevTauriShim(): void {
           dir = dir.slice(0, dir.lastIndexOf("/"));
         }
         return Promise.resolve(null);
+      }
+      // The folder's notes, by the rules Rust's vault.rs shares with
+      // link-resolve.ts.
+      case "resolve_note_link": {
+        const doc = String(args.docPath);
+        const root = String(args.folder ?? doc.slice(0, doc.lastIndexOf("/")));
+        const target = resolveTarget(
+          pathIndex(
+            root,
+            Object.keys(files).filter((f) => f.startsWith(`${root}/`)),
+          ),
+          args.wiki ? `[[${String(args.link)}]]` : String(args.link),
+          doc,
+        );
+        return Promise.resolve(
+          target && { path: target.path, exists: target.exists },
+        );
       }
       case "index_folder": {
         // The backend refuses these; the shim's "home" is /home/me.

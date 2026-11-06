@@ -1,0 +1,54 @@
+/* A note, section or block embedded read-only: a quiet box, like a quote,
+   its title opening the source. */
+.milkdown .note-embed {
+  display: block;
+  margin: 0;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid var(--doc-border);
+  user-select: text;
+  cursor: text;
+}
+
+.milkdown .note-embed .note-embed {
+  margin: 4px 0;
+}
+
+/* ProseMirror ends a paragraph whose last child is a widget with a hidden
+   image and break, a line of their own after a block; its rule for them is
+   !important. */
+.milkdown .note-embed ~ img.ProseMirror-separator,
+.milkdown .note-embed ~ br.ProseMirror-trailingBreak {
+  display: none !important;
+}
+
+.note-embed-title {
+  display: block;
+  color: var(--doc-muted);
+  font-size: 0.85em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.note-embed-title:hover {
+  color: var(--doc-accent);
+}
+
+/* The editor keeps white space as typed; rendered HTML's newlines between
+   blocks are no text. */
+.note-embed-body {
+  display: block;
+  white-space: normal;
+}
+
+.note-embed-body > :first-child {
+  margin-top: 0;
+}
+
+.note-embed-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* An embed drawn as its name: too deep, a loop, or not found. */
+.note-embed-chip:not(.wikilink-missing) {
+  color: var(--doc-accent);
+}
