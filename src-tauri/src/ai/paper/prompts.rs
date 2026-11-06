@@ -9,28 +9,66 @@
 //! `{{shared.zh-filler}}`, is another prompt, taken in as the files are
 //! read: so a genre can take another's part (genres/*.md) and a rule the
 //! genres share is written once (shared.md).
+//!
+//! To try a prompt without building again - a test run, or a live run
+//! against another wording (live.rs) - point TEXTUS_PAPER_PROMPTS at a
+//! folder laid out as prompts/ is: each file in it is read in place of
+//! the one compiled in, as the prompts are first used. Only a debug build
+//! reads it; the app as released says what is compiled in. A run's
+//! `fingerprint` tells which prompts it was told.
 
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::sync::OnceLock;
 
-/// Every prompt file, by its name.
-const FILES: &[(&str, &str)] = &[
-    ("choose", include_str!("prompts/choose.md")),
-    ("finish", include_str!("prompts/finish.md")),
-    ("research", include_str!("prompts/research.md")),
-    ("outline", include_str!("prompts/outline.md")),
-    ("draft", include_str!("prompts/draft.md")),
-    ("review", include_str!("prompts/review.md")),
-    ("shared", include_str!("prompts/shared.md")),
-    ("genre.paper", include_str!("prompts/genres/paper.md")),
-    ("genre.review", include_str!("prompts/genres/review.md")),
-    ("genre.report", include_str!("prompts/genres/report.md")),
-    ("genre.analysis", include_str!("prompts/genres/analysis.md")),
-    ("genre.article", include_str!("prompts/genres/article.md")),
-    ("genre.thread", include_str!("prompts/genres/thread.md")),
-    ("genre.brief", include_str!("prompts/genres/brief.md")),
+/// Every prompt file: its name, its path in prompts/, its text.
+macro_rules! files {
+    ($($name:literal => $path:literal),* $(,)?) => {
+        &[$(($name, $path, include_str!(concat!("prompts/", $path)))),*]
+    };
+}
+const FILES: &[(&str, &str, &str)] = files![
+    "choose" => "choose.md",
+    "finish" => "finish.md",
+    "research" => "research.md",
+    "outline" => "outline.md",
+    "draft" => "draft.md",
+    "review" => "review.md",
+    "shared" => "shared.md",
+    "genre.paper" => "genres/paper.md",
+    "genre.review" => "genres/review.md",
+    "genre.report" => "genres/report.md",
+    "genre.analysis" => "genres/analysis.md",
+    "genre.article" => "genres/article.md",
+    "genre.thread" => "genres/thread.md",
+    "genre.brief" => "genres/brief.md",
 ];
+
+/// Where a debug build reads prompt files in place of its own.
+const OVERRIDE: &str = "TEXTUS_PAPER_PROMPTS";
+
+/// The prompt files' texts: each from the folder OVERRIDE names where it
+/// has one (debug builds only), else compiled in.
+fn texts() -> Vec<(&'static str, String)> {
+    let folder = std::env::var_os(OVERRIDE)
+        .filter(|_| cfg!(debug_assertions))
+        .map(std::path::PathBuf::from);
+    texts_from(folder.as_deref())
+}
+
+/// The prompt files' texts, each from `folder` where it has one.
+fn texts_from(folder: Option<&std::path::Path>) -> Vec<(&'static str, String)> {
+    FILES
+        .iter()
+        .map(|(name, path, text)| {
+            let read = folder.and_then(|f| std::fs::read_to_string(f.join(path)).ok());
+            if read.is_some() {
+                eprintln!("paper prompts: {path} read from {OVERRIDE}");
+            }
+            (*name, read.unwrap_or_else(|| text.to_string()))
+        })
+        .collect()
+}
 
 /// The prompts in `text`, the file `file`, by their full names.
 fn parse(file: &str, text: &str) -> Vec<(String, String)> {
@@ -76,7 +114,7 @@ fn take_in(text: &str, read: &HashMap<String, String>, depth: usize) -> String {
 fn all() -> &'static HashMap<String, String> {
     static ALL: OnceLock<HashMap<String, String>> = OnceLock::new();
     ALL.get_or_init(|| {
-        let read: HashMap<String, String> = FILES
+        let read: HashMap<String, String> = texts()
             .iter()
             .flat_map(|(file, text)| parse(file, text))
             .collect();
@@ -93,6 +131,27 @@ pub(crate) fn get(name: &str) -> &'static str {
         Some(text) => text,
         None => panic!("no prompt {name:?} in src-tauri/src/ai/paper/prompts"),
     }
+}
+
+/// A short mark of every prompt as they read, the same for the same
+/// prompts, kept with a live run (live.rs) so runs on different prompts
+/// are told apart.
+#[cfg(test)]
+pub(crate) fn fingerprint() -> String {
+    use sha2::{Digest, Sha256};
+    let mut names: Vec<&String> = all().keys().collect();
+    names.sort();
+    let mut hash = Sha256::new();
+    for name in names {
+        hash.update(name.as_bytes());
+        hash.update([0]);
+        hash.update(all()[name].as_bytes());
+        hash.update([0]);
+    }
+    hash.finalize()[..6]
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// The prompt `name` with each `{{key}}` in it filled in from `values`.
@@ -201,10 +260,24 @@ mod tests {
     }
 
     #[test]
+    fn a_folder_s_prompt_files_are_read_in_place_of_the_compiled_ones() {
+        let folder = tempfile::tempdir().unwrap();
+        std::fs::create_dir(folder.path().join("genres")).unwrap();
+        std::fs::write(folder.path().join("genres/brief.md"), "## when\n\nnever").unwrap();
+        let texts = texts_from(Some(folder.path()));
+        let text = |name: &str| &texts.iter().find(|(n, _)| *n == name).unwrap().1;
+        assert_eq!(text("genre.brief"), "## when\n\nnever");
+        assert_eq!(text("draft"), include_str!("prompts/draft.md"));
+    }
+
+    #[test]
     fn every_prompt_file_is_read() {
         // Taking every file in finds every prompt they name.
         assert!(!all().is_empty());
-        for (file, text) in FILES {
+        let mark = fingerprint();
+        assert_eq!(mark.len(), 12);
+        assert_eq!(mark, fingerprint());
+        for (file, _, text) in FILES {
             let found = parse(file, text);
             assert!(!found.is_empty(), "{file}.md has no ## prompts");
             for (name, body) in found {

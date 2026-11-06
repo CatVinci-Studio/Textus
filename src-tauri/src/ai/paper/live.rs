@@ -11,7 +11,10 @@
 //! MiniMax by default, its key read in place from the app's key file (or
 //! MINIMAX_API_KEY); TEXTUS_PAPER_TOPIC, TEXTUS_PAPER_GENRE ("paper",
 //! "report"), TEXTUS_PAPER_LANGUAGE, TEXTUS_PAPER_CHARS and
-//! TEXTUS_EVAL_AGENT_MODEL change the run.
+//! TEXTUS_EVAL_AGENT_MODEL change the run. TEXTUS_PAPER_PROMPTS runs it on
+//! prompts of another wording, read from a folder laid out as prompts/ is
+//! (prompts.rs): copy the files to change, edit them, and compare the two
+//! runs' output - each is kept under its prompts' fingerprint.
 
 use super::*;
 use aicompat::capabilities::ThinkingLevel;
@@ -80,10 +83,14 @@ fn live_paper() {
     };
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../tmp/live-paper")
-        .join(format!("{}-{}", paper.id, model));
+        .join(format!("{}-{}-{}", paper.id, model, prompts::fingerprint()));
     std::fs::create_dir_all(&out).unwrap();
     let write = |name: &str, text: &str| std::fs::write(out.join(name), text).unwrap();
     let mut stats = serde_json::Map::new();
+    stats.insert("prompts".into(), json!(prompts::fingerprint()));
+    if let Ok(folder) = std::env::var("TEXTUS_PAPER_PROMPTS") {
+        stats.insert("prompts_from".into(), json!(folder));
+    }
     let started = Instant::now();
     let lap =
         |stats: &mut serde_json::Map<String, serde_json::Value>, stage: &str, since: Instant| {
