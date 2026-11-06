@@ -345,6 +345,12 @@ export interface Settings {
   /// Whether startup reopens last session's documents. Rust reads it before
   /// any webview exists; it also lets an update relaunch reopen what was open.
   restoreSessionOnStartup: boolean;
+  /** A window nothing opens in at launch shows the start page instead of a
+   *  blank document (with restoreSessionOnStartup off). */
+  startPageOnLaunch: boolean;
+  /** Closing the last document shows the start page instead of closing
+   *  the window. */
+  closeLastToStartPage: boolean;
   /** Suggest an H1 or first content line as a draft's Save As filename. */
   autoSuggestFilename: boolean;
   /** Write a document that has a file back to it once typing rests. */
@@ -459,6 +465,8 @@ export const DEFAULT_SETTINGS: Settings = {
   userThemes: [],
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
+  startPageOnLaunch: false,
+  closeLastToStartPage: false,
   autoSuggestFilename: true,
   autosave: false,
   pdfPageNumbers: false,

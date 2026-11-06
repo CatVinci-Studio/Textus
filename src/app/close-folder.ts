@@ -3,8 +3,8 @@ import { isWithin } from "../sidebar/tree-root";
 
 /**
  * What Close Folder does to the tabs: the saved documents inside `folder`
- * close, ones with unsaved changes stay for the user to decide. `blank`: a
- * new Untitled tab first, so closing them doesn't close the window.
+ * close, ones with unsaved changes stay for the user to decide. `blank`:
+ * the start page first, so closing them doesn't close the window.
  */
 export function folderTabsToClose(
   tabs: DocTab[],

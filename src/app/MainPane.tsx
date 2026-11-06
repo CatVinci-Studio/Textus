@@ -11,7 +11,12 @@ import {
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
-import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
+import {
+  showsStartPage,
+  tabIsDirty,
+  tabTitle,
+  type DocTab,
+} from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
@@ -40,6 +45,11 @@ import { copyPathItem } from "../clipboard/copy-path";
 type TabBarProps = ComponentProps<typeof TabBar>;
 
 // Its Markdown renderer loads when a tab first shows it, not with the window.
+// Shown only when the user chose it, so kept out of the startup chunk.
+const StartPage = lazyComponent(
+  lazyModule("start-page", () => import("./StartPage")),
+  (m) => m.StartPage,
+);
 const SplitView = lazyComponent(
   lazyModule("split-view", () => import("../editor/modes/SplitView")),
   (m) => m.SplitView,
@@ -321,6 +331,10 @@ export function MainPane({
                   target={tab.view.target}
                 />
               </KeptWhileHidden>
+            ) : showsStartPage(tab) ? (
+              <Suspense fallback={null}>
+                <StartPage t={t} />
+              </Suspense>
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>
                 <SplitView

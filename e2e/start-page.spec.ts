@@ -1,0 +1,98 @@
+import { expect, test, type Page } from "@playwright/test";
+import { openApp } from "./helpers";
+
+// The start page: shown, when the user chose it, at launch with nothing to
+// open and when the last document closes; anything opened takes its place.
+
+function drop(page: Page, path: string, text: string) {
+  return page.evaluate(
+    ({ path, text }) => {
+      const w = window as unknown as Record<string, unknown> & {
+        __devEmitTauriEvent: (name: string, payload: unknown) => void;
+      };
+      w.__devFiles = {
+        ...(w.__devFiles as Record<string, string> | undefined),
+        [path]: text,
+      };
+      w.__devEmitTauriEvent("tauri://drag-drop", {
+        paths: [path],
+        position: { x: 0, y: 0 },
+      });
+    },
+    { path, text },
+  );
+}
+
+function emit(page: Page, name: string) {
+  return page.evaluate(
+    (name) =>
+      (
+        window as unknown as {
+          __devEmitTauriEvent: (name: string, payload: unknown) => void;
+        }
+      ).__devEmitTauriEvent(name, null),
+    name,
+  );
+}
+
+const startPage = (page: Page) => page.getByRole("region", { name: "Start" });
+
+test("closing the last document shows the start page, and a new document takes its place", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      closeLastToStartPage: true,
+    },
+  });
+  await drop(page, "/notes/one.md", "# One");
+  await expect(page.locator(".ProseMirror")).toContainText("One");
+  await emit(page, "menu-close-tab");
+  await expect(startPage(page)).toBeVisible();
+  await expect(
+    startPage(page).getByRole("button", { name: /New File/ }),
+  ).toBeVisible();
+
+  await startPage(page)
+    .getByRole("button", { name: /New File/ })
+    .click();
+  await expect(startPage(page)).toHaveCount(0);
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toBeVisible();
+  await expect(page.locator('[role="tab"]')).toHaveCount(0);
+});
+
+test("a file opened from the start page opens in its place", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      closeLastToStartPage: true,
+    },
+  });
+  await drop(page, "/notes/one.md", "# One");
+  await emit(page, "menu-close-tab");
+  await expect(startPage(page)).toBeVisible();
+  await drop(page, "/notes/two.md", "# Two");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Two");
+  await expect(startPage(page)).toHaveCount(0);
+  await expect(page.locator('[role="tab"]')).toHaveCount(0);
+});
+
+test("with the default, closing the last document doesn't show the start page", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await drop(page, "/notes/one.md", "# One");
+  await emit(page, "menu-close-tab");
+  await expect(startPage(page)).toHaveCount(0);
+});

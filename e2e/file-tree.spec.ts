@@ -282,7 +282,7 @@ test("in a vault whose settings the project took, the split preview breaks the l
   expect(two).toBeGreaterThan(one);
 });
 
-test("a tree that follows the document says so, and Close Folder closes the opened folder's documents", async ({
+test("a tree that follows the document says so, and Close Project closes the project's documents", async ({
   page,
 }) => {
   await open(page);
@@ -294,9 +294,10 @@ test("a tree that follows the document says so, and Close Folder closes the open
   await following.getByRole("button", { name: "Open as Project" }).click();
   await expect(following).toHaveCount(0);
   await page.getByRole("button", { name: "Close Project" }).click();
-  // a.md was saved and inside the folder: it closes, the window stays.
+  // a.md was saved and inside the project: it closes, the window stays on
+  // the start page.
   await expect(page.locator(".window-bar-title-text")).not.toHaveText("a.md");
-  await expect(page.locator(editor)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Start" })).toBeVisible();
 });
 
 test("the tree shows files another app made once the window is back in front", async ({

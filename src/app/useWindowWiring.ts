@@ -93,6 +93,8 @@ export function useWindowWiring({
     openFile,
     replaceTabWithFile: docs.replaceTabWithFile,
     restoreCarets: settings.restoreSessionOnStartup,
+    launchStartPage:
+      settings.startPageOnLaunch && !settings.restoreSessionOnStartup,
     startTutorial: tutorial.start,
     stopTutorial: tutorial.exit,
   });

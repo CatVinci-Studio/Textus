@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../../prefs/SettingsContext";
-import { menuIpc } from "../../platform/ipc";
+import { readRecents } from "./recents";
 import { formatCombo } from "../../utils/shortcuts";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { runMenuAction } from "./app-menu-actions";
@@ -112,14 +112,9 @@ function useMenuOpening() {
   useEffect(() => {
     if (!hasAppMenu) return;
     let alive = true;
-    void Promise.all([menuIpc.listRecentFiles(), menuIpc.listRecentFolders()])
-      .then(([files, folders]) => {
-        // The dev shim answers null rather than rejecting.
-        if (alive)
-          setRecents({
-            files: Array.isArray(files) ? files : [],
-            folders: Array.isArray(folders) ? folders : [],
-          });
+    void readRecents()
+      .then((found) => {
+        if (alive) setRecents(found);
       })
       .catch(() => {
         // No backend at all: Open Recent shows its empty state.

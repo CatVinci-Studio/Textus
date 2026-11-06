@@ -156,19 +156,21 @@ export function useWindowDocuments({
     cancelDraftFlushes: shell.cancelDraftFlushes,
     flushAutosave,
     setPendingClose,
+    closeLastToStartPage: settings.closeLastToStartPage,
     t,
   });
 
-  // Close Folder also closes the folder's saved documents.
+  // Close Project also closes the project's saved documents; with none left,
+  // the start page.
   const { folder, closeFolder: forgetFolder } = openFolder;
-  const { addBlankTab } = tabState;
+  const { addStartTab } = tabState;
   const closeFolder = useCallback(() => {
     forgetFolder();
     if (!folder) return;
     const { close, blank } = folderTabsToClose(liveTabs(), folder);
-    if (blank) addBlankTab();
+    if (blank) addStartTab();
     for (const id of close) removeTab(id);
-  }, [folder, forgetFolder, liveTabs, addBlankTab, removeTab]);
+  }, [folder, forgetFolder, liveTabs, addStartTab, removeTab]);
 
   // Tabs moving between windows, in both directions.
   const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
