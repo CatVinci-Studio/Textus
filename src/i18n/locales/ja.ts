@@ -350,6 +350,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "指示が Textus AI 自身の指示を上書きしようとしているように見えます（「以前の指示を無視」など）。保存する前に読んでください。",
   skillWarnHiddenText:
     "見えない文字が含まれており、指示が隠れている可能性があります。保存する前に読んでください。",
+  chatShowCode: "コードを見る",
+  chatShowSkill: "スキルの全文を見る",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",

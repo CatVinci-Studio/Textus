@@ -358,6 +358,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Ihre Anweisungen wirken, als wollten sie die von Textus AI aushebeln („vorherige Anweisungen ignorieren“). Lesen Sie sie vor dem Speichern.",
   skillWarnHiddenText:
     "Sie enthält unsichtbare Zeichen, die Anweisungen verbergen können. Lesen Sie sie vor dem Speichern.",
+  chatShowCode: "Code ansehen",
+  chatShowSkill: "Fähigkeit ansehen",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
   chatPluginCheckDom:

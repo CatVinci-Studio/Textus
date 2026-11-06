@@ -5,6 +5,7 @@ import { skillsInReply, type ReplySkill } from "./chat-skill";
 import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
+import { ReplyFilesPreview } from "./ReplyFilesPreview";
 import { errorText } from "../../utils/error-text";
 import type { Strings, TextKey } from "../../i18n/strings";
 
@@ -137,6 +138,12 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
                 : t.chatSaveSkill}
           </button>
         </span>
+      )}
+      {state.kind !== "saved" && (
+        <ReplyFilesPreview
+          label={t.chatShowSkill}
+          files={[{ path: null, text: skill.text }]}
+        />
       )}
     </div>
   );

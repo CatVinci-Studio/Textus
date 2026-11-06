@@ -344,6 +344,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     '지시가 Textus AI 자체의 지시를 덮어쓰려는 것처럼 보입니다("이전 지시를 무시" 등). 저장하기 전에 읽어 보세요.',
   skillWarnHiddenText:
     "보이지 않는 문자가 있어 지시를 숨기고 있을 수 있습니다. 저장하기 전에 읽어 보세요.",
+  chatShowCode: "코드 보기",
+  chatShowSkill: "스킬 전체 보기",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",

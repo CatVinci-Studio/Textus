@@ -376,6 +376,8 @@ para usar una.
     "Sus instrucciones parecen intentar anular las de Textus AI («ignora las instrucciones anteriores»). Léela antes de guardarla.",
   skillWarnHiddenText:
     "Contiene caracteres invisibles, que pueden ocultar instrucciones. Léela antes de guardarla.",
+  chatShowCode: "Ver el código",
+  chatShowSkill: "Ver la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",

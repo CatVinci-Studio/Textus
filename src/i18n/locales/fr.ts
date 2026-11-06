@@ -369,6 +369,8 @@ utiliser une.
     "Ses instructions semblent vouloir passer outre celles de Textus AI (« ignore les instructions précédentes »). Lisez-la avant de l’enregistrer.",
   skillWarnHiddenText:
     "Elle contient des caractères invisibles, qui peuvent cacher des instructions. Lisez-la avant de l’enregistrer.",
+  chatShowCode: "Voir le code",
+  chatShowSkill: "Voir la compétence",
   chatPluginCantInstall:
     "Cette extension ne peut pas être installée : {reason}",
   chatPluginCheckDom:

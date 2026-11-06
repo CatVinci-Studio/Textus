@@ -327,6 +327,8 @@ export default {
   skillWarnPromptInjection:
     "它的指令像是要覆蓋 Textus AI 自身的指令（如「忽略之前的指令」）。儲存前請先讀一遍。",
   skillWarnHiddenText: "它含有看不見的字元，可能藏著指令。儲存前請先讀一遍。",
+  chatShowCode: "查看程式碼",
+  chatShowSkill: "查看技能全文",
   toolSearchDocument: "在文件中搜尋「{arg}」",
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",

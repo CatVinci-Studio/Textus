@@ -362,6 +362,8 @@ type /name in a conversation to use one.
     'Its instructions read like they try to override Textus AI\'s own ("ignore previous instructions"). Read it before you save it.',
   skillWarnHiddenText:
     "It holds invisible characters, which can hide instructions. Read it before you save it.",
+  chatShowCode: "Show the code",
+  chatShowSkill: "Show the skill",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",
