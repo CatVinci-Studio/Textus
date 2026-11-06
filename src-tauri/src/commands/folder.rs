@@ -39,11 +39,9 @@ fn index(root: &Path, limits: &Limits) -> FolderIndex {
     }
 }
 
-/// The files under `root`, for the sidebar's file-name search. Refuses the home
-/// folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
+/// `read` on the folder `root`, off the main thread. Refuses the home folder
+/// and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
+async fn read_folder<T: Send + 'static>(root: String, read: fn(&Path) -> T) -> Result<T, String> {
     crate::commands::fs::require_non_empty(&root)?;
     tauri::async_runtime::spawn_blocking(move || {
         let root = PathBuf::from(root);
@@ -53,10 +51,18 @@ pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
         if !root.is_dir() {
             return Err("NOT_A_FOLDER".to_string());
         }
-        Ok(index(&root, &LIMITS))
+        Ok(read(&root))
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// The files under `root`, for the sidebar's file-name search. Refuses the home
+/// folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
+    read_folder(root, |root| index(root, &LIMITS)).await
 }
 
 /// Every Markdown document under `root` with its text, for the links a rename
@@ -66,19 +72,7 @@ pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
 pub async fn folder_documents(
     root: String,
 ) -> Result<crate::plugins::workspace::WorkspaceDocuments, String> {
-    crate::commands::fs::require_non_empty(&root)?;
-    tauri::async_runtime::spawn_blocking(move || {
-        let root = PathBuf::from(root);
-        if is_too_broad(&root) {
-            return Err("TOO_BROAD".to_string());
-        }
-        if !root.is_dir() {
-            return Err("NOT_A_FOLDER".to_string());
-        }
-        Ok(crate::plugins::workspace::documents_in(&root))
-    })
-    .await
-    .map_err(|e| e.to_string())?
+    read_folder(root, crate::plugins::workspace::documents_in).await
 }
 
 /// File > Open Folder…: a folder picker. The home folder or a drive root is
