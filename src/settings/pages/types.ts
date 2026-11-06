@@ -7,7 +7,7 @@ import type { Settings, useSettings } from "../../prefs/SettingsContext";
 /** What Help opens as a document (or, the welcome, as the tour). */
 export type HelpGuide = "welcome" | "markdown" | "agent";
 
-export type Subpage = "about" | "guides";
+export type Subpage = "about" | "guides" | "changelog";
 
 /** A plugin's command, for Settings › Shortcuts: its own key, if any. */
 export interface ShortcutCommand {

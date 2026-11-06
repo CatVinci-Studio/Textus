@@ -120,6 +120,10 @@ export function GeneralPage({
           label={t.menuHelpCommunity}
           onOpen={() => void links.openCommunityPage(settings.language)}
         />
+        <LinkRow
+          label={t.navChangelog}
+          onOpen={() => setSubpage("changelog")}
+        />
         <LinkRow label={t.aboutTextus} onOpen={() => setSubpage("about")} />
       </SettingsGroup>
     </>

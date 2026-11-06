@@ -82,6 +82,12 @@ in the next one, through the merge back.
    `check-versions.mjs --tag` (step 4, and the workflow's preflight) a stable
    tag with fragments left over or the summary unwritten; the notes are the
    GitHub release's text and the updater's.
+   Settings › General › Release Notes shows the same notes in the app, in
+   Chinese for Chinese users: add the Simplified Chinese translation as
+   `src/settings/changelog/notes/zh/X.Y.Z.md` and the Traditional one under
+   `notes/zh-Hant/`, and the day to `release-dates.ts`
+   ([the folder's README](../../src/settings/changelog/notes/README.md));
+   `npm run check` fails on a version without them.
 3. Commit as `chore: bump version to X.Y.Z` in a pull request and merge it.
 4. Check the merged `main` and tag that exact commit:
 

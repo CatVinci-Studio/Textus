@@ -1,5 +1,6 @@
 import { AboutSection } from "./sections/about";
 import { GuidesSection } from "./sections/guides";
+import { ChangelogSection } from "./changelog/ChangelogSection";
 import {
   useCallback,
   useDeferredValue,
@@ -141,6 +142,7 @@ export function SettingsPanel({
   const subpageTitles: Record<Subpage, string> = {
     about: t.navAbout,
     guides: t.navGuides,
+    changelog: t.navChangelog,
   };
 
   const pageProps: SettingsPageProps = {
@@ -174,7 +176,15 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        <GuidesSection t={t} language={settings.language} openHelp={openHelp} />
+        {s === "guides" ? (
+          <GuidesSection
+            t={t}
+            language={settings.language}
+            openHelp={openHelp}
+          />
+        ) : (
+          <ChangelogSection t={t} language={settings.language} />
+        )}
       </>
     );
 

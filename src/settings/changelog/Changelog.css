@@ -1,0 +1,129 @@
+/* Settings › General › Release Notes: one card per version, opened like
+   Settings' Advanced groups. */
+.changelog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.changelog-entry {
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+}
+
+/* The triangle is drawn: iOS's font stack lacks the native marker's glyph. */
+.changelog-entry > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: var(--text-control);
+  cursor: pointer;
+  list-style: none;
+}
+
+.changelog-entry > summary::-webkit-details-marker {
+  display: none;
+}
+
+.changelog-entry > summary::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid var(--ui-muted);
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+
+.changelog-entry[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.changelog-entry[open] > summary {
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.changelog-version {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog-tag {
+  padding: 0 8px;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-muted) 14%, transparent);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  line-height: 20px;
+}
+
+.changelog-tag-installed {
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent);
+}
+
+.changelog-date {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.changelog-body {
+  padding: 12px 16px 16px;
+  color: var(--ui-text);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.changelog-body > :first-child {
+  margin-top: 0;
+}
+
+.changelog-body > :last-child {
+  margin-bottom: 0;
+}
+
+.changelog-body p,
+.changelog-body ul,
+.changelog-body ol {
+  margin: 8px 0;
+}
+
+.changelog-body ul,
+.changelog-body ol {
+  padding-left: 20px;
+}
+
+.changelog-body li + li {
+  margin-top: 4px;
+}
+
+.changelog-body h2,
+.changelog-body h3,
+.changelog-body h4 {
+  margin: 16px 0 4px;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.changelog-body code {
+  padding: 1px 4px;
+  border-radius: var(--shape-xs);
+  background: var(--doc-code-bg);
+  font-size: 0.92em;
+}
+
+.changelog-body a {
+  color: var(--ui-accent);
+  text-decoration: none;
+}
+
+.changelog-body a:hover {
+  text-decoration: underline;
+}
