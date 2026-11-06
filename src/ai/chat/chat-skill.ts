@@ -1,6 +1,6 @@
 import type { AgentMode } from "../../prefs/settings-types";
 import { storedAgentMode } from "../../prefs/settings-types";
-import { replyFiles } from "../../utils/reply-files";
+import { replyFiles } from "./reply-files";
 
 /**
  * A skill Textus AI wrote in a reply: one fenced block such as

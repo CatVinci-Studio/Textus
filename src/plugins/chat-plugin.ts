@@ -1,5 +1,5 @@
 import type { PluginFile } from "../platform/ipc";
-import { replyFiles } from "../utils/reply-files";
+import { replyFiles } from "../ai/chat/reply-files";
 import { parseManifest, type PluginManifest } from "./store/manifest";
 
 /**
