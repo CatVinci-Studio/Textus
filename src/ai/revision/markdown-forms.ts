@@ -64,13 +64,12 @@ export function formKey(markdown: string): string {
     .join("\n");
 }
 
-/** `markdown` as its text shows in the document: footnote marks and link
- *  references show no text there. */
+/** `markdown` as its text shows in the document: footnote marks and image
+ *  references show no text there; a link keeps its Markdown as its text. */
 export function matchableMarkdown(markdown: string): string {
   return markdown
     .replace(/\[\^[^\]\s]+\](?!:)/g, "")
-    .replace(/!\[[^\]\n]*\]\[[^\]\n]*\]/g, "")
-    .replace(/\[([^\]\n]+)\]\[[^\]\n]*\]/g, "$1");
+    .replace(/!\[[^\]\n]*\]\[[^\]\n]*\]/g, "");
 }
 
 /** What a change of a whole block is called on a card, by its kind. */
