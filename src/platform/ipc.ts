@@ -484,6 +484,9 @@ export const ai = {
   /** Deletes the Customize… copy so the built-in applies again; returns the
    *  deleted files' paths. */
   resetBuiltinSkill: (name: string) => command("reset_builtin_skill", name),
+  /** Moves one of the user's global skills to the Trash; returns the
+   *  deleted files' paths. */
+  deleteGlobalSkill: (name: string) => command("delete_global_skill", name),
   /** Sets the modes a user skill applies in; a built-in's are fixed. */
   setSkillModes: (
     name: string,

@@ -46,6 +46,12 @@ export const commands = {
 	 *  picked modes, over an earlier version. Returns its path.
 	 */
 	save_written_skill: (text: string, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_written_skill", { text, modes }),
+	/**
+	 *  Deletes one of the user's global skills - one Create made, from its
+	 *  list - to the Trash where there is one. Returns the deleted paths, so the
+	 *  frontend can close tabs that would write them back.
+	 */
+	delete_global_skill: (name: string) => __TAURI_INVOKE<string[]>("delete_global_skill", { name }),
 };
 
 /* Types */
