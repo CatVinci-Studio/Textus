@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { fs } from "../../platform/ipc";
 
-/** Whether the document's folder shows a single newline as a line break
- *  (an Obsidian vault with "Strict line breaks" off, a Logseq graph, VS
- *  Code's preview setting). Read-only; false where no app says so, or
- *  before the answer comes. */
+/** Whether the document's project shows a single newline as a line break,
+ *  as its .textus/settings.json says; false otherwise, or before the
+ *  answer comes. */
 export function useVaultLineBreaks(docPath: string | null): boolean {
   const [found, setFound] = useState<{ path: string; breaks: boolean }>();
   useEffect(() => {
