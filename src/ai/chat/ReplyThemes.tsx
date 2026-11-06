@@ -6,6 +6,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { withCreation } from "./creations";
 
 export interface ReplyThemeLabels {
   useTheme: string;
@@ -68,6 +69,12 @@ function ReplyThemeChip({
       setSettings({
         userThemes: withUserTheme(latest.current.userThemes, meta),
         themeId: meta.id,
+        creations: withCreation(latest.current.creations, {
+          kind: "theme",
+          id: meta.id,
+          name,
+          at: Date.now(),
+        }),
       });
     } catch (err) {
       await showMessage(explainError(err, currentStrings()), { tone: "error" });

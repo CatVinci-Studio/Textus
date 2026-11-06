@@ -22,6 +22,9 @@ import { showMessage } from "../../ui/app-dialog";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { useSettings } from "../../prefs/SettingsContext";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { withCreation } from "./creations";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
@@ -79,6 +82,8 @@ function ReplyPluginChip({
   plugin: ReplyPlugin;
   labels: ReplyPluginLabels;
 }) {
+  const { settings, setSettings } = useSettings();
+  const latest = useLatest(settings);
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   useSyncExternalStore(subscribePluginLog, pluginLogVersion);
   const [busy, setBusy] = useState(false);
@@ -121,6 +126,14 @@ function ReplyPluginChip({
       setInstalledAt(Date.now());
       const id = await installPlugin(plugin.files);
       await setPluginEnabled(id, true);
+      setSettings({
+        creations: withCreation(latest.current.creations, {
+          kind: "plugin",
+          id,
+          name,
+          at: Date.now(),
+        }),
+      });
     } catch (err) {
       await showMessage(explainError(err, currentStrings()), { tone: "error" });
     } finally {
