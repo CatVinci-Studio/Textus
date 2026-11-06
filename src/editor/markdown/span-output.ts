@@ -1,6 +1,7 @@
 import { type Handle } from "mdast-util-to-markdown";
 import { writeLatexMath } from "../math/latex-math-syntax";
 import type { PeekingHandle } from "./link-output";
+import { escapeCellPipes } from "../tables/cell-pipes";
 
 /** Bold, italic, strikethrough, highlight and maths written so they read
  *  back the same. */
@@ -41,7 +42,7 @@ export function withInlineMathAsWritten(inlineMath: Handle): Handle {
       const written = latex(node) ?? asWritten(node, parent, state, info);
       // A bare "|" would end a table's cell; the formula reads `\|` back.
       return state.stack.includes("tableCell")
-        ? written.replace(/(?<!\\)\|/g, "\\|")
+        ? escapeCellPipes(written)
         : written;
     }) as Handle,
     {

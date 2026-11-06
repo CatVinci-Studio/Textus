@@ -3,6 +3,7 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type { Root } from "mdast";
 import remarkMath from "remark-math";
+import { unescapeCellPipes } from "../tables/cell-pipes";
 import {
   displayLatexBlocks,
   latexMathFromMarkdown,
@@ -67,7 +68,7 @@ function recordDollarRuns(tree: MdastNode, source: string): void {
  */
 function unescapeTablePipes(node: MdastNode, inTable = false): void {
   if (inTable && node.type === "inlineMath" && node.value)
-    node.value = node.value.replace(/\\\|/g, "|");
+    node.value = unescapeCellPipes(node.value);
   const table = inTable || node.type === "table";
   node.children?.forEach((child) => unescapeTablePipes(child, table));
 }

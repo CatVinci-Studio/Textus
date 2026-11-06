@@ -1,6 +1,9 @@
 // A simple HTML table as a Markdown table: no merged cells and only inline
 // content, which a Markdown table can hold. Anything else stays HTML.
 
+import { inlineLink } from "../markdown/link-syntax";
+import { escapeCellPipes } from "./cell-pipes";
+
 /** Why a table can't become Markdown, for the menu item's reason. */
 export type TableRefusal = "notTable" | "merged" | "blocks";
 
@@ -29,18 +32,17 @@ class Blocks extends Error {}
 /** A cell's content as one line of Markdown. */
 function inline(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE)
-    return (node.textContent ?? "").replace(/\s+/g, " ").replace(/\|/g, "\\|");
+    return (node.textContent ?? "").replace(/\s+/g, " ");
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
   const el = node as Element;
   const tag = el.localName;
   const inner = () => [...el.childNodes].map(inline).join("");
   if (tag === "br") return "<br>";
-  if (tag === "code")
-    return `\`${(el.textContent ?? "").replace(/\|/g, "\\|")}\``;
+  if (tag === "code") return `\`${el.textContent ?? ""}\``;
   if (tag === "a") {
     const href = el.getAttribute("href");
     if (!href) return inner();
-    return `[${inner()}](${/[\s()<>]/.test(href) ? `<${href.replace(/[<>]/g, encodeURIComponent)}>` : href})`;
+    return inlineLink(inner(), href.replace(/[<>]/g, encodeURIComponent));
   }
   if (tag === "img")
     return `![${el.getAttribute("alt") ?? ""}](${el.getAttribute("src") ?? ""})`;
@@ -55,11 +57,8 @@ function inline(node: Node): string {
 const SPACED_MATH = /\$[ \t]+([^$\n]*?\S)[ \t]*\$/g;
 
 function cellText(cell: Element): string {
-  return [...cell.childNodes]
-    .map(inline)
-    .join("")
-    .trim()
-    .replace(SPACED_MATH, "$$$1$$");
+  const text = [...cell.childNodes].map(inline).join("").trim();
+  return escapeCellPipes(text.replace(SPACED_MATH, "$$$1$$"));
 }
 
 function alignOf(cell: Element | undefined): string {

@@ -3,6 +3,7 @@ import {
   type DOMOutputSpec,
   type Node as ProseNode,
 } from "@milkdown/kit/prose/model";
+import { escapeCellPipes } from "../tables/cell-pipes";
 import { $nodeSchema, $remark } from "@milkdown/kit/utils";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type {
@@ -116,11 +117,7 @@ function asWritten(node: LinkSourceNode, parent: Parents | undefined): string {
 const writeLinkSource = Object.assign(
   ((node: LinkSourceNode, parent, state) => {
     const value = asWritten(node, parent);
-    return state.stack.includes("tableCell")
-      ? value.replace(/(\\*)\|/g, (run, slashes: string) =>
-          slashes.length % 2 ? run : `${slashes}\\|`,
-        )
-      : value;
+    return state.stack.includes("tableCell") ? escapeCellPipes(value) : value;
   }) as Handle,
   // containerPhrasing asks which character it starts with, to escape a "!"
   // written right before it.
