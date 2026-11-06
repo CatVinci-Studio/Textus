@@ -145,7 +145,7 @@ import {
   lazyBlocksPlugin,
   withLazyBlockViews,
 } from "./lazy-blocks/lazy-blocks-editor";
-import { readOnlyPlugin } from "./read-only-plugin";
+import { readOnlyPlugin, readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
 
@@ -221,6 +221,9 @@ export function withEditorCore(
     editor
       // First: the plugins that read it are asked in order.
       .use(options.preview ? noRevealPlugin : [])
+      // Read-only's state before every plugin that reads it applying the
+      // same transaction (what shows as source); its keys come last.
+      .use(readOnlyStatePlugin)
       .config(configureMarkdownOutput)
       // Which part of the file each block was read from, so a save writes the
       // blocks the user didn't touch as they were.

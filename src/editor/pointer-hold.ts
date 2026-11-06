@@ -1,3 +1,4 @@
+import { isReadOnly } from "./read-only-plugin";
 import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 
@@ -19,7 +20,9 @@ export function revealSelection(state: EditorState): {
   from: number;
   to: number;
 } {
-  if (noRevealKey.getState(state)) return NOWHERE;
+  // Read-only, as in the split view's preview, nothing shows as source: the
+  // caret can't change it, so `###` or `**` would only be in the way.
+  if (noRevealKey.getState(state) || isReadOnly(state)) return NOWHERE;
   return pointerHoldKey.getState(state) ?? state.selection;
 }
 

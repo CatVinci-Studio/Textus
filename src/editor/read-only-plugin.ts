@@ -14,6 +14,10 @@ export function setReadOnly(view: EditorView, on: boolean): void {
   view.dispatch(readOnlyTr(view.state, on));
 }
 
+/** Whether the document is read-only now. */
+export const isReadOnly = (state: EditorState): boolean =>
+  readOnlyKey.getState(state) === true;
+
 /** The transaction that turns read-only on or off. */
 export const readOnlyTr = (state: EditorState, on: boolean) =>
   state.tr.setMeta(readOnlyKey, on).setMeta("addToHistory", false);
@@ -32,11 +36,6 @@ export function createReadOnlyPlugin(): Plugin<boolean> {
     return false;
   };
   return new Plugin<boolean>({
-    key: readOnlyKey,
-    state: {
-      init: () => false,
-      apply: (tr, on) => (tr.getMeta(readOnlyKey) as boolean | undefined) ?? on,
-    },
     view(view) {
       dom = view.dom;
       return { destroy: () => (dom = null) };
@@ -71,4 +70,18 @@ export function createReadOnlyPlugin(): Plugin<boolean> {
   });
 }
 
+/** Whether the document is read-only, registered before every plugin
+ *  that reads it while applying the same transaction (what shows as
+ *  source), while the keys and refusals above come last. */
+export function createReadOnlyState(): Plugin<boolean> {
+  return new Plugin<boolean>({
+    key: readOnlyKey,
+    state: {
+      init: () => false,
+      apply: (tr, on) => (tr.getMeta(readOnlyKey) as boolean | undefined) ?? on,
+    },
+  });
+}
+
+export const readOnlyStatePlugin = $prose(createReadOnlyState);
 export const readOnlyPlugin = $prose(createReadOnlyPlugin);
