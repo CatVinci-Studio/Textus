@@ -205,23 +205,30 @@ fn live_paper() {
         stats.insert("sections_revised".into(), json!(changed));
 
         let t = Instant::now();
-        for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
-            *section = finish::without_pictures(section);
-        }
+        let mut sections: Vec<String> =
+            web_figures::resolve(&sections, web_figures::find_on_commons)
+                .await
+                .iter()
+                .map(|s| finish::without_pictures(s))
+                .collect();
         let figures = finish::number_figures(&mut sections, &paper.language);
         let mut dossier = finish::number_citations(&mut sections, &dossier);
-        finish::title_sources(&mut dossier).await;
+        let plain: Vec<String> = sections
+            .iter()
+            .map(|s| finish::plain_citations(s))
+            .collect();
+        // As ai_paper_draft finishes: the opening while titles are looked up.
+        let ((), opening) = futures_util::future::join(
+            finish::title_sources(&mut dossier),
+            finish::opening(&agent, &paper, &outline, &plain),
+        )
+        .await;
         let references = finish::references(
             &sections,
             &dossier,
             finish::references_heading(&paper.language, paper.genre),
         );
-        let sections: Vec<String> = sections
-            .iter()
-            .map(|s| finish::plain_citations(s))
-            .collect();
-        let opening = finish::opening(&agent, &paper, &outline, &sections).await;
+        let sections = plain;
         let markdown = finish::assemble(&opening, &sections, references.as_deref());
         lap(&mut stats, "finish", t);
         stats.insert("figures".into(), json!(figures));

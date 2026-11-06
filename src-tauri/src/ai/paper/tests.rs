@@ -1315,7 +1315,9 @@ async fn web_picture_marks_become_kept_pictures_with_credits_or_generated_ones()
             Err("nothing".to_string())
         }
     };
-    let resolved = web_figures::resolve(section, find).await;
+    let resolved = web_figures::resolve(&[section.to_string()], find)
+        .await
+        .remove(0);
     let lines: Vec<&str> = resolved.split("\n\n").collect();
     assert_eq!(lines[0], "Intro.");
     let id = lines[1]
