@@ -341,6 +341,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグイン「{name}」に次の問題があります：\n{problems}\nコードから原因を見つけて直してください。",
   chatSaveSkill: "このスキルを保存",
   chatUpdateSkill: "スキルを更新",
+  chatShowCode: "コードを見る",
+  chatShowSkill: "スキルの全文を見る",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",

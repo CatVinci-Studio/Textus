@@ -360,6 +360,8 @@ utiliser une.
   chatUpdatePlugin: "Mettre à jour l’extension",
   chatSaveSkill: "Enregistrer cette compétence",
   chatUpdateSkill: "Mettre à jour la compétence",
+  chatShowCode: "Voir le code",
+  chatShowSkill: "Voir la compétence",
   chatPluginCantInstall:
     "Cette extension ne peut pas être installée : {reason}",
   chatPluginCheckDom:

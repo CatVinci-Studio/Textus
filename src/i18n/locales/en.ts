@@ -353,6 +353,8 @@ type /name in a conversation to use one.
     "The plugin {name} has these problems:\n{problems}\nFind the cause in its code and fix it.",
   chatSaveSkill: "Save this skill",
   chatUpdateSkill: "Update the skill",
+  chatShowCode: "Show the code",
+  chatShowSkill: "Show the skill",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",

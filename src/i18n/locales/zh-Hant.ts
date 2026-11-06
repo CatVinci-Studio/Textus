@@ -319,6 +319,8 @@ export default {
     "外掛「{name}」有這些問題：\n{problems}\n請在它的程式碼裡找到原因並修復。",
   chatSaveSkill: "儲存此技能",
   chatUpdateSkill: "更新技能",
+  chatShowCode: "查看程式碼",
+  chatShowSkill: "查看技能全文",
   toolSearchDocument: "在文件中搜尋「{arg}」",
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",

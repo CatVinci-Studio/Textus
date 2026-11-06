@@ -4,6 +4,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
+import { ReplyFilesPreview } from "./ReplyFilesPreview";
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
@@ -69,6 +70,12 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
             {had ? t.chatUpdateSkill : t.chatSaveSkill}
           </button>
         </span>
+      )}
+      {state.kind !== "saved" && (
+        <ReplyFilesPreview
+          label={t.chatShowSkill}
+          files={[{ path: null, text: skill.text }]}
+        />
       )}
     </div>
   );

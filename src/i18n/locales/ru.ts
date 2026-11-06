@@ -349,6 +349,8 @@ export default {
   chatUpdatePlugin: "Обновить плагин",
   chatSaveSkill: "Сохранить этот навык",
   chatUpdateSkill: "Обновить навык",
+  chatShowCode: "Показать код",
+  chatShowSkill: "Показать навык",
   chatPluginCantInstall: "Этот плагин нельзя установить: {reason}",
   chatPluginCheckDom:
     "Он рисует прямо на странице, а плагин так не может: ничего не появится.",

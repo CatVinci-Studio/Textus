@@ -319,6 +319,8 @@ export default {
     "插件「{name}」有这些问题：\n{problems}\n请在它的代码里找到原因并修复。",
   chatSaveSkill: "保存此技能",
   chatUpdateSkill: "更新技能",
+  chatShowCode: "查看代码",
+  chatShowSkill: "查看技能全文",
   toolSearchDocument: "在文档中搜索「{arg}」",
   toolReadDocument: "阅读「{arg}」",
   toolReadWholeDocument: "阅读全文",

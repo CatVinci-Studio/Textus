@@ -335,6 +335,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 {name}에 다음 문제가 있습니다:\n{problems}\n코드에서 원인을 찾아 고쳐 주세요.",
   chatSaveSkill: "이 스킬 저장",
   chatUpdateSkill: "스킬 업데이트",
+  chatShowCode: "코드 보기",
+  chatShowSkill: "스킬 전체 보기",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",

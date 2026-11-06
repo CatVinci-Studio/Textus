@@ -367,6 +367,8 @@ para usar una.
     "El complemento {name} tiene estos problemas:\n{problems}\nEncuentra la causa en su código y corrígela.",
   chatSaveSkill: "Guardar esta habilidad",
   chatUpdateSkill: "Actualizar la habilidad",
+  chatShowCode: "Ver el código",
+  chatShowSkill: "Ver la habilidad",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",

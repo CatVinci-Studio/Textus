@@ -346,6 +346,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatUpdatePlugin: "Atualizar o plugin",
   chatSaveSkill: "Guardar esta habilidade",
   chatUpdateSkill: "Atualizar a habilidade",
+  chatShowCode: "Ver o código",
+  chatShowSkill: "Ver a habilidade",
   chatPluginCantInstall: "Este plugin não pode ser instalado: {reason}",
   chatPluginCheckDom:
     "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",

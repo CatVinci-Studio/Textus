@@ -22,6 +22,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { ReplyFilesPreview } from "./ReplyFilesPreview";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
@@ -29,6 +30,10 @@ export interface ReplyPluginLabels {
   pluginInstalled: string;
   usageGuide: string;
   exportPlugin: string;
+  /** Unfolds the files Install would install. */
+  showCode: string;
+  /** "{name} asks to:", over its permissions one to a line. */
+  permissionsAsk: string;
   /** "Can't be installed: {reason}". */
   pluginCantInstall: string;
   /** What checkPlugin and the plugin's first run found, and asking the AI
@@ -135,11 +140,6 @@ function ReplyPluginChip({
       data-plugin={manifest.id}
     >
       <span className="agent-theme-chip-name">{name}</span>
-      {manifest.permissions.length > 0 && (
-        <span className="agent-plugin-permissions">
-          {manifest.permissions.map(labels.permission).join(" · ")}
-        </span>
-      )}
       <button
         type="button"
         disabled={busy || current}
@@ -164,6 +164,17 @@ function ReplyPluginChip({
           {labels.exportPlugin}
         </button>
       )}
+      {manifest.permissions.length > 0 && (
+        <div className="agent-plugin-permissions">
+          {labels.permissionsAsk.replace("{name}", name)}
+          <ul>
+            {manifest.permissions.map((p) => (
+              <li key={p}>{labels.permission(p)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <ReplyFilesPreview label={labels.showCode} files={plugin.files} />
       {problems.length > 0 && (
         <div className="agent-plugin-problems" role="status">
           <ul>

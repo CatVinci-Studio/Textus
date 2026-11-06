@@ -29,6 +29,7 @@ const labels = {
   useTheme: "Use this theme",
   themeInUse: "In use",
   themeFallbackName: "Theme",
+  showCode: "Show code",
 };
 
 function Current() {
