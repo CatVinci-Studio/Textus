@@ -11,8 +11,11 @@ export interface ReplySkill {
   description: string;
   /** What it says it is called in each UI language (`textus-label-<code>`). */
   labels: Record<string, string>;
-  /** The modes its file asks for; Write when it doesn't say. */
+  /** The modes its file asks for, Create left out - a skill there could
+   *  write the next skill, so only the user ticks it; Write when none. */
   modes: AgentMode[];
+  /** Its file asked for Create mode. */
+  asksForCreate: boolean;
   /** The whole file, as it is saved. */
   text: string;
 }
@@ -54,11 +57,13 @@ export function skillsInReply(text: string): ReplySkill[] {
       .split(/[\s,]+/)
       .map(storedAgentMode)
       .filter((mode): mode is AgentMode => mode !== null);
+    const picked = [...new Set(modes)].filter((mode) => mode !== "create");
     skills.push({
       name,
       description: description(front[1]),
       labels,
-      modes: modes.length ? [...new Set(modes)] : ["write"],
+      modes: picked.length ? picked : ["write"],
+      asksForCreate: modes.includes("create"),
       text: file,
     });
   }

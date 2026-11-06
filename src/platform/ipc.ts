@@ -380,9 +380,11 @@ export const ai = {
   ) =>
     command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
   /** A skill file a reply wrote, saved in the global skills folder in
-   *  `modes`, over an earlier version. Its path. */
-  saveWrittenSkill: (text: string, modes: AgentMode[]) =>
-    command("save_written_skill", text, modes),
+   *  `modes`, over an earlier version. Its path. One in Create mode or that
+   *  reads like a prompt injection fails with `SKILL_NEEDS_CONFIRM:` and its
+   *  warnings until saved again `confirmed`. */
+  saveWrittenSkill: (text: string, modes: AgentMode[], confirmed = false) =>
+    command("save_written_skill", text, modes, confirmed),
   /** What the writer will probably say next after a reply: up to three
    *  messages, most likely first (Rust: ai/next_message.rs). */
   suggestNextMessage: (args: {

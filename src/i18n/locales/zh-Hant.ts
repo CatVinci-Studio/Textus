@@ -319,6 +319,14 @@ export default {
     "外掛「{name}」有這些問題：\n{problems}\n請在它的程式碼裡找到原因並修復。",
   chatSaveSkill: "儲存此技能",
   chatUpdateSkill: "更新技能",
+  skillSaveAnyway: "仍然儲存",
+  skillWarnCreateAsked:
+    "它要求在「建立」模式下執行，在那裡它能自己寫技能。已預設不勾選「建立」：只有信任它的每一行時才勾選。",
+  skillWarnCreateMode:
+    "在「建立」模式下，它能自己寫或改技能。只有信任它的每一行時才保留。",
+  skillWarnPromptInjection:
+    "它的指令像是要覆蓋 Textus AI 自身的指令（如「忽略之前的指令」）。儲存前請先讀一遍。",
+  skillWarnHiddenText: "它含有看不見的字元，可能藏著指令。儲存前請先讀一遍。",
   toolSearchDocument: "在文件中搜尋「{arg}」",
   toolReadDocument: "閱讀「{arg}」",
   toolReadWholeDocument: "閱讀全文",

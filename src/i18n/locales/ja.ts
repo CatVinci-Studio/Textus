@@ -341,6 +341,15 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグイン「{name}」に次の問題があります：\n{problems}\nコードから原因を見つけて直してください。",
   chatSaveSkill: "このスキルを保存",
   chatUpdateSkill: "スキルを更新",
+  skillSaveAnyway: "それでも保存",
+  skillWarnCreateAsked:
+    "作成モードでの実行を求めています。そこではスキルを自分で書けます。作成はオフのままです。すべての行を信頼できる場合だけオンにしてください。",
+  skillWarnCreateMode:
+    "作成モードでは、スキルを自分で書いたり変えたりできます。すべての行を信頼できる場合だけ残してください。",
+  skillWarnPromptInjection:
+    "指示が Textus AI 自身の指示を上書きしようとしているように見えます（「以前の指示を無視」など）。保存する前に読んでください。",
+  skillWarnHiddenText:
+    "見えない文字が含まれており、指示が隠れている可能性があります。保存する前に読んでください。",
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",

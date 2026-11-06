@@ -335,6 +335,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 {name}에 다음 문제가 있습니다:\n{problems}\n코드에서 원인을 찾아 고쳐 주세요.",
   chatSaveSkill: "이 스킬 저장",
   chatUpdateSkill: "스킬 업데이트",
+  skillSaveAnyway: "그래도 저장",
+  skillWarnCreateAsked:
+    "만들기 모드에서 실행되기를 요청합니다. 그 모드에서는 스스로 스킬을 쓸 수 있습니다. 만들기는 선택 해제되어 있습니다. 모든 줄을 신뢰할 때만 선택하세요.",
+  skillWarnCreateMode:
+    "만들기 모드에서는 스스로 스킬을 쓰거나 바꿀 수 있습니다. 모든 줄을 신뢰할 때만 유지하세요.",
+  skillWarnPromptInjection:
+    '지시가 Textus AI 자체의 지시를 덮어쓰려는 것처럼 보입니다("이전 지시를 무시" 등). 저장하기 전에 읽어 보세요.',
+  skillWarnHiddenText:
+    "보이지 않는 문자가 있어 지시를 숨기고 있을 수 있습니다. 저장하기 전에 읽어 보세요.",
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",

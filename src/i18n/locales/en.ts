@@ -353,6 +353,15 @@ type /name in a conversation to use one.
     "The plugin {name} has these problems:\n{problems}\nFind the cause in its code and fix it.",
   chatSaveSkill: "Save this skill",
   chatUpdateSkill: "Update the skill",
+  skillSaveAnyway: "Save anyway",
+  skillWarnCreateAsked:
+    "It asked for Create mode, where it could write skills itself. Create is left unticked: tick it only if you trust every line.",
+  skillWarnCreateMode:
+    "In Create mode it could write or change skills itself. Keep it there only if you trust every line.",
+  skillWarnPromptInjection:
+    'Its instructions read like they try to override Textus AI\'s own ("ignore previous instructions"). Read it before you save it.',
+  skillWarnHiddenText:
+    "It holds invisible characters, which can hide instructions. Read it before you save it.",
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",

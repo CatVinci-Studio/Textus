@@ -367,6 +367,15 @@ para usar una.
     "El complemento {name} tiene estos problemas:\n{problems}\nEncuentra la causa en su código y corrígela.",
   chatSaveSkill: "Guardar esta habilidad",
   chatUpdateSkill: "Actualizar la habilidad",
+  skillSaveAnyway: "Guardar de todos modos",
+  skillWarnCreateAsked:
+    "Pide el modo Crear, donde podría escribir habilidades por sí misma. Crear queda sin marcar: márcalo solo si confías en cada línea.",
+  skillWarnCreateMode:
+    "En el modo Crear podría escribir o cambiar habilidades por sí misma. Déjala ahí solo si confías en cada línea.",
+  skillWarnPromptInjection:
+    "Sus instrucciones parecen intentar anular las de Textus AI («ignora las instrucciones anteriores»). Léela antes de guardarla.",
+  skillWarnHiddenText:
+    "Contiene caracteres invisibles, que pueden ocultar instrucciones. Léela antes de guardarla.",
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",

@@ -346,6 +346,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatUpdatePlugin: "Atualizar o plugin",
   chatSaveSkill: "Guardar esta habilidade",
   chatUpdateSkill: "Atualizar a habilidade",
+  skillSaveAnyway: "Guardar mesmo assim",
+  skillWarnCreateAsked:
+    "Pede o modo Criar, onde poderia escrever habilidades por si mesma. Criar fica desmarcado: marque-o só se confiar em cada linha.",
+  skillWarnCreateMode:
+    "No modo Criar, poderia escrever ou mudar habilidades por si mesma. Deixe-a lá só se confiar em cada linha.",
+  skillWarnPromptInjection:
+    "As instruções parecem tentar anular as do Textus AI («ignore as instruções anteriores»). Leia-a antes de a guardar.",
+  skillWarnHiddenText:
+    "Contém caracteres invisíveis, que podem esconder instruções. Leia-a antes de a guardar.",
   chatPluginCantInstall: "Este plugin não pode ser instalado: {reason}",
   chatPluginCheckDom:
     "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",

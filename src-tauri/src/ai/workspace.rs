@@ -9,6 +9,8 @@ mod frontmatter;
 pub(crate) use frontmatter::*;
 mod skills;
 pub(crate) use skills::*;
+mod skill_checks;
+pub(crate) use skill_checks::*;
 mod layers;
 pub(crate) use layers::*;
 
@@ -405,16 +407,19 @@ pub async fn set_skill_off(
 }
 
 /// Saves a skill a Create-mode reply wrote into the global skills/ with the
-/// picked modes, over an earlier version. Returns its path.
+/// picked modes, over an earlier version. Returns its path. A skill that
+/// runs in Create mode or reads like a prompt injection fails with
+/// SKILL_NEEDS_CONFIRM and its warnings until saved again `confirmed`.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn save_written_skill(
     app: AppHandle,
     text: String,
     modes: Vec<AgentMode>,
+    confirmed: bool,
 ) -> Result<String, String> {
     let dir = global_agent_dir(&app)?.join("skills");
-    tauri::async_runtime::spawn_blocking(move || save_written_in(&dir, &text, &modes))
+    tauri::async_runtime::spawn_blocking(move || save_written_in(&dir, &text, &modes, confirmed))
         .await
         .map_err(|e| e.to_string())?
         .map(|p| p.to_string_lossy().into_owned())

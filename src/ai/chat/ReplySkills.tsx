@@ -2,13 +2,40 @@ import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
+import type { AgentMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
+import { errorText } from "../../utils/error-text";
+import type { Strings, TextKey } from "../../i18n/strings";
+
+/** What save_written_skill fails with, then `:` and its warnings, until the
+ *  save is confirmed (Rust: ai/workspace/skill_checks.rs). */
+const NEEDS_CONFIRM = "SKILL_NEEDS_CONFIRM:";
+
+const WARNINGS: Record<string, TextKey> = {
+  "prompt-injection": "skillWarnPromptInjection",
+  "hidden-text": "skillWarnHiddenText",
+  "create-mode": "skillWarnCreateMode",
+};
+
+/** The warnings in a NEEDS_CONFIRM error, or null for any other error. */
+function warningsIn(err: unknown): string[] | null {
+  const text = errorText(err);
+  return text.startsWith(NEEDS_CONFIRM)
+    ? text.slice(NEEDS_CONFIRM.length).split(",").filter(Boolean)
+    : null;
+}
+
+function warningText(t: Strings, warning: string): string {
+  const key = WARNINGS[warning];
+  return key ? t[key] : warning;
+}
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
  * into the global skills folder. A later reply with the same skill offers
- * Update.
+ * Update. Its instructions join later prompts, so one in Create mode or that
+ * reads like a prompt injection says why, and saves on a second click.
  */
 export function ReplySkills({ text }: { text: string }) {
   const skills = useMemo(() => skillsInReply(text), [text]);
@@ -26,7 +53,10 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
   const [modes, setModes] = useState(skill.modes);
   const [had, setHad] = useState(false);
   const [state, setState] = useState<
-    { kind: "new" } | { kind: "saved" } | { kind: "failed"; why: string }
+    | { kind: "new" }
+    | { kind: "saved" }
+    | { kind: "failed"; why: string }
+    | { kind: "confirm"; warnings: string[]; modes: AgentMode[] }
   >({ kind: "new" });
   // A skill of that name already: this one updates it.
   useEffect(() => {
@@ -42,11 +72,31 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       live = false;
     };
   }, [skill.name]);
+  // Confirmed only for the modes the warnings were shown for: ticking
+  // Create afterwards asks again.
+  const confirming =
+    state.kind === "confirm" && sameModes(state.modes, modes) ? state : null;
   const save = () =>
-    ai.saveWrittenSkill(skill.text, modes).then(
+    ai.saveWrittenSkill(skill.text, modes, confirming !== null).then(
       () => setState({ kind: "saved" }),
-      (err: unknown) => setState({ kind: "failed", why: explainError(err, t) }),
+      (err: unknown) => {
+        const warnings = warningsIn(err);
+        setState(
+          warnings
+            ? { kind: "confirm", warnings, modes }
+            : { kind: "failed", why: explainError(err, t) },
+        );
+      },
     );
+  // Said before any click: Create is never ticked for it, and once it is,
+  // what that lets the skill do.
+  const createNote = confirming?.warnings.includes("create-mode")
+    ? null
+    : modes.includes("create")
+      ? t.skillWarnCreateMode
+      : skill.asksForCreate
+        ? t.skillWarnCreateAsked
+        : null;
   const label =
     skill.labels[settings.language] ?? skill.labels.en ?? `/${skill.name}`;
   return (
@@ -62,14 +112,36 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
       {state.kind === "failed" && (
         <span className="skill-offer-description">{state.why}</span>
       )}
+      {createNote && (
+        <span className="skill-offer-description skill-offer-warning">
+          {createNote}
+        </span>
+      )}
+      {confirming?.warnings.map((w) => (
+        <span
+          key={w}
+          className="skill-offer-description skill-offer-warning"
+          role="alert"
+        >
+          {warningText(t, w)}
+        </span>
+      ))}
       {state.kind !== "saved" && (
         <span className="agent-memory-chip-actions">
           <ModeChoice t={t} modes={modes} onChange={setModes} />
           <button type="button" onClick={() => void save()}>
-            {had ? t.chatUpdateSkill : t.chatSaveSkill}
+            {confirming
+              ? t.skillSaveAnyway
+              : had
+                ? t.chatUpdateSkill
+                : t.chatSaveSkill}
           </button>
         </span>
       )}
     </div>
   );
+}
+
+function sameModes(a: AgentMode[], b: AgentMode[]): boolean {
+  return a.length === b.length && a.every((m) => b.includes(m));
 }
