@@ -117,7 +117,9 @@ const writeLinkSource = Object.assign(
   ((node: LinkSourceNode, parent, state) => {
     const value = asWritten(node, parent);
     return state.stack.includes("tableCell")
-      ? value.replace(/(^|[^\\])\|/g, "$1\\|")
+      ? value.replace(/(\\*)\|/g, (run, slashes: string) =>
+          slashes.length % 2 ? run : `${slashes}\\|`,
+        )
       : value;
   }) as Handle,
   // containerPhrasing asks which character it starts with, to escape a "!"

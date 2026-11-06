@@ -190,6 +190,16 @@ describe("typing in a link", () => {
   });
 });
 
+describe("a link in a table cell", () => {
+  it("saves each | typed in it escaped, so the row keeps its cells", async () => {
+    const t = await open("| a | b |\n| - | - |\n| [x](u) | z |");
+    t.caretAt("u)", 1);
+    t.type("||");
+    t.caretAtEnd();
+    expect(t.markdown()).toContain("[x](u\\|\\|)");
+  });
+});
+
 describe("a reference link", () => {
   it("shows its source once its definition is gone, as the file would reopen", async () => {
     const t = await open("A [a][r] b\n\n[r]: https://r.org\n\nEnd");
