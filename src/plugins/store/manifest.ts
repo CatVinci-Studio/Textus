@@ -190,7 +190,10 @@ export interface AiToolContribution {
 export interface CompletionContribution {
   id: string;
   where: "math" | "text" | "any";
+  /** Anchored at the caret; its last capture group is the query. */
   pattern: string;
+  /** The panel group's heading ("%notes%"); the plugin's name without it. */
+  title?: string;
 }
 
 /** Links a plugin opens on Ctrl/Cmd+click instead of the browser: a URL

@@ -29,6 +29,7 @@ const WEBKIT_SPECS = [
   "sidebar-toggle.spec.ts",
   "tab-scroll.spec.ts",
   "markdown-keys.spec.ts",
+  "completion-panel.spec.ts",
   "code-block.spec.ts",
   "link-reveal.spec.ts",
   "sidebar-resize.spec.ts",

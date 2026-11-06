@@ -551,7 +551,9 @@ declare global {
       ): Promise<boolean>;
       /** Completions as you type, for one of `contributes.completions`
        *  (editor.read): asked when what is before the caret matches its
-       *  `pattern`. `insert` replaces the match; `$0` marks the caret. */
+       *  `pattern`. `insert` replaces the match; `$0` marks the caret.
+       *  Shown in the / panel, grouped by plugin. 1.2: every matching
+       *  provider is asked at once, and none holds up typing. */
       registerCompletion(id: string, provider: CompletionProvider): Disposable;
       /** A card for what the pointer rests on (editor.read). */
       registerHover(provider: {
@@ -618,23 +620,61 @@ declare global {
     }
 
     interface CompletionProvider {
-      provideCompletions(context: {
-        /** Before the caret, in its paragraph or formula. */
-        text: string;
-        /** The part `pattern` matched, which an item replaces. */
-        match: string;
-        inMath: boolean;
-      }):
+      provideCompletions(
+        context: CompletionContext,
+      ):
         | CompletionItem[]
+        | CompletionList
         | null
         | undefined
-        | Promise<CompletionItem[] | null | undefined>;
+        | Promise<CompletionItem[] | CompletionList | null | undefined>;
+    }
+
+    interface CompletionContext {
+      /** Before the caret, in its paragraph or formula. */
+      text: string;
+      /** The part `pattern` matched, which an item replaces. */
+      match: string;
+      inMath: boolean;
+      /** From 1.3.9: the pattern's last capture group (the query); the
+       *  match without one. */
+      query: string;
+      /** From 1.3.9: after the caret, to the end of its block (at most 200
+       *  characters): the "]]" Textus pairs with "[[". */
+      after: string;
+      /** From 1.3.9: the document's path; null for an unsaved one. */
+      path: string | null;
+      /** From 1.3.9: aborts when Textus no longer needs the answer (the
+       *  text moved on, the panel closed). An answer after that is dropped. */
+      signal: AbortSignal;
+    }
+
+    /** From 1.3.9: a whole list (up to 20,000 items) Textus filters itself
+     *  as typing goes on, without asking again while the same pattern keeps
+     *  matching from the same place. An array is the provider's own
+     *  filtering: asked again on each key, at most 50 kept. */
+    interface CompletionList {
+      items: CompletionItem[];
+      complete: true;
     }
 
     interface CompletionItem {
       label: string;
+      /** Replaces the match; `$0` marks the caret. */
       insert: string;
       detail?: string;
+      /** From 1.3.9: one of the app's icons ("file", "link", "tag",
+       *  "calendar", "clock", "star", "heading", "block", "quote",
+       *  "emoji") or an SVG of the plugin's. */
+      icon?: string;
+      /** From 1.3.9: also found by (an English name, an alias). */
+      keywords?: string;
+      /** From 1.3.9: characters after the caret it replaces too: 2 for the
+       *  "]]" in `after`. */
+      replaceAfter?: number;
+      /** From 1.3.9: run once it is inserted - the plugin's own command or
+       *  one of Textus's. */
+      command?: { id: string; args?: unknown[] };
     }
 
     type HoverTarget =

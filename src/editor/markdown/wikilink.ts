@@ -1,5 +1,6 @@
 import { $inputRule, $nodeSchema, $remark } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
+import type { Transaction } from "@milkdown/kit/prose/state";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type {
   Code,
@@ -183,3 +184,21 @@ export const wikilinkInputRule = $inputRule(
       );
     }),
 );
+
+const WHOLE_WIKILINK = /(^|[^!])(\[\[[^[\]\n]+\]\])/g;
+
+/** `[[...]]` put in as text in one go - a completion taken - made the
+ *  wikilinks typing their last "]" makes, so a save keeps their brackets. */
+export function wikilinksIn(tr: Transaction, from: number, to: number): void {
+  const type = tr.doc.type.schema.nodes.wikilink;
+  if (!type) return;
+  const text = tr.doc.textBetween(from, to, "\n", "\n");
+  const found: [number, number, string][] = [];
+  for (const m of text.matchAll(WHOLE_WIKILINK)) {
+    const start = from + m.index + m[1].length;
+    found.push([start, start + m[2].length, m[2]]);
+  }
+  // From the end, so the earlier positions still hold.
+  for (const [start, end, source] of found.reverse())
+    tr.replaceWith(start, end, type.create({}, tr.doc.type.schema.text(source)));
+}

@@ -1,4 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  registerNoteCompletion,
+  setNoteCompletionRoot,
+} from "../sidebar/note-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
@@ -80,10 +84,16 @@ export function useWindowDocuments({
     onWordDocumentOpened: shell.wordImported.opened,
   });
   useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  const folderRoot = openFolder.folder ?? openFolder.treeRoot;
+  // `[[` lists the folder's notes while no plugin completes it.
+  useEffect(() => {
+    setNoteCompletionRoot(folderRoot);
+    return registerNoteCompletion(() => t.completionNotes);
+  }, [folderRoot, t]);
   usePluginWindow({
     t,
     language: settings.language,
-    rootPath: openFolder.folder ?? openFolder.treeRoot,
+    rootPath: folderRoot,
     activePath: activeTab.path,
     tabState,
     openPathInTab: opening.openPathInTab,

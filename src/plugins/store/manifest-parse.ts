@@ -355,6 +355,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
         id: ownId(o.id, id, `${at}.id`),
         where: where as CompletionContribution["where"],
         pattern,
+        ...(o.title === undefined ? {} : { title: text(o.title, `${at}.title`) }),
       };
     },
   );

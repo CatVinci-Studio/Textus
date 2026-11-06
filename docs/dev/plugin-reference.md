@@ -367,7 +367,7 @@ A code block the plugin draws.
 | `replaceSelection(text: string): Promise<boolean>`                                                                             |                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `propose(change: Change, options?: { reason?: string }): Promise<boolean>`                                                     | Shown as a proposal the user accepts or rejects, as Textus AI's are (editor.propose).                                                                                                                                                                                                                                                                                                                      |
 | `reveal(location: Omit<Location, "path"> & { path?: string }): Promise<boolean>`                                               | Scrolls to a place in it and puts the caret there.                                                                                                                                                                                                                                                                                                                                                         |
-| `registerCompletion(id: string, provider: CompletionProvider): Disposable`                                                     | Completions as you type, for one of `contributes.completions` (editor.read): asked when what is before the caret matches its `pattern`. `insert` replaces the match; `$0` marks the caret.                                                                                                                                                                                                                 |
+| `registerCompletion(id: string, provider: CompletionProvider): Disposable`                                                     | Completions as you type, for one of `contributes.completions` (editor.read): asked when what is before the caret matches its `pattern`. `insert` replaces the match; `$0` marks the caret. Shown in the / panel, grouped by plugin. 1.2: every matching provider is asked at once, and none holds up typing.                                                                                               |
 | `registerHover(provider: { provideHover(target: HoverTarget): HoverCard \| null \| Promise<HoverCard \| null>; }): Disposable` | A card for what the pointer rests on (editor.read).                                                                                                                                                                                                                                                                                                                                                        |
 | `registerDecorations(provider: { decorate(blocks: Block[]): Decoration[] \| Promise<Decoration[]>; }): Disposable`             | Marks over the text (editor.read), asked for the blocks in sight and again when they change.                                                                                                                                                                                                                                                                                                               |
 | `onDidChangeActive: Event<{ path: string \| null }>`                                                                           | Another document came to the front (or none).                                                                                                                                                                                                                                                                                                                                                              |
@@ -397,17 +397,42 @@ One change, placed by block ids as Textus AI's are. Without `block`, `insert_at_
 
 ## CompletionProvider
 
-| Member                                                                                                                                                                       |     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| `provideCompletions(context: { text: string; match: string; inMath: boolean; }): \| CompletionItem[] \| null \| undefined \| Promise<CompletionItem[] \| null \| undefined>` |     |
+| Member                                                                                                                                                                           |     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `provideCompletions(context: CompletionContext): \| CompletionItem[] \| CompletionList \| null \| undefined \| Promise<CompletionItem[] \| CompletionList \| null \| undefined>` |     |
+
+## CompletionContext
+
+| Member                 |                                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `text: string`         | Before the caret, in its paragraph or formula.                                                                                    |
+| `match: string`        | The part `pattern` matched, which an item replaces.                                                                               |
+| `inMath: boolean`      |                                                                                                                                   |
+| `query: string`        | From 1.3.9: the pattern's last capture group (the query); the match without one.                                                  |
+| `after: string`        | From 1.3.9: after the caret, to the end of its block (at most 200 characters): the "]]" Textus pairs with "[[".                   |
+| `path: string \| null` | From 1.3.9: the document's path; null for an unsaved one.                                                                         |
+| `signal: AbortSignal`  | From 1.3.9: aborts when Textus no longer needs the answer (the text moved on, the panel closed). An answer after that is dropped. |
+
+## CompletionList
+
+From 1.3.9: a whole list (up to 20,000 items) Textus filters itself as typing goes on, without asking again while the same pattern keeps matching from the same place. An array is the provider's own filtering: asked again on each key, at most 50 kept.
+
+| Member                    |     |
+| ------------------------- | --- |
+| `items: CompletionItem[]` |     |
+| `complete: true`          |     |
 
 ## CompletionItem
 
-| Member            |     |
-| ----------------- | --- |
-| `label: string`   |     |
-| `insert: string`  |     |
-| `detail?: string` |     |
+| Member                                       |                                                                                                                                                          |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label: string`                              |                                                                                                                                                          |
+| `insert: string`                             | Replaces the match; `$0` marks the caret.                                                                                                                |
+| `detail?: string`                            |                                                                                                                                                          |
+| `icon?: string`                              | From 1.3.9: one of the app's icons ("file", "link", "tag", "calendar", "clock", "star", "heading", "block", "quote", "emoji") or an SVG of the plugin's. |
+| `keywords?: string`                          | From 1.3.9: also found by (an English name, an alias).                                                                                                   |
+| `replaceAfter?: number`                      | From 1.3.9: characters after the caret it replaces too: 2 for the "]]" in `after`.                                                                       |
+| `command?: { id: string; args?: unknown[] }` | From 1.3.9: run once it is inserted - the plugin's own command or one of Textus's.                                                                       |
 
 ## HoverTarget
 

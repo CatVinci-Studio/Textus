@@ -219,15 +219,19 @@ export function usePluginWindow({
   }, []);
   // Tools the plugins give Textus AI, told to Rust and run when called.
   useEffect(() => watchPluginAiTools(runPluginAiTool), []);
-  // The completions plugins suggest as you type.
+  // The completions plugins suggest as you type, and calling off those the
+  // panel no longer needs.
   useEffect(() => {
-    setCompletionAsker((id, source, context) =>
-      askPlugin(
-        id,
-        "$provideCompletions",
-        { id: source, ...context },
-        "editor.read",
-      ),
+    setCompletionAsker(
+      (id, source, context) =>
+        askPlugin(
+          id,
+          "$provideCompletions",
+          { id: source, ...context },
+          "editor.read",
+        ),
+      (id, request) =>
+        void askPlugin(id, "$cancelCompletions", { request }).catch(() => {}),
     );
     return () => setCompletionAsker(null);
   }, []);
