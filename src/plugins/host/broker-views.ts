@@ -15,11 +15,18 @@ import {
 } from "../contributions/list-views";
 import { setCodeBlockSource } from "../contributions/code-blocks";
 import {
+  embedRefreshed,
+  forgetEmbed,
+  setPluginEmbed,
+} from "../contributions/embeds";
+import {
   optionalStr,
   str,
   type Params,
   type PluginScope,
 } from "./broker-scope";
+
+let nextEmbedAsk = 1;
 
 /**
  * A plugin's calls about what it shows: a webview's page, title and messages,
@@ -91,6 +98,28 @@ export function viewHandlers(p: PluginScope) {
     },
     "views.listMessage": ({ view, text }: Params) => {
       setListMessage(p.id, listOf(view), optionalStr(text) ?? "");
+    },
+    "views.registerEmbed": ({ id }: Params) => {
+      const name = str(id, "id");
+      const declared = p
+        .manifest()
+        .contributes.embeds.find((e) => e.id === name);
+      if (!declared) throw new Error(`No embed ${name} in the manifest.`);
+      setPluginEmbed(p.id, name, declared.targets, (target, signal) => {
+        const request = nextEmbedAsk++;
+        signal.addEventListener(
+          "abort",
+          () => void p.request("$cancelEmbed", { request }).catch(() => {}),
+          { once: true },
+        );
+        return p.request("$provideEmbed", { id: name, target, request });
+      });
+    },
+    "views.unregisterEmbed": ({ id }: Params) => {
+      forgetEmbed(p.id, str(id, "id"));
+    },
+    "views.embedRefresh": () => {
+      embedRefreshed(p.id);
     },
     "codeBlock.setSource": ({ webview: id, source }: Params) => {
       const record = p.ownWebview(str(id, "webview"));

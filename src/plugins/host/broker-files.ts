@@ -10,6 +10,7 @@ import {
   type Frontmatter,
 } from "../workspace/frontmatter";
 import { linkPlanner } from "../workspace/link-rewrite";
+import { blockIdAt } from "../workspace/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -132,6 +133,18 @@ export function fileHandlers(p: PluginScope) {
     },
     "files.processWrite": ({ path, text, token }: Params) =>
       writeVersion(str(path, "path"), str(text, "text"), str(token, "token")),
+    "files.blockId": async ({ path, line }: Params) => {
+      const target = str(path, "path");
+      if (typeof line !== "number" || line < 0)
+        throw new Error("line must be a line number from 0.");
+      let id: string | null = null;
+      await change(target, (text) => {
+        const found = blockIdAt(text, Math.floor(line));
+        id = found?.id ?? null;
+        return found?.text ?? text;
+      });
+      return id;
+    },
     "files.rename": async ({ from, to, updateLinks }: Params) => {
       const root = write();
       const source = str(from, "from");

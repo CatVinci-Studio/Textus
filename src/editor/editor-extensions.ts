@@ -134,6 +134,8 @@ import {
   remarkObsidianEmbedPlugin,
 } from "./images/obsidian-embed";
 import { createObsidianEmbedPreviewPlugin } from "./images/obsidian-embed-preview";
+import { createNoteEmbedPlugin } from "./embeds/note-embed-plugin";
+import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { createTypewriterPlugin } from "./modes/typewriter-plugin";
 import { zenFocusPlugin } from "./modes/zen-focus-plugin";
 import { keyboardRevealPlugin } from "./keys/keyboard-reveal-plugin";
@@ -212,7 +214,9 @@ export function withEditorCore(
 ): Editor {
   const { settings, docPath } = options;
   const disk = !("noDiskImages" in options);
-  addEmojiCompletion(() => resolveStrings(settings.current.language).completionEmoji);
+  addEmojiCompletion(
+    () => resolveStrings(settings.current.language).completionEmoji,
+  );
   return (
     editor
       // First: the plugins that read it are asked in order.
@@ -277,12 +281,14 @@ export function withEditorCore(
       .use(wikilinkSchema)
       .use(wikilinkInputRule)
       .use(wikilinkRevealPlugin)
+      .use(createMissingLinksPlugin(() => docPath.current))
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,
           settings: () => settings.current,
         }),
       )
+      .use(createNoteEmbedPlugin(() => docPath.current))
 
       .use(
         createGithubAlertPlugin((type) => {

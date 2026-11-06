@@ -222,6 +222,19 @@ export interface FloatingViewContribution {
  *  for a document that does: [[wikilinks]]. */
 export type SuggestKind = "wikilinks";
 
+/** What `![[...]]` embeds point at. */
+export type EmbedKind = "note" | "heading" | "block";
+
+/** `![[...]]` embeds whose content the plugin gives as Markdown; Textus
+ *  draws it, read-only. Needs files.read. */
+export interface EmbedContribution {
+  id: string;
+  targets: EmbedKind[];
+}
+
+/** The hover cards a plugin gives. */
+export type HoverContribution = "document" | "link" | "citation";
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -235,6 +248,8 @@ export interface Contributes {
   themes: ThemeContribution[];
   aiTools: AiToolContribution[];
   completions: CompletionContribution[];
+  embeds: EmbedContribution[];
+  hovers: HoverContribution[];
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
   floatingViews: FloatingViewContribution[];
@@ -341,6 +356,9 @@ export function parseManifest(raw: string | unknown): PluginManifest {
         ),
       );
     }
+  const contributes = parseContributes(m.contributes, id);
+  if (contributes.embeds.length && !permissions.includes("files.read"))
+    throw new ManifestError("contributes.embeds needs files.read.");
   return {
     id,
     name: text(m.name, "name"),
@@ -360,7 +378,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     ),
     permissions,
     requires,
-    contributes: parseContributes(m.contributes, id),
+    contributes,
     l10n,
   };
 }

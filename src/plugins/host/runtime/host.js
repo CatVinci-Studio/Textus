@@ -24,6 +24,8 @@
   var completionProviders = new Map();
   // Asks the panel may still call off, by request.
   var completionAsks = new Map();
+  var embedProviders = new Map();
+  var embedAsks = new Map();
   var aiTools = new Map();
   var uriHandlers = [];
   var willSave = [];
@@ -637,6 +639,20 @@
             codeBlockProviders.delete(key);
         });
       },
+      registerEmbed: function (id, provider) {
+        var key = String(id);
+        embedProviders.set(key, provider);
+        quiet(call("views.registerEmbed", { id: key }));
+        var handle = disposable(function () {
+          if (embedProviders.get(key) !== provider) return;
+          embedProviders.delete(key);
+          quiet(call("views.unregisterEmbed", { id: key }));
+        });
+        handle.refresh = function () {
+          notify("views.embedRefresh", { id: key });
+        };
+        return handle;
+      },
       registerSettingsPage: function (provider) {
         settingsProvider = provider;
         return disposable(function () {
@@ -770,6 +786,12 @@
           String(path) + " kept changing while it was processed.",
         );
       },
+      blockId: function (path, line) {
+        return call("files.blockId", {
+          path: String(path),
+          line: Number(line),
+        });
+      },
       rename: function (from, to, options) {
         return call("files.rename", {
           from: String(from),
@@ -833,6 +855,13 @@
         return call("metadata.resolveNote", {
           link: String(link),
           from: String(from),
+        });
+      },
+      linkTo: function (to, from, options) {
+        return call("metadata.linkTo", {
+          to: String(to),
+          from: String(from),
+          options: plain(options || {}),
         });
       },
       tags: function () {
@@ -1120,6 +1149,29 @@
     },
     $cancelCompletions: function (params) {
       var controller = completionAsks.get(params.request);
+      if (controller) controller.abort();
+    },
+    $provideEmbed: async function (params) {
+      var provider = embedProviders.get(params.id);
+      if (!provider) return null;
+      var controller = new AbortController();
+      embedAsks.set(params.request, controller);
+      try {
+        var content = await provider.provideEmbed(params.target, {
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted || !content) return null;
+        if (typeof content.markdown !== "string") return null;
+        return {
+          markdown: content.markdown,
+          title: content.title == null ? null : String(content.title),
+        };
+      } finally {
+        embedAsks.delete(params.request);
+      }
+    },
+    $cancelEmbed: function (params) {
+      var controller = embedAsks.get(params.request);
       if (controller) controller.abort();
     },
     $provideHover: async function (params) {

@@ -12,6 +12,7 @@ import {
   type ContextMenuPlace,
 } from "../../ui/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
+import { startOnEmbed } from "./embeds";
 import { localize, type MenuContribution } from "../store/manifest";
 import {
   PluginListPane,
@@ -204,6 +205,14 @@ export function applyContributions(
     );
     undo.push(() => void views.then((m) => m.closeFloatingOf(id)));
   }
+  const embedKinds = manifest.contributes.embeds.flatMap((e) => e.targets);
+  if (embedKinds.length)
+    undo.push(
+      startOnEmbed(id, embedKinds, (plugin) => {
+        if (pluginRecord(plugin)?.status === "on")
+          void deps.start(plugin).catch(() => {});
+      }),
+    );
   contributions.set(id, undo);
   const events = manifest.activationEvents;
   if (events.includes("onStartupFinished") || events.includes("*"))

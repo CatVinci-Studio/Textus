@@ -1,6 +1,8 @@
 import type {
   CompletionContribution,
   Contributes,
+  EmbedKind,
+  HoverContribution,
   FloatingPlace,
   MenuId,
   SettingContribution,
@@ -86,6 +88,16 @@ function floatingPlace(value: unknown, what: string): FloatingPlace {
 
 /** Code block languages Textus draws itself: a plugin can't take them. */
 export const SUGGEST_KINDS: readonly SuggestKind[] = ["wikilinks"];
+const EMBED_KINDS: readonly EmbedKind[] = ["note", "heading", "block"];
+const HOVER_KINDS: readonly HoverContribution[] = [
+  "document",
+  "link",
+  "citation",
+];
+
+/** The entries of `values` among `known`: a later Textus's are left out. */
+const known = <T extends string>(values: string[], kinds: readonly T[]) =>
+  values.filter((v): v is T => (kinds as readonly string[]).includes(v));
 
 const BUILT_IN_BLOCKS = ["mermaid", "math", "latex", "katex", "tex"];
 
@@ -355,7 +367,9 @@ export function parseContributes(raw: unknown, id: string): Contributes {
         id: ownId(o.id, id, `${at}.id`),
         where: where as CompletionContribution["where"],
         pattern,
-        ...(o.title === undefined ? {} : { title: text(o.title, `${at}.title`) }),
+        ...(o.title === undefined
+          ? {}
+          : { title: text(o.title, `${at}.title`) }),
       };
     },
   );
@@ -411,9 +425,28 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     .filter((kind): kind is SuggestKind =>
       (SUGGEST_KINDS as readonly string[]).includes(kind),
     );
+  const embeds = list(c.embeds, "contributes.embeds").map((x, i) => {
+    const at = `contributes.embeds[${i}]`;
+    const o = object(x, at);
+    const targets = list(o.targets, `${at}.targets`).map((t, j) =>
+      text(t, `${at}.targets[${j}]`),
+    );
+    return {
+      id: ownId(o.id, id, `${at}.id`),
+      targets: known(targets, EMBED_KINDS),
+    };
+  });
+  const hovers = known(
+    list(c.hovers, "contributes.hovers").map((x, i) =>
+      text(x, `contributes.hovers[${i}]`),
+    ),
+    HOVER_KINDS,
+  );
   return {
     aiTools,
     completions,
+    embeds,
+    hovers,
     links,
     codeBlocks,
     floatingViews,

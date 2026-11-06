@@ -49,6 +49,8 @@ export interface MetaDocument {
     resolved: string | null;
     line: number;
     text: string;
+    /** A `[[wiki link]]` (or `![[embed]]`), not a Markdown link. */
+    wiki: boolean;
   }[];
   tags: string[];
   tasks: MetaTask[];
@@ -102,6 +104,7 @@ export function documentOf(
       target: l.target,
       text: l.text,
       line: l.line,
+      wiki: l.wiki,
       resolved: resolveIn(paths, l.target, meta.path, l.wiki),
     })),
     tags: withFrontmatterTags(meta.tags, frontmatter),

@@ -1,5 +1,6 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
+import { relativePath } from "../../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
@@ -39,16 +40,6 @@ function nameOf(path: string): string {
 const isNote = (path: string) => /\.(md|markdown)$/i.test(path);
 const stripNote = (path: string) => path.replace(/\.(md|markdown)$/i, "");
 const isRelative = (link: string) => /^\.\.?\//.test(link);
-
-/** `to`, written relative to the folder `fromDir`. */
-export function relativePath(fromDir: string, to: string): string {
-  const a = sep(fromDir).split("/").filter(Boolean);
-  const b = sep(to).split("/").filter(Boolean);
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  const up = a.slice(i).map(() => "..");
-  return [...up, ...b.slice(i)].join("/") || ".";
-}
 
 /** `link` from the folder `dir`, `.` and `..` folded. */
 function join(dir: string, link: string): string {

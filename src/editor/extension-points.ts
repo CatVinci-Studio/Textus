@@ -8,7 +8,13 @@ import type { MilkdownPlugin } from "@milkdown/kit/ctx";
 
 /** What the pointer rests on: a document link, another link, a citation. */
 export type HoverTarget =
-  | { type: "document"; path: string; heading: string | null }
+  | {
+      type: "document";
+      path: string;
+      heading: string | null;
+      /** A `^id` block the link points at, without "^". */
+      block?: string | null;
+    }
   | { type: "link"; url: string }
   | { type: "citation"; key: string };
 
@@ -28,6 +34,17 @@ export {
   type CompletionSource,
   type PanelItem,
 } from "./completion/sources";
+
+export {
+  addEmbedProvider,
+  embedProvider,
+  onEmbedsChange,
+  refreshEmbeds,
+  setEmbedStarter,
+  type EmbedContent,
+  type EmbedKind,
+  type EmbedTarget,
+} from "./embeds/embed-sources";
 
 export interface EditorExtensions {
   /** Editor plugins that see keys before the editor's own (a plugin

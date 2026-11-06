@@ -39,6 +39,7 @@ const WEBKIT_SPECS = [
   "typora-theme.spec.ts",
   "plugins.spec.ts",
   "large-doc-lazy.spec.ts",
+  "two-way-links.spec.ts",
 ];
 
 export default defineConfig({

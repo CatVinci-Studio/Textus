@@ -302,3 +302,38 @@ export function inlineLink(markdown: string, url: string, title = ""): string {
  *  brackets escaped. */
 export const linkSource = (label: string, url: string): string =>
   inlineLink(label.replace(/([\\[\]])/g, "\\$1"), url);
+
+/** A link to a note as a folder writes it: `[[wiki]]` or Markdown. */
+export interface NoteLinkParts {
+  wiki: boolean;
+  /** The note as named in the link ("Note", "a/Note.md"); "" for the
+   *  document the link is in. */
+  target: string;
+  heading?: string;
+  /** A block's id, without "^". */
+  block?: string;
+  alias?: string;
+  embed?: boolean;
+}
+
+/** The source of a link to a note: `[[Note#Heading|alias]]`, `[[#^id]]`,
+ *  `[alias](a/My%20Note.md#^id)`; `!` before it for an embed. */
+export function noteLinkSource(link: NoteLinkParts): string {
+  const anchor = link.block
+    ? `#^${link.block}`
+    : link.heading
+      ? `#${link.heading}`
+      : "";
+  const bang = link.embed ? "!" : "";
+  if (link.wiki)
+    return `${bang}[[${link.target}${anchor}${link.alias ? `|${link.alias}` : ""}]]`;
+  const name = link.target
+    .slice(link.target.lastIndexOf("/") + 1)
+    .replace(/\.(md|markdown)$/i, "");
+  const label =
+    link.alias || (link.target ? name : (link.heading ?? `^${link.block}`));
+  // Obsidian's Markdown links write a space as %20, nothing else encoded.
+  return (
+    bang + linkSource(label, `${link.target}${anchor}`.replace(/ /g, "%20"))
+  );
+}

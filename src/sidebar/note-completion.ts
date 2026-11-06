@@ -5,6 +5,12 @@ import {
 import { fs } from "../platform/ipc";
 import type { IndexedFile } from "../platform/ipc";
 import { isDocumentName } from "./file-search";
+import {
+  linkToTarget,
+  pathIndex,
+  type LinkStyle,
+} from "../plugins/workspace/link-resolve";
+import { linkStyleAt } from "../plugins/workspace/link-style";
 
 /**
  * `[[` lists the folder's notes - the core's fallback, gone as soon as a
@@ -15,7 +21,8 @@ import { isDocumentName } from "./file-search";
 const FRESH_MS = 10_000;
 
 interface Notes {
-  root: string;
+  /** Root, the document and its link style: what the links depend on. */
+  key: string;
   at: number;
   /** Without and with the "]]" already after the caret replaced. */
   lists: Promise<[PanelItem[], PanelItem[]]>;
@@ -32,40 +39,47 @@ export function setNoteCompletionRoot(next: string | null): void {
 
 const stem = (name: string) => name.replace(/\.(md|markdown)$/i, "");
 
-/** Each note by the shortest name that finds it: its own where no other
- *  note shares it, else its path in the folder. */
-export function noteItems(files: readonly IndexedFile[]): PanelItem[] {
-  const docs = files.filter((f) => /\.(md|markdown)$/i.test(f.rel));
-  const count = new Map<string, number>();
-  const nameOf = (rel: string) => stem(rel.slice(rel.lastIndexOf("/") + 1));
-  for (const f of docs) {
-    const key = nameOf(f.rel).toLowerCase();
-    count.set(key, (count.get(key) ?? 0) + 1);
-  }
-  return docs.map((f) => {
-    const name = nameOf(f.rel);
-    const slash = f.rel.lastIndexOf("/");
-    const target = count.get(name.toLowerCase())! > 1 ? stem(f.rel) : name;
-    return {
-      label: name,
-      insert: `[[${target}]]`,
-      icon: "file",
-      ...(slash > 0 ? { detail: f.rel.slice(0, slash) } : {}),
-    };
-  });
+/** Each note, linked from `from` (an unsaved document: the folder's top)
+ *  as `metadata.linkTo` writes a wiki link there. */
+export function noteItems(
+  files: readonly IndexedFile[],
+  folder: string,
+  from: string,
+  style: LinkStyle,
+): PanelItem[] {
+  const paths = pathIndex(
+    folder,
+    files.map((f) => f.path),
+  );
+  return files
+    .filter((f) => /\.(md|markdown)$/i.test(f.rel))
+    .map((f) => {
+      const slash = f.rel.lastIndexOf("/");
+      return {
+        label: stem(f.rel.slice(slash + 1)),
+        insert: linkToTarget(paths, f.path, from, { ...style, wiki: true }),
+        icon: "file",
+        ...(slash > 0 ? { detail: f.rel.slice(0, slash) } : {}),
+      };
+    });
 }
 
-function load(folder: string): Notes {
-  const lists = fs.indexFolder(folder).then((index) => {
-    const items = noteItems(
-      index.files.filter((f) => isDocumentName(f.rel)),
-    );
-    return [items, items.map((i) => ({ ...i, replaceAfter: 2 }))] as [
-      PanelItem[],
-      PanelItem[],
-    ];
-  });
-  return { root: folder, at: Date.now(), lists };
+function load(folder: string, from: string, key: string): Notes {
+  const lists = Promise.all([fs.indexFolder(folder), linkStyleAt(from)]).then(
+    ([index, style]) => {
+      const items = noteItems(
+        index.files.filter((f) => isDocumentName(f.rel)),
+        folder,
+        from,
+        style,
+      );
+      return [items, items.map((i) => ({ ...i, replaceAfter: 2 }))] as [
+        PanelItem[],
+        PanelItem[],
+      ];
+    },
+  );
+  return { key, at: Date.now(), lists };
 }
 
 export function registerNoteCompletion(title: () => string): () => void {
@@ -76,10 +90,12 @@ export function registerNoteCompletion(title: () => string): () => void {
     fallback: true,
     pattern: /\[\[([^[\]|#^\n]*)$/,
     title,
-    provide: ({ after }) => {
+    provide: ({ after, path }) => {
       if (!root) return null;
-      if (!notes || notes.root !== root || Date.now() - notes.at > FRESH_MS)
-        notes = load(root);
+      const from = path ?? `${root.replace(/[\\/]+$/, "")}/Untitled.md`;
+      const key = `${root}\n${from}`;
+      if (!notes || notes.key !== key || Date.now() - notes.at > FRESH_MS)
+        notes = load(root, from, key);
       const paired = after.startsWith("]]");
       return notes.lists.then(
         (lists) => ({ items: lists[paired ? 1 : 0], complete: true }),

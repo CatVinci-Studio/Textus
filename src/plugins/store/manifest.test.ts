@@ -127,7 +127,12 @@ describe("a plugin's manifest", () => {
     });
     expect(m.contributes.completions).toEqual([
       { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
-      { id: "catvinci.example.any", where: "any", pattern: "@\\w*", title: "%dates%" },
+      {
+        id: "catvinci.example.any",
+        where: "any",
+        pattern: "@\\w*",
+        title: "%dates%",
+      },
     ]);
     const bad = (c: object) => () =>
       parseManifest({ ...base, contributes: { completions: [c] } });
@@ -172,6 +177,34 @@ describe("a plugin's manifest", () => {
     });
     expect(m.contributes.suggestFor).toEqual(["wikilinks"]);
     expect(parseManifest(base).contributes.suggestFor).toEqual([]);
+  });
+
+  it("reads the embeds and hover cards a plugin gives, leaving out kinds it doesn't know", () => {
+    const m = parseManifest({
+      ...base,
+      permissions: ["files.read"],
+      contributes: {
+        embeds: [
+          { id: "catvinci.example.embed", targets: ["note", "block", "pdf"] },
+        ],
+        hovers: ["document", "later"],
+      },
+    });
+    expect(m.contributes.embeds).toEqual([
+      { id: "catvinci.example.embed", targets: ["note", "block"] },
+    ]);
+    expect(m.contributes.hovers).toEqual(["document"]);
+  });
+
+  it("refuses embeds without files.read", () => {
+    expect(() =>
+      parseManifest({
+        ...base,
+        contributes: {
+          embeds: [{ id: "catvinci.example.embed", targets: ["note"] }],
+        },
+      }),
+    ).toThrow(/needs files.read/);
   });
 
   it("names network permissions by host", () => {
