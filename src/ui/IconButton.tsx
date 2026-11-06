@@ -8,25 +8,31 @@ import { Tooltip } from "./Tooltip";
  */
 export function IconButton({
   label,
+  hint = label,
   onClick,
   pressed,
+  disabled,
   className = "tx-icon-button",
   children,
 }: {
   label: string;
+  /** What the tooltip says, when more than the name (a toggle's state). */
+  hint?: string;
   onClick: () => void;
   /** For a toggle: whether it is on. */
   pressed?: boolean;
+  disabled?: boolean;
   className?: string;
   children: ReactNode;
 }) {
   return (
-    <Tooltip text={label}>
+    <Tooltip text={hint}>
       <button
         type="button"
         className={className}
         aria-label={label}
         aria-pressed={pressed}
+        disabled={disabled}
         onClick={onClick}
       >
         {children}

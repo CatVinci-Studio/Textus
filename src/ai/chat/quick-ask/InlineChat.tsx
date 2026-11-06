@@ -1,4 +1,5 @@
 import { IconButton } from "../../../ui/IconButton";
+import { PanelHeader } from "../../../ui/PanelHeader";
 import type { DocumentSnapshot } from "../../doc-markdown";
 import { useRef } from "react";
 import type { AgentConversation } from "../useAgentConversation";
@@ -168,9 +169,12 @@ export function InlineChat({
         {/* Docked, the buttons share the composer's top row with the
             quoted selection instead of floating over the text. */}
         {!docked && (
-          <div className="inline-chat-header">
-            <div className="inline-chat-header-actions">{actions}</div>
-          </div>
+          <PanelHeader
+            className="inline-chat-header"
+            actionsClassName="inline-chat-header-actions"
+          >
+            {actions}
+          </PanelHeader>
         )}
         <ChatBody
           document={document}

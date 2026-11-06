@@ -36,6 +36,11 @@
   margin-right: -4px;
 }
 
+/* The buttons sit in the row itself, 4px apart, as they always have. */
+.chat-window-actions {
+  display: contents;
+}
+
 .chat-window-doc {
   min-width: 0;
   overflow: hidden;
