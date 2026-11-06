@@ -16,7 +16,13 @@ let drawn = 0;
 export async function figureErrors(
   blocks: readonly FigureBlock[],
 ): Promise<(string | null)[]> {
-  const draw = diagramRenderer("mermaid", { width: WIDTH, dark: false });
+  // Mermaid's settings are global: left as the editor set them, so its own
+  // diagrams keep their colours.
+  const draw = diagramRenderer(
+    "mermaid",
+    { width: WIDTH, dark: false },
+    () => {},
+  );
   const errors: (string | null)[] = [];
   // One at a time: Mermaid lays out in the shared document.
   for (const block of blocks) {

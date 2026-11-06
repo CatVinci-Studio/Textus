@@ -42,3 +42,10 @@ it("checks diagrams with Mermaid itself, whatever engine the user draws with", a
   expect(pele.renderAsync).not.toHaveBeenCalled();
   expect(mermaid.render).toHaveBeenCalledOnce();
 });
+
+it("leaves Mermaid's settings as the editor set them", async () => {
+  await figureErrors([
+    { language: "mermaid", code: "flowchart TB\n  A --> B" },
+  ]);
+  expect(mermaid.initialize).not.toHaveBeenCalled();
+});

@@ -6,13 +6,13 @@
 //! can't draw is sent back to its writer with the renderer's own words.
 
 use super::checks::Problem;
-use super::checks::{chart_holds, fences};
+use super::checks::{chart_holds, fence_spans, fences};
 use super::PaperEvent;
 use futures_util::future::BoxFuture;
 use serde::Serialize;
 use std::collections::HashMap;
-use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Arc, LazyLock, Mutex};
 use std::time::Duration;
 use tokio::sync::oneshot;
 
@@ -42,9 +42,9 @@ type Answers = HashMap<String, oneshot::Sender<Vec<Option<String>>>>;
 /// A draw's id: three writers draw at once.
 static NEXT_CALL: AtomicU64 = AtomicU64::new(0);
 /// The draws waiting for the window's answer, by call id.
-static WAITING: Mutex<Option<Answers>> = Mutex::new(None);
+static WAITING: LazyLock<Mutex<Answers>> = LazyLock::new(Default::default);
 
-fn waiting() -> std::sync::MutexGuard<'static, Option<Answers>> {
+fn waiting() -> std::sync::MutexGuard<'static, Answers> {
     WAITING.lock().unwrap_or_else(|e| e.into_inner())
 }
 
@@ -53,7 +53,7 @@ fn waiting() -> std::sync::MutexGuard<'static, Option<Answers>> {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_paper_figures_drawn(call_id: String, errors: Vec<Option<String>>) {
-    if let Some(sender) = waiting().as_mut().and_then(|w| w.remove(&call_id)) {
+    if let Some(sender) = waiting().remove(&call_id) {
         let _ = sender.send(errors);
     }
 }
@@ -62,15 +62,18 @@ pub fn ai_paper_figures_drawn(call_id: String, errors: Vec<Option<String>>) {
 pub(crate) fn by_window(
     send: impl Fn(PaperEvent) -> bool + Send + Sync + 'static,
 ) -> impl Fn(Vec<FigureBlock>) -> BoxFuture<'static, Option<Vec<Option<String>>>> + Sync {
-    let send = std::sync::Arc::new(send);
+    let send = Arc::new(send);
+    // A window that let one draw time out isn't waited for again.
+    let gone = Arc::new(AtomicBool::new(false));
     move |blocks: Vec<FigureBlock>| {
-        let send = send.clone();
+        let (send, gone) = (send.clone(), gone.clone());
         Box::pin(async move {
+            if gone.load(Ordering::Relaxed) {
+                return None;
+            }
             let call_id = NEXT_CALL.fetch_add(1, Ordering::Relaxed).to_string();
             let (sender, answer) = oneshot::channel();
-            waiting()
-                .get_or_insert_with(HashMap::new)
-                .insert(call_id.clone(), sender);
+            waiting().insert(call_id.clone(), sender);
             let count = blocks.len();
             let sent = send(PaperEvent::DrawFigures {
                 call_id: call_id.clone(),
@@ -84,7 +87,8 @@ pub(crate) fn by_window(
                 false => None,
             };
             if drawn.is_none() {
-                waiting().as_mut().and_then(|w| w.remove(&call_id));
+                waiting().remove(&call_id);
+                gone.store(sent, Ordering::Relaxed);
             }
             drawn.filter(|errors| errors.len() == count)
         })
@@ -148,39 +152,22 @@ pub(crate) async fn drawable(draw: Option<Draw<'_>>, section: &str) -> String {
     let lines: Vec<&str> = section.split('\n').collect();
     // Each diagram or chart block: its first and last line, and whether it
     // goes without drawing.
-    let mut found: Vec<(usize, usize, Option<bool>, FigureBlock)> = Vec::new();
-    let mut i = 0;
-    while i < lines.len() {
-        let open = lines[i].trim_start();
-        if !open.starts_with("```") {
-            i += 1;
-            continue;
-        }
-        let language = open.trim_start_matches('`').trim().to_lowercase();
-        let Some(close) = (i + 1..lines.len()).find(|&j| lines[j].trim_start().starts_with("```"))
-        else {
-            break;
-        };
-        let code = lines[i + 1..close].join("\n");
-        let known = match language.as_str() {
-            "mermaid" if code.trim().is_empty() => Some(false),
-            "chart" if chart_holds(&code).is_err() => Some(false),
-            "mermaid" | "chart" => None,
-            _ => Some(true),
-        };
-        if known != Some(true) {
-            found.push((
-                i,
-                close,
-                known,
-                FigureBlock {
-                    language,
-                    code: code.trim_end().to_string(),
-                },
-            ));
-        }
-        i = close + 1;
-    }
+    let found: Vec<(usize, usize, Option<bool>, FigureBlock)> = fence_spans(section)
+        .into_iter()
+        .filter_map(|f| {
+            let known = match f.language.as_str() {
+                "mermaid" if f.body.trim().is_empty() => Some(false),
+                "chart" if chart_holds(&f.body).is_err() => Some(false),
+                "mermaid" | "chart" => None,
+                _ => return None,
+            };
+            let block = FigureBlock {
+                language: f.language,
+                code: f.body.trim_end().to_string(),
+            };
+            Some((f.open, f.close, known, block))
+        })
+        .collect();
     let to_draw: Vec<FigureBlock> = found
         .iter()
         .filter(|f| f.2.is_none())
@@ -200,9 +187,6 @@ pub(crate) async fn drawable(draw: Option<Draw<'_>>, section: &str) -> String {
         if !keep {
             out.extend(&lines[next..*open]);
             next = close + 1;
-            if cfg!(test) {
-                eprintln!("paper: a figure that doesn't draw was taken out");
-            }
         }
     }
     out.extend(&lines[next..]);
@@ -308,7 +292,26 @@ mod tests {
         assert_eq!(answering(block()).await, Some(vec![Some("bad".into())]));
         let gone = by_window(|_| false);
         assert_eq!(gone(block()).await, None);
-        assert!(waiting().as_ref().is_none_or(HashMap::is_empty));
+        assert!(waiting().is_empty());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_window_that_never_answers_is_waited_for_once() {
+        let asked = Arc::new(AtomicU64::new(0));
+        let counted = asked.clone();
+        let silent = by_window(move |_| {
+            counted.fetch_add(1, Ordering::Relaxed);
+            true
+        });
+        let block = || {
+            vec![FigureBlock {
+                language: "mermaid".into(),
+                code: "flowchart TB".into(),
+            }]
+        };
+        assert_eq!(silent(block()).await, None);
+        assert_eq!(silent(block()).await, None);
+        assert_eq!(asked.load(Ordering::Relaxed), 1);
     }
 
     #[tokio::test]

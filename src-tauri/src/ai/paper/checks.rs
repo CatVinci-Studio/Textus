@@ -50,29 +50,48 @@ pub(super) fn bare_number() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\[(\d{1,3})\]($|[^(\d])").unwrap())
 }
 
-/// `markdown`'s fenced blocks, as (language, body).
-pub(super) fn fences(markdown: &str) -> Vec<(String, String)> {
+/// A closed fenced block: its language, body, and opening and closing lines.
+pub(super) struct Fence {
+    pub language: String,
+    pub body: String,
+    pub open: usize,
+    pub close: usize,
+}
+
+/// `markdown`'s closed fenced blocks, its lines counted as `split('\n')` counts them.
+pub(super) fn fence_spans(markdown: &str) -> Vec<Fence> {
     let mut out = Vec::new();
-    let mut open: Option<(String, String)> = None;
-    for line in markdown.lines() {
+    let mut open: Option<Fence> = None;
+    for (i, line) in markdown.split('\n').enumerate() {
+        let line = line.strip_suffix('\r').unwrap_or(line);
         let trimmed = line.trim_start();
         match open.take() {
             None if trimmed.starts_with("```") => {
-                open = Some((
-                    trimmed.trim_start_matches('`').trim().to_lowercase(),
-                    String::new(),
-                ));
+                open = Some(Fence {
+                    language: trimmed.trim_start_matches('`').trim().to_lowercase(),
+                    body: String::new(),
+                    open: i,
+                    close: i,
+                });
             }
             None => {}
-            Some(block) if trimmed.starts_with("```") => out.push(block),
-            Some((lang, mut body)) => {
-                body.push_str(line);
-                body.push('\n');
-                open = Some((lang, body));
+            Some(fence) if trimmed.starts_with("```") => out.push(Fence { close: i, ..fence }),
+            Some(mut fence) => {
+                fence.body.push_str(line);
+                fence.body.push('\n');
+                open = Some(fence);
             }
         }
     }
     out
+}
+
+/// `markdown`'s fenced blocks, as (language, body).
+pub(super) fn fences(markdown: &str) -> Vec<(String, String)> {
+    fence_spans(markdown)
+        .into_iter()
+        .map(|f| (f.language, f.body))
+        .collect()
 }
 
 /// The section's prose, without its fences, pictures and marks: what its
