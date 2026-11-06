@@ -30,6 +30,7 @@ import {
   DOC_LETTER_SPACINGS,
   type DocLetterSpacing,
   LETTER_SPACING_BY,
+  PANDOC_ARGS_FORMATS,
   storedAgentMode,
 } from "./settings-types";
 
@@ -55,6 +56,19 @@ function stringMap(value: unknown): Record<string, string> {
     Object.entries(value).filter(
       (entry): entry is [string, string] => typeof entry[1] === "string",
     ),
+  );
+}
+
+/** Stored Pandoc arguments: lists of strings, for the formats known. */
+function pandocArgs(value: unknown): Settings["pandocArgs"] {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(
+    PANDOC_ARGS_FORMATS.flatMap((format) => {
+      const args = value[format];
+      return Array.isArray(args)
+        ? [[format, args.filter((a): a is string => typeof a === "string")]]
+        : [];
+    }),
   );
 }
 
@@ -111,6 +125,7 @@ function readSettings(parsed: Raw | null): Settings {
       shortcuts: storedShortcuts(parsed.shortcuts),
       commandShortcuts: stringMap(parsed.commandShortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),
+      pandocArgs: pandocArgs(parsed.pandocArgs),
       plugins: isRecord(parsed.plugins)
         ? (Object.fromEntries(
             Object.entries(parsed.plugins).filter(([, v]) => isRecord(v)),

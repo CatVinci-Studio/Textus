@@ -799,8 +799,10 @@ utiliser une.
   deleteColumn: "Supprimer la colonne",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
-  tableToMarkdownMerged: "Convertir en tableau Markdown (il a des cellules fusionnées)",
-  tableToMarkdownBlocks: "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
+  tableToMarkdownMerged:
+    "Convertir en tableau Markdown (il a des cellules fusionnées)",
+  tableToMarkdownBlocks:
+    "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
@@ -1014,6 +1016,25 @@ utiliser une.
     "Les fichiers Word exportés reprennent les styles, polices et marges de ce fichier.",
   docxTemplateNone: "Par défaut de Pandoc",
   docxTemplateClear: "Par défaut",
+  exportTocLabel: "Table des matières dans les exports Pandoc",
+  exportNumberHeadingsLabel: "Titres numérotés dans les exports Pandoc",
+  exportNumberHeadingsHelp:
+    "Numérotés comme le fait le plugin Heading Numbers : un titre de plus haut niveau unique est le titre du document et n’est pas numéroté.",
+  exportBibliographyLabel: "Bibliographie",
+  exportBibliographyHelp:
+    "Un fichier .bib. Les exports Pandoc (Word, EPUB…) changent les citations [@clé] en références, avec la liste à la fin.",
+  exportBibliographyNone: "Aucune",
+  exportBibliographyClear: "Retirer",
+  exportCslLabel: "Style de citation",
+  exportCslHelp:
+    "Un fichier .csl pour la bibliographie. Sans lui, Pandoc utilise Chicago auteur-date.",
+  pandocArgsLabel: "Arguments Pandoc",
+  pandocArgsHelp:
+    "Ajoutés à la commande Pandoc pour ce format, mot par mot, jamais via un shell. Mettez entre guillemets une valeur avec des espaces. Textus fixe --from, --to et --output.",
+  pandocArgsAll: "Tous les formats",
+  pandocArgsOwned: "{arg} est fixé par Textus ; retirez-le.",
+  pandocErrorSettings:
+    "Vos options Pandoc sont dans Réglages › {page} › {group}, et ses arguments avancés.",
   pdfLightColorsLabel: "Exporter les PDF en couleurs claires",
   infoTipLabel: "En savoir plus sur « {label} »",
   infoTipLabelPlain: "En savoir plus",

@@ -901,6 +901,25 @@ export default {
   docxTemplateHelp: "匯出的 Word 檔案沿用這個檔案的樣式、字型和邊界。",
   docxTemplateNone: "Pandoc 預設",
   docxTemplateClear: "恢復預設",
+  exportTocLabel: "Pandoc 匯出時加目錄",
+  exportNumberHeadingsLabel: "Pandoc 匯出時為標題編號",
+  exportNumberHeadingsHelp:
+    "編號方式和「標題編號」外掛一樣：文件裡只有一個最高層級標題時，它算作題目，不編號。",
+  exportBibliographyLabel: "參考文獻",
+  exportBibliographyHelp:
+    "選一個 .bib 檔案。匯出為 Word、EPUB 等 Pandoc 格式時，[@key] 引用會變成參考文獻，文獻列表放在文末。",
+  exportBibliographyNone: "無",
+  exportBibliographyClear: "移除",
+  exportCslLabel: "引用格式",
+  exportCslHelp:
+    "參考文獻用的 .csl 檔案。不選時，Pandoc 使用芝加哥作者-日期格式。",
+  pandocArgsLabel: "Pandoc 參數",
+  pandocArgsHelp:
+    "逐詞加進這個格式的 Pandoc 指令，不經過 shell。含空格的值請加引號。--from、--to 和 --output 由 Textus 設定。",
+  pandocArgsAll: "所有格式",
+  pandocArgsOwned: "{arg} 由 Textus 設定，請移除。",
+  pandocErrorSettings:
+    "你設定的 Pandoc 選項在 設定 › {page} › {group}，以及其中的進階參數。",
   pdfLightColorsLabel: "匯出 PDF 時使用淺色",
   infoTipLabel: "關於「{label}」的說明",
   infoTipLabelPlain: "說明",

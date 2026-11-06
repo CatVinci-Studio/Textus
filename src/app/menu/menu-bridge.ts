@@ -27,6 +27,7 @@ import {
 } from "../../utils/events";
 import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
+import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../split/split-layout";
 import { openCommandPalette } from "../command-palette-entry";
@@ -42,7 +43,8 @@ export interface MenuBridgeHandlers {
   pdfPageNumbers: boolean;
   pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
-  docxReferenceDoc: string;
+  /** Settings › Editor › Export, for a Pandoc export. */
+  pandocSettings: PandocSettings;
   onOpenSettings: () => void;
   /** Textus › Check for Updates…: Settings › About, checking. */
   onCheckUpdates: () => void;
@@ -163,7 +165,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
                 event.payload,
                 h().t,
                 h().diagramEngine,
-                h().docxReferenceDoc,
+                h().pandocSettings,
               ),
             );
       }),

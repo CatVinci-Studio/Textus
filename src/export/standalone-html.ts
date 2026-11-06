@@ -28,6 +28,10 @@ import {
   COLOR_SWATCH_TEXT_CLASS,
 } from "../editor/marks/color-swatch-classes";
 import { LINK } from "../editor/markdown/link-source";
+import { COMMENT_SELECTOR } from "../editor/markdown/inline-syntax-plugin";
+import { shownWikilink } from "../editor/markdown/wikilink-reveal";
+import { parseNoteLink } from "../utils/note-link";
+import type { NoteLinkOut } from "./note-links";
 
 /**
  * The document as one HTML file: the editor's content without its chrome,
@@ -175,17 +179,47 @@ function exportedLink(
   return link;
 }
 
+export const WIKILINK_SELECTOR = '[data-type="wikilink"]';
+
+/** A wikilink as the page's <a>: to its note, to a heading of this page,
+ *  or its text when it leads nowhere the page can go. */
+function exportedWikilink(
+  source: string,
+  root: HTMLElement,
+  noteLinks?: ReadonlyMap<string, NoteLinkOut | null>,
+): Node {
+  const text = document.createTextNode(shownWikilink(source));
+  const out = noteLinks?.get(source);
+  let href = out && "href" in out ? out.href : null;
+  const link = parseNoteLink(source);
+  const heading = link?.headings.at(-1)?.toLowerCase();
+  if (!href && link && !link.note && heading) {
+    const target = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")].find(
+      (h) => h.id && h.textContent?.trim().toLowerCase() === heading,
+    );
+    if (target) href = `#${encodeURIComponent(target.id)}`;
+  }
+  if (!href) return text;
+  const a = document.createElement("a");
+  a.setAttribute("href", href);
+  a.append(text);
+  return a;
+}
+
 // Clones the editor subtree, stripping contenteditable so the export is inert.
 export function cloneEditorContent(
   editor: Element,
   images: ExportImages = "document",
   renderLink?: (markdown: string) => string,
+  noteLinks?: ReadonlyMap<string, NoteLinkOut | null>,
 ): string {
   const clone = editor.cloneNode(true) as HTMLElement;
   clone
     .querySelectorAll("[contenteditable]")
     .forEach((el) => el.removeAttribute("contenteditable"));
   clone.querySelectorAll(EDITOR_CHROME_SELECTOR).forEach((el) => el.remove());
+  // `%%comments%%` are the writer's own, never the reader's.
+  clone.querySelectorAll(COMMENT_SELECTOR).forEach((el) => el.remove());
   clone
     .querySelectorAll(EDITOR_MARK_SELECTOR)
     .forEach((el) => el.replaceWith(...el.childNodes));
@@ -204,6 +238,9 @@ export function cloneEditorContent(
   ].map((el) => el.textContent ?? "");
   clone.querySelectorAll(LINK_SELECTOR).forEach((el) => {
     el.replaceWith(exportedLink(el.textContent ?? "", definitions, renderLink));
+  });
+  clone.querySelectorAll(WIKILINK_SELECTOR).forEach((el) => {
+    el.replaceWith(exportedWikilink(el.textContent ?? "", clone, noteLinks));
   });
   // A colour code in plain text draws its swatch before its first
   // character; the character goes back into the text around it.

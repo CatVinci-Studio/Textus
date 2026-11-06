@@ -11,6 +11,11 @@ import {
   markColourAt,
 } from "./inline-syntax";
 
+/** The classes a `%%comment%%` is drawn with, shown or folded away; an
+ *  export leaves out whatever carries one. */
+const COMMENT_HIDDEN = "md-comment-hidden";
+export const COMMENT_SELECTOR = `.md-comment, .md-comment-block, .${COMMENT_HIDDEN}`;
+
 const inlineSyntaxKey = new PluginKey<RevealState>("inline-syntax");
 
 /** A textblock's words as one string, with the document position of each
@@ -62,7 +67,12 @@ function decorateBlock(
             class: "md-comment-block",
           }),
         );
-      else out.push(hide(from, to));
+      else
+        out.push(
+          Decoration.inline(from, to, {
+            class: `md-syntax-hidden ${COMMENT_HIDDEN}`,
+          }),
+        );
     } else if (found.kind === "blockId") {
       if (!near)
         out.push(Decoration.inline(from, to, { class: "md-block-id" }));

@@ -23,10 +23,11 @@ import { emitMenuEvent } from "../../platform/menu-events";
 import { ThemeSection } from "../sections/theme";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
-import { DocxTemplateRow } from "../sections/docx-template";
+import { ExportFileRow } from "../sections/export-files";
+import { PandocArgsRows } from "../sections/pandoc-args";
 import { Select } from "../../ui/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
-import { canExportPdf } from "../../platform/capabilities";
+import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 import { openExtensionsTab } from "./extensions-tab";
 
@@ -200,7 +201,26 @@ export function EditorPage({
               onChange={(v) => setSettings({ pdfLightColors: v })}
             />
           )}
-          <DocxTemplateRow t={t} />
+          {canExportWithPandoc && (
+            <>
+              <ExportFileRow t={t} setting="docxReferenceDoc" />
+              <ToggleRow
+                label={t.exportTocLabel}
+                checked={settings.exportToc}
+                onChange={(v) => setSettings({ exportToc: v })}
+              />
+              <ToggleRow
+                label={t.exportNumberHeadingsLabel}
+                help={t.exportNumberHeadingsHelp}
+                checked={settings.exportNumberHeadings}
+                onChange={(v) => setSettings({ exportNumberHeadings: v })}
+              />
+              <ExportFileRow t={t} setting="exportBibliography" />
+              {settings.exportBibliography && (
+                <ExportFileRow t={t} setting="exportCsl" />
+              )}
+            </>
+          )}
         </SettingsGroup>
       )}
       {/* Rarely changed: how diagrams are drawn, colour swatches, and the
@@ -244,6 +264,7 @@ export function EditorPage({
           checked={settings.autoCloseMarks}
           onChange={(v) => setSettings({ autoCloseMarks: v })}
         />
+        {canExportWithPandoc && <PandocArgsRows t={t} />}
       </AdvancedFold>
     </>
   );

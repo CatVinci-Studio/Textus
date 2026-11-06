@@ -782,8 +782,10 @@ export default {
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
-  tableToMarkdownMerged: "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
-  tableToMarkdownBlocks: "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
+  tableToMarkdownMerged:
+    "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
+  tableToMarkdownBlocks:
+    "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
@@ -996,6 +998,25 @@ export default {
     "Экспортированные файлы Word берут стили, шрифты и поля из этого файла.",
   docxTemplateNone: "По умолчанию Pandoc",
   docxTemplateClear: "По умолчанию",
+  exportTocLabel: "Оглавление при экспорте через Pandoc",
+  exportNumberHeadingsLabel: "Нумерация заголовков при экспорте через Pandoc",
+  exportNumberHeadingsHelp:
+    "Нумерация как в плагине Heading Numbers: единственный заголовок верхнего уровня считается названием и не нумеруется.",
+  exportBibliographyLabel: "Список литературы",
+  exportBibliographyHelp:
+    "Файл .bib. При экспорте через Pandoc (Word, EPUB…) цитаты [@ключ] становятся ссылками, а список — в конце.",
+  exportBibliographyNone: "Нет",
+  exportBibliographyClear: "Убрать",
+  exportCslLabel: "Стиль цитирования",
+  exportCslHelp:
+    "Файл .csl для списка литературы. Без него Pandoc использует Chicago «автор—дата».",
+  pandocArgsLabel: "Аргументы Pandoc",
+  pandocArgsHelp:
+    "Добавляются к команде Pandoc для этого формата по словам, без оболочки. Значение с пробелами возьмите в кавычки. --from, --to и --output задаёт Textus.",
+  pandocArgsAll: "Все форматы",
+  pandocArgsOwned: "{arg} задаёт Textus; уберите его.",
+  pandocErrorSettings:
+    "Ваши параметры Pandoc — в Настройки › {page} › {group} и в её дополнительных аргументах.",
   pdfLightColorsLabel: "Экспортировать PDF в светлых цветах",
   infoTipLabel: "Подробнее о «{label}»",
   infoTipLabelPlain: "Подробнее",

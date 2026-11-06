@@ -17,8 +17,8 @@ import type { Literal } from "mdast";
 
 /**
  * Obsidian's embeds, `![[file]]`, kept as written (the source is the node's
- * text) so saving writes them back unchanged. Pandoc exports keep the embed
- * as text: rewriting it to `![](path)` would change what was written.
+ * text) so saving writes them back unchanged. A Pandoc export writes its
+ * own copy as a standard image (`src/export/pandoc-markdown.ts`).
  */
 
 declare module "micromark-util-types" {

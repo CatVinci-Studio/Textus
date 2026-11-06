@@ -523,6 +523,7 @@ pub fn run() {
             detect_pandoc,
             #[cfg(desktop)]
             export_via_pandoc,
+            commands::export::check_pandoc_args,
             #[cfg(desktop)]
             export_pdf_native,
             commands::links::open_community_page,

@@ -9,6 +9,9 @@ import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
 import { toPandocMarkdown } from "./pandoc-markdown";
+import { numberedHeadings } from "./pandoc-headings";
+import { pandocOptions, type PandocSettings } from "./pandoc-options";
+import { noteLinkSources, resolveNoteLinks } from "./note-links";
 import {
   diagramsToImages,
   drawnBlocksToImages,
@@ -25,6 +28,7 @@ import {
   type PageGeometry,
 } from "./paginate";
 import {
+  WIKILINK_SELECTOR,
   buildStandaloneHtml,
   cloneEditorContent,
   inlineImages,
@@ -164,6 +168,14 @@ async function settleRender(editor: Element): Promise<void> {
   await nextFrame();
 }
 
+/** Where the editor's wikilinks lead, for a page saved as `from`. */
+function pageNoteLinks(editor: Element, tab: DocTab, from: string) {
+  const sources = [...editor.querySelectorAll(WIKILINK_SELECTOR)].map(
+    (el) => el.textContent ?? "",
+  );
+  return resolveNoteLinks(sources, tab.path, from);
+}
+
 // File > Export as PDF. Needs the WYSIWYG view; unsaved edits included.
 export async function exportPdf(
   tab: DocTab,
@@ -189,10 +201,12 @@ export async function exportPdf(
       editor,
       whitePage || !appearanceIsDark() ? "light" : "dark",
     );
+    // The page renders from the document's folder; a link's href too.
     const copy = cloneEditorContent(
       editor,
       "inline",
       await linkRenderer(editor),
+      await pageNoteLinks(editor, tab, tab.path ?? picked),
     );
     unmark();
     let content = await inlineImages(copy, tab.path);
@@ -255,6 +269,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   await drawPending(editor);
   const besideDocument = !!tab.path && dirname(tab.path) === dirname(picked);
   const renderLink = await linkRenderer(editor);
+  const noteLinks = await pageNoteLinks(editor, tab, picked);
   const unmark = await markDrawnPictures(
     editor,
     appearanceIsDark() ? "dark" : "light",
@@ -263,6 +278,7 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
     editor,
     besideDocument ? "document" : "inline",
     renderLink,
+    noteLinks,
   );
   unmark();
   const content = besideDocument ? copy : await inlineImages(copy, tab.path);
@@ -288,13 +304,20 @@ async function drawnPictures(): Promise<Map<string, (string | null)[]>> {
   return drawnPicturesByLanguage(editor, "light");
 }
 
+// The menu's place a failed Pandoc export points to.
+function pandocErrorText(err: unknown, t: Strings): string {
+  const where = t.pandocErrorSettings
+    .replace("{page}", t.navEditor)
+    .replace("{group}", t.menuExport);
+  return `${t.exportFailed} ${explainError(err, t)}\n\n${where}`;
+}
+
 export async function exportViaPandoc(
   tab: DocTab,
   format: string,
   t: Strings,
   diagramEngine: DiagramEngine,
-  /** Settings › Editor › Word template, "" for none. */
-  referenceDoc = "",
+  settings: PandocSettings,
 ): Promise<void> {
   const info = PANDOC_FORMATS[format];
   if (!info || !canExportWithPandoc) return;
@@ -317,13 +340,25 @@ export async function exportViaPandoc(
   );
   if (!picked) return;
   try {
+    const options = pandocOptions(settings, format);
     // tab.content, not the file on disk - unsaved edits export too.
-    const text = toPandocMarkdown(tab.content, {
-      NOTE: t.alertNote,
-      TIP: t.alertTip,
-      IMPORTANT: t.alertImportant,
-      WARNING: t.alertWarning,
-      CAUTION: t.alertCaution,
+    const source = options.numberSections
+      ? numberedHeadings(tab.content)
+      : tab.content;
+    const text = toPandocMarkdown(source, {
+      alertLabels: {
+        NOTE: t.alertNote,
+        TIP: t.alertTip,
+        IMPORTANT: t.alertImportant,
+        WARNING: t.alertWarning,
+        CAUTION: t.alertCaution,
+      },
+      noteLinks: await resolveNoteLinks(
+        noteLinkSources(source),
+        tab.path,
+        picked,
+      ),
+      citations: !!options.bibliography,
     });
     await exportDoc.exportViaPandoc({
       pandocPath: pandoc,
@@ -337,11 +372,15 @@ export async function exportViaPandoc(
       format,
       resourceDir: tab.path ? dirname(tab.path) : null,
       title: base,
-      referenceDoc: format === "docx" && referenceDoc ? referenceDoc : null,
+      referenceDoc:
+        format === "docx" && settings.docxReferenceDoc
+          ? settings.docxReferenceDoc
+          : null,
+      options,
     });
     void exportDoc.revealInDir(picked);
   } catch (err) {
-    await showMessage(`${t.exportFailed} ${explainError(err, t)}`, {
+    await showMessage(pandocErrorText(err, t), {
       title: t.exportFailedTitle,
       tone: "error",
     });

@@ -769,7 +769,8 @@ type /name in a conversation to use one.
   deleteTable: "Delete Table",
   tableToMarkdown: "Convert to Markdown Table",
   tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",
-  tableToMarkdownBlocks: "Convert to Markdown Table (a cell holds lists or paragraphs)",
+  tableToMarkdownBlocks:
+    "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
@@ -966,6 +967,25 @@ type /name in a conversation to use one.
     "Exported Word files take this file's styles, fonts and margins.",
   docxTemplateNone: "Pandoc's default",
   docxTemplateClear: "Use default",
+  exportTocLabel: "Table of contents in Pandoc exports",
+  exportNumberHeadingsLabel: "Numbered headings in Pandoc exports",
+  exportNumberHeadingsHelp:
+    "Numbered as the Heading Numbers plugin numbers them: a document's one top heading is its title and stays unnumbered.",
+  exportBibliographyLabel: "Bibliography",
+  exportBibliographyHelp:
+    "A .bib file. Word, EPUB and other Pandoc exports turn [@key] citations into references, with the list at the end.",
+  exportBibliographyNone: "None",
+  exportBibliographyClear: "Remove",
+  exportCslLabel: "Citation style",
+  exportCslHelp:
+    "A .csl file for the bibliography. Without one, Pandoc uses Chicago author-date.",
+  pandocArgsLabel: "Pandoc arguments",
+  pandocArgsHelp:
+    "Added to Pandoc's command for this format, word by word and never through a shell. Quote a value that has spaces. Textus sets --from, --to and --output itself.",
+  pandocArgsAll: "All formats",
+  pandocArgsOwned: "{arg} is set by Textus; take it out.",
+  pandocErrorSettings:
+    "Your Pandoc options are in Settings › {page} › {group}, and its Advanced arguments.",
   pdfLightColorsLabel: "Export PDFs in light colors",
   infoTipLabel: "More about {label}",
   infoTipLabelPlain: "More information",
