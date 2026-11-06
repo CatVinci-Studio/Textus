@@ -2,7 +2,7 @@
 .corner-stack {
   position: fixed;
   bottom: 16px;
-  z-index: 300;
+  z-index: var(--z-toast);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -50,7 +50,7 @@
   gap: 8px;
   padding: 4px;
   border: 0;
-  border-radius: var(--radius-control);
+  border-radius: var(--shape-s);
   background: transparent;
   color: inherit;
   font-weight: inherit;
