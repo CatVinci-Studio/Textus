@@ -197,7 +197,8 @@ describe("typing in a link", () => {
     expect(firstLink(t.view.state.doc).node.textContent).toBe("[b]");
     t.caretAtEnd();
     expect(firstLink(t.view.state.doc)).toBeNull();
-    expect(t.markdown()).toBe("A \\[b] c");
+    // Saved as typed: with no definition, [b] reads back as text.
+    expect(t.markdown()).toBe("A [b] c");
   });
 
   it("is no longer watched once it is a link again and the caret has left", async () => {

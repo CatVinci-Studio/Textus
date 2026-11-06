@@ -76,7 +76,7 @@ export class CompletionPanel {
         rows[i].setAttribute("aria-selected", String(i === index));
     if (index >= 0) {
       el.setAttribute("aria-activedescendant", `completion-item-${index}`);
-      rows[index]?.scrollIntoView({ block: "nearest" });
+      rows[index]?.scrollIntoView?.({ block: "nearest" });
     } else el.removeAttribute("aria-activedescendant");
   }
 
