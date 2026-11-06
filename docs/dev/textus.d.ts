@@ -810,8 +810,15 @@ declare global {
         path: string,
       ): Promise<{ path: string; line: number; text: string }[]>;
       /** Where a link written in `from` goes: a [[wiki link]] or a relative
-       *  path; null for none. */
+       *  path; null for none. 1.2: the same as `(await resolveNote(link,
+       *  from))?.path` for a target that exists. */
       resolveLink(link: string, from: string): Promise<string | null>;
+      /** Where a link goes, exactly as a click takes it: `link` as written -
+       *  "[[Note#^id|alias]]", "![[Note#Heading]]", "[[#^id]]", or a Markdown
+       *  link's target "Note.md#my-heading" / "../a/Note" - from the document
+       *  `from` (needed for relative links and same-note anchors). null when
+       *  `link` is no link to a file (a web URL). From 1.3.9 (files.read). */
+      resolveNote(link: string, from: string): Promise<ResolvedLink | null>;
       tags(): Promise<{ tag: string; count: number }[]>;
       tasks(filter?: {
         done?: boolean;
@@ -830,6 +837,22 @@ declare global {
       onDidChange: Event<{ paths: string[] }>;
     }
 
+    interface ResolvedLink {
+      /** Absolute. For a note that doesn't exist: where a click creates it. */
+      path: string;
+      exists: boolean;
+      /** "note": a Markdown document; "file": anything else (a PDF, a picture). */
+      kind: "note" | "file";
+      /** The last level of "#A#B"; never a "^id". */
+      heading?: string;
+      /** A "^id", without the "^". */
+      block?: string;
+      alias?: string;
+      /** Where the heading or block is; null for the top, or when it isn't
+       *  found (the note opens at its top, as a click does). */
+      line: number | null;
+    }
+
     interface DocumentMetadata {
       path: string;
       rel: string;
@@ -845,6 +868,11 @@ declare global {
       }[];
       tags: string[];
       tasks: Task[];
+      /** From 1.3.9: the block ids ("^abc123") in it, with the first words of
+       *  their block - for [[Note#^ completion. Also from `all`. */
+      blockIds: { id: string; line: number; text: string }[];
+      /** From 1.3.9: front matter `aliases` / `alias`, as strings. */
+      aliases: string[];
       /** Only from `get`. */
       blocks?: { id: string; kind: Block["kind"]; line: number }[];
       modifiedMs: number | null;

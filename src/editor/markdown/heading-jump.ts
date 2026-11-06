@@ -3,9 +3,15 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { revealPosition } from "../reveal-position";
 import { headingSlug } from "./link-target";
 
-/** The position inside the heading `anchor` names, numbering repeats the
- *  way GitHub does ("intro", "intro-1"), or null. */
+/**
+ * The position inside what `anchor` names, or null: a block for `^id`; for
+ * `A#B` (a wikilink's levels) the heading B under A; else the heading by its
+ * slug, numbering repeats the way GitHub does ("intro", "intro-1").
+ */
 export function headingPos(doc: ProseNode, anchor: string): number | null {
+  if (anchor.startsWith("^")) return blockPos(doc, anchor.slice(1));
+  const levels = anchor.split("#").filter(Boolean);
+  if (levels.length > 1) return nestedHeadingPos(doc, levels);
   const wanted = headingSlug(anchor);
   const seen = new Map<string, number>();
   let found: number | null = null;
@@ -16,6 +22,60 @@ export function headingPos(doc: ProseNode, anchor: string): number | null {
     const repeat = seen.get(slug) ?? 0;
     seen.set(slug, repeat + 1);
     if ((repeat ? `${slug}-${repeat}` : slug) === wanted) found = pos + 1;
+    return false;
+  });
+  return found;
+}
+
+/** The heading the last of `levels` names inside the sections of the ones
+ *  before it, as Obsidian reads `[[Note#A#B]]`. */
+function nestedHeadingPos(doc: ProseNode, levels: string[]): number | null {
+  const headings: { level: number; slug: string; pos: number }[] = [];
+  doc.descendants((node, pos) => {
+    if (node.type.name === "heading")
+      headings.push({
+        level: node.attrs.level as number,
+        slug: headingSlug(node.textContent),
+        pos: pos + 1,
+      });
+    return node.type.name !== "heading" && !node.isTextblock;
+  });
+  let from = 0;
+  let to = headings.length;
+  let found: number | null = null;
+  for (const level of levels) {
+    const slug = headingSlug(level);
+    const at = headings.findIndex(
+      (h, i) => i >= from && i < to && h.slug === slug,
+    );
+    if (at < 0) return null;
+    found = headings[at].pos;
+    from = at + 1;
+    const end = headings.findIndex(
+      (h, i) => i > at && h.level <= headings[at].level,
+    );
+    to = end < 0 ? to : Math.min(to, end);
+  }
+  return found;
+}
+
+/** The block with the Obsidian id `id`: a textblock ending " ^id", or for an
+ *  `^id` line of its own, the block before it (a list, a table, a quote). */
+export function blockPos(doc: ProseNode, id: string): number | null {
+  if (!/^[\w-]+$/.test(id)) return null;
+  const tail = new RegExp(`(?:^|\\s)\\^${id}$`);
+  let found: number | null = null;
+  let previous: number | null = null;
+  doc.descendants((node, pos, parent) => {
+    if (found !== null) return false;
+    if (!node.isTextblock) {
+      if (parent === doc) previous = pos + 1;
+      return true;
+    }
+    const text = node.textContent.trimEnd();
+    if (text === `^${id}` && parent === doc) found = previous ?? pos + 1;
+    else if (tail.test(text)) found = pos + 1;
+    if (parent === doc) previous = pos + 1;
     return false;
   });
   return found;

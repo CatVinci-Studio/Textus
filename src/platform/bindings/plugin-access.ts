@@ -89,6 +89,16 @@ export const commands = {
 };
 
 /* Types */
+/**
+ *  An Obsidian block id (`^abc123`), the line it marks, and that block's
+ *  first words.
+ */
+export type BlockIdMeta = {
+	id: string,
+	line: number,
+	text: string,
+};
+
 export type BlockMeta = {
 	id: string,
 	kind: string,
@@ -109,6 +119,7 @@ export type DocumentMeta_Deserialize = {
 	links: LinkMeta[],
 	tags: string[],
 	tasks: TaskMeta_Deserialize[],
+	blockIds: BlockIdMeta[],
 	blocks?: BlockMeta[] | null,
 	modifiedMs?: number | null,
 };
@@ -124,6 +135,7 @@ export type DocumentMeta_Serialize = {
 	links: LinkMeta[],
 	tags: string[],
 	tasks: TaskMeta_Serialize[],
+	blockIds: BlockIdMeta[],
 	blocks: BlockMeta[] | null,
 	modifiedMs: number | null,
 };

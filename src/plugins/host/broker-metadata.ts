@@ -3,7 +3,8 @@ import {
   backlinksIn,
   documentOf,
   folderIndex,
-  resolveIn,
+  resolveTarget,
+  targetLine,
   tagsIn,
   tasksIn,
 } from "../workspace/metadata-cache";
@@ -32,14 +33,21 @@ export function metadataHandlers(p: PluginScope) {
     "metadata.backlinks": async ({ path }: Params) =>
       backlinksIn(await index(), str(path, "path")),
     "metadata.resolveLink": async ({ link, from }: Params) => {
-      const { paths } = await index();
-      const target = str(link, "link");
-      return resolveIn(
-        paths,
-        target.replace(/^\[\[|\]\]$/g, ""),
+      const target = resolveTarget(
+        (await index()).paths,
+        str(link, "link"),
         str(from, "from"),
-        target.startsWith("[["),
       );
+      return target?.exists ? target.path : null;
+    },
+    "metadata.resolveNote": async ({ link, from }: Params) => {
+      const folder = await index();
+      const target = resolveTarget(
+        folder.paths,
+        str(link, "link"),
+        str(from, "from"),
+      );
+      return target && { ...target, line: targetLine(folder, target) };
     },
     "metadata.tags": async () => tagsIn(await index()),
     "metadata.tasks": async ({ done, path, tag }: Params) =>

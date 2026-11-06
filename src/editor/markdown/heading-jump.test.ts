@@ -67,3 +67,45 @@ describe("referencePos", () => {
     expect(referencePos(paper, "ref-7")).toBeNull();
   });
 });
+
+describe("headingPos for wikilinks' blocks and levels", () => {
+  const leveled = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { content: "text*", group: "block" },
+      heading: {
+        content: "text*",
+        group: "block",
+        attrs: { level: { default: 1 } },
+      },
+      list: { content: "paragraph+", group: "block" },
+      text: {},
+    },
+  });
+  const p = (text: string) =>
+    leveled.node("paragraph", null, text ? [leveled.text(text)] : []);
+  const h = (level: number, text: string) =>
+    leveled.node("heading", { level }, [leveled.text(text)]);
+  const book = leveled.node("doc", null, [
+    h(1, "A"), // 0
+    h(2, "B"), // 3
+    h(1, "C"), // 6
+    h(2, "B"), // 9
+    p("A line ^abc123"), // 12
+    leveled.node("list", null, [p("one"), p("two")]),
+    p("^list1"),
+    h(2, "abc123"),
+  ]);
+
+  it("finds B under C, not the first B", () => {
+    expect(headingPos(book, "C#B")).toBe(10);
+    expect(headingPos(book, "A#B")).toBe(4);
+    expect(headingPos(book, "A#C")).toBeNull();
+  });
+
+  it("finds a block by its ^id, never a heading of that name", () => {
+    expect(headingPos(book, "^abc123")).toBe(13);
+    expect(headingPos(book, "^list1")).toBe(29);
+    expect(headingPos(book, "^nope")).toBeNull();
+  });
+});

@@ -3,14 +3,25 @@ import {
   type PluginDocumentMeta,
 } from "../../platform/ipc";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
-import { basename, dirname } from "../../utils/path";
 import {
   emitPluginEvent,
   getWindowAccess,
   onPluginEvent,
   type PluginLocation,
 } from "../app-bridge";
-import { parseYaml, type Frontmatter } from "./frontmatter";
+import {
+  parseYaml,
+  type Frontmatter,
+  type FrontmatterValue,
+} from "./frontmatter";
+import {
+  pathIndex,
+  resolveTarget,
+  type NoteTarget,
+  type PathIndex,
+} from "./link-resolve";
+
+export { pathIndex, resolveTarget, type PathIndex };
 
 /**
  * textus.metadata on the window's side: Rust's index of the open folder plus
@@ -41,6 +52,10 @@ export interface MetaDocument {
   }[];
   tags: string[];
   tasks: MetaTask[];
+  /** Obsidian block ids, with their block's first words. */
+  blockIds: { id: string; line: number; text: string }[];
+  /** Front matter `aliases` / `alias`. */
+  aliases: string[];
   blocks?: { id: string; kind: string; line: number }[];
   modifiedMs: number | null;
 }
@@ -53,71 +68,17 @@ interface FolderIndex {
 }
 
 const norm = (path: string) => path.replace(/\\/g, "/");
-const stem = (name: string) =>
-  name.replace(/\.(md|markdown)$/i, "").toLowerCase();
 
-/** A folder's paths looked up by name and by path, built once per index:
- *  a big folder's links each found in one step, not by a walk over every
- *  file. */
-export interface PathIndex {
-  byStem: Map<string, string[]>;
-  byPath: Map<string, string>;
-}
-
-export function pathIndex(paths: readonly string[]): PathIndex {
-  const byStem = new Map<string, string[]>();
-  for (const p of paths) {
-    const key = stem(basename(p));
-    const same = byStem.get(key);
-    if (same) same.push(p);
-    else byStem.set(key, [p]);
-  }
-  return { byStem, byPath: new Map(paths.map((p) => [norm(p), p])) };
-}
-
-/** Where `link`, written in the document at `from`, goes among `paths`:
- *  a [[wiki link]] by name (the nearest when several share it), anything
- *  else as a path relative to `from`'s folder. */
+/** `resolveTarget`'s path, for a target that exists. `wiki`: `link` is a
+ *  wiki link's inside, without its brackets. */
 export function resolveIn(
   paths: PathIndex,
   link: string,
   from: string,
   wiki: boolean,
 ): string | null {
-  const bare = link.split("#")[0].split("|")[0].trim();
-  if (!bare || /^[a-z][a-z0-9+.-]*:/i.test(bare)) return null;
-  let decoded = bare;
-  try {
-    decoded = decodeURI(bare);
-  } catch {
-    /* not encoded */
-  }
-  const fromDir = norm(dirname(from));
-  if (wiki || !decoded.includes("/")) {
-    const want = stem(basename(decoded));
-    const matches = paths.byStem.get(want) ?? [];
-    if (wiki || !/\.\w+$/.test(decoded) || matches.length) {
-      if (!matches.length) return null;
-      // The one nearest the linking document: its own folder first.
-      return (
-        matches.find((p) => norm(dirname(p)) === fromDir) ??
-        [...matches].sort((a, b) => a.length - b.length)[0]
-      );
-    }
-  }
-  const parts = fromDir.split("/");
-  for (const part of norm(decoded).split("/")) {
-    if (!part || part === ".") continue;
-    if (part === "..") parts.pop();
-    else parts.push(part);
-  }
-  const target = parts.join("/");
-  return (
-    paths.byPath.get(target) ??
-    paths.byPath.get(`${target}.md`) ??
-    paths.byPath.get(`${target}.markdown`) ??
-    null
-  );
+  const target = resolveTarget(paths, wiki ? `[[${link}]]` : link, from);
+  return target?.exists ? target.path : null;
 }
 
 export function documentOf(
@@ -143,15 +104,44 @@ export function documentOf(
       line: l.line,
       resolved: resolveIn(paths, l.target, meta.path, l.wiki),
     })),
-    tags: meta.tags,
+    tags: withFrontmatterTags(meta.tags, frontmatter),
     tasks: meta.tasks.map((t) => ({
       ...t,
       path: meta.path,
       location: { path: meta.path, line: t.line, text: t.text.slice(0, 60) },
     })),
+    blockIds: meta.blockIds,
+    aliases: listOf(frontmatter.aliases ?? frontmatter.alias),
     blocks: meta.blocks ?? undefined,
     modifiedMs: meta.modifiedMs,
   };
+}
+
+/** A front matter list, or one value split at `split`, as strings:
+ *  `tags: [a, b]`, `tags: a, b` and a YAML list all read the same. */
+function listOf(value: FrontmatterValue | undefined, split = /,/): string[] {
+  const items = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(split)
+      : [];
+  return items.flatMap((item) =>
+    typeof item === "string" || typeof item === "number"
+      ? [String(item).trim()].filter(Boolean)
+      : [],
+  );
+}
+
+/** The body's tags, and the front matter's (`tags:`, as Obsidian reads
+ *  them, without "#"), each once. */
+function withFrontmatterTags(tags: string[], frontmatter: Frontmatter) {
+  const seen = new Set(tags.map((t) => t.toLowerCase()));
+  const extra = listOf(frontmatter.tags ?? frontmatter.tag, /[,\s]+/)
+    .map((t) => t.replace(/^#/, ""))
+    .filter(
+      (t) => t && !seen.has(t.toLowerCase()) && seen.add(t.toLowerCase()),
+    );
+  return [...extra, ...tags];
 }
 
 let current: FolderIndex | null = null;
@@ -167,7 +157,10 @@ export async function folderIndex(
   if (pending) return pending;
   pending = (async () => {
     const { documents, changed } = await pluginsIpc.metadataAll(asker, root);
-    const paths = pathIndex(documents.map((d) => d.path));
+    const paths = pathIndex(
+      root,
+      documents.map((d) => d.path),
+    );
     const docs = documents.map((d) => documentOf(d, paths));
     const first = current?.root !== root;
     current = {
@@ -183,6 +176,23 @@ export async function folderIndex(
     pending = null;
   });
   return pending;
+}
+
+/** The line of a resolved link's heading or block in its note, as the
+ *  index knows it; null for its top or one not found. */
+export function targetLine(
+  index: FolderIndex,
+  target: NoteTarget,
+): number | null {
+  const doc = index.byPath.get(norm(target.path));
+  if (!doc) return null;
+  if (target.block)
+    return doc.blockIds.find((b) => b.id === target.block)?.line ?? null;
+  if (!target.heading) return null;
+  const wanted = target.heading.toLowerCase();
+  return (
+    doc.headings.find((h) => h.text.toLowerCase() === wanted)?.line ?? null
+  );
 }
 
 export function backlinksIn(index: FolderIndex, path: string) {

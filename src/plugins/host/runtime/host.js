@@ -827,6 +827,12 @@
           from: String(from),
         });
       },
+      resolveNote: function (link, from) {
+        return call("metadata.resolveNote", {
+          link: String(link),
+          from: String(from),
+        });
+      },
       tags: function () {
         return call("metadata.tags");
       },

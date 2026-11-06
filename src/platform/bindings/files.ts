@@ -94,10 +94,15 @@ export const commands = {
 	 */
 	resolve_vault_image: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_image", { docPath, link, folder }),
 	/**
-	 *  The note an Obsidian wikilink names, as an absolute path; None when it isn't
-	 *  in the vault.
+	 *  The file a wikilink's or a Markdown link's note part names, as an absolute
+	 *  path; for one that isn't there, where following it creates it.
 	 */
-	resolve_vault_note: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link, folder }),
+	resolve_note_link: (docPath: string, link: string, folder: string | null, wiki: boolean) => __TAURI_INVOKE<NoteLinkTarget | null>("resolve_note_link", { docPath, link, folder, wiki }),
+	/**
+	 *  `link_root` for the window: where `/img/a.png` and `[a](/docs/a.md)` are
+	 *  read from.
+	 */
+	document_link_root: (docPath: string, folder: string | null) => __TAURI_INVOKE<string | null>("document_link_root", { docPath, folder }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
@@ -286,6 +291,16 @@ export type IndexedFile = {
 export type MemoryFile = {
 	path: string,
 	text: string,
+};
+
+/**
+ *  Where a link to a note leads: the file, or for one that doesn't exist,
+ *  where following it creates it. Shared with `NoteLinkTarget` in
+ *  `src/platform/ipc-files.ts`.
+ */
+export type NoteLinkTarget = {
+	path: string,
+	exists: boolean,
 };
 
 /**

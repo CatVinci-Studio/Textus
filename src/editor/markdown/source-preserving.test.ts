@@ -163,6 +163,36 @@ describe("saving after an edit elsewhere keeps as written", () => {
     );
   });
 
+  it.each([
+    ["an Obsidian task state, with the rest of its list", "- [/] half\n- [-] dropped\n- [ ] open\n", "- [/] half edited\n- [-] dropped\n- [ ] open\n"],
+    ["an inline footnote", "a^[note] b\n", "a^[note] b edited\n"],
+    ["an escaped # that isn't a tag", "a \\#notatag and \\#2\n", "a \\#notatag and \\#2 edited\n"],
+    ["an entity", "a&nbsp;b &amp; c\n", "a&nbsp;b &amp; c edited\n"],
+    ["escaped brackets", "see \\[1\\] and [b]\n", "see \\[1\\] and [b] edited\n"],
+  ])("keeps %s in an edited block as written", async (_, markdown, saved) => {
+    expect(await saveAfter(markdown, typeInto(0))).toBe(saved);
+  });
+
+  it("still escapes what the user typed that would read as syntax", async () => {
+    const out = await saveAfter("a \\[b\n", typeInto(0, " *c* [d](e"));
+    expect(out).toBe("a \\[b \\*c\\* \\[d]\\(e\n");
+  });
+
+  it("reads a table formula's \\| as one bar and writes a typed | as \\|", async () => {
+    const markdown = "| a | b |\n| - | - |\n| x | $a \\| b$ |\n";
+    let formula = "";
+    const out = await saveAfter(markdown, (view) => {
+      view.state.doc.descendants((node, pos) => {
+        if (node.type.name !== "math_inline") return;
+        formula = node.textContent;
+        view.dispatch(view.state.tr.insertText("|c", pos + node.nodeSize - 1));
+      });
+    });
+    expect(formula).toBe("a | b");
+    expect(out).toContain("| x | $a \\| b\\|c$ |\n");
+    expect(out.split("\n")[0]).toBe("| a | b           |");
+  });
+
   it("still escapes a # that would open a heading", async () => {
     const out = await saveAfter("Edit me\n", (view) => {
       const end = endOfBlock(view.state.doc, 0);

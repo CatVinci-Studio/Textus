@@ -42,6 +42,16 @@ pub struct TaskMeta {
     line: u32,
 }
 
+/// An Obsidian block id (`^abc123`), the line it marks, and that block's
+/// first words.
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct BlockIdMeta {
+    id: String,
+    line: u32,
+    text: String,
+}
+
 #[derive(Serialize, Clone, Debug, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct BlockMeta {
@@ -64,6 +74,7 @@ pub struct DocumentMeta {
     links: Vec<LinkMeta>,
     tags: Vec<String>,
     tasks: Vec<TaskMeta>,
+    block_ids: Vec<BlockIdMeta>,
     blocks: Option<Vec<BlockMeta>>,
     modified_ms: Option<f64>,
 }
@@ -80,6 +91,27 @@ static WIKI: OnceLock<Regex> = OnceLock::new();
 static TAG: OnceLock<Regex> = OnceLock::new();
 static TASK: OnceLock<Regex> = OnceLock::new();
 static DUE: OnceLock<Regex> = OnceLock::new();
+static LINK_TARGET: OnceLock<Regex> = OnceLock::new();
+static BLOCK_ID: OnceLock<Regex> = OnceLock::new();
+
+/// How much of a block a block id's entry quotes.
+const BLOCK_TEXT_CHARS: usize = 60;
+
+/// `line` without its `%%comments%%`, which Obsidian hides and doesn't count:
+/// `open` says whether one runs on from an earlier line, and is left saying
+/// whether one runs on past this one.
+fn without_comments(line: &str, open: &mut bool) -> String {
+    let mut out = String::new();
+    for (i, part) in line.split("%%").enumerate() {
+        if i > 0 {
+            *open = !*open;
+        }
+        if !*open {
+            out.push_str(part);
+        }
+    }
+    out
+}
 
 /// The front matter's YAML and the line the rest starts on.
 fn front_matter(text: &str) -> (Option<String>, usize) {
@@ -116,11 +148,14 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
     let mut tags: Vec<String> = Vec::new();
     let mut seen_tags = HashSet::new();
     let mut tasks = Vec::new();
+    let mut block_ids = Vec::new();
+    let mut previous_text = String::new();
     let mut fence: Option<char> = None;
+    let mut comment = false;
     for (i, raw) in text.split('\n').enumerate().skip(body_start) {
         let line_no = i as u32;
-        let line = raw.trim_end_matches('\r');
-        if let Some(m) = re(&FENCE, r"^\s{0,3}(`{3,}|~{3,})").captures(line) {
+        let raw_line = raw.trim_end_matches('\r');
+        if let Some(m) = re(&FENCE, r"^\s{0,3}(`{3,}|~{3,})").captures(raw_line) {
             let c = m[1].chars().next().unwrap_or('`');
             fence = match fence {
                 None => Some(c),
@@ -131,6 +166,23 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
         }
         if fence.is_some() {
             continue;
+        }
+        let line = &without_comments(raw_line, &mut comment);
+        if let Some(b) = re(&BLOCK_ID, r"(?:^|\s)\^([A-Za-z0-9-]+)\s*$").captures(line) {
+            let before = line[..b.get(0).map_or(0, |m| m.start())].trim();
+            let quoted = if before.is_empty() {
+                &previous_text
+            } else {
+                before
+            };
+            block_ids.push(BlockIdMeta {
+                id: b[1].to_string(),
+                line: line_no,
+                text: quoted.chars().take(BLOCK_TEXT_CHARS).collect(),
+            });
+        }
+        if !line.trim().is_empty() {
+            previous_text = line.trim().to_string();
         }
         // Code spans hold no links or tags.
         let plain = re(&CODE_SPAN, r"`+[^`]*`+").replace_all(line, "");
@@ -152,8 +204,9 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
         }
         for w in re(&WIKI, r"\[\[([^\]\n]+)\]\]").captures_iter(&plain) {
             let inner = &w[1];
+            // In a table the bar is written `\|`; its backslash isn't the name's.
             let (target, label) = match inner.split_once('|') {
-                Some((t, l)) => (t, l),
+                Some((t, l)) => (t.strip_suffix('\\').unwrap_or(t), l),
                 None => (inner, inner),
             };
             links.push(LinkMeta {
@@ -170,14 +223,17 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
         {
             headings.last().map(|h| h.text.clone()).unwrap_or_default()
         } else {
-            plain.to_string()
+            // A link's `(#anchor)` is no tag.
+            re(&LINK_TARGET, r"\]\([^)\n]*\)")
+                .replace_all(&plain, "]")
+                .into_owned()
         };
         for tag in tags_in(&tag_text) {
             if seen_tags.insert(tag.to_lowercase()) {
                 tags.push(tag);
             }
         }
-        if let Some(t) = re(&TASK, r"^\s*(?:[-*+]|\d+[.)])\s+\[([ xX])\]\s+(.*)$").captures(line) {
+        if let Some(t) = re(&TASK, r"^\s*(?:[-*+]|\d+[.)])\s+\[([^\]])\]\s+(.*)$").captures(line) {
             let task_text = t[2].to_string();
             let due = re(&DUE, r"(?:📅\s*|due::?\s*)(\d{4}-\d{2}-\d{2})")
                 .captures(&task_text)
@@ -206,6 +262,7 @@ pub fn parse_document(path: &str, rel: &str, text: &str) -> DocumentMeta {
         links,
         tags,
         tasks,
+        block_ids,
         blocks: None,
         modified_ms: None,
     }
@@ -401,6 +458,39 @@ mod tests {
         assert!(m.tasks[1].done);
         assert_eq!(m.tasks[1].due.as_deref(), Some("2026-10-01"));
         assert_eq!(m.tasks[2].line, 16);
+    }
+
+    #[test]
+    fn comments_anchors_and_escaped_bars_are_read_as_obsidian_reads_them() {
+        let text = "See [a](#intro) and [[Note\\|shown]] #real\n%% [[Hidden]] #secret\nstill hidden [[Gone]] %% [[Kept]]\n- [/] half done\n";
+        let m = parse_document("/r/a.md", "a.md", text);
+        let targets: Vec<_> = m
+            .links
+            .iter()
+            .map(|l| (l.target.as_str(), l.text.as_str()))
+            .collect();
+        assert_eq!(
+            targets,
+            vec![("#intro", "a"), ("Note", "shown"), ("Kept", "Kept")]
+        );
+        assert_eq!(m.tags, vec!["real"]);
+        assert_eq!(m.tasks.len(), 1);
+        assert!(m.tasks[0].done);
+    }
+
+    #[test]
+    fn block_ids_carry_their_line_and_block() {
+        let text = "A paragraph ^para1\n\n- one\n- two\n\n^list-2\n";
+        let m = parse_document("/r/a.md", "a.md", text);
+        let ids: Vec<_> = m
+            .block_ids
+            .iter()
+            .map(|b| (b.id.as_str(), b.line, b.text.as_str()))
+            .collect();
+        assert_eq!(
+            ids,
+            vec![("para1", 0, "A paragraph"), ("list-2", 5, "- two")]
+        );
     }
 
     #[test]

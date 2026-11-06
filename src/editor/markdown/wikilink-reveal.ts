@@ -14,17 +14,29 @@ const key = new PluginKey<RevealState>("wikilink-reveal");
 const isWikilink = (node: ProseNode) => node.type.name === "wikilink";
 
 /** The source a wikilink hides while the caret is away, as offsets in its
- *  text: "[[" (with "Note|" before an alias) and "]]". Null when it isn't
- *  one whole. */
+ *  text: "[[" (with "Note|" before an alias) and "]]", the bar too when the
+ *  alias is empty (`[[Note|]]`). Null when it isn't one whole. */
 export function hiddenParts(text: string): [number, number][] | null {
   if (!text.startsWith("[[") || !text.endsWith("]]") || text.length < 5)
     return null;
-  const bar = text.indexOf("|");
-  const open = bar > 2 && bar < text.length - 3 ? bar + 1 : 2;
-  return [
-    [0, open],
-    [text.length - 2, text.length],
-  ];
+  // In a table the bar is written `\|`.
+  const bar = /\\?\|/.exec(text);
+  const end = text.length - 2;
+  if (!bar || bar.index <= 2)
+    return [
+      [0, 2],
+      [end, text.length],
+    ];
+  const after = bar.index + bar[0].length;
+  return after === end
+    ? [
+        [0, 2],
+        [bar.index, text.length],
+      ]
+    : [
+        [0, after],
+        [end, text.length],
+      ];
 }
 
 const reveal: Reveal = {
