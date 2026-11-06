@@ -634,10 +634,6 @@ export default {
   searchServiceSendsTo: "搜索内容会发送给 {name}。",
   searchServiceNone: "还没有可用的搜索：请选一个服务并填入它的 Key。",
   searxngUrlLabel: "SearXNG 地址",
-  researchAtOnceLabel: "研究：同时请求数",
-  researchAtOnceAuto: "自动",
-  researchAtOnceHelp:
-    "研究模式同时向模型发出的请求数，用于并行研究问题、撰写各节。“自动”按服务商的常见限额设定；如遇频率限制错误，请调低。",
   editAnimationLabel: "编辑预览动画",
   agentWorkspaceLabel: "全局配置文件夹",
   agentWorkspaceOpenButton: "打开",

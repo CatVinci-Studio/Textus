@@ -470,31 +470,6 @@ export function SearchServiceSection({ t }: { t: Strings }) {
   );
 }
 
-/** Research's model calls at once: "Automatic" for the provider's. */
-const RESEARCH_AT_ONCE = [0, 1, 2, 3, 4, 6, 8];
-
-export function ResearchAtOnceRow({ t }: { t: Strings }) {
-  const { settings, setSettings } = useSettings();
-  return (
-    <SettingRow label={t.researchAtOnceLabel} help={t.researchAtOnceHelp}>
-      <Select
-        className="settings-select"
-        aria-label={t.researchAtOnceLabel}
-        value={String(settings.researchAtOnce)}
-        onChange={(e) =>
-          setSettings({ researchAtOnce: Number(e.target.value) })
-        }
-      >
-        {RESEARCH_AT_ONCE.map((n) => (
-          <option key={n} value={String(n)}>
-            {n === 0 ? t.researchAtOnceAuto : String(n)}
-          </option>
-        ))}
-      </Select>
-    </SettingRow>
-  );
-}
-
 /** A search service's key, saved with the AI providers' keys, never in
  *  Settings. */
 function SearchKeyRow({

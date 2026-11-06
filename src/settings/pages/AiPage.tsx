@@ -25,7 +25,6 @@ import { ImageModelSection } from "../sections/image-model";
 import {
   AgentModelSection,
   SearchServiceSection,
-  ResearchAtOnceRow,
   ModelListRow,
   WritingModelSection,
   AgentWorkspaceRootSection,
@@ -192,7 +191,6 @@ export function AiPage({
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
                 <SearchServiceSection t={t} />
-                <ResearchAtOnceRow t={t} />
               </>
             )}
           </SettingsGroup>

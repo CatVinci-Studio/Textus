@@ -8,6 +8,7 @@
 use super::model::{Model, Watch};
 use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
 use futures_util::future::BoxFuture;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
 use tokio::sync::Semaphore;
 
@@ -21,7 +22,7 @@ const FIRST_WAIT: Duration = Duration::from_secs(2);
 /// Error strings are the dialects' `"... request failed ({status}): {body}"`.
 pub(crate) fn is_busy(error: &str) -> bool {
     let lower = error.to_ascii_lowercase();
-    ["(429", "(502", "(503", "(529"]
+    ["failed (429", "failed (502", "failed (503", "failed (529"]
         .iter()
         .any(|status| lower.contains(status))
         || [
@@ -42,10 +43,12 @@ fn wait(n: u32, spread: u64) -> Duration {
 }
 
 /// A model with at most `at_once` steps in flight, a busy step tried again.
+/// Each busy answer gives up a slot for good (one is always kept): a
+/// provider that refuses this many at once is asked for fewer.
 pub(crate) struct Throttled<'a, M: Model> {
     inner: &'a M,
     slots: Semaphore,
-    at_once: usize,
+    at_once: AtomicUsize,
 }
 
 impl<'a, M: Model> Throttled<'a, M> {
@@ -54,11 +57,30 @@ impl<'a, M: Model> Throttled<'a, M> {
         Self {
             inner,
             slots: Semaphore::new(at_once),
-            at_once,
+            at_once: AtomicUsize::new(at_once),
         }
     }
 
-    async fn run<'s, F>(&'s self, mut step: F) -> Result<StepResult, String>
+    /// Gives up one slot not in use, keeping one.
+    fn ask_fewer(&self) {
+        let fewer = self
+            .at_once
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
+                (n > 1).then(|| n - 1)
+            });
+        if fewer.is_ok() && self.slots.forget_permits(1) == 0 {
+            // Every other slot is busy: given up as the first comes back.
+            self.at_once.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    /// `step` run in a slot, tried again while the service is busy and
+    /// `again` says nothing of it has reached the paper yet.
+    async fn run<'s, F>(
+        &'s self,
+        mut step: F,
+        again: impl Fn() -> bool,
+    ) -> Result<StepResult, String>
     where
         F: FnMut() -> BoxFuture<'s, Result<StepResult, String>>,
     {
@@ -68,7 +90,8 @@ impl<'a, M: Model> Throttled<'a, M> {
         loop {
             tried += 1;
             match step().await {
-                Err(error) if tried < TRIES && is_busy(&error) => {
+                Err(error) if tried < TRIES && is_busy(&error) && again() => {
+                    self.ask_fewer();
                     let spread = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
                         .map_or(0, |d| d.subsec_nanos() as u64);
@@ -87,7 +110,7 @@ impl<M: Model> Model for Throttled<'_, M> {
         turns: &'a [AgentTurn],
         tools: &'a [ToolSpec],
     ) -> BoxFuture<'a, Result<StepResult, String>> {
-        Box::pin(self.run(move || self.inner.step(instructions, turns, tools)))
+        Box::pin(self.run(move || self.inner.step(instructions, turns, tools), || true))
     }
 
     fn step_watched<'a>(
@@ -97,24 +120,26 @@ impl<M: Model> Model for Throttled<'_, M> {
         tools: &'a [ToolSpec],
         watch: Watch<'a>,
     ) -> BoxFuture<'a, Result<StepResult, String>> {
-        Box::pin(self.run(move || self.inner.step_watched(instructions, turns, tools, watch)))
+        Box::pin(async move {
+            // A step that streamed some of its answer isn't tried again: the
+            // paper has shown it already.
+            let streamed = AtomicBool::new(false);
+            let seen = |event: aicompat::agent::ProviderEvent<'_>| {
+                streamed.store(true, Ordering::Relaxed);
+                watch(event)
+            };
+            let seen: Watch<'_> = &seen;
+            self.run(
+                move || self.inner.step_watched(instructions, turns, tools, seen),
+                || !streamed.load(Ordering::Relaxed),
+            )
+            .await
+        })
     }
 
     fn at_once(&self) -> usize {
-        self.at_once
+        self.at_once.load(Ordering::Relaxed)
     }
-}
-
-/// How many model calls a paper makes at once: the user's choice
-/// (`Settings.researchAtOnce`), else the provider's; 0 or None is the
-/// provider's.
-pub(crate) fn at_once(
-    chosen: Option<u32>,
-    entry: &crate::ai::catalog::ProviderCatalogEntry,
-) -> usize {
-    chosen
-        .filter(|n| *n > 0)
-        .map_or(entry.paper_at_once, |n| n as usize)
 }
 
 #[cfg(test)]
@@ -195,7 +220,7 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn a_service_busy_every_time_gives_up_after_its_tries() {
         let slow = Slow::default();
-        *slow.errors.lock().unwrap() = vec!["(429): slow down".into(); 10];
+        *slow.errors.lock().unwrap() = vec!["request failed (429): slow down".into(); 10];
         let throttled = Throttled::new(&slow, 1);
         let error = throttled.step("", &[], &[]).await.err().unwrap();
         assert!(error.contains("429"));
@@ -213,6 +238,60 @@ mod tests {
         assert!(next.await.unwrap().is_ok());
     }
 
+    #[tokio::test(start_paused = true)]
+    async fn a_busy_answer_asks_for_one_fewer_at_once() {
+        let slow = Slow::default();
+        *slow.errors.lock().unwrap() = vec!["request failed (429): slow down".into()];
+        let throttled = Throttled::new(&slow, 3);
+        assert!(throttled.step("", &[], &[]).await.is_ok());
+        assert_eq!(throttled.at_once(), 2);
+        let steps = (0..6).map(|_| throttled.step("", &[], &[]));
+        futures_util::future::join_all(steps).await;
+        assert_eq!(slow.most.load(Ordering::SeqCst), 2);
+    }
+
+    /// Streams some text, then the service says it is busy.
+    #[derive(Default)]
+    struct Cut(AtomicUsize);
+
+    impl Model for Cut {
+        fn step<'a>(
+            &'a self,
+            _instructions: &'a str,
+            _turns: &'a [AgentTurn],
+            _tools: &'a [ToolSpec],
+        ) -> BoxFuture<'a, Result<StepResult, String>> {
+            unreachable!()
+        }
+
+        fn step_watched<'a>(
+            &'a self,
+            _instructions: &'a str,
+            _turns: &'a [AgentTurn],
+            _tools: &'a [ToolSpec],
+            watch: Watch<'a>,
+        ) -> BoxFuture<'a, Result<StepResult, String>> {
+            self.0.fetch_add(1, Ordering::SeqCst);
+            watch(aicompat::agent::ProviderEvent::Text("Half a"));
+            Box::pin(async { Err("stream error: overloaded".into()) })
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_step_cut_off_mid_answer_is_not_tried_again() {
+        let cut = Cut::default();
+        let throttled = Throttled::new(&cut, 2);
+        let shown = Mutex::new(String::new());
+        let watch = |e: aicompat::agent::ProviderEvent<'_>| {
+            if let aicompat::agent::ProviderEvent::Text(t) = e {
+                shown.lock().unwrap().push_str(t);
+            }
+        };
+        assert!(throttled.step_watched("", &[], &[], &watch).await.is_err());
+        assert_eq!(cut.0.load(Ordering::SeqCst), 1);
+        assert_eq!(*shown.lock().unwrap(), "Half a");
+    }
+
     #[test]
     fn busy_is_read_from_the_status_or_the_body() {
         assert!(is_busy("OpenAI request failed (429 Too Many Requests): {}"));
@@ -226,6 +305,9 @@ mod tests {
         assert!(!is_busy(
             "Claude request failed (400 Bad Request): too long"
         ));
+        assert!(!is_busy(
+            "request failed (400): see docs (429 is our limit)"
+        ));
     }
 
     #[test]
@@ -233,14 +315,6 @@ mod tests {
         for entry in crate::ai::catalog::PROVIDER_CATALOG {
             assert!(entry.paper_at_once >= 1, "{}", entry.id);
         }
-    }
-
-    #[test]
-    fn the_users_choice_goes_before_the_providers() {
-        let ollama = crate::ai::catalog::find("ollama").unwrap();
-        assert_eq!(at_once(None, ollama), ollama.paper_at_once);
-        assert_eq!(at_once(Some(0), ollama), ollama.paper_at_once);
-        assert_eq!(at_once(Some(7), ollama), 7);
     }
 
     #[test]

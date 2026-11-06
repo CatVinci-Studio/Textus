@@ -679,10 +679,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   searchServiceNone:
     "検索に使えるものがまだありません。サービスを選んでキーを入力してください。",
   searxngUrlLabel: "SearXNG のアドレス",
-  researchAtOnceLabel: "リサーチ：同時リクエスト数",
-  researchAtOnceAuto: "自動",
-  researchAtOnceHelp:
-    "リサーチモードがモデルに同時に送るリクエストの数です。調査の問いや各節を並行して進めます。「自動」はプロバイダに合わせた値です。レート制限のエラーが出るときは下げてください。",
   editAnimationLabel: "編集プレビューのアニメーション",
   agentWorkspaceLabel: "グローバル設定フォルダー",
   agentWorkspaceOpenButton: "表示",

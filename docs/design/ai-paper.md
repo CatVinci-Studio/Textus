@@ -19,8 +19,7 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
 
 1. **Plan research**: the topic split into 6-10 questions (background,
    mechanism, state of the art, disputes, cases, data, trends), for breadth.
-2. **Research helpers**: two for each model call the paper makes at once,
-   one question each, with web
+2. **Research helpers**: four at once, one question each, with web
    search, page reads, scholarly search, the project's files, the files
    attached and the user's references. Each
    returns notes: a claim, its evidence, a quote, the sources' numbers, and
@@ -126,7 +125,7 @@ it, lazily loaded. Each stage and helper is one run of
   atomically, so a stopped paper can resume and the user can read the
   research. An id is lowercase letters and digits only.
 - **Research** (`paper/research.rs`): one tool-less step plans 4-10
-  questions; a helper per question, two for each model call at once,
+  questions; a helper per question, four at once (their searches too),
   searches and reads and
   keeps findings with `add_note` - a claim, its evidence, an optional quote,
   its sources and leads to pictures or data. A note must cite a number a
@@ -184,10 +183,10 @@ it, lazily loaded. Each stage and helper is one run of
   then the draft stops, so the paper has no gap.
 - **At once** (`paper/throttle.rs`): every stage steps one `Throttled`
   model - at most `paper_at_once` calls in flight, a provider's catalog
-  data (Ollama 2, OpenAI 6) or the user's "Research: calls at once"
-  (`Settings.researchAtOnce`). A call refused for its rate or an overload
-  (429, 502, 503, 529) waits 2, 4, 8, 16 s and goes again, keeping its
-  slot. Stages start the next piece as soon as any is done and put the
+  data (Ollama 2, OpenAI 6), with no setting. A call refused for its rate
+  or an overload (429, 502, 503, 529) gives up one slot for good (one is
+  always kept), waits 2, 4, 8, 16 s and goes again, keeping its slot; one
+  that already streamed part of its answer isn't tried again. Stages start the next piece as soon as any is done and put the
   results back in order. Finishing searches Commons four marks at a time
   and looks up six source titles at a time, writing the opening meanwhile.
   Nothing is spawned: a stop drops every call under way.

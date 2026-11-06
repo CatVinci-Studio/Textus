@@ -718,10 +718,6 @@ para usar una.
   searchServiceNone:
     "Aún no hay con qué buscar: elige un servicio y añade su clave.",
   searxngUrlLabel: "Dirección de SearXNG",
-  researchAtOnceLabel: "Investigación: peticiones a la vez",
-  researchAtOnceAuto: "Automático",
-  researchAtOnceHelp:
-    "Cuántas peticiones envía a la vez el modo Investigación al modelo, para investigar preguntas y escribir secciones en paralelo. Automático se ajusta a tu proveedor; bájalo si ves errores de límite de peticiones.",
   editAnimationLabel: "Animar la vista previa de los cambios",
   agentWorkspaceLabel: "Carpeta de configuración global",
   agentWorkspaceOpenButton: "Mostrar",
