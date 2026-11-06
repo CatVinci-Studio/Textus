@@ -390,6 +390,10 @@ export default {
   paperSectionDrafted: "已寫完",
   paperSectionRevising: "修改中",
   paperSectionFailed: "失敗",
+  paperSectionsAtOnce: { other: "同時撰寫 {n} 節 · 已完成 {done}/{of}" },
+  paperRevisingAtOnce: { other: "同時修改 {n} 節 · 已完成 {done}/{of}" },
+  paperQuestionsAtOnce: { other: "同時研究 {n} 個問題 · 已完成 {done}/{of}" },
+  paperDoneOf: "已完成 {done}/{of}",
   paperOutlineRetry: "第 {n} 稿：上一稿未通過檢查，正在重擬…",
   paperPapersOnly:
     "沒有可用的網頁搜尋，這篇的研究只會檢索學術論文（OpenAlex、arXiv）和你的資料庫。",

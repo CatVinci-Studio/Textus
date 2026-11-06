@@ -412,6 +412,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperSectionDrafted: "執筆済み",
   paperSectionRevising: "修正中",
   paperSectionFailed: "失敗",
+  paperSectionsAtOnce: {
+    other: "{n} 節を同時に執筆中 · {of} 節中 {done} 節完了",
+  },
+  paperRevisingAtOnce: {
+    other: "{n} 節を同時に修正中 · {of} 節中 {done} 節完了",
+  },
+  paperQuestionsAtOnce: {
+    other: "{n} 件の問いを同時に調査中 · {of} 件中 {done} 件完了",
+  },
+  paperDoneOf: "{of} 件中 {done} 件完了",
   paperOutlineRetry:
     "第 {n} 稿：前の案がチェックを通らなかったため、作り直しています…",
   paperPapersOnly:

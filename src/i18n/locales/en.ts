@@ -424,6 +424,19 @@ type /name in a conversation to use one.
   paperSectionDrafted: "Written",
   paperSectionRevising: "Revising",
   paperSectionFailed: "Failed",
+  paperSectionsAtOnce: {
+    one: "Writing {n} section at once · {done} of {of} done",
+    other: "Writing {n} sections at once · {done} of {of} done",
+  },
+  paperRevisingAtOnce: {
+    one: "Revising {n} section at once · {done} of {of} done",
+    other: "Revising {n} sections at once · {done} of {of} done",
+  },
+  paperQuestionsAtOnce: {
+    one: "Researching {n} question at once · {done} of {of} done",
+    other: "Researching {n} questions at once · {done} of {of} done",
+  },
+  paperDoneOf: "{done} of {of} done",
   paperOutlineRetry:
     "Draft {n}: the last one didn't pass its checks, so it is being redone…",
   paperPapersOnly:

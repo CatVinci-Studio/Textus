@@ -431,6 +431,22 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   paperSectionDrafted: "Geschrieben",
   paperSectionRevising: "Wird überarbeitet",
   paperSectionFailed: "Fehlgeschlagen",
+  paperSectionsAtOnce: {
+    one: "{n} Abschnitt wird gleichzeitig geschrieben · {done} von {of} fertig",
+    other:
+      "{n} Abschnitte werden gleichzeitig geschrieben · {done} von {of} fertig",
+  },
+  paperRevisingAtOnce: {
+    one: "{n} Abschnitt wird gleichzeitig überarbeitet · {done} von {of} fertig",
+    other:
+      "{n} Abschnitte werden gleichzeitig überarbeitet · {done} von {of} fertig",
+  },
+  paperQuestionsAtOnce: {
+    one: "{n} Frage wird gleichzeitig recherchiert · {done} von {of} fertig",
+    other:
+      "{n} Fragen werden gleichzeitig recherchiert · {done} von {of} fertig",
+  },
+  paperDoneOf: "{done} von {of} fertig",
   paperOutlineRetry:
     "Entwurf {n}: Der letzte hat die Prüfung nicht bestanden und wird neu erstellt…",
   paperPapersOnly:

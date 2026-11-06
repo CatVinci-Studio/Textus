@@ -406,6 +406,16 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   paperSectionDrafted: "작성 완료",
   paperSectionRevising: "수정 중",
   paperSectionFailed: "실패",
+  paperSectionsAtOnce: {
+    other: "{n}개 절을 동시에 쓰는 중 · {of}개 중 {done}개 완료",
+  },
+  paperRevisingAtOnce: {
+    other: "{n}개 절을 동시에 고치는 중 · {of}개 중 {done}개 완료",
+  },
+  paperQuestionsAtOnce: {
+    other: "{n}개 질문을 동시에 조사하는 중 · {of}개 중 {done}개 완료",
+  },
+  paperDoneOf: "{of}개 중 {done}개 완료",
   paperOutlineRetry: "{n}번째 안: 이전 안이 검사를 통과하지 못해 다시 짜는 중…",
   paperPapersOnly:
     "웹 검색을 쓸 수 없어 이 글의 조사는 학술 논문(OpenAlex, arXiv)과 자료실만 검색합니다.",

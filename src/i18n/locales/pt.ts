@@ -427,6 +427,22 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   paperSectionDrafted: "Escrito",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falhou",
+  paperSectionsAtOnce: {
+    one: "Escrevendo {n} seção ao mesmo tempo · {done} de {of} prontas",
+    many: "Escrevendo {n} de seções ao mesmo tempo · {done} de {of} prontas",
+    other: "Escrevendo {n} seções ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperRevisingAtOnce: {
+    one: "Revisando {n} seção ao mesmo tempo · {done} de {of} prontas",
+    many: "Revisando {n} de seções ao mesmo tempo · {done} de {of} prontas",
+    other: "Revisando {n} seções ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperQuestionsAtOnce: {
+    one: "Pesquisando {n} pergunta ao mesmo tempo · {done} de {of} prontas",
+    many: "Pesquisando {n} de perguntas ao mesmo tempo · {done} de {of} prontas",
+    other: "Pesquisando {n} perguntas ao mesmo tempo · {done} de {of} prontas",
+  },
+  paperDoneOf: "{done} de {of} prontas",
   paperOutlineRetry:
     "Versão {n}: a anterior não passou nas verificações; está sendo refeita…",
   paperPapersOnly:
