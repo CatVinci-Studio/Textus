@@ -537,6 +537,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeRenameItem: "Renomear…",
   treeRename: "Renomear",
   treeRenamePrompt: "Novo nome",
+  treeUpdateLinksConfirm:
+    "Atualizar os links para e de “{name}” para que continuem funcionando?",
+  treeUpdateLinks: "Atualizar links",
+  treeKeepLinks: "Não atualizar",
+  treeUpdateLinksFailed:
+    "Não foi possível atualizar os links destes documentos: {names}",
+  treeDocumentFolder: "Pasta do documento atual",
+  treeOpenAsFolder: "Abrir como pasta",
   treeTrashItem: "Mover para a lixeira",
   treeTrash: "Mover para a lixeira",
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",

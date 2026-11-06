@@ -114,6 +114,33 @@ pub(crate) fn walk(root: &Path, limits: &Limits, keep: impl Fn(&Path) -> bool + 
     }
 }
 
+/// The entries of `dir` the walk would skip as ignored: by a `.gitignore` (or
+/// `.ignore`, or Git's excludes) or as one of SKIPPED_DIRS. Hidden entries are
+/// not counted; the tree has its own switch for them.
+pub(crate) fn ignored_children(dir: &Path) -> std::collections::HashSet<PathBuf> {
+    let kept: std::collections::HashSet<PathBuf> = WalkBuilder::new(dir)
+        .require_git(false)
+        .follow_links(false)
+        .hidden(false)
+        .max_depth(Some(1))
+        .build()
+        .flatten()
+        .map(|entry| entry.into_path())
+        .collect();
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Default::default();
+    };
+    entries
+        .flatten()
+        .filter(|entry| {
+            let skipped = entry.file_type().is_ok_and(|t| t.is_dir())
+                && SKIPPED_DIRS.contains(&entry.file_name().to_string_lossy().as_ref());
+            skipped || !kept.contains(&entry.path())
+        })
+        .map(|entry| entry.path())
+        .collect()
+}
+
 /// `rel` as bytes that compare in the sidebar's tree order: folder by folder,
 /// subfolders before files, names natural ("file2" before "file10") and caseless,
 /// ties by code point. Precomputed per file, since in-place comparison was 3x slower.
@@ -160,6 +187,33 @@ mod tests {
         let path = root.join(rel);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
         fs::write(path, b"x").unwrap();
+    }
+
+    #[test]
+    fn names_the_ignored_and_skipped_entries_of_one_folder() {
+        let dir = tempfile::tempdir().unwrap();
+        fs::write(dir.path().join(".gitignore"), "*.log\nout/\n").unwrap();
+        for rel in [
+            "a.md",
+            "b.log",
+            "out/x.md",
+            "node_modules/p.js",
+            ".env",
+            "sub/c.log",
+        ] {
+            touch(dir.path(), rel);
+        }
+        let mut names: Vec<String> = ignored_children(dir.path())
+            .iter()
+            .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+            .collect();
+        names.sort();
+        assert_eq!(names, ["b.log", "node_modules", "out"]);
+        // A parent folder's .gitignore counts too.
+        let sub: Vec<PathBuf> = ignored_children(&dir.path().join("sub"))
+            .into_iter()
+            .collect();
+        assert_eq!(sub, [dir.path().join("sub/c.log")]);
     }
 
     fn rels(walk: &Walk) -> Vec<&str> {

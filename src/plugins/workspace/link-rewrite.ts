@@ -1,18 +1,44 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
-import { basename, dirname } from "../../utils/path";
-import { pathIndex, resolveTarget, type PathIndex } from "./metadata-cache";
+import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
- * Links to a renamed or moved file, made to point at its new place. A link
- * changes only when it led to that very file, as a click reads it - never
- * because another note shares its name - and only its target's characters
- * change. Anything else is left exactly as it was.
+ * Links to renamed or moved files, made to point at their new place. A link
+ * changes only when it led to a file that moved, as a click reads it
+ * (`resolveTarget`, the one resolver) - never because another note shares
+ * its name - and only its target's characters change; every other byte
+ * stays.
  */
+
+/** A rename or move: the files there were, and where each went. */
+export interface LinkMove {
+  /** The folder whose files are known; a wiki link's path starts here. */
+  root: string;
+  /** Every file under `root` before the move, absolute. */
+  files: string[];
+  /** Where a file went; null for one that stayed. */
+  moved: (path: string) => string | null;
+  /** Where a link from "/" starts (`document_link_root`); null for the
+   *  disk's root. `root` when not given. */
+  linkRoot?: string | null;
+}
 
 function sep(path: string): string {
   return path.replace(/\\/g, "/");
 }
+
+function dirOf(path: string): string {
+  const i = path.lastIndexOf("/");
+  return i > 0 ? path.slice(0, i) : "/";
+}
+
+function nameOf(path: string): string {
+  return path.slice(path.lastIndexOf("/") + 1);
+}
+
+const isNote = (path: string) => /\.(md|markdown)$/i.test(path);
+const stripNote = (path: string) => path.replace(/\.(md|markdown)$/i, "");
+const isRelative = (link: string) => /^\.\.?\//.test(link);
 
 /** `to`, written relative to the folder `fromDir`. */
 export function relativePath(fromDir: string, to: string): string {
@@ -24,32 +50,22 @@ export function relativePath(fromDir: string, to: string): string {
   return [...up, ...b.slice(i)].join("/") || ".";
 }
 
-/** Where a relative link from a document in `docDir` leads. */
-function resolveFrom(docDir: string, link: string): string {
-  const parts = sep(docDir).split("/");
+/** `link` from the folder `dir`, `.` and `..` folded. */
+function join(dir: string, link: string): string {
+  const parts = sep(dir).split("/");
   for (const part of sep(link).split("/")) {
     if (part === "" || part === ".") continue;
     if (part === "..") parts.pop();
     else parts.push(part);
   }
-  return parts.join("/");
+  return parts.join("/") || "/";
 }
 
-const MARKDOWN = /\.(md|markdown)$/i;
-
-function stem(name: string): string {
-  return name.replace(MARKDOWN, "");
-}
-
-function encodeLink(path: string): string {
-  return path.replace(/ /g, "%20");
-}
-
-function decoded(link: string): string {
+function decode(path: string): string {
   try {
-    return decodeURI(link);
+    return decodeURI(path);
   } catch {
-    return link;
+    return path; // not encoded
   }
 }
 
@@ -66,142 +82,264 @@ function codeRanges(text: string): [number, number][] {
   return ranges;
 }
 
-/** The folder's notes before the rename and after it, for telling which
- *  links led to the file and how to spell the new one; and the folder a
- *  link from "/" is read from, if any. */
-export interface RenameContext {
+/** The folder's files before and after the move, indexed once for every
+ *  document a move touches. */
+interface Context {
+  root: string;
+  linkRoot: string | null;
   before: PathIndex;
   after: PathIndex;
-  linkRoot: string | null;
+  moved: (path: string) => string | null;
 }
 
-/** The context for renaming `from` to `to` in the folder `root`, whose
- *  documents are now at `paths`. */
-export function renameContext(
-  root: string,
-  paths: readonly string[],
-  from: string,
-  to: string,
-  linkRoot: string | null,
-): RenameContext {
-  const after = paths.includes(to) ? [...paths] : [...paths, to];
+function contextOf(move: LinkMove): Context {
+  const moved = (path: string) => {
+    const to = move.moved(path);
+    return to === null ? null : sep(to);
+  };
+  const files = move.files.map(sep);
+  const root = sep(move.root).replace(/\/+$/, "") || "/";
+  const linkRoot = move.linkRoot === undefined ? root : move.linkRoot;
   return {
-    before: pathIndex(
+    root,
+    linkRoot: linkRoot === null ? null : sep(linkRoot).replace(/\/+$/, ""),
+    before: pathIndex(root, files),
+    after: pathIndex(
       root,
-      after.map((p) => (p === to ? from : p)),
+      files.map((f) => moved(f) ?? f),
     ),
-    after: pathIndex(root, after),
-    linkRoot,
+    moved,
   };
 }
 
-const MD_LINK = /(!?\[[^\]\n]*\]\()(<[^>\n]+>|[^)\s]+)((?:\s+"[^"\n]*")?\))/g;
-const WIKI_LINK = /(!?)\[\[([^[\]\n]+)\]\]/g;
-
-/** `replace` on `text`'s Markdown links' targets outside code: given the
- *  target as written (without <>), it returns the new one or null. */
-function eachMarkdownLink(
-  text: string,
-  replace: (bare: string) => string | null,
-): string {
-  const code = codeRanges(text);
-  return text.replace(
-    MD_LINK,
-    (all, open: string, target: string, close: string, offset: number) => {
-      if (code.some(([s, e]) => s <= offset && offset < e)) return all;
-      const angled = target.startsWith("<");
-      const bare = angled ? target.slice(1, -1) : target;
-      if (/^[a-z][a-z0-9+.-]*:/i.test(bare) || bare.startsWith("#")) return all;
-      const next = replace(bare);
-      if (next === null) return all;
-      return `${open}${angled ? `<${next}>` : encodeLink(next)}${close}`;
-    },
-  );
+/** The existing file `link` (as written) leads to from `doc`, as a click
+ *  takes it. */
+function existing(index: PathIndex, link: string, doc: string): string | null {
+  const target = resolveTarget(index, link, doc);
+  return target?.exists ? target.path : null;
 }
 
-/**
- * `text` (the document at `docPath`) with its links to `from` pointing at
- * `to`; the same text when none did.
- */
-export function rewriteLinks(
+/** How a link names its file, so the new link is written the same way. */
+type Form = "relative" | "name" | "path";
+
+/** One link's target in the text, and what replaces it. */
+interface Edit {
+  start: number;
+  end: number;
+  text: string;
+}
+
+// [label](target "title"), ![alt](target), and a reference definition
+// `[id]: target` (not a footnote's); the target is group 2 or 4.
+const MARKDOWN_LINK =
+  /(!?\[[^\]\n]*\]\()(<[^>\n]+>|[^)\s]+)(?=(?:\s+"[^"\n]*")?\))|(^ {0,3}\[(?!\^)[^\]\n]+\]:[ \t]*)(<[^>\n]+>|\S+)/gm;
+// [[name#heading|label]] and ![[…]]; a `\|` in a table ends the name too.
+const WIKI_LINK = /\[\[([^\]|#\n]*)(?=[#|\]])/g;
+
+function rewriteWith(
   text: string,
-  docPath: string,
-  from: string,
-  to: string,
-  context: RenameContext,
-): string {
-  const docDir = sep(dirname(docPath));
-  const oldPath = sep(from);
-  const leadsThere = (written: string) =>
-    resolveTarget(context.before, written, docPath)?.path === oldPath;
-  const root = context.linkRoot && sep(context.linkRoot).replace(/\/+$/, "");
-  let out = eachMarkdownLink(text, (bare) => {
-    const [file, hash = ""] = bare.split(/(?=#)/);
-    const path = decoded(file);
-    // From "/" when a project root reads it so, kept that way.
-    if (path.startsWith("/") && root) {
-      if (`${root}${path}` !== oldPath) return null;
-      return `/${relativePath(root, sep(to))}${hash}`;
+  doc: string,
+  ctx: Context,
+): { text: string; count: number } {
+  const { before, after, moved, root } = ctx;
+  const oldDoc = sep(doc);
+  const newDoc = moved(oldDoc) ?? oldDoc;
+  const docMoved = newDoc !== oldDoc;
+  const oldDir = dirOf(oldDoc);
+  const newDir = dirOf(newDoc);
+  const edits: Edit[] = [];
+  const edit = (start: number, written: string, next: string | null) => {
+    if (next !== null && next !== written)
+      edits.push({ start, end: start + written.length, text: next });
+  };
+  // `.md` stays only where it was written: "[[Note v1.2]]" has none.
+  const spelling = (target: string, found: string, written: string) =>
+    nameOf(found).toLowerCase() === nameOf(written).toLowerCase() ||
+    !isNote(target)
+      ? (path: string) => path
+      : stripNote;
+
+  /** A Markdown link's new path, or null to leave it. */
+  const markdownTarget = (file: string, decoded: string): string | null => {
+    if (decoded.startsWith("/") || /^[a-z]:\//i.test(decoded)) {
+      const base = decoded.startsWith("/") ? ctx.linkRoot : null;
+      const full = base === null ? decoded : `${base}${decoded}`;
+      // Only a file of the folder is known; it is looked up as "/" from it.
+      if (full !== root && !full.startsWith(`${root}/`)) return null;
+      const found = existing(before, `/${relativePath(root, full)}`, oldDoc);
+      const target = found && moved(found);
+      if (!target) return null;
+      return base === null ? target : `/${relativePath(base, target)}`;
     }
-    const direct = resolveFrom(docDir, path) === oldPath;
-    if (!direct && !(MARKDOWN.test(oldPath) && leadsThere(bare))) return null;
-    // Written without ".md" (`[t](Note)`), it stays without.
-    const next = relativePath(docDir, sep(to));
-    return (
-      (MARKDOWN.test(path) || !MARKDOWN.test(next) ? next : stem(next)) + hash
-    );
-  });
-  if (out !== text) text = out;
-  const code = codeRanges(text);
-  out = text.replace(
-    WIKI_LINK,
-    (all, bang: string, inner: string, offset: number) => {
-      if (code.some(([s, e]) => s <= offset && offset < e)) return all;
-      if (!leadsThere(all)) return all;
-      // Only the name changes: its "#heading", "|alias" (or a table's "\|")
-      // stay byte for byte.
-      const end = inner.search(/#|\\?\|/);
-      const name = (end < 0 ? inner : inner.slice(0, end)).trim();
-      const rest = end < 0 ? "" : inner.slice(end);
-      return `${bang}[[${wikiName(name, docPath, to, context)}${rest}]]`;
-    },
-  );
-  return out;
-}
+    const direct = isRelative(file) ? file : `./${file}`;
+    let found = existing(before, direct, oldDoc);
+    let form: Form = "relative";
+    if (!found) {
+      found = existing(before, file, oldDoc);
+      form = "name";
+    }
+    // A link to nothing still leads to the same place from a moved document.
+    if (!found && !docMoved) return null;
+    found ??= join(oldDir, decoded);
+    const target = moved(found) ?? found;
+    if (!docMoved && target === found) return null;
+    const leads =
+      form === "relative"
+        ? existing(after, direct, newDoc)
+        : existing(after, file, newDoc);
+    if (leads === target) return null;
+    const ext = spelling(target, found, decoded);
+    if (form === "name") {
+      const bare = ext(nameOf(target));
+      if (existing(after, bare, newDoc) === target) return bare;
+    }
+    const path = ext(relativePath(newDir, target));
+    return file.startsWith("./") && !path.startsWith(".") ? `./${path}` : path;
+  };
 
-/** How a wiki link names `to` from `docPath`: by its name alone when that
- *  finds it, else by its path from the root; ".md" kept when it was written. */
-function wikiName(
-  written: string,
-  docPath: string,
-  to: string,
-  { after }: RenameContext,
-): string {
-  const withExt = MARKDOWN.test(written) || !MARKDOWN.test(to);
-  const name = basename(to);
-  const short = withExt ? name : stem(name);
-  if (
-    !written.includes("/") &&
-    resolveTarget(after, `[[${short}]]`, docPath)?.path === sep(to)
-  )
-    return short;
-  const rel = relativePath(after.root, sep(to));
-  return withExt ? rel : stem(rel);
+  for (const m of text.matchAll(MARKDOWN_LINK)) {
+    const written = m[2] ?? m[4];
+    const start = (m.index ?? 0) + (m[1] ?? m[3]).length;
+    const angle = written.startsWith("<");
+    const bare = angle ? written.slice(1, -1) : written;
+    const scheme =
+      /^[a-z][a-z0-9+.-]*:/i.test(bare) && !/^[a-z]:[\\/]/i.test(bare);
+    if (scheme || bare.startsWith("#")) continue;
+    const hash = bare.indexOf("#");
+    const file = hash < 0 ? bare : bare.slice(0, hash);
+    const fragment = hash < 0 ? "" : bare.slice(hash);
+    const decoded = sep(decode(file));
+    if (!decoded) continue;
+    const path = markdownTarget(file, decoded);
+    edit(
+      start,
+      written,
+      path === null
+        ? null
+        : angle
+          ? `<${path}${fragment}>`
+          : path.replace(/ /g, "%20") + fragment,
+    );
+  }
+
+  for (const m of text.matchAll(WIKI_LINK)) {
+    const raw = m[1];
+    const name = raw.trim().replace(/\\$/, "");
+    if (!name) continue; // [[#heading]] in the same note
+    const start = (m.index ?? 0) + 2 + raw.indexOf(name);
+    const found = existing(before, `[[${name}]]`, oldDoc);
+    if (!found) continue;
+    const target = moved(found) ?? found;
+    if (!docMoved && target === found) continue;
+    if (existing(after, `[[${name}]]`, newDoc) === target) continue;
+    const ext = spelling(target, found, name);
+    const form: Form = isRelative(name)
+      ? "relative"
+      : name.includes("/")
+        ? "path"
+        : "name";
+    let next: string;
+    if (form === "relative") {
+      const path = ext(relativePath(newDir, target));
+      next = path.startsWith(".") ? path : `./${path}`;
+    } else {
+      const short = ext(nameOf(target));
+      next =
+        form === "name" && existing(after, `[[${short}]]`, newDoc) === target
+          ? short
+          : ext(relativePath(root, target));
+    }
+    edit(start, name, next);
+  }
+  if (edits.length === 0) return { text, count: 0 };
+
+  const code = codeRanges(text);
+  const inCode = (offset: number) =>
+    code.some(([s, e]) => s <= offset && offset < e);
+  let out = text;
+  let count = 0;
+  let last = Infinity;
+  for (const e of edits.sort((a, b) => b.start - a.start)) {
+    if (e.end > last || inCode(e.start)) continue;
+    out = out.slice(0, e.start) + e.text + out.slice(e.end);
+    last = e.start;
+    count++;
+  }
+  return { text: out, count };
 }
 
 /**
- * The text of a document moved from `from` to `to`, its relative Markdown
- * links and pictures made to lead where they led before. Wiki links (by
- * name, from the vault) and links from "/" don't move with it.
+ * `text`, the document that was at `doc`, with its links following `move`:
+ * links to files that moved, and, when the document moved itself, its own
+ * relative links. `count` is how many links changed.
  */
-export function rebaseLinks(text: string, from: string, to: string): string {
-  const oldDir = sep(dirname(from));
-  const newDir = sep(dirname(to));
-  if (oldDir === newDir) return text;
-  return eachMarkdownLink(text, (bare) => {
-    const [file, hash = ""] = bare.split(/(?=#)/);
-    const path = decoded(file);
-    if (!path || path.startsWith("/") || /^[a-z]:/i.test(path)) return null;
-    return relativePath(newDir, resolveFrom(oldDir, path)) + hash;
+export function rewriteMovedLinks(
+  text: string,
+  doc: string,
+  move: LinkMove,
+): { text: string; count: number } {
+  return rewriteWith(text, doc, contextOf(move));
+}
+
+/** Where `path` went when `from` became `to` (a file, or a folder and all in it). */
+export function movedBy(from: string, to: string) {
+  const a = sep(from);
+  const b = sep(to);
+  return (path: string): string | null => {
+    const p = sep(path);
+    if (p === a) return b;
+    return p.startsWith(`${a}/`) ? b + p.slice(a.length) : null;
+  };
+}
+
+/** A document whose links a rename changed, and how many. */
+export interface LinkUpdate {
+  path: string;
+  text: string;
+  count: number;
+}
+
+export interface LinkPlan {
+  root: string;
+  from: string;
+  to: string;
+  linkRoot?: string | null;
+}
+
+/**
+ * What `from` becoming `to` does to one document's links, worked out after
+ * the move: `files` and the document's path are where they are now. Null
+ * when none change. Built once, it is asked again for each document.
+ */
+export function linkPlanner(
+  files: string[],
+  plan: LinkPlan,
+): (doc: { path: string; text: string }) => LinkUpdate | null {
+  const back = movedBy(plan.to, plan.from);
+  const oldFiles = files.map((f) => back(f) ?? sep(f));
+  const from = sep(plan.from);
+  // A hidden or ignored file isn't indexed, but its links still count.
+  if (!oldFiles.some((f) => f === from || f.startsWith(`${from}/`)))
+    oldFiles.push(from);
+  const ctx = contextOf({
+    root: plan.root,
+    files: oldFiles,
+    moved: movedBy(plan.from, plan.to),
+    linkRoot: plan.linkRoot,
   });
+  return (doc) => {
+    const oldPath = back(doc.path) ?? sep(doc.path);
+    const { text, count } = rewriteWith(doc.text, oldPath, ctx);
+    return count > 0 ? { path: doc.path, text, count } : null;
+  };
+}
+
+/** The documents whose links must follow `from` becoming `to`. */
+export function planLinkUpdates(
+  documents: { path: string; text: string }[],
+  files: string[],
+  plan: LinkPlan,
+): LinkUpdate[] {
+  const planner = linkPlanner(files, plan);
+  return documents.flatMap((doc) => planner(doc) ?? []);
 }

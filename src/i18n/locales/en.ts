@@ -535,6 +535,13 @@ type /name in a conversation to use one.
   treeRenameItem: "Rename…",
   treeRename: "Rename",
   treeRenamePrompt: "New name",
+  treeUpdateLinksConfirm:
+    "Update the links to and from “{name}” so they keep working?",
+  treeUpdateLinks: "Update Links",
+  treeKeepLinks: "Don't Update",
+  treeUpdateLinksFailed: "These documents' links couldn't be updated: {names}",
+  treeDocumentFolder: "Current document's folder",
+  treeOpenAsFolder: "Open as Folder",
   treeTrashItem: "Move to Trash",
   treeTrash: "Move to Trash",
   treeTrashConfirm:

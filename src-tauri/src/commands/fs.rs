@@ -17,6 +17,9 @@ pub struct DirEntryInfo {
     /// Hidden: a name starting with a dot, or on Windows a file marked hidden or
     /// system (desktop.ini).
     hidden: bool,
+    /// Left out by a `.gitignore` or as build output, as the file search
+    /// leaves it out; the tree shows it dimmed.
+    ignored: bool,
 }
 
 /// Whether Windows marks `meta` hidden or system; never elsewhere.
@@ -222,6 +225,10 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     require_non_empty(&path)?;
     let mut reader = fs::read_dir(&path).await.map_err(|e| e.to_string())?;
     let mut items: Vec<DirEntryInfo> = Vec::new();
+    let dir = PathBuf::from(&path);
+    let ignored = tauri::async_runtime::spawn_blocking(move || crate::walk::ignored_children(&dir))
+        .await
+        .unwrap_or_default();
 
     while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
         let file_type = entry.file_type().await.map_err(|e| e.to_string())?;
@@ -235,6 +242,7 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
         items.push(DirEntryInfo {
             hidden: name.starts_with('.') || meta.as_ref().is_some_and(marked_hidden),
             name,
+            ignored: ignored.contains(&entry.path()),
             path: entry.path().to_string_lossy().to_string(),
             is_dir: file_type.is_dir(),
             modified_ms,
@@ -306,9 +314,12 @@ pub async fn save_pasted_image(
     }
     let bytes = STANDARD.decode(&data_base64).map_err(|e| e.to_string())?;
 
-    let folder = match doc_path.as_deref() {
-        Some(doc) => Some(ImageFolder::resolve(Path::new(doc), &folder)?),
-        None => None,
+    let (folder, vault) = match doc_path.as_deref() {
+        Some(doc) => match super::vault::convention_folder(Path::new(doc)) {
+            Some((folder, vault)) => (Some(folder), vault),
+            None => (Some(ImageFolder::resolve(Path::new(doc), &folder)?), None),
+        },
+        None => (None, None),
     };
     let dir = match &folder {
         Some(folder) => folder.dir.clone(),
@@ -324,11 +335,14 @@ pub async fn save_pasted_image(
         .await
         .map_err(|e| e.to_string())?;
 
+    let embed = vault.as_ref().and_then(|vault| {
+        super::vault::vault_embed(vault, Path::new(doc_path.as_deref()?), &dir.join(&name))
+    });
     let src = match folder {
         Some(folder) => folder.src(&name),
         None => dir.join(&name).to_string_lossy().to_string(),
     };
-    Ok(SavedImage { src })
+    Ok(SavedImage { src, embed })
 }
 
 /// Brings a document's images into the image folder of the file it was just

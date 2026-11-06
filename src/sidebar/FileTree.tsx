@@ -39,7 +39,9 @@ import {
   type TreeSort,
 } from "./tree-shared";
 import { useRowDrag } from "./useRowDrag";
+import { updateLinksAfterMove } from "./move-links";
 import { DirNode } from "./TreeNodes";
+import { TreeFollowing } from "./TreeFollowing";
 import "./FileTree.css";
 import { copyPathItem } from "../clipboard/copy-path";
 export type { TreeSort } from "./tree-shared";
@@ -57,6 +59,8 @@ interface FileTreeProps {
   onFileSelect: (path: string, beside?: boolean) => void;
   /** File > Open Folder… and Close Folder; Open is left out on iOS. */
   onOpenFolder?: () => void;
+  /** Opens the folder the tree shows as the window's folder; desktop only. */
+  onOpenAsFolder?: (path: string) => void;
   onCloseFolder: () => void;
   /** A file or folder was dragged into another folder: open tabs follow
    *  it to its new path. */
@@ -81,6 +85,7 @@ export function FileTree({
   activePath,
   onFileSelect,
   onOpenFolder,
+  onOpenAsFolder,
   onCloseFolder,
   onEntryMoved,
   searchFocusRequest,
@@ -103,6 +108,7 @@ export function FileTree({
 
   const onRowMenu = useRowMenu(
     root,
+    folder ?? root,
     t,
     reload,
     onFileSelect,
@@ -113,6 +119,7 @@ export function FileTree({
     treeRef,
     reload,
     onEntryMoved,
+    folder ?? root,
     t,
   );
   const shared = useMemo<TreeShared>(
@@ -122,6 +129,7 @@ export function FileTree({
       showHidden,
       versions,
       stale: view.stale,
+      refreshed: view.refreshed,
       dropInto: drag?.into ?? null,
       onRowMenu: desktop ? onRowMenu : null,
       onRowPointerDown: desktop ? onRowPointerDown : null,
@@ -134,6 +142,7 @@ export function FileTree({
       showHidden,
       versions,
       view.stale,
+      view.refreshed,
       drag?.into,
       desktop,
       onRowMenu,
@@ -272,6 +281,14 @@ export function FileTree({
               </button>
             </Tooltip>
           </div>
+          {!folder && onOpenAsFolder && (
+            <TreeFollowing
+              t={t}
+              root={root}
+              activePath={activePath}
+              onOpenAsFolder={onOpenAsFolder}
+            />
+          )}
           <div
             ref={treeRef}
             role="tree"
@@ -339,6 +356,7 @@ function useTreeView(base: string) {
     setStale((prev) => bump(prev, dirs));
   }, []);
   usePluginWrites(base, refresh);
+  const refreshed = useRefreshOnFocus();
   return {
     generation,
     setGeneration,
@@ -354,7 +372,20 @@ function useTreeView(base: string) {
     reload,
     stale,
     refresh,
+    refreshed,
   };
+}
+
+/** A count bumped each time the window comes back to the front, when Git,
+ *  Obsidian or a file manager may have changed the folder. */
+function useRefreshOnFocus(): number {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const onFocus = () => setCount((n) => n + 1);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+  return count;
 }
 
 function bump(counts: Record<string, number>, dirs: string[]) {
@@ -406,6 +437,7 @@ type TreeMenu = {
 /** A row's context menu: open, new document or folder, rename, move to Trash. */
 function useRowMenu(
   root: string,
+  linkBase: string,
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string, beside?: boolean) => void,
@@ -424,11 +456,12 @@ function useRowMenu(
         reload(parentDir(path) ?? root);
         // Open documents follow, as for a move.
         onEntryMoved(path, to);
+        void updateLinksAfterMove(path, to, linkBase, t);
       } catch (err) {
         await showMessage(failureText(t, err, name.trim()));
       }
     },
-    [root, t, reload, onEntryMoved],
+    [root, linkBase, t, reload, onEntryMoved],
   );
   const trash = useCallback(
     async (path: string, isDir: boolean) => {

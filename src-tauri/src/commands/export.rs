@@ -91,8 +91,15 @@ pub async fn export_via_pandoc(
     reference_doc: Option<String>,
 ) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
+        let mut args = pandoc_args(&format, &title);
+        if resource_dir
+            .as_deref()
+            .is_some_and(|d| super::vault::soft_breaks_show(Path::new(d)))
+        {
+            args[1].push_str("+hard_line_breaks");
+        }
         let mut cmd = Command::new(&pandoc_path);
-        cmd.args(pandoc_args(&format, &title))
+        cmd.args(args)
             .arg("--output")
             .arg(&output_path)
             .stdin(Stdio::piped())

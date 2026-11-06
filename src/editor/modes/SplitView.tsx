@@ -1,5 +1,6 @@
 import { useDeferredValue, useRef } from "react";
 import { SplitPreview } from "./SplitPreview";
+import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceTextarea } from "./DocSourceTextarea";
 import "./SplitView.css";
 
@@ -26,6 +27,7 @@ export function SplitView({
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
+  const breaks = useVaultLineBreaks(filePath);
 
   // The scrollTop each side was last moved to by the other. Its scroll event
   // can arrive frames later (WebKitGTK), so it is matched by position, not a
@@ -70,7 +72,7 @@ export function SplitView({
       />
       <div
         ref={previewRef}
-        className="split-preview"
+        className={`split-preview${breaks ? " split-preview-breaks" : ""}`}
         onScroll={(e) =>
           sourceRef.current &&
           follow(e.currentTarget, sourceRef.current, "preview")

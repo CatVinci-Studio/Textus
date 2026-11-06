@@ -40,3 +40,10 @@
     border-bottom: 1px solid var(--ui-border);
   }
 }
+
+/* An Obsidian vault without strict line breaks breaks the line at a single
+   newline, which the editor shows as a space. */
+.split-preview-breaks [data-type="hardbreak"][data-is-inline="true"]::after {
+  content: "\A";
+  white-space: pre;
+}

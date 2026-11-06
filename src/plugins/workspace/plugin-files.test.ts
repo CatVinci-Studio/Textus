@@ -7,10 +7,10 @@ import {
   withFrontmatter,
 } from "./frontmatter";
 import {
-  rebaseLinks,
+  movedBy,
+  planLinkUpdates,
   relativePath,
-  renameContext,
-  rewriteLinks,
+  rewriteMovedLinks,
 } from "./link-rewrite";
 
 describe("a glob", () => {
@@ -94,8 +94,8 @@ describe("front matter", () => {
   });
 });
 
-/** `rewriteLinks` in a folder /r holding `doc`, the renamed file (now at
- *  `to`) and `others`. */
+/** `doc`'s text after a rename in a folder /r holding `doc`, the renamed
+ *  file (now at `to`) and `others`. */
 function rw(
   text: string,
   doc: string,
@@ -105,13 +105,13 @@ function rw(
   linkRoot: string | null = null,
 ) {
   const paths = [doc, to, ...others];
-  return rewriteLinks(
-    text,
-    doc,
+  const [update] = planLinkUpdates([{ path: doc, text }], paths, {
+    root: "/r",
     from,
     to,
-    renameContext("/r", paths, from, to, linkRoot),
-  );
+    linkRoot,
+  });
+  return update?.text ?? text;
 }
 
 describe("links after a rename", () => {
@@ -242,7 +242,13 @@ describe("a moved document's own links", () => {
   it("lead where they led before, wiki links and links from / untouched", () => {
     const text =
       "![](assets/a.png) [b](../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)";
-    expect(rebaseLinks(text, "/r/notes/x.md", "/r/archive/2024/x.md")).toBe(
+    const from = "/r/notes/x.md";
+    const move = {
+      root: "/r",
+      files: [from],
+      moved: movedBy(from, "/r/archive/2024/x.md"),
+    };
+    expect(rewriteMovedLinks(text, from, move).text).toBe(
       "![](../../notes/assets/a.png) [b](../../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)",
     );
   });

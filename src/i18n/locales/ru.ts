@@ -541,6 +541,14 @@ export default {
   treeRenameItem: "Переименовать…",
   treeRename: "Переименовать",
   treeRenamePrompt: "Новое имя",
+  treeUpdateLinksConfirm:
+    "Обновить ссылки на «{name}» и из него, чтобы они продолжали работать?",
+  treeUpdateLinks: "Обновить ссылки",
+  treeKeepLinks: "Не обновлять",
+  treeUpdateLinksFailed:
+    "Не удалось обновить ссылки в этих документах: {names}",
+  treeDocumentFolder: "Папка текущего документа",
+  treeOpenAsFolder: "Открыть как папку",
   treeTrashItem: "Переместить в корзину",
   treeTrash: "Переместить в корзину",
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",

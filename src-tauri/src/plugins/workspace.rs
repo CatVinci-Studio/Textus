@@ -54,7 +54,7 @@ pub struct WorkspaceDocuments {
     truncated: bool,
 }
 
-fn documents_in(root: &Path) -> WorkspaceDocuments {
+pub(crate) fn documents_in(root: &Path) -> WorkspaceDocuments {
     let walk = crate::walk::walk(root, &crate::walk::LIMITS, is_markdown);
     let mut truncated = walk.truncated;
     let mut total = 0;

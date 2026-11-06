@@ -9,7 +9,7 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../workspace/frontmatter";
-import { renameContext, rewriteLinks } from "../workspace/link-rewrite";
+import { linkPlanner } from "../workspace/link-rewrite";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -142,19 +142,33 @@ export function fileHandlers(p: PluginScope) {
       );
       await notePathMoved(source, target);
       if (updateLinks !== true) return;
-      const { documents } = await pluginsIpc.fsDocuments(p.id, root);
-      const context = renameContext(
-        root,
-        documents.map((d) => d.path),
-        source,
-        target,
-        await fs.documentLinkRoot(target, root).catch(() => null),
+      // A plugin may name the files from the folder.
+      const abs = (path: string) =>
+        /^([\\/]|[A-Za-z]:)/.test(path)
+          ? path
+          : `${root.replace(/[\\/]+$/, "")}/${path}`;
+      const [{ documents }, { files }, vault, linkRoot] = await Promise.all([
+        pluginsIpc.fsDocuments(p.id, root),
+        fs.indexFolder(root),
+        fs.obsidianVault(root).catch(() => null),
+        fs.documentLinkRoot(abs(target), root).catch(() => null),
+      ]);
+      const planner = linkPlanner(
+        files.map((f) => f.path),
+        {
+          root: vault?.root ?? root,
+          from: abs(source),
+          to: abs(target),
+          linkRoot,
+        },
       );
       for (const doc of documents) {
-        const rewrite = (text: string) =>
-          rewriteLinks(text, doc.path, source, target, context);
-        if (rewrite(doc.text) === doc.text) continue;
-        await change(doc.path, rewrite);
+        if (!planner(doc)) continue;
+        // Planned again on the text as it is now: it may have changed.
+        await change(
+          doc.path,
+          (text) => planner({ path: doc.path, text })?.text ?? text,
+        );
       }
     },
     "files.trash": async ({ path }: Params) => {

@@ -550,6 +550,14 @@ para usar una.
   treeRenameItem: "Cambiar nombre…",
   treeRename: "Cambiar nombre",
   treeRenamePrompt: "Nombre nuevo",
+  treeUpdateLinksConfirm:
+    "¿Actualizar los enlaces hacia y desde «{name}» para que sigan funcionando?",
+  treeUpdateLinks: "Actualizar enlaces",
+  treeKeepLinks: "No actualizar",
+  treeUpdateLinksFailed:
+    "No se pudieron actualizar los enlaces de estos documentos: {names}",
+  treeDocumentFolder: "Carpeta del documento actual",
+  treeOpenAsFolder: "Abrir como carpeta",
   treeTrashItem: "Mover a la papelera",
   treeTrash: "Mover a la papelera",
   treeTrashConfirm:

@@ -65,6 +65,27 @@ it("stores a pasted picture and writes it at the caret", async () => {
   );
 });
 
+it("writes the embed an Obsidian vault asks for instead of a Markdown image", async () => {
+  vi.mocked(fs.savePastedImage).mockResolvedValue({
+    src: "../shot.png",
+    embed: "![[shot.png]]",
+  } as never);
+  const onChange = vi.fn();
+  render(
+    <DocSourceTextarea
+      docPath="/vault/notes/a.md"
+      value=""
+      typewriter={false}
+      onChange={onChange}
+      aria-label="source"
+    />,
+  );
+  paste(screen.getByLabelText("source"), [
+    new File(["x"], "shot.png", { type: "image/png" }),
+  ]);
+  await waitFor(() => expect(onChange).toHaveBeenCalledWith("![[shot.png]]"));
+});
+
 it("leaves a paste without pictures to the textarea", () => {
   const onChange = vi.fn();
   render(

@@ -17,6 +17,7 @@ import { useDraftTitles } from "../ai/doc-title";
 import { useZenMode } from "./useZenMode";
 import { useSourceModes } from "./useSourceModes";
 import { useTabRemoval } from "./close-flow";
+import { folderTabsToClose } from "./close-folder";
 import { usePracticeTab } from "./onboarding-wiring";
 import { usePluginWindow } from "../plugins/usePluginWindow";
 import type { WindowShell } from "./useWindowShell";
@@ -158,6 +159,17 @@ export function useWindowDocuments({
     t,
   });
 
+  // Close Folder also closes the folder's saved documents.
+  const { folder, closeFolder: forgetFolder } = openFolder;
+  const { addBlankTab } = tabState;
+  const closeFolder = useCallback(() => {
+    forgetFolder();
+    if (!folder) return;
+    const { close, blank } = folderTabsToClose(liveTabs(), folder);
+    if (blank) addBlankTab();
+    for (const id of close) removeTab(id);
+  }, [folder, forgetFolder, liveTabs, addBlankTab, removeTab]);
+
   // Tabs moving between windows, in both directions.
   const { dragHoverPreview, handleTabDetach, moveTabToNewWindow } =
     useTabDragMerge({
@@ -175,7 +187,7 @@ export function useWindowDocuments({
 
   return {
     ...active,
-    openFolder,
+    openFolder: { ...openFolder, closeFolder },
     searchFocusRequest,
     clearSearchFocusRequest,
     searchFiles,

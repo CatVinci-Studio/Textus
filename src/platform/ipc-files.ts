@@ -14,6 +14,7 @@ export type {
   NoteLinkTarget,
   SavedImage,
   IndexedFile,
+  ObsidianVault,
   FolderIndex,
   WordDocument,
 } from "./bindings/files";
@@ -79,6 +80,9 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
+  /** Every Markdown document under `root` with its text, for the links a
+   *  rename updates. Rejects as `indexFolder` does. */
+  folderDocuments: (root: string) => command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>
@@ -136,6 +140,9 @@ export const fs = {
    *  repository, the vault, the open folder); null for the disk's root. */
   documentLinkRoot: (docPath: string, folder: string | null) =>
     command("document_link_root", docPath, folder),
+  /** The Obsidian vault a document or folder is in, with the settings
+   *  Textus follows; null outside one. Never written. */
+  obsidianVault: (path: string) => command("obsidian_vault", path),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (
