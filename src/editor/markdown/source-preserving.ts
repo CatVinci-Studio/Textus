@@ -16,6 +16,7 @@ import {
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { ParserState, type MarkdownNode } from "@milkdown/kit/transformer";
 import { blockMarkdown } from "./block-markdown";
+import { withEscapesAsWritten } from "./escapes-as-written";
 
 /**
  * Saving writes back, byte for byte, every top-level block the user didn't
@@ -288,7 +289,8 @@ function piecesOf(
 }
 
 /** A run of changed blocks as the serializer writes it, without the final
- *  newline. A thematic break first in a run (not the document) is "---". */
+ *  newline, with `original`'s escapes where they still read the same. A
+ *  thematic break first in a run (not the document) is "---". */
 function writeRun(
   ctx: Ctx,
   { runs }: SaveMemo,
@@ -296,6 +298,7 @@ function writeRun(
   offsets: number[],
   from: number,
   to: number,
+  original: string | null,
 ): string {
   const nodes: ProseNode[] = [];
   for (let j = from; j < to; j++) nodes.push(doc.child(j));
@@ -307,12 +310,20 @@ function writeRun(
     text = ctx
       .get(serializerCtx)(doc.cut(offsets[from], end))
       .replace(/\n+$/, "");
+    if (original !== null && original.length < MAX_ESCAPE_CHECK) {
+      const kept = withEscapesAsWritten(original, text);
+      if (kept !== text && sameNodes(ctx, nodes, readBlocks(ctx, kept)))
+        text = kept;
+    }
     runs.set(nodes[0], { nodes, text });
   }
   return from > 0 && nodes[0].type.name === "hr"
     ? text.replace(/^\*\*\*/, "---")
     : text;
 }
+
+/** Longer stretches are a rewrite: their escapes aren't worth a diff. */
+const MAX_ESCAPE_CHECK = 20_000;
 
 function sameObjects(a: readonly ProseNode[], b: readonly ProseNode[]) {
   return a.length === b.length && a.every((node, k) => node === b[k]);
@@ -375,6 +386,18 @@ interface Composed {
   definitions: string;
 }
 
+/** The file's text a changed run stands in for: between the kept pieces
+ *  around it, when they are in the file's order. */
+function originalBetween(
+  { text, units }: SourceBlocks,
+  before: Piece | undefined,
+  after: Piece | undefined,
+): string | null {
+  const from = before ? units[before.to].end! : 0;
+  const to = after ? units[after.from].start! : text.length;
+  return from <= to ? text.slice(from, to).trim() : null;
+}
+
 function unitText(source: SourceBlocks, u: number): string {
   const unit = source.units[u];
   return source.text.slice(unit.start!, unit.end!);
@@ -390,7 +413,7 @@ function compose(
   const offsets: number[] = [];
   doc.forEach((_node, offset) => offsets.push(offset));
   const definitions: string[] = [];
-  const pieceTexts = pieces.map((piece) => {
+  const pieceTexts = pieces.map((piece, p) => {
     if (piece.kind === "changed") {
       const written = writeRun(
         ctx,
@@ -399,6 +422,7 @@ function compose(
         offsets,
         piece.from,
         piece.to,
+        originalBetween(source, pieces[p - 1], pieces[p + 1]),
       );
       for (let j = piece.from; j < piece.to; j++)
         if (isDefinition(doc.child(j))) {
