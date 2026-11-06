@@ -82,6 +82,24 @@ export function blockPos(doc: ProseNode, id: string): number | null {
   return found;
 }
 
+/** The HTML element with `id` or `name` `anchor` (`<a id="note1"></a>`),
+ *  the way a hand-made table of contents links to a spot in the text. */
+export function htmlAnchorPos(doc: ProseNode, anchor: string): number | null {
+  const quoted = anchor.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const named = new RegExp(
+    `<[a-z][^>]*\\s(?:id|name)\\s*=\\s*(["']?)${quoted}\\1(?=[\\s/>])`,
+    "i",
+  );
+  let found: number | null = null;
+  doc.descendants((node, pos) => {
+    if (found !== null) return false;
+    if (node.type.name === "html" && named.test(node.textContent))
+      found = pos + 1;
+    return true;
+  });
+  return found;
+}
+
 /** The position inside the reference-list entry `ref-<n>` names: the last
  *  paragraph that starts "[n]", the way a paper's numbered citations link
  *  to their sources (docs/design/ai-paper.md). Null for any other anchor. */
@@ -99,12 +117,15 @@ export function referencePos(doc: ProseNode, anchor: string): number | null {
 }
 
 /**
- * Scrolls to the heading `anchor` names, or the reference `ref-<n>` names. False when the document has no such
- * heading; nothing moves then.
+ * Scrolls to what `anchor` names: a heading, an HTML element's id, or the
+ * reference `ref-<n>`. False when the document has none; nothing moves then.
  */
 export function revealHeading(view: EditorView, anchor: string): boolean {
+  const { doc } = view.state;
   const pos =
-    headingPos(view.state.doc, anchor) ?? referencePos(view.state.doc, anchor);
+    headingPos(doc, anchor) ??
+    htmlAnchorPos(doc, anchor) ??
+    referencePos(doc, anchor);
   if (pos === null) return false;
   revealPosition(view, pos);
   return true;

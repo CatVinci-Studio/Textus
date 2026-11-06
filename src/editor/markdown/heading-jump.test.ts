@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
-import { headingPos, referencePos } from "./heading-jump";
+import { headingPos, htmlAnchorPos, referencePos } from "./heading-jump";
 
 const schema = new Schema({
   nodes: {
     doc: { content: "block+" },
-    paragraph: { content: "text*", group: "block" },
+    paragraph: { content: "inline*", group: "block" },
     heading: { content: "text*", group: "block" },
-    text: {},
+    text: { group: "inline" },
+    html: { content: "text*", group: "inline", inline: true },
   },
 });
 
@@ -107,5 +108,28 @@ describe("headingPos for wikilinks' blocks and levels", () => {
     expect(headingPos(book, "^abc123")).toBe(13);
     expect(headingPos(book, "^list1")).toBe(29);
     expect(headingPos(book, "^nope")).toBeNull();
+  });
+});
+
+describe("htmlAnchorPos", () => {
+  const html = (source: string) =>
+    schema.node("html", null, [schema.text(source)]);
+  const page = schema.node("doc", null, [
+    schema.node("paragraph", null, [schema.text("Intro")]),
+    schema.node("paragraph", null, [
+      schema.text("See "),
+      html('<a id="note1"></a>'),
+    ]),
+    schema.node("paragraph", null, [html("<a name=old.2>")]),
+  ]);
+
+  it("finds an element by its id or name", () => {
+    expect(htmlAnchorPos(page, "note1")).toBe(13);
+    expect(htmlAnchorPos(page, "old.2")).not.toBeNull();
+  });
+
+  it("matches the whole id only", () => {
+    expect(htmlAnchorPos(page, "note")).toBeNull();
+    expect(htmlAnchorPos(page, "old")).toBeNull();
   });
 });
