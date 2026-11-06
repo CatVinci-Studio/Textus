@@ -400,6 +400,10 @@ export default {
   paperSectionDrafted: "已写完",
   paperSectionRevising: "修改中",
   paperSectionFailed: "失败",
+  paperSectionsAtOnce: { other: "同时撰写 {n} 节 · 已完成 {done}/{of}" },
+  paperRevisingAtOnce: { other: "同时修改 {n} 节 · 已完成 {done}/{of}" },
+  paperQuestionsAtOnce: { other: "同时研究 {n} 个问题 · 已完成 {done}/{of}" },
+  paperDoneOf: "已完成 {done}/{of}",
   paperOutlineRetry: "第 {n} 稿：上一稿没通过检查，正在重拟…",
   paperPapersOnly:
     "没有可用的网页搜索，这篇的研究只会检索学术论文（OpenAlex、arXiv）和你的资料库。",
@@ -630,6 +634,10 @@ export default {
   searchServiceSendsTo: "搜索内容会发送给 {name}。",
   searchServiceNone: "还没有可用的搜索：请选一个服务并填入它的 Key。",
   searxngUrlLabel: "SearXNG 地址",
+  researchAtOnceLabel: "研究：同时请求数",
+  researchAtOnceAuto: "自动",
+  researchAtOnceHelp:
+    "研究模式同时向模型发出的请求数，用于并行研究问题、撰写各节。“自动”按服务商的常见限额设定；如遇频率限制错误，请调低。",
   editAnimationLabel: "编辑预览动画",
   agentWorkspaceLabel: "全局配置文件夹",
   agentWorkspaceOpenButton: "打开",

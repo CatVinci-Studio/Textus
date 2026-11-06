@@ -16,9 +16,7 @@ use serde_json::{json, Value};
 
 pub(crate) const REPORT_ISSUES_TOOL: &str = "report_issues";
 
-use super::tuning::{
-    MAX_POINTS_PER_SECTION as MAX_PER_SECTION, REVIEW_STEPS, REVISERS_AT_ONCE as AT_ONCE,
-};
+use super::tuning::{MAX_POINTS_PER_SECTION as MAX_PER_SECTION, REVIEW_STEPS};
 
 /// One point against a section.
 #[derive(Debug, Clone, PartialEq)]
@@ -149,7 +147,8 @@ pub(crate) async fn review(
     Ok(issues.unwrap_or_default())
 }
 
-/// `sections` with each one `issues` names revised once, three at a time.
+/// `sections` with each one `issues` names revised once, as many at a time as
+/// the model takes.
 /// `revising` hears of each as it begins; a revision that fails leaves the
 /// draft. Returns which sections changed.
 #[allow(clippy::too_many_arguments)]
@@ -193,7 +192,7 @@ pub(crate) async fn revise(
                 .await,
             )
         })
-        .buffer_unordered(AT_ONCE)
+        .buffer_unordered(model.at_once())
         .collect()
         .await;
     let mut changed = Vec::new();

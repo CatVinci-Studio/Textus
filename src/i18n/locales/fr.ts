@@ -452,6 +452,22 @@ utiliser une.
   paperSectionDrafted: "Rédigé",
   paperSectionRevising: "Révision",
   paperSectionFailed: "Échec",
+  paperSectionsAtOnce: {
+    one: "Rédaction de {n} section à la fois · {done} sur {of} terminées",
+    many: "Rédaction de {n} de sections à la fois · {done} sur {of} terminées",
+    other: "Rédaction de {n} sections à la fois · {done} sur {of} terminées",
+  },
+  paperRevisingAtOnce: {
+    one: "Révision de {n} section à la fois · {done} sur {of} terminées",
+    many: "Révision de {n} de sections à la fois · {done} sur {of} terminées",
+    other: "Révision de {n} sections à la fois · {done} sur {of} terminées",
+  },
+  paperQuestionsAtOnce: {
+    one: "Recherche sur {n} question à la fois · {done} sur {of} terminées",
+    many: "Recherche sur {n} de questions à la fois · {done} sur {of} terminées",
+    other: "Recherche sur {n} questions à la fois · {done} sur {of} terminées",
+  },
+  paperDoneOf: "{done} sur {of} terminées",
   paperOutlineRetry:
     "Version {n} : la précédente n'a pas passé les vérifications, elle est refaite…",
   paperPapersOnly:
@@ -708,6 +724,10 @@ utiliser une.
   searchServiceNone:
     "Rien pour chercher pour l'instant : choisissez un service et ajoutez sa clé.",
   searxngUrlLabel: "Adresse de SearXNG",
+  researchAtOnceLabel: "Recherche : requêtes simultanées",
+  researchAtOnceAuto: "Automatique",
+  researchAtOnceHelp:
+    "Le nombre de requêtes que le mode Recherche envoie en même temps au modèle, pour étudier les questions et rédiger les sections en parallèle. Automatique convient à votre fournisseur ; baissez-le si des erreurs de limite de débit apparaissent.",
   editAnimationLabel: "Animer l'aperçu des modifications",
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",

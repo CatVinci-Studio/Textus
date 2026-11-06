@@ -36,8 +36,6 @@ pub(super) const OUTLINE_LENGTH: (f64, f64) = (0.5, 1.6);
 
 // Drafting.
 
-/// Writers writing at once.
-pub(super) const WRITERS_AT_ONCE: usize = 3;
 /// A writer's tries at a section that holds.
 pub(super) const WRITER_STEPS: usize = 5;
 /// How far a section's length may be from its target, as fractions of it:
@@ -54,8 +52,6 @@ pub(super) const REVIEW_STEPS: usize = 3;
 /// Points kept against one section: the most important, as the reviewer
 /// ordered them.
 pub(super) const MAX_POINTS_PER_SECTION: usize = 3;
-/// Sections revised at once.
-pub(super) const REVISERS_AT_ONCE: usize = 3;
 
 // Figures.
 

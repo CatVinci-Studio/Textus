@@ -450,6 +450,22 @@ para usar una.
   paperSectionDrafted: "Redactado",
   paperSectionRevising: "Revisando",
   paperSectionFailed: "Falló",
+  paperSectionsAtOnce: {
+    one: "Escribiendo {n} sección a la vez · {done} de {of} listas",
+    many: "Escribiendo {n} de secciones a la vez · {done} de {of} listas",
+    other: "Escribiendo {n} secciones a la vez · {done} de {of} listas",
+  },
+  paperRevisingAtOnce: {
+    one: "Revisando {n} sección a la vez · {done} de {of} listas",
+    many: "Revisando {n} de secciones a la vez · {done} de {of} listas",
+    other: "Revisando {n} secciones a la vez · {done} de {of} listas",
+  },
+  paperQuestionsAtOnce: {
+    one: "Investigando {n} pregunta a la vez · {done} de {of} listas",
+    many: "Investigando {n} de preguntas a la vez · {done} de {of} listas",
+    other: "Investigando {n} preguntas a la vez · {done} de {of} listas",
+  },
+  paperDoneOf: "{done} de {of} listas",
   paperOutlineRetry:
     "Versión {n}: la anterior no pasó las comprobaciones; se está rehaciendo…",
   paperPapersOnly:
@@ -702,6 +718,10 @@ para usar una.
   searchServiceNone:
     "Aún no hay con qué buscar: elige un servicio y añade su clave.",
   searxngUrlLabel: "Dirección de SearXNG",
+  researchAtOnceLabel: "Investigación: peticiones a la vez",
+  researchAtOnceAuto: "Automático",
+  researchAtOnceHelp:
+    "Cuántas peticiones envía a la vez el modo Investigación al modelo, para investigar preguntas y escribir secciones en paralelo. Automático se ajusta a tu proveedor; bájalo si ves errores de límite de peticiones.",
   editAnimationLabel: "Animar la vista previa de los cambios",
   agentWorkspaceLabel: "Carpeta de configuración global",
   agentWorkspaceOpenButton: "Mostrar",

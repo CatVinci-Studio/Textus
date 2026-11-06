@@ -68,6 +68,11 @@ export type DraftRequest_Deserialize = {
 	id: string,
 	/**  The image model the paper's pictures are made with; None for none. */
 	imageModel?: ImageModel_Deserialize | null,
+	/**
+	 *  Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+	 *  provider's.
+	 */
+	atOnce?: number | null,
 };
 
 /**
@@ -84,6 +89,11 @@ export type DraftRequest_Serialize = {
 	id: string,
 	/**  The image model the paper's pictures are made with; None for none. */
 	imageModel: ImageModel_Serialize | null,
+	/**
+	 *  Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+	 *  provider's.
+	 */
+	atOnce: number | null,
 };
 
 /**
@@ -431,6 +441,11 @@ export type PaperRequest_Deserialize = {
 	 *  none.
 	 */
 	conversation?: string | null,
+	/**
+	 *  Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+	 *  provider's.
+	 */
+	atOnce?: number | null,
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
@@ -472,6 +487,11 @@ export type PaperRequest_Serialize = {
 	 *  none.
 	 */
 	conversation: string | null,
+	/**
+	 *  Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+	 *  provider's.
+	 */
+	atOnce: number | null,
 };
 
 /**  How far a paper has come. */

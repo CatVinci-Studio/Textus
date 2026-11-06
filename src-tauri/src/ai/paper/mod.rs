@@ -25,6 +25,7 @@ mod sources;
 pub mod status;
 mod store;
 mod stream;
+mod throttle;
 mod timeline;
 mod tuning;
 mod web_figures;
@@ -214,6 +215,10 @@ pub struct PaperRequest {
     /// none.
     #[serde(default)]
     pub conversation: Option<String>,
+    /// Model calls at once (`Settings.researchAtOnce`); None or 0 for the
+    /// provider's.
+    #[serde(default)]
+    pub at_once: Option<u32>,
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,
@@ -242,6 +247,7 @@ pub async fn ai_paper_run(
         target_chars,
         image_model,
         conversation,
+        at_once,
     } = request;
     let session = Session::open(
         &app,
@@ -281,8 +287,9 @@ pub async fn ai_paper_run(
     });
     crate::ai::cancel::cancellable(request_id, async {
         let agent = session.agent(native).await?;
+        let throttled = throttle::Throttled::new(&agent, throttle::at_once(at_once, entry));
         let agent = model::Metered {
-            inner: &agent,
+            inner: &throttled,
             budget: &budget,
         };
         let mut files = match kept {
@@ -404,6 +411,10 @@ pub async fn ai_paper_run(
     .await
 }
 
+#[cfg(test)]
+mod draft_tests;
+#[cfg(test)]
+mod finish_tests;
 #[cfg(test)]
 mod live;
 #[cfg(test)]

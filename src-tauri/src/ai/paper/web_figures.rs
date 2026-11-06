@@ -10,6 +10,7 @@ use super::draft::WEB_FIGURE_MARK;
 use crate::ai::images::{begin, finish as finish_picture, placeholder_src, Slot};
 use crate::ai::web::commons;
 use aicompat::images::GeneratedImage;
+use futures_util::{stream, StreamExt};
 use std::future::Future;
 
 use super::tuning::COMMONS_TRIES as TRIES;
@@ -30,16 +31,52 @@ pub(crate) fn read_mark(line: &str) -> Option<(String, String)> {
     (!caption.is_empty()).then(|| (caption.to_string(), words.to_string()))
 }
 
-/// `section` with its web-picture marks replaced by pictures `find` finds -
-/// the picture and its credit - each kept in the picture store. A mark
-/// `find` finds nothing for becomes a `textus-picture:` line, begun with
-/// the planned generated pictures, or left out with them when there is no
-/// image model.
-pub(crate) async fn resolve<F, Fut>(section: &str, find: F) -> String
+/// Marks searched for at once, across all a paper's sections: each search
+/// and fetch is mostly waiting on Commons, and a few at a time stay polite.
+pub(crate) const AT_ONCE: usize = 4;
+
+/// `sections` with their web-picture marks replaced by pictures `find`
+/// finds - the picture and its credit - each kept in the picture store. A
+/// mark `find` finds nothing for becomes a `textus-picture:` line, begun
+/// with the planned generated pictures, or left out with them when there is
+/// no image model. The marks are searched for a few at a time, whichever
+/// section they are in, and each lands where its mark was.
+pub(crate) async fn resolve<F, Fut>(sections: &[String], find: F) -> Vec<String>
 where
     F: Fn(String) -> Fut,
     Fut: Future<Output = Result<(GeneratedImage, String), String>>,
 {
+    let words: Vec<String> = sections
+        .iter()
+        .flat_map(|s| s.split('\n'))
+        .filter_map(read_mark)
+        .map(|(_, words)| words)
+        .collect();
+    // Kept in the store as soon as found, so the bytes aren't held here
+    // while the slower searches finish.
+    let found: Vec<Option<(String, String)>> = stream::iter(words)
+        .map(|words| {
+            let search = find(words);
+            async move {
+                let (image, credit) = search.await.ok()?;
+                let id = begin();
+                finish_picture(&id, Slot::Ready(image));
+                Some((id, credit))
+            }
+        })
+        .buffered(AT_ONCE)
+        .collect()
+        .await;
+    let mut found = found.into_iter();
+    sections
+        .iter()
+        .map(|section| place(section, &mut found))
+        .collect()
+}
+
+/// `section` with each of its marks replaced by the next of `found`: the
+/// kept picture's id and its credit, or None for one to generate instead.
+fn place(section: &str, found: &mut impl Iterator<Item = Option<(String, String)>>) -> String {
     if !section.contains(WEB_FIGURE_MARK) {
         return section.to_string();
     }
@@ -49,9 +86,7 @@ where
             out.push(line.to_string());
             continue;
         };
-        if let Ok((image, credit)) = find(words.clone()).await {
-            let id = begin();
-            finish_picture(&id, Slot::Ready(image));
+        if let Some((id, credit)) = found.next().flatten() {
             out.push(format!(
                 "![{}]({})",
                 caption.replace(['[', ']'], ""),

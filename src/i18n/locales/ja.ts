@@ -423,6 +423,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   paperSectionDrafted: "執筆済み",
   paperSectionRevising: "修正中",
   paperSectionFailed: "失敗",
+  paperSectionsAtOnce: {
+    other: "{n} 節を同時に執筆中 · {of} 節中 {done} 節完了",
+  },
+  paperRevisingAtOnce: {
+    other: "{n} 節を同時に修正中 · {of} 節中 {done} 節完了",
+  },
+  paperQuestionsAtOnce: {
+    other: "{n} 件の問いを同時に調査中 · {of} 件中 {done} 件完了",
+  },
+  paperDoneOf: "{of} 件中 {done} 件完了",
   paperOutlineRetry:
     "第 {n} 稿：前の案がチェックを通らなかったため、作り直しています…",
   paperPapersOnly:
@@ -669,6 +679,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   searchServiceNone:
     "検索に使えるものがまだありません。サービスを選んでキーを入力してください。",
   searxngUrlLabel: "SearXNG のアドレス",
+  researchAtOnceLabel: "リサーチ：同時リクエスト数",
+  researchAtOnceAuto: "自動",
+  researchAtOnceHelp:
+    "リサーチモードがモデルに同時に送るリクエストの数です。調査の問いや各節を並行して進めます。「自動」はプロバイダに合わせた値です。レート制限のエラーが出るときは下げてください。",
   editAnimationLabel: "編集プレビューのアニメーション",
   agentWorkspaceLabel: "グローバル設定フォルダー",
   agentWorkspaceOpenButton: "表示",

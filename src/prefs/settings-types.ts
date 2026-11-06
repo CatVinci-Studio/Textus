@@ -262,6 +262,9 @@ export interface Settings {
   searchService: SearchService;
   /// The SearXNG server `searchService: "searxng"` sends queries to.
   searxngUrl: string;
+  /// Model calls Research mode makes at once; 0 for the provider's own
+  /// (src-tauri/src/ai/catalog.rs `paper_at_once`).
+  researchAtOnce: number;
   /// The proposal card's "Add sources as footnotes": remembered from the last
   /// card, not set in Settings.
   sourcesAsFootnotes: boolean;
@@ -424,6 +427,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imageModelEndpoint: "",
   searchService: "auto",
   searxngUrl: "",
+  researchAtOnce: 0,
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
   mcpServers: [],

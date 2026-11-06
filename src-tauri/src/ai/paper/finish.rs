@@ -8,8 +8,10 @@ use super::model::ask;
 use super::prompts;
 use super::research::Model;
 use super::{Dossier, Genre, Outline, Paper};
+use futures_util::stream::{self, StreamExt};
 use regex::Regex;
 use serde_json::Value;
+use std::future::Future;
 use std::sync::OnceLock;
 
 /// The words a paper's apparatus is labelled with, by the language it is
@@ -377,24 +379,56 @@ fn doi_of(url: &str) -> Option<&str> {
     (rest.starts_with("10.")).then_some(rest)
 }
 
+/// Titles looked up at once: a paper can cite dozens of sources by their
+/// address alone, and one at a time each waits out the last one's round
+/// trip.
+pub(crate) const LOOKUPS_AT_ONCE: usize = 6;
+
 /// `dossier`'s sources cited by their address alone given a title, so the
 /// reference list names them: a DOI's work, with its authors, from OpenAlex;
 /// a page's own title, read as web_fetch reads it.
 pub(crate) async fn title_sources(dossier: &mut Dossier) {
-    for source in &mut dossier.sources {
-        if !source.title.trim().is_empty() && source.title != source.url {
-            continue;
-        }
-        let address = percent_encoding::percent_decode_str(&source.url)
-            .decode_utf8_lossy()
-            .into_owned();
-        let title = match doi_of(&address) {
-            Some(doi) => crate::ai::web::doi_title(doi).await,
-            None if address.starts_with("http") => crate::ai::web::page_title(&address).await,
-            None => None,
-        };
+    title_sources_with(dossier, look_up_title).await
+}
+
+/// title_sources with the lookup given, so a test needs no network. A few
+/// lookups run at once; each title lands on its own source, whichever
+/// comes back first.
+pub(crate) async fn title_sources_with<F, Fut>(dossier: &mut Dossier, look_up: F)
+where
+    F: Fn(String) -> Fut,
+    Fut: Future<Output = Option<String>>,
+{
+    let untitled: Vec<(usize, String)> = dossier
+        .sources
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| s.title.trim().is_empty() || s.title == s.url)
+        .map(|(i, s)| {
+            let address = percent_encoding::percent_decode_str(&s.url).decode_utf8_lossy();
+            (i, address.into_owned())
+        })
+        .collect();
+    let titles: Vec<(usize, Option<String>)> = stream::iter(untitled)
+        .map(|(i, address)| {
+            let title = look_up(address);
+            async move { (i, title.await) }
+        })
+        .buffer_unordered(LOOKUPS_AT_ONCE)
+        .collect()
+        .await;
+    for (i, title) in titles {
         if let Some(title) = title {
-            source.title = title;
+            dossier.sources[i].title = title;
         }
+    }
+}
+
+/// The title at `address`: a DOI's work, or a web page's own title.
+async fn look_up_title(address: String) -> Option<String> {
+    match doi_of(&address) {
+        Some(doi) => crate::ai::web::doi_title(doi).await,
+        None if address.starts_with("http") => crate::ai::web::page_title(&address).await,
+        None => None,
     }
 }

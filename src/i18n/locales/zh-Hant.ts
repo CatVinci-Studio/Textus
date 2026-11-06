@@ -400,6 +400,10 @@ export default {
   paperSectionDrafted: "已寫完",
   paperSectionRevising: "修改中",
   paperSectionFailed: "失敗",
+  paperSectionsAtOnce: { other: "同時撰寫 {n} 節 · 已完成 {done}/{of}" },
+  paperRevisingAtOnce: { other: "同時修改 {n} 節 · 已完成 {done}/{of}" },
+  paperQuestionsAtOnce: { other: "同時研究 {n} 個問題 · 已完成 {done}/{of}" },
+  paperDoneOf: "已完成 {done}/{of}",
   paperOutlineRetry: "第 {n} 稿：上一稿未通過檢查，正在重擬…",
   paperPapersOnly:
     "沒有可用的網頁搜尋，這篇的研究只會檢索學術論文（OpenAlex、arXiv）和你的資料庫。",
@@ -631,6 +635,10 @@ export default {
   searchServiceSendsTo: "搜尋內容會傳送給 {name}。",
   searchServiceNone: "還沒有可用的搜尋：請選擇一個服務並填入它的金鑰。",
   searxngUrlLabel: "SearXNG 網址",
+  researchAtOnceLabel: "研究：同時請求數",
+  researchAtOnceAuto: "自動",
+  researchAtOnceHelp:
+    "研究模式同時向模型發出的請求數，用於並行研究問題、撰寫各節。「自動」依服務商的常見限額設定；如遇頻率限制錯誤，請調低。",
   editAnimationLabel: "以動畫顯示修改預覽",
   agentWorkspaceLabel: "全域設定資料夾",
   agentWorkspaceOpenButton: "打開",

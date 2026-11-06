@@ -1,6 +1,6 @@
 //! A paper's research: the topic split into questions, then a helper per
-//! question - four at a time - searching the web and the literature and
-//! keeping what it finds as notes with add_note, with the tools every mode
+//! question - two for each call the model takes at once - searching the web
+//! and the literature and keeping what it finds as notes with add_note, with the tools every mode
 //! shares (the files, the reference library, plugins' and MCP servers'
 //! tools) beside the web's. The helpers share one WebPlan, so a source has
 //! one number for the whole paper and the paper's budget is spent by all of

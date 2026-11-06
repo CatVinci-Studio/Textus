@@ -435,6 +435,19 @@ type /name in a conversation to use one.
   paperSectionDrafted: "Written",
   paperSectionRevising: "Revising",
   paperSectionFailed: "Failed",
+  paperSectionsAtOnce: {
+    one: "Writing {n} section at once · {done} of {of} done",
+    other: "Writing {n} sections at once · {done} of {of} done",
+  },
+  paperRevisingAtOnce: {
+    one: "Revising {n} section at once · {done} of {of} done",
+    other: "Revising {n} sections at once · {done} of {of} done",
+  },
+  paperQuestionsAtOnce: {
+    one: "Researching {n} question at once · {done} of {of} done",
+    other: "Researching {n} questions at once · {done} of {of} done",
+  },
+  paperDoneOf: "{done} of {of} done",
   paperOutlineRetry:
     "Draft {n}: the last one didn't pass its checks, so it is being redone…",
   paperPapersOnly:
@@ -681,6 +694,10 @@ type /name in a conversation to use one.
   searchServiceNone:
     "Nothing to search with yet - choose a service and add its key.",
   searxngUrlLabel: "SearXNG address",
+  researchAtOnceLabel: "Research: calls at once",
+  researchAtOnceAuto: "Automatic",
+  researchAtOnceHelp:
+    "How many requests to the model Research mode sends at the same time, to research questions and write sections side by side. Automatic suits your provider; lower it if you see rate-limit errors.",
   editAnimationLabel: "Animate edit previews",
   agentWorkspaceLabel: "Global config folder",
   agentWorkspaceOpenButton: "Show",

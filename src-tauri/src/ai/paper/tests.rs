@@ -4,7 +4,7 @@ use crate::ai::web::{WebPlan, WEB_FETCH_TOOL};
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 
-fn paper() -> Paper {
+pub(super) fn paper() -> Paper {
     Paper {
         id: "abc123".into(),
         topic: "城市热岛效应".into(),
@@ -500,7 +500,7 @@ async fn research_that_keeps_nothing_fails_with_a_reason() {
 }
 
 /// `outline()` with `n` copies of its section, each `words` long.
-fn outline_of(n: usize, words: u32) -> Outline {
+pub(super) fn outline_of(n: usize, words: u32) -> Outline {
     let mut o = outline();
     let section = OutlineSection {
         target_words: words,
@@ -642,7 +642,7 @@ fn an_edited_outline_drops_what_it_can_t_use_and_needs_titles() {
     assert!(outline::as_edited(Outline::default(), &d).is_err());
 }
 
-fn drafting_dossier() -> Dossier {
+pub(super) fn drafting_dossier() -> Dossier {
     Dossier {
         sources: vec![aicompat::agent::Source {
             n: 3,
@@ -654,7 +654,7 @@ fn drafting_dossier() -> Dossier {
 }
 
 /// A section of `n` words citing source 3, with `extra` after it.
-fn section_text(n: usize, extra: &str) -> String {
+pub(super) fn section_text(n: usize, extra: &str) -> String {
     format!(
         "{} roofs cool [3](https://example.org/study).\n\n{extra}",
         "Green ".repeat(n)
@@ -1341,7 +1341,9 @@ async fn web_picture_marks_become_kept_pictures_with_credits_or_generated_ones()
             Err("nothing".to_string())
         }
     };
-    let resolved = web_figures::resolve(section, find).await;
+    let resolved = web_figures::resolve(&[section.to_string()], find)
+        .await
+        .remove(0);
     let lines: Vec<&str> = resolved.split("\n\n").collect();
     assert_eq!(lines[0], "Intro.");
     let id = lines[1]

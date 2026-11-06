@@ -19,7 +19,8 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
 
 1. **Plan research**: the topic split into 6-10 questions (background,
    mechanism, state of the art, disputes, cases, data, trends), for breadth.
-2. **Research helpers**: up to four at once, one question each, with web
+2. **Research helpers**: two for each model call the paper makes at once,
+   one question each, with web
    search, page reads, scholarly search, the project's files, the files
    attached and the user's references. Each
    returns notes: a claim, its evidence, a quote, the sources' numbers, and
@@ -27,7 +28,8 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
 3. **Outline**: a thesis, and per section its key points, the notes it
    draws on, a target length and its figures. The one checkpoint: the user
    edits and approves it on a card in the chat.
-4. **Drafting**: one helper per section, up to three at once, given the
+4. **Drafting**: one helper per section, as many at once as the paper's
+   model calls, given the
    outline, its notes and the sections before it in summary. Sections are
    written into the document as they come - each under its heading as its
    writer writes it - with nothing to accept: the user asked for the paper,
@@ -124,7 +126,8 @@ it, lazily loaded. Each stage and helper is one run of
   atomically, so a stopped paper can resume and the user can read the
   research. An id is lowercase letters and digits only.
 - **Research** (`paper/research.rs`): one tool-less step plans 4-10
-  questions; a helper per question, four at a time, searches and reads and
+  questions; a helper per question, two for each model call at once,
+  searches and reads and
   keeps findings with `add_note` - a claim, its evidence, an optional quote,
   its sources and leads to pictures or data. A note must cite a number a
   result has or a page's address, so nothing unsourced enters the dossier.
@@ -158,7 +161,7 @@ it, lazily loaded. Each stage and helper is one run of
   `ai_paper_save_outline` keeps the user's edit, dropping notes the dossier
   doesn't have.
 - **Drafting** (`paper/draft.rs`, `ai_paper_draft`): a writer per section,
-  three at once, given the thesis, what the other sections cover, and its
+  as many at once as the paper's model calls, given the thesis, what the other sections cover, and its
   notes with their sources' numbers and addresses. It hands the section over
   with `submit_section`, checked for length (60-150% of its target, prose
   only), citations (`[n](address)` for this section's sources only, never a
@@ -174,7 +177,20 @@ it, lazily loaded. Each stage and helper is one run of
   (`src/editor/chart/chart-cases.json` is read by both test suites). No
   answer in 30 seconds, or no window, leaves the section to these checks. Sections
   are kept as `section-<n>.md` and, after the review, sent as
-  `sectionDrafted` in the outline's order; a section whose writer fails (its model's error; a section handed over at all is kept) stops the ones after it, so the paper has no gap.
+  `sectionDrafted` in the outline's order. Each is kept as soon as it is
+  written, whatever the order they finish in, so a stop costs no finished
+  section. A section whose writer fails (its model's error; a section
+  handed over at all is kept) starts no more; those under way are kept,
+  then the draft stops, so the paper has no gap.
+- **At once** (`paper/throttle.rs`): every stage steps one `Throttled`
+  model - at most `paper_at_once` calls in flight, a provider's catalog
+  data (Ollama 2, OpenAI 6) or the user's "Research: calls at once"
+  (`Settings.researchAtOnce`). A call refused for its rate or an overload
+  (429, 502, 503, 529) waits 2, 4, 8, 16 s and goes again, keeping its
+  slot. Stages start the next piece as soon as any is done and put the
+  results back in order. Finishing searches Commons four marks at a time
+  and looks up six source titles at a time, writing the opening meanwhile.
+  Nothing is spawned: a stop drops every call under way.
 - **Review** (`paper/review.rs`): once every section is drafted, a reader
   who sees them all reports with `report_issues` what only the whole shows -
   repetition, contradictions, an outline point no section makes, a figure
