@@ -517,8 +517,11 @@ fn the_skill_index_offers_model_skills_and_prefers_the_users() {
     assert!(!zh.contains("- house-headline"));
     let create = skill_index(&ws, AgentMode::Create, "en");
     for name in ["theme", "plugin", "skill"] {
-        assert!(create.contains(&format!("- {name}:")), "{name}");
+        // Marked the way Create mode's prompt asks for them.
+        assert!(create.contains(&format!("- {name} [create]:")), "{create}");
     }
+    let create_zh = skill_index(&ws, AgentMode::Create, "zh");
+    assert!(create_zh.contains("- theme [create] [/"), "{create_zh}");
     assert!(!create.contains("- proofread:"));
     // The system prompt carries it, the preference rule and the packs,
     // the same whatever the document.

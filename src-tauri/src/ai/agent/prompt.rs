@@ -368,6 +368,12 @@ pub(crate) fn skill_index(
     offered
         .iter()
         .map(|s| {
+            // Create mode's prompt asks for "the skill marked [create]".
+            let category = if s.category.as_deref() == Some("create") {
+                " [create]"
+            } else {
+                ""
+            };
             let mark = match s.source {
                 SkillSource::Project => " (project)".to_string(),
                 SkillSource::Global => " (yours)".to_string(),
@@ -391,7 +397,7 @@ pub(crate) fn skill_index(
             } else {
                 description
             };
-            format!("- {}{mark}: {description}", s.name)
+            format!("- {}{category}{mark}: {description}", s.name)
         })
         .collect::<Vec<_>>()
         .join("\n")
