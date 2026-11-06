@@ -1,11 +1,7 @@
 import { afterEach, beforeAll, expect, it } from "vitest";
 import { addSlashItems, slashPanelItems } from "./slash-commands";
 import { pinyinEngine } from "../../utils/pinyin";
-import {
-  preparePinyin,
-  prepareList,
-  rankList,
-} from "../../utils/list-filter";
+import { preparePinyin, prepareList, rankList } from "../../utils/list-filter";
 import { matchSources } from "../../editor/completion/panel-rows";
 import { completionSources } from "../../editor/completion/sources";
 

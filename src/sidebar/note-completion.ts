@@ -6,12 +6,8 @@ import {
 import { fs } from "../platform/ipc";
 import type { IndexedFile } from "../platform/ipc";
 import { isDocumentName } from "./file-search";
-import {
-  linkToTarget,
-  pathIndex,
-  type LinkStyle,
-} from "../plugins/workspace/link-resolve";
-import { linkStyleAt } from "../plugins/workspace/link-style";
+import { linkToTarget, pathIndex, type LinkStyle } from "../links/link-resolve";
+import { linkStyleAt } from "../links/link-style";
 
 /**
  * `[[` lists the folder's notes - the core's fallback, gone as soon as a

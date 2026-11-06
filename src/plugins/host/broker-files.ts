@@ -9,8 +9,8 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../workspace/frontmatter";
-import { linkPlanner } from "../workspace/link-rewrite";
-import { blockIdAt } from "../workspace/block-id";
+import { linkPlanner } from "../../links/link-rewrite";
+import { blockIdAt } from "../../links/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {

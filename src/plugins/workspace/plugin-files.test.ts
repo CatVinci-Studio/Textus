@@ -6,7 +6,11 @@ import {
   stringifyYaml,
   withFrontmatter,
 } from "./frontmatter";
-import { movedBy, planLinkUpdates, rewriteMovedLinks } from "./link-rewrite";
+import {
+  movedBy,
+  planLinkUpdates,
+  rewriteMovedLinks,
+} from "../../links/link-rewrite";
 import { relativePath } from "../../utils/path";
 
 describe("a glob", () => {

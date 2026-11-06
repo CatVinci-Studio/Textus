@@ -1,6 +1,6 @@
-import { fs } from "../../platform/ipc";
-import type { ObsidianVault } from "../../platform/ipc-files";
-import { dirname } from "../../utils/path";
+import { fs } from "../platform/ipc";
+import type { ObsidianVault } from "../platform/ipc-files";
+import { dirname } from "../utils/path";
 import { DEFAULT_LINK_STYLE, type LinkStyle } from "./link-resolve";
 
 /** How links are written in a document of `vault`; Textus's own outside one. */

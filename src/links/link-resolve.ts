@@ -1,10 +1,10 @@
-import { noteLinkSource } from "../../editor/markdown/link-syntax";
+import { noteLinkSource } from "../editor/markdown/link-syntax";
 import {
   noteFileNames,
   parseNoteLink,
   type NoteLink,
-} from "../../utils/note-link";
-import { isNoteFile, noteStem, relativePath, slashed } from "../../utils/path";
+} from "../utils/note-link";
+import { isNoteFile, noteStem, relativePath, slashed } from "../utils/path";
 
 /**
  * Where a link to a note leads, among a folder's files: the one resolver for

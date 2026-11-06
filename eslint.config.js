@@ -48,6 +48,7 @@ const FEATURES = [
   "document",
   "editor",
   "export",
+  "links",
   "mobile",
   "onboarding",
   "settings",
@@ -124,6 +125,7 @@ export default tseslint.config(
       "ai",
       "document",
       "export",
+      "links",
       "mobile",
       "onboarding",
       "plugins",
@@ -132,7 +134,7 @@ export default tseslint.config(
   },
   {
     files: [
-      "src/{ai,clipboard,document,export,mobile,onboarding,settings,sidebar,theme}/**/*.{ts,tsx}",
+      "src/{ai,clipboard,document,export,links,mobile,onboarding,settings,sidebar,theme}/**/*.{ts,tsx}",
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),

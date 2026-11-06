@@ -21,7 +21,7 @@ import { namedCall, settledArguments, settledTurns } from "./settle-calls";
 import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
-import { pathIndex, resolveTarget } from "../plugins/workspace/link-resolve";
+import { pathIndex, resolveTarget } from "../links/link-resolve";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [

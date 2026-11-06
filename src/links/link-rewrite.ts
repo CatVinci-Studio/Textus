@@ -1,6 +1,6 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
-import { isNoteFile, noteStem, relativePath, slashed } from "../../utils/path";
+import { isNoteFile, noteStem, relativePath, slashed } from "../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
