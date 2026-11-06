@@ -293,7 +293,7 @@
   align-items: center;
   gap: 4px;
   min-width: 0;
-  padding: 0 2px 4px 6px;
+  padding: 0 2px 4px 4px;
   font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
