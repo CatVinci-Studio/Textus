@@ -81,6 +81,20 @@ function normalizePath(path: string, sep: "/" | "\\"): string {
   return drive + sep.repeat(root) + parts.join(sep);
 }
 
+/** Which of `texts` (a document's headings in order) `anchor` names: by
+ *  slug, a repeat numbered the way GitHub does ("intro", "intro-1"); -1 for
+ *  none. Clicks, embeds, metadata and exports all match headings here. */
+export function headingIndex(texts: readonly string[], anchor: string): number {
+  const wanted = headingSlug(anchor);
+  const seen = new Map<string, number>();
+  return texts.findIndex((text) => {
+    const slug = headingSlug(text);
+    const repeat = seen.get(slug) ?? 0;
+    seen.set(slug, repeat + 1);
+    return (repeat ? `${slug}-${repeat}` : slug) === wanted;
+  });
+}
+
 /** A heading's anchor as GitHub writes it: lower case, punctuation dropped,
  *  spaces as "-" - letters of any script kept, so `#章節一` works. */
 export function headingSlug(text: string): string {

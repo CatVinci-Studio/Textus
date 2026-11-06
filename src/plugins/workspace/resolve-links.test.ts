@@ -106,6 +106,8 @@ describe("a document's metadata", () => {
     expect(targetLine(index, block)).toBe(7);
     const heading = resolveTarget(paths, "[[Note#Plan]]", "/v/a/y.md")!;
     expect(targetLine(index, heading)).toBe(3);
+    // A heading named as a click names it: by its slug too.
+    expect(targetLine(index, { ...heading, heading: "plan" })).toBe(3);
     expect(resolveTarget(paths, "[[Note v1.2]]", "/v/a/y.md")).toMatchObject({
       path: "/v/a/Note v1.2.md",
       exists: false,

@@ -1,3 +1,4 @@
+import { headingIndex } from "../../editor/markdown/link-target";
 import {
   plugins as pluginsIpc,
   type PluginDocumentMeta,
@@ -192,10 +193,11 @@ export function targetLine(
   if (target.block)
     return doc.blockIds.find((b) => b.id === target.block)?.line ?? null;
   if (!target.heading) return null;
-  const wanted = target.heading.toLowerCase();
-  return (
-    doc.headings.find((h) => h.text.toLowerCase() === wanted)?.line ?? null
+  const at = headingIndex(
+    doc.headings.map((h) => h.text),
+    target.heading,
   );
+  return at < 0 ? null : doc.headings[at].line;
 }
 
 export function backlinksIn(index: FolderIndex, path: string) {

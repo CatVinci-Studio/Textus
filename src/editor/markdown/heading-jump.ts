@@ -1,7 +1,7 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { revealPosition } from "../reveal-position";
-import { headingSlug } from "./link-target";
+import { headingIndex, headingSlug } from "./link-target";
 import { shownText } from "./link-source";
 
 /**
@@ -13,19 +13,17 @@ export function headingPos(doc: ProseNode, anchor: string): number | null {
   if (anchor.startsWith("^")) return blockPos(doc, anchor.slice(1));
   const levels = anchor.split("#").filter(Boolean);
   if (levels.length > 1) return nestedHeadingPos(doc, levels);
-  const wanted = headingSlug(anchor);
-  const seen = new Map<string, number>();
-  let found: number | null = null;
+  const headings: { text: string; pos: number }[] = [];
   doc.descendants((node, pos) => {
-    if (found !== null) return false;
     if (node.type.name !== "heading") return true;
-    const slug = headingSlug(shownText(node));
-    const repeat = seen.get(slug) ?? 0;
-    seen.set(slug, repeat + 1);
-    if ((repeat ? `${slug}-${repeat}` : slug) === wanted) found = pos + 1;
+    headings.push({ text: shownText(node), pos: pos + 1 });
     return false;
   });
-  return found;
+  const at = headingIndex(
+    headings.map((h) => h.text),
+    anchor,
+  );
+  return at < 0 ? null : headings[at].pos;
 }
 
 /** The heading the last of `levels` names inside the sections of the ones

@@ -1,3 +1,4 @@
+import { headingIndex } from "../editor/markdown/link-target";
 import {
   decodeUrlPath,
   dirname,
@@ -192,12 +193,17 @@ function exportedWikilink(
   const out = noteLinks?.get(source);
   let href = out && "href" in out ? out.href : null;
   const link = parseNoteLink(source);
-  const heading = link?.headings.at(-1)?.toLowerCase();
+  const heading = link?.headings.at(-1);
   if (!href && link && !link.note && heading) {
-    const target = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")].find(
-      (h) => h.id && h.textContent?.trim().toLowerCase() === heading,
-    );
-    if (target) href = `#${encodeURIComponent(target.id)}`;
+    const headings = [...root.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+    const target =
+      headings[
+        headingIndex(
+          headings.map((h) => h.textContent ?? ""),
+          heading,
+        )
+      ];
+    if (target?.id) href = `#${encodeURIComponent(target.id)}`;
   }
   if (!href) return text;
   const a = document.createElement("a");
