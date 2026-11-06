@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Réglages → Éditeur et apparence → Moteur de diagrammes** choisit ce qui dessine ces blocs : Mermaid, par défaut, ou Pele, plus rapide, mais qui dispose les diagrammes à sa façon et laisse de côté quelques fonctions ; un diagramme que Pele ne sait pas dessiner est dessiné par Mermaid.
 
+Leurs couleurs suivent l'apparence — la palette propre de Mermaid en clair, sa palette sombre en sombre — et un thème importé ou le CSS personnalisé peut en choisir une autre intégrée avec `--mermaid-theme: forest`.
+
 ## Images
 
 Collez une image directement depuis le presse-papiers : Textus l'enregistre et insère la référence. L'endroit se choisit dans **Réglages → Éditeur et apparence → Images**. **Sur cet ordinateur**, c'est un **Sous-dossier** du dossier du document, `assets/` par défaut, dont vous pouvez changer le nom, ou le **Même dossier que le document** ; les réglages montrent le lien que reçoit l'image collée. Avec **Envoyer vers un hébergeur d'images**, elle part vers PicGo / PicList, SM.MS, Imgur ou votre propre URL d'envoi (**Personnalisé**).

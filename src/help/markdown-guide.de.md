@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Einstellungen → Editor & Design → Diagramm-Engine** legt fest, was diese Blöcke zeichnet: Mermaid, die Voreinstellung, oder Pele, das schneller ist, Diagramme aber auf seine eigene Art anordnet und einige Funktionen weglässt; ein Diagramm, das Pele nicht zeichnen kann, zeichnet Mermaid.
 
+Die Farben folgen dem Erscheinungsbild — im hellen Mermaids eigene Palette, im dunklen seine dunkle — und ein importiertes Theme oder eigenes CSS kann mit `--mermaid-theme: forest` eine andere eingebaute Palette wählen.
+
 ## Bilder
 
 Füge ein Bild direkt aus der Zwischenablage ein – Textus speichert es und fügt den Verweis ein. Wohin, legst du unter **Einstellungen → Editor & Design → Bilder** fest. **Auf diesem Computer** ist es ein **Unterordner** im Ordner des Dokuments, standardmäßig `assets/`, dessen Namen du ändern kannst, oder **Derselbe Ordner wie das Dokument**; die Einstellungen zeigen den Link, den ein eingefügtes Bild bekommt. Mit **Zu einem Bildhoster hochladen** geht es an PicGo / PicList, SM.MS, Imgur oder deinen eigenen Endpunkt (**Eigener Server**).

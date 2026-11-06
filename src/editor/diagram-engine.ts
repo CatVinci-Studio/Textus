@@ -5,6 +5,10 @@ import type { DiagramEngine } from "../prefs/SettingsContext";
 import { lazyModule } from "../lazy/lazy-module";
 
 export type MermaidApi = (typeof import("mermaid"))["default"];
+/** The theme names Mermaid itself knows. */
+type MermaidThemeName = NonNullable<
+  Parameters<MermaidApi["initialize"]>[0]["theme"]
+>;
 const mermaidModule = lazyModule("mermaid", () =>
   import("mermaid").then(({ default: mermaid }) => mermaid),
 );
@@ -12,6 +16,39 @@ const mermaidModule = lazyModule("mermaid", () =>
 /** Mermaid, loaded the first time a diagram is drawn. */
 export function loadMermaid(): Promise<MermaidApi> {
   return mermaidModule.load();
+}
+
+/** Mermaid's built-in themes: a --mermaid-theme naming anything else would
+ *  fail every render, so it falls back to the choice below. */
+const MERMAID_THEMES: readonly MermaidThemeName[] = [
+  "default",
+  "neutral",
+  "dark",
+  "forest",
+  "base",
+  "neo",
+  "redux",
+  "neo-dark",
+  "redux-dark",
+  "redux-color",
+  "redux-dark-color",
+  "null",
+];
+
+/** The Mermaid theme for the page: what an imported theme or the user's CSS
+ *  sets as --mermaid-theme when it names one Mermaid knows, else "dark" in
+ *  the dark appearance and Mermaid's own colours, "default", in the light.
+ *  Read on `body`, so a theme may set the variable on it or on the root. */
+export function mermaidTheme(dark = appearanceIsDark()): MermaidThemeName {
+  const chosen = getComputedStyle(document.body)
+    .getPropertyValue("--mermaid-theme")
+    .trim()
+    .toLowerCase();
+  return (MERMAID_THEMES as readonly string[]).includes(chosen)
+    ? (chosen as MermaidThemeName)
+    : dark
+      ? "dark"
+      : "default";
 }
 
 // Re-applied before every pass because the width follows the text column:
@@ -25,8 +62,7 @@ export function configureMermaid(
 ): void {
   mermaid.initialize({
     startOnLoad: false,
-    // "neutral" in a dark theme left white boxes and near-invisible arrows.
-    theme: dark ? "dark" : "neutral",
+    theme: mermaidTheme(dark),
     ...(fontFamily ? { fontFamily, themeVariables: { fontFamily } } : {}),
     securityLevel: "strict",
     // A broken diagram must not draw mermaid's "Syntax error" bomb into a

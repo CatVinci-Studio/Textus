@@ -128,6 +128,8 @@ sequenceDiagram
 
 **Settings → Editor & Appearance → Diagram engine** chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
 
+Their colours follow the appearance — Mermaid's own palette in the light, its dark one in the dark — and an imported theme or custom CSS can pick another built-in palette with `--mermaid-theme: forest`.
+
 ## Images
 
 Paste an image straight from the clipboard — Textus saves it and inserts the reference. Where it goes is set in **Settings → Editor & Appearance → Images**. **On this computer**, it is a **Subfolder** of the document's folder, `assets/` by default, whose name you can change; **Same folder as the document** is the other choice. Settings shows the link a pasted image gets. **Upload to an image host** sends it to PicGo / PicList, SM.MS, Imgur or an endpoint of your own (**Custom**) instead.

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const pele = vi.hoisted(() => ({
   renderAsync: vi.fn(),
@@ -13,6 +13,7 @@ vi.mock("mermaid", () => ({ default: mermaid }));
 
 import {
   diagramRenderer,
+  mermaidTheme,
   peleMayDraw,
   resetPeleRefusals,
 } from "./diagram-engine";
@@ -136,6 +137,52 @@ describe("diagramRenderer", () => {
       theme: "dark",
       securityLevel: "strict",
     });
+  });
+
+  it("draws a light pass in Mermaid's own colours, not grey", async () => {
+    const draw = diagramRenderer("mermaid", { width: 500, dark: false });
+    await draw(FLOW, "d1");
+    expect(mermaid.initialize.mock.calls[0][0]).toMatchObject({
+      theme: "default",
+    });
+  });
+
+  it("draws in the palette the page's --mermaid-theme names", async () => {
+    document.body.style.setProperty("--mermaid-theme", "forest");
+    try {
+      await diagramRenderer("mermaid", { width: 500 })(FLOW, "d1");
+      expect(mermaid.initialize.mock.calls[0][0]).toMatchObject({
+        theme: "forest",
+      });
+    } finally {
+      document.body.style.removeProperty("--mermaid-theme");
+    }
+  });
+});
+
+describe("mermaidTheme", () => {
+  afterEach(() => {
+    document.body.style.removeProperty("--mermaid-theme");
+  });
+
+  it("gives the light appearance Mermaid's own colours", () => {
+    expect(mermaidTheme(false)).toBe("default");
+  });
+
+  it("gives the dark appearance Mermaid's dark palette", () => {
+    expect(mermaidTheme(true)).toBe("dark");
+  });
+
+  it("takes --mermaid-theme from the page's CSS in either appearance", () => {
+    document.body.style.setProperty("--mermaid-theme", " Neo ");
+    expect(mermaidTheme(false)).toBe("neo");
+    expect(mermaidTheme(true)).toBe("neo");
+  });
+
+  it("ignores a theme Mermaid does not know", () => {
+    document.body.style.setProperty("--mermaid-theme", "vibrant");
+    expect(mermaidTheme(false)).toBe("default");
+    expect(mermaidTheme(true)).toBe("dark");
   });
 });
 
