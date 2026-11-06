@@ -1,9 +1,19 @@
-/* Bottom-right notice when a newer release exists. */
-.update-toast {
+/* The bottom-right corner: the plugin card above the update notice, so the
+   two never overlap. */
+.corner-stack {
   position: fixed;
   right: 16px;
   bottom: 16px;
   z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+}
+
+/* Bottom-right notice when a newer release exists. */
+.update-toast {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -45,4 +55,109 @@
   corner-shape: round;
   background: var(--ui-accent);
   flex-shrink: 0;
+}
+
+/* One line until opened: the reason, then Install, Later and ×. */
+.suggest-card {
+  flex-wrap: wrap;
+  width: min(520px, calc(100vw - 32px));
+  padding: 4px 8px 4px 4px;
+  gap: 8px;
+  user-select: none;
+}
+
+/* A plain row, not one of the toast's pill buttons. */
+.suggest-card .suggest-card-summary {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
+  text-align: start;
+}
+
+.suggest-card-summary .plugin-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.suggest-card-line {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggest-card[data-open] .suggest-card-line {
+  white-space: normal;
+}
+
+.suggest-card-actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+/* An icon-only button is a circle (tx-icon-button), not the toast's pill. */
+.suggest-card .suggest-card-never {
+  width: var(--control-height-sm);
+  min-height: 0;
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 0;
+  border-radius: var(--shape-pill);
+}
+
+.suggest-card-never svg {
+  width: 1em;
+  height: 1em;
+}
+
+.suggest-card-more {
+  display: flex;
+  order: 1;
+  flex-basis: 100%;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px 4px 36px;
+  color: var(--ui-muted);
+  font-size: var(--text-sm);
+}
+
+.suggest-card-more p {
+  margin: 0;
+}
+
+.suggest-card-name {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.suggest-card-permissions ul {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+
+.suggest-card-permissions strong {
+  display: block;
+  color: var(--ui-text);
+  font-weight: 500;
+}
+
+/* A phone: the buttons go under the line, and under the details once open. */
+@media (max-width: 480px) {
+  .suggest-card-actions {
+    order: 2;
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
 }

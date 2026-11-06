@@ -1525,6 +1525,11 @@ export default {
   pluginOfferTurnOn:
     "外掛「{name}」已安裝但目前已關閉。要開啟嗎？\n{description}",
   pluginOfferReason: "來自外掛的建議：「{reason}」",
+  pluginCardOfferLine: "{caller} 建議使用{name}：「{reason}」",
+  pluginCardSystemApp: "用系統應用程式開啟",
+  pluginCardNever: "不再建議",
+  pluginCardsMuted: "已關閉的外掛建議：{n} 則",
+  pluginCardsRestore: "重新顯示",
   pluginScreenshot: "{name} 使用截圖",
   pluginsMine: "我做的外掛",
   pluginsNone: "尚無。",

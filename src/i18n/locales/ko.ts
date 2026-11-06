@@ -1586,6 +1586,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginOfferTurnOn:
     "{name} 플러그인이 설치되어 있지만 꺼져 있습니다. 켤까요?\n{description}",
   pluginOfferReason: "플러그인의 제안: “{reason}”",
+  pluginCardOfferLine: "{caller}에서 {name}을(를) 추천합니다: “{reason}”",
+  pluginCardSystemApp: "시스템 앱으로 열기",
+  pluginCardNever: "다시 제안하지 않기",
+  pluginCardsMuted: "끈 플러그인 제안: {n}개",
+  pluginCardsRestore: "다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
   pluginsNone: "아직 없습니다.",

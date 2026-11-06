@@ -20,9 +20,9 @@ test("a PDF without its plugin offers it, installs it and opens the file", async
 }) => {
   await openWithPdf(page);
   await openPath(page, "/notes/paper.pdf");
-  const dialog = page.locator(".app-dialog");
-  await expect(dialog).toContainText("opens “paper.pdf”");
-  await dialog.getByRole("button", { name: "Install and open" }).click();
+  const card = page.locator(".suggest-card");
+  await expect(card).toContainText("opens “paper.pdf”");
+  await card.getByRole("button", { name: "Install and open" }).click();
   // Its permissions, as any install asks.
   const allow = page.locator(".app-dialog").getByRole("button", {
     name: "Allow",
@@ -36,8 +36,8 @@ test("declined, the file isn't opened and nothing is installed", async ({
 }) => {
   await openWithPdf(page);
   await openPath(page, "/notes/paper.pdf");
-  const dialog = page.locator(".app-dialog");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
+  const card = page.locator(".suggest-card");
+  await card.getByRole("button", { name: "Later" }).click();
   await expect(page.locator(".plugin-webview-frame")).toHaveCount(0);
   expect(
     await page.evaluate(

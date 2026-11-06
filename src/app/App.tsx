@@ -1,3 +1,4 @@
+import { SuggestCard } from "./SuggestCard";
 import { Suspense } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
@@ -270,7 +271,10 @@ function App() {
           t={t}
         />
 
-        <UpdateToast appUpdate={appUpdate} t={t} />
+        <div className="corner-stack">
+          <SuggestCard t={t} />
+          <UpdateToast appUpdate={appUpdate} t={t} />
+        </div>
 
         <OnboardingLayers
           tutorial={tutorial}
