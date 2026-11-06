@@ -249,24 +249,6 @@
   list-style: none;
 }
 
-.settings-advanced > summary::-webkit-details-marker {
-  display: none;
-}
-
-.settings-advanced > summary::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.settings-advanced[open] > summary::before {
-  transform: rotate(90deg);
-}
-
 .settings-advanced[open] > summary {
   border-bottom: 1px solid var(--ui-border);
 }

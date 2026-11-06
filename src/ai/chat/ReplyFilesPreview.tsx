@@ -24,7 +24,7 @@ export function ReplyFilesPreview({
   const named = files.length > 1;
   return (
     <details
-      className="agent-reply-files"
+      className="disclosure agent-reply-files"
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary>{label}</summary>

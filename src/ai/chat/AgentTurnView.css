@@ -295,23 +295,8 @@ button.agent-context-chip:hover {
   transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.agent-tool-result > summary::-webkit-details-marker {
-  display: none;
-}
-
 .agent-tool-result > summary::before {
-  content: "";
-  width: 0;
-  height: 0;
   margin: 0 2px 0 4px;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.agent-tool-result[open] > summary::before {
-  transform: rotate(90deg);
 }
 
 .agent-tool-result > summary:hover {

@@ -1,6 +1,5 @@
-/* The code an install card would install, folded under its buttons: the
-   app's small caret, as a tool result's, and the code at caption size in a
-   box that scrolls rather than growing the reply. */
+/* The code an install card would install, folded under its buttons, at
+   caption size in a box that scrolls rather than growing the reply. */
 .agent-reply-files {
   flex-basis: 100%;
   min-width: 0;
@@ -10,28 +9,12 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  list-style: none;
   color: var(--ui-accent);
   cursor: pointer;
 }
 
-.agent-reply-files > summary::-webkit-details-marker {
-  display: none;
-}
-
 .agent-reply-files > summary::before {
-  content: "";
-  width: 0;
-  height: 0;
   margin: 0 2px;
-  border-left: 4px solid currentColor;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  transition: transform var(--dur-fast) var(--ease-standard);
-}
-
-.agent-reply-files[open] > summary::before {
-  transform: rotate(90deg);
 }
 
 .agent-reply-files > summary:hover {
@@ -48,7 +31,7 @@
 }
 
 .agent-reply-file pre {
-  max-height: 240px;
+  max-height: min(320px, 45vh);
   margin: 0;
   padding: 4px 8px;
   overflow: auto;

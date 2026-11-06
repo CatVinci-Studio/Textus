@@ -97,7 +97,7 @@ export function ExtensionsTabLayout({
         {footer}
       </div>
       {advanced && (
-        <details className="settings-advanced extensions-advanced">
+        <details className="disclosure settings-advanced extensions-advanced">
           <summary>{t.agentAdvancedGroupLabel}</summary>
           <div className="settings-advanced-body">{advanced}</div>
         </details>

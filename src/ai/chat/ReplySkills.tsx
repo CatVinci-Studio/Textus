@@ -139,12 +139,10 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
           </button>
         </span>
       )}
-      {state.kind !== "saved" && (
-        <ReplyFilesPreview
-          label={t.chatShowSkill}
-          files={[{ path: null, text: skill.text }]}
-        />
-      )}
+      <ReplyFilesPreview
+        label={t.chatShowSkill}
+        files={[{ path: null, text: skill.text }]}
+      />
     </div>
   );
 }
