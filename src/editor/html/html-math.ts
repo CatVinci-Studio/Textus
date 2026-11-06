@@ -21,7 +21,11 @@ export function drawHtmlMath(root: Element): boolean {
   const doc = root.ownerDocument;
   const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (node) => {
-      for (let el = node.parentElement; el && el !== root; el = el.parentElement)
+      for (
+        let el = node.parentElement;
+        el && el !== root;
+        el = el.parentElement
+      )
         if (VERBATIM.has(el.localName)) return NodeFilter.FILTER_REJECT;
       return NodeFilter.FILTER_ACCEPT;
     },

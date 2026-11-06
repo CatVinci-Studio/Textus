@@ -33,14 +33,23 @@ interface MdastNode {
 const isMdastBr = (node: MdastNode) =>
   node.type === "html" && PLAIN_BR_RE.test(node.value ?? "");
 
+/** A cell's formulas with the table's `\|` read as the bar it stands for;
+ *  a save escapes it again. */
+function unescapeCellMath(node: MdastNode) {
+  if (node.type === "inlineMath")
+    node.value = (node.value ?? "").replace(/\\\|/g, "|");
+  node.children?.forEach(unescapeCellMath);
+}
+
 /** A `<br>` in a table cell is read as a break, shown as a new line and
- *  written back as `<br>`. */
+ *  written back as `<br>`; `\|` in a cell's formula is one bar. */
 export const remarkTableCellBreaks = $remark(
   "remark-table-cell-breaks",
   () => () => (tree: unknown) => {
     const walk = (node: MdastNode) => {
       if (node.type !== "tableCell") return node.children?.forEach(walk);
       const children = node.children ?? [];
+      children.forEach(unescapeCellMath);
       cellBreaks(children, isMdastBr).forEach((isBreak, i) => {
         if (isBreak) children[i] = { type: "break" };
       });

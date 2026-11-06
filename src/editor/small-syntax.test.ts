@@ -65,3 +65,27 @@ describe("GitHub's math", () => {
     expect(saved(view)).toBe(`${markdown}\n\nend\n`);
   });
 });
+
+describe("formulas in a Markdown table", () => {
+  const table = "| a | b |\n| - | - |\n| $x \\| y$ | 2 |";
+
+  it("reads \\| in a cell's formula as one bar and saves it escaped", async () => {
+    const view = await open(table);
+    let math = "";
+    view.state.doc.descendants((n) => {
+      if (n.type.name === "math_inline") math = n.textContent;
+    });
+    expect(math).toBe("x | y");
+    expect(saved(view)).toContain("| $x \\| y$ |");
+  });
+
+  it("saves a bar typed into a cell's formula as \\|", async () => {
+    const view = await open("| a |\n| - |\n| $x$ |");
+    let at = -1;
+    view.state.doc.descendants((n, pos) => {
+      if (n.type.name === "math_inline") at = pos + 2;
+    });
+    view.dispatch(view.state.tr.insertText(" | z", at));
+    expect(saved(view)).toContain("$x | z$".replace("|", "\\|"));
+  });
+});

@@ -45,6 +45,8 @@ describe("formulas in raw HTML", () => {
     editors.push(editor);
     const view = editor.action((ctx) => ctx.get(editorViewCtx));
     view.dispatch(view.state.tr.setSelection(Selection.atEnd(view.state.doc)));
-    expect(view.dom.querySelector(".raw-html-rendered td .katex")).not.toBeNull();
+    expect(
+      view.dom.querySelector(".raw-html-rendered td .katex"),
+    ).not.toBeNull();
   });
 });

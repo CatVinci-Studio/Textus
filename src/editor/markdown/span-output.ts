@@ -38,14 +38,19 @@ export function withInlineMathAsWritten(inlineMath: Handle): Handle {
   const peek = (inlineMath as Partial<PeekingHandle>).peek;
   return Object.assign(
     ((node, parent, state, info) => {
+      // A bar in a table cell's formula would end the cell.
+      const cell = (out: string) =>
+        state.stack.includes("tableCell") ? out.replace(/\|/g, "\\|") : out;
       const written = latex(node);
-      if (written) return written;
+      if (written) return cell(written);
       const out = inlineMath(node, parent, state, info);
       const wanted = (node.data as MathData)?.mathDelimiter;
       const used = /^\$+/.exec(out)?.[0] ?? "";
-      return wanted && /^\$+$/.test(wanted) && wanted.length > used.length
-        ? wanted + out.slice(used.length, out.length - used.length) + wanted
-        : out;
+      return cell(
+        wanted && /^\$+$/.test(wanted) && wanted.length > used.length
+          ? wanted + out.slice(used.length, out.length - used.length) + wanted
+          : out,
+      );
     }) as Handle,
     {
       peek: ((node, parent, state, info) =>
