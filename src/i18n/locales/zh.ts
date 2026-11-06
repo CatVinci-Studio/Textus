@@ -1566,4 +1566,6 @@ export default {
   webPageShowBar: "展开地址栏",
   webPageHint:
     "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
+  pluginKeysTaken:
+    "「{name}」无法接管键盘：「{holder}」正在使用。请在 设置 › 扩展 中关掉其中一个。",
 } satisfies Translation;

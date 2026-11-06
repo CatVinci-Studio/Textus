@@ -704,10 +704,12 @@ declare global {
 
     interface EditorKeys {
       /** Takes the editor's keys: "all" but the app's shortcuts, or "some" -
-       *  only `keys`. null gives them back. */
+       *  only `keys`. null gives back your own capture. One plugin at a time:
+       *  false while another holds them (its id is in your log). The boolean
+       *  is from 1.3.9; older Textus answers undefined. */
       capture(
         capture: { mode: "all" | "some"; keys: string[] } | null,
-      ): Promise<void>;
+      ): Promise<boolean>;
       onKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }

@@ -769,7 +769,8 @@ type /name in a conversation to use one.
   deleteTable: "Delete Table",
   tableToMarkdown: "Convert to Markdown Table",
   tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",
-  tableToMarkdownBlocks: "Convert to Markdown Table (a cell holds lists or paragraphs)",
+  tableToMarkdownBlocks:
+    "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
@@ -1680,6 +1681,8 @@ type /name in a conversation to use one.
   webPageShowBar: "Show the address bar",
   webPageHint:
     "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
+  pluginKeysTaken:
+    "{name} can't take the keyboard: {holder} has it. Turn one of them off in Settings › Extensions.",
 } satisfies Record<string, string | Plural>;
 
 export default en;

@@ -1641,4 +1641,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webPageShowBar: "주소 표시줄 보기",
   webPageHint:
     "페이지가 계속 비어 있다면 그 사이트는 다른 앱 안에서 표시되는 것을 허용하지 않습니다. 브라우저에서 여세요.",
+  pluginKeysTaken:
+    "{name}이(가) 키보드를 쓸 수 없습니다. {holder}이(가) 사용 중입니다. 설정 › 확장 기능에서 하나를 끄세요.",
 } satisfies Translation;

@@ -776,7 +776,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   deleteTable: "Apagar Tabela",
   tableToMarkdown: "Converter em Tabela Markdown",
   tableToMarkdownMerged: "Converter em Tabela Markdown (tem células mescladas)",
-  tableToMarkdownBlocks: "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
+  tableToMarkdownBlocks:
+    "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
   apiKeyLabelTemplate: "Chave de API do provedor {name}",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
@@ -1701,4 +1702,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageShowBar: "Mostrar a barra de endereço",
   webPageHint:
     "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
+  pluginKeysTaken:
+    "{name} não pode usar o teclado: {holder} está com ele. Desative um dos dois em Ajustes › Extensões.",
 } satisfies Translation;

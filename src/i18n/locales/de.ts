@@ -782,8 +782,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   deleteColumn: "Spalte löschen",
   deleteTable: "Tabelle löschen",
   tableToMarkdown: "In Markdown-Tabelle umwandeln",
-  tableToMarkdownMerged: "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
-  tableToMarkdownBlocks: "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
+  tableToMarkdownMerged:
+    "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
+  tableToMarkdownBlocks:
+    "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",
@@ -1718,4 +1720,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageShowBar: "Adressleiste einblenden",
   webPageHint:
     "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
+  pluginKeysTaken:
+    "{name} kann die Tastatur nicht übernehmen: {holder} nutzt sie. Schalte eines davon unter Einstellungen › Erweiterungen aus.",
 } satisfies Translation;

@@ -782,8 +782,10 @@ export default {
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
   tableToMarkdown: "Преобразовать в таблицу Markdown",
-  tableToMarkdownMerged: "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
-  tableToMarkdownBlocks: "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
+  tableToMarkdownMerged:
+    "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
+  tableToMarkdownBlocks:
+    "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
@@ -1713,4 +1715,6 @@ export default {
   webPageShowBar: "Показать адресную строку",
   webPageHint:
     "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
+  pluginKeysTaken:
+    "{name} не может перехватить клавиатуру: она у {holder}. Отключите один из них в Настройки › Расширения.",
 } satisfies Translation;

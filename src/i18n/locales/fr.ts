@@ -799,8 +799,10 @@ utiliser une.
   deleteColumn: "Supprimer la colonne",
   deleteTable: "Supprimer le tableau",
   tableToMarkdown: "Convertir en tableau Markdown",
-  tableToMarkdownMerged: "Convertir en tableau Markdown (il a des cellules fusionnées)",
-  tableToMarkdownBlocks: "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
+  tableToMarkdownMerged:
+    "Convertir en tableau Markdown (il a des cellules fusionnées)",
+  tableToMarkdownBlocks:
+    "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
@@ -1747,4 +1749,6 @@ utiliser une.
   webPageShowBar: "Afficher la barre d’adresse",
   webPageHint:
     "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
+  pluginKeysTaken:
+    "{name} ne peut pas prendre le clavier : {holder} l’utilise. Désactivez l’un des deux dans Réglages › Extensions.",
 } satisfies Translation;
