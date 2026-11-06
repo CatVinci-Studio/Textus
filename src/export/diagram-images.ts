@@ -112,9 +112,8 @@ export async function diagramsToImages(
   const fontFamily = getComputedStyle(document.body).fontFamily;
   // A page is white, and labels must be SVG text (not HTML) to draw on a
   // canvas. The editor re-applies its own settings before its next render.
-  // The page is light whatever the window's appearance, but a theme's
-  // --mermaid-theme still picks the palette - Mermaid's own "default" one,
-  // now, rather than the grey "neutral".
+  // The page is light whatever the window's appearance; a theme's
+  // --doc-mermaid-theme still picks the palette.
   const configure = (mermaid: MermaidApi) =>
     mermaid.initialize({
       startOnLoad: false,

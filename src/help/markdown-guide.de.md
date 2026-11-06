@@ -128,7 +128,7 @@ sequenceDiagram
 
 **Einstellungen → Editor & Design → Diagramm-Engine** legt fest, was diese Blöcke zeichnet: Mermaid, die Voreinstellung, oder Pele, das schneller ist, Diagramme aber auf seine eigene Art anordnet und einige Funktionen weglässt; ein Diagramm, das Pele nicht zeichnen kann, zeichnet Mermaid.
 
-Die Farben folgen dem Erscheinungsbild — im hellen Mermaids eigene Palette, im dunklen seine dunkle — und ein importiertes Theme oder eigenes CSS kann mit `--mermaid-theme: forest` eine andere eingebaute Palette wählen.
+Die Farben folgen dem Erscheinungsbild — im hellen eine ruhige graue Palette, im dunklen seine dunkle — und ein importiertes Theme oder eigenes CSS kann mit `--doc-mermaid-theme: forest` eine andere eingebaute Palette wählen.
 
 ## Bilder
 

@@ -128,7 +128,7 @@ sequenceDiagram
 
 **Ajustes → Editor y aspecto → Motor de diagramas** elige quién dibuja estos bloques: Mermaid, el predeterminado, o Pele, que es más rápido pero distribuye los diagramas a su manera y omite algunas funciones; un diagrama que Pele no puede dibujar lo dibuja Mermaid.
 
-Sus colores siguen el aspecto: la paleta propia de Mermaid en el claro y la oscura en el oscuro; un tema importado o el CSS personalizado pueden elegir otra paleta integrada con `--mermaid-theme: forest`.
+Sus colores siguen el aspecto: una paleta gris y sobria en el claro y la oscura en el oscuro; un tema importado o el CSS personalizado pueden elegir otra paleta integrada con `--doc-mermaid-theme: forest`.
 
 ## Imágenes
 

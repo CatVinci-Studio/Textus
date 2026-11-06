@@ -128,7 +128,7 @@ sequenceDiagram
 
 **Settings → Editor & Appearance → Diagram engine** chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
 
-Their colours follow the appearance — Mermaid's own palette in the light, its dark one in the dark — and an imported theme or custom CSS can pick another built-in palette with `--mermaid-theme: forest`.
+Their colours follow the appearance — a calm grey palette in the light, its dark one in the dark — and an imported theme or custom CSS can pick another built-in palette with `--doc-mermaid-theme: forest`.
 
 ## Images
 

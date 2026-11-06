@@ -18,8 +18,8 @@ export function loadMermaid(): Promise<MermaidApi> {
   return mermaidModule.load();
 }
 
-/** Mermaid's built-in themes: a --mermaid-theme naming anything else would
- *  fail every render, so it falls back to the choice below. */
+/** Mermaid's built-in themes: a --doc-mermaid-theme naming anything else
+ *  would fail every render, so it falls back to the choice below. */
 const MERMAID_THEMES: readonly MermaidThemeName[] = [
   "default",
   "neutral",
@@ -32,23 +32,22 @@ const MERMAID_THEMES: readonly MermaidThemeName[] = [
   "redux-dark",
   "redux-color",
   "redux-dark-color",
-  "null",
 ];
 
 /** The Mermaid theme for the page: what an imported theme or the user's CSS
- *  sets as --mermaid-theme when it names one Mermaid knows, else "dark" in
- *  the dark appearance and Mermaid's own colours, "default", in the light.
- *  Read on `body`, so a theme may set the variable on it or on the root. */
+ *  sets as --doc-mermaid-theme when it names one Mermaid knows, else "dark"
+ *  in the dark appearance and the grey "neutral" in the light. Read on
+ *  `body`, so a theme may set the variable on it or on the root. */
 export function mermaidTheme(dark = appearanceIsDark()): MermaidThemeName {
   const chosen = getComputedStyle(document.body)
-    .getPropertyValue("--mermaid-theme")
+    .getPropertyValue("--doc-mermaid-theme")
     .trim()
     .toLowerCase();
   return (MERMAID_THEMES as readonly string[]).includes(chosen)
     ? (chosen as MermaidThemeName)
     : dark
       ? "dark"
-      : "default";
+      : "neutral";
 }
 
 // Re-applied before every pass because the width follows the text column:
