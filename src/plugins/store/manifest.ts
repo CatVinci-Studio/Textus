@@ -291,7 +291,9 @@ const ID = /^[a-z0-9][a-z0-9-]{0,63}\.[a-z0-9][a-z0-9-]{0,63}$/;
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 /** The manifest in `raw` (the file's text or its parsed JSON), checked;
- *  throws ManifestError saying what is wrong. */
+ *  throws ManifestError saying what is wrong. Everything but `contributes`
+ *  is checked again by `plugins::manifest::check` in Rust before a plugin is
+ *  installed or loaded; change both. */
 export function parseManifest(raw: string | unknown): PluginManifest {
   let json: unknown = raw;
   if (typeof raw === "string") {

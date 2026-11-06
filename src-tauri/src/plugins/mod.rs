@@ -8,6 +8,7 @@ pub mod catalog;
 pub mod export;
 pub mod files;
 pub mod install;
+pub mod manifest;
 pub mod metadata;
 pub mod moved_skills;
 pub mod read_tool;
