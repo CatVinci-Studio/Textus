@@ -261,7 +261,9 @@ pub async fn ai_paper_run(
     let native = session.native_search();
     let service = request.search_service(&app);
     let can_search = native.is_some() || service.is_some();
-    let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
+    let web = crate::ai::web::WebPlan::new(true, native, service, &[])
+        .with_budget(budget.clone())
+        .keeping_seen_text();
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };

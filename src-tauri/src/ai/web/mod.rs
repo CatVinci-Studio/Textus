@@ -8,6 +8,7 @@ pub(crate) mod extract;
 mod fetch;
 mod scholar;
 pub(crate) mod search;
+mod seen;
 mod sources;
 
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
@@ -23,6 +24,7 @@ use tauri::AppHandle;
 
 pub(crate) use budget::{WebBudget, WebUse};
 pub(crate) use scholar::{doi_title, SEARCH_PAPERS_TOOL};
+pub(crate) use seen::{Reach, Seen};
 pub(crate) use sources::with_sources_in_text;
 use sources::{host, SourceBook};
 
@@ -91,6 +93,16 @@ pub(crate) struct WebPlan {
 #[derive(Default)]
 struct State {
     book: SourceBook,
+    /// What each source said when shown, for a plan that keeps it.
+    seen: Option<seen::SeenText>,
+}
+
+impl State {
+    fn saw(&mut self, n: u32, text: &str, reach: Reach) {
+        if let Some(seen) = &mut self.seen {
+            seen.record(n, text, reach);
+        }
+    }
 }
 
 impl WebPlan {
@@ -108,6 +120,7 @@ impl WebPlan {
             budget: Arc::new(budget::PerRequest::default()),
             state: Mutex::new(State {
                 book: SourceBook::from_history(history),
+                seen: None,
             }),
         }
     }
@@ -117,6 +130,29 @@ impl WebPlan {
     pub(crate) fn with_budget(mut self, budget: Arc<dyn WebBudget>) -> Self {
         self.budget = budget;
         self
+    }
+
+    /// Keeps what each source said when shown, for `seen`: a paper's
+    /// research checks its notes against it. Off for chat, which never asks.
+    pub(crate) fn keeping_seen_text(self) -> Self {
+        self.state.lock().unwrap().seen = Some(Default::default());
+        self
+    }
+
+    // Read by the paper's add_note, which checks notes against it.
+    #[allow(dead_code)]
+    /// What source `n` said when shown, if this plan keeps it and it was
+    /// shown: a page's text, or its search snippets and abstract.
+    pub(crate) fn seen(&self, n: u32) -> Option<Seen> {
+        self.state.lock().unwrap().seen.as_ref()?.get(n).cloned()
+    }
+
+    // Read by the paper's add_note, which checks notes against it.
+    #[allow(dead_code)]
+    /// Keeps `text` as what source `n` said - a file of the user's, read
+    /// elsewhere.
+    pub(crate) fn saw(&self, n: u32, text: &str, reach: Reach) {
+        self.state.lock().unwrap().saw(n, text, reach);
     }
 
     /// The tools this request offers the model, in every mode. `question`
@@ -358,6 +394,11 @@ impl WebPlan {
                         .iter()
                         .map(|hit| {
                             let n = state.book.add(&hit.url, &hit.title);
+                            state.saw(
+                                n,
+                                &format!("{}\n{}", hit.title, hit.snippet),
+                                Reach::Snippet,
+                            );
                             format_hit(n, hit)
                         })
                         .collect();
@@ -404,6 +445,11 @@ impl WebPlan {
                 let n = state
                     .book
                     .add(&paper.url, &format!("{} - {}", paper.title, paper.byline()));
+                state.saw(
+                    n,
+                    &format!("{}\n{}", paper.title, paper.abstract_text),
+                    Reach::Snippet,
+                );
                 paper.describe(n)
             })
             .collect();
@@ -451,7 +497,12 @@ impl WebPlan {
         } else {
             page.title.clone()
         };
-        let n = self.state.lock().unwrap().book.add(&page.url, &title);
+        let n = {
+            let mut state = self.state.lock().unwrap();
+            let n = state.book.add(&page.url, &title);
+            state.saw(n, &format!("{title}\n{}", page.text), Reach::Read);
+            n
+        };
         let mut out = format!(
             "<external-content source=\"{}\">\n[{n}] {title}\n{}\n\n{}\n</external-content>",
             page.url, page.url, page.text
