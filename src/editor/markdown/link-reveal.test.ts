@@ -181,6 +181,27 @@ describe("typing in a link", () => {
     expect(t.markdown()).toBe("A \\[b] c");
   });
 
+  it("is no longer watched once it is a link again and the caret has left", async () => {
+    const t = await open("A [b](u) c");
+    const watched = () =>
+      (
+        t.view.state.plugins
+          .find((plugin) =>
+            (plugin as unknown as { key: string }).key.startsWith(
+              "link-normalize",
+            ),
+          )!
+          .getState(t.view.state) as number[]
+      ).length;
+    t.caretAt("u)", 1);
+    t.type("v");
+    expect(watched()).toBe(1);
+    t.caretAtEnd();
+    t.caretAt("A");
+    expect(watched()).toBe(0);
+    expect(t.markdown()).toBe("A [b](uv) c");
+  });
+
   it("Enter inside it splits its source as text", async () => {
     const t = await open("A [bc](u) d");
     t.caretAt("bc", 1);

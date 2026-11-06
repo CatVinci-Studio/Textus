@@ -133,13 +133,23 @@ function normalize(
   return tr.docChanged ? tr.setMeta(key, true) : null;
 }
 
-/** The links an edit typed into, carried through `tr`. */
-function tracked(tr: Transaction, prev: number[]): number[] {
+/** The links an edit typed into, carried through `tr`; one that was a
+ *  whole link with the caret away is done. */
+function tracked(
+  tr: Transaction,
+  prev: number[],
+  oldState: EditorState,
+): number[] {
   if (isHistoryTransaction(tr)) return [];
   const found = new Set<number>();
   for (const pos of prev) {
+    const before = oldState.doc.nodeAt(pos);
+    const done =
+      before?.type.name === LINK &&
+      !!parseLink(before.textContent) &&
+      !cursorTouches(oldState.selection, pos, pos + before.nodeSize);
     const mapped = tr.mapping.map(pos, 1);
-    if (tr.doc.nodeAt(mapped)?.type.name === LINK) found.add(mapped);
+    if (!done && tr.doc.nodeAt(mapped)?.type.name === LINK) found.add(mapped);
   }
   if (tr.docChanged && !tr.getMeta(key))
     for (const [from, to] of changedRanges(tr))
@@ -159,7 +169,7 @@ export const linkNormalizePlugin = $prose((ctx) => {
     key,
     state: {
       init: () => [],
-      apply: (tr, prev) => tracked(tr, prev),
+      apply: (tr, prev, oldState) => tracked(tr, prev, oldState),
     },
     appendTransaction(transactions, _old, state) {
       const positions = key.getState(state) ?? [];
