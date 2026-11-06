@@ -165,9 +165,14 @@ looks the way it does in Typora. A new built-in _look_ rule belongs in
 `content-base.css`; a new _behaviour_ rule in `milkdown-theme.css`.
 
 **DOM differences bridged on import.** Code blocks carry Typora's
-`md-fences` class. Milkdown has no `<thead>` (the header row is a
-`<tr data-is-header>` in `<tbody>`), so `src/theme/typora-compat.ts`
-rewrites `thead` selectors when the theme is applied.
+`md-fences` class. `src/theme/typora-compat.ts` rewrites the rest when the
+theme is applied: `thead` (Milkdown's header row is a `<tr data-is-header>`),
+CodeMirror's `.cm-s-inner`/`.CodeMirror` (the code block's `<pre>`) and
+`.cm-*` tokens (refractor's `.token.*`), `.md-task-list-item` and
+`.task-list-done`, `pre.md-meta-block` (front matter) and `.md-image`. It
+also adds Typora's base rules for `--monospace` and `--select-text-*` when
+the theme sets them. Token colours sit in the `textus-content` layer, so a
+theme's token rules win.
 
 **Imports are single-file**: `hasDark` is `false` for anything imported through
 the UI, so the same stylesheet is used in both appearances - which is the right

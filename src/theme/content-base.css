@@ -226,6 +226,41 @@
     line-height: inherit;
   }
 
+  /* Code tokens (refractor's Prism classes), coloured by the --doc-token-*
+     variables. */
+  .milkdown .token.comment,
+  .milkdown .token.prolog,
+  .milkdown .token.doctype {
+    color: var(--doc-muted);
+    font-style: italic;
+  }
+  .milkdown .token.string,
+  .milkdown .token.attr-value {
+    color: var(--doc-token-string);
+  }
+  .milkdown .token.number,
+  .milkdown .token.boolean,
+  .milkdown .token.constant {
+    color: var(--doc-token-number);
+  }
+  .milkdown .token.keyword,
+  .milkdown .token.operator,
+  .milkdown .token.rule {
+    color: var(--doc-token-keyword);
+  }
+  .milkdown .token.function,
+  .milkdown .token.class-name {
+    color: var(--doc-token-function);
+  }
+  .milkdown .token.tag,
+  .milkdown .token.selector,
+  .milkdown .token.attr-name {
+    color: var(--doc-token-tag);
+  }
+  .milkdown .token.punctuation {
+    color: var(--doc-muted);
+  }
+
   /* The vertical rhythm of a list. Every item's content is a paragraph, so
      without this each row carries the prose margin. --doc-list-gap is the
      theme hook; nested ul/ol are included for their 1em UA margin. */
