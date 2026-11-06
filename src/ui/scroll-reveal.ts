@@ -1,5 +1,6 @@
 /** The scrollers whose bar shows only while they move. */
-const REVEAL_SELECTOR = ".editor-scroll, .source-view";
+const REVEAL_SELECTOR =
+  ".editor-scroll, .source-view .cm-scroller, .source-view";
 /** How long the bar stays after the last scroll step. */
 const HIDE_AFTER_MS = 900;
 

@@ -31,6 +31,18 @@ console.log("a fairly long first line of code to see whether the language label 
 export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
 export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
 
+/** The raw Markdown source mode is showing, one `.cm-line` per line. Short
+ *  documents are fully rendered; CodeMirror only draws lines near the viewport
+ *  in a long one. */
+export async function sourceValue(
+  page: Page,
+  root = '[data-active-tab="true"]',
+): Promise<string> {
+  return (
+    await page.locator(`${root} .source-view .cm-line`).allTextContents()
+  ).join("\n");
+}
+
 /** Has ProseMirror read the selection a click or a key made. It reads it
  *  on the selectionchange that follows, which in WebKit the next key sent
  *  at once can overtake; and 20ms after it hears the editor focused it puts

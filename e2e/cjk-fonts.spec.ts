@@ -166,7 +166,7 @@ test("source mode names a mono face for Latin and a sans face for CJK before the
       }
     ).__devEmitTauriEvent("menu-toggle-source-mode"),
   );
-  const source = '[data-active-tab="true"] textarea.source-view';
+  const source = '[data-active-tab="true"] .source-view .cm-content';
   await expect(page.locator(source)).toBeAttached();
   for (const [lang, cjk] of [
     ["zh-CN", "Microsoft YaHei"],

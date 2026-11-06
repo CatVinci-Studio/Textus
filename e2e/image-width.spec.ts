@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
+import {
+  sourceValue,
+  PHONE,
+  openApp,
+  openPhone,
+  pasteMarkdown,
+} from "./helpers";
 
 // An image's width preset is saved as `<img width>`, and Image width: Auto
 // takes it out again, also on an image without a caption.
@@ -24,10 +30,10 @@ function emit(page: Page, name: string) {
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value.trim().replace(SRC, "SRC");

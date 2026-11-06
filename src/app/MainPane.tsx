@@ -7,7 +7,7 @@ import {
 } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
+import { DocSourceEditor } from "../editor/modes/lazy-doc-source-editor";
 import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
@@ -291,13 +291,15 @@ export function MainPane({
                 />
               </Suspense>
             ) : tab.sourceMode ? (
-              <DocSourceTextarea
-                value={tab.content}
-                docPath={tab.path}
-                typewriter={typewriter}
-                onChange={(markdown) => onChange(tab.id, markdown)}
-                readOnly={tabReadOnly(tab)}
-              />
+              <Suspense fallback={null}>
+                <DocSourceEditor
+                  value={tab.content}
+                  docPath={tab.path}
+                  typewriter={typewriter}
+                  onChange={(markdown) => onChange(tab.id, markdown)}
+                  readOnly={tabReadOnly(tab)}
+                />
+              </Suspense>
             ) : (
               <EditorPane
                 key={`${tab.id}-${tab.reloadKey}`}

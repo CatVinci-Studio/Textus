@@ -109,7 +109,9 @@ export function useQuickAskReview({
           editorHadFocus,
           textFieldFocused:
             active instanceof HTMLTextAreaElement ||
-            active instanceof HTMLInputElement,
+            active instanceof HTMLInputElement ||
+            (active instanceof HTMLElement &&
+              active.closest(".cm-content") !== null),
         })
       )
         view.focus();

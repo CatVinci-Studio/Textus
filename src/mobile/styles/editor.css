@@ -51,7 +51,7 @@
    already. */
 :root[data-window-chrome="mobile"]
   .main-pane:not(:has(> .tab-bar))
-  :is(.editor-content:not(.typewriter-active), .source-view) {
+  :is(.editor-content:not(.typewriter-active), .source-view .cm-scroller) {
   padding-top: calc(var(--mobile-top) + 1.5rem);
 }
 

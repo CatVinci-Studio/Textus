@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, openApp, selectionRead } from "./helpers";
+import { sourceValue, END, HOME, openApp, selectionRead } from "./helpers";
 
 // The keys around blocks that need a browser: the arrows, clicks and
 // focus. What a typed key does to the document is tested in vitest
@@ -22,10 +22,10 @@ function emit(page: Page, name: string, payload?: unknown) {
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value.trim();

@@ -48,7 +48,7 @@ export function useEditorCarets({
  *  would otherwise go into the document. */
 const ownsMenu = (target: EventTarget | null) =>
   !(target as HTMLElement | null)?.closest?.(
-    ".inline-chat, .find-replace-bar, input, textarea",
+    ".inline-chat, .find-replace-bar, input, textarea, .cm-content",
   );
 
 /**

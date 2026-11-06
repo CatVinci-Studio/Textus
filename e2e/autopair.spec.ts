@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { sourceValue, openApp } from "./helpers";
 
 function emit(page: Page, name: string) {
   return page.evaluate(
@@ -15,10 +15,10 @@ function emit(page: Page, name: string) {
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value.trim();

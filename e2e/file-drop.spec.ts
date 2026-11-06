@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { sourceValue, mockInvoke, openApp } from "./helpers";
 
 // Files dropped from a file manager arrive as a `tauri://drag-drop` event
 // with their paths, fired by the dev shim as Rust would; reading is canned.
@@ -36,10 +36,10 @@ function emit(page: Page, name: string) {
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value.trim();

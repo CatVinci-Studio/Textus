@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { sourceValue, PHONE, openPhone, pasteMarkdown } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**
@@ -20,10 +20,10 @@ async function emit(page: Page, name: string) {
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value.trim();

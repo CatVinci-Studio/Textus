@@ -137,7 +137,7 @@ body {
   }
 
   .playground .editor-content,
-  .playground .source-view {
+  .playground .source-view .cm-scroller {
     padding: 1.5rem 1rem 4rem;
   }
 }

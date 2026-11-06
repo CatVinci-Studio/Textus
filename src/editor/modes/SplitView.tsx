@@ -4,7 +4,7 @@ import { useKatexHtml } from "../math/useKatexHtml";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
 import { useSettings } from "../../prefs/SettingsContext";
-import { DocSourceTextarea } from "./DocSourceTextarea";
+import { DocSourceEditor } from "./lazy-doc-source-editor";
 import "./SplitView.css";
 
 /**
@@ -25,8 +25,11 @@ export function SplitView({
   onChange: (markdown: string) => void;
   readOnly: boolean;
 }) {
-  const sourceRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const sourceScroller = () =>
+    rootRef.current?.querySelector<HTMLElement>(".split-source .cm-scroller") ??
+    null;
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
@@ -104,27 +107,25 @@ export function SplitView({
   }
 
   return (
-    <div className="split-view">
-      <DocSourceTextarea
-        ref={sourceRef}
+    <div ref={rootRef} className="split-view">
+      <DocSourceEditor
         className="split-source"
         value={content}
         docPath={filePath}
         typewriter={typewriter}
         onChange={onChange}
         readOnly={readOnly}
-        onScroll={(e) =>
-          previewRef.current &&
-          follow(e.currentTarget, previewRef.current, "source")
+        onScroll={(scroller) =>
+          previewRef.current && follow(scroller, previewRef.current, "source")
         }
       />
       <div
         ref={previewRef}
         className="split-preview"
-        onScroll={(e) =>
-          sourceRef.current &&
-          follow(e.currentTarget, sourceRef.current, "preview")
-        }
+        onScroll={(e) => {
+          const source = sourceScroller();
+          if (source) follow(e.currentTarget, source, "preview");
+        }}
       >
         <div className="milkdown">
           {/* Keyed by the engine: the effect above replaces each fence

@@ -32,11 +32,11 @@ function snap(zoom: number): number {
   return Math.abs(clamped - 1) < 0.03 ? 1 : clamped;
 }
 
-/// Where a zoom step is held still: a rendered scroller, or a source
-/// textarea, which scrolls itself.
+/// Where a zoom step is held still: a rendered scroller, or the source
+/// editor's own scroller.
 type Pane =
   | { kind: "rendered"; scroller: HTMLElement; content: Element }
-  | { kind: "source"; scroller: HTMLTextAreaElement };
+  | { kind: "source"; scroller: HTMLElement };
 
 /// The pane under the pointer, else the focused one, else the first on
 /// screen. Split panes sit side by side, hence the x.
@@ -49,8 +49,8 @@ function zoomPane(x: number | null, y: number | null): Pane | null {
     if (scroller && content)
       panes.push({ kind: "rendered", scroller, content });
   }
-  const source = document.querySelector<HTMLTextAreaElement>(
-    `${tab} textarea.source-view`,
+  const source = document.querySelector<HTMLElement>(
+    `${tab} .source-view .cm-scroller`,
   );
   if (source) panes.push({ kind: "source", scroller: source });
   const shown = panes.filter((pane) => {
@@ -101,10 +101,10 @@ function holdRendered(
   scroller.scrollTop = contentTop() + (into * next) / prev - anchor;
 }
 
-/// The same for a source textarea, which scrolls in zoomed px. Its lines
-/// rewrap, so the anchor keeps its share of the whole text height.
+/// The same for the source editor's scroller, which scrolls in zoomed px.
+/// Its lines rewrap, so the anchor keeps its share of the whole text height.
 function holdSource(
-  source: HTMLTextAreaElement,
+  source: HTMLElement,
   line: number,
   prev: number,
   next: number,

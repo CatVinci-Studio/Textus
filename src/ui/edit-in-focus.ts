@@ -24,6 +24,22 @@ export function editInFocus(action: FocusedEdit): void {
     else editNatively(action);
     return;
   }
+  // Source mode is a contenteditable CodeMirror document. It handles the
+  // native undo/redo input, as the old textarea did; Select All is a DOM
+  // range. No editor-layer import here: CodeMirror loads with source mode.
+  if (
+    focused instanceof HTMLElement &&
+    focused.closest(".source-view .cm-content")
+  ) {
+    if (action === "select-all") {
+      const range = document.createRange();
+      range.selectNodeContents(focused);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    } else editNatively(action);
+    return;
+  }
   if (focused instanceof HTMLElement && focused.closest('[aria-modal="true"]'))
     return;
   window.dispatchEvent(new CustomEvent(EDIT_ACTION_EVENT, { detail: action }));

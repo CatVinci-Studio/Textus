@@ -1,3 +1,4 @@
+import type { EditorView as CmView } from "@codemirror/view";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -157,83 +158,56 @@ export function placeEditorCaret(
   }
 }
 
-/** The caret's y inside a textarea's content, via a mirror element: a
- *  textarea has no API for where a character sits. */
-export function textareaCaretTop(
-  textarea: HTMLTextAreaElement,
-  offset: number,
-) {
-  const style = getComputedStyle(textarea);
-  const mirror = document.createElement("div");
-  for (const prop of [
-    "boxSizing",
-    "width",
-    "paddingTop",
-    "paddingRight",
-    "paddingBottom",
-    "paddingLeft",
-    "borderTopWidth",
-    "borderRightWidth",
-    "borderBottomWidth",
-    "borderLeftWidth",
-    "fontFamily",
-    "fontSize",
-    "fontWeight",
-    "lineHeight",
-    "letterSpacing",
-    "tabSize",
-    "wordSpacing",
-  ] as const) {
-    mirror.style[prop] = style[prop];
-  }
-  mirror.style.position = "absolute";
-  mirror.style.visibility = "hidden";
-  mirror.style.whiteSpace = "pre-wrap";
-  mirror.style.overflowWrap = "break-word";
-  mirror.style.left = "-9999px";
-  mirror.style.top = "0";
-  mirror.textContent = textarea.value.slice(0, offset);
-  const marker = document.createElement("span");
-  marker.textContent = "​";
-  mirror.appendChild(marker);
-  document.body.appendChild(mirror);
-  const top = marker.offsetTop;
-  mirror.remove();
-  return top;
-}
-
 export function zoomOf(el: Element): number {
   return parseFloat(getComputedStyle(el).zoom) || 1;
 }
 
-/** The source-view caret as a markdown offset. */
-export function readTextareaCaret(
-  textarea: HTMLTextAreaElement,
-): ModeSwitchCaret {
-  const offset = textarea.selectionStart;
-  const y =
-    (textareaCaretTop(textarea, offset) - textarea.scrollTop) *
-    zoomOf(textarea);
-  const visible = y >= 0 && y <= textarea.getBoundingClientRect().height;
-  return { offset, viewportY: visible ? y : null };
+/** The source editor's caret as a markdown offset. CodeMirror measures its
+ *  own lines, so the mirror element a textarea needed is gone. */
+export function readSourceCaret(view: CmView): ModeSwitchCaret {
+  const offset = view.state.selection.main.head;
+  const scroller = view.scrollDOM;
+  const box = scroller.getBoundingClientRect();
+  let viewportY: number | null = null;
+  try {
+    const coords = view.coordsAtPos(offset);
+    if (coords && coords.top >= box.top && coords.top <= box.bottom)
+      viewportY = coords.top - box.top;
+  } catch {
+    // No layout for that position (hidden): don't restore scroll.
+  }
+  return { offset, viewportY };
 }
 
-/** Places the source-view caret at a markdown offset and scrolls it to
- *  where the WYSIWYG caret was. */
-export function applyTextareaCaret(
-  textarea: HTMLTextAreaElement,
-  caret: ModeSwitchCaret,
-): void {
-  const offset = Math.min(caret.offset, textarea.value.length);
-  textarea.focus({ preventScroll: true });
-  textarea.setSelectionRange(offset, offset);
-  const zoom = zoomOf(textarea);
-  const target = caret.viewportY ?? textarea.getBoundingClientRect().height / 3;
-  textarea.scrollTop = textareaCaretTop(textarea, offset) - target / zoom;
+/** Places the source caret at a markdown offset and scrolls it to where the
+ *  WYSIWYG caret was. `coordsAtPos` is in screen px, scrollTop in zoomed
+ *  content px, hence the divide. */
+export function applySourceCaret(view: CmView, caret: ModeSwitchCaret): void {
+  const offset = Math.max(0, Math.min(caret.offset, view.state.doc.length));
+  view.dispatch({ selection: { anchor: offset } });
+  view.focus();
+  const scroller = view.scrollDOM;
+  const box = scroller.getBoundingClientRect();
+  const target = caret.viewportY ?? box.height / 3;
+  const zoom = zoomOf(scroller) || 1;
+  try {
+    const coords = view.coordsAtPos(offset);
+    if (coords) scroller.scrollTop += (coords.top - box.top - target) / zoom;
+  } catch {
+    // No layout yet: the caret is set; scrolling is best effort.
+  }
 }
 
-/** Typewriter mode in a source textarea: the caret's line in the middle. */
-export function centerTextareaCaret(textarea: HTMLTextAreaElement): void {
-  const top = textareaCaretTop(textarea, textarea.selectionStart);
-  textarea.scrollTop = top - textarea.clientHeight / 2;
+/** Typewriter mode: the caret's line in the middle of the source pane. */
+export function centerSourceCaret(view: CmView): void {
+  const scroller = view.scrollDOM;
+  const box = scroller.getBoundingClientRect();
+  const zoom = zoomOf(scroller) || 1;
+  try {
+    const coords = view.coordsAtPos(view.state.selection.main.head);
+    if (coords)
+      scroller.scrollTop += (coords.top - box.top - box.height / 2) / zoom;
+  } catch {
+    // No layout yet.
+  }
 }

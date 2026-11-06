@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, mockInvoke, openApp, selectionRead } from "./helpers";
+import {
+  sourceValue,
+  END,
+  HOME,
+  mockInvoke,
+  openApp,
+  selectionRead,
+} from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
 // it is a link again, as edited. Ctrl/Cmd+click still opens it. The file is
@@ -95,10 +102,10 @@ async function sourceOf(page: Page): Promise<string> {
     );
   await emit("menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit("menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
