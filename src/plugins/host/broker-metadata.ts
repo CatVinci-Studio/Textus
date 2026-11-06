@@ -8,6 +8,8 @@ import {
   tagsIn,
   tasksIn,
 } from "../workspace/metadata-cache";
+import { linkToTarget, type LinkToOptions } from "../workspace/link-resolve";
+import { linkStyleAt } from "../workspace/link-style";
 import {
   optionalStr,
   str,
@@ -48,6 +50,28 @@ export function metadataHandlers(p: PluginScope) {
         str(from, "from"),
       );
       return target && { ...target, line: targetLine(folder, target) };
+    },
+    "metadata.linkTo": async ({ to, from, options }: Params) => {
+      const source = str(from, "from");
+      const o = (options ?? {}) as Record<string, unknown>;
+      const text = (key: string) =>
+        typeof o[key] === "string" && o[key] ? (o[key] as string) : undefined;
+      const [folder, style] = await Promise.all([index(), linkStyleAt(source)]);
+      const wanted: LinkToOptions = {
+        heading: text("heading"),
+        block: text("block")?.replace(/^\^/, ""),
+        alias: text("alias"),
+        embed: o.embed === true,
+      };
+      return linkToTarget(
+        folder.paths,
+        str(to, "to"),
+        source,
+        o.style === "wiki" || o.style === "markdown"
+          ? { ...style, wiki: o.style === "wiki" }
+          : style,
+        wanted,
+      );
     },
     "metadata.tags": async () => tagsIn(await index()),
     "metadata.tasks": async ({ done, path, tag }: Params) =>

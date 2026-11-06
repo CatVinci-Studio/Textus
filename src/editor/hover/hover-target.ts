@@ -62,7 +62,7 @@ function spotAt(
         // A ^id is a block, never a heading's name.
         const heading = parsed.block ? null : (parsed.headings.at(-1) ?? null);
         return found?.exists
-          ? { type: "document", path: found.path, heading }
+          ? { type: "document", path: found.path, heading, block: parsed.block }
           : null;
       },
     };
@@ -88,6 +88,7 @@ function linkHover(href: string, docPath: string | null): HoverTarget | null {
       type: "document",
       path: target.path,
       heading: target.anchor?.startsWith("^") ? null : (target.anchor ?? null),
+      block: target.anchor?.startsWith("^") ? target.anchor.slice(1) : null,
     };
   if (target?.kind === "heading" || target?.kind === "file") return null;
   // The web, and other apps' links (zotero://select/...).

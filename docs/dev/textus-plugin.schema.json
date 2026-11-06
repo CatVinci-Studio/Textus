@@ -437,9 +437,37 @@
               "pattern": {
                 "type": "string",
                 "description": "A regular expression the text before the caret must end with, such as \\\\[A-Za-z]*."
+              },
+              "title": {
+                "type": "string",
+                "description": "The / panel group's heading (\"%notes%\"); the plugin's name without it."
               }
             }
           }
+        },
+        "embeds": {
+          "type": "array",
+          "description": "![[...]] embeds whose content the plugin gives as Markdown (files.read), answered by textus.views.registerEmbed(id); Textus draws it read-only. One plugin draws each kind.",
+          "items": {
+            "type": "object",
+            "required": ["id", "targets"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Starts with the plugin's id and a dot."
+              },
+              "targets": {
+                "type": "array",
+                "description": "A whole note, a heading's section, a ^id block; a kind this Textus doesn't know is left out.",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "hovers": {
+          "type": "array",
+          "description": "The hover cards the plugin gives (textus.editor.registerHover).",
+          "items": { "type": "string" }
         },
         "links": {
           "type": "array",

@@ -423,10 +423,46 @@ declare global {
           render(block: CodeBlock, webview: Webview): void | Promise<void>;
         },
       ): Disposable;
+      /** The content of `![[...]]` embeds of the kinds `contributes.embeds`
+       *  names, asked only for embeds in sight; Textus draws it read-only
+       *  and expands embeds inside it itself. One plugin draws each kind:
+       *  the first turned on. From 1.3.9 (files.read). */
+      registerEmbed(id: string, provider: EmbedProvider): EmbedHandle;
       /** The plugin's page in Settings (`contributes.settingsPage`). */
       registerSettingsPage(provider: {
         resolve(webview: Webview): void | Promise<void>;
       }): Disposable;
+    }
+
+    interface EmbedProvider {
+      /** null: nothing to show (Textus shows the link's name, dimmed). */
+      provideEmbed(
+        target: EmbedTarget,
+        context: { signal: AbortSignal },
+      ): EmbedContent | null | Promise<EmbedContent | null>;
+    }
+
+    /** What `![[...]]` points at, as `metadata.resolveNote` resolves it. */
+    interface EmbedTarget {
+      path: string;
+      heading?: string;
+      block?: string;
+      alias?: string;
+    }
+
+    interface EmbedContent {
+      /** Markdown, drawn read-only. Links and pictures in it are read from
+       *  `target.path`'s folder. Leave `![[...]]` in it as is: Textus draws
+       *  those itself, at most 5 deep and never in a loop. */
+      markdown: string;
+      /** Shown over it, opening the source when clicked; the link's name
+       *  without it. */
+      title?: string;
+    }
+
+    interface EmbedHandle extends Disposable {
+      /** Asks again for every embed shown. */
+      refresh(): void;
     }
 
     interface ListProvider {
@@ -678,7 +714,13 @@ declare global {
     }
 
     type HoverTarget =
-      | { type: "document"; path: string; heading: string | null }
+      | {
+          type: "document";
+          path: string;
+          heading: string | null;
+          /** From 1.3.9: a "^id" block the link points at, without "^". */
+          block?: string | null;
+        }
       | { type: "link"; url: string }
       | { type: "citation"; key: string };
 
@@ -781,6 +823,13 @@ declare global {
        * write nothing.
        */
       process(path: string, change: (text: string) => string): Promise<string>;
+      /** The `^id` of the block at `line` (from 0) of `path`, adding a new
+       *  one (6 lowercase hex characters) where Obsidian reads it - the end
+       *  of a paragraph's, heading's or list item's last line; a line of its
+       *  own after a table, quote or code block - through `process`, every
+       *  other byte kept. null when no block is there. From 1.3.9
+       *  (files.write). */
+      blockId(path: string, line: number): Promise<string | null>;
       /** With `updateLinks`, links to it in the folder's documents follow. */
       rename(
         from: string,
@@ -859,6 +908,23 @@ declare global {
        *  `from` (needed for relative links and same-note anchors). null when
        *  `link` is no link to a file (a web URL). From 1.3.9 (files.read). */
       resolveNote(link: string, from: string): Promise<ResolvedLink | null>;
+      /** The link Textus writes to `to` from `from`: the folder's style (in
+       *  an Obsidian vault, its "new link format" and wiki or Markdown
+       *  links; `[[wiki]]` by the shortest name elsewhere), with `#heading`,
+       *  `#^block` and `|alias` as given - `[[#Heading]]` within one note.
+       *  `style` overrides wiki or Markdown; `embed` adds "!". From 1.3.9
+       *  (files.read). */
+      linkTo(
+        to: string,
+        from: string,
+        options?: {
+          heading?: string;
+          block?: string;
+          alias?: string;
+          style?: "wiki" | "markdown";
+          embed?: boolean;
+        },
+      ): Promise<string>;
       tags(): Promise<{ tag: string; count: number }[]>;
       tasks(filter?: {
         done?: boolean;
@@ -905,6 +971,9 @@ declare global {
         resolved: string | null;
         line: number;
         text: string;
+        /** From 1.3.9: a `[[wiki link]]` or `![[embed]]`, so `target` is a
+         *  name to pass to resolveNote as "[[" + target + "]]". */
+        wiki: boolean;
       }[];
       tags: string[];
       tasks: Task[];

@@ -1,8 +1,10 @@
+import { noteLinkSource } from "../../editor/markdown/link-syntax";
 import {
   noteFileNames,
   parseNoteLink,
   type NoteLink,
 } from "../../utils/note-link";
+import { relativePath } from "../../utils/path";
 
 /**
  * Where a link to a note leads, among a folder's files: the one resolver for
@@ -210,4 +212,80 @@ export function resolveTarget(
 ): NoteTarget | null {
   const target = resolveNoteIn(paths.notes, link, relativeTo(paths.root, from));
   return target && { ...target, path: absolute(paths, target.path) };
+}
+
+/** How a folder writes new links: an Obsidian vault's "Use [[Wikilinks]]"
+ *  and "New link format"; outside one, `[[wiki]]` by the shortest name. */
+export interface LinkStyle {
+  wiki: boolean;
+  format: "shortest" | "relative" | "absolute";
+}
+
+export const DEFAULT_LINK_STYLE: LinkStyle = { wiki: true, format: "shortest" };
+
+export interface LinkToOptions {
+  heading?: string;
+  block?: string;
+  alias?: string;
+  embed?: boolean;
+}
+
+/** How a link from `from` names `to` (both from the root): the name alone
+ *  when it finds `to` and no other file has it, else the path. */
+function namedAs(
+  index: NoteIndex,
+  to: string,
+  from: string,
+  style: LinkStyle,
+): string {
+  const shown = (path: string) =>
+    style.wiki ? path.replace(MARKDOWN, "") : path;
+  if (style.format === "relative")
+    return shown(relativePath(folderOf(from), to));
+  const file = to.slice(to.lastIndexOf("/") + 1);
+  if (
+    style.format === "shortest" &&
+    (index.byName.get(file.toLowerCase())?.length ?? 0) <= 1
+  ) {
+    const name = shown(file);
+    const found = resolveNoteIn(index, style.wiki ? `[[${name}]]` : name, from);
+    if (found?.path.toLowerCase() === to.toLowerCase()) return name;
+  }
+  return shown(to);
+}
+
+/** The link Textus writes from `from` to `to` (both from the root):
+ *  `[[#Heading]]` within the same note. */
+export function noteLinkIn(
+  index: NoteIndex,
+  to: string,
+  from: string,
+  style: LinkStyle,
+  options: LinkToOptions = {},
+): string {
+  const self =
+    !!(options.heading || options.block) &&
+    to.toLowerCase() === from.toLowerCase();
+  return noteLinkSource({
+    ...options,
+    wiki: style.wiki,
+    target: self ? "" : namedAs(index, to, from, style),
+  });
+}
+
+/** `noteLinkIn` for absolute paths in the folder `paths` indexes. */
+export function linkToTarget(
+  paths: PathIndex,
+  to: string,
+  from: string,
+  style: LinkStyle,
+  options: LinkToOptions = {},
+): string {
+  return noteLinkIn(
+    paths.notes,
+    relativeTo(paths.root, to),
+    relativeTo(paths.root, from),
+    style,
+    options,
+  );
 }
