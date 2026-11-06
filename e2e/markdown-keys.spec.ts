@@ -241,6 +241,8 @@ test("a folded callout opens from its chevron, and a comment shows only under th
     page,
     "> [!faq]- Why?\n> Because.\n\nSee %%private%% here.\n\nEnd.",
   );
+  // The caret opens on the first line, which shows a callout's source.
+  await page.locator(`${editor} p`).last().click();
   const callout = page.locator(`${editor} blockquote.callout`);
   await expect(callout.locator(".md-alert-title")).toHaveText("Why?");
   await expect(callout.getByText("Because.")).toBeHidden();
@@ -249,8 +251,10 @@ test("a folded callout opens from its chevron, and a comment shows only under th
   const comment = page.locator(`${editor} p`).filter({ hasText: "See" });
   await expect(comment.getByText("private")).toBeHidden();
   await page.locator(`${editor} p`).last().click();
+  // The caret at the comment's start, right after "See ".
   await comment.click({ position: { x: 4, y: 4 } });
-  await page.keyboard.press(END);
+  await page.keyboard.press("Home");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight");
   await expect(comment.locator(".md-comment")).toBeVisible();
 });
 
