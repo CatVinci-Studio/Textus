@@ -702,6 +702,21 @@ declare global {
       before?: boolean;
     }
 
+    /** A document about to be saved. */
+    interface WillSave {
+      path: string;
+      text: string;
+      trigger: "manual" | "auto";
+      /** Its blocks in order; `from`/`to` are offsets into `text`. */
+      blocks: (Block & { from: number; to: number })[];
+    }
+
+    /** A block's new Markdown, by its id. */
+    interface BlockEdit {
+      block: string;
+      markdown: string;
+    }
+
     interface EditorKeys {
       /** Takes the editor's keys: "all" but the app's shortcuts, or "some" -
        *  only `keys`. null gives back your own capture. One plugin at a time:
@@ -797,13 +812,20 @@ declare global {
       onDidChange: Event<{ path: string }>;
       onDidRename: Event<{ from: string; to: string }>;
       onDidDelete: Event<{ path: string }>;
-      /** A document is about to be saved: return its text changed to save
-       *  that instead (within a second; files.write). */
+      /** A document is about to be saved (files.write). Plugins are asked
+       *  one after another in plugin id order, each given the text as the
+       *  one before left it, at most a second each. Return the blocks you
+       *  changed (`{ block, markdown }`, by the ids in `blocks`) - only
+       *  those are written back - or the whole text, which is written back
+       *  block by block. Code, math, HTML and link definition blocks stay
+       *  as the user wrote them, and each block keeps its line endings. A
+       *  change that would change again when run a second time is skipped
+       *  for this save. `trigger`, `blocks` and `BlockEdit[]` answers are
+       *  from 1.3.9. */
       onWillSave(
-        listener: (e: {
-          path: string;
-          text: string;
-        }) => string | void | Promise<string | void>,
+        listener: (
+          e: WillSave,
+        ) => string | BlockEdit[] | void | Promise<string | BlockEdit[] | void>,
       ): Disposable;
       /** 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for
        *  autosave. */
@@ -998,8 +1020,9 @@ declare global {
     interface Export {
       /** An HTML or PDF export's page, before it is written (editor.read):
        *  `css` is added to its styles, `html` replaces its content. Scripts
-       *  and handlers in the HTML are taken out. Each plugin is waited for
-       *  at most two seconds. */
+       *  and handlers in the HTML are taken out. Plugins are asked in plugin
+       *  id order, each given the HTML as the one before left it, and
+       *  waited for at most two seconds. */
       onWillExport(
         listener: (page: {
           format: "html" | "pdf";

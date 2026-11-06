@@ -250,7 +250,11 @@ export function useSaveTabs(opts: {
           if (!overwrite) return "conflict";
         }
       }
-      const content = await beforeSave(tab.path, tab.content);
+      const content = await beforeSave(
+        tab.path,
+        tab.content,
+        auto ? "auto" : "manual",
+      );
       if (!(await writeOrReport(tab.path, content))) return "failed";
       await commitSaved(tabId, tab.path, content, auto);
       return "saved";
@@ -389,9 +393,13 @@ export function useSaveTabs(opts: {
  * The text to save once onWillSave plugins have changed it, put into the
  * editor first as one undo step so what is saved is what shows.
  */
-async function beforeSave(path: string, text: string): Promise<string> {
+async function beforeSave(
+  path: string,
+  text: string,
+  trigger: "manual" | "auto",
+): Promise<string> {
   if (!hasWillSave()) return text;
-  const changed = await runWillSave(path, text);
+  const changed = await runWillSave(path, text, trigger);
   if (changed === text) return text;
   const doc = openDocumentAt(path);
   if (!doc?.replaceText(changed, doc.revision())) return text;

@@ -27,6 +27,20 @@
   var aiTools = new Map();
   var uriHandlers = [];
   var willSave = [];
+  /** `text` with each `{ block, markdown }` put in its block, last first. */
+  function withBlockEdits(text, blocks, edits) {
+    var byId = {};
+    for (var e = 0; e < edits.length; e++)
+      if (edits[e] && typeof edits[e].markdown === "string")
+        byId[edits[e].block] = edits[e].markdown;
+    for (var b = blocks.length - 1; b >= 0; b--)
+      if (Object.prototype.hasOwnProperty.call(byId, blocks[b].id))
+        text =
+          text.slice(0, blocks[b].from) +
+          byId[blocks[b].id] +
+          text.slice(blocks[b].to);
+    return text;
+  }
   var willExport = [];
   var settingsProvider = null;
   var webviews = new Map();
@@ -1144,8 +1158,15 @@
     $willSave: async function (params) {
       var current = params.text;
       for (var i = 0; i < willSave.length; i++) {
-        var next = await willSave[i]({ path: params.path, text: current });
+        var next = await willSave[i]({
+          path: params.path,
+          text: current,
+          trigger: params.trigger,
+          blocks: current === params.text ? plain(params.blocks) : [],
+        });
         if (typeof next === "string") current = next;
+        else if (Array.isArray(next) && current === params.text)
+          current = withBlockEdits(current, params.blocks, next);
       }
       return current === params.text ? null : current;
     },
