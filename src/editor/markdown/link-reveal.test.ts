@@ -4,7 +4,9 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { headingPos } from "./heading-jump";
 import { arrowPastLinkEdge, linkHrefAt } from "./link-reveal";
+import { tocEntries } from "./toc-plugin";
 
 // A link holds its Markdown as text; the caret on it shows that source,
 // elsewhere decorations hide its syntax. Nothing about it is a document edit.
@@ -168,7 +170,7 @@ describe("typing in a link", () => {
 });
 
 describe("Left and Right at a link's edges", () => {
-  it("step one character past the edge, never onto its other side", async () => {
+  it("step onto the edge, and one character past it, never onto its other side", async () => {
     const t = await open("ab [c](u) de");
     const { pos, node } = firstLink(t.view.state.doc);
     const end = pos + node.nodeSize;
@@ -183,6 +185,10 @@ describe("Left and Right at a link's edges", () => {
     expect(step(end, -1)).toBe(end - 2);
     expect(step(pos, -1)).toBe(pos - 1);
     expect(step(pos + 3, 1)).toBeNull();
+    // From the character beside it, onto its edge, outside it.
+    expect(step(pos - 1, 1)).toBe(pos);
+    expect(step(end + 1, -1)).toBe(end);
+    expect(step(pos - 2, 1)).toBeNull();
     // The key does it, and the document stays as it was.
     caret(t.view, pos);
     t.press("ArrowRight");
@@ -203,6 +209,16 @@ describe("two editors on one file", () => {
     a.type("y");
     expect(b.markdown()).toBe(MARKDOWN);
     expect(a.markdown()).toBe('See [the **docs**](https://xy.org "T") here.');
+  });
+});
+
+describe("a link in a heading", () => {
+  it("reads as its label in the heading's id, its anchor and the TOC", async () => {
+    const t = await open("# See [the docs](https://x.org)\n\nText.");
+    const heading = t.view.state.doc.firstChild!;
+    expect(heading.attrs.id).toBe("see-the-docs");
+    expect(headingPos(t.view.state.doc, "see-the-docs")).toBe(1);
+    expect(tocEntries(t.view.state.doc)[0].text).toBe("See the docs");
   });
 });
 

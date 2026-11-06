@@ -5,6 +5,7 @@ import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import { $nodeSchema, $prose, $remark } from "@milkdown/kit/utils";
 import { revealPosition } from "../reveal-position";
 import { touchesHeading } from "./heading-id-plugin";
+import { shownText } from "./link-source";
 
 // `[TOC]` alone on a line, any case, as Typora writes it.
 const TOC_RE = /^\[toc\]$/i;
@@ -75,7 +76,7 @@ export function tocEntries(doc: ProseNode): TocEntry[] {
   const entries: TocEntry[] = [];
   doc.descendants((node) => {
     if (node.type.name !== "heading") return !node.isTextblock;
-    const text = node.textContent.trim();
+    const text = shownText(node).trim();
     if (text)
       entries.push({
         level: node.attrs.level as number,

@@ -181,11 +181,7 @@ export const linkSchema = $nodeSchema(LINK, () => ({
       },
     },
   ],
-  toDOM: () => [
-    "a",
-    { "data-type": LINK, class: "md-link", spellcheck: "false" },
-    0,
-  ],
+  toDOM: () => ["a", { "data-type": LINK, class: "md-link" }, 0],
   parseMarkdown: {
     match: (node) => node.type === "link" || node.type === "linkReference",
     runner: (state, node, type) => {
@@ -203,3 +199,20 @@ export const linkSchema = $nodeSchema(LINK, () => ({
     },
   },
 }));
+
+/** What `node` reads as: its text with each link as its label, as headings'
+ *  ids and the table of contents use it. */
+export function shownText(node: ProseNode): string {
+  let text = "";
+  node.descendants((child) => {
+    if (child.type.name === LINK) {
+      const source = child.textContent;
+      const parts = parseLink(source);
+      text += parts ? source.slice(...parts.label) || parts.dest : source;
+      return false;
+    }
+    if (child.isText) text += child.text;
+    return true;
+  });
+  return text;
+}

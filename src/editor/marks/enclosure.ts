@@ -93,6 +93,14 @@ export function redirectMisattributedInput(
   const nodeStart = $typed.before($typed.depth);
   const nodeEnd = $typed.after($typed.depth);
   if (sel.from > nodeStart && sel.from < nodeEnd) return false;
+  // A source node's misread caret is the one just outside it; a selection
+  // elsewhere is one a click hasn't been read into yet.
+  if (
+    SOURCE_INLINE_NODES.has(name) &&
+    sel.from !== nodeStart &&
+    sel.from !== nodeEnd
+  )
+    return false;
   const deflt = () => state.tr.insertText(text, sel.from, sel.to);
   const handled = view.someProp("handleTextInput", (f) =>
     f(view, sel.from, sel.to, text, deflt),

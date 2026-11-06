@@ -81,7 +81,12 @@ for (const [way, write] of ways) {
     await page.keyboard.press("Enter");
     await write(page, IMAGE);
 
-    await expect(page.locator(`${editor} a[href="${URL}"]`)).toHaveText("百度");
+    await expect(page.locator(`${editor} a[href="${URL}"]`)).toHaveText(
+      "百度",
+      {
+        useInnerText: true,
+      },
+    );
     await expect(page.locator(`${editor} img[src="${SRC}"]`)).toHaveAttribute(
       "alt",
       "美女",

@@ -17,6 +17,7 @@ import {
 } from "../reveal-state";
 import { showDocImage } from "../images/image-plugin";
 import { isImeKeyEvent } from "../keys/ime";
+import { stateWithLiveSelection } from "../live-selection";
 import { labelParts, type LabelPart } from "./link-label";
 import { LINK } from "./link-source";
 import {
@@ -102,14 +103,21 @@ function linkReveal(
       const text = node.textContent;
       const end = pos + node.nodeSize;
       const href = linkHref(text);
-      const out = href ? [Decoration.node(pos, end, { href })] : [];
+      const shown = touches(pos, end);
+      // The class marks the link whose source shows, for its colours and tests.
+      const out = [
+        Decoration.node(pos, end, {
+          ...(href !== null && { href }),
+          ...(shown && { class: "link-source" }),
+        }),
+      ];
       const parts = hiddenLinkParts(text);
       if (!parts) return out;
-      const shown = touches(pos, end);
       for (const [from, to] of parts)
         out.push(
           Decoration.inline(pos + 1 + from, pos + 1 + to, {
             class: shown ? "link-source-syntax" : "link-source-hidden",
+            spellcheck: "false",
           }),
         );
       const link = parseLink(text)!;
@@ -168,9 +176,10 @@ export function linkHrefAt(
 }
 
 /**
- * Where Left or Right takes a caret at an edge of a link: past the edge.
- * Just outside and just inside are one place on screen, and WebKit's own
- * step stopped at the other. Null where the browser's step is fine.
+ * Where Left or Right takes a caret at or next to an edge of a link: past
+ * the edge, or onto it from the character beside it. Just outside and just
+ * inside are one place on screen, and the browser's own step stopped at the
+ * other, or behind syntax still hidden. Null where its step is fine.
  */
 export function arrowPastLinkEdge(
   state: EditorState,
@@ -179,6 +188,18 @@ export function arrowPastLinkEdge(
   const { selection, doc } = state;
   if (!selection.empty) return null;
   const { $from, from } = selection;
+  // One character away, the step lands just outside the link.
+  const $next = doc.resolve(from + dir);
+  const beside = dir === 1 ? $next.nodeAfter : $next.nodeBefore;
+  const between = dir === 1 ? $from.nodeAfter : $from.nodeBefore;
+  if (
+    !isLink($from.parent) &&
+    between?.isText &&
+    $next.parent === $from.parent &&
+    beside &&
+    isLink(beside)
+  )
+    return from + dir;
   let start: number;
   if (isLink($from.parent)) start = $from.before();
   else if ($from.nodeAfter && isLink($from.nodeAfter)) start = from;
@@ -259,7 +280,8 @@ export function createLinkRevealPlugin(docPath: () => string | null) {
             event.metaKey
           )
             return false;
-          const to = arrowPastLinkEdge(view.state, dir);
+          // Arrows pressed fast run ahead of the state's selection.
+          const to = arrowPastLinkEdge(stateWithLiveSelection(view), dir);
           if (to === null) return false;
           event.preventDefault();
           view.dispatch(
