@@ -141,7 +141,7 @@ function linkReveal(
       const end = pos + node.nodeSize;
       const href = linkHref(text);
       const shown = touches(pos, end);
-      // The class marks the link whose source shows, for its colours and tests.
+      // The class marks the link whose source shows, for tests.
       const out = [
         Decoration.node(pos, end, {
           ...(href !== null && { href }),
