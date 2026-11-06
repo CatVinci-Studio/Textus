@@ -24,7 +24,7 @@ pub(crate) struct Shape {
     /// At least one figure for every this many sections; None for none.
     pub figure_every: Option<usize>,
     pub max_figures: usize,
-    /// Web pictures: each needs a match on Commons, and too many crowd out
+    /// Web pictures: each needs a match on the web, and too many crowd out
     /// the figures that carry the paper's own data.
     pub max_web: usize,
     /// Generated pictures the budget still allows.

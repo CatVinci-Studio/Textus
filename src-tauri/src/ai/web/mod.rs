@@ -6,6 +6,7 @@ mod budget;
 pub(crate) mod commons;
 pub(crate) mod extract;
 mod fetch;
+pub(crate) mod openverse;
 mod scholar;
 pub(crate) mod search;
 mod sources;

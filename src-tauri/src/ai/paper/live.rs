@@ -1,6 +1,6 @@
 //! A whole paper written against a real provider, the way the app writes
 //! one: research, the outline (approved as it comes), drafting, the review
-//! and the finish, pictures from Wikimedia Commons included. `#[ignore]`d -
+//! and the finish, pictures from the web included. `#[ignore]`d -
 //! it spends money. The paper, its dossier and outline and what each stage
 //! took go to `tmp/live-paper/<time>/`.
 //!
@@ -199,7 +199,7 @@ fn live_paper() {
 
         let t = Instant::now();
         for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
+            *section = web_figures::resolve(section, web_figures::find_on_the_web).await;
             *section = finish::without_pictures(section);
         }
         let figures = finish::number_figures(&mut sections, &paper.language);
@@ -225,6 +225,13 @@ fn live_paper() {
         stats.insert(
             "commons_pictures".into(),
             json!(markdown.matches("[Wikimedia Commons](").count()),
+        );
+        stats.insert(
+            "web_pictures".into(),
+            json!(markdown
+                .lines()
+                .filter(|line| line.starts_with('*') && line.contains(" · ["))
+                .count()),
         );
         write("paper.md", &markdown);
     });

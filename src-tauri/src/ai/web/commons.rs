@@ -135,13 +135,31 @@ fn plain(html: &str) -> String {
 pub(crate) async fn fetch(
     image: &CommonsImage,
 ) -> Result<aicompat::images::GeneratedImage, String> {
+    fetch_picture(&image.url, image.width, image.height, "Wikimedia Commons").await
+}
+
+/// The picture at `url` - kept unless larger than MAX_BYTES - with its type
+/// and file extension as the picture store keeps them; `site` names who
+/// answered in an error.
+pub(super) async fn fetch_picture(
+    url: &str,
+    width: u32,
+    height: u32,
+    site: &str,
+) -> Result<aicompat::images::GeneratedImage, String> {
     let response = http_client()?
-        .get(&image.url)
+        .get(url)
         .send()
         .await
         .map_err(|e| format!("The picture couldn't be fetched: {e}"))?;
     if !response.status().is_success() {
-        return Err(format!("Wikimedia Commons answered {}", response.status()));
+        return Err(format!("{site} answered {}", response.status()));
+    }
+    if response
+        .content_length()
+        .is_some_and(|len| len > MAX_BYTES as u64)
+    {
+        return Err("The picture is too large.".into());
     }
     let declared = response
         .headers()
@@ -149,7 +167,7 @@ pub(crate) async fn fetch(
         .and_then(|v| v.to_str().ok())
         .unwrap_or("")
         .to_string();
-    let (mime, ext) = picture_type(&declared, &image.url);
+    let (mime, ext) = picture_type(&declared, url);
     let bytes = response.bytes().await.map_err(|e| e.to_string())?;
     if bytes.len() > MAX_BYTES {
         return Err("The picture is too large.".into());
@@ -158,8 +176,8 @@ pub(crate) async fn fetch(
         bytes: bytes.to_vec(),
         mime,
         ext,
-        width: image.width,
-        height: image.height,
+        width,
+        height,
     })
 }
 

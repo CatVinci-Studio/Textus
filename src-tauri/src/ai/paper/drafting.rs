@@ -165,10 +165,10 @@ pub async fn ai_paper_draft(
             phase: PaperPhase::Finishing,
         });
         let language = &files.paper.language;
-        // Web pictures first: one Commons has nothing for becomes a picture
+        // Web pictures first: one no source has anything for becomes a picture
         // to generate, begun with the planned ones.
         for section in &mut sections {
-            *section = web_figures::resolve(section, web_figures::find_on_commons).await;
+            *section = web_figures::resolve(section, web_figures::find_on_the_web).await;
         }
         // Pictures begun before the figures are numbered, so one that can't
         // be made leaves no caption behind.

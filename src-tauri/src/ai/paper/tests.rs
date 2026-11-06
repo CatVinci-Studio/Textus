@@ -1302,6 +1302,20 @@ fn a_web_picture_mark_gives_its_caption_and_search_words() {
     assert_eq!(web_figures::read_mark("Plain text."), None);
 }
 
+#[test]
+fn a_web_picture_is_searched_again_with_fewer_words() {
+    assert_eq!(
+        web_figures::searches("green roof  Zurich 1990"),
+        ["green roof Zurich 1990", "green roof Zurich", "green roof"]
+    );
+    assert_eq!(
+        web_figures::searches("green roof Zurich"),
+        ["green roof Zurich", "green roof"]
+    );
+    assert_eq!(web_figures::searches("Matterhorn"), ["Matterhorn"]);
+    assert!(web_figures::searches("  ").is_empty());
+}
+
 #[tokio::test]
 async fn web_picture_marks_become_kept_pictures_with_credits_or_generated_ones() {
     let section = "Intro.\n\n<!-- textus-figure web: A roof in Basel | green roof Basel -->\n\nMid.\n\n<!-- textus-figure web: Nothing | no such picture -->\n\nEnd.";

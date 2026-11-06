@@ -359,3 +359,42 @@ fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
         ("image/jpeg", "jpg")
     );
 }
+
+#[test]
+fn openverse_pictures_keep_only_licences_a_paper_may_show_with_their_credits() {
+    let body = json!({"results": [
+        {
+            "url": "https://live.staticflickr.com/1/roof_b.jpg",
+            "foreign_landing_url": "https://www.flickr.com/photos/ann/1",
+            "creator": "  Ann\n Lee ", "license": "by", "license_version": "2.0",
+            "source": "flickr", "width": 1024, "height": 768
+        },
+        {
+            "url": "https://live.staticflickr.com/2/nc.jpg",
+            "foreign_landing_url": "https://www.flickr.com/photos/bo/2",
+            "creator": "Bo", "license": "by-nc", "license_version": "2.0", "source": "flickr"
+        },
+        {
+            "url": "http://insecure.example/x.jpg",
+            "foreign_landing_url": "https://example.org/x",
+            "license": "cc0", "license_version": "1.0", "source": "met"
+        },
+        {
+            "url": "https://ids.si.edu/tray.jpg",
+            "foreign_landing_url": "https://collections.si.edu/tray",
+            "license": "pdm", "license_version": "1.0",
+            "source": "smithsonian_national_museum_of_natural_history"
+        }
+    ]});
+    let found = openverse::images(&body);
+    assert_eq!(found.len(), 2);
+    assert_eq!((found[0].width, found[0].height), (1024, 768));
+    assert_eq!(
+        found[0].credit(),
+        "Ann Lee · CC BY 2.0 · [Flickr](https://www.flickr.com/photos/ann/1)"
+    );
+    assert_eq!(
+        found[1].credit(),
+        "Public domain · [Smithsonian](https://collections.si.edu/tray)"
+    );
+}
