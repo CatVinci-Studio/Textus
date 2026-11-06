@@ -66,7 +66,8 @@
   font-family: var(--font-ui, inherit);
   font-size: var(--text-secondary);
   line-height: 1.55;
-  box-shadow: var(--shadow-card);
+  /* A card is its hairline; the shadow comes only under the pointer and
+     when a cut card opens over the ones below. */
   /* A card glides on `translate`, never `top`, which would lay the margin
      out on every frame. */
   transition: transform var(--dur-fast) var(--ease-out);
