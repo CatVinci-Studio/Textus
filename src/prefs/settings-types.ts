@@ -156,6 +156,25 @@ export interface UserThemeMeta {
   gallery?: GalleryOrigin;
 }
 
+/** What Textus AI made and the user installed from a reply's card: a
+ *  plugin (its manifest id), a user theme (its `UserThemeMeta.id`) or a
+ *  global skill (its name). Each still lives in its own store; this only
+ *  remembers which of them came from Create, for its "Made here" list. */
+export interface Creation {
+  kind: CreationKind;
+  id: string;
+  name: string;
+  /** When it was last installed or updated, in ms. */
+  at: number;
+}
+
+export type CreationKind = "plugin" | "theme" | "skill";
+export const CREATION_KINDS: readonly CreationKind[] = [
+  "plugin",
+  "theme",
+  "skill",
+];
+
 export interface GalleryOrigin {
   id: string;
   /// The installed copy's `GalleryTheme.updated`.
@@ -339,6 +358,8 @@ export interface Settings {
   /// A built-in theme id or a `UserThemeMeta.id`.
   themeId: string;
   userThemes: UserThemeMeta[];
+  /** What Create made, newest first (see `Creation`). */
+  creations: Creation[];
   /// "window" (default): another document opens a new OS window; "tab": a
   /// tab in this one. Rust reads it from the settings file, often before any webview exists.
   newDocumentMode: NewDocumentMode;
@@ -463,6 +484,7 @@ export const DEFAULT_SETTINGS: Settings = {
   commandShortcuts: {},
   themeId: "default",
   userThemes: [],
+  creations: [],
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
   startPageOnLaunch: false,

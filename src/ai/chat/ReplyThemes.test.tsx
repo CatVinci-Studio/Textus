@@ -39,6 +39,9 @@ function Current() {
       <output data-testid="current">
         {settings.themeId}|{settings.userThemes.map((t) => t.name).join(",")}
       </output>
+      <output data-testid="creations">
+        {settings.creations.map((c) => `${c.kind}:${c.id}`).join(",")}
+      </output>
       <button onClick={() => setSettings({ themeId: "paper" })}>Paper</button>
     </>
   );
@@ -79,6 +82,7 @@ it("installs a reply's css block as a user theme and switches to it", async () =
   expect(variant).toBe("light");
   expect(css).toContain("--doc-accent: #5fc4b4;");
   expect(screen.getByTestId("current").textContent).toBe(`${id}|Night Harbor`);
+  expect(screen.getByTestId("creations").textContent).toBe(`theme:${id}`);
 
   // Picking another theme and coming back reuses the saved copy.
   fireEvent.click(screen.getByText("Paper"));
