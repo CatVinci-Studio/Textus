@@ -13,7 +13,6 @@ pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::sources::link_safe;
 use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
-use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};
@@ -29,10 +28,6 @@ const HELPER_STEPS: usize = 10;
 const MAX_QUESTIONS: usize = 10;
 /// Characters of each attached file the research plan sees.
 const PLAN_GLIMPSE: usize = 1_500;
-
-/// The mode whose tools a researcher is offered: it reads, and changes
-/// nothing of the user's.
-const MODE: AgentMode = AgentMode::Review;
 
 /// What the researchers work with besides the web and add_note: the tools
 /// every mode shares - the files, the reference library, the plugins' and
@@ -88,16 +83,12 @@ pub(crate) fn shared_tools<'t>(
     installed: Vec<Tool<'t>>,
 ) -> ToolRegistry<'t> {
     let mut tools = if root.is_some() || attached {
-        ToolRegistry::files(MODE, sees_images)
+        ToolRegistry::files(sees_images)
     } else {
-        ToolRegistry::new(MODE)
+        ToolRegistry::shared()
     };
-    if let Some(tool) = crate::ai::tools::references_tool(root) {
-        tools.add(tool);
-    }
-    for tool in installed {
-        tools.add(tool);
-    }
+    tools.extend(crate::ai::tools::references_tool(root));
+    tools.extend(installed);
     tools
 }
 
@@ -209,10 +200,8 @@ async fn research_question(
         notes: &notes,
         send,
     };
-    let mut own = ToolRegistry::new(MODE);
-    for tool in web.tools(question) {
-        own.add(tool);
-    }
+    let mut own = ToolRegistry::shared();
+    own.extend(web.tools(question));
     own.add(taker.tool());
     let mut specs = own.specs();
     specs.extend(kit.tools.specs());
