@@ -146,6 +146,10 @@ it, lazily loaded. Each stage and helper is one run of
   rests on as `excerpt` and its `grounding` - `read`, `snippet`, or
   `unchecked` for a source never shown (the provider's own search, a
   plugin's address) - and its writer is shown all three.
+  A drafted section is checked the same way: a sentence citing `[n]` that
+  gives a figure none of its cited sources' notes give (less their
+  `unmatched` ones) is sent back to its writer - soft, as a length is, so a
+  last try keeps it.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a

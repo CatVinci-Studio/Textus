@@ -14,6 +14,7 @@ pub(crate) use super::checks::{
 use super::figures::Draw;
 use super::handover::{hand_over_checked, Checked, Task};
 use super::prompts;
+use super::grounding::{figures_by_source, unsupported_figures};
 use super::stream::{string_value, LastSent};
 use super::{
     Dossier, FigureKind, FigurePlan, Grounding, Note, Outline, OutlineSection, Paper, PaperEvent,
@@ -179,6 +180,12 @@ pub(crate) async fn write_section(
         .filter_map(|s| dossier.sources.iter().find(|x| x.n == *s))
         .map(|s| (s.n, s.url.clone()))
         .collect();
+    let given = &figures_by_source(
+        dossier
+            .notes
+            .iter()
+            .filter(|n| section.evidence.contains(&n.id)),
+    );
     // The latest section handed over whose problems were all soft: kept at
     // the end if no try holds.
     let soft: Mutex<Option<String>> = Mutex::new(None);
@@ -196,6 +203,7 @@ pub(crate) async fn write_section(
         // Drawn even when other things are wrong, so the writer fixes all
         // at once.
         wrong.extend(super::figures::undrawn(draw, &markdown).await);
+        wrong.extend(unsupported_figures(&markdown, given));
         if !markdown.is_empty() {
             *last.lock().unwrap() = Some(markdown.clone());
         }
