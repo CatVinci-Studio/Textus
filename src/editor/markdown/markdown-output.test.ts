@@ -502,12 +502,12 @@ describe("an edited block is saved so it reads back the same", () => {
   });
 
   it("doesn't escape a bracket into a LaTeX formula after it", async () => {
-    // `\[', '\]` is a formula; the `[[` before it is escaped.
+    // `\[', '^\]` is a formula; the `[[` before it is escaped.
     const saved = await savedAfter(
-      "x = [['\\[', '\\]']] end\n",
+      "x = [['\\[', '^\\]']] end\n",
       deleting(" end"),
     );
-    expect(saved).toBe("x = &#91;&#91;'\\[', '\\]']]\n");
+    expect(saved).toBe("x = &#91;&#91;'\\[', '^\\]']]\n");
     expect(await roundTrip(saved)).toBe(saved);
   });
 

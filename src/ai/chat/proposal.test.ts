@@ -44,8 +44,8 @@ describe("resolveSkillMessage", () => {
 describe("parseProposal", () => {
   it("writes the reply's LaTeX maths in dollars", () => {
     const proposal = parseProposal(
-      JSON.stringify({ action: "append", text: "so \\(x\\) and\n\\[y\\]" }),
+      JSON.stringify({ action: "append", text: "so \\(x\\) and\n\\[y^2\\]" }),
     );
-    expect(proposal?.text).toBe("so $x$ and\n$$\ny\n$$");
+    expect(proposal?.text).toBe("so $x$ and\n$$\ny^2\n$$");
   });
 });

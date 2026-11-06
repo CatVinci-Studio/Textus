@@ -1199,6 +1199,10 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+.milkdown .math-fence-hidden {
+  display: none;
+}
+
 /* Not drawn yet (off screen): about a display formula's height. */
 .math-block-rendered[data-draw-pending] {
   min-height: 2.6em;
