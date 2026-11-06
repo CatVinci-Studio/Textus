@@ -28,7 +28,6 @@ import {
   inSummary,
   mapOpen,
   rawHtmlPreviewKey,
-  unfoldEventHandlers,
   unfoldFor,
   widgetSpec,
   type FoldMeta,
@@ -478,7 +477,6 @@ export function createRawHtmlPreviewPlugin(
           },
           handleKeyDown: (view, event) =>
             arrowIntoHtmlBlock(view, event) || arrowOntoHtml(view, event),
-          handleDOMEvents: unfoldEventHandlers,
         },
       }),
   );

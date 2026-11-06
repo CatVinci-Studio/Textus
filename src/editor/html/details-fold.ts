@@ -229,23 +229,6 @@ export function unfoldRange(
   return true;
 }
 
-const UNFOLD_EVENT = "textus-unfold";
-
-/** unfoldRange for an element of the editor's own DOM. */
-export function unfoldElement(el: Element): void {
-  el.dispatchEvent(new CustomEvent(UNFOLD_EVENT, { bubbles: true }));
-}
-
-/** The plugin's handleDOMEvents entry that answers unfoldElement. */
-export const unfoldEventHandlers = {
-  [UNFOLD_EVENT]: (view: EditorView, event: Event) => {
-    if (!(event.target instanceof Node)) return false;
-    const pos = view.posAtDOM(event.target, 0);
-    unfoldRange(view, pos);
-    return true;
-  },
-};
-
 /**
  * The folds to open after these transactions: one hiding the selection, one
  * unfoldRange asked for, one where a new attention item landed.
