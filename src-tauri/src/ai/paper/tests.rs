@@ -2590,3 +2590,19 @@ async fn a_diagram_the_window_can_t_draw_is_sent_back_with_the_renderer_s_words(
     // The diagram and the chart, each time.
     assert_eq!(drawn.into_inner().unwrap(), [2, 2]);
 }
+
+#[test]
+fn a_web_picture_search_widens_by_dropping_its_last_words() {
+    assert_eq!(
+        web_figures::fewer_words("green roof Zurich city"),
+        ["green roof Zurich city", "green roof Zurich", "green roof"]
+    );
+    assert_eq!(
+        web_figures::fewer_words("green roof Zurich"),
+        ["green roof Zurich", "green roof"]
+    );
+    assert_eq!(
+        web_figures::fewer_words("Basel rooftops"),
+        ["Basel rooftops"]
+    );
+}

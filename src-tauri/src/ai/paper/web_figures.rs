@@ -117,15 +117,31 @@ fn generated_instead(caption: &str, words: &str) -> String {
     }
 }
 
+/// `words`, then with its last word dropped, then its last two, keeping
+/// two at least: a search too narrow to find anything gets a wider one.
+pub(crate) fn fewer_words(words: &str) -> Vec<String> {
+    let all: Vec<&str> = words.split_whitespace().collect();
+    let mut tries = vec![all.join(" ")];
+    for n in [all.len().saturating_sub(1), all.len().saturating_sub(2)] {
+        let shorter = all[..n].join(" ");
+        if n >= 2 && !tries.contains(&shorter) {
+            tries.push(shorter);
+        }
+    }
+    tries
+}
+
 /// The best picture on Commons for `words` that can be fetched, and its
-/// credit.
+/// credit; with nothing found, the same search with fewer words.
 pub(crate) async fn find_on_commons(words: String) -> Result<(GeneratedImage, String), String> {
-    let found = commons::search(&words).await?;
     let mut last = format!("Nothing on Wikimedia Commons for {words:?}.");
-    for image in found.iter().take(TRIES) {
-        match commons::fetch(image).await {
-            Ok(picture) => return Ok((picture, image.credit())),
-            Err(why) => last = why,
+    for query in fewer_words(&words) {
+        let found = commons::search(&query).await?;
+        for image in found.iter().take(TRIES) {
+            match commons::fetch(image).await {
+                Ok(picture) => return Ok((picture, image.credit())),
+                Err(why) => last = why,
+            }
         }
     }
     Err(last)

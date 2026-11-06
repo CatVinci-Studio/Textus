@@ -99,7 +99,8 @@ pub(crate) fn build(
     let open_folder_item =
         MenuItemBuilder::with_id(OPEN_FOLDER_ID, l(OPEN_FOLDER_ID, "Open Project…")).build(app)?;
     let close_folder_item =
-        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Project")).build(app)?;
+        MenuItemBuilder::with_id(CLOSE_FOLDER_ID, l(CLOSE_FOLDER_ID, "Close Project"))
+            .build(app)?;
     // Built empty; rebuild_recent_menu fills it.
     let open_recent_menu =
         SubmenuBuilder::new(app, l("menu:open-recent", "Open Recent")).build()?;
