@@ -5,22 +5,9 @@ import { Tooltip } from "../ui/Tooltip";
 import { Presence, PresenceDiv } from "../ui/usePresence";
 import { usePluginCard } from "../plugins/store/usePluginCard";
 import { pluginName, pluginText } from "../plugins/store/plugin-records";
-import { permissionLabel } from "../plugins/store/permissions";
-import { installsText } from "../settings/pages/installs-text";
-import { Byline } from "../settings/pages/PluginPage";
 import { PluginIcon } from "../settings/pages/PluginArt";
 import type { CardRequest } from "../plugins/store/plugin-card";
 import type { Strings } from "../i18n/strings";
-
-/** The card's one line: a plugin's own reason with the plugin it names;
- *  the app's reasons already name it. */
-function cardLine(request: CardRequest, name: string, t: Strings): string {
-  return request.situation.type === "offer"
-    ? t.pluginCardOfferLine
-        .replace("{name}", name)
-        .replace("{reason}", request.reason)
-    : request.reason;
-}
 
 /** The Install button's words for what the card is about. */
 function installLabel(request: CardRequest, t: Strings): string {
@@ -30,33 +17,31 @@ function installLabel(request: CardRequest, t: Strings): string {
   return open ? t.pluginOpenInstall : t.pluginInstall;
 }
 
-/** The one bottom-right card that suggests an official plugin: a line that
- *  opens to say more, and Install, Later and ×. It never takes the focus
- *  and stays until answered. */
+/** The one bottom-right card that suggests an official plugin: "Plugin
+ *  suggestion: <name>", Install, Later and ×; the line opens to the
+ *  plugin's description. It never takes the focus and stays until
+ *  answered; Install still asks for the permissions. */
 export function SuggestCard({ t }: { t: Strings }) {
   const card = usePluginCard();
   const [open, setOpen] = useState(false);
   const moreId = useId();
   const request = card?.request ?? null;
-  const name = request
-    ? card?.item
-      ? pluginName({ id: card.item.id, manifest: card.item.manifest })
-      : request.plugin
-    : "";
+  const item = card?.item ?? null;
+  const name = item
+    ? pluginName({ id: item.id, manifest: item.manifest })
+    : (request?.plugin ?? "");
+  const line = t.pluginCardLine.replace("{name}", name);
   useEffect(() => {
     setOpen(false);
-    if (request)
-      announce(`${t.pluginCardTitle}: ${cardLine(request, name, t)}`);
-  }, [request, name, t]);
-  const item = card?.item ?? null;
-  const installs = item ? installsText(item, t) : null;
+    if (request) announce(line);
+  }, [request, line]);
   return (
     <Presence show={!!card} exitMs={120}>
       {card && request && (
         <PresenceDiv
           className="update-toast suggest-card"
           role="region"
-          aria-label={name}
+          aria-label={line}
           data-open={open || undefined}
         >
           <button
@@ -71,10 +56,7 @@ export function SuggestCard({ t }: { t: Strings }) {
               manifest={item?.manifest ?? null}
               url={item?.icon}
             />
-            <span className="suggest-card-line">
-              <span className="suggest-card-title">{t.pluginCardTitle}</span>
-              {cardLine(request, name, t)}
-            </span>
+            <span className="suggest-card-line">{line}</span>
           </button>
           <div className="suggest-card-actions">
             <button
@@ -111,44 +93,10 @@ export function SuggestCard({ t }: { t: Strings }) {
               </button>
             </Tooltip>
           </div>
-          {open && (
-            <div className="suggest-card-more" id={moreId}>
-              <strong className="suggest-card-name">{name}</strong>
-              {request.situation.type === "offer" && (
-                <p>
-                  {t.pluginCardFrom.replace(
-                    "{caller}",
-                    request.situation.caller.name,
-                  )}
-                </p>
-              )}
-              {item && (
-                <>
-                  <p>{pluginText(item, item.manifest.description)}</p>
-                  <Byline
-                    manifest={item.manifest}
-                    official={item.official}
-                    t={t}
-                  >
-                    {installs && (
-                      <span className="plugin-installs">{installs}</span>
-                    )}
-                  </Byline>
-                  <div className="suggest-card-permissions">
-                    <strong>{t.pluginPermissionsLabel}</strong>
-                    {item.manifest.permissions.length ? (
-                      <ul>
-                        {item.manifest.permissions.map((p) => (
-                          <li key={p}>{permissionLabel(p, t)}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      t.pluginNoPermissions
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+          {open && item && (
+            <p className="suggest-card-more" id={moreId}>
+              {pluginText(item, item.manifest.description)}
+            </p>
           )}
         </PresenceDiv>
       )}

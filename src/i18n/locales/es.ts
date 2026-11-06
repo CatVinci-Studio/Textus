@@ -1668,9 +1668,7 @@ para usar una.
   pluginOfferTurnOn:
     "El plugin {name} está instalado pero desactivado. ¿Activarlo?\n{description}",
   pluginOfferReason: "Sugerido por un plugin: «{reason}»",
-  pluginCardOfferLine: "{name}: «{reason}»",
-  pluginCardTitle: "Plugin recomendado",
-  pluginCardFrom: "Recomendado por {caller}",
+  pluginCardLine: "Plugin recomendado: {name}",
   pluginCardSystemApp: "Abrir con la app del sistema",
   pluginCardNever: "No volver a sugerir",
   pluginCardsMuted: "Sugerencias de plugins desactivadas: {n}",

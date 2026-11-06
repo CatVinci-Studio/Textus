@@ -87,7 +87,7 @@ test("a file only an official plugin opens offers that plugin, and opens with it
     .locator(`${editor} a`, { hasText: "the scan" })
     .click({ modifiers: ["ControlOrMeta"] });
   const card = page.locator(".suggest-card");
-  await expect(card).toContainText("scan.pdf");
+  await expect(card).toContainText("Plugin suggestion:");
   await card.getByRole("button", { name: "Install and open" }).click();
   await expect(page.locator(".tab-pill-active .tab-pill-title")).toHaveText(
     /scan\.pdf/,

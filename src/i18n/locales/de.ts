@@ -1662,9 +1662,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginOfferTurnOn:
     "Das Plugin {name} ist installiert, aber aus. Einschalten?\n{description}",
   pluginOfferReason: "Von einem Plugin vorgeschlagen: „{reason}“",
-  pluginCardOfferLine: "{name}: „{reason}“",
-  pluginCardTitle: "Plugin-Empfehlung",
-  pluginCardFrom: "Empfohlen von {caller}",
+  pluginCardLine: "Plugin-Empfehlung: {name}",
   pluginCardSystemApp: "Mit System-App öffnen",
   pluginCardNever: "Nicht mehr vorschlagen",
   pluginCardsMuted: "Ausgeblendete Plugin-Vorschläge: {n}",

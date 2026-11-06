@@ -60,7 +60,7 @@
 /* One line until opened: the reason, then Install, Later and ×. */
 .suggest-card {
   flex-wrap: wrap;
-  width: min(520px, calc(100vw - 32px));
+  max-width: min(520px, calc(100vw - 32px));
   padding: 4px 8px 4px 4px;
   gap: 8px;
   user-select: none;
@@ -97,14 +97,6 @@
   white-space: nowrap;
 }
 
-.suggest-card-title {
-  color: var(--ui-muted);
-}
-
-.suggest-card-title::after {
-  content: " · ";
-}
-
 .suggest-card[data-open] .suggest-card-line {
   white-space: normal;
 }
@@ -132,41 +124,30 @@
 }
 
 .suggest-card-more {
-  display: flex;
   order: 1;
   flex-basis: 100%;
-  flex-direction: column;
-  gap: 4px;
+  margin: 0;
   padding: 0 4px 4px 36px;
   color: var(--ui-muted);
   font-size: var(--text-sm);
 }
 
-.suggest-card-more p {
-  margin: 0;
-}
-
-.suggest-card-name {
-  color: var(--ui-text);
-  font-weight: 600;
-}
-
-.suggest-card-permissions ul {
-  margin: 0;
-  padding-inline-start: 1.2em;
-}
-
-.suggest-card-permissions strong {
-  display: block;
-  color: var(--ui-text);
-  font-weight: 500;
-}
-
-/* A phone: the buttons go under the line, and under the details once open. */
+/* A phone: the card spans the width with room inside; once open, the
+   buttons go under the description. */
 @media (max-width: 480px) {
+  .corner-stack .suggest-card {
+    width: calc(100vw - 32px);
+    padding: 8px 12px 8px 8px;
+  }
+
   .suggest-card-actions {
+    gap: 8px;
+  }
+
+  .suggest-card[data-open] .suggest-card-actions {
     order: 2;
     flex-basis: 100%;
     justify-content: flex-end;
+    padding-bottom: 4px;
   }
 }

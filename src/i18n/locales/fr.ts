@@ -1690,9 +1690,7 @@ utiliser une.
   pluginOfferTurnOn:
     "Le plugin {name} est installé mais désactivé. L’activer ?\n{description}",
   pluginOfferReason: "Suggéré par un plugin : « {reason} »",
-  pluginCardOfferLine: "{name} : « {reason} »",
-  pluginCardTitle: "Plugin suggéré",
-  pluginCardFrom: "Suggéré par {caller}",
+  pluginCardLine: "Plugin suggéré : {name}",
   pluginCardSystemApp: "Ouvrir avec l’app du système",
   pluginCardNever: "Ne plus suggérer",
   pluginCardsMuted: "Suggestions de plugins désactivées : {n}",

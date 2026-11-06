@@ -21,7 +21,7 @@ test("a PDF without its plugin offers it, installs it and opens the file", async
   await openWithPdf(page);
   await openPath(page, "/notes/paper.pdf");
   const card = page.locator(".suggest-card");
-  await expect(card).toContainText("opens “paper.pdf”");
+  await expect(card).toContainText("Plugin suggestion:");
   await card.getByRole("button", { name: "Install and open" }).click();
   // Its permissions, as any install asks.
   const allow = page.locator(".app-dialog").getByRole("button", {
