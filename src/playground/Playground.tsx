@@ -1,4 +1,5 @@
 import { NoticeHost, showNotice } from "../ui/notices";
+import { Tooltip } from "../ui/Tooltip";
 import {
   type ChangeEvent,
   type RefObject,
@@ -242,15 +243,16 @@ function WebEditor({
         </button>
         <p className="playground-note">{t.playgroundLocalNote}</p>
         <div className="playground-actions">
-          <button
-            type="button"
-            className="text-button"
-            aria-pressed={source}
-            title={t.menuToggleSourceMode}
-            onClick={toggleSource}
-          >
-            {t.playgroundSource}
-          </button>
+          <Tooltip text={t.menuToggleSourceMode}>
+            <button
+              type="button"
+              className="text-button"
+              aria-pressed={source}
+              onClick={toggleSource}
+            >
+              {t.playgroundSource}
+            </button>
+          </Tooltip>
           <button
             type="button"
             className="text-button"

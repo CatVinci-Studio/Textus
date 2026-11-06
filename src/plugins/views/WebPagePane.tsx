@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Tooltip } from "../../ui/Tooltip";
 import { links, webPages } from "../../platform/ipc";
 import { ChevronIcon, DetachIcon, RefreshIcon } from "../../ui/icons";
 import { hasNativeWebPages } from "../../platform/capabilities";
@@ -136,15 +137,16 @@ function AddressBar({
   if (hidden)
     return (
       <div className="web-page-bar web-page-bar-folded">
-        <button
-          type="button"
-          className="web-page-handle"
-          aria-label={t.webPageShowBar}
-          title={t.webPageShowBar}
-          onClick={() => setHidden(false)}
-        >
-          <ChevronIcon className="web-page-chevron-down" />
-        </button>
+        <Tooltip text={t.webPageShowBar}>
+          <button
+            type="button"
+            className="web-page-handle"
+            aria-label={t.webPageShowBar}
+            onClick={() => setHidden(false)}
+          >
+            <ChevronIcon className="web-page-chevron-down" />
+          </button>
+        </Tooltip>
       </div>
     );
   return (
@@ -155,15 +157,16 @@ function AddressBar({
         onGo(typed.trim());
       }}
     >
-      <button
-        type="button"
-        className="icon-button web-page-button"
-        aria-label={t.webPageReload}
-        title={t.webPageReload}
-        onClick={onReload}
-      >
-        <RefreshIcon />
-      </button>
+      <Tooltip text={t.webPageReload}>
+        <button
+          type="button"
+          className="icon-button web-page-button"
+          aria-label={t.webPageReload}
+          onClick={onReload}
+        >
+          <RefreshIcon />
+        </button>
+      </Tooltip>
       <input
         className="web-page-address"
         aria-label={t.webPageAddress}
@@ -172,28 +175,32 @@ function AddressBar({
         onFocus={(e) => e.currentTarget.select()}
         onChange={(e) => onType(e.target.value)}
       />
-      <button
-        type="button"
-        className="icon-button web-page-button"
-        aria-label={t.webPageOpenInBrowser}
-        title={
+      <Tooltip
+        text={
           outsideHint
             ? `${t.webPageOpenInBrowser} - ${outsideHint}`
             : t.webPageOpenInBrowser
         }
-        onClick={onOutside}
       >
-        <DetachIcon />
-      </button>
-      <button
-        type="button"
-        className="icon-button web-page-button"
-        aria-label={t.webPageHideBar}
-        title={t.webPageHideBar}
-        onClick={() => setHidden(true)}
-      >
-        <ChevronIcon className="web-page-chevron-up" />
-      </button>
+        <button
+          type="button"
+          className="icon-button web-page-button"
+          aria-label={t.webPageOpenInBrowser}
+          onClick={onOutside}
+        >
+          <DetachIcon />
+        </button>
+      </Tooltip>
+      <Tooltip text={t.webPageHideBar}>
+        <button
+          type="button"
+          className="icon-button web-page-button"
+          aria-label={t.webPageHideBar}
+          onClick={() => setHidden(true)}
+        >
+          <ChevronIcon className="web-page-chevron-up" />
+        </button>
+      </Tooltip>
     </form>
   );
 }

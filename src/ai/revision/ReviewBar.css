@@ -18,8 +18,6 @@
   line-height: 1;
   white-space: nowrap;
   box-shadow: var(--shadow-bar);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   transform: translateX(-50%);
   --enter-x: -50%;
   --enter-y: calc(var(--motion-distance-md) * 1.5);
