@@ -6,14 +6,14 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
-use super::model::ask;
-pub(crate) use super::model::{clip, Model, Watch};
+pub(crate) use super::model::clip;
 use super::notes::NoteTaker;
 pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::sources::link_safe;
 use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::agent::AgentMode;
+use crate::ai::agent::{ask, Model, Watch};
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, ToolCall};

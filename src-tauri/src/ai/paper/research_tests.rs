@@ -51,7 +51,7 @@ fn last_result(turns: &[AgentTurn]) -> &str {
 /// its path.
 struct Reader;
 
-impl research::Model for Reader {
+impl crate::ai::agent::Model for Reader {
     fn step<'a>(
         &'a self,
         instructions: &'a str,
@@ -139,7 +139,7 @@ fn plugin_echo(_: &ToolContext, arguments: &str) -> String {
 /// Calls the plugin's tool it is offered, then keeps a note from it.
 struct PluginUser;
 
-impl research::Model for PluginUser {
+impl crate::ai::agent::Model for PluginUser {
     fn step<'a>(
         &'a self,
         _: &'a str,

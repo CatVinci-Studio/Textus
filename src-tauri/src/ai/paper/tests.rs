@@ -264,7 +264,7 @@ fn questions_come_from_a_json_array_or_a_list() {
 /// one good note, tries two bad ones, then stops.
 struct Scripted;
 
-impl research::Model for Scripted {
+impl crate::ai::agent::Model for Scripted {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -452,7 +452,7 @@ async fn a_note_s_sources_must_be_known_numbers_or_addresses() {
 /// Plans two questions; its helpers keep nothing.
 struct Empty;
 
-impl research::Model for Empty {
+impl crate::ai::agent::Model for Empty {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -560,7 +560,7 @@ fn english_lengths_are_in_words_and_chinese_in_characters() {
 /// Sends a wrong outline, then the right one.
 struct Outliner(std::sync::atomic::AtomicUsize);
 
-impl research::Model for Outliner {
+impl crate::ai::agent::Model for Outliner {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -708,7 +708,7 @@ fn chinese_sections_count_characters_and_skip_figures() {
 /// Writes every section, the second only on its second try.
 struct Writer(std::sync::atomic::AtomicUsize);
 
-impl research::Model for Writer {
+impl crate::ai::agent::Model for Writer {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -826,7 +826,7 @@ fn a_review_report_is_read_in_order_and_capped_per_section() {
 /// section 2 never in a form that holds.
 struct Reviser;
 
-impl research::Model for Reviser {
+impl crate::ai::agent::Model for Reviser {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -1040,7 +1040,7 @@ fn the_references_list_only_what_the_text_cites_in_number_order() {
 /// Answers the opening step with `reply`.
 struct Opener(&'static str);
 
-impl research::Model for Opener {
+impl crate::ai::agent::Model for Opener {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -1167,7 +1167,7 @@ fn a_reference_file_s_address_has_no_spaces_and_reads_back() {
 /// outside the project folder.
 struct Librarian;
 
-impl research::Model for Librarian {
+impl crate::ai::agent::Model for Librarian {
     fn step<'a>(
         &'a self,
         instructions: &'a str,
@@ -1424,7 +1424,7 @@ fn only_length_and_missing_figures_are_soft() {
 /// Always hands over a section three times too long, citing its source.
 struct Verbose(usize);
 
-impl research::Model for Verbose {
+impl crate::ai::agent::Model for Verbose {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -1469,7 +1469,7 @@ async fn a_section_whose_only_problem_is_its_length_is_kept_after_the_tries() {
 /// Writes the section as its reply, never calling submit_section.
 struct Replier;
 
-impl research::Model for Replier {
+impl crate::ai::agent::Model for Replier {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -1643,7 +1643,7 @@ fn search_pages_and_search_apis_are_not_sources() {
 /// Keeps one note citing a search page by address, one by its number.
 struct SearchCiter;
 
-impl research::Model for SearchCiter {
+impl crate::ai::agent::Model for SearchCiter {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -1913,7 +1913,7 @@ fn a_section_that_never_holds_is_repaired_to_keep() {
 /// Hands its section over with a citation of no source, every try.
 struct Miscites;
 
-impl research::Model for Miscites {
+impl crate::ai::agent::Model for Miscites {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
@@ -2078,7 +2078,7 @@ async fn a_paper_stops_to_ask_once_its_model_calls_are_spent() {
         inner: &Scripted,
         budget: &budget,
     };
-    use research::Model as _;
+    use crate::ai::agent::Model as _;
     assert!(metered.step("", &[], &[]).await.is_ok());
     assert!(metered.spent());
     assert_eq!(
@@ -2156,7 +2156,7 @@ fn the_chosen_genre_is_read_from_the_reply_and_fitted_to_its_lengths() {
 #[tokio::test]
 async fn the_choosing_step_is_told_every_genre_and_the_length_picked() {
     struct Told(std::sync::Mutex<String>);
-    impl research::Model for Told {
+    impl crate::ai::agent::Model for Told {
         fn step<'a>(
             &'a self,
             instructions: &'a str,
@@ -2269,7 +2269,7 @@ fn a_brief_is_short_researched_lightly_and_written_straight_on() {
 #[tokio::test]
 async fn the_choosing_step_keeps_threads_for_social_posts_and_news_for_briefs() {
     struct Told(std::sync::Mutex<String>);
-    impl research::Model for Told {
+    impl crate::ai::agent::Model for Told {
         fn step<'a>(
             &'a self,
             instructions: &'a str,
@@ -2359,7 +2359,7 @@ async fn an_analysis_opens_on_an_executive_summary_and_lists_its_sources() {
 #[tokio::test]
 async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres() {
     struct Told(std::sync::Mutex<String>);
-    impl research::Model for Told {
+    impl crate::ai::agent::Model for Told {
         fn step<'a>(
             &'a self,
             instructions: &'a str,

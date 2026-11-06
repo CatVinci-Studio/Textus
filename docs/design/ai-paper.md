@@ -127,7 +127,9 @@ it, lazily loaded. Each stage and helper is one run of
   result has or a page's address, so nothing unsourced enters the dossier.
   The helpers share one `WebPlan`: one source numbering for the paper (kept
   as `Dossier::sources`, for the reference list) and one budget. The stages
-  run on the `Model` trait, so tests drive them with a scripted model.
+  run on the agent's `Model` trait (`agent/model.rs`), as the chat does, so
+  tests drive them with a scripted model; `paper/model.rs` only adds
+  `Metered`, which spends the paper's budget on every step.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a

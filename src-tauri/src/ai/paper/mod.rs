@@ -361,7 +361,7 @@ pub async fn ai_paper_run(
                 // Outlined, like everything written, as the user asks of
                 // their writing; researched plainly.
                 let guidance = session.guidance(&files.paper.topic);
-                let guided = model::Guided {
+                let guided = crate::ai::agent::Guided {
                     inner: &agent,
                     guidance: &guidance,
                 };

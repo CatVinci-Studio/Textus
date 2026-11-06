@@ -19,6 +19,11 @@ Pure logic sits inside each layer; side effects - the network, files, the
 editor, the frontend channel - only at its edge (`agent/mod.rs`'s step and
 `forward`, the tools' runners, the editor plugins).
 
+Every model step - the chat's, its chapter helpers', and Research's stages
+([ai-paper.md](ai-paper.md)) - goes through one trait, `agent::Model`
+(`agent/model.rs`): a provider steps through it on the desktop, a scripted
+model in tests. `Guided` wraps one with the user's writing guidance.
+
 ## One request
 
 | State      | What happens                                                                 | What the user sees                          |

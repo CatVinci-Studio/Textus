@@ -64,7 +64,7 @@ pub async fn ai_paper_draft(
             budget: &budget,
         };
         let guidance = session.guidance(&files.paper.topic);
-        let agent = model::Guided {
+        let agent = crate::ai::agent::Guided {
             inner: &metered,
             guidance: &guidance,
         };

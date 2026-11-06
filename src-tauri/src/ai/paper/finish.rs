@@ -4,9 +4,8 @@
 
 use super::draft::WEB_FIGURE_MARK;
 use super::genre::Frame;
-use super::model::ask;
-use super::research::Model;
 use super::{Dossier, Genre, Outline, Paper};
+use crate::ai::agent::{ask, Model};
 use regex::Regex;
 use serde_json::Value;
 use std::sync::OnceLock;

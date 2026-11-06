@@ -26,11 +26,13 @@ mod chapters;
 mod context;
 mod history;
 pub(crate) mod lists;
+mod model;
 mod past;
 mod prompt;
 pub(crate) use chapters::*;
 pub(crate) use context::*;
 pub(crate) use history::*;
+pub(crate) use model::*;
 pub(crate) use past::*;
 pub(crate) use prompt::*;
 
@@ -307,9 +309,11 @@ async fn ai_agent_message_inner(
                     let sink =
                         |e: ProviderEvent<'_>| lists.feed(e, &|e| forward(channel, web, inline, e));
                     let turns = lists::join_calls(&turns);
-                    let result = agent.step(instructions, &turns, tool_specs, &sink).await;
+                    let result = agent
+                        .step_watched(instructions, &turns, tool_specs, &sink)
+                        .await;
                     // Native search citations numbered (WebPlan::finish_step).
-                    result.map(|(step, _)| {
+                    result.map(|step| {
                         settle_step(web.finish_step(step), document, conventions, inline).0
                     })
                 }
