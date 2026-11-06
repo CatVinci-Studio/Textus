@@ -1,5 +1,6 @@
 import type { AgentMode } from "../../prefs/settings-types";
 import { storedAgentMode } from "../../prefs/settings-types";
+import { replyFiles } from "../../utils/reply-files";
 
 /**
  * A skill Textus AI wrote in a reply: one fenced block such as
@@ -16,7 +17,6 @@ export interface ReplySkill {
   text: string;
 }
 
-const FENCE = /^(`{3,})([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$/gm;
 const FRONT = /^---\n([\s\S]*?)\n---\n/;
 
 /** A front matter value: `key: value` or `key: "value"`, at any indent. */
@@ -41,10 +41,8 @@ function description(front: string): string {
 /** The skills `text` writes: each `.md` block that is a skill file. */
 export function skillsInReply(text: string): ReplySkill[] {
   const skills: ReplySkill[] = [];
-  for (const m of text.matchAll(FENCE)) {
-    const words = m[2].trim().split(/\s+/);
-    if (words.length < 2 || !words[words.length - 1].endsWith(".md")) continue;
-    const file = m[3] + "\n";
+  for (const { path, text: file } of replyFiles(text)) {
+    if (!path?.endsWith(".md")) continue;
     const front = FRONT.exec(file);
     if (!front) continue;
     const name = field(front[1], "name");

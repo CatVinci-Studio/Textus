@@ -1,14 +1,14 @@
 /// The themes Textus AI writes in a reply: found in its Markdown, so the chat
 /// can offer "Use this theme" under it.
 
+import { replyFiles } from "../utils/reply-files";
+
 /** A ```css block of a reply that is a whole, installable theme. */
 export interface ReplyTheme {
   css: string;
   /** From its first comment, `/* Name - ... *\/`; null when it has none. */
   name: string | null;
 }
-
-const CSS_FENCE = /^(`{3,}|~{3,})[ \t]*css[ \t]*\n([\s\S]*?)\n\1[ \t]*$/gim;
 
 /** CSS escapes resolved (`\75 rl(` is `url(`), so the check below can't be
  *  dodged by spelling a word with them. */
@@ -49,8 +49,9 @@ export function themeName(css: string): string | null {
  *  closing fence, so it is offered only once whole. */
 export function themesInReply(markdown: string): ReplyTheme[] {
   const themes: ReplyTheme[] = [];
-  for (const m of markdown.matchAll(CSS_FENCE)) {
-    const css = m[2].trim();
+  for (const block of replyFiles(markdown)) {
+    if (block.lang !== "css") continue;
+    const css = block.text.trim();
     if (!/#write\b|--doc-[a-z]/.test(css) || !isSelfContained(css)) continue;
     themes.push({ css: `${css}\n`, name: themeName(css) });
   }
