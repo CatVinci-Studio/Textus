@@ -391,9 +391,10 @@ pub(crate) async fn research(
     }
     let questions = kept.questions.clone();
     let progress = Mutex::new(kept);
+    let writing = Mutex::new(());
     let failed: Vec<(usize, String)> = stream::iter(open)
         .map(|i| {
-            let (question, progress) = (&questions[i], &progress);
+            let (question, progress, writing) = (&questions[i], &progress, &writing);
             async move {
                 let notes = research_question(
                     model,
@@ -418,11 +419,16 @@ pub(crate) async fn research(
                 });
                 match notes {
                     Ok(notes) => {
-                        // Kept as it ends, so a stop later doesn't cost it.
-                        let mut p = progress.lock().unwrap();
-                        p.answered[i] = Some(notes);
-                        p.sources = cited(web, p.answered.iter().flatten().flatten());
-                        keep(&p);
+                        {
+                            let mut p = progress.lock().unwrap();
+                            p.answered[i] = Some(notes);
+                            p.sources = cited(web, p.answered.iter().flatten().flatten());
+                        }
+                        // Kept as it ends, outside the lock; one write at a
+                        // time, each of the latest, so none undoes another.
+                        let _one = writing.lock().unwrap();
+                        let now = progress.lock().unwrap().clone();
+                        keep(&now);
                         None
                     }
                     Err(message) => Some((i, message)),

@@ -125,12 +125,16 @@ pub(crate) fn save(root: &Path, files: &PaperFiles) -> Result<(), String> {
     Ok(())
 }
 
-/// The research so far, written whole or not at all.
+/// The research so far, written whole or not at all; none (no questions)
+/// takes the file away.
 pub(crate) fn save_research(
     root: &Path,
     id: &str,
     progress: &ResearchProgress,
 ) -> Result<(), String> {
+    if progress.questions.is_empty() {
+        return clear_research(root, id);
+    }
     let dir = paper_dir(root, id)?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     write_json(&dir.join(RESEARCH_FILE), progress)

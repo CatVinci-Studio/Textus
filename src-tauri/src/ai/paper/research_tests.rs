@@ -386,3 +386,32 @@ async fn research_stopped_halfway_goes_on_from_the_questions_it_finished() {
     store::clear_research(root.path(), &id).unwrap();
     assert!(store::load_research(root.path(), &id).questions.is_empty());
 }
+
+#[test]
+fn research_with_no_questions_leaves_no_file() {
+    let root = tempfile::tempdir().unwrap();
+    let kept = research::ResearchProgress {
+        questions: vec!["Why?".into()],
+        ..Default::default()
+    };
+    store::save_research(root.path(), "p1", &kept).unwrap();
+    let before = walk(root.path());
+    store::save_research(root.path(), "p1", &Default::default()).unwrap();
+    assert!(before.iter().any(|p| p.ends_with("research.json")));
+    assert!(!walk(root.path())
+        .iter()
+        .any(|p| p.ends_with("research.json")));
+}
+
+fn walk(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
+    let mut out = Vec::new();
+    for entry in std::fs::read_dir(dir).unwrap().flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            out.extend(walk(&path));
+        } else {
+            out.push(path);
+        }
+    }
+    out
+}
