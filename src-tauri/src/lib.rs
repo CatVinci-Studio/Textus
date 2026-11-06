@@ -59,6 +59,8 @@ use std::sync::Mutex;
 use tauri::{Emitter, Manager, State};
 
 #[cfg(desktop)]
+use commands::chat_window::{OpenChatWindows, PendingChatHandoffs};
+#[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 #[cfg(desktop)]
 use commands::export::{
@@ -90,12 +92,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(PendingDetachedTabs(Mutex::new(HashMap::new())))
         .manage(DragTrackers::default())
         .manage(SessionTabsState(Mutex::new(HashMap::new())))
-        .manage(commands::chat_window::PendingChatHandoffs(Mutex::new(
-            HashMap::new(),
-        )))
-        .manage(commands::chat_window::OpenChatWindows(Mutex::new(
-            Vec::new(),
-        )))
+        .manage(PendingChatHandoffs(Mutex::new(HashMap::new())))
+        .manage(OpenChatWindows(Mutex::new(Vec::new())))
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
@@ -120,7 +118,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     // The last editor window keeps its documents in the session file.
                     commands::session::forget_window(app, window.label(), &state);
                 }
-                if let Some(state) = app.try_state::<commands::chat_window::OpenChatWindows>() {
+                if let Some(state) = app.try_state::<OpenChatWindows>() {
                     commands::chat_window::forget_chat_window(app, window.label(), &state);
                 }
                 // File > Quit closes every window so dirty editors can cancel; macOS would
