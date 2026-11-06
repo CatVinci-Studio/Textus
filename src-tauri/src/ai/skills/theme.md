@@ -11,6 +11,7 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
+  textus-index: "Use when asked to make, design or change a theme, colour scheme or look for the editor."
   textus-category: "create"
   textus-modes: "create"
   textus-packs: "contract"

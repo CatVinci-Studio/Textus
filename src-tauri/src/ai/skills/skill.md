@@ -12,6 +12,7 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
+  textus-index: "Use when asked to make, write or change a skill, a saved procedure, a template for a recurring task or a /command."
   textus-category: "create"
   textus-modes: "create"
   textus-packs: "contract"

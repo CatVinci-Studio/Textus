@@ -11,6 +11,7 @@ license: MIT
 metadata:
   textus-version: "1"
   textus-invocation: "both"
+  textus-index: "Use when asked to make, build or change a plugin, extension, add-on or small tool for the app."
   textus-category: "create"
   textus-modes: "create"
   textus-packs: "contract"
