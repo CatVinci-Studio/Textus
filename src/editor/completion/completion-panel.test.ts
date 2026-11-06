@@ -36,13 +36,16 @@ function source(
 const panel = () =>
   document.querySelector<HTMLElement>(".completion-list:not([hidden])");
 const rows = () =>
-  [...(panel()?.querySelectorAll(".completion-group, .completion-item") ?? [])].map(
+  [
+    ...(panel()?.querySelectorAll(".completion-group, .completion-item") ?? []),
+  ].map(
     (el) =>
       (el.classList.contains("completion-group") ? "# " : "") +
       (el.querySelector(".completion-label")?.textContent ?? el.textContent),
   );
 const chosen = () =>
-  panel()?.querySelector('[aria-selected="true"] .completion-label')?.textContent;
+  panel()?.querySelector('[aria-selected="true"] .completion-label')
+    ?.textContent;
 
 const items = (...labels: string[]) =>
   labels.map((label) => ({ label, insert: label }));
@@ -66,10 +69,18 @@ it("opens in the keystroke that matches, with what is known, grouped longest mat
   const t = await openView("");
   t.type("see [@");
   // No await: the rows are there in the same task as the key.
-  expect(rows()).toEqual(["# b.cite.at", "smith2020", "# a.dates.at", "today", "tomorrow"]);
+  expect(rows()).toEqual([
+    "# b.cite.at",
+    "smith2020",
+    "# a.dates.at",
+    "today",
+    "tomorrow",
+  ]);
   expect(chosen()).toBe("smith2020");
   t.type("to");
-  expect(rows()).toEqual(["today", "tomorrow"].filter((l) => l.startsWith("to")));
+  expect(rows()).toEqual(
+    ["today", "tomorrow"].filter((l) => l.startsWith("to")),
+  );
 });
 
 it("filters a whole list itself while the match grows, asking only once", async () => {

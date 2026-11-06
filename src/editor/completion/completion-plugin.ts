@@ -5,7 +5,11 @@ import { isImeKeydown } from "../../utils/ime";
 import { pinyinEngine } from "../../utils/pinyin";
 import { wikilinksIn } from "../markdown/wikilink";
 import { CompletionPanel } from "./completion-panel";
-import { preparePinyin, prepareList, type PreparedList } from "./panel-filter";
+import {
+  preparePinyin,
+  prepareList,
+  type PreparedList,
+} from "../../utils/list-filter";
 import {
   appendLate,
   firstItem,
@@ -47,7 +51,12 @@ function contextAt(view: EditorView) {
   if (!inMath && (!parent.isTextblock || parent.type.spec.code)) return null;
   const at = $to.parentOffset;
   return {
-    text: parent.textBetween(Math.max(0, at - CONTEXT_CHARS), at, undefined, "￼"),
+    text: parent.textBetween(
+      Math.max(0, at - CONTEXT_CHARS),
+      at,
+      undefined,
+      "￼",
+    ),
     after: parent.textBetween(
       at,
       Math.min(parent.content.size, at + CONTEXT_CHARS),
@@ -64,11 +73,12 @@ function contextAt(view: EditorView) {
 const filtersItself = new Set<string>();
 
 /** Each whole list prepared once, however often its source hands it over. */
-const prepared = new WeakMap<readonly PanelItem[], PreparedList>();
+const prepared = new WeakMap<readonly PanelItem[], PreparedList<PanelItem>>();
 
-function prepareOnce(items: PanelItem[]): PreparedList {
+function prepareOnce(items: PanelItem[]): PreparedList<PanelItem> {
   let list = prepared.get(items);
-  if (!list) prepared.set(items, (list = prepareList(items.slice(0, MAX_LIST))));
+  if (!list)
+    prepared.set(items, (list = prepareList(items.slice(0, MAX_LIST))));
   return list;
 }
 
@@ -138,7 +148,8 @@ export function createCompletionPlugin(
             const caret = view.state.selection.to;
             const $caret = view.state.doc.resolve(caret);
             const room = $caret.parent.content.size - $caret.parentOffset;
-            const to = caret + Math.min(Math.max(0, item.replaceAfter ?? 0), room);
+            const to =
+              caret + Math.min(Math.max(0, item.replaceAfter ?? 0), room);
             close();
             const at = item.insert.indexOf("$0");
             const text = item.insert.replace("$0", "");
@@ -149,7 +160,9 @@ export function createCompletionPlugin(
               .slice(inserted)
               .map(group.from + (at < 0 ? text.length : at));
             view.dispatch(
-              tr.setSelection(TextSelection.create(tr.doc, end)).scrollIntoView(),
+              tr
+                .setSelection(TextSelection.create(tr.doc, end))
+                .scrollIntoView(),
             );
             view.focus();
             item.run?.();
@@ -157,7 +170,9 @@ export function createCompletionPlugin(
           const anchor = () => {
             const first = groups.get(order[0]?.source.id ?? "");
             try {
-              const rect = view.coordsAtPos(first?.from ?? view.state.selection.to);
+              const rect = view.coordsAtPos(
+                first?.from ?? view.state.selection.to,
+              );
               return { left: rect.left, top: rect.top, bottom: rect.bottom };
             } catch {
               // No layout to measure (a hidden tab).
@@ -195,7 +210,10 @@ export function createCompletionPlugin(
               pinyinTimer = null;
               let done = true;
               for (const group of groups.values())
-                if (group.list && !preparePinyin(group.list, performance.now() + 4))
+                if (
+                  group.list &&
+                  !preparePinyin(group.list, performance.now() + 4)
+                )
                   done = false;
               if (!done) preparePinyinSoon();
               else if (groups.size && !arrowed) relayout();
@@ -354,7 +372,10 @@ export function createCompletionPlugin(
                 return;
               // The caret moved: it stays open only inside the same match.
               const anchorAt = groups.get(order[0]?.source.id ?? "")?.from;
-              if (!refresh() || groups.get(order[0].source.id)?.from !== anchorAt)
+              if (
+                !refresh() ||
+                groups.get(order[0].source.id)?.from !== anchorAt
+              )
                 close();
             },
             destroy() {
@@ -367,7 +388,12 @@ export function createCompletionPlugin(
         },
         props: {
           handleKeyDown(view, event) {
-            if (isImeKeydown(event) || event.metaKey || event.ctrlKey || event.altKey)
+            if (
+              isImeKeydown(event) ||
+              event.metaKey ||
+              event.ctrlKey ||
+              event.altKey
+            )
               return false;
             if (!completionViews.get(view)?.key(event.key)) return false;
             event.preventDefault();

@@ -5,7 +5,7 @@ import {
   preparePinyin,
   prepareList,
   rankList,
-} from "../../editor/completion/panel-filter";
+} from "../../utils/list-filter";
 import { matchSources } from "../../editor/completion/panel-rows";
 import { completionSources } from "../../editor/completion/sources";
 

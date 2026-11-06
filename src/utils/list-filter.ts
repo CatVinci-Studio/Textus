@@ -1,20 +1,21 @@
-import {
-  mayBePinyin,
-  pinyinEngine,
-  pinyinIndexOf,
-  readings,
-} from "../../utils/pinyin";
-import { searchFold } from "../../utils/search-fold";
-import type { PanelItem } from "./sources";
+import { mayBePinyin, pinyinEngine, pinyinIndexOf, readings } from "./pinyin";
+import { searchFold } from "./search-fold";
 
 /**
- * Filtering a whole list as the user types: each label's folded and pinyin
- * keys are worked out once, when the list arrives, so a keystroke only
- * compares strings - 10,000 notes well inside a frame.
+ * Filtering a whole list as the user types - the / panel, the command
+ * palette, the file search: each label's folded and pinyin keys are worked
+ * out once, when the list arrives, so a keystroke only compares strings -
+ * 10,000 notes well inside a frame.
  */
 
-export interface PreparedList {
-  items: readonly PanelItem[];
+/** What a list filters on: its label, and words that find it too. */
+export interface Filterable {
+  label: string;
+  keywords?: string;
+}
+
+export interface PreparedList<T extends Filterable = Filterable> {
+  items: readonly T[];
   /** The folded label, per item. */
   labels: string[];
   /** The folded label and keywords, for a query of several words. */
@@ -25,7 +26,9 @@ export interface PreparedList {
   initials: string[];
 }
 
-export function prepareList(items: readonly PanelItem[]): PreparedList {
+export function prepareList<T extends Filterable>(
+  items: readonly T[],
+): PreparedList<T> {
   const labels: string[] = [];
   const all: string[] = [];
   for (const item of items) {
@@ -46,7 +49,14 @@ export function preparePinyin(list: PreparedList, deadline: number): boolean {
   while (pinyin.length < items.length) {
     const chars = readings(items[pinyin.length].label);
     pinyin.push(chars);
-    initials.push(chars ? chars.flat().map((r) => r[0]).join("") : "");
+    initials.push(
+      chars
+        ? chars
+            .flat()
+            .map((r) => r[0])
+            .join("")
+        : "",
+    );
     if ((pinyin.length & 63) === 0 && performance.now() > deadline)
       return pinyin.length === items.length;
   }
@@ -96,11 +106,11 @@ const BUCKETS = 5;
  * label or keywords, then the label spelt in pinyin; the provider's order
  * within each. An empty query keeps the provider's order.
  */
-export function rankList(
-  list: PreparedList,
+export function rankList<T extends Filterable>(
+  list: PreparedList<T>,
   query: string,
   limit: number,
-): PanelItem[] {
+): T[] {
   const needle = searchFold(query.trim());
   if (!needle) return list.items.slice(0, limit);
   const words = needle.split(/\s+/);
@@ -116,7 +126,7 @@ export function rankList(
   // Of the labels starting with it, the closest - "smile" before "smiley" -
   // first; the provider's order between those as long.
   buckets[0].sort((a, b) => list.labels[a].length - list.labels[b].length);
-  const out: PanelItem[] = [];
+  const out: T[] = [];
   for (const bucket of buckets)
     for (const i of bucket) {
       if (out.length >= limit) return out;

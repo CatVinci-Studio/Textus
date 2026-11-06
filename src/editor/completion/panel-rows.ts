@@ -1,4 +1,4 @@
-import { rankList, type PreparedList } from "./panel-filter";
+import { rankList, type PreparedList } from "../../utils/list-filter";
 import type { CompletionSource, PanelItem } from "./sources";
 
 /**
@@ -21,7 +21,11 @@ function compareMatches(a: SourceMatch, b: SourceMatch): number {
   return (
     b.match.length - a.match.length ||
     Number(isCore(b.source)) - Number(isCore(a.source)) ||
-    (a.source.owner < b.source.owner ? -1 : a.source.owner > b.source.owner ? 1 : 0)
+    (a.source.owner < b.source.owner
+      ? -1
+      : a.source.owner > b.source.owner
+        ? 1
+        : 0)
   );
 }
 
@@ -46,7 +50,9 @@ export function matchSources(
   const kept = found.filter(
     (f) =>
       !f.source.fallback ||
-      !found.some((o) => !isCore(o.source) && o.match.length === f.match.length),
+      !found.some(
+        (o) => !isCore(o.source) && o.match.length === f.match.length,
+      ),
   );
   // Array.prototype.sort is stable: equal groups keep registration order.
   return kept.sort(compareMatches);
@@ -60,7 +66,7 @@ export interface Group {
   /** Asked and not answered yet. */
   pending: boolean;
   /** A whole list the panel filters itself. */
-  list: PreparedList | null;
+  list: PreparedList<PanelItem> | null;
   /** A list the provider filtered, shown as given. */
   items: PanelItem[];
 }
@@ -91,7 +97,8 @@ export function panelRows(groups: readonly Group[]): PanelRow[] {
   const shared = found.length > 1;
   const rows: PanelRow[] = [];
   for (const { group, items } of found) {
-    if (shared) rows.push({ kind: "heading", title: group.match.source.title() });
+    if (shared)
+      rows.push({ kind: "heading", title: group.match.source.title() });
     for (const item of shared ? items.slice(0, SHARED_ROWS) : items)
       rows.push({ kind: "item", item, group });
   }
@@ -100,10 +107,7 @@ export function panelRows(groups: readonly Group[]): PanelRow[] {
 
 /** After an arrow key the rows stay put: a group answering late goes
  *  under them, with its heading, and nothing above moves. */
-export function appendLate(
-  rows: readonly PanelRow[],
-  late: Group,
-): PanelRow[] {
+export function appendLate(rows: readonly PanelRow[], late: Group): PanelRow[] {
   const items = rowsOf(late, SHARED_ROWS);
   if (!items.length) return [...rows];
   const kept = rows.filter((r) => r.kind !== "loading");

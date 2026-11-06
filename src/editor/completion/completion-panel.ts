@@ -134,7 +134,10 @@ export class CompletionPanel {
 
   /** Under the match, or above it where the window ends - decided once, so
    *  the panel never jumps while it is open. It grows away from the caret. */
-  private place(el: HTMLElement, at: { left: number; top: number; bottom: number }) {
+  private place(
+    el: HTMLElement,
+    at: { left: number; top: number; bottom: number },
+  ) {
     const width = el.offsetWidth;
     const tall = parseFloat(getComputedStyle(el).maxHeight) || 0;
     const left = Math.min(at.left, window.innerWidth - width - MARGIN);

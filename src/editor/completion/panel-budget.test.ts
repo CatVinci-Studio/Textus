@@ -1,6 +1,6 @@
 import { beforeAll, expect, it } from "vitest";
 import { pinyinEngine } from "../../utils/pinyin";
-import { preparePinyin, prepareList, rankList } from "./panel-filter";
+import { preparePinyin, prepareList, rankList } from "../../utils/list-filter";
 import type { PanelItem } from "./sources";
 
 // The panel's budget: each keystroke filters and ranks 10,000 notes well

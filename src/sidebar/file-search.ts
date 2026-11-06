@@ -1,6 +1,10 @@
 import type { IndexedFile } from "../platform/ipc";
-import { mayBePinyin, pinyinIndexOf, readings } from "../utils/pinyin";
-import { searchFold } from "../utils/search-fold";
+import {
+  preparePinyin,
+  prepareList,
+  rankList,
+  type PreparedList,
+} from "../utils/list-filter";
 
 /** Most results the sidebar draws: past this the list is a wall, and the
  *  answer is a longer query. */
@@ -21,12 +25,11 @@ export function isDocumentName(name: string): boolean {
  *  index rather than on every keystroke. */
 export interface SearchEntry extends IndexedFile {
   name: string;
+  /** The name again, as the shared list filter reads it. */
+  label: string;
   /** The folder it is in, from the indexed one ("" at the top). */
   folder: string;
   isDocument: boolean;
-  key: string;
-  /** A Chinese name's readings, for a query typed in pinyin. */
-  pinyin: string[][] | null;
 }
 
 /** The index in result order: by name as `collator` sorts, then by folder. */
@@ -42,9 +45,8 @@ export function searchEntries(
         ...file,
         name,
         folder: slash >= 0 ? file.rel.slice(0, slash) : "",
+        label: name,
         isDocument: isDocumentName(name),
-        key: searchFold(name),
-        pinyin: readings(name),
       };
     })
     .sort(
@@ -54,10 +56,12 @@ export function searchEntries(
     );
 }
 
+const prepared = new WeakMap<SearchEntry[], PreparedList<SearchEntry>>();
+
 /**
- * The files whose name contains `query`, ignoring case and accents, or spells it in
- * pinyin: documents first, then names starting with the query, each group
- * in index order. At most `limit`; an empty query matches nothing.
+ * The files whose name `query` finds, by the filter the / panel uses (case,
+ * accents and pinyin aside): documents first, each group best first. At
+ * most `limit`; an empty query matches nothing.
  */
 export function matchFiles(
   entries: SearchEntry[],
@@ -65,21 +69,15 @@ export function matchFiles(
   scope: SearchScope = "all",
   limit = MAX_SHOWN_MATCHES,
 ): SearchEntry[] {
-  const needle = searchFold(query.trim());
-  if (!needle) return [];
-  const pinyin = mayBePinyin(needle);
-  // [document starts, document contains, other starts, other contains]
-  const groups: SearchEntry[][] = [[], [], [], []];
-  for (const entry of entries) {
-    if (scope === "documents" && !entry.isDocument) continue;
-    let at = entry.key.indexOf(needle);
-    if (at < 0 && pinyin && entry.pinyin)
-      at = pinyinIndexOf(entry.pinyin, needle);
-    if (at < 0) continue;
-    const group = groups[(entry.isDocument ? 0 : 2) + (at === 0 ? 0 : 1)];
-    if (group.length < limit) group.push(entry);
-    // Enough documents starting with it: nothing below can rank higher.
-    if (groups[0].length >= limit) break;
+  if (!query.trim()) return [];
+  let list = prepared.get(entries);
+  if (!list) {
+    list = prepareList(entries);
+    prepared.set(entries, list);
   }
-  return groups.flat().slice(0, limit);
+  preparePinyin(list, Infinity);
+  const found = rankList(list, query, Infinity);
+  const documents = found.filter((entry) => entry.isDocument);
+  const others = scope === "all" ? found.filter((e) => !e.isDocument) : [];
+  return [...documents, ...others].slice(0, limit);
 }
