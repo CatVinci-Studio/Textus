@@ -182,8 +182,7 @@
   .image-name-dialog,
   .insert-table-dialog,
   .close-prompt,
-  .update-toast,
-  .draft-restored-toast,
+  .corner-toast,
   .pdf-export-card,
   .chat-window
 ) {
@@ -335,8 +334,7 @@
   .text-button,
   .tx-button,
   .inline-chat-action,
-  .update-toast button,
-  .draft-restored-toast button,
+  .corner-toast button,
   .project-bar-naming button,
   .missing-image-actions button,
   .inline-chat-send
@@ -362,8 +360,7 @@
 
 :is(
   .inline-chat-action,
-  .update-toast button,
-  .draft-restored-toast button,
+  .corner-toast button,
   .project-bar-naming button,
   .missing-image-actions button,
   .inline-chat-send,
@@ -383,8 +380,7 @@
     .text-button,
     .tx-button,
     .inline-chat-action,
-    .update-toast button,
-    .draft-restored-toast button,
+    .corner-toast button,
     .project-bar-naming button,
     .missing-image-actions button
   ):not(:disabled):hover {
@@ -399,7 +395,7 @@
   .tutorial-btn,
   .language-welcome-continue,
   .inline-chat-action,
-  .update-toast button,
+  .corner-toast button,
   .inline-chat-send,
   .tx-button
 ):is(
@@ -409,7 +405,7 @@
   .tutorial-btn-primary,
   .language-welcome-continue,
   .inline-chat-action-primary,
-  .update-toast-primary,
+  .corner-toast-primary,
   .inline-chat-send,
   .tx-button.primary
 ) {
@@ -426,7 +422,7 @@
     .tutorial-btn,
     .language-welcome-continue,
     .inline-chat-action,
-    .update-toast button,
+    .corner-toast button,
     .inline-chat-send,
     .tx-button
   ):is(
@@ -436,7 +432,7 @@
     .tutorial-btn-primary,
     .language-welcome-continue,
     .inline-chat-action-primary,
-    .update-toast-primary,
+    .corner-toast-primary,
     .inline-chat-send,
     .tx-button.primary
   ):not(:disabled):hover {
@@ -455,8 +451,7 @@
     .text-button,
     .tx-button,
     .inline-chat-action,
-    .update-toast button,
-    .draft-restored-toast button,
+    .corner-toast button,
     .project-bar-naming button,
     .missing-image-actions button
   ):not(:disabled):active {
@@ -471,7 +466,7 @@
     .tutorial-btn,
     .language-welcome-continue,
     .inline-chat-action,
-    .update-toast button,
+    .corner-toast button,
     .inline-chat-send,
     .tx-button
   ):is(
@@ -481,7 +476,7 @@
     .tutorial-btn-primary,
     .language-welcome-continue,
     .inline-chat-action-primary,
-    .update-toast-primary,
+    .corner-toast-primary,
     .inline-chat-send,
     .tx-button.primary
   ):not(:disabled):active {
@@ -596,8 +591,7 @@
       .text-button,
       .tx-button,
       .inline-chat-action,
-      .update-toast button,
-      .draft-restored-toast button,
+      .corner-toast button,
       .project-bar-naming button,
       .inline-chat-header-button,
       .quick-ask-pending-nav-button,
@@ -712,11 +706,11 @@
 }
 
 /* Toasts rise from the bottom edge they live on and sink back into it. */
-:is(.ai-notice, .update-toast, .draft-restored-toast) {
+:is(.ai-notice, .corner-toast) {
   animation: motion-rise-in var(--dur-base) var(--ease-out);
 }
 
-:is(.ai-notice, .update-toast, .draft-restored-toast)[data-state="closing"] {
+:is(.ai-notice, .corner-toast)[data-state="closing"] {
   animation: motion-sink-out var(--dur-fast) var(--ease-in) forwards;
 }
 
@@ -802,7 +796,7 @@
   background: var(--ui-border);
 }
 
-:is(.update-toast button):is(.update-toast-secondary) {
+:is(.corner-toast button):is(.corner-toast-secondary) {
   border-color: transparent;
   color: var(--ui-muted, inherit);
 }

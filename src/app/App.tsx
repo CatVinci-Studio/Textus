@@ -1,4 +1,5 @@
 import { SuggestCard } from "./SuggestCard";
+import { CornerStack } from "../ui/CornerToast";
 import { Suspense } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
@@ -259,22 +260,23 @@ function App() {
 
         {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
 
-        <DraftRestoredToast
-          count={draftsRestoredCount}
-          onDismiss={() => setDraftsRestoredCount(0)}
-          t={t}
-        />
+        <CornerStack corner="start">
+          <WordImportNotice
+            path={wordImported.path}
+            onDismiss={wordImported.dismiss}
+            t={t}
+          />
+          <DraftRestoredToast
+            count={draftsRestoredCount}
+            onDismiss={() => setDraftsRestoredCount(0)}
+            t={t}
+          />
+        </CornerStack>
 
-        <WordImportNotice
-          path={wordImported.path}
-          onDismiss={wordImported.dismiss}
-          t={t}
-        />
-
-        <div className="corner-stack">
+        <CornerStack corner="end">
           <SuggestCard t={t} />
           <UpdateToast appUpdate={appUpdate} t={t} />
-        </div>
+        </CornerStack>
 
         <OnboardingLayers
           tutorial={tutorial}

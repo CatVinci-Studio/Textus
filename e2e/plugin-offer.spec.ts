@@ -77,7 +77,7 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   await expect(card).toContainText("Plugin suggestion: Kanban");
   await expect(card).toHaveCount(1);
   await expect(card.locator(":focus")).toHaveCount(0);
-  await card.locator(".suggest-card-summary").click();
+  await card.locator(".corner-toast-summary").click();
   await expect(card).toContainText("Boards of cards in lists");
   await card.getByRole("button", { name: "Install", exact: true }).click();
   // Its permissions, as any install asks.

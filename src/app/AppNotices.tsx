@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isIOSApp } from "../platform/capabilities";
 import { announce } from "../ui/announce";
-import { Presence, PresenceDiv } from "../ui/usePresence";
+import { CornerToast } from "../ui/CornerToast";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import type { useAppUpdate } from "./useAppUpdate";
@@ -32,16 +32,12 @@ export function DraftRestoredToast({
   t: Strings;
 }) {
   return (
-    <Presence show={count > 0} exitMs={120}>
-      {count > 0 && (
-        <PresenceDiv className="draft-restored-toast">
-          <span>{t.draftRestoredMessage}</span>
-          <button className="update-toast-secondary" onClick={onDismiss}>
-            {t.draftRestoredDismiss}
-          </button>
-        </PresenceDiv>
-      )}
-    </Presence>
+    <CornerToast
+      show={count > 0}
+      name="draft-restored-toast"
+      line={t.draftRestoredMessage}
+      actions={[{ label: t.draftRestoredDismiss, onSelect: onDismiss }]}
+    />
   );
 }
 
@@ -77,16 +73,12 @@ export function WordImportNotice({
     return () => window.clearTimeout(timer);
   }, [path, onDismiss]);
   return (
-    <Presence show={path !== null} exitMs={120}>
-      {path !== null && (
-        <PresenceDiv className="draft-restored-toast">
-          <span>{notice}</span>
-          <button className="update-toast-secondary" onClick={onDismiss}>
-            {t.wordImportDismiss}
-          </button>
-        </PresenceDiv>
-      )}
-    </Presence>
+    <CornerToast
+      show={path !== null}
+      name="word-import-toast"
+      line={notice}
+      actions={[{ label: t.wordImportDismiss, onSelect: onDismiss }]}
+    />
   );
 }
 
@@ -98,51 +90,33 @@ export function UpdateToast({
   appUpdate: ReturnType<typeof useAppUpdate>;
   t: Strings;
 }) {
+  const later = { label: t.updateLater, onSelect: appUpdate.dismiss };
+  const state = {
+    idle: null,
+    available: {
+      line: `${t.updateAvailable} v${appUpdate.version}${
+        appUpdate.selfUpdate ? "" : ` · ${t.updateViaPackageManager}`
+      }`,
+      actions: appUpdate.selfUpdate
+        ? [
+            {
+              label: t.updateInstall,
+              onSelect: () => void appUpdate.install(),
+              primary: true,
+            },
+            later,
+          ]
+        : [later],
+    },
+    downloading: { line: t.updateDownloading, actions: [] },
+    error: { line: `${t.updateFailed} ${appUpdate.error}`, actions: [later] },
+  }[appUpdate.status];
   return (
-    <Presence show={appUpdate.status !== "idle"} exitMs={120}>
-      {appUpdate.status !== "idle" && (
-        <PresenceDiv className="update-toast">
-          {appUpdate.status === "available" && (
-            <>
-              <span>
-                {t.updateAvailable} v{appUpdate.version}
-              </span>
-              {appUpdate.selfUpdate ? (
-                <button
-                  className="update-toast-primary"
-                  onClick={() => void appUpdate.install()}
-                >
-                  {t.updateInstall}
-                </button>
-              ) : (
-                <span>{t.updateViaPackageManager}</span>
-              )}
-              <button
-                className="update-toast-secondary"
-                onClick={appUpdate.dismiss}
-              >
-                {t.updateLater}
-              </button>
-            </>
-          )}
-          {appUpdate.status === "downloading" && (
-            <span>{t.updateDownloading}</span>
-          )}
-          {appUpdate.status === "error" && (
-            <>
-              <span>
-                {t.updateFailed} {appUpdate.error}
-              </span>
-              <button
-                className="update-toast-secondary"
-                onClick={appUpdate.dismiss}
-              >
-                {t.updateLater}
-              </button>
-            </>
-          )}
-        </PresenceDiv>
-      )}
-    </Presence>
+    <CornerToast
+      show={state !== null}
+      name="update-toast"
+      line={state?.line ?? ""}
+      actions={state?.actions ?? []}
+    />
   );
 }
