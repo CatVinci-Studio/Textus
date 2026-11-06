@@ -24,7 +24,6 @@ pub struct DraftRequest {
 /// before the review, so no proposal is replaced after it. Stopped like any
 /// request, by `ai_cancel` with `request_id`.
 #[tauri::command]
-#[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_draft(
     app: tauri::AppHandle,
     request: DraftRequest,

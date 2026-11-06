@@ -280,11 +280,16 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "ai-paper.ts",
             builder()
                 .commands(collect_commands![
-                    crate::ai::paper::ai_paper_run,
                     crate::ai::paper::status::ai_paper_save_outline,
-                    crate::ai::paper::drafting::ai_paper_draft,
                     crate::ai::paper::status::ai_paper_status
                 ])
+                // ai_paper_run and ai_paper_draft stream on the chat's
+                // StreamEvent channel, whose types are ai-agent.ts's: only
+                // what they take and return is exported here.
+                .typ::<crate::ai::paper::PaperRequest>()
+                .typ::<crate::ai::paper::drafting::DraftRequest>()
+                .typ::<crate::ai::paper::Paper>()
+                .typ::<crate::ai::paper::PaperEvent>()
                 .typ::<crate::ai::paper::Outline>(),
         ),
         (

@@ -210,7 +210,6 @@ pub struct PaperRequest {
 /// kept in `.textus/papers/<id>/`; a paper begun before goes on from what
 /// it kept. Stopped like any request, by `ai_cancel` with `request_id`.
 #[tauri::command]
-#[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_run(
     app: tauri::AppHandle,
     request: PaperRequest,
