@@ -5,7 +5,6 @@ import {
 } from "../editor/extension-points";
 import { fs } from "../platform/ipc";
 import type { IndexedFile } from "../platform/ipc";
-import { isDocumentName } from "./file-search";
 import { linkToTarget, pathIndex, type LinkStyle } from "../links/link-resolve";
 import { linkStyleAt } from "../links/link-style";
 
@@ -62,12 +61,7 @@ export function noteItems(
 function load(folder: string, from: string, key: string): Notes {
   const lists = Promise.all([fs.indexFolder(folder), linkStyleAt(from)]).then(
     ([index, style]) => {
-      const items = noteItems(
-        index.files.filter((f) => isDocumentName(f.rel)),
-        folder,
-        from,
-        style,
-      );
+      const items = noteItems(index.files, folder, from, style);
       return [items, items.map((i) => ({ ...i, replaceAfter: 2 }))] as [
         PanelItem[],
         PanelItem[],
