@@ -38,7 +38,11 @@ export function SidebarTabBar({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const [fit, setFit] = useState(Infinity);
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    keyboard: boolean;
+  } | null>(null);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
@@ -71,7 +75,12 @@ export function SidebarTabBar({
             aria-haspopup="menu"
             onClick={(e) => {
               const box = e.currentTarget.getBoundingClientRect();
-              setMenu({ x: box.left, y: box.bottom + 4 });
+              // detail 0: Enter or Space, so the menu takes the focus.
+              setMenu({
+                x: box.left,
+                y: box.bottom + 4,
+                keyboard: e.detail === 0,
+              });
             }}
           >
             <MoreIcon />
@@ -83,6 +92,7 @@ export function SidebarTabBar({
           <ContextMenu
             x={menu.x}
             y={menu.y}
+            keyboard={menu.keyboard}
             items={more.map((tab) => ({
               label: tab.label(t),
               onSelect: () => onSelect(tab.id),
