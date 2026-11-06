@@ -614,6 +614,10 @@ export function installDevTauriShim(): void {
               path: `${path}/${name}`,
               is_dir: isDir,
               hidden: name.startsWith("."),
+              // `__devIgnored`: paths a .gitignore would leave out.
+              ignored: (
+                (w.__devIgnored as string[] | undefined) ?? []
+              ).includes(`${path}/${name}`),
               modified_ms:
                 (w.__devMtimes as Record<string, number> | undefined)?.[
                   `${path}/${name}`

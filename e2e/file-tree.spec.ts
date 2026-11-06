@@ -286,6 +286,21 @@ test("the tree shows files another app made once the window is back in front", a
   await expect(row(page, "b.md")).toHaveCount(0);
 });
 
+test("files a .gitignore leaves out show dimmed, as the search leaves them out", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devIgnored: string[] }).__devIgnored = [
+      "/work/notes/chart.png",
+      "/work/notes/drafts",
+    ];
+  });
+  await open(page);
+  await expect(row(page, "chart.png")).toHaveClass(/tree-row-ignored/);
+  await expect(row(page, "drafts")).toHaveClass(/tree-row-ignored/);
+  await expect(row(page, "b.md")).not.toHaveClass(/tree-row-ignored/);
+});
+
 test("⌘/Ctrl-click on a file opens it in a new window, this one unchanged (#348)", async ({
   page,
 }) => {

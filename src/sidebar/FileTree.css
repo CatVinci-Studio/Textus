@@ -322,3 +322,9 @@
 .tree-following-open:hover {
   background: var(--ui-hover);
 }
+
+/* Left out by a .gitignore or as build output, as the search leaves it. */
+.tree-row-ignored .tree-label,
+.tree-row-ignored .tree-icon {
+  opacity: 0.5;
+}

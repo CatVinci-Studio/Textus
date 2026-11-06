@@ -209,6 +209,11 @@ export type DirEntryInfo_Deserialize = {
 	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
+	/**
+	 *  Left out by a `.gitignore` or as build output, as the file search
+	 *  leaves it out; the tree shows it dimmed.
+	 */
+	ignored: boolean,
 };
 
 export type DirEntryInfo_Serialize = {
@@ -225,6 +230,11 @@ export type DirEntryInfo_Serialize = {
 	 *  system (desktop.ini).
 	 */
 	hidden: boolean,
+	/**
+	 *  Left out by a `.gitignore` or as build output, as the file search
+	 *  leaves it out; the tree shows it dimmed.
+	 */
+	ignored: boolean,
 };
 
 export type DraftSnapshot = DraftSnapshot_Serialize | DraftSnapshot_Deserialize;

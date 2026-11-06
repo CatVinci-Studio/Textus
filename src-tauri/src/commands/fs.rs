@@ -17,6 +17,9 @@ pub struct DirEntryInfo {
     /// Hidden: a name starting with a dot, or on Windows a file marked hidden or
     /// system (desktop.ini).
     hidden: bool,
+    /// Left out by a `.gitignore` or as build output, as the file search
+    /// leaves it out; the tree shows it dimmed.
+    ignored: bool,
 }
 
 /// Whether Windows marks `meta` hidden or system; never elsewhere.
@@ -222,6 +225,10 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
     require_non_empty(&path)?;
     let mut reader = fs::read_dir(&path).await.map_err(|e| e.to_string())?;
     let mut items: Vec<DirEntryInfo> = Vec::new();
+    let dir = PathBuf::from(&path);
+    let ignored = tauri::async_runtime::spawn_blocking(move || crate::walk::ignored_children(&dir))
+        .await
+        .unwrap_or_default();
 
     while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
         let file_type = entry.file_type().await.map_err(|e| e.to_string())?;
@@ -235,6 +242,7 @@ pub async fn list_dir(path: String) -> Result<Vec<DirEntryInfo>, String> {
         items.push(DirEntryInfo {
             hidden: name.starts_with('.') || meta.as_ref().is_some_and(marked_hidden),
             name,
+            ignored: ignored.contains(&entry.path()),
             path: entry.path().to_string_lossy().to_string(),
             is_dir: file_type.is_dir(),
             modified_ms,
