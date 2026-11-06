@@ -9,7 +9,7 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../workspace/frontmatter";
-import { rewriteLinks } from "../workspace/link-rewrite";
+import { renameContext, rewriteLinks } from "../workspace/link-rewrite";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {
@@ -143,12 +143,18 @@ export function fileHandlers(p: PluginScope) {
       await notePathMoved(source, target);
       if (updateLinks !== true) return;
       const { documents } = await pluginsIpc.fsDocuments(p.id, root);
+      const context = renameContext(
+        root,
+        documents.map((d) => d.path),
+        source,
+        target,
+        await fs.documentLinkRoot(target, root).catch(() => null),
+      );
       for (const doc of documents) {
-        if (rewriteLinks(doc.text, doc.path, source, target) === doc.text)
-          continue;
-        await change(doc.path, (text) =>
-          rewriteLinks(text, doc.path, source, target),
-        );
+        const rewrite = (text: string) =>
+          rewriteLinks(text, doc.path, source, target, context);
+        if (rewrite(doc.text) === doc.text) continue;
+        await change(doc.path, rewrite);
       }
     },
     "files.trash": async ({ path }: Params) => {
