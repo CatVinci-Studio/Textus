@@ -23,7 +23,7 @@ Hinweise im GitHub-Stil:
 
 ## Textauszeichnung
 
-**Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`.
+**Fett** (`**Text**`), *kursiv* (`*Text*`), ***fett und kursiv***, ~~durchgestrichen~~ (`~~Text~~`), ==hervorgehoben== (`==Text==`) und `Inline-Code`. ``Ctrl+` `` (auch auf dem Mac Control) macht die Auswahl zu Inline-Code, ``Ctrl+Shift+` `` streicht sie durch, und `Cmd+K` macht sie zum Link, mit dem Cursor dort, wo die Adresse hinkommt.
 
 Emoji-Kurzcodes wie auf GitHub erscheinen als Emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). Die Datei behält den Kurzcode; setzen Sie den Cursor darauf, um ihn zu bearbeiten.
 
@@ -160,7 +160,7 @@ Alle findest du im Menü **Ansicht** und unter **Einstellungen → Editor & Desi
 
 **Ansicht → Schreibgeschützt** (auch im Rechtsklickmenü eines Tabs) schützt ein Dokument vor Änderungen – durch Tippen, Einfügen, Ablegen, Rückgängig, Textus AI oder Plugins. Ein Vorhängeschloss neben dem Titel zeigt es an; ein Klick darauf macht das Dokument wieder bearbeitbar.
 
-**Ansicht → Befehlspalette…** (`Cmd+Shift+P`) findet alles, was die Menüs können, und jeden Befehl, den ein Plugin hinzufügt, wenn du ein paar Buchstaben seines Namens tippst. Sie wechselt außerdem das Erscheinungsbild (hell, dunkel oder wie das System) und das Editor-Design und schaltet Textus AI ein oder aus.
+**Ansicht → Befehlspalette…** (`Cmd+Shift+P`) findet alles, was die Menüs können, und jeden Befehl, den ein Plugin hinzufügt, wenn du ein paar Buchstaben seines Namens tippst. Sie wechselt außerdem das Erscheinungsbild (hell, dunkel oder wie das System) und das Editor-Design und schaltet Textus AI ein oder aus. **Bearbeiten → Suchen & Ersetzen…** (`Cmd+F`) sucht im Dokument, **Bearbeiten → Ersetzen…** (`Cmd+Option+F`) öffnet es mit der Ersetzen-Zeile, und `Cmd+G` springt zum nächsten Treffer.
 
 Der Tab **Gliederung** der Seitenleiste listet die Überschriften des Dokuments auf; ein Klick auf eine führt dorthin. Ein Rechtsklick auf die Gliederung bietet **Alle aufklappen** und **Alle zuklappen**, oder klappe mit `Option`-Klick (`Alt`-Klick) auf den Pfeil einer Überschrift alle auf einmal auf oder zu.
 
@@ -177,7 +177,7 @@ Der Tab **Gliederung** der Seitenleiste listet die Überschriften des Dokuments 
 
 ## Tabs und Fenster
 
-`Cmd+T` öffnet einen neuen Tab, `Cmd+N` ein neues Fenster, und **Datei → Geschlossenen Tab wieder öffnen** (`Cmd+Shift+T`) holt die Dokumente zurück, die du geschlossen hast, das zuletzt geschlossene zuerst. Ein Mittelklick schließt einen Tab; das Rechtsklickmenü eines Tabs hat **Andere schließen**, **Tabs links schließen** und **Tabs rechts schließen** (Tabs mit ungespeicherten Änderungen bleiben offen), **Pfad kopieren** und **In neues Fenster verschieben**. Du kannst einen Tab auch aus dem Fenster ziehen, um ihm ein eigenes Fenster zu geben. Wenn Textus wieder öffnet, kommt jedes Fenster mit seinen eigenen Tabs zurück.
+`Cmd+N` (oder `Cmd+T`) öffnet einen neuen Tab, `Cmd+Shift+N` ein neues Fenster, und **Datei → Geschlossenen Tab wieder öffnen** (`Cmd+Shift+T`) holt die Dokumente zurück, die du geschlossen hast, das zuletzt geschlossene zuerst. Ein Mittelklick schließt einen Tab; das Rechtsklickmenü eines Tabs hat **Andere schließen**, **Tabs links schließen** und **Tabs rechts schließen** (Tabs mit ungespeicherten Änderungen bleiben offen), **Pfad kopieren** und **In neues Fenster verschieben**. Du kannst einen Tab auch aus dem Fenster ziehen, um ihm ein eigenes Fenster zu geben. Wenn Textus wieder öffnet, kommt jedes Fenster mit seinen eigenen Tabs zurück.
 
 ## Ordner und Dateisuche
 

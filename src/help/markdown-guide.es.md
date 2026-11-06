@@ -23,7 +23,7 @@ Alertas al estilo de GitHub:
 
 ## Estilos de texto
 
-**Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`.
+**Negrita** (`**texto**`), *cursiva* (`*texto*`), ***negrita y cursiva***, ~~tachado~~ (`~~texto~~`), ==resaltado== (`==texto==`) y `código en línea`. ``Ctrl+` `` (Control también en Mac) convierte la selección en código en línea, ``Ctrl+Shift+` `` la tacha y `Cmd+K` la pone en un enlace con el cursor donde va la dirección.
 
 Los códigos cortos de emoji de GitHub se muestran como su emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). El archivo guarda el código; pon el cursor encima para editarlo.
 
@@ -160,7 +160,7 @@ Todos están en el menú **Visualización** y en **Ajustes → Editor y aspecto 
 
 **Visualización → Solo lectura** (también en el menú contextual de una pestaña) impide que un documento cambie, ya sea al escribir, pegar, soltar, deshacer, por Textus AI o por los complementos. Un candado junto al título lo indica; haz clic en él para que el documento vuelva a ser editable.
 
-**Visualización → Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI.
+**Visualización → Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI. **Edición → Buscar y reemplazar…** (`Cmd+F`) busca en el documento, **Edición → Reemplazar…** (`Cmd+Option+F`) lo abre con la fila de reemplazo y `Cmd+G` va a la siguiente coincidencia.
 
 La pestaña **Esquema** de la barra lateral muestra los encabezados del documento; haz clic en uno para ir a él. Haz clic derecho en el esquema para **Expandir todo** y **Contraer todo**, o haz `Option`-clic (`Alt`-clic) en la flecha de un encabezado para plegarlos o desplegarlos todos a la vez.
 
@@ -177,7 +177,7 @@ La pestaña **Esquema** de la barra lateral muestra los encabezados del document
 
 ## Pestañas y ventanas
 
-`Cmd+T` abre una pestaña nueva, `Cmd+N` una ventana nueva, y **Archivo → Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda** y **Cerrar pestañas a la derecha** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mover a una ventana nueva**. También puedes arrastrar una pestaña fuera de la ventana para darle una ventana propia. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
+`Cmd+N` (o `Cmd+T`) abre una pestaña nueva, `Cmd+Shift+N` una ventana nueva, y **Archivo → Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda** y **Cerrar pestañas a la derecha** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mover a una ventana nueva**. También puedes arrastrar una pestaña fuera de la ventana para darle una ventana propia. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
 
 ## Carpetas y búsqueda de archivos
 

@@ -122,6 +122,7 @@ import { changeSourcePlugin } from "./change-source";
 import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
+import { addEmojiCompletion } from "./emoji/emoji-completion";
 import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
 import { copyTextPlugin } from "./clipboard/copy-text-plugin";
 import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
@@ -211,6 +212,7 @@ export function withEditorCore(
 ): Editor {
   const { settings, docPath } = options;
   const disk = !("noDiskImages" in options);
+  addEmojiCompletion(() => resolveStrings(settings.current.language).completionEmoji);
   return (
     editor
       // First: the plugins that read it are asked in order.
@@ -219,10 +221,10 @@ export function withEditorCore(
       // Which part of the file each block was read from, so a save writes the
       // blocks the user didn't touch as they were.
       .use(openedParseRecorder)
-      // A plugin holding the keyboard (Vim's normal mode) has its keys first.
+      // The open / panel takes the arrows, Enter, Tab and Esc first, even
+      // from a plugin holding the keyboard (Vim's normal mode).
+      .use(createCompletionPlugin(() => docPath.current))
       .use(editorExtensions().keyInput)
-      // A plugin's completions take Enter, Tab and the arrows while open.
-      .use(createCompletionPlugin())
       .use(macNavigationPlugin)
       // Before the margin's clicks: held before they move the selection.
       .use(pointerHoldPlugin)

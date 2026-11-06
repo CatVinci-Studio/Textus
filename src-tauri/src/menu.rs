@@ -72,6 +72,10 @@ const ZOOM_IN_ID: &str = "zoom-in";
 const ZOOM_OUT_ID: &str = "zoom-out";
 const ZOOM_RESET_ID: &str = "zoom-reset";
 const FIND_REPLACE_ID: &str = "find-replace";
+/// Edit > Replace…: the find bar with its replace row open.
+const REPLACE_ID: &str = "replace";
+/// Edit > Find Next: the next match of what the find bar last looked for.
+const FIND_NEXT_ID: &str = "find-next";
 /// Edit > Copy as Plain Text and Paste as Plain Text: the words without the
 /// Markdown marks Copy's plain text carries, and the clipboard's text as is.
 const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
@@ -98,8 +102,13 @@ const UPDATES_ID: &str = "check-updates";
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
-/// Format > Highlight, sent as the inline mark to toggle.
+/// Format > Highlight, Strikethrough and Inline Code, each sent as the inline
+/// mark to toggle.
 const HIGHLIGHT_ID: &str = "toggle-mark:highlight";
+const STRIKETHROUGH_ID: &str = "toggle-mark:strikethrough";
+const INLINE_CODE_ID: &str = "toggle-mark:code";
+/// Format > Link: a link around the selection, its address to type.
+const INSERT_LINK_ID: &str = "insert-link";
 
 /// Emit a menu event only to the focused window. `emit_to`, not `emit` on a
 /// window handle: that one looks scoped but broadcasts to every window.
@@ -357,6 +366,12 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused_payload(app_handle, "menu-insert-block", kind);
     } else if id == HIGHLIGHT_ID {
         emit_to_focused_payload(app_handle, "menu-toggle-mark", "highlight");
+    } else if id == STRIKETHROUGH_ID {
+        emit_to_focused_payload(app_handle, "menu-toggle-mark", "strikethrough");
+    } else if id == INLINE_CODE_ID {
+        emit_to_focused_payload(app_handle, "menu-toggle-mark", "code");
+    } else if id == INSERT_LINK_ID {
+        emit_to_focused(app_handle, "menu-insert-link");
     } else if id == TOGGLE_SOURCE_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-source-mode");
     } else if id == TOGGLE_TYPEWRITER_MODE_ID {
@@ -391,6 +406,10 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, &format!("menu-{id}"));
     } else if id == FIND_REPLACE_ID {
         emit_to_focused(app_handle, "menu-find-replace");
+    } else if id == REPLACE_ID {
+        emit_to_focused(app_handle, "menu-replace");
+    } else if id == FIND_NEXT_ID {
+        emit_to_focused(app_handle, "menu-find-next");
     } else if id == ZOOM_IN_ID {
         emit_to_focused(app_handle, "menu-zoom-in");
     } else if id == ZOOM_OUT_ID {

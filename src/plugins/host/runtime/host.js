@@ -10,7 +10,7 @@
 /* global createEndpoint */
 (function () {
   "use strict";
-  var API_VERSION = "1.1";
+  var API_VERSION = "1.2";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -22,6 +22,8 @@
   var hoverProviders = [];
   var decorationProviders = [];
   var completionProviders = new Map();
+  // Asks the panel may still call off, by request.
+  var completionAsks = new Map();
   var aiTools = new Map();
   var uriHandlers = [];
   var willSave = [];
@@ -1095,12 +1097,30 @@
     $provideCompletions: async function (params) {
       var provider = completionProviders.get(params.id);
       if (!provider) return null;
-      var items = await provider.provideCompletions({
-        text: params.text,
-        match: params.match,
-        inMath: params.inMath,
-      });
-      return Array.isArray(items) ? plain(items) : null;
+      var controller = new AbortController();
+      completionAsks.set(params.request, controller);
+      try {
+        var answer = await provider.provideCompletions({
+          text: params.text,
+          match: params.match,
+          inMath: params.inMath,
+          query: params.query,
+          after: params.after,
+          path: params.path,
+          signal: controller.signal,
+        });
+        if (controller.signal.aborted) return null;
+        if (Array.isArray(answer)) return plain(answer);
+        if (answer && answer.complete === true && Array.isArray(answer.items))
+          return { items: plain(answer.items), complete: true };
+        return null;
+      } finally {
+        completionAsks.delete(params.request);
+      }
+    },
+    $cancelCompletions: function (params) {
+      var controller = completionAsks.get(params.request);
+      if (controller) controller.abort();
     },
     $provideHover: async function (params) {
       for (var i = 0; i < hoverProviders.length; i++) {

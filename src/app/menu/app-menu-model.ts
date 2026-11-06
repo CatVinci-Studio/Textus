@@ -27,6 +27,9 @@ export type NativeMenuId =
   | "close-window"
   | "quit"
   | "find-replace"
+  | "replace"
+  | "find-next"
+  | "insert-link"
   | "copy-as-plain-text"
   | "paste-as-plain-text"
   | "toggle-source-mode"
@@ -223,6 +226,18 @@ function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
       accel: HIGHLIGHT_COMBO,
       action: { native: "toggle-mark:highlight" },
     },
+    // Typora's keys: Control on a Mac too, where Cmd+` is the system's.
+    {
+      label: t.menuStrikethrough,
+      accel: "ctrl+shift+`",
+      action: { native: "toggle-mark:strikethrough" },
+    },
+    {
+      label: t.menuInlineCode,
+      accel: "ctrl+`",
+      action: { native: "toggle-mark:code" },
+    },
+    { label: t.menuInsertLink, accel: "mod+k", action: { native: "insert-link" } },
     "separator",
     ...headings,
     "separator",
@@ -269,15 +284,15 @@ export function buildAppMenu(
       label: t.menuFile,
       submenu: [
         {
+          // Ctrl+N, as other editors have it; Ctrl+T works too.
           label: t.menuNewTab,
-          accel: "mod+t",
+          accel: "mod+n",
           action: { native: "new-file" },
         },
         {
-          // A browser's keys: Ctrl+T a tab, Ctrl+N a window (menu.rs's
-          // NEW_WINDOW_ACCEL).
+          // menu.rs's NEW_WINDOW_ACCEL.
           label: t.menuNewWindow,
-          accel: "mod+n",
+          accel: "mod+shift+n",
           action: { native: "new-window" },
         },
         {
@@ -343,6 +358,8 @@ export function buildAppMenu(
           accel: shortcuts.findReplace,
           action: { native: "find-replace" },
         },
+        { label: t.menuReplace, accel: "mod+alt+f", action: { native: "replace" } },
+        { label: t.menuFindNext, accel: "mod+g", action: { native: "find-next" } },
       ],
     },
     { label: t.menuFormat, submenu: formatEntries(t, shortcuts) },

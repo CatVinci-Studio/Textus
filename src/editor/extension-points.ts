@@ -20,23 +20,14 @@ export interface HoverCard {
   open?: () => void;
 }
 
-export interface CompletionItem {
-  /** What the list shows. */
-  label: string;
-  /** What replaces the matched text; `$0` marks where the caret goes. */
-  insert: string;
-  /** A word or two beside the label, dimmed. */
-  detail?: string;
-  /** Run once the item is taken (a `/` command): what was typed goes, and
-   *  `insert` is empty. */
-  run?: () => void;
-}
-
-export interface CompletionResult {
-  /** How many characters before the caret the item replaces: the match. */
-  replace: number;
-  items: CompletionItem[];
-}
+export {
+  addCompletionSource,
+  setPluginCompletionSources,
+  type CompletionAnswer,
+  type CompletionContext,
+  type CompletionSource,
+  type PanelItem,
+} from "./completion/sources";
 
 export interface EditorExtensions {
   /** Editor plugins that see keys before the editor's own (a plugin
@@ -45,12 +36,6 @@ export interface EditorExtensions {
   hasHoverProviders: () => boolean;
   /** The first card someone has for `target`, or null. */
   provideHover: (target: HoverTarget) => Promise<HoverCard | null>;
-  hasCompletionSources: () => boolean;
-  /** The first list someone has for the text before the caret. */
-  provideCompletions: (
-    text: string,
-    inMath: boolean,
-  ) => Promise<CompletionResult | null>;
   /** Opens a web link in what handles it; false when nothing does. */
   openLink: (url: string) => boolean;
 }
@@ -59,8 +44,6 @@ let current: EditorExtensions = {
   keyInput: [],
   hasHoverProviders: () => false,
   provideHover: async () => null,
-  hasCompletionSources: () => false,
-  provideCompletions: async () => null,
   openLink: () => false,
 };
 
