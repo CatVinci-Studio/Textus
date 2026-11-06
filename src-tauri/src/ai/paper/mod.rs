@@ -219,6 +219,7 @@ pub struct PaperRequest {
 #[cfg_attr(test, specta::specta)]
 pub async fn ai_paper_run(
     app: tauri::AppHandle,
+    window: tauri::Window,
     request: PaperRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<Paper, String> {
@@ -334,7 +335,7 @@ pub async fn ai_paper_run(
                 project.as_deref(),
                 paper_folder.is_some(),
                 entry.supports_vision,
-                crate::ai::agent::installed_tools(&app).await,
+                crate::ai::agent::installed_tools(&app, window.label()).await,
             );
             let kit = research::Kit {
                 tools: &tools,
