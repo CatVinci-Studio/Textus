@@ -441,6 +441,7 @@ type /name in a conversation to use one.
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Add sources as footnotes",
   menuToggleSplitView: "Source and Preview",
+  splitPreview: "Preview",
   menuToggleZenMode: "Zen Mode",
   menuSplitRight: "Split Right",
   menuCommandPalette: "Command Palette…",

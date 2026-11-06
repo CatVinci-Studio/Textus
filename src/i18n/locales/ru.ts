@@ -447,6 +447,7 @@ export default {
   webSources: "Источники",
   proposalSourcesAsFootnotes: "Добавить источники как сноски",
   menuToggleSplitView: "Исходник и просмотр",
+  splitPreview: "Предпросмотр",
   menuToggleZenMode: "Режим дзен",
   menuSplitRight: "Разделить вправо",
   menuCommandPalette: "Палитра команд…",

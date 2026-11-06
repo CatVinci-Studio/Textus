@@ -448,6 +448,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webSources: "Quellen",
   proposalSourcesAsFootnotes: "Quellen als Fußnoten einfügen",
   menuToggleSplitView: "Quelltext und Vorschau",
+  splitPreview: "Vorschau",
   menuToggleZenMode: "Zen-Modus",
   menuSplitRight: "Rechts teilen",
   menuCommandPalette: "Befehlspalette…",

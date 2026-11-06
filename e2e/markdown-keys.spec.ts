@@ -233,3 +233,36 @@ test("``` typed on a line of its own reads as a fence, not as code", async ({
     /is-fence/,
   );
 });
+
+test("a folded callout opens from its chevron, and a comment shows only under the caret", async ({
+  page,
+}) => {
+  await open(
+    page,
+    "> [!faq]- Why?\n> Because.\n\nSee %%private%% here.\n\nEnd.",
+  );
+  const callout = page.locator(`${editor} blockquote.callout`);
+  await expect(callout.locator(".md-alert-title")).toHaveText("Why?");
+  await expect(callout.getByText("Because.")).toBeHidden();
+  await callout.locator(".md-alert-fold").click();
+  await expect(callout.getByText("Because.")).toBeVisible();
+  const comment = page.locator(`${editor} p`).filter({ hasText: "See" });
+  await expect(comment.getByText("private")).toBeHidden();
+  await page.locator(`${editor} p`).last().click();
+  await comment.click({ position: { x: 4, y: 4 } });
+  await page.keyboard.press(END);
+  await expect(comment.locator(".md-comment")).toBeVisible();
+});
+
+test("the split view's preview draws what the editor draws", async ({
+  page,
+}) => {
+  await open(page, "> [!tip] Hint\n> body\n\nA %%secret%% line ^abc123\n");
+  await emit(page, "menu-toggle-split-view");
+  const preview = page.locator('[data-active-tab="true"] .split-preview');
+  await expect(
+    preview.locator("blockquote.md-alert-tip .md-alert-title"),
+  ).toHaveText("Hint");
+  await expect(preview.getByText("secret")).toBeHidden();
+  await expect(preview.locator(".md-block-id")).toHaveText("^abc123");
+});

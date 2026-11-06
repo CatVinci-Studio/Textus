@@ -405,6 +405,7 @@ export default {
   webSources: "來源",
   proposalSourcesAsFootnotes: "把來源加為註腳",
   menuToggleSplitView: "原始碼與預覽",
+  splitPreview: "預覽",
   menuToggleZenMode: "禪模式",
   menuSplitRight: "向右分割",
   menuCommandPalette: "命令面板…",

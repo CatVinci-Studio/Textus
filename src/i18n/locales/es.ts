@@ -456,6 +456,7 @@ para usar una.
   webSources: "Fuentes",
   proposalSourcesAsFootnotes: "Añadir las fuentes como notas al pie",
   menuToggleSplitView: "Código y vista previa",
+  splitPreview: "Vista previa",
   menuToggleZenMode: "Modo zen",
   menuSplitRight: "Dividir a la derecha",
   menuCommandPalette: "Paleta de comandos…",

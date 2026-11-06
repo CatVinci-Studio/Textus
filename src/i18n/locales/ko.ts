@@ -422,6 +422,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   webSources: "출처",
   proposalSourcesAsFootnotes: "출처를 각주로 추가",
   menuToggleSplitView: "소스와 미리보기",
+  splitPreview: "미리 보기",
   menuToggleZenMode: "젠 모드",
   menuSplitRight: "오른쪽으로 분할",
   menuCommandPalette: "명령 팔레트…",

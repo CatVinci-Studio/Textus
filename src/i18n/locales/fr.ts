@@ -458,6 +458,7 @@ utiliser une.
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Ajouter les sources en notes de bas de page",
   menuToggleSplitView: "Source et aperçu",
+  splitPreview: "Aperçu",
   menuToggleZenMode: "Mode zen",
   menuSplitRight: "Partager à droite",
   menuCommandPalette: "Palette de commandes…",

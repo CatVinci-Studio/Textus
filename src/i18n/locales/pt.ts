@@ -444,6 +444,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webSources: "Fontes",
   proposalSourcesAsFootnotes: "Adicionar as fontes como notas de rodapé",
   menuToggleSplitView: "Código e pré-visualização",
+  splitPreview: "Pré-visualização",
   menuToggleZenMode: "Modo Zen",
   menuSplitRight: "Dividir à direita",
   menuCommandPalette: "Paleta de comandos…",

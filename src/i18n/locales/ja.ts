@@ -429,6 +429,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webSources: "出典",
   proposalSourcesAsFootnotes: "出典を脚注として追加",
   menuToggleSplitView: "ソースとプレビュー",
+  splitPreview: "プレビュー",
   menuToggleZenMode: "禅モード",
   menuSplitRight: "右に分割",
   menuCommandPalette: "コマンドパレット…",
