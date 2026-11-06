@@ -24,6 +24,7 @@ import {
   frontmatterSchema,
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
+import { inlineSyntaxPlugin } from "./markdown/inline-syntax-plugin";
 import { installProseMirrorSpeedups } from "./prosemirror-speedups";
 import {
   headingIdPlugin,
@@ -292,6 +293,8 @@ export function withEditorCore(
           }[type];
         }),
       )
+
+      .use(inlineSyntaxPlugin)
 
       // CommonMark's flanking rules reject "**" next to CJK punctuation, which
       // would break reopening bold made here. Parse side only.

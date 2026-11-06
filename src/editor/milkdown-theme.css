@@ -1261,6 +1261,47 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: none;
 }
 
+/* Obsidian's inline syntax, drawn while the caret is away. */
+.md-syntax-hidden {
+  display: none;
+}
+.md-comment,
+.md-block-id {
+  color: var(--doc-muted);
+}
+.md-block-id {
+  opacity: 0.6;
+}
+/* All comment: kept in the flow so the caret can still reach it. */
+.milkdown .md-comment-block {
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.md-inline-footnote {
+  font-size: 0.8em;
+  vertical-align: super;
+  color: var(--doc-muted);
+}
+.milkdown mark.md-mark-red {
+  background: var(--tone-red-tint);
+}
+.milkdown mark.md-mark-orange {
+  background: var(--tone-orange-tint);
+}
+.milkdown mark.md-mark-yellow {
+  background: var(--tone-yellow-tint);
+}
+.milkdown mark.md-mark-green {
+  background: var(--tone-green-tint);
+}
+.milkdown mark.md-mark-blue {
+  background: var(--tone-blue-tint);
+}
+.milkdown mark.md-mark-purple {
+  background: var(--tone-purple-tint);
+}
+
 /* Obsidian's "-" / "+": the chevron folds the body away in the view only. */
 .md-alert-fold {
   display: inline-flex;

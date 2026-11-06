@@ -26,6 +26,18 @@ export function keepAlertMarker(text: Handle): Handle {
 }
 
 /**
+ * Obsidian's and Pandoc's inline footnote `^[note]` is written as typed:
+ * remark escapes every "[", and `^\[note]` is a footnote nowhere. Not
+ * where the brackets would read back as a link.
+ */
+const INLINE_FOOTNOTE = /\^\\\[([^\]\n]*)\](?![([:])/g;
+
+export function keepInlineFootnote(text: Handle): Handle {
+  return (node, parent, state, info) =>
+    text(node, parent, state, info).replace(INLINE_FOOTNOTE, "^[$1]");
+}
+
+/**
  * Text ending in a space is escaped like any other: Milkdown returns it
  * as is, so `# bar ` at a line's start became a heading on reopening. The
  * space itself is still kept.

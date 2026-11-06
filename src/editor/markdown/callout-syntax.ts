@@ -3,12 +3,7 @@
 
 /** The colour and icon a callout draws with. */
 export type CalloutKind =
-  | "note"
-  | "tip"
-  | "important"
-  | "warning"
-  | "caution"
-  | "quote";
+  "note" | "tip" | "important" | "warning" | "caution" | "quote";
 
 /** GitHub's own five, whose label is translated. */
 export const GITHUB_ALERTS = [
