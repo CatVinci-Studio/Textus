@@ -147,6 +147,25 @@ pub(crate) async fn review(
     Ok(issues.unwrap_or_default())
 }
 
+/// The points against the drafted `sections`: the review's, and those of
+/// the check of every cited sentence against its notes (`claims`), run at
+/// once. A review that fails leaves the check's.
+pub(crate) async fn review_all(
+    model: &dyn Model,
+    paper: &Paper,
+    outline: &Outline,
+    dossier: &Dossier,
+    sections: &[String],
+) -> Vec<Issue> {
+    let (reviewed, checked) = futures_util::join!(
+        review(model, paper, outline, sections),
+        super::claims::check_claims(model, paper, dossier, sections)
+    );
+    let mut issues = checked;
+    issues.extend(reviewed.unwrap_or_default());
+    issues
+}
+
 /// `sections` with each one `issues` names revised once, as many at a time as
 /// the model takes.
 /// `revising` hears of each as it begins; a revision that fails leaves the

@@ -123,9 +123,8 @@ pub async fn ai_paper_draft(
             });
             // A review that fails costs the paper nothing: its sections
             // passed their own checks.
-            let issues = review::review(&agent, &files.paper, &outline, &sections)
-                .await
-                .unwrap_or_default();
+            let issues =
+                review::review_all(&agent, &files.paper, &outline, &files.dossier, &sections).await;
             let revising = |i: usize| {
                 send(PaperEvent::Section {
                     index: i as u32,

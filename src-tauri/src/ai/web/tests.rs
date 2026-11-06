@@ -1,4 +1,5 @@
 use super::*;
+use seen::Seen;
 
 fn plan(service: Option<Service>) -> WebPlan {
     WebPlan::new(true, None, service, &[])
