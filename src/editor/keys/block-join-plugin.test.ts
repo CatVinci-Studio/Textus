@@ -128,6 +128,14 @@ describe("backspaceKeepingApart", () => {
       ),
     ).toBeNull();
   });
+
+  it("leaves a list item's or quote's first line under a code block to the default", () => {
+    for (const below of [list(""), list("item"), quote(p("q"))]) {
+      const doc = docOf(code("x"), below);
+      const line = below.textContent;
+      expect(run(backspaceKeepingApart, at(doc, line, false))).toBeNull();
+    }
+  });
 });
 
 describe("backspaceKeepingApart on an empty line", () => {
