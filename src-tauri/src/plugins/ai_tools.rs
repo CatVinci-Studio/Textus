@@ -111,10 +111,14 @@ fn model_name(plugin: &str, name: &str) -> String {
 /// The tools the asking window's plugins offer, for this request. A detached
 /// chat asks for the editor window it serves.
 pub fn tools_for_request<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
+    #[cfg(desktop)]
     let window = app
         .try_state::<crate::commands::chat_window::OpenChatWindows>()
         .and_then(|open| crate::commands::chat_window::editor_for_chat(asking, &open))
         .unwrap_or_else(|| asking.to_string());
+    // The phone has one window and no detached chats.
+    #[cfg(mobile)]
+    let window = asking.to_string();
     let hub = app.state::<PluginAiTools>();
     let offered = hub.offered.lock().unwrap_or_else(|e| e.into_inner());
     window_tools(&offered, &window)
