@@ -178,6 +178,21 @@ describe("saving after an edit elsewhere keeps as written", () => {
     expect(out).toBe("a \\[b \\*c\\* \\[d]\\(e\n");
   });
 
+  it("reads a table formula's \\| as one bar and writes a typed | as \\|", async () => {
+    const markdown = "| a | b |\n| - | - |\n| x | $a \\| b$ |\n";
+    let formula = "";
+    const out = await saveAfter(markdown, (view) => {
+      view.state.doc.descendants((node, pos) => {
+        if (node.type.name !== "math_inline") return;
+        formula = node.textContent;
+        view.dispatch(view.state.tr.insertText("|c", pos + node.nodeSize - 1));
+      });
+    });
+    expect(formula).toBe("a | b");
+    expect(out).toContain("| x | $a \\| b\\|c$ |\n");
+    expect(out.split("\n")[0]).toBe("| a | b           |");
+  });
+
   it("still escapes a # that would open a heading", async () => {
     const out = await saveAfter("Edit me\n", (view) => {
       const end = endOfBlock(view.state.doc, 0);
