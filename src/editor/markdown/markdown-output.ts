@@ -16,12 +16,7 @@ import {
   readImagePresentation,
   type ImageAttrs,
 } from "../images/image-html";
-import {
-  type PeekingHandle,
-  isAutolinkLiteralGuard,
-  keepLinkAcrossInlineNodes,
-  link,
-} from "./link-output";
+import { type PeekingHandle, isAutolinkLiteralGuard } from "./link-output";
 import {
   type Phrasing,
   alternateNestedMarkers,
@@ -43,14 +38,6 @@ import {
   withSingleLineEnds,
   withoutLatexPairs,
 } from "./text-output";
-export {
-  type LinkSyntax,
-  linkSyntaxOf,
-  linked,
-  firstLink,
-  linksOnSpansIn,
-  linksOnSpansSerializer,
-} from "./link-output";
 export { documentBreaks, displayWidth } from "./text-output";
 // How the editor writes markdown back out: every rule keeps a saved file
 // close to what the user wrote, not remark-stringify's house style.
@@ -379,7 +366,6 @@ export function documentBullet(markdown: string): "-" | "*" | "+" | null {
 /** Installs the rules above. `update`, not `set`: replacing the slice would
  *  drop Milkdown's own handlers. */
 export function configureMarkdownOutput(ctx: Ctx): void {
-  keepLinkAcrossInlineNodes(ctx);
   configureImageNode(ctx);
   keepCodeFenceMeta(ctx);
   ctx.update(remarkGFMPlugin.options.key, (options) => ({
@@ -399,7 +385,6 @@ export function configureMarkdownOutput(ctx: Ctx): void {
       root,
       thematicBreak,
       list,
-      link,
       image,
       break: breaks === "spaces" ? hardBreakAsSpaces : hardBreak,
       text: withSingleLineEnds(

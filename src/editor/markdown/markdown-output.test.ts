@@ -262,25 +262,22 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip("a $ x$ b\n")).toBe("a \\$ x\\$ b\n");
   });
 
-  it("shows an empty-text link's URL as its text", async () => {
-    const editor = await createTestEditor("[](https://x.org/a)\n");
-    editors.push(editor);
-    const text = editor.action(
-      (ctx) => ctx.get(editorViewCtx).state.doc.textContent,
+  it("keeps an empty-text link as written", async () => {
+    expect(await roundTrip("[](https://x.org/a)\n")).toBe(
+      "[](https://x.org/a)\n",
     );
-    expect(text).toBe("https://x.org/a");
   });
 
-  it("writes a bare URL as an autolink, as before", async () => {
+  it("writes a bare URL bare, as the file has it", async () => {
     expect(await roundTrip("See https://x.org/a here\n")).toBe(
-      "See <https://x.org/a> here\n",
+      "See https://x.org/a here\n",
     );
   });
 
   it.each([
-    ["a URL", "see https://x.org/a here", "see <https://x.org/a> here\n"],
+    ["a URL", "see https://x.org/a here", "see https://x.org/a here\n"],
     ["a www address", "see www.x.org here", "see www.x.org here\n"],
-    ["an email address", "mail a@b.com now", "mail <a@b.com> now\n"],
+    ["an email address", "mail a@b.com now", "mail a@b.com now\n"],
   ])("writes %s typed as text unescaped", async (_name, typed, reopened) => {
     const editor = await createTestEditor("");
     editors.push(editor);
@@ -453,8 +450,9 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await savedAfter("a **foo** b\n", deleting("foo"))).toBe("a  b\n");
     expect(await savedAfter("x *_foo_* y\n", deleting("foo"))).toBe("x  y\n");
     expect(await savedAfter("a `foo` b\n", deleting("foo"))).toBe("a  b\n");
+    // A link's text is its source: what is left of the bold stays in it.
     expect(await savedAfter("[a **b** c](u)\n", deleting("b"))).toBe(
-      "[a  c](u)\n",
+      "[a **** c](u)\n",
     );
   });
 
@@ -493,12 +491,8 @@ describe("an edited block is saved so it reads back the same", () => {
       "[Tech [Episodes]](u)\n",
       typingAfter("Tech", "!"),
     );
-    expect(saved).toBe("[Tech! \\[Episodes&#93;](u)\n");
-    const editor = await createTestEditor(saved);
-    editors.push(editor);
-    expect(
-      editor.action((ctx) => ctx.get(editorViewCtx).state.doc.textContent),
-    ).toBe("Tech! [Episodes]");
+    expect(saved).toBe("[Tech! [Episodes]](u)\n");
+    expect(await roundTrip(saved)).toBe(saved);
   });
 
   it("doesn't escape a bracket into a LaTeX formula after it", async () => {

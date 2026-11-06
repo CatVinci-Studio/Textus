@@ -246,11 +246,11 @@ describe("typing a bracket or quote", () => {
     const linked = await openView("[a link](https://x.org) after\n");
     linked.view.dispatch(
       linked.view.state.tr.setSelection(
-        TextSelection.create(linked.view.state.doc, 4),
+        TextSelection.create(linked.view.state.doc, 6),
       ),
     );
     type(linked.view, "(");
-    expect(withCaret(linked.view)).toBe("a l(|ink after");
+    expect(withCaret(linked.view)).toBe("[a l(|ink](https://x.org)");
   });
 
   it("still turns a typed [text](url) into a link", async () => {

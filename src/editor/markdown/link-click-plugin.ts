@@ -8,7 +8,7 @@ import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
 import { noteJump } from "../../utils/nav-history";
-import { revealedLinkHref } from "./link-reveal";
+import { linkHrefAt } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { followNoteLink } from "./note-link-follow";
 import { windowFolder } from "../../platform/window-folder";
@@ -69,12 +69,13 @@ async function follow(
   );
 }
 
-/** The URL of the link under a mouse event, or of one the caret shows as
- *  its source. */
+/** The URL of the link under a mouse event: a link's own, read from its
+ *  source, or a raw HTML anchor's. */
 function hrefAt(view: EditorView, event: MouseEvent): string | null {
+  const own = linkHrefAt(view, event.target);
+  if (own !== null) return own;
   const link = linkAt(view, event);
-  if (link) return link.getAttribute("href") ?? "";
-  return revealedLinkHref(view, event.target);
+  return link ? (link.getAttribute("href") ?? "") : null;
 }
 
 /**

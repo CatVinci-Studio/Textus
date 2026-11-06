@@ -71,7 +71,7 @@ interface Run {
  * A block's swatches: a code block's literals outside its comments, and
  * inline code that is one colour. With "everywhere", also codes in the
  * block's own text, read as one string across bold or italic so neighbours
- * are judged truly; link text is read but never matched.
+ * are judged truly; a link is never matched.
  */
 function swatches(
   mode: ColorSwatchMode,
@@ -95,9 +95,7 @@ function swatches(
     parent.forEach((child, offset) => {
       const pos = contentPos + offset;
       if (child.isText) {
-        const linked = child.marks.some((m) => m.type.name === "link");
-        if (!linked)
-          runs.push({ start: text.length, pos, length: child.nodeSize });
+        runs.push({ start: text.length, pos, length: child.nodeSize });
         text += child.text;
       } else if (child.type.name === "md_span") {
         read(child, pos + 1);

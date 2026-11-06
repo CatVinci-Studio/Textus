@@ -1,6 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import type { HoverTarget } from "../extension-points";
+import { linkHrefAt } from "../markdown/link-reveal";
 import { linkTarget } from "../markdown/link-target";
 import { parseNoteLink } from "../../utils/note-link";
 import { windowFolder } from "../../platform/window-folder";
@@ -66,9 +67,11 @@ function spotAt(
       },
     };
   }
-  const link = target?.closest?.("a[href]");
-  if (link instanceof HTMLAnchorElement && view.dom.contains(link)) {
-    const href = link.getAttribute("href") ?? "";
+  const link = target?.closest?.("a[href], a[data-type]");
+  const href =
+    linkHrefAt(view, target) ??
+    (link instanceof HTMLAnchorElement ? link.getAttribute("href") : null);
+  if (link instanceof HTMLAnchorElement && view.dom.contains(link) && href) {
     return {
       key: `link:${href}`,
       rect: link.getBoundingClientRect(),

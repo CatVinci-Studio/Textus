@@ -8,8 +8,10 @@ import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
+import { linkHref } from "../markdown/link-syntax";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { LINK } from "../markdown/link-source";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -259,12 +261,13 @@ export function onlyLinkHrefs(slice: Slice): string[] {
   let other = false;
   slice.content.descendants((node) => {
     if (other) return false;
+    if (node.type.name === LINK) {
+      const href = linkHref(node.textContent);
+      if (href && hrefs[hrefs.length - 1] !== href) hrefs.push(href);
+      return false;
+    }
     if (node.isText) {
-      const href = node.marks.find((mark) => mark.type.name === "link")?.attrs
-        .href as string | undefined;
-      if (href) {
-        if (hrefs[hrefs.length - 1] !== href) hrefs.push(href);
-      } else if (node.text?.trim()) other = true;
+      if (node.text?.trim()) other = true;
     } else if (node.isLeaf && node.type.name !== "hardbreak") other = true;
     return true;
   });

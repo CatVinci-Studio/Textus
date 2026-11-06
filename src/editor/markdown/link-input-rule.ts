@@ -1,6 +1,7 @@
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { $inputRule } from "@milkdown/kit/utils";
+import { LINK } from "./link-source";
 
 /**
  * `[text](url)` typed out becomes a link as its `)` goes in. A run holding an
@@ -25,21 +26,32 @@ export function typedLink(
   start: number,
   end: number,
 ): Transaction | null {
-  const link = state.schema.marks.link;
-  const [, text, href] = match;
+  return match[1].trim() ? linkNodeAt(state, match[0], start, end) : null;
+}
+
+/** `source` at start..end as a link node; null where none may go. */
+export function linkNodeAt(
+  state: EditorState,
+  source: string,
+  start: number,
+  end: number,
+): Transaction | null {
+  const link = state.schema.nodes[LINK];
   const $start = state.doc.resolve(start);
   if (
     !link ||
-    !text.trim() ||
     $start.parent.type.spec.code ||
-    !$start.parent.type.allowsMarkType(link)
+    !$start.parent.canReplaceWith(
+      $start.index(),
+      state.doc.resolve(end).index(),
+      link,
+    )
   )
     return null;
-  return (
-    state.tr
-      .replaceWith(start, end, state.schema.text(text, [link.create({ href })]))
-      // Typing on after the link should not extend it.
-      .setStoredMarks([])
+  return state.tr.replaceWith(
+    start,
+    end,
+    link.create(null, state.schema.text(source)),
   );
 }
 

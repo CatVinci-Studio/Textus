@@ -9,10 +9,15 @@ afterEach(closeViews);
 
 const open = (markdown = "") => openView(markdown, { enableCompletion: false });
 
+/** Each link as it reads, its syntax left out, and where it points. */
 const links = (root: HTMLElement) =>
-  [...root.querySelectorAll("a")].map(
-    (a) => `${a.textContent} -> ${a.getAttribute("href")}`,
-  );
+  [...root.querySelectorAll("a")].map((a) => {
+    const shown = a.cloneNode(true) as HTMLElement;
+    shown
+      .querySelectorAll(".link-source-hidden, .link-source-syntax")
+      .forEach((el) => el.remove());
+    return `${shown.textContent} -> ${a.getAttribute("href")}`;
+  });
 
 it("a pasted URL becomes a link with the URL as its text", async () => {
   const url = "https://github.com/CatVinci-Studio/Textus/issues";

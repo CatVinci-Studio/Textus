@@ -32,6 +32,7 @@ import {
 import { caretAt, setCaret, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "../keys/ime";
 import { revealMoved, revealSelection } from "../pointer-hold";
+import { LINK } from "../markdown/link-source";
 export {
   isEnclosureName,
   cursorTouches,
@@ -60,7 +61,12 @@ const enclosureKey = new PluginKey("enclosure");
 
 /** Inline nodes kept as source text: no delimiters, but text typed right
  *  after one lands in it the same way ("[[Note]] and" linked "Note]] and"). */
-const SOURCE_INLINE_NODES = new Set(["wikilink", "obsidian_embed", "html"]);
+const SOURCE_INLINE_NODES = new Set([
+  "wikilink",
+  "obsidian_embed",
+  "html",
+  LINK,
+]);
 
 /**
  * WKWebView normalizes a caret just outside an inline element to just
@@ -88,6 +94,14 @@ export function redirectMisattributedInput(
   const nodeStart = $typed.before($typed.depth);
   const nodeEnd = $typed.after($typed.depth);
   if (sel.from > nodeStart && sel.from < nodeEnd) return false;
+  // A source node's misread caret is the one just outside it; a selection
+  // elsewhere is one a click hasn't been read into yet.
+  if (
+    SOURCE_INLINE_NODES.has(name) &&
+    sel.from !== nodeStart &&
+    sel.from !== nodeEnd
+  )
+    return false;
   const deflt = () => state.tr.insertText(text, sel.from, sel.to);
   const handled = view.someProp("handleTextInput", (f) =>
     f(view, sel.from, sel.to, text, deflt),

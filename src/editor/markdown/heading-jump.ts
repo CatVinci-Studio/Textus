@@ -2,6 +2,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { revealPosition } from "../reveal-position";
 import { headingSlug } from "./link-target";
+import { shownText } from "./link-source";
 
 /**
  * The position inside what `anchor` names, or null: a block for `^id`; for
@@ -18,7 +19,7 @@ export function headingPos(doc: ProseNode, anchor: string): number | null {
   doc.descendants((node, pos) => {
     if (found !== null) return false;
     if (node.type.name !== "heading") return true;
-    const slug = headingSlug(node.textContent);
+    const slug = headingSlug(shownText(node));
     const repeat = seen.get(slug) ?? 0;
     seen.set(slug, repeat + 1);
     if ((repeat ? `${slug}-${repeat}` : slug) === wanted) found = pos + 1;

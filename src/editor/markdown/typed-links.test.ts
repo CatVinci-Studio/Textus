@@ -2,6 +2,7 @@
 import { afterEach, expect, it } from "vitest";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { linkHref, parseLink } from "./link-syntax";
 
 // A link or image typed or pasted becomes a working link or image, and is
 // saved without escaping backslashes.
@@ -20,8 +21,10 @@ const open = (markdown = "") => openView(markdown, { enableCompletion: false });
 function links(doc: ProseNode): string[] {
   const out: string[] = [];
   doc.descendants((node) => {
-    const link = node.marks.find((m) => m.type.name === "link");
-    if (link) out.push(`${node.text} -> ${link.attrs.href}`);
+    const source = node.textContent;
+    const parts = node.type.name === "link" && parseLink(source);
+    if (parts)
+      out.push(`${source.slice(...parts.label)} -> ${linkHref(source)}`);
   });
   return out;
 }
@@ -96,16 +99,16 @@ it("a link written as []() first, then filled in, is one once the caret leaves",
   t.type("Textus");
   t.caretAt("](", 2);
   t.paste("https://a.org");
-  // Still inside its parentheses: still being written.
-  expect(links(t.view.state.doc)).toEqual(["https://a.org -> https://a.org"]);
+  // Still inside its parentheses: still being written, the URL as text.
+  expect(links(t.view.state.doc)).toEqual([]);
   const end = t.view.state.doc.firstChild!.nodeSize - 1;
   t.select(end);
   expect(links(t.view.state.doc)).toEqual(["Textus -> https://a.org"]);
   // An undo takes the link back to its text, which then stays text.
   t.press("Mod+z");
-  expect(links(t.view.state.doc)).toEqual(["https://a.org -> https://a.org"]);
+  expect(links(t.view.state.doc)).toEqual([]);
   t.select(1);
-  expect(links(t.view.state.doc)).toEqual(["https://a.org -> https://a.org"]);
+  expect(links(t.view.state.doc)).toEqual([]);
   t.press("Mod+Shift+z");
   t.select(t.view.state.doc.firstChild!.nodeSize - 1);
   t.press("Enter");
@@ -132,5 +135,5 @@ it("a URL typed out is a link once a space follows it", async () => {
     "https://a.org -> https://a.org",
     "www.b.org -> http://www.b.org",
   ]);
-  expect(t.markdown()).toBe("See <https://a.org> now. Or www.b.org.");
+  expect(t.markdown()).toBe("See https://a.org now. Or www.b.org.");
 });

@@ -60,10 +60,7 @@ import { selectAllKeyPlugin } from "./keys/select-all";
 import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
-import {
-  configureMarkdownOutput,
-  linksOnSpansSerializer,
-} from "./markdown/markdown-output";
+import { configureMarkdownOutput } from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
 import {
   linkDefinitionSchema,
@@ -111,8 +108,9 @@ import {
 import { pasteMarkdownSourcePlugin } from "./clipboard/paste-markdown-plugin";
 import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
 import { linkSettlePlugin } from "./markdown/link-settle";
-import { remarkLinkSourcePlugin } from "./markdown/link-source";
-import { linkRevealPlugin, linkSourceSchema } from "./markdown/link-reveal";
+import { linkSchema, remarkLinkSourcePlugin } from "./markdown/link-source";
+import { createLinkRevealPlugin } from "./markdown/link-reveal";
+import { linkNormalizePlugin } from "./markdown/link-normalize";
 import {
   footnoteInputRule,
   htmlTagInputRule,
@@ -216,7 +214,6 @@ export function withEditorCore(
       // Which part of the file each block was read from, so a save writes the
       // blocks the user didn't touch as they were.
       .use(openedParseRecorder)
-      .use(linksOnSpansSerializer)
       // A plugin holding the keyboard (Vim's normal mode) has its keys first.
       .use(editorExtensions().keyInput)
       // A plugin's completions take Enter, Tab and the arrows while open.
@@ -264,7 +261,7 @@ export function withEditorCore(
       .use(remarkReferenceLinksPlugin)
       .use(linkDefinitionSchema)
       .use(remarkLinkSourcePlugin)
-      .use(linkSourceSchema)
+      .use(linkSchema)
 
       .use(remarkObsidianEmbedPlugin)
       .use(obsidianEmbedSchema)
@@ -389,7 +386,8 @@ export function withEditorCore(
             }),
       )
       .use(linkInputRule)
-      .use(linkRevealPlugin)
+      .use(createLinkRevealPlugin(() => docPath.current))
+      .use(linkNormalizePlugin)
       .use(imageInputRule)
       .use(linkSettlePlugin)
       .use(htmlTagInputRule)

@@ -1,3 +1,4 @@
+import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import type { Editor } from "@milkdown/kit/core";
 import { editorViewCtx, parserCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
@@ -15,6 +16,7 @@ import {
   makeEdit,
   random,
 } from "./save-roundtrip-edits";
+import { LINK } from "../editor/markdown/link-source";
 export {
   EDIT_KINDS,
   type EditKind,
@@ -72,23 +74,24 @@ export function contentText(doc: ProseNode): string {
     if (node.type.name === "hr") lines.push("⟨hr⟩");
     if (!node.isTextblock) return true;
     const out: string[] = [];
-    let link: string | null = null;
-    const walk = (parent: ProseNode, inherited: string | null) => {
+    const walk = (parent: ProseNode) => {
       let previous: ProseNode | null = null;
       parent.forEach((child) => {
-        const href =
-          child.marks.find((mark) => mark.type.name === "link")?.attrs.href ??
-          inherited;
         if (child.isText) {
-          const text =
+          out.push(
             parent.type.name === "md_code_span"
               ? child.text!.replace(/\r?\n/g, " ")
-              : child.text!;
-          if (/\S/.test(text) || href !== null) {
-            if (href !== link && href !== null) out.push(`⟨link ${href}⟩`);
-            link = href;
-          }
-          out.push(text);
+              : child.text!,
+          );
+        } else if (child.type.name === LINK) {
+          // The form a link is written in may change; what it says may not.
+          const source = child.textContent;
+          const parts = parseLink(source);
+          out.push(
+            parts
+              ? `⟨link ${linkHref(source)}⟩${source.slice(...parts.label)}`
+              : source,
+          );
         } else if (child.type.name === "hardbreak")
           out.push(child.attrs.isInline ? "\n" : "⏎");
         else if (child.isLeaf) {
@@ -98,17 +101,16 @@ export function contentText(doc: ProseNode): string {
         } else {
           if (inDollars(child) && previous && inDollars(previous))
             out.push(" ");
-          walk(child, href);
+          walk(child);
         }
         previous = child;
       });
     };
-    walk(node, null);
+    walk(node);
     const text = out.join("");
     if (node.type.spec.code) lines.push(text);
     else {
       const prose = text
-        .replace(/(⟨link [^⟩]*⟩)( +)/g, "$2$1")
         .replace(/[ \t]*(\n|⏎)[ \t]*/g, "$1")
         .replace(/\n+/g, "\n")
         .replace(/^[ \t\n]+|[ \t\n⏎]+$/g, "");

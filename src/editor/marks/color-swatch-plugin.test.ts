@@ -19,10 +19,10 @@ const schema = new Schema({
     md_code_span: { content: "text*", group: "inline", inline: true },
     md_span: { content: "inline*", group: "inline", inline: true },
     wikilink: { content: "text*", group: "inline", inline: true, code: true },
+    link: { content: "text*", group: "inline", inline: true, code: true },
     hardbreak: { group: "inline", inline: true },
     text: { group: "inline" },
   },
-  marks: { link: { attrs: { href: {} } } },
 });
 
 const text = (value: string) => schema.text(value);
@@ -122,7 +122,7 @@ describe("colorSwatchPlugin", () => {
     const state = stateOf(
       [
         para(
-          schema.text("#ff8800", [schema.mark("link", { href: "x" })]),
+          schema.node("link", null, [text("[#ff8800](x)")]),
           text(" "),
           schema.node("wikilink", null, [text("[[#ff8800]]")]),
         ),
