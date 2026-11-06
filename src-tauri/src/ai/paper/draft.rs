@@ -12,7 +12,9 @@ pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_
 use super::handover::{hand_over, Checked, Task};
 use super::research::Model;
 use super::stream::{string_value, LastSent};
-use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
+use super::{
+    Dossier, FigureKind, FigurePlan, Grounding, Note, Outline, OutlineSection, Paper, PaperEvent,
+};
 use aicompat::agent::{AgentTurn, ProviderEvent, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
@@ -66,9 +68,10 @@ fn writer_message(paper: &Paper, outline: &Outline, index: usize, dossier: &Doss
                 .map(|q| format!(" Quote: \"{q}\""))
                 .unwrap_or_default();
             format!(
-                "- {} Evidence: {}{quote} Sources: {}",
+                "- {} Evidence: {}{quote}{} Sources: {}",
                 n.claim,
                 n.evidence,
+                grounding_line(n),
                 cite.join(" ")
             )
         })
@@ -120,7 +123,7 @@ pub(crate) async fn write_section(
         "words"
     };
     let instructions = format!(
-        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
+        "You write one section of a {}, in the language tagged \"{}\": {} Don't repeat what the other sections cover; you may point to them. {} A sentence you cite says no more than its notes and what their sources say: no figure, date or name they don't give, and nothing firmer than they put it. Use ### subheadings if the section is long; don't write the section's own heading. Its length counts {unit}, figures and code aside. Put each planned figure where it belongs, with a sentence in the text that refers to it as the diagram, chart or picture below or above - never by a number, since the figures are numbered afterwards. Write only about the topic, never about how it was researched: no searches, budgets, sources that couldn't be read or checked, or keywords to look up; with few notes, write a shorter section rather than fill it. Hand it over by calling submit_section with the whole section - never write the section in your reply.",
         profile.name, paper.language, profile.voice, profile.cite
     );
     let sources: Vec<(u32, String)> = dossier
@@ -425,5 +428,46 @@ impl<'a> SectionWatch<'a> {
             index: self.index,
             text,
         });
+    }
+}
+
+/// What a note's sources were seen to say, for its writer: the passage it
+/// rests on, how much of them was read, and figures they didn't give.
+fn grounding_line(note: &Note) -> String {
+    let mut line = String::new();
+    if let Some(excerpt) = &note.excerpt {
+        line.push_str(&format!(" The source says: \"{excerpt}\""));
+    }
+    if note.grounding == Grounding::Snippet {
+        line.push_str(
+            " (Only a search snippet was read: state it no more firmly than the snippet does.)",
+        );
+    }
+    if !note.unmatched.is_empty() {
+        line.push_str(&format!(
+            " (Not in its sources: {} - leave these out, or say whose figure it is.)",
+            note.unmatched.join(", ")
+        ));
+    }
+    line
+}
+
+#[cfg(test)]
+mod grounding_tests {
+    use super::*;
+
+    #[test]
+    fn a_writer_sees_what_its_notes_sources_said() {
+        let note = Note {
+            excerpt: Some("Up to 30 °C cooler.".into()),
+            grounding: Grounding::Snippet,
+            unmatched: vec!["2019".into()],
+            ..Default::default()
+        };
+        assert_eq!(
+            grounding_line(&note),
+            " The source says: \"Up to 30 °C cooler.\" (Only a search snippet was read: state it no more firmly than the snippet does.) (Not in its sources: 2019 - leave these out, or say whose figure it is.)"
+        );
+        assert_eq!(grounding_line(&Note::default()), "");
     }
 }

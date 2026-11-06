@@ -208,6 +208,7 @@ async fn research_question(
         ctx: kit.ctx,
         notes: &notes,
         send,
+        sent_back: Default::default(),
     };
     let mut own = ToolRegistry::new(MODE);
     for tool in web.tools(question) {

@@ -46,6 +46,7 @@ fn dossier() -> Dossier {
                 description: "Table 2: temperatures per roof".into(),
                 url: Some("https://example.org/study".into()),
             }],
+            ..Default::default()
         }],
         sources: Vec::new(),
     }

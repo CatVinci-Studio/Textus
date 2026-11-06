@@ -101,7 +101,9 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
     )
     .unwrap();
     let budget = Arc::new(SharedBudget::new(ResearchBudget::for_paper()));
-    let web = crate::ai::web::WebPlan::new(true, None, None, &[]).with_budget(budget.clone());
+    let web = crate::ai::web::WebPlan::new(true, None, None, &[])
+        .with_budget(budget.clone())
+        .keeping_seen_text();
     let (tools, ctx) = kit(None, Some(folder.path()), Vec::new());
     let kit = research::Kit {
         tools: &tools,
@@ -112,6 +114,12 @@ async fn a_researcher_reads_an_attached_file_with_read_file_and_cites_its_path()
         .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     assert_eq!(dossier.sources.len(), 1);
+    // The note was checked against the file it cites.
+    assert_eq!(dossier.notes[0].grounding, Grounding::Read);
+    assert_eq!(
+        dossier.notes[0].excerpt.as_deref(),
+        Some("Tides were logged hourly.")
+    );
     let address = &dossier.sources[0].url;
     assert_eq!(address, "attached/my%20notes.md");
     assert_eq!(finish::entry(&dossier.sources[0]), "`my notes.md`");
@@ -243,4 +251,78 @@ fn an_older_paper_s_materials_become_attached_files() {
         "Hourly."
     );
     assert!(!dir.join("materials.json").exists());
+}
+
+/// add_note keeps a note only as its sources said it: a quote they don't
+/// have is refused, a figure they don't give sent back once, and a note
+/// kept carries the passage it rests on.
+#[test]
+fn a_note_is_checked_against_what_its_sources_said() {
+    use crate::ai::web::Reach;
+    let web = crate::ai::web::WebPlan::new(true, None, None, &[]).keeping_seen_text();
+    let page = web.add_source("https://sea.example/tides", "Tides");
+    web.saw(page, "Tides\nThe gauge logged 1,240 tides in 2023. Spring tides were \u{201c}a metre higher\u{201d}.", Reach::Read);
+    let snippet = web.add_source("https://sky.example/moon", "Moon");
+    web.saw(snippet, "Moon\nThe moon pulls the sea.", Reach::Snippet);
+    let unseen = web.add_source("https://plugin.example/gauge", "");
+    let (_, ctx) = kit(None, None, Vec::new());
+    let notes = std::sync::Mutex::new(Vec::new());
+    let taker = super::notes::NoteTaker {
+        question: "q",
+        index: 0,
+        web: &web,
+        ctx: &ctx,
+        notes: &notes,
+        send: &|_| {},
+        sent_back: Default::default(),
+    };
+    let add = |args: Value| {
+        taker
+            .keep(&aicompat::agent::ToolCall {
+                call_id: "n".into(),
+                name: ADD_NOTE_TOOL.into(),
+                arguments: args.to_string(),
+            })
+            .text
+    };
+    let quoted = add(
+        json!({"claim": "Spring tides run high.", "evidence": "The gauge.", "quote": "two metres higher", "sources": ["1"]}),
+    );
+    assert!(
+        quoted.starts_with("Not kept: the quote isn't in what [1] says"),
+        "{quoted}"
+    );
+    let made_up = json!({"claim": "The gauge logged 1,240 tides.", "evidence": "Since 2019.", "sources": ["1"]});
+    let sent_back = add(made_up.clone());
+    assert!(
+        sent_back.starts_with("Not kept: 2019 isn't in what [1] says"),
+        "{sent_back}"
+    );
+    assert_eq!(add(made_up), "Kept.");
+    assert_eq!(
+        add(
+            json!({"claim": "Spring tides run high.", "evidence": "1240 tides in 2023.", "quote": "A metre higher", "sources": ["1"]})
+        ),
+        "Kept."
+    );
+    assert_eq!(
+        add(json!({"claim": "The moon pulls the sea.", "evidence": "Gravity.", "sources": ["2"]})),
+        "Kept."
+    );
+    assert_eq!(
+        add(json!({"claim": "Gauges read 7.5 m.", "evidence": "The plugin.", "sources": ["3"]})),
+        "Kept."
+    );
+    let notes = notes.into_inner().unwrap();
+    assert_eq!(notes[0].unmatched, vec!["2019"]);
+    assert_eq!(notes[0].grounding, Grounding::Read);
+    assert!(notes[1].unmatched.is_empty());
+    assert_eq!(
+        notes[1].excerpt.as_deref(),
+        Some("The gauge logged 1,240 tides in 2023. Spring tides were \u{201c}a metre higher\u{201d}.")
+    );
+    assert_eq!(notes[2].grounding, Grounding::Snippet);
+    assert_eq!(notes[3].grounding, Grounding::Unchecked);
+    assert_eq!(notes[3].excerpt, None);
+    assert_eq!(unseen, 3);
 }

@@ -139,16 +139,12 @@ impl WebPlan {
         self
     }
 
-    // Read by the paper's add_note, which checks notes against it.
-    #[allow(dead_code)]
     /// What source `n` said when shown, if this plan keeps it and it was
     /// shown: a page's text, or its search snippets and abstract.
     pub(crate) fn seen(&self, n: u32) -> Option<Seen> {
         self.state.lock().unwrap().seen.as_ref()?.get(n).cloned()
     }
 
-    // Read by the paper's add_note, which checks notes against it.
-    #[allow(dead_code)]
     /// Keeps `text` as what source `n` said - a file of the user's, read
     /// elsewhere.
     pub(crate) fn saw(&self, n: u32, text: &str, reach: Reach) {

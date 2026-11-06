@@ -55,8 +55,6 @@ impl SeenText {
         seen.text.extend(text.chars().take(room));
     }
 
-    // Read by the paper's add_note, which checks notes against it.
-    #[allow(dead_code)]
     pub(crate) fn get(&self, n: u32) -> Option<&Seen> {
         self.by_source.get(&n)
     }
