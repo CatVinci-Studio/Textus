@@ -163,8 +163,20 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       else holdRendered(pane, line, prev, next, setZoomVar);
       // Split panes sync on scroll, and the held pane may not have moved:
       // let the other follow it.
-      if (pane.scroller.closest(".split-view"))
+      if (!pane.scroller.closest(".split-view")) return;
+      const held = pane.scroller.scrollTop;
+      pane.scroller.dispatchEvent(new Event("scroll"));
+      // The follower writes back through the same handler when its own
+      // reflow moves it - CodeMirror re-measures after a resize and shifts
+      // its scrollTop, so the position the sync expects is not the one it
+      // finds and the pane under the pointer gets pulled with it. One frame
+      // later, put that pane back where the step left it and let the other
+      // follow again.
+      requestAnimationFrame(() => {
+        if (pane.scroller.scrollTop === held) return;
+        pane.scroller.scrollTop = held;
         pane.scroller.dispatchEvent(new Event("scroll"));
+      });
     };
 
     const applyFrame = () => {
