@@ -702,6 +702,9 @@ export default {
   deleteRow: "刪除列",
   deleteColumn: "刪除欄",
   deleteTable: "刪除表格",
+  tableToMarkdown: "轉換為 Markdown 表格",
+  tableToMarkdownMerged: "轉換為 Markdown 表格（有合併的儲存格）",
+  tableToMarkdownBlocks: "轉換為 Markdown 表格（儲存格裡有清單或段落）",
   apiKeyLabelTemplate: "{name} API 金鑰",
   apiKeyOptionalHintTemplate:
     "不需要 API 金鑰；只有在 {name} 啟用驗證時才需要填寫。",

@@ -786,6 +786,9 @@ utiliser une.
   deleteRow: "Supprimer la ligne",
   deleteColumn: "Supprimer la colonne",
   deleteTable: "Supprimer le tableau",
+  tableToMarkdown: "Convertir en tableau Markdown",
+  tableToMarkdownMerged: "Convertir en tableau Markdown (il a des cellules fusionnées)",
+  tableToMarkdownBlocks: "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",

@@ -7,6 +7,7 @@ import { fillTable, inTableCell, joinLinesForTableCell } from "./paste-slice";
 import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
+import { htmlTableToMarkdown } from "../tables/html-table-markdown";
 
 /**
  * Milkdown parses pasted text as markdown only when the clipboard has no
@@ -165,7 +166,12 @@ export const pasteMarkdownSourcePlugin = $prose(
           const text = data.getData("text/plain");
           if (!text || (html && !htmlIsStyledPlainText(html))) return false;
 
-          const lined = keepPastedLines(text);
+          // The source of a simple HTML table comes in as a Markdown table.
+          const table = /^\s*<table[\s>]/i.test(text)
+            ? htmlTableToMarkdown(text)
+            : null;
+          const source = table && "markdown" in table ? table.markdown : text;
+          const lined = keepPastedLines(source);
           const doc = parseMarkdownSource(ctx, lined);
           if (!doc || typeof doc === "string" || doc.content.size === 0)
             return false;

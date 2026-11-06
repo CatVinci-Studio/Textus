@@ -735,6 +735,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   deleteRow: "행 삭제",
   deleteColumn: "열 삭제",
   deleteTable: "표 삭제",
+  tableToMarkdown: "Markdown 표로 변환",
+  tableToMarkdownMerged: "Markdown 표로 변환 (병합된 셀이 있음)",
+  tableToMarkdownBlocks: "Markdown 표로 변환 (셀에 목록이나 문단이 있음)",
   apiKeyLabelTemplate: "{name} API 키",
   apiKeyOptionalHintTemplate:
     "API 키가 필요하지 않습니다. {name}에 인증을 설정한 경우에만 입력하세요.",

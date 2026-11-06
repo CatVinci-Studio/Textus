@@ -769,6 +769,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   deleteRow: "Zeile löschen",
   deleteColumn: "Spalte löschen",
   deleteTable: "Tabelle löschen",
+  tableToMarkdown: "In Markdown-Tabelle umwandeln",
+  tableToMarkdownMerged: "In Markdown-Tabelle umwandeln (enthält verbundene Zellen)",
+  tableToMarkdownBlocks: "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",

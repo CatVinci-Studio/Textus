@@ -779,6 +779,9 @@ para usar una.
   deleteRow: "Eliminar fila",
   deleteColumn: "Eliminar columna",
   deleteTable: "Eliminar tabla",
+  tableToMarkdown: "Convertir en tabla Markdown",
+  tableToMarkdownMerged: "Convertir en tabla Markdown (tiene celdas combinadas)",
+  tableToMarkdownBlocks: "Convertir en tabla Markdown (una celda tiene listas o párrafos)",
   apiKeyLabelTemplate: "Clave de API de {name}",
   apiKeyOptionalHintTemplate:
     "No hace falta una clave de API; añade una solo si {name} está protegido.",

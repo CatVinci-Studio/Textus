@@ -762,6 +762,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   deleteRow: "Apagar Linha",
   deleteColumn: "Apagar Coluna",
   deleteTable: "Apagar Tabela",
+  tableToMarkdown: "Converter em Tabela Markdown",
+  tableToMarkdownMerged: "Converter em Tabela Markdown (tem células mescladas)",
+  tableToMarkdownBlocks: "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
   apiKeyLabelTemplate: "Chave de API do provedor {name}",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
