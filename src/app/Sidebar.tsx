@@ -20,6 +20,7 @@ export function Sidebar({
   openFolder,
   activePath,
   activeContent,
+  activeTabId,
   onToggle,
   onClose,
   onOpenFile,
@@ -37,6 +38,7 @@ export function Sidebar({
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  activeTabId: string;
   onToggle: () => void;
   onClose: () => void;
   /** `beside`: in a split beside the document in front. */
@@ -82,6 +84,7 @@ export function Sidebar({
                 openFolder={openFolder}
                 activePath={activePath}
                 activeContent={activeContent}
+                activeTabId={activeTabId}
                 onOpenFile={onOpenFile}
                 onClose={onClose}
                 onEntryMoved={onEntryMoved}

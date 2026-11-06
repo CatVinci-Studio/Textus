@@ -150,6 +150,7 @@ function App() {
           openFolder={openFolder}
           activePath={activeTab.path}
           activeContent={activeTab.content}
+          activeTabId={activeTab.id}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
           onOpenFile={(path, beside) =>

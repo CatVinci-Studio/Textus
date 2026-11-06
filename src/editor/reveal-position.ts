@@ -21,23 +21,36 @@ export function makeReachable(
 
 /**
  * Brings `pos` into view in one eased stroke of fixed length (the browser's
- * smooth scroll crawled on long ways) and pulses its block once. Already in
- * view, nothing moves.
+ * smooth scroll crawled on long ways) and pulses its block once. A link's
+ * target lands a third of the way down, where reading starts, and doesn't
+ * move when already in view; `top` (the outline) puts its block at the top,
+ * below the window bar, so the section reads from there.
  */
-export function revealPosition(view: EditorView, pos: number) {
+export function revealPosition(
+  view: EditorView,
+  pos: number,
+  place: "third" | "top" = "third",
+) {
   const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
   makeReachable(view, pos, pos, duration("--dur-sheet"));
-  const at = view.coordsAtPos(pos);
-  if (scroller) {
-    const box = scroller.getBoundingClientRect();
-    if (at.top < box.top || at.bottom > box.bottom)
-      // A third of the way down, where reading starts.
-      glideScroll(scroller, at.top - (box.top + box.height / 3));
-  }
   const { node } = view.domAtPos(pos);
   const block = (
     node instanceof Element ? node : node.parentElement
   )?.closest<HTMLElement>(".ProseMirror > *");
+  if (scroller) {
+    const box = scroller.getBoundingClientRect();
+    if (place === "top" && block) {
+      const margin = parseFloat(getComputedStyle(block).scrollMarginTop) || 0;
+      glideScroll(
+        scroller,
+        block.getBoundingClientRect().top - box.top - margin,
+      );
+    } else {
+      const at = view.coordsAtPos(pos);
+      if (at.top < box.top || at.bottom > box.bottom)
+        glideScroll(scroller, at.top - (box.top + box.height / 3));
+    }
+  }
   if (!block) return;
   // Animated, never a class: a class on ProseMirror's DOM reads as an edit,
   // redrawing the block and replaying its revisions' entrances. Restarted if

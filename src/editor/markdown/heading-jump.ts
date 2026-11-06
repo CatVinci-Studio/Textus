@@ -114,6 +114,20 @@ export function referencePos(doc: ProseNode, anchor: string): number | null {
   return found;
 }
 
+/** Scrolls to the document's `index`-th top-level heading, as the outline
+ *  lists them. */
+export function revealNthHeading(view: EditorView, index: number): boolean {
+  let count = 0;
+  let found: number | null = null;
+  view.state.doc.forEach((node, offset) => {
+    if (found === null && node.type.name === "heading" && count++ === index)
+      found = offset + 1;
+  });
+  if (found === null) return false;
+  revealPosition(view, found, "top");
+  return true;
+}
+
 /**
  * Scrolls to what `anchor` names: a heading, an HTML element's id, or the
  * reference `ref-<n>`. False when the document has none; nothing moves then.
