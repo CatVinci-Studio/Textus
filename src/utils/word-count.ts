@@ -1,3 +1,5 @@
+import { onMemoryIdle } from "./memory-idle";
+
 export interface WordCount {
   words: number;
 }
@@ -39,6 +41,7 @@ function countText(text: string): number {
 // count, switching back from another tab recounted it whole.)
 const PARAGRAPHS_KEPT = 50_000;
 const paragraphCounts = new Map<string, number>();
+onMemoryIdle(() => paragraphCounts.clear());
 
 /** An image's turn or width kept in its title (`{textus-rotate=90}`,
  *  images/image-rotation.ts): layout, not words. */

@@ -1,3 +1,4 @@
+import { onMemoryIdle } from "../../utils/memory-idle";
 import { clampLeft } from "../../ui/placement";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
@@ -27,6 +28,7 @@ const KATEX_READY = "katex-ready";
 // the expensive part; renders are pure in (source, mode), so they're cached.
 const RENDER_CACHE_LIMIT = 1000;
 const renderCache = new Map<string, string>();
+onMemoryIdle(() => renderCache.clear());
 
 const cacheKeyOf = (value: string, displayMode: boolean) =>
   `${displayMode ? "B" : "I"}${value}`;

@@ -1,3 +1,4 @@
+import { onMemoryIdle } from "../../utils/memory-idle";
 import { slashed } from "../../utils/path";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
@@ -26,6 +27,9 @@ const key = new PluginKey<RevealState>("note-embed");
 
 /** What each embed showed last, so a redraw starts from it, not empty. */
 const lastShown = new Map<string, string>();
+/** Embeds remembered at most; the oldest goes first. */
+const SHOWN_KEPT = 200;
+onMemoryIdle(() => lastShown.clear());
 
 interface EmbedView {
   docPath: () => string | null;
@@ -65,8 +69,12 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
       signal: state.asks.signal,
       read: (path) => state.read.add(slashed(path)),
     }).then(() => {
-      if (!state.asks.signal.aborted)
-        lastShown.set(`${docPath}\n${source}`, el.innerHTML);
+      if (state.asks.signal.aborted) return;
+      const key = `${docPath}\n${source}`;
+      lastShown.delete(key);
+      lastShown.set(key, el.innerHTML);
+      if (lastShown.size > SHOWN_KEPT)
+        lastShown.delete(lastShown.keys().next().value!);
     });
     el.addEventListener("click", (event) => {
       const title = (event.target as Element).closest?.(".note-embed-title");

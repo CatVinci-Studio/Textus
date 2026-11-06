@@ -1,3 +1,4 @@
+import { onMemoryIdle } from "../utils/memory-idle";
 import { isNoteFile, noteStem } from "../utils/path";
 import {
   addCompletionSource,
@@ -26,6 +27,7 @@ interface Notes {
 
 let root: string | null = null;
 let notes: Notes | null = null;
+onMemoryIdle(() => (notes = null));
 
 /** The window's folder, where `[[` looks. */
 export function setNoteCompletionRoot(next: string | null): void {
