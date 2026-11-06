@@ -3,6 +3,7 @@
 // `[[links]]` and embeds, `~sub~`/`^sup^`, citations; `%%comments%%` go.
 // Code and math are left untouched.
 
+import { WIKILINK_SOURCE } from "../utils/note-link";
 import { parseImageTag } from "../editor/images/image-html";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { shownWikilink } from "../editor/markdown/wikilink-reveal";
@@ -27,8 +28,10 @@ const BLOCK_START = /^\s*(?:[-+*]\s|\d{1,9}[.)]\s|#{1,6}\s|\|)/;
 const CODE_MATH =
   /(`+)[\s\S]*?(?<!`)\1(?!`)|(?<!\\)\$\$[^$\n]+?\$\$|(?<!\\)\$(?!\s)[^$\n]+?(?<!\s)\$(?!\d)/g;
 // Wikilinks and embeds (rewritten whole), a link's destination and URLs.
-const LINKS =
-  /!?\[\[[^[\]\n]+\]\](?!\()|\]\([^)\s]*|<[a-z][a-z0-9+.-]*:[^>\s]*>|\bhttps?:\/\/[^\s<>)]+/gi;
+const LINKS = new RegExp(
+  `!?${WIKILINK_SOURCE}|${String.raw`\]\([^)\s]*|<[a-z][a-z0-9+.-]*:[^>\s]*>|\bhttps?:\/\/[^\s<>)]+`}`,
+  "gi",
+);
 
 // One pass over the words, so nothing a rewrite writes is read again.
 // Groups: 1 citation, 2 highlight, 3 superscript, 4 tilde span.

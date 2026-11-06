@@ -1,5 +1,9 @@
 import { fs } from "../../platform/ipc";
-import { parseNoteLink, type NoteLink } from "../../utils/note-link";
+import {
+  parseNoteLink,
+  type NoteLink,
+  WIKILINK_SOURCE,
+} from "../../utils/note-link";
 import { basename, isNoteFile, noteStem } from "../../utils/path";
 import { showDocImage } from "../images/image-plugin";
 import { renderDocumentHtml } from "../markdown/render-html";
@@ -16,8 +20,8 @@ export const MAX_DEPTH = 5;
 const ANSWER_MS = 3000;
 /** `![[x.pdf]]`, `![[pic.png]]`: files, not notes ("v1.2" is a note). */
 const OTHER_FILE = /\.(?!md$|markdown$)[a-z][a-z0-9]{1,4}$/i;
-const EMBED = /!\[\[[^[\]\n]+\]\]/g;
-const WIKILINK = /(?<!!)\[\[[^[\]\n]+\]\]/g;
+const EMBED = new RegExp(`!${WIKILINK_SOURCE}`, "g");
+const WIKILINK = new RegExp(`(?<!!)${WIKILINK_SOURCE}`, "g");
 
 export interface EmbedPlace {
   /** The document the embed is written in. */

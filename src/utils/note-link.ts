@@ -23,6 +23,10 @@ export interface NoteLink {
 
 const WIKI = /^(!?)\[\[([^[\]\n]+)\]\]$/;
 
+/** A whole `[[link]]` as written, for finding links in text: no newline or
+ *  "[" inside, and not `[[x]](url)`. Put "!" before it for an embed. */
+export const WIKILINK_SOURCE = String.raw`\[\[[^[\]\n]+\]\](?!\()`;
+
 function decode(text: string, whole: boolean): string {
   try {
     return whole ? decodeURIComponent(text) : decodeURI(text);

@@ -1,3 +1,4 @@
+import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 import { showMessage } from "../../ui/app-dialog";
@@ -80,7 +81,7 @@ export async function offerPluginToOpen(
 
 /** How each kind a plugin can be suggested for shows in a document. */
 const HOLDS: Record<SuggestKind, RegExp> = {
-  wikilinks: /\[\[[^[\]\n]+\]\]/,
+  wikilinks: new RegExp(WIKILINK_SOURCE),
 };
 
 /** A document opened with something an official plugin works with

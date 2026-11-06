@@ -1,6 +1,6 @@
 import { fs } from "../platform/ipc";
 import { windowFolder } from "../platform/window-folder";
-import { parseNoteLink } from "../utils/note-link";
+import { parseNoteLink, WIKILINK_SOURCE } from "../utils/note-link";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { exportSrc } from "../editor/images/obsidian-embed-preview";
 
@@ -9,8 +9,7 @@ import { exportSrc } from "../editor/images/obsidian-embed-preview";
 export type NoteLinkOut =
   { image: string; width: number | null; alt: string } | { href: string };
 
-// Same as the editor's tokenizers: no newline or "[" inside, not `[[x]](url)`.
-const WIKILINK = /!?\[\[[^[\]\n]+\]\](?!\()/g;
+const WIKILINK = new RegExp(`!?${WIKILINK_SOURCE}`, "g");
 
 /** Every `[[link]]` and `![[embed]]` written in `markdown`. */
 export function noteLinkSources(markdown: string): string[] {
