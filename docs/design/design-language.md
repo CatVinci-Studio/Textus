@@ -207,6 +207,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 ## 9. States and focus - In force
 
 - One rule for every control: hover `--ui-hover`; pressed one step stronger; selected `--ui-selected`; disabled 50% opacity.
+- In a list typed into (the `/` panel, the command palette, the chat's `/` and `@`), the option the keys are on is selected (`--ui-selected`); a menu's row under the pointer or keys is hovered (`--ui-hover`).
 - The focus ring shows only for keyboard focus (`:focus-visible`): the accent, 2 px (3 px with more contrast), drawn inside the control (`outline-offset: -1px`, `-2px` in a scrolling list).
 - A highlight in a list or menu arrives in 80 ms and leaves at once, so a pointer running down a list leaves no trail.
 

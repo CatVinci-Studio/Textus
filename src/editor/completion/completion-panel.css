@@ -35,8 +35,10 @@
   cursor: pointer;
 }
 
+/* The option the keys are on: selected, as in the command palette and the
+   chat's / and @ lists; a menu's row is hovered instead. */
 .completion-item[aria-selected="true"] {
-  background: var(--ui-hover);
+  background: var(--ui-selected);
 }
 
 .completion-group {
