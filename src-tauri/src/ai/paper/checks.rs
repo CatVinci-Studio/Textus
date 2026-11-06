@@ -117,25 +117,67 @@ pub(crate) fn prose_length(markdown: &str, language: &str) -> u32 {
     length(&prose(markdown), language)
 }
 
-/// Whether a chart block's JSON has what the chart renderer needs.
+/// The most series and points a series the chart renderer draws
+/// (`MAX_SERIES` and `MAX_POINTS` in `src/editor/chart/chart-spec.ts`).
+const MOST_SERIES: usize = 8;
+const MOST_POINTS: usize = 1000;
+
+/// Whether a chart block's JSON is one the chart renderer draws: it refuses
+/// all `parseChartSpec` (`src/editor/chart/chart-spec.ts`) refuses, which
+/// `src/editor/chart/chart-cases.json` holds both to. A chart that passed
+/// here but not there reached a paper as its JSON source.
 pub(super) fn chart_holds(body: &str) -> Result<(), String> {
     let spec: Value =
         serde_json::from_str(body).map_err(|e| format!("its JSON doesn't parse ({e})"))?;
-    let kind = spec["type"].as_str().unwrap_or("bar");
+    if !spec.is_object() {
+        return Err("it must be one JSON object".into());
+    }
+    let kind = match &spec["type"] {
+        Value::Null => "bar",
+        kind => kind.as_str().unwrap_or("?"),
+    };
     if !["bar", "line", "area", "pie", "scatter"].contains(&kind) {
         return Err(format!(
-            "\"type\" {kind:?} isn't bar, line, area, pie or scatter"
+            "\"type\" {} isn't bar, line, area, pie or scatter",
+            spec["type"]
         ));
     }
     let series = spec["series"]
         .as_array()
         .filter(|s| !s.is_empty())
         .ok_or("it needs a non-empty \"series\"")?;
-    if series
-        .iter()
-        .any(|s| s["data"].as_array().is_none_or(|d| d.is_empty()))
-    {
-        return Err("every series needs a non-empty \"data\" list".into());
+    if series.len() > MOST_SERIES {
+        return Err(format!("at most {MOST_SERIES} series"));
+    }
+    let number = |v: &Value| v.as_f64().is_some_and(f64::is_finite);
+    for (i, s) in series.iter().enumerate() {
+        let n = i + 1;
+        let data = s["data"]
+            .as_array()
+            .filter(|d| !d.is_empty())
+            .ok_or("every series needs a non-empty \"data\" list")?;
+        if data.len() > MOST_POINTS {
+            return Err(format!("at most {MOST_POINTS} points a series"));
+        }
+        if kind == "scatter" {
+            let pair = |p: &Value| {
+                p.as_array()
+                    .is_some_and(|p| p.len() == 2 && p.iter().all(number))
+            };
+            if !data.iter().all(pair) {
+                return Err(format!("series {n}: \"data\" must be [x, y] number pairs"));
+            }
+        } else if !data.iter().all(number) {
+            return Err(format!(
+                "series {n}: \"data\" must be plain numbers - no units, percent signs, quotes or nulls"
+            ));
+        }
+        if !s["name"].is_null() && !s["name"].is_string() {
+            return Err(format!("series {n}: \"name\" must be text"));
+        }
+        if kind == "pie" && i == 0 && data.iter().any(|v| v.as_f64() < Some(0.0)) {
+            return Err("a pie's values can't be negative".into());
+        }
     }
     if spec["x"].is_array() {
         return Err("\"x\" is the x axis' title, one text; the categories go in \"labels\"".into());
@@ -150,15 +192,16 @@ pub(super) fn chart_holds(body: &str) -> Result<(), String> {
         .filter_map(|s| s["data"].as_array().map(Vec::len))
         .max()
         .unwrap_or(0);
-    if kind != "scatter" {
-        if let Some(labels) = spec["labels"].as_array() {
-            if labels.len() < points {
-                return Err(format!(
-                    "{} \"labels\" for {points} data points: one label each",
-                    labels.len()
-                ));
-            }
+    match &spec["labels"] {
+        Value::Null => {}
+        Value::Array(labels) if kind != "scatter" && labels.len() < points => {
+            return Err(format!(
+                "{} \"labels\" for {points} data points: one label each",
+                labels.len()
+            ));
         }
+        Value::Array(_) => {}
+        _ => return Err("\"labels\" must be a list".into()),
     }
     if spec["source"]
         .as_str()
@@ -285,4 +328,35 @@ pub(crate) fn problems(
         ));
     }
     out
+}
+
+#[cfg(test)]
+mod chart_tests {
+    use super::chart_holds;
+    use serde_json::Value;
+
+    #[test]
+    fn a_chart_passes_only_if_the_renderer_would_draw_it() {
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../src/editor/chart/chart-cases.json"
+        ))
+        .unwrap();
+        for case in cases["cases"].as_array().unwrap() {
+            let spec = case["spec"].to_string();
+            let draws = case["draws"].as_bool().unwrap();
+            assert_eq!(
+                chart_holds(&spec).is_ok(),
+                draws,
+                "{spec}: {:?}",
+                chart_holds(&spec)
+            );
+        }
+    }
+
+    #[test]
+    fn a_series_past_the_renderer_s_points_is_refused() {
+        let data: Vec<u32> = (0..1001).collect();
+        let spec = serde_json::json!({ "series": [{ "data": data }] }).to_string();
+        assert!(chart_holds(&spec).unwrap_err().contains("at most 1000"));
+    }
 }
