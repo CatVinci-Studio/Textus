@@ -59,29 +59,33 @@ test("the toggle opens and closes the sidebar, beside the menu button", async ({
   await expect(page.locator(sidebar)).toBeHidden();
 });
 
-test("the sidebar's slide leaves the toggle where it is", async ({ page }) => {
-  await openApp(page, { settings: { language: "en" }, animations: true });
-  const at = await left(page, toggle);
-  // Every frame of the slide out and back.
-  const frames = await page.evaluate(async (selector) => {
-    const button = document.querySelector(selector)!;
-    const seen: number[] = [];
-    (button as HTMLElement).click();
-    const until = performance.now() + 700;
-    while (performance.now() < until) {
-      await new Promise(requestAnimationFrame);
-      seen.push(button.getBoundingClientRect().left);
-    }
-    (button as HTMLElement).click();
-    const back = performance.now() + 700;
-    while (performance.now() < back) {
-      await new Promise(requestAnimationFrame);
-      seen.push(button.getBoundingClientRect().left);
-    }
-    return seen;
-  }, toggle);
-  expect(new Set(frames)).toEqual(new Set([at]));
-});
+test(
+  "the sidebar's slide leaves the toggle where it is",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    const at = await left(page, toggle);
+    // Every frame of the slide out and back.
+    const frames = await page.evaluate(async (selector) => {
+      const button = document.querySelector(selector)!;
+      const seen: number[] = [];
+      (button as HTMLElement).click();
+      const until = performance.now() + 700;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        seen.push(button.getBoundingClientRect().left);
+      }
+      (button as HTMLElement).click();
+      const back = performance.now() + 700;
+      while (performance.now() < back) {
+        await new Promise(requestAnimationFrame);
+        seen.push(button.getBoundingClientRect().left);
+      }
+      return seen;
+    }, toggle);
+    expect(new Set(frames)).toEqual(new Set([at]));
+  },
+);
 
 test("the title is centred over the document column, not the window", async ({
   page,
@@ -110,111 +114,117 @@ test("the title is centred over the document column, not the window", async ({
   );
 });
 
-test("the title slides with the sidebar, frame for frame", async ({ page }) => {
-  await openApp(page, { settings: { language: "en" }, animations: true });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.locator(toggle).click();
-  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-  // Its opening slide over first: one turned back at its start lasts as
-  // little as it had run.
-  await page.waitForFunction(
-    () => document.querySelector(".sidebar")!.getAnimations().length === 0,
-  );
+test(
+  "the title slides with the sidebar, frame for frame",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.locator(toggle).click();
+    await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+    // Its opening slide over first: one turned back at its start lasts as
+    // little as it had run.
+    await page.waitForFunction(
+      () => document.querySelector(".sidebar")!.getAnimations().length === 0,
+    );
 
-  const slide = await page.evaluate(async () => {
-    const title = document.querySelector(".window-bar-title")!;
-    const side = document.querySelector(".sidebar")!;
-    const pane = document.querySelector(".main-pane")!;
-    const button = document.querySelector<HTMLElement>(
-      ".window-bar-sidebar-toggle",
-    )!;
-    const drift: number[] = [];
-    const wanted: number[] = [];
-    // A click's state can land a frame or two later on a busy machine: wait
-    // for the sidebar itself, or the sample can miss the whole slide.
-    const waitFor = async (closed: boolean) => {
-      const until = performance.now() + 5000;
-      while (performance.now() < until) {
-        await new Promise(requestAnimationFrame);
-        if (side.classList.contains("sidebar-collapsed") === closed) return;
-      }
-    };
-    // The title's centre should be midway between the sidebar's moving edge
-    // and the column's far edge, in the frame it is drawn.
-    const sample = async (forMs: number) => {
-      const until = performance.now() + forMs;
-      while (performance.now() < until) {
-        await new Promise(requestAnimationFrame);
-        const box = title.getBoundingClientRect();
-        const want =
-          (side.getBoundingClientRect().right +
-            pane.getBoundingClientRect().right) /
-          2;
-        drift.push(Math.abs(box.left + box.width / 2 - want));
-        wanted.push(want);
-      }
-    };
-    // Out, at the exit's faster curve, then back in on the spring.
-    button.click();
-    await waitFor(true);
-    await sample(600);
-    button.click();
-    await waitFor(false);
-    await sample(700);
-    return {
-      worst: Math.max(...drift),
-      travelled: Math.max(...wanted) - Math.min(...wanted),
-    };
-  });
-  const { worst, travelled } = slide;
-  // Seen across the slide, not at either end of it.
-  expect(travelled).toBeGreaterThan(50);
-  expect(worst).toBeLessThan(1);
-});
+    const slide = await page.evaluate(async () => {
+      const title = document.querySelector(".window-bar-title")!;
+      const side = document.querySelector(".sidebar")!;
+      const pane = document.querySelector(".main-pane")!;
+      const button = document.querySelector<HTMLElement>(
+        ".window-bar-sidebar-toggle",
+      )!;
+      const drift: number[] = [];
+      const wanted: number[] = [];
+      // A click's state can land a frame or two later on a busy machine: wait
+      // for the sidebar itself, or the sample can miss the whole slide.
+      const waitFor = async (closed: boolean) => {
+        const until = performance.now() + 5000;
+        while (performance.now() < until) {
+          await new Promise(requestAnimationFrame);
+          if (side.classList.contains("sidebar-collapsed") === closed) return;
+        }
+      };
+      // The title's centre should be midway between the sidebar's moving edge
+      // and the column's far edge, in the frame it is drawn.
+      const sample = async (forMs: number) => {
+        const until = performance.now() + forMs;
+        while (performance.now() < until) {
+          await new Promise(requestAnimationFrame);
+          const box = title.getBoundingClientRect();
+          const want =
+            (side.getBoundingClientRect().right +
+              pane.getBoundingClientRect().right) /
+            2;
+          drift.push(Math.abs(box.left + box.width / 2 - want));
+          wanted.push(want);
+        }
+      };
+      // Out, at the exit's faster curve, then back in on the spring.
+      button.click();
+      await waitFor(true);
+      await sample(600);
+      button.click();
+      await waitFor(false);
+      await sample(700);
+      return {
+        worst: Math.max(...drift),
+        travelled: Math.max(...wanted) - Math.min(...wanted),
+      };
+    });
+    const { worst, travelled } = slide;
+    // Seen across the slide, not at either end of it.
+    expect(travelled).toBeGreaterThan(50);
+    expect(worst).toBeLessThan(1);
+  },
+);
 
-test("the title slides with the AI panel, rather than jumping to its column", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" }, animations: true });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
+test(
+  "the title slides with the AI panel, rather than jumping to its column",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
 
-  const slides = await page.evaluate(async () => {
-    const title = document.querySelector(".window-bar-title")!;
-    const toggle = document.querySelector<HTMLElement>(".window-bar-toggle")!;
-    const sliding = (a: Animation) =>
-      a instanceof CSSTransition &&
-      a.transitionProperty === "transform" &&
-      a.playState === "running";
-    // The panel mounts - or unmounts, once its exit has played - a frame or
-    // more after the click, so wait on the title's own transition rather
-    // than on a clock.
-    const waitForSlide = async () => {
-      const until = performance.now() + 3000;
-      while (performance.now() < until) {
-        if (title.getAnimations().some(sliding)) return true;
-        await new Promise(requestAnimationFrame);
-      }
-      return false;
-    };
-    const settle = async () => {
-      const until = performance.now() + 3000;
-      while (performance.now() < until) {
-        if (!title.getAnimations().some((a) => a.playState === "running"))
-          return;
-        await new Promise(requestAnimationFrame);
-      }
-    };
-    toggle.click();
-    const opening = await waitForSlide();
-    await settle();
-    toggle.click();
-    const closing = await waitForSlide();
-    await settle();
-    return { opening, closing };
-  });
+    const slides = await page.evaluate(async () => {
+      const title = document.querySelector(".window-bar-title")!;
+      const toggle = document.querySelector<HTMLElement>(".window-bar-toggle")!;
+      const sliding = (a: Animation) =>
+        a instanceof CSSTransition &&
+        a.transitionProperty === "transform" &&
+        a.playState === "running";
+      // The panel mounts - or unmounts, once its exit has played - a frame or
+      // more after the click, so wait on the title's own transition rather
+      // than on a clock.
+      const waitForSlide = async () => {
+        const until = performance.now() + 3000;
+        while (performance.now() < until) {
+          if (title.getAnimations().some(sliding)) return true;
+          await new Promise(requestAnimationFrame);
+        }
+        return false;
+      };
+      const settle = async () => {
+        const until = performance.now() + 3000;
+        while (performance.now() < until) {
+          if (!title.getAnimations().some((a) => a.playState === "running"))
+            return;
+          await new Promise(requestAnimationFrame);
+        }
+      };
+      toggle.click();
+      const opening = await waitForSlide();
+      await settle();
+      toggle.click();
+      const closing = await waitForSlide();
+      await settle();
+      return { opening, closing };
+    });
 
-  expect(slides).toEqual({ opening: true, closing: true });
-});
+    expect(slides).toEqual({ opening: true, closing: true });
+  },
+);
 
 test.describe("on a Mac", () => {
   test.beforeEach(async ({ page }) => {
@@ -385,45 +395,49 @@ test("the sidebar's surface reaches the window's top, its own layout does not", 
   expect(Math.round(hidden.left)).toBe(-Math.round(width));
 });
 
-test("the surface slides with the sidebar, frame for frame", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" }, animations: true });
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.locator(toggle).click();
-  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-  // Its opening slide over first: one turned back at its start lasts as
-  // little as it had run.
-  await page.waitForFunction(
-    () => document.querySelector(".sidebar")!.getAnimations().length === 0,
-  );
+test(
+  "the surface slides with the sidebar, frame for frame",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await openApp(page, { settings: { language: "en" }, animations: true });
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await page.locator(toggle).click();
+    await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+    // Its opening slide over first: one turned back at its start lasts as
+    // little as it had run.
+    await page.waitForFunction(
+      () => document.querySelector(".sidebar")!.getAnimations().length === 0,
+    );
 
-  const slide = await page.evaluate(async () => {
-    const bar = document.querySelector(".window-bar")!;
-    const side = document.querySelector(".sidebar")!;
-    document.querySelector<HTMLElement>(".window-bar-sidebar-toggle")!.click();
-    const drift: number[] = [];
-    const lefts: number[] = [];
-    const until = performance.now() + 500;
-    while (performance.now() < until) {
-      await new Promise(requestAnimationFrame);
-      const s = getComputedStyle(bar, "::before");
-      const left =
-        s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
-      const sideLeft = side.getBoundingClientRect().left;
-      drift.push(Math.abs(left - sideLeft));
-      lefts.push(sideLeft);
-    }
-    return {
-      worst: Math.max(...drift),
-      travelled: Math.max(...lefts) - Math.min(...lefts),
-    };
-  });
-  const { worst, travelled } = slide;
-  // Seen across the slide, not at either end of it.
-  expect(travelled).toBeGreaterThan(50);
-  expect(worst).toBeLessThan(1);
-});
+    const slide = await page.evaluate(async () => {
+      const bar = document.querySelector(".window-bar")!;
+      const side = document.querySelector(".sidebar")!;
+      document
+        .querySelector<HTMLElement>(".window-bar-sidebar-toggle")!
+        .click();
+      const drift: number[] = [];
+      const lefts: number[] = [];
+      const until = performance.now() + 500;
+      while (performance.now() < until) {
+        await new Promise(requestAnimationFrame);
+        const s = getComputedStyle(bar, "::before");
+        const left =
+          s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
+        const sideLeft = side.getBoundingClientRect().left;
+        drift.push(Math.abs(left - sideLeft));
+        lefts.push(sideLeft);
+      }
+      return {
+        worst: Math.max(...drift),
+        travelled: Math.max(...lefts) - Math.min(...lefts),
+      };
+    });
+    const { worst, travelled } = slide;
+    // Seen across the slide, not at either end of it.
+    expect(travelled).toBeGreaterThan(50);
+    expect(worst).toBeLessThan(1);
+  },
+);
 
 test("the sidebar opens on the tab it was left on, after a restart (#347)", async ({
   page,
