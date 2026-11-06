@@ -732,6 +732,35 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
 }
 
 #[test]
+fn create_mode_is_told_its_tools_and_turns_document_changes_away() {
+    let workspace = AgentWorkspace::default();
+    let prompt = build_instructions(&workspace, &md("draft"), true, AgentMode::Create, "", "en");
+    assert!(prompt.contains(AGENT_CREATE_TOOL_INSTRUCTIONS));
+    // check_conventions and measure_text aren't offered in Create.
+    assert!(!prompt.contains(RULES_TOOL_INSTRUCTIONS));
+    assert!(
+        build_instructions(&workspace, &md("draft"), true, AgentMode::Write, "", "en")
+            .contains(RULES_TOOL_INSTRUCTIONS)
+    );
+
+    let message = request_message(
+        &workspace,
+        AgentMode::Create,
+        "en",
+        "",
+        "Make a skill for 500-word posts.",
+    );
+    assert!(message.contains("interaction mode: create"));
+    assert!(message.contains("switch to Write mode"), "{message}");
+    // The length note points at propose_edit, which only Write has.
+    assert!(!message.contains(LENGTH_TARGET_NOTE));
+    assert!(
+        request_message(&workspace, AgentMode::Write, "en", "", "Write 500 words.")
+            .contains(LENGTH_TARGET_NOTE)
+    );
+}
+
+#[test]
 fn interaction_mode_is_explicit_in_every_message() {
     let workspace = AgentWorkspace::default();
     let message = |mode| request_message(&workspace, mode, "en", "---document---\ndraft", "Go.");
