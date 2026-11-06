@@ -706,11 +706,11 @@
 }
 
 /* Toasts rise from the bottom edge they live on and sink back into it. */
-:is(.ai-notice, .corner-toast) {
+:is(.corner-toast) {
   animation: motion-rise-in var(--dur-base) var(--ease-out);
 }
 
-:is(.ai-notice, .corner-toast)[data-state="closing"] {
+:is(.corner-toast)[data-state="closing"] {
   animation: motion-sink-out var(--dur-fast) var(--ease-in) forwards;
 }
 

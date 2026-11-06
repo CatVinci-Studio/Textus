@@ -110,20 +110,6 @@ body {
   min-height: 0;
 }
 
-.playground-notice {
-  position: fixed;
-  bottom: 20px;
-  left: 0;
-  right: 0;
-  width: fit-content;
-  max-width: calc(100% - 32px);
-  margin-inline: auto;
-  z-index: var(--z-toast);
-  padding: var(--space-2) var(--space-3);
-  color: var(--ui-text);
-  font-size: var(--text-body);
-}
-
 /* A phone: the note gets a line of its own under the brand and buttons,
    and the column gives the text the width. */
 @media (max-width: 640px) {

@@ -1,7 +1,6 @@
 /* The main window's stylesheet. Order is cascade order: print rules come
    after what they hide, and the zen and typewriter modes come last. */
 @import "../ui/base.css";
-@import "../document-view/ai-notice.css";
 @import "./sidebar-frame.css";
 @import "./window-bar.css";
 @import "./tabs/TabBar.css";

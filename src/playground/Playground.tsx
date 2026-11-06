@@ -1,3 +1,4 @@
+import { NoticeHost, showNotice } from "../ui/notices";
 import {
   type ChangeEvent,
   type RefObject,
@@ -33,8 +34,6 @@ import sampleZh from "./samples/zh.md?raw";
 import mark from "../../src-tauri/icons/128x128.png";
 
 export const DOWNLOAD_URL = "https://textus.catvinci.com/#download";
-
-const NOTICE_MS = 3200;
 
 /** The first visit's document, in the UI language where there is one. */
 function sample(lang: Lang): string {
@@ -106,17 +105,6 @@ function usePageEvents(
   }, [editorRef]);
 }
 
-/** A notice shown for a few seconds. */
-function useNotice() {
-  const [notice, setNotice] = useState<string | null>(null);
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
-    return () => clearTimeout(timer);
-  }, [notice]);
-  return [notice, setNotice] as const;
-}
-
 /** Textus in a browser tab: documents kept in this browser, opened from
  *  and saved to files on disk. */
 export function Playground({ settings }: { settings: Settings }) {
@@ -137,7 +125,7 @@ function WebEditor({
 }) {
   const doc = docs.doc!;
   const [source, setSource] = useState(false);
-  const [notice, setNotice] = useNotice();
+  const setNotice = showNotice;
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const editorRef = useRef<EditorHandle | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -321,11 +309,7 @@ function WebEditor({
           handleRef={editorRef}
         />
       )}
-      {notice && (
-        <div className="playground-notice floating-surface" role="status">
-          {notice}
-        </div>
-      )}
+      <NoticeHost />
     </div>
   );
 }

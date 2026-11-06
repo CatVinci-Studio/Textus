@@ -8,7 +8,7 @@ import { GrammarSuggestion } from "../ai/writing/GrammarSuggestion";
 import { InsertTableDialog } from "../editor/tables/InsertTableDialog";
 import { ImageNameDialog } from "../editor/images/ImageNameDialog";
 import { FindReplaceBar } from "../editor/find/FindReplaceBar";
-import { Presence, PresenceDiv } from "../ui/usePresence";
+import { Presence } from "../ui/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
@@ -59,18 +59,6 @@ export function EditorOverlays({
         own={review.notes.menu}
         onClose={() => popups.setMenu(null)}
       />
-      <Presence show={!!notice.aiNotice} exitMs={120}>
-        {notice.aiNotice && (
-          <PresenceDiv
-            className="ai-notice floating-surface"
-            role="status"
-            onMouseEnter={notice.holdAiNotice}
-            onMouseLeave={notice.releaseAiNotice}
-          >
-            {notice.aiNotice}
-          </PresenceDiv>
-        )}
-      </Presence>
       <Presence show={tableDialogOpen} exitMs={120}>
         {tableDialogOpen && (
           <InsertTableDialog
