@@ -14,6 +14,7 @@ mod events;
 pub mod figures;
 mod finish;
 mod genre;
+mod grounding;
 mod handover;
 mod helper;
 mod model;
@@ -126,6 +127,32 @@ pub struct Note {
     /// The sources' numbers in the paper's source book.
     pub sources: Vec<u32>,
     pub leads: Vec<Lead>,
+    /// How much of its sources the note was checked against.
+    #[serde(default)]
+    pub grounding: Grounding,
+    /// The passage of a source the note rests on, in the source's words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub excerpt: Option<String>,
+    /// Figures the note gives that its sources didn't, kept because its
+    /// researcher sent it again unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unmatched: Vec<String>,
+}
+
+/// How much of its sources a note was checked against.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub enum Grounding {
+    /// None of them was shown to the researcher (a page the provider's own
+    /// search cited, an address from a plugin), or the note is older than
+    /// the checks.
+    #[default]
+    Unchecked,
+    /// Search snippets or abstracts only.
+    Snippet,
+    /// A page read in full, or a file.
+    Read,
 }
 
 /// A picture or a data set a note's source has that a figure could use.

@@ -136,6 +136,16 @@ it, lazily loaded. Each stage and helper is one run of
   run on the `Model` trait, so tests drive them with a scripted model.
   Each question is kept as its helper ends (`research::Progress`), not
   when all have.
+  **Grounding** (`paper/grounding.rs`): the paper's `WebPlan` keeps what
+  each source said when shown - a page's text, a result's snippet, a
+  paper's abstract (`WebPlan::seen`) - and a cited file is read for it. A
+  note is checked against those words: a quote they don't have is refused
+  (spacing and punctuation aside); a figure they don't give ("1,200" and
+  "1200" alike; whole numbers under ten aside) is sent back once, and kept
+  marked `unmatched` if sent again unchanged. A note keeps the passage it
+  rests on as `excerpt` and its `grounding` - `read`, `snippet`, or
+  `unchecked` for a source never shown (the provider's own search, a
+  plugin's address) - and its writer is shown all three.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a
