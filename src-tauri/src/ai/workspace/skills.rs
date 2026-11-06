@@ -412,6 +412,20 @@ pub(crate) fn set_modes_in(
     crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())
 }
 
+/// The files of the user's skill `name` in `skills_dir`, for Delete: every
+/// file of that name, as a stray second copy would come back otherwise.
+pub(crate) fn skill_files_named(skills_dir: &Path, name: &str) -> Result<Vec<PathBuf>, String> {
+    let files: Vec<PathBuf> = read_skill_files(skills_dir)
+        .into_iter()
+        .filter(|(_, s)| s.name == name)
+        .map(|(p, _)| p)
+        .collect();
+    if files.is_empty() {
+        return Err(format!("No skill called {name}."));
+    }
+    Ok(files)
+}
+
 /// Turns the skill `name` in `skills_dir` off, or on again.
 pub(crate) fn set_off_in(skills_dir: &Path, name: &str, off: bool) -> Result<(), String> {
     let (path, _) = read_skill_files(skills_dir)

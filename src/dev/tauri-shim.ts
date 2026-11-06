@@ -558,6 +558,9 @@ export function installDevTauriShim(): void {
         skills.files.delete(skillCopyPath(name));
         return Promise.resolve(had ? [skillCopyPath(name)] : []);
       }
+      case "delete_global_skill":
+        skills.log.push(`${cmd}:${name}`);
+        return Promise.resolve([skillCopyPath(name)]);
       case "read_text_file": {
         const text = skills.files.get(String(args.path ?? ""));
         return text === undefined ? null : Promise.resolve(text);

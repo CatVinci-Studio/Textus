@@ -32,9 +32,8 @@ mod walk;
 mod webview_memory;
 mod window_frame;
 
-use ai::agent::ai_agent_message;
-use ai::cancel::ai_cancel;
 use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models, set_ai_proxy};
+use ai::{agent::ai_agent_message, cancel::ai_cancel};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
     clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
@@ -324,6 +323,7 @@ pub fn run() {
             crate::ai::workspace::ensure_global_agent_md,
             crate::ai::workspace::import_agent_skill,
             crate::ai::workspace::list_skills,
+            crate::ai::workspace::delete_global_skill,
             crate::ai::workspace::customize_builtin_skill,
             crate::ai::workspace::reset_builtin_skill,
             crate::ai::workspace::set_skill_modes,
