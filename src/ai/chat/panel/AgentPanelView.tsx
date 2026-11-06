@@ -1,6 +1,6 @@
+import { IconButton } from "../../../ui/IconButton";
 import type { ReactNode } from "react";
 import { DetachIcon, PlusIcon, ProjectIcon } from "../../../ui/icons";
-import { Tooltip } from "../../../ui/Tooltip";
 
 export interface AgentPanelLabels {
   title: string;
@@ -52,43 +52,34 @@ export function AgentPanelView({
         )}
         <div className="agent-panel-actions">
           {memory && (
-            <Tooltip text={labels.project}>
-              <button
-                type="button"
-                className="inline-chat-header-button"
-                aria-label={labels.project}
-                aria-pressed={showingMemory}
-                onClick={() => setTab(showingMemory ? "chat" : "memory")}
-              >
-                <ProjectIcon />
-              </button>
-            </Tooltip>
+            <IconButton
+              className="inline-chat-header-button"
+              label={labels.project}
+              pressed={showingMemory}
+              onClick={() => setTab(showingMemory ? "chat" : "memory")}
+            >
+              <ProjectIcon />
+            </IconButton>
           )}
           {history}
-          <Tooltip text={labels.newConversation}>
-            <button
-              type="button"
-              className="inline-chat-header-button"
-              aria-label={labels.newConversation}
-              onClick={() => {
-                setTab("chat");
-                onNewConversation();
-              }}
-            >
-              <PlusIcon />
-            </button>
-          </Tooltip>
+          <IconButton
+            className="inline-chat-header-button"
+            label={labels.newConversation}
+            onClick={() => {
+              setTab("chat");
+              onNewConversation();
+            }}
+          >
+            <PlusIcon />
+          </IconButton>
           {onPopOut && (
-            <Tooltip text={labels.popOut}>
-              <button
-                type="button"
-                className="inline-chat-header-button"
-                aria-label={labels.popOut}
-                onClick={onPopOut}
-              >
-                <DetachIcon />
-              </button>
-            </Tooltip>
+            <IconButton
+              className="inline-chat-header-button"
+              label={labels.popOut}
+              onClick={onPopOut}
+            >
+              <DetachIcon />
+            </IconButton>
           )}
         </div>
       </header>
