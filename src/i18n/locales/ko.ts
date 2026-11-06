@@ -542,7 +542,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeKeepLinks: "업데이트 안 함",
   treeUpdateLinksFailed: "다음 문서의 링크를 업데이트하지 못했습니다: {names}",
   treeDocumentFolder: "현재 문서가 있는 폴더",
-  treeOpenAsFolder: "폴더로 열기",
+  treeOpenAsFolder: "프로젝트로 열기",
   treeTrashItem: "휴지통으로 옮기기",
   treeTrash: "휴지통으로 옮기기",
   treeTrashConfirm:

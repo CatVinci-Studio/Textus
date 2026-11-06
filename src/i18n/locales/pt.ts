@@ -571,7 +571,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeUpdateLinksFailed:
     "Não foi possível atualizar os links destes documentos: {names}",
   treeDocumentFolder: "Pasta do documento atual",
-  treeOpenAsFolder: "Abrir como pasta",
+  treeOpenAsFolder: "Abrir como projeto",
   treeTrashItem: "Mover para a lixeira",
   treeTrash: "Mover para a lixeira",
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",

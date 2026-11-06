@@ -549,7 +549,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeKeepLinks: "更新しない",
   treeUpdateLinksFailed: "次の書類のリンクを更新できませんでした: {names}",
   treeDocumentFolder: "現在の書類のフォルダー",
-  treeOpenAsFolder: "フォルダーとして開く",
+  treeOpenAsFolder: "プロジェクトとして開く",
   treeTrashItem: "ゴミ箱に入れる",
   treeTrash: "ゴミ箱に入れる",
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",

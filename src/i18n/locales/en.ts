@@ -565,7 +565,7 @@ type /name in a conversation to use one.
   treeKeepLinks: "Don't Update",
   treeUpdateLinksFailed: "These documents' links couldn't be updated: {names}",
   treeDocumentFolder: "Current document's folder",
-  treeOpenAsFolder: "Open as Folder",
+  treeOpenAsFolder: "Open as Project",
   treeTrashItem: "Move to Trash",
   treeTrash: "Move to Trash",
   treeTrashConfirm:

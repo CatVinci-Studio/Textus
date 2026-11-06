@@ -578,7 +578,7 @@ export default {
   treeUpdateLinksFailed:
     "Не удалось обновить ссылки в этих документах: {names}",
   treeDocumentFolder: "Папка текущего документа",
-  treeOpenAsFolder: "Открыть как папку",
+  treeOpenAsFolder: "Открыть как проект",
   treeTrashItem: "Переместить в корзину",
   treeTrash: "Переместить в корзину",
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",

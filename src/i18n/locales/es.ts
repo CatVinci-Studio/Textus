@@ -584,7 +584,7 @@ para usar una.
   treeUpdateLinksFailed:
     "No se pudieron actualizar los enlaces de estos documentos: {names}",
   treeDocumentFolder: "Carpeta del documento actual",
-  treeOpenAsFolder: "Abrir como carpeta",
+  treeOpenAsFolder: "Abrir como proyecto",
   treeTrashItem: "Mover a la papelera",
   treeTrash: "Mover a la papelera",
   treeTrashConfirm:

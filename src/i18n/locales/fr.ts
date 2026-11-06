@@ -586,7 +586,7 @@ utiliser une.
   treeUpdateLinksFailed:
     "Les liens de ces documents n’ont pas pu être mis à jour : {names}",
   treeDocumentFolder: "Dossier du document actuel",
-  treeOpenAsFolder: "Ouvrir comme dossier",
+  treeOpenAsFolder: "Ouvrir comme projet",
   treeTrashItem: "Mettre à la corbeille",
   treeTrash: "Mettre à la corbeille",
   treeTrashConfirm:

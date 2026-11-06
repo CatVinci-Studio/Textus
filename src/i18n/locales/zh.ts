@@ -512,7 +512,7 @@ export default {
   treeKeepLinks: "不更新",
   treeUpdateLinksFailed: "这些文档里的链接没能更新：{names}",
   treeDocumentFolder: "当前文档所在文件夹",
-  treeOpenAsFolder: "作为文件夹打开",
+  treeOpenAsFolder: "作为项目打开",
   treeTrashItem: "移到废纸篓",
   treeTrash: "移到废纸篓",
   treeTrashConfirm: "把“{name}”移到废纸篓吗？之后可以从废纸篓里放回。",

@@ -576,7 +576,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeUpdateLinksFailed:
     "Die Links dieser Dokumente konnten nicht aktualisiert werden: {names}",
   treeDocumentFolder: "Ordner des aktuellen Dokuments",
-  treeOpenAsFolder: "Als Ordner öffnen",
+  treeOpenAsFolder: "Als Projekt öffnen",
   treeTrashItem: "In den Papierkorb",
   treeTrash: "In den Papierkorb",
   treeTrashConfirm:

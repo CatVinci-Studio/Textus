@@ -513,7 +513,7 @@ export default {
   treeKeepLinks: "不更新",
   treeUpdateLinksFailed: "這些文件裡的連結未能更新：{names}",
   treeDocumentFolder: "目前文件所在資料夾",
-  treeOpenAsFolder: "以資料夾開啟",
+  treeOpenAsFolder: "以專案開啟",
   treeTrashItem: "移到垃圾桶",
   treeTrash: "移到垃圾桶",
   treeTrashConfirm: "要把「{name}」移到垃圾桶嗎？之後可以從垃圾桶放回。",
