@@ -67,6 +67,19 @@ export function withEmbedPath(source: string, path: string): string {
   return `![[${[path, ...options].join("|")}]]`;
 }
 
+/** What a missing embed (`source`) becomes once a picked file is stored:
+ *  a vault that writes wiki links keeps an embed by the name it gives;
+ *  else a Markdown image from the document, alt and `|300` size kept. */
+export function embedForPicked(
+  source: string,
+  stored: { src: string; embed?: string | null },
+): { embed: string } | { src: string; alt: string } {
+  const named = stored.embed && parseEmbed(stored.embed)?.path;
+  if (named) return { embed: withEmbedPath(source, named) };
+  const options = EMBED_SOURCE.exec(source)?.[1].split("|").slice(1) ?? [];
+  return { src: stored.src, alt: options.join("|") };
+}
+
 export interface EmbedTarget {
   /** The file as written: a name or a path from the vault root. */
   path: string;

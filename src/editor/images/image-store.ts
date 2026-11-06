@@ -152,10 +152,10 @@ export function saveToImageFolder(
 export async function copyToImageFolder(
   path: string,
   store: Pick<ImageStore, "docPath" | "settings">,
-): Promise<string | null> {
+): Promise<StoredImage | null> {
   const image = fileImage(path);
   const ext = EXT_BY_MIME[image.type];
-  return ext ? (await saveToImageFolder(image, ext, store)).src : null;
+  return ext ? saveToImageFolder(image, ext, store) : null;
 }
 
 export function reportFailure(
