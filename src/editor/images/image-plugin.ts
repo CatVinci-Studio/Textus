@@ -26,6 +26,8 @@ import {
   revealNearest,
 } from "./missing-image";
 import { parseEmbed } from "./obsidian-embed";
+import { LINK } from "../markdown/link-source";
+import { parseLink } from "../markdown/link-syntax";
 import { clipboardImageSources } from "./pasted-files";
 import {
   shownImageWidth,
@@ -105,8 +107,18 @@ function cssWidth(width: string): string {
   return /^\d+$/.test(width) ? `${width}px` : width;
 }
 
+/** A link whose label is one image, `[![alt](src)](url)`: a badge. */
+function isLinkedImage(source: string): boolean {
+  const link = parseLink(source);
+  if (!link) return false;
+  // The label's range may hold its brackets: they're allowed around it.
+  return /^\[?!\[[^\]]*\]\([^)]*\)\]?$/.test(
+    source.slice(...link.label).trim(),
+  );
+}
+
 /** A paragraph of only images and line breaks, laid out as a centred figure.
- *  Obsidian image embeds count. */
+ *  Obsidian image embeds and linked images count. */
 function isImageParagraph(node: ProseNode): boolean {
   if (node.type.name !== "paragraph" || node.childCount === 0) return false;
   let images = 0;
@@ -115,7 +127,8 @@ function isImageParagraph(node: ProseNode): boolean {
     if (
       child.type.name === "image" ||
       (child.type.name === "obsidian_embed" &&
-        parseEmbed(child.textContent)?.isImage)
+        parseEmbed(child.textContent)?.isImage) ||
+      (child.type.name === LINK && isLinkedImage(child.textContent))
     )
       images++;
     else if (child.type.name !== "hardbreak") return false;

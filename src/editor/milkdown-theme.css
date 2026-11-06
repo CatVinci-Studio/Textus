@@ -1061,6 +1061,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+/* A linked image in a row of pictures sits on the same line as the rest. */
+.milkdown p.image-paragraph :is(.image-view, .link-image) {
+  vertical-align: bottom;
+}
+
 :root[data-image-align="left"] .milkdown p.image-paragraph {
   text-align: left;
 }
