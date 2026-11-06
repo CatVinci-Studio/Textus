@@ -306,9 +306,12 @@ pub async fn save_pasted_image(
     }
     let bytes = STANDARD.decode(&data_base64).map_err(|e| e.to_string())?;
 
-    let folder = match doc_path.as_deref() {
-        Some(doc) => Some(ImageFolder::resolve(Path::new(doc), &folder)?),
-        None => None,
+    let (folder, vault) = match doc_path.as_deref() {
+        Some(doc) => match super::vault::convention_folder(Path::new(doc)) {
+            Some((folder, vault)) => (Some(folder), vault),
+            None => (Some(ImageFolder::resolve(Path::new(doc), &folder)?), None),
+        },
+        None => (None, None),
     };
     let dir = match &folder {
         Some(folder) => folder.dir.clone(),
@@ -324,11 +327,14 @@ pub async fn save_pasted_image(
         .await
         .map_err(|e| e.to_string())?;
 
+    let embed = vault.as_ref().and_then(|vault| {
+        super::vault::vault_embed(vault, Path::new(doc_path.as_deref()?), &dir.join(&name))
+    });
     let src = match folder {
         Some(folder) => folder.src(&name),
         None => dir.join(&name).to_string_lossy().to_string(),
     };
-    Ok(SavedImage { src })
+    Ok(SavedImage { src, embed })
 }
 
 /// Brings a document's images into the image folder of the file it was just

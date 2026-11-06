@@ -13,6 +13,7 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
 export type {
   SavedImage,
   IndexedFile,
+  ObsidianVault,
   FolderIndex,
   WordDocument,
 } from "./bindings/files";
@@ -122,6 +123,9 @@ export const fs = {
    *  null; `folder` is the one open in the window. */
   resolveVaultImage: (docPath: string, link: string, folder: string | null) =>
     command("resolve_vault_image", docPath, link, folder),
+  /** The Obsidian vault a document or folder is in, with the settings
+   *  Textus follows; null outside one. Never written. */
+  obsidianVault: (path: string) => command("obsidian_vault", path),
   /** The note an Obsidian wikilink names in the document's vault, or null. */
   resolveVaultNote: (docPath: string, link: string, folder: string | null) =>
     command("resolve_vault_note", docPath, link, folder),

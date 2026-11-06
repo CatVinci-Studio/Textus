@@ -280,6 +280,7 @@ pub fn run() {
             save_pasted_image,
             commands::vault::resolve_vault_image,
             commands::vault::resolve_vault_note,
+            commands::vault::obsidian_vault,
             upload_image,
             migrate_draft_images,
             save_theme_css,

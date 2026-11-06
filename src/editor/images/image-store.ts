@@ -77,12 +77,27 @@ export interface ImageStore {
   onError: () => string;
 }
 
+/** A stored image: its src, and in a vault that writes wiki links the
+ *  `![[…]]` to insert instead. */
+export interface StoredImage {
+  src: string;
+  embed?: string | null;
+}
+
 /** Saves one image as Settings > Images says and returns the src to write;
  *  null when it can't be stored or naming was cancelled. */
 export async function storeImage(
   image: PastedImage,
   store: ImageStore,
 ): Promise<string | null> {
+  return (await storeImageAs(image, store))?.src ?? null;
+}
+
+/** `storeImage`, with the embed a vault wants where a new image goes in. */
+export async function storeImageAs(
+  image: PastedImage,
+  store: ImageStore,
+): Promise<StoredImage | null> {
   const ext = EXT_BY_MIME[image.type];
   if (!ext) return null;
   const current = store.settings();
@@ -106,23 +121,28 @@ export async function storeImage(
         : current.imageUploadEndpoint,
       current.imageUploadUrlField || "url",
     );
-    return src;
+    return { src };
   }
   return saveToImageFolder(image, ext, store);
 }
 
-export async function saveToImageFolder(
+/** In the folder the document's own conventions name (a vault's attachment
+ *  folder, Typora's front matter), else Settings > Images > Folder. */
+export function saveToImageFolder(
   image: PastedImage,
   ext: string,
   store: Pick<ImageStore, "docPath" | "settings">,
-): Promise<string> {
-  const { src } = await fs.savePastedImage(
-    store.docPath(),
-    await image.base64(),
-    ext,
-    store.settings().imageFolder,
-  );
-  return src;
+): Promise<StoredImage> {
+  return image
+    .base64()
+    .then((data) =>
+      fs.savePastedImage(
+        store.docPath(),
+        data,
+        ext,
+        store.settings().imageFolder,
+      ),
+    );
 }
 
 /** Copies an image file into the image folder whatever the storage mode,
@@ -133,7 +153,7 @@ export async function copyToImageFolder(
 ): Promise<string | null> {
   const image = fileImage(path);
   const ext = EXT_BY_MIME[image.type];
-  return ext ? saveToImageFolder(image, ext, store) : null;
+  return ext ? (await saveToImageFolder(image, ext, store)).src : null;
 }
 
 export function reportFailure(
@@ -155,15 +175,16 @@ export async function saveAndInsertImages(
 ): Promise<void> {
   for (const image of images) {
     try {
-      const src = await storeImage(image, store);
-      if (src === null) continue;
-      const node = view.state.schema.nodes.image;
+      const stored = await storeImageAs(image, store);
+      if (stored === null) continue;
+      const { image: imageNode, obsidian_embed: embedNode } =
+        view.state.schema.nodes;
+      const node =
+        stored.embed && embedNode
+          ? embedNode.create({}, view.state.schema.text(stored.embed))
+          : imageNode?.create({ src: stored.src });
       if (!node) return;
-      view.dispatch(
-        view.state.tr
-          .replaceSelectionWith(node.create({ src }))
-          .scrollIntoView(),
-      );
+      view.dispatch(view.state.tr.replaceSelectionWith(node).scrollIntoView());
     } catch (err) {
       reportFailure(err, store);
     }

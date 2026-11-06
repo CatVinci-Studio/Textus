@@ -30,13 +30,8 @@ const MAX_VAULT_ASCENT: usize = 32;
 /// is inside it, else the document's own folder.
 fn vault_root(doc_path: &Path, folder: Option<&Path>) -> Option<PathBuf> {
     let doc_dir = doc_path.parent()?;
-    let mut dir = Some(doc_dir);
-    for _ in 0..MAX_VAULT_ASCENT {
-        let Some(current) = dir else { break };
-        if current.join(".obsidian").is_dir() {
-            return Some(current.to_path_buf());
-        }
-        dir = current.parent();
+    if let Some(vault) = find_vault(doc_dir) {
+        return Some(vault);
     }
     if let Some(folder) = folder.filter(|f| doc_dir.starts_with(f)) {
         return Some(folder.to_path_buf());
@@ -316,6 +311,9 @@ pub async fn resolve_vault_note(
     .await
     .map_err(|e| e.to_string())
 }
+
+mod conventions;
+pub use conventions::*;
 
 #[cfg(test)]
 mod tests;

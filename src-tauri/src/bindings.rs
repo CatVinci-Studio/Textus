@@ -39,6 +39,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::tree_ops::tree_trash_entry,
                 crate::commands::vault::resolve_vault_image,
                 crate::commands::vault::resolve_vault_note,
+                crate::commands::vault::obsidian_vault,
                 crate::commands::word_import::open_word_document,
                 crate::commands::image_host::upload_image,
                 crate::commands::session::update_session_paths,

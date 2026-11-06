@@ -50,7 +50,7 @@ export const commands = {
 	 *  Persists an image pasted into the editor. Saved documents get it in their
 	 *  image folder with a relative src; unsaved drafts use the app's assets folder, absolute.
 	 */
-	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage>("save_pasted_image", { docPath, dataBase64, ext, folder }),
+	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
@@ -98,6 +98,11 @@ export const commands = {
 	 *  in the vault.
 	 */
 	resolve_vault_note: (docPath: string, link: string, folder: string | null) => __TAURI_INVOKE<string | null>("resolve_vault_note", { docPath, link, folder }),
+	/**
+	 *  The Obsidian vault a document or folder is in, with its settings; None
+	 *  outside one.
+	 */
+	obsidian_vault: (path: string) => __TAURI_INVOKE<ObsidianVault_Serialize | null>("obsidian_vault", { path }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
@@ -288,18 +293,75 @@ export type MemoryFile = {
 	text: string,
 };
 
+/**  An Obsidian vault and the settings of it Textus follows. */
+export type ObsidianVault = ObsidianVault_Serialize | ObsidianVault_Deserialize;
+
+/**  An Obsidian vault and the settings of it Textus follows. */
+export type ObsidianVault_Deserialize = {
+	root: string,
+	/**  "Use [[Wikilinks]]" off. */
+	useMarkdownLinks: boolean,
+	/**  "shortest", "relative" or "absolute". */
+	newLinkFormat: string,
+	/**
+	 *  "/" the vault root, "./" the note's folder, "./sub" below it, else a
+	 *  folder from the root.
+	 */
+	attachmentFolder: string,
+	strictLineBreaks: boolean,
+	/**  "Automatically update internal links"; None when the vault doesn't say. */
+	alwaysUpdateLinks?: boolean | null,
+};
+
+/**  An Obsidian vault and the settings of it Textus follows. */
+export type ObsidianVault_Serialize = {
+	root: string,
+	/**  "Use [[Wikilinks]]" off. */
+	useMarkdownLinks: boolean,
+	/**  "shortest", "relative" or "absolute". */
+	newLinkFormat: string,
+	/**
+	 *  "/" the vault root, "./" the note's folder, "./sub" below it, else a
+	 *  folder from the root.
+	 */
+	attachmentFolder: string,
+	strictLineBreaks: boolean,
+	/**  "Automatically update internal links"; None when the vault doesn't say. */
+	alwaysUpdateLinks: boolean | null,
+};
+
 /**
  *  What is kept for a document: its own notes (a list), or its tracked changes
  *  (an object).
  */
 export type OwnPart = "notes" | "revisions";
 
-export type SavedImage = {
+export type SavedImage = SavedImage_Serialize | SavedImage_Deserialize;
+
+export type SavedImage_Deserialize = {
 	/**
 	 *  What goes into the markdown: a path relative to the document, or an
 	 *  absolute path for a draft that has no folder yet.
 	 */
 	src: string,
+	/**
+	 *  In an Obsidian vault that writes wiki links: the `![[…]]` to insert
+	 *  instead of a Markdown image.
+	 */
+	embed?: string | null,
+};
+
+export type SavedImage_Serialize = {
+	/**
+	 *  What goes into the markdown: a path relative to the document, or an
+	 *  absolute path for a draft that has no folder yet.
+	 */
+	src: string,
+	/**
+	 *  In an Obsidian vault that writes wiki links: the `![[…]]` to insert
+	 *  instead of a Markdown image.
+	 */
+	embed: string | null,
 };
 
 export type Snapshot = {
