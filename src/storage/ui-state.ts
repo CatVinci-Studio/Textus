@@ -48,8 +48,9 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
-  /** The kinds (contributes.suggestFor) a plugin was offered for, once each. */
-  pluginsOfferedFor: string[];
+  /** The plugin suggestion card's answers by situation: how many times
+   *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
+  pluginCardAnswers: Record<string, number | "never">;
   /** The plugins whose first scheduled job brought up the notice about
    *  background mode, once each. */
   pluginsToldOfSchedule: string[];
@@ -172,8 +173,8 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
-  pluginsOfferedFor: {
-    key: "textus-plugins-offered-for",
+  pluginCardAnswers: {
+    key: "textus-plugin-card-answers",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

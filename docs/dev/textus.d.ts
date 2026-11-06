@@ -195,16 +195,17 @@ declare global {
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
        *  "textus.offerPlugin" with { id, reason } suggests an official
-       *  plugin from the market: the user is asked to install it, or turn
-       *  it on, with its name, description and your reason (plain text, up
-       *  to 120 characters) under your plugin's name; resolves
-       *  whether it is on. True at once when it already is; false for an
-       *  id the market has no official plugin for (or when the market
-       *  can't be reached), for an installed plugin that can't be turned
-       *  on, while another offer is open, when the install fails, or when
-       *  declined - after which your plugin's offers aren't shown again in
-       *  that window. Don't await it in activate: activation has 10
-       *  seconds, and the user may take longer. From 1.3.9. */
+       *  plugin from the market: a card at the bottom right, under your
+       *  plugin's name, with its name and your reason (plain text, up to
+       *  120 characters). It never blocks editing and stays until the user
+       *  acts; its permissions are still asked before it installs.
+       *  Resolves true once it is installed and on (at once when it already
+       *  is); false for an id the market has no official plugin for (or
+       *  when the market can't be reached), for an installed plugin that
+       *  can't be turned on, while another card is shown, when the install
+       *  fails, on "Later", and on × - after which your plugin's offers of
+       *  that plugin aren't shown again (the user can bring them back in
+       *  Settings › Extensions). Don't await it in activate. From 1.3.9. */
       execute(id: string, ...args: unknown[]): Promise<unknown>;
     }
 

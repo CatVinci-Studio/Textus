@@ -127,7 +127,12 @@ describe("a plugin's manifest", () => {
     });
     expect(m.contributes.completions).toEqual([
       { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
-      { id: "catvinci.example.any", where: "any", pattern: "@\\w*", title: "%dates%" },
+      {
+        id: "catvinci.example.any",
+        where: "any",
+        pattern: "@\\w*",
+        title: "%dates%",
+      },
     ]);
     const bad = (c: object) => () =>
       parseManifest({ ...base, contributes: { completions: [c] } });

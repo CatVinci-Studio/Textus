@@ -10,6 +10,11 @@ export function basename(path: string): string {
 
 // The folder part of a path: "/" for a root-level "/name", and the input
 // unchanged for a bare filename.
+/** A file's extension with its dot (".pdf"), or "" for none. */
+export function extname(path: string): string {
+  return /\.[^./\\]+$/.exec(path)?.[0] ?? "";
+}
+
 export function dirname(path: string): string {
   const idx = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
   if (idx > 0) return path.slice(0, idx);

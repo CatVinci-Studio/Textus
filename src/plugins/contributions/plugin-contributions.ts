@@ -6,6 +6,7 @@ import { showMessage } from "../../ui/app-dialog";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { isMacPlatform } from "../../platform/os";
+import { extname } from "../../utils/path";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
   registerContextItems,
@@ -46,7 +47,6 @@ export interface ContributionDeps {
 
 const contributions = new Map<string, (() => void)[]>();
 
-const extname = (path: string) => /\.[^./\\]+$/.exec(path)?.[0] ?? "";
 
 /** Adds an undo to what goes when the plugin is withdrawn. */
 export function addContribution(id: string, undo: () => void): void {
