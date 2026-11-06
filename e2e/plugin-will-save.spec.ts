@@ -8,8 +8,11 @@ import { openApp } from "./helpers";
 
 const HOST = `
 exports.activate = function () {
+  // Idempotent, as save-time changes must be: a change that would change
+  // again on a second run is dropped.
   textus.files.onWillSave(function (e) {
-    return e.text.trimEnd() + "\\n\\nStamped.\\n";
+    var text = e.text.trimEnd();
+    return /Stamped\\.$/.test(text) ? e.text : text + "\\n\\nStamped.\\n";
   });
 };
 `;

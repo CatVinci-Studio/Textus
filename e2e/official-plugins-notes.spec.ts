@@ -514,7 +514,7 @@ test("backlinks list what links here, what names it, and link a mention", async 
   });
   await openPath(page, "/notes/Zettel.md");
   await expect(page.locator(editor)).toContainText("See");
-  const list = await openSidebarList(page, "Backlinks");
+  const list = await openSidebarList(page, "Two-way Links");
   await expect(list.locator(".plugin-list-group")).toHaveText([
     "Linked mentions · 1",
     "Unlinked mentions · 1",
