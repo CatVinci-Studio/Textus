@@ -1,6 +1,5 @@
-import { useEffect, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { usePresenceProps } from "./usePresence";
+import type { ReactNode } from "react";
+import { Sheet } from "./Sheet";
 import "./BottomCard.css";
 
 export interface BottomCardAction {
@@ -24,42 +23,30 @@ export function BottomCard({
   actions: BottomCardAction[];
   onClose: () => void;
 }) {
-  const presence = usePresenceProps<HTMLDivElement>();
-  const open = presence["data-state"] === "open";
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, open]);
-  return createPortal(
-    <div
-      {...presence}
-      className="bottom-card-scrim"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+  return (
+    <Sheet
+      role="dialog"
+      label={label}
+      className="bottom-card"
+      onClose={onClose}
     >
-      <div className="bottom-card" role="dialog" aria-label={label}>
-        <div className="bottom-card-grab" aria-hidden="true" />
-        <div className="bottom-card-body">{children}</div>
-        <div className="bottom-card-actions">
-          {actions.map((a) => (
-            <button
-              key={a.label}
-              type="button"
-              className={a.primary ? "bottom-card-primary" : undefined}
-              onClick={() => {
-                a.onSelect();
-                onClose();
-              }}
-            >
-              {a.label}
-            </button>
-          ))}
-        </div>
+      <div className="bottom-card-grab" aria-hidden="true" />
+      <div className="bottom-card-body">{children}</div>
+      <div className="bottom-card-actions">
+        {actions.map((a) => (
+          <button
+            key={a.label}
+            type="button"
+            className={a.primary ? "bottom-card-primary" : undefined}
+            onClick={() => {
+              a.onSelect();
+              onClose();
+            }}
+          >
+            {a.label}
+          </button>
+        ))}
       </div>
-    </div>,
-    document.body,
+    </Sheet>
   );
 }
