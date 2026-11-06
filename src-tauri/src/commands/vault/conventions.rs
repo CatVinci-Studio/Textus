@@ -77,6 +77,13 @@ pub async fn obsidian_vault(path: String) -> Result<Option<ObsidianVault>, Strin
     .map_err(|e| e.to_string())
 }
 
+/// Whether a document in `dir` shows a single newline as a line break: in a
+/// vault with "Strict line breaks" off, Obsidian's default.
+#[cfg_attr(not(desktop), allow(dead_code))]
+pub(crate) fn soft_breaks_show(dir: &Path) -> bool {
+    find_vault(dir).is_some_and(|root| !read_vault(&root).strict_line_breaks)
+}
+
 /// `typora-copy-images-to` from the document's front matter on disk.
 fn typora_images_to(doc: &Path) -> Option<String> {
     let text = std::fs::read_to_string(doc).ok()?;
@@ -221,6 +228,9 @@ mod tests {
             find_vault(&dir.path().join("notes")).as_deref(),
             Some(dir.path())
         );
+        assert!(!soft_breaks_show(&dir.path().join("notes")));
+        assert!(soft_breaks_show(&plain.path().join("notes")));
+        assert!(!soft_breaks_show(tempfile::tempdir().unwrap().path()));
     }
 
     #[test]

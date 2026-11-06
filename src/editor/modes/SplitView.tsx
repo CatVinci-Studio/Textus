@@ -1,11 +1,16 @@
 import { useDeferredValue, useEffect, useRef } from "react";
 import { renderDocumentHtml } from "../markdown/render-html";
+import { useVaultLineBreaks } from "./useVaultLineBreaks";
+
 import { useKatexHtml } from "../math/useKatexHtml";
 import { resolveImageSrc } from "../images/image-plugin";
 import { diagramRenderer } from "../diagram-engine";
 import { useSettings } from "../../prefs/SettingsContext";
 import { DocSourceTextarea } from "./DocSourceTextarea";
 import "./SplitView.css";
+
+const renderWithBreaks = (markdown: string) =>
+  renderDocumentHtml(markdown, true);
 
 /**
  * Split view: editable markdown source on the left, the rendered document
@@ -30,7 +35,11 @@ export function SplitView({
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
-  const html = useKatexHtml(deferred, renderDocumentHtml);
+  const breaks = useVaultLineBreaks(filePath);
+  const html = useKatexHtml(
+    deferred,
+    breaks ? renderWithBreaks : renderDocumentHtml,
+  );
   const { diagramEngine } = useSettings().settings;
 
   // Relative image paths resolve against the document's folder; Mermaid

@@ -194,12 +194,15 @@ const documentMarked = new Marked({
 });
 
 /** A whole document -> sanitized HTML, for the split view's preview. Front
- *  matter is dropped; raw HTML follows the editor's policy. */
-export function renderDocumentHtml(markdown: string): string {
+ *  matter is dropped; raw HTML follows the editor's policy. `breaks`: a
+ *  single newline breaks the line, as an Obsidian vault without strict line
+ *  breaks shows it. */
+export function renderDocumentHtml(markdown: string, breaks = false): string {
   const body = markdown.replace(/^---\n[\s\S]*?\n---\n?/, "");
   mathSlots = [];
   const parsed = documentMarked.parse(normalizeMathDelimiters(body), {
     async: false,
+    breaks,
   });
   const slots = mathSlots;
   mathSlots = [];
