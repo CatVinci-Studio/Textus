@@ -21,6 +21,7 @@
     "test:watch": "vitest",
     "test:roundtrip": "node scripts/roundtrip-corpus/run.mjs",
     "test:e2e": "playwright test --ignore-snapshots",
+    "test:perf": "TEXTUS_PERF=1 playwright test --ignore-snapshots --project=chromium --workers=1",
     "test:visual": "playwright test",
     "bench:large-doc": "playwright test -c playwright.perf.config.ts large-doc.perf.ts",
     "bench:plugins": "playwright test -c playwright.perf.config.ts plugins.perf.ts",

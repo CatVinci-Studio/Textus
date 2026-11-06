@@ -7,7 +7,9 @@ name: CI
 #                                  README/version/updater checks; and the build
 #   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
 #                                  test across four machines; e2e-webkit runs
-#                                  the WebKit ones (not yet required)
+#                                  the WebKit ones after a merge (not required);
+#                                  stopwatch tests (@perf) run only locally,
+#                                  with npm run test:perf
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
 #                                  macOS and Windows; and npm test on macOS
 #                                  and Windows
@@ -222,11 +224,11 @@ jobs:
           test "$RESULT" = success || test "$RESULT" = skipped
 
   # The flows macOS, iOS and Linux users meet in WebKit
-  # (playwright.config.ts's WEBKIT_SPECS). Not required until it has run
-  # green for a while.
+  # (playwright.config.ts's WEBKIT_SPECS). Not required: it runs after a
+  # merge to main or stable, not on every pull request.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
+    if: needs.changes.outputs.e2e == 'true' && github.event_name == 'push'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:

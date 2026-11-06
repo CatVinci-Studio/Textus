@@ -76,12 +76,17 @@ npm run test:e2e                       # Playwright flows in Chromium, desktop a
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
 npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
+npm run test:perf                      # the stopwatch flows (@perf: frame budgets, slides) - not in CI
 npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
 
-The first three run in CI, the same commands on every platform. One part
+The first three run in CI, the same commands on every platform. A flow
+that times itself (a frame budget, a slide checked frame by frame) is
+tagged `{ tag: "@perf" }`: it depends on how busy the machine is, so CI
+leaves it out and `npm run test:perf` runs it. Write e2e flows that check
+what happened, not how fast. One part
 of `npm run check` runs in CI only once, in the `check` job, and on a pull
 request only when the change can reach saving: the save round trip
 (`src/document-view/save-roundtrip*.test.ts`, see
