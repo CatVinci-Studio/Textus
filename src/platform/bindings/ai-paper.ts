@@ -28,6 +28,11 @@ export const commands = {
 	 *  request, by `ai_cancel` with `request_id`.
 	 */
 	ai_paper_draft: (request: DraftRequest_Deserialize, channel: Channel<PaperEvent_Deserialize>) => __TAURI_INVOKE<null>("ai_paper_draft", { request, channel }),
+	/**
+	 *  What the window made of the blocks `drawFigures` `call_id` sent: for
+	 *  each, in order, why it couldn't be drawn, or null.
+	 */
+	ai_paper_figures_drawn: (callId: string, errors: (string | null)[]) => __TAURI_INVOKE<void>("ai_paper_figures_drawn", { callId, errors }),
 	/**  Paper `id` as it was kept, for its card to go on from where it stopped. */
 	ai_paper_status: (docPath: string | null, workspaceRoot: string | null, id: string) => __TAURI_INVOKE<PaperProgress_Serialize>("ai_paper_status", { docPath, workspaceRoot, id }),
 };
@@ -79,6 +84,16 @@ export type DraftRequest_Serialize = {
 	id: string,
 	/**  The image model the paper's pictures are made with; None for none. */
 	imageModel: ImageModel_Serialize | null,
+};
+
+/**
+ *  One diagram or chart block to draw. Mirrored in
+ *  src/platform/bindings/ai-paper.ts.
+ */
+export type FigureBlock = {
+	/**  "mermaid" or "chart". */
+	language: string,
+	code: string,
 };
 
 export type FigureKind = 
@@ -216,6 +231,11 @@ export type PaperEvent_Deserialize = { type: "phase"; phase: PaperPhase } |
  *  reference list, as one text to propose.
  */
 { type: "ready"; markdown: string } | 
+/**
+ *  Draw these diagram and chart blocks as the document would, and say
+ *  with `ai_paper_figures_drawn` `call_id` which can't be drawn.
+ */
+{ type: "drawFigures"; callId: string; blocks: FigureBlock[] } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */
@@ -282,6 +302,11 @@ export type PaperEvent_Serialize = { type: "phase"; phase: PaperPhase } |
  *  reference list, as one text to propose.
  */
 { type: "ready"; markdown: string } | 
+/**
+ *  Draw these diagram and chart blocks as the document would, and say
+ *  with `ai_paper_figures_drawn` `call_id` which can't be drawn.
+ */
+{ type: "drawFigures"; callId: string; blocks: FigureBlock[] } | 
 /**  The outline is ready for the user to edit and approve. */
 { type: "outlineReady"; outline: Outline } | 
 /**  A stage failed; `section` when it was one section's. */

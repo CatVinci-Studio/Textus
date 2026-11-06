@@ -226,6 +226,10 @@ pub(super) fn note_id() -> &'static Regex {
 /// than lose the paper; a wrong citation or a chart that can't be drawn is
 /// never kept.
 pub(crate) fn is_soft(problem: &str) -> bool {
+    // A renderer's error may say anything, " planned " too.
+    if problem.contains(" doesn't draw (") {
+        return false;
+    }
     problem.starts_with("It is ") || problem.contains(" planned ")
 }
 

@@ -164,6 +164,7 @@ fn live_paper() {
                 Ok(())
             },
             &|_| {},
+            None,
         )
         .await
         .expect("drafting");
@@ -191,6 +192,7 @@ fn live_paper() {
             &issues,
             &|_| {},
             &|_| {},
+            None,
         )
         .await;
         lap(&mut stats, "review", t);

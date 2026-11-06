@@ -9,7 +9,8 @@
 pub(crate) use super::checks::prose_length;
 use super::checks::*;
 pub(crate) use super::checks::{cited_link, is_soft, length, most, problems, WEB_FIGURE_MARK};
-use super::handover::{hand_over, Checked, Task};
+use super::figures::Draw;
+use super::handover::{hand_over_checked, Checked, Task};
 use super::research::Model;
 use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
@@ -101,6 +102,7 @@ fn submit_section_spec() -> ToolSpec {
 }
 
 /// Section `index` written: its Markdown under its heading.
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn write_section(
     model: &dyn Model,
     paper: &Paper,
@@ -110,6 +112,9 @@ pub(crate) async fn write_section(
     // A revision: the earlier draft and the reviewer's points against it.
     revision: Option<(&str, &[String])>,
     send: &(dyn Fn(PaperEvent) + Sync),
+    // Draws the section's figures as the document would; None checks them
+    // by their JSON and syntax alone.
+    draw: Option<Draw<'_>>,
 ) -> Result<String, String> {
     let watch = SectionWatch::new(index as u32, send);
     let section = &outline.sections[index];
@@ -138,11 +143,16 @@ pub(crate) async fn write_section(
     // holds or is only soft - a paper with one weaker section beats one
     // that stops there.
     let last: Mutex<Option<String>> = Mutex::new(None);
-    let check = |arguments: &str| {
-        let args: Value = serde_json::from_str(arguments).unwrap_or_default();
+    let (sources_ref, soft_ref, last_ref) = (&sources, &soft, &last);
+    let check = |arguments: String| async move {
+        let (sources, soft, last) = (sources_ref, soft_ref, last_ref);
+        let args: Value = serde_json::from_str(&arguments).unwrap_or_default();
         let markdown = args["markdown"].as_str().unwrap_or("").trim().to_string();
-        let mut wrong = problems(&markdown, section, &sources, &paper.language);
+        let mut wrong = problems(&markdown, section, sources, &paper.language);
         wrong.extend(long_posts(&markdown, paper));
+        // Drawn even when other things are wrong, so the writer fixes all
+        // at once.
+        wrong.extend(super::figures::undrawn(draw, &markdown).await);
         if !markdown.is_empty() {
             *last.lock().unwrap() = Some(markdown.clone());
         }
@@ -177,7 +187,7 @@ pub(crate) async fn write_section(
         steps: WRITER_STEPS,
         watch: Some(&push),
     };
-    let (kept, turns) = hand_over(model, task, check).await?;
+    let (kept, turns) = hand_over_checked(model, task, check).await?;
     let body = kept
         .or(soft.into_inner().unwrap())
         .or_else(|| replied_section(&turns, section, &sources, &paper.language))
@@ -342,6 +352,7 @@ pub(crate) async fn draft(
     started: &(dyn Fn(usize) + Sync),
     drafted: &mut (dyn FnMut(usize, &str) -> Result<(), String> + Send),
     send: &(dyn Fn(PaperEvent) + Sync),
+    draw: Option<Draw<'_>>,
 ) -> Result<(), String> {
     let mut sections = stream::iter(0..outline.sections.len())
         .map(|i| async move {
@@ -351,7 +362,7 @@ pub(crate) async fn draft(
             started(i);
             (
                 i,
-                write_section(model, paper, outline, i, dossier, None, send).await,
+                write_section(model, paper, outline, i, dossier, None, send, draw).await,
             )
         })
         .buffered(AT_ONCE);

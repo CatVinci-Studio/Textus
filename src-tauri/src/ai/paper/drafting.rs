@@ -49,6 +49,10 @@ pub async fn ai_paper_draft(
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };
+    // Each section's diagrams and charts are drawn by the window it is
+    // written for before it is kept.
+    let figures_channel = channel.clone();
+    let draw = figures::by_window(move |event| figures_channel.send(event).is_ok());
     crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(None).await?;
         let budget = std::sync::Arc::new(SharedBudget::new(files.paper.budget.renewed()));
@@ -117,6 +121,7 @@ pub async fn ai_paper_draft(
             &started,
             &mut drafted,
             &send,
+            Some(&draw),
         )
         .await?;
 
@@ -145,6 +150,7 @@ pub async fn ai_paper_draft(
                 &issues,
                 &revising,
                 &send,
+                Some(&draw),
             )
             .await;
             for i in changed {

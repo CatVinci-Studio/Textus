@@ -59,6 +59,8 @@ use std::sync::Mutex;
 use tauri::{Emitter, Manager, State};
 
 #[cfg(desktop)]
+use commands::chat_window::{OpenChatWindows, PendingChatHandoffs};
+#[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 #[cfg(desktop)]
 use commands::export::{
@@ -90,12 +92,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(PendingDetachedTabs(Mutex::new(HashMap::new())))
         .manage(DragTrackers::default())
         .manage(SessionTabsState(Mutex::new(HashMap::new())))
-        .manage(commands::chat_window::PendingChatHandoffs(Mutex::new(
-            HashMap::new(),
-        )))
-        .manage(commands::chat_window::OpenChatWindows(Mutex::new(
-            Vec::new(),
-        )))
+        .manage(PendingChatHandoffs(Mutex::new(HashMap::new())))
+        .manage(OpenChatWindows(Mutex::new(Vec::new())))
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
@@ -301,6 +299,7 @@ pub fn run() {
             crate::ai::paper::ai_paper_run,
             crate::ai::paper::status::ai_paper_save_outline,
             crate::ai::paper::drafting::ai_paper_draft,
+            crate::ai::paper::figures::ai_paper_figures_drawn,
             crate::ai::paper::status::ai_paper_status,
             fetch_agent_models,
             set_ai_proxy,
