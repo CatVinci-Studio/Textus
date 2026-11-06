@@ -23,7 +23,7 @@ Les encadrés de style GitHub :
 
 ## Styles de texte
 
-**Gras** (`**texte**`), *italique* (`*texte*`), ***gras italique***, ~~barré~~ (`~~texte~~`), ==surligné== (`==texte==`) et `code en ligne`.
+**Gras** (`**texte**`), *italique* (`*texte*`), ***gras italique***, ~~barré~~ (`~~texte~~`), ==surligné== (`==texte==`) et `code en ligne`. ``Ctrl+` `` (Contrôle aussi sur Mac) met la sélection en code en ligne, ``Ctrl+Shift+` `` la barre et `Cmd+K` en fait un lien, le curseur là où va l'adresse.
 
 Les codes courts d’emoji de GitHub s’affichent en emoji : :tada: (`:tada:`), :rocket: (`:rocket:`). Le fichier garde le code ; placez le curseur dessus pour le modifier.
 
@@ -160,7 +160,7 @@ Tous se trouvent dans le menu **Présentation** et dans **Réglages → Éditeur
 
 **Présentation → Lecture seule** (aussi dans le menu contextuel d'un onglet) empêche toute modification d'un document : frappe, collage, dépôt, annulation, Textus AI ou extensions. Un cadenas à côté du titre l'indique ; cliquez dessus pour rendre le document de nouveau modifiable.
 
-**Présentation → Palette de commandes…** (`Cmd+Shift+P`) trouve tout ce que font les menus, ainsi que chaque commande ajoutée par une extension, en tapant quelques lettres de son nom. Elle change aussi l'apparence (claire, sombre ou celle du système) et le thème de l'éditeur, et active ou désactive Textus AI.
+**Présentation → Palette de commandes…** (`Cmd+Shift+P`) trouve tout ce que font les menus, ainsi que chaque commande ajoutée par une extension, en tapant quelques lettres de son nom. Elle change aussi l'apparence (claire, sombre ou celle du système) et le thème de l'éditeur, et active ou désactive Textus AI. **Édition → Rechercher et remplacer…** (`Cmd+F`) cherche dans le document, **Édition → Remplacer…** (`Cmd+Option+F`) l'ouvre avec la ligne de remplacement, et `Cmd+G` passe à l'occurrence suivante.
 
 L'onglet **Plan** de la barre latérale liste les titres du document ; cliquez sur l'un d'eux pour vous y rendre. Un clic droit sur le plan propose **Tout déplier** et **Tout replier**, ou `Option`-clic (`Alt`-clic) sur la flèche d'un titre les déplie ou les replie tous d'un coup.
 
@@ -177,7 +177,7 @@ L'onglet **Plan** de la barre latérale liste les titres du document ; cliquez s
 
 ## Onglets et fenêtres
 
-`Cmd+T` ouvre un nouvel onglet, `Cmd+N` une nouvelle fenêtre, et **Fichier → Rouvrir l'onglet fermé** (`Cmd+Shift+T`) rouvre les documents que vous avez fermés, le plus récent d'abord. Un clic du milieu ferme un onglet ; le menu contextuel d'un onglet propose **Fermer les autres**, **Fermer les onglets à gauche** et **Fermer les onglets à droite** (les onglets aux modifications non enregistrées restent ouverts), **Copier le chemin** et **Déplacer dans une nouvelle fenêtre**. Vous pouvez aussi faire glisser un onglet hors de la fenêtre pour lui donner sa propre fenêtre. Quand Textus rouvre, chaque fenêtre revient avec ses propres onglets.
+`Cmd+N` (ou `Cmd+T`) ouvre un nouvel onglet, `Cmd+Shift+N` une nouvelle fenêtre, et **Fichier → Rouvrir l'onglet fermé** (`Cmd+Shift+T`) rouvre les documents que vous avez fermés, le plus récent d'abord. Un clic du milieu ferme un onglet ; le menu contextuel d'un onglet propose **Fermer les autres**, **Fermer les onglets à gauche** et **Fermer les onglets à droite** (les onglets aux modifications non enregistrées restent ouverts), **Copier le chemin** et **Déplacer dans une nouvelle fenêtre**. Vous pouvez aussi faire glisser un onglet hors de la fenêtre pour lui donner sa propre fenêtre. Quand Textus rouvre, chaque fenêtre revient avec ses propres onglets.
 
 ## Dossiers et recherche de fichiers
 

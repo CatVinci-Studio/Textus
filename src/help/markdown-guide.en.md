@@ -23,7 +23,7 @@ GitHub-style alerts:
 
 ## Inline styles
 
-**Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`.
+**Bold** (`**text**`), *italic* (`*text*`), ***bold italic***, ~~strikethrough~~ (`~~text~~`), ==highlight== (`==text==`), and `inline code`. ``Ctrl+` `` (Control on a Mac too) makes the selection inline code, ``Ctrl+Shift+` `` strikes it through, and `Cmd+K` puts it in a link with the caret where the address goes.
 
 Emoji shortcodes as on GitHub show as their emoji: :tada: (`:tada:`), :rocket: (`:rocket:`). The file keeps the shortcode; put the caret on one to edit it.
 
@@ -160,7 +160,7 @@ All of them are in the **View** menu and in **Settings → Editor & Appearance �
 
 **View → Read Only** (also in a tab's right-click menu) keeps a document from being changed - by typing, pasting, dropping, undo, Textus AI or plugins. A padlock beside the title shows it; click it to make the document editable again.
 
-**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off.
+**View → Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off. **Edit → Find & Replace…** (`Cmd+F`) searches the document, **Edit → Replace…** (`Cmd+Option+F`) opens it with the replace row, and `Cmd+G` goes to the next match.
 
 The **Outline** tab of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
@@ -177,7 +177,7 @@ The **Outline** tab of the sidebar lists the document's headings; click one to g
 
 ## Tabs and windows
 
-`Cmd+T` opens a new tab, `Cmd+N` a new window, and **File → Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left** and **Close Tabs to the Right** (tabs with unsaved changes stay open), **Copy Path** and **Move to New Window**. You can also drag a tab out of the window to give it a window of its own. When Textus reopens, each window comes back with its own tabs.
+`Cmd+N` (or `Cmd+T`) opens a new tab, `Cmd+Shift+N` a new window, and **File → Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left** and **Close Tabs to the Right** (tabs with unsaved changes stay open), **Copy Path** and **Move to New Window**. You can also drag a tab out of the window to give it a window of its own. When Textus reopens, each window comes back with its own tabs.
 
 ## Folders and file search
 

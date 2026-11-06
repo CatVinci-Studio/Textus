@@ -69,6 +69,7 @@ export function useFindReplace(run: EditorRunner) {
   const [caseSensitive, setCaseSensitive] = useState(false);
   const [useRegex, setUseRegex] = useState(false);
   const [status, setStatus] = useState<FindReplaceStatus>(IDLE_STATUS);
+  const [replaceOpen, setReplaceOpen] = useState(false);
   // Bumped when Find is asked for again with the bar open: the bar takes the
   // focus back and selects its query.
   const [focusRequest, setFocusRequest] = useState(0);
@@ -216,6 +217,19 @@ export function useFindReplace(run: EditorRunner) {
     }
   }, [run, setOpen]);
 
+  /** Replace…: the bar with its replace row open. */
+  const showReplace = useCallback(() => {
+    setReplaceOpen(true);
+    show();
+  }, [show]);
+
+  /** Find Next: the next match while the bar is open; else the bar, at the
+   *  match after the caret of what it last looked for. */
+  const findNext = useCallback(() => {
+    if (openRef.current && query) step(1);
+    else show();
+  }, [query, show, step]);
+
   // Escape closes the bar even once focus has moved to the editor.
   useEffect(() => {
     if (!open) return;
@@ -247,6 +261,10 @@ export function useFindReplace(run: EditorRunner) {
     close,
     dismiss,
     show,
+    showReplace,
+    findNext,
+    replaceOpen,
+    setReplaceOpen,
   };
 }
 
