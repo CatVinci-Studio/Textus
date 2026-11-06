@@ -16,6 +16,7 @@ mod handover;
 mod model;
 mod notes;
 mod outline;
+mod prompts;
 mod research;
 mod review;
 mod session;

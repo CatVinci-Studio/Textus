@@ -2392,3 +2392,23 @@ async fn the_choosing_step_sends_literature_reviews_and_analyses_to_their_genres
     assert!(line("analysis").contains("调研报告"), "{instructions}");
     assert!(!line("report").contains("调研报告"), "{instructions}");
 }
+
+/// Every stage's prompt fills in for every genre and language: the
+/// prompt files and the code agree on what goes in them.
+#[test]
+fn every_prompt_fills_in_for_every_genre() {
+    let unfilled = |text: &str| assert!(!text.contains("{{"), "{text}");
+    for asked in [None, Some(3000)] {
+        unfilled(&choose::instructions(asked));
+    }
+    for genre in Genre::ALL {
+        for language in ["en", "zh"] {
+            let paper = Paper {
+                genre,
+                language: language.into(),
+                ..paper()
+            };
+            unfilled(&finish::opening_instructions(&paper));
+        }
+    }
+}
