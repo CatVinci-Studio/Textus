@@ -10,11 +10,11 @@ Textus est un éditeur Markdown qui montre votre texte tel qu'il sera. Cliquez n
 
 ## Tableaux
 
-| Fonction | On tape | On voit |
-| --- | --- | --- |
-| Titre | `# Titre` | un titre |
-| Lien | `[texte](url)` | un lien |
-| Formule | `$E = mc^2$` | $E = mc^2$ |
+| Fonction | On tape        | On voit    |
+| -------- | -------------- | ---------- |
+| Titre    | `# Titre`      | un titre   |
+| Lien     | `[texte](url)` | un lien    |
+| Formule  | `$E = mc^2$`   | $E = mc^2$ |
 
 ## Mathématiques
 
