@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Which CI jobs a change needs (e2e, native, roundtrip), printed for
-// $GITHUB_OUTPUT. Docs or a version bump alone need neither; a push runs
+// Which CI jobs a change needs (e2e, native, platforms, roundtrip), printed
+// for $GITHUB_OUTPUT. Docs or a version bump alone need neither; a push runs
 // everything except a bump's merge; without a usable base everything runs.
+// `platforms` is macOS, Windows and iOS beside Linux: a pull request runs
+// them only for code that differs between platforms, a push always.
 import { execFileSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join, posix, relative } from "node:path";
@@ -25,6 +27,12 @@ const EVERYTHING =
  *  the native check script and the iOS project's preparation. */
 const NATIVE =
   /(^src-tauri\/|(^|\/)Cargo\.(toml|lock)$|(^|\/)\.cargo\/|(^|\/)rust-toolchain(\.toml)?$|^scripts\/check-native\.mjs$|^scripts\/(ios-|smoke-ios-))/;
+
+/** Code that differs between platforms: per-OS Rust files, the crate's
+ *  entry points, dependencies and build setup, the per-OS Tauri configs and
+ *  the iOS project, and the frontend's path and platform layers. */
+const PLATFORM =
+  /(^src-tauri\/(Cargo\.(toml|lock)$|build\.rs$|tauri\.[a-z]+\.conf\.json$|Info\.plist$|[^/]*\.entitlements$|plugins\/|gen\/)|^src-tauri\/src\/(lib|main)\.rs$|^src-tauri\/src\/.*(macos|windows|linux|ios|mobile)[^/]*$|(^|\/)rust-toolchain(\.toml)?$|^scripts\/(ios-|smoke-ios-|check-native)|^src\/utils\/path|^src\/platform\/)/;
 
 /** Frontend files a Rust test reads from disk, so not embedded: the
  *  generated bindings it compares against its own. */
@@ -94,14 +102,15 @@ function versionOnly(file, before, after) {
 /** `read(file)` gives a file's text `before` and `after` the change (null
  *  where missing); `rustReads` are files outside src-tauri/ Rust embeds. */
 export function classify({ files, push, read, rustReads = [] }) {
-  const all = { e2e: true, native: true };
+  const all = { e2e: true, native: true, platforms: true };
+  const none = { e2e: false, native: false, platforms: false };
   const code = files.filter(
     (file) =>
       !DOCS.test(file) || CODE_TREES.test(file) || rustReads.includes(file),
   );
-  if (code.length === 0) return push ? all : { e2e: false, native: false };
+  if (code.length === 0) return push ? all : none;
   const rest = code.filter((file) => !versionOnly(file, ...read(file)));
-  if (rest.length === 0) return { e2e: false, native: false };
+  if (rest.length === 0) return none;
   if (push || rest.some((file) => EVERYTHING.test(file))) return all;
   return {
     e2e: rest.some((file) => !NATIVE.test(file) || BROWSER_NATIVE.test(file)),
@@ -109,6 +118,7 @@ export function classify({ files, push, read, rustReads = [] }) {
       (file) =>
         NATIVE.test(file) || RUST_TESTED.test(file) || rustReads.includes(file),
     ),
+    platforms: rest.some((file) => PLATFORM.test(file)),
   };
 }
 
@@ -158,7 +168,7 @@ function show(rev, file) {
 function main(argv) {
   const at = argv.indexOf("--base");
   const base = at === -1 ? "" : (argv[at + 1] ?? "");
-  let result = { e2e: true, native: true, roundtrip: true };
+  let result = { e2e: true, native: true, platforms: true, roundtrip: true };
   if (base && !/^0+$/.test(base)) {
     try {
       const files = git("diff", "--name-only", "--no-renames", base, "HEAD")
@@ -179,7 +189,7 @@ function main(argv) {
     }
   }
   console.log(
-    `e2e=${result.e2e}\nnative=${result.native}\nroundtrip=${result.roundtrip}`,
+    `e2e=${result.e2e}\nnative=${result.native}\nplatforms=${result.platforms}\nroundtrip=${result.roundtrip}`,
   );
 }
 

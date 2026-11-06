@@ -82,7 +82,12 @@ cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threa
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
 
-The first three run in CI, the same commands on every platform. A flow
+The first three run in CI, the same commands on every platform. A pull
+request runs `check`, the Chromium flows and the Rust checks on Linux;
+macOS, Windows and the iOS build only when it touches code that differs
+between platforms (`scripts/ci-changes.mjs`), and the WebKit flows not at
+all. A push to `main` or `stable` runs everything, and a release waits for
+that run. A flow
 that times itself (a frame budget, a slide checked frame by frame) is
 tagged `{ tag: "@perf" }`: it depends on how busy the machine is, so CI
 leaves it out and `npm run test:perf` runs it. Write e2e flows that check
