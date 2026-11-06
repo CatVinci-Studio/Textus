@@ -12,7 +12,7 @@ import { tabIsDirty, tabTitle, type DocTab } from "../document/doc-tabs";
 import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
-import type { AgentMode } from "../prefs/SettingsContext";
+import type { ChatMode } from "../prefs/SettingsContext";
 import {
   PluginListPane,
   PluginTabPane,
@@ -87,7 +87,7 @@ export function MainPane({
   typewriter: boolean;
   /** The tour's practice tab, its AI and the AI panel mode its lesson
    *  needs, while the tour runs; else null. */
-  tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
+  tour: { tabId: string; ai: TourAi; mode: ChatMode | null } | null;
   t: Strings;
 }) {
   const split = useSplitPanes(

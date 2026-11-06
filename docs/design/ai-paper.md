@@ -131,11 +131,15 @@ it, lazily loaded. Each stage and helper is one run of
   run on the agent's `Model` trait (`agent/model.rs`), as the chat does, so
   tests drive them with a scripted model; `paper/model.rs` only adds
   `Metered`, which spends the paper's budget on every step.
-- **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
-  `ToolRegistry` shared by every helper has the file tools (`read_file`,
-  `find_files`, `search_files`), `search_references` when the project has a
-  `references/` folder, and the plugins' and MCP servers' tools
-  (`agent::installed_tools`), all executed with `registry.execute` over one
+- **Tools** (`research::Kit`): a helper runs on the agent's tool layer, in
+  its own mode, `AgentMode::Research`: a tool is offered to it when its
+  `modes` name Research (`tools::EVERY_MODE` does; nothing that edits or
+  comments does). One `ToolRegistry` shared by every helper has the file
+  tools (`read_file`, `find_files`, `search_files`), then what every mode
+  shares, added by `ToolRegistry::add_shared` as the chat's requests add
+  it: `search_references` when the project has a `references/` folder, and
+  the plugins' and MCP servers' tools (`agent::installed_tools`), all
+  executed with `registry.execute` over one
   `ToolContext`: an empty document, the project folder as `root`, the
   paper's folder as `scratch`. Each helper adds its own registry with the
   web tools, ranked by its question, and `add_note` (`paper/notes.rs`), the
@@ -209,7 +213,8 @@ it, lazily loaded. Each stage and helper is one run of
   written.
 
 - **In the app** (`document-view/usePaperWriter.ts`, `ai/paper/paper-store.ts`,
-  the lazy `paper` module): the AI panel's fourth mode, **Research**, takes
+  the lazy `paper` module): the agent's fourth mode, **Research**
+  (`AgentMode::Research`), takes
   the message as the paper's topic, of the kind picked beside the mode - **Choose for me** (the default) lets the model choose it and its length, a genre picked is written at the middle of its lengths -
   under the message box; it never reaches the chat agent, so it is no skill's mode and
   not a default. The conversation

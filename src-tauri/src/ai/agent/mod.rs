@@ -88,6 +88,11 @@ pub async fn ai_agent_message(
     image_model: Option<crate::ai::images::ImageModel>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
+    // Research runs as a paper - ai_paper_run, then ai_paper_draft - not as
+    // a chat message.
+    if mode == AgentMode::Research {
+        return Err("Research writes a paper; it doesn't send a chat message.".to_string());
+    }
     // What every request names, as Research's requests carry it too.
     let request = AgentRequest {
         provider,
@@ -258,10 +263,12 @@ async fn ai_agent_message_inner(
                     run: tools::Run::Async(Box::new(move |call| Box::pin(run.run(call)))),
                 });
             }
-            // The reference library's search, once there is a library.
-            if let Some(tool) = tools::references_tool(workspace.root.as_deref().map(Path::new)) {
-                tools.add(tool);
-            }
+            // The reference library's search, once there is a library, and
+            // the plugins' and MCP servers' tools: what every mode shares.
+            tools.add_shared(
+                workspace.root.as_deref().map(Path::new),
+                installed_tools(&app).await,
+            );
             // A document shown whole needs no tools to read it: offered, they were
             // read again and again instead of edited.
             if context::shown_whole(&document, true) {
@@ -283,9 +290,6 @@ async fn ai_agent_message_inner(
             }
             // The user's earlier conversations, when they refer to one.
             tools.add(search_conversations_tool(&stores.chat));
-            for tool in installed_tools(&app).await {
-                tools.add(tool);
-            }
             // Create mode reads the plugins installed, to change one.
             if let Some(tool) = crate::plugins::read_tool::read_plugin_tool(&app) {
                 tools.add(tool);

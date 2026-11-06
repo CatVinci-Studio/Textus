@@ -7,7 +7,7 @@ import { EditorMarginLayer } from "./EditorMarginLayer";
 import { EditorOverlays } from "./EditorOverlays";
 import { EditorChatPortals } from "./EditorChatPortals";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
-import { useSettings, type AgentMode } from "../prefs/SettingsContext";
+import { useSettings, type ChatMode } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 import { Milkdown } from "@milkdown/react";
 import "@milkdown/kit/prose/view/style/prosemirror.css";
@@ -31,7 +31,7 @@ interface MilkdownEditorProps {
    *  the grammar check go quiet. */
   tour?: TourAi | null;
   /** The AI panel's mode the tour's lesson needs, on its practice tab. */
-  tourMode?: AgentMode | null;
+  tourMode?: ChatMode | null;
   /** Nothing may change the document (View › Read Only). */
   readOnly?: boolean;
 }

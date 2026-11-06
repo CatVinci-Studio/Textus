@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { AgentSkill } from "../types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import type { PickerLabels } from "./ComposerPicker";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
 import {
   SKILL_TRIGGER,
   listFromWorkspace,
@@ -29,7 +29,7 @@ export function useComposerSkills({
   dismissedInput: string | null;
   lang: PickerLabels["lang"];
   /** Only this mode's skills are offered; none for null. */
-  mode: AgentMode | null;
+  mode: ChatMode | null;
 }) {
   const [skills, setSkills] = useState<AgentSkill[]>([]);
   const [skillList, setSkillList] = useState<SkillListItem[] | null>(null);

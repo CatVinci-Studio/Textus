@@ -9,7 +9,11 @@ import {
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { ai } from "../../platform/ipc";
 import { useActiveProvider, useWebSearchStatus } from "../provider-catalog";
-import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
+import {
+  isChatMode,
+  type ChatMode,
+  type AgentMode,
+} from "../../prefs/SettingsContext";
 import { initialMode, rememberMode } from "./last-mode";
 import { deepThinkingOn, useCanThinkDeeper } from "./deep-thinking";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -116,14 +120,14 @@ export function useComposerMode({
   offered,
   onModeChange,
 }: {
-  tourMode: AgentMode | null;
+  tourMode: ChatMode | null;
   carryMode: boolean;
-  defaultMode: AgentMode;
-  offered: readonly PanelMode[];
+  defaultMode: ChatMode;
+  offered: readonly AgentMode[];
   onModeChange: ChatComposerProps["onModeChange"];
 }) {
-  const allowed = (m: PanelMode) => (offered.includes(m) ? m : offered[0]);
-  const [mode, setModeState] = useState<PanelMode>(() =>
+  const allowed = (m: AgentMode) => (offered.includes(m) ? m : offered[0]);
+  const [mode, setModeState] = useState<AgentMode>(() =>
     allowed(tourMode ?? (carryMode ? initialMode(defaultMode) : defaultMode)),
   );
   useEffect(() => {
@@ -131,10 +135,10 @@ export function useComposerMode({
   }, [tourMode]);
   const onModeChangeRef = useLatest(onModeChange);
   useEffect(() => onModeChangeRef.current?.(mode), [mode, onModeChangeRef]);
-  const setMode = (next: PanelMode) => {
+  const setMode = (next: AgentMode) => {
     setModeState(next);
     // A paper is one request; the next conversation starts in an agent mode.
-    if (carryMode && next !== "research") rememberMode(next, defaultMode);
+    if (carryMode && isChatMode(next)) rememberMode(next, defaultMode);
   };
   return { mode, setMode };
 }

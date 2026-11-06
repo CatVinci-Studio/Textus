@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
 import { useSettings } from "../../prefs/SettingsContext";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
 
@@ -41,7 +41,7 @@ export function SkillOfferChip({
   docPath: string | null;
 }) {
   const { t } = useSettings();
-  const [modes, setModes] = useState<AgentMode[]>(["write"]);
+  const [modes, setModes] = useState<ChatMode[]>(["write"]);
   const [state, setState] = useState<
     { kind: "offered" } | { kind: "saved" } | { kind: "failed"; why: string }
   >({ kind: "offered" });

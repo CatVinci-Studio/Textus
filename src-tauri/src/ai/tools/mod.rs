@@ -119,8 +119,13 @@ pub enum Access {
     ProposesInItsCall,
 }
 
-/// The modes a tool is offered in.
-pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write, AgentMode::Create];
+/// The modes a tool is offered in: every mode, Research's researchers too.
+pub const EVERY_MODE: &[AgentMode] = &[
+    AgentMode::Review,
+    AgentMode::Write,
+    AgentMode::Create,
+    AgentMode::Research,
+];
 /// Write and Review: the modes that work on the document (comments).
 pub const DOCUMENT_MODES: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
 /// Write: the modes that change the document.
@@ -175,6 +180,20 @@ impl<'a> ToolRegistry<'a> {
             .contains(&&*t.spec.name)
         });
         registry
+    }
+
+    /// The tools every mode shares beyond the built-ins: the reference
+    /// library's search, once the project in `root` has a library, and
+    /// `installed` - the plugins' and MCP servers' tools
+    /// (`agent::installed_tools`). The chat's requests and Research's
+    /// researchers both add them here.
+    pub fn add_shared(&mut self, root: Option<&std::path::Path>, installed: Vec<Tool<'a>>) {
+        if let Some(tool) = references_tool(root) {
+            self.add(tool);
+        }
+        for tool in installed {
+            self.add(tool);
+        }
     }
 
     /// Only the tool named `name`, if it is offered: what a chapter's helper has.

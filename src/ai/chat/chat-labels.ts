@@ -6,7 +6,7 @@ import { permissionLabel } from "../../plugins/store/permissions";
 import { aiErrorTexts } from "../error-messages";
 import { toolActivityLabels } from "./tool-activity";
 import { MODES } from "../modes";
-import type { PanelMode } from "../../prefs/settings-types";
+import type { AgentMode } from "../../prefs/settings-types";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no
@@ -157,7 +157,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
 
 /** Each mode's name and line, as the composer's picker shows them. */
 function modeLabels(t: Strings) {
-  const of = (mode: PanelMode) => ({
+  const of = (mode: AgentMode) => ({
     label: t[MODES[mode].label],
     hint: t[MODES[mode].hint],
   });

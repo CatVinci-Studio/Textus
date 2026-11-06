@@ -16,7 +16,7 @@ import {
   type PickerSkill,
 } from "./skill-picker";
 import { basename } from "../../utils/path";
-import type { PanelMode } from "../../prefs/SettingsContext";
+import { isChatMode, type AgentMode } from "../../prefs/SettingsContext";
 import {
   CloseIcon,
   GenericFileIcon,
@@ -103,7 +103,7 @@ export function ChatComposer({
   const { attachments, setAttachments, attachError, setAttachError } = staged;
   // Research is the panel's, where its paper is followed. Create is made in
   // Settings › Extensions, so it is offered only where it is the one mode.
-  const modeValues: readonly PanelMode[] = onlyMode
+  const modeValues: readonly AgentMode[] = onlyMode
     ? [onlyMode]
     : ["write", "review", ...(onResearch ? (["research"] as const) : [])];
   const { mode, setMode } = useComposerMode({
@@ -134,7 +134,7 @@ export function ChatComposer({
     dismissedInput,
     lang: picker.lang,
     // Research has no skills: the message is a paper's topic.
-    mode: mode === "research" ? null : mode,
+    mode: isChatMode(mode) ? mode : null,
   });
 
   // @-mention picker ("@", or the "＠" a CJK IME types): picking a project

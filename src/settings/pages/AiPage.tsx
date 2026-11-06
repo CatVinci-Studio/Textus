@@ -3,7 +3,7 @@ import { SettingsGroup } from "./SettingsGroup";
 import {
   COMPLETION_TONES,
   type CompletionTone,
-  type AgentMode,
+  type ChatMode,
   type GrammarStrictness,
   type ProxyType,
   REVISION_DISPLAYS,
@@ -149,7 +149,7 @@ export function AiPage({
                     }
                     onChange={(e) =>
                       setSettings({
-                        agentDefaultMode: e.target.value as AgentMode,
+                        agentDefaultMode: e.target.value as ChatMode,
                       })
                     }
                   >

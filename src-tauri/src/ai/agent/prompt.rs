@@ -111,8 +111,11 @@ pub(crate) fn app_guide() -> String {
     )
 }
 
-/// The conversation's mode, picked in the composer. It decides what
-/// propose_edit may do, which skills apply and what the prompt says.
+/// The agent's mode, picked in the composer. It decides what propose_edit
+/// may do, which skills apply, which tools are offered and what the prompt
+/// says. Review, Write and Create are a chat message's (`ai_agent_message`);
+/// Research is a paper's (`ai::paper`), whose stages write their own
+/// prompts.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "lowercase")]
@@ -127,6 +130,10 @@ pub enum AgentMode {
     /// files in the reply, which the chat offers to install: no
     /// propose_edit, no comments.
     Create,
+    /// Researches a topic and writes a piece on it (docs/design/ai-paper.md):
+    /// its researchers read and search, and change nothing of the user's.
+    /// No skills, so no `textus-modes` word names it.
+    Research,
 }
 
 impl AgentMode {
@@ -147,6 +154,7 @@ impl std::fmt::Display for AgentMode {
             AgentMode::Review => "review",
             AgentMode::Write => "write",
             AgentMode::Create => "create",
+            AgentMode::Research => "research",
         })
     }
 }
@@ -213,7 +221,9 @@ pub(crate) fn build_instructions(
     if with_tools {
         sections.push(
             match mode {
-                AgentMode::Review => AGENT_READ_ONLY_TOOL_INSTRUCTIONS,
+                // Research never sends a chat message (ai_agent_message
+                // refuses it); were it to, it reads as Review.
+                AgentMode::Review | AgentMode::Research => AGENT_READ_ONLY_TOOL_INSTRUCTIONS,
                 AgentMode::Write => AGENT_TOOL_INSTRUCTIONS,
                 AgentMode::Create => AGENT_CREATE_TOOL_INSTRUCTIONS,
             }
@@ -267,7 +277,7 @@ pub(super) fn mode_section(mode: AgentMode, ui_language: &str) -> String {
         None => format!("{mode} mode"),
     };
     match mode {
-        AgentMode::Review => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click.", named("Review", true), named("Write", false)),
+        AgentMode::Review | AgentMode::Research => format!("---interaction mode: review---\nThe user is in {}: answer, explain, discuss or research, and pin feedback to passages with add_comment; you can't change the document here. When they ask for a change anyway, give the new text in your reply and say that in {} you can propose it for them to apply with one click.", named("Review", true), named("Write", false)),
         AgentMode::Create => format!("---interaction mode: create---\nThe user is in {}: they are making something for the app itself - an editor theme, a plugin or a skill - not working on the document. Load the skill marked [create] that matches what they ask for and deliver what it makes as files in fenced code blocks in your reply, which the chat offers to install or save; read the document or the project only when the request is about them. Questions about the app still get a plain reply. For writing in the document, send them to {}.", named("Create", true), named("Write", false)),
         AgentMode::Write => format!("---interaction mode: write---\nThe user is in {}: carry out their request on the document - continue it, add a paragraph, section, list, scene or dialogue, or rewrite, tighten, fix, translate, restructure or delete what is there - and submit every document change through propose_edit so they can review it before applying. Where new text goes, when the request doesn't say: with a <selected-text> block, a change to the selection (rewrite it, translate it, shorten it) replaces it with replace_selection, while more text (continue, add) goes right after it - insert_after with the selection's last sentence (or the whole selection) as `anchor`; otherwise, with a <cursor> block in a document that has text, insert_at_cursor; in an empty document, append. Questions and feedback still get a plain reply. {UNDECIDED_TEXT}", named("Write", true)),
     }

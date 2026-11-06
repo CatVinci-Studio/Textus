@@ -66,10 +66,11 @@ export {
   type ImageStorageMode,
   type ImageHost,
   type ImageNamingMode,
+  type ChatMode,
   type AgentMode,
-  type PanelMode,
-  AGENT_MODES,
-  storedAgentMode,
+  CHAT_MODES,
+  isChatMode,
+  storedChatMode,
   type Settings,
 } from "./settings-types";
 export { htmlLang, normaliseSettings } from "./settings-normalise";

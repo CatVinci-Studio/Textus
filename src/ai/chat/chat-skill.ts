@@ -1,5 +1,5 @@
-import type { AgentMode } from "../../prefs/settings-types";
-import { storedAgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
+import { storedChatMode } from "../../prefs/settings-types";
 
 /**
  * A skill Textus AI wrote in a reply: one fenced block such as
@@ -11,7 +11,7 @@ export interface ReplySkill {
   /** What it says it is called in each UI language (`textus-label-<code>`). */
   labels: Record<string, string>;
   /** The modes its file asks for; Write when it doesn't say. */
-  modes: AgentMode[];
+  modes: ChatMode[];
   /** The whole file, as it is saved. */
   text: string;
 }
@@ -54,8 +54,8 @@ export function skillsInReply(text: string): ReplySkill[] {
       labels[l[1]] = l[2].trim().replace(/^"(.*)"$/, "$1");
     const modes = (field(front[1], "textus-modes") ?? "")
       .split(/[\s,]+/)
-      .map(storedAgentMode)
-      .filter((mode): mode is AgentMode => mode !== null);
+      .map(storedChatMode)
+      .filter((mode): mode is ChatMode => mode !== null);
     skills.push({
       name,
       description: description(front[1]),

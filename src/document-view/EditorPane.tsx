@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import { MilkdownProvider } from "@milkdown/react";
-import { useSettings, type AgentMode } from "../prefs/SettingsContext";
+import { useSettings, type ChatMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";
@@ -45,7 +45,7 @@ interface EditorPaneProps {
   /** The tour's AI, on its practice tab. */
   tour?: TourAi | null;
   /** The tour's AI panel mode, on its practice tab. */
-  tourMode?: AgentMode | null;
+  tourMode?: ChatMode | null;
   /** View › Read Only, for this tab. */
   readOnly?: boolean;
 }

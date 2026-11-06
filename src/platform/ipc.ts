@@ -12,7 +12,7 @@ import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../ai/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
-import type { AgentMode } from "../prefs/SettingsContext";
+import type { ChatMode } from "../prefs/SettingsContext";
 import type {
   CompletionRequest_Deserialize as CompletionRequest,
   GrammarRequest_Deserialize as GrammarRequest,
@@ -241,7 +241,7 @@ export const ai = {
     /** What web_search uses when the model can't search by itself. */
     searchService?: string;
     searxngUrl?: string;
-    mode: AgentMode;
+    mode: ChatMode;
     model: string | null;
     requestId: string;
     /** Heading of the section the cursor is in, embedded in full when the
@@ -386,12 +386,12 @@ export const ai = {
     scope: "personal" | "project",
     docPath: string | null,
     workspaceRoot: string | null,
-    modes: AgentMode[],
+    modes: ChatMode[],
   ) =>
     command("save_offered_skill", offer, scope, docPath, workspaceRoot, modes),
   /** A skill file a reply wrote, saved in the global skills folder in
    *  `modes`, over an earlier version. Its path. */
-  saveWrittenSkill: (text: string, modes: AgentMode[]) =>
+  saveWrittenSkill: (text: string, modes: ChatMode[]) =>
     command("save_written_skill", text, modes),
   /** What the writer will probably say next after a reply: up to three
    *  messages, most likely first (Rust: ai/next_message.rs). */
@@ -500,7 +500,7 @@ export const ai = {
     source: SkillListItem["source"],
     docPath: string | null,
     workspaceRoot: string | null,
-    modes: AgentMode[],
+    modes: ChatMode[],
   ) => command("set_skill_modes", name, source, docPath, workspaceRoot, modes),
   /** Turns a user skill off for now, or on again; a built-in is always on. */
   setSkillOff: (

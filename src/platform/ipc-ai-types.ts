@@ -1,4 +1,5 @@
 import type { SkillCategory } from "../ai/skills/builtin";
+import type { AgentMode } from "../prefs/settings-types";
 import type { WebSearchStatus_Serialize } from "./bindings/ai";
 import type {
   GeneratedImageData as GeneratedImage,
@@ -10,7 +11,6 @@ import type {
   Remembering_Serialize,
 } from "./bindings/ai-memory";
 import type {
-  AgentMode_Serialize as AgentMode,
   AgentSkill_Serialize,
   AgentWorkspace_Serialize,
   LibraryEntry_Serialize,

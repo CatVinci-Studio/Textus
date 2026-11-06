@@ -30,9 +30,9 @@ const MAX_QUESTIONS: usize = 10;
 /// Characters of each attached file the research plan sees.
 const PLAN_GLIMPSE: usize = 1_500;
 
-/// The mode whose tools a researcher is offered: it reads, and changes
-/// nothing of the user's.
-const MODE: AgentMode = AgentMode::Review;
+/// The mode whose tools a researcher is offered: Research's own, which
+/// reads and changes nothing of the user's.
+const MODE: AgentMode = AgentMode::Research;
 
 /// What the researchers work with besides the web and add_note: the tools
 /// every mode shares - the files, the reference library, the plugins' and
@@ -92,12 +92,7 @@ pub(crate) fn shared_tools<'t>(
     } else {
         ToolRegistry::new(MODE)
     };
-    if let Some(tool) = crate::ai::tools::references_tool(root) {
-        tools.add(tool);
-    }
-    for tool in installed {
-        tools.add(tool);
-    }
+    tools.add_shared(root, installed);
     tools
 }
 

@@ -2,7 +2,7 @@ import type { ReactNode, RefObject } from "react";
 import type { ChatAttachment, ThinkingLevel } from "../types";
 import { resolveStrings } from "../../i18n/strings";
 import { pickerLabels, type PickerLabels } from "./ComposerPicker";
-import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
+import type { ChatMode, AgentMode } from "../../prefs/SettingsContext";
 
 // What ChatComposer is given, apart from the component so the hooks and
 // windows that only pass these along needn't import it.
@@ -49,7 +49,7 @@ export interface ChatComposerLabels {
   attachmentNoVision: string;
   /** Each mode's name, and one line on what it does under it in the
    *  picker (src/ai/modes.ts). */
-  modes: Record<PanelMode, { label: string; hint: string }>;
+  modes: Record<AgentMode, { label: string; hint: string }>;
   /** Accessible name of the phone's segmented mode control, and the
    *  picker's heading over the modes. */
   modeLabel: string;
@@ -112,13 +112,13 @@ export interface ChatComposerProps {
   selectionIsPicture?: boolean;
   busy: boolean;
   labels: ChatComposerLabels;
-  defaultMode: AgentMode;
+  defaultMode: ChatMode;
   /** The panel and the detached window: the mode picked carries over to
    *  the next conversation. Quick Ask keeps its own. */
   carryMode?: boolean;
   /** The tour's lesson's mode, put in place whenever it changes; the learner
    *  can still pick another. Not carried over. */
-  tourMode?: AgentMode | null;
+  tourMode?: ChatMode | null;
   selectionChip?: SelectionChipHandlers;
   /** The panel and the detached window: a selection rides with one message,
    *  so sending uses it up. Quick Ask's stays for its whole conversation. */
@@ -128,7 +128,7 @@ export interface ChatComposerProps {
   compact?: boolean;
   /** The one mode offered, and the mode it starts and stays in (Settings ›
    *  Extensions › Create: Create only). */
-  onlyMode?: AgentMode;
+  onlyMode?: ChatMode;
   /** Focus the input as the composer appears (default). Off for the phone's
    *  AI sheet, where raising the keyboard right away flashes. */
   focusOnOpen?: boolean;
@@ -146,7 +146,7 @@ export interface ChatComposerProps {
     attachments: ChatAttachment[],
     /** False once the user has removed the selection chip. */
     includeSelection: boolean,
-    options: { mode: AgentMode; webSearch: boolean; thinking: ThinkingLevel },
+    options: { mode: ChatMode; webSearch: boolean; thinking: ThinkingLevel },
     /** What was typed (before a skill expanded it), for the queue's Edit
      *  to put back. */
     typed: string,
@@ -157,7 +157,7 @@ export interface ChatComposerProps {
   onStop: () => void;
   onEscape: () => void;
   /** The mode as it is now, on the first render and on every switch. */
-  onModeChange?: (mode: PanelMode) => void;
+  onModeChange?: (mode: AgentMode) => void;
   /** The panel: Research is offered, and a message sent in it is the
    *  topic of a paper, handed here with its text files instead of to
    *  onSend. */

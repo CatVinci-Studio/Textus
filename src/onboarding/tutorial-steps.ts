@@ -1,5 +1,5 @@
 import type { TextKey } from "../i18n/strings";
-import type { AgentMode } from "../prefs/SettingsContext";
+import type { ChatMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
 import { LESSON_DONE, WRITE_PART, WYSIWYG_PART } from "./tutorial-evaluation";
 
@@ -70,7 +70,7 @@ export interface TutorialStep {
   /** A Textus AI lesson: with no AI connected it is watched, not done. */
   ai?: boolean;
   /** The AI panel's mode this lesson needs; the tour sets it. */
-  agentMode?: AgentMode;
+  agentMode?: ChatMode;
   /** Never locked: Continue is there whether or not it was tried. */
   optional?: boolean;
 }

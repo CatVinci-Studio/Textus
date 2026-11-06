@@ -311,11 +311,14 @@ only reads, answers and comments.**
   of each message, and the tools: Review gets no `propose_edit`, Write
   gets every action. Every proposal is decided by the user either way
   ([ai-proposals.md](ai-proposals.md)).
-- In code: `AgentMode` (`prefs/SettingsContext.tsx`,
-  `ai/agent/prompt.rs`) with the values `write` and `review`. 1.2.0's
-  third mode, Revise (修订), folded into Write in 1.2.1: a stored or sent
+- In code: `AgentMode` (`ai/agent/prompt.rs`, and
+  `prefs/settings-types.ts`, which a test holds to the generated type) -
+  `write`, `review`, `create` and `research`, the one agent's modes.
+  `ChatMode` is the first three, the ones a chat message is sent in
+  (`isChatMode`); Research writes a paper ([ai-paper.md](ai-paper.md)).
+  1.2.0's Revise (修订) folded into Write in 1.2.1: a stored or sent
   `revise` reads as `write`, any other unknown value as the default
-  (`storedAgentMode`).
+  (`storedChatMode`).
 
 ### Not a file: completion tone
 

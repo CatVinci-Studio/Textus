@@ -30,7 +30,7 @@ import {
   DOC_LETTER_SPACINGS,
   type DocLetterSpacing,
   LETTER_SPACING_BY,
-  storedAgentMode,
+  storedChatMode,
 } from "./settings-types";
 
 /** Saved settings read back whole: a missing, ill-typed or unknown value
@@ -98,7 +98,7 @@ function readSettings(parsed: Raw | null): Settings {
       agentModels: stringMap(parsed.agentModels),
       writingModels: stringMap(parsed.writingModels),
       agentDefaultMode:
-        storedAgentMode(parsed.agentDefaultMode) ??
+        storedChatMode(parsed.agentDefaultMode) ??
         DEFAULT_SETTINGS.agentDefaultMode,
       revisionDisplay:
         parsed.revisionDisplay === "new"

@@ -9,7 +9,7 @@ import { CloseConfirmBar, type CloseConfirmLabels } from "../CloseConfirm";
 import { useQuickAskReveal } from "./useQuickAskReveal";
 import { useQuickAskDock } from "./quick-ask-dock";
 import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
-import type { AgentMode } from "../../../prefs/SettingsContext";
+import type { ChatMode } from "../../../prefs/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { Tooltip } from "../../../ui/Tooltip";
@@ -41,7 +41,7 @@ interface InlineChatProps {
   /** Conversation state owned by the editor so close/reopen preserves it;
    *  only the explicit New Conversation action resets it. */
   conversation: AgentConversation;
-  defaultMode: AgentMode;
+  defaultMode: ChatMode;
   defaultWebSearch: boolean;
   /** The composer's selection chip handlers. */
   selectionChip?: SelectionChipHandlers;

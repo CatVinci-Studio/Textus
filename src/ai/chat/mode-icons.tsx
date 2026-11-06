@@ -1,4 +1,4 @@
-import type { PanelMode } from "../../prefs/SettingsContext";
+import type { AgentMode } from "../../prefs/SettingsContext";
 import { MODES } from "../modes";
 
 /** A mode's icon, large in the AI panel's empty state (the composer's
@@ -7,7 +7,7 @@ export function ModeIcon({
   mode,
   className,
 }: {
-  mode: PanelMode;
+  mode: AgentMode;
   className?: string;
 }) {
   const Icon = MODES[mode].icon;

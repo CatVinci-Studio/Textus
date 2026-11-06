@@ -24,7 +24,7 @@ import {
 } from "../ai/paper/paper-genres";
 import type { Genre } from "../platform/bindings/ai-paper";
 import { ModeIcon } from "../ai/chat/mode-icons";
-import type { AgentMode, PanelMode, Settings } from "../prefs/SettingsContext";
+import type { ChatMode, AgentMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** The panel always asks for the document as it is now; this stands until
@@ -60,7 +60,7 @@ export function EditorAgentPanel({
   settings: Settings;
   filePath: string | null;
   /** The mode the tour's lesson sets in the composer. */
-  tourMode: AgentMode | null;
+  tourMode: ChatMode | null;
   agentPanel: AgentPanelFrame;
   conversation: AgentConversation;
   pendingEdits: PendingEdits;
@@ -90,7 +90,7 @@ export function EditorAgentPanel({
   ) => void;
 }) {
   // The composer's mode: the empty state says what the AI will do in it.
-  const [mode, setMode] = useState<PanelMode>(settings.agentDefaultMode);
+  const [mode, setMode] = useState<AgentMode>(settings.agentDefaultMode);
   // Research mode's kind of piece, "auto" for the model's choice; the
   // message sent is its topic.
   const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");

@@ -47,6 +47,34 @@ fn a_runtime_tool_is_offered_and_run_through_the_registry() {
     );
 }
 
+/// Research is a mode like the chat's: what every mode shares reaches its
+/// researchers, and nothing that changes or comments on the document does.
+#[test]
+fn research_is_offered_what_every_mode_shares_and_nothing_that_edits() {
+    let mut tools = ToolRegistry::files(AgentMode::Research, false);
+    tools.add_shared(
+        None,
+        vec![runtime_tool("zotero_search", Access::ReadOnly, EVERY_MODE)],
+    );
+    tools.add(runtime_tool(
+        "note_on_text",
+        Access::Proposes,
+        DOCUMENT_MODES,
+    ));
+    let names: Vec<String> = tools
+        .specs()
+        .into_iter()
+        .map(|s| s.name.into_owned())
+        .collect();
+    for offered in [READ_FILE_TOOL_NAME, FIND_FILES_TOOL_NAME, "zotero_search"] {
+        assert!(names.iter().any(|n| n == offered), "{names:?}");
+    }
+    assert!(!tools.edits());
+    assert!(!names.iter().any(|n| n == "note_on_text"), "{names:?}");
+    // Research's own registry with every built-in still edits nothing.
+    assert!(!ToolRegistry::builtin(true, true, AgentMode::Research, true).edits());
+}
+
 /// Only a valid proposal or comment ends the exchange early (the loop's
 /// ToolOutput::settled): a refused one needs the model again.
 #[test]

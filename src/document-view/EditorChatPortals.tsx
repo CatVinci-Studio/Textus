@@ -5,7 +5,7 @@ import type { EditorChat } from "./useEditorChat";
 import type { EditorReview } from "./useEditorReview";
 import { InlineChat } from "../ai/chat/quick-ask/InlineChat";
 import { chatLabels } from "../ai/chat/chat-labels";
-import type { AgentMode, Settings } from "../prefs/SettingsContext";
+import type { ChatMode, Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 
 /** Where one tab's chats are drawn: the docked AI panel while active, and
@@ -25,7 +25,7 @@ export function EditorChatPortals({
   review: EditorReview;
   filePath: string | null;
   phone: boolean;
-  tourMode: AgentMode | null;
+  tourMode: ChatMode | null;
   settings: Settings;
   t: Strings;
 }) {

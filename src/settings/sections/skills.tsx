@@ -5,7 +5,11 @@ import type { Strings } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
 import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
 import { listFromWorkspace } from "../../ai/chat/skill-picker";
-import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
+import {
+  CHAT_MODES,
+  isChatMode,
+  type ChatMode,
+} from "../../prefs/settings-types";
 import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
@@ -107,7 +111,7 @@ export function OwnSkillsList({
     }
   }
 
-  async function setModes(skill: SkillListItem, modes: AgentMode[]) {
+  async function setModes(skill: SkillListItem, modes: ChatMode[]) {
     if (modes.length === 0) return;
     setError(null);
     const before = list;
@@ -135,7 +139,8 @@ export function OwnSkillsList({
       {own.map((skill) => {
         const words = skill.labels?.[lang] ?? skill.labels?.en;
         const shadows = skill.overridesBuiltin;
-        const modes = skill.modes ?? ["write"];
+        // No skill is Research's: it sends no chat message.
+        const modes = (skill.modes ?? ["write"]).filter(isChatMode);
         return (
           <div
             key={skill.name}
@@ -257,7 +262,7 @@ export function BuiltinSkillsSection({
           {error}
         </div>
       )}
-      {AGENT_MODES.map((mode) => ({
+      {CHAT_MODES.map((mode) => ({
         mode,
         names: BUILTIN_SKILLS.filter((s) => s.mode === mode),
       }))

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
 import { requestCreate } from "./create-request";
 
 /**
@@ -11,10 +11,10 @@ const ASK_AI_EVENT = "textus-ask-ai";
 
 interface Asked {
   text: string;
-  mode: AgentMode;
+  mode: ChatMode;
 }
 
-export function askAi(text: string, mode: AgentMode): void {
+export function askAi(text: string, mode: ChatMode): void {
   // Create is made in Settings › Extensions, not beside a document; what
   // asks for it here is about a plugin.
   if (mode === "create") return requestCreate(text, "plugin");
@@ -28,8 +28,8 @@ export function askAi(text: string, mode: AgentMode): void {
 export function useAskAi(
   isActive: boolean,
   setPanelOpen: (open: boolean) => void,
-): AgentMode | null {
-  const [mode, setMode] = useState<AgentMode | null>(null);
+): ChatMode | null {
+  const [mode, setMode] = useState<ChatMode | null>(null);
   useEffect(() => {
     if (!isActive) return;
     const onAsk = (e: Event) => {

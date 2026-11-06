@@ -50,14 +50,20 @@ export const commands = {
 
 /* Types */
 /**
- *  The conversation's mode, picked in the composer. It decides what
- *  propose_edit may do, which skills apply and what the prompt says.
+ *  The agent's mode, picked in the composer. It decides what propose_edit
+ *  may do, which skills apply, which tools are offered and what the prompt
+ *  says. Review, Write and Create are a chat message's (`ai_agent_message`);
+ *  Research is a paper's (`ai::paper`), whose stages write their own
+ *  prompts.
  */
 export type AgentMode = AgentMode_Serialize | AgentMode_Deserialize;
 
 /**
- *  The conversation's mode, picked in the composer. It decides what
- *  propose_edit may do, which skills apply and what the prompt says.
+ *  The agent's mode, picked in the composer. It decides what propose_edit
+ *  may do, which skills apply, which tools are offered and what the prompt
+ *  says. Review, Write and Create are a chat message's (`ai_agent_message`);
+ *  Research is a paper's (`ai::paper`), whose stages write their own
+ *  prompts.
  */
 export type AgentMode_Deserialize = 
 /**  Reads, answers and comments: no propose_edit. */
@@ -77,11 +83,20 @@ export type AgentMode_Deserialize =
  *  files in the reply, which the chat offers to install: no
  *  propose_edit, no comments.
  */
-"create";
+"create" | 
+/**
+ *  Researches a topic and writes a piece on it (docs/design/ai-paper.md):
+ *  its researchers read and search, and change nothing of the user's.
+ *  No skills, so no `textus-modes` word names it.
+ */
+"research";
 
 /**
- *  The conversation's mode, picked in the composer. It decides what
- *  propose_edit may do, which skills apply and what the prompt says.
+ *  The agent's mode, picked in the composer. It decides what propose_edit
+ *  may do, which skills apply, which tools are offered and what the prompt
+ *  says. Review, Write and Create are a chat message's (`ai_agent_message`);
+ *  Research is a paper's (`ai::paper`), whose stages write their own
+ *  prompts.
  */
 export type AgentMode_Serialize = 
 /**  Reads, answers and comments: no propose_edit. */
@@ -96,7 +111,13 @@ export type AgentMode_Serialize =
  *  files in the reply, which the chat offers to install: no
  *  propose_edit, no comments.
  */
-"create";
+"create" | 
+/**
+ *  Researches a topic and writes a piece on it (docs/design/ai-paper.md):
+ *  its researchers read and search, and change nothing of the user's.
+ *  No skills, so no `textus-modes` word names it.
+ */
+"research";
 
 /**
  *  One skill as the app sees it: the frontmatter's name and description, the

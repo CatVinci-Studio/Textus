@@ -9,7 +9,7 @@ import {
   type SkillCategory,
 } from "../skills/builtin";
 import type { AgentSkill } from "../types";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 
@@ -84,7 +84,7 @@ export function listFromWorkspace(skills: AgentSkill[]): SkillListItem[] {
 export function pickerSkills(
   items: SkillListItem[],
   lang: Lang,
-  mode: AgentMode,
+  mode: ChatMode,
 ): PickerSkill[] {
   return items
     .filter(

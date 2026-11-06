@@ -1,7 +1,7 @@
 import type { DocumentSnapshot } from "../doc-markdown";
 import type { MessageQueueLabels } from "./MessageQueue";
 import type { AgentConversation } from "./useAgentConversation";
-import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
+import type { ChatMode, AgentMode } from "../../prefs/SettingsContext";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
 import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
@@ -46,9 +46,9 @@ export interface ChatBodyProps {
   /** Explicit agent workspace root, or null for the document's own folder. */
   workspaceRoot: string | null;
   conversation: AgentConversation;
-  defaultMode: AgentMode;
+  defaultMode: ChatMode;
   /** The tour's lesson's mode. */
-  tourMode?: AgentMode | null;
+  tourMode?: ChatMode | null;
   defaultWebSearch: boolean;
   labels: ChatBodyLabels;
   proposalStatus: (callId: string) => PendingStatus;
@@ -73,7 +73,7 @@ export interface ChatBodyProps {
    *  (Escape shouldn't destroy an OS window the user placed deliberately). */
   onEscape?: () => void;
   /** The composer's mode, now and on every switch. */
-  onModeChange?: (mode: PanelMode) => void;
+  onModeChange?: (mode: AgentMode) => void;
   /** The panel: Research is offered, its message a paper's topic. */
   onResearch?: ChatComposerProps["onResearch"];
   kind?: ChatComposerProps["kind"];
@@ -96,7 +96,7 @@ export interface ChatBodyProps {
    *  one-line reply summary, the pending bar and the composer. */
   variant?: "quick" | "full";
   /** The composer offers this mode alone. */
-  onlyMode?: AgentMode;
+  onlyMode?: ChatMode;
   /** Detached window only: fetches the editor's document and selection just
    *  before a send, since the user may have moved on since the last push.
    *  Resolves null if the editor doesn't answer; the last push is used. */

@@ -157,20 +157,26 @@ export type ImageStorageMode = "local" | "image-host";
 export type ImageHost = "picgo" | "smms" | "imgur" | "custom";
 export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
-/** The AI conversation's mode: Write adds and changes text, Review only
- *  reads and comments, Create makes a theme, plugin or skill. In composer order. */
-export type AgentMode = "write" | "review" | "create";
-export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
-/** The AI panel's modes: the agent's, then Research, which researches a
- *  topic and writes a paper (docs/design/ai-paper.md). Research never
- *  reaches the agent, so it is no skill's mode and no default. */
-export type PanelMode = AgentMode | "research";
+/** The modes a chat message is sent in: Write adds and changes text,
+ *  Review only reads and comments, Create makes a theme, plugin or skill.
+ *  In composer order. */
+export type ChatMode = "write" | "review" | "create";
+export const CHAT_MODES: readonly ChatMode[] = ["write", "review", "create"];
+/** Textus AI's modes - Rust's `agent::AgentMode`, one agent's: the chat's,
+ *  then Research, which researches a topic and writes a paper
+ *  (docs/design/ai-paper.md). Research sends no chat message, so it is no
+ *  skill's mode and no default. */
+export type AgentMode = ChatMode | "research";
+/** Whether `mode` sends chat messages: every mode but Research. */
+export function isChatMode(mode: AgentMode): mode is ChatMode {
+  return mode !== "research";
+}
 
 /** A stored mode, or null for anything that isn't one of today's; the old
  *  Revise mode reads as Write. */
-export function storedAgentMode(value: unknown): AgentMode | null {
+export function storedChatMode(value: unknown): ChatMode | null {
   if (value === "revise") return "write";
-  return AGENT_MODES.includes(value as AgentMode) ? (value as AgentMode) : null;
+  return CHAT_MODES.includes(value as ChatMode) ? (value as ChatMode) : null;
 }
 
 export interface Settings {
@@ -228,7 +234,7 @@ export interface Settings {
   /// shape change.
   agentModels: Record<string, string>;
   /** Initial mode shown in a newly mounted Agent composer. */
-  agentDefaultMode: AgentMode;
+  agentDefaultMode: ChatMode;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
   /// the text, removals in the margin), "original" (struck original, new text
   /// in the margin; "inline" where no room) or "inline". Legacy "new" reads as "final".

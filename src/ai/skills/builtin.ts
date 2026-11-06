@@ -1,4 +1,4 @@
-import type { AgentMode } from "../../prefs/settings-types";
+import type { ChatMode } from "../../prefs/settings-types";
 
 /** The built-in skills as the frontend needs them. The backend's list decides
  *  which exist; this one sets Settings' order and is the fallback. */
@@ -23,7 +23,7 @@ export const BUILTIN_SKILLS = [
   name: string;
   category: SkillCategory;
   invocation: "both" | "userOnly";
-  mode: AgentMode;
+  mode: ChatMode;
 }[];
 
 export type BuiltinSkillName = (typeof BUILTIN_SKILLS)[number]["name"];

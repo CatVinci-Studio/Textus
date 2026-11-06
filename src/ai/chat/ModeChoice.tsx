@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { MODES } from "../modes";
 import type { Strings } from "../../i18n/strings";
-import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
+import { CHAT_MODES, type ChatMode } from "../../prefs/settings-types";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 
@@ -16,10 +16,10 @@ export function ModeChoice({
   onChange,
 }: {
   t: Strings;
-  modes: AgentMode[];
+  modes: ChatMode[];
   /** The skill is off: its modes show, kept, but can't be changed. */
   disabled?: boolean;
-  onChange: (modes: AgentMode[]) => void;
+  onChange: (modes: ChatMode[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useCloseOnOutsideClick<HTMLSpanElement>(
@@ -41,7 +41,7 @@ export function ModeChoice({
     const below = bottom - button.bottom;
     setUp(below < menu.offsetHeight + 8 && button.top > below);
   }, [open, ref]);
-  const label = AGENT_MODES.filter((m) => modes.includes(m))
+  const label = CHAT_MODES.filter((m) => modes.includes(m))
     .map((m) => t[MODES[m].label])
     .join(" · ");
   return (
@@ -65,7 +65,7 @@ export function ModeChoice({
           role="menu"
           aria-label={t.agentSkillsModes}
         >
-          {AGENT_MODES.map((mode) => {
+          {CHAT_MODES.map((mode) => {
             const on = modes.includes(mode);
             return (
               <button
@@ -78,7 +78,7 @@ export function ModeChoice({
                 onClick={() => {
                   if (on && modes.length === 1) return;
                   onChange(
-                    AGENT_MODES.filter((m) =>
+                    CHAT_MODES.filter((m) =>
                       m === mode ? !on : modes.includes(m),
                     ),
                   );
