@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { isSelfContained, themeName, themesInReply } from "./chat-theme";
@@ -14,7 +15,7 @@ describe("themesInReply", () => {
     const [theme, ...rest] = themesInReply(reply);
     expect(rest).toEqual([]);
     expect(theme.name).toBe("Night Harbor");
-    expect(theme.css).toContain("--doc-bg: #16191d;");
+    expect(theme.css).toMatch(/--doc-bg: (#16191d|rgb\(22, 25, 29\));/);
     expect(theme.css.startsWith("/* Night Harbor")).toBe(true);
   });
 

@@ -1,6 +1,8 @@
 /// The themes Textus AI writes in a reply: found in its Markdown, so the chat
 /// can offer "Use this theme" under it.
 
+import { allowedThemeCss } from "./theme-allowlist";
+
 /** A ```css block of a reply that is a whole, installable theme. */
 export interface ReplyTheme {
   css: string;
@@ -44,15 +46,21 @@ export function themeName(css: string): string | null {
   return name ? name.slice(0, 60) : null;
 }
 
+const IS_THEME = /#write\b|--doc-[a-z]/;
+
 /** The installable themes in a reply: closed ```css blocks that style the
- *  document and load nothing from elsewhere. A block still streaming has no
- *  closing fence, so it is offered only once whole. */
+ *  document and load nothing from elsewhere, cut down to what a theme may set
+ *  (`allowedThemeCss`). A block still streaming has no closing fence, so it is
+ *  offered only once whole. */
 export function themesInReply(markdown: string): ReplyTheme[] {
   const themes: ReplyTheme[] = [];
   for (const m of markdown.matchAll(CSS_FENCE)) {
-    const css = m[2].trim();
-    if (!/#write\b|--doc-[a-z]/.test(css) || !isSelfContained(css)) continue;
-    themes.push({ css: `${css}\n`, name: themeName(css) });
+    const source = m[2].trim();
+    if (!IS_THEME.test(source) || !isSelfContained(source)) continue;
+    // Checked again as the parser wrote it out: escapes are resolved there.
+    const css = allowedThemeCss(source);
+    if (!css || !IS_THEME.test(css) || !isSelfContained(css)) continue;
+    themes.push({ css, name: themeName(source) });
   }
   return themes;
 }
