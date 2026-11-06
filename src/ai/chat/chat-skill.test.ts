@@ -47,6 +47,16 @@ describe("a skill in a reply", () => {
     expect(skill.modes).toEqual(["write"]);
   });
 
+  it("never starts in Create, even when its file asks", () => {
+    const [skill] = skillsInReply(reply.replace("write review", "create"));
+    expect(skill).toMatchObject({ modes: ["write"], asksForCreate: true });
+    const [both] = skillsInReply(
+      reply.replace("write review", "review create"),
+    );
+    expect(both).toMatchObject({ modes: ["review"], asksForCreate: true });
+    expect(skillsInReply(reply)[0].asksForCreate).toBe(false);
+  });
+
   it("is nothing without front matter or instructions", () => {
     // A plugin's README.md is a guide, not a skill.
     expect(skillsInReply("```markdown README.md\n# Guide\n```")).toEqual([]);

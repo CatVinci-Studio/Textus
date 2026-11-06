@@ -360,6 +360,15 @@ utiliser une.
   chatUpdatePlugin: "Mettre à jour l’extension",
   chatSaveSkill: "Enregistrer cette compétence",
   chatUpdateSkill: "Mettre à jour la compétence",
+  skillSaveAnyway: "Enregistrer quand même",
+  skillWarnCreateAsked:
+    "Elle demande le mode Créer, où elle pourrait écrire elle-même des compétences. Créer reste décoché : cochez-le seulement si vous faites confiance à chaque ligne.",
+  skillWarnCreateMode:
+    "En mode Créer, elle pourrait écrire ou modifier elle-même des compétences. Ne l’y laissez que si vous faites confiance à chaque ligne.",
+  skillWarnPromptInjection:
+    "Ses instructions semblent vouloir passer outre celles de Textus AI (« ignore les instructions précédentes »). Lisez-la avant de l’enregistrer.",
+  skillWarnHiddenText:
+    "Elle contient des caractères invisibles, qui peuvent cacher des instructions. Lisez-la avant de l’enregistrer.",
   chatPluginCantInstall:
     "Cette extension ne peut pas être installée : {reason}",
   chatPluginCheckDom:

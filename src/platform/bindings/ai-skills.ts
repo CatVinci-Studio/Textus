@@ -43,9 +43,11 @@ export const commands = {
 	set_skill_off: (name: string, source: SkillSource, docPath: string | null, workspaceRoot: string | null, off: boolean) => __TAURI_INVOKE<null>("set_skill_off", { name, source, docPath, workspaceRoot, off }),
 	/**
 	 *  Saves a skill a Create-mode reply wrote into the global skills/ with the
-	 *  picked modes, over an earlier version. Returns its path.
+	 *  picked modes, over an earlier version. Returns its path. A skill that
+	 *  runs in Create mode or reads like a prompt injection fails with
+	 *  SKILL_NEEDS_CONFIRM and its warnings until saved again `confirmed`.
 	 */
-	save_written_skill: (text: string, modes: AgentMode_Deserialize[]) => __TAURI_INVOKE<string>("save_written_skill", { text, modes }),
+	save_written_skill: (text: string, modes: AgentMode_Deserialize[], confirmed: boolean) => __TAURI_INVOKE<string>("save_written_skill", { text, modes, confirmed }),
 };
 
 /* Types */

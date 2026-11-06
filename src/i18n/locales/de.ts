@@ -349,6 +349,15 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatUpdatePlugin: "Plugin aktualisieren",
   chatSaveSkill: "Diese Fähigkeit speichern",
   chatUpdateSkill: "Fähigkeit aktualisieren",
+  skillSaveAnyway: "Trotzdem speichern",
+  skillWarnCreateAsked:
+    "Sie verlangt den Erstellen-Modus, in dem sie selbst Fähigkeiten schreiben könnte. Erstellen bleibt abgewählt: Wählen Sie es nur, wenn Sie jeder Zeile vertrauen.",
+  skillWarnCreateMode:
+    "Im Erstellen-Modus könnte sie selbst Fähigkeiten schreiben oder ändern. Lassen Sie sie dort nur, wenn Sie jeder Zeile vertrauen.",
+  skillWarnPromptInjection:
+    "Ihre Anweisungen wirken, als wollten sie die von Textus AI aushebeln („vorherige Anweisungen ignorieren“). Lesen Sie sie vor dem Speichern.",
+  skillWarnHiddenText:
+    "Sie enthält unsichtbare Zeichen, die Anweisungen verbergen können. Lesen Sie sie vor dem Speichern.",
   chatPluginCantInstall:
     "Dieses Plugin lässt sich nicht installieren: {reason}",
   chatPluginCheckDom:

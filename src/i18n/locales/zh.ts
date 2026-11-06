@@ -319,6 +319,14 @@ export default {
     "插件「{name}」有这些问题：\n{problems}\n请在它的代码里找到原因并修复。",
   chatSaveSkill: "保存此技能",
   chatUpdateSkill: "更新技能",
+  skillSaveAnyway: "仍然保存",
+  skillWarnCreateAsked:
+    "它要求在“创建”模式下运行，在那里它能自己写技能。已默认不勾选“创建”：只有信任它的每一行时才勾选。",
+  skillWarnCreateMode:
+    "在“创建”模式下，它能自己写或改技能。只有信任它的每一行时才保留。",
+  skillWarnPromptInjection:
+    "它的指令像是要覆盖 Textus AI 自身的指令（如“忽略之前的指令”）。保存前请先读一遍。",
+  skillWarnHiddenText: "它含有看不见的字符，可能藏着指令。保存前请先读一遍。",
   toolSearchDocument: "在文档中搜索「{arg}」",
   toolReadDocument: "阅读「{arg}」",
   toolReadWholeDocument: "阅读全文",

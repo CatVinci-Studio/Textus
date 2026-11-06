@@ -471,6 +471,11 @@ button.agent-context-chip:hover {
   gap: 8px;
 }
 
+/* Why a skill the reply wrote needs a second look before it is saved. */
+.skill-offer-warning {
+  color: var(--ui-warning);
+}
+
 /* What a plugin the reply wrote asks to do, before Install. */
 .agent-plugin-permissions {
   color: var(--ui-muted);

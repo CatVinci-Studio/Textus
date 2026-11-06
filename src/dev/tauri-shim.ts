@@ -507,6 +507,9 @@ export function installDevTauriShim(): void {
       }
       // Save this skill (Create mode): the file and its modes, logged.
       case "save_written_skill":
+        // As the app does: Create mode saves only once confirmed.
+        if ((args.modes as string[]).includes("create") && !args.confirmed)
+          return Promise.reject("SKILL_NEEDS_CONFIRM:create-mode");
         skills.log.push(`${cmd}:${String(args.modes)}`);
         skills.files.set(skillCopyPath("written"), String(args.text ?? ""));
         return Promise.resolve(skillCopyPath("written"));
