@@ -14,9 +14,9 @@ pub(crate) use super::checks::{
 use super::figures::Draw;
 use super::handover::{hand_over_checked, Checked, Task};
 use super::prompts;
-use super::research::Model;
 use super::stream::{string_value, LastSent};
 use super::{Dossier, FigureKind, FigurePlan, Outline, OutlineSection, Paper, PaperEvent};
+use crate::ai::agent::Model;
 use aicompat::agent::{AgentTurn, ProviderEvent, ToolSpec};
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};

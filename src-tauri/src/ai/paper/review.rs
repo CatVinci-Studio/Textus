@@ -8,8 +8,8 @@
 use super::draft::write_section;
 use super::handover::{hand_over, Checked, Task};
 use super::prompts;
-use super::research::Model;
 use super::{Dossier, Outline, Paper, PaperEvent};
+use crate::ai::agent::Model;
 use aicompat::agent::ToolSpec;
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
