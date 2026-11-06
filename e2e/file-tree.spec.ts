@@ -198,6 +198,61 @@ test("Rename and Move to Trash from the right-click menu (#351)", async ({
   await expect(page.getByRole("menuitem", { name: "Rename…" })).toHaveCount(0);
 });
 
+const disk = (page: Page, path: string) =>
+  page.evaluate(
+    (p) =>
+      (window as unknown as { __devFs: Record<string, string> }).__devFs[p],
+    path,
+  );
+
+test("a rename asks before updating the links to it, outside a vault", async ({
+  page,
+}) => {
+  await open(page, {
+    "/work/notes/b.md": "# Bravo\r\n[o](drafts/old.md) [[old]]\r\n",
+  });
+  await row(page, "drafts").click();
+  await row(page, "old.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Rename…" }).click();
+  await page.getByRole("dialog").getByRole("textbox").fill("Archive");
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Rename" })
+    .click();
+  await expect(page.getByRole("dialog")).toContainText(
+    "Update the links to and from “Archive.md” so they keep working?",
+  );
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Update Links" })
+    .click();
+  await expect
+    .poll(() => disk(page, "/work/notes/b.md"))
+    .toBe("# Bravo\r\n[o](drafts/Archive.md) [[Archive]]\r\n");
+});
+
+test("in an Obsidian vault a moved note's links follow at once", async ({
+  page,
+}) => {
+  await open(page, {
+    "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/b.md": "# Bravo\n![c](chart.png) [a](a.md)\n",
+  });
+  const from = (await row(page, "b.md").boundingBox())!;
+  const to = (await row(page, "drafts").boundingBox())!;
+  await page.mouse.move(from.x + 30, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 34, from.y + from.height / 2 - 6, {
+    steps: 2,
+  });
+  await page.mouse.move(to.x + 40, to.y + to.height / 2, { steps: 6 });
+  await page.mouse.up();
+  await expect
+    .poll(() => disk(page, "/work/notes/drafts/b.md"))
+    .toBe("# Bravo\n![c](../chart.png) [a](../a.md)\n");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("⌘/Ctrl-click on a file opens it in a new window, this one unchanged (#348)", async ({
   page,
 }) => {

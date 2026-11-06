@@ -68,6 +68,11 @@ export const commands = {
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
 	/**
+	 *  Every Markdown document under `root` with its text, for the links a rename
+	 *  in the sidebar updates. Refuses what `index_folder` refuses.
+	 */
+	folder_documents: (root: string) => __TAURI_INVOKE<WorkspaceDocuments>("folder_documents", { root }),
+	/**
 	 *  File > Open Folder…: a folder picker. The home folder or a drive root is
 	 *  refused with "TOO_BROAD" for the frontend to explain.
 	 */
@@ -378,5 +383,19 @@ export type Value = null | boolean | number | string | Value[] | { [key in strin
 /**  What `open_word_document` hands the frontend. */
 export type WordDocument = {
 	markdown: string,
+};
+
+/**  One document and its text. */
+export type WorkspaceDocument = {
+	path: string,
+	/**  From the folder, `/`-separated. */
+	rel: string,
+	text: string,
+};
+
+export type WorkspaceDocuments = {
+	documents: WorkspaceDocument[],
+	/**  The folder holds more than was read: a limit was reached. */
+	truncated: boolean,
 };
 

@@ -31,6 +31,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::fs::migrate_draft_images,
                 crate::commands::fs::move_picture_to_trash,
                 crate::commands::folder::index_folder,
+                crate::commands::folder::folder_documents,
                 crate::commands::folder::pick_open_folder,
                 crate::commands::tree_ops::tree_create_document,
                 crate::commands::tree_ops::tree_create_folder,

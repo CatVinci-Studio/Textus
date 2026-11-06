@@ -705,6 +705,50 @@ export function installDevTauriShim(): void {
         trashed.push(path);
         return Promise.resolve(null);
       }
+      case "folder_documents": {
+        const documents = Object.keys(files)
+          .filter(
+            (file) =>
+              file.startsWith(`${path}/`) &&
+              !file.slice(path.length).includes("/.") &&
+              /\.(md|markdown)$/i.test(file),
+          )
+          .sort()
+          .map((file) => ({
+            path: file,
+            rel: file.slice(path.length + 1),
+            text: files[file],
+          }));
+        return Promise.resolve({ documents, truncated: false });
+      }
+      // A vault is a folder with a file under `.obsidian/`.
+      case "obsidian_vault": {
+        for (let dir = path; dir.includes("/");) {
+          if (
+            Object.keys(files).some((f) => f.startsWith(`${dir}/.obsidian/`))
+          ) {
+            let app: Record<string, unknown> = {};
+            try {
+              app = JSON.parse(files[`${dir}/.obsidian/app.json`] ?? "{}");
+            } catch {
+              /* Obsidian's defaults */
+            }
+            return Promise.resolve({
+              root: dir,
+              useMarkdownLinks: app.useMarkdownLinks === true,
+              newLinkFormat: String(app.newLinkFormat ?? "shortest"),
+              attachmentFolder: String(app.attachmentFolderPath ?? "/"),
+              strictLineBreaks: app.strictLineBreaks === true,
+              alwaysUpdateLinks:
+                typeof app.alwaysUpdateLinks === "boolean"
+                  ? app.alwaysUpdateLinks
+                  : null,
+            });
+          }
+          dir = dir.slice(0, dir.lastIndexOf("/"));
+        }
+        return Promise.resolve(null);
+      }
       case "index_folder": {
         // The backend refuses these; the shim's "home" is /home/me.
         if (path === "/" || path === "/home/me")

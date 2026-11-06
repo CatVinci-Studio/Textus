@@ -11,6 +11,7 @@ import type { Strings } from "../i18n/strings";
 import { showMessage } from "../ui/app-dialog";
 import { documentDrop, setDragging } from "../ui/document-drop";
 import { basename, parentDir } from "../utils/path";
+import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, DRAG_START_PX, failureText } from "./tree-shared";
 
 /** A row being dragged, and the folder under the pointer. */
@@ -31,6 +32,8 @@ export function useRowDrag(
   treeRef: RefObject<HTMLDivElement | null>,
   reload: (...dirs: string[]) => void,
   onEntryMoved: (from: string, to: string) => void,
+  /** The folder whose documents' links follow a move. */
+  linkBase: string,
   t: Strings,
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -111,6 +114,7 @@ export function useRowDrag(
         const to = await fs.moveEntry(from, into);
         reload(parentDir(from) ?? into, into);
         onEntryMoved(from, to);
+        void updateLinksAfterMove(from, to, linkBase, t);
       } catch (err) {
         await showMessage(failureText(t, err, basename(from)));
       }
@@ -125,7 +129,7 @@ export function useRowDrag(
       window.removeEventListener("pointercancel", end);
       window.removeEventListener("keydown", onKey);
     };
-  }, [treeRef, reload, onEntryMoved, t]);
+  }, [treeRef, reload, onEntryMoved, linkBase, t]);
 
   const takeDragClick = useCallback(() => {
     const taken = dragClick.current;

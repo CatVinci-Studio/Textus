@@ -551,6 +551,14 @@ utiliser une.
   treeRenameItem: "Renommer…",
   treeRename: "Renommer",
   treeRenamePrompt: "Nouveau nom",
+  treeUpdateLinksConfirm:
+    "Mettre à jour les liens vers et depuis « {name} » pour qu’ils continuent de fonctionner ?",
+  treeUpdateLinks: "Mettre à jour les liens",
+  treeKeepLinks: "Ne pas mettre à jour",
+  treeUpdateLinksFailed:
+    "Les liens de ces documents n’ont pas pu être mis à jour : {names}",
+  treeDocumentFolder: "Dossier du document actuel",
+  treeOpenAsFolder: "Ouvrir comme dossier",
   treeTrashItem: "Mettre à la corbeille",
   treeTrash: "Mettre à la corbeille",
   treeTrashConfirm:

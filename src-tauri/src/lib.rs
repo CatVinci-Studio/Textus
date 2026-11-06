@@ -272,6 +272,7 @@ pub fn run() {
             save_file_dialog,
             list_dir,
             commands::folder::index_folder,
+            commands::folder::folder_documents,
             read_text_file,
             commands::word_import::open_word_document,
             file_mtime_ms,

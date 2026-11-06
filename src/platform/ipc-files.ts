@@ -79,6 +79,9 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
+  /** Every Markdown document under `root` with its text, for the links a
+   *  rename updates. Rejects as `indexFolder` does. */
+  folderDocuments: (root: string) => command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
   fileMtimeMs: (path: string): Promise<number | null> =>

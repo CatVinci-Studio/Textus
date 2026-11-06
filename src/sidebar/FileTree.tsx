@@ -39,6 +39,7 @@ import {
   type TreeSort,
 } from "./tree-shared";
 import { useRowDrag } from "./useRowDrag";
+import { updateLinksAfterMove } from "./move-links";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
 import { copyPathItem } from "../clipboard/copy-path";
@@ -103,6 +104,7 @@ export function FileTree({
 
   const onRowMenu = useRowMenu(
     root,
+    folder ?? root,
     t,
     reload,
     onFileSelect,
@@ -113,6 +115,7 @@ export function FileTree({
     treeRef,
     reload,
     onEntryMoved,
+    folder ?? root,
     t,
   );
   const shared = useMemo<TreeShared>(
@@ -406,6 +409,7 @@ type TreeMenu = {
 /** A row's context menu: open, new document or folder, rename, move to Trash. */
 function useRowMenu(
   root: string,
+  linkBase: string,
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string, beside?: boolean) => void,
@@ -424,11 +428,12 @@ function useRowMenu(
         reload(parentDir(path) ?? root);
         // Open documents follow, as for a move.
         onEntryMoved(path, to);
+        void updateLinksAfterMove(path, to, linkBase, t);
       } catch (err) {
         await showMessage(failureText(t, err, name.trim()));
       }
     },
-    [root, t, reload, onEntryMoved],
+    [root, linkBase, t, reload, onEntryMoved],
   );
   const trash = useCallback(
     async (path: string, isDir: boolean) => {

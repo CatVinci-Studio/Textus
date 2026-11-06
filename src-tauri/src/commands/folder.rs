@@ -59,6 +59,28 @@ pub async fn index_folder(root: String) -> Result<FolderIndex, String> {
     .map_err(|e| e.to_string())?
 }
 
+/// Every Markdown document under `root` with its text, for the links a rename
+/// in the sidebar updates. Refuses what `index_folder` refuses.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn folder_documents(
+    root: String,
+) -> Result<crate::plugins::workspace::WorkspaceDocuments, String> {
+    crate::commands::fs::require_non_empty(&root)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = PathBuf::from(root);
+        if is_too_broad(&root) {
+            return Err("TOO_BROAD".to_string());
+        }
+        if !root.is_dir() {
+            return Err("NOT_A_FOLDER".to_string());
+        }
+        Ok(crate::plugins::workspace::documents_in(&root))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// File > Open Folder…: a folder picker. The home folder or a drive root is
 /// refused with "TOO_BROAD" for the frontend to explain.
 #[cfg(desktop)]

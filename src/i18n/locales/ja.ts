@@ -521,6 +521,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeRenameItem: "名前を変更…",
   treeRename: "名前を変更",
   treeRenamePrompt: "新しい名前",
+  treeUpdateLinksConfirm:
+    "「{name}」へのリンクと、その中のリンクを更新して使えるままにしますか？",
+  treeUpdateLinks: "リンクを更新",
+  treeKeepLinks: "更新しない",
+  treeUpdateLinksFailed: "次の書類のリンクを更新できませんでした: {names}",
+  treeDocumentFolder: "現在の書類のフォルダー",
+  treeOpenAsFolder: "フォルダーとして開く",
   treeTrashItem: "ゴミ箱に入れる",
   treeTrash: "ゴミ箱に入れる",
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
