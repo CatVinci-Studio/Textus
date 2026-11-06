@@ -1236,6 +1236,9 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .milkdown blockquote.md-alert-caution {
   --doc-alert-accent: var(--doc-alert-caution);
 }
+.milkdown blockquote.md-alert-quote {
+  --doc-alert-accent: var(--doc-muted);
+}
 
 .milkdown blockquote.md-alert {
   border-left-color: var(--doc-alert-accent);
@@ -1255,6 +1258,19 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .md-alert-marker-hidden {
+  display: none;
+}
+
+/* Obsidian's "-" / "+": the chevron folds the body away in the view only. */
+.md-alert-fold {
+  display: inline-flex;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-standard);
+}
+.md-alert-fold[data-folded="true"] {
+  transform: rotate(-90deg);
+}
+.milkdown blockquote.md-alert-folded > :not(:first-child) {
   display: none;
 }
 
