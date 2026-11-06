@@ -1,3 +1,5 @@
+import { splitFrontmatter } from "../utils/frontmatter";
+
 /**
  * Obsidian block ids (`^abc123`): the one a block has, or a new one written
  * where Obsidian reads it - at the end of a paragraph's, heading's or list
@@ -21,11 +23,11 @@ const ID_BELOW: readonly Kind[] = ["code", "math", "quote", "table"];
 
 const blank = (line: string) => !line.trim();
 
+/** The first line after the front matter, as metadata reads it. */
 function bodyStart(lines: string[]): number {
-  if (lines[0] !== "---") return 0;
-  for (let i = 1; i < lines.length; i++)
-    if (lines[i] === "---" || lines[i] === "...") return i + 1;
-  return 0;
+  const text = lines.join("\n");
+  const head = text.slice(0, text.length - splitFrontmatter(text).body.length);
+  return head ? head.split("\n").length - (head.endsWith("\n") ? 1 : 0) : 0;
 }
 
 /** Where the block starting at `i` ends (exclusive), and its kind. */

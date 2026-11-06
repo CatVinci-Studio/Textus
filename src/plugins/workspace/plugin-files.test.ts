@@ -5,7 +5,7 @@ import {
   splitFrontmatter,
   stringifyYaml,
   withFrontmatter,
-} from "./frontmatter";
+} from "../../utils/frontmatter";
 import {
   movedBy,
   planLinkUpdates,

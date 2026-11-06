@@ -15,7 +15,7 @@ import {
   parseYaml,
   type Frontmatter,
   type FrontmatterValue,
-} from "./frontmatter";
+} from "../../utils/frontmatter";
 import {
   pathIndex,
   resolveTarget,

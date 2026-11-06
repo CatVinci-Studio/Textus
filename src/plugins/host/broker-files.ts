@@ -8,7 +8,7 @@ import {
   parseFrontmatter,
   withFrontmatter,
   type Frontmatter,
-} from "../workspace/frontmatter";
+} from "../../utils/frontmatter";
 import { linkPlanner } from "../../links/link-rewrite";
 import { blockIdAt } from "../../links/block-id";
 import { setWillExport } from "../contributions/will-export";
