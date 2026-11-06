@@ -180,7 +180,13 @@ it, lazily loaded. Each stage and helper is one run of
   who sees them all reports with `report_issues` what only the whole shows -
   repetition, contradictions, an outline point no section makes, a figure
   never referred to, a claim stronger than its notes - at most three points
-  a section. Each faulted section is revised once by its writer, under the
+  a section. Beside it, at once, every cited sentence is checked against
+  its notes (`paper/claims.rs`): each section's sentences that cite are
+  paired, by code, with the notes on the sources they cite - claim,
+  evidence, quote and the source's own passage - and a checker gives each
+  a verdict, `supported`, `overstated`, `unsupported` or `wrong_source`,
+  judged by the notes alone; the worst three of a section join the
+  review's points. Each faulted section is revised once by its writer, under the
   same checks; a revision that doesn't hold, or a review that fails, leaves
   the drafts. Only then are the sections sent, so no proposal is replaced.
 - **Finish** (`paper/finish.rs`): picture lines are begun with the user's

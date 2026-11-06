@@ -60,6 +60,43 @@ impl SeenText {
     }
 }
 
+impl super::State {
+    /// Keeps what source `n`, titled `title`, said, if the plan keeps it.
+    pub(super) fn saw(&mut self, n: u32, title: &str, text: &str, reach: Reach) {
+        if let Some(seen) = &mut self.seen {
+            seen.record(n, &format!("{title}\n{text}"), reach);
+        }
+    }
+
+    /// The number of the page at `url`, read in full: what it said kept.
+    pub(super) fn read(&mut self, url: &str, title: &str, text: &str) -> u32 {
+        let n = self.book.add(url, title);
+        self.saw(n, title, text, Reach::Read);
+        n
+    }
+}
+
+impl super::WebPlan {
+    /// Keeps what each source said when shown, for `seen`: a paper's
+    /// research checks its notes against it. Off for chat, which never asks.
+    pub(crate) fn keeping_seen_text(self) -> Self {
+        self.state.lock().unwrap().seen = Some(Default::default());
+        self
+    }
+
+    /// What source `n` said when shown, if this plan keeps it and it was
+    /// shown: a page's text, or its search snippets and abstract.
+    pub(crate) fn seen(&self, n: u32) -> Option<Seen> {
+        self.state.lock().unwrap().seen.as_ref()?.get(n).cloned()
+    }
+
+    /// Keeps `text` as what source `n` said - a file of the user's, read
+    /// elsewhere.
+    pub(crate) fn saw(&self, n: u32, text: &str, reach: Reach) {
+        self.state.lock().unwrap().saw(n, "", text, reach);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

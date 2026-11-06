@@ -142,6 +142,36 @@ pub(super) const UNSUPPORTED_FIGURE: &str = "A figure its sources don't give";
 /// The most such problems told at once.
 const MAX_UNSUPPORTED: usize = 5;
 
+/// A section's sentences that cite, each with the numbers it cites: its
+/// prose only - code, pictures and marks aside.
+pub(super) fn cited_sentences(markdown: &str) -> Vec<(String, Vec<u32>)> {
+    let mut text = String::new();
+    let mut in_fence = false;
+    for line in markdown.lines() {
+        let trimmed = line.trim_start();
+        if trimmed.starts_with("```") {
+            in_fence = !in_fence;
+        } else if !(in_fence || trimmed.starts_with("![") || trimmed.starts_with("<!--")) {
+            text.push_str(line);
+            text.push('\n');
+        }
+    }
+    sentences(&text)
+        .into_iter()
+        .filter_map(|sentence| {
+            let mut cited: Vec<u32> = Vec::new();
+            for c in cited_link().captures_iter(sentence) {
+                if let Ok(n) = c[1].parse() {
+                    if !cited.contains(&n) {
+                        cited.push(n);
+                    }
+                }
+            }
+            (!cited.is_empty()).then(|| (sentence.to_string(), cited))
+        })
+        .collect()
+}
+
 /// The figures each source's notes give - their claims, evidence, quotes
 /// and excerpts, less the figures their sources were found not to give.
 pub(super) fn figures_by_source<'a>(
@@ -174,28 +204,10 @@ pub(super) fn unsupported_figures(
     markdown: &str,
     given: &HashMap<u32, HashSet<String>>,
 ) -> Vec<String> {
-    let mut text = String::new();
-    let mut in_fence = false;
-    for line in markdown.lines() {
-        let trimmed = line.trim_start();
-        if trimmed.starts_with("```") {
-            in_fence = !in_fence;
-        } else if !(in_fence || trimmed.starts_with("![") || trimmed.starts_with("<!--")) {
-            text.push_str(line);
-            text.push('\n');
-        }
-    }
     let empty = HashSet::new();
     let mut out = Vec::new();
-    for sentence in sentences(&text) {
-        let cited: Vec<u32> = cited_link()
-            .captures_iter(sentence)
-            .filter_map(|c| c[1].parse().ok())
-            .collect();
-        if cited.is_empty() {
-            continue;
-        }
-        let missing: Vec<String> = figures(sentence)
+    for (sentence, cited) in cited_sentences(markdown) {
+        let missing: Vec<String> = figures(&sentence)
             .into_iter()
             .filter(|f| {
                 !cited
@@ -206,7 +218,7 @@ pub(super) fn unsupported_figures(
         if missing.is_empty() {
             continue;
         }
-        let plain = cited_link().replace_all(sentence, "");
+        let plain = cited_link().replace_all(&sentence, "");
         let cites: String = cited.iter().map(|n| format!("[{n}]")).collect();
         out.push(format!(
             "{UNSUPPORTED_FIGURE}: \"{}\" has {} but the notes of {cites} don't - give the figure as the notes do, cite the source that gives it, or leave it out.",
