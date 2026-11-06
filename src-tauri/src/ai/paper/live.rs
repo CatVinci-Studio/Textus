@@ -204,6 +204,10 @@ fn live_paper() {
             *section = web_figures::resolve(section, web_figures::find_on_commons).await;
             *section = finish::without_pictures(section);
         }
+        // No window draws here: only figures known not to draw go.
+        for section in &mut sections {
+            *section = super::figures::drawable(None, section).await;
+        }
         let figures = finish::number_figures(&mut sections, &paper.language);
         let mut dossier = finish::number_citations(&mut sections, &dossier);
         finish::title_sources(&mut dossier).await;

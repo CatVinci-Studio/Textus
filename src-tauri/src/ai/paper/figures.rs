@@ -137,6 +137,81 @@ pub(crate) async fn undrawn(draw: Option<Draw<'_>>, markdown: &str) -> Vec<Strin
     out
 }
 
+/// `section` with every diagram and chart that can't be drawn taken out:
+/// the last pass before the figures are numbered, for what no writer's
+/// check saw - a section kept from a run before this one, kept repaired, or
+/// kept on its last try. An empty diagram and a chart `checks` refuses go
+/// undrawn; the rest are drawn by `draw`, and kept as they are when it
+/// can't draw at all. So no figure reaches the paper as its code.
+pub(crate) async fn drawable(draw: Option<Draw<'_>>, section: &str) -> String {
+    let lines: Vec<&str> = section.split('\n').collect();
+    // Each diagram or chart block: its first and last line, and whether it
+    // goes without drawing.
+    let mut found: Vec<(usize, usize, Option<bool>, FigureBlock)> = Vec::new();
+    let mut i = 0;
+    while i < lines.len() {
+        let open = lines[i].trim_start();
+        if !open.starts_with("```") {
+            i += 1;
+            continue;
+        }
+        let language = open.trim_start_matches('`').trim().to_lowercase();
+        let Some(close) = (i + 1..lines.len()).find(|&j| lines[j].trim_start().starts_with("```"))
+        else {
+            break;
+        };
+        let code = lines[i + 1..close].join("\n");
+        let known = match language.as_str() {
+            "mermaid" if code.trim().is_empty() => Some(false),
+            "chart" if chart_holds(&code).is_err() => Some(false),
+            "mermaid" | "chart" => None,
+            _ => Some(true),
+        };
+        if known != Some(true) {
+            found.push((
+                i,
+                close,
+                known,
+                FigureBlock {
+                    language,
+                    code: code.trim_end().to_string(),
+                },
+            ));
+        }
+        i = close + 1;
+    }
+    let to_draw: Vec<FigureBlock> = found
+        .iter()
+        .filter(|f| f.2.is_none())
+        .map(|f| f.3.clone())
+        .collect();
+    let mut drawn = match (draw, to_draw.is_empty()) {
+        (Some(draw), false) => draw(to_draw).await,
+        _ => None,
+    }
+    .map(|errors| errors.into_iter().map(|e| e.is_none()))
+    .into_iter()
+    .flatten();
+    let mut out: Vec<&str> = Vec::with_capacity(lines.len());
+    let mut next = 0;
+    for (open, close, known, _) in &found {
+        let keep = known.unwrap_or_else(|| drawn.next().unwrap_or(true));
+        if !keep {
+            out.extend(&lines[next..*open]);
+            next = close + 1;
+            if cfg!(test) {
+                eprintln!("paper: a figure that doesn't draw was taken out");
+            }
+        }
+    }
+    out.extend(&lines[next..]);
+    let mut text = out.join("\n");
+    while text.contains("\n\n\n") {
+        text = text.replace("\n\n\n", "\n\n");
+    }
+    text
+}
+
 /// A block that doesn't draw, as its writer is told: which one, and the
 /// renderer's words, cut short.
 fn problem(what: &str, n: usize, error: &str) -> String {
@@ -231,5 +306,27 @@ mod tests {
         let gone = by_window(|_| false);
         assert_eq!(gone(block()).await, None);
         assert!(waiting().as_ref().is_none_or(HashMap::is_empty));
+    }
+
+    #[tokio::test]
+    async fn the_last_pass_takes_out_every_figure_that_doesn_t_draw_and_nothing_else() {
+        let section = "Above.\n\n```mermaid\nflowchart TB\n  A[bad\n```\n\nBetween.\n\n```mermaid\nflowchart TB\n  A --> B\n```\n\n```mermaid\n```\n\n```chart\n{\"series\": []}\n```\n\n```rust\nfn main() {}\n```\n\nBelow.";
+        let draw = |blocks: Vec<FigureBlock>| -> BoxFuture<'static, Option<Vec<Option<String>>>> {
+            let errors = blocks
+                .iter()
+                .map(|b| b.code.contains("A[bad").then(|| "Parse error".to_string()))
+                .collect();
+            Box::pin(async move { Some(errors) })
+        };
+        assert_eq!(
+            drawable(Some(&draw), section).await,
+            "Above.\n\nBetween.\n\n```mermaid\nflowchart TB\n  A --> B\n```\n\n```rust\nfn main() {}\n```\n\nBelow."
+        );
+        // Undrawn by any window: only what is known not to draw goes.
+        let kept = drawable(None, section).await;
+        assert!(
+            kept.contains("A[bad") && !kept.contains("\"series\": []"),
+            "{kept}"
+        );
     }
 }

@@ -185,6 +185,11 @@ pub async fn ai_paper_draft(
                 None => finish::without_pictures(section),
             };
         }
+        // A figure no check saw drawn is drawn now, and taken out if it
+        // can't be: the paper never shows a diagram or chart as its code.
+        for section in &mut sections {
+            *section = figures::drawable(Some(&draw), section).await;
+        }
         finish::number_figures(&mut sections, language);
         // Numbered first, so only the sources cited are looked up.
         let mut dossier = finish::number_citations(&mut sections, &files.dossier);
