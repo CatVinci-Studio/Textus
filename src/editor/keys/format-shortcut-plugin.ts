@@ -294,11 +294,7 @@ export function toggleCodeSpan(view: EditorView): boolean {
   if (!code) return false;
   if ($from.parent.type === code) {
     const start = $from.before();
-    const tr = state.tr.replaceWith(
-      start,
-      $from.after(),
-      $from.parent.content,
-    );
+    const tr = state.tr.replaceWith(start, $from.after(), $from.parent.content);
     view.dispatch(caretAt(tr, from - 1));
     return true;
   }
@@ -309,7 +305,9 @@ export function toggleCodeSpan(view: EditorView): boolean {
   view.dispatch(
     empty
       ? caretAt(tr, from + 1)
-      : tr.setSelection(TextSelection.create(tr.doc, from + 1, from + 1 + text.length)),
+      : tr.setSelection(
+          TextSelection.create(tr.doc, from + 1, from + 1 + text.length),
+        ),
   );
   return true;
 }

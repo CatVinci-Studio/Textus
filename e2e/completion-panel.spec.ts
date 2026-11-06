@@ -50,7 +50,12 @@ function watchKeys(page: Page) {
       if (!down) return;
       w.__panelTimes.push(performance.now() - down);
       down = 0;
-    }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["hidden"] });
+    }).observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["hidden"],
+    });
   });
 }
 
@@ -78,7 +83,8 @@ test("[[ lists 10,000 notes, and each key filters them within a frame", async ({
   );
   const sorted = [...times].sort((a, b) => a - b);
   const median = sorted[Math.floor(sorted.length / 2)];
-  const p95 = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
+  const p95 =
+    sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))];
   console.info(
     `panel in the browser, ${NOTES} notes, ${times.length} keys: median ${median.toFixed(1)} ms, p95 ${p95.toFixed(1)} ms`,
   );
