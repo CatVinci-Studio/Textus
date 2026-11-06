@@ -16,7 +16,7 @@ import {
   type Touches,
 } from "../reveal-state";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
-import { katexNow } from "../math/katex-loader";
+import { katexLoaded } from "../math/katex-loader";
 import { htmlTextEditing, inHtmlTextEdit } from "./html-text-edit";
 import { sanitizeStyle } from "./html-policy";
 import {
@@ -327,8 +327,9 @@ const isTextblock = (node: ProseNode) => node.isTextblock;
 
 /** What the drawing depends on besides the document: the path, and KaTeX
  *  having arrived to draw formulas in HTML. */
+// katexLoaded, not katexNow: asking must not start loading KaTeX.
 const drawnFor = (docPath: () => string | null) =>
-  `${docPath() ?? ""}\n${katexNow() ? 1 : 0}`;
+  `${docPath() ?? ""}\n${katexLoaded() ? 1 : 0}`;
 
 /** Raw HTML drawn per textblock; `handled` holds the HTML nodes a
  *  <details> fold draws instead. */
