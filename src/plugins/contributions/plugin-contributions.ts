@@ -27,6 +27,7 @@ import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
 import { pluginKey } from "./plugin-keys";
+import { claim, ownedClaims } from "./owners";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -199,6 +200,8 @@ export function applyContributions(
     );
   for (const block of codeBlocks)
     undo.push(addCodeBlockLanguage(block.language, id, block.frame));
+  for (const key of ownedClaims(manifest.contributes))
+    undo.push(claim(key, id));
   // Floating views left open last time open again; turned off, they go.
   // Their code loads only for a plugin that has some.
   const floating = manifest.contributes.floatingViews;
