@@ -60,7 +60,12 @@ const enclosureKey = new PluginKey("enclosure");
 
 /** Inline nodes kept as source text: no delimiters, but text typed right
  *  after one lands in it the same way ("[[Note]] and" linked "Note]] and"). */
-const SOURCE_INLINE_NODES = new Set(["wikilink", "obsidian_embed", "html"]);
+const SOURCE_INLINE_NODES = new Set([
+  "wikilink",
+  "obsidian_embed",
+  "html",
+  "link",
+]);
 
 /**
  * WKWebView normalizes a caret just outside an inline element to just

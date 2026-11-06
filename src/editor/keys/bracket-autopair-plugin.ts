@@ -75,8 +75,8 @@ function charAt(doc: ProseNode, pos: number): string {
   return charAfter(doc.resolve(pos));
 }
 
-/** Text where brackets are typed as they are: code, maths, raw HTML, and
- *  link text, whose address may be what is being typed. */
+/** Text where brackets are typed as they are: code, maths, raw HTML and
+ *  a link's source. */
 function isVerbatim($pos: ResolvedPos): boolean {
   const parent = $pos.parent;
   if (!parent.isTextblock && !parent.isInline) return true;
@@ -84,7 +84,7 @@ function isVerbatim($pos: ResolvedPos): boolean {
     const node = $pos.node(d);
     if (node.type.spec.code || node.type.name === "math_inline") return true;
   }
-  return $pos.marks().some((mark) => mark.type.name === "link");
+  return false;
 }
 
 /**

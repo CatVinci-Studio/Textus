@@ -20,7 +20,7 @@ const ORDER = [
   "enclosurePlugin",
   "mathAutopairPlugin",
   "headingMarkerPlugin",
-  "linkRevealPlugin",
+  "createLinkRevealPlugin",
   "pastePlainTextKeyPlugin",
   "blockKeysPlugin",
   "tabExtendPlugin",

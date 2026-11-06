@@ -6,6 +6,7 @@ import type {
   Node as ProseNode,
 } from "@milkdown/kit/prose/model";
 import { $nodeSchema, $prose, $remark } from "@milkdown/kit/utils";
+import { linkClipboardDOM } from "../markdown/link-source";
 import type {
   MarkdownNode,
   RemarkPluginRaw,
@@ -166,12 +167,16 @@ function mdSpanDOM(node: ProseNode, forClipboard: boolean): DOMOutputSpec {
   return ["em", attrs, 0];
 }
 
-/** Copies bold+italic as strong>em; everything else as the schema renders
- *  it. */
+/** Copies bold+italic as strong>em and a link as an <a> with its label;
+ *  everything else as the schema renders it. */
 export const mdSpanClipboardPlugin = $prose((ctx) => {
   const base = DOMSerializer.fromSchema(ctx.get(schemaCtx));
   const serializer = new DOMSerializer(
-    { ...base.nodes, md_span: (node) => mdSpanDOM(node, true) },
+    {
+      ...base.nodes,
+      md_span: (node) => mdSpanDOM(node, true),
+      link: linkClipboardDOM,
+    },
     base.marks,
   );
   return new Plugin({ props: { clipboardSerializer: serializer } });

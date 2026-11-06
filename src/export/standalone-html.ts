@@ -5,6 +5,7 @@ import {
   isDrivePath,
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
+import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
 import { escapeHtml } from "../utils/html";
 import { lazyModule } from "../lazy/lazy-module";
@@ -138,8 +139,8 @@ export function gatherDetails(root: HTMLElement): void {
 // markdown's paths; "inline" embeds the pixels, read from data-doc-src.
 export type ExportImages = "document" | "inline";
 
-// A link shown as its Markdown while the caret is on it.
-export const LINK_SOURCE_SELECTOR = '[data-type="link_source"]';
+// A link: its Markdown in the document, its syntax hidden by the editor.
+const LINK_SELECTOR = '[data-type="link"]';
 
 const renderHtml = lazyModule(
   "render-html",
@@ -150,8 +151,27 @@ const renderHtml = lazyModule(
 export async function linkRenderer(
   editor: Element,
 ): Promise<((markdown: string) => string) | undefined> {
-  if (!editor.querySelector(LINK_SOURCE_SELECTOR)) return undefined;
+  if (!editor.querySelector(LINK_SELECTOR)) return undefined;
   return (await renderHtml.load()).renderMarkdownInlineHtml;
+}
+
+/** A link's source as the page's <a>, or as text when it is no link. */
+function exportedLink(
+  source: string,
+  definitions: string[],
+  renderLink?: (markdown: string) => string,
+): Node {
+  const parts = parseLink(source);
+  const href = linkHref(source, () => definitions);
+  if (!parts || href === null) return document.createTextNode(source);
+  const label = source.slice(...parts.label) || href;
+  const link = document.createElement("a");
+  link.setAttribute("href", href);
+  if (parts.title) link.title = parts.title;
+  if (parts.kind === "inline" || parts.kind === "reference")
+    link.innerHTML = renderLink?.(label) ?? "";
+  if (!link.childNodes.length) link.textContent = label;
+  return link;
 }
 
 // Clones the editor subtree, stripping contenteditable so the export is inert.
@@ -177,13 +197,12 @@ export function cloneEditorContent(
   clone
     .querySelectorAll(`.${CODE_LINE_NUMBERS_CLASS}`)
     .forEach((el) => el.classList.remove(CODE_LINE_NUMBERS_CLASS));
-  // The link the caret is on shows as its Markdown; the page has the link.
-  clone.querySelectorAll(LINK_SOURCE_SELECTOR).forEach((el) => {
-    const link = document.createElement("span");
-    link.innerHTML = renderLink?.(el.textContent ?? "") ?? "";
-    el.replaceWith(
-      ...(link.childNodes.length ? link.childNodes : [el.textContent ?? ""]),
-    );
+  // The page has the link its Markdown makes, whatever the editor showed.
+  const definitions = [
+    ...clone.querySelectorAll('[data-type="link_definition"]'),
+  ].map((el) => el.textContent ?? "");
+  clone.querySelectorAll(LINK_SELECTOR).forEach((el) => {
+    el.replaceWith(exportedLink(el.textContent ?? "", definitions, renderLink));
   });
   // A colour code in plain text draws its swatch before its first
   // character; the character goes back into the text around it.

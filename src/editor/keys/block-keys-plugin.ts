@@ -260,8 +260,8 @@ export const splitInlineCode: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   const parent = $from.parent;
   if (!empty || !parent.isInline || !parent.type.spec.code) return false;
-  // Inline math and a link's source have their own Enter.
-  if (parent.type.name === "math_inline" || parent.type.name === "link_source")
+  // Inline math and a link have their own Enter.
+  if (parent.type.name === "math_inline" || parent.type.name === "link")
     return false;
   return splitBlock(state, dispatch);
 };

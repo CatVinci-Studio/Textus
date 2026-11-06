@@ -1,7 +1,6 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
-import { visibleTextBetween } from "../../editor/markdown/link-reveal";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import {
   composeMarkdownEdit,
@@ -153,12 +152,7 @@ function sentencesFor(
             before: h.before,
             after: h.after,
             take: null,
-            expected: visibleTextBetween(
-              doc,
-              ranges[i].from,
-              ranges[i].to,
-              " ",
-            ),
+            expected: doc.textBetween(ranges[i].from, ranges[i].to, " "),
             ...(ranges[i].block
               ? { block: true, at: ranges[i].to }
               : (wholeParagraphs(doc, ranges[i], h.before, h.after) ??
@@ -195,7 +189,7 @@ function rebasedSentences(
       before: h.before,
       after: h.after,
       take: null,
-      expected: visibleTextBetween(doc, found.from, found.to, " "),
+      expected: doc.textBetween(found.from, found.to, " "),
     });
   }
   return changes.length > 0 ? { hunks, changes } : undefined;
@@ -368,12 +362,7 @@ export function placeProposals(
         placed.push({
           ...draft,
           proposal,
-          expectedText: visibleTextBetween(
-            state.doc,
-            draft.from,
-            draft.to,
-            " ",
-          ),
+          expectedText: state.doc.textBetween(draft.from, draft.to, " "),
           streaming: undefined,
           sentences,
           rebased: true,
@@ -436,7 +425,7 @@ export function placeProposals(
       proposal,
       from: range.from,
       to: range.to,
-      expectedText: visibleTextBetween(state.doc, range.from, range.to, " "),
+      expectedText: state.doc.textBetween(range.from, range.to, " "),
       replacement,
       streaming,
       strikeFrom: strikeRange?.from,

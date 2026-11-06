@@ -1,17 +1,19 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
 import { closeViews, openView } from "../../document-view/editor-view-kit";
+import { parseLink } from "../markdown/link-syntax";
 
 // Brackets, quotes and Markdown links typed by hand: what closes itself,
 // what the caret steps over, and what is saved.
 
 afterEach(closeViews);
 
-/** The text under a link mark. */
+/** The text links show. */
 function linked(doc: import("@milkdown/kit/prose/model").Node): string {
   let text = "";
   doc.descendants((node) => {
-    if (node.marks.some((m) => m.type.name === "link")) text += node.text;
+    const parts = node.type.name === "link" && parseLink(node.textContent);
+    if (parts) text += node.textContent.slice(...parts.label);
   });
   return text;
 }

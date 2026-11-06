@@ -8,6 +8,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isEnclosureName } from "../marks/enclosure";
+import { wrapInLinkSource } from "../marks/span-commands";
 import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
 
@@ -28,7 +29,7 @@ const SHIFT_SHORTCUTS: Record<string, FormatSpec> = { h: HIGHLIGHT };
 
 /** Inline nodes besides text a selection may hold to be made bold or
  *  italic: verbatim ones, with no formatting of their own to clash. */
-const WRAPPABLE = new Set(["md_code_span", "math_inline"]);
+const WRAPPABLE = new Set(["md_code_span", "math_inline", "link"]);
 
 /**
  * The shortcut pressed again on its own formatting takes it off; a `***`
@@ -179,7 +180,9 @@ export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
   // Live selection: Cmd+B right after fast caret movement must not act on a
   // position one step behind.
   const state = stateWithLiveSelection(view);
-  const off = toggleOff(state, spec);
+  const off =
+    toggleOff(state, spec) ??
+    wrapInLinkSource(state, spec.delim.repeat(spec.rung));
   if (off) {
     view.dispatch(off);
     return true;

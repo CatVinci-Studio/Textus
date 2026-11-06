@@ -8,7 +8,8 @@ import { ReplaceStep } from "@milkdown/kit/prose/transform";
 import type { Transaction } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import { changedRanges } from "../changed-ranges";
-import { typedImage, typedLink } from "./link-input-rule";
+import { linkNodeAt, typedImage, typedLink } from "./link-input-rule";
+import { trimUrl } from "./link-syntax";
 
 /**
  * A bare URL typed out becomes a link once the caret has gone past it, as
@@ -26,32 +27,6 @@ const LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)/g;
  *  `~`, `(`), `http(s)://` or `www.`. */
 const BARE_URL = /(?<=^|[\s*_~(])(?:https?:\/\/|www\.)[^\s<>\ufffc]+/gi;
 
-/** A bare URL without the punctuation GFM leaves after it. */
-function trimUrl(url: string): string {
-  let end = url.length;
-  for (;;) {
-    const last = url[end - 1];
-    if (!last) return "";
-    if (".,:;!?\"'".includes(last)) end--;
-    else if (last === ")") {
-      const inside = url.slice(0, end);
-      if (inside.split("(").length < inside.split(")").length) end--;
-      else return inside;
-    } else return url.slice(0, end);
-  }
-}
-
-/** `url` at start..end as an autolink, the way a bare URL in a file reads. */
-function bareLink(state: EditorState, url: string, start: number, end: number) {
-  const link = state.schema.marks.link;
-  if (!link || state.doc.rangeHasMark(start, end, link)) return null;
-  const href = /^www\./i.test(url) ? `http://${url}` : url;
-  return state.tr.addMark(
-    start,
-    end,
-    link.create({ href, syntax: "autolink" }),
-  );
-}
 const IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)/g;
 
 /** Typing, as far as the steps tell: each puts in a few characters at most
@@ -111,7 +86,7 @@ function settle(state: EditorState, ranges: [number, number][]) {
       const typing = at + match[0].length;
       if (!url || (selection.from > at && selection.from <= typing)) continue;
       if (!edited(at, end)) continue;
-      const tr = bareLink(state, url, at, end);
+      const tr = linkNodeAt(state, url, at, end);
       if (tr) return tr;
     }
   }

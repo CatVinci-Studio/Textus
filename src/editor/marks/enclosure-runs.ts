@@ -53,7 +53,7 @@ export function cursorTouches(
  * whole, as `**a `b` c**` holds its code; left out, a "**" typed after the
  * code never paired with the one before it.
  */
-export const RUN_ATOMS = new Set(["md_code_span", "math_inline"]);
+export const RUN_ATOMS = new Set(["md_code_span", "math_inline", "link"]);
 
 /** A RUN_ATOMS node in a run: one character per position, so text offsets
  *  stay document offsets. Neither a delimiter nor a space. */

@@ -641,13 +641,20 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.85em;
 }
 
-/* A link shown as its Markdown while the caret is on it. */
-.link-source {
-  color: var(--doc-accent);
+/* A link: its Markdown syntax hidden while the caret is away, muted while
+   it shows. */
+.link-source-hidden {
+  display: none;
 }
 
 .link-source-syntax {
   color: var(--doc-muted);
+}
+
+/* An image in a link's text, drawn while its source is hidden. */
+.link-image {
+  max-width: 100%;
+  vertical-align: middle;
 }
 
 /* `:smile:` drawn as its emoji; the caret on it shows the source. */

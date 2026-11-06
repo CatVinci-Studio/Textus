@@ -1,3 +1,4 @@
+import { linkHref, parseLink } from "../markdown/link-syntax";
 import type { Fragment, Node as ProseNode } from "@milkdown/kit/prose/model";
 
 /**
@@ -97,11 +98,16 @@ function inlineText(nodes: ProseNode[]): string {
   const runs: { text: string; href: string | null }[] = [];
   const walk = (node: ProseNode) => {
     if (node.isText) {
-      const link = node.marks.find((m) => m.type.name === "link");
-      runs.push({
-        text: node.text ?? "",
-        href: link ? String(link.attrs.href ?? "") : null,
-      });
+      runs.push({ text: node.text ?? "", href: null });
+    } else if (node.type.name === "link") {
+      const source = node.textContent;
+      const parts = parseLink(source);
+      const href = linkHref(source);
+      runs.push(
+        parts
+          ? { text: source.slice(...parts.label) || (href ?? ""), href }
+          : { text: source, href: null },
+      );
     } else if (node.type.name === "hardbreak") {
       runs.push({ text: "\n", href: null });
     } else if (node.type.name === "image") {
