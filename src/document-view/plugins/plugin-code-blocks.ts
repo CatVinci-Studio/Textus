@@ -15,7 +15,7 @@ import {
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { cachedDocument } from "../../ai/doc-markdown";
-import { drawWhenVisible } from "../../editor/draw-when-visible";
+import { drawWhileNear } from "../../editor/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {
   codeBlockFrameless,
@@ -110,23 +110,33 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.append(editButton(view, getPos));
       const holder = document.createElement("div");
       el.append(holder);
-      drawWhenVisible(el, view.dom, () => {
-        const root = createRoot(holder);
-        const render = () => {
-          const seen = blockAt(ctx, view, getPos, language);
-          if (!seen) return;
-          root.render(
-            createElement(PluginCodeBlock, {
-              plugin,
-              widget,
-              seen,
-              setSource: (source: string) => setSource(view, getPos, source),
-            }),
-          );
-        };
-        drawn.set(widget, { root, render });
-        render();
-      });
+      // A plugin's frame is heavy: drawn near the screen, let go far from
+      // it (its state kept through setWebviewState).
+      drawWhileNear(
+        el,
+        view.dom,
+        () => {
+          const root = createRoot(holder);
+          const render = () => {
+            const seen = blockAt(ctx, view, getPos, language);
+            if (!seen) return;
+            root.render(
+              createElement(PluginCodeBlock, {
+                plugin,
+                widget,
+                seen,
+                setSource: (source: string) => setSource(view, getPos, source),
+              }),
+            );
+          };
+          drawn.set(widget, { root, render });
+          render();
+        },
+        () => {
+          drawn.get(widget)?.root.unmount();
+          drawn.delete(widget);
+        },
+      );
       return el;
     }
 
