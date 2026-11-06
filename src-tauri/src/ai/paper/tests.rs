@@ -2432,3 +2432,38 @@ fn every_prompt_fills_in_for_every_genre() {
     }
     unfilled(&review::message(&outline(), &["One.".into()]));
 }
+
+/// Each genre's profile is its own, read whole from its file.
+#[test]
+fn every_genre_s_profile_is_read_from_its_file() {
+    for genre in Genre::ALL {
+        let p = genre.profile();
+        assert_eq!(
+            serde_json::to_value(genre).unwrap(),
+            json!(p.name),
+            "{genre:?}"
+        );
+        for part in [
+            p.when,
+            p.research_angles,
+            p.research_sources,
+            p.thesis,
+            p.outline_order,
+            p.voice,
+            p.cite,
+            p.review_for,
+            p.opening,
+        ] {
+            assert!(
+                !part.is_empty() && !part.contains("{{"),
+                "{genre:?}: {part}"
+            );
+        }
+    }
+    // A part one genre takes from another, and a rule taken from shared.md.
+    assert_eq!(Genre::Review.profile().cite, Genre::Paper.profile().cite);
+    assert!(Genre::Report
+        .profile()
+        .voice
+        .contains("no 此外, 综上所述 or 值得注意的是, and dates"));
+}

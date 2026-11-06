@@ -5,7 +5,10 @@
 //! what comes before the first heading is a note for whoever edits the
 //! file. A prompt's `{{name}}` is filled in by the code from what it knows
 //! at the time - the paper, its notes, its outline; a lone brace is just a
-//! brace, as in the JSON a prompt asks for.
+//! brace, as in the JSON a prompt asks for. A key with a dot in it,
+//! `{{shared.zh-filler}}`, is another prompt, taken in as the files are
+//! read: so a genre can take another's part (genres/*.md) and a rule the
+//! genres share is written once (shared.md).
 
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -19,6 +22,14 @@ const FILES: &[(&str, &str)] = &[
     ("outline", include_str!("prompts/outline.md")),
     ("draft", include_str!("prompts/draft.md")),
     ("review", include_str!("prompts/review.md")),
+    ("shared", include_str!("prompts/shared.md")),
+    ("genre.paper", include_str!("prompts/genres/paper.md")),
+    ("genre.review", include_str!("prompts/genres/review.md")),
+    ("genre.report", include_str!("prompts/genres/report.md")),
+    ("genre.analysis", include_str!("prompts/genres/analysis.md")),
+    ("genre.article", include_str!("prompts/genres/article.md")),
+    ("genre.thread", include_str!("prompts/genres/thread.md")),
+    ("genre.brief", include_str!("prompts/genres/brief.md")),
 ];
 
 /// The prompts in `text`, the file `file`, by their full names.
@@ -38,12 +49,39 @@ fn parse(file: &str, text: &str) -> Vec<(String, String)> {
     out
 }
 
+/// `text` with each `{{other.prompt}}` in it replaced by that prompt from
+/// `read`, itself taken in the same way - at most a few deep, so a prompt
+/// can't take itself in forever.
+fn take_in(text: &str, read: &HashMap<String, String>, depth: usize) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find("{{") {
+        let after = &rest[start + 2..];
+        let Some(end) = after.find("}}") else { break };
+        let key = &after[..end];
+        out.push_str(&rest[..start]);
+        match read.get(key).filter(|_| key.contains('.') && depth < 4) {
+            Some(other) => out.push_str(&take_in(other, read, depth + 1)),
+            None => {
+                debug_assert!(!key.contains('.'), "no prompt {key:?} to take in");
+                out.push_str(&rest[start..start + end + 4]);
+            }
+        }
+        rest = &after[end + 2..];
+    }
+    out.push_str(rest);
+    out
+}
+
 fn all() -> &'static HashMap<String, String> {
     static ALL: OnceLock<HashMap<String, String>> = OnceLock::new();
     ALL.get_or_init(|| {
-        FILES
+        let read: HashMap<String, String> = FILES
             .iter()
             .flat_map(|(file, text)| parse(file, text))
+            .collect();
+        read.iter()
+            .map(|(name, text)| (name.clone(), take_in(text, &read, 0)))
             .collect()
     })
 }
@@ -147,7 +185,25 @@ mod tests {
     }
 
     #[test]
+    fn a_prompt_takes_in_another_by_its_dotted_name() {
+        let read: HashMap<String, String> = [
+            ("a.one", "one, {{b.two}} and {{key}}"),
+            ("b.two", "two and {{c.three}}"),
+            ("c.three", "three"),
+        ]
+        .into_iter()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+        assert_eq!(
+            take_in(&read["a.one"], &read, 0),
+            "one, two and three and {{key}}"
+        );
+    }
+
+    #[test]
     fn every_prompt_file_is_read() {
+        // Taking every file in finds every prompt they name.
+        assert!(!all().is_empty());
         for (file, text) in FILES {
             let found = parse(file, text);
             assert!(!found.is_empty(), "{file}.md has no ## prompts");
