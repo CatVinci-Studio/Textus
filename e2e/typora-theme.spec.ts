@@ -41,6 +41,8 @@ test("an imported Typora theme's code, font, selection and block classes apply",
   expect(await style("pre .token.string", "color")).toBe("rgb(152, 195, 121)");
   expect(await style("pre .token.comment", "color")).toBe("rgb(92, 99, 112)");
   expect(await style(".md-fences pre", "color")).toBe("rgb(171, 178, 191)");
+  // Its CodeMirror box's margin would open bands inside our code block.
+  expect(await style(".md-fences pre", "margin-top")).toBe("0px");
   expect(await style("pre code", "font-family")).toContain("Courier New");
   expect(await style("#write li p::selection", "background-color")).toBe(
     "rgb(64, 96, 160)",

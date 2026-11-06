@@ -40,8 +40,9 @@ const tokenSelector = (classes: string[]) =>
     : `.token:is(${classes.map((c) => `.${c}`).join(", ")})`;
 
 // Typora's code box is a CodeMirror inside `pre.md-fences`; ours is the
-// <pre> inside the `.md-fences` wrapper.
-const CODE_BOX = ":is(.md-fences pre)";
+// <pre> inside the `.md-fences` wrapper. Weightless, so the editor's own
+// rule against margins inside the wrapper still holds.
+const CODE_BOX = ":where(.md-fences pre)";
 const END = "(?![\\w-])";
 
 const SELECTORS: [RegExp, string][] = [

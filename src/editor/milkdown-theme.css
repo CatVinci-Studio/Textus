@@ -1405,6 +1405,12 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-shadow: none;
 }
 
+/* The wrapper is the block's box: a Typora theme's margin on its CodeMirror
+   box, mapped to this <pre>, would open bands inside it. */
+#write .md-fences > pre {
+  margin: 0;
+}
+
 /* "```" typed on a line of its own: the fence, not inline code
    (md-span-autopair-plugin.ts). */
 #write code.is-fence {
@@ -1427,7 +1433,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --doc-token-function: #3462cc;
   --doc-token-tag: #a83a4b;
 }
-
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {

@@ -23,6 +23,10 @@ pre.md-fences {
   color: rgb(171, 178, 191);
 }
 
+.md-fences .cm-s-inner.CodeMirror {
+  margin: 1.5rem 0;
+}
+
 .cm-s-inner .cm-keyword {
   color: rgb(198, 120, 221);
 }

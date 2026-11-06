@@ -25,9 +25,9 @@ describe("adaptTyporaCss", () => {
         ".cm-s-inner .cm-keyword { a: b }\n.cm-s-inner span.cm-variable-2, .cm-s-inner .cm-comment { c: d }\n.cm-s-inner.CodeMirror { e: f }",
       ),
     ).toBe(
-      ":is(.md-fences pre) .token.keyword { a: b }\n" +
-        ":is(.md-fences pre) span.token.parameter, :is(.md-fences pre) .token:is(.comment, .prolog, .doctype) { c: d }\n" +
-        ":is(.md-fences pre):is(.md-fences pre) { e: f }",
+      ":where(.md-fences pre) .token.keyword { a: b }\n" +
+        ":where(.md-fences pre) span.token.parameter, :where(.md-fences pre) .token:is(.comment, .prolog, .doctype) { c: d }\n" +
+        ":where(.md-fences pre):where(.md-fences pre) { e: f }",
     );
   });
 
@@ -35,7 +35,7 @@ describe("adaptTyporaCss", () => {
     const css =
       ".cm-s-inner .cm-error, .cm-constructor, .CodeMirror-gutters, .cm-s-typora-default { x: y }";
     expect(adaptTyporaCss(css)).toBe(
-      ":is(.md-fences pre) .cm-error, .cm-constructor, .CodeMirror-gutters, .cm-s-typora-default { x: y }",
+      ":where(.md-fences pre) .cm-error, .cm-constructor, .CodeMirror-gutters, .cm-s-typora-default { x: y }",
     );
   });
 
