@@ -99,6 +99,19 @@ fn optional_text<'a>(value: Option<&'a Value>, what: &str) -> Result<Option<&'a 
     value.map(|v| text(Some(v), what)).transpose()
 }
 
+/// The permissions `manifest` names that Textus has; none when it can't be read.
+pub fn declared_permissions(manifest: &str) -> Vec<String> {
+    serde_json::from_str::<Value>(manifest)
+        .ok()
+        .and_then(|m| m.get("permissions")?.as_array().cloned())
+        .unwrap_or_default()
+        .iter()
+        .filter_map(Value::as_str)
+        .filter(|p| is_permission(p))
+        .map(str::to_string)
+        .collect()
+}
+
 /// `text` (the manifest as written), checked; the error says what is wrong,
 /// in English, for the plugin's author.
 pub fn check(manifest: &str) -> Result<(), String> {
@@ -178,7 +191,17 @@ pub fn check(manifest: &str) -> Result<(), String> {
         }
     }
     if let Some(contributes) = m.get("contributes") {
-        object(contributes, "contributes")?;
+        let contributes = object(contributes, "contributes")?;
+        let embeds = contributes
+            .get("embeds")
+            .and_then(Value::as_array)
+            .is_some_and(|e| !e.is_empty());
+        let reads = list(m.get("permissions"), "permissions")?
+            .iter()
+            .any(|p| p.as_str() == Some("files.read"));
+        if embeds && !reads {
+            return Err("contributes.embeds needs files.read.".into());
+        }
     }
 
     Ok(())
@@ -239,6 +262,28 @@ mod tests {
         ] {
             assert!(check(&with("version", Some(v))).is_err(), "{v}");
         }
+    }
+
+    #[test]
+    fn embeds_need_files_read() {
+        let embeds = |permissions: &str| {
+            let mut m: Value = serde_json::from_str(GOOD).unwrap();
+            let o = m.as_object_mut().unwrap();
+            o.insert(
+                "contributes".into(),
+                serde_json::json!({"embeds": [{"kind": "x"}]}),
+            );
+            o.insert(
+                "permissions".into(),
+                serde_json::from_str(permissions).unwrap(),
+            );
+            check(&m.to_string())
+        };
+        assert_eq!(
+            embeds("[]").unwrap_err(),
+            "contributes.embeds needs files.read."
+        );
+        assert!(embeds(r#"["files.read"]"#).is_ok());
     }
 
     #[test]

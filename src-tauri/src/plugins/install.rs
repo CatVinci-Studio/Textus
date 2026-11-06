@@ -68,7 +68,8 @@ pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, 
     let mut out: Vec<InstalledPlugin> = Vec::new();
     for (id, entry) in state::read(&app).plugins {
         if let Some(path) = entry.dev_path {
-            if let Ok((head, text)) = read_manifest(Path::new(&path)) {
+            // Checked again each time: its author may have changed it.
+            if let Ok((head, text)) = read_checked_manifest(Path::new(&path)) {
                 if head.id == id {
                     out.push(installed(id, Path::new(&path), text, true));
                 }
