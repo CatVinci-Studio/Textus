@@ -81,12 +81,11 @@ export function onOwnersChanged(listener: () => void): () => void {
 export function ownedClaims(
   contributes: PluginManifest["contributes"],
 ): string[] {
-  const hovers = (contributes as { hovers?: readonly string[] }).hovers ?? [];
   return [
     ...contributes.customEditors
       .filter((editor) => editor.priority === "default")
       .flatMap((editor) => editor.filenamePatterns)
       .map((pattern) => `editor:${pattern.toLowerCase()}`),
-    ...hovers.map((kind) => `hover:${kind}`),
+    ...contributes.hovers.map((kind) => `hover:${kind}`),
   ];
 }

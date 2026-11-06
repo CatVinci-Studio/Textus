@@ -1,22 +1,27 @@
 import {
   addEmbedProvider,
   refreshEmbeds,
+  setEmbedOwners,
   setEmbedStarter,
   type EmbedContent,
   type EmbedKind,
 } from "../../editor/extension-points";
 
 import { onPluginEvent } from "../app-bridge";
+import { claim, onOwnersChanged, ownerOf } from "./owners";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 
 /** The embed providers each running plugin registered, to take away. */
 const registered = new Map<string, Map<string, () => void>>();
 
-/** Embeds of a file follow it as it is saved, by a tab or a plugin. */
+/** Embeds of a file follow it as it is saved, by a tab or a plugin; each
+ *  kind is drawn by its owner in the one registry ("embed:note"). */
 let watching = false;
 function watchSaves(): void {
   if (watching) return;
   watching = true;
+  setEmbedOwners((kind) => ownerOf(`embed:${kind}`));
+  onOwnersChanged(() => refreshEmbeds());
   onPluginEvent("didSave", ({ path }) => refreshEmbeds(path));
   window.addEventListener(FILE_WRITTEN_EVENT, (event) => {
     const path = (event as CustomEvent<unknown>).detail;
@@ -33,7 +38,8 @@ export function setPluginEmbed(
 ): void {
   forgetEmbed(plugin, id);
   watchSaves();
-  const remove = addEmbedProvider({
+  const claims = kinds.map((kind) => claim(`embed:${kind}`, plugin));
+  const removeProvider = addEmbedProvider({
     owner: plugin,
     id,
     kinds,
@@ -44,6 +50,10 @@ export function setPluginEmbed(
         : null;
     },
   });
+  const remove = () => {
+    removeProvider();
+    claims.forEach((release) => release());
+  };
   const own = registered.get(plugin) ?? new Map<string, () => void>();
   own.set(id, remove);
   registered.set(plugin, own);
@@ -54,7 +64,7 @@ export function forgetEmbed(plugin: string, id: string): void {
   registered.get(plugin)?.delete(id);
 }
 
-/** A plugin stopped: the next provider of each kind takes over. */
+/** A plugin stopped: the next claimant of each kind takes over. */
 export function forgetEmbeds(plugin: string): void {
   for (const remove of registered.get(plugin)?.values() ?? []) remove();
   registered.delete(plugin);

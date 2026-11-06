@@ -1,8 +1,8 @@
 /**
  * Who gives the content of `![[note]]` embeds: plugins register here
  * (contributes.embeds) and the editor draws what the owner of each kind
- * answers. One owner a kind, the first registered; when it goes, the next
- * takes over at once.
+ * answers. Who owns a kind is the plugin host's call (its one registry);
+ * without one, the first registered.
  */
 
 export type EmbedKind = "note" | "heading" | "block";
@@ -58,10 +58,20 @@ export function setEmbedStarter(start: ((kind: EmbedKind) => void) | null) {
   starter = start;
 }
 
+let ownerOf: (kind: EmbedKind) => string | null = () => null;
+
+export function setEmbedOwners(owner: (kind: EmbedKind) => string | null) {
+  ownerOf = owner;
+}
+
 /** The provider that draws embeds of `kind`; null leaves them as source,
  *  until a plugin that declares the kind has started. */
 export function embedProvider(kind: EmbedKind): EmbedProvider | null {
-  const found = providers.find((p) => p.kinds.includes(kind)) ?? null;
+  const owner = ownerOf(kind);
+  const found =
+    providers.find(
+      (p) => p.kinds.includes(kind) && (!owner || p.owner === owner),
+    ) ?? null;
   if (!found) starter?.(kind);
   return found;
 }

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
 import {
   addCodeBlockLanguage,
@@ -94,4 +95,21 @@ it("opens a file with the owner of its pattern", () => {
   pickOwner("editor:*.pdf", "b.pdf");
   expect(customEditorFor("/x/y.pdf")?.plugin).toBe("b.pdf");
   publish({ records: [] });
+});
+
+it("draws an embed kind by its owner in the one registry", async () => {
+  const { setPluginEmbed, forgetEmbeds } = await import("./embeds");
+  const { embedProvider } = await import("../../editor/extension-points");
+  const ask = async () => null;
+  setPluginEmbed("a.links", "notes", ["note"], ask);
+  setPluginEmbed("b.links", "notes", ["note"], ask);
+  undo.push(
+    () => forgetEmbeds("a.links"),
+    () => forgetEmbeds("b.links"),
+  );
+  expect(embedProvider("note")?.owner).toBe("a.links");
+  pickOwner("embed:note", "b.links");
+  expect(embedProvider("note")?.owner).toBe("b.links");
+  forgetEmbeds("b.links");
+  expect(embedProvider("note")?.owner).toBe("a.links");
 });

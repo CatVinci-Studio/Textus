@@ -40,6 +40,7 @@ export {
   embedProvider,
   onEmbedsChange,
   refreshEmbeds,
+  setEmbedOwners,
   setEmbedStarter,
   type EmbedContent,
   type EmbedKind,
