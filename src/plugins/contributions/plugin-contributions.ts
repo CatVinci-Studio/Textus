@@ -47,7 +47,6 @@ export interface ContributionDeps {
 
 const contributions = new Map<string, (() => void)[]>();
 
-
 /** Adds an undo to what goes when the plugin is withdrawn. */
 export function addContribution(id: string, undo: () => void): void {
   contributions.get(id)?.push(undo);
