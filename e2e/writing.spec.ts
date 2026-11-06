@@ -83,6 +83,8 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
   await emit(page, "menu-toggle-split-view");
   const source = page.locator(".split-source");
   await expect(source).toBeVisible();
+  // The pane scrolls inside CodeMirror's scroller, not the wrapper.
+  const scroller = page.locator(".split-source .cm-scroller");
   const box = (await source.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < 15; i++) {
@@ -90,10 +92,10 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
     await page.waitForTimeout(16);
   }
   await page.waitForTimeout(400);
-  const scrolled = await source.evaluate((el) => el.scrollTop);
+  const scrolled = await scroller.evaluate((el) => el.scrollTop);
   expect(scrolled).toBeGreaterThan(1000);
   await page.waitForTimeout(800);
-  expect(await source.evaluate((el) => el.scrollTop)).toBe(scrolled);
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(scrolled);
   const preview = await page
     .locator(".split-preview")
     .evaluate((el) => el.scrollTop);
@@ -1037,7 +1039,11 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
       const r = (el: Element) =>
         el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight);
       return Math.abs(
-        r(document.querySelector('[data-active-tab="true"] .split-source')!) -
+        r(
+          document.querySelector(
+            '[data-active-tab="true"] .split-source .cm-scroller',
+          )!,
+        ) -
           r(document.querySelector('[data-active-tab="true"] .split-preview')!),
       );
     });
@@ -1045,7 +1051,7 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
   // the preview follows on the scroll event after that. A scroll set here
   // before both have happened is undone.
   await expect(
-    page.locator('[data-active-tab="true"] .split-source'),
+    page.locator('[data-active-tab="true"] .split-source .cm-content'),
   ).toBeFocused();
   await expect.poll(gap).toBeLessThan(0.02);
   await heading.evaluate((el) =>
