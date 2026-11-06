@@ -76,7 +76,13 @@ const isShortcut = (text: string) => {
  *  caret is in that typing. */
 function splitEdges(tr: Transaction, pos: number, node: ProseNode): boolean {
   const split = splitAroundLink(node.textContent);
-  if (!split || (!split.lead && !split.trail) || isShortcut(split.link))
+  if (
+    !split ||
+    (!split.lead && !split.trail) ||
+    isShortcut(split.link) ||
+    // "!" before "[" makes an image of it, read once the caret leaves.
+    (split.lead.endsWith("!") && split.link.startsWith("["))
+  )
     return false;
   const { selection } = tr;
   const offset = selection.empty ? selection.from - pos - 1 : -1;

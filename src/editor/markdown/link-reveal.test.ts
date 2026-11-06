@@ -132,6 +132,15 @@ describe("typing in a link", () => {
     expect(t.markdown()).toBe("A y[b](u)x c");
   });
 
+  it('"!" typed before it makes an image of it once the caret leaves', async () => {
+    const t = await open("A [b](u.png) c");
+    caret(t.view, firstLink(t.view.state.doc).pos + 1);
+    t.type("!");
+    t.caretAtEnd();
+    expect(firstLink(t.view.state.doc)).toBeNull();
+    expect(t.markdown()).toBe("A ![b](u.png) c");
+  });
+
   it("an IME composition goes into the link's text and stays there", async () => {
     const t = await open("A [link](u) c");
     t.caretAt("link", 2);
