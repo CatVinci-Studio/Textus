@@ -1418,7 +1418,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font: inherit;
 }
 
-/* Syntax highlighting tokens (via refractor/Prism token classes) */
+/* Syntax highlighting tokens (via refractor/Prism token classes); the colour
+   rules are in content-base.css's layer, so a theme's own token rules win. */
 :root {
   --doc-token-string: #457236;
   --doc-token-number: #8f5a1c;
@@ -1427,38 +1428,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
   --doc-token-tag: #a83a4b;
 }
 
-.milkdown .token.comment,
-.milkdown .token.prolog,
-.milkdown .token.doctype {
-  color: var(--doc-muted);
-  font-style: italic;
-}
-.milkdown .token.string,
-.milkdown .token.attr-value {
-  color: var(--doc-token-string);
-}
-.milkdown .token.number,
-.milkdown .token.boolean,
-.milkdown .token.constant {
-  color: var(--doc-token-number);
-}
-.milkdown .token.keyword,
-.milkdown .token.operator,
-.milkdown .token.rule {
-  color: var(--doc-token-keyword);
-}
-.milkdown .token.function,
-.milkdown .token.class-name {
-  color: var(--doc-token-function);
-}
-.milkdown .token.tag,
-.milkdown .token.selector,
-.milkdown .token.attr-name {
-  color: var(--doc-token-tag);
-}
-.milkdown .token.punctuation {
-  color: var(--doc-muted);
-}
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {

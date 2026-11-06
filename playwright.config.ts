@@ -35,6 +35,7 @@ const WEBKIT_SPECS = [
   "keyboard.spec.ts",
   "file-tree.spec.ts",
   "user-css.spec.ts",
+  "typora-theme.spec.ts",
   "plugins.spec.ts",
   "large-doc-lazy.spec.ts",
 ];
