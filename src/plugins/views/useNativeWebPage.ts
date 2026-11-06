@@ -1,3 +1,4 @@
+import { keepLoaded } from "../../utils/kept-loaded";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { webPages } from "../../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../../platform/events";
@@ -8,25 +9,8 @@ import { onWebPagesCover, webPagesCovered } from "./web-page-cover";
  *  certificate): WebKit says nothing, the page stays blank. */
 const LOAD_MS = 15_000;
 /** Each loaded page is a WebKit process of its own, up to a few hundred MB:
- *  one out of sight this long is let go, and no more than this many stay
+ *  kept-loaded lets one out of sight go after a while, three at most stay
  *  loaded. Shown again, it loads its last address. */
-const HIDDEN_KEPT_MS = 5 * 60_000;
-const MAX_LOADED = 3;
-
-interface Loaded {
-  visible: boolean;
-  seen: number;
-  unload: () => void;
-}
-const loaded = new Map<string, Loaded>();
-
-function unloadExtra() {
-  const hidden = [...loaded.values()]
-    .filter((page) => !page.visible)
-    .sort((a, b) => a.seen - b.seen);
-  while (loaded.size > MAX_LOADED && hidden.length) hidden.shift()!.unload();
-}
-
 /**
  * Tab `id`'s web page as a native webview laid over `holder` and kept there
  * as the layout changes: hidden while out of sight or covered, let go when
@@ -50,17 +34,11 @@ export function useNativeWebPage(
     if (!el) return;
     let shown = false;
     let frame = 0;
-    let hiddenTimer = 0;
     let loadTimer = 0;
-    const page: Loaded = {
-      visible: false,
-      seen: Date.now(),
-      unload: () => {
-        loaded.delete(id);
-        clearTimeout(hiddenTimer);
-        void webPages.close(id).catch(() => {});
-      },
-    };
+    const page = keepLoaded("web-page", () => {
+      shown = false;
+      void webPages.close(id).catch(() => {});
+    });
     const place = () => {
       frame = 0;
       const r = el.getBoundingClientRect();
@@ -68,11 +46,7 @@ export function useNativeWebPage(
         r.width > 0 && r.height > 0 && !webPagesCovered() && !failedRef.current;
       if (visible) {
         shown = true;
-        page.visible = true;
-        page.seen = Date.now();
-        clearTimeout(hiddenTimer);
-        loaded.set(id, page);
-        unloadExtra();
+        page.shown();
         void webPages
           .show(id, last.current, {
             x: r.left,
@@ -83,10 +57,7 @@ export function useNativeWebPage(
           .catch(() => {});
       } else if (shown) {
         shown = false;
-        page.visible = false;
-        page.seen = Date.now();
-        clearTimeout(hiddenTimer);
-        hiddenTimer = window.setTimeout(page.unload, HIDDEN_KEPT_MS);
+        page.hidden();
         void webPages.hide(id).catch(() => {});
       }
     };
@@ -122,7 +93,8 @@ export function useNativeWebPage(
       window.removeEventListener("resize", onResize);
       stopCover();
       stopListening();
-      page.unload();
+      page.drop();
+      void webPages.close(id).catch(() => {});
     };
   }, [id, holder, navigated, failedRef]);
   // Failed, the page is hidden for the message; shown again to retry.

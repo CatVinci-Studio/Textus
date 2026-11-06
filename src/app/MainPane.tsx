@@ -1,3 +1,5 @@
+import { useKeptLoaded } from "../utils/kept-loaded";
+import type { ReactNode } from "react";
 import { Suspense, type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
@@ -53,6 +55,18 @@ function pluginTabItems(
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
 /** The document column: the tab bar over every open tab's editor. */
+
+/** A plugin's page in a tab out of sight is let go after a while (three
+ *  at most kept); shown again, it loads afresh, its saved state restored. */
+function KeptWhileHidden({
+  shown,
+  children,
+}: {
+  shown: boolean;
+  children: ReactNode;
+}) {
+  return useKeptLoaded("plugin-view", shown) ? children : null;
+}
 
 export function MainPane({
   tabs,
@@ -265,21 +279,25 @@ export function MainPane({
             {tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
             ) : tab.view?.kind === "list" ? (
-              <PluginListPane
-                plugin={tab.view.plugin}
-                view={tab.view.view}
-                className="plugin-list-tab"
-              />
+              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
+                <PluginListPane
+                  plugin={tab.view.plugin}
+                  view={tab.view.view}
+                  className="plugin-list-tab"
+                />
+              </KeptWhileHidden>
             ) : tab.view && tab.view.kind !== "web" ? (
-              <PluginTabPane
-                tabId={tab.id}
-                plugin={tab.view.plugin}
-                view={tab.view.view}
-                kind={tab.view.kind}
-                resource={tab.view.resource}
-                state={tab.view.state}
-                target={tab.view.target}
-              />
+              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
+                <PluginTabPane
+                  tabId={tab.id}
+                  plugin={tab.view.plugin}
+                  view={tab.view.view}
+                  kind={tab.view.kind}
+                  resource={tab.view.resource}
+                  state={tab.view.state}
+                  target={tab.view.target}
+                />
+              </KeptWhileHidden>
             ) : tab.sourceMode && tab.splitView ? (
               <Suspense fallback={null}>
                 <SplitView
