@@ -292,8 +292,8 @@ fn measure_text_counts_exactly() {
 }
 
 #[test]
-fn the_rules_tools_are_in_every_mode() {
-    for mode in [AgentMode::Review, AgentMode::Write, AgentMode::Write] {
+fn the_rules_tools_are_in_the_document_modes() {
+    for mode in [AgentMode::Review, AgentMode::Write] {
         let names = names(&builtin_tools(false, false, mode, false));
         assert!(
             names.iter().any(|n| n == "check_conventions")
@@ -301,6 +301,17 @@ fn the_rules_tools_are_in_every_mode() {
             "{names:?}"
         );
     }
+}
+
+#[test]
+fn create_mode_is_offered_skills_and_project_files_only() {
+    // Create makes themes, plugins and skills: nothing that reads, checks
+    // or changes the document.
+    assert_eq!(
+        names(&builtin_tools(true, true, AgentMode::Create, false)),
+        ["use_skill", "find_files", "search_files", "read_file"]
+    );
+    assert!(names(&builtin_tools(false, false, AgentMode::Create, false)).is_empty());
 }
 
 #[test]

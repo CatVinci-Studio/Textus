@@ -40,7 +40,7 @@ pub fn builtin_tools<'a>(
                 }),
             },
             access: Access::ReadOnly,
-            modes: EVERY_MODE,
+            modes: DOCUMENT_MODES,
             run: Run::Text(search_document),
         }, Tool {
             spec: ToolSpec {
@@ -65,11 +65,12 @@ pub fn builtin_tools<'a>(
                 }),
             },
             access: Access::ReadOnly,
-            modes: EVERY_MODE,
+            modes: DOCUMENT_MODES,
             run: Run::Text(read_document),
         }];
 
-    // The rules engine's read-only tools: every mode has them.
+    // The rules engine's read-only tools: they judge the document and text
+    // bound for it, so only the document modes have them.
     tools.push(Tool {
         spec: ToolSpec {
             name: CHECK_CONVENTIONS_TOOL_NAME.into(),
@@ -101,7 +102,7 @@ pub fn builtin_tools<'a>(
             }),
         },
         access: Access::ReadOnly,
-        modes: EVERY_MODE,
+        modes: DOCUMENT_MODES,
         run: Run::Text(check_conventions),
     });
     tools.push(Tool {
@@ -125,7 +126,7 @@ pub fn builtin_tools<'a>(
             }),
         },
         access: Access::ReadOnly,
-        modes: EVERY_MODE,
+        modes: DOCUMENT_MODES,
         run: Run::Text(measure_text),
     });
 

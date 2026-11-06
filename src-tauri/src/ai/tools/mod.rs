@@ -121,7 +121,9 @@ pub enum Access {
 
 /// The modes a tool is offered in.
 pub const EVERY_MODE: &[AgentMode] = &[AgentMode::Review, AgentMode::Write, AgentMode::Create];
-/// Write and Review: the modes that work on the document (comments).
+/// Write and Review: the modes that work on the document - reading,
+/// searching and checking it, and commenting on it. Create makes things for
+/// the app, not the document, so it is offered none of these.
 pub const DOCUMENT_MODES: &[AgentMode] = &[AgentMode::Review, AgentMode::Write];
 /// Write: the modes that change the document.
 pub const EDITING_MODES: &[AgentMode] = &[AgentMode::Write];
