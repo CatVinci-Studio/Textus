@@ -429,6 +429,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webSources: "出典",
   proposalSourcesAsFootnotes: "出典を脚注として追加",
   menuToggleSplitView: "ソースとプレビュー",
+  splitPreview: "プレビュー",
   menuToggleZenMode: "禅モード",
   menuSplitRight: "右に分割",
   menuCommandPalette: "コマンドパレット…",
@@ -747,6 +748,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   deleteRow: "行を削除",
   deleteColumn: "列を削除",
   deleteTable: "表を削除",
+  tableToMarkdown: "Markdown の表に変換",
+  tableToMarkdownMerged: "Markdown の表に変換（結合されたセルがあります）",
+  tableToMarkdownBlocks: "Markdown の表に変換（セルにリストや段落があります）",
   apiKeyLabelTemplate: "{name}のAPIキー",
   apiKeyOptionalHintTemplate:
     "APIキーは不要です。{name}で認証を有効にした場合のみ入力します。",

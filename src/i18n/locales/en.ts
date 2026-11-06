@@ -441,6 +441,7 @@ type /name in a conversation to use one.
   webSources: "Sources",
   proposalSourcesAsFootnotes: "Add sources as footnotes",
   menuToggleSplitView: "Source and Preview",
+  splitPreview: "Preview",
   menuToggleZenMode: "Zen Mode",
   menuSplitRight: "Split Right",
   menuCommandPalette: "Command Palette…",
@@ -756,6 +757,9 @@ type /name in a conversation to use one.
   deleteRow: "Delete Row",
   deleteColumn: "Delete Column",
   deleteTable: "Delete Table",
+  tableToMarkdown: "Convert to Markdown Table",
+  tableToMarkdownMerged: "Convert to Markdown Table (it has merged cells)",
+  tableToMarkdownBlocks: "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",

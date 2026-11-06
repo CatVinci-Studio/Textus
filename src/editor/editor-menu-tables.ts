@@ -19,7 +19,12 @@ import {
 } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "./useEditorRunner";
-import type { Strings } from "../i18n/strings";
+import type { Strings, TextKey } from "../i18n/strings";
+import { parseMarkdownSource } from "./markdown/parse-markdown-source";
+import {
+  htmlTableToMarkdown,
+  type TableRefusal,
+} from "./tables/html-table-markdown";
 import type { MenuEntry } from "./editor-menu";
 
 /** Tables in the editor's menus. */
@@ -219,5 +224,52 @@ export function tableMenuItems(run: EditorRunner, t: Strings): MenuEntry[] {
       ],
     },
     { label: t.deleteTable, onSelect: table("delete-table"), danger: true },
+  ];
+}
+
+const REFUSED: Record<TableRefusal, TextKey | null> = {
+  notTable: null,
+  merged: "tableToMarkdownMerged",
+  blocks: "tableToMarkdownBlocks",
+};
+
+/** "Convert to Markdown Table" for the HTML table the caret is in: one undo
+ *  step, or shown disabled with the reason it can't be. */
+export function htmlTableItems(run: EditorRunner, t: Strings): MenuEntry[] {
+  const found = run((ctx) => {
+    const { $from } = ctx.get(editorViewCtx).state.selection;
+    // The caret is in the HTML node, inside its paragraph.
+    let depth = $from.depth;
+    while (depth > 0 && !$from.node(depth).isTextblock) depth--;
+    const block = $from.node(depth);
+    if (depth === 0 || block.firstChild?.type.name !== "html") return null;
+    const source = block.textContent;
+    if (!/^\s*<table[\s>]/i.test(source)) return null;
+    return { at: $from.before(depth), size: block.nodeSize, source };
+  });
+  if (!found) return [];
+  const conversion = htmlTableToMarkdown(found.source);
+  if ("refused" in conversion) {
+    const reason = REFUSED[conversion.refused];
+    return reason
+      ? [{ label: t[reason], disabled: true, onSelect: () => {} }]
+      : [];
+  }
+  return [
+    {
+      label: t.tableToMarkdown,
+      onSelect: () =>
+        run((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const doc = parseMarkdownSource(ctx, conversion.markdown);
+          if (!doc) return;
+          view.dispatch(
+            view.state.tr
+              .replaceWith(found.at, found.at + found.size, doc.content)
+              .scrollIntoView(),
+          );
+          view.focus();
+        }),
+    },
   ];
 }

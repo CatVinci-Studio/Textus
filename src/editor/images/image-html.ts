@@ -104,6 +104,28 @@ export function imageWidthOf(attrs: Attrs): string | null {
   return legacy === null ? null : `${legacy}%`;
 }
 
+// Obsidian's size in the alt text: `![alt|300](u)`, `![alt|300x200](u)`.
+const ALT_SIZE = /\|(\d{1,5})(?:x\d{1,5})?$/;
+
+/** An image's alt without an Obsidian size, and the width that size gives
+ *  in pixels ("" for none). */
+export function splitAltSize(alt: string): { alt: string; width: string } {
+  const size = ALT_SIZE.exec(alt);
+  return size
+    ? { alt: alt.slice(0, size.index).trimEnd(), width: size[1] }
+    : { alt, width: "" };
+}
+
+/** The width an image is drawn at: as imageWidthOf, else an Obsidian size
+ *  in its alt. Display only - the file keeps the alt as written. */
+export function shownImageWidth(attrs: Attrs): string | null {
+  return (
+    imageWidthOf(attrs) ||
+    splitAltSize((attrs.alt as string | undefined) ?? "").width ||
+    null
+  );
+}
+
 /**
  * An image's attrs at a new width, or null for its own size. A width kept
  * in the title comes out of it. Never a null title: it validates as a string.
@@ -114,6 +136,8 @@ export function withImageWidth(
 ): Attrs {
   return {
     ...attrs,
+    // A new width replaces an Obsidian size in the alt.
+    alt: splitAltSize((attrs.alt as string | undefined) ?? "").alt,
     title: keepRotation(
       attrs.title as string,
       readImagePresentation(attrs.title as string).title,

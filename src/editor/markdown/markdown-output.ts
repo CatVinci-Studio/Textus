@@ -34,6 +34,7 @@ import {
   hardBreak,
   hardBreakAsSpaces,
   keepAlertMarker,
+  keepInlineFootnote,
   markLatexAhead,
   withSingleLineEnds,
   withoutLatexPairs,
@@ -390,9 +391,11 @@ export function configureMarkdownOutput(ctx: Ctx): void {
       text: withSingleLineEnds(
         withoutLatexPairs(
           keepAlertMarker(
-            escapingBeforeSpaces(
-              (options.handlers?.text as Handle | undefined) ??
-                defaultHandlers.text,
+            keepInlineFootnote(
+              escapingBeforeSpaces(
+                (options.handlers?.text as Handle | undefined) ??
+                  defaultHandlers.text,
+              ),
             ),
           ),
         ),

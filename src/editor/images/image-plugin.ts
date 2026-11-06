@@ -28,7 +28,8 @@ import {
 import { parseEmbed } from "./obsidian-embed";
 import { clipboardImageSources } from "./pasted-files";
 import {
-  imageWidthOf,
+  shownImageWidth,
+  splitAltSize,
   readImagePresentation,
   withImageWidth,
 } from "./image-html";
@@ -216,14 +217,14 @@ function createImageView(
     // Another picture: the card goes, until that one fails too.
     if (shown() !== before) clearMissing();
     const { title } = readImagePresentation(n.attrs.title as string);
-    const width = imageWidthOf(n.attrs);
+    const width = shownImageWidth(n.attrs);
     showDocImage(
       img,
       (n.attrs.src as string) ?? "",
       docPath(),
       () => current === n,
     );
-    img.alt = (n.attrs.alt as string) ?? "";
+    img.alt = splitAltSize((n.attrs.alt as string) ?? "").alt;
     if (title) img.title = title;
     else img.removeAttribute("title");
     dom.style.width = width ? cssWidth(width) : "";

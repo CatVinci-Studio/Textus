@@ -11,6 +11,7 @@ import {
 } from "../reveal-state";
 import { liveCaretPos } from "../live-selection";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
+import { katexNow } from "../math/katex-loader";
 
 // The folding half of the raw-HTML preview. The plugin's state holds the
 // fold state too, so its key and shape are declared here.
@@ -56,8 +57,13 @@ export function inSummary(event: Event): boolean {
 
 // ProseMirror leaves a summary's clicks to the browser, which toggles it,
 // instead of placing the caret there (which would reveal the source).
+// Keyed by KaTeX too: drawn before it loaded, a formula stays source.
 export function widgetSpec(key: string) {
-  return { side: -1, key, stopEvent: inSummary };
+  return {
+    side: -1,
+    key: katexNow() ? `${key}\nkatex` : key,
+    stopEvent: inSummary,
+  };
 }
 
 const DETAILS_OPEN_RE = /^<details[\s>]/i;

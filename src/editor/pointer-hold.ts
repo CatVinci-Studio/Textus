@@ -19,8 +19,23 @@ export function revealSelection(state: EditorState): {
   from: number;
   to: number;
 } {
+  if (noRevealKey.getState(state)) return NOWHERE;
   return pointerHoldKey.getState(state) ?? state.selection;
 }
+
+const noRevealKey = new PluginKey<boolean>("no-reveal");
+// Before every position, so no range is ever touched.
+const NOWHERE = { from: -2, to: -2 };
+
+/** A view that is only read (the split view's preview): every syntax drawn,
+ *  none shown as source wherever its selection lands. */
+export const noRevealPlugin = $prose(
+  () =>
+    new Plugin<boolean>({
+      key: noRevealKey,
+      state: { init: () => true, apply: (_tr, on) => on },
+    }),
+);
 
 /** Whether what was drawn for `before`'s selection is stale in `after`. */
 export function revealMoved(before: EditorState, after: EditorState): boolean {

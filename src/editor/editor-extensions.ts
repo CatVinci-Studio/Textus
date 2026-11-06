@@ -24,6 +24,7 @@ import {
   frontmatterSchema,
 } from "./markdown/frontmatter-schema";
 import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
+import { inlineSyntaxPlugin } from "./markdown/inline-syntax-plugin";
 import { installProseMirrorSpeedups } from "./prosemirror-speedups";
 import {
   headingIdPlugin,
@@ -84,7 +85,7 @@ import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { editorExtensions } from "./extension-points";
 import { marginClickPlugin } from "./keys/margin-click-plugin";
-import { pointerHoldPlugin } from "./pointer-hold";
+import { noRevealPlugin, pointerHoldPlugin } from "./pointer-hold";
 import {
   cjkTaskInputPlugin,
   remarkEmptyTaskItems,
@@ -189,6 +190,8 @@ export function withEditorCore(
   options: {
     settings: { readonly current: Settings };
     docPath: { readonly current: string | null };
+    /** Only read, every syntax drawn (the split view's preview). */
+    preview?: boolean;
   } & (
     | {
         /** A pasted image failed to save to disk: the localized message for a
@@ -210,6 +213,8 @@ export function withEditorCore(
   const disk = !("noDiskImages" in options);
   return (
     editor
+      // First: the plugins that read it are asked in order.
+      .use(options.preview ? noRevealPlugin : [])
       .config(configureMarkdownOutput)
       // Which part of the file each block was read from, so a save writes the
       // blocks the user didn't touch as they were.
@@ -289,6 +294,8 @@ export function withEditorCore(
           }[type];
         }),
       )
+
+      .use(inlineSyntaxPlugin)
 
       // CommonMark's flanking rules reject "**" next to CJK punctuation, which
       // would break reopening bold made here. Parse side only.

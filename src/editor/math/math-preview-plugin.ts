@@ -61,8 +61,15 @@ function blockRoom(): HTMLElement {
   return el;
 }
 
+/** GitHub's ```math fence, drawn as a display formula. */
+const isMathFence = (node: ProseNode) =>
+  node.type.name === "code_block" &&
+  String(node.attrs.language).toLowerCase() === "math";
+
 const isMath = (node: ProseNode) =>
-  node.type.name === "math_inline" || node.type.name === "math_block";
+  node.type.name === "math_inline" ||
+  node.type.name === "math_block" ||
+  isMathFence(node);
 
 function decorateMath(
   node: ProseNode,
@@ -73,7 +80,9 @@ function decorateMath(
   const to = pos + node.nodeSize;
   // While the cursor touches the node, enclosure reveals the source; the
   // KaTeX swap stays out of the way for exactly that range.
+  const fence = isMathFence(node);
   if (touches(from, to)) {
+    if (fence) return [];
     // A block's preview room: there whenever the source is revealed, because
     // this set is only redrawn when cursorTouches flips.
     return node.type.name === "math_block"
@@ -89,10 +98,12 @@ function decorateMath(
 
   // KaTeX still loading: the source stays in view until it is drawn.
   if (!katexNow()) return [];
-  const displayMode = node.type.name === "math_block";
+  const displayMode = fence || node.type.name === "math_block";
   const source = node.textContent;
   return [
-    Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
+    fence
+      ? Decoration.node(from, to, { class: "math-fence-hidden" })
+      : Decoration.inline(from + 1, to - 1, { class: "math-source-hidden" }),
     Decoration.widget(
       to,
       (view: EditorView, getPos: () => number | undefined) => {

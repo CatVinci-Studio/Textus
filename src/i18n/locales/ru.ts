@@ -447,6 +447,7 @@ export default {
   webSources: "Источники",
   proposalSourcesAsFootnotes: "Добавить источники как сноски",
   menuToggleSplitView: "Исходник и просмотр",
+  splitPreview: "Предпросмотр",
   menuToggleZenMode: "Режим дзен",
   menuSplitRight: "Разделить вправо",
   menuCommandPalette: "Палитра команд…",
@@ -769,6 +770,9 @@ export default {
   deleteRow: "Удалить строку",
   deleteColumn: "Удалить столбец",
   deleteTable: "Удалить таблицу",
+  tableToMarkdown: "Преобразовать в таблицу Markdown",
+  tableToMarkdownMerged: "Преобразовать в таблицу Markdown (есть объединённые ячейки)",
+  tableToMarkdownBlocks: "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
