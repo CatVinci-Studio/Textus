@@ -118,9 +118,17 @@ fn live_paper() {
             tools: &tools,
             ctx: &ctx,
         };
-        let dossier = research::research(&agent, &paper, &web, &shared, &send, &kit)
-            .await
-            .expect("research");
+        let dossier = research::research(
+            &agent,
+            &paper,
+            &web,
+            &shared,
+            &send,
+            &kit,
+            research::Progress::none(),
+        )
+        .await
+        .expect("research");
         lap(&mut stats, "research", t);
         write(
             "dossier.json",

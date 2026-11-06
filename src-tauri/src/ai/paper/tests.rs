@@ -319,9 +319,17 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&Scripted, &paper(), &web, &budget, &send, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &Scripted,
+        &paper(),
+        &web,
+        &budget,
+        &send,
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
 
     // One note per question kept; the unknown number and the unsourced one
     // were refused.
@@ -477,9 +485,17 @@ async fn research_that_keeps_nothing_fails_with_a_reason() {
         tools: &tools,
         ctx: &ctx,
     };
-    let err = research::research(&Empty, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap_err();
+    let err = research::research(
+        &Empty,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap_err();
     assert!(err.contains("found nothing to write from"), "{err}");
 }
 
@@ -1246,9 +1262,17 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&Librarian, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &Librarian,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert_eq!(dossier.notes.len(), 2);
     assert_eq!(dossier.notes[0].sources, vec![1]);
     assert_eq!(dossier.notes[1].sources, vec![1]);
@@ -1689,9 +1713,17 @@ async fn a_note_can_t_rest_on_a_search_page_by_address_or_number() {
         tools: &tools,
         ctx: &ctx,
     };
-    let dossier = research::research(&SearchCiter, &paper(), &web, &budget, &|_| {}, &kit)
-        .await
-        .unwrap();
+    let dossier = research::research(
+        &SearchCiter,
+        &paper(),
+        &web,
+        &budget,
+        &|_| {},
+        &kit,
+        research::Progress::none(),
+    )
+    .await
+    .unwrap();
     assert!(
         dossier.notes.iter().all(|n| n.sources == vec![2]),
         "{:?}",
