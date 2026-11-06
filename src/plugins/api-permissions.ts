@@ -49,6 +49,7 @@ const API_PERMISSIONS: readonly {
       "metadata.all",
       "metadata.backlinks",
       "metadata.resolveLink",
+      "metadata.resolveNote",
       "metadata.tags",
       "metadata.tasks",
       "metadata.search",

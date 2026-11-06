@@ -87,5 +87,5 @@ const MARKDOWN = /\.(md|markdown)$/i;
  * then the name as written (`[[file.pdf]]`).
  */
 export function noteFileNames(note: string): string[] {
-  return MARKDOWN.test(note) ? [note] : [`${note}.md`, note];
+  return MARKDOWN.test(note) ? [note] : [`${note}.md`, `${note}.markdown`, note];
 }

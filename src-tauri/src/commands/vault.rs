@@ -134,7 +134,11 @@ fn folder_distance(from: &[&str], to: &[&str]) -> usize {
 /// (`[[Note v1.2]]` is `Note v1.2.md`), then the name as written.
 fn file_names(link: &str, kind: LinkKind) -> Vec<String> {
     match kind {
-        LinkKind::Note if !is_note(Path::new(link)) => vec![format!("{link}.md"), link.to_string()],
+        LinkKind::Note if !is_note(Path::new(link)) => vec![
+            format!("{link}.md"),
+            format!("{link}.markdown"),
+            link.to_string(),
+        ],
         _ => vec![link.to_string()],
     }
 }
@@ -178,14 +182,30 @@ fn direct<'a>(index: &'a [String], rel: Option<String>, kind: LinkKind) -> Optio
 /// A name, or a path's tail, compared without case as Obsidian does. Ties go
 /// to the nearest, then shortest, then alphabetical path.
 fn by_name<'a>(index: &'a [String], link: &str, from_dir: &str, kind: LinkKind) -> Option<&'a str> {
-    file_names(link, kind).iter().find_map(|name| {
-        let lower = name.trim_start_matches("./").to_lowercase();
-        let tail = format!("/{lower}");
+    let names = file_names(link, kind);
+    // A note's spellings (.md, .markdown) compete as one; a name as written is
+    // only tried after them.
+    let groups: Vec<&[String]> = if names.len() > 1 {
+        vec![&names[..names.len() - 1], &names[names.len() - 1..]]
+    } else {
+        vec![&names[..]]
+    };
+    groups.into_iter().find_map(|group| {
+        let wanted: Vec<(String, String)> = group
+            .iter()
+            .map(|name| {
+                let lower = name.trim_start_matches("./").to_lowercase();
+                let tail = format!("/{lower}");
+                (lower, tail)
+            })
+            .collect();
         index
             .iter()
             .filter(|rel| {
                 let rel = rel.to_lowercase();
-                rel == lower || rel.ends_with(&tail)
+                wanted
+                    .iter()
+                    .any(|(lower, tail)| rel == *lower || rel.ends_with(tail))
             })
             .min_by_key(|rel| {
                 (

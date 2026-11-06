@@ -70,8 +70,16 @@ describe("parseNoteLink", () => {
 
 describe("noteFileNames", () => {
   it("tries a note before a dotted name's own extension", () => {
-    expect(noteFileNames("Note v1.2")).toEqual(["Note v1.2.md", "Note v1.2"]);
-    expect(noteFileNames("file.pdf")).toEqual(["file.pdf.md", "file.pdf"]);
+    expect(noteFileNames("Note v1.2")).toEqual([
+      "Note v1.2.md",
+      "Note v1.2.markdown",
+      "Note v1.2",
+    ]);
+    expect(noteFileNames("file.pdf")).toEqual([
+      "file.pdf.md",
+      "file.pdf.markdown",
+      "file.pdf",
+    ]);
     expect(noteFileNames("a.md")).toEqual(["a.md"]);
   });
 });
