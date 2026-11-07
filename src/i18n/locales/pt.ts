@@ -1628,6 +1628,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginUpdatedOn: "Atualizado em {date}",
   pluginReadmeLabel: "Sobre {name}",
   pluginUpdate: "Atualizar para {version}",
+  pluginsUpdateAll: "Atualizar todos ({count})",
+  pluginsUpdateAllFailed: "Estes plugins não foram atualizados: {names}.",
   pluginOfficial: "Oficial",
   pluginBy: "por {author}",
   pluginOpenDetails: "{name}: detalhes e ajustes",

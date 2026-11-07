@@ -52,6 +52,30 @@ export function usePluginInstall(t: Strings) {
       }
     });
 
+  /** Updates each of `items` in turn; one that fails is named at the end,
+   *  the rest still update. */
+  const updateAll = async (items: CatalogItem[]) => {
+    const failed: string[] = [];
+    for (const item of items) {
+      setInstalling(item.id);
+      try {
+        await installFromCatalog(item.id);
+        await askForRequirements(item.id, t, settings, setSettings);
+      } catch {
+        const record = pluginsSnapshot().records.find((r) => r.id === item.id);
+        failed.push(
+          pluginName(record ?? { id: item.id, manifest: item.manifest }),
+        );
+      }
+    }
+    setInstalling(null);
+    if (failed.length)
+      void showMessage(
+        t.pluginsUpdateAllFailed.replace("{names}", failed.join(", ")),
+        { title: t.pluginsTitle, tone: "error" },
+      );
+  };
+
   /** Turns a plugin on, then offers to turn on what it needs. */
   const enable = (record: PluginRecord, on: boolean) =>
     attempt(async () => {
@@ -83,6 +107,7 @@ export function usePluginInstall(t: Strings) {
   return {
     installing,
     install,
+    updateAll,
     enable,
     uninstall,
     attempt,

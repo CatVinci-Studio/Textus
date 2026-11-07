@@ -1562,6 +1562,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginUpdatedOn: "{date} 업데이트",
   pluginReadmeLabel: "{name} 소개",
   pluginUpdate: "{version}(으)로 업데이트",
+  pluginsUpdateAll: "모두 업데이트({count})",
+  pluginsUpdateAllFailed: "업데이트하지 못한 플러그인: {names}.",
   pluginOfficial: "공식",
   pluginBy: "만든 이: {author}",
   pluginOpenDetails: "{name}: 자세히 및 설정",

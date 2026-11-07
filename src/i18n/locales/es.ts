@@ -1651,6 +1651,8 @@ para usar una.
   pluginUpdatedOn: "Actualizado el {date}",
   pluginReadmeLabel: "Acerca de {name}",
   pluginUpdate: "Actualizar a {version}",
+  pluginsUpdateAll: "Actualizar todo ({count})",
+  pluginsUpdateAllFailed: "No se actualizaron estos plugins: {names}.",
   pluginOfficial: "Oficial",
   pluginBy: "de {author}",
   pluginOpenDetails: "{name}: detalles y ajustes",

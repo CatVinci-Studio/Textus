@@ -1673,6 +1673,8 @@ utiliser une.
   pluginUpdatedOn: "Mis à jour le {date}",
   pluginReadmeLabel: "À propos de {name}",
   pluginUpdate: "Mettre à jour vers {version}",
+  pluginsUpdateAll: "Tout mettre à jour ({count})",
+  pluginsUpdateAllFailed: "Ces plugins n'ont pas été mis à jour : {names}.",
   pluginOfficial: "Officielle",
   pluginBy: "par {author}",
   pluginOpenDetails: "{name} : détails et réglages",

@@ -24,6 +24,7 @@ export function ExtensionsTabLayout({
   off = false,
   installedTitle,
   installedCount,
+  installedAction,
   installed,
   available,
   footer,
@@ -42,6 +43,8 @@ export function ExtensionsTabLayout({
   off?: boolean;
   installedTitle: string;
   installedCount?: number;
+  /** Beside the installed list's title, while there is something to do. */
+  installedAction?: ReactNode;
   installed: ReactNode;
   available?: ReactNode;
   footer?: ReactNode;
@@ -90,6 +93,7 @@ export function ExtensionsTabLayout({
             {!!installedCount && (
               <span className="extensions-count">{installedCount}</span>
             )}
+            {installedAction}
           </h2>
           <div className="settings-group-body">{installed}</div>
         </section>

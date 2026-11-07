@@ -360,3 +360,37 @@ test("a plugin's setting can be the project's own, over the general one", async 
     .click();
   await expect(folder()).toHaveValue("Daily");
 });
+
+test("with updates for two or more installed plugins, Update All updates them all, then goes", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devCatalogOlder = [
+      "catvinci.tasks",
+      "catvinci.kanban",
+    ];
+  });
+  await openWithPlugins(page, {
+    plugins: { "catvinci.tasks": [], "catvinci.kanban": [] },
+  });
+  await openPluginsPage(page);
+  const all = page.getByRole("button", { name: "Update All (2)" });
+  await expect(all).toBeVisible();
+  const tasks = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
+  await expect(
+    tasks.getByRole("button", { name: /^Update to / }),
+  ).toBeVisible();
+  // An update may ask again for what the plugin uses.
+  const allow = page
+    .locator(".app-dialog")
+    .getByRole("button", { name: "Allow" });
+  // One plugin's ask can follow another's at once.
+  await page.addLocatorHandler(allow, () => allow.click(), {
+    noWaitAfter: true,
+  });
+  await all.click();
+  await expect(all).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^Update to / })).toHaveCount(
+    0,
+  );
+});
