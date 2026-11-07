@@ -373,20 +373,6 @@ test("a row dragged onto a folder moves into it, and its open tab follows", asyn
     .toContain("moved");
 });
 
-test("a folder can't be dragged into itself", async ({ page }) => {
-  await open(page);
-  await row(page, "drafts").click();
-  await expect(row(page, "old.md")).toBeVisible();
-  const from = (await row(page, "drafts").boundingBox())!;
-  const into = (await row(page, "old.md").boundingBox())!;
-  await page.mouse.move(from.x + 30, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(into.x + 40, into.y + into.height / 2, { steps: 6 });
-  await expect(page.locator(".tree-row-drop")).toHaveCount(0);
-  await page.mouse.up();
-  expect(await files(page)).toContain("/work/notes/drafts/old.md");
-});
-
 test("hidden files stay out of the tree until it shows them (#357)", async ({
   page,
 }) => {

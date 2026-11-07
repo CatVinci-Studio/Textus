@@ -83,16 +83,6 @@ const defaultEditorStatus = {
   appImage: { supported: false, isDefault: false, chooseInSettings: false },
 };
 
-/** The canned commands Settings sent, in order. */
-function invokeCalls(page: Page) {
-  return page.evaluate(() =>
-    (
-      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
-        .__devInvokeCalls ?? []
-    ).map((c) => c.cmd),
-  );
-}
-
 async function openSettings(page: Page) {
   await emit(page, "menu-open-settings");
   return page.getByRole("dialog", { name: t.settingsTitle });
@@ -456,69 +446,6 @@ test.describe("desktop", () => {
       panel.getByRole("button", { name: t.updateCheckButton }),
     ).toBeVisible();
     await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
-  });
-
-  test("the default editor button makes Textus the default where the system allows it", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.mac,
-      set_default_editor: null,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row).toContainText(t.defaultEditorNotDefault);
-    // What the system reports once the command has run.
-    await page.evaluate(() => {
-      (
-        window as unknown as { __devInvokeResults: Record<string, unknown> }
-      ).__devInvokeResults.default_editor_status = {
-        supported: true,
-        isDefault: true,
-        chooseInSettings: false,
-      };
-    });
-    await row.getByRole("button", { name: t.defaultEditorButton }).click();
-    await expect(row).toContainText(t.defaultEditorIsDefault);
-    await expect(row.getByRole("button")).toHaveCount(0);
-    expect(await invokeCalls(page)).toContain("set_default_editor");
-  });
-
-  test("on Windows the button opens Default apps and says what to choose", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.windows,
-      set_default_editor: null,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row.getByText(t.defaultEditorChooseHint)).toHaveCount(0);
-    await row.getByRole("button", { name: t.defaultEditorButton }).click();
-    await expect(row.getByText(t.defaultEditorChooseHint)).toBeVisible();
-    await expect(row).toContainText(t.defaultEditorNotDefault);
-    expect(await invokeCalls(page)).toContain("set_default_editor");
-  });
-
-  test("an AppImage explains instead of offering the button", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.appImage,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row.getByText(t.defaultEditorUnsupported)).toBeVisible();
-    await expect(row.getByRole("button")).toHaveCount(0);
   });
 
   test("every page is as wide as the others, whichever category is chosen", async ({

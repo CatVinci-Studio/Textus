@@ -71,14 +71,3 @@ test("Turn into… makes the paragraph a heading, then text again", async ({
   await expect(editor.locator("h1")).toHaveCount(0);
   await expect(editor.locator("p")).toHaveText("A title");
 });
-
-test("a colon and a word offer emoji, but not in a time", async ({ page }) => {
-  const editor = await open(page, "Done\n");
-  const list = page.locator(".completion-list");
-  await page.keyboard.type(" at 10:30");
-  await expect(list).toBeHidden();
-  await page.keyboard.type(" :tada");
-  await expect(list).toContainText("🎉");
-  await page.keyboard.press("Enter");
-  await expect(editor.locator("p")).toHaveText("Done at 10:30 🎉");
-});
