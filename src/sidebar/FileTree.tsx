@@ -96,7 +96,6 @@ export function FileTree({
   const { generation, setGeneration, query, setQuery } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
   const { showHidden, setShowHidden } = view;
-  const [menu, setMenu] = useState<TreeMenu>(null);
   // Not on iOS: above Documents is the app's private container, and above
   // a folder picked in Files is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
@@ -105,17 +104,15 @@ export function FileTree({
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
-  const [draft, setDraft] = useState<TreeDraft | null>(null);
-  const finishDraft = useNewEntry(draft, setDraft, t, reload, onFileSelect);
+  const { draft, setDraft, finishDraft } = useNewEntry(t, reload, onFileSelect);
 
-  const onRowMenu = useRowMenu(
+  const { menu, setMenu, onRowMenu } = useRowMenu(
     root,
     folder ?? root,
     t,
     reload,
     onFileSelect,
     onEntryMoved,
-    setMenu,
     setDraft,
   );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
@@ -464,7 +461,8 @@ type TreeMenu = {
   items: (ContextMenuItem | "separator")[];
 } | null;
 
-/** A row's context menu: open, new document or folder, rename, move to Trash. */
+/** The tree's menus: the one open, and a row's context menu - open, new
+ *  document or folder, rename, move to Trash. */
 function useRowMenu(
   root: string,
   linkBase: string,
@@ -472,9 +470,9 @@ function useRowMenu(
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string, beside?: boolean) => void,
   onEntryMoved: (from: string, to: string) => void,
-  setMenu: (menu: TreeMenu) => void,
   setDraft: (draft: TreeDraft) => void,
 ) {
+  const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
     async (path: string) => {
       const name = await showPrompt(t.treeRenamePrompt, basename(path), {
@@ -515,7 +513,7 @@ function useRowMenu(
     [root, t, reload],
   );
 
-  return useCallback(
+  const onRowMenu = useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
       e.stopPropagation();
@@ -552,19 +550,20 @@ function useRowMenu(
       if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
-    [root, t, setDraft, rename, trash, onFileSelect, setMenu],
+    [root, t, setDraft, rename, trash, onFileSelect],
   );
+  return { menu, setMenu, onRowMenu };
 }
 
-/** Makes the document or folder named in place, and opens a document. */
+/** The document or folder being named in place, and making it once
+ *  named (a document opens). */
 function useNewEntry(
-  draft: TreeDraft | null,
-  setDraft: (draft: TreeDraft | null) => void,
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string) => void,
 ) {
-  return useCallback(
+  const [draft, setDraft] = useState<TreeDraft | null>(null);
+  const finishDraft = useCallback(
     async (name: string | null) => {
       setDraft(null);
       if (!draft || !name) return;
@@ -579,6 +578,7 @@ function useNewEntry(
         await showMessage(failureText(t, err, name));
       }
     },
-    [draft, setDraft, t, reload, onFileSelect],
+    [draft, t, reload, onFileSelect],
   );
+  return { draft, setDraft, finishDraft };
 }
