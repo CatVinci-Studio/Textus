@@ -10,6 +10,10 @@ import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
+import { IconButton } from "../../ui/IconButton";
+import { TrashIcon } from "../../ui/icons";
+import { isIOSApp } from "../../platform/capabilities";
+import { withoutCreation } from "../../ai/chat/creations";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
 import {
@@ -72,13 +76,18 @@ export async function importSkill(): Promise<void> {
 export function OwnSkillsList({
   t,
   query = "",
+  onFilesDeleted,
 }: {
   t: Strings;
   query?: string;
+  /** Tabs open on a deleted skill's files close, so they aren't saved back. */
+  onFilesDeleted?: (paths: string[]) => void;
 }) {
-  const { settings } = useSettings();
+  const { settings, setSettings } = useSettings();
   const lang = settings.language;
   const { list, setList, workspaceSkills } = useSkillList();
+  const madeHere = (name: string) =>
+    settings.creations.some((c) => c.kind === "skill" && c.id === name);
   const [error, setError] = useState<string | null>(null);
   const own: SkillListItem[] = (
     list
@@ -124,6 +133,29 @@ export function OwnSkillsList({
     }
   }
 
+  async function remove(skill: SkillListItem, label: string) {
+    setError(null);
+    const ok = await showConfirm(
+      (isIOSApp ? t.skillDeleteAskMobile : t.skillDeleteAsk).replace(
+        "{name}",
+        label,
+      ),
+      { okLabel: t.skillDelete, cancelLabel: t.cancel, danger: true },
+    );
+    if (!ok) return;
+    try {
+      const deleted = await ai.deleteGlobalSkill(skill.name);
+      setList((list ?? []).filter((i) => i.name !== skill.name));
+      setSettings({
+        creations: withoutCreation(settings.creations, "skill", skill.name),
+      });
+      announceChange();
+      if (deleted.length > 0) onFilesDeleted?.(deleted);
+    } catch (err) {
+      setError(explainError(err, t));
+    }
+  }
+
   if (own.length === 0) return null;
   return (
     <div className="settings-skill-list">
@@ -153,6 +185,9 @@ export function OwnSkillsList({
                     {shadows ? t.agentSkillsShadows : t.skillGroupProject}
                   </span>
                 )}
+                {madeHere(skill.name) && (
+                  <span className="settings-skill-tag">{t.madeByTextusAi}</span>
+                )}
               </span>
               <span className="settings-skill-desc">
                 <span className="settings-builtin-skill-name">
@@ -169,6 +204,14 @@ export function OwnSkillsList({
                 onChange={(next) => void setModes(skill, next)}
               />
             </span>
+            {skill.source === "global" && (
+              <IconButton
+                label={t.skillDelete}
+                onClick={() => void remove(skill, words?.label ?? skill.name)}
+              >
+                <TrashIcon />
+              </IconButton>
+            )}
             {/* Off for now, its modes kept for when it comes back on. */}
             <input
               type="checkbox"

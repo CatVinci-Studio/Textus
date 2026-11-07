@@ -729,6 +729,10 @@ type /name in a conversation to use one.
   agentSkillsBuiltinTag: "Built-in",
   agentSkillsOpen: "Open",
   agentSkillsReset: "Reset",
+  madeByTextusAi: `Made with ${AI_NAME}`,
+  skillDelete: "Delete",
+  skillDeleteAsk: "Delete “{name}”? Its files go to the Trash.",
+  skillDeleteAskMobile: "Delete “{name}”?",
   agentSkillsResetConfirm:
     "Delete your copy of “{name}” and use the built-in skill again?",
   agentSkillsShadows: "Replaces a built-in skill",

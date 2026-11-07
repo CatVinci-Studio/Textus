@@ -746,6 +746,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSkillsBuiltinTag: "Integriert",
   agentSkillsOpen: "Öffnen",
   agentSkillsReset: "Zurücksetzen",
+  madeByTextusAi: `Mit ${AI_NAME} erstellt`,
+  skillDelete: "Löschen",
+  skillDeleteAsk: "„{name}“ löschen? Seine Dateien kommen in den Papierkorb.",
+  skillDeleteAskMobile: "„{name}“ löschen?",
   agentSkillsResetConfirm:
     "Deine Kopie von „{name}“ löschen und wieder den integrierten Skill verwenden?",
   agentSkillsShadows: "Ersetzt einen integrierten Skill",

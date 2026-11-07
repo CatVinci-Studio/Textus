@@ -26,6 +26,7 @@ import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { matchesWords } from "../../utils/match-words";
+import { madeByAi } from "../../ai/chat/creations";
 
 const CUSTOM_CSS_PLACEHOLDER = `#write > p {
   text-indent: 2em;
@@ -386,6 +387,11 @@ export function ThemesTab({ t }: { t: Strings }) {
                 <span className="settings-row-label plugin-card-name">
                   {theme.name}
                 </span>
+                {madeByAi(settings.creations, "theme", theme.id) && (
+                  <span className="plugin-byline">
+                    <span className="plugin-official">{t.madeByTextusAi}</span>
+                  </span>
+                )}
               </div>
               <div className="settings-row-control">
                 {updates.has(theme.id) && (

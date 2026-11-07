@@ -748,6 +748,10 @@ export default {
   agentSkillsBuiltinTag: "Встроенный",
   agentSkillsOpen: "Открыть",
   agentSkillsReset: "Сбросить",
+  madeByTextusAi: `Сделано с ${AI_NAME}`,
+  skillDelete: "Удалить",
+  skillDeleteAsk: "Удалить «{name}»? Его файлы попадут в Корзину.",
+  skillDeleteAskMobile: "Удалить «{name}»?",
   agentSkillsResetConfirm:
     "Удалить вашу копию навыка «{name}» и вернуться к встроенному?",
   agentSkillsShadows: "Заменяет встроенный навык",

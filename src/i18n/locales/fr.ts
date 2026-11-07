@@ -763,6 +763,10 @@ utiliser une.
   agentSkillsBuiltinTag: "Intégrée",
   agentSkillsOpen: "Ouvrir",
   agentSkillsReset: "Réinitialiser",
+  madeByTextusAi: `Créé avec ${AI_NAME}`,
+  skillDelete: "Supprimer",
+  skillDeleteAsk: "Supprimer « {name} » ? Ses fichiers iront à la Corbeille.",
+  skillDeleteAskMobile: "Supprimer « {name} » ?",
   agentSkillsResetConfirm:
     "Supprimer votre copie de «\u00a0{name}\u00a0» et revenir à la compétence intégrée\u00a0?",
   agentSkillsShadows: "Remplace une compétence intégrée",

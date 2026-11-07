@@ -717,6 +717,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSkillsBuiltinTag: "組み込み",
   agentSkillsOpen: "開く",
   agentSkillsReset: "リセット",
+  madeByTextusAi: `${AI_NAME} で作成`,
+  skillDelete: "削除",
+  skillDeleteAsk: "「{name}」を削除しますか？ファイルはゴミ箱に移動します。",
+  skillDeleteAskMobile: "「{name}」を削除しますか？",
   agentSkillsResetConfirm:
     "「{name}」のコピーを削除して、組み込みスキルに戻しますか？",
   agentSkillsShadows: "組み込みスキルを置き換えています",

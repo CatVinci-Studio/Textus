@@ -60,12 +60,15 @@ export function Byline({
   manifest,
   official,
   dev,
+  madeHere,
   t,
   children,
 }: {
   manifest: PluginManifest;
   official: boolean;
   dev?: boolean;
+  /** Made by Textus AI in Create. */
+  madeHere?: boolean;
   t: Strings;
   /** More about it after the version: its installs. */
   children?: ReactNode;
@@ -73,6 +76,7 @@ export function Byline({
   return (
     <div className="plugin-byline">
       {official && <span className="plugin-official">{t.pluginOfficial}</span>}
+      {madeHere && <span className="plugin-official">{t.madeByTextusAi}</span>}
       <span>
         {t.pluginBy.replace("{author}", manifest.author || manifest.publisher)}
       </span>

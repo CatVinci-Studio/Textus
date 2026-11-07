@@ -756,6 +756,10 @@ para usar una.
   agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restablecer",
+  madeByTextusAi: `Hecho con ${AI_NAME}`,
+  skillDelete: "Eliminar",
+  skillDeleteAsk: "¿Eliminar «{name}»? Sus archivos irán a la Papelera.",
+  skillDeleteAskMobile: "¿Eliminar «{name}»?",
   agentSkillsResetConfirm:
     "¿Eliminar tu copia de «{name}» y volver a usar la habilidad integrada?",
   agentSkillsShadows: "Sustituye a una habilidad integrada",

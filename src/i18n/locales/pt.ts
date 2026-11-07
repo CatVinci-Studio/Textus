@@ -739,6 +739,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restaurar",
+  madeByTextusAi: `Feito com ${AI_NAME}`,
+  skillDelete: "Excluir",
+  skillDeleteAsk: "Excluir “{name}”? Os arquivos vão para a Lixeira.",
+  skillDeleteAskMobile: "Excluir “{name}”?",
   agentSkillsResetConfirm:
     "Excluir sua cópia de “{name}” e voltar a usar a habilidade integrada?",
   agentSkillsShadows: "Substitui uma habilidade integrada",
