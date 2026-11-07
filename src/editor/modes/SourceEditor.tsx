@@ -28,7 +28,9 @@ import { sourceHighlighting } from "./source-highlight";
 import {
   registerSourceView,
   unregisterSourceView,
+  type SourceEdit,
 } from "./source-view-registry";
+import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import "./source-editor.css";
 
 // Read-only refuses changes but stays focusable: the caret still moves,
@@ -120,15 +122,22 @@ export function SourceEditor({
       }),
     });
     viewRef.current = view;
-    registerSourceView(host, view, (action) => {
-      const command = { undo, redo, "select-all": selectAll }[action];
-      command(view);
+    const edit = (action: SourceEdit) => {
+      ({ undo, redo, "select-all": selectAll })[action](view);
       view.focus();
-    });
+    };
+    registerSourceView(host, view, edit);
+    const onEdit = (event: Event) => {
+      const action = (event as CustomEvent<SourceEdit>).detail;
+      if (action === "undo" || action === "redo" || action === "select-all")
+        edit(action);
+    };
+    host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
     const scroller = view.scrollDOM;
     const onScrollEvent = () => latest.current.onScroll?.(scroller);
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
     return () => {
+      host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);
       unregisterSourceView(host);
       readOnlyRef.current = null;

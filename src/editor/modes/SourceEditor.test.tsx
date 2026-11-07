@@ -4,6 +4,7 @@ import { cleanup, render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SourceEditor } from "./SourceEditor";
 import { sourceViewAt } from "./source-view-registry";
+import { editInFocus } from "../../ui/edit-in-focus";
 
 afterEach(cleanup);
 
@@ -95,5 +96,20 @@ describe("SourceEditor", () => {
     edit("select-all");
     expect(view.state.selection.main.from).toBe(0);
     expect(view.state.selection.main.to).toBe(4);
+  });
+
+  it("takes Edit › Undo from the menu when it has the keyboard", () => {
+    const { container } = render(
+      <SourceEditor value={"abc"} onChange={vi.fn()} typewriter={false} />,
+    );
+    const { view } = sourceViewAt(container)!;
+    view.dispatch({
+      changes: { from: 3, insert: "d" },
+      userEvent: "input.type",
+    });
+    view.contentDOM.focus();
+    vi.spyOn(document, "hasFocus").mockReturnValue(true);
+    editInFocus("undo");
+    expect(view.state.doc.toString()).toBe("abc");
   });
 });

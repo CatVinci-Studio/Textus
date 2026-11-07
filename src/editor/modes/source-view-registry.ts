@@ -35,9 +35,3 @@ export function sourceViewAt(root: ParentNode = document): SourceView | null {
   const host = root.querySelector<HTMLElement>(".source-view");
   return (host && views.get(host)) ?? null;
 }
-
-/** The source editor `element` is in. */
-export function sourceViewOf(element: Element): SourceView | null {
-  const host = element.closest<HTMLElement>(".source-view");
-  return (host && views.get(host)) ?? null;
-}
