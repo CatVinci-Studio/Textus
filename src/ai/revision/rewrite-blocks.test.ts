@@ -42,7 +42,7 @@ async function rowsFor(block: string, rewritten: string): Promise<number> {
       const { placed } = placeProposals(
         ctx,
         view.state,
-        [{ callId: "r1", proposal: edit }],
+        [{ callId: "r1", proposal: { ...edit, action: "replace" } }],
         null,
       );
       const changes = reviewChanges(placed[0]) ?? [];
