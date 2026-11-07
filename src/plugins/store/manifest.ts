@@ -139,6 +139,9 @@ export interface CustomEditorContribution {
   displayName: string;
   /** Glob-like file name patterns: "*.pdf", "*.kanban.md". */
   filenamePatterns: string[];
+  /** Front matter keys that make a Markdown document the plugin's: a .md
+   *  whose front matter has one ("kanban-plugin: board") opens in it. */
+  frontMatter: string[];
   /** "default" opens matching files in it; "option" only offers it in
    *  the file's Open With. */
   priority: "default" | "option";
