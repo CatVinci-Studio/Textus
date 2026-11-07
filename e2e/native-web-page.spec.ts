@@ -36,22 +36,17 @@ async function openPage(page: Page) {
   ).toHaveText("Example page");
 }
 
-test("the page lies over its tab's area, below the address bar", async ({
+test("the page lies over its tab's area, goes out of sight with its tab and under a menu, and goes with its tab", async ({
   page,
 }) => {
   await openPage(page);
+  // Over its tab's area, below the address bar.
   const holder = (await page
     .locator('[data-active-tab="true"] .web-page-native')
     .boundingBox())!;
   const shown = (await native(page).boundingBox())!;
   for (const side of ["x", "y", "width", "height"] as const)
     expect(Math.abs(shown[side] - holder[side])).toBeLessThan(2);
-});
-
-test("the page goes out of sight with its tab and under a menu, and comes back", async ({
-  page,
-}) => {
-  await openPage(page);
   // Another tab in front: hidden; back: shown again, the same page.
   await page.locator(".tab-bar [role='tab']").first().click();
   await expect(native(page)).toBeHidden();
@@ -66,11 +61,7 @@ test("the page goes out of sight with its tab and under a menu, and comes back",
   await expect(native(page)).toBeHidden();
   await page.keyboard.press("Escape");
   await expect(native(page)).toBeVisible();
-});
-
-test("closing the tab lets its page go", async ({ page }) => {
-  await openPage(page);
-  // Delete on the tab closes it.
+  // Delete on the tab closes it, and lets its page go.
   await page.locator(".tab-bar [role='tab']").last().focus();
   await page.keyboard.press("Delete");
   await expect(native(page)).toHaveCount(0);
