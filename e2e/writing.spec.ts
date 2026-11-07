@@ -1309,3 +1309,34 @@ test("a shift-click in the page's margin extends the selection there", async ({
     await page.evaluate(() => window.getSelection()?.toString() ?? ""),
   ).toContain("Second line.");
 });
+
+test("source mode edits as plain text with colours: Enter continues a list, nothing else is added", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await expect(source).toBeFocused();
+  const text = () =>
+    source.evaluate((el) =>
+      Array.from(el.querySelectorAll(".cm-line"), (l) => l.textContent).join(
+        "\n",
+      ),
+    );
+  await page.keyboard.type("- one");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("two");
+  await expect.poll(text).toContain("- one\n- two");
+  // No closing tag typed in for an HTML tag.
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("<div>");
+  await expect.poll(text).not.toContain("</div>");
+  // Tab leaves the pane, as in any field, instead of indenting.
+  const before = await text();
+  await page.keyboard.press("Tab");
+  await expect(source).not.toBeFocused();
+  expect(await text()).toBe(before);
+});
