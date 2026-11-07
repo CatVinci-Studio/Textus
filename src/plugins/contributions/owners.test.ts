@@ -14,7 +14,11 @@ import {
 import { claim, claimantsOf, ownerOf, ownedClaims, pickOwner } from "./owners";
 import type { Contributes } from "../store/manifest";
 import { publish, type PluginRecord } from "../store/plugin-records";
-import { customEditorFor } from "../store/plugin-lookup";
+import {
+  customEditorFor,
+  customEditorForContent,
+  frontMatterKeys,
+} from "../store/plugin-lookup";
 
 const undo: (() => void)[] = [];
 afterEach(() => {
@@ -65,12 +69,21 @@ it("asks only the owner of a declared hover kind; others for the rest", async ()
 it("reads the claims of default editors and declared hovers", () => {
   const contributes = {
     customEditors: [
-      { priority: "default", filenamePatterns: ["*.PDF"] },
-      { priority: "option", filenamePatterns: ["*.txt"] },
+      { priority: "default", filenamePatterns: ["*.PDF"], frontMatter: [] },
+      { priority: "option", filenamePatterns: ["*.txt"], frontMatter: [] },
+      {
+        priority: "default",
+        filenamePatterns: [],
+        frontMatter: ["kanban-plugin"],
+      },
     ],
     hovers: ["citation"],
   } as unknown as Contributes;
-  expect(ownedClaims(contributes)).toEqual(["editor:*.pdf", "hover:citation"]);
+  expect(ownedClaims(contributes)).toEqual([
+    "editor:*.pdf",
+    "editor:front-matter:kanban-plugin",
+    "hover:citation",
+  ]);
 });
 
 it("opens a file with the owner of its pattern", () => {
@@ -94,6 +107,42 @@ it("opens a file with the owner of its pattern", () => {
   undo.push(claim("editor:*.pdf", "a.pdf"), claim("editor:*.pdf", "b.pdf"));
   pickOwner("editor:*.pdf", "b.pdf");
   expect(customEditorFor("/x/y.pdf")?.plugin).toBe("b.pdf");
+  publish({ records: [] });
+});
+
+it("opens a Markdown document whose front matter a plugin claims, by its owner", () => {
+  const record = (id: string) =>
+    ({
+      id,
+      status: "on",
+      manifest: {
+        contributes: {
+          customEditors: [
+            {
+              viewType: "board",
+              priority: "default",
+              filenamePatterns: [],
+              frontMatter: ["kanban-plugin"],
+            },
+          ],
+        },
+      },
+    }) as unknown as PluginRecord;
+  publish({ allOn: true, records: [record("a.board"), record("b.board")] });
+  const key = "editor:front-matter:kanban-plugin";
+  undo.push(claim(key, "a.board"), claim(key, "b.board"));
+  const board = "---\nkanban-plugin: board\n---\n\n## Todo\n";
+  expect(customEditorForContent("/x/Plan.md", board)?.plugin).toBe("a.board");
+  pickOwner(key, "b.board");
+  expect(customEditorForContent("/x/Plan.md", board)?.plugin).toBe("b.board");
+  // Not in its front matter, or not Markdown: a document.
+  expect(customEditorForContent("/x/Plan.md", "kanban-plugin: board\n")).toBe(
+    null,
+  );
+  expect(customEditorForContent("/x/Plan.txt", board)).toBe(null);
+  expect(frontMatterKeys("---\ntitle: A\nkanban-plugin: board\n---\n")).toEqual(
+    ["title", "kanban-plugin"],
+  );
   publish({ records: [] });
 });
 

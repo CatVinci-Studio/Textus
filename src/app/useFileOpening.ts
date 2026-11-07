@@ -34,7 +34,10 @@ import { showConfirm, showMessage } from "../ui/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";
-import { customEditorFor } from "../plugins/store/plugin-lookup";
+import {
+  customEditorFor,
+  customEditorForContent,
+} from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { useLatest } from "../utils/hooks/useLatest";
 import { openBeside } from "./split/split-layout";
@@ -161,6 +164,9 @@ export function useFileOpening(opts: {
         throw err;
       }
       const { content, diskMtime } = disk;
+      // A Markdown document a plugin claims by its front matter (a board).
+      const claimed = asDocument ? null : customEditorForContent(path, content);
+      if (claimed) return pluginTab(path, claimed, place);
       void session.addRecentFile(path);
       void import("../plugins/store/open-offer").then((offer) =>
         offer.offerForContent(content, t),

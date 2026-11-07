@@ -55,8 +55,24 @@ describe("a plugin's manifest", () => {
     expect(m.contributes.keybindings[0].key).toBe("mod+shift+h");
     expect(m.contributes.customEditors[0]).toMatchObject({
       filenamePatterns: ["*.pdf"],
+      frontMatter: [],
       priority: "default",
     });
+    // An editor may claim Markdown by its front matter alone, not by nothing.
+    const board = (editor: object) =>
+      parseManifest({
+        ...base,
+        contributes: {
+          customEditors: [
+            { viewType: "catvinci.example.board", displayName: "B", ...editor },
+          ],
+        },
+      }).contributes.customEditors[0];
+    expect(board({ frontMatter: ["kanban-plugin"] })).toMatchObject({
+      filenamePatterns: [],
+      frontMatter: ["kanban-plugin"],
+    });
+    expect(() => board({})).toThrow(/filenamePatterns/);
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
       "打个招呼",
     );

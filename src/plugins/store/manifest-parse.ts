@@ -296,15 +296,25 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     (x, i) => {
       const at = `contributes.customEditors[${i}]`;
       const o = object(x, at);
-      const patterns = list(o.filenamePatterns, `${at}.filenamePatterns`).map(
-        (p, j) => text(p, `${at}.filenamePatterns[${j}]`).toLowerCase(),
-      );
-      if (!patterns.length)
+      const patterns =
+        o.filenamePatterns === undefined && o.frontMatter !== undefined
+          ? []
+          : list(o.filenamePatterns, `${at}.filenamePatterns`).map((p, j) =>
+              text(p, `${at}.filenamePatterns[${j}]`).toLowerCase(),
+            );
+      const frontMatter =
+        o.frontMatter === undefined
+          ? []
+          : list(o.frontMatter, `${at}.frontMatter`).map((k, j) =>
+              text(k, `${at}.frontMatter[${j}]`),
+            );
+      if (!patterns.length && !frontMatter.length)
         throw new ManifestError(`${at}.filenamePatterns is empty.`);
       return {
         viewType: ownId(o.viewType, id, `${at}.viewType`),
         displayName: text(o.displayName, `${at}.displayName`),
         filenamePatterns: patterns,
+        frontMatter,
         priority:
           o.priority === "option" ? ("option" as const) : ("default" as const),
       };
