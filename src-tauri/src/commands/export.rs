@@ -87,6 +87,7 @@ pub fn check_pandoc_args(args: Vec<String>) -> Option<String> {
 
 /// Pandoc's extension for a single newline: a line break where the
 /// document's folder shows one (its `.textus` conventions), else nothing.
+#[cfg(desktop)]
 fn breaks_extension(folder: Option<&str>) -> &'static str {
     match folder {
         Some(dir) if crate::conventions::soft_breaks_show(Path::new(dir)) => "+hard_line_breaks",
@@ -96,6 +97,7 @@ fn breaks_extension(folder: Option<&str>) -> &'static str {
 
 /// The Word template to hand Pandoc: one since moved or deleted leaves
 /// Pandoc's own styles.
+#[cfg(desktop)]
 fn usable_reference_doc(path: Option<String>) -> Option<String> {
     path.filter(|p| Path::new(p).is_file())
 }
