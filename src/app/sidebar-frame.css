@@ -41,7 +41,7 @@
 
 /* Below the window bar: the bar's own row stays the window's to drag. */
 .sidebar-resizer {
-  top: 28px;
+  top: var(--window-bar-height);
   right: -3px;
 }
 

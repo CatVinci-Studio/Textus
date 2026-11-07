@@ -15,6 +15,10 @@
   /* Control heights: in bars, cards and segments; in forms and dialogs. */
   --control-height-sm: 24px;
   --control-height: 28px;
+  /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
+     the interface text, and a step more in full screen. */
+  --chrome-scale: var(--ui-text-scale, 1);
+  --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
      styles) under :root[data-window-chrome="mobile"] below; both times
@@ -130,6 +134,7 @@
 :root[data-window-chrome="mobile"] {
   --control-height-sm: 32px;
   --control-height: 36px;
+  --chrome-scale: 1;
   --text-caption: calc(12px * var(--ui-text-scale, 1));
   --text-footnote: calc(13px * var(--ui-text-scale, 1));
   --text-secondary: calc(15px * var(--ui-text-scale, 1));
@@ -503,6 +508,26 @@
   button.close-prompt-primary.app-dialog-danger:not(:disabled):active {
   border-color: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
   background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
+}
+
+/* Full screen has room to spare: the chrome takes a step up. */
+:root[data-window-fullscreen] {
+  --chrome-scale: calc(var(--ui-text-scale, 1) * 1.15);
+}
+
+/* Icons are drawn at fixed pixel sizes, so a whole button scales at once. */
+:root:not([data-window-chrome="mobile"])
+  :is(
+    .window-bar-toggle,
+    .window-bar-sidebar-toggle,
+    .window-menu-button,
+    .tree-tool,
+    .icon-button,
+    .tx-icon-button,
+    .tab-bar-add,
+    .sidebar-tab > svg
+  ) {
+  zoom: var(--chrome-scale);
 }
 
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
