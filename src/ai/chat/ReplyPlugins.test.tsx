@@ -110,7 +110,11 @@ it("lists each permission on a line of its own, in words", () => {
     '"permissions":[]',
     '"permissions":["editor.write","network:api.example.com"]',
   );
-  const { container } = render(<ReplyPlugins text={asking} labels={labels} />);
+  const { container } = render(
+    <SettingsProvider>
+      <ReplyPlugins text={asking} labels={labels} />
+    </SettingsProvider>,
+  );
   expect(screen.getByText("Toggle asks to:")).toBeTruthy();
   const items = [...container.querySelectorAll(".agent-plugin-permissions li")];
   expect(items.map((li) => li.textContent)).toEqual([
@@ -120,7 +124,11 @@ it("lists each permission on a line of its own, in words", () => {
 });
 
 it("shows the code Install would run, folded until asked", () => {
-  const { container } = render(<ReplyPlugins text={reply} labels={labels} />);
+  const { container } = render(
+    <SettingsProvider>
+      <ReplyPlugins text={reply} labels={labels} />
+    </SettingsProvider>,
+  );
   expect(container.querySelector(".agent-reply-file")).toBeNull();
   const details = container.querySelector("details")!;
   details.open = true;
