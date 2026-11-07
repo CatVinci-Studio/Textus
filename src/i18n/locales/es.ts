@@ -308,6 +308,9 @@ para usar una.
     "Tras cada respuesta, hasta tres cosas que probablemente dirás después aparecen como botones sobre el cuadro de mensaje, la más probable también en gris dentro; haz clic en una para enviarla, o pulsa Tab para usar la gris. Cuesta una petición breve más.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Siguientes mensajes sugeridos",
+  researchSubHelpersLabel: "Investigación: delegar partes de una pregunta",
+  researchSubHelpersHint:
+    "En Investigación, quien estudia una pregunta puede pasar una parte más concreta a un ayudante propio. Más a fondo, pero más lento, con entre un cuarto y la mitad más de llamadas al modelo.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
@@ -396,6 +399,7 @@ para usar una.
   toolSearchPapers: "Buscando artículos sobre «{arg}»",
   toolSearchReferences: "Buscando «{arg}» en las referencias",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esquema",
   paperOutlineTotal: "Unas {n} {unit} en total",
   paperOutlineThesis: "Tesis",

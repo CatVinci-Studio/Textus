@@ -275,6 +275,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "답변마다 다음에 보낼 것 같은 말을 최대 세 개까지 입력창 위에 버튼으로 보여 주고, 가장 가능성 높은 것은 입력창에 회색으로도 보여 줍니다. 클릭하면 보내고, Tab으로 회색 문장을 사용합니다. 짧은 요청이 한 번 더 듭니다.",
   composerSuggestionTab: "Tab으로 사용",
   composerFollowUps: "추천 다음 메시지",
+  researchSubHelpersLabel: "리서치: 질문의 일부를 보조에게 맡기기",
+  researchSubHelpersHint:
+    "리서치에서 한 질문을 조사하는 보조가 그중 좁은 부분을 자기 보조에게 맡길 수 있습니다. 더 자세하지만 느려지고, 모델 호출이 25~50% 늘어납니다.",
   rememberAutomaticallyLabel: "자동으로 기억",
   rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘프로젝트’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",
@@ -364,6 +367,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolSearchPapers: "논문에서 “{arg}” 검색 중",
   toolSearchReferences: "참고 자료에서 “{arg}” 검색 중",
   toolAddNote: "메모: {arg}",
+  toolDelegateTask: "위임: {arg}",
   paperOutlineTitle: "개요",
   paperOutlineTotal: "모두 약 {n} {unit}",
   paperOutlineThesis: "논지",

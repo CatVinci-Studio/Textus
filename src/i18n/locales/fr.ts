@@ -309,6 +309,10 @@ utiliser une.
     "Après chaque réponse, jusqu'à trois choses que vous direz sans doute ensuite s'affichent en boutons au-dessus de la zone de saisie, la plus probable aussi en gris dedans ; un clic l'envoie, Tab reprend celle en gris. Cela coûte une courte requête de plus.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Messages suivants suggérés",
+  researchSubHelpersLabel:
+    "Recherche : confier des parties d’une question à des aides",
+  researchSubHelpersHint:
+    "En Recherche, l’aide qui étudie une question peut en confier une partie plus précise à une aide à lui. Plus approfondi, mais plus lent, avec un quart à la moitié d’appels au modèle en plus.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
   rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Projet, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
@@ -399,6 +403,7 @@ utiliser une.
   toolSearchPapers: "Recherche d’articles sur « {arg} »",
   toolSearchReferences: "Recherche de « {arg} » dans les références",
   toolAddNote: "Noté : {arg}",
+  toolDelegateTask: "Confié : {arg}",
   paperOutlineTitle: "Plan",
   paperOutlineTotal: "Environ {n} {unit} au total",
   paperOutlineThesis: "Thèse",

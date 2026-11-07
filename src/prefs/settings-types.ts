@@ -287,6 +287,9 @@ export interface Settings {
   /// Textus AI may keep requirements, preferences, style and facts it learns
   /// in a conversation. Rust reads it from settings.json.
   rememberAutomatically: boolean;
+  /// In Research, a question's researcher may hand parts of it to helpers of
+  /// its own: more thorough, slower and dearer. Off unless chosen.
+  researchSubHelpers: boolean;
   /// The MCP servers Textus AI may use; Rust reads them from the settings file.
   mcpServers: McpServer[];
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
@@ -453,6 +456,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searxngUrl: "",
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
+  researchSubHelpers: false,
   mcpServers: [],
   plugins: {},
   suggestNextMessage: true,

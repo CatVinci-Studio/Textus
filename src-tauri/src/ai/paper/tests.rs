@@ -13,6 +13,7 @@ pub(super) fn paper() -> Paper {
         target_chars: 8000,
         budget: ResearchBudget::for_paper(),
         stage: PaperStage::Researching,
+        sub_helpers: false,
     }
 }
 
@@ -2454,6 +2455,7 @@ fn every_prompt_fills_in_for_every_genre() {
             unfilled(&research::helper_instructions(
                 &paper,
                 &research::material_prompt(&["notes.md".into()], true),
+                true,
             ));
             for images in [0, 3] {
                 let shape = outline::Shape::of(&genre.profile().scale, paper.target_chars, images);

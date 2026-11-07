@@ -263,6 +263,9 @@ export default {
     "每次回复后，在输入框上方以按钮列出最多三句你接下来可能要说的话，最可能的一句也用灰字显示在输入框里；点一下就发送，按 Tab 采用灰字。会多一次简短请求。",
   composerSuggestionTab: "Tab 采用",
   composerFollowUps: "建议的下一句",
+  researchSubHelpersLabel: "研究时把子问题交给助手",
+  researchSubHelpersHint:
+    "研究模式里，查一个问题的助手可以把其中更窄的一块交给自己的子助手去查。资料更细，但更慢，模型调用多约 25%–50%。",
   rememberAutomaticallyLabel: "自动记住",
   rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在 AI 面板的“项目”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
   toolRemember: "记下来",
@@ -347,6 +350,7 @@ export default {
   toolSearchPapers: "检索论文「{arg}」",
   toolSearchReferences: "在参考资料中检索「{arg}」",
   toolAddNote: "记下：{arg}",
+  toolDelegateTask: "分派：{arg}",
   paperOutlineTitle: "大纲",
   paperOutlineTotal: "合计约 {n} {unit}",
   paperOutlineThesis: "论点",

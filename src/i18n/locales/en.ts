@@ -294,6 +294,9 @@ type /name in a conversation to use one.
     "After each reply, up to three things you will probably say next show as buttons over the message box, the likeliest also grey in it; click one to send it, or Tab to take the grey one. It costs one more short request.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Suggested next messages",
+  researchSubHelpersLabel: "Research: hand parts of a question to helpers",
+  researchSubHelpersHint:
+    "In Research, the helper looking into a question may hand a narrower part to a helper of its own. More thorough, but slower, with a quarter to half more model calls.",
   rememberAutomaticallyLabel: "Remember automatically",
   rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Project in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
@@ -382,6 +385,7 @@ type /name in a conversation to use one.
   toolSearchPapers: "Searching papers for “{arg}”",
   toolSearchReferences: "Searching references for “{arg}”",
   toolAddNote: "Noted: {arg}",
+  toolDelegateTask: "Handing over: {arg}",
   paperOutlineTitle: "Outline",
   paperOutlineTotal: "About {n} {unit} in all",
   paperOutlineThesis: "Thesis",

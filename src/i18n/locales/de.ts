@@ -298,6 +298,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nach jeder Antwort stehen bis zu drei Dinge, die du wahrscheinlich als Nächstes schreibst, als Schaltflächen über dem Eingabefeld, das wahrscheinlichste auch grau darin; ein Klick sendet es, Tab übernimmt das graue. Kostet eine weitere kurze Anfrage.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Vorgeschlagene nächste Nachrichten",
+  researchSubHelpersLabel: "Recherche: Teilfragen an Helfer abgeben",
+  researchSubHelpersHint:
+    "In der Recherche darf der Helfer einer Frage einen engeren Teil an einen eigenen Helfer abgeben. Gründlicher, aber langsamer, mit einem Viertel bis zur Hälfte mehr Modellaufrufen.",
   rememberAutomaticallyLabel: "Automatisch merken",
   rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Projekt im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
@@ -389,6 +392,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolSearchPapers: "Sucht Fachartikel zu „{arg}“",
   toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   toolAddNote: "Notiert: {arg}",
+  toolDelegateTask: "Übergeben: {arg}",
   paperOutlineTitle: "Gliederung",
   paperOutlineTotal: "Insgesamt etwa {n} {unit}",
   paperOutlineThesis: "These",

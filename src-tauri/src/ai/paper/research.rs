@@ -6,6 +6,7 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
+use super::delegate::{self, DELEGATE_TOOL};
 use super::model::ask;
 pub(crate) use super::model::{clip, Model, Watch};
 use super::notes::NoteTaker;
@@ -23,7 +24,10 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Mutex;
 
-use super::tuning::{HELPER_STEPS, MAX_QUESTIONS, PLAN_GLIMPSE, RESEARCHERS_AT_ONCE as AT_ONCE};
+use super::tuning::{
+    HELPER_STEPS, MAX_HANDED, MAX_QUESTIONS, PLAN_GLIMPSE, RESEARCHERS_AT_ONCE as AT_ONCE,
+    SUB_STEPS,
+};
 
 /// What the researchers work with besides the web and add_note: the tools
 /// every mode shares - the files, the reference library, the plugins' and
@@ -182,9 +186,14 @@ pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
 }
 
 /// What a question's helper is told; `own` is what it is told about the
-/// user's own material.
-pub(crate) fn helper_instructions(paper: &Paper, own: &str) -> String {
+/// user's own material, and `delegates` whether it may hand parts over.
+pub(crate) fn helper_instructions(paper: &Paper, own: &str, delegates: bool) -> String {
     let profile = paper.genre.profile();
+    let handing = if delegates {
+        prompts::fill("research.delegate", &[("tool", &DELEGATE_TOOL)]) + " "
+    } else {
+        String::new()
+    };
     prompts::fill(
         "research.helper",
         &[
@@ -192,14 +201,31 @@ pub(crate) fn helper_instructions(paper: &Paper, own: &str) -> String {
             ("topic", &paper.topic),
             ("language", &paper.language),
             ("sources", &profile.research_sources),
+            ("delegate", &handing),
             ("material", &own),
         ],
     )
 }
 
-/// One question's helper: its notes, in the order it kept them. Its own
-/// registry has the web tools, ranked by its question, and add_note; the
-/// rest it shares with the other helpers through `kit`.
+/// What the helper of a part handed over is told: `of` is the question
+/// the part belongs to.
+pub(crate) fn part_instructions(paper: &Paper, own: &str, of: &str) -> String {
+    let profile = paper.genre.profile();
+    prompts::fill(
+        "research.part",
+        &[
+            ("genre", &profile.name),
+            ("topic", &paper.topic),
+            ("language", &paper.language),
+            ("of", &of),
+            ("sources", &profile.research_sources),
+            ("material", &own),
+        ],
+    )
+}
+
+/// One question's helper: its notes, in the order it kept them - with
+/// those of the helpers it handed sub-questions to.
 #[allow(clippy::too_many_arguments)]
 async fn research_question(
     model: &dyn Model,
@@ -211,32 +237,125 @@ async fn research_question(
     share: Share,
     send: &(dyn Fn(PaperEvent) + Sync),
 ) -> Result<Vec<Note>, String> {
-    let instructions = helper_instructions(paper, &kit.prompt());
-    let notes = Mutex::new(Vec::new());
+    let desk = Desk {
+        index,
+        share,
+        spent: Mutex::new([0; 3]),
+        notes: Mutex::new(Vec::new()),
+        handed: Mutex::new(0),
+        delegates: paper.sub_helpers,
+    };
+    let env = Env {
+        model,
+        paper,
+        web,
+        budget,
+        kit,
+        send,
+    };
+    helper(&env, &desk, question, Role::Question).await?;
+    let kept = std::mem::take(&mut *desk.notes.lock().unwrap());
+    Ok(kept)
+}
+
+/// What every helper of the paper works with.
+struct Env<'e, 'k, 't> {
+    model: &'e dyn Model,
+    paper: &'e Paper,
+    web: &'e WebPlan,
+    budget: &'e SharedBudget,
+    kit: &'e Kit<'k, 't>,
+    send: &'e (dyn Fn(PaperEvent) + Sync),
+}
+
+/// What one question's helper and the helpers it hands sub-questions to
+/// share: the question's notes, and its share of the budget and what of it
+/// is spent.
+struct Desk {
+    index: u32,
+    share: Share,
+    spent: Mutex<[usize; 3]>,
+    notes: Mutex<Vec<Note>>,
+    /// Sub-questions handed over so far.
+    handed: Mutex<usize>,
+    /// Whether the question's helper may hand parts over: the user's choice.
+    delegates: bool,
+}
+
+/// Who a helper is: a question's own, which may hand parts of it over with
+/// delegate_task, or the helper of a part handed over, which hands nothing on.
+#[derive(Clone, Copy)]
+enum Role<'q> {
+    Question,
+    Part {
+        of: &'q str,
+        handed: &'q delegate::Handed,
+    },
+}
+
+/// One helper's run: its own registry has the web tools, ranked by its
+/// question, and add_note - and delegate_task for a question's own helper;
+/// the rest it shares with the other helpers through `env.kit`. What it
+/// keeps goes on `desk`.
+async fn helper(
+    env: &Env<'_, '_, '_>,
+    desk: &Desk,
+    question: &str,
+    role: Role<'_>,
+) -> Result<(), String> {
+    let Env {
+        model,
+        paper,
+        web,
+        budget,
+        kit,
+        send,
+    } = *env;
+    let (instructions, first, steps) = match role {
+        Role::Question => (
+            helper_instructions(paper, &kit.prompt(), desk.delegates),
+            format!("Your question: {question}"),
+            HELPER_STEPS,
+        ),
+        Role::Part { of, handed } => (
+            part_instructions(paper, &kit.prompt(), of),
+            delegate::brief(handed),
+            SUB_STEPS,
+        ),
+    };
     let taker = NoteTaker {
         question,
-        index,
+        index: desk.index,
         web,
         ctx: kit.ctx,
-        notes: &notes,
+        notes: &desk.notes,
         send,
     };
     let mut own = ToolRegistry::shared();
     own.extend(web.tools(question));
     own.add(taker.tool());
     let mut specs = own.specs();
+    let delegates = desk.delegates && matches!(role, Role::Question);
+    if delegates {
+        specs.push(delegate::spec());
+    }
     specs.extend(kit.tools.specs());
-    let spent = Mutex::new([0usize; 3]);
     let execute = |call: ToolCall| {
-        let (own, spent) = (&own, &spent);
+        let own = &own;
         async move {
-            if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
+            if delegates && call.name == DELEGATE_TOOL {
+                return hand_over(env, desk, question, call).await.into();
+            }
+            if let Some(refused) = desk
+                .share
+                .spend(&call.name, &mut desk.spent.lock().unwrap())
+            {
                 return refused.into();
             }
             let web_call = call.name != ADD_NOTE_TOOL && own.offers(&call.name);
             if web_call || kit.tools.offers(&call.name) {
                 send(PaperEvent::Activity {
-                    question: index,
+                    question: desk.index,
                     tool: call.name.clone(),
                     arguments: call.arguments.clone(),
                 });
@@ -257,8 +376,8 @@ async fn research_question(
     };
     run_agent_loop(
         Vec::new(),
-        AgentTurn::user(format!("Your question: {question}")),
-        HELPER_STEPS,
+        AgentTurn::user(first),
+        steps,
         |turns: Vec<AgentTurn>| {
             let (instructions, specs) = (&instructions, &specs);
             async move { model.step(instructions, &turns, specs).await }
@@ -268,14 +387,59 @@ async fn research_question(
             if own.offers(name) {
                 own.how_to_run(name)
             } else {
+                // delegate_task, too: one helper at a time, in call order.
                 kit.tools.how_to_run(name)
             }
         },
         |_| {},
     )
     .await?;
-    let kept = std::mem::take(&mut *notes.lock().unwrap());
-    Ok(kept)
+    Ok(())
+}
+
+/// A delegate_task call run: the part handed to a helper of its own, and
+/// what it kept told back - or why it wasn't handed over. A helper that
+/// fails costs the part, not the question.
+async fn hand_over(env: &Env<'_, '_, '_>, desk: &Desk, question: &str, call: ToolCall) -> String {
+    let handed = match delegate::read(&call.arguments, question) {
+        Ok(handed) => handed,
+        Err(why) => return why,
+    };
+    if desk.share.used_up(&desk.spent.lock().unwrap()) {
+        return "Your question's share of searches and page reads is used up: there is nothing left for a helper to search with. Keep notes from what you have.".into();
+    }
+    {
+        let mut handed_over = desk.handed.lock().unwrap();
+        if *handed_over >= MAX_HANDED {
+            return format!(
+                "You have handed over {} parts already: research the rest yourself.",
+                MAX_HANDED
+            );
+        }
+        *handed_over += 1;
+    }
+    (env.send)(PaperEvent::Activity {
+        question: desk.index,
+        tool: DELEGATE_TOOL.to_string(),
+        arguments: call.arguments.clone(),
+    });
+    let before = desk.notes.lock().unwrap().len();
+    let part = Box::pin(helper(
+        env,
+        desk,
+        &handed.question,
+        Role::Part {
+            of: question,
+            handed: &handed,
+        },
+    ))
+    .await;
+    let kept: Vec<Note> = desk.notes.lock().unwrap()[before..].to_vec();
+    match part {
+        Ok(()) => delegate::answer(&handed.question, &kept),
+        Err(why) if kept.is_empty() => format!("The helper stopped before keeping anything: {why}. Cover the part yourself if it matters."),
+        Err(_) => delegate::answer(&handed.question, &kept),
+    }
 }
 
 /// The research so far, kept as `research.json` while it is under way: the
@@ -483,6 +647,15 @@ impl Share {
             each(limits.fetches),
             each(limits.paper_lookups),
         ])
+    }
+
+    /// Whether `spent` has used every kind of the share: nothing is left to
+    /// search, read or look up with.
+    pub(crate) fn used_up(&self, spent: &[usize; 3]) -> bool {
+        spent
+            .iter()
+            .zip(self.0)
+            .all(|(spent, share)| *spent >= share)
     }
 
     /// Counts a call against the share, in `spent`; why it is refused once

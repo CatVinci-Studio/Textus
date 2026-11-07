@@ -280,6 +280,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "返答のたびに、次に送りそうな言葉を最大 3 つ入力欄の上にボタンで表示し、いちばん可能性の高いものは入力欄に灰色でも表示します。クリックで送信、Tab で灰色のものを使えます。短い依頼が一回増えます。",
   composerSuggestionTab: "Tab で使う",
   composerFollowUps: "次のメッセージの候補",
+  researchSubHelpersLabel: "リサーチ：問いの一部をサブ助手に任せる",
+  researchSubHelpersHint:
+    "リサーチで、ひとつの問いを調べる助手が、その一部を自分のサブ助手に任せられます。より詳しくなりますが、遅くなり、モデルの呼び出しが 25〜50% ほど増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
@@ -370,6 +373,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolSearchPapers: "論文で「{arg}」を検索",
   toolSearchReferences: "参考資料で「{arg}」を検索",
   toolAddNote: "メモ：{arg}",
+  toolDelegateTask: "分担：{arg}",
   paperOutlineTitle: "アウトライン",
   paperOutlineTotal: "合計 約 {n} {unit}",
   paperOutlineThesis: "主題文",

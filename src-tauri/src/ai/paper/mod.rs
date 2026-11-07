@@ -7,6 +7,7 @@
 mod budget;
 mod checks;
 mod choose;
+mod delegate;
 mod draft;
 pub mod drafting;
 mod events;
@@ -65,6 +66,10 @@ pub struct Paper {
     /// from there.
     #[serde(default)]
     pub stage: PaperStage,
+    /// Whether a question's researcher may hand parts of it to helpers of
+    /// its own: the user's choice, set again on every run.
+    #[serde(default)]
+    pub sub_helpers: bool,
 }
 
 /// How far a paper has come.
@@ -215,6 +220,9 @@ pub struct PaperRequest {
     /// none.
     #[serde(default)]
     pub conversation: Option<String>,
+    /// Research hands parts of a question to helpers of its own.
+    #[serde(default)]
+    pub sub_helpers: bool,
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,
@@ -243,6 +251,7 @@ pub async fn ai_paper_run(
         target_chars,
         image_model,
         conversation,
+        sub_helpers,
     } = request;
     let session = Session::open(
         &app,
@@ -312,6 +321,7 @@ pub async fn ai_paper_run(
                         target_chars,
                         budget: budget.snapshot(),
                         stage: PaperStage::Researching,
+                        sub_helpers,
                     },
                     dossier: Dossier::default(),
                     outline: None,
