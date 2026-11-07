@@ -536,6 +536,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchScopeDocuments: "文書のみ",
   treeNewDocument: "新規ドキュメント",
   treeNewFolder: "新規フォルダ",
+  treeEmptyHint: "空です。ここをダブルクリックすると新しい文書を作れます。",
   treeNewDocumentPrompt: "新しいドキュメントの名前",
   treeNewFolderPrompt: "新しいフォルダの名前",
   treeNewDocumentDefault: "名称未設定",

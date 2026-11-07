@@ -558,6 +558,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchScopeDocuments: "Só documentos",
   treeNewDocument: "Novo documento",
   treeNewFolder: "Nova pasta",
+  treeEmptyHint: "Vazia. Clique duas vezes aqui para um documento novo.",
   treeNewDocumentPrompt: "Nome do novo documento",
   treeNewFolderPrompt: "Nome da nova pasta",
   treeNewDocumentDefault: "Sem título",

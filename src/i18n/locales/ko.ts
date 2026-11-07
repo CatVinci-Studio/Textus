@@ -529,6 +529,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSearchScopeDocuments: "문서만",
   treeNewDocument: "새 문서",
   treeNewFolder: "새 폴더",
+  treeEmptyHint: "비어 있습니다. 여기를 두 번 클릭하면 새 문서를 만듭니다.",
   treeNewDocumentPrompt: "새 문서 이름",
   treeNewFolderPrompt: "새 폴더 이름",
   treeNewDocumentDefault: "제목 없음",

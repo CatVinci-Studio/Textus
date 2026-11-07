@@ -562,6 +562,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchScopeDocuments: "Nur Dokumente",
   treeNewDocument: "Neues Dokument",
   treeNewFolder: "Neuer Ordner",
+  treeEmptyHint: "Leer. Hier doppelklicken für ein neues Dokument.",
   treeNewDocumentPrompt: "Name des neuen Dokuments",
   treeNewFolderPrompt: "Name des neuen Ordners",
   treeNewDocumentDefault: "Unbenannt",

@@ -552,6 +552,7 @@ type /name in a conversation to use one.
   treeSearchScopeDocuments: "Documents only",
   treeNewDocument: "New Document",
   treeNewFolder: "New Folder",
+  treeEmptyHint: "Empty. Double-click here for a new document.",
   treeNewDocumentPrompt: "Name of the new document",
   treeNewFolderPrompt: "Name of the new folder",
   treeNewDocumentDefault: "Untitled",

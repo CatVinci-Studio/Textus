@@ -328,3 +328,30 @@
 .tree-row-ignored .tree-icon {
   opacity: 0.5;
 }
+
+/* A new entry's name, typed in place: the row stays a row, the field
+   is its label. */
+.tree-row-draft,
+.tree-row-draft:hover {
+  cursor: default;
+  background: none;
+}
+
+.tree-draft-input {
+  flex: 1;
+  min-width: 0;
+  margin: -2px 0;
+  padding: 1px 4px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--shape-xs);
+  background: var(--ui-bg);
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.tree-empty-hint {
+  margin: 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+}

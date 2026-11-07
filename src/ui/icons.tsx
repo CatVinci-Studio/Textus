@@ -88,8 +88,28 @@ export function ProjectIcon({ className }: IconProps) {
   );
 }
 
-/** File > Open Folder…: the folder outline with a plus in it. */
+/** File > Open Folder…: a folder, opened. */
 export function OpenFolderIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M2 11.5V3.5C2 2.95 2.45 2.5 3 2.5H6L7.5 4H12.5C13.05 4 13.5 4.45 13.5 5V6.5M2 11.5L3.6 7.2C3.75 6.8 4.1 6.5 4.55 6.5H14.1C14.45 6.5 14.7 6.85 14.6 7.2L13.2 11.8C13.1 12.2 12.7 12.5 12.3 12.5H3C2.45 12.5 2 12.05 2 11.5Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** The tree's New Folder: the folder outline with a plus. */
+export function NewFolderIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -106,6 +126,32 @@ export function OpenFolderIcon({ className }: IconProps) {
       />
       <path
         d="M8 6.5V10.5M6 8.5H10"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** The tree's New Document: a page with a plus. */
+export function NewDocumentIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M3.5 2C3.5 1.72 3.72 1.5 4 1.5H9L12.5 5V13.5C12.5 13.78 12.28 14 12 14H4C3.72 14 3.5 13.78 3.5 13.5V2Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 7V11.5M5.75 9.25H10.25"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"

@@ -10,6 +10,8 @@ import { createPortal } from "react-dom";
 import {
   ChevronIcon,
   CloseIcon,
+  NewDocumentIcon,
+  NewFolderIcon,
   OpenFolderIcon,
   RefreshIcon,
   SortIcon,
@@ -35,6 +37,7 @@ import type { Strings } from "../i18n/strings";
 import {
   failureText,
   TreeContext,
+  type TreeDraft,
   type TreeShared,
   type TreeSort,
 } from "./tree-shared";
@@ -105,6 +108,8 @@ export function FileTree({
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
+  const [draft, setDraft] = useState<TreeDraft | null>(null);
+  const finishDraft = useNewEntry(draft, setDraft, t, reload, onFileSelect);
 
   const onRowMenu = useRowMenu(
     root,
@@ -114,6 +119,7 @@ export function FileTree({
     onFileSelect,
     onEntryMoved,
     setMenu,
+    setDraft,
   );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
     treeRef,
@@ -135,6 +141,9 @@ export function FileTree({
       onRowPointerDown: desktop ? onRowPointerDown : null,
       openInNewWindow: desktop ? openInNewWindow : null,
       takeDragClick,
+      draft,
+      finishDraft,
+      draftHint: desktop ? t.treeEmptyHint : null,
     }),
     [
       sort,
@@ -148,6 +157,9 @@ export function FileTree({
       onRowMenu,
       onRowPointerDown,
       takeDragClick,
+      draft,
+      finishDraft,
+      t,
     ],
   );
 
@@ -235,6 +247,30 @@ export function FileTree({
             <span className="tree-root-label" title={root}>
               {basename(root.replace(/[\\/]+$/, "")) || root}
             </span>
+            {desktop && (
+              <>
+                <Tooltip text={t.treeNewDocument}>
+                  <button
+                    type="button"
+                    className="tree-tool"
+                    aria-label={t.treeNewDocument}
+                    onClick={() => setDraft({ dir: root, kind: "document" })}
+                  >
+                    <NewDocumentIcon />
+                  </button>
+                </Tooltip>
+                <Tooltip text={t.treeNewFolder}>
+                  <button
+                    type="button"
+                    className="tree-tool"
+                    aria-label={t.treeNewFolder}
+                    onClick={() => setDraft({ dir: root, kind: "folder" })}
+                  >
+                    <NewFolderIcon />
+                  </button>
+                </Tooltip>
+              </>
+            )}
             <Tooltip text={t.treeSort}>
               <button
                 type="button"
@@ -298,6 +334,15 @@ export function FileTree({
             onKeyDown={treeKeys}
             onContextMenu={
               desktop ? (e) => onRowMenu(e, root, true) : undefined
+            }
+            // Double-click on the blank below the rows: a new document there.
+            onDoubleClick={
+              desktop
+                ? (e) => {
+                    if (!(e.target as HTMLElement).closest(".tree-row"))
+                      setDraft({ dir: root, kind: "document" });
+                  }
+                : undefined
             }
           >
             <DirNode
@@ -443,6 +488,7 @@ function useRowMenu(
   onFileSelect: (path: string, beside?: boolean) => void,
   onEntryMoved: (from: string, to: string) => void,
   setMenu: (menu: TreeMenu) => void,
+  setDraft: (draft: TreeDraft) => void,
 ) {
   const rename = useCallback(
     async (path: string) => {
@@ -484,28 +530,6 @@ function useRowMenu(
     [root, t, reload],
   );
 
-  const create = useCallback(
-    async (dir: string, kind: "document" | "folder") => {
-      const doc = kind === "document";
-      const name = await showPrompt(
-        doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt,
-        doc ? t.treeNewDocumentDefault : t.treeNewFolderDefault,
-        { okLabel: t.dialogOk, cancelLabel: t.cancel },
-      );
-      if (!name?.trim()) return;
-      try {
-        const made = doc
-          ? await fs.createDocument(dir, name)
-          : await fs.createFolder(dir, name);
-        reload(dir);
-        if (doc) onFileSelect(made);
-      } catch (err) {
-        await showMessage(failureText(t, err, name.trim()));
-      }
-    },
-    [t, reload, onFileSelect],
-  );
-
   return useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
@@ -522,9 +546,12 @@ function useRowMenu(
       items.push(
         {
           label: t.treeNewDocument,
-          onSelect: () => void create(dir, "document"),
+          onSelect: () => setDraft({ dir, kind: "document" }),
         },
-        { label: t.treeNewFolder, onSelect: () => void create(dir, "folder") },
+        {
+          label: t.treeNewFolder,
+          onSelect: () => setDraft({ dir, kind: "folder" }),
+        },
       );
       items.push("separator", copyPathItem(t, path));
       if (path !== root)
@@ -540,6 +567,33 @@ function useRowMenu(
       if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
-    [root, t, create, rename, trash, onFileSelect, setMenu],
+    [root, t, setDraft, rename, trash, onFileSelect, setMenu],
+  );
+}
+
+/** Makes the document or folder named in place, and opens a document. */
+function useNewEntry(
+  draft: TreeDraft | null,
+  setDraft: (draft: TreeDraft | null) => void,
+  t: Strings,
+  reload: (...dirs: string[]) => void,
+  onFileSelect: (path: string) => void,
+) {
+  return useCallback(
+    async (name: string | null) => {
+      setDraft(null);
+      if (!draft || !name) return;
+      try {
+        const made =
+          draft.kind === "document"
+            ? await fs.createDocument(draft.dir, name)
+            : await fs.createFolder(draft.dir, name);
+        reload(draft.dir);
+        if (draft.kind === "document") onFileSelect(made);
+      } catch (err) {
+        await showMessage(failureText(t, err, name));
+      }
+    },
+    [draft, setDraft, t, reload, onFileSelect],
   );
 }

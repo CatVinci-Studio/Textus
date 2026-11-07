@@ -573,6 +573,7 @@ utiliser une.
   treeSearchScopeDocuments: "Documents seulement",
   treeNewDocument: "Nouveau document",
   treeNewFolder: "Nouveau dossier",
+  treeEmptyHint: "Vide. Double-cliquez ici pour un nouveau document.",
   treeNewDocumentPrompt: "Nom du nouveau document",
   treeNewFolderPrompt: "Nom du nouveau dossier",
   treeNewDocumentDefault: "Sans titre",

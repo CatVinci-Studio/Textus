@@ -500,6 +500,7 @@ export default {
   treeSearchScopeDocuments: "仅文档",
   treeNewDocument: "新建文档",
   treeNewFolder: "新建文件夹",
+  treeEmptyHint: "这里还是空的。双击空白处新建文档。",
   treeNewDocumentPrompt: "新文档的名称",
   treeNewFolderPrompt: "新文件夹的名称",
   treeNewDocumentDefault: "未命名",
