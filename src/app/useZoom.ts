@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../ui/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
+import type { EditorView } from "@codemirror/view";
+import { sourceViewAt } from "../editor/modes/source-view-registry";
 
 /// Document zoom, scoped to the editor content; the window chrome stays at
 /// 100%. Published as `--content-zoom`, so fixed overlays keep unzoomed
@@ -101,8 +103,10 @@ function holdRendered(
   scroller.scrollTop = contentTop() + (into * next) / prev - anchor;
 }
 
-/// The same for the source editor's scroller, which scrolls in zoomed px.
-/// Its lines rewrap, so the anchor keeps its share of the whole text height.
+/// The same for the source editor's scroller, whose text grows by its font
+/// size (the pane isn't zoomed). CodeMirror keeps a line of its own still
+/// while heights change and only knows the new ones once it measures, so
+/// the line under the pointer is handed to it to put back.
 function holdSource(
   source: HTMLElement,
   line: number,
@@ -110,12 +114,44 @@ function holdSource(
   next: number,
   setZoomVar: () => void,
 ) {
-  const anchor = line - source.getBoundingClientRect().top;
-  const share =
-    (source.scrollTop + anchor / prev) / Math.max(1, source.scrollHeight);
+  const host = source.closest<HTMLElement>(".source-view");
+  const cm = host?.parentElement && sourceViewAt(host.parentElement)?.view;
+  if (!cm) return setZoomVar();
+  // Steps that come before CodeMirror has measured keep the first one's
+  // anchor: until then its heights are the old zoom's.
+  let held = heldSource.get(source);
+  if (!held) {
+    const block = cm.lineBlockAtHeight(line - cm.documentTop);
+    held = {
+      pos: block.from,
+      into: line - cm.documentTop - block.top,
+      line,
+      zoom: prev,
+    };
+    heldSource.set(source, held);
+    cm.requestMeasure({
+      read: () => null,
+      write: () => heldSource.delete(source),
+    });
+  }
   setZoomVar();
-  source.scrollTop = share * source.scrollHeight - anchor / next;
+  const scroll = (cm.constructor as typeof EditorView).scrollIntoView;
+  cm.dispatch({
+    effects: scroll(held.pos, {
+      y: "start",
+      yMargin:
+        held.line -
+        source.getBoundingClientRect().top -
+        (held.into * next) / held.zoom,
+    }),
+  });
 }
+
+/** A source pane's anchor while a zoom waits for CodeMirror's measure. */
+const heldSource = new WeakMap<
+  HTMLElement,
+  { pos: number; into: number; line: number; zoom: number }
+>();
 
 /**
  * Applies `initialZoom` on mount and owns every zoom input for this window.

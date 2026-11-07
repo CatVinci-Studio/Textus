@@ -27,6 +27,7 @@ import {
   typedThrough,
 } from "./ghost-state";
 import { markChangeSource } from "../../editor/change-source";
+import { isReadOnly } from "../../editor/read-only-plugin";
 export { typedThrough } from "./ghost-state";
 export {
   tidySuggestion,
@@ -81,6 +82,8 @@ export async function triggerGhostTextNow(
   uiLanguage: string | null = null,
 ): Promise<void> {
   const { selection } = view.state;
+  // A read-only document takes no writing, suggested or not.
+  if (isReadOnly(view.state)) return;
   if (!selection.empty) throw new AiNoticeError("completion-needs-caret");
 
   const $pos = selection.$from;
@@ -322,7 +325,7 @@ export function createGhostTextPlugin(options: {
                 accepted = false;
                 return;
               }
-              if (!options.enabled()) return;
+              if (!options.enabled() || isReadOnly(view.state)) return;
               if (view.composing) return;
               // A suggestion is still on offer right here (say, the rest
               // after accepting one word): asking again would replace it.
@@ -368,8 +371,9 @@ export function createGhostTextPlugin(options: {
               if (!hasProse(prose)) return;
 
               debounced.schedule(async (isCurrent) => {
-                // Turned off while the request waited out the debounce.
-                if (!options.enabled()) return;
+                // Turned off, or made read-only, while the request waited
+                // out the debounce.
+                if (!options.enabled() || isReadOnly(view.state)) return;
                 let suggestion: string;
                 try {
                   suggestion = await ai.complete(
