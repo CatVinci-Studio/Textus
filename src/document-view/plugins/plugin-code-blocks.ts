@@ -1,3 +1,4 @@
+import type { Editor } from "@milkdown/kit/core";
 import { createElement } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import type { Ctx } from "@milkdown/kit/ctx";
@@ -288,3 +289,9 @@ function pageIn(el: HTMLElement): Promise<string | null> {
     const timer = setTimeout(() => done(null), PAGE_WAIT_MS);
   });
 }
+
+/** Plugins' blocks drawn in another editor (the split view's preview). */
+export const withPluginBlocks = (
+  editor: Editor,
+  docPath: { readonly current: string | null },
+): Editor => editor.use(pluginCodeBlocks(docPath));
