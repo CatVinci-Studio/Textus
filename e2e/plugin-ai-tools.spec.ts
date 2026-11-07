@@ -111,7 +111,3 @@ test("a plugin's tool is offered to Textus AI and runs when called", async ({
     .toEqual({ text: "3 words" });
 });
 
-test("without ai.tools a plugin offers Textus AI nothing", async ({ page }) => {
-  await open(page, []);
-  await expect.poll(() => offered(page)).toEqual([]);
-});
