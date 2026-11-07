@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { emit, END, openApp, pasteMarkdown } from "./helpers";
+import { emit, END, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
 // what Pele can't. Each engine loads only when needed; Pele's colours are CSS
@@ -127,7 +127,7 @@ test("a Pele diagram changes colour with the appearance without being redrawn", 
   expect(dark.shape).not.toBe(light.shape);
   expect(luminance(dark.shape)).toBeLessThan(0.3);
   // The same element: recoloured through the CSS variables, not drawn again.
-  await page.waitForTimeout(700);
+  await settled(page);
   expect(
     await page
       .locator(peleSvg)

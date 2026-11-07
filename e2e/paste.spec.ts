@@ -5,6 +5,7 @@ import {
   openApp,
   pasteMarkdown,
   selectionRead,
+  settled,
 } from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
@@ -128,7 +129,7 @@ test("a screenshot undone before its save lands comes back stored on redo", asyn
   await page.keyboard.press("Control+z");
   await expect.poll(() => imageSrcs(page)).toEqual([]);
   await releaseSave(page);
-  await page.waitForTimeout(300);
+  await settled(page);
   await page.keyboard.press("Control+Shift+z");
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
@@ -165,7 +166,7 @@ async function pasteHere(page: Page, text: string) {
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.evaluate((value) => navigator.clipboard.writeText(value), text);
   await page.keyboard.press("ControlOrMeta+v");
-  await page.waitForTimeout(300);
+  await settled(page);
 }
 
 /** Puts the caret `n` characters into the first paragraph, selecting the

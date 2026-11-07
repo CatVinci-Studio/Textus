@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, settled } from "./helpers";
 
 /**
  * The file-backed storage path: the real boot script runs first with a
@@ -195,7 +195,7 @@ test("another window's change shows up here, except its zoom", async ({
     patch: { theme: "dark" },
     from: "window-3",
   });
-  await page.waitForTimeout(100);
+  await settled(page);
   await expect(html).toHaveAttribute("data-theme", "light");
   const zoom = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue(

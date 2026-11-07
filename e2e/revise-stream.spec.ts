@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -426,7 +426,7 @@ test("with motion on, each strike draws in once and each new text comes in once"
   await expect(
     page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
   ).toHaveCount(2);
-  await page.waitForTimeout(400);
+  await settled(page);
   const entrances = await page.evaluate(() => {
     const w = window as unknown as {
       __entrances: Record<string, number>;

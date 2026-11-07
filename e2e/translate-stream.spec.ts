@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, settled } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -104,7 +104,7 @@ test("short lines landed together stand as the paragraphs they will be, and the 
       hasText: "I live a little far away.",
     }),
   ).toBeVisible({ timeout: 15_000 });
-  await page.waitForTimeout(500);
+  await settled(page);
   // The two short lines stand as two paragraphs do, a paragraph apart -
   // not with a blank line between them in one run of text.
   const tops = await page.evaluate((sel) => {

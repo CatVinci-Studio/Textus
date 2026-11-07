@@ -1,5 +1,5 @@
 import { devices, expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 
 // An iPad, as far as Chromium can be one: the desktop layout at a tablet's
 // width, with touch and "iPad" as its platform, which keyboard shortcuts and
@@ -51,7 +51,7 @@ test("an iPad keyboard's Cmd is the shortcuts' Mod", async ({ page }) => {
   // Ctrl is not: Mod follows ProseMirror's rule.
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
   await page.keyboard.press("Control+Shift+K");
-  await page.waitForTimeout(300);
+  await settled(page);
   await expect(page.locator(".inline-chat")).toHaveCount(0);
 });
 

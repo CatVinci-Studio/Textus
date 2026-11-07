@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dropPaths, mockInvoke, openApp } from "./helpers";
+import { dropPaths, mockInvoke, openApp, settled } from "./helpers";
 
 // Ctrl/Cmd+click follows a link (a Markdown file in a tab, a web link in the
 // browser) while a plain click only places the caret. Opened as a dropped
@@ -52,7 +52,7 @@ test("a plain click on a link opens nothing", async ({ page }) => {
   const before = await page.locator(".ProseMirror").count();
   await page.locator(`${editor} a`, { hasText: "Chapter one" }).click();
   await page.locator(`${editor} a`, { hasText: "the site" }).click();
-  await page.waitForTimeout(300);
+  await settled(page);
   await expect(page.locator(".ProseMirror")).toHaveCount(before);
   expect(await opened(page)).toEqual([]);
   expect(page.context().pages()).toHaveLength(1);

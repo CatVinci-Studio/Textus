@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openPhone, pasteMarkdown, PHONE } from "./helpers";
+import { openPhone, pasteMarkdown, PHONE, settled } from "./helpers";
 
 // The iPhone layout, checked in Chromium with touch and a phone-sized
 // viewport.
@@ -268,10 +268,10 @@ test("with the keyboard up, the AI page comes once it has gone", async ({
   await openPhone(page);
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
   await page.setViewportSize({ width: 430, height: 440 });
-  await page.waitForTimeout(100);
+  await settled(page);
   await page.getByRole("button", { name: "AI", exact: true }).tap();
   // Not yet: the web view is still short.
-  await page.waitForTimeout(100);
+  await settled(page);
   await expect(page.locator(".agent-panel")).toHaveCount(0);
   // The keyboard goes; the page comes, laid out at the full height.
   await page.setViewportSize({ width: 430, height: 932 });

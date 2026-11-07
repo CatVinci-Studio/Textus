@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 
 /**
  * A decided proposal leaves as one move: the paragraph cross-fades, the
@@ -258,7 +258,7 @@ for (const zoom of [1.5, 0.8])
     await composer.fill("go");
     await composer.press("Enter");
     await expect(page.locator(".review-bar-accept")).toBeEnabled();
-    await page.waitForTimeout(700);
+    await settled(page);
     const box = (el: Element) => {
       const r = el.getBoundingClientRect();
       return [r.left, r.top, r.width, r.height];

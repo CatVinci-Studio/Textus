@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -193,7 +193,7 @@ test("in a right-to-left script the copy fades out where the paragraph stood", a
   });
   await send(page);
   await expect(page.locator(".review-bar-accept")).toBeEnabled();
-  await page.waitForTimeout(700);
+  await settled(page);
   const box = (el: Element) => {
     const r = el.getBoundingClientRect();
     return [r.left, r.top, r.width, r.height];

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 // The start page: shown, when the user chose it, at launch with nothing to
 // open and when the last document closes; anything opened takes its place.
@@ -126,7 +126,7 @@ test("zooming on the start page leaves the documents' zoom as it was", async ({
   const before = await zoom();
   await emit(page, "menu-zoom-in");
   await emit(page, "menu-zoom-in");
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(await zoom()).toBe(before);
 });
 

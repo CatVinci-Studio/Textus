@@ -141,7 +141,7 @@ export async function pasteMarkdown(page: Page, markdown: string) {
       }),
     );
   }, markdown);
-  await page.waitForTimeout(300);
+  await settled(page);
 }
 
 /** The ids of a document's blocks, as the app makes them - its own module,

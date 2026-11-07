@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 // The app's own select keeps its list inside the window even when the
 // list is wider than its button.
@@ -34,7 +34,7 @@ test("a list wider than its button stays inside the window", async ({
   await expect(list).toBeVisible();
   await expect(list.getByRole("option")).not.toHaveCount(1);
   // Settled, past its entrance.
-  await page.waitForTimeout(400);
+  await settled(page);
   const box = (await list.boundingBox())!;
   const button = (await trigger.boundingBox())!;
   expect(box.width).toBeGreaterThan(button.width);
