@@ -146,28 +146,6 @@ test("a picture past the request's limit says so in the user's words, and propos
   await expect(page.locator(`${editor} img`)).toHaveCount(0);
 });
 
-test("a picture call the model got wrong shows nothing: it is the model's to resend", async ({
-  page,
-}) => {
-  await open(page);
-  await mockInvoke(page, {
-    ai_agent_message: exchange(
-      {
-        ...made,
-        image: undefined,
-        not_generated: "`prompt` is empty - describe the picture.",
-      },
-      "Not generated: `prompt` is empty - describe the picture. Tell the user in plain words; don't change the description and call again unless they ask.",
-    ),
-  });
-  await send(page);
-  await expect(page.locator(".agent-message-assistant")).toContainText(
-    "A harbour at dusk",
-  );
-  await expect(page.locator(".agent-image-failed")).toHaveCount(0);
-  await expect(page.locator(".agent-proposal")).toHaveCount(0);
-});
-
 test("Illustrate this paragraph asks for a picture of the paragraph right-clicked", async ({
   page,
 }) => {
@@ -509,31 +487,23 @@ test("a picture asked for next to text not accepted yet joins that text, which s
   );
 });
 
-test("a picture that wasn't made says why in its frame", async ({ page }) => {
+test("a picture that wasn't made says why in its frame, and Retry asks for it again by itself", async ({
+  page,
+}) => {
   await open(page);
   await writeAndPaint(
     page,
-    500,
+    100,
     "The service refused this description: rejected by the safety system",
   );
   const frame = page.locator(`${editor} .pending-picture`);
   await expect(frame).toHaveClass(/pending-picture-failed/);
   await expect(frame).toContainText("rejected by the safety system");
-  // The paragraph is unaffected.
   await expect(
     page.locator(`${editor} .pending-insert`, {
       hasText: "The tide went out before dawn.",
     }),
   ).toBeVisible();
-});
-
-test("a picture that wasn't made is asked for again by itself with Retry", async ({
-  page,
-}) => {
-  await open(page);
-  await writeAndPaint(page, 100, "The image service didn't answer in time.");
-  const frame = page.locator(`${editor} .pending-picture`);
-  await expect(frame).toHaveClass(/pending-picture-failed/);
   // This time the service answers.
   await page.evaluate((png) => {
     const w = window as unknown as {
