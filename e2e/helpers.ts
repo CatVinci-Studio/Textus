@@ -126,10 +126,12 @@ export async function openApp(
 
 /** Puts markdown into the active editor the way a paste does. */
 export async function pasteMarkdown(page: Page, markdown: string) {
-  await page.evaluate((md) => {
+  // The paste may land a moment later: wait until the document changed.
+  await page.evaluate(async (md) => {
     const target = document.querySelector<HTMLElement>(
       '[data-active-tab="true"] .ProseMirror',
     )!;
+    const before = target.innerHTML;
     target.focus();
     const data = new DataTransfer();
     data.setData("text/plain", md);
@@ -140,6 +142,9 @@ export async function pasteMarkdown(page: Page, markdown: string) {
         cancelable: true,
       }),
     );
+    const end = performance.now() + 3000;
+    while (target.innerHTML === before && performance.now() < end)
+      await new Promise((resolve) => setTimeout(resolve, 16));
   }, markdown);
   await settled(page);
 }

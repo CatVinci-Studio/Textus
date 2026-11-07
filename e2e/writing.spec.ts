@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   emit,
+  HOME,
   mockInvoke,
   openApp,
   openPhone,
@@ -1266,7 +1267,8 @@ test("a shift-click in the page's margin extends the selection there", async ({
   await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
   const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
   // The caret at the start, settled before the shift-click extends from it.
-  await page.keyboard.press("ControlOrMeta+Home");
+  await paras.first().click();
+  await page.keyboard.press(HOME);
   await expect
     .poll(() => page.evaluate(() => window.getSelection()?.anchorOffset))
     .toBe(0);
