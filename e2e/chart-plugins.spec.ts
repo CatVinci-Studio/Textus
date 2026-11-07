@@ -87,9 +87,9 @@ test("every chart plugin's blocks are drawn, and exported as pictures", async ({
     });
   }
 
-  // Exported from the top: a markmap scrolled out of view loses its
-  // picture, still to be fixed.
-  await frames.first().scrollIntoViewIfNeeded();
+  // Exported from the bottom: the blocks scrolled out of view, whose
+  // frames have gone, still export their pictures.
+  await frames.last().scrollIntoViewIfNeeded();
   const html = await exportHtml(page);
   const pictures = await page.evaluate((text) => {
     const doc = new DOMParser().parseFromString(text, "text/html");
