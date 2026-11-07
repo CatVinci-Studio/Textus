@@ -199,6 +199,24 @@ test.describe("file name search", () => {
     await expect(page.locator(editor)).toBeFocused();
   });
 
+  test("Esc hands the keyboard back to the source editor in source mode", async ({
+    page,
+  }) => {
+    await open(page);
+    await openFolderFromMenu(page, "/work/notes");
+    await emit(page, "menu-toggle-source-mode");
+    const source = page.locator(
+      '[data-active-tab="true"] .source-view .cm-content',
+    );
+    await source.click();
+    await page.keyboard.press("ControlOrMeta+Shift+O");
+    await expect(search(page)).toBeFocused();
+    await page.keyboard.type("CH");
+    await page.keyboard.press("Escape");
+    await expect(search(page)).toHaveValue("");
+    await expect(source).toBeFocused();
+  });
+
   test("opens another kind of file the way the tree does", async ({ page }) => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");

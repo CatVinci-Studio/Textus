@@ -84,13 +84,16 @@ function useFolderIndex(
   return { index, ensure };
 }
 
-/** The editor in front, for Esc to hand the keyboard back to. */
+/** The editor in front, for Esc to hand the keyboard back to: source
+ *  mode's (also split view's left pane) before the rendered one. */
 function focusEditor() {
-  document
-    .querySelector<HTMLElement>(
-      '[data-active-tab="true"] :is(.ProseMirror, textarea)',
-    )
-    ?.focus();
+  const tab = '[data-active-tab="true"]';
+  const editor = [`${tab} .source-view .cm-content`, `${tab} .ProseMirror`]
+    .flatMap((selector) => [
+      ...document.querySelectorAll<HTMLElement>(selector),
+    ])
+    .find((el) => el.getClientRects().length > 0 && el.isContentEditable);
+  editor?.focus();
 }
 
 /** The files matching the query in the scope, a beat behind the keystroke
