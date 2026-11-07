@@ -5,6 +5,7 @@ import { Fragment, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   Plugin,
   PluginKey,
+  Selection,
   TextSelection,
   type EditorState,
 } from "@milkdown/kit/prose/state";
@@ -31,7 +32,14 @@ import { setDrawnBlocks } from "../../export/drawn-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
 
-const key = new PluginKey<DecorationSet>("plugin-code-blocks");
+/** The drawings, and the block whose source </> opened (its start), if any:
+ *  only that one shows its source, until the caret leaves it. */
+interface BlocksState {
+  deco: DecorationSet;
+  open: number | null;
+}
+
+const key = new PluginKey<BlocksState>("plugin-code-blocks");
 const BLOCK_CLASS = "plugin-code-block";
 const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
 /** How long an export waits for a drawing just made to have its page. */
@@ -56,9 +64,11 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
   return $prose((ctx) => {
     const drawn = new Map<string, Drawn>();
 
-    function decorations(state: EditorState): DecorationSet {
+    function decorations(
+      state: EditorState,
+      open: number | null,
+    ): DecorationSet {
       if (!hasCodeBlockLanguages()) return DecorationSet.empty;
-      const { from, to } = state.selection;
       const seen = new Map<string, number>();
       const out: Decoration[] = [];
       state.doc.descendants((node, pos) => {
@@ -69,7 +79,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
-        if (from < pos || to > end)
+        if (pos !== open)
           out.push(Decoration.node(pos, end, { class: HIDDEN_SOURCE_CLASS }));
         const widget = `${plugin}:${language}:${n}`;
         out.push(
@@ -170,18 +180,51 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       };
     }
 
-    return new Plugin<DecorationSet>({
+    return new Plugin<BlocksState>({
       key,
       state: {
-        init: (_config, state) => decorations(state),
+        init: (_config, state) => ({
+          deco: decorations(state, null),
+          open: null,
+        }),
         apply(tr, prev, _old, state) {
-          if (tr.docChanged || tr.selectionSet || tr.getMeta(key))
-            return decorations(state);
+          const meta = tr.getMeta(key) as { open?: number } | true | undefined;
+          let open =
+            meta && meta !== true && meta.open !== undefined
+              ? meta.open
+              : prev.open === null
+                ? null
+                : tr.mapping.map(prev.open);
+          // The caret has left the opened block: its source hides again.
+          if (open !== null && !holds(state, open)) open = null;
+          if (tr.docChanged || meta || open !== prev.open)
+            return { deco: decorations(state, open), open };
           return prev;
         },
       },
       props: {
-        decorations: (state) => key.getState(state),
+        decorations: (state) => key.getState(state)?.deco,
+      },
+      // The caret never rests in a drawn block's hidden source: it steps
+      // over it, the way it came. Only </> opens the source.
+      appendTransaction(trs, old, state) {
+        if (!trs.some((tr) => tr.selectionSet || tr.docChanged)) return null;
+        const open = key.getState(state)?.open ?? null;
+        const { $head } = state.selection;
+        for (let d = $head.depth; d > 0; d--) {
+          const node = $head.node(d);
+          if (node.type.name !== "code_block") continue;
+          const start = $head.before(d);
+          const language = String(node.attrs.language ?? "").toLowerCase();
+          if (start === open || !language || !codeBlockPlugin(language))
+            return null;
+          const forward = old.selection.head <= start;
+          const at = forward
+            ? Selection.near(state.doc.resolve(start + node.nodeSize), 1)
+            : Selection.near(state.doc.resolve(start), -1);
+          return state.tr.setSelection(at);
+        }
+        return null;
       },
       view(view) {
         // A plugin turned on or off: its blocks drawn, or back to source.
@@ -200,6 +243,14 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       },
     });
   });
+}
+
+/** Whether the selection is inside the code block that starts at `start`. */
+function holds(state: EditorState, start: number): boolean {
+  const node = state.doc.nodeAt(start);
+  if (node?.type.name !== "code_block") return false;
+  const { from, to } = state.selection;
+  return from > start && to < start + node.nodeSize;
 }
 
 /** CodeBlock.setSource: the block's text, as one undo step. */
@@ -246,10 +297,11 @@ function editButton(
     const node =
       end === undefined ? null : view.state.doc.resolve(end).nodeBefore;
     if (end === undefined || node?.type.name !== "code_block") return;
+    const start = end - node.nodeSize;
     view.dispatch(
-      view.state.tr.setSelection(
-        TextSelection.create(view.state.doc, end - node.nodeSize + 1),
-      ),
+      view.state.tr
+        .setSelection(TextSelection.create(view.state.doc, start + 1))
+        .setMeta(key, { open: start }),
     );
     view.focus();
   });
