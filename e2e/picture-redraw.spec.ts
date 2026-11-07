@@ -64,11 +64,21 @@ async function propose(page: Page) {
   });
 }
 
-test("a proposed picture is drawn again from the description the writer changed", async ({
+test("a proposed picture is drawn again from the description the writer changed, and not when it is left as it was", async ({
   page,
 }) => {
   await propose(page);
   const before = await page.locator(pending).getAttribute("src");
+  // Left as it was, the description draws nothing again.
+  await page.locator(pending).hover();
+  await page.getByRole("button", { name: "Redraw…" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Redraw" })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await calls(page, "ai_redraw_generated_image")).toHaveLength(0);
+
   // The new picture takes a moment: its frame paints meanwhile.
   await page.evaluate((png) => {
     (
@@ -100,17 +110,4 @@ test("a proposed picture is drawn again from the description the writer changed"
     "src",
     /^blob:/,
   );
-});
-
-test("a description left as it was draws nothing again", async ({ page }) => {
-  await propose(page);
-  await page.locator(pending).hover();
-  await page.getByRole("button", { name: "Redraw…" }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Redraw" })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(await calls(page, "ai_redraw_generated_image")).toHaveLength(0);
-  await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/);
 });
