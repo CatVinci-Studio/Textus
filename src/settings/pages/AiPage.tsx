@@ -191,6 +191,12 @@ export function AiPage({
                   onChange={(v) => setSettings({ enableWebSearch: v })}
                 />
                 <SearchServiceSection t={t} />
+                <ToggleRow
+                  label={t.researchSubHelpersLabel}
+                  help={t.researchSubHelpersHint}
+                  checked={settings.researchSubHelpers}
+                  onChange={(v) => setSettings({ researchSubHelpers: v })}
+                />
               </>
             )}
           </SettingsGroup>

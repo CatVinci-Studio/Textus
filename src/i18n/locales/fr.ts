@@ -309,6 +309,10 @@ utiliser une.
     "Après chaque réponse, jusqu'à trois choses que vous direz sans doute ensuite s'affichent en boutons au-dessus de la zone de saisie, la plus probable aussi en gris dedans ; un clic l'envoie, Tab reprend celle en gris. Cela coûte une courte requête de plus.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Messages suivants suggérés",
+  researchSubHelpersLabel:
+    "Recherche : confier des parties d’une question à des aides",
+  researchSubHelpersHint:
+    "En Recherche, l’aide qui étudie une question peut en confier une partie plus précise à une aide à lui. Plus approfondi, mais plus lent, avec un quart à la moitié d’appels au modèle en plus.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
   rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Projet, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
@@ -399,6 +403,7 @@ utiliser une.
   toolSearchPapers: "Recherche d’articles sur « {arg} »",
   toolSearchReferences: "Recherche de « {arg} » dans les références",
   toolAddNote: "Noté : {arg}",
+  toolDelegateTask: "Confié : {arg}",
   paperOutlineTitle: "Plan",
   paperOutlineTotal: "Environ {n} {unit} au total",
   paperOutlineThesis: "Thèse",
@@ -763,6 +768,10 @@ utiliser une.
   agentSkillsBuiltinTag: "Intégrée",
   agentSkillsOpen: "Ouvrir",
   agentSkillsReset: "Réinitialiser",
+  madeByTextusAi: `Créé avec ${AI_NAME}`,
+  skillDelete: "Supprimer",
+  skillDeleteAsk: "Supprimer « {name} » ? Ses fichiers iront à la Corbeille.",
+  skillDeleteAskMobile: "Supprimer « {name} » ?",
   agentSkillsResetConfirm:
     "Supprimer votre copie de «\u00a0{name}\u00a0» et revenir à la compétence intégrée\u00a0?",
   agentSkillsShadows: "Remplace une compétence intégrée",
@@ -1179,7 +1188,7 @@ utiliser une.
   reportLimit:
     "Vous avez déjà envoyé plusieurs rapports aujourd'hui. Réessayez demain, ou soumettez-le sur GitHub.",
   reportFailed: "Impossible de l'envoyer.",
-  menuHelpTutorials: "Tutoriels vidéo",
+  menuHelpTutorials: "Tutoriels en ligne",
   windowMinimize: "Réduire",
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",
@@ -1390,7 +1399,7 @@ utiliser une.
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody:
-    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels vidéo.",
+    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Projet, le bouton dossier du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",

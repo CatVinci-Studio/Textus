@@ -89,6 +89,7 @@ fn live_paper() {
         target_chars: env_or("TEXTUS_PAPER_CHARS", "5000").parse().unwrap_or(5000),
         budget,
         stage: PaperStage::Researching,
+        sub_helpers: false,
     };
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../tmp/live-paper")

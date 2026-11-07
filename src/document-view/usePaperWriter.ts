@@ -201,6 +201,7 @@ export function usePaperWriter({
             genre,
             targetChars,
             conversation,
+            subHelpers: s.researchSubHelpers,
           },
           (event) => applyPaperEvent(key, event),
         )

@@ -34,6 +34,8 @@ import {
 } from "../../plugins/store/catalog";
 import { pluginMatches } from "../../plugins/store/plugin-records";
 import { PluginIcon } from "./PluginArt";
+import { useSettings } from "../../prefs/SettingsContext";
+import { madeByAi } from "../../ai/chat/creations";
 
 /**
  * Settings › Extensions › Plugins. Nothing comes installed: one switch for
@@ -43,6 +45,7 @@ import { PluginIcon } from "./PluginArt";
  */
 export function PluginsPage({ t }: SettingsPageProps) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
+  const { settings } = useSettings();
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install, enable, attempt, actionFor } =
     usePluginActions(t);
@@ -81,6 +84,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
       record={record}
       t={t}
       allOn={snapshot.allOn}
+      madeHere={madeByAi(settings.creations, "plugin", record.id)}
       action={actionFor(record.id)}
       onOpen={() => setOpen(record.id)}
     />
@@ -240,12 +244,14 @@ function PluginCard({
   record,
   t,
   allOn,
+  madeHere,
   action,
   onOpen,
 }: {
   record: PluginRecord;
   t: Strings;
   allOn: boolean;
+  madeHere: boolean;
   action: ReactNode;
   onOpen: () => void;
 }) {
@@ -277,6 +283,7 @@ function PluginCard({
               manifest={manifest}
               official={record.official}
               dev={record.origin === "dev"}
+              madeHere={madeHere}
               t={t}
             />
           )}

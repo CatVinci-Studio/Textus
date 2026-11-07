@@ -18,6 +18,7 @@ const mock = vi.hoisted(() => ({
     frostedTitleBar: false,
     themeId: "user-test",
     userThemes: [{ id: "user-test", name: "Test", hasDark: false }],
+    creations: [{ kind: "theme", id: "user-test", name: "Test", at: 1 }],
   },
 }));
 vi.mock("../../prefs/SettingsContext", () => ({
@@ -76,6 +77,8 @@ describe("theme settings", () => {
     render(<ThemesTab t={t} />);
     const row = screen.getByText("Test").closest(".plugin-card");
     expect(row).toHaveTextContent(t.themeGalleryInUse);
+    // Made in Create: it says so.
+    expect(row).toHaveTextContent(t.madeByTextusAi);
     // Importing and exporting wait behind "⋯"; the gallery's themes follow.
     expect(
       screen.queryByRole("menuitem", { name: t.themeImportButton }),

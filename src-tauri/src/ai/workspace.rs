@@ -425,5 +425,29 @@ pub async fn save_written_skill(
         .map(|p| p.to_string_lossy().into_owned())
 }
 
+/// Deletes one of the user's global skills - one Create made, from its
+/// list - to the Trash where there is one. Returns the deleted paths, so the
+/// frontend can close tabs that would write them back.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn delete_global_skill(app: AppHandle, name: String) -> Result<Vec<String>, String> {
+    let dir = global_agent_dir(&app)?.join("skills");
+    tauri::async_runtime::spawn_blocking(move || {
+        let files = skill_files_named(&dir, &name)?;
+        for file in &files {
+            #[cfg(desktop)]
+            trash::delete(file).map_err(|e| e.to_string())?;
+            #[cfg(not(desktop))]
+            std::fs::remove_file(file).map_err(|e| e.to_string())?;
+        }
+        Ok(files
+            .iter()
+            .map(|p| p.to_string_lossy().into_owned())
+            .collect())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg(test)]
 mod tests;

@@ -5,6 +5,7 @@ import { katexWoff2Only } from "./vite.katex-fonts";
 import { colorMixFallback } from "./vite.color-mix-fallback";
 import { devPlugins } from "./vite.dev-plugins";
 import { startupBudget } from "./vite.startup-budget";
+import { devServerCsp } from "./vite.csp";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -46,6 +47,7 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
+    headers: { "Content-Security-Policy": devServerCsp() },
     hmr: host
       ? {
           protocol: "ws",

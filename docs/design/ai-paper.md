@@ -23,7 +23,8 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
    search, page reads, scholarly search, the project's files, the files
    attached and the user's references. Each
    returns notes: a claim, its evidence, a quote, the sources' numbers, and
-   leads to pictures or data.
+   leads to pictures or data. A helper may hand up to two narrower parts of
+   its question to sub-helpers of its own (`delegate_task`).
 3. **Outline**: a thesis, and per section its key points, the notes it
    draws on, a target length and its figures. The one checkpoint: the user
    edits and approves it on a card in the chat.
@@ -145,6 +146,17 @@ it, lazily loaded. Each stage and helper is one run of
   web tools, ranked by its question, and `add_note` (`paper/notes.rs`), the
   one tool of research's own. Around both, each question's share of the
   budget and the card's activity and budget events.
+- **Sub-helpers** (`paper/delegate.rs`): a question's helper also has
+  `delegate_task`, which hands a narrower part of its question - a case, a
+  data set, a dispute - to a helper of its own while it waits, at most twice
+  (`MAX_HANDED`). The part's helper runs the same loop with `SUB_STEPS`
+  steps and without `delegate_task`, so it hands nothing on; it keeps its
+  notes with the question's, under its own sub-question, and spends the
+  question's share of the budget (`research::Desk`), so handing over costs
+  no more than searching. The call's answer lists the notes it kept with
+  their source numbers, so the helper doesn't note them again. A part isn't
+  handed over once the question's share is used up, and a sub-helper that
+  fails costs the part, not the question.
 - **Attached files**: the request names its `conversation`; the files the
   composer staged in that conversation's `attached/` are copied into the
   paper's own `attached/` when it starts (`store::keep_attachments`), so a

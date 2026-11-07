@@ -431,6 +431,8 @@ export type PaperRequest_Deserialize = {
 	 *  none.
 	 */
 	conversation?: string | null,
+	/**  Research hands parts of a question to helpers of its own. */
+	subHelpers?: boolean,
 };
 
 /**  What starting a paper takes. Mirrored in src/platform/bindings/ai-paper.ts. */
@@ -472,6 +474,8 @@ export type PaperRequest_Serialize = {
 	 *  none.
 	 */
 	conversation: string | null,
+	/**  Research hands parts of a question to helpers of its own. */
+	subHelpers: boolean,
 };
 
 /**  How far a paper has come. */
@@ -513,6 +517,11 @@ export type Paper_Deserialize = {
 	 *  from there.
 	 */
 	stage?: PaperStage,
+	/**
+	 *  Whether a question's researcher may hand parts of it to helpers of
+	 *  its own: the user's choice, set again on every run.
+	 */
+	subHelpers?: boolean,
 };
 
 /**  One paper being written. Kept as `.textus/papers/<id>/paper.json`. */
@@ -535,6 +544,11 @@ export type Paper_Serialize = {
 	 *  from there.
 	 */
 	stage: PaperStage,
+	/**
+	 *  Whether a question's researcher may hand parts of it to helpers of
+	 *  its own: the user's choice, set again on every run.
+	 */
+	subHelpers: boolean,
 };
 
 /**  A paper's limits and what it has used of them. */

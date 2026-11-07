@@ -98,7 +98,7 @@ const COMMUNITY_ID: &str = "help-community";
 const REPORT_ID: &str = "help-report";
 /// Textus > Check for Updates… (macOS): Settings › About, checking.
 const UPDATES_ID: &str = "check-updates";
-/// Help > Video Tutorials, opened the same way as Join the Community.
+/// Help > Online Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";

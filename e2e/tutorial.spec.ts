@@ -281,7 +281,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await expect(done).toContainText(
     "Textus AI remembers your requirements and style over time",
   );
-  await done.getByRole("button", { name: "Video Tutorials" }).click();
+  await done.getByRole("button", { name: "Online Tutorials" }).click();
   await done.getByRole("button", { name: "Join the Community" }).click();
   const links = await opened(page);
   expect(links.slice(-2)).toEqual([
@@ -425,7 +425,7 @@ test.describe("connected", () => {
   });
 });
 
-test("Help › Video Tutorials opens the page in the UI's language", async ({
+test("Help › Online Tutorials opens the page in the UI's language", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "ja" } });

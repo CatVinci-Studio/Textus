@@ -529,3 +529,23 @@ fn the_skill_list_drops_hidden_skills() {
     let json = serde_json::to_value(&list[0]).unwrap();
     assert!(json.get("overridesBuiltin").is_some() && json.get("invocation").is_some());
 }
+
+#[test]
+fn deleting_a_skill_finds_every_file_of_that_name() {
+    let root = scratch("delete");
+    let skills = root.join("skills");
+    write(&skills.join("weekly.md"), "---\nname: weekly\n---\nBody.\n");
+    write(
+        &skills.join("weekly-2.md"),
+        "---\nname: weekly\n---\nOld.\n",
+    );
+    write(&skills.join("other.md"), "---\nname: other\n---\nBody.\n");
+    let mut files = skill_files_named(&skills, "weekly").unwrap();
+    files.sort();
+    assert_eq!(
+        files,
+        [skills.join("weekly-2.md"), skills.join("weekly.md")]
+    );
+    assert!(skill_files_named(&skills, "missing").is_err());
+    std::fs::remove_dir_all(&root).ok();
+}
