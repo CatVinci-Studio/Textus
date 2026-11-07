@@ -19,22 +19,28 @@ test.beforeEach(async ({ page }) => {
   );
 });
 
-test("Ctrl/Cmd+click on a wikilink opens the note in a tab", async ({
+test("a plain click on a wikilink places the caret; Ctrl/Cmd+click opens the note in a tab", async ({
   page,
 }) => {
   const before = await page.locator(".ProseMirror").count();
+  await page.locator(`${editor} .wikilink`).click();
+  // The caret is in the link, and no tab opened.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          !!window
+            .getSelection()
+            ?.anchorNode?.parentElement?.closest(".wikilink"),
+      ),
+    )
+    .toBe(true);
+  await expect(page.locator(".ProseMirror")).toHaveCount(before);
   await page
     .locator(`${editor} .wikilink`)
     .click({ modifiers: ["ControlOrMeta"] });
-  await expect(page.locator(".ProseMirror")).toHaveCount(before + 1);
   await expect(page.locator(".tab-pill-active .tab-pill-title")).toHaveText(
     /Page/,
   );
-});
-
-test("a plain click on a wikilink opens nothing", async ({ page }) => {
-  const before = await page.locator(".ProseMirror").count();
-  await page.locator(`${editor} .wikilink`).click();
-  await page.waitForTimeout(300);
-  await expect(page.locator(".ProseMirror")).toHaveCount(before);
+  await expect(page.locator(".ProseMirror")).toHaveCount(before + 1);
 });
