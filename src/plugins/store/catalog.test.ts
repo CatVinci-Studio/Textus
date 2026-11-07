@@ -13,6 +13,7 @@ vi.mock("../manager", () => ({
   loadPlugins: vi.fn(() => Promise.resolve()),
   runsHere: () => true,
   pluginName: (r: { id: string }) => r.id,
+  pluginText: (_r: unknown, text: string) => text,
   pluginRecord: (id: string) =>
     installed.has(id)
       ? { id, status: "on", manifest: { version: installed.get(id) } }
@@ -20,8 +21,14 @@ vi.mock("../manager", () => ({
   setPluginEnabled: vi.fn(() => Promise.resolve()),
 }));
 
-const { installFromCatalog, loadCatalog, neededTextus, updateFor } =
-  await import("./catalog");
+const {
+  installFromCatalog,
+  loadCatalog,
+  neededTextus,
+  searchCatalog,
+  sortCatalog,
+  updateFor,
+} = await import("./catalog");
 
 const [major, minor] = APP_VERSION.split(".").map(Number);
 const NEWER = `${major}.${minor + 1}.0`;
@@ -74,5 +81,49 @@ describe("catalog versions this Textus can run", () => {
         manifest: { engine: `>=${APP_VERSION}` },
       } as Parameters<typeof neededTextus>[0]),
     ).toBeNull();
+  });
+});
+
+describe("the catalog list", () => {
+  const item = (
+    id: string,
+    description: string,
+    installs?: number,
+    updated?: string,
+  ) =>
+    ({
+      id,
+      installs,
+      updated,
+      manifest: { name: id, description, author: "CatVinci Studio" },
+    }) as unknown as Parameters<typeof searchCatalog>[0][number];
+  const list = [
+    item("catvinci.kanban", "Boards of cards", 50, "2026-11-01"),
+    item("catvinci.graph", "A graph view of your notes", 90, "2026-10-01"),
+    item("catvinci.abc", "Music notation", 10, "2026-11-05"),
+  ];
+  const ids = (l: typeof list) => l.map((i) => i.id);
+
+  it("finds a plugin when every word is in its name, description or maker", () => {
+    expect(ids(searchCatalog(list, "kanban"))).toEqual(["catvinci.kanban"]);
+    expect(ids(searchCatalog(list, "catvinci graph view"))).toEqual([
+      "catvinci.graph",
+    ]);
+    expect(searchCatalog(list, "CatVinci Studio")).toHaveLength(3);
+    expect(searchCatalog(list, "no such plugin")).toHaveLength(0);
+  });
+
+  it("sorts the most installed first, the latest first, or by name", () => {
+    expect(ids(sortCatalog(list, "popular"))).toEqual([
+      "catvinci.graph",
+      "catvinci.kanban",
+      "catvinci.abc",
+    ]);
+    expect(ids(sortCatalog(list, "newest"))[0]).toBe("catvinci.abc");
+    expect(ids(sortCatalog(list, "name"))).toEqual([
+      "catvinci.abc",
+      "catvinci.graph",
+      "catvinci.kanban",
+    ]);
   });
 });

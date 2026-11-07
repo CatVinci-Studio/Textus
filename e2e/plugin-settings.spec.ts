@@ -160,7 +160,7 @@ test("an available plugin's page has its README, in the UI's language", async ({
   await expect(installed.getByRole("checkbox").first()).toBeChecked();
 });
 
-test("the search finds catalog plugins by name, what they do and who made them", async ({
+test("the search filters the catalog's plugins, and says when none match", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -173,11 +173,6 @@ test("the search finds catalog plugins by name, what they do and who made them",
   await search.fill("kanban");
   await expect(cards).toHaveCount(1);
   await expect(cards).toHaveAttribute("data-catalog", "catvinci.kanban");
-  // Every word has to match, in any field.
-  await search.fill("catvinci graph view");
-  await expect(cards).toHaveCount(1);
-  await search.fill("CatVinci Studio");
-  await expect(cards).toHaveCount(all);
   await search.fill("no such plugin");
   await expect(cards).toHaveCount(0);
   await expect(page.locator(".extensions-available")).toContainText(

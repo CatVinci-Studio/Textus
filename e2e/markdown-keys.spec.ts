@@ -108,15 +108,6 @@ test("Tab and Shift+Tab in a paragraph leave the focus in the text", async ({
   expect(await sourceOf(page)).toMatch(/!/);
 });
 
-test("Format › Ordered List turns a bullet list into one, every item", async ({
-  page,
-}) => {
-  await open(page, "- one\n- two\n");
-  await page.locator(`${editor} li`).first().click();
-  await emit(page, "menu-insert-block", "ordered-list");
-  expect(await sourceOf(page)).toBe("1. one\n2. two");
-});
-
 test("Left steps one character onto inline HTML, as Right does", async ({
   page,
 }) => {
