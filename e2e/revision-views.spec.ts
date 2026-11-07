@@ -94,11 +94,41 @@ async function revise(page: Page) {
 const visible = (page: Page, selector: string) =>
   page.locator(`.milkdown ${selector}:visible`);
 
-test("after Write's text is accepted, every view applies to its rewrite across paragraphs", async ({
+test("Write's new text waits in its card in the original's view; accepted, every view applies to its rewrite across paragraphs", async ({
   page,
 }) => {
   await open(page);
   await write(page);
+  // Write's new text has no original: in the original's view it waits in
+  // its card, a mark where it goes.
+  const block = page.locator(".milkdown .pending-insert");
+  // Fully typed in: the story's two paragraphs, as paragraphs.
+  await expect(block).not.toHaveClass(/pending-insert-typing/);
+  // The tint is on the text: on each line's span when new text in a
+  // paragraph runs over several lines (the breaks between them untinted),
+  // else on the box - new paragraphs of their own are one box.
+  const green = () =>
+    block.evaluate((el) => {
+      const lines = el.classList.contains("pending-insert-lines");
+      const tinted = lines ? el.querySelector(".pending-line")! : el;
+      return getComputedStyle(tinted).backgroundColor;
+    });
+  await expect(block).toHaveClass(/pending-blocks/);
+  await expect(block.locator("p")).toHaveCount(2);
+  const tint = await green();
+  expect(tint).not.toBe("rgba(0, 0, 0, 0)");
+
+  await view(page, "original");
+  // A thin mark, its text in the card.
+  expect((await block.boundingBox())!.width).toBeLessThan(6);
+  await expect(page.locator(".revision-note")).toContainText(
+    "The lighthouse keeper",
+  );
+
+  await view(page, "final");
+  await expect(block).toBeVisible();
+  expect(await green()).toBe("rgba(0, 0, 0, 0)");
+  await view(page, "inline");
   await page
     .locator(".agent-proposal-actions .inline-chat-action-primary")
     .click();
@@ -152,40 +182,6 @@ test("after Write's text is accepted, every view applies to its rewrite across p
     "The lighthouse keeper woke before dawn. He climbed the stairs. The lamp was still warm.",
     "Outside, the sea lay calm. A gull cried somewhere far off.",
   ]);
-});
-
-test("Write's new text has no original: in the original's view it waits in its card, a mark where it goes", async ({
-  page,
-}) => {
-  await open(page);
-  await write(page);
-  const block = page.locator(".milkdown .pending-insert");
-  // Fully typed in: the story's two paragraphs, as paragraphs.
-  await expect(block).not.toHaveClass(/pending-insert-typing/);
-  // The tint is on the text: on each line's span when new text in a
-  // paragraph runs over several lines (the breaks between them untinted),
-  // else on the box - new paragraphs of their own are one box.
-  const green = () =>
-    block.evaluate((el) => {
-      const lines = el.classList.contains("pending-insert-lines");
-      const tinted = lines ? el.querySelector(".pending-line")! : el;
-      return getComputedStyle(tinted).backgroundColor;
-    });
-  await expect(block).toHaveClass(/pending-blocks/);
-  await expect(block.locator("p")).toHaveCount(2);
-  const tint = await green();
-  expect(tint).not.toBe("rgba(0, 0, 0, 0)");
-
-  await view(page, "original");
-  // A thin mark, its text in the card.
-  expect((await block.boundingBox())!.width).toBeLessThan(6);
-  await expect(page.locator(".revision-note")).toContainText(
-    "The lighthouse keeper",
-  );
-
-  await view(page, "final");
-  await expect(block).toBeVisible();
-  expect(await green()).toBe("rgba(0, 0, 0, 0)");
 });
 
 test(

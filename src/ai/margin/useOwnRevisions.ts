@@ -220,7 +220,6 @@ export function keptOriginal(
     return null;
   }
   if (typeof saved.base !== "string") return null;
-  if (typeof saved.revised === "string" && saved.revised !== shown)
-    return null;
+  if (typeof saved.revised === "string" && saved.revised !== shown) return null;
   return saved.base;
 }
