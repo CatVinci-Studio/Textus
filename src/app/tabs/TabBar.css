@@ -35,7 +35,8 @@
   min-width: 90px;
   max-width: 200px;
   padding: 4px 8px;
-  font-size: var(--text-secondary);
+  /* The bar's text grows with a wide window, as its icons do. */
+  font-size: calc(var(--text-secondary) * var(--window-scale, 1));
   white-space: nowrap;
   overflow: hidden;
   animation: motion-pop-in var(--dur-base) var(--ease-out);
@@ -122,7 +123,7 @@
   background: none;
   cursor: pointer;
   color: var(--ui-muted);
-  font-size: var(--text-body-large);
+  font-size: calc(var(--text-body-large) * var(--window-scale, 1));
   padding: 4px 8px;
   border-radius: var(--shape-pill);
   corner-shape: round;
@@ -133,7 +134,7 @@
 }
 
 .word-count {
-  font-size: var(--text-footnote);
+  font-size: calc(var(--text-footnote) * var(--window-scale, 1));
   color: var(--ui-muted);
   white-space: nowrap;
   min-width: 1px;

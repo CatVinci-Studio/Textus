@@ -133,7 +133,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--text-secondary);
+  font-size: calc(var(--text-secondary) * var(--window-scale, 1));
   color: var(--ui-muted);
   pointer-events: none;
   user-select: none;

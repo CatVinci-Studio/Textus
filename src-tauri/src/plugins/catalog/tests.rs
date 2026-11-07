@@ -183,3 +183,30 @@ fn downloads_come_from_the_site_at_either_of_its_addresses() {
     assert!(!ok("http://textus.md/plugin-release/x.zip"));
     assert!(!ok("https://example.com/x.zip"));
 }
+
+/// A connection that drops halfway through is tried once more, as on a weak
+/// network (#580).
+#[test]
+fn a_download_cut_off_halfway_is_tried_again() {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    std::thread::spawn(move || {
+        for (i, stream) in listener.incoming().take(2).enumerate() {
+            let mut stream = stream.unwrap();
+            let _ = stream.read(&mut [0; 1024]);
+            let body: &[u8] = if i == 0 { b"half" } else { b"whole body" };
+            let _ = stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\nConnection: close\r\n\r\n");
+            let _ = stream.write_all(body);
+        }
+    });
+    let client = client_with(reqwest::redirect::Policy::none()).unwrap();
+    let bytes = tauri::async_runtime::block_on(download_with(
+        client,
+        &format!("http://127.0.0.1:{port}/p.zip"),
+        "p",
+    ))
+    .expect("the second try");
+    assert_eq!(bytes, b"whole body");
+}

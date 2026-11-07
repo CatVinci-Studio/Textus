@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: calc(40px * var(--chrome-scale));
   padding: 4px 8px 4px 12px;
   border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }

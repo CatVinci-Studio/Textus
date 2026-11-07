@@ -219,19 +219,40 @@ async fn fetch() -> Result<String, String> {
     if let Some(path) = url.strip_prefix("file://") {
         return std::fs::read_to_string(path).map_err(|e| e.to_string());
     }
-    let response = client()?.get(&url).send().await.map_err(|e| {
-        format!(
-            "Couldn't reach the plugin catalog: {}",
-            crate::net::error_text(&e)
-        )
-    })?;
-    if !response.status().is_success() {
-        return Err(format!(
-            "The plugin catalog answered {}.",
-            response.status()
-        ));
+    let client = client()?;
+    twice(|| async {
+        let response = client.get(&url).send().await.map_err(|e| {
+            format!(
+                "Couldn't reach the plugin catalog: {}",
+                crate::net::error_text(&e)
+            )
+        })?;
+        if !response.status().is_success() {
+            return Err(format!(
+                "The plugin catalog answered {}.",
+                response.status()
+            ));
+        }
+        response.text().await.map_err(|e| {
+            format!(
+                "The plugin catalog broke off: {}",
+                crate::net::error_text(&e)
+            )
+        })
+    })
+    .await
+}
+
+/// A slow or dropped connection often holds on a second try.
+async fn twice<T, F, Fut>(attempt: F) -> Result<T, String>
+where
+    F: Fn() -> Fut,
+    Fut: std::future::Future<Output = Result<T, String>>,
+{
+    match attempt().await {
+        Ok(value) => Ok(value),
+        Err(_) => attempt().await,
     }
-    response.text().await.map_err(|e| e.to_string())
 }
 
 /// The catalog, fetched now and kept for next time.
@@ -314,19 +335,28 @@ async fn download_with(client: reqwest::Client, url: &str, what: &str) -> Result
     if let Some(path) = url.strip_prefix("file://") {
         return std::fs::read(path).map_err(|e| e.to_string());
     }
-    let response = client
-        .get(url)
-        .send()
-        .await
-        .map_err(|e| format!("Couldn't download {what}: {}", crate::net::error_text(&e)))?;
-    ext_stats::check_redirected(&response)?;
-    if !response.status().is_success() {
-        return Err(format!(
-            "The download of {what} answered {}.",
-            response.status()
-        ));
-    }
-    Ok(response.bytes().await.map_err(|e| e.to_string())?.to_vec())
+    twice(|| async {
+        let response = client
+            .get(url)
+            .send()
+            .await
+            .map_err(|e| format!("Couldn't download {what}: {}", crate::net::error_text(&e)))?;
+        ext_stats::check_redirected(&response)?;
+        if !response.status().is_success() {
+            return Err(format!(
+                "The download of {what} answered {}.",
+                response.status()
+            ));
+        }
+        let bytes = response.bytes().await.map_err(|e| {
+            format!(
+                "The download of {what} broke off: {}",
+                crate::net::error_text(&e)
+            )
+        })?;
+        Ok(bytes.to_vec())
+    })
+    .await
 }
 
 /// A README this large is not a README.

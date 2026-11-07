@@ -16,8 +16,9 @@
   --control-height-sm: 24px;
   --control-height: 28px;
   /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
-     the interface text, and a step more in full screen. */
-  --chrome-scale: var(--ui-text-scale, 1);
+     the interface text and, in a straight line, with the window's width
+     (--window-scale). */
+  --chrome-scale: calc(var(--ui-text-scale, 1) * var(--window-scale, 1));
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
@@ -510,11 +511,6 @@
   background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
 }
 
-/* Full screen has room to spare: the chrome takes a step up. */
-:root[data-window-fullscreen] {
-  --chrome-scale: calc(var(--ui-text-scale, 1) * 1.15);
-}
-
 /* Icons are drawn at fixed pixel sizes: each grows as a picture, without
    moving what is around it; the buttons' own sizes are scaled below. */
 :root:not([data-window-chrome="mobile"])
@@ -525,6 +521,7 @@
     .tree-tool,
     .icon-button,
     .tx-icon-button,
+    .inline-chat-header-button,
     .tab-bar-add,
     .sidebar-tab,
     .window-caption-button,
