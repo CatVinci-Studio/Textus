@@ -63,3 +63,38 @@ test("Replace All is taken back by one undo", async ({ page }) => {
     "zebra three",
   ]);
 });
+
+const emit = (page: Page, name: string) =>
+  page.evaluate(
+    (n) =>
+      (
+        window as unknown as {
+          __devEmitTauriEvent: (name: string, payload: unknown) => void;
+        }
+      ).__devEmitTauriEvent(n, null),
+    name,
+  );
+
+test("Find Next steps through the matches from the text, and Replace opens with its box", async ({
+  page,
+}) => {
+  const editor = await openDoc(page);
+  await page.keyboard.press("ControlOrMeta+f");
+  const input = page.locator(".find-replace-input").first();
+  await input.fill("zebra");
+  await expect(page.locator(".find-replace-count")).toContainText("1 / 3");
+  await page.keyboard.press("Escape");
+  await expect(editor).toBeFocused();
+
+  // Closed, it opens the bar again on what was looked for; open, it steps.
+  const count = page.locator(".find-replace-count");
+  await emit(page, "menu-find-next");
+  await expect(count).toContainText("/ 3");
+  const at = Number((await count.textContent())!.split("/")[0].trim());
+  await emit(page, "menu-find-next");
+  await expect(count).toContainText(`${(at % 3) + 1} / 3`);
+
+  await page.keyboard.press("Escape");
+  await emit(page, "menu-replace");
+  await expect(page.locator(".find-replace-input").nth(1)).toBeVisible();
+});
