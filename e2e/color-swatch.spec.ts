@@ -20,12 +20,6 @@ async function open(page: Page, mode: ColorSwatchMode, doc = DOC) {
   if (doc === DOC) await expect(page.locator(`${editor} code`)).toHaveCount(3);
 }
 
-test("swatches stay out of a printout", async ({ page }) => {
-  await open(page, "everywhere");
-  await page.emulateMedia({ media: "print" });
-  await expect(page.locator(swatch).first()).toBeHidden();
-});
-
 /** The paragraph's content as the editor holds it. */
 const paragraph = (page: Page) =>
   page.evaluate(() => {
@@ -191,9 +185,13 @@ test("every swatch is painted, in its colour, at a size that shows", async ({
     expect(p, p.colour).toMatchObject({ shows: true, paints: true });
 });
 
-test("a plain-text swatch stays out of a printout", async ({ page }) => {
-  await open(page, "everywhere", RICH);
+test("swatches, in code and in plain text, stay out of a printout", async ({
+  page,
+}) => {
+  await open(page, "everywhere", `${RICH}\n\n${DOC}`);
+  await expect(page.locator(swatch).first()).toBeVisible();
   await page.emulateMedia({ media: "print" });
+  await expect(page.locator(swatch).first()).toBeHidden();
   const display = await page
     .locator(textSwatch)
     .first()
