@@ -9,19 +9,15 @@ import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 const bar = '[role="menubar"]';
 
-test("off by default: the ☰ and the sidebar's button", async ({ page }) => {
+test("off by default; Settings turns it on, and the sidebar's button makes room", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   await expect(page.locator(".window-menu-button")).toBeVisible();
   await expect(
     page.locator('.window-bar [aria-label="Sidebar"]'),
   ).toBeVisible();
   await expect(page.locator(bar)).toHaveCount(0);
-});
-
-test("Settings turns it on, and the sidebar's button makes room", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
   await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await dialog
