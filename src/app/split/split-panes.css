@@ -11,7 +11,7 @@
   min-width: 0;
 }
 .main-pane.main-pane-split > .tab-bar.tab-bar-inner {
-  height: calc(var(--header-height) - 28px);
+  height: calc(var(--header-height) - var(--window-bar-height));
   padding-top: 4px;
 }
 

@@ -31,7 +31,18 @@ import {
   type SourceEdit,
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
+import { tellCopied } from "../../clipboard/copied";
 import "./source-editor.css";
+
+/** What a copy or cut takes: the selected ranges, a line apart. */
+function tellSelection(view: EditorView, cut: boolean) {
+  const { state } = view;
+  const text = state.selection.ranges
+    .filter((range) => !range.empty)
+    .map((range) => state.sliceDoc(range.from, range.to))
+    .join(state.lineBreak);
+  tellCopied(text, cut);
+}
 
 // Read-only refuses changes but stays focusable: the caret still moves,
 // and the caret carried over from the rich view still lands.
@@ -107,6 +118,8 @@ export function SourceEditor({
           // anything it leaves alone is CodeMirror's own.
           EditorView.domEventHandlers({
             paste: (event, view) => pasteRef.current?.(event, view) ?? false,
+            copy: (_event, view) => (tellSelection(view, false), false),
+            cut: (_event, view) => (tellSelection(view, true), false),
           }),
           compartment.of(readOnlyOf(latest.current.readOnly)),
           EditorView.updateListener.of((update) => {

@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { selectAllIn } from "../keys/select-all";
 import { openToText } from "../markdown/parse-markdown-source";
 import type { EditorRunner } from "../useEditorRunner";
-import { recordClipboardEntry } from "../../clipboard/history";
+import { tellCopied } from "../../clipboard/copied";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 import { pastePlainText } from "./paste-plain";
 import { clipboardIpc } from "../../platform/ipc";
@@ -69,9 +69,8 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
         void (async () => {
           if (text) {
             await writeClipboard(dom.innerHTML, text, png);
-            // navigator.clipboard bypasses the DOM copy event the history's
-            // document-level capture listens on - record explicitly.
-            recordClipboardEntry(text);
+            // navigator.clipboard bypasses the DOM copy event.
+            tellCopied(text, cut);
           }
           if (cut)
             view.dispatch(
@@ -94,7 +93,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
       if (!text) return;
       void (async () => {
         await navigator.clipboard.writeText(text).catch(() => {});
-        recordClipboardEntry(text);
+        tellCopied(text);
         view.focus();
       })();
     });

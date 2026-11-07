@@ -11,8 +11,17 @@ async function fontSize(page: Page, selector: string): Promise<number> {
     .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 }
 
+async function box(page: Page, selector: string) {
+  const b = await page.locator(selector).first().boundingBox();
+  if (!b) throw new Error(`${selector} isn't shown`);
+  return b;
+}
+
 async function sizes(page: Page) {
   return {
+    bar: (await box(page, ".window-bar")).height,
+    barButton: (await box(page, ".window-bar-sidebar-toggle")).width,
+    tabIcon: (await box(page, ".sidebar-tab svg")).width,
     outline: await fontSize(page, ".sidebar .outline-row .tree-label"),
     composer: await fontSize(page, ".agent-panel-view textarea"),
     tab: await fontSize(page, ".tab-pill-title"),
@@ -20,7 +29,7 @@ async function sizes(page: Page) {
   };
 }
 
-test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the document", async ({
+test("Interface Text Size scales the sidebar, the tabs, the AI panel and the icons, not the document", async ({
   page,
 }) => {
   await openApp(page, {
@@ -47,7 +56,26 @@ test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the
   expect(after.outline).toBeCloseTo(before.outline * 1.25, 1);
   expect(after.composer).toBeCloseTo(before.composer * 1.25, 1);
   expect(after.tab).toBeCloseTo(before.tab * 1.25, 1);
+  expect(after.bar).toBeCloseTo(before.bar * 1.25, 0);
+  expect(after.barButton).toBeCloseTo(before.barButton * 1.25, 0);
+  expect(after.tabIcon).toBeCloseTo(before.tabIcon * 1.25, 0);
   expect(after.document).toBe(before.document);
+});
+
+test("full screen takes the window's icons and bar a step up", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-sidebar-open": "1" },
+  });
+  const before = await box(page, ".window-bar-sidebar-toggle");
+  await page.evaluate(() => {
+    document.documentElement.dataset.windowFullscreen = "";
+  });
+  const after = await box(page, ".window-bar-sidebar-toggle");
+  expect(after.width).toBeGreaterThan(before.width * 1.1);
+  expect((await box(page, ".window-bar")).height).toBeGreaterThan(30);
 });
 
 test("the detached chat window follows Interface Text Size too", async ({

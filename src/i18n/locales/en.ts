@@ -552,6 +552,7 @@ type /name in a conversation to use one.
   treeSearchScopeDocuments: "Documents only",
   treeNewDocument: "New Document",
   treeNewFolder: "New Folder",
+  treeEmptyHint: "Double-click here for a new document.",
   treeNewDocumentPrompt: "Name of the new document",
   treeNewFolderPrompt: "Name of the new folder",
   treeNewDocumentDefault: "Untitled",
@@ -1447,10 +1448,6 @@ type /name in a conversation to use one.
   privacyChatHistoryToggle: "Save chat conversations",
   privacyChatHistoryClearHint:
     "Removes every saved conversation. This can't be undone.",
-  privacyClipboardHistoryLabel: "Clipboard History",
-  privacyClipboardHistoryToggle: "Save clipboard history",
-  privacyClipboardHistoryClearHint:
-    "Removes everything in the clipboard history. This can't be undone.",
   privacyDraftRecoveryLabel: "Draft Recovery",
   privacyDraftRecoveryToggle: "Recover unsaved content after a crash",
   privacyKeepUnsavedToggle: "Keep unsaved changes when closing, without asking",
@@ -1460,12 +1457,7 @@ type /name in a conversation to use one.
     "Removes any snapshots currently on disk. This can't be undone.",
   privacyClearButton: "Clear",
   privacyClearChatHistory: "Clear Chat History",
-  privacyClearClipboard: "Clear Clipboard History",
   privacyClearDrafts: "Delete Recovery Drafts",
-  clipboardTab: "Clipboard",
-  clipboardEmpty: "Copied and pasted text will show up here.",
-  clipboardClear: "Clear",
-  clipboardCopy: "Copy",
   clipboardInsertHint: "Click to insert at the cursor",
   exportNeedsWysiwyg:
     "HTML export uses the rendered view. Leave Source Code Mode first, then export again.",
@@ -1658,6 +1650,7 @@ type /name in a conversation to use one.
   pluginOpenInstall: "Install and open",
   pluginOpenTurnOnButton: "Turn on and open",
   pluginCardLine: "Plugin suggestion: {name}",
+  pluginCardMovedLine: "{name} is a plugin now",
   conventionsCardLine:
     "This folder's {app} settings store pictures in {folder}",
   conventionsCardDetails:

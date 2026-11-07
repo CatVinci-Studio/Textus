@@ -41,7 +41,7 @@
 
 /* Below the window bar: the bar's own row stays the window's to drag. */
 .sidebar-resizer {
-  top: 28px;
+  top: var(--window-bar-height);
   right: -3px;
 }
 
@@ -88,7 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 4px;
+  padding: calc(4px * var(--chrome-scale)) 4px;
   border: none;
 }
 

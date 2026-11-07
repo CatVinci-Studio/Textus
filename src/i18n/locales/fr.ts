@@ -573,6 +573,7 @@ utiliser une.
   treeSearchScopeDocuments: "Documents seulement",
   treeNewDocument: "Nouveau document",
   treeNewFolder: "Nouveau dossier",
+  treeEmptyHint: "Double-cliquez ici pour un nouveau document.",
   treeNewDocumentPrompt: "Nom du nouveau document",
   treeNewFolderPrompt: "Nom du nouveau dossier",
   treeNewDocumentDefault: "Sans titre",
@@ -1509,10 +1510,6 @@ utiliser une.
   privacyChatHistoryToggle: "Enregistrer les conversations",
   privacyChatHistoryClearHint:
     "Supprime toutes les conversations enregistrées. Cette action est irréversible.",
-  privacyClipboardHistoryLabel: "Historique du presse-papiers",
-  privacyClipboardHistoryToggle: "Enregistrer l'historique du presse-papiers",
-  privacyClipboardHistoryClearHint:
-    "Supprime tout le contenu de l'historique du presse-papiers. Cette action est irréversible.",
   privacyDraftRecoveryLabel: "Récupération des brouillons",
   privacyDraftRecoveryToggle:
     "Récupérer le contenu non enregistré après un plantage",
@@ -1524,12 +1521,7 @@ utiliser une.
     "Supprime les instantanés présents sur le disque. Cette action est irréversible.",
   privacyClearButton: "Effacer",
   privacyClearChatHistory: "Effacer l'historique des discussions",
-  privacyClearClipboard: "Effacer l'historique du presse-papiers",
   privacyClearDrafts: "Supprimer les brouillons de récupération",
-  clipboardTab: "Presse-papiers",
-  clipboardEmpty: "Le texte copié et collé apparaîtra ici.",
-  clipboardClear: "Effacer",
-  clipboardCopy: "Copier",
   clipboardInsertHint: "Cliquez pour insérer au curseur",
   exportNeedsWysiwyg:
     "L'export HTML utilise la vue mise en forme. Quittez d'abord le mode source, puis exportez de nouveau.",
@@ -1727,6 +1719,7 @@ utiliser une.
   pluginOpenInstall: "Installer et ouvrir",
   pluginOpenTurnOnButton: "Activer et ouvrir",
   pluginCardLine: "Plugin suggéré : {name}",
+  pluginCardMovedLine: "{name} est désormais un plugin",
   conventionsCardLine:
     "Les réglages {app} de ce dossier placent les images dans {folder}",
   conventionsCardDetails:

@@ -41,7 +41,10 @@ export function catalogEditorFor(
 
 /** Installs the card's plugin, or turns it on, asking for its permissions
  *  first; whether it is on now. */
-async function takeUp(request: CardRequest, t: Strings): Promise<boolean> {
+export async function takeUp(
+  request: CardRequest,
+  t: Strings,
+): Promise<boolean> {
   try {
     if (request.installed) await setPluginEnabled(request.plugin, true);
     else await installFromCatalog(request.plugin);

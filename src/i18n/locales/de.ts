@@ -562,6 +562,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchScopeDocuments: "Nur Dokumente",
   treeNewDocument: "Neues Dokument",
   treeNewFolder: "Neuer Ordner",
+  treeEmptyHint: "Hier doppelklicken für ein neues Dokument.",
   treeNewDocumentPrompt: "Name des neuen Dokuments",
   treeNewFolderPrompt: "Name des neuen Ordners",
   treeNewDocumentDefault: "Unbenannt",
@@ -1483,10 +1484,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyChatHistoryToggle: "Unterhaltungen speichern",
   privacyChatHistoryClearHint:
     "Entfernt alle gespeicherten Unterhaltungen. Das lässt sich nicht rückgängig machen.",
-  privacyClipboardHistoryLabel: "Verlauf der Zwischenablage",
-  privacyClipboardHistoryToggle: "Verlauf der Zwischenablage speichern",
-  privacyClipboardHistoryClearHint:
-    "Entfernt alles aus dem Verlauf der Zwischenablage. Das lässt sich nicht rückgängig machen.",
   privacyDraftRecoveryLabel: "Wiederherstellung von Entwürfen",
   privacyDraftRecoveryToggle:
     "Nicht gespeicherte Inhalte nach einem Absturz wiederherstellen",
@@ -1498,12 +1495,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Entfernt alle derzeit gespeicherten Zwischenstände. Das lässt sich nicht rückgängig machen.",
   privacyClearButton: "Löschen",
   privacyClearChatHistory: "Chatverlauf löschen",
-  privacyClearClipboard: "Verlauf der Zwischenablage löschen",
   privacyClearDrafts: "Wiederherstellungsdaten löschen",
-  clipboardTab: "Zwischenablage",
-  clipboardEmpty: "Kopierter und eingefügter Text erscheint hier.",
-  clipboardClear: "Leeren",
-  clipboardCopy: "Kopieren",
   clipboardInsertHint: "Klicken, um am Cursor einzufügen",
   exportNeedsWysiwyg:
     "Der HTML-Export verwendet die gerenderte Ansicht. Verlasse zuerst den Quellcodemodus und exportiere dann erneut.",
@@ -1698,6 +1690,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginOpenInstall: "Installieren und öffnen",
   pluginOpenTurnOnButton: "Einschalten und öffnen",
   pluginCardLine: "Plugin-Empfehlung: {name}",
+  pluginCardMovedLine: "{name} ist jetzt ein Plugin",
   conventionsCardLine:
     "Die {app}-Einstellungen dieses Ordners legen Bilder in {folder} ab",
   conventionsCardDetails:

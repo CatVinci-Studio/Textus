@@ -21,6 +21,7 @@ import { isDocumentName } from "./file-search";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree } from "./tree-shared";
+import { DraftRow } from "./DraftRow";
 
 interface DirNodeProps {
   path: string;
@@ -63,10 +64,12 @@ export function DirNode({
   useEffect(() => {
     if (activePath !== null && isInside(activePath, path)) setOpen(true);
   }, [activePath, path]);
-  // Something was made in it or moved into it: show it.
+  // Something was made in it or moved into it, or is being named in it:
+  // show it.
+  const drafting = tree.draft?.dir === path ? tree.draft.kind : null;
   useEffect(() => {
-    if (version > 0) setOpen(true);
-  }, [version]);
+    if (version > 0 || drafting) setOpen(true);
+  }, [version, drafting]);
 
   useEffect(() => {
     if (!open || loaded?.listing === listing) return;
@@ -133,6 +136,19 @@ export function DirNode({
       )}
       {open && sorted && (
         <div className="dir-children" role={depth > 0 ? "group" : "none"}>
+          {drafting && loaded && (
+            <DraftRow
+              kind={drafting}
+              depth={depth + 1}
+              entries={loaded.entries}
+            />
+          )}
+          {depth === 0 &&
+            sorted.length === 0 &&
+            !drafting &&
+            tree.draftHint && (
+              <p className="tree-empty-hint">{tree.draftHint}</p>
+            )}
           {sorted.map((entry) =>
             entry.is_dir ? (
               <DirNode

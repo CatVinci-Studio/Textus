@@ -558,6 +558,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchScopeDocuments: "Só documentos",
   treeNewDocument: "Novo documento",
   treeNewFolder: "Nova pasta",
+  treeEmptyHint: "Clique duas vezes aqui para um documento novo.",
   treeNewDocumentPrompt: "Nome do novo documento",
   treeNewFolderPrompt: "Nome da nova pasta",
   treeNewDocumentDefault: "Sem título",
@@ -1468,10 +1469,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   privacyChatHistoryToggle: "Salvar as conversas do chat",
   privacyChatHistoryClearHint:
     "Remove todas as conversas salvas. Esta ação não pode ser desfeita.",
-  privacyClipboardHistoryLabel: "Histórico da área de transferência",
-  privacyClipboardHistoryToggle: "Salvar o histórico da área de transferência",
-  privacyClipboardHistoryClearHint:
-    "Remove tudo do histórico da área de transferência. Esta ação não pode ser desfeita.",
   privacyDraftRecoveryLabel: "Recuperação de rascunhos",
   privacyDraftRecoveryToggle: "Recuperar conteúdo não salvo após uma falha",
   privacyKeepUnsavedToggle:
@@ -1482,12 +1479,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Remove os instantâneos que estiverem no disco. Esta ação não pode ser desfeita.",
   privacyClearButton: "Limpar",
   privacyClearChatHistory: "Limpar histórico de conversas",
-  privacyClearClipboard: "Limpar histórico da área de transferência",
   privacyClearDrafts: "Apagar rascunhos de recuperação",
-  clipboardTab: "Área de transferência",
-  clipboardEmpty: "O texto que você copiar e colar aparecerá aqui.",
-  clipboardClear: "Limpar",
-  clipboardCopy: "Copiar",
   clipboardInsertHint: "Clique para inserir no cursor",
   exportNeedsWysiwyg:
     "A exportação para HTML usa a visualização renderizada. Saia do modo código-fonte e exporte de novo.",
@@ -1681,6 +1673,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginOpenInstall: "Instalar e abrir",
   pluginOpenTurnOnButton: "Ligar e abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  pluginCardMovedLine: "{name} agora é um plugin",
   conventionsCardLine:
     "As configurações do {app} desta pasta guardam as imagens em {folder}",
   conventionsCardDetails:

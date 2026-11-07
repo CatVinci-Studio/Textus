@@ -25,7 +25,11 @@ export function SuggestCard({ t }: { t: Strings }) {
   const name = item
     ? pluginName({ id: item.id, manifest: item.manifest })
     : (request?.plugin ?? "");
-  const line = t.pluginCardLine.replace("{name}", name);
+  const line = (
+    request?.situation.type === "moved"
+      ? t.pluginCardMovedLine
+      : t.pluginCardLine
+  ).replace("{name}", name);
   useEffect(() => {
     if (request) announce(line);
   }, [request, line]);

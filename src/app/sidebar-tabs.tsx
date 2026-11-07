@@ -1,8 +1,7 @@
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
-import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
+import { TreeTabIcon, OutlineTabIcon } from "../ui/icons";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { PHONE_QUERY } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
@@ -64,7 +63,6 @@ function FilesPanel({
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
         onOpenFile(path, beside);
       }}
-      onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}
@@ -88,12 +86,6 @@ const BUILT_IN: SidebarTabDef[] = [
     Panel: ({ activeContent, activeTabId }) => (
       <Outline content={activeContent} tabId={activeTabId} />
     ),
-  },
-  {
-    id: "clipboard",
-    label: (t) => t.clipboardTab,
-    Icon: ClipboardTabIcon,
-    Panel: () => <ClipboardHistory />,
   },
 ];
 

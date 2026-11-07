@@ -156,6 +156,9 @@ export interface PluginEventMap {
    *  changed it (the user's wins when several did meanwhile). */
   documentChange: { path: string | null; source: ChangeSource };
   selection: { text: string };
+  /** The user copied or cut text from a document: the Markdown that went
+   *  on the clipboard. */
+  copy: { text: string; cut: boolean };
   activeTab: PluginTabInfo | null;
   layout: null;
   root: { path: string | null };

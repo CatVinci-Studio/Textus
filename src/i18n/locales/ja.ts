@@ -536,6 +536,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchScopeDocuments: "文書のみ",
   treeNewDocument: "新規ドキュメント",
   treeNewFolder: "新規フォルダ",
+  treeEmptyHint: "ここをダブルクリックすると新しい文書を作れます。",
   treeNewDocumentPrompt: "新しいドキュメントの名前",
   treeNewFolderPrompt: "新しいフォルダの名前",
   treeNewDocumentDefault: "名称未設定",
@@ -1421,10 +1422,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   privacyChatHistoryToggle: "チャット履歴を保存",
   privacyChatHistoryClearHint:
     "保存済みの会話をすべて削除します。元に戻せません。",
-  privacyClipboardHistoryLabel: "クリップボード履歴",
-  privacyClipboardHistoryToggle: "クリップボード履歴を保存",
-  privacyClipboardHistoryClearHint:
-    "クリップボード履歴の内容をすべて削除します。元に戻せません。",
   privacyDraftRecoveryLabel: "下書きの復元",
   privacyDraftRecoveryToggle: "クラッシュ後に未保存の内容を復元する",
   privacyKeepUnsavedToggle: "閉じるときに未保存の変更を残す（確認しない）",
@@ -1434,12 +1431,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "ディスク上のスナップショットをすべて削除します。元に戻せません。",
   privacyClearButton: "消去",
   privacyClearChatHistory: "チャット履歴を消去",
-  privacyClearClipboard: "クリップボード履歴を消去",
   privacyClearDrafts: "復元用の下書きを削除",
-  clipboardTab: "クリップボード",
-  clipboardEmpty: "コピーまたは貼り付けたテキストがここに表示されます。",
-  clipboardClear: "クリア",
-  clipboardCopy: "コピー",
   clipboardInsertHint: "クリックしてカーソル位置に挿入",
   exportNeedsWysiwyg:
     "HTMLエクスポートは表示モードの内容を使用します。まずソースコードモードを終了してから、再度エクスポートしてください。",
@@ -1632,6 +1624,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginOpenInstall: "インストールして開く",
   pluginOpenTurnOnButton: "オンにして開く",
   pluginCardLine: "おすすめのプラグイン：{name}",
+  pluginCardMovedLine: "{name}はプラグインになりました",
   conventionsCardLine:
     "このフォルダの {app} 設定では、画像を {folder} に保存します",
   conventionsCardDetails:

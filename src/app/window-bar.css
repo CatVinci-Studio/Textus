@@ -7,7 +7,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 28px;
+  height: var(--window-bar-height);
   z-index: 45;
   display: flex;
   align-items: center;
@@ -51,7 +51,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 28px;
+  height: var(--window-bar-height);
   z-index: 44;
   pointer-events: none;
 }
@@ -86,9 +86,12 @@
 }
 
 /* macOS 26 centres the traffic lights in a 32pt title bar; the row keeps
-   28px and drops its contents to the lights' centre. */
+   its height and drops its contents to the lights' centre. */
 :root[data-window-chrome="native"] .window-bar {
-  padding-top: max(0px, var(--native-titlebar-height, 28px) - 28px);
+  padding-top: max(
+    0px,
+    var(--native-titlebar-height, 28px) - var(--window-bar-height)
+  );
 }
 
 /* In full screen the lights' corner is free, and the sidebar's toggle takes
@@ -118,7 +121,7 @@
     .image-name-overlay,
     .close-prompt-overlay
   ) {
-  top: 28px;
+  top: var(--window-bar-height);
 }
 
 /* Centered on the window, where a native title sits, hence absolute. */
@@ -230,8 +233,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 20px;
+  width: calc(22px * var(--chrome-scale));
+  height: calc(20px * var(--chrome-scale));
   padding: 0;
   border: none;
   border-radius: var(--shape-pill);
@@ -325,9 +328,9 @@
 }
 
 /* Every column's top row ends on one line: the sidebar's, each pane's tab
-   bar and the AI panel's header (which starts below the 28px window bar). */
+   bar and the AI panel's header (which starts below the window bar). */
 :root {
-  --header-height: 64px;
+  --header-height: calc(var(--window-bar-height) + 36px * var(--chrome-scale));
 }
 
 :root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
@@ -342,7 +345,7 @@
 }
 
 :root:not([data-window-chrome="mobile"]) .agent-panel-header {
-  height: calc(var(--header-height) - 28px);
+  height: calc(var(--header-height) - var(--window-bar-height));
 }
 
 .sidebar-body {

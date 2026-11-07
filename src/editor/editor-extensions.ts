@@ -123,7 +123,7 @@ import { createLinkClickPlugin } from "./markdown/link-click-plugin";
 import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
 import { addEmojiCompletion } from "./emoji/emoji-completion";
-import { clipboardHistoryPlugin } from "../clipboard/history-plugin";
+import { copiedPlugin } from "../clipboard/copied-plugin";
 import { copyTextPlugin } from "./clipboard/copy-text-plugin";
 import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
 import { pictureCopyPlugin } from "./images/picture-clipboard";
@@ -208,7 +208,7 @@ export function withEditorCore(
       }
     | {
         /** No disk behind the page (the playground): pasted images aren't stored
-         *  and no clipboard history is kept; this plugin takes image pastes. */
+         *  this plugin takes image pastes. */
         noDiskImages: MilkdownPlugin;
       }
   ),
@@ -418,7 +418,7 @@ export function withEditorCore(
       .use(pictureCopyPlugin)
       .use(pastePlainTextKeyPlugin)
       .use(clipboard)
-      .use(disk ? clipboardHistoryPlugin : [])
+      .use(copiedPlugin)
       // The playground leaves links to the browser it runs in.
       .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
       .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])

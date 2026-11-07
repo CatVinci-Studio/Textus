@@ -76,7 +76,7 @@
 }
 
 .tree-root-label {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -100,7 +100,8 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 1;
+  /* Gives way first: the folder the tree shows matters more. */
+  flex-shrink: 8;
   min-width: 0;
   max-width: 45%;
   padding: 2px 4px;
@@ -327,4 +328,31 @@
 .tree-row-ignored .tree-label,
 .tree-row-ignored .tree-icon {
   opacity: 0.5;
+}
+
+/* A new entry's name, typed in place: the row stays a row, the field
+   is its label. */
+.tree-row-draft,
+.tree-row-draft:hover {
+  cursor: default;
+  background: none;
+}
+
+.tree-draft-input {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0 4px;
+  border: 1px solid var(--ui-accent);
+  border-radius: var(--shape-xs);
+  background: var(--ui-bg);
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.tree-empty-hint {
+  margin: 8px;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
 }

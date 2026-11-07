@@ -90,6 +90,11 @@ export function ProjectIcon({ className }: IconProps) {
 
 /** File > Open Folder…: the folder outline with a plus in it. */
 export function OpenFolderIcon({ className }: IconProps) {
+  return <NewFolderIcon className={className} />;
+}
+
+/** The tree's New Folder: the folder outline with a plus. */
+export function NewFolderIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -106,6 +111,32 @@ export function OpenFolderIcon({ className }: IconProps) {
       />
       <path
         d="M8 6.5V10.5M6 8.5H10"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** The tree's New Document: a page with a plus. */
+export function NewDocumentIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <path
+        d="M3.5 2C3.5 1.72 3.72 1.5 4 1.5H9L12.5 5V13.5C12.5 13.78 12.28 14 12 14H4C3.72 14 3.5 13.78 3.5 13.5V2Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 7V11.5M5.75 9.25H10.25"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"
@@ -262,42 +293,6 @@ export function OutlineTabIcon({ className }: IconProps) {
         d="M6.9 12.5H14"
         stroke="currentColor"
         strokeWidth="1.2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-export function ClipboardTabIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        x="3"
-        y="2.8"
-        width="10"
-        height="11.5"
-        rx="1.3"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <rect
-        x="5.5"
-        y="1.5"
-        width="5"
-        height="2.4"
-        rx="0.8"
-        fill="currentColor"
-      />
-      <path
-        d="M5.5 7.5H10.5M5.5 10.5H10.5"
-        stroke="currentColor"
-        strokeWidth="1.1"
         strokeLinecap="round"
       />
     </svg>
@@ -486,36 +481,6 @@ export function DetachIcon({ className }: IconProps) {
       />
       <path
         d="M9.8 2.5H13.5V6.2M13.5 2.5L8.2 7.8"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** Copy to clipboard. */
-export function CopyIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="13"
-      height="13"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        x="5.5"
-        y="5.5"
-        width="8"
-        height="8"
-        rx="1.2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M10.5 5.5V3.7C10.5 3.03 9.97 2.5 9.3 2.5H3.7C3.03 2.5 2.5 3.03 2.5 3.7V9.3C2.5 9.97 3.03 10.5 3.7 10.5H5.5"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"

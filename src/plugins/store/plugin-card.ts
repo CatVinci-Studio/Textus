@@ -13,7 +13,9 @@ import { extname } from "../../utils/path";
 export type CardSituation =
   | { type: "offer"; caller: { id: string; name: string } }
   | { type: "content"; kind: string }
-  | { type: "open"; path: string };
+  | { type: "open"; path: string }
+  /** A feature of the core that is this plugin now. */
+  | { type: "moved"; feature: string };
 
 export interface CardRequest {
   /** The suggested plugin's id, in the catalog. */
@@ -37,6 +39,7 @@ export function cardKey(request: CardRequest): string {
   const s = request.situation;
   if (s.type === "offer") return `offer:${s.caller.id}:${request.plugin}`;
   if (s.type === "content") return `content:${s.kind}`;
+  if (s.type === "moved") return `moved:${s.feature}`;
   return `open:${extname(s.path).toLowerCase() || s.path}`;
 }
 

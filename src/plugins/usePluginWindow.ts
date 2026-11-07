@@ -1,5 +1,7 @@
 import { watchConventions } from "./contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
+import { onCopied } from "../clipboard/copied";
+import { offerMovedFeatures } from "./store/moved-offer";
 import { watchDevPlugins } from "./store/dev-reload";
 import { watchPluginAiTools } from "./contributions/ai-tools";
 import { setCompletionAsker } from "./contributions/completion-sources";
@@ -84,8 +86,10 @@ export function usePluginWindow({
       }),
     });
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
+    // And offer, once, the plugins features of the core became.
     void loadPlugins()
       .then(() => migrateOfficialPlugins())
+      .then(() => offerMovedFeatures(tRef.current))
       .catch(() => {});
   }, [tRef, languageRef, settingsRef]);
 
@@ -251,6 +255,7 @@ export function usePluginWindow({
     [activePath],
   );
   useEffect(() => emitPluginEvent("language", language), [language]);
+  useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
   useEffect(() => {
     let dark = windowIsDark();
     return watchTheme(() => {
