@@ -236,6 +236,19 @@ it(":name lists emoji, and taking one writes its shortcode", async () => {
   expect(t.markdown()).toBe("so :smile:");
 });
 
+it("a time's colon offers no emoji", async () => {
+  const { addEmojiCompletion } = await import("../emoji/emoji-completion");
+  const { emojiNames } = await import("../emoji/emoji-shortcode-plugin");
+  addEmojiCompletion(() => "Emoji");
+  await emojiNames.load();
+  const t = await openView("");
+  // ":10" would offer :100: if a time's colon counted.
+  t.type("at 10:10");
+  expect(rows()).toEqual([]);
+  t.type(" :tada");
+  expect(rows()[0]).toBe("tada");
+});
+
 it("nothing opens in a code block", async () => {
   source({
     id: "a.words.at",
