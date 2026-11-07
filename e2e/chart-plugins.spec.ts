@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { emit } from "./helpers";
 import { hasPlugin, openWithPlugins, openPath } from "./plugin-helpers";
 
 /**
@@ -114,5 +115,29 @@ test("a mistake in a chart's source is said under it", async ({ page }) => {
     .first();
   await expect(frame.locator("#chart-problem")).toBeVisible({
     timeout: 20_000,
+  });
+});
+
+test("split view's preview draws a plugin's block as the rendered view does", async ({
+  page,
+}) => {
+  test.skip(
+    !hasPlugin("catvinci.markmap"),
+    "no markmap plugin in this checkout",
+  );
+  await openWithPlugins(page, {
+    plugins: { "catvinci.markmap": [] },
+    folder: { "/work/m.md": "# M\n\n```markmap\n# Root\n## A\n```\n" },
+  });
+  await openPath(page, "/work/m.md");
+  await emit(page, "menu-toggle-split-view");
+  const frame = page
+    .locator(
+      '[data-active-tab="true"] .split-preview .plugin-code-block iframe',
+    )
+    .first();
+  await expect(frame).toBeAttached({ timeout: 30_000 });
+  await expect(frame.contentFrame().locator("#chart svg").first()).toBeVisible({
+    timeout: 30_000,
   });
 });

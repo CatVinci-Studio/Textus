@@ -41,6 +41,7 @@ import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 import { copyPathItem } from "../clipboard/copy-path";
+import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -343,6 +344,7 @@ export function MainPane({
                   typewriter={typewriter}
                   onChange={(markdown) => onChange(tab.id, markdown)}
                   readOnly={tabReadOnly(tab)}
+                  previewExtras={withPluginBlocks}
                 />
               </Suspense>
             ) : tab.sourceMode ? (
