@@ -103,19 +103,14 @@ async function openDoc(page: Page) {
   ).toHaveCount(4);
 }
 
-test("equation numbers run on across the formulas in the editor", async ({
+test("equation numbers run on across the formulas, in the editor and the split view's preview", async ({
   page,
 }) => {
   await openDoc(page);
   expect(
     await equationLabels(page, '[data-active-tab="true"] .milkdown'),
   ).toEqual(EXPECTED);
-});
-
-test("the split view's preview numbers the formulas the same way", async ({
-  page,
-}) => {
-  await openDoc(page);
+  // The split view's preview numbers them the same way.
   await emit(page, "menu-toggle-split-view");
   const preview = '[data-active-tab="true"] .split-preview';
   await expect(page.locator(`${preview} .katex-display`)).toHaveCount(4);
