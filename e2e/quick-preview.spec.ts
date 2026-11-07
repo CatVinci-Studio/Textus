@@ -37,7 +37,7 @@ async function restOn(page: Page, target: ReturnType<Page["locator"]>) {
   }).toPass();
 }
 
-test("a link to a section shows that section of the document in a card", async ({
+test("a link to a section shows that section in a card, which pins, closes, and opens the document there", async ({
   page,
 }) => {
   await open(page);
@@ -50,6 +50,25 @@ test("a link to a section shows that section of the document in a card", async (
   // Away from the link and the card, it goes.
   await page.mouse.move(5, 400);
   await expect(card(page)).toHaveCount(0);
+
+  // Pinned, it stays while the pointer goes, and closes by its button.
+  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
+  await card(page).getByRole("button", { name: "Pin" }).click();
+  await page.mouse.move(5, 400);
+  await page.waitForTimeout(500);
+  await expect(card(page)).toBeVisible();
+  // Typing goes on in the document meanwhile.
+  await page.locator(`${editor} p`).first().click();
+  await page.keyboard.type(" Typed.");
+  await expect(card(page)).toBeVisible();
+  await card(page).getByRole("button", { name: "Close" }).click();
+  await expect(card(page)).toHaveCount(0);
+
+  // Open goes to the document, at the section linked to.
+  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
+  await card(page).getByRole("button", { name: "Open" }).click();
+  await expect(card(page)).toHaveCount(0);
+  await expect(page.locator(`${editor} h1`)).toContainText("Two");
 });
 
 test("a wikilink shows the note's opening, without its front matter", async ({
@@ -89,33 +108,6 @@ test("a long list scrolls inside the card, its bullets too", async ({
     .last()
     .evaluate((li) => (li as HTMLElement).offsetParent?.className ?? "");
   expect(placedAgainst).toContain("hover-card-body");
-});
-
-test("Open on a card goes to the document, at the section linked to", async ({
-  page,
-}) => {
-  await open(page);
-  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
-  await card(page).getByRole("button", { name: "Open" }).click();
-  await expect(card(page)).toHaveCount(0);
-  await expect(page.locator(`${editor} h1`)).toContainText("Two");
-});
-
-test("a pinned card stays while the pointer goes, and closes by its button", async ({
-  page,
-}) => {
-  await open(page);
-  await restOn(page, page.locator(`${editor} a`, { hasText: "the harbour" }));
-  await card(page).getByRole("button", { name: "Pin" }).click();
-  await page.mouse.move(5, 400);
-  await page.waitForTimeout(500);
-  await expect(card(page)).toBeVisible();
-  // Typing goes on in the document meanwhile.
-  await page.locator(`${editor} p`).first().click();
-  await page.keyboard.type(" Typed.");
-  await expect(card(page)).toBeVisible();
-  await card(page).getByRole("button", { name: "Close" }).click();
-  await expect(card(page)).toHaveCount(0);
 });
 
 test("a citation shows what it cites, from Zotero", async ({ page }) => {
