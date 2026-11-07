@@ -143,39 +143,6 @@ test("the boot script puts the appearance on the document before the app runs", 
   ).toBe(SETTINGS.customCss);
 });
 
-test("an imported theme is on the first frame, in the variant for the appearance", async ({
-  page,
-}) => {
-  await bootLikeRust(
-    page,
-    {
-      settings: {
-        ...SETTINGS,
-        themeId: "mine",
-        userThemes: [{ id: "mine", name: "Mine", hasDark: true }],
-      },
-    },
-    {
-      light: "#write { color: rgb(1, 2, 3); }",
-      dark: "#write thead th { color: rgb(4, 5, 6); }",
-    },
-  );
-  await openApp(page);
-  const first = await page.evaluate(
-    () =>
-      (window as unknown as { __firstPaint: Record<string, unknown> })
-        .__firstPaint,
-  );
-  // Dark (pinned), with the Typora header selector rewritten as the
-  // frontend does it, and before the user's CSS.
-  expect(first.themeCss).toBe(
-    "#write tr[data-is-header] th { color: rgb(4, 5, 6); }",
-  );
-  expect(first.userTheme).toBe("");
-  expect(first.contentTheme).toBeNull();
-  expect(first.lastInHead).toBe("textus-user-css");
-});
-
 test("another window's change shows up here, except its zoom", async ({
   page,
 }) => {
@@ -353,12 +320,11 @@ test("the imported theme's chrome colours are on the first frame too", async ({
     .toBe(true);
 });
 
+// Which remembered colours the first frame takes is unit-tested
+// (boot-script.test.ts); here, that the frontend derives them afresh.
 for (const [name, theme, cache] of [
   // Derived for the light appearance; the window opens dark.
   ["another appearance", "dark", remembered()],
-  // A hand-edited theme file.
-  ["a theme file that changed", "light", remembered({ sourceLength: 3 })],
-  ["another theme", "light", remembered({ id: "other" })],
 ] as const) {
   test(`chrome colours remembered for ${name} stay off the first frame`, async ({
     page,

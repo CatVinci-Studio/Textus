@@ -6,18 +6,7 @@ import { dropPaths, openApp } from "./helpers";
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 
-test("a reload brings back an unsaved draft's text", async ({ page }) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator(editor).click();
-  await page.keyboard.type("A long piece, written before the reload.");
-  await expect(page.locator(editor)).toContainText("before the reload");
-  await page.reload();
-  await expect(page.locator(editor)).toContainText(
-    "A long piece, written before the reload.",
-  );
-});
-
-test("a reload brings back every tab, unsaved edits and all", async ({
+test("a reload brings back every tab, an unsaved draft and unsaved edits", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -27,16 +16,24 @@ test("a reload brings back every tab, unsaved edits and all", async ({
     };
   });
   await openApp(page, { settings: { language: "en", newDocumentMode: "tab" } });
+  await page.locator(editor).click();
+  await page.keyboard.type("A long piece, written before the reload.");
   await dropPaths(page, ["/notes/a.md", "/notes/b.md"]);
-  await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.md"]);
+  const tabs = page.locator(".tab-pill-title");
+  await expect(tabs).toHaveCount(3);
+  const names = await tabs.allTextContents();
   await page.locator(".tab-pill-title", { hasText: "b.md" }).click();
   await page.locator(editor).getByText("Also on disk.").click();
   await page.keyboard.press("End");
   await page.keyboard.type(" And edited.");
 
   await page.reload();
-  await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.md"]);
+  await expect(tabs).toHaveText(names);
   await expect(page.locator(editor)).toContainText("Also on disk. And edited.");
   await page.locator(".tab-pill-title", { hasText: "a.md" }).click();
   await expect(page.locator(editor)).toContainText("On disk.");
+  await tabs.first().click();
+  await expect(page.locator(editor)).toContainText(
+    "A long piece, written before the reload.",
+  );
 });

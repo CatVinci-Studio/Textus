@@ -423,7 +423,7 @@ test("an open split turns, swaps its sides and evens them out", async ({
   await expect(page.locator(panes)).toHaveCount(0);
 });
 
-test("a tab's right-click menu opens it beside the one in front", async ({
+test("a tab's right-click menu opens it beside the one in front, or moves it to a new window", async ({
   page,
 }) => {
   await openTwo(page);
@@ -435,6 +435,31 @@ test("a tab's right-click menu opens it beside the one in front", async ({
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
   await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+
+  // Move to New Window hands one.md over and takes it, and its pane, out.
+  await mockInvoke(page, { move_tab_to_new_window: null });
+  await page
+    .locator('.tab-bar [role="tab"]', { hasText: "one.md" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Move to New Window" }).click();
+  await expect(
+    page.locator('.tab-bar [role="tab"]', { hasText: "one.md" }),
+  ).toHaveCount(0);
+  await expect(page.locator(panes)).toHaveCount(0);
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "Two",
+  );
+  const sent = await page.evaluate(() =>
+    (
+      (
+        window as unknown as {
+          __devInvokeCalls?: { cmd: string; tab?: { path?: string } }[];
+        }
+      ).__devInvokeCalls ?? []
+    ).filter((c) => c.cmd === "move_tab_to_new_window"),
+  );
+  expect(sent).toHaveLength(1);
+  expect(sent[0].tab?.path).toBe("/notes/one.md");
 });
 
 test("a tab pulled down onto the document comes to the front in the middle, and splits it at an edge", async ({
@@ -522,35 +547,6 @@ test("the split is remembered and comes back once its documents are open", async
       page.evaluate(() => localStorage.getItem("textus-split-layout")),
     )
     .toBe("null");
-});
-
-test("a tab's Move to New Window hands it to a new window and takes it out of this one", async ({
-  page,
-}) => {
-  await openTwo(page);
-  await mockInvoke(page, { move_tab_to_new_window: null });
-  await page
-    .locator('.tab-bar [role="tab"]', { hasText: "one.md" })
-    .click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Move to New Window" }).click();
-  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(0);
-  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
-    "Two",
-  );
-  const sent = await page.evaluate(() =>
-    (
-      (
-        window as unknown as {
-          __devInvokeCalls?: {
-            cmd: string;
-            tab?: { path?: string };
-          }[];
-        }
-      ).__devInvokeCalls ?? []
-    ).filter((c) => c.cmd === "move_tab_to_new_window"),
-  );
-  expect(sent).toHaveLength(1);
-  expect(sent[0].tab?.path).toBe("/notes/one.md");
 });
 
 test.describe("on Linux", () => {

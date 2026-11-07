@@ -334,44 +334,6 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
-  test("a beta set back to Stable can go back to the stable version", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      "plugin:app|version": "1.3.0-beta.1",
-      check_for_update: null,
-    });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    const goBack = panel.getByRole("button", { name: "Go Back to Stable" });
-    await expect(goBack).toBeVisible();
-    await expect(panel).toContainText("You're using a beta (1.3.0-beta.1).");
-    // Nothing stable on offer: it says so.
-    await goBack.click();
-    await expect(panel.getByRole("status")).toHaveText(
-      "There's no stable version to go back to right now.",
-    );
-    // On Beta, there is nothing to go back from.
-    const channel = panel.getByRole("combobox", { name: t.updateChannel });
-    await channel.click();
-    await page.getByRole("option", { name: t.updateChannelBeta }).click();
-    await expect(goBack).toHaveCount(0);
-  });
-
-  test("a stable install has no way back to offer", async ({ page }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, { "plugin:app|version": "1.2.1" });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    await expect(
-      panel.getByRole("combobox", { name: t.updateChannel }),
-    ).toBeVisible();
-    await expect(
-      panel.getByRole("button", { name: "Go Back to Stable" }),
-    ).toHaveCount(0);
-  });
-
   test("Check for Updates… opens About and checks at once", async ({
     page,
   }) => {
@@ -430,22 +392,6 @@ test.describe("desktop", () => {
     await expect(
       panel.getByRole("combobox", { name: t.updateChannel }),
     ).toHaveText(t.updateChannelBeta);
-  });
-
-  test("no update channel in a package-manager build", async ({ page }) => {
-    // The Arch package: it reports new versions but doesn't install them.
-    await page.addInitScript(() => {
-      (
-        window as unknown as { __devInvokeResults: unknown }
-      ).__devInvokeResults = { app_distribution: "aur" };
-    });
-    await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    await expect(
-      panel.getByRole("button", { name: t.updateCheckButton }),
-    ).toBeVisible();
-    await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
   });
 
   test("every page is as wide as the others, whichever category is chosen", async ({

@@ -62,20 +62,27 @@ test("Interface Text Size scales the sidebar, the tabs, the AI panel and the ico
   expect(after.document).toBe(before.document);
 });
 
-test("full screen takes the window's icons and bar a step up", async ({
+test("a wider window takes the icons and the bar up in a straight line", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, {
     settings: { language: "en" },
     storage: { "textus-sidebar-open": "1" },
   });
-  const before = await box(page, ".window-bar-sidebar-toggle");
-  await page.evaluate(() => {
-    document.documentElement.dataset.windowFullscreen = "";
+  const chrome = async () => ({
+    bar: (await box(page, ".window-bar")).height,
+    button: (await box(page, ".window-bar-sidebar-toggle")).width,
+    tabIcon: (await box(page, ".sidebar-tab svg")).width,
   });
-  const after = await box(page, ".window-bar-sidebar-toggle");
-  expect(after.width).toBeGreaterThan(before.width * 1.1);
-  expect((await box(page, ".window-bar")).height).toBeGreaterThan(30);
+  const small = await chrome();
+  await page.setViewportSize({ width: 1840, height: 1000 });
+  await expect
+    .poll(async () => (await box(page, ".window-bar")).height)
+    .toBeCloseTo(small.bar * 1.2, 0);
+  const wide = await chrome();
+  expect(wide.button).toBeCloseTo(small.button * 1.2, 0);
+  expect(wide.tabIcon).toBeCloseTo(small.tabIcon * 1.2, 0);
 });
 
 test("the detached chat window follows Interface Text Size too", async ({
