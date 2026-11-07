@@ -68,7 +68,8 @@ test("a file opened again opens where it was last read, at another width too (#3
   await expect(page.locator(editor)).toContainText("Paragraph 399");
   const line = page.locator(`${editor} p`, { hasText: "Paragraph 300 of" });
   await line.evaluate((el) => el.scrollIntoView({ block: "start" }));
-  await settled(page);
+  // Past the debounce that keeps the place read.
+  await page.waitForTimeout(400);
   // Closed, and opened again in a narrower window.
   await page.keyboard.press("ControlOrMeta+w");
   await expect(page.locator(editor)).not.toContainText("Paragraph 399");
