@@ -205,6 +205,19 @@ export function invokeCalls(
   );
 }
 
+/** Changes settings while the app runs, as another window's change arrives. */
+export function changeSettings(page: Page, patch: Record<string, unknown>) {
+  return page.evaluate((patch) => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      ...patch,
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  }, patch);
+}
+
 /** Lets a mocked `{ __hold: true }` command answer, once it has been called. */
 export async function release(page: Page, cmd: string) {
   await expect
