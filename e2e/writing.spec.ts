@@ -894,11 +894,16 @@ async function sourceLineAt(page: Page, y: number): Promise<number> {
         '[data-active-tab="true"] .source-view .cm-line',
       ),
     );
-    const hit = lines.find((el) => {
+    // A blank line between two counts as the one above it.
+    const at = lines.findIndex((el) => {
       const box = el.getBoundingClientRect();
       return y >= box.top && y < box.bottom;
     });
-    const label = (hit ?? lines[0])?.textContent ?? "Line 0";
+    const labelled = lines
+      .slice(0, at + 1)
+      .reverse()
+      .find((el) => el.textContent);
+    const label = (labelled ?? lines[0])?.textContent ?? "Line 0";
     return Number(label.replace(/^Line\s+/, "")) || 0;
   }, y);
 }
@@ -949,9 +954,10 @@ test("mod+wheel in source mode keeps the line under the pointer", async ({
   const y = box.y + box.height * 0.3;
   const before = await sourceLineAt(page, y);
   await wheelZoom(page, box.x + box.width / 2, y, 5);
-  expect(Math.abs((await sourceLineAt(page, y)) - before)).toBeLessThanOrEqual(
-    1,
-  );
+  // CodeMirror puts the line back once it has measured the new size.
+  await expect
+    .poll(async () => Math.abs((await sourceLineAt(page, y)) - before))
+    .toBeLessThanOrEqual(1);
 });
 
 test("split view: mod+wheel holds the pane under the pointer, the other follows", async ({

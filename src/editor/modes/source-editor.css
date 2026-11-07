@@ -27,7 +27,7 @@
   background: transparent;
   color: var(--doc-text);
   font-family: var(--font-mono);
-  font-size: 1.03125rem;
+  font-size: inherit;
   line-height: 1.7;
   font-variant-ligatures: no-common-ligatures;
 }
@@ -37,14 +37,32 @@
   outline: none;
 }
 
+/* The column: the text where the rendered view's is (editor-column.css's
+   .editor-content: the column times the zoom, centred, 1.5rem inside). */
 .source-view .cm-scroller {
-  padding: 3rem 1.5rem 6rem;
+  --source-gutter: max(
+    1.5rem,
+    calc(
+      (100% - min(100%, var(--content-width) * var(--content-zoom, 1))) / 2 +
+        1.5rem
+    )
+  );
+  padding: 3rem var(--source-gutter) 6rem;
   overflow-y: auto;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;
   color: inherit;
   background: transparent;
+}
+
+/* Centred on a whole pixel: WebKitGTK resamples a focused textarea's layer
+   at x.5 and the text goes soft. Behind @supports, since an engine without
+   round() would compute it to 0. */
+@supports (padding-left: round(down, 1px, 1px)) {
+  .source-view .cm-scroller {
+    padding-left: round(down, var(--source-gutter), 1px);
+  }
 }
 
 .source-view .cm-content {
