@@ -110,4 +110,3 @@ test("a plugin's tool is offered to Textus AI and runs when called", async ({
     )
     .toEqual({ text: "3 words" });
 });
-
