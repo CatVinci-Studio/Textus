@@ -1,15 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, PHONE } from "./helpers";
 
 // Settings' search box: lists matching rows of every page, grouped by
 // page; Enter or a click goes to the row.
 
 async function openSettings(page: Page, title = "Settings") {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: title });
   await expect(dialog).toBeVisible();
   return dialog;

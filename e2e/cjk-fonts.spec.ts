@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // Han characters differ by language, so the font stacks pick faces for the
 // <html lang>, in the chrome and content themes alike. The resolved stack is
@@ -159,13 +159,7 @@ test("source mode names a mono face for Latin and a sans face for CJK before the
   // WebView2 on a Chinese Windows resolves `monospace` to NSimSun, so a named
   // face holding Chinese must come ahead of it.
   await openApp(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-toggle-source-mode"),
-  );
+  await emit(page, "menu-toggle-source-mode");
   const source = '[data-active-tab="true"] textarea.source-view';
   await expect(page.locator(source)).toBeAttached();
   for (const [lang, cjk] of [

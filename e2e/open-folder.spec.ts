@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // File > Open Folder… and the sidebar's file-name search. The folder pins
 // the tree's root; the dev shim's in-memory folder stands in for the disk.
@@ -29,18 +29,6 @@ async function open(
     settings: { language: "en", ...options.settings },
     storage: options.storage,
   });
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 /** Opens a file in a new tab, as the AI panel's project bar does. */

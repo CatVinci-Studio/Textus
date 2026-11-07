@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // The theme gallery against the dev shim's canned one: install, pick again,
 // update in place, and an unreachable gallery with a retry.
@@ -11,11 +11,7 @@ interface DevGallery {
 }
 
 async function openGallery(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await dialog
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })

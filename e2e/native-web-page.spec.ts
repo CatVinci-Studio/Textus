@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -76,16 +76,8 @@ test("closing the tab lets its page go", async ({ page }) => {
   await expect(native(page)).toHaveCount(0);
 });
 
-const emit = (page: Page, payload: unknown) =>
-  page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("web-page-navigated", p),
-    payload,
-  );
+const navigated = (page: Page, payload: unknown) =>
+  emit(page, "web-page-navigated", payload);
 
 test("a page that doesn't finish loading says so, and Reload tries again", async ({
   page,
@@ -96,7 +88,11 @@ test("a page that doesn't finish loading says so, and Reload tries again", async
     .locator('[data-active-tab="true"]')
     .getAttribute("data-tab-id");
   // A load starts and never finishes (a refused certificate, no network).
-  await emit(page, { id, url: "https://example.test/page", loading: true });
+  await navigated(page, {
+    id,
+    url: "https://example.test/page",
+    loading: true,
+  });
   await page.clock.fastForward(16_000);
   const failed = page.locator(".web-page-failed");
   await expect(failed).toBeVisible();

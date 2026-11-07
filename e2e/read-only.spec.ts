@@ -1,22 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // View › Read Only: nothing changes the document, a padlock beside the
 // title turns it off, and the file is still read-only when opened again.
 
 const editor = '[data-active-tab="true"] .ProseMirror';
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
 
 async function openNote(page: Page) {
   await page.evaluate(

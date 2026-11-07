@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // A link or image committed by an input method becomes a working link or
 // image, and is saved without escaping backslashes.
@@ -10,16 +10,6 @@ const SRC =
   "https://i.pinimg.com/originals/f8/53/b8/f853b86957f6412dc57eb2949cdfe6ae.jpg";
 const LINK = `[百度](${URL})`;
 const IMAGE = `![美女](${SRC})`;
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {

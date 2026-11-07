@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, PHONE } from "./helpers";
 
 // The first-run tour end to end. The AI lessons are watched with no AI and
 // done for real against canned answers with one; the AI only ever works on
@@ -429,13 +429,7 @@ test("Help › Video Tutorials opens the page in the UI's language", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "ja" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-tutorials"),
-  );
+  await emit(page, "menu-open-tutorials");
   await expect
     .poll(async () => (await opened(page)).at(-1))
     .toEqual({

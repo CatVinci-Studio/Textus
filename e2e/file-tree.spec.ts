@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp } from "./helpers";
+import { END, emit, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The
@@ -35,18 +35,6 @@ async function open(page: Page, more: Record<string, string> = {}) {
   await emit(page, "menu-open-recent", "/work/notes/a.md");
   await expect(page.locator(`${editor} h1`)).toContainText("Alpha");
   await emit(page, "menu-toggle-sidebar");
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 const rows = (page: Page) => page.locator(".sidebar .tree-main .tree-row");

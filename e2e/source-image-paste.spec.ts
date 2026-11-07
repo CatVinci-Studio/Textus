@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
 
 // A picture pasted in source mode is stored as one pasted in the rich
 // editor is, and written as Markdown at the caret; Undo takes it back.
@@ -9,16 +9,6 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 const source = '[data-active-tab="true"] textarea.source-view';
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 test("a picture pasted in source mode is stored and written at the caret", async ({
   page,

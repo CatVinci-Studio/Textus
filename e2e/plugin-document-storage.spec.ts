@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * ctx.storage.document(path): a plugin's data for a document follows a
@@ -49,15 +49,7 @@ const ENTRY = {
 };
 
 const run = (page: Page, command: string) =>
-  page.evaluate(
-    (id) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, p: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", id),
-    command,
-  );
+  emit(page, "menu-plugin-command", command);
 
 test("a document's plugin data follows it when it is renamed", async ({
   page,

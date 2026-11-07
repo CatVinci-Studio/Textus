@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
 
 // A revision's margin views need room right of the text. Without it they
 // can't be picked, and say why; a chosen one waits, untouched in Settings,
@@ -56,13 +56,7 @@ async function storedDisplay(page: Page) {
 }
 
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: t.settingsTitle });
   await panel.getByRole("button", { name: t.navAi, exact: true }).click();
   return panel;
@@ -149,13 +143,7 @@ test("the adaptive column leaves room for the margin views beside the AI panel a
   await page.setViewportSize({ width: 1920, height: 900 });
   await expect(page.locator(".revision-note")).toHaveCount(2);
   // The sidebar too, on a large screen.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
+  await emit(page, "menu-toggle-sidebar");
   await expect(page.locator(".sidebar:not(.sidebar-collapsed)")).toBeVisible();
   await expect(page.locator(".revision-note")).toHaveCount(2);
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);

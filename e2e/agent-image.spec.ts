@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, dropPaths, emit, mockInvoke, openApp } from "./helpers";
 
 // A picture Textus AI makes is a proposal like any other insertion: saved
 // only on Accept, Reject leaves nothing, undo restores it without a second file.
@@ -553,18 +553,7 @@ async function openSaved(page: Page, settings: Record<string, unknown> = {}) {
       ((window as unknown as Record<string, unknown>).__devFiles = files),
     { [path]: `${FIRST}\n\n${OLD}\n` },
   );
-  await page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", {
-        paths: [p],
-        position: { x: 0, y: 0 },
-      }),
-    path,
-  );
+  await dropPaths(page, [path]);
   await expect(page.locator(`${editor} p`).first()).toHaveText(FIRST);
 }
 
@@ -715,13 +704,7 @@ test("pictures per request is a setting, sent with each request", async ({
     ],
     provider_api_key_status: true,
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings
     .getByRole("button", { name: "Textus AI", exact: true })

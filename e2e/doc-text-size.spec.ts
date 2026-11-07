@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 /**
  * The reader's own document text size and line spacing, over the theme's,
@@ -19,11 +19,7 @@ test("the document takes the reader's text size and line spacing, and follows a 
   await expect(text).toHaveCSS("font-size", "20px");
   await expect(text).toHaveCSS("line-height", "41px");
 
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
     .click();

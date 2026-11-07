@@ -1,23 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  PHONE,
+  pasteMarkdown,
+  emit,
   mockInvoke,
   openApp,
   openPhone,
-  pasteMarkdown,
+  PHONE,
 } from "./helpers";
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
@@ -198,13 +187,7 @@ test("a note opened from its badge stays under the Settings backdrop", async ({
   const popover = page.locator(".review-note-popover");
   await expect(popover).toBeVisible();
   // Settings opened from the menu leaves the note open behind it.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await expect(page.locator(".settings-backdrop")).toBeVisible();
   const box = (await popover.boundingBox())!;
   const covered = await page.evaluate(

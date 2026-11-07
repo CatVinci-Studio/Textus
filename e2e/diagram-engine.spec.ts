@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
 // what Pele can't. Each engine loads only when needed; Pele's colours are CSS
@@ -10,18 +10,6 @@ const FLOW = "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```\n\nEnd.";
 const preview = '[data-active-tab="true"] .ProseMirror .mermaid-preview';
 const peleSvg = `${preview} > svg.pele`;
 const mermaidSvg = `${preview} > svg:not(.pele)`;
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, payload]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, payload),
-    [name, payload] as const,
-  );
-}
 
 /** The engines' own modules the page fetched (the dev server serves each
  *  pre-bundled under node_modules/.vite/deps). */

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Help > Report a Problem: the user's words and what Textus fills in, sent
 // to GitHub's bug form already filled, or copied.
@@ -13,11 +13,7 @@ test("a report opens GitHub's bug form filled with the words, the system and the
       __devSystem: { os: "macOS 26.1", arch: "aarch64", webview: "622.1" },
     }),
   );
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-help-report"),
-  );
+  await emit(page, "menu-help-report");
   const dialog = page.getByRole("dialog", { name: "报告问题" });
   await expect(dialog.locator(".report-problem-details")).toContainText(
     "macOS 26.1 aarch64",
@@ -49,11 +45,7 @@ test("Settings' Help group opens the report too, closing Settings", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings.getByRole("button", { name: "Report a Problem…" }).click();
   await expect(settings).toHaveCount(0);
@@ -72,11 +64,7 @@ test("a report is sent from the app, labelled by what it is, and says which issu
       number: 7,
     },
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-help-report"),
-  );
+  await emit(page, "menu-help-report");
   const dialog = page.getByRole("dialog", { name: "Report a Problem" });
   const send = dialog.getByRole("button", { name: "Send", exact: true });
   // Nothing to send until something is written.

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { emit, selectionRead } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -14,15 +14,7 @@ import {
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 const run = (page: Page, command: string) =>
-  page.evaluate(
-    (id) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, p: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", id),
-    command,
-  );
+  emit(page, "menu-plugin-command", command);
 
 async function open(
   page: Page,
@@ -135,11 +127,7 @@ test("Templates adds its item to a file's right-click menu", async ({
     "# Doc\n",
   );
   if (await page.locator(".sidebar.sidebar-collapsed").count())
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-toggle-sidebar"),
-    );
+    await emit(page, "menu-toggle-sidebar");
   await page
     .locator(".sidebar .tree-main .tree-row", { hasText: "doc.md" })
     .click({ button: "right" });

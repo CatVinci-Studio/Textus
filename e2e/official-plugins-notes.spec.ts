@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke } from "./helpers";
 import {
   openPath,
   openSidebarList,
@@ -256,12 +256,7 @@ test("saves close together are one version, listed under Today", async ({
     folder: { "/notes/essay.md": "First line\n" },
   });
   await openPath(page, "/notes/essay.md");
-  const save = () =>
-    page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-save-file"),
-    );
+  const save = () => emit(page, "menu-save-file");
   const history = await openSidebarTab(page, "History");
   for (const words of [" one", " two", " three"]) {
     await page.locator(editor).click();
@@ -293,12 +288,7 @@ test("each save is a version, shown against the text now and restorable", async 
     folder: { "/notes/essay.md": "First line\n" },
   });
   await openPath(page, "/notes/essay.md");
-  const save = () =>
-    page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-save-file"),
-    );
+  const save = () => emit(page, "menu-save-file");
   await page.locator(editor).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" and more");
@@ -325,15 +315,7 @@ test("each save is a version, shown against the text now and restorable", async 
 });
 
 const runCommand = (page: Page, command: string) =>
-  page.evaluate(
-    (c) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", c),
-    command,
-  );
+  emit(page, "menu-plugin-command", command);
 
 test("a new day's note fills in its template, and the day before is a command away", async ({
   page,

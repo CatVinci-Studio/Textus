@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
 import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
@@ -10,17 +10,6 @@ import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 const panes = ".main-pane-split > .split-pane";
 const pane = (which: "first" | "second" | "third") =>
   `.split-pane[data-pane="${which}"]`;
-
-/** A View menu item, as the native menu sends it. */
-async function emit(page: Page, name: string) {
-  await page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    name,
-  );
-}
 
 /** An item of the divider's right-click menu. */
 async function dividerMenu(page: Page, item: string) {
@@ -523,13 +512,7 @@ test("the split is remembered and comes back once its documents are open", async
     "One",
   );
   // As the next document of a session arrives: a tab of its own.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("open-paths-as-tabs", ["/notes/two.md"]),
-  );
+  await emit(page, "open-paths-as-tabs", ["/notes/two.md"]);
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(".main-pane-split")).toHaveAttribute(
     "data-split",

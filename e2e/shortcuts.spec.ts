@@ -1,21 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // Settings › Shortcuts lists the fixed shortcuts under the configurable
 // ones, and the new actions work: Ctrl+Tab between tabs, and the heading
 // levels on Ctrl+1..6. Chromium on Linux: Mod is Ctrl.
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, payload]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, payload),
-    [name, payload] as const,
-  );
-}
 
 test("Settings › Shortcuts lists the fixed shortcuts, read-only, by menu", async ({
   page,

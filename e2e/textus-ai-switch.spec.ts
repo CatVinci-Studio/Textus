@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp, openPhone, PHONE } from "./helpers";
 
 /**
  * Textus AI's switch on the window bar's AI button: off, nothing of it runs
@@ -145,11 +145,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("Escape");
   // Settings › Textus AI shows only the switch, so nothing there asks for
   // a model list either.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (e: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.locator(".settings-nav-item", { hasText: "Textus AI" }).click();
   await expect(
     page.getByRole("checkbox", { name: "开启 Textus AI" }),
@@ -254,11 +250,7 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+Alt+A");
   await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
   // The iPhone's menu, as the backend sends it.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (e: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-textus-ai"),
-  );
+  await emit(page, "menu-toggle-textus-ai");
   await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
 });
 

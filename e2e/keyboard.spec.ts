@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * The window without a mouse: F6 through the regions and back to the
@@ -18,18 +18,6 @@ const FILES: Record<string, string> = {
 };
 
 const editor = '[data-active-tab="true"] .ProseMirror';
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
-}
 
 async function open(page: Page, storage: Record<string, string> = {}) {
   await page.addInitScript((files) => {

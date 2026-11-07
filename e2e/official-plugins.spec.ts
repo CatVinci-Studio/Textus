@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { mockInvoke, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke } from "./helpers";
 import {
   minimalDocx,
   minimalPdf,
@@ -325,16 +325,7 @@ test("Web View searches words that aren't an address, and offers pages opened be
   await openWithPlugins(page, {
     plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
-  const run = (command: string) =>
-    page.evaluate(
-      (c) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (n: string, payload: unknown) => void;
-          }
-        ).__devEmitTauriEvent("menu-plugin-command", c),
-      command,
-    );
+  const run = (command: string) => emit(page, "menu-plugin-command", command);
   await run("catvinci.web-view.open");
   await page.locator(".app-dialog-input").fill("markdown tables");
   await page.keyboard.press("Enter");

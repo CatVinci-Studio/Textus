@@ -1,17 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // The sidebar's width follows the handle, stays within its bounds, is
 // remembered for the next window, and the keyboard can do the same.
 
 async function openSidebar(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
+  await emit(page, "menu-toggle-sidebar");
   await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
 }
 
@@ -88,11 +82,7 @@ test("a sidebar closed again comes back closed", async ({ page }) => {
   await expect(page.locator(".sidebar")).toHaveClass(collapsed);
   // Left open, it comes back open: the first test checks that.
   await openSidebar(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
+  await emit(page, "menu-toggle-sidebar");
   await expect(page.locator(".sidebar")).toHaveClass(collapsed);
   await reload();
   await expect(page.locator(".sidebar")).toHaveClass(collapsed);

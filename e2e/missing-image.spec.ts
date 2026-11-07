@@ -1,21 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openPhone, PHONE } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**
  * A picture that won't load shows a card in its place: its name, the reason
  * (asked of the backend, not guessed), and Choose image… / Show in folder.
  */
-
-async function emit(page: Page, name: string) {
-  await page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");

@@ -1,5 +1,5 @@
 import { expect, test, type CDPSession, type Page } from "@playwright/test";
-import { PHONE, openPhone } from "./helpers";
+import { emit, openPhone, PHONE } from "./helpers";
 
 /**
  * Tabs under a finger on a phone: held still, a tab lifts; dragged then, it
@@ -13,11 +13,7 @@ const panes = ".main-pane-split > .split-pane";
 
 async function openTwo(page: Page) {
   await openPhone(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-new-file"),
-  );
+  await emit(page, "menu-new-file");
   await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
 }
 

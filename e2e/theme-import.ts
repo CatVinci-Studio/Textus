@@ -1,4 +1,5 @@
 import { expect, type Page } from "@playwright/test";
+import { emit } from "./helpers";
 
 // Importing a Typora theme through Settings, against an in-memory theme
 // store: shared by the specs that check how imported themes apply.
@@ -54,11 +55,7 @@ export async function installThemeBackend(
 }
 
 export async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await expect(dialog).toBeVisible();
   await dialog

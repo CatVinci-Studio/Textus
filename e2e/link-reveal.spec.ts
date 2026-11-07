@@ -1,5 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, mockInvoke, openApp, selectionRead } from "./helpers";
+import {
+  dropPaths,
+  END,
+  HOME,
+  emit,
+  mockInvoke,
+  openApp,
+  selectionRead,
+} from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
 // it reads as a link again, as edited. Ctrl/Cmd+click still opens it. The
@@ -30,16 +38,7 @@ const AFTER = " link.";
 async function openDoc(page: Page) {
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, { read_text_file: `${DOC}\n`, file_mtime_ms: 1 });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: unknown) => void;
-      }
-    ).__devEmitTauriEvent("tauri://drag-drop", {
-      paths: ["/home/me/links.md"],
-      position: { x: 0, y: 0 },
-    }),
-  );
+  await dropPaths(page, ["/home/me/links.md"]);
   await expect(page.locator(`${editor} a`)).toHaveCount(KINDS.length);
 }
 
@@ -90,21 +89,13 @@ async function leave(page: Page) {
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
-  const emit = (name: string) =>
-    page.evaluate(
-      (n) =>
-        (
-          window as unknown as { __devEmitTauriEvent: (name: string) => void }
-        ).__devEmitTauriEvent(n),
-      name,
-    );
-  await emit("menu-toggle-source-mode");
+  await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
     '[data-active-tab="true"] textarea.source-view',
   );
   await expect(textarea).toBeAttached();
   const value = await textarea.inputValue();
-  await emit("menu-toggle-source-mode");
+  await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
 }

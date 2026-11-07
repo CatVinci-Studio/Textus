@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * A <details> around markdown folds it away. Whatever points into the folded
@@ -29,18 +29,6 @@ const DOC = [
   "",
   "The end.",
 ].join("\n");
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string) => void;
-        }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 async function openFolded(
   page: Page,

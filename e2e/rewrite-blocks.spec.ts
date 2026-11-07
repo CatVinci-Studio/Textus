@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { FIRST_LOAD, openApp } from "./helpers";
+import { dropPaths, FIRST_LOAD, openApp } from "./helpers";
 
 /**
  * A whole-document rewrite around a non-sentence block is still decided
@@ -101,18 +101,7 @@ for (const c of CASES) {
         ((window as unknown as Record<string, unknown>).__devFiles = files),
       { [path]: `${BEFORE}\n\n${c.block}\n\n${AFTER}\n` },
     );
-    await page.evaluate(
-      (p) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-          }
-        ).__devEmitTauriEvent("tauri://drag-drop", {
-          paths: [p],
-          position: { x: 0, y: 0 },
-        }),
-      path,
-    );
+    await dropPaths(page, [path]);
     // Its block may be maths, which waits for KaTeX's first load.
     await expect(
       page.locator('[data-active-tab="true"] .ProseMirror'),

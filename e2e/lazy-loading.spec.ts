@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // The heavy parts load on first use: a window opens with its own language's
 // strings only, Settings and the diagram and formula engines come when
@@ -10,16 +10,6 @@ function loaded(page: Page): Promise<string[]> {
     (
       window as unknown as { __loadedModules: () => string[] }
     ).__loadedModules(),
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
   );
 }
 
@@ -139,16 +129,7 @@ test("an installed plugin starts, and its views load, only once it is needed", a
     };
   }, entry);
   await openApp(page, { settings: { language: "en" } });
-  const open = (path: string) =>
-    page.evaluate(
-      (p) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (n: string, payload: unknown) => void;
-          }
-        ).__devEmitTauriEvent("menu-open-recent", p),
-      path,
-    );
+  const open = (path: string) => emit(page, "menu-open-recent", path);
   await open("/work/plain.md");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator("h1")).toContainText("Plain");

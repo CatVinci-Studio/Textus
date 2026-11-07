@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { HOME, openApp, pasteMarkdown, selectionRead } from "./helpers";
+import { pasteMarkdown, HOME, emit, openApp, selectionRead } from "./helpers";
 
 // Find and replace as other editors have it: the selected words become the
 // query, Find again goes back to the box, closing leaves the match
@@ -63,17 +63,6 @@ test("Replace All is taken back by one undo", async ({ page }) => {
     "zebra three",
   ]);
 });
-
-const emit = (page: Page, name: string) =>
-  page.evaluate(
-    (n) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n, null),
-    name,
-  );
 
 test("Find Next steps through the matches from the text, and Replace opens with its box", async ({
   page,

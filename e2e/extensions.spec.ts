@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * Settings › Extensions: plugins, themes, skills and MCP servers, one tab
@@ -8,11 +8,7 @@ import { openApp } from "./helpers";
  */
 
 async function openExtensions(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.locator(".settings-nav-item", { hasText: "Extensions" }).click();
   return panel;

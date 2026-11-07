@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
+import { emit, mockInvoke, openApp, openPhone, PHONE } from "./helpers";
 
 // The Settings panel.
 
@@ -94,13 +94,7 @@ function invokeCalls(page: Page) {
 }
 
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   return page.getByRole("dialog", { name: t.settingsTitle });
 }
 
@@ -224,13 +218,7 @@ test.describe("desktop", () => {
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    await page.evaluate(() =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-toggle-split-view"),
-    );
+    await emit(page, "menu-toggle-split-view");
     await expect(page.locator(".split-view")).toBeVisible();
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
@@ -398,11 +386,7 @@ test.describe("desktop", () => {
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-check-updates"),
-    );
+    await emit(page, "menu-check-updates");
     const panel = page.getByRole("dialog", { name: "Settings" });
     // The check ran without a click: its answer is there.
     await expect(panel.getByRole("status")).toHaveText(t.updateLatest);

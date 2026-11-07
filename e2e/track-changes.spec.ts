@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * View › Track My Changes: the writer's edits show as marked changes with
@@ -24,12 +24,7 @@ async function openDraft(page: Page, kept?: string) {
   await expect(page.locator(editor)).toContainText("at dawn");
 }
 
-const toggleTracking = (page: Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-track-changes"),
-  );
+const toggleTracking = (page: Page) => emit(page, "menu-track-changes");
 
 /** Replaces `word` in the first paragraph by typing over it. */
 async function retype(page: Page, word: string, by: string) {
@@ -66,12 +61,7 @@ const file = (page: Page) =>
     PATH,
   );
 
-const save = (page: Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-save-file"),
-  );
+const save = (page: Page) => emit(page, "menu-save-file");
 
 test("tracked edits show struck and marked, each to accept or reject", async ({
   page,
@@ -247,21 +237,13 @@ test("closed with changes still to decide, it says they are kept", async ({
 }) => {
   await openDraft(page);
   // A second tab, so closing the draft leaves the window open.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-new-file"),
-  );
+  await emit(page, "menu-new-file");
   await page.locator(".tab-bar .tab-pill-title", { hasText: "draft" }).click();
   await toggleTracking(page);
   await retype(page, "quiet", "still");
   await save(page);
   await expect.poll(() => kept(page)).toContain("still at dawn");
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-close-tab"),
-  );
+  await emit(page, "menu-close-tab");
   await expect(page.locator(".notice")).toContainText(
     "Changes to decide in draft.md: 1",
   );

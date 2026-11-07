@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Settings › General's background switch against a canned background_status.
 
@@ -17,11 +17,7 @@ async function openSettings(
 ) {
   await openApp(page, { settings: { language: "en", ...settings } });
   await mockInvoke(page, { background_status: { tray: "off" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const group = page
     .locator(".settings-group")
     .filter({ has: page.getByRole("heading", { name: t.group }) });
@@ -35,15 +31,7 @@ const stored = (page: Page) =>
   );
 
 const emitStatus = (page: Page, status: unknown) =>
-  page.evaluate(
-    (s) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, p: unknown) => void;
-        }
-      ).__devEmitTauriEvent("background-status", s),
-    status,
-  );
+  emit(page, "background-status", status);
 
 test.describe("Keep running in the background", () => {
   test("is one switch in the Application group, off by default", async ({

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // A document reopened from the last session or Open Recent comes back with
 // the caret where it was left, as long as the file hasn't changed since.
@@ -147,15 +147,7 @@ test("File > Open Recent opens a document at its last caret", async ({
     { path: PATH, doc: DOC },
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(
-    (path) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-open-recent", path),
-    PATH,
-  );
+  await emit(page, "menu-open-recent", PATH);
   await expect(page.locator(`${editor} p`)).toHaveCount(80);
   await expect
     .poll(() => caretParagraph(page))

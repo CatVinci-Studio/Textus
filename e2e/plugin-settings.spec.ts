@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -9,15 +9,6 @@ import { openWithPlugins } from "./plugin-helpers";
 
 /** The catalog's plugins, under the installed ones. */
 const AVAILABLE = ".extensions-available .plugin-card[data-catalog]";
-
-const emit = (page: Page, event: string) =>
-  page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    event,
-  );
 
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");
@@ -328,13 +319,7 @@ test("a plugin's setting can be the project's own, over the general one", async 
     },
     folder: { "/work/notes/a.md": "# A\n" },
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/notes/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/notes/a.md");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
   await openPluginsPage(page);
   await page

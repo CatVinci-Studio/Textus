@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * A plugin loaded from a folder reloads when its files change, and its
@@ -52,14 +52,7 @@ async function open(page: Page) {
   await openApp(page, { settings: { language: "en" } });
 }
 
-const say = (page: Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-plugin-command", "test.dev.say"),
-  );
+const say = (page: Page) => emit(page, "menu-plugin-command", "test.dev.say");
 
 test("a plugin loaded from a folder is loaded again when it changes", async ({
   page,
@@ -98,11 +91,7 @@ test("a plugin loaded from a folder is loaded again when it changes", async ({
 
 test("what goes wrong in a plugin is on its page", async ({ page }) => {
   await open(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="test.dev"] .plugin-card-open')
     .click();

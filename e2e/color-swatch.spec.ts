@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { pasteMarkdown, emit, openApp } from "./helpers";
 
 // A colour code gets a swatch before it, per Settings: off (the default), in
 // code only, or everywhere. The text, the caret's moves, find and what is
@@ -226,16 +226,6 @@ test("the caret crosses a plain-text colour code as it does without the swatch",
   );
   expect(before.content[0].text).toBe("Orange Y#ff8800 here.");
 });
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 test("find matches inside a colour code, which keeps one swatch", async ({
   page,

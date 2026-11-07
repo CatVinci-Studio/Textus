@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { dropPaths, mockInvoke, openApp } from "./helpers";
 
 // Obsidian wikilinks: Ctrl/Cmd+click opens the vault's note by that name in
 // a tab, while a plain click only places the caret.
@@ -13,16 +13,7 @@ test.beforeEach(async ({ page }) => {
     file_mtime_ms: 1,
     resolve_note_link: { path: "/home/me/notes/Page.md", exists: true },
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: unknown) => void;
-      }
-    ).__devEmitTauriEvent("tauri://drag-drop", {
-      paths: ["/home/me/index.md"],
-      position: { x: 0, y: 0 },
-    }),
-  );
+  await dropPaths(page, ["/home/me/index.md"]);
   await expect(page.locator(`${editor} .wikilink`)).toHaveText(
     "[[Page|the page]]",
   );

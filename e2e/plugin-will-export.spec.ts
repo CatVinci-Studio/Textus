@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * textus.export.onWillExport: a plugin adds CSS and changes the HTML; a
@@ -79,13 +79,7 @@ test("a plugin's onWillExport adds to an HTML export, and its scripts are taken 
   // Exported once the plugin has started and listens.
   await expect
     .poll(async () => {
-      await page.evaluate(() =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (n: string, p?: unknown) => void;
-          }
-        ).__devEmitTauriEvent("menu-export-html"),
-      );
+      await emit(page, "menu-export-html");
       await page.waitForTimeout(300);
       return written();
     })

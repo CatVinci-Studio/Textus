@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, selectionRead } from "./helpers";
+import { emit, openApp, selectionRead } from "./helpers";
 
 /**
  * The / panel in a real browser, against its budget: in a folder of 10,000
@@ -25,11 +25,7 @@ async function open(page: Page) {
     w.__devPickFolder = "/work/vault";
   }, folder());
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-folder"),
-  );
+  await emit(page, "menu-open-folder");
   await page.getByRole("treeitem", { name: "index.md" }).click();
   await expect(page.locator(editor)).toContainText("Start");
   await page.locator(`${editor} p`).first().click();

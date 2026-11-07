@@ -1,18 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown, selectionRead } from "./helpers";
+import {
+  pasteMarkdown,
+  emit,
+  mockInvoke,
+  openApp,
+  selectionRead,
+} from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
 // commands with canned srcs.
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {

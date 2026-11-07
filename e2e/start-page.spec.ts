@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // The start page: shown, when the user chose it, at launch with nothing to
 // open and when the last document closes; anything opened takes its place.
@@ -20,18 +20,6 @@ function drop(page: Page, path: string, text: string) {
       });
     },
     { path, text },
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (name) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name, null),
-    name,
   );
 }
 

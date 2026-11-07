@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Files dropped from a file manager arrive as a `tauri://drag-drop` event
 // with their paths, fired by the dev shim as Rust would; reading is canned.
@@ -11,25 +11,7 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 function drop(page: Page, paths: string[], position = { x: 0, y: 0 }) {
-  return page.evaluate(
-    (payload) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", payload),
-    { paths, position },
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
+  return emit(page, "tauri://drag-drop", { paths, position });
 }
 
 /** The active document's Markdown, read from source mode (and back). */

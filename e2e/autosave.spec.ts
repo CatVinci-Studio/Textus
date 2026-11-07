@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { dropPaths, openApp } from "./helpers";
 
 // Save Automatically: a file-backed document is written back once typing
 // rests; with it off nothing is written, and a file changed on disk is never
@@ -51,18 +51,7 @@ const disk = (page: Page) =>
   page.evaluate(() => (window as unknown as { __disk: Disk }).__disk);
 
 async function openDoc(page: Page) {
-  await page.evaluate(
-    (paths) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", {
-        paths,
-        position: { x: 0, y: 0 },
-      }),
-    [PATH],
-  );
+  await dropPaths(page, [PATH]);
   await expect(page.locator(editor)).toContainText("Saved text.");
 }
 

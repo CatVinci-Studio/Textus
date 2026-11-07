@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import {
+  pasteMarkdown,
+  emit,
+  mockInvoke,
+  openApp,
+  SAMPLE_DOC,
+} from "./helpers";
 
 test("first run asks for a language", async ({ page }) => {
   await openApp(page, { settings: { languageChosen: false } });
@@ -307,13 +313,7 @@ test("Quick Ask opens on a selection in Write mode", async ({ page }) => {
 
 test("settings show the typewriter toggle", async ({ page }) => {
   await openApp(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByRole("button", { name: "编辑与外观" }).click();
   await expect(page.getByText("打字机模式").first()).toBeVisible();
   await expect(page).toHaveScreenshot("settings-editor.png");
@@ -421,13 +421,7 @@ test("selects open the app's own list; notices are the app's own dialog", async 
   page,
 }) => {
   await openApp(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByRole("button", { name: "编辑与外观" }).click();
   await page.getByRole("combobox", { name: "编辑器主题" }).click();
   const list = page.getByRole("listbox");
@@ -458,22 +452,10 @@ test("a help guide opens once, however many times it is asked for at once", asyn
 
 test("an open guide switches language with the UI", async ({ page }) => {
   await openApp(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-help", "markdown"),
-  );
+  await emit(page, "menu-open-help", "markdown");
   await expect(page.locator(".milkdown h1").first()).toContainText("Markdown");
   const zhTitle = await page.locator(".milkdown h1").first().innerText();
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByRole("combobox", { name: "语言", exact: true }).click();
   await page.getByRole("option", { name: "English" }).click();
   await expect(page.locator(".milkdown h1").first()).not.toHaveText(zhTitle);
@@ -566,31 +548,21 @@ test("menu events: New File opens one tab after edits, Zen and Split View respon
   page,
 }) => {
   await openApp(page);
-  const emit = (name: string) =>
-    page.evaluate(
-      (event) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-          }
-        ).__devEmitTauriEvent(event),
-      name,
-    );
   const tabs = page.locator("[data-active-tab]");
   const before = await tabs.count();
   // Edits re-render App with new handlers; one menu click must still run
   // once.
   await pasteMarkdown(page, "some words");
   await page.keyboard.type(" and more");
-  await emit("menu-new-file");
+  await emit(page, "menu-new-file");
   await expect(tabs).toHaveCount(before + 1);
 
-  await emit("menu-toggle-zen-mode");
+  await emit(page, "menu-toggle-zen-mode");
   await expect(page.locator(".zen-hint")).toBeVisible();
-  await emit("menu-toggle-zen-mode");
+  await emit(page, "menu-toggle-zen-mode");
   await expect(page.locator(".zen-hint")).toHaveCount(0);
 
-  await emit("menu-toggle-split-view");
+  await emit(page, "menu-toggle-split-view");
   await expect(
     page.locator('[data-active-tab="true"] .split-view'),
   ).toBeVisible();
