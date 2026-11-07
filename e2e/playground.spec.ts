@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { sourceValue } from "./helpers";
 
 // The browser playground: the editor alone, with no dev shim and nothing
 // native behind it.
@@ -246,9 +247,9 @@ test("source mode shows the Markdown and takes edits back", async ({
   await openPlayground(page);
   await page.locator(editor).click();
   await page.keyboard.press("Control+/");
-  const source = page.locator("textarea.source-view");
+  const source = page.locator(".source-view .cm-content");
   await expect(source).toBeVisible();
-  await expect(source).toHaveValue(/^# Welcome to Textus\n/);
+  expect(await sourceValue(page, "body")).toMatch(/^# Welcome to Textus\n/);
   await source.fill("# From source\n\n$x^2$ squared\n\nEnd\n");
   await page.getByRole("button", { name: "Source" }).click();
   await expect(source).toHaveCount(0);

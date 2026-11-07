@@ -1,28 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  emit,
   mockInvoke,
   openApp,
   pasteMarkdown,
   selectionRead,
   settled,
+  sourceOf,
 } from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
 // commands with canned srcs.
-
-/** The active document's Markdown, read from source mode (and back). */
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
-}
 
 /** Dispatches a paste carrying exactly these clipboard flavors. */
 async function paste(page: Page, flavors: Record<string, string>) {

@@ -14,7 +14,7 @@ const REGIONS: { region: string; start?: string }[] = [
   {
     region:
       '[data-active-tab="true"] > :is(.editor-scroll, .source-view, .split-view)',
-    start: ".ProseMirror, textarea",
+    start: ".ProseMirror, .cm-content",
   },
   { region: ".review-bar" },
   { region: ".agent-panel", start: "textarea" },

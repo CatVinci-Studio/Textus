@@ -1,23 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, END, HOME, openApp, selectionRead } from "./helpers";
+import { emit, END, HOME, openApp, selectionRead, sourceOf } from "./helpers";
 
 // The keys around blocks that need a browser: the arrows, clicks and
 // focus. What a typed key does to the document is tested in vitest
 // (src/editor/keys/markdown-keys.test.ts).
 
 const editor = '[data-active-tab="true"] .ProseMirror';
-
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
-}
 
 /** The app with `markdown` opened from a file (a paste could leave an
  *  empty line around it), or an empty document to type in. */

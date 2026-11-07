@@ -65,7 +65,7 @@ test("the font stacks follow the language: CJK faces, Latin first elsewhere, CJK
   // WebView2 on a Chinese Windows resolves `monospace` to NSimSun, so a named
   // face holding Chinese must come ahead of it.
   await emit(page, "menu-toggle-source-mode");
-  const source = '[data-active-tab="true"] textarea.source-view';
+  const source = '[data-active-tab="true"] .source-view .cm-content';
   await expect(page.locator(source)).toBeAttached();
   for (const [lang, cjk] of [
     ["zh-CN", "Microsoft YaHei"],

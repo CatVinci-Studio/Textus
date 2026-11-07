@@ -1,13 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   dropPaths,
-  emit,
   END,
   HOME,
   mockInvoke,
   openApp,
   selectionRead,
   settled,
+  sourceValue,
 } from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
@@ -90,13 +90,21 @@ async function leave(page: Page) {
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
+  const emit = (name: string) =>
+    page.evaluate(
+      (n) =>
+        (
+          window as unknown as { __devEmitTauriEvent: (name: string) => void }
+        ).__devEmitTauriEvent(n),
+      name,
+    );
+  await emit("menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
+  const value = await sourceValue(page);
+  await emit("menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
 }
