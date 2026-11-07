@@ -21,12 +21,13 @@ export function selectedPictureAsPng(view: EditorView): Promise<Blob> | null {
         : null;
   const src = img?.currentSrc || img?.src;
   if (!src) return null;
-  // The window may not fetch from the web: Rust brings a web picture.
-  const local = /^https?:/i.test(src)
-    ? webAssets.get(src, "image")
-    : Promise.resolve(src);
-  return local
-    .then((url) => fetch(url))
+  // The window may not fetch from the web itself: a web picture it can't
+  // read is brought by Rust.
+  return fetch(src)
+    .catch((err: unknown) => {
+      if (!/^https?:/i.test(src)) throw err;
+      return webAssets.get(src, "image").then((data) => fetch(data));
+    })
     .then((response) => response.blob())
     .then(asPng);
 }

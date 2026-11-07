@@ -201,8 +201,9 @@ export function useApplyAppearance(
       style.textContent = withCurrentVariables(css);
       if (style.sheet) promoteCustomProperties(style.sheet.cssRules);
     };
-    show(settings.customCss);
+    // In the document first: a <style> has a sheet to promote only there.
     document.head.appendChild(style);
+    show(settings.customCss);
     // Its web fonts come a moment later, fetched by Rust.
     let current = true;
     void withWebFonts(settings.customCss).then((css) => {

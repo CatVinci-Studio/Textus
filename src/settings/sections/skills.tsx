@@ -12,7 +12,7 @@ import { ai, type SkillListItem } from "../../platform/ipc";
 import { showConfirm } from "../../ui/app-dialog";
 import { IconButton } from "../../ui/IconButton";
 import { TrashIcon } from "../../ui/icons";
-import { isIOSApp } from "../../platform/capabilities";
+import { canTrashFiles } from "../../platform/capabilities";
 import { withoutCreation } from "../../ai/chat/creations";
 import { Select } from "../../ui/Select";
 import { SettingRow } from "./controls";
@@ -136,7 +136,7 @@ export function OwnSkillsList({
   async function remove(skill: SkillListItem, label: string) {
     setError(null);
     const ok = await showConfirm(
-      (isIOSApp ? t.skillDeleteAskMobile : t.skillDeleteAsk).replace(
+      (canTrashFiles ? t.skillDeleteAsk : t.skillDeleteAskMobile).replace(
         "{name}",
         label,
       ),
