@@ -75,7 +75,7 @@ test("opening a file in a subfolder keeps the tree where it was", async ({
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
 });
 
-test("Open Folder pins the tree's root and lists the folder as recent", async ({
+test("Open Folder pins the tree's root and lists the folder as recent; Close Project lets it follow the document again", async ({
   page,
 }) => {
   await open(page);
@@ -99,13 +99,7 @@ test("Open Folder pins the tree's root and lists the folder as recent", async ({
           .__devRecents.folders,
     ),
   ).toEqual(["/work/notes"]);
-});
-
-test("Close Folder goes back to following the document", async ({ page }) => {
-  await open(page);
-  await openFolderFromMenu(page, "/work/notes");
-  await openInTab(page, "/work/elsewhere/c.md");
-  await expect(page.locator(rootLabel)).toHaveText("notes");
+  // Close Project goes back to following the document.
   await page.getByRole("button", { name: "Close Project" }).click();
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
   await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
