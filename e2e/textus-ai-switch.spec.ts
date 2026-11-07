@@ -100,7 +100,7 @@ test("a pause turns Textus AI off for an hour, and it comes back by itself", asy
     expect.any(Number),
   );
 
-  await page.clock.runFor(60 * 60 * 1000);
+  await page.clock.fastForward(60 * 60 * 1000);
   await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
   expect(await savedSetting(page, "textusAi")).toBe(true);
   expect(await savedSetting(page, "textusAiResumeAt")).toBe(null);
@@ -119,6 +119,8 @@ test("a pause that ran out while Textus was closed is over at launch", async ({
 test("while Textus AI is off, no request reaches an AI service, from launch on", async ({
   page,
 }) => {
+  // Debounces are passed by moving the clock on, not by waiting.
+  await page.clock.install();
   // Grammar check off by its own switch: it has to stay off when Textus AI
   // comes back on.
   await openApp(page, {
@@ -157,7 +159,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("Escape");
 
   // Past both debounces (completion 450 ms, grammar check 1.5 s).
-  await page.waitForTimeout(2000);
+  await page.clock.fastForward(2000);
   expect(await providerRequests(page)).toEqual([]);
   await expect(page.locator(".ghost-text")).toHaveCount(0);
   await expect(page.locator(".agent-panel-view")).toHaveCount(0);
@@ -170,7 +172,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("End");
   await page.keyboard.type(" was calm");
   await expect(page.locator(".ghost-text")).toBeVisible();
-  await page.waitForTimeout(2000);
+  await page.clock.fastForward(2000);
   const requests = await providerRequests(page);
   expect(requests).toContain("ai_complete");
   expect(requests).not.toContain("ai_grammar_check");

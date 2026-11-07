@@ -37,6 +37,8 @@ const setState = (page: Page, state: "active" | "inactive" | "background") =>
 test("typing in front is sent when the window steps back; the background sends nothing", async ({
   page,
 }) => {
+  // The plugin's waits are passed by moving the clock on.
+  await page.clock.install();
   await page.addInitScript(() => {
     (window as unknown as Record<string, unknown>).__devHttp = {
       "https://api.wakatime.com/api/v1/users/current/heartbeats.bulk": {
@@ -67,7 +69,7 @@ test("typing in front is sent when the window steps back; the background sends n
   await selectionRead(page);
   await page.keyboard.press("End");
   await page.keyboard.type(" Then it rained.");
-  await page.waitForTimeout(1500);
+  await page.clock.fastForward(1500);
   await setState(page, "inactive");
   await expect.poll(async () => (await sent(page)).length).toBeGreaterThan(0);
   const beats = await sent(page);
@@ -82,6 +84,6 @@ test("typing in front is sent when the window steps back; the background sends n
   await setState(page, "background");
   await page.keyboard.type(" More.");
   await setState(page, "inactive");
-  await page.waitForTimeout(1500);
+  await page.clock.fastForward(1500);
   expect((await sent(page)).length).toBe(before);
 });
