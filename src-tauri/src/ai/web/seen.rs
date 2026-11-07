@@ -78,6 +78,12 @@ impl super::State {
 
 impl super::WebPlan {
     /// Keeps what each source said when shown, for `seen`: a paper's
+    /// Whether a source has the page at `address` already: one a search
+    /// showed, a page read, or one the provider's own search cited.
+    pub(crate) fn knows(&self, address: &str) -> bool {
+        self.state.lock().unwrap().book.find(address).is_some()
+    }
+
     /// research checks its notes against it. Off for chat, which never asks.
     pub(crate) fn keeping_seen_text(self) -> Self {
         self.state.lock().unwrap().seen = Some(Default::default());
