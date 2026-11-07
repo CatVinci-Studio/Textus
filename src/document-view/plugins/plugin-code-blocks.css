@@ -32,6 +32,9 @@
 .plugin-code-block .plugin-webview-frame {
   /* Until the page says how tall it is. */
   height: 120px;
+  /* Out of the document's zoom: the page is told it and draws at it, sharp
+     and at the column's width (frame-zoom.ts). */
+  zoom: calc(1 / var(--content-zoom, 1));
 }
 
 .plugin-code-edit {

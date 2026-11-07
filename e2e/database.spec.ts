@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { emit } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 // The Database plugin: a folder's documents as a table, a board or a
@@ -200,4 +201,40 @@ test("the calendar puts each week on its days", async ({ page }) => {
   // Week1 runs from the 1st to the 4th: its name, then three days more.
   await expect(db.locator(".chip", { hasText: "Week1" })).toHaveCount(4);
   await expect(db.locator(".chip.cont", { hasText: "Week1" })).toHaveCount(3);
+});
+
+test("zoomed, the block's page draws at the zoom across the column's width, and a pinch over it zooms the document", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await expect(db.locator(rows)).toHaveCount(3);
+  const frame = page
+    .locator('[data-active-tab="true"] .plugin-code-block iframe')
+    .first();
+  for (let i = 0; i < 3; i++) await emit(page, "menu-zoom-in");
+  // Told the zoom, the page draws at it; the frame itself is out of the
+  // document's CSS zoom, so its page is as wide as the frame shows.
+  await expect
+    .poll(() =>
+      db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom),
+    )
+    .toBe("1.331");
+  const fits = async () => {
+    const outer = await frame.boundingBox();
+    const add = await db.locator("#add").boundingBox();
+    return !!outer && !!add && add.x + add.width <= outer.x + outer.width + 1;
+  };
+  await expect.poll(fits).toBe(true);
+  // mod+wheel over the page: the document zooms, as anywhere else.
+  const zoom = () =>
+    page.evaluate(() =>
+      document.documentElement.style.getPropertyValue("--content-zoom"),
+    );
+  const before = await zoom();
+  const box = (await frame.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 40);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, 200);
+  await page.keyboard.up("Control");
+  await expect.poll(zoom).not.toBe(before);
 });
