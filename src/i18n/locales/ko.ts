@@ -278,6 +278,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   researchSubHelpersLabel: "리서치: 질문의 일부를 보조에게 맡기기",
   researchSubHelpersHint:
     "리서치에서 한 질문을 조사하는 보조가 그중 좁은 부분을 자기 보조에게 맡길 수 있습니다. 더 자세하지만 느려지고, 모델 호출이 25~50% 늘어납니다.",
+  researchCheckClaimsLabel: "리서치: 인용한 문장을 하나씩 확인",
+  researchCheckClaimsHint:
+    "리서치가 초안을 고치기 전에 출처를 인용한 문장마다 그 출처의 메모와 비교해, 메모보다 지나친 문장을 다시 씁니다. 더 꼼꼼하지만 섹션마다 모델 호출이 한 번 늘어납니다.",
   rememberAutomaticallyLabel: "자동으로 기억",
   rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘프로젝트’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",

@@ -120,6 +120,11 @@ export type DraftRequest = DraftRequest_Serialize | DraftRequest_Deserialize;
 export type DraftRequest_Deserialize = {
 	/**  The paper, outlined and its outline approved. */
 	id: string,
+	/**
+	 *  Every cited sentence checked against its notes before the review's
+	 *  revision (the user's choice; slower, one more call a section).
+	 */
+	checkClaims?: boolean,
 } & AgentRequest_Deserialize;
 
 /**
@@ -129,6 +134,11 @@ export type DraftRequest_Deserialize = {
 export type DraftRequest_Serialize = {
 	/**  The paper, outlined and its outline approved. */
 	id: string,
+	/**
+	 *  Every cited sentence checked against its notes before the review's
+	 *  revision (the user's choice; slower, one more call a section).
+	 */
+	checkClaims: boolean,
 } & AgentRequest_Serialize;
 
 /**

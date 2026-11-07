@@ -290,6 +290,9 @@ export interface Settings {
   /// In Research, a question's researcher may hand parts of it to helpers of
   /// its own: more thorough, slower and dearer. Off unless chosen.
   researchSubHelpers: boolean;
+  /** Research checks every cited sentence against its sources' notes before
+   *  the review's revision. Off: one more model call a section. */
+  researchCheckClaims: boolean;
   /// The MCP servers Textus AI may use; Rust reads them from the settings file.
   mcpServers: McpServer[];
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
@@ -456,6 +459,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
   researchSubHelpers: false,
+  researchCheckClaims: false,
   mcpServers: [],
   plugins: {},
   suggestNextMessage: true,

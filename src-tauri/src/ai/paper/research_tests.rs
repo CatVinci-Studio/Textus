@@ -694,7 +694,15 @@ fn a_note_is_checked_against_what_its_sources_said() {
         add(json!({"claim": "Gauges read 7.5 m.", "evidence": "The plugin.", "sources": ["3"]})),
         "Kept."
     );
+    // An address nothing showed: kept, marked as never read.
+    assert_eq!(
+        add(
+            json!({"claim": "Gauges read 9 m.", "evidence": "A page.", "sources": ["https://made-up.example/gauge"]})
+        ),
+        "Kept."
+    );
     let notes = notes.into_inner().unwrap();
+    assert_eq!(notes[4].grounding, Grounding::Unread);
     assert_eq!(notes[0].unmatched, vec!["2019"]);
     assert_eq!(notes[0].grounding, Grounding::Read);
     assert!(notes[1].unmatched.is_empty());

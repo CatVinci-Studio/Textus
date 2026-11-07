@@ -313,6 +313,9 @@ utiliser une.
     "Recherche : confier des parties d’une question à des aides",
   researchSubHelpersHint:
     "En Recherche, l’aide qui étudie une question peut en confier une partie plus précise à une aide à lui. Plus approfondi, mais plus lent, avec un quart à la moitié d’appels au modèle en plus.",
+  researchCheckClaimsLabel: "Recherche : vérifier chaque phrase citée",
+  researchCheckClaimsHint:
+    "Avant de réviser le brouillon, chaque phrase qui cite une source est comparée aux notes sur cette source, et celle qui en dit plus est réécrite. Plus rigoureux, avec un appel au modèle de plus par section.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
   rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Projet, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",

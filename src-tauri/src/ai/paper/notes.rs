@@ -176,6 +176,8 @@ fn read_note(
         .map(|list| list.iter().filter_map(Value::as_str).collect())
         .unwrap_or_default();
     let mut sources = Vec::new();
+    // Cited by addresses no source had: nothing shows what they say.
+    let mut unread = !cited.is_empty();
     for c in &cited {
         let number = match cited_file(ctx, c) {
             Some(file) => {
@@ -185,6 +187,7 @@ fn read_note(
                         web.saw(n, &text, Reach::Read);
                     }
                 }
+                unread = false;
                 Some(n)
             }
             None => {
@@ -199,6 +202,8 @@ fn read_note(
                 if address.as_deref().is_some_and(is_search_page) {
                     return Err(format!("{c:?} is a search page, not a source: read the page or paper a result points to, and cite that."));
                 }
+                let known = !c.trim().starts_with("http") || web.knows(c.trim());
+                unread &= !known;
                 web.source_number(c)
             }
         };
@@ -236,6 +241,11 @@ fn read_note(
         quote: Some(text("quote")).filter(|q| !q.is_empty()),
         sources,
         leads,
+        grounding: if unread {
+            Grounding::Unread
+        } else {
+            Grounding::Unchecked
+        },
         ..Default::default()
     })
 }

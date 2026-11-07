@@ -69,7 +69,7 @@ impl SourceBook {
         !self.sources.iter().any(|s| s.n == n)
     }
 
-    fn find(&self, url: &str) -> Option<&Source> {
+    pub(crate) fn find(&self, url: &str) -> Option<&Source> {
         let page = same_page(url);
         self.sources.iter().find(|s| same_page(&s.url) == page)
     }

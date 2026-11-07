@@ -147,20 +147,27 @@ pub(crate) async fn review(
     Ok(issues.unwrap_or_default())
 }
 
-/// The points against the drafted `sections`: the review's, and those of
-/// the check of every cited sentence against its notes (`claims`), run at
-/// once. A review that fails leaves the check's.
+/// The points against the drafted `sections`: the review's, and with
+/// `check_claims` those of the check of every cited sentence against its
+/// notes (`claims`), run at once. A review that fails leaves the check's.
 pub(crate) async fn review_all(
     model: &dyn Model,
     paper: &Paper,
     outline: &Outline,
     dossier: &Dossier,
     sections: &[String],
+    check_claims: bool,
 ) -> Vec<Issue> {
-    let (reviewed, checked) = futures_util::join!(
-        review(model, paper, outline, sections),
-        super::claims::check_claims(model, paper, dossier, sections)
-    );
+    let checking = async {
+        if check_claims {
+            super::claims::check_claims(model, paper, dossier, sections).await
+        } else {
+            Vec::new()
+        }
+    };
+    // The function, not join!: that macro needs a feature iOS's build lacks.
+    let (reviewed, checked) =
+        futures_util::future::join(review(model, paper, outline, sections), checking).await;
     let mut issues = checked;
     issues.extend(reviewed.unwrap_or_default());
     issues

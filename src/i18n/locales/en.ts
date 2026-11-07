@@ -297,6 +297,9 @@ type /name in a conversation to use one.
   researchSubHelpersLabel: "Research: hand parts of a question to helpers",
   researchSubHelpersHint:
     "In Research, the helper looking into a question may hand a narrower part to a helper of its own. More thorough, but slower, with a quarter to half more model calls.",
+  researchCheckClaimsLabel: "Research: check each cited sentence",
+  researchCheckClaimsHint:
+    "Before Research revises its draft, every sentence that cites a source is compared with the notes on that source, and one that says more than they do is rewritten. More careful, with one more model call per section.",
   rememberAutomaticallyLabel: "Remember automatically",
   rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Project in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",

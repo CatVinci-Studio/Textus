@@ -32,10 +32,49 @@ pub(super) fn has_quote(words: &str, quote: &str) -> bool {
     quote.is_empty() || plain(words).contains(&quote)
 }
 
-/// A number as written: "1,200" with its thousands, "3.5", "2024".
+/// A number as written, with what scales it: "1,200" with its thousands,
+/// "3.5", "3,5" (a decimal comma), "2024", "1.2万", "3 亿", "4.5 million".
 fn number() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?").unwrap())
+    RE.get_or_init(|| {
+        Regex::new(
+            r"(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+,\d{1,2}\b|\d+(?:\.\d+)?)(?:\s?(万|亿|(?i:thousand|million|billion)\b))?",
+        )
+        .unwrap()
+    })
+}
+
+/// A number's value as one form: "1,200" and "1200" alike, "3,5" and
+/// "3.50" as "3.5", "1.2万" as "12000". None for what isn't a number.
+fn figure_value(digits: &str, scale: Option<&str>) -> Option<String> {
+    let decimal_comma =
+        !digits.contains('.') && digits.split(',').nth(1).is_some_and(|d| d.len() < 3);
+    let plain = if decimal_comma {
+        digits.replace(',', ".")
+    } else {
+        digits.replace(',', "")
+    };
+    let times: u64 = match scale.map(str::to_lowercase).as_deref() {
+        Some("万") => 10_000,
+        Some("亿") => 100_000_000,
+        Some("thousand") => 1_000,
+        Some("million") => 1_000_000,
+        Some("billion") => 1_000_000_000,
+        _ => 1,
+    };
+    let value: f64 = plain.parse().ok()?;
+    let scaled = value * times as f64;
+    let mut text = if scaled.fract() == 0.0 && scaled < 1e18 {
+        format!("{}", scaled as u64)
+    } else if times == 1 {
+        plain
+    } else {
+        format!("{scaled}")
+    };
+    if text.contains('.') {
+        text = text.trim_end_matches('0').trim_end_matches('.').to_string();
+    }
+    Some(text)
 }
 
 /// A citation, `[3]`, whose number is no figure.
@@ -44,34 +83,36 @@ fn citation() -> &'static Regex {
     RE.get_or_init(|| Regex::new(r"\[\d{1,3}\](?:\([^)\s]*\))?").unwrap())
 }
 
-/// The figures `text` gives, each as one form - "1,200" and "1200" alike,
-/// "3.50" as "3.5" - leaving out whole numbers under ten, which are written
-/// as words as often as not.
-pub(super) fn figures(text: &str) -> Vec<String> {
+/// The figures `text` gives, each as its value and as written, leaving out
+/// whole numbers under ten, which are written as words as often as not.
+fn figures_written(text: &str) -> Vec<(String, String)> {
     let text = citation().replace_all(text, " ");
-    let mut out: Vec<String> = Vec::new();
-    for m in number().find_iter(&text) {
-        let mut figure = m.as_str().replace(',', "");
-        if figure.contains('.') {
-            figure = figure
-                .trim_end_matches('0')
-                .trim_end_matches('.')
-                .to_string();
-        }
+    let mut out: Vec<(String, String)> = Vec::new();
+    for c in number().captures_iter(&text) {
+        let Some(figure) = figure_value(&c[1], c.get(2).map(|m| m.as_str())) else {
+            continue;
+        };
         let small = !figure.contains('.') && figure.parse::<u64>().is_ok_and(|n| n < 10);
-        if !small && !out.contains(&figure) {
-            out.push(figure);
+        if !small && !out.iter().any(|(f, _)| *f == figure) {
+            out.push((figure, c[0].trim().to_string()));
         }
     }
     out
 }
 
-/// The figures of `text` that none of `words` gives.
+/// The figures `text` gives, each as one value - "1,200" and "1200" alike,
+/// "3,5" and "3.50" as "3.5", "1.2万" as "12000".
+pub(super) fn figures(text: &str) -> Vec<String> {
+    figures_written(text).into_iter().map(|(f, _)| f).collect()
+}
+
+/// The figures of `text` that none of `words` gives, as `text` writes them.
 pub(super) fn missing_figures(text: &str, words: &[&str]) -> Vec<String> {
     let given: HashSet<String> = words.iter().flat_map(|w| figures(w)).collect();
-    figures(text)
+    figures_written(text)
         .into_iter()
-        .filter(|f| !given.contains(f))
+        .filter(|(f, _)| !given.contains(f))
+        .map(|(_, written)| written)
         .collect()
 }
 
@@ -81,19 +122,36 @@ fn pairs(text: &str) -> HashSet<(char, char)> {
     chars.windows(2).map(|w| (w[0], w[1])).collect()
 }
 
+/// Citations right after a sentence's end - "。[1](…)", ". [2][3]" - which
+/// belong to the sentence before them.
+fn trailing_citations() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"^(?:[ \t]*\[\d{1,3}\](?:\([^)\s]*\))?)+").unwrap())
+}
+
 /// `text`'s sentences and lines, trimmed: a sentence ends at a full stop,
 /// question or exclamation mark followed by a space or the end - so "3.5"
-/// stays whole - or at one of the CJK marks, which need none.
+/// stays whole - or at one of the CJK marks, which need none. Citations
+/// written after the mark stay with the sentence they follow.
 pub(super) fn sentences(text: &str) -> Vec<&str> {
     let mut out = Vec::new();
     let mut start = 0;
     let mut chars = text.char_indices().peekable();
     while let Some((i, c)) = chars.next() {
+        if i < start {
+            continue;
+        }
         let next_is_space = chars.peek().is_none_or(|(_, n)| n.is_whitespace());
+        let next_cites = chars.peek().is_some_and(|(_, n)| *n == '[');
         let ends = matches!(c, '。' | '！' | '？' | '\n')
-            || (matches!(c, '.' | '!' | '?') && next_is_space);
+            || (matches!(c, '.' | '!' | '?') && (next_is_space || next_cites));
         if ends {
-            let end = i + c.len_utf8();
+            let mut end = i + c.len_utf8();
+            if c != '\n' {
+                if let Some(m) = trailing_citations().find(&text[end..]) {
+                    end += m.end();
+                }
+            }
             out.push(text[start..end].trim());
             start = end;
         }
@@ -186,9 +244,10 @@ pub(super) fn figures_by_source<'a>(
             note.quote.as_deref().unwrap_or(""),
             note.excerpt.as_deref().unwrap_or("")
         );
+        let unmatched: HashSet<String> = note.unmatched.iter().flat_map(|u| figures(u)).collect();
         let given: Vec<String> = figures(&said)
             .into_iter()
-            .filter(|f| !note.unmatched.contains(f))
+            .filter(|f| !unmatched.contains(f))
             .collect();
         for n in &note.sources {
             out.entry(*n).or_default().extend(given.iter().cloned());
@@ -207,13 +266,14 @@ pub(super) fn unsupported_figures(
     let empty = HashSet::new();
     let mut out = Vec::new();
     for (sentence, cited) in cited_sentences(markdown) {
-        let missing: Vec<String> = figures(&sentence)
+        let missing: Vec<String> = figures_written(&sentence)
             .into_iter()
-            .filter(|f| {
+            .filter(|(f, _)| {
                 !cited
                     .iter()
                     .any(|n| given.get(n).unwrap_or(&empty).contains(f))
             })
+            .map(|(_, written)| written)
             .collect();
         if missing.is_empty() {
             continue;
@@ -244,8 +304,48 @@ fn clip_to(text: &str, most: usize) -> String {
     format!("{}…", cut.trim_end())
 }
 
+/// The passage of its sources a note rests on, marked as the web's words:
+/// material to read, never instructions.
+pub(super) fn source_passage(note: &Note) -> String {
+    let Some(excerpt) = &note.excerpt else {
+        return String::new();
+    };
+    let cited: String = note.sources.iter().map(|n| format!("[{n}]")).collect();
+    // A page can't close the block early.
+    let excerpt = excerpt.replace("</external-content", "</external_content");
+    format!("\n  <external-content source=\"{cited}\">\n  {excerpt}\n  </external-content>")
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_figure_is_one_value_however_it_is_written() {
+        use super::figures;
+        assert_eq!(figures("3,5 % and 3.50%"), vec!["3.5"]);
+        assert_eq!(figures("1,200 people, 1200 seats"), vec!["1200"]);
+        assert_eq!(figures("约1.2万人"), vec!["12000"]);
+        assert_eq!(figures("12,000 visitors"), vec!["12000"]);
+        assert_eq!(figures("3亿元，即 300 million"), vec!["300000000"]);
+        assert_eq!(figures("4.5 Million users"), vec!["4500000"]);
+    }
+
+    #[test]
+    fn a_citation_after_the_full_stop_stays_with_its_sentence() {
+        use super::sentences;
+        assert_eq!(
+            sentences("屋顶降温 30 度。[1](https://a.example/1)成本较高。[2]"),
+            vec!["屋顶降温 30 度。[1](https://a.example/1)", "成本较高。[2]"]
+        );
+        assert_eq!(
+            sentences("Roofs cool. [1](https://a.example/1) They cost more.[2][3] Done"),
+            vec![
+                "Roofs cool. [1](https://a.example/1)",
+                "They cost more.[2][3]",
+                "Done"
+            ]
+        );
+    }
+
     use super::*;
 
     #[test]
@@ -264,7 +364,7 @@ mod tests {
             figures("1,200 roofs, 3.50 m, 7 cities, 1200 again, 2024 [12](https://x.example/12)"),
             vec!["1200", "3.5", "2024"]
         );
-        assert_eq!(figures("增长 30% 至 45.0 亿"), vec!["30", "45"]);
+        assert_eq!(figures("增长 30% 至 45.0 亿"), vec!["30", "4500000000"]);
         assert_eq!(
             missing_figures(
                 "Cooler by 30 °C on 12 roofs in 2019.",
@@ -304,7 +404,7 @@ mod tests {
         assert_eq!(found.len(), 2, "{found:?}");
         assert_eq!(
             found[0].text,
-            "A figure its sources don't give: \"They cost 4.5 million .\" has 4.5 but the notes of [1] don't - give the figure as the notes do, cite the source that gives it, or leave it out."
+            "A figure its sources don't give: \"They cost 4.5 million .\" has 4.5 million but the notes of [1] don't - give the figure as the notes do, cite the source that gives it, or leave it out."
         );
         assert!(found[1].text.contains("has 2019"), "{}", found[1].text);
         // Sent back, but kept on a writer's last try, as a length is.

@@ -266,6 +266,9 @@ export default {
   researchSubHelpersLabel: "研究时把子问题交给助手",
   researchSubHelpersHint:
     "研究模式里，查一个问题的助手可以把其中更窄的一块交给自己的子助手去查。资料更细，但更慢，模型调用多约 25%–50%。",
+  researchCheckClaimsLabel: "研究时逐句核对引用",
+  researchCheckClaimsHint:
+    "研究模式修改草稿前，把每个带引用的句子和该来源的笔记对一遍，说过头的会改写。更严谨，每节多一次模型调用。",
   rememberAutomaticallyLabel: "自动记住",
   rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在 AI 面板的“项目”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
   toolRemember: "记下来",

@@ -150,6 +150,9 @@ pub enum Grounding {
     /// the checks.
     #[default]
     Unchecked,
+    /// Cited by an address nothing showed it: no search, read or the
+    /// provider's own search (a plugin's or a tool's, or one made up).
+    Unread,
     /// Search snippets or abstracts only.
     Snippet,
     /// A page read in full, or a file.

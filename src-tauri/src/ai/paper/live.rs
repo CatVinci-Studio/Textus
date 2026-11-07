@@ -195,7 +195,7 @@ fn live_paper() {
         write("draft-before-review.md", &sections.join("\n\n"));
 
         let t = Instant::now();
-        let issues = review::review_all(&agent, &paper, &outline, &dossier, &sections).await;
+        let issues = review::review_all(&agent, &paper, &outline, &dossier, &sections, true).await;
         for issue in &issues {
             eprintln!(
                 "live_paper: review, section {}: {} -> {}",

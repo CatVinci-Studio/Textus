@@ -199,6 +199,12 @@ impl WebPlan {
         state.book.has(n).then_some(n)
     }
 
+    /// Whether a source has the page at `address` already: one a search
+    /// showed, a page read, or one the provider's own search cited.
+    pub(crate) fn knows(&self, address: &str) -> bool {
+        self.state.lock().unwrap().book.find(address).is_some()
+    }
+
     /// The address of source `n`, if there is one.
     pub(crate) fn source_address(&self, n: u32) -> Option<String> {
         self.state.lock().unwrap().book.address(n)

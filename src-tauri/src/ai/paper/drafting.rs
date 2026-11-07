@@ -16,6 +16,10 @@ pub struct DraftRequest {
     pub request: crate::ai::agent::AgentRequest,
     /// The paper, outlined and its outline approved.
     pub id: String,
+    /// Every cited sentence checked against its notes before the review's
+    /// revision (the user's choice; slower, one more call a section).
+    #[serde(default)]
+    pub check_claims: bool,
 }
 
 /// Drafts paper `id` from its saved outline: every section written and kept
@@ -30,7 +34,11 @@ pub async fn ai_paper_draft(
     request: DraftRequest,
     channel: Channel<PaperEvent>,
 ) -> Result<(), String> {
-    let DraftRequest { request, id } = request;
+    let DraftRequest {
+        request,
+        id,
+        check_claims,
+    } = request;
     let session = request.session(&app)?;
     let root = super::session_root(&session, Some(&id))?;
     let files = load(&root, &id)?;
@@ -123,8 +131,15 @@ pub async fn ai_paper_draft(
             });
             // A review that fails costs the paper nothing: its sections
             // passed their own checks.
-            let issues =
-                review::review_all(&agent, &files.paper, &outline, &files.dossier, &sections).await;
+            let issues = review::review_all(
+                &agent,
+                &files.paper,
+                &outline,
+                &files.dossier,
+                &sections,
+                check_claims,
+            )
+            .await;
             let revising = |i: usize| {
                 send(PaperEvent::Section {
                     index: i as u32,

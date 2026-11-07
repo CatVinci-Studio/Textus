@@ -299,6 +299,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Pesquisa: passar partes de uma pergunta a ajudantes",
   researchSubHelpersHint:
     "Na Pesquisa, quem investiga uma pergunta pode passar uma parte mais específica a um ajudante próprio. Mais completo, porém mais lento, com um quarto a metade a mais de chamadas ao modelo.",
+  researchCheckClaimsLabel: "Pesquisa: verificar cada frase citada",
+  researchCheckClaimsHint:
+    "Antes de revisar o rascunho, cada frase que cita uma fonte é comparada com as notas dessa fonte, e a que diz mais do que elas é reescrita. Mais cuidadoso, com uma chamada ao modelo a mais por seção.",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
   rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Projeto, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
