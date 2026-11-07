@@ -15,6 +15,7 @@ pub mod figures;
 mod finish;
 mod genre;
 mod handover;
+mod helper;
 mod model;
 mod notes;
 mod outline;
