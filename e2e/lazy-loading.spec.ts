@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // The heavy parts load on first use: a window opens with its own language's
 // strings only, Settings and the diagram and formula engines come when

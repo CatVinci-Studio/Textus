@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * Equation numbers run in order across the document, as LaTeX numbers them,

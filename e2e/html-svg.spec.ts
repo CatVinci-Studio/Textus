@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * HTML in a document (<details>, tables, a few inline styles, inline SVG)

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, END, emit, openApp } from "./helpers";
+import { emit, END, openApp, pasteMarkdown } from "./helpers";
 
 // A document past the threshold draws only the blocks near the screen; the
 // rest are placeholders of their height. Nothing a reader does should tell:

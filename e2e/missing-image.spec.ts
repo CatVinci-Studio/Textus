@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openPhone, PHONE } from "./helpers";
+import { emit, openPhone, pasteMarkdown, PHONE } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**

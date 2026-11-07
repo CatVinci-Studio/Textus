@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * A <details> around markdown folds it away. Whatever points into the folded

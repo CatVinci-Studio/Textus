@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
 // what Pele can't. Each engine loads only when needed; Pele's colours are CSS

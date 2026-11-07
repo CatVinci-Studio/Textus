@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke } from "./helpers";
+import { emit, mockInvoke, pasteMarkdown } from "./helpers";
 import {
   openPath,
   openSidebarList,

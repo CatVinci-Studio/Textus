@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The window without a mouse: F6 through the regions and back to the

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The reader's own document text size and line spacing, over the theme's,

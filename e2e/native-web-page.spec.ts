@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit } from "./helpers";
+import { emit, pasteMarkdown } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**

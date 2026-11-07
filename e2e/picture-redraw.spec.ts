@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, release } from "./helpers";
 
 // A proposed picture drawn again from the writer's own change to its
 // description: Redraw… over the picture, the description to change, and
@@ -74,7 +74,7 @@ test("a proposed picture is drawn again from the description the writer changed"
     (
       window as unknown as { __devInvokeResults: Record<string, unknown> }
     ).__devInvokeResults.ai_generated_image = {
-      __delay: 400,
+      __hold: true,
       value: { mime: "image/png", ext: "png", dataBase64: png },
     };
   }, PNG);
@@ -89,6 +89,7 @@ test("a proposed picture is drawn again from the description the writer changed"
     .click();
 
   await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(1);
+  await release(page, "ai_generated_image");
   await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/);
   expect(await page.locator(pending).getAttribute("src")).not.toBe(before);
   const redrawn = await calls(page, "ai_redraw_generated_image");

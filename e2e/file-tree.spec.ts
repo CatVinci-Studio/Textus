@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, emit, openApp } from "./helpers";
+import { emit, END, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The

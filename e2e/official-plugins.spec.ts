@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { pasteMarkdown, emit, mockInvoke } from "./helpers";
+import { emit, mockInvoke, pasteMarkdown } from "./helpers";
 import {
   minimalDocx,
   minimalPdf,

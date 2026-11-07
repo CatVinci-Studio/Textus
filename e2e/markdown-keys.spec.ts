@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, emit, openApp, selectionRead } from "./helpers";
+import { emit, END, HOME, openApp, selectionRead } from "./helpers";
 
 // The keys around blocks that need a browser: the arrows, clicks and
 // focus. What a typed key does to the document is tested in vitest

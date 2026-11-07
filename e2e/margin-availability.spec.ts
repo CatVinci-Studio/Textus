@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A revision's margin views need room right of the text. Without it they
 // can't be picked, and say why; a chosen one waits, untouched in Settings,

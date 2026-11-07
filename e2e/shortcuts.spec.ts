@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // Settings › Shortcuts lists the fixed shortcuts under the configurable
 // ones, and the new actions work: Ctrl+Tab between tabs, and the heading

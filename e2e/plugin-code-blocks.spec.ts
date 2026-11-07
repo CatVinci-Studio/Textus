@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, emit, openApp } from "./helpers";
+import { emit, END, openApp } from "./helpers";
 
 /**
  * Code blocks a plugin draws (textus.views.registerCodeBlock): the page

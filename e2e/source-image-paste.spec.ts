@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A picture pasted in source mode is stored as one pasted in the rich
 // editor is, and written as Markdown at the caret; Undo takes it back.

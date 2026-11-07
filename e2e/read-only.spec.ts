@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // View › Read Only: nothing changes the document, a padlock beside the
 // title turns it off, and the file is still read-only when opened again.

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp, SAMPLE_DOC } from "./helpers";
+import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
 // Interface Text Size scales the app's own text and leaves the document's
 // alone, which has its own zoom.

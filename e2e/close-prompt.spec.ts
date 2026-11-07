@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A close request (close button, Alt+F4, ⌘W, the window manager) reaches the
 // page as tauri://close-requested. With unsaved changes the prompt must be

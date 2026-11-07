@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // Han characters differ by language, so the font stacks pick faces for the
 // <html lang>, in the chrome and content themes alike. The resolved stack is

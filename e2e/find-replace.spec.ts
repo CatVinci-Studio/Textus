@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, HOME, emit, openApp, selectionRead } from "./helpers";
+import { emit, HOME, openApp, pasteMarkdown, selectionRead } from "./helpers";
 
 // Find and replace as other editors have it: the selected words become the
 // query, Find again goes back to the box, closing leaves the match

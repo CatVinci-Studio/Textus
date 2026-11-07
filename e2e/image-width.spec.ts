@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // An image's width preset is saved as `<img width>`, and Image width: Auto
 // takes it out again, also on an image without a caption.

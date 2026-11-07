@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // A colour code gets a swatch before it, per Settings: off (the default), in
 // code only, or everywhere. The text, the caret's moves, find and what is

@@ -1,9 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   dropPaths,
+  emit,
   END,
   HOME,
-  emit,
   mockInvoke,
   openApp,
   selectionRead,

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { pasteMarkdown, emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The menu bar, where the app draws the window frame (Windows and Linux): off

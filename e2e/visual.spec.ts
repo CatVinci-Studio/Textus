@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import {
-  pasteMarkdown,
   emit,
   mockInvoke,
   openApp,
+  pasteMarkdown,
   SAMPLE_DOC,
 } from "./helpers";
 

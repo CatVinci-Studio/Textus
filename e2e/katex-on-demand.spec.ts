@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  pasteMarkdown,
-  FIRST_LOAD,
   emit,
+  FIRST_LOAD,
   mockInvoke,
   openApp,
+  pasteMarkdown,
 } from "./helpers";
 
 // KaTeX loads on a document's first formula instead of with the app. A

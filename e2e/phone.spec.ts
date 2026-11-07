@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // The iPhone layout, checked in Chromium with touch and a phone-sized
 // viewport.

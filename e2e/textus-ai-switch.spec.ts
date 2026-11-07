@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown, emit, openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 /**
  * Textus AI's switch on the window bar's AI button: off, nothing of it runs

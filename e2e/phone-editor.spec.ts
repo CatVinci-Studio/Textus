@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
+import { mockInvoke, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // Editing by finger on the iPhone layout, in Chromium with touch: iOS
 // WebKit's own keyboard and text menu aren't reachable.
