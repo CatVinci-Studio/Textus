@@ -218,6 +218,44 @@ export function changeSettings(page: Page, patch: Record<string, unknown>) {
   }, patch);
 }
 
+/** Waits until nothing moves: no animation running and every scroll
+ *  position the same for a few frames (at most 3 s). In place of a fixed
+ *  pause before checking where things came to rest. */
+export function settled(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const positions = () =>
+          [document.scrollingElement, ...document.querySelectorAll("*")]
+            .filter(
+              (el): el is Element =>
+                !!el && (el.scrollTop !== 0 || el.scrollLeft !== 0),
+            )
+            .map((el) => `${el.scrollTop},${el.scrollLeft}`)
+            .join(";");
+        const running = () =>
+          document
+            .getAnimations()
+            .some(
+              (a) =>
+                a.playState === "running" &&
+                a.effect?.getTiming().iterations !== Infinity,
+            );
+        const end = performance.now() + 3000;
+        let last = positions();
+        let still = 0;
+        const tick = () => {
+          const now = positions();
+          still = now === last && !running() ? still + 1 : 0;
+          last = now;
+          if (still >= 4 || performance.now() > end) resolve();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+}
+
 /** Lets a mocked `{ __hold: true }` command answer, once it has been called. */
 export async function release(page: Page, cmd: string) {
   await expect
