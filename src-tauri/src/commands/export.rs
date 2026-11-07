@@ -85,6 +85,21 @@ pub fn check_pandoc_args(args: Vec<String>) -> Option<String> {
     pandoc_options::owned_arg(&args).map(str::to_string)
 }
 
+/// Pandoc's extension for a single newline: a line break where the
+/// document's folder shows one (its `.textus` conventions), else nothing.
+fn breaks_extension(folder: Option<&str>) -> &'static str {
+    match folder {
+        Some(dir) if crate::conventions::soft_breaks_show(Path::new(dir)) => "+hard_line_breaks",
+        _ => "",
+    }
+}
+
+/// The Word template to hand Pandoc: one since moved or deleted leaves
+/// Pandoc's own styles.
+fn usable_reference_doc(path: Option<String>) -> Option<String> {
+    path.filter(|p| Path::new(p).is_file())
+}
+
 /// Converts the document text to `format` via a user-installed pandoc, through
 /// stdin; --resource-path lets relative images resolve. The user's arguments
 /// come first, so the export's own win; none is passed through a shell.
@@ -107,12 +122,7 @@ pub async fn export_via_pandoc(
             return Err(format!("The Pandoc argument {arg} is set by Textus."));
         }
         let mut args = pandoc_args(&format, &title);
-        if resource_dir
-            .as_deref()
-            .is_some_and(|d| crate::conventions::soft_breaks_show(Path::new(d)))
-        {
-            args[1].push_str("+hard_line_breaks");
-        }
+        args[1].push_str(breaks_extension(resource_dir.as_deref()));
         let filter = pandoc_options::lua_filter_path().map_err(|e| e.to_string())?;
         let mut cmd = Command::new(&pandoc_path);
         cmd.arg("--lua-filter")
@@ -129,8 +139,7 @@ pub async fn export_via_pandoc(
             cmd.arg("--resource-path").arg(dir);
             cmd.current_dir(dir);
         }
-        // A template since moved or deleted leaves Pandoc's own styles.
-        if let Some(doc) = reference_doc.filter(|d| Path::new(d).is_file()) {
+        if let Some(doc) = usable_reference_doc(reference_doc) {
             cmd.arg("--reference-doc").arg(doc);
         }
         let mut child = cmd.spawn().map_err(|e| e.to_string())?;
