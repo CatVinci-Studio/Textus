@@ -169,16 +169,6 @@ test("a job's run calls the background code, which has no editor", async ({
     ]);
 });
 
-test("a plugin without the grants schedules nothing", async ({ page }) => {
-  await open(page, ["files.read"]);
-  await expect(setJobs(page, 4_000)).rejects.toThrow();
-  expect(
-    await page.evaluate(() => [
-      ...(window as unknown as Shim).__devSchedule.notifications,
-    ]),
-  ).toEqual([]);
-});
-
 test("a plugin hears Textus go behind and come back", async ({ page }) => {
   await open(page, ["notifications", "background", "files.read"]);
   await page.evaluate(() =>

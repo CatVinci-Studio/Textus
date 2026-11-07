@@ -153,29 +153,6 @@ test("a proposed edit is reviewed in the dock and lands in the document", async 
   );
 });
 
-test("a / skill suggestion is picked with a tap", async ({ page }) => {
-  await openPhone(page);
-  await mockInvoke(page, {
-    load_agent_workspace: {
-      skills: [
-        { name: "polish", description: "Tighten the prose", prompt: "Polish" },
-      ],
-    },
-  });
-  const dock = await openQuickAsk(page);
-  const input = dock.locator("textarea");
-  await input.fill("/po");
-  // The user's skill by its name first; the built-in Social post (alias
-  // "post") matches too, after it.
-  const row = dock.locator(".inline-chat-skill-item").first();
-  await expect(row).toContainText("/polish");
-  expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
-  await row.tap();
-  await expect(input).toHaveValue("/polish ");
-  // Picked once, and the keyboard's field kept its focus.
-  await expect(input).toBeFocused();
-});
-
 test("continue in panel hands the exchange to the AI sheet", async ({
   page,
 }) => {

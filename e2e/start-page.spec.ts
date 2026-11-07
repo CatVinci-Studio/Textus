@@ -93,7 +93,26 @@ test("with the default, closing the last document doesn't show the start page", 
     settings: { language: "en", newDocumentMode: "tab" },
   });
   await drop(page, "/notes/one.md", "# One");
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, ...rest: unknown[]) => unknown;
+      };
+      __closed?: boolean;
+    };
+    const invoke = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, ...rest) => {
+      if (cmd.includes("destroy")) w.__closed = true;
+      return invoke(cmd, ...rest);
+    };
+  });
   await emit(page, "menu-close-tab");
+  // The close has run: the window was closed, not turned into a start page.
+  await expect
+    .poll(() =>
+      page.evaluate(() => (window as { __closed?: boolean }).__closed),
+    )
+    .toBe(true);
   await expect(startPage(page)).toHaveCount(0);
 });
 
@@ -121,4 +140,63 @@ test("zooming on the start page leaves the documents' zoom as it was", async ({
   await emit(page, "menu-zoom-in");
   await page.waitForTimeout(300);
   expect(await zoom()).toBe(before);
+});
+
+test("the start page lists recent files and opens one, and asks for a project", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      closeLastToStartPage: true,
+    },
+  });
+  await drop(page, "/notes/deep/one.md", "# One");
+  await emit(page, "menu-close-tab");
+  const recent = startPage(page).getByRole("region", { name: "Recent Files" });
+  await expect(recent.getByRole("button", { name: /one\.md/ })).toBeVisible();
+  await expect(recent).toContainText("/notes/deep");
+
+  const asked: string[] = [];
+  await page.exposeFunction("__asked", (cmd: string) => asked.push(cmd));
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __TAURI_INTERNALS__: {
+        invoke: (cmd: string, ...rest: unknown[]) => unknown;
+      };
+      __asked: (cmd: string) => void;
+    };
+    const invoke = w.__TAURI_INTERNALS__.invoke;
+    w.__TAURI_INTERNALS__.invoke = (cmd, ...rest) => {
+      if (cmd.startsWith("pick_")) w.__asked(cmd);
+      return invoke(cmd, ...rest);
+    };
+  });
+  await startPage(page)
+    .getByRole("button", { name: /Open Project/ })
+    .click();
+  await expect.poll(() => asked.length).toBeGreaterThan(0);
+
+  await recent.getByRole("button", { name: /one\.md/ }).click();
+  await expect(startPage(page)).toHaveCount(0);
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("One");
+});
+
+test("a launch with nothing to restore opens on the start page, when chosen", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      startPageOnLaunch: true,
+      restoreSessionOnStartup: false,
+    },
+    ready: ".start-page",
+  });
+  await expect(startPage(page)).toBeVisible();
+  await expect(page.locator(".ProseMirror")).toHaveCount(0);
 });

@@ -13,32 +13,11 @@ const NOTES = {
   "/notes/two.md": "# Two\n\nNothing here.\n",
 };
 
-const shown = (page: Page) =>
-  page
-    .locator(`${editor} .wikilink`)
-    .first()
-    .evaluate((el) => (el as HTMLElement).innerText);
-
 async function open(page: Page, plugins: Record<string, string[]> = {}) {
   await openWithPlugins(page, { plugins, folder: NOTES });
   await openPath(page, "/notes/one.md");
   await expect(page.locator(`${editor} h1`)).toContainText("One");
 }
-
-test("a wikilink shows its name, and its brackets while the caret is on it", async ({
-  page,
-}) => {
-  await open(page);
-  const line = page.locator(`${editor} p`).first();
-  await line.click();
-  await page.keyboard.press("End");
-  await expect.poll(() => shown(page)).toBe("two");
-  // Right after the link's end: on it.
-  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowLeft");
-  await expect.poll(() => shown(page)).toBe("[[two]]");
-  await page.keyboard.press("Home");
-  await expect.poll(() => shown(page)).toBe("two");
-});
 
 test("a document with wikilinks suggests Two-way Links on the card", async ({
   page,

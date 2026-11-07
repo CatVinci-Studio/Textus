@@ -16,31 +16,33 @@ const selected = (page: Page) =>
   page.evaluate(() => window.getSelection()?.toString() ?? "");
 
 for (const from of ["text", "margin"])
-  test(`dragging a selection from the ${from} past the bottom scrolls down and selects on`, async ({
-    page,
-  }) => {
-    await openApp(page);
-    const lines = Array.from(
-      { length: 120 },
-      (_, i) => `Paragraph ${i + 1} of a long document.`,
-    );
-    await pasteMarkdown(page, lines.join("\n\n"));
-    await page.locator(scroller).evaluate((el) => (el.scrollTop = 0));
-    const box = (await page.locator(scroller).boundingBox())!;
-    const at = (await page.locator(paragraphs).nth(3).boundingBox())!;
-    const x = from === "text" ? at.x + 5 : box.x + 12;
-    await page.mouse.move(x, at.y + at.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(at.x + 40, box.y + box.height - 2, { steps: 4 });
-    await page.mouse.move(at.x + 40, box.y + box.height + 30, { steps: 4 });
-    await page.waitForTimeout(1200);
-    const scrolled = await page
-      .locator(scroller)
-      .evaluate((el) => el.scrollTop);
-    await page.mouse.up();
-    expect(scrolled).toBeGreaterThan(300);
-    expect(await selected(page)).toContain("Paragraph 18 of");
-  });
+  test(
+    `dragging a selection from the ${from} past the bottom scrolls down and selects on`,
+    { tag: "@perf" },
+    async ({ page }) => {
+      await openApp(page);
+      const lines = Array.from(
+        { length: 120 },
+        (_, i) => `Paragraph ${i + 1} of a long document.`,
+      );
+      await pasteMarkdown(page, lines.join("\n\n"));
+      await page.locator(scroller).evaluate((el) => (el.scrollTop = 0));
+      const box = (await page.locator(scroller).boundingBox())!;
+      const at = (await page.locator(paragraphs).nth(3).boundingBox())!;
+      const x = from === "text" ? at.x + 5 : box.x + 12;
+      await page.mouse.move(x, at.y + at.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(at.x + 40, box.y + box.height - 2, { steps: 4 });
+      await page.mouse.move(at.x + 40, box.y + box.height + 30, { steps: 4 });
+      await page.waitForTimeout(1200);
+      const scrolled = await page
+        .locator(scroller)
+        .evaluate((el) => el.scrollTop);
+      await page.mouse.up();
+      expect(scrolled).toBeGreaterThan(300);
+      expect(await selected(page)).toContain("Paragraph 18 of");
+    },
+  );
 
 test("a drag from the page's margin selects the lines it passes", async ({
   page,

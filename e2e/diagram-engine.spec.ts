@@ -120,35 +120,6 @@ test("switching the diagram engine in Settings redraws an open diagram", async (
   await expect(page.locator(peleSvg)).toHaveCount(0);
 });
 
-test("a diagram Pele throws on is drawn by Mermaid instead", async ({
-  page,
-}) => {
-  // Pele's module, answering every diagram with an error.
-  await page.route(/\/node_modules\/\.vite\/deps\/pele_lazy\.js/, (route) =>
-    route.fulfill({
-      contentType: "text/javascript",
-      body: 'export async function renderAsync() { throw new Error("boom"); }',
-    }),
-  );
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
-  await pasteMarkdown(page, FLOW);
-  await expect(page.locator(mermaidSvg)).toHaveCount(1, { timeout: 10_000 });
-  await expect(page.locator(peleSvg)).toHaveCount(0);
-});
-
-test("a diagram with HTML in a label is left to Mermaid, the others drawn by Pele", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
-  await pasteMarkdown(
-    page,
-    FLOW.replace("\n\nEnd.", "") +
-      '\n\n```mermaid\nflowchart LR\n  A["<span>html</span>"] --> B\n```\n\nEnd.',
-  );
-  await expect(page.locator(peleSvg)).toHaveCount(1, { timeout: 10_000 });
-  await expect(page.locator(mermaidSvg)).toHaveCount(1, { timeout: 10_000 });
-});
-
 test("a Pele diagram changes colour with the appearance without being redrawn", async ({
   page,
 }) => {

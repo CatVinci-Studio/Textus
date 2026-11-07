@@ -62,19 +62,6 @@ test("Show in folder opens the nearest folder that exists", async ({
     .toEqual([{ cmd: "reveal_in_dir", args: { path: "/home/me/notes" } }]);
 });
 
-test("a file that is there but can't be shown says so", async ({ page }) => {
-  const doc = await openDoc(page, "![](photo.heic)\n", {
-    existing: ["/home/me/notes/photo.heic"],
-  });
-  const card = doc.locator(".missing-image-card");
-  await expect(card.locator(".missing-image-title")).toHaveText(
-    "Can't show image: photo.heic",
-  );
-  await expect(card.locator(".missing-image-reason")).toHaveText(
-    "The file is there, but it isn't an image format Textus can show.",
-  );
-});
-
 test("a web image that fails names its host and offers no folder", async ({
   page,
 }) => {

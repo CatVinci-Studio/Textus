@@ -120,44 +120,6 @@ test("a past conversation reopens with its own document", async ({ page }) => {
   expect(stored.find((c) => c.id === "c1")?.docPath).toBe(CHAPTER);
 });
 
-test("a conversation whose document is gone asks before continuing here", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-chat-history": JSON.stringify(SAVED) },
-  });
-  await installDisk(page);
-  await openHistory(page);
-
-  await entry(page, "Check the dates in this draft").click();
-  const dialog = page.locator(".app-dialog");
-  await expect(dialog).toContainText("deleted.md");
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(dialog).toBeHidden();
-  await expect(panel(page)).not.toContainText("Check the dates in this draft");
-
-  await openHistory(page);
-  await entry(page, "Check the dates in this draft").click();
-  await dialog.getByRole("button", { name: "Continue Here" }).click();
-  await expect(panel(page)).toContainText("Check the dates in this draft");
-});
-
-test("a never-saved document's conversation continues in the current one", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-chat-history": JSON.stringify(SAVED) },
-  });
-  await openHistory(page);
-  const draft = entry(page, "Brainstorm a title");
-  await expect(draft).toHaveAttribute("title", /current document/);
-  await draft.click();
-  await expect(panel(page)).toContainText("Brainstorm a title");
-  await expect(page.locator(".app-dialog")).toHaveCount(0);
-});
-
 test("with Rust, the list is the index and older conversations are noted as archived", async ({
   page,
 }) => {

@@ -1564,6 +1564,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogKept:
     "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
   pluginInstall: "インストール",
+  pluginNeedsTextus: "Textus {version} が必要",
   pluginInstalling: "インストール中…",
   pluginsSortLabel: "並べ替え",
   pluginsSortPopular: "インストール数",

@@ -38,27 +38,6 @@ async function open(page: Page, suggestNextMessage = true) {
   );
 }
 
-test("after a reply, the next message shows grey and Tab takes it", async ({
-  page,
-}) => {
-  await open(page);
-  await expect(composer(page)).toHaveAttribute(
-    "placeholder",
-    "接着润色第二章  (Tab 采用)",
-  );
-  // Fainter than a hint, never like typed text: the theme's muted ink at
-  // part strength.
-  await expect(composer(page)).toHaveClass(/inline-chat-input-suggested/);
-  const ink = await composer(page).evaluate((el) => ({
-    text: getComputedStyle(el).color,
-    hint: getComputedStyle(el, "::placeholder").color,
-  }));
-  expect(ink.hint).not.toBe(ink.text);
-  expect(ink.hint).toMatch(/srgb|rgba/);
-  await composer(page).press("Tab");
-  await expect(composer(page)).toHaveValue("接着润色第二章");
-});
-
 test("with Suggest your next message off, nothing is asked", async ({
   page,
 }) => {

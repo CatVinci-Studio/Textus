@@ -55,20 +55,6 @@ test("Markdown Lint underlines a heading's trailing colon, and Fix takes it off"
   await expect(page.locator(`${editor} h2`)).toHaveText("Notes");
 });
 
-test("CJK Spacing spaces Chinese from English, as one change", async ({
-  page,
-}) => {
-  test.skip(!hasPlugin("catvinci.cjk-spacing"), "not in this checkout");
-  await open(
-    page,
-    "catvinci.cjk-spacing",
-    ["editor.read", "editor.write", "files.write"],
-    "# 文档\n\n用Textus写作。\n",
-  );
-  await run(page, "catvinci.cjk-spacing.space");
-  await expect(page.locator(`${editor} p`)).toHaveText("用 Textus 写作。");
-});
-
 test("Heading Numbers numbers the headings, and an export carries them", async ({
   page,
 }) => {

@@ -359,3 +359,48 @@ fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
         ("image/jpeg", "jpg")
     );
 }
+
+/// A server answering once with `head` (status line and headers) and `body`.
+fn answer_once(head: &'static str, body: Vec<u8>) -> String {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let url = format!("http://{}/a.png", listener.local_addr().unwrap());
+    std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buf = [0u8; 4096];
+        let _ = stream.read(&mut buf);
+        let _ = stream.write_all(head.as_bytes());
+        let _ = stream.write_all(&body);
+    });
+    url
+}
+
+fn commons_image(url: String) -> commons::CommonsImage {
+    commons::CommonsImage {
+        page: String::new(),
+        url,
+        mime: "image/png".into(),
+        width: 1,
+        height: 1,
+        author: String::new(),
+        license: "CC0".into(),
+    }
+}
+
+#[tokio::test]
+async fn a_commons_picture_too_large_is_refused_before_it_downloads() {
+    let url = answer_once(
+        "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: 99999999\r\nConnection: close\r\n\r\n",
+        Vec::new(),
+    );
+    let err = commons::fetch(&commons_image(url)).await.unwrap_err();
+    assert!(err.contains("too large"), "{err}");
+
+    let url = answer_once(
+        "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: 4\r\nConnection: close\r\n\r\n",
+        b"\x89PNG".to_vec(),
+    );
+    let picture = commons::fetch(&commons_image(url)).await.unwrap();
+    assert_eq!(picture.bytes, b"\x89PNG");
+    assert_eq!(picture.mime, "image/png");
+}

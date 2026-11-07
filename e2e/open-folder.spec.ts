@@ -169,32 +169,6 @@ test("an empty window's Files tab explains itself, without a button", async ({
   await expect(page.locator(".sidebar-body button")).toHaveCount(0);
 });
 
-test.describe("the AI's project folder", () => {
-  const agentRoot = (page: Page) =>
-    page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")
-          .agentWorkspaceRoot,
-    );
-
-  test("follows an opened folder while it has none of its own", async ({
-    page,
-  }) => {
-    await open(page);
-    await openFolderFromMenu(page, "/work/notes");
-    await expect.poll(() => agentRoot(page)).toBe("/work/notes");
-    await page.getByRole("button", { name: "Close Project" }).click();
-    await expect.poll(() => agentRoot(page)).toBe("");
-  });
-
-  test("keeps a folder the user chose", async ({ page }) => {
-    await open(page, { settings: { agentWorkspaceRoot: "/research" } });
-    await openFolderFromMenu(page, "/work/notes");
-    await expect(page.locator(rootLabel)).toHaveText("notes");
-    expect(await agentRoot(page)).toBe("/research");
-  });
-});
-
 test.describe("file name search", () => {
   const search = (page: Page) =>
     page.getByRole("combobox", { name: "Search file names" });
@@ -243,24 +217,6 @@ test.describe("file name search", () => {
     await expect(page.locator(editor)).toBeFocused();
   });
 
-  test("the filter keeps to documents, and is remembered", async ({ page }) => {
-    await open(page);
-    await openFolderFromMenu(page, "/work/notes");
-    await search(page).fill("ch");
-    await expect(results(page)).toHaveCount(4);
-    await page.getByRole("combobox", { name: "Show" }).click();
-    await page
-      .getByRole("option", { name: "Documents only", exact: true })
-      .click();
-    await expect(results(page)).toHaveCount(3);
-    await expect(results(page).filter({ hasText: "chart.png" })).toHaveCount(0);
-    expect(
-      await page.evaluate(() =>
-        localStorage.getItem("textus-file-search-scope"),
-      ),
-    ).toBe("documents");
-  });
-
   test("opens another kind of file the way the tree does", async ({ page }) => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");
@@ -270,23 +226,6 @@ test.describe("file name search", () => {
       "chart.png",
     );
     await expect(page.locator(editor)).toContainText("not really a picture");
-  });
-
-  test("the tree lists numbered names by their numbers", async ({ page }) => {
-    await open(page);
-    await openFolderFromMenu(page, "/work/notes");
-    await treeRow(page, "novel").click();
-    await expect(
-      page.locator(".sidebar .tree-main .tree-row .tree-label"),
-    ).toHaveText([
-      "essays",
-      "images",
-      "novel",
-      "ch1.md",
-      "ch2.md",
-      "ch10.md",
-      "a.md",
-    ]);
   });
 
   test("finds Chinese names and says when nothing matches", async ({

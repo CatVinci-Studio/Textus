@@ -1628,6 +1628,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogKept:
     "Die Liste vom letzten Mal - eine neuere ließ sich nicht laden: {reason}",
   pluginInstall: "Installieren",
+  pluginNeedsTextus: "Benötigt Textus {version}",
   pluginInstalling: "Wird installiert …",
   pluginsSortLabel: "Sortieren nach",
   pluginsSortPopular: "Meist installiert",

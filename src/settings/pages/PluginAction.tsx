@@ -11,6 +11,7 @@ import {
   catalogSnapshot,
   subscribeCatalog,
   updateFor,
+  neededTextus,
 } from "../../plugins/store/catalog";
 import { canSwitch } from "../../plugins/store/lifecycle";
 import { usePluginInstall } from "./usePluginInstall";
@@ -34,6 +35,7 @@ export function usePluginActions(t: Strings) {
         name={pluginName(record ?? { id, manifest: item?.manifest ?? null })}
         record={record}
         update={record ? updateFor(id, catalog) : null}
+        needs={item ? neededTextus(item) : null}
         installing={installing === id}
         onInstall={() => item && void install(item)}
         onUpdate={() => item && void install(item)}
@@ -49,6 +51,8 @@ interface Action {
   label: string;
   run: () => void;
   danger?: boolean;
+  /** Shown, not pressable. */
+  unavailable?: boolean;
 }
 
 /**
@@ -61,6 +65,7 @@ export function PluginAction({
   name,
   record,
   update,
+  needs,
   installing,
   onInstall,
   onUpdate,
@@ -73,6 +78,8 @@ export function PluginAction({
   record: PluginRecord | undefined;
   /** The catalog's newer version, if there is one. */
   update: string | null;
+  /** The newer Textus the catalog's version needs, if it doesn't run here. */
+  needs: string | null;
   installing: boolean;
   onInstall: () => void;
   onUpdate: () => void;
@@ -81,7 +88,13 @@ export function PluginAction({
 }) {
   let main: Action;
   const menu: Action[] = [];
-  if (!record) {
+  if (!record && needs) {
+    main = {
+      label: t.pluginNeedsTextus.replace("{version}", needs),
+      run: () => {},
+      unavailable: true,
+    };
+  } else if (!record) {
     main = {
       label: installing ? t.pluginInstalling : t.pluginInstall,
       run: onInstall,
@@ -121,7 +134,7 @@ export function PluginAction({
       <button
         type="button"
         className={`text-button plugin-action-main${menu.length ? " is-split" : ""}${main.danger ? " danger" : ""}`}
-        disabled={installing}
+        disabled={installing || main.unavailable}
         onClick={main.run}
       >
         {main.label}

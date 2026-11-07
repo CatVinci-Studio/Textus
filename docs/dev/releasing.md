@@ -98,7 +98,14 @@ in the next one, through the merge back.
 5. `release.yml` checks that the tag matches the version files and that CI
    (`check`, `e2e`, `native`) passed on the tagged commit - it waits if CI is
    still running, and stops if it failed, so the builds don't run the tests
-   again. Then it builds,
+   again. A pull request runs macOS, Windows and the iOS build only for
+   platform code, so this run after the merge is the first to run all of
+   them: before tagging, look at it whole, `e2e-webkit` and `ios` included,
+   which the gate doesn't wait for. A flaky job is rerun alone
+   (`gh run rerun <run> --failed`); a real failure is fixed on `main`, synced
+   to `stable` again, and the unpublished tag moved to the new commit. Run
+   `npm run test:perf` once and compare its numbers with the last release's:
+   a reference, not a gate. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux
    (x64 and ARM64 each; see [Installers](#installers)),
    writes the updater manifest onto the draft, publishes the GitHub release,

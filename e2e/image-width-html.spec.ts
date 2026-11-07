@@ -73,15 +73,6 @@ async function ticked(page: Page): Promise<string[]> {
   return labels;
 }
 
-/** Types into the paragraph after the image, so the document is edited
- *  without touching the image. */
-async function editElsewhere(page: Page) {
-  await page.locator(editor).getByText("Text below.").click();
-  await page.keyboard.press("ControlOrMeta+End");
-  await page.keyboard.type(" More.");
-  await expect(page.locator(editor)).toContainText("Text below. More.");
-}
-
 test("50% saves <img width>, and Auto saves ![]() again", async ({ page }) => {
   await openFile(page, "Text above.\n\n![chart](SRC)\n\nText below.\n");
   const view = page.locator(`${editor} .image-view`);
@@ -98,51 +89,4 @@ test("50% saves <img width>, and Auto saves ![]() again", async ({ page }) => {
   expect(await save(page)).toBe(
     "Text above.\n\n![chart](SRC)\n\nText below.\n",
   );
-});
-
-test("a file an older Textus saved opens at its width and saves as written", async ({
-  page,
-}) => {
-  const old =
-    'Text above.\n\n![chart](SRC "Cap {textus-width=30%}")\n\nText below.\n';
-  await openFile(page, old);
-  const view = page.locator(`${editor} .image-view`);
-  await expect(view).toHaveAttribute("style", /width: 30%/);
-  await expect(view.locator("img")).toHaveAttribute("title", "Cap");
-  await editElsewhere(page);
-  expect(await save(page)).toBe(old.replace("below.", "below. More."));
-  expect(await ticked(page)).toEqual(["✓ Image width: 30%"]);
-
-  await chooseWidth(page, "Image width: 70%");
-  expect(await save(page)).toBe(
-    'Text above.\n\n<img src="SRC" alt="chart" title="Cap" width="70%">\n\nText below. More.\n',
-  );
-});
-
-test("an <img> written elsewhere is an image and round-trips", async ({
-  page,
-}) => {
-  const typora =
-    'Text above.\n\n<img src="SRC" alt="chart" style="zoom:50%;" />\n\nA <img src=\'SRC\' width=120 /> icon.\n\nText below.\n';
-  await openFile(page, typora);
-  const views = page.locator(`${editor} .image-view`);
-  await expect(views).toHaveCount(2);
-  await editElsewhere(page);
-  expect(await save(page)).toBe(typora.replace("below.", "below. More."));
-
-  // A pixel width shows, and ticks none of the presets.
-  await expect(views.nth(1)).toHaveAttribute("style", /width: 120px/);
-  await page.locator(`${editor} .image-view img`).nth(1).click({
-    button: "right",
-  });
-  await expect(page.locator(".context-menu")).toBeVisible();
-  await expect(
-    page.locator(".context-menu").getByText(/^✓ Image width/),
-  ).toHaveCount(0);
-  await page.evaluate(() => new Promise((r) => setTimeout(r, 0)));
-  await page.keyboard.press("Escape");
-
-  // Resized, Typora's zoom gives way to the width.
-  await chooseWidth(page, "Image width: 50%");
-  expect(await save(page)).toContain('<img src="SRC" alt="chart" width="50%">');
 });

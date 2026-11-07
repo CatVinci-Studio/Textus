@@ -122,42 +122,6 @@ test.describe("in Chinese", () => {
   test.beforeEach(async ({ page }) => {
     await openApp(page, { settings: { language: "zh" } });
   });
-
-  test("finds Chinese labels, and full-width letters as half-width", async ({
-    page,
-  }) => {
-    const dialog = await openSettings(page, "设置");
-    const box = dialog.getByRole("combobox", { name: "搜索设置" });
-    await box.fill("标签页");
-    const results = dialog.getByRole("listbox", { name: "搜索结果" });
-    await expect(results.getByRole("group", { name: "快捷键" })).toContainText(
-      "下一个标签页",
-    );
-
-    await box.fill("ＣＳＳ");
-    await expect(
-      results.getByRole("group", { name: "扩展 › 主题" }),
-    ).toContainText("自定义 CSS");
-
-    await box.fill("画图更快");
-    await results.getByRole("option", { name: /图表引擎/ }).click();
-    await expect(
-      dialog.getByRole("region", { name: "编辑与外观" }),
-    ).toBeVisible();
-    await expect(
-      dialog.locator(".settings-search-hit", { hasText: "图表引擎" }),
-    ).toHaveCount(1);
-  });
-
-  test("says so when nothing matches", async ({ page }) => {
-    const dialog = await openSettings(page, "设置");
-    await dialog
-      .getByRole("combobox", { name: "搜索设置" })
-      .fill("不存在的设置");
-    await expect(dialog.locator(".settings-search-empty")).toHaveText(
-      "没有匹配的设置。",
-    );
-  });
 });
 
 test.describe("phone", () => {

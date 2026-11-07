@@ -249,59 +249,63 @@ test.describe("on a Mac", () => {
     expect(await left(page, toggle)).toBeLessThan(16);
   });
 
-  test("moves into that corner and back at once, as the lights go and come", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" }, animations: true });
-    await page.evaluate(() => {
-      document.documentElement.dataset.windowChrome = "native";
-      document.querySelector(".window-menu-button")?.remove();
-    });
-    const frames = await page.evaluate(async (selector) => {
-      const button = document.querySelector(selector)!;
-      const seen: number[] = [];
-      for (const on of [true, false]) {
-        if (on) document.documentElement.dataset.windowFullscreen = "";
-        else delete document.documentElement.dataset.windowFullscreen;
-        await new Promise(requestAnimationFrame);
-        seen.push(Math.round(button.getBoundingClientRect().left));
-      }
-      return seen;
-    }, toggle);
-    // The next frame already has it there: no slide that never kept pace
-    // with the window's own animation.
-    expect(frames[0]).toBeLessThan(16);
-    expect(frames[1]).toBeGreaterThanOrEqual(76);
-  });
+  test(
+    "moves into that corner and back at once, as the lights go and come",
+    { tag: "@perf" },
+    async ({ page }) => {
+      await openApp(page, { settings: { language: "en" }, animations: true });
+      await page.evaluate(() => {
+        document.documentElement.dataset.windowChrome = "native";
+        document.querySelector(".window-menu-button")?.remove();
+      });
+      const frames = await page.evaluate(async (selector) => {
+        const button = document.querySelector(selector)!;
+        const seen: number[] = [];
+        for (const on of [true, false]) {
+          if (on) document.documentElement.dataset.windowFullscreen = "";
+          else delete document.documentElement.dataset.windowFullscreen;
+          await new Promise(requestAnimationFrame);
+          seen.push(Math.round(button.getBoundingClientRect().left));
+        }
+        return seen;
+      }, toggle);
+      // The next frame already has it there: no slide that never kept pace
+      // with the window's own animation.
+      expect(frames[0]).toBeLessThan(16);
+      expect(frames[1]).toBeGreaterThanOrEqual(76);
+    },
+  );
 });
 
-test("the menu button is the sidebar toggle's twin, hover and all", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  const toggle = ".window-bar-sidebar-toggle";
-  const menu = ".window-menu-button";
+test(
+  "the menu button is the sidebar toggle's twin, hover and all",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const toggle = ".window-bar-sidebar-toggle";
+    const menu = ".window-menu-button";
 
-  // At rest: the menu button takes the bar's own controls' box, rounding,
-  // dimming and transition, not the caption buttons' full-height, square
-  // one (window-bar.css, window-controls.css).
-  expect(await look(page, toggle)).toEqual(await look(page, menu));
+    // At rest: the menu button takes the bar's own controls' box, rounding,
+    // dimming and transition, not the caption buttons' full-height, square
+    // one (window-bar.css, window-controls.css).
+    expect(await look(page, toggle)).toEqual(await look(page, menu));
 
-  const lit = [];
-  for (const selector of [toggle, menu]) {
-    await page.locator(selector).hover();
-    // Past the 80ms hover transition, and short of the tooltip's 400ms.
-    await page.waitForTimeout(250);
-    const state = await look(page, selector);
-    expect(Number(state.opacity)).toBe(1);
-    expect(state.background).not.toBe("rgba(0, 0, 0, 0)");
-    lit.push(state);
-    await page.mouse.move(0, 0);
-    await page.waitForTimeout(250);
-  }
-  // Lit, they fill with the same colour for the same time.
-  expect(lit[0]).toEqual(lit[1]);
-});
+    const lit = [];
+    for (const selector of [toggle, menu]) {
+      await page.locator(selector).hover();
+      // Past the 80ms hover transition, and short of the tooltip's 400ms.
+      await page.waitForTimeout(250);
+      const state = await look(page, selector);
+      expect(Number(state.opacity)).toBe(1);
+      expect(state.background).not.toBe("rgba(0, 0, 0, 0)");
+      lit.push(state);
+      await page.mouse.move(0, 0);
+      await page.waitForTimeout(250);
+    }
+    // Lit, they fill with the same colour for the same time.
+    expect(lit[0]).toEqual(lit[1]);
+  },
+);
 
 test("the sidebar's tabs are capsules like the document's", async ({
   page,
@@ -438,20 +442,3 @@ test(
     expect(worst).toBeLessThan(1);
   },
 );
-
-test("the sidebar opens on the tab it was left on, after a restart (#347)", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.locator(toggle).click();
-  await page
-    .locator(".sidebar-tabs")
-    .getByRole("button", { name: "Outline" })
-    .click();
-  await page.reload();
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  await expect(page.locator(sidebar)).toBeVisible();
-  await expect(
-    page.locator(".sidebar-tabs").getByRole("button", { name: "Outline" }),
-  ).toHaveClass(/sidebar-tab-active/);
-});

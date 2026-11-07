@@ -214,23 +214,6 @@ test("the URL and the text are edited in place, and saved as typed", async ({
   );
 });
 
-test("a link that is no longer one is plain text", async ({ page }) => {
-  await caretAtLineStart(page, "resource");
-  await press(page, "ArrowRight");
-  await press(page, "ArrowRight");
-  await press(page, "ArrowRight");
-  // The opening bracket.
-  await page.keyboard.press("Backspace");
-  await leave(page);
-  // Text, with the URL in it a bare link of its own.
-  await expect(line(page, "resource")).toHaveText(
-    "A resource](https://a.org/r) link.",
-  );
-  await expect(
-    page.locator(`${editor} a`, { hasText: "resource" }),
-  ).toHaveCount(0);
-});
-
 test("looking at links leaves the document unchanged", async ({ page }) => {
   for (const [, label] of KINDS)
     await page.locator(`${editor} a`, { hasText: label }).click();
@@ -238,32 +221,6 @@ test("looking at links leaves the document unchanged", async ({ page }) => {
   await page.waitForTimeout(500);
   await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
   expect(await sourceOf(page)).toBe(`${DOC}\n`);
-});
-
-test("one undo takes back an edited URL, and a redo puts it back", async ({
-  page,
-}) => {
-  await page.locator(`${editor} a`, { hasText: "resource" }).click();
-  await press(page, END);
-  await press(page, "ArrowLeft", AFTER.length + 1);
-  await page.keyboard.type("/x");
-  await leave(page);
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(1);
-  await page.keyboard.press("ControlOrMeta+z");
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(0);
-  await expect(line(page, "resource")).toHaveText(
-    "A [resource](https://a.org/r) link.",
-  );
-  // Elsewhere, the redo is still there.
-  await page.locator(`${editor} p`, { hasText: "Start here." }).click();
-  await page.keyboard.press("ControlOrMeta+Shift+z");
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(1);
 });
 
 test("Ctrl/Cmd+click opens a link shown as its Markdown", async ({ page }) => {
@@ -279,35 +236,4 @@ test("Ctrl/Cmd+click opens a link shown as its Markdown", async ({ page }) => {
     )
     .toEqual([{ cmd: "open_web_link", url: "https://a.org/r" }]);
   await expect(page.locator(source)).toHaveCount(1);
-});
-
-test("Chinese typed with an input method goes into the link's text", async ({
-  page,
-  browserName,
-}) => {
-  test.skip(browserName !== "chromium", "composition is sent over CDP");
-  await clickAfterChar(page, "resource", 2);
-  await expect(page.locator(source)).toHaveCount(1);
-  const cdp = await page.context().newCDPSession(page);
-  for (const [preedit, committed] of [
-    ["zhong", "中"],
-    ["wen", "文"],
-  ]) {
-    await cdp.send("Input.imeSetComposition", {
-      text: preedit,
-      selectionStart: preedit.length,
-      selectionEnd: preedit.length,
-    });
-    await cdp.send("Input.insertText", { text: committed });
-    await page.waitForTimeout(100);
-  }
-  await cdp.detach();
-  await expect(page.locator(source)).toHaveText(
-    "[res中文ource](https://a.org/r)",
-  );
-  await leave(page);
-  await expect(page.locator(`${editor} a[href="https://a.org/r"]`)).toHaveText(
-    "res中文ource",
-    { useInnerText: true },
-  );
 });

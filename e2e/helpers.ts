@@ -79,6 +79,8 @@ export async function openApp(
     settings?: Record<string, unknown>;
     colorScheme?: "light" | "dark";
     animations?: boolean;
+    /** What shows once the window is ready; an editor by default. */
+    ready?: string;
   } = {},
 ) {
   await page.emulateMedia({ colorScheme: options.colorScheme ?? "light" });
@@ -117,7 +119,9 @@ export async function openApp(
       content:
         "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }",
     });
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+  await page.waitForSelector(
+    options.ready ?? '[data-active-tab="true"] .ProseMirror',
+  );
 }
 
 /** Puts markdown into the active editor the way a paste does. */

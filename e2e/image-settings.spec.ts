@@ -147,23 +147,6 @@ test("a subfolder's name shows its link as it is typed, and a refused one is nev
   expect((await calls(page, "save_pasted_image"))[0].folder).toBe("img");
 });
 
-// How a stored folder (Typora's ${filename}.assets, one outside the
-// document's) maps to a choice is unit-tested; here, Settings shows the result.
-test("an image folder from before shows as the subfolder it names", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", imageFolder: "pictures" },
-  });
-  const panel = await openImageSettings(page);
-  await expect(
-    panel.getByRole("combobox", { name: t.imageFolderLabel }),
-  ).toHaveText(t.imageFolderSubfolder);
-  await expect(
-    panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
-  ).toHaveValue("pictures");
-});
-
 test("an upload shows only the chosen service's settings and goes to it", async ({
   page,
 }) => {

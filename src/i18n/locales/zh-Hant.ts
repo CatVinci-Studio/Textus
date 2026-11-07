@@ -1481,6 +1481,7 @@ export default {
   marketSkillsNone: "還沒有上架的技能。",
   pluginsCatalogKept: "顯示的是上次的清單，沒能取得新的：{reason}",
   pluginInstall: "安裝",
+  pluginNeedsTextus: "需要 Textus {version}",
   pluginInstalling: "正在安裝…",
   pluginsSortLabel: "排序",
   pluginsSortPopular: "安裝最多",
