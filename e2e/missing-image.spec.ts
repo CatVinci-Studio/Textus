@@ -22,8 +22,17 @@ async function sourceOf(page: Page): Promise<string> {
 test("a local image that isn't on disk names the file and where it was looked for", async ({
   page,
 }) => {
-  const doc = await openDoc(page, "![A sleeping cat](../img/cat%201.png)\n");
+  const doc = await openDoc(
+    page,
+    "![A sleeping cat](../img/cat%201.png)\n\n![](assets/cat.png)\n",
+    { loadable: ["/home/me/notes/assets/cat.png"] },
+  );
+  // Only the missing one gets a card; the one that loads shows.
   const card = doc.locator(".missing-image-card");
+  await expect(card).toHaveCount(1);
+  await expect(
+    doc.locator('.image-view img[data-doc-src="assets/cat.png"]'),
+  ).toBeVisible();
   await expect(card.locator(".missing-image-title")).toHaveText(
     "Image not found: cat 1.png",
   );
@@ -33,7 +42,9 @@ test("a local image that isn't on disk names the file and where it was looked fo
   );
   // The relative path, resolved: where the user can go and look.
   await expect(card).toHaveAttribute("title", "/home/me/img/cat 1.png");
-  await expect(doc.locator(".image-view img")).toBeHidden();
+  await expect(
+    doc.locator('.image-view img[data-doc-src="../img/cat%201.png"]'),
+  ).toBeHidden();
   await expect(card.getByRole("button")).toHaveText([
     "Choose image…",
     "Show in folder",
@@ -72,14 +83,6 @@ test("a web image that fails names its host and offers no folder", async ({
     "https://img.example.com/brand/logo.png",
   );
   await expect(card.getByRole("button")).toHaveText(["Choose image…"]);
-});
-
-test("an image that loads shows no card", async ({ page }) => {
-  const doc = await openDoc(page, "![](assets/cat.png)\n", {
-    loadable: ["/home/me/notes/assets/cat.png"],
-  });
-  await expect(doc.locator(".image-view img")).toBeVisible();
-  await expect(doc.locator(".missing-image-card")).toHaveCount(0);
 });
 
 test("Choose image… points the image at the chosen file, as one undo step", async ({
