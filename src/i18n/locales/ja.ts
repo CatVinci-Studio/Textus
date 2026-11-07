@@ -280,6 +280,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "返答のたびに、次に送りそうな言葉を最大 3 つ入力欄の上にボタンで表示し、いちばん可能性の高いものは入力欄に灰色でも表示します。クリックで送信、Tab で灰色のものを使えます。短い依頼が一回増えます。",
   composerSuggestionTab: "Tab で使う",
   composerFollowUps: "次のメッセージの候補",
+  researchSubHelpersLabel: "リサーチ：問いの一部をサブ助手に任せる",
+  researchSubHelpersHint:
+    "リサーチで、ひとつの問いを調べる助手が、その一部を自分のサブ助手に任せられます。より詳しくなりますが、遅くなり、モデルの呼び出しが 25〜50% ほど増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
@@ -370,6 +373,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolSearchPapers: "論文で「{arg}」を検索",
   toolSearchReferences: "参考資料で「{arg}」を検索",
   toolAddNote: "メモ：{arg}",
+  toolDelegateTask: "分担：{arg}",
   paperOutlineTitle: "アウトライン",
   paperOutlineTotal: "合計 約 {n} {unit}",
   paperOutlineThesis: "主題文",
@@ -717,6 +721,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSkillsBuiltinTag: "組み込み",
   agentSkillsOpen: "開く",
   agentSkillsReset: "リセット",
+  madeByTextusAi: `${AI_NAME} で作成`,
+  skillDelete: "削除",
+  skillDeleteAsk: "「{name}」を削除しますか？ファイルはゴミ箱に移動します。",
+  skillDeleteAskMobile: "「{name}」を削除しますか？",
   agentSkillsResetConfirm:
     "「{name}」のコピーを削除して、組み込みスキルに戻しますか？",
   agentSkillsShadows: "組み込みスキルを置き換えています",
@@ -1108,7 +1116,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportLimit:
     "今日はすでに何件か送信しています。明日もう一度送るか、GitHub で送信してください。",
   reportFailed: "送信できませんでした。",
-  menuHelpTutorials: "動画チュートリアル",
+  menuHelpTutorials: "オンラインチュートリアル",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",
@@ -1305,7 +1313,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
   tutorialDoneTitle: "完了",
   tutorialDoneBody:
-    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどは動画チュートリアルにあります。",
+    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",

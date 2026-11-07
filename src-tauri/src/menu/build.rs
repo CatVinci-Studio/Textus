@@ -384,7 +384,7 @@ pub(crate) fn build(
         .separator()
         .text(markdown_id, markdown)
         .text(agent_id, agent)
-        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
+        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Online Tutorials"))
         .separator()
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .text(REPORT_ID, l(REPORT_ID, "Report a Problem…"))

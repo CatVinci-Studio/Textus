@@ -6,9 +6,12 @@
 //! one number for the whole paper and the paper's budget is spent by all of
 //! them together.
 
+#[cfg(test)]
+pub(crate) use super::helper::helper_instructions;
+use super::helper::research_question;
 use super::model::ask;
 pub(crate) use super::model::{clip, Model, Watch};
-use super::notes::NoteTaker;
+#[cfg(test)]
 pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::prompts;
 use super::sources::link_safe;
@@ -16,14 +19,14 @@ use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
-use aicompat::agent::{run_agent_loop, AgentTurn, ProviderEvent, Source, ToolCall};
+use aicompat::agent::{ProviderEvent, Source};
 use futures_util::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use std::sync::Mutex;
 
-use super::tuning::{HELPER_STEPS, MAX_QUESTIONS, PLAN_GLIMPSE, RESEARCHERS_AT_ONCE as AT_ONCE};
+use super::tuning::{MAX_QUESTIONS, PLAN_GLIMPSE, RESEARCHERS_AT_ONCE as AT_ONCE};
 
 /// What the researchers work with besides the web and add_note: the tools
 /// every mode shares - the files, the reference library, the plugins' and
@@ -49,7 +52,7 @@ impl Kit<'_, '_> {
     }
 
     /// What a researcher is told about the user's own material.
-    fn prompt(&self) -> String {
+    pub(super) fn prompt(&self) -> String {
         material_prompt(
             &self.attached(),
             self.tools
@@ -179,103 +182,6 @@ pub(crate) fn parse_questions(reply: &str) -> Vec<String> {
     }
     out.truncate(MAX_QUESTIONS);
     out
-}
-
-/// What a question's helper is told; `own` is what it is told about the
-/// user's own material.
-pub(crate) fn helper_instructions(paper: &Paper, own: &str) -> String {
-    let profile = paper.genre.profile();
-    prompts::fill(
-        "research.helper",
-        &[
-            ("genre", &profile.name),
-            ("topic", &paper.topic),
-            ("language", &paper.language),
-            ("sources", &profile.research_sources),
-            ("material", &own),
-        ],
-    )
-}
-
-/// One question's helper: its notes, in the order it kept them. Its own
-/// registry has the web tools, ranked by its question, and add_note; the
-/// rest it shares with the other helpers through `kit`.
-#[allow(clippy::too_many_arguments)]
-async fn research_question(
-    model: &dyn Model,
-    paper: &Paper,
-    web: &WebPlan,
-    budget: &SharedBudget,
-    kit: &Kit<'_, '_>,
-    (index, question): (u32, &str),
-    share: Share,
-    send: &(dyn Fn(PaperEvent) + Sync),
-) -> Result<Vec<Note>, String> {
-    let instructions = helper_instructions(paper, &kit.prompt());
-    let notes = Mutex::new(Vec::new());
-    let taker = NoteTaker {
-        question,
-        index,
-        web,
-        ctx: kit.ctx,
-        notes: &notes,
-        send,
-    };
-    let mut own = ToolRegistry::shared();
-    own.extend(web.tools(question));
-    own.add(taker.tool());
-    let mut specs = own.specs();
-    specs.extend(kit.tools.specs());
-    let spent = Mutex::new([0usize; 3]);
-    let execute = |call: ToolCall| {
-        let (own, spent) = (&own, &spent);
-        async move {
-            if let Some(refused) = share.spend(&call.name, &mut spent.lock().unwrap()) {
-                return refused.into();
-            }
-            let web_call = call.name != ADD_NOTE_TOOL && own.offers(&call.name);
-            if web_call || kit.tools.offers(&call.name) {
-                send(PaperEvent::Activity {
-                    question: index,
-                    tool: call.name.clone(),
-                    arguments: call.arguments.clone(),
-                });
-            }
-            if !own.offers(&call.name) {
-                return kit.tools.execute(kit.ctx, call).await;
-            }
-            let output = own.execute(kit.ctx, call).await;
-            if web_call {
-                let spent = budget.snapshot();
-                send(PaperEvent::Budget {
-                    used: spent.used,
-                    remaining: spent.remaining(),
-                });
-            }
-            output
-        }
-    };
-    run_agent_loop(
-        Vec::new(),
-        AgentTurn::user(format!("Your question: {question}")),
-        HELPER_STEPS,
-        |turns: Vec<AgentTurn>| {
-            let (instructions, specs) = (&instructions, &specs);
-            async move { model.step(instructions, &turns, specs).await }
-        },
-        execute,
-        |name| {
-            if own.offers(name) {
-                own.how_to_run(name)
-            } else {
-                kit.tools.how_to_run(name)
-            }
-        },
-        |_| {},
-    )
-    .await?;
-    let kept = std::mem::take(&mut *notes.lock().unwrap());
-    Ok(kept)
 }
 
 /// The research so far, kept as `research.json` while it is under way: the
@@ -483,6 +389,15 @@ impl Share {
             each(limits.fetches),
             each(limits.paper_lookups),
         ])
+    }
+
+    /// Whether `spent` has used every kind of the share: nothing is left to
+    /// search, read or look up with.
+    pub(crate) fn used_up(&self, spent: &[usize; 3]) -> bool {
+        spent
+            .iter()
+            .zip(self.0)
+            .all(|(spent, share)| *spent >= share)
     }
 
     /// Counts a call against the share, in `spent`; why it is refused once

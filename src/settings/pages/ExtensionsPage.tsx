@@ -103,7 +103,13 @@ export function ExtensionsPage(props: SettingsPageProps) {
               installedTitle={t.pluginsInstalledGroup}
               // Only the skills added here; each mode's own, always on,
               // are under Textus AI.
-              installed={<OwnSkillsList t={t} query={skillQuery} />}
+              installed={
+                <OwnSkillsList
+                  t={t}
+                  query={skillQuery}
+                  onFilesDeleted={props.onFilesDeleted}
+                />
+              }
               available={
                 <AvailableSkills t={t} catalog={catalog} query={skillQuery} />
               }

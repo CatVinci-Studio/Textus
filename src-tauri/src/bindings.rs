@@ -120,6 +120,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::links::open_about_link,
                 crate::commands::links::open_web_link,
                 crate::commands::links::open_tutorials_page,
+                crate::commands::web_asset::web_asset,
                 crate::commands::export::export_save_dialog,
                 crate::commands::export::detect_pandoc,
                 crate::commands::export::export_via_pandoc,
@@ -320,6 +321,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::workspace::set_skill_modes,
                 crate::ai::workspace::set_skill_off,
                 crate::ai::workspace::save_written_skill,
+                crate::ai::workspace::delete_global_skill,
             ]),
         ),
         (

@@ -294,6 +294,9 @@ type /name in a conversation to use one.
     "After each reply, up to three things you will probably say next show as buttons over the message box, the likeliest also grey in it; click one to send it, or Tab to take the grey one. It costs one more short request.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Suggested next messages",
+  researchSubHelpersLabel: "Research: hand parts of a question to helpers",
+  researchSubHelpersHint:
+    "In Research, the helper looking into a question may hand a narrower part to a helper of its own. More thorough, but slower, with a quarter to half more model calls.",
   rememberAutomaticallyLabel: "Remember automatically",
   rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Project in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
@@ -382,6 +385,7 @@ type /name in a conversation to use one.
   toolSearchPapers: "Searching papers for “{arg}”",
   toolSearchReferences: "Searching references for “{arg}”",
   toolAddNote: "Noted: {arg}",
+  toolDelegateTask: "Handing over: {arg}",
   paperOutlineTitle: "Outline",
   paperOutlineTotal: "About {n} {unit} in all",
   paperOutlineThesis: "Thesis",
@@ -729,6 +733,10 @@ type /name in a conversation to use one.
   agentSkillsBuiltinTag: "Built-in",
   agentSkillsOpen: "Open",
   agentSkillsReset: "Reset",
+  madeByTextusAi: `Made with ${AI_NAME}`,
+  skillDelete: "Delete",
+  skillDeleteAsk: "Delete “{name}”? Its files go to the Trash.",
+  skillDeleteAskMobile: "Delete “{name}”?",
   agentSkillsResetConfirm:
     "Delete your copy of “{name}” and use the built-in skill again?",
   agentSkillsShadows: "Replaces a built-in skill",
@@ -1128,7 +1136,7 @@ type /name in a conversation to use one.
   reportLimit:
     "You've sent several reports today. Try again tomorrow, or submit it on GitHub.",
   reportFailed: "Couldn't send it.",
-  menuHelpTutorials: "Video Tutorials",
+  menuHelpTutorials: "Online Tutorials",
   windowMinimize: "Minimize",
   windowMaximize: "Maximize",
   windowRestore: "Restore Down",
@@ -1331,7 +1339,7 @@ type /name in a conversation to use one.
     "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
-    "Now start writing your own; tables, formulas, themes, review and the rest are in the Video Tutorials.",
+    "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Project, the folder button in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",

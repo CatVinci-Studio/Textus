@@ -130,7 +130,7 @@ pub async fn open_community_page(
     open_community(&app, language.as_deref())
 }
 
-/// Help > Video Tutorials, its row in Settings, and the tour's "Watch the
+/// Help > Online Tutorials, its row in Settings, and the tour's "Watch the
 /// animation" links, which name their `clip`.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

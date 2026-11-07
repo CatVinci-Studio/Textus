@@ -219,6 +219,14 @@ export const links = {
   openWebLink: (url: string) => command("open_web_link", url),
 };
 
+/** Web fonts, their stylesheets and web pictures, fetched by Rust: the
+ *  window's Content Security Policy keeps the page from loading them. A
+ *  stylesheet comes as its text, a font or picture as a data URL. */
+export const webAssets = {
+  get: (url: string, kind: "stylesheet" | "font" | "image") =>
+    command("web_asset", url, kind),
+};
+
 /** Web pages in tabs as native webviews laid over each tab's area. Desktop. */
 export const webPages = {
   show: (

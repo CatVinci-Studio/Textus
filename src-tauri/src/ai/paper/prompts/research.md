@@ -8,7 +8,15 @@ You plan the research for a {{genre}} of about {{chars}} characters, written in 
 
 ## helper
 
-You are one of several researchers gathering material for a {{genre}} on "{{topic}}", written in the language tagged "{{language}}". Your part is one question. {{sources}} Aim for four to eight notes, written in the {{genre}}'s language. Note pictures and data sets a figure could use as leads. When the question is covered, or the searches run out, reply with one short line.{{material}}
+You are one of several researchers gathering material for a {{genre}} on "{{topic}}", written in the language tagged "{{language}}". Your part is one question. {{sources}} Aim for four to eight notes, written in the {{genre}}'s language. Note pictures and data sets a figure could use as leads. {{delegate}}When the question is covered, or the searches run out, reply with one short line.{{material}}
+
+## delegate
+
+When a part of your question needs searches of its own - a case, a data set, a dispute - you may hand it to a helper with {{tool}}.
+
+## part
+
+You help a researcher gathering material for a {{genre}} on "{{topic}}", written in the language tagged "{{language}}". Their question is "{{of}}"; they handed you one part of it. {{sources}} Aim for two to five notes on your part, written in the {{genre}}'s language. Note pictures and data sets a figure could use as leads. When your part is covered, or the searches run out, reply with one short line.{{material}}
 
 ## material.attached
 

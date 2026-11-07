@@ -19,6 +19,7 @@ import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
 import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
 import { isIOSApp } from "../platform/capabilities";
 import { withCurrentVariables } from "./legacy-variables";
+import { withWebFonts } from "./web-fonts";
 
 /** The CSS letter-spacing for Word's character spacing; null keeps the
  *  theme's. */
@@ -195,9 +196,22 @@ export function useApplyAppearance(
       styleEl = document.createElement("style");
       styleEl.id = CUSTOM_CSS_STYLE_ID;
     }
-    styleEl.textContent = withCurrentVariables(settings.customCss);
-    document.head.appendChild(styleEl);
-    if (styleEl.sheet) promoteCustomProperties(styleEl.sheet.cssRules);
+    const style = styleEl;
+    const show = (css: string) => {
+      style.textContent = withCurrentVariables(css);
+      if (style.sheet) promoteCustomProperties(style.sheet.cssRules);
+    };
+    // In the document first: a <style> has a sheet to promote only there.
+    document.head.appendChild(style);
+    show(settings.customCss);
+    // Its web fonts come a moment later, fetched by Rust.
+    let current = true;
+    void withWebFonts(settings.customCss).then((css) => {
+      if (current && css !== settings.customCss) show(css);
+    });
+    return () => {
+      current = false;
+    };
   }, [settings.customCss]);
 
   // Built-in themes are CSS-variable overlays set by attribute; imported
@@ -252,7 +266,9 @@ export function useApplyAppearance(
       const variant =
         isEffectiveDark(settings.theme) && theme.hasDark ? "dark" : "light";
       try {
-        const loaded = await themes.loadThemeCss(theme.id, variant);
+        const stored = await themes.loadThemeCss(theme.id, variant);
+        // One imported before web fonts were embedded still has them.
+        const loaded = stored && (await withWebFonts(stored));
         if (cancelled || request !== revision) return;
         const css = loaded && withCurrentVariables(loaded);
         let styleEl = document.getElementById(

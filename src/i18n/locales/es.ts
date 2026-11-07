@@ -308,6 +308,9 @@ para usar una.
     "Tras cada respuesta, hasta tres cosas que probablemente dirás después aparecen como botones sobre el cuadro de mensaje, la más probable también en gris dentro; haz clic en una para enviarla, o pulsa Tab para usar la gris. Cuesta una petición breve más.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Siguientes mensajes sugeridos",
+  researchSubHelpersLabel: "Investigación: delegar partes de una pregunta",
+  researchSubHelpersHint:
+    "En Investigación, quien estudia una pregunta puede pasar una parte más concreta a un ayudante propio. Más a fondo, pero más lento, con entre un cuarto y la mitad más de llamadas al modelo.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
@@ -396,6 +399,7 @@ para usar una.
   toolSearchPapers: "Buscando artículos sobre «{arg}»",
   toolSearchReferences: "Buscando «{arg}» en las referencias",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esquema",
   paperOutlineTotal: "Unas {n} {unit} en total",
   paperOutlineThesis: "Tesis",
@@ -756,6 +760,10 @@ para usar una.
   agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restablecer",
+  madeByTextusAi: `Hecho con ${AI_NAME}`,
+  skillDelete: "Eliminar",
+  skillDeleteAsk: "¿Eliminar «{name}»? Sus archivos irán a la Papelera.",
+  skillDeleteAskMobile: "¿Eliminar «{name}»?",
   agentSkillsResetConfirm:
     "¿Eliminar tu copia de «{name}» y volver a usar la habilidad integrada?",
   agentSkillsShadows: "Sustituye a una habilidad integrada",
@@ -1168,7 +1176,7 @@ para usar una.
   reportLimit:
     "Ya enviaste varios informes hoy. Inténtalo mañana o envíalo en GitHub.",
   reportFailed: "No se pudo enviar.",
-  menuHelpTutorials: "Videotutoriales",
+  menuHelpTutorials: "Tutoriales en línea",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
@@ -1374,7 +1382,7 @@ para usar una.
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
-    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Videotutoriales.",
+    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Proyecto, el botón de carpeta del panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",

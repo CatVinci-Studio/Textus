@@ -8,6 +8,11 @@
 pub(super) const RESEARCHERS_AT_ONCE: usize = 4;
 /// A helper's steps: a few searches and reads, and its notes.
 pub(super) const HELPER_STEPS: usize = 10;
+/// Parts of its question one researcher may hand to helpers of its own,
+/// when the user lets it (not yet tried on a live model).
+pub(super) const MAX_HANDED: usize = 2;
+/// A part's helper's steps: fewer than a question's, for a narrower one.
+pub(super) const SUB_STEPS: usize = 6;
 /// Questions a research plan may give at most, whatever the genre.
 pub(super) const MAX_QUESTIONS: usize = 10;
 /// Characters of each attached file the research plan sees; the helpers

@@ -298,6 +298,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nach jeder Antwort stehen bis zu drei Dinge, die du wahrscheinlich als Nächstes schreibst, als Schaltflächen über dem Eingabefeld, das wahrscheinlichste auch grau darin; ein Klick sendet es, Tab übernimmt das graue. Kostet eine weitere kurze Anfrage.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Vorgeschlagene nächste Nachrichten",
+  researchSubHelpersLabel: "Recherche: Teilfragen an Helfer abgeben",
+  researchSubHelpersHint:
+    "In der Recherche darf der Helfer einer Frage einen engeren Teil an einen eigenen Helfer abgeben. Gründlicher, aber langsamer, mit einem Viertel bis zur Hälfte mehr Modellaufrufen.",
   rememberAutomaticallyLabel: "Automatisch merken",
   rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Projekt im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
@@ -389,6 +392,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolSearchPapers: "Sucht Fachartikel zu „{arg}“",
   toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   toolAddNote: "Notiert: {arg}",
+  toolDelegateTask: "Übergeben: {arg}",
   paperOutlineTitle: "Gliederung",
   paperOutlineTotal: "Insgesamt etwa {n} {unit}",
   paperOutlineThesis: "These",
@@ -746,6 +750,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSkillsBuiltinTag: "Integriert",
   agentSkillsOpen: "Öffnen",
   agentSkillsReset: "Zurücksetzen",
+  madeByTextusAi: `Mit ${AI_NAME} erstellt`,
+  skillDelete: "Löschen",
+  skillDeleteAsk: "„{name}“ löschen? Seine Dateien kommen in den Papierkorb.",
+  skillDeleteAskMobile: "„{name}“ löschen?",
   agentSkillsResetConfirm:
     "Deine Kopie von „{name}“ löschen und wieder den integrierten Skill verwenden?",
   agentSkillsShadows: "Ersetzt einen integrierten Skill",
@@ -1155,7 +1163,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportLimit:
     "Du hast heute schon mehrere Berichte gesendet. Versuch es morgen wieder oder reiche ihn auf GitHub ein.",
   reportFailed: "Konnte nicht gesendet werden.",
-  menuHelpTutorials: "Video-Tutorials",
+  menuHelpTutorials: "Online-Tutorials",
   windowMinimize: "Minimieren",
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
@@ -1365,7 +1373,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody:
-    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Video-Tutorials.",
+    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",

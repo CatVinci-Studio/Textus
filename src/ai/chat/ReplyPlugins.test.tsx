@@ -1,6 +1,13 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, expect, it, vi } from "vitest";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { SettingsProvider, useSettings } from "../../prefs/SettingsContext";
 import { ReplyPlugins, type ReplyPluginLabels } from "./ReplyPlugins";
 import { askAi } from "./ask-ai";
 
@@ -8,14 +15,40 @@ vi.mock("./ask-ai", () => ({ askAi: vi.fn() }));
 vi.mock("../../plugins/manager", () => {
   const none = { loaded: true, allOn: true, records: [] };
   return {
-    installPlugin: vi.fn(),
-    setPluginEnabled: vi.fn(),
+    installPlugin: vi.fn(async () => "local.toggle"),
+    setPluginEnabled: vi.fn(async () => {}),
     pluginsSnapshot: () => none,
     subscribePlugins: () => () => {},
   };
 });
 
-afterEach(cleanup);
+vi.mock("../../platform/ipc", () => ({
+  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
+}));
+
+beforeEach(() => {
+  const saved = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => saved.get(key) ?? null,
+    setItem: (key: string, value: string) => saved.set(key, value),
+    removeItem: (key: string) => saved.delete(key),
+    clear: () => saved.clear(),
+  });
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+
+function Creations() {
+  const { settings } = useSettings();
+  return (
+    <output data-testid="creations">
+      {settings.creations.map((c) => `${c.kind}:${c.id}:${c.name}`).join(",")}
+    </output>
+  );
+}
 
 const labels: ReplyPluginLabels = {
   installPlugin: "Install",
@@ -59,7 +92,11 @@ const reply = [
 ].join("\n");
 
 it("says what a plugin's code will get wrong and asks the AI to fix it", () => {
-  render(<ReplyPlugins text={reply} labels={labels} />);
+  render(
+    <SettingsProvider>
+      <ReplyPlugins text={reply} labels={labels} />
+    </SettingsProvider>,
+  );
   expect(screen.getByText("Draws on the page.")).toBeTruthy();
   fireEvent.click(screen.getByText("Fix with AI"));
   expect(askAi).toHaveBeenCalledWith(
@@ -73,7 +110,11 @@ it("lists each permission on a line of its own, in words", () => {
     '"permissions":[]',
     '"permissions":["editor.write","network:api.example.com"]',
   );
-  const { container } = render(<ReplyPlugins text={asking} labels={labels} />);
+  const { container } = render(
+    <SettingsProvider>
+      <ReplyPlugins text={asking} labels={labels} />
+    </SettingsProvider>,
+  );
   expect(screen.getByText("Toggle asks to:")).toBeTruthy();
   const items = [...container.querySelectorAll(".agent-plugin-permissions li")];
   expect(items.map((li) => li.textContent)).toEqual([
@@ -83,7 +124,11 @@ it("lists each permission on a line of its own, in words", () => {
 });
 
 it("shows the code Install would run, folded until asked", () => {
-  const { container } = render(<ReplyPlugins text={reply} labels={labels} />);
+  const { container } = render(
+    <SettingsProvider>
+      <ReplyPlugins text={reply} labels={labels} />
+    </SettingsProvider>,
+  );
   expect(container.querySelector(".agent-reply-file")).toBeNull();
   const details = container.querySelector("details")!;
   details.open = true;
@@ -94,4 +139,19 @@ it("shows the code Install would run, folded until asked", () => {
     "host.js",
   ]);
   expect(container.textContent).toContain("exports.activate");
+});
+
+it("remembers a plugin it installed for Create's list", async () => {
+  render(
+    <SettingsProvider>
+      <ReplyPlugins text={reply} labels={labels} />
+      <Creations />
+    </SettingsProvider>,
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Install" }));
+  await waitFor(() =>
+    expect(screen.getByTestId("creations").textContent).toBe(
+      "plugin:local.toggle:Toggle",
+    ),
+  );
 });

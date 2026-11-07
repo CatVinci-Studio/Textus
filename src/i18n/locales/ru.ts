@@ -300,6 +300,9 @@ export default {
     "После каждого ответа над полем ввода появляются кнопки — до трёх вариантов того, что вы, скорее всего, напишете дальше, а самый вероятный ещё и серым в самом поле; щелчок отправляет вариант, Tab подставляет серый. Это ещё один короткий запрос.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Предложенные следующие сообщения",
+  researchSubHelpersLabel: "Исследование: отдавать части вопроса помощникам",
+  researchSubHelpersHint:
+    "В режиме исследования помощник, изучающий вопрос, может передать более узкую часть своему помощнику. Подробнее, но медленнее, и вызовов модели на четверть–половину больше.",
   rememberAutomaticallyLabel: "Запоминать автоматически",
   rememberAutomaticallyHint: `${AI_NAME} запоминает ваши требования и манеру письма для следующих разговоров. Посмотреть, изменить или отменить это можно в разделе «Проект» панели ИИ. После каждого ответа он ещё раз коротко спрашивает ту же модель, что запомнить.`,
   toolRemember: "Запоминаю",
@@ -388,6 +391,7 @@ export default {
   toolSearchPapers: "Поиск статей: «{arg}»",
   toolSearchReferences: "Поиск в источниках: «{arg}»",
   toolAddNote: "Записано: {arg}",
+  toolDelegateTask: "Передано: {arg}",
   paperOutlineTitle: "План",
   paperOutlineTotal: "Всего около {n} {unit}",
   paperOutlineThesis: "Тезис",
@@ -748,6 +752,10 @@ export default {
   agentSkillsBuiltinTag: "Встроенный",
   agentSkillsOpen: "Открыть",
   agentSkillsReset: "Сбросить",
+  madeByTextusAi: `Сделано с ${AI_NAME}`,
+  skillDelete: "Удалить",
+  skillDeleteAsk: "Удалить «{name}»? Его файлы попадут в Корзину.",
+  skillDeleteAskMobile: "Удалить «{name}»?",
   agentSkillsResetConfirm:
     "Удалить вашу копию навыка «{name}» и вернуться к встроенному?",
   agentSkillsShadows: "Заменяет встроенный навык",
@@ -1164,7 +1172,7 @@ export default {
   reportLimit:
     "Сегодня вы уже отправили несколько сообщений. Попробуйте завтра или отправьте его на GitHub.",
   reportFailed: "Не удалось отправить.",
-  menuHelpTutorials: "Видеоуроки",
+  menuHelpTutorials: "Онлайн-уроки",
   windowMinimize: "Свернуть",
   windowMaximize: "Развернуть",
   windowRestore: "Свернуть в окно",
@@ -1368,7 +1376,7 @@ export default {
     "В конце введите `Главное в первой фразе то, что`, сделайте паузу и коснитесь серого текста",
   tutorialDoneTitle: "Готово",
   tutorialDoneBody:
-    "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Видеоуроках.",
+    "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Онлайн-уроках.",
   tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Проект» — кнопку с папкой в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",

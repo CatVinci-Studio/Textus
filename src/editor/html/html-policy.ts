@@ -2,8 +2,9 @@ import { isDrivePath } from "../../utils/path";
 
 /**
  * The one HTML allow-list for a document's own markup, shared by the editor
- * and the split view. It is strict because the webview has no CSP and full
- * Tauri IPC: anything that runs in a document runs on the user's machine.
+ * and the split view. It is strict because the window's CSP still allows
+ * inline scripts and Tauri IPC: anything that runs in a document runs on the
+ * user's machine.
  */
 
 // Block-level: a fragment containing one of these renders as a block.

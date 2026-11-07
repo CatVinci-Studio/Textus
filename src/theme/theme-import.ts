@@ -1,4 +1,5 @@
 import { fs, themes } from "../platform/ipc";
+import { withWebFonts } from "./web-fonts";
 import type { UserThemeMeta } from "../prefs/SettingsContext";
 
 /// Typora themes often `@import` a sibling stylesheet and use relative
@@ -103,7 +104,7 @@ async function inlineFile(path: string, seen: Set<string>): Promise<string> {
 
 /// Reads a theme CSS file as one self-contained stylesheet.
 export async function importThemeCss(path: string): Promise<string> {
-  return inlineFile(path, new Set());
+  return withWebFonts(await inlineFile(path, new Set()));
 }
 
 /// Saves a self-contained stylesheet as a user theme, new or over `replacing`
