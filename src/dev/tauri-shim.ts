@@ -870,8 +870,8 @@ export function installDevTauriShim(): void {
   // Plugins in memory. Folder calls read `window.__devFs` (a lone document,
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
-  // `__devCatalogInstalled`, `__devCatalogCache`, `__devCatalogFails` and
-  // `__devCatalogStats`.
+  // `__devCatalogInstalled`, `__devCatalogOlder`, `__devCatalogCache`,
+  // `__devCatalogFails` and `__devCatalogStats`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -927,11 +927,19 @@ export function installDevTauriShim(): void {
     return installed;
   };
   let preinstalled: Promise<unknown> | null = null;
+  // `__devCatalogOlder`: preinstalled ids at 0.0.1, so the catalog has an
+  // update for them.
   const preinstall = () =>
     (preinstalled ??= Promise.all(
-      ((w.__devCatalogInstalled ?? []) as string[]).map((id) =>
-        installFromDevCatalog(id),
-      ),
+      ((w.__devCatalogInstalled ?? []) as string[]).map(async (id) => {
+        const plugin = await installFromDevCatalog(id);
+        if (((w.__devCatalogOlder ?? []) as string[]).includes(id))
+          plugin.manifest = JSON.stringify({
+            ...JSON.parse(plugin.manifest),
+            version: "0.0.1",
+          });
+        return plugin;
+      }),
     ));
   const encoded = (text: string) => new TextEncoder().encode(text).buffer;
   // Plugins' jobs and notifications: `window.__devSchedule` fires and clicks.

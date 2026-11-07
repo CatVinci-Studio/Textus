@@ -1643,6 +1643,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginUpdatedOn: "Aktualisiert am {date}",
   pluginReadmeLabel: "Über {name}",
   pluginUpdate: "Auf {version} aktualisieren",
+  pluginsUpdateAll: "Alle aktualisieren ({count})",
+  pluginsUpdateAllFailed: "Diese Plugins wurden nicht aktualisiert: {names}.",
   pluginOfficial: "Offiziell",
   pluginBy: "von {author}",
   pluginOpenDetails: "{name}: Details und Einstellungen",

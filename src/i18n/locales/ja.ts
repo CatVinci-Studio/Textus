@@ -1579,6 +1579,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginUpdatedOn: "{date} に更新",
   pluginReadmeLabel: "{name}について",
   pluginUpdate: "{version} に更新",
+  pluginsUpdateAll: "すべて更新（{count}）",
+  pluginsUpdateAllFailed: "次のプラグインは更新できませんでした：{names}。",
   pluginOfficial: "公式",
   pluginBy: "作者: {author}",
   pluginOpenDetails: "{name}: 詳細と設定",

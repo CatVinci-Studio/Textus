@@ -638,6 +638,21 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--ui-muted);
   font-weight: 400;
 }
+/* Update All, at the end of the Installed title's line while there are updates. */
+.settings-group-title:has(> .extensions-title-action) {
+  display: flex;
+  align-items: center;
+}
+.settings-group-title:has(> .extensions-title-action) {
+  white-space: nowrap;
+}
+.settings-group-title > .extensions-title-action {
+  flex: none;
+  width: auto;
+  margin-left: auto;
+  font-size: var(--text-control);
+  font-weight: 500;
+}
 .extensions-available-head {
   display: flex;
   align-items: center;

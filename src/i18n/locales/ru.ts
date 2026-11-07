@@ -1643,6 +1643,8 @@ export default {
   pluginUpdatedOn: "Обновлён {date}",
   pluginReadmeLabel: "О плагине {name}",
   pluginUpdate: "Обновить до {version}",
+  pluginsUpdateAll: "Обновить все ({count})",
+  pluginsUpdateAllFailed: "Эти плагины не обновились: {names}.",
   pluginOfficial: "Официальный",
   pluginBy: "автор: {author}",
   pluginOpenDetails: "{name}: подробности и настройки",

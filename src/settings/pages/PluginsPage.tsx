@@ -47,7 +47,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const { settings } = useSettings();
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { installing, install, enable, attempt, actionFor } =
+  const { installing, install, updateAll, enable, attempt, actionFor } =
     usePluginActions(t);
   const [open, setOpen] = useState<string | null>(null);
   const [openItem, setOpenItem] = useState<string | null>(null);
@@ -94,6 +94,13 @@ export function PluginsPage({ t }: SettingsPageProps) {
       ? catalog.items.find((i) => i.id === openItem)
       : undefined;
   const installed = new Set(snapshot.records.map((r) => r.id));
+  // Two or more with updates: one button takes them all (one shows its own).
+  const updates =
+    catalog.status === "ready"
+      ? catalog.items.filter(
+          (i) => installed.has(i.id) && updateFor(i.id, catalog),
+        )
+      : [];
   // Installed from its page: the installed plugin's page instead.
   if (item && !installed.has(item.id))
     return (
@@ -173,6 +180,18 @@ export function PluginsPage({ t }: SettingsPageProps) {
       onQuery={setQuery}
       installedTitle={t.pluginsInstalledGroup}
       installedCount={snapshot.records.length}
+      installedAction={
+        updates.length > 1 && (
+          <button
+            type="button"
+            className="text-button extensions-title-action"
+            disabled={installing !== null}
+            onClick={() => void updateAll(updates)}
+          >
+            {t.pluginsUpdateAll.replace("{count}", String(updates.length))}
+          </button>
+        )
+      }
       installed={
         snapshot.records.length ? (
           <>

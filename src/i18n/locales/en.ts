@@ -1605,6 +1605,8 @@ type /name in a conversation to use one.
   pluginUpdatedOn: "Updated {date}",
   pluginReadmeLabel: "About {name}",
   pluginUpdate: "Update to {version}",
+  pluginsUpdateAll: "Update All ({count})",
+  pluginsUpdateAllFailed: "These plugins weren't updated: {names}.",
   pluginOfficial: "Official",
   pluginBy: "by {author}",
   pluginOpenDetails: "{name}: details and settings",

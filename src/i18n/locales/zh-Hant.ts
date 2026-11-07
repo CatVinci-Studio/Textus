@@ -1496,6 +1496,8 @@ export default {
   pluginUpdatedOn: "更新於 {date}",
   pluginReadmeLabel: "關於{name}",
   pluginUpdate: "更新到 {version}",
+  pluginsUpdateAll: "全部更新（{count}）",
+  pluginsUpdateAllFailed: "這些外掛沒有更新成功：{names}。",
   pluginOfficial: "官方",
   pluginBy: "作者：{author}",
   pluginOpenDetails: "「{name}」的詳情和設定",
