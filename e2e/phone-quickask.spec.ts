@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
+import { mockInvoke, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // Quick Ask and the AI composer in Chromium's phone viewport.
 test.use(PHONE);

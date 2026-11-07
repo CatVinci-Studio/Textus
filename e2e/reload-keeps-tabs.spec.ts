@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { dropPaths, openApp } from "./helpers";
 
 // A reloaded page (an error screen's Reload, a refresh) is handed none of
 // the launch-time documents again: the window brings back its own tabs.
@@ -27,16 +27,7 @@ test("a reload brings back every tab, unsaved edits and all", async ({
     };
   });
   await openApp(page, { settings: { language: "en", newDocumentMode: "tab" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: unknown) => void;
-      }
-    ).__devEmitTauriEvent("tauri://drag-drop", {
-      paths: ["/notes/a.md", "/notes/b.md"],
-      position: { x: 0, y: 0 },
-    }),
-  );
+  await dropPaths(page, ["/notes/a.md", "/notes/b.md"]);
   await expect(page.locator(".tab-pill-title")).toHaveText(["a.md", "b.md"]);
   await page.locator(".tab-pill-title", { hasText: "b.md" }).click();
   await page.locator(editor).getByText("Also on disk.").click();

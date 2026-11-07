@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Files dropped from a file manager arrive as a `tauri://drag-drop` event
 // with their paths, fired by the dev shim as Rust would; reading is canned.
@@ -11,25 +11,7 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 function drop(page: Page, paths: string[], position = { x: 0, y: 0 }) {
-  return page.evaluate(
-    (payload) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", payload),
-    { paths, position },
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
+  return emit(page, "tauri://drag-drop", { paths, position });
 }
 
 /** The active document's Markdown, read from source mode (and back). */
@@ -84,23 +66,6 @@ test("a dropped document opens beside the one being read, never in its place", a
     "first.md",
     "second.md",
   ]);
-});
-
-test("a dropped image goes into the document", async ({ page }) => {
-  await page.locator(editor).click();
-  await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.press("Backspace");
-  await mockInvoke(page, {
-    read_binary_file_base64: PNG,
-    save_pasted_image: { src: "assets/dropped.png" },
-  });
-  const box = (await page.locator(editor).boundingBox())!;
-  await drop(page, ["/home/me/shot.png"], {
-    x: box.x + 20,
-    y: box.y + 10,
-  });
-  await expect(page.locator(`${editor} .image-view img`)).toHaveCount(1);
-  expect(await sourceOf(page)).toBe("![](assets/dropped.png)");
 });
 
 test("a dropped image lands where it was dropped, not at the caret", async ({

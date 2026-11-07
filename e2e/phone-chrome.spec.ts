@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone } from "./helpers";
+import { openPhone, PHONE } from "./helpers";
 
 // The phone's dialogs, menus and bars, checked in Chromium with touch and a
 // phone-sized viewport.

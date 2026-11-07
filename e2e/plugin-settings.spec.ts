@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 import { openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -9,15 +9,6 @@ import { openWithPlugins } from "./plugin-helpers";
 
 /** The catalog's plugins, under the installed ones. */
 const AVAILABLE = ".extensions-available .plugin-card[data-catalog]";
-
-const emit = (page: Page, event: string) =>
-  page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    event,
-  );
 
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");
@@ -41,11 +32,16 @@ async function showAll(page: Page) {
   }
 }
 
-test("nothing comes installed, and the catalog offers the official plugins", async ({
+test("nothing comes installed, and the catalog offers the official plugins, eight at first, more as it is scrolled", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await openPluginsPage(page);
+  await emit(page, "menu-manage-plugins");
+  const cards = page.locator(AVAILABLE);
+  await expect(cards).toHaveCount(8);
+  await page.locator(".extensions-more-rows").scrollIntoViewIfNeeded();
+  await expect(cards).toHaveCount(20);
+  await showAll(page);
   const installed = page.getByRole("region", { name: "Installed" });
   await expect(installed).toContainText("None yet.");
   // The catalog follows, on the same page.
@@ -64,7 +60,7 @@ test("nothing comes installed, and the catalog offers the official plugins", asy
   ).toHaveCount(0);
 });
 
-test("installing from the list turns the plugin on, behind its permissions", async ({
+test("installing from the list turns the plugin on, behind its permissions; uninstalled, it is offered again", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -106,33 +102,22 @@ test("installing from the list turns the plugin on, behind its permissions", asy
   const card = listed;
   await expect(card.getByRole("button", { name: "Turn Off" })).toBeVisible();
   await expect(card.locator(".plugin-official")).toHaveText("Official");
-  // Its page has its guide, its README.
-  await card.locator(".plugin-card-open").click();
-  await expect(page.locator(".plugin-readme")).toContainText("Tasks");
-});
-
-test("uninstalled from its button's menu, a plugin is offered to install again", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await openPluginsPage(page);
-  const offered = page.locator('.plugin-card[data-catalog="catvinci.tasks"]');
-  await offered.getByRole("button", { name: "Install" }).click();
-  await page
-    .locator(".app-dialog")
-    .getByRole("button", { name: "Allow" })
-    .click();
-  const listed = page.locator('.plugin-card[data-plugin="catvinci.tasks"]');
+  // Turned off, then uninstalled from its button's menu, it is offered
+  // to install again.
   await listed.getByRole("button", { name: "Turn Off" }).click();
   await expect(listed.getByRole("button", { name: "Turn On" })).toBeVisible();
-  await listed.getByRole("button", { name: "More for Tasks" }).click();
+  await more.click();
   await listed.getByRole("menuitem", { name: "Uninstall" }).click();
   await page
     .locator(".app-dialog")
     .getByRole("button", { name: "Uninstall" })
     .click();
   await expect(listed).toHaveCount(0);
-  await expect(offered.getByRole("button", { name: "Install" })).toBeVisible();
+  await expect(
+    page
+      .locator('.plugin-card[data-catalog="catvinci.tasks"]')
+      .getByRole("button", { name: "Install" }),
+  ).toBeVisible();
 });
 
 test("an available plugin's page has its README, in the UI's language", async ({
@@ -328,13 +313,7 @@ test("a plugin's setting can be the project's own, over the general one", async 
     },
     folder: { "/work/notes/a.md": "# A\n" },
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/notes/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/notes/a.md");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
   await openPluginsPage(page);
   await page
@@ -380,15 +359,4 @@ test("a plugin's setting can be the project's own, over the general one", async 
     .first()
     .click();
   await expect(folder()).toHaveValue("Daily");
-});
-
-test("the catalog's list grows as it is scrolled, eight at first", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-manage-plugins");
-  const cards = page.locator(AVAILABLE);
-  await expect(cards).toHaveCount(8);
-  await page.locator(".extensions-more-rows").scrollIntoViewIfNeeded();
-  await expect(cards).toHaveCount(20);
 });

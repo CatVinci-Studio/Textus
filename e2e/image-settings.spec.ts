@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Settings › Images: where a pasted image goes, handed to the backend with
 // the paste. The dev shim answers with canned srcs; where the file really
@@ -30,11 +30,7 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 async function openImageSettings(page: Page): Promise<Locator> {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: t.settingsTitle });
   await panel.getByRole("button", { name: t.navEditor }).click();
   return panel;

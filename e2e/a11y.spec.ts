@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { SAMPLE_DOC, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  SAMPLE_DOC,
+} from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -45,18 +51,6 @@ async function scan(page: Page, name: string) {
       nodes: v.nodes.slice(0, 5).map((n) => n.target.join(" ")),
     }));
   expect(blocking, name).toEqual([]);
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 async function open(

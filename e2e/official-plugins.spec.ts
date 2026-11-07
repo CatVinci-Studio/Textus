@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { mockInvoke, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, pasteMarkdown } from "./helpers";
 import {
   minimalDocx,
   minimalPdf,
@@ -15,7 +15,9 @@ import {
  * shim and used as a writer would: a file in its tab, its panel, its command.
  */
 
-test("a picture opens in the Image Viewer's tab", async ({ page }) => {
+test("a picture opens in the Image Viewer's tab, which zooms, turns it and answers to its keys", async ({
+  page,
+}) => {
   await openWithPlugins(page, {
     plugins: { "catvinci.image-viewer": [] },
     binary: { "/notes/dot.png": PNG },
@@ -30,6 +32,20 @@ test("a picture opens in the Image Viewer's tab", async ({ page }) => {
   await expect(frame.locator("#zoom")).toHaveAttribute("title", "Fit");
   await frame.locator("#zoom-in").click();
   await expect(frame.locator("#zoom")).toHaveText("125%");
+  // It turns the picture, and answers to its keys: 0 is the picture's own
+  // size, + zooms in, F fits it again.
+  await frame.getByRole("button", { name: "Rotate" }).click();
+  await expect(frame.locator("#image")).toHaveAttribute(
+    "style",
+    /rotate\(90deg\)/,
+  );
+  await frame.locator("#stage").click();
+  await page.keyboard.press("0");
+  await expect(frame.locator("#zoom")).toHaveText("100%");
+  await page.keyboard.press("+");
+  await expect(frame.locator("#zoom")).toHaveText("125%");
+  await page.keyboard.press("f");
+  await expect(frame.locator("#stage")).toHaveClass(/fit/);
 });
 
 test("a file that isn't a picture says it can't be opened", async ({
@@ -60,23 +76,6 @@ test("an SVG shows as a picture, its source a click away", async ({ page }) => {
   await frame.locator("#source").click();
   await expect(frame.locator("#code")).toContainText("<rect");
   await expect(frame.locator("#source")).toHaveText("图片");
-});
-
-test("a PDF opens in the PDF Viewer, its words there to select", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.pdf-viewer": [] },
-    binary: { "/notes/paper.pdf": minimalPdf("Hello PDF") },
-  });
-  await openPath(page, "/notes/paper.pdf");
-  const frame = tabFrame(page);
-  await expect(frame.locator("#count")).toHaveText("/ 1", { timeout: 15_000 });
-  await expect(frame.locator(".page canvas")).toHaveCount(1);
-  await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
-  const before = (await frame.locator("#zoom").textContent()) ?? "";
-  await frame.locator("#zoom-in").click();
-  await expect(frame.locator("#zoom")).not.toHaveText(before);
 });
 
 test("a pinch zooms the PDF in place: the page never goes blank, then is drawn sharp", async ({
@@ -126,7 +125,7 @@ test("a pinch zooms the PDF in place: the page never goes blank, then is drawn s
   await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
 });
 
-test("Find in the PDF tints the words and says when there are none; the zoom is kept", async ({
+test("a PDF opens in the PDF Viewer, its words there to select; Find tints them and says when there are none; the zoom is kept", async ({
   page,
 }) => {
   await openWithPlugins(page, {
@@ -135,9 +134,10 @@ test("Find in the PDF tints the words and says when there are none; the zoom is 
   });
   await openPath(page, "/notes/paper.pdf");
   const frame = tabFrame(page);
-  await expect(frame.locator(".textLayer")).toContainText("Hello PDF", {
-    timeout: 15_000,
-  });
+  // Drawn, one page, its words there to select.
+  await expect(frame.locator("#count")).toHaveText("/ 1", { timeout: 15_000 });
+  await expect(frame.locator(".page canvas")).toHaveCount(1);
+  await expect(frame.locator(".textLayer")).toContainText("Hello PDF");
   await frame.getByRole("button", { name: "Find in the PDF" }).click();
   const find = frame.getByRole("searchbox", { name: "Find in the PDF" });
   await find.fill("hello");
@@ -243,53 +243,7 @@ test("with its setting on, a web link Ctrl/Cmd+clicked opens in Web View", async
   ).toEqual([]);
 });
 
-test("a Word document reads as laid out, and Edit as Markdown converts it", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.word-reader": [] },
-    binary: { "/notes/letter.docx": await minimalDocx("Dear reader") },
-  });
-  await openPath(page, "/notes/letter.docx");
-  const frame = tabFrame(page);
-  await expect(frame.locator("section.docx")).toContainText("Dear reader", {
-    timeout: 15_000,
-  });
-  await mockInvoke(page, {
-    open_word_document: { markdown: "Dear reader, as Markdown" },
-  });
-  await frame.getByRole("button", { name: "Edit as Markdown" }).click();
-  await expect(
-    page.locator('[data-active-tab="true"] .ProseMirror'),
-  ).toContainText("Dear reader, as Markdown");
-});
-
-test("the Image Viewer turns a picture and answers to its keys", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.image-viewer": [] },
-    binary: { "/notes/dot.png": PNG },
-  });
-  await openPath(page, "/notes/dot.png");
-  const frame = tabFrame(page);
-  await expect(frame.locator("#info")).toContainText("1 × 1");
-  await frame.getByRole("button", { name: "Rotate" }).click();
-  await expect(frame.locator("#image")).toHaveAttribute(
-    "style",
-    /rotate\(90deg\)/,
-  );
-  // 0 is the picture's own size, + zooms in, F fits it again.
-  await frame.locator("#stage").click();
-  await page.keyboard.press("0");
-  await expect(frame.locator("#zoom")).toHaveText("100%");
-  await page.keyboard.press("+");
-  await expect(frame.locator("#zoom")).toHaveText("125%");
-  await page.keyboard.press("f");
-  await expect(frame.locator("#stage")).toHaveClass(/fit/);
-});
-
-test("the Word Reader finds words, zooms, and says which page", async ({
+test("the Word Reader lays a document out, finds words, zooms, says which page, and Edit as Markdown converts it", async ({
   page,
 }) => {
   await openWithPlugins(page, {
@@ -314,6 +268,14 @@ test("the Word Reader finds words, zooms, and says which page", async ({
   await expect(frame.locator("mark.hit")).toHaveCount(0);
   await frame.getByRole("button", { name: "Zoom in" }).click();
   await expect(frame.locator("#zoom")).toHaveText("110%");
+  // Edit as Markdown converts it.
+  await mockInvoke(page, {
+    open_word_document: { markdown: "Dear reader, as Markdown" },
+  });
+  await frame.getByRole("button", { name: "Edit as Markdown" }).click();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Dear reader, as Markdown");
 });
 
 test("Web View searches words that aren't an address, and offers pages opened before", async ({
@@ -325,16 +287,7 @@ test("Web View searches words that aren't an address, and offers pages opened be
   await openWithPlugins(page, {
     plugins: { "catvinci.web-view": ["network:*", "editor.read"] },
   });
-  const run = (command: string) =>
-    page.evaluate(
-      (c) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (n: string, payload: unknown) => void;
-          }
-        ).__devEmitTauriEvent("menu-plugin-command", c),
-      command,
-    );
+  const run = (command: string) => emit(page, "menu-plugin-command", command);
   await run("catvinci.web-view.open");
   await page.locator(".app-dialog-input").fill("markdown tables");
   await page.keyboard.press("Enter");

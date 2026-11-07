@@ -167,6 +167,73 @@ export async function mockInvoke(page: Page, results: Record<string, unknown>) {
   }, results);
 }
 
+/** The active tab's editor. */
+export const editor = '[data-active-tab="true"] .ProseMirror';
+
+type DevWindow = {
+  __devEmitTauriEvent: (name: string, payload?: unknown) => void;
+  __devInvokeCalls?: ({ cmd: string } & Record<string, unknown>)[];
+  __devHeld?: Record<string, unknown[]>;
+  __devRelease: (cmd: string) => void;
+};
+
+/** Sends a backend event, as a menu item or the OS would. */
+export function emit(page: Page, name: string, payload?: unknown) {
+  return page.evaluate(
+    ([n, p]) =>
+      (window as unknown as DevWindow).__devEmitTauriEvent(n as string, p),
+    [name, payload] as const,
+  );
+}
+
+/** Opens files the way dropping them on the window does. */
+export function dropPaths(page: Page, paths: string[]) {
+  return emit(page, "tauri://drag-drop", { paths, position: { x: 0, y: 0 } });
+}
+
+/** The calls made to a mocked command, with their arguments. */
+export function invokeCalls(
+  page: Page,
+  cmd: string,
+): Promise<Record<string, unknown>[]> {
+  return page.evaluate(
+    (c) =>
+      ((window as unknown as DevWindow).__devInvokeCalls ?? []).filter(
+        (call) => call.cmd === c,
+      ),
+    cmd,
+  );
+}
+
+/** Changes settings while the app runs, as another window's change arrives. */
+export function changeSettings(page: Page, patch: Record<string, unknown>) {
+  return page.evaluate((patch) => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      ...patch,
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  }, patch);
+}
+
+/** Lets a mocked `{ __hold: true }` command answer, once it has been called. */
+export async function release(page: Page, cmd: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (c) => (window as unknown as DevWindow).__devHeld?.[c]?.length ?? 0,
+        cmd,
+      ),
+    )
+    .toBeGreaterThan(0);
+  await page.evaluate(
+    (c) => (window as unknown as DevWindow).__devRelease(c),
+    cmd,
+  );
+}
+
 /** An iPhone, as far as Chromium can be one: touch and a phone-sized
  *  viewport. Playwright can't drive iOS WebKit itself; the layout is keyed
  *  off the platform, which openPhone fakes. For `test.use(PHONE)`. */

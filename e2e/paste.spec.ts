@@ -1,18 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown, selectionRead } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  selectionRead,
+} from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
 // commands with canned srcs.
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
@@ -137,7 +133,7 @@ test("a screenshot undone before its save lands comes back stored on redo", asyn
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
 
-test("an image file copied in the file manager is pasted as an image", async ({
+test("an image file copied in the file manager is pasted as an image, from a file list or a file:// link", async ({
   page,
 }) => {
   await mockInvoke(page, {
@@ -148,12 +144,7 @@ test("an image file copied in the file manager is pasted as an image", async ({
     "text/uri-list": "file:///home/me/%E5%9B%BE/shot.png",
     "text/plain": "/home/me/图/shot.png",
   });
-  expect(await sourceOf(page)).toBe("![](assets/copied.png)");
-});
-
-test("a file:// link to an image, as WebKitGTK renders a copied file", async ({
-  page,
-}) => {
+  // And a file:// link to one, as WebKitGTK renders a copied file.
   await mockInvoke(page, {
     read_binary_file_base64: PNG,
     save_pasted_image: { src: "assets/linked.png" },
@@ -162,7 +153,10 @@ test("a file:// link to an image, as WebKitGTK renders a copied file", async ({
     "text/html": '<a href="file:///home/me/shot.png">/home/me/shot.png</a>',
     "text/plain": "/home/me/shot.png",
   });
-  expect(await sourceOf(page)).toBe("![](assets/linked.png)");
+  const source = await sourceOf(page);
+  expect(source).toContain("![](assets/copied.png)");
+  expect(source).toContain("![](assets/linked.png)");
+  expect(source).not.toContain("file://");
 });
 
 /** A real Ctrl+V of `text` at the caret as it stands; paste() would

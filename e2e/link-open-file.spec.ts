@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { dropPaths, mockInvoke, openApp } from "./helpers";
 
 // Ctrl/Cmd+click on a link to a local file: what Textus opens itself (a
 // Word file) opens in a tab; anything else asks first, then opens in the
@@ -26,16 +26,7 @@ test.beforeEach(async ({ page }) => {
     file_mtime_ms: 1,
     open_linked_file: null,
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: unknown) => void;
-      }
-    ).__devEmitTauriEvent("tauri://drag-drop", {
-      paths: ["/home/me/index.md"],
-      position: { x: 0, y: 0 },
-    }),
-  );
+  await dropPaths(page, ["/home/me/index.md"]);
   await expect(page.locator(`${editor} a`)).toHaveCount(3);
 });
 

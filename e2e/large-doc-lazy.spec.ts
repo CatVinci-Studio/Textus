@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp, pasteMarkdown } from "./helpers";
+import { emit, END, openApp, pasteMarkdown } from "./helpers";
 
 // A document past the threshold draws only the blocks near the screen; the
 // rest are placeholders of their height. Nothing a reader does should tell:
@@ -18,15 +18,6 @@ const DOC = [
   ),
   "The zebracorn end.",
 ].join("\n\n");
-
-const emit = (page: Page, name: string) =>
-  page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
 
 const frames = (page: Page, count = 3) =>
   page.evaluate(async (count) => {

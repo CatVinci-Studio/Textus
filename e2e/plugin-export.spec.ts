@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * Export for Publishing: a plugin you made goes into a folder under your
@@ -36,11 +36,7 @@ test("a plugin you made is exported under your name, to the folder you pick", as
     w.__devPickPluginFolder = "/home/jane/code";
   }, ENTRY);
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="local.word-count"] .plugin-card-open')
     .click();

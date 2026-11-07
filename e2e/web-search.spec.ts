@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * Web search: the Search service row in Settings, a reply's cited pages,
@@ -21,13 +21,7 @@ const t = {
 };
 
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: t.settingsTitle });
   await panel.getByRole("button", { name: t.navAi, exact: true }).click();
   return panel;

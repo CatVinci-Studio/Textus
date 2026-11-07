@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp } from "./helpers";
+import { emit, END, openApp } from "./helpers";
 
 /**
  * Code blocks a plugin draws (textus.views.registerCodeBlock): the page
@@ -67,13 +67,7 @@ async function open(page: Page, source = "hello") {
     [ENTRY, source] as const,
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/a.md");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
 }
 

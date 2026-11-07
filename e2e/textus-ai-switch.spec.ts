@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
+import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 /**
  * Textus AI's switch on the window bar's AI button: off, nothing of it runs
@@ -100,7 +100,7 @@ test("a pause turns Textus AI off for an hour, and it comes back by itself", asy
     expect.any(Number),
   );
 
-  await page.clock.runFor(60 * 60 * 1000);
+  await page.clock.fastForward(60 * 60 * 1000);
   await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
   expect(await savedSetting(page, "textusAi")).toBe(true);
   expect(await savedSetting(page, "textusAiResumeAt")).toBe(null);
@@ -119,6 +119,8 @@ test("a pause that ran out while Textus was closed is over at launch", async ({
 test("while Textus AI is off, no request reaches an AI service, from launch on", async ({
   page,
 }) => {
+  // Debounces are passed by moving the clock on, not by waiting.
+  await page.clock.install();
   // Grammar check off by its own switch: it has to stay off when Textus AI
   // comes back on.
   await openApp(page, {
@@ -145,11 +147,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("Escape");
   // Settings › Textus AI shows only the switch, so nothing there asks for
   // a model list either.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (e: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.locator(".settings-nav-item", { hasText: "Textus AI" }).click();
   await expect(
     page.getByRole("checkbox", { name: "开启 Textus AI" }),
@@ -161,7 +159,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("Escape");
 
   // Past both debounces (completion 450 ms, grammar check 1.5 s).
-  await page.waitForTimeout(2000);
+  await page.clock.fastForward(2000);
   expect(await providerRequests(page)).toEqual([]);
   await expect(page.locator(".ghost-text")).toHaveCount(0);
   await expect(page.locator(".agent-panel-view")).toHaveCount(0);
@@ -174,7 +172,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   await page.keyboard.press("End");
   await page.keyboard.type(" was calm");
   await expect(page.locator(".ghost-text")).toBeVisible();
-  await page.waitForTimeout(2000);
+  await page.clock.fastForward(2000);
   const requests = await providerRequests(page);
   expect(requests).toContain("ai_complete");
   expect(requests).not.toContain("ai_grammar_check");
@@ -254,11 +252,7 @@ test("the menu and the shortcut turn it off and on too", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+Alt+A");
   await expect(aiButton(page)).toHaveClass(/textus-ai-button-off/);
   // The iPhone's menu, as the backend sends it.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (e: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-textus-ai"),
-  );
+  await emit(page, "menu-toggle-textus-ai");
   await expect(aiButton(page)).not.toHaveClass(/textus-ai-button-off/);
 });
 

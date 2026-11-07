@@ -1,10 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import {
-  PHONE,
+  emit,
   mockInvoke,
   openApp,
   openPhone,
   pasteMarkdown,
+  PHONE,
 } from "./helpers";
 import { STORY, STORY_CLASSICAL } from "./revise-mock";
 
@@ -14,18 +15,6 @@ import { STORY, STORY_CLASSICAL } from "./revise-mock";
 
 /** Longest exit plus margin: a closed surface must be gone by then. */
 const GONE = { timeout: 600 };
-
-async function emit(page: Page, name: string) {
-  await page.evaluate(
-    (event) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(event),
-    name,
-  );
-}
 
 /** Waits until nothing in the element is animating any more. */
 async function settled(locator: Locator) {

@@ -1,21 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 // A close request (close button, Alt+F4, ⌘W, the window manager) reaches the
 // page as tauri://close-requested. With unsaved changes the prompt must be
 // the one thing in front, even over the first-launch welcome.
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
-}
 
 /** Whether the element is the one drawn at its own centre, not covered. */
 function onTop(page: Page, selector: string) {

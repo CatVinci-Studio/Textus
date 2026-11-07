@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // Han characters differ by language, so the font stacks pick faces for the
 // <html lang>, in the chrome and content themes alike. The resolved stack is
@@ -22,7 +22,7 @@ async function firstCjkFace(page: Page, lang: string, selector: string) {
   );
 }
 
-test("the interface font follows the UI language's CJK faces", async ({
+test("the font stacks follow the language: CJK faces, Latin first elsewhere, CJK punctuation, source mode", async ({
   page,
 }) => {
   await openApp(page);
@@ -32,27 +32,9 @@ test("the interface font follows the UI language's CJK faces", async ({
   expect(await firstCjkFace(page, "zh-Hant", "body")).toBe("PingFang TC");
   expect(await firstCjkFace(page, "zh-TW", "body")).toBe("PingFang TC");
   expect(await firstCjkFace(page, "ko", "body")).toBe("Apple SD Gothic Neo");
-});
 
-/** Every face in the font-family of `selector`, under `lang`. */
-async function faces(page: Page, lang: string, selector: string) {
-  return page.evaluate(
-    ([lang, selector]) => {
-      document.documentElement.lang = lang;
-      return getComputedStyle(document.querySelector(selector)!)
-        .fontFamily.split(",")
-        .map((f) => f.trim().replace(/"/g, ""));
-    },
-    [lang, selector],
-  );
-}
-
-test("a Latin face comes before the CJK ones outside Chinese, Japanese and Korean", async ({
-  page,
-}) => {
   // A CJK face draws ’ full-width: ahead of system-ui on Linux it leaves a gap
   // in French "d’habitants".
-  await openApp(page);
   for (const selector of ["body", ".milkdown .ProseMirror"]) {
     for (const lang of ["fr", "de", "ru", "en"]) {
       const stack = await faces(page, lang, selector);
@@ -67,7 +49,50 @@ test("a Latin face comes before the CJK ones outside Chinese, Japanese and Korea
       );
     }
   }
+
+  const stack = (lang: string, selector: string) =>
+    faces(page, lang, selector).then((f) => f[0]);
+  const editor = ".milkdown .ProseMirror";
+  expect(await stack("zh-CN", "body")).toBe("Textus Punct SC");
+  expect(await stack("zh-CN", editor)).toBe("Textus Punct SC");
+  expect(await stack("zh-Hant", "body")).toBe("Textus Punct TC");
+  expect(await stack("ja", "body")).toBe("Textus Punct JP");
+  // Elsewhere the faces stay out, so English and French quotes and
+  // apostrophes keep their Latin shapes.
+  for (const lang of ["en", "fr", "ko"])
+    expect(await stack(lang, "body")).toBe("Textus No Punct");
+
+  // WebView2 on a Chinese Windows resolves `monospace` to NSimSun, so a named
+  // face holding Chinese must come ahead of it.
+  await emit(page, "menu-toggle-source-mode");
+  const source = '[data-active-tab="true"] textarea.source-view';
+  await expect(page.locator(source)).toBeAttached();
+  for (const [lang, cjk] of [
+    ["zh-CN", "Microsoft YaHei"],
+    ["en", "Microsoft YaHei"],
+    ["ja", "Yu Gothic UI"],
+  ]) {
+    const stack = await faces(page, lang, source);
+    expect(stack.indexOf("Consolas"), lang).toBeGreaterThan(-1);
+    expect(stack.indexOf(cjk), lang).toBeGreaterThan(
+      stack.indexOf("Liberation Mono"),
+    );
+    expect(stack.at(-1), lang).toBe("monospace");
+  }
 });
+
+/** Every face in the font-family of `selector`, under `lang`. */
+async function faces(page: Page, lang: string, selector: string) {
+  return page.evaluate(
+    ([lang, selector]) => {
+      document.documentElement.lang = lang;
+      return getComputedStyle(document.querySelector(selector)!)
+        .fontFamily.split(",")
+        .map((f) => f.trim().replace(/"/g, ""));
+    },
+    [lang, selector],
+  );
+}
 
 test("every language falls back to the Simplified Chinese faces last, and a theme's serif follows the language", async ({
   page,
@@ -134,50 +159,4 @@ test("Korean breaks at spaces, in the UI and the document, but not in table cell
   expect(await wordBreak(".window-bar-title")).toBe("keep-all");
   expect(await wordBreak(".milkdown .ProseMirror p")).toBe("keep-all");
   expect(await wordBreak(".milkdown .ProseMirror td p")).toBe("normal");
-});
-
-test("Chinese and Japanese UIs take quotes, the ellipsis and the dash from the CJK face", async ({
-  page,
-}) => {
-  await openApp(page);
-  const stack = (lang: string, selector: string) =>
-    faces(page, lang, selector).then((f) => f[0]);
-  const editor = ".milkdown .ProseMirror";
-  expect(await stack("zh-CN", "body")).toBe("Textus Punct SC");
-  expect(await stack("zh-CN", editor)).toBe("Textus Punct SC");
-  expect(await stack("zh-Hant", "body")).toBe("Textus Punct TC");
-  expect(await stack("ja", "body")).toBe("Textus Punct JP");
-  // Elsewhere the faces stay out, so English and French quotes and
-  // apostrophes keep their Latin shapes.
-  for (const lang of ["en", "fr", "ko"])
-    expect(await stack(lang, "body")).toBe("Textus No Punct");
-});
-
-test("source mode names a mono face for Latin and a sans face for CJK before the generic monospace (#132)", async ({
-  page,
-}) => {
-  // WebView2 on a Chinese Windows resolves `monospace` to NSimSun, so a named
-  // face holding Chinese must come ahead of it.
-  await openApp(page);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-toggle-source-mode"),
-  );
-  const source = '[data-active-tab="true"] textarea.source-view';
-  await expect(page.locator(source)).toBeAttached();
-  for (const [lang, cjk] of [
-    ["zh-CN", "Microsoft YaHei"],
-    ["en", "Microsoft YaHei"],
-    ["ja", "Yu Gothic UI"],
-  ]) {
-    const stack = await faces(page, lang, source);
-    expect(stack.indexOf("Consolas"), lang).toBeGreaterThan(-1);
-    expect(stack.indexOf(cjk), lang).toBeGreaterThan(
-      stack.indexOf("Liberation Mono"),
-    );
-    expect(stack.at(-1), lang).toBe("monospace");
-  }
 });

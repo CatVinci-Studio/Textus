@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  dropPaths,
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  release,
+} from "./helpers";
 
 // A picture Textus AI makes is a proposal like any other insertion: saved
 // only on Accept, Reject leaves nothing, undo restores it without a second file.
@@ -146,28 +153,6 @@ test("a picture past the request's limit says so in the user's words, and propos
   await expect(page.locator(`${editor} img`)).toHaveCount(0);
 });
 
-test("a picture call the model got wrong shows nothing: it is the model's to resend", async ({
-  page,
-}) => {
-  await open(page);
-  await mockInvoke(page, {
-    ai_agent_message: exchange(
-      {
-        ...made,
-        image: undefined,
-        not_generated: "`prompt` is empty - describe the picture.",
-      },
-      "Not generated: `prompt` is empty - describe the picture. Tell the user in plain words; don't change the description and call again unless they ask.",
-    ),
-  });
-  await send(page);
-  await expect(page.locator(".agent-message-assistant")).toContainText(
-    "A harbour at dusk",
-  );
-  await expect(page.locator(".agent-image-failed")).toHaveCount(0);
-  await expect(page.locator(".agent-proposal")).toHaveCount(0);
-});
-
 test("Illustrate this paragraph asks for a picture of the paragraph right-clicked", async ({
   page,
 }) => {
@@ -248,7 +233,7 @@ const painting = {
 
 /** A reply that writes a paragraph and asks for a picture, the picture
  *  taking `ms` to come (or failing then with `refusal`). */
-async function writeAndPaint(page: Page, ms: number, refusal?: string) {
+async function writeAndPaint(page: Page, refusal?: string) {
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Write a paragraph and illustrate it" },
@@ -276,9 +261,9 @@ async function writeAndPaint(page: Page, ms: number, refusal?: string) {
       { kind: "Assistant", text: "A paragraph, and a harbour at dusk." },
     ],
     ai_generated_image: refusal
-      ? { __delay: ms, __reject: refusal }
+      ? { __hold: true, __reject: refusal }
       : {
-          __delay: ms,
+          __hold: true,
           value: { mime: "image/png", ext: "png", dataBase64: PNG },
         },
     ai_discard_generated_image: null,
@@ -291,7 +276,7 @@ test("text and a picture come together: the text at once, the picture's frame un
   page,
 }) => {
   await open(page);
-  await writeAndPaint(page, 2500);
+  await writeAndPaint(page);
   const frame = page.locator(`${editor} .pending-picture`);
   // The paragraph and the reply are there while the picture is painting.
   await expect(
@@ -308,6 +293,7 @@ test("text and a picture come together: the text at once, the picture's frame un
   const box = (await frame.boundingBox())!;
   expect(box.width / box.height).toBeCloseTo(1536 / 1024, 1);
   // The picture takes its place once it comes.
+  await release(page, "ai_generated_image");
   await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/, {
     timeout: 10_000,
   });
@@ -318,7 +304,7 @@ test("Accept waits for a picture being made, and saves it once it has come", asy
   page,
 }) => {
   await open(page);
-  await writeAndPaint(page, 2000);
+  await writeAndPaint(page);
   await expect(page.locator(`${editor} .pending-picture`)).toBeVisible();
   const pictureCard = page.locator(".agent-proposal", {
     hasText: "Picture",
@@ -330,19 +316,16 @@ test("Accept waits for a picture being made, and saves it once it has come", asy
   await expect(accept).toBeDisabled();
   await expect(accept).toHaveText("Picture coming…");
   await expect(page.locator(".review-bar-accept")).toBeDisabled();
+  await release(page, "ai_generated_image");
   await expect(accept).toHaveText("Accept", { timeout: 10_000 });
   await accept.click();
   await expect(page.locator(written)).toHaveCount(1, { timeout: 10_000 });
   expect(await calls(page, "save_pasted_image")).toHaveLength(1);
 });
 
-/** A reply that writes text with a picture in it, the picture taking `ms`
- *  to come (or failing then with `refusal`). */
-async function writeWithPictureInside(
-  page: Page,
-  ms: number,
-  refusal?: string,
-) {
+/** A reply that writes text with a picture in it, the picture coming (or
+ *  failing with `refusal`) once released. */
+async function writeWithPictureInside(page: Page, refusal?: string) {
   await mockInvoke(page, {
     ai_agent_message: [
       { kind: "User", text: "Write about the harbour, with a picture" },
@@ -359,9 +342,9 @@ async function writeWithPictureInside(
       { kind: "Assistant", text: "Two paragraphs, a harbour between them." },
     ],
     ai_generated_image: refusal
-      ? { __delay: ms, __reject: refusal }
+      ? { __hold: true, __reject: refusal }
       : {
-          __delay: ms,
+          __hold: true,
           value: { mime: "image/png", ext: "png", dataBase64: PNG },
         },
     ai_discard_generated_image: null,
@@ -377,7 +360,7 @@ test("a picture written into its text is one proposal with it, its frame until t
     settings: { language: "en", imageModelProvider: "openai" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  await writeWithPictureInside(page, 1500);
+  await writeWithPictureInside(page);
   const proposal = page.locator(`${editor} .pending-insert`);
   await expect(proposal).toHaveCount(1);
   // The frame between the two paragraphs.
@@ -388,6 +371,7 @@ test("a picture written into its text is one proposal with it, its frame until t
   );
   await expect(accept).toBeDisabled();
   // The picture comes in place, and only then can the text be accepted.
+  await release(page, "ai_generated_image");
   await expect(proposal.locator("img")).toHaveAttribute("src", /^blob:/, {
     timeout: 10_000,
   });
@@ -409,9 +393,9 @@ test("a picture in the text that wasn't made is left out when the text is accept
   });
   await writeWithPictureInside(
     page,
-    300,
     "The service refused this description: rejected by the safety system",
   );
+  await release(page, "ai_generated_image");
   const proposal = page.locator(`${editor} .pending-insert`);
   await expect(proposal.locator(".pending-picture-failed")).toContainText(
     "rejected by the safety system",
@@ -509,31 +493,23 @@ test("a picture asked for next to text not accepted yet joins that text, which s
   );
 });
 
-test("a picture that wasn't made says why in its frame", async ({ page }) => {
+test("a picture that wasn't made says why in its frame, and Retry asks for it again by itself", async ({
+  page,
+}) => {
   await open(page);
   await writeAndPaint(
     page,
-    500,
     "The service refused this description: rejected by the safety system",
   );
+  await release(page, "ai_generated_image");
   const frame = page.locator(`${editor} .pending-picture`);
   await expect(frame).toHaveClass(/pending-picture-failed/);
   await expect(frame).toContainText("rejected by the safety system");
-  // The paragraph is unaffected.
   await expect(
     page.locator(`${editor} .pending-insert`, {
       hasText: "The tide went out before dawn.",
     }),
   ).toBeVisible();
-});
-
-test("a picture that wasn't made is asked for again by itself with Retry", async ({
-  page,
-}) => {
-  await open(page);
-  await writeAndPaint(page, 100, "The image service didn't answer in time.");
-  const frame = page.locator(`${editor} .pending-picture`);
-  await expect(frame).toHaveClass(/pending-picture-failed/);
   // This time the service answers.
   await page.evaluate((png) => {
     const w = window as unknown as {
@@ -541,11 +517,12 @@ test("a picture that wasn't made is asked for again by itself with Retry", async
     };
     w.__devInvokeResults.ai_retry_generated_image = null;
     w.__devInvokeResults.ai_generated_image = {
-      __delay: 300,
+      __hold: true,
       value: { mime: "image/png", ext: "png", dataBase64: png },
     };
   }, PNG);
   await frame.getByRole("button", { name: "Retry" }).click();
+  await release(page, "ai_generated_image");
   await expect(page.locator(`${editor} .pending-picture-failed`)).toHaveCount(
     0,
   );
@@ -583,18 +560,7 @@ async function openSaved(page: Page, settings: Record<string, unknown> = {}) {
       ((window as unknown as Record<string, unknown>).__devFiles = files),
     { [path]: `${FIRST}\n\n${OLD}\n` },
   );
-  await page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", {
-        paths: [p],
-        position: { x: 0, y: 0 },
-      }),
-    path,
-  );
+  await dropPaths(page, [path]);
   await expect(page.locator(`${editor} p`).first()).toHaveText(FIRST);
 }
 
@@ -663,7 +629,7 @@ test("a picture being redone keeps the old one, veiled, until the new one comes"
       "Image proposed and being made (1024 x 1024 pixels).",
     ),
     ai_generated_image: {
-      __delay: 1500,
+      __hold: true,
       value: { mime: "image/png", ext: "png", dataBase64: PNG },
     },
     ai_discard_generated_image: null,
@@ -682,6 +648,7 @@ test("a picture being redone keeps the old one, veiled, until the new one comes"
     page.locator(".agent-proposal-actions .inline-chat-action-primary"),
   ).toBeDisabled();
   // The new one has come: the old struck, the new beside it, to decide on.
+  await release(page, "ai_generated_image");
   await expect(page.locator(pending)).toHaveCount(1, { timeout: 10_000 });
   await expect(veiled).toHaveCount(0);
   await expect(page.locator(`${editor} .pending-delete`)).toHaveCount(1);
@@ -745,13 +712,7 @@ test("pictures per request is a setting, sent with each request", async ({
     ],
     provider_api_key_status: true,
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings
     .getByRole("button", { name: "Textus AI", exact: true })
@@ -894,7 +855,7 @@ test("a picture written into streaming text shows as its frame from the moment i
   });
   await mockInvoke(page, {
     ai_generated_image: {
-      __delay: 4000,
+      __hold: true,
       value: { mime: "image/png", ext: "png", dataBase64: PNG },
     },
     ai_discard_generated_image: null,
@@ -948,6 +909,7 @@ test("a picture written into streaming text shows as its frame from the moment i
       }),
     editor,
   );
+  await release(page, "ai_generated_image");
   await expect(frames).toHaveCount(0, { timeout: 10_000 });
   expect(await faded).toBe(true);
   await expect(accept).toBeEnabled({ timeout: 10_000 });

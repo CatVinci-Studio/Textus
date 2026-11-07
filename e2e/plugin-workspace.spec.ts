@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 /**
@@ -140,11 +140,7 @@ test("a plugin listening from the start hears of a folder opened later", async (
   }, LISTENER);
   await openApp(page, { settings: { language: "en" } });
   await expect(status(page)).toHaveText("listening");
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-folder"),
-  );
+  await emit(page, "menu-open-folder");
   await expect(page.getByRole("tree", { name: "Files" })).toBeVisible();
   // Coming back to the window looks the folder over: first as it is, then
   // after a note gained a tag.

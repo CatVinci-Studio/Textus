@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // File > Open Folder… and the sidebar's file-name search. The folder pins
 // the tree's root; the dev shim's in-memory folder stands in for the disk.
@@ -29,18 +29,6 @@ async function open(
     settings: { language: "en", ...options.settings },
     storage: options.storage,
   });
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 /** Opens a file in a new tab, as the AI panel's project bar does. */
@@ -87,7 +75,7 @@ test("opening a file in a subfolder keeps the tree where it was", async ({
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
 });
 
-test("Open Folder pins the tree's root and lists the folder as recent", async ({
+test("Open Folder pins the tree's root and lists the folder as recent; Close Project lets it follow the document again", async ({
   page,
 }) => {
   await open(page);
@@ -111,13 +99,7 @@ test("Open Folder pins the tree's root and lists the folder as recent", async ({
           .__devRecents.folders,
     ),
   ).toEqual(["/work/notes"]);
-});
-
-test("Close Folder goes back to following the document", async ({ page }) => {
-  await open(page);
-  await openFolderFromMenu(page, "/work/notes");
-  await openInTab(page, "/work/elsewhere/c.md");
-  await expect(page.locator(rootLabel)).toHaveText("notes");
+  // Close Project goes back to following the document.
   await page.getByRole("button", { name: "Close Project" }).click();
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
   await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(

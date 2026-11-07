@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown, PHONE } from "./helpers";
+import { changeSettings, openApp, pasteMarkdown, PHONE } from "./helpers";
 
 // The composer's footer is one row at the AI panel's narrowest: a long
 // selection chip ellipsizes first, and Send keeps its place at the end.
@@ -54,130 +54,139 @@ async function selectPassage(page: Page) {
   await page.locator(".milkdown p").first().click({ clickCount: 3 });
 }
 
-// And with Interface Text Size at its largest, 125%.
+// And with Interface Text Size at its largest, 125%. One window, its
+// language switched in turn.
 for (const uiTextScale of [1, 1.25])
-  for (const language of LANGUAGES)
-    test(`${language}: the footer stays one row with a long selection chip at the panel's narrowest${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
-      page,
-    }) => {
-      await openApp(page, {
-        settings: { language, uiTextScale },
-        storage: {
-          "textus-agent-panel-open": "1",
-          "textus-agent-panel-width": "300",
-        },
-      });
-      await selectPassage(page);
-      const view = page.locator(".agent-panel-view");
-      await view.locator("textarea").click();
-      const chip = view.locator(".inline-chat-selection-chip");
-      await expect(chip).toBeVisible();
-      await expectOneRow(view.locator(".inline-chat-toolbar"));
-      // The chip's ✕ stays whole: the label gives way, not the button.
-      const remove = chip.locator(".inline-chat-chip-remove");
-      await expect(remove).toBeVisible();
-      const removeBox = (await remove.boundingBox())!;
-      const chipBox = (await chip.boundingBox())!;
-      expect(removeBox.x + removeBox.width).toBeLessThanOrEqual(
-        chipBox.x + chipBox.width + 0.5,
-      );
-    });
-
-// Fonts differ between machines: with every footer word far wider than any
-// real font makes it, the row still holds, the chip giving way first, then
-// the mode's name.
-for (const language of ["de", "ru"] as const)
-  test(`${language}: the footer holds its row in a wider font too`, async ({
+  test(`the footer stays one row with a long selection chip at the panel's narrowest, in every language${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
     page,
   }) => {
     await openApp(page, {
-      settings: { language },
+      settings: { language: LANGUAGES[0], uiTextScale },
       storage: {
         "textus-agent-panel-open": "1",
         "textus-agent-panel-width": "300",
       },
     });
-    await page.addStyleTag({
-      content:
-        ".agent-panel-view .inline-chat-toolbar * { letter-spacing: 0.12em; }",
-    });
     await selectPassage(page);
     const view = page.locator(".agent-panel-view");
     await view.locator("textarea").click();
-    await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
-    await expectOneRow(view.locator(".inline-chat-toolbar"));
-    // The mode is still there to pick, if shortened.
-    await expect(
-      view.getByRole("combobox", {
-        name: language === "de" ? "Modus" : "Режим",
-      }),
-    ).toBeVisible();
+    const chip = view.locator(".inline-chat-selection-chip");
+    for (const language of LANGUAGES) {
+      await test.step(language, async () => {
+        await changeSettings(page, { language });
+        await expect(page.locator("html")).toHaveAttribute(
+          "lang",
+          new RegExp(`^${language}`),
+        );
+        await expect(chip).toBeVisible();
+        await expectOneRow(view.locator(".inline-chat-toolbar"));
+        // The chip's ✕ stays whole: the label gives way, not the button.
+        const remove = chip.locator(".inline-chat-chip-remove");
+        await expect(remove).toBeVisible();
+        const removeBox = (await remove.boundingBox())!;
+        const chipBox = (await chip.boundingBox())!;
+        expect(removeBox.x + removeBox.width).toBeLessThanOrEqual(
+          chipBox.x + chipBox.width + 0.5,
+        );
+      });
+    }
   });
 
-for (const uiTextScale of [1, 1.25])
-  for (const language of ["de", "ru"] as const)
-    test(`${language}: the detached chat window's footer stays one row at its narrowest${uiTextScale === 1 ? "" : `, at ${uiTextScale * 100}% text`}`, async ({
-      page,
-    }) => {
-      await page.setViewportSize({ width: 320, height: 560 });
-      await page.addInitScript(
-        ({ language, passage, uiTextScale }) => {
-          localStorage.setItem(
-            "catvinci-settings",
-            JSON.stringify({
-              language,
-              languageChosen: true,
-              onboardingShown: true,
-              uiTextScale,
-            }),
-          );
-          (
-            window as unknown as { __devInvokeResults: unknown }
-          ).__devInvokeResults = {
-            take_chat_handoff: {
+// Fonts differ between machines: with every footer word far wider than any
+// real font makes it, the row still holds, the chip giving way first, then
+// the mode's name.
+test("the footer holds its row in a wider font too", async ({ page }) => {
+  await openApp(page, {
+    settings: { language: "de" },
+    storage: {
+      "textus-agent-panel-open": "1",
+      "textus-agent-panel-width": "300",
+    },
+  });
+  await page.addStyleTag({
+    content:
+      ".agent-panel-view .inline-chat-toolbar * { letter-spacing: 0.12em; }",
+  });
+  await selectPassage(page);
+  const view = page.locator(".agent-panel-view");
+  await view.locator("textarea").click();
+  for (const [language, mode] of [
+    ["de", "Modus"],
+    ["ru", "Режим"],
+  ]) {
+    await changeSettings(page, { language });
+    // The mode is still there to pick, if shortened.
+    await expect(view.getByRole("combobox", { name: mode })).toBeVisible();
+    await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
+    await expectOneRow(view.locator(".inline-chat-toolbar"));
+  }
+});
+
+test("the detached chat window's footer stays one row at its narrowest", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 560 });
+  await page.addInitScript((passage) => {
+    localStorage.setItem(
+      "catvinci-settings",
+      JSON.stringify({
+        language: "de",
+        languageChosen: true,
+        onboardingShown: true,
+      }),
+    );
+    (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
+      {
+        take_chat_handoff: {
+          editorLabel: "main",
+          state: {
+            context: {
+              document: passage,
+              selectedText: passage,
+              selectionMarkdown: passage,
+              docPath: null,
+              docTitle: "Untitled",
               editorLabel: "main",
-              state: {
-                context: {
-                  document: passage,
-                  selectedText: passage,
-                  selectionMarkdown: passage,
-                  docPath: null,
-                  docTitle: "Untitled",
-                  editorLabel: "main",
-                },
-                conversationId: "c1",
-                turns: [],
-                statuses: {},
-              },
             },
-          };
+            conversationId: "c1",
+            turns: [],
+            statuses: {},
+          },
         },
-        { language, passage: PASSAGE, uiTextScale },
-      );
-      await page.goto("/?view=chat");
-      const body = page.locator(".chat-window-body");
+      };
+  }, PASSAGE);
+  await page.goto("/?view=chat");
+  const body = page.locator(".chat-window-body");
+  for (const uiTextScale of [1, 1.25])
+    for (const language of ["de", "ru"]) {
+      await changeSettings(page, { language, uiTextScale });
+      await expect(page.locator("html")).toHaveAttribute("lang", language);
       await expect(body.locator(".inline-chat-selection-chip")).toBeVisible();
       await expectOneRow(body.locator(".inline-chat-toolbar"));
-    });
+    }
+});
 
 test.describe("on a phone", () => {
   test.use(PHONE);
-  for (const language of ["de", "ru"] as const)
-    test(`${language}: the AI page keeps the mode, its tools and Send on one row`, async ({
-      page,
-    }) => {
-      await page.addInitScript(() => {
-        Object.defineProperty(navigator, "platform", { get: () => "iPhone" });
-      });
-      await openApp(page, { settings: { language } });
-      await expect(page.locator("html")).toHaveAttribute(
-        "data-window-chrome",
-        "mobile",
-      );
-      await selectPassage(page);
-      await page.locator(".page-switch button").nth(1).tap();
-      const view = page.locator(".agent-panel-view");
+  test("the AI page keeps the mode, its tools and Send on one row", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "platform", { get: () => "iPhone" });
+    });
+    await openApp(page, { settings: { language: "de" } });
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-window-chrome",
+      "mobile",
+    );
+    await selectPassage(page);
+    await page.locator(".page-switch button").nth(1).tap();
+    const view = page.locator(".agent-panel-view");
+    for (const language of ["de", "ru"]) {
+      await changeSettings(page, { language });
+      await expect(page.locator("html")).toHaveAttribute("lang", language);
       await expect(view.locator(".inline-chat-selection-chip")).toBeVisible();
       await expectOneRow(view.locator(".inline-chat-toolbar"));
-    });
+    }
+  });
 });

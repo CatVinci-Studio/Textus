@@ -117,14 +117,7 @@ test("a plugin's settings page is as tall as its page, not a box to scroll", asy
   await expect
     .poll(async () => (await frame.boundingBox())?.height ?? 0)
     .toBeGreaterThan(900);
-});
-
-test("a setting of several lines is a box, not a pill", async ({ page }) => {
-  await open(page);
-  await emit(page, "menu-manage-plugins");
-  await page
-    .locator('.plugin-card[data-plugin="test.sync"] .plugin-card-open')
-    .click();
+  // A setting of several lines is a box, not a pill.
   const box = page.getByRole("textbox", { name: "Ignore" });
   await expect(box).toBeVisible();
   const radius = await box.evaluate((el) =>

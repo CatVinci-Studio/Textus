@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * The margin's cards at the document's zoom and beside an open sidebar:
@@ -24,15 +24,6 @@ async function trackedChange(page: Page) {
   await page.keyboard.type(" and more");
   await expect(page.locator(".revision-note")).toHaveCount(1);
 }
-
-const emit = (page: Page, name: string) =>
-  page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    name,
-  );
 
 const zoom = (page: Page, factor: number) =>
   page.evaluate(

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // File > Reopen Closed Tab (Cmd/Ctrl+Shift+T): the documents closed in the
 // window come back, the latest first.
@@ -22,18 +22,6 @@ function drop(page: Page, path: string, text: string) {
       });
     },
     { path, text },
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (name) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name, null),
-    name,
   );
 }
 

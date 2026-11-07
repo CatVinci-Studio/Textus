@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { blockIds, mockInvoke, openApp } from "./helpers";
+import { blockIds, emit, mockInvoke, openApp } from "./helpers";
 
 // Undecided AI proposals are kept with their document: closed and reopened,
 // it offers them again. The dev shim keeps them by path, as the backend does.
@@ -8,18 +8,6 @@ const editor = '[data-active-tab="true"] .ProseMirror';
 const PATH = "/home/me/story.md";
 const STORY =
   "The keeper climbed the stairs slowly.\n\nThe lamp was still warm when he reached it.\n\nOutside, the sea was calm.";
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
 
 /** Opens the story by its path, as a file dropped on the window does. */
 async function openStory(page: Page) {

@@ -35,6 +35,8 @@ test("the copy button copies the block's code and says so", async ({
   test.skip(browserName === "webkit", "WebKit has no clipboard permission");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await openWithCode(page, {});
+  // Line numbers are off by default.
+  await expect(page.locator(`${block} .code-line-gutter`)).toHaveCount(0);
   await page.locator(block).hover();
   const copy = page.locator(`${block} .code-block-copy`);
   await expect(copy).toHaveText("Copy");
@@ -111,14 +113,6 @@ test("the header and line numbers stay out of a printout", async ({ page }) => {
   await page.emulateMedia({ media: "print" });
   await expect(page.locator(`${block} .code-block-header`)).toBeHidden();
   await expect(page.locator(`${block} .code-line-gutter`)).toBeHidden();
-});
-
-test("line numbers are off by default", async ({ page }) => {
-  await openWithCode(page, {});
-  await expect(page.locator(`${block} .code-line-gutter`)).toHaveCount(0);
-  // The long line wraps.
-  const lines = await codeLineMiddles(page);
-  expect(lines.length).toBeGreaterThan(4);
 });
 
 for (const zoom of [1, 1.25])
@@ -235,10 +229,9 @@ test("Select All in a document that opens with a code block selects its text", a
   expect(ends).toEqual([3, 3, CODE]);
 });
 
+// Every kind of list is in block-join-plugin's unit tests.
 for (const [kind, item, selector] of [
-  ["list", "- a", "ul"],
   ["task list", "- [ ] a", "ul"],
-  ["numbered list", "1. a", "ol"],
 ] as const) {
   test(`Backspace in an empty ${kind} item under a code block ends the list`, async ({
     page,

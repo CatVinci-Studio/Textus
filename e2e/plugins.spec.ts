@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The plugin system end to end, with a small plugin installed through the
@@ -115,15 +115,6 @@ async function open(page: Page) {
   );
   await openApp(page, { settings: { language: "en" } });
 }
-
-const emit = (page: Page, event: string) =>
-  page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    event,
-  );
 
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");

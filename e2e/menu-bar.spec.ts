@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The menu bar, where the app draws the window frame (Windows and Linux): off
@@ -9,24 +9,16 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 const bar = '[role="menubar"]';
 
-test("off by default: the ☰ and the sidebar's button", async ({ page }) => {
+test("off by default; Settings turns it on, and the sidebar's button makes room", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   await expect(page.locator(".window-menu-button")).toBeVisible();
   await expect(
     page.locator('.window-bar [aria-label="Sidebar"]'),
   ).toBeVisible();
   await expect(page.locator(bar)).toHaveCount(0);
-});
-
-test("Settings turns it on, and the sidebar's button makes room", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await dialog
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
@@ -116,17 +108,9 @@ test("Edit › Undo and Redo take back a paste, from the bar and from the macOS 
   await expect(doc).toContainText("Pasted words");
 
   // The macOS menu bar's items arrive as events.
-  const emit = (name: string) =>
-    page.evaluate(
-      (n) =>
-        (
-          window as unknown as { __devEmitTauriEvent: (n: string) => void }
-        ).__devEmitTauriEvent(n),
-      name,
-    );
   await doc.focus();
-  await emit("menu-undo");
+  await emit(page, "menu-undo");
   await expect(doc).not.toContainText("Pasted");
-  await emit("menu-redo");
+  await emit(page, "menu-redo");
   await expect(doc).toContainText("Pasted words");
 });

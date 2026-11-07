@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openApp, openPhone, pasteMarkdown } from "./helpers";
+import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // An image's width preset is saved as `<img width>`, and Image width: Auto
 // takes it out again, also on an image without a caption.
@@ -9,16 +9,6 @@ const editor = '[data-active-tab="true"] .ProseMirror';
 const SRC =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzhhYyIvPjwvc3ZnPg==";
 const IMAGE = `![chart](${SRC})`;
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {

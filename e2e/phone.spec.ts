@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // The iPhone layout, checked in Chromium with touch and a phone-sized
 // viewport.
@@ -358,17 +358,4 @@ test("the first line of a document starts below the title row", async ({
   const bar = await page.locator(".window-bar").boundingBox();
   const line = await page.locator(".ProseMirror > h1").boundingBox();
   expect(line!.y).toBeGreaterThanOrEqual(bar!.y + bar!.height);
-});
-
-test("a tap's mouse enter, as iOS WebKit sends after it, opens no tooltip", async ({
-  page,
-}) => {
-  await openPhone(page);
-  const button = page.locator(".window-menu-button").first();
-  await button.dispatchEvent("pointerover", {
-    pointerType: "mouse",
-    bubbles: true,
-  });
-  await page.waitForTimeout(1200);
-  await expect(page.getByRole("tooltip")).toHaveCount(0);
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * Settings › Extensions › Skills: the user's skills, then the catalog's
@@ -36,11 +36,7 @@ async function openSkills(page: Page) {
   }, SKILLS);
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, { list_skills: [] });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByRole("button", { name: "Extensions" }).click();
   await page.getByRole("tab", { name: "Skills" }).click();
 }

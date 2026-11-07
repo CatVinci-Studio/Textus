@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /** A plugin's settings of every kind on its page. */
 
@@ -79,11 +79,7 @@ test("a plugin's settings of every kind", async ({ page }) => {
     };
   }, ENTRY);
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="test.kinds"] .plugin-card-open')
     .click();

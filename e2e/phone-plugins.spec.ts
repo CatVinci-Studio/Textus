@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone } from "./helpers";
+import { emit, openPhone, PHONE } from "./helpers";
 import { pluginsAtStart } from "./plugin-helpers";
 
 /**
@@ -23,11 +23,7 @@ async function open(page: Page, plugins: Record<string, string[]> = BOTH) {
 }
 
 async function openExtensions(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByText("Extensions", { exact: true }).first().tap();
 }
 

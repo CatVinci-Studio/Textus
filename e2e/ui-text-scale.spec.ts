@@ -1,20 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
 // Interface Text Size scales the app's own text and leaves the document's
 // alone, which has its own zoom.
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, payload]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, payload),
-    [name, payload] as const,
-  );
-}
 
 async function fontSize(page: Page, selector: string): Promise<number> {
   return page

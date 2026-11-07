@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openApp, PHONE } from "./helpers";
+import { emit, openApp, PHONE } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
 // shim's 9 built-ins and one user skill in Write.
@@ -22,13 +22,7 @@ async function openWithPanel(
 }
 
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.locator(".settings-panel");
   await expect(panel).toBeVisible();
   return panel;

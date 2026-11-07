@@ -1358,7 +1358,7 @@ export function installDevTauriShim(): void {
         ((w.__devInvokeCalls ??= []) as unknown[]).push({ cmd, ...args });
         let value = canned[cmd] as {
           __reject?: unknown;
-          __delay?: number;
+          __hold?: boolean;
           value?: unknown;
         } | null;
         // Settled against the request's blocks, as the backend settles a model's.
@@ -1366,7 +1366,7 @@ export function installDevTauriShim(): void {
           const blocks = ((args as { blocks?: SentBlock[] } | undefined)
             ?.blocks ?? []) as SentBlock[];
           value =
-            value && typeof value === "object" && "__delay" in value
+            value && typeof value === "object" && "__hold" in value
               ? { ...value, value: settledTurns(blocks, value.value) }
               : (settledTurns(blocks, value) as typeof value);
         }
@@ -1380,18 +1380,23 @@ export function installDevTauriShim(): void {
             channel?.onmessage?.(event);
           return Promise.resolve((value as { value?: unknown }).value ?? null);
         }
-        // `{ __delay: ms, value }` answers only after a while - a picture
-        // still being made - and `{ __delay: ms, __reject }` fails then.
-        if (value && typeof value === "object" && "__delay" in value)
-          return new Promise((resolve, reject) =>
-            setTimeout(
-              () =>
-                "__reject" in value
-                  ? reject(value.__reject)
-                  : resolve(value.value),
-              value.__delay,
-            ),
-          );
+        // `{ __hold: true, value }` answers (or fails, with `__reject`) only
+        // once the test calls `window.__devRelease(cmd)`.
+        if (value && typeof value === "object" && "__hold" in value) {
+          const held = value;
+          return new Promise((resolve, reject) => {
+            const queue = (w.__devHeld ??= {}) as Record<
+              string,
+              (() => void)[]
+            >;
+            (queue[cmd] ??= []).push(() =>
+              "__reject" in held ? reject(held.__reject) : resolve(held.value),
+            );
+            w.__devRelease ??= (name: string) => {
+              for (const settle of queue[name]?.splice(0) ?? []) settle();
+            };
+          });
+        }
         // `{ __reject: message }` fails the command instead, for error UI.
         return value && typeof value === "object" && "__reject" in value
           ? Promise.reject(value.__reject)

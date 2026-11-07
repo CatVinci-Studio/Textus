@@ -1,23 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, openApp, selectionRead } from "./helpers";
+import { emit, END, HOME, openApp, selectionRead } from "./helpers";
 
 // The keys around blocks that need a browser: the arrows, clicks and
 // focus. What a typed key does to the document is tested in vitest
 // (src/editor/keys/markdown-keys.test.ts).
 
 const editor = '[data-active-tab="true"] .ProseMirror';
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
 
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
