@@ -359,6 +359,7 @@ mod tests {
             target_chars: 4000,
             budget: crate::ai::paper::ResearchBudget::for_paper(),
             stage: Default::default(),
+            sub_helpers: false,
         };
         let dossier = Dossier {
             notes: vec![Note {
