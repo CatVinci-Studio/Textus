@@ -490,36 +490,6 @@ export function DetachIcon({ className }: IconProps) {
   );
 }
 
-/** Copy to clipboard. */
-export function CopyIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="13"
-      height="13"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        x="5.5"
-        y="5.5"
-        width="8"
-        height="8"
-        rx="1.2"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      />
-      <path
-        d="M10.5 5.5V3.7C10.5 3.03 9.97 2.5 9.3 2.5H3.7C3.03 2.5 2.5 3.03 2.5 3.7V9.3C2.5 9.97 3.03 10.5 3.7 10.5H5.5"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /** Keep the detached chat window above the editor. */
 export function PinIcon({ className }: IconProps) {
   return (
