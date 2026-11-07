@@ -1155,7 +1155,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportLimit:
     "Du hast heute schon mehrere Berichte gesendet. Versuch es morgen wieder oder reiche ihn auf GitHub ein.",
   reportFailed: "Konnte nicht gesendet werden.",
-  menuHelpTutorials: "Video-Tutorials",
+  menuHelpTutorials: "Online-Tutorials",
   windowMinimize: "Minimieren",
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
@@ -1365,7 +1365,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody:
-    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Video-Tutorials.",
+    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",

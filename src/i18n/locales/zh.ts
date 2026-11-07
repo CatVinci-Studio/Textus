@@ -1046,7 +1046,7 @@ export default {
   reportView: "查看",
   reportLimit: "你今天已经发了好几条，明天再试，或者在 GitHub 上提交。",
   reportFailed: "没能发送。",
-  menuHelpTutorials: "视频教程",
+  menuHelpTutorials: "在线教程",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "向下还原",
@@ -1236,7 +1236,7 @@ export default {
     "在末尾输入 `宝玉和黛玉的缘分`，停一下，点灰色文字采纳",
   tutorialDoneTitle: "完成",
   tutorialDoneBody:
-    "开始写你自己的吧，表格、公式、主题、审阅这些都在视频教程里。",
+    "开始写你自己的吧，表格、公式、主题、审阅这些都在在线教程里。",
   tutorialDoneMemory: `${AI_NAME} 会慢慢记住你的要求和风格，可以在 AI 面板的“项目”里查看。`,
   closePromptMessage: "文档有未保存的更改。",
   closePromptSave: "保存",

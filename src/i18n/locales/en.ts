@@ -1128,7 +1128,7 @@ type /name in a conversation to use one.
   reportLimit:
     "You've sent several reports today. Try again tomorrow, or submit it on GitHub.",
   reportFailed: "Couldn't send it.",
-  menuHelpTutorials: "Video Tutorials",
+  menuHelpTutorials: "Online Tutorials",
   windowMinimize: "Minimize",
   windowMaximize: "Maximize",
   windowRestore: "Restore Down",
@@ -1331,7 +1331,7 @@ type /name in a conversation to use one.
     "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
-    "Now start writing your own; tables, formulas, themes, review and the rest are in the Video Tutorials.",
+    "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Project, the folder button in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",

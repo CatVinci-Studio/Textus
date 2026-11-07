@@ -74,7 +74,7 @@ export interface MenuBridgeHandlers {
   startWelcomeTutorial: () => void;
   /** Help > Join the Community: the website's page in the UI's language. */
   openCommunity: () => void;
-  /** Help > Video Tutorials: the website's page in the UI's language. */
+  /** Help > Online Tutorials: the website's page in the UI's language. */
   openTutorials: () => void;
   /** The phone menu's Documents. */
   onOpenDocuments: () => void;

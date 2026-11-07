@@ -1179,7 +1179,7 @@ utiliser une.
   reportLimit:
     "Vous avez déjà envoyé plusieurs rapports aujourd'hui. Réessayez demain, ou soumettez-le sur GitHub.",
   reportFailed: "Impossible de l'envoyer.",
-  menuHelpTutorials: "Tutoriels vidéo",
+  menuHelpTutorials: "Tutoriels en ligne",
   windowMinimize: "Réduire",
   windowMaximize: "Agrandir",
   windowRestore: "Niveau inférieur",
@@ -1390,7 +1390,7 @@ utiliser une.
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody:
-    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels vidéo.",
+    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Projet, le bouton dossier du panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",

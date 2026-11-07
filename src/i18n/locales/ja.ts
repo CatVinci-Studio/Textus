@@ -1108,7 +1108,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportLimit:
     "今日はすでに何件か送信しています。明日もう一度送るか、GitHub で送信してください。",
   reportFailed: "送信できませんでした。",
-  menuHelpTutorials: "動画チュートリアル",
+  menuHelpTutorials: "オンラインチュートリアル",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",
@@ -1305,7 +1305,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
   tutorialDoneTitle: "完了",
   tutorialDoneBody:
-    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどは動画チュートリアルにあります。",
+    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",

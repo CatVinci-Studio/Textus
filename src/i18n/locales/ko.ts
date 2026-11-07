@@ -1096,7 +1096,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reportLimit:
     "오늘은 이미 여러 건을 보냈습니다. 내일 다시 시도하거나 GitHub에 제출해 주세요.",
   reportFailed: "보내지 못했습니다.",
-  menuHelpTutorials: "동영상 튜토리얼",
+  menuHelpTutorials: "온라인 튜토리얼",
   windowMinimize: "최소화",
   windowMaximize: "최대화",
   windowRestore: "이전 크기로 복원",
@@ -1292,7 +1292,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 회색 글자를 탭",
   tutorialDoneTitle: "완료",
   tutorialDoneBody:
-    "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 동영상 튜토리얼에 있습니다.",
+    "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 온라인 튜토리얼에 있습니다.",
   tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘프로젝트’에서 확인할 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",

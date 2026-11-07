@@ -1048,7 +1048,7 @@ export default {
   reportView: "查看",
   reportLimit: "你今天已經傳送好幾則了，明天再試，或在 GitHub 上提交。",
   reportFailed: "無法傳送。",
-  menuHelpTutorials: "影片教學",
+  menuHelpTutorials: "線上教學",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "向下還原",
@@ -1238,7 +1238,7 @@ export default {
     "在結尾輸入 `石猴之所以能稱王，是因為`，停一下，點灰色文字採用",
   tutorialDoneTitle: "完成",
   tutorialDoneBody:
-    "開始寫你自己的吧，表格、公式、主題、審閱這些都在影片教學裡。",
+    "開始寫你自己的吧，表格、公式、主題、審閱這些都在線上教學裡。",
   tutorialDoneMemory: `${AI_NAME} 會慢慢記住你的要求和風格，可以在 AI 面板的「專案」裡查看。`,
   closePromptMessage: "這份文件有未儲存的變更。",
   closePromptSave: "儲存",

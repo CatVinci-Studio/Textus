@@ -163,7 +163,7 @@ export const commands = {
 	/**  A link Ctrl/Cmd+clicked in a document. */
 	open_web_link: (url: string) => __TAURI_INVOKE<null>("open_web_link", { url }),
 	/**
-	 *  Help > Video Tutorials, its row in Settings, and the tour's "Watch the
+	 *  Help > Online Tutorials, its row in Settings, and the tour's "Watch the
 	 *  animation" links, which name their `clip`.
 	 */
 	open_tutorials_page: (clip: string | null, language: string | null) => __TAURI_INVOKE<null>("open_tutorials_page", { clip, language }),

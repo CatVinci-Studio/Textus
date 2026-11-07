@@ -1168,7 +1168,7 @@ para usar una.
   reportLimit:
     "Ya enviaste varios informes hoy. Inténtalo mañana o envíalo en GitHub.",
   reportFailed: "No se pudo enviar.",
-  menuHelpTutorials: "Videotutoriales",
+  menuHelpTutorials: "Tutoriales en línea",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
@@ -1374,7 +1374,7 @@ para usar una.
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
-    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Videotutoriales.",
+    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Proyecto, el botón de carpeta del panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",

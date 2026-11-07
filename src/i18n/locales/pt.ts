@@ -1148,7 +1148,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reportLimit:
     "Você já enviou vários relatos hoje. Tente amanhã ou envie no GitHub.",
   reportFailed: "Não foi possível enviar.",
-  menuHelpTutorials: "Tutoriais em vídeo",
+  menuHelpTutorials: "Tutoriais online",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
@@ -1354,7 +1354,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody:
-    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais em vídeo.",
+    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Projeto, o botão de pasta no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
