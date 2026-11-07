@@ -1,6 +1,7 @@
 import type { Extension } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { html } from "@codemirror/lang-html";
 import { languages } from "@codemirror/language-data";
 import { tags as t } from "@lezer/highlight";
 
@@ -82,10 +83,19 @@ export const sourceHighlightStyle = HighlightStyle.define([
 ]);
 
 /** The Markdown language (GFM tables, strikethrough and fenced code with
- *  their own language highlighting) plus the style above. */
+ *  their own language highlighting) plus the style above. Of its editing
+ *  help only Enter continuing a list or quote stays, as the rendered view
+ *  does: no closing tags typed in, no pasted URL made a link. */
 export function sourceHighlighting(): Extension {
   return [
-    markdown({ base: markdownLanguage, codeLanguages: languages }),
+    markdown({
+      base: markdownLanguage,
+      codeLanguages: languages,
+      completeHTMLTags: false,
+      pasteURLAsLink: false,
+      // HTML in Markdown still coloured, its tags not closed as typed.
+      htmlTagLanguage: html({ matchClosingTags: false, autoCloseTags: false }),
+    }),
     syntaxHighlighting(sourceHighlightStyle),
   ];
 }

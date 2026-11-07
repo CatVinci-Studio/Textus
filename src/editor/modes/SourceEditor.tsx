@@ -9,20 +9,16 @@ import {
   drawSelection,
   dropCursor,
   EditorView,
-  highlightActiveLine,
   keymap,
 } from "@codemirror/view";
 import {
-  defaultKeymap,
   history,
   historyKeymap,
-  indentWithTab,
   redo,
   selectAll,
+  standardKeymap,
   undo,
 } from "@codemirror/commands";
-import { bracketMatching, indentOnInput } from "@codemirror/language";
-import { highlightSelectionMatches } from "@codemirror/search";
 import { centerSourceCaret } from "./mode-switch";
 import { sourceHighlighting } from "./source-highlight";
 import {
@@ -97,22 +93,20 @@ export function SourceEditor({
       state: EditorState.create({
         doc: latest.current.value,
         extensions: [
+          // Source mode edits as plain text does, with colours: no line or
+          // word highlights, multiple carets, auto-indent or code keys.
           history(),
           drawSelection(),
           dropCursor(),
-          highlightActiveLine(),
-          highlightSelectionMatches(),
-          EditorState.allowMultipleSelections.of(true),
-          indentOnInput(),
-          bracketMatching(),
           EditorView.lineWrapping,
           EditorView.contentAttributes.of({
             spellcheck: "false",
             autocorrect: "off",
             autocapitalize: "off",
           }),
-          // No searchKeymap: Ctrl/Cmd+F belongs to Textus's own find bar.
-          keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
+          // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
+          // Textus's own find bar), and Tab moves the focus as in any field.
+          keymap.of([...standardKeymap, ...historyKeymap]),
           sourceHighlighting(),
           // A caller's paste handler (a document's source stores pictures);
           // anything it leaves alone is CodeMirror's own.
