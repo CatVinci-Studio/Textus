@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { changeSettings, openApp, pasteMarkdown } from "./helpers";
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PIXEL =
@@ -12,14 +12,19 @@ async function imageAlign(page: import("@playwright/test").Page) {
   return paragraph.evaluate((p) => getComputedStyle(p).textAlign);
 }
 
-test("an image on its own line is centered by default", async ({ page }) => {
+test("an image on its own line is centered by default, and the setting puts it on the left", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   expect(await imageAlign(page)).toBe("center");
-});
-
-test("the setting puts it on the left", async ({ page }) => {
-  await openApp(page, { settings: { language: "en", imageAlign: "left" } });
-  expect(await imageAlign(page)).toBe("left");
+  await changeSettings(page, { imageAlign: "left" });
+  await expect
+    .poll(() =>
+      page
+        .locator(`${editor} p.image-paragraph`)
+        .evaluate((p) => getComputedStyle(p).textAlign),
+    )
+    .toBe("left");
 });
 
 test("a row of images lines up whether or not each is a link", async ({
