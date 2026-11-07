@@ -5,7 +5,7 @@ import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
 import { configureEditorRoot, withEditorCore } from "../editor-extensions";
 import { useEditorRunner } from "../useEditorRunner";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
-import { setReadOnly } from "../read-only-plugin";
+import { pastReadOnly, setReadOnly } from "../read-only-plugin";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useLatest } from "../../utils/hooks/useLatest";
 
@@ -60,10 +60,11 @@ function PreviewEditor({ markdown, filePath }: Props) {
         b += overlap;
       }
       view.dispatch(
-        view.state.tr
-          .replace(start, a, next.slice(start, b))
-          // Passes the read-only guard, which refuses only the writer's edits.
-          .setMeta("addToHistory", false),
+        pastReadOnly(
+          view.state.tr
+            .replace(start, a, next.slice(start, b))
+            .setMeta("addToHistory", false),
+        ),
       );
     });
   }, [markdown, run]);

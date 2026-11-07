@@ -1,4 +1,9 @@
-import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
+import {
+  Plugin,
+  PluginKey,
+  type EditorState,
+  type Transaction,
+} from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
@@ -13,6 +18,13 @@ export function setReadOnly(view: EditorView, on: boolean): void {
   if (readOnlyKey.getState(view.state) === on) return;
   view.dispatch(readOnlyTr(view.state, on));
 }
+
+const PAST_READ_ONLY = "pastReadOnly";
+
+/** Marks a change the read-only guard lets through: the split preview
+ *  following its source. */
+export const pastReadOnly = (tr: Transaction): Transaction =>
+  tr.setMeta(PAST_READ_ONLY, true);
 
 /** Whether the document is read-only now. */
 export const isReadOnly = (state: EditorState): boolean =>
@@ -61,6 +73,7 @@ export function createReadOnlyPlugin(): Plugin<boolean> {
     },
     filterTransaction(tr, state) {
       if (!tr.docChanged || !readOnlyKey.getState(state)) return true;
+      if (tr.getMeta(PAST_READ_ONLY)) return true;
       const aside =
         tr.getMeta("addToHistory") === false ||
         tr.getMeta("appendedTransaction") !== undefined;

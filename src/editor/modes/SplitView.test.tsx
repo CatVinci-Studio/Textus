@@ -69,3 +69,21 @@ it("keeps one paragraph line where the vault asks for strict line breaks", async
   expect(pane()?.classList.contains("split-preview-breaks")).toBe(false);
   expect(pane()?.innerHTML).not.toContain("<br>");
 });
+
+it("follows the source as it is typed", async () => {
+  vi.mocked(fs.folderConventions).mockResolvedValue(vault(true));
+  const view = (content: string) => (
+    <SplitView
+      content={content}
+      filePath="/v/c.md"
+      typewriter={false}
+      onChange={() => {}}
+      readOnly={false}
+    />
+  );
+  const { container, rerender } = render(view("first"));
+  const pane = () => container.querySelector(".split-preview .ProseMirror");
+  await waitFor(() => expect(pane()?.textContent).toBe("first"));
+  rerender(view("first\n\nsecond $x^2$"));
+  await waitFor(() => expect(pane()?.textContent).toContain("second"));
+});
