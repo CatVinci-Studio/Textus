@@ -159,6 +159,7 @@ async fn helper(
         ctx: kit.ctx,
         notes: &desk.notes,
         send,
+        sent_back: Default::default(),
     };
     let mut own = ToolRegistry::shared();
     own.extend(web.tools(question));

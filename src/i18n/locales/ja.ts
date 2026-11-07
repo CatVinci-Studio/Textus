@@ -283,6 +283,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   researchSubHelpersLabel: "リサーチ：問いの一部をサブ助手に任せる",
   researchSubHelpersHint:
     "リサーチで、ひとつの問いを調べる助手が、その一部を自分のサブ助手に任せられます。より詳しくなりますが、遅くなり、モデルの呼び出しが 25〜50% ほど増えます。",
+  researchCheckClaimsLabel: "リサーチ：引用した文を一文ずつ確認",
+  researchCheckClaimsHint:
+    "リサーチが草稿を直す前に、出典を引く文をその出典のメモと照らし合わせ、言い過ぎている文を書き直します。より慎重になりますが、セクションごとにモデル呼び出しが1回増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",

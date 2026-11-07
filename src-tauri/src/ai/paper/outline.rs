@@ -6,9 +6,9 @@
 use super::genre::Scale;
 use super::handover::{hand_over, Checked, Task};
 use super::prompts;
-use super::research::Model;
 use super::stream::{after_key, AfterKey, LastSent, ThinkingTail};
 use super::{Dossier, FigureKind, Outline, Paper, PaperEvent};
+use crate::ai::agent::Model;
 use aicompat::agent::{ProviderEvent, ToolSpec};
 use serde_json::json;
 use std::sync::Mutex;

@@ -4,7 +4,7 @@
 //! One loop for every stage, so a stage says only what it asks for and
 //! what holds.
 
-use super::model::{Model, Watch};
+use crate::ai::agent::{Model, Watch};
 use aicompat::agent::{run_agent_loop, AgentTurn, ToolOutput, ToolRun, ToolSpec};
 use std::future::Future;
 use std::sync::Mutex;

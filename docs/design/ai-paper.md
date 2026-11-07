@@ -136,6 +136,20 @@ it, lazily loaded. Each stage and helper is one run of
   run on the `Model` trait, so tests drive them with a scripted model.
   Each question is kept as its helper ends (`research::Progress`), not
   when all have.
+  **Grounding** (`paper/grounding.rs`): the paper's `WebPlan` keeps what
+  each source said when shown - a page's text, a result's snippet, a
+  paper's abstract (`WebPlan::seen`) - and a cited file is read for it. A
+  note is checked against those words: a quote they don't have is refused
+  (spacing and punctuation aside); a figure they don't give ("1,200" and
+  "1200" alike; whole numbers under ten aside) is sent back once, and kept
+  marked `unmatched` if sent again unchanged. A note keeps the passage it
+  rests on as `excerpt` and its `grounding` - `read`, `snippet`, or
+  `unchecked` for a source never shown (the provider's own search, a
+  plugin's address) - and its writer is shown all three.
+  A drafted section is checked the same way: a sentence citing `[n]` that
+  gives a figure none of its cited sources' notes give (less their
+  `unmatched` ones) is sent back to its writer - soft, as a length is, so a
+  last try keeps it.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a
@@ -206,7 +220,13 @@ it, lazily loaded. Each stage and helper is one run of
   who sees them all reports with `report_issues` what only the whole shows -
   repetition, contradictions, an outline point no section makes, a figure
   never referred to, a claim stronger than its notes - at most three points
-  a section. Each faulted section is revised once by its writer, under the
+  a section. Beside it, at once, every cited sentence is checked against
+  its notes (`paper/claims.rs`): each section's sentences that cite are
+  paired, by code, with the notes on the sources they cite - claim,
+  evidence, quote and the source's own passage - and a checker gives each
+  a verdict, `supported`, `overstated`, `unsupported` or `wrong_source`,
+  judged by the notes alone; the worst three of a section join the
+  review's points. Each faulted section is revised once by its writer, under the
   same checks; a revision that doesn't hold, or a review that fails, leaves
   the drafts. Only then are the sections sent, so no proposal is replaced.
 - **Finish** (`paper/finish.rs`): picture lines are begun with the user's

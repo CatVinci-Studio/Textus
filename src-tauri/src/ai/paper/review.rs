@@ -8,8 +8,8 @@
 use super::draft::write_section;
 use super::handover::{hand_over, Checked, Task};
 use super::prompts;
-use super::research::Model;
 use super::{Dossier, Outline, Paper, PaperEvent};
+use crate::ai::agent::Model;
 use aicompat::agent::ToolSpec;
 use futures_util::stream::{self, StreamExt};
 use serde_json::{json, Value};
@@ -145,6 +145,32 @@ pub(crate) async fn review(
     })
     .await?;
     Ok(issues.unwrap_or_default())
+}
+
+/// The points against the drafted `sections`: the review's, and with
+/// `check_claims` those of the check of every cited sentence against its
+/// notes (`claims`), run at once. A review that fails leaves the check's.
+pub(crate) async fn review_all(
+    model: &dyn Model,
+    paper: &Paper,
+    outline: &Outline,
+    dossier: &Dossier,
+    sections: &[String],
+    check_claims: bool,
+) -> Vec<Issue> {
+    let checking = async {
+        if check_claims {
+            super::claims::check_claims(model, paper, dossier, sections).await
+        } else {
+            Vec::new()
+        }
+    };
+    // The function, not join!: that macro needs a feature iOS's build lacks.
+    let (reviewed, checked) =
+        futures_util::future::join(review(model, paper, outline, sections), checking).await;
+    let mut issues = checked;
+    issues.extend(reviewed.unwrap_or_default());
+    issues
 }
 
 /// `sections` with each one `issues` names revised once, as many at a time as

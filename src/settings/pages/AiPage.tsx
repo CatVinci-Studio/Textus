@@ -197,6 +197,12 @@ export function AiPage({
                   checked={settings.researchSubHelpers}
                   onChange={(v) => setSettings({ researchSubHelpers: v })}
                 />
+                <ToggleRow
+                  label={t.researchCheckClaimsLabel}
+                  help={t.researchCheckClaimsHint}
+                  checked={settings.researchCheckClaims}
+                  onChange={(v) => setSettings({ researchCheckClaims: v })}
+                />
               </>
             )}
           </SettingsGroup>

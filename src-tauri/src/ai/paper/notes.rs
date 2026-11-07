@@ -2,16 +2,22 @@
 //! kept with the sources it rests on - web results by their numbers, local
 //! files by their paths.
 
+use super::grounding::{excerpt, has_quote, missing_figures};
 use super::research::{clip, is_search_page};
 use super::sources::cited_file;
-use super::{Lead, LeadKind, Note, PaperEvent};
+use super::{Grounding, Lead, LeadKind, Note, PaperEvent};
 use crate::ai::tools::{Access, Run, Tool, ToolContext};
-use crate::ai::web::WebPlan;
+use crate::ai::web::{Reach, WebPlan};
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
 use serde_json::{json, Value};
+use std::collections::HashSet;
+use std::path::Path;
 use std::sync::Mutex;
 
 pub(crate) const ADD_NOTE_TOOL: &str = "add_note";
+
+/// The most of a cited file read to check notes against.
+const FILE_BYTES: u64 = 200_000;
 
 /// What one question's add_note keeps its notes against, and where.
 pub(super) struct NoteTaker<'a, 't> {
@@ -23,6 +29,9 @@ pub(super) struct NoteTaker<'a, 't> {
     pub ctx: &'a ToolContext<'t>,
     pub notes: &'a Mutex<Vec<Note>>,
     pub send: &'a (dyn Fn(PaperEvent) + Sync),
+    /// Claims sent back once for figures their sources don't give: sent
+    /// again unchanged, they are kept, the figures marked.
+    pub sent_back: Mutex<HashSet<String>>,
 }
 
 impl<'a, 't> NoteTaker<'a, 't> {
@@ -38,8 +47,10 @@ impl<'a, 't> NoteTaker<'a, 't> {
         }
     }
 
-    fn keep(&self, call: &ToolCall) -> ToolOutput {
-        match read_note(&call.arguments, self.question, self.web, self.ctx) {
+    pub(super) fn keep(&self, call: &ToolCall) -> ToolOutput {
+        let checked = read_note(&call.arguments, self.question, self.web, self.ctx)
+            .and_then(|note| self.ground(note));
+        match checked {
             Ok(note) => {
                 (self.send)(PaperEvent::Activity {
                     question: self.index,
@@ -52,6 +63,62 @@ impl<'a, 't> NoteTaker<'a, 't> {
             Err(why) => why.into(),
         }
     }
+}
+
+impl NoteTaker<'_, '_> {
+    /// `note` checked against what its sources said when the researcher saw
+    /// them: a quote they don't have is refused; figures they don't give
+    /// are sent back once. Kept with the passage it rests on.
+    fn ground(&self, mut note: Note) -> Result<Note, String> {
+        let seen: Vec<_> = note
+            .sources
+            .iter()
+            .filter_map(|n| self.web.seen(*n))
+            .collect();
+        if seen.is_empty() {
+            return Ok(note);
+        }
+        let words: Vec<&str> = seen.iter().map(|s| s.text.as_str()).collect();
+        let cited = note
+            .sources
+            .iter()
+            .map(|n| format!("[{n}]"))
+            .collect::<Vec<_>>()
+            .join("");
+        if let Some(quote) = &note.quote {
+            if !words.iter().any(|w| has_quote(w, quote)) {
+                return Err(format!("Not kept: the quote isn't in what {cited} says. Copy it word for word from the source, or leave `quote` out."));
+            }
+        }
+        let said = format!("{} {}", note.claim, note.evidence);
+        let missing = missing_figures(&said, &words);
+        if !missing.is_empty() && self.sent_back.lock().unwrap().insert(said.clone()) {
+            return Err(format!("Not kept: {} isn't in what {cited} says. Give each figure as its source does and cite the source it comes from, or leave it out. Sent again unchanged, the note is kept with the figure marked unconfirmed.", missing.join(", ")));
+        }
+        note.unmatched = missing;
+        note.grounding = if seen.iter().any(|s| s.reach == Reach::Read) {
+            Grounding::Read
+        } else {
+            Grounding::Snippet
+        };
+        let rests_on = format!("{said} {}", note.quote.as_deref().unwrap_or(""));
+        note.excerpt = words.iter().find_map(|w| excerpt(w, &rests_on));
+        Ok(note)
+    }
+}
+
+/// A file's opening as text, for checking notes against; None for one that
+/// can't be read or isn't text.
+fn file_text(path: &Path) -> Option<String> {
+    use std::io::Read;
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(FILE_BYTES)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    let text = String::from_utf8_lossy(&bytes);
+    (!text.contains('\0')).then(|| text.into_owned())
 }
 
 /// What add_note looks like to the model.
@@ -109,9 +176,20 @@ fn read_note(
         .map(|list| list.iter().filter_map(Value::as_str).collect())
         .unwrap_or_default();
     let mut sources = Vec::new();
+    // Cited by addresses no source had: nothing shows what they say.
+    let mut unread = !cited.is_empty();
     for c in &cited {
         let number = match cited_file(ctx, c) {
-            Some((address, title)) => Some(web.add_source(&address, &title)),
+            Some(file) => {
+                let n = web.add_source(&file.address, &file.title);
+                if web.seen(n).is_none() {
+                    if let Some(text) = file_text(&file.path) {
+                        web.saw(n, &text, Reach::Read);
+                    }
+                }
+                unread = false;
+                Some(n)
+            }
             None => {
                 let address = if c.trim().starts_with("http") {
                     Some(c.trim().to_string())
@@ -124,6 +202,8 @@ fn read_note(
                 if address.as_deref().is_some_and(is_search_page) {
                     return Err(format!("{c:?} is a search page, not a source: read the page or paper a result points to, and cite that."));
                 }
+                let known = !c.trim().starts_with("http") || web.knows(c.trim());
+                unread &= !known;
                 web.source_number(c)
             }
         };
@@ -161,5 +241,11 @@ fn read_note(
         quote: Some(text("quote")).filter(|q| !q.is_empty()),
         sources,
         leads,
+        grounding: if unread {
+            Grounding::Unread
+        } else {
+            Grounding::Unchecked
+        },
+        ..Default::default()
     })
 }

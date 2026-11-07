@@ -194,7 +194,7 @@ pub(crate) fn with_helper_turns(turns: Vec<AgentTurn>, helpers: &HelperTurns) ->
 
 /// What the request's run needs of its own for the helpers.
 pub(crate) struct ChapterRun<'a, 'r> {
-    pub(crate) agent: &'a aicompat::providers::AgentProvider,
+    pub(crate) agent: &'a dyn Model,
     pub(crate) workspace: &'a AgentWorkspace,
     pub(crate) document: &'a Document,
     pub(crate) mode: AgentMode,
@@ -304,8 +304,11 @@ impl ChapterRun<'_, '_> {
         let step = |turns: Vec<AgentTurn>| {
             let (instructions, specs, sink) = (&instructions, &specs, &sink);
             async move {
-                let result = self.agent.step(instructions, &turns, specs, sink).await;
-                result.map(|(step, _)| settle_step(step, self.document, self.conventions, None).0)
+                let result = self
+                    .agent
+                    .step_watched(instructions, &turns, specs, sink)
+                    .await;
+                result.map(|step| settle_step(step, self.document, self.conventions, None).0)
             }
         };
         let turns = run_agent_loop(
@@ -389,6 +392,75 @@ mod tests {
         .unwrap();
         assert_eq!(instruction, "Translate into English.");
         assert_eq!(glossary, vec![("林远".to_string(), "Lin Yuan".to_string())]);
+    }
+
+    /// A chapter's helper steps through `Model`, as the chat and
+    /// Research do: here a scripted one, each chapter seeing only its own.
+    #[tokio::test]
+    async fn each_chapter_s_helper_steps_the_model_it_is_given() {
+        use aicompat::agent::StepResult;
+        use futures_util::future::BoxFuture;
+
+        struct Seen(Mutex<Vec<String>>);
+        impl Model for Seen {
+            fn step<'a>(
+                &'a self,
+                _instructions: &'a str,
+                turns: &'a [AgentTurn],
+                _tools: &'a [ToolSpec],
+            ) -> BoxFuture<'a, Result<StepResult, String>> {
+                Box::pin(async move {
+                    if let Some(AgentTurn::User { text, .. }) = turns.first() {
+                        self.0.lock().unwrap().push(text.clone());
+                    }
+                    Ok(StepResult::Done("Nothing to change.".into()))
+                })
+            }
+        }
+        struct Quiet;
+        impl EventSink for Quiet {
+            fn send(&self, _: StreamEvent) {}
+        }
+
+        let text: String = (1..=2)
+            .map(|n| format!("## Chapter {n}\n\nBody {n}.\n\n"))
+            .collect();
+        let document = doc(&text);
+        let model = Seen(Default::default());
+        let workspace = AgentWorkspace::default();
+        let conventions = Conventions::default();
+        let tools = ToolRegistry::builtin(false, false, AgentMode::Write, false)
+            .only(crate::ai::tools::PROPOSE_EDIT_TOOL_NAME);
+        let tool_ctx = ToolContext::for_document(&document);
+        let helpers = HelperTurns::default();
+        let run = ChapterRun {
+            agent: &model,
+            workspace: &workspace,
+            document: &document,
+            mode: AgentMode::Write,
+            ui_language: "en",
+            conventions: &conventions,
+            tools: &tools,
+            tool_ctx: &tool_ctx,
+            channel: &Quiet,
+            helpers: &helpers,
+        };
+        let call = ToolCall {
+            call_id: "c1".into(),
+            name: "edit_chapters".into(),
+            arguments: r#"{"instruction": "Tighten it."}"#.into(),
+        };
+        let ToolOutput { text: said, .. } = run.run(call).await;
+        assert!(said.contains("\"Chapter 1\": 0 edits proposed"), "{said}");
+        assert!(said.contains("\"Chapter 2\": 0 edits proposed"), "{said}");
+        let seen = model.0.lock().unwrap();
+        assert_eq!(seen.len(), 2);
+        assert!(seen
+            .iter()
+            .any(|m| m.contains("Body 1.") && !m.contains("Body 2.")));
+        assert!(seen
+            .iter()
+            .any(|m| m.contains("Body 2.") && !m.contains("Body 1.")));
     }
 
     #[test]

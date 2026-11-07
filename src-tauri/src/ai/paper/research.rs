@@ -9,14 +9,15 @@
 #[cfg(test)]
 pub(crate) use super::helper::helper_instructions;
 use super::helper::research_question;
-use super::model::ask;
-pub(crate) use super::model::{clip, Model, Watch};
+pub(crate) use super::model::clip;
 #[cfg(test)]
 pub(crate) use super::notes::ADD_NOTE_TOOL;
 use super::prompts;
 use super::sources::link_safe;
 use super::stream::ThinkingTail;
 use super::{Dossier, Note, Paper, PaperEvent, PaperPhase, SharedBudget};
+use crate::ai::agent::ask;
+pub(crate) use crate::ai::agent::{Model, Watch};
 use crate::ai::tools::{Tool, ToolContext, ToolRegistry};
 use crate::ai::web::WebPlan;
 use aicompat::agent::{ProviderEvent, Source};

@@ -311,6 +311,9 @@ para usar una.
   researchSubHelpersLabel: "Investigación: delegar partes de una pregunta",
   researchSubHelpersHint:
     "En Investigación, quien estudia una pregunta puede pasar una parte más concreta a un ayudante propio. Más a fondo, pero más lento, con entre un cuarto y la mitad más de llamadas al modelo.",
+  researchCheckClaimsLabel: "Investigación: comprobar cada frase citada",
+  researchCheckClaimsHint:
+    "Antes de revisar el borrador, cada frase que cita una fuente se compara con las notas de esa fuente, y la que dice más que ellas se reescribe. Más cuidadoso, con una llamada al modelo más por sección.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
