@@ -1489,10 +1489,6 @@ para usar una.
   privacyChatHistoryToggle: "Guardar las conversaciones",
   privacyChatHistoryClearHint:
     "Elimina todas las conversaciones guardadas. Esta acción no se puede deshacer.",
-  privacyClipboardHistoryLabel: "Historial del portapapeles",
-  privacyClipboardHistoryToggle: "Guardar el historial del portapapeles",
-  privacyClipboardHistoryClearHint:
-    "Elimina todo el historial del portapapeles. Esta acción no se puede deshacer.",
   privacyDraftRecoveryLabel: "Recuperación de borradores",
   privacyDraftRecoveryToggle:
     "Recuperar lo no guardado tras un cierre inesperado",
@@ -1504,12 +1500,7 @@ para usar una.
     "Elimina las copias de recuperación que haya en el disco. Esta acción no se puede deshacer.",
   privacyClearButton: "Borrar",
   privacyClearChatHistory: "Borrar historial de chats",
-  privacyClearClipboard: "Borrar historial del portapapeles",
   privacyClearDrafts: "Eliminar borradores de recuperación",
-  clipboardTab: "Portapapeles",
-  clipboardEmpty: "El texto que copies y pegues aparecerá aquí.",
-  clipboardClear: "Borrar",
-  clipboardCopy: "Copiar",
   clipboardInsertHint: "Haz clic para insertarlo en el cursor",
   exportNeedsWysiwyg:
     "La exportación a HTML usa la vista con formato. Sal primero del modo código fuente y vuelve a exportar.",
@@ -1705,6 +1696,7 @@ para usar una.
   pluginOpenInstall: "Instalar y abrir",
   pluginOpenTurnOnButton: "Activar y abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  pluginCardMovedLine: "{name} ahora es un plugin",
   conventionsCardLine:
     "Los ajustes de {app} de esta carpeta guardan las imágenes en {folder}",
   conventionsCardDetails:

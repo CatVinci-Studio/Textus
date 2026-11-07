@@ -1407,10 +1407,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   privacyChatHistoryToggle: "채팅 대화 저장",
   privacyChatHistoryClearHint:
     "저장된 대화를 모두 삭제합니다. 되돌릴 수 없습니다.",
-  privacyClipboardHistoryLabel: "클립보드 기록",
-  privacyClipboardHistoryToggle: "클립보드 기록 저장",
-  privacyClipboardHistoryClearHint:
-    "클립보드 기록에 있는 항목을 모두 삭제합니다. 되돌릴 수 없습니다.",
   privacyDraftRecoveryLabel: "초안 복구",
   privacyDraftRecoveryToggle: "비정상 종료 후 저장하지 않은 내용 복구",
   privacyKeepUnsavedToggle: "닫을 때 저장하지 않은 변경 사항을 묻지 않고 유지",
@@ -1420,12 +1416,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "현재 디스크에 있는 스냅샷을 모두 삭제합니다. 되돌릴 수 없습니다.",
   privacyClearButton: "지우기",
   privacyClearChatHistory: "채팅 기록 지우기",
-  privacyClearClipboard: "클립보드 기록 지우기",
   privacyClearDrafts: "복구용 초안 삭제",
-  clipboardTab: "클립보드",
-  clipboardEmpty: "복사하거나 붙여넣은 텍스트가 여기에 표시됩니다.",
-  clipboardClear: "지우기",
-  clipboardCopy: "복사",
   clipboardInsertHint: "클릭하면 커서 위치에 삽입",
   exportNeedsWysiwyg:
     "HTML 내보내기는 렌더링된 보기를 사용합니다. 소스 코드 모드를 끈 다음 다시 내보내세요.",
@@ -1617,6 +1608,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginOpenInstall: "설치하고 열기",
   pluginOpenTurnOnButton: "켜고 열기",
   pluginCardLine: "추천 플러그인: {name}",
+  pluginCardMovedLine: "{name}은(는) 이제 플러그인입니다",
   conventionsCardLine: "이 폴더의 {app} 설정은 그림을 {folder}에 저장합니다",
   conventionsCardDetails:
     "현재 설정: {current}. 적용하면 이 폴더의 .textus/settings.json에 저장되어 프로젝트와 함께 유지됩니다.",

@@ -19,8 +19,8 @@ describe("the remembered sidebar tab", () => {
     storeSidebarTab("outline");
     expect(localStorage.getItem(KEY)).toBe("outline");
     expect(storedSidebarTab()).toBe("outline");
-    storeSidebarTab("clipboard");
-    expect(storedSidebarTab()).toBe("clipboard");
+    storeSidebarTab("outline");
+    expect(storedSidebarTab()).toBe("outline");
   });
 
   it("is Files when the stored tab is one this build doesn't have", () => {

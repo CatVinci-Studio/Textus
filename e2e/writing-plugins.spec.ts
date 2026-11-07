@@ -159,3 +159,29 @@ test("Bookmarks keeps the words selected, listed in the sidebar", async ({
   await expect(list).toContainText("A remarkable sentence here.");
   await expect(list).toContainText("doc.md");
 });
+
+test("Clipboard History lists what is copied or cut in a document, and a click puts it in again", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.clipboard-history"), "not in this checkout");
+  await open(
+    page,
+    "catvinci.clipboard-history",
+    ["clipboard", "editor.write"],
+    "# Doc\n\nFirst words.\n\nSecond words.\n",
+  );
+  const list = await openSidebarList(page, "Clipboard History");
+  await expect(list).toContainText("Nothing yet");
+  await page.locator(`${editor} p`).first().click({ clickCount: 3 });
+  await page.keyboard.press("ControlOrMeta+c");
+  await page.locator(`${editor} p`).nth(1).click({ clickCount: 3 });
+  await page.keyboard.press("ControlOrMeta+x");
+  await expect(page.locator(editor)).not.toContainText("Second words.");
+  // The newest first.
+  await expect(list.getByRole("treeitem")).toHaveText([
+    "Second words.",
+    "First words.",
+  ]);
+  await list.getByRole("treeitem", { name: "First words." }).click();
+  await expect(page.locator(`${editor} p`).nth(1)).toHaveText("First words.");
+});

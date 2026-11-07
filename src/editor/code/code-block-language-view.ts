@@ -3,7 +3,7 @@ import { codeBlockSchema } from "@milkdown/kit/preset/commonmark";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { Decoration } from "@milkdown/kit/prose/view";
-import { recordClipboardEntry } from "../../clipboard/history";
+import { tellCopied } from "../../clipboard/copied";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
 import { mountLanguagePicker } from "./code-language-picker";
 import { fitGutter } from "./gutter-fit";
@@ -96,9 +96,8 @@ export function createCodeBlockView(
         const text = node.textContent;
         void navigator.clipboard.writeText(text).then(
           () => {
-            // navigator.clipboard bypasses the copy event the clipboard history
-            // listens for.
-            recordClipboardEntry(text);
+            // navigator.clipboard bypasses the copy event.
+            tellCopied(text);
             copy.textContent = labels().copied;
             copy.classList.add("is-copied");
             clearTimeout(copiedTimer);

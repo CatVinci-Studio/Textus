@@ -1,8 +1,7 @@
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
-import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
+import { TreeTabIcon, OutlineTabIcon } from "../ui/icons";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { PHONE_QUERY } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
@@ -88,12 +87,6 @@ const BUILT_IN: SidebarTabDef[] = [
     Panel: ({ activeContent, activeTabId }) => (
       <Outline content={activeContent} tabId={activeTabId} />
     ),
-  },
-  {
-    id: "clipboard",
-    label: (t) => t.clipboardTab,
-    Icon: ClipboardTabIcon,
-    Panel: () => <ClipboardHistory />,
   },
 ];
 

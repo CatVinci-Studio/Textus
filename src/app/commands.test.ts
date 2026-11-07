@@ -35,13 +35,9 @@ describe("commands", () => {
 });
 
 describe("sidebar tabs", () => {
-  it("are Files, Outline and Clipboard, then any added", () => {
+  it("are Files and Outline, then any added", () => {
     const t = resolveStrings("en");
-    expect(sidebarTabs().map((tab) => tab.id)).toEqual([
-      "tree",
-      "outline",
-      "clipboard",
-    ]);
+    expect(sidebarTabs().map((tab) => tab.id)).toEqual(["tree", "outline"]);
     const remove = registerSidebarTab({
       id: "example",
       label: () => "Example",

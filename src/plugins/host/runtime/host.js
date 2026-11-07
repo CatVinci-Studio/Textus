@@ -10,7 +10,7 @@
 /* global createEndpoint */
 (function () {
   "use strict";
-  var API_VERSION = "1.2";
+  var API_VERSION = "1.3";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -431,6 +431,7 @@
       writeClipboard: function (value) {
         return call("clipboard.writeText", { text: String(value) });
       },
+      onDidCopy: on("copy"),
     },
     l10n: {
       t: function (key) {

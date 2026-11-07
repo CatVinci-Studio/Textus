@@ -50,7 +50,6 @@ import {
   TOGGLE_FLOATING_CHAT_EVENT,
   TOGGLE_FIND_REPLACE_EVENT,
   CLOSE_FIND_REPLACE_EVENT,
-  INSERT_CLIPBOARD_TEXT_EVENT,
   RESTORE_CHAT_EVENT,
   INSERT_BLOCK_EVENT,
   TOGGLE_BLOCK_EVENT,
@@ -161,13 +160,6 @@ export function useEditorWindowEvents({
     () => isOnScreen() && findReplace.showReplace(),
   );
   useWindowEvent(FIND_NEXT_EVENT, () => isOnScreen() && findReplace.findNext());
-
-  // Clipboard-history panel clicks, with the text as detail.
-  useWindowEvent(INSERT_CLIPBOARD_TEXT_EVENT, (e) => {
-    if (!isOnScreen()) return;
-    const text = (e as CustomEvent<string>).detail;
-    if (typeof text === "string" && text) clipboard.insertText(text);
-  });
 
   // Native Format menu clicks and the heading shortcuts ("paragraph" for
   // body text): the same commands as the right-click Insert submenu.

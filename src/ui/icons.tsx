@@ -314,42 +314,6 @@ export function OutlineTabIcon({ className }: IconProps) {
   );
 }
 
-export function ClipboardTabIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="15"
-      height="15"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <rect
-        x="3"
-        y="2.8"
-        width="10"
-        height="11.5"
-        rx="1.3"
-        stroke="currentColor"
-        strokeWidth="1.1"
-      />
-      <rect
-        x="5.5"
-        y="1.5"
-        width="5"
-        height="2.4"
-        rx="0.8"
-        fill="currentColor"
-      />
-      <path
-        d="M5.5 7.5H10.5M5.5 10.5H10.5"
-        stroke="currentColor"
-        strokeWidth="1.1"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 /** The window bar's sidebar toggle: a window with its left pane drawn. */
 export function SidebarToggleIcon({ className }: IconProps) {
   return (

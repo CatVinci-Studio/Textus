@@ -1347,10 +1347,6 @@ export default {
   privacyChatHistoryLabel: "對話紀錄",
   privacyChatHistoryToggle: "儲存對話紀錄",
   privacyChatHistoryClearHint: "移除所有已儲存的對話。此動作無法復原。",
-  privacyClipboardHistoryLabel: "剪貼簿紀錄",
-  privacyClipboardHistoryToggle: "儲存剪貼簿紀錄",
-  privacyClipboardHistoryClearHint:
-    "移除剪貼簿紀錄中的所有內容。此動作無法復原。",
   privacyDraftRecoveryLabel: "草稿復原",
   privacyDraftRecoveryToggle: "當機後復原未儲存的內容",
   privacyKeepUnsavedToggle: "關閉時保留未儲存的修改，不再詢問",
@@ -1360,12 +1356,7 @@ export default {
     "移除目前存放在磁碟上的所有快照。此動作無法復原。",
   privacyClearButton: "清除",
   privacyClearChatHistory: "清除對話紀錄",
-  privacyClearClipboard: "清除剪貼簿紀錄",
   privacyClearDrafts: "刪除復原草稿",
-  clipboardTab: "剪貼簿",
-  clipboardEmpty: "複製和貼上過的文字會顯示在這裡。",
-  clipboardClear: "清除",
-  clipboardCopy: "複製",
   clipboardInsertHint: "按一下即可插入到游標處",
   exportNeedsWysiwyg:
     "HTML 匯出使用的是呈現後的畫面。先離開原始碼模式，再重新匯出。",
@@ -1550,6 +1541,7 @@ export default {
   pluginOpenInstall: "安裝並開啟",
   pluginOpenTurnOnButton: "開啟並開啟檔案",
   pluginCardLine: "外掛推薦：{name}",
+  pluginCardMovedLine: "{name}現在是外掛了",
   conventionsCardLine: "此資料夾的 {app} 設定將圖片存放在 {folder}",
   conventionsCardDetails:
     "目前設定：{current}。採用後將儲存到此資料夾的 .textus/settings.json，隨專案保留。",

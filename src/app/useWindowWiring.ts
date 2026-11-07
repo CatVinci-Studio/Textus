@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { setReadOnlyShown } from "../document/read-only-state";
-import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useNavHistory } from "./useNavHistory";
@@ -68,7 +67,6 @@ export function useWindowWiring({
   });
 
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
-  useEffect(() => installClipboardCapture(), []);
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
   usePracticeNotes({

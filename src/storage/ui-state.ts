@@ -57,6 +57,9 @@ export interface UiState {
   /** The plugins whose first scheduled job brought up the notice about
    *  background mode, once each. */
   pluginsToldOfSchedule: string[];
+  /** Features that left the core for an official plugin, each offered to
+   *  those who used it once (plugins/store/moved-offer.ts). */
+  movedToPluginsOffered: string[];
   /** "plugin key" pairs whose manifest key was someone else's, told once. */
   pluginKeysTold: string[];
   /** Who the user chose to do what more than one plugin on claims

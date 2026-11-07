@@ -16,9 +16,6 @@ export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 /// manager and where they landed; the editor on screen inserts them.
 export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 
-/// detail: the markdown text to insert at the cursor.
-export const INSERT_CLIPBOARD_TEXT_EVENT = "textus:insert-clipboard-text";
-
 /// A saved conversation is waiting to be restored by the editor it is for.
 export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 

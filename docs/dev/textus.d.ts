@@ -171,6 +171,10 @@ declare global {
       /** Plain text on the system clipboard (needs clipboard). */
       readClipboard(): Promise<string>;
       writeClipboard(text: string): Promise<void>;
+      /** 1.3: the user copied or cut text from a document (needs
+       *  clipboard): the Markdown that went on the clipboard, math source
+       *  kept. Not what is copied elsewhere in Textus or in other apps. */
+      onDidCopy: Event<{ text: string; cut: boolean }>;
     }
 
     interface L10n {

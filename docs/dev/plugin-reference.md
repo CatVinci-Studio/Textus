@@ -135,17 +135,18 @@ Values kept for one document.
 
 ## Env
 
-| Member                                                        |                                                                                                                                                     |
-| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `readonly language: string`                                   | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                  |
-| `readonly appVersion: string`                                 |                                                                                                                                                     |
-| `readonly apiVersion: string`                                 | This API's version: "1.1". Check it before using what 1.1 added (schedule, notify, app, change sources), or set engines.textus to ">=1.3.0-beta.8". |
-| `readonly platform: "macos" \| "windows" \| "linux" \| "ios"` |                                                                                                                                                     |
-| `readonly theme: "light" \| "dark"`                           |                                                                                                                                                     |
-| `onDidChangeTheme: Event<"light" \| "dark">`                  |                                                                                                                                                     |
-| `onDidChangeLanguage: Event<string>`                          |                                                                                                                                                     |
-| `readClipboard(): Promise<string>`                            | Plain text on the system clipboard (needs clipboard).                                                                                               |
-| `writeClipboard(text: string): Promise<void>`                 |                                                                                                                                                     |
+| Member                                                        |                                                                                                                                                                                         |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `readonly language: string`                                   | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                                                      |
+| `readonly appVersion: string`                                 |                                                                                                                                                                                         |
+| `readonly apiVersion: string`                                 | This API's version: "1.1". Check it before using what 1.1 added (schedule, notify, app, change sources), or set engines.textus to ">=1.3.0-beta.8".                                     |
+| `readonly platform: "macos" \| "windows" \| "linux" \| "ios"` |                                                                                                                                                                                         |
+| `readonly theme: "light" \| "dark"`                           |                                                                                                                                                                                         |
+| `onDidChangeTheme: Event<"light" \| "dark">`                  |                                                                                                                                                                                         |
+| `onDidChangeLanguage: Event<string>`                          |                                                                                                                                                                                         |
+| `readClipboard(): Promise<string>`                            | Plain text on the system clipboard (needs clipboard).                                                                                                                                   |
+| `writeClipboard(text: string): Promise<void>`                 |                                                                                                                                                                                         |
+| `onDidCopy: Event<{ text: string; cut: boolean }>`            | 1.3: the user copied or cut text from a document (needs clipboard): the Markdown that went on the clipboard, math source kept. Not what is copied elsewhere in Textus or in other apps. |
 
 ## L10n
 

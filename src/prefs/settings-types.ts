@@ -407,7 +407,6 @@ export interface Settings {
   /// Privacy toggles: each stops one kind of locally stored history going
   /// forward; turning one off does not clear what's already stored.
   enableChatHistory: boolean;
-  enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
   /** Closing a window with unsaved changes keeps them as drafts for the next
    *  launch instead of asking. Needs enableDraftRecovery. */
@@ -506,7 +505,6 @@ export const DEFAULT_SETTINGS: Settings = {
   updateChannel: "stable",
   onboardingShown: false,
   enableChatHistory: true,
-  enableClipboardHistory: true,
   enableDraftRecovery: true,
   keepUnsavedOnClose: false,
   runInBackground: false,

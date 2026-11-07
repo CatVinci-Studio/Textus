@@ -1484,10 +1484,6 @@ export default {
   privacyChatHistoryToggle: "Сохранять диалоги",
   privacyChatHistoryClearHint:
     "Удаляет все сохранённые диалоги. Это действие нельзя отменить.",
-  privacyClipboardHistoryLabel: "История буфера обмена",
-  privacyClipboardHistoryToggle: "Сохранять историю буфера обмена",
-  privacyClipboardHistoryClearHint:
-    "Удаляет всё из истории буфера обмена. Это действие нельзя отменить.",
   privacyDraftRecoveryLabel: "Восстановление черновиков",
   privacyDraftRecoveryToggle: "Восстанавливать несохранённое после сбоя",
   privacyKeepUnsavedToggle:
@@ -1498,12 +1494,7 @@ export default {
     "Удаляет все снимки, которые сейчас хранятся на диске. Это действие нельзя отменить.",
   privacyClearButton: "Очистить",
   privacyClearChatHistory: "Очистить историю чатов",
-  privacyClearClipboard: "Очистить историю буфера обмена",
   privacyClearDrafts: "Удалить черновики восстановления",
-  clipboardTab: "Буфер обмена",
-  clipboardEmpty: "Здесь появится скопированный и вставленный текст.",
-  clipboardClear: "Очистить",
-  clipboardCopy: "Скопировать",
   clipboardInsertHint: "Нажмите, чтобы вставить у курсора",
   exportNeedsWysiwyg:
     "Экспорт в HTML использует визуальный режим. Сначала выйдите из режима исходного кода, затем повторите экспорт.",
@@ -1696,6 +1687,7 @@ export default {
   pluginOpenInstall: "Установить и открыть",
   pluginOpenTurnOnButton: "Включить и открыть",
   pluginCardLine: "Рекомендуемый плагин: {name}",
+  pluginCardMovedLine: "{name} теперь плагин",
   conventionsCardLine:
     "Настройки {app} этой папки сохраняют изображения в {folder}",
   conventionsCardDetails:

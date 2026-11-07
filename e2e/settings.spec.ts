@@ -54,7 +54,7 @@ const t = {
   customCssLabel: "Custom CSS",
   themeGetMore: "Get more themes",
   privacyClearButton: "Clear",
-  privacyClearClipboard: "Clear Clipboard History",
+  privacyClearDrafts: "Delete Recovery Drafts",
   pdfPageNumbersLabel: "Show page numbers in exports",
   aboutTextus: "About Textus",
   aboutMadeBy: "Made by CatVinci Studio",
@@ -324,7 +324,7 @@ test.describe("desktop", () => {
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navPrivacy }).click();
     const clear = panel.getByRole("button", {
-      name: `${t.privacyClearButton}: ${t.privacyClearClipboard}`,
+      name: `${t.privacyClearButton}: ${t.privacyClearDrafts}`,
     });
     await clear.click();
     // The confirm dialog's own Clear, over Settings.
