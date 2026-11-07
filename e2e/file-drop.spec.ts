@@ -68,23 +68,6 @@ test("a dropped document opens beside the one being read, never in its place", a
   ]);
 });
 
-test("a dropped image goes into the document", async ({ page }) => {
-  await page.locator(editor).click();
-  await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.press("Backspace");
-  await mockInvoke(page, {
-    read_binary_file_base64: PNG,
-    save_pasted_image: { src: "assets/dropped.png" },
-  });
-  const box = (await page.locator(editor).boundingBox())!;
-  await drop(page, ["/home/me/shot.png"], {
-    x: box.x + 20,
-    y: box.y + 10,
-  });
-  await expect(page.locator(`${editor} .image-view img`)).toHaveCount(1);
-  expect(await sourceOf(page)).toBe("![](assets/dropped.png)");
-});
-
 test("a dropped image lands where it was dropped, not at the caret", async ({
   page,
 }) => {

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import { emit, END, openApp, pasteMarkdown } from "./helpers";
 
 // Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
 // what Pele can't. Each engine loads only when needed; Pele's colours are CSS
@@ -71,21 +71,18 @@ test("Mermaid draws diagrams unless Pele is chosen, and Pele is never fetched", 
   expect(seen).toEqual({ mermaid: true, pele: false });
 });
 
-test("neither engine is fetched for a document without diagrams", async ({
+test("with Pele chosen nothing is fetched until a diagram comes, which Pele draws, and Mermaid is never fetched", async ({
   page,
 }) => {
   const seen = engineRequests(page);
   await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
   await pasteMarkdown(page, "# Notes\n\n```js\nconst a = 1;\n```\n");
-  await page.waitForTimeout(800);
+  await expect(page.locator(".milkdown pre code")).toContainText("const a");
   expect(seen).toEqual({ mermaid: false, pele: false });
-});
-
-test("with Pele chosen a diagram is drawn by Pele and Mermaid is never fetched", async ({
-  page,
-}) => {
-  const seen = engineRequests(page);
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
+  // Below the heading, out of the code block.
+  await page.locator(".milkdown h1").click();
+  await page.keyboard.press(END);
+  await page.keyboard.press("Enter");
   await pasteMarkdown(page, FLOW);
   await expect(page.locator(peleSvg)).toHaveCount(1, { timeout: 10_000 });
   await expect(page.locator(`${peleSvg} .pele-node`)).toHaveCount(2);
