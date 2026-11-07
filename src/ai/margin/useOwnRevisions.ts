@@ -83,20 +83,13 @@ export function useOwnRevisions({
       .then((text) => {
         if (!alive) return;
         loadedFor.current = filePath;
-        let saved: { base?: unknown; revised?: unknown } = {};
-        try {
-          saved = text ? JSON.parse(text) : {};
-        } catch {
-          saved = {};
-        }
-        if (typeof saved.base !== "string") return;
         run((ctx) => {
-          const shown = ctx.get(serializerCtx)(view.state.doc);
-          // Revised from an original the file no longer holds: it gives way,
-          // as a proposal does.
-          if (typeof saved.revised === "string" && saved.revised !== shown)
-            return;
-          const base = parseMarkdownSource(ctx, saved.base as string);
+          const kept = keptOriginal(
+            text,
+            ctx.get(serializerCtx)(view.state.doc),
+          );
+          if (kept === null) return;
+          const base = parseMarkdownSource(ctx, kept);
           if (!base || typeof base === "string") return;
           view.dispatch(
             view.state.tr.setMeta(ownRevisionKey, { type: "base", base }),
@@ -208,4 +201,26 @@ export function useOwnRevisions({
   });
 
   return { changes, decide, acceptAll, rejectAll, toggle };
+}
+
+/**
+ * The original kept beside a file (`text`, as stored) that tracking carries
+ * on from, or null. Changes revised from text the editor no longer shows
+ * give way, as a proposal does; one kept from before 1.3 has no revised
+ * text and always carries on.
+ */
+export function keptOriginal(
+  text: string | null,
+  shown: string,
+): string | null {
+  let saved: { base?: unknown; revised?: unknown };
+  try {
+    saved = text ? JSON.parse(text) : {};
+  } catch {
+    return null;
+  }
+  if (typeof saved.base !== "string") return null;
+  if (typeof saved.revised === "string" && saved.revised !== shown)
+    return null;
+  return saved.base;
 }

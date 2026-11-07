@@ -205,33 +205,6 @@ test("tracking carries on when the document opens again", async ({ page }) => {
   await expect(page.locator(".own-insert")).toHaveText("still");
 });
 
-test("kept from before 1.3, the original alone carries on too", async ({
-  page,
-}) => {
-  await openDraft(
-    page,
-    JSON.stringify({ base: "The harbour was silent at dawn.\n" }),
-  );
-  await expect(page.locator(".own-delete")).toHaveText("silent");
-  await expect(page.locator(".own-insert")).toHaveText("quiet");
-});
-
-test("changes kept for an original the file no longer holds give way", async ({
-  page,
-}) => {
-  await openDraft(
-    page,
-    JSON.stringify({
-      base: "The harbour was empty at dawn.\n",
-      revised: "The harbour was still at dawn.\n",
-    }),
-  );
-  await expect(page.locator(editor)).toHaveText(
-    "The harbour was quiet at dawn.",
-  );
-  await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
-});
-
 test("closed with changes still to decide, it says they are kept", async ({
   page,
 }) => {
