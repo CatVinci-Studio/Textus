@@ -65,6 +65,7 @@ export {
   systemIpc,
   links,
   webPages,
+  webAssets,
   exportDoc,
   themes,
   themeGallery,

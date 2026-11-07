@@ -535,6 +535,7 @@ pub fn run() {
             commands::links::open_about_link,
             commands::links::open_web_link,
             commands::links::open_tutorials_page,
+            commands::web_asset::web_asset,
             #[cfg(desktop)]
             open_pandoc_install_page,
             #[cfg(desktop)]

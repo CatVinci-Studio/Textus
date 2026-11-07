@@ -45,5 +45,6 @@ pub mod undo_files;
 pub mod update;
 pub mod vault;
 #[cfg(desktop)]
+pub mod web_asset;
 pub mod web_page;
 pub mod word_import;

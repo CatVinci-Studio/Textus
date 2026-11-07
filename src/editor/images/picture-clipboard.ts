@@ -1,6 +1,7 @@
 import { NodeSelection, Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
+import { webAssets } from "../../platform/ipc";
 
 /** The picture selected in `view` as PNG, so other apps paste the picture
  *  rather than its Markdown; null when no picture is selected. */
@@ -20,7 +21,12 @@ export function selectedPictureAsPng(view: EditorView): Promise<Blob> | null {
         : null;
   const src = img?.currentSrc || img?.src;
   if (!src) return null;
-  return fetch(src)
+  // The window may not fetch from the web: Rust brings a web picture.
+  const local = /^https?:/i.test(src)
+    ? webAssets.get(src, "image")
+    : Promise.resolve(src);
+  return local
+    .then((url) => fetch(url))
     .then((response) => response.blob())
     .then(asPng);
 }

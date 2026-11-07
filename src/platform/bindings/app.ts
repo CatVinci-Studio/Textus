@@ -167,6 +167,11 @@ export const commands = {
 	 *  animation" links, which name their `clip`.
 	 */
 	open_tutorials_page: (clip: string | null, language: string | null) => __TAURI_INVOKE<null>("open_tutorials_page", { clip, language }),
+	/**
+	 *  `url` as the kind asked for: a stylesheet's text, or a font or picture
+	 *  as a data URL. Only http(s) addresses on the public internet.
+	 */
+	web_asset: (url: string, kind: WebAssetKind) => __TAURI_INVOKE<string>("web_asset", { url, kind }),
 	/**  Save dialog for exports, with the target format's name and extension. */
 	export_save_dialog: (defaultName: string, filterName: string, ext: string) => __TAURI_INVOKE<string | null>("export_save_dialog", { defaultName, filterName, ext }),
 	/**
@@ -536,6 +541,14 @@ export type UpdateMetadata_Serialize = {
 };
 
 export type Value = null | boolean | number | string | Value[] | { [key in string]: Value };
+
+export type WebAssetKind = 
+/**  A stylesheet a theme `@import`s: its text. */
+"stylesheet" | 
+/**  A font a stylesheet's `@font-face` names: a data URL. */
+"font" | 
+/**  A picture: a data URL. */
+"image";
 
 export type WindowBounds = {
 	label: string,
