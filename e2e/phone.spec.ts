@@ -5,40 +5,13 @@ import { openPhone, pasteMarkdown, PHONE, settled } from "./helpers";
 // viewport.
 test.use(PHONE);
 
-test("the phone menu opens the sidebar as a drawer over the page", async ({
+test("the phone menu: short, finger-sized rows; Documents, the sidebar drawer and the view mode from it", async ({
   page,
 }) => {
   await openPhone(page);
-  await page.locator(".window-menu-button").tap();
+  const menuButton = page.locator(".window-menu-button");
+  await menuButton.tap();
   // A flat list - no File/Edit/View flyouts on a phone - led by Documents.
-  await expect(page.getByRole("menuitem").first()).toHaveText("Documents");
-  const sidebarItem = page.getByRole("menuitemcheckbox", { name: "Sidebar" });
-  await expect(sidebarItem).toHaveAttribute("aria-checked", "false");
-  await sidebarItem.tap();
-
-  const sidebar = page.locator(".sidebar");
-  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
-  // Over the editor, not beside it: the page keeps the full width.
-  const pane = await page.locator(".main-pane").boundingBox();
-  expect(pane?.x).toBe(0);
-  expect(pane?.width).toBe(430);
-
-  // The scrim dims the whole screen, the status bar's strip too.
-  expect(await page.locator(".sidebar-scrim").boundingBox()).toMatchObject({
-    y: 0,
-    height: 932,
-  });
-
-  // A tap beside the drawer closes it.
-  await page.locator(".sidebar-scrim").tap({ position: { x: 400, y: 500 } });
-  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
-});
-
-test("the phone menu is short; the view modes are switched in Settings", async ({
-  page,
-}) => {
-  await openPhone(page);
-  await page.locator(".window-menu-button").tap();
   await expect(page.locator(".app-menu-item")).toHaveText([
     "Documents",
     "New File",
@@ -51,9 +24,51 @@ test("the phone menu is short; the view modes are switched in Settings", async (
     "Plugins",
     "Settings…",
   ]);
+  // It drops from its button, rows a finger can hit, none looking selected.
+  const list = page.locator(".app-menu-list");
+  expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(240);
+  const row = (await page.getByRole("menuitem").first().boundingBox())!;
+  expect(row.height).toBeGreaterThanOrEqual(44);
+  expect(
+    await page.evaluate(() => document.activeElement?.closest(".app-menu")),
+  ).toBeNull();
+  // A tap on the page's text, which sends no mousedown on iOS, closes it.
+  await page.tap(".main-pane", { position: { x: 380, y: 600 } });
+  await expect(list).toHaveCount(0);
+
+  // Documents opens as its own page and closes again.
+  await menuButton.tap();
+  await page.getByRole("menuitem", { name: "Documents" }).tap();
+  const documents = page.getByRole("dialog", { name: "Documents" });
+  await expect(documents).toBeVisible();
+  await documents.getByRole("button", { name: "Close" }).tap();
+  await expect(documents).toHaveCount(0);
+
+  // The sidebar opens as a drawer over the page.
+  await menuButton.tap();
+  const sidebarItem = page.getByRole("menuitemcheckbox", { name: "Sidebar" });
+  await expect(sidebarItem).toHaveAttribute("aria-checked", "false");
+  await sidebarItem.tap();
+  const sidebar = page.locator(".sidebar");
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  // Over the editor, not beside it: the page keeps the full width.
+  const pane = await page.locator(".main-pane").boundingBox();
+  expect(pane?.x).toBe(0);
+  expect(pane?.width).toBe(430);
+  // The scrim dims the whole screen, the status bar's strip too.
+  expect(await page.locator(".sidebar-scrim").boundingBox()).toMatchObject({
+    y: 0,
+    height: 932,
+  });
+  // A tap beside the drawer closes it.
+  await page.locator(".sidebar-scrim").tap({ position: { x: 400, y: 500 } });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+
+  // The view modes are switched in Settings: source mode is the window's,
+  // not a setting, so the choice follows it.
+  await menuButton.tap();
   await page.getByRole("menuitem", { name: "Settings…" }).tap();
   await page.getByRole("button", { name: "Editor & Appearance" }).tap();
-  // Source mode is the window's, not a setting: the choice follows it.
   const view = page.getByRole("combobox", { name: "Editing view" });
   // The phone's own picker: a native select.
   await expect(view).toHaveValue("rich");
@@ -166,16 +181,6 @@ test("with the keyboard up the AI page drops what no longer fits whole", async (
   const list = (await picker.boundingBox())!;
   expect(list.y).toBeGreaterThanOrEqual(header.y + header.height);
   await expect(page.locator(".agent-panel-empty-text")).toBeHidden();
-});
-
-test("Documents opens as its own page and closes again", async ({ page }) => {
-  await openPhone(page);
-  await page.locator(".window-menu-button").tap();
-  await page.getByRole("menuitem", { name: "Documents" }).tap();
-  const list = page.getByRole("dialog", { name: "Documents" });
-  await expect(list).toBeVisible();
-  await list.getByRole("button", { name: "Close" }).tap();
-  await expect(list).toHaveCount(0);
 });
 
 test("the keyboard toolbar formats without leaving the document, and leaves copy and paste to the system's menu", async ({
