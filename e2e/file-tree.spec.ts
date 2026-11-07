@@ -59,10 +59,30 @@ test("the parent folder's name takes the tree up a level in one click", async ({
   await expect(row(page, "other.md")).toBeVisible();
 });
 
-test("sorts by name or by date modified, and filters to documents", async ({
+test("the Sort menu shows hidden files and sorts by name or by date modified; the filter keeps documents", async ({
   page,
 }) => {
-  await open(page);
+  await open(page, {
+    "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/.env": "x",
+  });
+  // Hidden files stay out of the tree until it shows them (#357).
+  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
+  await expect(rows(page)).toHaveText([
+    ".obsidian",
+    "drafts",
+    ".env",
+    "a.md",
+    "b.md",
+    "chart.png",
+  ]);
+  expect(
+    await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
+  ).toBe("1");
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
   await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
 
   await page.getByRole("button", { name: "Sort" }).click();
@@ -373,51 +393,6 @@ test("a row dragged onto a folder moves into it, and its open tab follows", asyn
     .toContain("moved");
 });
 
-test("hidden files stay out of the tree until it shows them (#357)", async ({
-  page,
-}) => {
-  await open(page, {
-    "/work/notes/.obsidian/app.json": "{}",
-    "/work/notes/.env": "x",
-  });
-  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
-  await page.getByRole("button", { name: "Sort" }).click();
-  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
-  await expect(rows(page)).toHaveText([
-    ".obsidian",
-    "drafts",
-    ".env",
-    "a.md",
-    "b.md",
-    "chart.png",
-  ]);
-  expect(
-    await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
-  ).toBe("1");
-});
-
-test("a file dragged over a plugin's frame still splits where it is let go", async ({
-  page,
-}) => {
-  await open(page);
-  // A plugin's view (a PDF) is an iframe over the document.
-  await page.evaluate(() => {
-    const frame = document.createElement("iframe");
-    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
-    document.querySelector(".main-pane")!.append(frame);
-  });
-  const from = (await row(page, "b.md").boundingBox())!;
-  const main = (await page.locator(".main-pane").boundingBox())!;
-  await page.mouse.move(from.x + 20, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(main.x + main.width - 30, main.y + main.height / 2, {
-    steps: 8,
-  });
-  await expect(page.locator(".split-drop-hint")).toBeVisible();
-  await page.mouse.up();
-  await expect(page.locator(".main-pane-split > .split-pane")).toHaveCount(2);
-});
-
 test("a file clicked opens in a tab of its own, and an open one comes to the front", async ({
   page,
 }) => {
@@ -446,10 +421,16 @@ test("Open to the Side shows a document beside the one in front", async ({
   ).toContainText("Bravo");
 });
 
-test("a file dragged onto the lower half of the document opens below it", async ({
+test("a file dragged onto the lower half of the document opens below it, over a plugin's frame too", async ({
   page,
 }) => {
   await open(page);
+  // A plugin's view (a PDF) is an iframe over the document.
+  await page.evaluate(() => {
+    const frame = document.createElement("iframe");
+    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
+    document.querySelector(".main-pane")!.append(frame);
+  });
   const from = (await row(page, "b.md").boundingBox())!;
   const main = (await page.locator(".main-pane").boundingBox())!;
   await page.mouse.move(from.x + 20, from.y + from.height / 2);
