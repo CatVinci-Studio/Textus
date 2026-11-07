@@ -61,17 +61,14 @@ async function arrive(page: Page, link: string) {
   }, link);
 }
 
-test("a link waiting at start and one that comes later reach their plugin", async ({
+test("a link waiting at start and one that comes later reach their plugin; one for no plugin says so", async ({
   page,
 }) => {
   await open(page);
   await expect(page.getByText("/save First")).toBeVisible();
   await arrive(page, "textus://test.clip/again?title=Second");
   await expect(page.getByText("/again Second")).toBeVisible();
-});
-
-test("a link for no plugin that is on says so", async ({ page }) => {
-  await open(page);
+  // One for no plugin that is on says so.
   await arrive(page, "textus://someone.else/x");
   await expect(page.locator(".app-dialog")).toContainText(
     "No plugin that is turned on opens this link: textus://someone.else/x",
