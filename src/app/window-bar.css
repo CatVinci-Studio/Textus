@@ -233,8 +233,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 20px;
+  width: calc(22px * var(--chrome-scale));
+  height: calc(20px * var(--chrome-scale));
   padding: 0;
   border: none;
   border-radius: var(--shape-pill);

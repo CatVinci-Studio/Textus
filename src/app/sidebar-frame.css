@@ -88,7 +88,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 4px;
+  padding: calc(4px * var(--chrome-scale)) 4px;
   border: none;
 }
 

@@ -63,7 +63,6 @@ function FilesPanel({
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
         onOpenFile(path, beside);
       }}
-      onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}

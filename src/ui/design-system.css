@@ -515,7 +515,8 @@
   --chrome-scale: calc(var(--ui-text-scale, 1) * 1.15);
 }
 
-/* Icons are drawn at fixed pixel sizes, so a whole button scales at once. */
+/* Icons are drawn at fixed pixel sizes: each grows as a picture, without
+   moving what is around it; the buttons' own sizes are scaled below. */
 :root:not([data-window-chrome="mobile"])
   :is(
     .window-bar-toggle,
@@ -525,9 +526,13 @@
     .icon-button,
     .tx-icon-button,
     .tab-bar-add,
-    .sidebar-tab > svg
-  ) {
-  zoom: var(--chrome-scale);
+    .sidebar-tab,
+    .window-caption-button,
+    .window-bar-lock,
+    .tree-row
+  )
+  > svg {
+  scale: var(--chrome-scale);
 }
 
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
@@ -563,13 +568,13 @@
   .tree-tool,
   .tx-icon-button
 ) {
-  width: 24px;
-  height: 24px;
+  width: calc(24px * var(--chrome-scale));
+  height: calc(24px * var(--chrome-scale));
 }
 
 .icon-button {
-  width: 30px;
-  height: 30px;
+  width: calc(30px * var(--chrome-scale));
+  height: calc(30px * var(--chrome-scale));
 }
 
 :is(.inline-chat-attach, .inline-chat-toggle) {

@@ -76,7 +76,7 @@
 }
 
 .tree-root-label {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -100,7 +100,8 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 1;
+  /* Gives way first: the folder the tree shows matters more. */
+  flex-shrink: 8;
   min-width: 0;
   max-width: 45%;
   padding: 2px 4px;
@@ -340,8 +341,8 @@
 .tree-draft-input {
   flex: 1;
   min-width: 0;
-  margin: -2px 0;
-  padding: 1px 4px;
+  margin: 0;
+  padding: 0 4px;
   border: 1px solid var(--ui-accent);
   border-radius: var(--shape-xs);
   background: var(--ui-bg);
@@ -353,5 +354,5 @@
 .tree-empty-hint {
   margin: 8px;
   color: var(--ui-muted);
-  font-size: var(--text-secondary);
+  font-size: var(--text-footnote);
 }

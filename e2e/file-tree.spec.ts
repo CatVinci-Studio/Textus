@@ -175,7 +175,7 @@ test("an empty folder says a double-click makes a document", async ({
   await open(page, { "/work/notes/empty/.keep": "" });
   await row(page, "empty").dblclick();
   await expect(page.locator(".sidebar .tree-empty-hint")).toHaveText(
-    "Empty. Double-click here for a new document.",
+    "Double-click here for a new document.",
   );
   await page.locator(".sidebar .tree-empty-hint").dblclick();
   await page.locator(".sidebar .tree-draft-input").press("Enter");

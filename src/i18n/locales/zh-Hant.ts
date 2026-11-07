@@ -500,7 +500,7 @@ export default {
   treeSearchScopeDocuments: "僅文件",
   treeNewDocument: "新增文件",
   treeNewFolder: "新增檔案夾",
-  treeEmptyHint: "這裡還是空的。按兩下空白處新增文件。",
+  treeEmptyHint: "按兩下空白處新增文件。",
   treeNewDocumentPrompt: "新文件的名稱",
   treeNewFolderPrompt: "新檔案夾的名稱",
   treeNewDocumentDefault: "未命名",

@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
+  width: calc(46px * var(--chrome-scale, 1));
   align-self: stretch;
   padding: 0;
   border: none;

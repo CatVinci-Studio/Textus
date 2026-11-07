@@ -12,7 +12,6 @@ import {
   CloseIcon,
   NewDocumentIcon,
   NewFolderIcon,
-  OpenFolderIcon,
   RefreshIcon,
   SortIcon,
 } from "../ui/icons";
@@ -60,10 +59,9 @@ interface FileTreeProps {
   activePath: string | null;
   /** `beside`: Open to the Side, in a split beside the one in front. */
   onFileSelect: (path: string, beside?: boolean) => void;
-  /** File > Open Folder… and Close Folder; Open is left out on iOS. */
-  onOpenFolder?: () => void;
   /** Opens the folder the tree shows as the window's folder; desktop only. */
   onOpenAsFolder?: (path: string) => void;
+  /** File > Close Folder. */
   onCloseFolder: () => void;
   /** A file or folder was dragged into another folder: open tabs follow
    *  it to its new path. */
@@ -87,7 +85,6 @@ export function FileTree({
   folder,
   activePath,
   onFileSelect,
-  onOpenFolder,
   onOpenAsFolder,
   onCloseFolder,
   onEntryMoved,
@@ -282,18 +279,6 @@ export function FileTree({
                 <SortIcon />
               </button>
             </Tooltip>
-            {onOpenFolder && (
-              <Tooltip text={t.menuOpenFolder}>
-                <button
-                  type="button"
-                  className="tree-tool"
-                  onClick={onOpenFolder}
-                  aria-label={t.menuOpenFolder}
-                >
-                  <OpenFolderIcon />
-                </button>
-              </Tooltip>
-            )}
             {folder && (
               <Tooltip text={t.menuCloseFolder}>
                 <button

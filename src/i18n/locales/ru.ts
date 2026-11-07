@@ -564,7 +564,7 @@ export default {
   treeSearchScopeDocuments: "Только документы",
   treeNewDocument: "Новый документ",
   treeNewFolder: "Новая папка",
-  treeEmptyHint: "Пусто. Дважды щёлкните здесь, чтобы создать документ.",
+  treeEmptyHint: "Дважды щёлкните здесь, чтобы создать документ.",
   treeNewDocumentPrompt: "Название нового документа",
   treeNewFolderPrompt: "Название новой папки",
   treeNewDocumentDefault: "Без названия",

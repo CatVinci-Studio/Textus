@@ -88,24 +88,9 @@ export function ProjectIcon({ className }: IconProps) {
   );
 }
 
-/** File > Open Folder…: a folder, opened. */
+/** File > Open Folder…: the folder outline with a plus in it. */
 export function OpenFolderIcon({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      width="14"
-      height="14"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <path
-        d="M2 11.5V3.5C2 2.95 2.45 2.5 3 2.5H6L7.5 4H12.5C13.05 4 13.5 4.45 13.5 5V6.5M2 11.5L3.6 7.2C3.75 6.8 4.1 6.5 4.55 6.5H14.1C14.45 6.5 14.7 6.85 14.6 7.2L13.2 11.8C13.1 12.2 12.7 12.5 12.3 12.5H3C2.45 12.5 2 12.05 2 11.5Z"
-        stroke="currentColor"
-        strokeWidth="1.2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <NewFolderIcon className={className} />;
 }
 
 /** The tree's New Folder: the folder outline with a plus. */

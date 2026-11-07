@@ -570,7 +570,7 @@ para usar una.
   treeSearchScopeDocuments: "Solo documentos",
   treeNewDocument: "Nuevo documento",
   treeNewFolder: "Nueva carpeta",
-  treeEmptyHint: "Vacía. Haz doble clic aquí para un documento nuevo.",
+  treeEmptyHint: "Haz doble clic aquí para un documento nuevo.",
   treeNewDocumentPrompt: "Nombre del nuevo documento",
   treeNewFolderPrompt: "Nombre de la nueva carpeta",
   treeNewDocumentDefault: "Sin título",
