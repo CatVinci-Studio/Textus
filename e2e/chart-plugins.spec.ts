@@ -88,7 +88,7 @@ test("every chart plugin's blocks are drawn, and exported as pictures", async ({
   }
 
   // Exported from the top: a markmap scrolled out of view loses its
-  // picture (a known bug, in the plan).
+  // picture, still to be fixed.
   await frames.first().scrollIntoViewIfNeeded();
   const html = await exportHtml(page);
   const pictures = await page.evaluate((text) => {
