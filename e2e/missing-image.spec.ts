@@ -1,23 +1,11 @@
-import { expect, test, type Page } from "@playwright/test";
-import { emit, openPhone, pasteMarkdown, PHONE } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { openPhone, pasteMarkdown, PHONE, sourceOf } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**
  * A picture that won't load shows a card in its place: its name, the reason
  * (asked of the backend, not guessed), and Choose image… / Show in folder.
  */
-
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
-}
 
 test("a local image that isn't on disk names the file and where it was looked for", async ({
   page,

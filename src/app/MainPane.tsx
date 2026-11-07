@@ -10,7 +10,7 @@ import {
 } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
+import { DocSourceEditor } from "../editor/modes/lazy-doc-source-editor";
 import {
   showsStartPage,
   tabIsDirty,
@@ -346,13 +346,15 @@ export function MainPane({
                 />
               </Suspense>
             ) : tab.sourceMode ? (
-              <DocSourceTextarea
-                value={tab.content}
-                docPath={tab.path}
-                typewriter={typewriter}
-                onChange={(markdown) => onChange(tab.id, markdown)}
-                readOnly={tabReadOnly(tab)}
-              />
+              <Suspense fallback={null}>
+                <DocSourceEditor
+                  value={tab.content}
+                  docPath={tab.path}
+                  typewriter={typewriter}
+                  onChange={(markdown) => onChange(tab.id, markdown)}
+                  readOnly={tabReadOnly(tab)}
+                />
+              </Suspense>
             ) : (
               <EditorKept
                 tabId={tab.id}

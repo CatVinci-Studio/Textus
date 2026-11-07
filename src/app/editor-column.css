@@ -49,16 +49,15 @@
   padding-bottom: 42vh;
 }
 
+/* The source editor's column. CodeMirror's own scroller holds the padding
+   and scrolls; see editor/modes/source-editor.css. */
 .source-view {
   zoom: var(--content-zoom, 1);
   flex: 1;
+  min-height: 0;
   width: 100%;
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 3rem 1.5rem 6rem;
-  border: none;
-  outline: none;
-  resize: none;
   background: var(--doc-bg);
   color: var(--doc-text);
   font-family: var(--font-mono);

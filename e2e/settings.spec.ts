@@ -220,7 +220,7 @@ test.describe("desktop", () => {
     await expect(view).toHaveText(t.menuViewSource);
     await expect(page.locator(".split-view")).toHaveCount(0);
     await expect(
-      page.locator('[data-active-tab="true"] textarea.source-view'),
+      page.locator('[data-active-tab="true"] .source-view .cm-content'),
     ).toBeAttached();
   });
 

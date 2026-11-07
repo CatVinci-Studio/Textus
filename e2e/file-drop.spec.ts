@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp, sourceOf } from "./helpers";
 
 // Files dropped from a file manager arrive as a `tauri://drag-drop` event
 // with their paths, fired by the dev shim as Rust would; reading is canned.
@@ -12,19 +12,6 @@ const PNG =
 
 function drop(page: Page, paths: string[], position = { x: 0, y: 0 }) {
   return emit(page, "tauri://drag-drop", { paths, position });
-}
-
-/** The active document's Markdown, read from source mode (and back). */
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
 }
 
 test.beforeEach(async ({ page }) => {

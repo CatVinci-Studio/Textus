@@ -26,6 +26,11 @@ export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 /// predefined menu items have no id, so on Windows they come through here.
 export const EDIT_ACTION_EVENT = "textus:edit-action";
 
+/// On the source editor's content, detail "undo", "redo" or "select-all": the
+/// Edit menu asking CodeMirror for its own, whose history the system's
+/// commands don't reach off macOS.
+export const SOURCE_EDIT_EVENT = "textus:source-edit";
+
 /// detail: what to do with the writer's tracked changes in the document on screen.
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";

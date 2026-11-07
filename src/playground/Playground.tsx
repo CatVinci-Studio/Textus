@@ -3,17 +3,19 @@ import { Tooltip } from "../ui/Tooltip";
 import {
   type ChangeEvent,
   type RefObject,
+  Suspense,
   useEffect,
   useRef,
   useState,
 } from "react";
 import { APP_NAME, resolveStrings, type Lang } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
-import { SourceTextarea } from "../editor/modes/SourceTextarea";
+import { SourceEditor } from "../editor/modes/lazy-source-editor";
+import { sourceViewAt } from "../editor/modes/source-view-registry";
 import {
-  applyTextareaCaret,
+  applySourceCaret,
   captureEditorCaret,
-  readTextareaCaret,
+  readSourceCaret,
   setPendingCaret,
   takePendingCaret,
 } from "../editor/modes/mode-switch";
@@ -143,7 +145,6 @@ function WebEditor({
   const setNotice = showNotice;
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const editorRef = useRef<EditorHandle | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const onChange = (markdown: string) => docs.update(doc.id, markdown);
@@ -155,9 +156,8 @@ function WebEditor({
 
   function toggleSource() {
     if (source) {
-      setPendingCaret(
-        textareaRef.current ? readTextareaCaret(textareaRef.current) : null,
-      );
+      const view = sourceViewAt(document);
+      setPendingCaret(view ? readSourceCaret(view.view) : null);
     } else {
       const markdown = currentMarkdown();
       setPendingCaret(captureEditorCaret(markdown));
@@ -169,8 +169,8 @@ function WebEditor({
   // The source view just mounted: put the caret where the editor had it.
   useEffect(() => {
     const caret = source ? takePendingCaret() : null;
-    if (caret && textareaRef.current)
-      applyTextareaCaret(textareaRef.current, caret);
+    const view = caret ? sourceViewAt(document) : null;
+    if (caret && view) applySourceCaret(view.view, caret);
   }, [source]);
 
   async function importFile(file: File) {
@@ -320,13 +320,14 @@ function WebEditor({
         )}
       </Presence>
       {source ? (
-        <SourceTextarea
-          key={doc.id}
-          ref={textareaRef}
-          value={doc.markdown}
-          typewriter={false}
-          onChange={onChange}
-        />
+        <Suspense fallback={null}>
+          <SourceEditor
+            key={doc.id}
+            value={doc.markdown}
+            typewriter={false}
+            onChange={onChange}
+          />
+        </Suspense>
       ) : (
         <PlaygroundEditor
           key={doc.id}

@@ -1,5 +1,5 @@
 import { editIpc } from "../platform/ipc-app";
-import { EDIT_ACTION_EVENT } from "../utils/events";
+import { EDIT_ACTION_EVENT, SOURCE_EDIT_EVENT } from "../utils/events";
 
 /** The Edit menu items that act where the keyboard is. */
 export type FocusedEdit = "undo" | "redo" | "select-all";
@@ -22,6 +22,17 @@ export function editInFocus(action: FocusedEdit): void {
   ) {
     if (action === "select-all") focused.select();
     else editNatively(action);
+    return;
+  }
+  // Source mode is a CodeMirror document with its own history: the editor
+  // does the edit itself, asked through its content element.
+  if (
+    focused instanceof HTMLElement &&
+    focused.closest(".source-view .cm-content")
+  ) {
+    focused.dispatchEvent(
+      new CustomEvent(SOURCE_EDIT_EVENT, { detail: action, bubbles: true }),
+    );
     return;
   }
   if (focused instanceof HTMLElement && focused.closest('[aria-modal="true"]'))

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
-  applyTextareaCaret,
+  applySourceCaret,
   captureEditorCaret,
-  readTextareaCaret,
+  readSourceCaret,
   setPendingCaret,
   takePendingCaret,
 } from "../editor/modes/mode-switch";
+import { sourceViewAt } from "../editor/modes/source-view-registry";
 import {
   setCurrentViewMode,
   viewModeFields,
@@ -37,10 +38,9 @@ export function useSourceModes(tabState: TabState) {
       if (mode === "rich") {
         // The view being left records its caret; the one entered places it.
         if (front) {
-          const textarea = document.querySelector<HTMLTextAreaElement>(
-            '[data-active-tab="true"] textarea.source-view',
-          );
-          setPendingCaret(textarea ? readTextareaCaret(textarea) : null);
+          const activeTab = document.querySelector('[data-active-tab="true"]');
+          const source = activeTab ? sourceViewAt(activeTab) : null;
+          setPendingCaret(source ? readSourceCaret(source.view) : null);
         }
         // Remount the rich editor so it picks up the raw text.
         updateTab(tab.id, {
@@ -91,15 +91,14 @@ export function useSourceModes(tabState: TabState) {
     if (!activeSourceMode) return;
     const caret = takePendingCaret();
     if (!caret) return;
-    // Split View loads on first use, so look for its textarea each frame,
-    // for a second.
-    let frames = 60;
+    // Source mode loads CodeMirror on first use, so look for its editor
+    // each frame for a few seconds.
+    let frames = 180;
     let frame = 0;
     const place = () => {
-      const textarea = document.querySelector<HTMLTextAreaElement>(
-        '[data-active-tab="true"] textarea.source-view',
-      );
-      if (textarea) applyTextareaCaret(textarea, caret);
+      const activeTab = document.querySelector('[data-active-tab="true"]');
+      const source = activeTab ? sourceViewAt(activeTab) : null;
+      if (source) applySourceCaret(source.view, caret);
       else if (--frames > 0) frame = requestAnimationFrame(place);
     };
     frame = requestAnimationFrame(place);

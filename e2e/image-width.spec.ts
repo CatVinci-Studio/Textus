@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
+import { openApp, openPhone, pasteMarkdown, PHONE, sourceOf } from "./helpers";
 
 // An image's width preset is saved as `<img width>`, and Image width: Auto
 // takes it out again, also on an image without a caption.
@@ -10,18 +10,9 @@ const SRC =
   "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzhhYyIvPjwvc3ZnPg==";
 const IMAGE = `![chart](${SRC})`;
 
-/** The active document's Markdown, read from source mode (and back). */
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim().replace(SRC, "SRC");
-}
+/** The document's Markdown, its picture data shortened. */
+const sourceWithSrc = async (page: Page) =>
+  (await sourceOf(page)).replace(SRC, "SRC");
 
 /** Right-clicks the image and returns its context menu. */
 async function imageMenu(page: Page) {
@@ -76,7 +67,9 @@ for (const [name, markdown, saved] of [
 
     // Saved without the width, and read back from it (source mode
     // re-parses the Markdown) still automatic.
-    expect(await sourceOf(page)).toBe(`Text above.\n\n${saved}\n\nText below.`);
+    expect(await sourceWithSrc(page)).toBe(
+      `Text above.\n\n${saved}\n\nText below.`,
+    );
     await expect(view).not.toHaveClass(/image-view-sized/);
   });
 }

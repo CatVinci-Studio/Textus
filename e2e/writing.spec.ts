@@ -8,16 +8,17 @@ import {
   pasteMarkdown,
   PHONE,
   settled,
+  sourceValue,
 } from "./helpers";
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
@@ -73,6 +74,8 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
   await emit(page, "menu-toggle-split-view");
   const source = page.locator(".split-source");
   await expect(source).toBeVisible();
+  // The pane scrolls inside CodeMirror's scroller, not the wrapper.
+  const scroller = page.locator(".split-source .cm-scroller");
   const box = (await source.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < 15; i++) {
@@ -80,10 +83,10 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
     await page.waitForTimeout(16);
   }
   await settled(page);
-  const scrolled = await source.evaluate((el) => el.scrollTop);
+  const scrolled = await scroller.evaluate((el) => el.scrollTop);
   expect(scrolled).toBeGreaterThan(1000);
   await page.waitForTimeout(800);
-  expect(await source.evaluate((el) => el.scrollTop)).toBe(scrolled);
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(scrolled);
   const preview = await page
     .locator(".split-preview")
     .evaluate((el) => el.scrollTop);
@@ -777,7 +780,7 @@ test("no fi drawn as one glyph where the font is monospaced, so the caret can st
   expect(await ligatures(`${active} .milkdown p code`)).toEqual(kept);
   expect(await ligatures(`${active} .milkdown pre code`)).toEqual(kept);
   await emit(page, "menu-toggle-source-mode");
-  expect((await ligatures(`${active} textarea.source-view`))[0]).toBe(
+  expect((await ligatures(`${active} .source-view .cm-content`))[0]).toBe(
     "no-common-ligatures",
   );
 });
@@ -795,7 +798,7 @@ test("source mode: body-sized text, centred on a whole pixel, unchanged by focus
     .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeVisible();
   const look = () =>
@@ -881,26 +884,22 @@ async function expectZoom(page: Page, zoom: number) {
   await expect.poll(() => contentZoom(page)).toBeCloseTo(zoom, 6);
 }
 
-/** Text-line index of a source textarea at viewport y, from its own
- *  scroll metrics (the content zoom scales screen px by 1/zoom). Assumes
- *  lines too short to wrap. */
+/** Which source line sits at viewport y. CodeMirror only draws lines near the
+ *  viewport, so the line's own label ("Line N") is the stable index; the
+ *  short-lines fixture is written that way. */
 async function sourceLineAt(page: Page, y: number): Promise<number> {
   return page.evaluate((y) => {
-    const ta = document.querySelector<HTMLTextAreaElement>(
-      '[data-active-tab="true"] textarea.source-view',
-    )!;
-    const zoom = Number(
-      getComputedStyle(document.documentElement).getPropertyValue(
-        "--content-zoom",
-      ) || 1,
+    const lines = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-active-tab="true"] .source-view .cm-line',
+      ),
     );
-    const style = getComputedStyle(ta);
-    const padTop = parseFloat(style.paddingTop);
-    const lines = ta.value.split("\n").length;
-    const lineHeight =
-      (ta.scrollHeight - padTop - parseFloat(style.paddingBottom)) / lines;
-    const top = ta.getBoundingClientRect().top;
-    return Math.floor((ta.scrollTop + (y - top) / zoom - padTop) / lineHeight);
+    const hit = lines.find((el) => {
+      const box = el.getBoundingClientRect();
+      return y >= box.top && y < box.bottom;
+    });
+    const label = (hit ?? lines[0])?.textContent ?? "Line 0";
+    return Number(label.replace(/^Line\s+/, "")) || 0;
   }, y);
 }
 
@@ -923,12 +922,29 @@ test("mod+wheel in source mode keeps the line under the pointer", async ({
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, shortLines);
   await emit(page, "menu-toggle-source-mode");
-  const source = page.locator('[data-active-tab="true"] textarea.source-view');
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-scroller',
+  );
   // Entering source mode places the caret a frame later, focusing the
-  // textarea and scrolling to it: a scroll set before that is undone after
+  // editor and scrolling to it: a scroll set before that is undone after
   // `before` is read.
-  await expect(source).toBeFocused();
-  await source.evaluate((ta) => (ta.scrollTop = ta.scrollHeight / 3));
+  await expect(
+    page.locator('[data-active-tab="true"] .source-view .cm-content'),
+  ).toBeFocused();
+  await source.evaluate((el) => (el.scrollTop = el.scrollHeight / 3));
+  // Focus comes before the caret is centred, and CodeMirror measures on its
+  // own frame, so wait for the scroll to come to rest rather than for focus.
+  await expect
+    .poll(() =>
+      source.evaluate(async (el) => {
+        const top = el.scrollTop;
+        await new Promise((rest) =>
+          requestAnimationFrame(() => requestAnimationFrame(rest)),
+        );
+        return el.scrollTop === top;
+      }),
+    )
+    .toBe(true);
   const box = (await source.boundingBox())!;
   const y = box.y + box.height * 0.3;
   const before = await sourceLineAt(page, y);
@@ -952,7 +968,11 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
       const r = (el: Element) =>
         el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight);
       return Math.abs(
-        r(document.querySelector('[data-active-tab="true"] .split-source')!) -
+        r(
+          document.querySelector(
+            '[data-active-tab="true"] .split-source .cm-scroller',
+          )!,
+        ) -
           r(document.querySelector('[data-active-tab="true"] .split-preview')!),
       );
     });
@@ -960,7 +980,7 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
   // the preview follows on the scroll event after that. A scroll set here
   // before both have happened is undone.
   await expect(
-    page.locator('[data-active-tab="true"] .split-source'),
+    page.locator('[data-active-tab="true"] .split-source .cm-content'),
   ).toBeFocused();
   await expect.poll(gap).toBeLessThan(0.02);
   await heading.evaluate((el) =>
