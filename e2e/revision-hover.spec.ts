@@ -236,53 +236,55 @@ const CASES = [
 
 for (const [[display, sides, margin, steps], colorScheme] of CASES) {
   const stepping = steps && colorScheme === "light";
-  test(`${display} (${colorScheme}): hovering a revised sentence darkens its pair and hides nothing${stepping ? ", nor do the review bar's prev / next" : ""}`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1800, height: 900 });
-    await openApp(page, {
-      settings: { language: "en", revisionDisplay: display },
-      storage: { "textus-agent-panel-open": "1" },
-      colorScheme,
-      // Entrances must not replay: keep the motion on.
-      animations: true,
-    });
-    await proposeRevision(page);
-    await expect(page.locator(".revision-note")).toHaveCount(margin ? 2 : 0);
-    await page.mouse.move(5, 5);
-    await rememberSides(page);
-    const card = page.locator(".revision-note").first();
-    const border = margin
-      ? await card.evaluate((el) => getComputedStyle(el).borderTopColor)
-      : "";
+  test(
+    `${display} (${colorScheme}): hovering a revised sentence darkens its pair and hides nothing${stepping ? ", nor do the review bar's prev / next" : ""}`,
+    { tag: "@perf" },
+    async ({ page }) => {
+      await page.setViewportSize({ width: 1800, height: 900 });
+      await openApp(page, {
+        settings: { language: "en", revisionDisplay: display },
+        storage: { "textus-agent-panel-open": "1" },
+        colorScheme,
+        // Entrances must not replay: keep the motion on.
+        animations: true,
+      });
+      await proposeRevision(page);
+      await expect(page.locator(".revision-note")).toHaveCount(margin ? 2 : 0);
+      await page.mouse.move(5, 5);
+      await rememberSides(page);
+      const card = page.locator(".revision-note").first();
+      const border = margin
+        ? await card.evaluate((el) => getComputedStyle(el).borderTopColor)
+        : "";
 
-    for (const side of sides) {
-      await hover(page, page.locator(`.milkdown .${side}`).first());
-      await expectFirstPairHot(page);
-      await expectSidesUnchanged(page);
-      if (margin) {
-        await expect(card).toHaveClass(/review-note-hot/);
-        await expectCardDarker(card, border);
+      for (const side of sides) {
+        await hover(page, page.locator(`.milkdown .${side}`).first());
+        await expectFirstPairHot(page);
+        await expectSidesUnchanged(page);
+        if (margin) {
+          await expect(card).toHaveClass(/review-note-hot/);
+          await expectCardDarker(card, border);
+        }
+        // Leaving takes the darker tint away, again without a redraw.
+        await page.mouse.move(5, 5);
+        await expect(
+          page.locator(".milkdown .pending-sentence-hot"),
+        ).toHaveCount(0);
+        await expectSidesUnchanged(page);
       }
-      // Leaving takes the darker tint away, again without a redraw.
-      await page.mouse.move(5, 5);
-      await expect(page.locator(".milkdown .pending-sentence-hot")).toHaveCount(
-        0,
-      );
-      await expectSidesUnchanged(page);
-    }
 
-    if (margin) {
-      // The card darkens its pair in the text the same way, and itself.
-      await hover(page, card);
-      await expectFirstPairHot(page);
-      await expectCardDarker(card, border);
-      await expectSidesUnchanged(page);
-      await page.mouse.move(5, 5);
-    }
+      if (margin) {
+        // The card darkens its pair in the text the same way, and itself.
+        await hover(page, card);
+        await expectFirstPairHot(page);
+        await expectCardDarker(card, border);
+        await expectSidesUnchanged(page);
+        await page.mouse.move(5, 5);
+      }
 
-    if (stepping) await stepWithReviewBar(page);
-  });
+      if (stepping) await stepWithReviewBar(page);
+    },
+  );
 }
 
 test("the ✓ / ✕ darken their pair under the pointer and still decide it", async ({

@@ -188,79 +188,82 @@ test("Write's new text has no original: in the original's view it waits in its c
   expect(await green()).toBe("rgba(0, 0, 0, 0)");
 });
 
-test("switching views cross-fades: the same elements, no entrance replayed, nothing drops to nothing", async ({
-  page,
-}) => {
-  await open(page, true);
-  await write(page);
-  await page
-    .locator(".agent-proposal-actions .inline-chat-action-primary")
-    .click();
-  await revise(page);
-  const parts =
-    ".milkdown .ProseMirror :is(.pending-delete, .pending-insert, .pending-pick)";
-  // Entrances over.
-  await page.waitForFunction(
-    (sel) =>
-      Array.from(document.querySelectorAll(sel)).every((el) =>
-        el.getAnimations().every((a) => a.playState === "finished"),
-      ),
-    parts,
-  );
-  await page.evaluate((sel) => {
-    (window as unknown as { __parts: Element[] }).__parts = Array.from(
-      document.querySelectorAll(sel),
+test(
+  "switching views cross-fades: the same elements, no entrance replayed, nothing drops to nothing",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await open(page, true);
+    await write(page);
+    await page
+      .locator(".agent-proposal-actions .inline-chat-action-primary")
+      .click();
+    await revise(page);
+    const parts =
+      ".milkdown .ProseMirror :is(.pending-delete, .pending-insert, .pending-pick)";
+    // Entrances over.
+    await page.waitForFunction(
+      (sel) =>
+        Array.from(document.querySelectorAll(sel)).every((el) =>
+          el.getAnimations().every((a) => a.playState === "finished"),
+        ),
+      parts,
     );
-  }, parts);
-
-  for (const name of ["original", "final", "inline", "original"] as const) {
-    // What is shown before the switch and still after it.
     await page.evaluate((sel) => {
-      const shown = (el: Element) =>
-        el.getClientRects().length > 0 &&
-        getComputedStyle(el).fontSize !== "0px";
-      (window as unknown as { __before: Element[] }).__before = Array.from(
+      (window as unknown as { __parts: Element[] }).__parts = Array.from(
         document.querySelectorAll(sel),
-      ).filter(shown);
+      );
     }, parts);
-    await view(page, name);
-    const problems = await page.evaluate(async (sel) => {
-      const w = window as unknown as {
-        __parts: Element[];
-        __before: Element[];
-      };
-      const shown = (el: Element) =>
-        el.getClientRects().length > 0 &&
-        getComputedStyle(el).fontSize !== "0px";
-      const out: string[] = [];
-      const now = Array.from(document.querySelectorAll(sel));
-      if (
-        now.length !== w.__parts.length ||
-        now.some((el, i) => el !== w.__parts[i])
-      )
-        out.push("redrawn");
-      for (let frame = 0; frame < 8; frame++) {
-        for (const el of now) {
-          const name = `${el.className} "${el.textContent?.slice(0, 16)}"`;
-          // A CSS animation is an entrance; the cross-fade is a script one.
-          if (
-            el
-              .getAnimations()
-              .some(
-                (a) => a instanceof CSSAnimation && a.playState !== "finished",
-              )
-          )
-            out.push(`entrance replayed: ${name}`);
-          if (!shown(el)) continue;
-          const opacity = Number(getComputedStyle(el).opacity);
-          if (opacity === 0) out.push(`opacity 0: ${name}`);
-          if (w.__before.includes(el) && opacity < 1)
-            out.push(`faded though it stayed: ${name}`);
+
+    for (const name of ["original", "final", "inline", "original"] as const) {
+      // What is shown before the switch and still after it.
+      await page.evaluate((sel) => {
+        const shown = (el: Element) =>
+          el.getClientRects().length > 0 &&
+          getComputedStyle(el).fontSize !== "0px";
+        (window as unknown as { __before: Element[] }).__before = Array.from(
+          document.querySelectorAll(sel),
+        ).filter(shown);
+      }, parts);
+      await view(page, name);
+      const problems = await page.evaluate(async (sel) => {
+        const w = window as unknown as {
+          __parts: Element[];
+          __before: Element[];
+        };
+        const shown = (el: Element) =>
+          el.getClientRects().length > 0 &&
+          getComputedStyle(el).fontSize !== "0px";
+        const out: string[] = [];
+        const now = Array.from(document.querySelectorAll(sel));
+        if (
+          now.length !== w.__parts.length ||
+          now.some((el, i) => el !== w.__parts[i])
+        )
+          out.push("redrawn");
+        for (let frame = 0; frame < 8; frame++) {
+          for (const el of now) {
+            const name = `${el.className} "${el.textContent?.slice(0, 16)}"`;
+            // A CSS animation is an entrance; the cross-fade is a script one.
+            if (
+              el
+                .getAnimations()
+                .some(
+                  (a) =>
+                    a instanceof CSSAnimation && a.playState !== "finished",
+                )
+            )
+              out.push(`entrance replayed: ${name}`);
+            if (!shown(el)) continue;
+            const opacity = Number(getComputedStyle(el).opacity);
+            if (opacity === 0) out.push(`opacity 0: ${name}`);
+            if (w.__before.includes(el) && opacity < 1)
+              out.push(`faded though it stayed: ${name}`);
+          }
+          await new Promise((r) => requestAnimationFrame(r));
         }
-        await new Promise((r) => requestAnimationFrame(r));
-      }
-      return Array.from(new Set(out));
-    }, parts);
-    expect(problems, name).toEqual([]);
-  }
-});
+        return Array.from(new Set(out));
+      }, parts);
+      expect(problems, name).toEqual([]);
+    }
+  },
+);
