@@ -1,5 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  blockIds,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  settled,
+} from "./helpers";
 
 // A story translated with its picture redone: merging short paragraphs
 // around the picture must not take its node, or the redo finds nothing.
@@ -140,7 +146,7 @@ test("two pictures redone beside one rewrite both land", async ({ page }) => {
   for (let i = 0; i < 3; i++) {
     const keep = page.getByRole("button", { name: "Keep" });
     if (await keep.isVisible().catch(() => false)) await keep.click();
-    await page.waitForTimeout(300);
+    await settled(page);
   }
   await expect(page.locator(".review-bar")).toHaveCount(0);
   await expect(page.locator(".agent-panel-view")).not.toContainText(

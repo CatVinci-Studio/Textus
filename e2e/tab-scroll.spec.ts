@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, settled } from "./helpers";
 
 // A tab switched away from and back to shows the place it was left at:
 // WebKit resets a display: none scroller to the top. Run in WebKit with
@@ -40,7 +40,7 @@ test("a tab back in front is where it was left", async ({ page }) => {
   await expect(page.locator(editor)).toContainText("Paragraph 399");
   const line = page.locator(`${editor} p`, { hasText: "Paragraph 300 of" });
   await line.evaluate((el) => el.scrollIntoView({ block: "start" }));
-  await page.waitForTimeout(200);
+  await settled(page);
   const scrolled = await page.locator(scroller).evaluate((el) => el.scrollTop);
   expect(scrolled).toBeGreaterThan(1000);
 
@@ -68,6 +68,7 @@ test("a file opened again opens where it was last read, at another width too (#3
   await expect(page.locator(editor)).toContainText("Paragraph 399");
   const line = page.locator(`${editor} p`, { hasText: "Paragraph 300 of" });
   await line.evaluate((el) => el.scrollIntoView({ block: "start" }));
+  // Past the debounce that keeps the place read.
   await page.waitForTimeout(400);
   // Closed, and opened again in a narrower window.
   await page.keyboard.press("ControlOrMeta+w");
@@ -91,6 +92,6 @@ test("a file never scrolled opens at its top", async ({ page }) => {
   });
   await drop(page, "/notes/other.md", LONG);
   await expect(page.locator(editor)).toContainText("Paragraph 399");
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(await page.locator(scroller).evaluate((el) => el.scrollTop)).toBe(0);
 });

@@ -5,6 +5,7 @@ import {
   openApp,
   pasteMarkdown,
   SAMPLE_DOC,
+  settled,
 } from "./helpers";
 
 test("first run asks for a language", async ({ page }) => {
@@ -525,7 +526,7 @@ test("a one-character CJK fix reads with its neighbour on the grammar card", asy
 }) => {
   await openApp(page);
   await pasteMarkdown(page, "黛玉必竟寄人篱下，所以步步留心。");
-  await page.waitForTimeout(300);
+  await settled(page);
   await mockInvoke(page, {
     ai_grammar_check: [
       {

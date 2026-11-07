@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 // The start page: shown, when the user chose it, at launch with nothing to
 // open and when the last document closes; anything opened takes its place.
@@ -25,7 +25,7 @@ function drop(page: Page, path: string, text: string) {
 
 const startPage = (page: Page) => page.getByRole("region", { name: "Start" });
 
-test("closing the last document shows the start page, and a new document takes its place", async ({
+test("closing the last document shows the start page; a new document or an opened file takes its place", async ({
   page,
 }) => {
   await openApp(page, {
@@ -51,19 +51,7 @@ test("closing the last document shows the start page, and a new document takes i
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toBeVisible();
   await expect(page.locator('[role="tab"]')).toHaveCount(0);
-});
-
-test("a file opened from the start page opens in its place", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: {
-      language: "en",
-      newDocumentMode: "tab",
-      closeLastToStartPage: true,
-    },
-  });
-  await drop(page, "/notes/one.md", "# One");
+  // Closed again, a file opened from the start page opens in its place.
   await emit(page, "menu-close-tab");
   await expect(startPage(page)).toBeVisible();
   await drop(page, "/notes/two.md", "# Two");
@@ -126,7 +114,7 @@ test("zooming on the start page leaves the documents' zoom as it was", async ({
   const before = await zoom();
   await emit(page, "menu-zoom-in");
   await emit(page, "menu-zoom-in");
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(await zoom()).toBe(before);
 });
 

@@ -7,6 +7,7 @@ import {
   mockInvoke,
   openApp,
   selectionRead,
+  settled,
 } from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
@@ -213,7 +214,7 @@ test("looking at links leaves the document unchanged", async ({ page }) => {
   for (const [, label] of KINDS)
     await page.locator(`${editor} a`, { hasText: label }).click();
   await leave(page);
-  await page.waitForTimeout(500);
+  await settled(page);
   await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
   expect(await sourceOf(page)).toBe(`${DOC}\n`);
 });

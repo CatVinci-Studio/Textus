@@ -63,8 +63,9 @@ test("a list of thousands of items draws a page at a time", async ({
   expect(first).toBeLessThan(500);
   // Scrolled to its end, the next page comes, and so on to the last.
   for (let i = 0; i < 40 && (await rows.count()) < 5000; i++) {
+    const shown = await rows.count();
     await rows.last().scrollIntoViewIfNeeded();
-    await page.waitForTimeout(100);
+    await expect(rows).not.toHaveCount(shown);
   }
   await expect(list.getByText("Task 5000", { exact: true })).toBeAttached();
   expect(await rows.count()).toBe(5000);

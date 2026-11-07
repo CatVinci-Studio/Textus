@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dropPaths, mockInvoke, openApp } from "./helpers";
+import { dropPaths, mockInvoke, openApp, settled } from "./helpers";
 
 // Ctrl/Cmd+click on a link to a local file: what Textus opens itself (a
 // Word file) opens in a tab; anything else asks first, then opens in the
@@ -53,7 +53,7 @@ test("cancelled, the file isn't opened", async ({ page }) => {
     .getByRole("dialog")
     .getByRole("button", { name: "Cancel" })
     .click();
-  await page.waitForTimeout(200);
+  await settled(page);
   expect(await calls(page, "open_linked_file")).toEqual([]);
 });
 

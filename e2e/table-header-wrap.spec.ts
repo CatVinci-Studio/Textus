@@ -74,7 +74,7 @@ async function setColumnWidths(page: Page, widths: number[]) {
 }
 
 for (const lang of ["zh", "en"] as const) {
-  test(`a long ${lang} header wraps instead of widening the table`, async ({
+  test(`a long ${lang} header wraps instead of widening the table, and stays in its column when the widths are set`, async ({
     page,
   }) => {
     await openApp(page, { settings: { language: lang } });
@@ -89,13 +89,8 @@ for (const lang of ["zh", "en"] as const) {
     await page.setViewportSize({ width: 640, height: 700 });
     await expect.poll(() => linesIn(page, 1)).toBeGreaterThan(wide);
     expect(await scrolls(page)).toBe(false);
-  });
 
-  test(`a long ${lang} header stays in its column when the widths are set`, async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: lang } });
-    await pasteMarkdown(page, LONG[lang]);
+    // With the widths set, it stays in its column.
     await setColumnWidths(page, [80, 200, 120]);
     await expect(page.locator(".milkdown table[data-sized]")).toHaveCount(1);
     const header = headers(page).nth(1);

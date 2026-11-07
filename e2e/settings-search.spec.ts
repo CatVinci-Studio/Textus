@@ -46,9 +46,20 @@ test.describe("in English", () => {
     ).toHaveCount(1);
   });
 
-  test("finds a row by its ? text and a row on a subpage", async ({ page }) => {
+  test("↑/↓ move through the results, across pages; a row is found by its ? text and on a subpage", async ({
+    page,
+  }) => {
     const dialog = await openSettings(page);
     const box = dialog.getByRole("combobox", { name: "Search settings" });
+    await box.fill("tab");
+    const options = dialog.getByRole("option");
+    await expect(options.nth(1)).toBeVisible();
+    await box.press("ArrowDown");
+    await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
+    await box.press("ArrowUp");
+    await box.press("ArrowUp");
+    await expect(options.last()).toHaveAttribute("aria-selected", "true");
+
     await box.fill("LAYS DIAGRAMS");
     const results = dialog.getByRole("listbox", { name: "Search results" });
     await expect(results.getByRole("option")).toHaveCount(1);
@@ -66,19 +77,6 @@ test.describe("in English", () => {
     await expect(
       dialog.getByRole("textbox", { name: "Custom CSS" }),
     ).toBeFocused();
-  });
-
-  test("↑/↓ move through the results, across pages", async ({ page }) => {
-    const dialog = await openSettings(page);
-    const box = dialog.getByRole("combobox", { name: "Search settings" });
-    await box.fill("tab");
-    const options = dialog.getByRole("option");
-    await expect(options.nth(1)).toBeVisible();
-    await box.press("ArrowDown");
-    await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
-    await box.press("ArrowUp");
-    await box.press("ArrowUp");
-    await expect(options.last()).toHaveAttribute("aria-selected", "true");
   });
 
   test("Esc clears the box, and the next Esc closes Settings", async ({

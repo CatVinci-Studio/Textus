@@ -27,7 +27,7 @@ async function dragHandle(page: Page, dx: number) {
   await page.mouse.up();
 }
 
-test("dragging the sidebar's edge resizes it, and it comes back open at that width", async ({
+test("dragging the sidebar's edge resizes it; it comes back as it was left: open at that width on its tab, or closed", async ({
   page,
 }) => {
   await openApp(page);
@@ -47,17 +47,7 @@ test("dragging the sidebar's edge resizes it, and it comes back open at that wid
     )
     .toBe("320");
 
-  await page.reload();
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  // Left open, it comes back open.
-  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
-  expect(await sidebarWidth(page)).toBe(320);
-  expect(await mainPaneLeft(page)).toBe(320);
-});
-
-test("the sidebar comes back on the tab it was left on", async ({ page }) => {
-  await openApp(page);
-  await openSidebar(page);
+  // On another tab than the files.
   const tabs = page.locator(".sidebar-tabs");
   const outlineTab = tabs.getByRole("button", { name: "大纲" });
   const filesTab = tabs.getByRole("button", { name: "文件树" });
@@ -65,25 +55,21 @@ test("the sidebar comes back on the tab it was left on", async ({ page }) => {
   await outlineTab.click();
   await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
 
-  await page.reload();
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
-  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
-  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
-  await expect(filesTab).not.toHaveClass(/sidebar-tab-active/);
-});
-
-test("a sidebar closed again comes back closed", async ({ page }) => {
-  const collapsed = /sidebar-collapsed/;
   const reload = async () => {
     await page.reload();
     await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
   };
-  await openApp(page);
-  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
-  // Left open, it comes back open: the first test checks that.
-  await openSidebar(page);
-  await emit(page, "menu-toggle-sidebar");
-  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
   await reload();
-  await expect(page.locator(".sidebar")).toHaveClass(collapsed);
+  // Left open, it comes back open, at that width, on that tab.
+  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
+  expect(await sidebarWidth(page)).toBe(320);
+  expect(await mainPaneLeft(page)).toBe(320);
+  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
+  await expect(filesTab).not.toHaveClass(/sidebar-tab-active/);
+
+  // Closed again, it comes back closed.
+  await emit(page, "menu-toggle-sidebar");
+  await expect(page.locator(".sidebar")).toHaveClass(/sidebar-collapsed/);
+  await reload();
+  await expect(page.locator(".sidebar")).toHaveClass(/sidebar-collapsed/);
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, settled } from "./helpers";
 
 // A link into another file's heading (`./ch1.md#part-two`) opens that file
 // scrolled to the heading - in a new tab, or the tab it is already open
@@ -101,7 +101,7 @@ test("a heading the file doesn't have opens it at its top", async ({
     /ch1/,
   );
   await expect(page.locator(`${editor} h1`)).toContainText("Chapter one");
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(await page.locator(scroller).evaluate((el) => el.scrollTop)).toBe(0);
 });
 

@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { emit, openApp, PHONE } from "./helpers";
+import { emit, openApp, PHONE, settled } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
 // shim's 9 built-ins and one user skill in Write.
@@ -163,7 +163,7 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(select).toHaveText("自动");
     // Scrolled to first: the list closes when the page scrolls under it.
     await select.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
+    await settled(page);
     await select.click();
     const list = page.getByRole("listbox", { name: "写作规范" });
     await expect(list).toContainText("简体中文");

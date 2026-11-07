@@ -235,7 +235,7 @@ async function expectCustomCssWins(page: Page, label: string) {
   );
 }
 
-test("custom CSS wins over the Default theme, in light and dark", async ({
+test("custom CSS wins over the Default theme and an imported one, in light and dark", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en", customCss: CUSTOM_CSS } });
@@ -243,13 +243,9 @@ test("custom CSS wins over the Default theme, in light and dark", async ({
   await expectCustomCssWins(page, "default light");
   await setAppearance(page, "Dark");
   await expectCustomCssWins(page, "default dark");
-});
+  await setAppearance(page, "Light");
 
-test("custom CSS wins over an imported theme, --* variables included", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en", customCss: CUSTOM_CSS } });
-  await pasteMarkdown(page, DOC);
+  // Over an imported theme too, --* variables included.
   const path = "/themes/latex-like.css";
   await installThemeBackend(page, { [path]: fixture("latex-like.css") });
   await importTheme(page, path);

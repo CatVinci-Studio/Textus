@@ -1,5 +1,5 @@
 import { expect, test, type CDPSession, type Page } from "@playwright/test";
-import { emit, openPhone, PHONE } from "./helpers";
+import { emit, openPhone, PHONE, settled } from "./helpers";
 
 /**
  * Tabs under a finger on a phone: held still, a tab lifts; dragged then, it
@@ -110,7 +110,7 @@ test("a finger that moves at once scrolls the bar: nothing lifts or splits", asy
     y: tab.y + (i + 1) * 60,
   }));
   await touch(cdp, [tab, ...steps], 0, page);
-  await page.waitForTimeout(400);
+  await settled(page);
   await expect(page.locator(".tab-pill-lifted")).toHaveCount(0);
   await expect(page.locator(panes)).toHaveCount(0);
   await expect(page.getByRole("menu")).toHaveCount(0);

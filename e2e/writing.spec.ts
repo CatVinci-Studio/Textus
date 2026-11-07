@@ -1,11 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   emit,
+  HOME,
   mockInvoke,
   openApp,
   openPhone,
   pasteMarkdown,
   PHONE,
+  settled,
 } from "./helpers";
 
 /** The active document's Markdown, read from source mode (and back). */
@@ -77,7 +79,7 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
     await page.mouse.wheel(0, 100);
     await page.waitForTimeout(16);
   }
-  await page.waitForTimeout(400);
+  await settled(page);
   const scrolled = await source.evaluate((el) => el.scrollTop);
   expect(scrolled).toBeGreaterThan(1000);
   await page.waitForTimeout(800);
@@ -105,7 +107,7 @@ test("an outline jump lands the heading below the window bar", async ({
   await row.click();
   const heading = page.locator(".milkdown h2", { hasText: "heading" });
   await expect(heading).toBeInViewport();
-  await page.waitForTimeout(100);
+  await settled(page);
   const top = (await heading.boundingBox())!.y;
   expect(top).toBeGreaterThanOrEqual(28);
   expect(top).toBeLessThan(120);
@@ -432,7 +434,7 @@ async function expectPreviewsClear(page: Page) {
   await page.locator('[data-active-tab="true"] .math-block-rendered').click();
   await page.keyboard.press("End");
   await expect(preview).toBeVisible();
-  await page.waitForTimeout(400);
+  await settled(page);
   expect(await previewCoversText(page), "block preview covers text").toBe(
     false,
   );
@@ -449,7 +451,7 @@ async function expectPreviewsClear(page: Page) {
     .dispatchEvent("mousedown");
   await page.keyboard.press("ArrowLeft");
   await expect(preview).toBeVisible();
-  await page.waitForTimeout(400);
+  await settled(page);
   // Revealing the source may rewrap its own line; nothing grows to make
   // room for the preview, so the paragraph's height stays within a line.
   const after = (await lastLine.boundingBox())!;
@@ -1009,23 +1011,23 @@ test("in Typewriter Mode a click on a task's box ticks it without scrolling (#13
     el.closest(".editor-scroll")!.scrollTop -= 150;
   });
   const scrollTop = () => scroller.evaluate((el) => el.scrollTop);
-  await page.waitForTimeout(100);
+  await settled(page);
   const before = await scrollTop();
   const box = (await task.first().boundingBox())!;
   await page.mouse.click(box.x + 8, box.y + box.height / 2);
   await expect(task.first()).toHaveAttribute("data-checked", "true");
   await expect(task.nth(1)).toHaveAttribute("data-checked", "false");
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   // And untick it again, still in place.
   await page.mouse.click(box.x + 8, box.y + box.height / 2);
   await expect(task.first()).toHaveAttribute("data-checked", "false");
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   // A click on the text places the caret where it is, and the first key
   // centres it.
   await page.mouse.click(box.x + 80, box.y + box.height / 2);
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   await page.keyboard.press("ArrowRight");
   await expect
@@ -1046,7 +1048,7 @@ async function typewriterBelowMiddle(page: Page) {
     const mid = s.getBoundingClientRect().top + s.clientHeight / 2;
     s.scrollTop += el.getBoundingClientRect().top - (mid + 250);
   });
-  await page.waitForTimeout(100);
+  await settled(page);
   return {
     target,
     scrollTop: () => scroller.evaluate((el) => el.scrollTop),
@@ -1090,7 +1092,7 @@ test("in Typewriter Mode a click lands where it was made, without scrolling, and
   await page.mouse.move(box.x + 121, box.y + 12);
   await page.mouse.move(box.x + 122, box.y + 11);
   await page.mouse.up();
-  await page.waitForTimeout(150);
+  await settled(page);
   const click = await selectionInfo(page);
   expect(click).toMatchObject({
     anchor: "Paragraph 30:",
@@ -1132,7 +1134,7 @@ test("in Typewriter Mode a drag selects what it passes over and the page stays s
       from.y + 10 + ((to.y - from.y) * i) / 8,
     );
   await page.mouse.up();
-  await page.waitForTimeout(150);
+  await settled(page);
   const drag = await selectionInfo(page);
   expect(drag).toMatchObject({
     anchor: "Paragraph 30:",
@@ -1155,7 +1157,7 @@ test.describe("phone", () => {
     const before = await scrollTop();
     const box = (await target.boundingBox())!;
     await page.touchscreen.tap(box.x + 60, box.y + 10);
-    await page.waitForTimeout(150);
+    await settled(page);
     expect(await selectionInfo(page)).toMatchObject({
       anchor: "Paragraph 30:",
       focus: "Paragraph 30:",
@@ -1265,7 +1267,8 @@ test("a shift-click in the page's margin extends the selection there", async ({
   await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
   const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
   // The caret at the start, settled before the shift-click extends from it.
-  await page.keyboard.press("ControlOrMeta+Home");
+  await paras.first().click();
+  await page.keyboard.press(HOME);
   await expect
     .poll(() => page.evaluate(() => window.getSelection()?.anchorOffset))
     .toBe(0);
