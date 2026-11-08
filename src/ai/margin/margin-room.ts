@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** A card's width and the air between it and the text. */
@@ -31,7 +32,7 @@ export function marginRoom(
   // The text's right edge sits inside the column's padding.
   const textRight = natural + columnWidth - padding / 2;
   const room = scrollWidth - textRight;
-  const need = CARD_WIDTH + GAP + RIGHT_EDGE;
+  const need = scaledPx(CARD_WIDTH + GAP + RIGHT_EDGE);
   const shift = room < need ? need - room : 0;
   return {
     natural,

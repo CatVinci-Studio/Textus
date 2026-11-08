@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { InlineMarkdownText } from "../MarkdownText";
@@ -84,7 +85,7 @@ function cardStyle(
   return {
     top,
     left,
-    width: CARD_WIDTH,
+    width: scaledPx(CARD_WIDTH),
     height: cut !== null && !open ? cut : undefined,
   };
 }

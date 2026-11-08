@@ -199,13 +199,32 @@ Every surface that appears in the window is one of these. Each row says where it
 
 **Lists you type into** (the `/` panel, the command palette, the file search, the chat's `/` and `@`) filter with `utils/list-filter.ts`: a label starting with the query first, then a word starting with it, inside it, every word, then pinyin. The option the keys are on is selected (9).
 
-### 5.6 Scale and alignment - In force (Textus 1.3.12)
+### 5.6 Sizes and scale - In force (Textus 1.3.12)
 
-- **One scale for the interface.** `--chrome-scale` is Interface Text Size times the window's width step (1 up to 1200 px, then a straight line to 1.35 at 2320 px; 1 on the phone). Every length of 3 px or more in the app's stylesheets is multiplied by it at build time (`vite.chrome-scale.ts`), so a control, its icon, its padding and its radius grow together. Hairlines (1–2 px) stay crisp. The document's own sheets are left out: it has its own zoom.
-- What a script sizes (panel widths, floating views) multiplies by the same number (`chromeScaleAt`, `useChromeScale`). Plugin pages get `--ui-text-scale` and `--window-scale` in their theme variables; a block drawn in the document takes `--window-scale: 1`.
-- A plugin page's own sizes SHOULD be proportional: `%`, `vw`, `clamp()`, or `calc(Npx * var(--chrome-scale, 1))`, not bare pixels.
-- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on one line, `--header-height` (the window bar plus 36 × scale). The panels' vertical edges run up through the window bar to the top. `e2e/panel-alignment.spec.ts` checks both at three widths.
-- **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside, so the note around it stays in view.
+Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
+
+**The scale.** `--chrome-scale` = Interface Text Size × the window's step (1 up to 1200 px wide, then a straight line to 1.35 at 2320 px). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+
+**Where a size is written, and how it scales:**
+
+| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                         |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                 |
+| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                         |
+| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/ui/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
+| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                      |
+| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/ui/scale-lengths.ts`), the same rule as the build's                                              |
+| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                 |
+
+**Layout rules that follow from it:**
+
+- **Side panels** (sidebar, AI panel): each keeps its own width in interface px; in a small window it is drawn narrower. A panel takes at most 45% of the window; the document keeps at least 360 × scale beside both panels; a squeezed panel can go down to 200 × scale and keeps 100 × scale of room to be dragged in. The handle's range (keys, readers) is the range in force, not the panel's ideal one.
+- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on `--header-height` (the window bar + 36 × scale). The sidebar's fill and edge run up to the window's top (only the window's controls sit there); the AI panel's start under the window bar, whose right end - the word count, the window's buttons - is the page's. `e2e/panel-alignment.spec.ts` checks this at 820, 1280 and 1920.
+- **Popups** keep `EDGE` (8) from the window's edge and `GAP` (6) from what opened them, both scaled; a menu is at most 280 × scale tall.
+- **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
+- **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.
+
+**Reusing it.** The pieces live together and are the only way in: `src/ui/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/ui/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
 
 ## 6. Shape - In force
 

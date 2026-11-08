@@ -120,7 +120,7 @@ function place(el: HTMLElement, rect: DOMRect) {
   const top = opensBelow(rect, box.height, gap)
     ? Math.min(rect.bottom + gap, window.innerHeight - edge - box.height)
     : rect.top - gap - box.height;
-  el.style.top = `${Math.max(EDGE, top)}px`;
+  el.style.top = `${Math.max(edge, top)}px`;
   el.style.left = `${clampLeft(rect.left, box.width)}px`;
 }
 

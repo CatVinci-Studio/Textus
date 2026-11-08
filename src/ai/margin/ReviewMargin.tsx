@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -95,7 +96,7 @@ export function ReviewMargin({
       );
       scrollEl.classList.add("review-notes-on");
       placeColumn(contentEl, shift > 0 ? `${natural - shift}px` : "");
-      const left = textRight - shift + GAP;
+      const left = textRight - shift + scaledPx(GAP);
       const box = scrollEl.getBoundingClientRect();
       const top0 = box.top - scrollEl.scrollTop;
       // Horizontal positions are taken from the column, wherever its glide
@@ -232,8 +233,8 @@ export function ReviewMargin({
           // Far below its passage, a card's line is fainter, not gone.
           const far = p.drift > LINE_DRIFT;
           const x2 = layout.left;
-          const y2 = p.top + (p.chip ? CHIP_HEIGHT / 2 : 16);
-          const dx = Math.max(16, (x2 - p.ax) / 2);
+          const y2 = p.top + scaledPx(p.chip ? CHIP_HEIGHT / 2 : 16);
+          const dx = Math.max(scaledPx(16), (x2 - p.ax) / 2);
           return (
             <path
               key={p.item.key}

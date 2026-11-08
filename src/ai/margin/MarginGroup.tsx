@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { memo } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
 import { CARD_WIDTH } from "./margin-room";
@@ -77,8 +78,8 @@ export const MarginGroup = memo(function MarginGroup({
       style={{
         top,
         left,
-        width: CARD_WIDTH,
-        height: open ? undefined : CHIP_HEIGHT,
+        width: scaledPx(CARD_WIDTH),
+        height: open ? undefined : scaledPx(CHIP_HEIGHT),
       }}
     >
       <button
