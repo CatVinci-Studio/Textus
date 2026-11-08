@@ -17,6 +17,19 @@ async function typeAt(
   markdown: string,
   ...steps: [anchor: string, text: string][]
 ): Promise<string> {
+  return typeIn(markdown, "end", steps);
+}
+
+/** As typeAt, the caret at the start of the textblock instead. */
+function typeBefore(markdown: string, anchor: string, text: string) {
+  return typeIn(markdown, "start", [[anchor, text]]);
+}
+
+async function typeIn(
+  markdown: string,
+  where: "start" | "end",
+  steps: [anchor: string, text: string][],
+): Promise<string> {
   const editor = await createTestEditor(markdown);
   editors.push(editor);
   return editor.action((ctx) => {
@@ -25,7 +38,7 @@ async function typeAt(
       let end = -1;
       view.state.doc.descendants((node, pos) => {
         if (end < 0 && node.isTextblock && node.textContent === anchor)
-          end = pos + node.nodeSize - 1;
+          end = where === "end" ? pos + node.nodeSize - 1 : pos + 1;
       });
       view.dispatch(
         view.state.tr.setSelection(TextSelection.create(view.state.doc, end)),
@@ -46,6 +59,24 @@ describe("typing a task spelling", () => {
   it("turns a paragraph into a task", async () => {
     const out = await typeAt("", ["", "-[]x"]);
     expect(out).toBe("* [ ] x\n");
+  });
+
+  it("turns a line with words already in it into a task, the words its text", async () => {
+    expect(await typeBefore("买牛奶\n", "买牛奶", "-[]")).toBe(
+      "* [ ] 买牛奶\n",
+    );
+    expect(await typeBefore("Buy **milk**\n", "Buy milk", "-[x]")).toBe(
+      "* [x] Buy **milk**\n",
+    );
+    expect(await typeBefore("买牛奶\n", "买牛奶", "- 【】")).toBe(
+      "* [ ] 买牛奶\n",
+    );
+  });
+
+  it("turns a list item with words in it into a task", async () => {
+    expect(await typeBefore("* 买牛奶\n", "买牛奶", "[]")).toBe(
+      "* [ ] 买牛奶\n",
+    );
   });
 
   it("leaves a table cell's text alone instead of splitting the table", async () => {

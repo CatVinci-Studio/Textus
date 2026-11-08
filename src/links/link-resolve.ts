@@ -217,7 +217,12 @@ export interface LinkStyle {
   format: "shortest" | "relative" | "absolute";
 }
 
-export const DEFAULT_LINK_STYLE: LinkStyle = { wiki: true, format: "shortest" };
+/** Where nothing says otherwise: a standard link by its path from the
+ *  note, which opens in any app - [Nov 8](Week45/Nov%208.md). */
+export const DEFAULT_LINK_STYLE: LinkStyle = {
+  wiki: false,
+  format: "relative",
+};
 
 export interface LinkToOptions {
   heading?: string;

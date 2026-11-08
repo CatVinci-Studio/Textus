@@ -132,13 +132,13 @@ describe("noteLinkIn writes links as the folder wants them", () => {
         wiki: true,
         format: "relative",
       }),
-    ).toBe("[[../b/Idea]]");
+    ).toBe("[[../b/Idea|Idea]]");
     expect(
       noteLinkIn(files, "a/My Note.md", "Inbox.md", {
         wiki: true,
         format: "absolute",
       }),
-    ).toBe("[[a/My Note]]");
+    ).toBe("[[a/My Note|My Note]]");
     expect(
       noteLinkIn(
         files,

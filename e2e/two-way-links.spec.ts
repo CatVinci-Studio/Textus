@@ -51,6 +51,8 @@ test("[[ lists notes, headings and blocks, and a block picked gets an id", async
   await open(
     page,
     {
+      // A folder that chose [[wiki links]] (Two-way Links › New Links).
+      "/notes/.textus/settings.json": '{"conventions":{"linkStyle":"wiki"}}',
       "/notes/Doc.md": "Start\n",
       "/notes/Ideas.md":
         "# Ideas\n\n## Plan\n\nFirst point.\n\nSecond point.\n",
@@ -182,4 +184,27 @@ test("a section that embeds itself is drawn once", async ({ page }) => {
   await expect(loop.locator(".note-embed-chip").first()).toHaveText(
     "Loop › Part",
   );
+});
+
+test("[[ writes a standard link where the folder says nothing", async ({
+  page,
+}) => {
+  await open(
+    page,
+    { "/notes/Doc.md": "Start\n", "/notes/My Ideas.md": "# Ideas\n" },
+    "/notes/Doc.md",
+  );
+  await expect(page.locator(editor)).toContainText("Start");
+  await page.locator(`${editor} p`).first().click();
+  await selectionRead(page);
+  await page.keyboard.press("End");
+  await page.keyboard.type(" [[My Ide");
+  await expect(
+    page.locator(panel).locator(".completion-item").first(),
+  ).toContainText("My Ideas");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("ControlOrMeta+s");
+  await expect
+    .poll(() => disk(page, "/notes/Doc.md"))
+    .toContain("[My Ideas](My%20Ideas.md)");
 });
