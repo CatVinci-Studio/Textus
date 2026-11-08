@@ -161,8 +161,13 @@ function App() {
           activeTabId={activeTab.id}
           onToggle={toggleSidebar}
           onClose={() => setPanelOpen(false)}
-          onOpenFile={(path, beside) =>
-            void openFile(path, beside ? { where: "beside" } : {})
+          onOpenFile={(path, how) =>
+            void openFile(
+              path,
+              how === "beside"
+                ? { where: "beside" }
+                : { preview: how === "preview" },
+            )
           }
           onEntryMoved={entryMoved}
           searchFocusRequest={searchFocusRequest}
@@ -181,6 +186,7 @@ function App() {
           onMoveToNewWindow={moveTabToNewWindow}
           onToggleReadOnly={toggleReadOnly}
           onReorder={reorderTab}
+          onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
           previewTab={dragHoverPreview}
           onChange={handleChange}
           typewriter={settings.typewriterMode}

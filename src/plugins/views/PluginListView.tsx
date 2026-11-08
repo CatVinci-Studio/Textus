@@ -91,7 +91,7 @@ function keyOf(item: PluginListItem, index: number): string {
 function defaultSelect(item: PluginListItem) {
   if (item.location) {
     const { path, ...place } = item.location;
-    getWindowAccess()?.openFile(path, { place, where: "tab" });
+    getWindowAccess()?.openFile(path, { place, preview: true });
   } else if (item.command) runCommand(item.command.id, item.command.args ?? []);
 }
 

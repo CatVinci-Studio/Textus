@@ -527,3 +527,33 @@ test("Copy Path in the tree's and a tab's right-click menus and in File copies t
   await emit(page, "menu-copy-path");
   await expect.poll(clipboard).toBe("/work/notes/b.md");
 });
+
+test("a click looks in the preview tab; a double click or an edit keeps it", async ({
+  page,
+}) => {
+  await open(page);
+  // a.md, opened from Recent, is a tab of its own.
+  const tabs = page.locator(".tab-bar .tab-pill");
+  const count = 1;
+  await rows(page).filter({ hasText: "b.md" }).click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  const look = page.locator(".tab-pill-preview");
+  await expect(look).toHaveCount(1);
+  await expect(tabs).toHaveCount(count + 1);
+  // The next look takes the same tab.
+  await rows(page).filter({ hasText: "drafts" }).click();
+  await rows(page).filter({ hasText: "old.md" }).click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Old");
+  await expect(tabs).toHaveCount(count + 1);
+  // Written in, it stays; the next look gets a tab of its own.
+  await page.locator(editor).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type("er");
+  await expect(look).toHaveCount(0);
+  await rows(page).filter({ hasText: "b.md" }).click();
+  await expect(tabs).toHaveCount(count + 2);
+  await expect(look).toHaveCount(1);
+  // A double click on the file keeps it too.
+  await rows(page).filter({ hasText: "b.md" }).dblclick();
+  await expect(look).toHaveCount(0);
+});

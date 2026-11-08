@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import { useSettings } from "../prefs/SettingsContext";
-import { FolderIcon, fileIconFor } from "../ui/icons";
+import { FolderIcon } from "../ui/icons";
+import { fileIconFor } from "../ui/file-icons";
 import { useTree } from "./tree-shared";
 
 /** A name nothing in the folder has yet: "Untitled", then "Untitled 2"…

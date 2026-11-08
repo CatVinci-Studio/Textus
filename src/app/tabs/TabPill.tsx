@@ -15,6 +15,8 @@ export interface TabInfo {
   // Display name: filename, "Untitled", or a Help document's title.
   title: string;
   dirty: boolean;
+  /** Opened to look (DocTab.preview): its title in italics. */
+  preview?: boolean;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -55,6 +57,7 @@ export function TabPill({
   onClose,
   onPullOut,
   onReorder,
+  onKeep,
   captureFlip,
   onMenu,
 }: {
@@ -66,6 +69,8 @@ export function TabPill({
   onClose: (id: string) => void;
   onPullOut?: (id: string, title: string) => void;
   onReorder: (id: string, index: number) => void;
+  /** A double click keeps a preview tab. */
+  onKeep?: (id: string) => void;
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
   onMenu?: (x: number, y: number) => void;
 }) {
@@ -263,7 +268,8 @@ export function TabPill({
     <div
       ref={elRef}
       data-flip-id={tab.id}
-      className={`tab-pill ${isActive ? "tab-pill-active" : ""}`}
+      className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-preview" : ""}`}
+      onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
       role="tab"
       aria-selected={isActive}
       tabIndex={isActive ? 0 : -1}

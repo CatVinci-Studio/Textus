@@ -89,3 +89,7 @@ export function failureText(t: Strings, err: unknown, name: string): string {
     return t.treeNameTaken.replace("{name}", name);
   return t.treeActionFailed.replace("{reason}", explainError(err, t));
 }
+
+/** How a file chosen in the sidebar opens: to look (a click, the preview
+ *  tab), beside the one in front, or (none) in a tab of its own. */
+export type FileOpenHow = "preview" | "beside";

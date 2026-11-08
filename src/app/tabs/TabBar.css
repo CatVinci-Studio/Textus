@@ -88,6 +88,11 @@
   white-space: nowrap;
 }
 
+/* Opened to look: the next file looked at takes its place. */
+.tab-pill-preview .tab-pill-title {
+  font-style: italic;
+}
+
 .tab-pill-dirty-dot {
   width: 6px;
   height: 6px;

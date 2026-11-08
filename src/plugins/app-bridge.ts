@@ -92,7 +92,13 @@ export interface WindowAccess {
    *  its type. */
   openFile(
     path: string,
-    options: { place?: DocumentPlace; asDocument?: boolean; where?: Where },
+    options: {
+      place?: DocumentPlace;
+      asDocument?: boolean;
+      where?: Where;
+      /** A look: the preview tab, as a click in the file tree. */
+      preview?: boolean;
+    },
   ): void;
   openUntitled(content: string, title?: string, where?: Where): void;
   /** A guide to read: a clean draft, closed without asking; the same guide
