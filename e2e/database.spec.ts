@@ -276,7 +276,7 @@ test("zoomed, the block's page draws at the zoom across the column's width, and 
   await expect.poll(zoom).not.toBe(before);
 });
 
-test("a long view shows its first rows and more on asking; folded, only its bar", async ({
+test("a long view loads more rows once its end is in sight; folded, only its bar", async ({
   page,
 }) => {
   const db = await open(page, {
@@ -285,9 +285,10 @@ test("a long view shows its first rows and more on asking; folded, only its bar"
       BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
       "\n```\n",
   });
-  await expect(db.locator(rows)).toHaveCount(2);
-  await db.getByRole("button", { name: "Show 1 more" }).click();
+  // Two rows to start; the short block's end is in sight, so the third comes.
   await expect(db.locator(rows)).toHaveCount(3);
+  await expect(db.getByRole("button", { name: /more/i })).toHaveCount(0);
+  await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
   await db.locator("#fold").click();
   await expect(db.locator("#body")).toBeHidden();
   await expect(db.locator("#count")).toHaveText("3 pages");
@@ -339,15 +340,4 @@ test("any view's menu opens on a right click, and a view is deleted from it", as
   await page.getByRole("menuitem", { name: /Delete view/i }).click();
   await expect(db.getByRole("tab")).toHaveText([/Table/, /Board/]);
   await expect.poll(() => docText(page)).not.toContain("type: calendar");
-});
-
-test("Show more comes before New at a table's end", async ({ page }) => {
-  const db = await open(page, {
-    "/work/2026 Calendar/2026 Calendar.md":
-      "# 2026 Calendar\n\n```base\n" +
-      BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
-      "\n```\n",
-  });
-  await expect(db.locator("#body tbody tr").nth(-2)).toHaveClass(/more-row/);
-  await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
 });
