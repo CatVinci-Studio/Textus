@@ -526,6 +526,7 @@
         return call("ui.notice", {
           text: String(message),
           tone: (options && options.tone) || "info",
+          action: options && options.action,
         });
       },
       message: function (message, options) {

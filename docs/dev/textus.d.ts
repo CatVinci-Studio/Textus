@@ -220,8 +220,13 @@ declare global {
     // ---------------------------------------------------------------
 
     interface Ui {
-      /** A short note at the bottom of the window that goes by itself. */
-      notice(text: string, options?: { tone?: Tone }): Promise<void>;
+      /** A short note at the bottom of the window that goes by itself.
+       *  With `action` ("Undo"), a button on it: resolves true when it was
+       *  clicked before the note went, false otherwise (Textus 1.3.12). */
+      notice(
+        text: string,
+        options?: { tone?: Tone; action?: string },
+      ): Promise<boolean>;
       /** A box with one button; resolves when it is closed. */
       message(text: string, options?: { tone?: Tone }): Promise<void>;
       confirm(

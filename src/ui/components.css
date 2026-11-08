@@ -113,7 +113,8 @@ textarea.tx-input {
 
 .appearance-option.is-selected,
 .tx-segment.is-selected,
-.tx-segment[aria-selected="true"] {
+.tx-segment[aria-selected="true"],
+.tx-segment[aria-checked="true"] {
   background: var(--ui-surface);
   color: var(--ui-text);
   box-shadow: var(--shadow-raised);

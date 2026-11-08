@@ -17,6 +17,8 @@ export interface Notice {
   onCancel?: () => void;
   /** A button that does what the note suggests, and closes it. */
   action?: { label: string; run: () => void };
+  /** Called once it has gone, acted on or not. */
+  onGone?: () => void;
 }
 
 /** How long a note stays: long enough to read a line, or to act on one. */
@@ -37,6 +39,7 @@ function publish() {
 function remove(id: number) {
   clearTimeout(timers.get(id));
   timers.delete(id);
+  notices.find((n) => n.id === id)?.onGone?.();
   notices = notices.filter((n) => n.id !== id);
   publish();
 }
@@ -86,6 +89,7 @@ export function showNotice(
     tone?: Notice["tone"];
     source?: string;
     action?: Notice["action"];
+    onGone?: () => void;
   } = {},
 ): void {
   const { action } = options;
@@ -95,11 +99,13 @@ export function showNotice(
     source: options.source,
     action: action && {
       label: action.label,
+      // Acted on first, then gone: a caller hears which.
       run: () => {
-        remove(id);
         action.run();
+        remove(id);
       },
     },
+    onGone: options.onGone,
   });
   arm(id, action ? ACTION_NOTICE_MS : NOTICE_MS);
 }
