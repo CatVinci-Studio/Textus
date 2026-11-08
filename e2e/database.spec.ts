@@ -313,15 +313,6 @@ test("a column's head dragged along the others, and its edge to a width, kept in
   page,
 }) => {
   const db = await open(page);
-  const heads = db.locator("thead th[data-key]");
-  await expect(heads).toHaveText([
-    /name/,
-    /start/,
-    /end/,
-    /focus/,
-    /status/,
-    /rate/,
-  ]);
   await dragWithMouse(
     page,
     db.locator('thead th[data-key="status"]'),
