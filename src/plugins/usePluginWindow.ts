@@ -25,10 +25,10 @@ import {
   loadPlugins,
   pluginsSnapshot,
   runPluginAiTool,
-  setPluginProject,
   subscribePlugins,
   type PluginsSnapshot,
 } from "./manager";
+import { setPluginProject } from "./plugin-setting-values";
 import { watchTheme, windowIsDark } from "./views/theme-vars";
 import { usePluginMenuSync } from "./contributions/usePluginMenu";
 import { openBeside } from "../app/split/split-layout";

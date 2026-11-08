@@ -7,7 +7,7 @@ import {
   type SettingsAccess,
 } from "./schedule-notice";
 import { windowIsDark } from "../views/theme-vars";
-import { pluginPlatform } from "../manager";
+import { pluginPlatform } from "../plugin-platform";
 import { currentAppState, watchAppState } from "./app-state";
 import { runWaitingJobs } from "./run-jobs";
 

@@ -37,7 +37,6 @@ const LINES_NOW = {
   "src/app/menu/app-menu-model.ts": 580,
   "src/editor/markdown/source-preserving.ts": 560,
   "src/platform/ipc.ts": 524,
-  "src/plugins/manager.ts": 587,
   "src/prefs/settings-types.ts": 520,
   "src/settings/sections/agent.tsx": 524,
   "src/sidebar/FileTree.tsx": 586,

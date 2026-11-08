@@ -15,8 +15,8 @@ import {
   revokePermission,
   uninstallPlugin,
   type PluginRecord,
-  runsHere,
 } from "../../plugins/manager";
+import { runsHere } from "../../plugins/plugin-platform";
 import {
   requirementLabel,
   requirementMet,
