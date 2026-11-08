@@ -7,7 +7,12 @@ import {
   type ReactNode,
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
-import { chromeScaleAt, clampSidePanel } from "../../../ui/side-panel-width";
+import {
+  chromeScaleAt,
+  clampSidePanel,
+  sidePanelMax,
+  sidePanelMin,
+} from "../../../ui/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";
@@ -87,7 +92,10 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
     [windowWidth, beside],
   );
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
-  return { open, setOpen, toggle, width, setWidth, tab, setTab };
+  // How far it may be dragged here, for its handle's keys and readers.
+  const min = Math.round(sidePanelMin(windowWidth, LIMITS, beside, scale));
+  const max = Math.round(sidePanelMax(windowWidth, LIMITS, beside, scale));
+  return { open, setOpen, toggle, width, min, max, setWidth, tab, setTab };
 }
 
 export function AgentPanelProvider({

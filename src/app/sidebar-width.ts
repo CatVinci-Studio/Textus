@@ -4,6 +4,7 @@ import {
   chromeScaleAt,
   clampSidePanel,
   sidePanelMax,
+  sidePanelMin,
 } from "../ui/side-panel-width";
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
@@ -56,7 +57,7 @@ export function useSidebarWidth(windowWidth: number) {
   }, []);
   return {
     width,
-    min: Math.round(SIDEBAR_MIN_WIDTH * scale),
+    min: Math.round(sidePanelMin(windowWidth, LIMITS, 0, scale)),
     max: sidePanelMax(windowWidth, LIMITS, 0, scale),
     setWidth,
     resetWidth,

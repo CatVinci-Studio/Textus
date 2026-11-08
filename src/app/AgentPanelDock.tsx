@@ -1,9 +1,5 @@
 import type { PresenceHandle } from "../ui/usePresence";
-import {
-  AGENT_PANEL_DEFAULT_WIDTH,
-  AGENT_PANEL_MAX_WIDTH,
-  AGENT_PANEL_MIN_WIDTH,
-} from "../ai/chat/panel/agent-panel";
+import { AGENT_PANEL_DEFAULT_WIDTH } from "../ai/chat/panel/agent-panel";
 import { ResizeHandle } from "../ui/ResizeHandle";
 import type { Strings } from "../i18n/strings";
 import { TextusAiOffNote } from "../ai/TextusAiSwitch";
@@ -14,6 +10,8 @@ export function AgentPanelDock({
   presence,
   closing,
   width,
+  min,
+  max,
   onResize,
   mountRef,
   sourceMode,
@@ -24,6 +22,9 @@ export function AgentPanelDock({
   presence: PresenceHandle;
   closing: boolean;
   width: number;
+  /** How far it may be dragged in this window. */
+  min: number;
+  max: number;
   /** `done`: the drag let go, or a key moved it - remember it. */
   onResize: (width: number, done: boolean) => void;
   mountRef: (el: HTMLElement | null) => void;
@@ -48,8 +49,8 @@ export function AgentPanelDock({
         className="agent-panel-resizer"
         edge="left"
         width={width}
-        min={AGENT_PANEL_MIN_WIDTH}
-        max={AGENT_PANEL_MAX_WIDTH}
+        min={min}
+        max={max}
         onResize={onResize}
         onReset={() => onResize(AGENT_PANEL_DEFAULT_WIDTH, true)}
         label={t.agentPanelResize}

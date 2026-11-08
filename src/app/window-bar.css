@@ -312,38 +312,6 @@
     visibility 0s;
 }
 
-/* The AI panel's edge runs up through the strip as the sidebar's does: the
-   same copy of its fill and its left edge, on the right, so the line beside
-   the document is one line from the window's top to its bottom on both
-   sides. */
-.window-bar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  width: var(--agent-panel-width, 0px);
-  box-sizing: border-box;
-  background: var(--ui-surface);
-  border-left: 1px solid var(--ui-border);
-  z-index: -1;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--dur-base) var(--ease-in),
-    visibility 0s linear var(--dur-base);
-}
-
-:root:not([data-window-chrome="mobile"], .zen)
-  .app-shell:has(> .agent-panel:not([data-state="closing"]))
-  .window-bar::after {
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity var(--dur-slow) var(--ease-out),
-    visibility 0s;
-}
-
 /* The menu bar's titles run the width of the row, so the sidebar's fill stops
    at the bar's underside instead of running up through them: otherwise the
    copy's fill and its right edge split the menu in two. */

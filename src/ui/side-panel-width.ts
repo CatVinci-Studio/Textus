@@ -32,8 +32,15 @@ export interface PanelLimits {
   max: number;
 }
 
+/** The narrowest a panel gets, however small the window (or its own
+ *  minimum, if smaller). */
+const PANEL_FLOOR = 200;
+const floor = (limits: PanelLimits) => Math.min(limits.min, PANEL_FLOOR);
+/** Room a squeezed panel keeps to be dragged in. */
+const DRAG_ROOM = 100;
+
 /** The widest a panel may be in a window `windowWidth` wide, beside
- *  `beside` px of the other panel. */
+ *  `beside` px of the other panel: the document keeps its room first. */
 export function sidePanelMax(
   windowWidth: number,
   limits: PanelLimits,
@@ -41,12 +48,27 @@ export function sidePanelMax(
   scale = 1,
 ): number {
   return Math.max(
-    limits.min * scale,
+    floor(limits) * scale,
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
       windowWidth - beside - DOCUMENT_MIN_WIDTH * scale,
     ),
+  );
+}
+
+/** The narrowest it may be dragged to: its own minimum, lower in a small
+ *  window so a squeezed panel can still be dragged. */
+export function sidePanelMin(
+  windowWidth: number,
+  limits: PanelLimits,
+  beside = 0,
+  scale = 1,
+): number {
+  const max = sidePanelMax(windowWidth, limits, beside, scale);
+  return Math.min(
+    limits.min * scale,
+    Math.max(floor(limits) * scale, max - DRAG_ROOM * scale),
   );
 }
 
@@ -61,7 +83,7 @@ export function clampSidePanel(
   return Math.round(
     Math.min(
       sidePanelMax(windowWidth, limits, beside, scale),
-      Math.max(limits.min * scale, width),
+      Math.max(sidePanelMin(windowWidth, limits, beside, scale), width),
     ),
   );
 }
