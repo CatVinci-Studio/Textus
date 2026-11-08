@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useChromeScale } from "../../ui/useChromeScale";
+import { scaledPx } from "../../ui/chrome-scale";
 import { windowInfo } from "../store/plugin-records";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
@@ -56,16 +57,18 @@ export function FloatingViews() {
 }
 
 function clamp(value: number, size: number, room: number) {
+  const margin = scaledPx(MARGIN);
   return Math.min(
-    Math.max(value, MARGIN),
-    Math.max(MARGIN, room - size - MARGIN),
+    Math.max(value, margin),
+    Math.max(margin, room - size - margin),
   );
 }
 
 function snap(value: number, size: number, room: number) {
-  const far = room - size - MARGIN;
-  if (value - MARGIN < SNAP) return MARGIN;
-  return far - value < SNAP ? far : value;
+  const margin = scaledPx(MARGIN);
+  const far = room - size - margin;
+  if (value - margin < scaledPx(SNAP)) return margin;
+  return far - value < scaledPx(SNAP) ? far : value;
 }
 
 /** Its top-left in pixels: where it was left, else the bottom-right
@@ -103,8 +106,8 @@ function FloatingBox({
     { ...view, scale: sizing ?? view.scale },
     chrome,
   );
-  const width = view.folded ? DOT : fullWidth;
-  const height = view.folded ? DOT : fullHeight;
+  const width = view.folded ? DOT * chrome : fullWidth;
+  const height = view.folded ? DOT * chrome : fullHeight;
   const side = floatingSide(view);
   const at =
     live ??

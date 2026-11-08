@@ -152,7 +152,7 @@ function useFloatingWindow(view: FloatingView): string | null {
   const label = useWindowLabel(view);
   const chrome = useChromeScale();
   const [width, height] = view.folded
-    ? [DOT_SIZE, DOT_SIZE]
+    ? [DOT_SIZE * chrome, DOT_SIZE * chrome]
     : floatingSize(view, chrome);
   useEffect(() => {
     if (!label) return;

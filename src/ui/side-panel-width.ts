@@ -5,21 +5,6 @@
  * always leaving the document room between them.
  */
 
-import { windowScale } from "./window-scale";
-
-/** The interface's size step now, as `--chrome-scale` has it: Interface
- *  Text Size times the window's width step. A panel's widths are in this
- *  step's units, so it grows with what it holds. */
-export function chromeScaleAt(windowWidth: number): number {
-  const text =
-    typeof document === "undefined"
-      ? 1
-      : Number.parseFloat(
-          document.documentElement.style.getPropertyValue("--ui-text-scale"),
-        ) || 1;
-  return text * windowScale(windowWidth);
-}
-
 /** The narrowest the document column is squeezed to by a panel. */
 export const DOCUMENT_MIN_WIDTH = 360;
 /** The most of the window one panel takes. */

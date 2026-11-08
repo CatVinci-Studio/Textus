@@ -1,7 +1,7 @@
+import { chromeScaleAt } from "../ui/chrome-scale";
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../storage/ui-state";
 import {
-  chromeScaleAt,
   clampSidePanel,
   sidePanelMax,
   sidePanelMin,

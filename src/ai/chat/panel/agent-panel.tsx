@@ -1,3 +1,4 @@
+import { chromeScaleAt } from "../../../ui/chrome-scale";
 import {
   createContext,
   useCallback,
@@ -8,7 +9,6 @@ import {
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
 import {
-  chromeScaleAt,
   clampSidePanel,
   sidePanelMax,
   sidePanelMin,
@@ -78,7 +78,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
     // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
     // "ask about this note" - wants the conversation.
     if (next) setTab("chat");
-  }, []);
+  }, [setTab]);
   // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback(
     (next: number, persist = true) => {

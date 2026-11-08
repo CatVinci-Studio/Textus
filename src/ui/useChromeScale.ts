@@ -1,5 +1,5 @@
+import { chromeScaleAt } from "./chrome-scale";
 import { useSyncExternalStore } from "react";
-import { chromeScaleAt } from "./side-panel-width";
 
 /** `--chrome-scale` now, for sizes set from script; follows the window's
  *  width and Interface Text Size. */

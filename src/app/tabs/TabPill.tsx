@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useEffect, useRef } from "react";
 import { CloseIcon } from "../../ui/icons";
 import { measure, play } from "../../ui/flip";
@@ -172,7 +173,7 @@ export function TabPill({
       return;
     }
 
-    if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
+    if (onPullOut && Math.abs(e.clientY - g.startY) > scaledPx(PULL_OUT_PX)) {
       // Pulled out of the bar: neighbours slide home, and the drag is the
       // caller's from here.
       gesture.current = null;

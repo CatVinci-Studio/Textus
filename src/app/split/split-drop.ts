@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import {
   moveToPane,
   pairLayout,
@@ -43,8 +44,9 @@ function outerEdge(
   x: number,
   y: number,
 ): "left" | "right" | "top" | "bottom" | null {
-  const across = Math.min(OUTER, area.width * OUTER_SHARE);
-  const down = Math.min(OUTER, area.height * OUTER_SHARE);
+  const outer = scaledPx(OUTER);
+  const across = Math.min(outer, area.width * OUTER_SHARE);
+  const down = Math.min(outer, area.height * OUTER_SHARE);
   const sides = [
     ["top", (y - area.top) / down],
     ["bottom", (area.bottom - y) / down],

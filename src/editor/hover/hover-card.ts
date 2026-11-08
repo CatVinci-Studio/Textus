@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
@@ -114,9 +115,11 @@ function build(card: HoverCard): HTMLElement {
 /** Below the link, or above it when there is no room; inside the window. */
 function place(el: HTMLElement, rect: DOMRect) {
   const box = el.getBoundingClientRect();
-  const top = opensBelow(rect, box.height, GAP)
-    ? Math.min(rect.bottom + GAP, window.innerHeight - EDGE - box.height)
-    : rect.top - GAP - box.height;
+  const gap = scaledPx(GAP);
+  const edge = scaledPx(EDGE);
+  const top = opensBelow(rect, box.height, gap)
+    ? Math.min(rect.bottom + gap, window.innerHeight - edge - box.height)
+    : rect.top - gap - box.height;
   el.style.top = `${Math.max(EDGE, top)}px`;
   el.style.left = `${clampLeft(rect.left, box.width)}px`;
 }
