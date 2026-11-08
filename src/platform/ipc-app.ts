@@ -155,7 +155,7 @@ export const menuIpc = {
   setMenuAccelerators: (accelerators: Record<string, string>) =>
     desktopQueryCommand("set_menu_accelerators", undefined, accelerators),
   /** Fills the native Plugins menu with the enabled plugins' items. */
-  setPluginMenu: (items: { command: string; label: string }[]) =>
+  setPluginMenu: (items: { command: string; label: string; group?: string }[]) =>
     desktopQueryCommand("set_plugin_menu", undefined, items),
   /** The plugin commands the background tray icon lists. */
   setTrayPluginItems: (items: { command: string; label: string }[]) =>

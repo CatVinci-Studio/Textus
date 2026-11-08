@@ -57,6 +57,8 @@ export interface MenuBridgeHandlers {
   onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
   onToggleReadOnly: () => void;
+  /** View › Mode › Default: the rendered editor, the document writable. */
+  onViewModeDefault: () => void;
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
@@ -190,6 +192,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
+      listenToThisWindow("menu-view-mode-default", () =>
+        h().onViewModeDefault(),
+      ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       listenToThisWindow(
         "menu-command-palette",

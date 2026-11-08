@@ -14,6 +14,7 @@ import {
   menuBarSections,
   NO_RECENTS,
   nativeMenuChecks,
+  pluginMenuNodes,
   type MenuNode,
 } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";
@@ -108,7 +109,8 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      expect(onOff).toHaveLength(9);
+      // Sidebar, AI panel, the four modes and their three additions.
+      expect(onOff).toHaveLength(10);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
@@ -128,10 +130,34 @@ describe("the View menu's on/off items", () => {
     const checked = flatten(view)
       .filter((item) => item.checked)
       .map((item) => item.label);
+    // One of View › Mode's four is always on: here, the default.
     expect(checked).toEqual([
       t.menuToggleSidebar,
+      t.menuViewModeDefault,
       t.menuToggleZenMode,
       t.menuFullscreen,
+    ]);
+  });
+
+  it("check one mode of four, a read-only document's before the window's view", () => {
+    const on = (checks: Parameters<typeof nativeMenuChecks>[0]) =>
+      Object.entries(nativeMenuChecks(checks))
+        .filter(
+          ([id, v]) =>
+            v &&
+            [
+              "view-mode-default",
+              "toggle-source-mode",
+              "toggle-split-view",
+              "toggle-read-only",
+            ].includes(id),
+        )
+        .map(([id]) => id);
+    expect(on({})).toEqual(["view-mode-default"]);
+    expect(on({ sourceMode: true })).toEqual(["toggle-source-mode"]);
+    expect(on({ splitView: true })).toEqual(["toggle-split-view"]);
+    expect(on({ splitView: true, readOnly: true })).toEqual([
+      "toggle-read-only",
     ]);
   });
 
@@ -336,5 +362,17 @@ describe("the menu ids", () => {
     );
     expect(ids.length).toBeGreaterThan(20);
     expect(ids.filter((id) => !known(id))).toEqual([]);
+  });
+
+  it("put a plugin's several commands in a submenu of its name, one alone as it is", () => {
+    const nodes = pluginMenuNodes([
+      { command: "w.new", label: "New database", group: "Workspace" },
+      { command: "a.go", label: "Desk Pet", group: "Desk Pet" },
+      { command: "w.page", label: "New sub-page", group: "Workspace" },
+    ]);
+    expect(nodes.map((n) => [n.label, n.submenu?.length ?? 0])).toEqual([
+      ["Desk Pet", 0],
+      ["Workspace", 2],
+    ]);
   });
 });

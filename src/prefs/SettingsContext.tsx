@@ -38,6 +38,7 @@ export {
   type NewDocumentMode,
   type ContentWidth,
   type ImageAlign,
+  type EmbedDisplay,
   type ProxyType,
   THEME_MODES,
   UI_TEXT_SCALES,

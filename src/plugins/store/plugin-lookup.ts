@@ -79,11 +79,13 @@ export function pluginMenuEntries(
   from: PluginsSnapshot = pluginsSnapshot(),
   menu: "app/plugins" | "app/tray" = "app/plugins",
   language: string = windowInfo().language(),
-): { command: string; label: string }[] {
+): { command: string; label: string; group: string }[] {
   if (!from.allOn) return [];
   return from.records.flatMap((record) => {
     const manifest = record.manifest;
     if (record.status !== "on" || !manifest) return [];
+    // Each command under its plugin's name, for a submenu of its own.
+    const group = localize(manifest, manifest.name, language);
     return (manifest.contributes.menus[menu] ?? []).map((item) => {
       const command = manifest.contributes.commands.find(
         (c) => c.command === item.command,
@@ -91,6 +93,7 @@ export function pluginMenuEntries(
       return {
         command: item.command,
         label: localize(manifest, command?.title ?? item.command, language),
+        group,
       };
     });
   });

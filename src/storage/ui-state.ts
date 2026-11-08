@@ -51,6 +51,8 @@ export interface UiState {
   /** The note embeds folded, by the document they are in and what they
    *  show, oldest first. */
   foldedEmbeds: string[];
+  /** With embeds shown as cards, the ones opened, the same way. */
+  openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
    *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
   pluginCardAnswers: Record<string, number | "never">;
@@ -191,6 +193,11 @@ const LOCAL: {
   },
   foldedEmbeds: {
     key: "textus-folded-embeds",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  openedEmbeds: {
+    key: "textus-opened-embeds",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

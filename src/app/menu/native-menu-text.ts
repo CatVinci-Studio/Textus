@@ -32,6 +32,7 @@ export function nativeMenuLabels(t: Strings): Record<string, string> {
     "menu:edit": t.menuEdit,
     "menu:format": t.menuFormat,
     "menu:view": t.menuView,
+    "menu:view-mode": t.menuViewMode,
     "menu:plugins": t.menuPlugins,
     "plugin-commands-none": t.menuNoPluginCommands,
     "menu:window": t.menuWindow,
