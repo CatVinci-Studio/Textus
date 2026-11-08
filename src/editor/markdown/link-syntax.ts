@@ -349,6 +349,7 @@ export interface EncodedRun {
 const ESCAPES = /(?:%[0-9A-Fa-f]{2})+/g;
 /** Characters shown as their escape: they would read as Markdown, or as
  *  nothing at all. */
+// eslint-disable-next-line no-control-regex -- control characters are the point
 const KEEP_ESCAPED = /[\x00-\x1f\x7f%()<>[\]\\"]/;
 
 /** Where `text` holds percent-escapes between `from` and `to`, each run
@@ -389,4 +390,15 @@ export function encodeDestSpaces(text: string): string {
   if (!match || !/\S\s+\S/.test(match[2].trim())) return text;
   const fixed = `${match[1]}${match[2].trim().replace(/\s/g, "%20")}${match[3] ?? ""})`;
   return parseLink(fixed) ? fixed : text;
+}
+
+/** `text` with its percent-escapes read, for showing a path or URL. */
+export function readEscapes(text: string): string {
+  let out = "";
+  let at = 0;
+  for (const run of encodedRuns(text)) {
+    out += text.slice(at, run.from) + run.text;
+    at = run.to;
+  }
+  return out + text.slice(at);
 }

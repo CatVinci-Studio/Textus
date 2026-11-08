@@ -378,8 +378,7 @@ export function createLinkRevealPlugin(docPath: () => string | null) {
           const dir = PLAIN_ARROWS[event.key];
           // `%20` reads as one space, so it is passed or deleted as one.
           const step = dir ?? DELETES[event.key];
-          const run =
-            step && !modified ? escapeRunAt(view.state, step) : null;
+          const run = step && !modified ? escapeRunAt(view.state, step) : null;
           if (run) {
             event.preventDefault();
             const tr = dir

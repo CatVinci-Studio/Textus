@@ -2,6 +2,7 @@ import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
 import { renderMarkdownHtml } from "../markdown/render-html";
+import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
 import { duration } from "../../ui/motion";
 
@@ -62,12 +63,14 @@ function build(card: HoverCard): HTMLElement {
   const el = document.createElement("div");
   el.className = "hover-card floating-surface";
   el.setAttribute("role", "dialog");
-  el.setAttribute("aria-label", card.title ?? t.hoverCard);
+  // A title made from a link's path reads `%20` as a space.
+  const named = card.title ? readEscapes(card.title) : null;
+  el.setAttribute("aria-label", named ?? t.hoverCard);
   const head = document.createElement("div");
   head.className = "hover-card-head";
   const title = document.createElement("span");
   title.className = "hover-card-title";
-  title.textContent = card.title ?? "";
+  title.textContent = named ?? "";
   const pin = document.createElement("button");
   pin.type = "button";
   pin.className = "hover-card-button";

@@ -21,6 +21,7 @@ import {
 } from "@codemirror/commands";
 import { centerSourceCaret } from "./mode-switch";
 import { sourceHighlighting } from "./source-highlight";
+import { sourceEscapes } from "./source-escapes";
 import {
   registerSourceView,
   unregisterSourceView,
@@ -109,6 +110,7 @@ export function SourceEditor({
           // Textus's own find bar), and Tab moves the focus as in any field.
           keymap.of([...standardKeymap, ...historyKeymap]),
           sourceHighlighting(),
+          sourceEscapes(),
           // A caller's paste handler (a document's source stores pictures);
           // anything it leaves alone is CodeMirror's own.
           EditorView.domEventHandlers({
