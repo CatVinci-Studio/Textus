@@ -28,6 +28,7 @@ export type Permission =
   | "ai.tools"
   | "notifications"
   | "background"
+  | "agents"
   | `network:${string}`;
 
 export const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
@@ -45,6 +46,7 @@ const PLAIN_PERMISSIONS = [
   "ai.tools",
   "notifications",
   "background",
+  "agents",
 ] as const;
 
 export function isPermission(value: unknown): value is Permission {
@@ -238,6 +240,19 @@ export interface EmbedContribution {
 /** The hover cards a plugin gives. */
 export type HoverContribution = "document" | "link" | "citation";
 
+/** An AI agent on the user's computer that Textus AI's panel can talk to
+ *  (Agent Client Protocol over stdio): Claude Code, Codex… Needs `agents`.
+ *  `{pluginDir}` in `args` and `env` is the plugin's own folder. */
+export interface AgentContribution {
+  id: string;
+  name: string;
+  command: string;
+  args: string[];
+  env: Record<string, string>;
+  /** How to install it and sign in, shown when it can't start. */
+  setup?: string;
+}
+
 export interface Contributes {
   commands: CommandContribution[];
   keybindings: KeybindingContribution[];
@@ -256,6 +271,7 @@ export interface Contributes {
   links: LinkContribution[];
   codeBlocks: CodeBlockContribution[];
   floatingViews: FloatingViewContribution[];
+  agents: AgentContribution[];
   /** Suggested, once, for a document with these. */
   suggestFor: SuggestKind[];
 }
@@ -335,9 +351,11 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   // Background code, or Textus kept running in the background: the desktop's.
   const inBackground =
     !!background || requires.some((r) => r.setting === "runInBackground");
+  // An agent is a program on the computer: the desktop's too.
+  const agents = permissions.includes("agents");
   const platforms: readonly PluginPlatform[] =
     m.platforms === undefined
-      ? inBackground
+      ? inBackground || agents
         ? ["desktop"]
         : PLUGIN_PLATFORMS
       : list(m.platforms, "platforms").map((p) => {
@@ -350,6 +368,10 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   if (inBackground && platforms.includes("ios"))
     throw new ManifestError(
       "The background is the desktop's only: platforms can't name ios.",
+    );
+  if (agents && platforms.includes("ios"))
+    throw new ManifestError(
+      "Agents are the desktop's only: platforms can't name ios.",
     );
   const l10n: PluginManifest["l10n"] = {};
   if (m.l10n !== undefined)
@@ -364,6 +386,8 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   const contributes = parseContributes(m.contributes, id);
   if (contributes.embeds.length && !permissions.includes("files.read"))
     throw new ManifestError("contributes.embeds needs files.read.");
+  if (contributes.agents.length && !permissions.includes("agents"))
+    throw new ManifestError("contributes.agents needs agents.");
   return {
     id,
     name: text(m.name, "name"),

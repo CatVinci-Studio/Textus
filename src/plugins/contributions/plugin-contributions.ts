@@ -30,6 +30,7 @@ import { addCodeBlockLanguage } from "./code-blocks";
 import { addSlashItems } from "./slash-commands";
 import { pluginKey } from "./plugin-keys";
 import { claim, ownedClaims } from "./owners";
+import { addAgents } from "./agents";
 
 /**
  * What an on plugin adds to the window, registered from its manifest alone;
@@ -173,6 +174,17 @@ export function applyContributions(
       ),
     );
   }
+  if (record.granted.includes("agents") && manifest.contributes.agents.length)
+    undo.push(
+      addAgents(
+        id,
+        manifest.contributes.agents.map((a) => ({
+          id: a.id,
+          name: text(a.name),
+          setup: a.setup && text(a.setup),
+        })),
+      ),
+    );
   for (const tab of sidebarTabs)
     undo.push(
       registerSidebarTab({

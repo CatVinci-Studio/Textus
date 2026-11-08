@@ -33,6 +33,7 @@ import { ProposalCard, notMadeLine } from "./ProposalCard";
 import { ProposalGroup, proposalRuns } from "./ProposalGroup";
 import { CommentCard, CommentGroup, noteRunsOf } from "./CommentCard";
 import { ThinkingIndicator } from "./ThinkingIndicator";
+import { AgentPermission } from "../agents/AgentPermission";
 import { memoryRunsOf } from "./memory-pass";
 import { OFFER_SKILL, SkillOfferChip, parseSkillOffer } from "./SkillOfferChip";
 import { PAPER_TURN, parsePaperCard } from "../paper/paper-store";
@@ -69,6 +70,8 @@ export interface ChatMessagesLabels
   diffShow: string;
   actionNames: Record<EditAction, string>;
   retry: string;
+  /** An external agent's step that has no title of its own. */
+  agentPermission: string;
   /** The Accept button while some sentences are kept as written: "{k}" of
    *  "{n}". */
   proposalAcceptSome: string;
@@ -538,26 +541,34 @@ export function ChatMessages({
           />
         </div>
       )}
+      {streaming?.permission && (
+        <AgentPermission
+          pending={streaming.permission}
+          label={labels.agentPermission}
+        />
+      )}
       {/* Shown at the bottom once a step's rows push the thinking row out of
           sight, and under a reply once it has paused, so the panel never
           looks stuck. Re-keyed by each delta, it waits again. */}
-      {busy && (streaming?.thought?.since == null || thoughtAbove) && (
-        <ThinkingIndicator
-          key={step ?? streaming?.text.length ?? 0}
-          after={!!streaming?.text && !step}
-          soon={!streaming?.text && !step && !streaming?.thought}
-          waitedFor={labels.waitedFor}
-          label={
-            step === "generate_image"
-              ? labels.generatingImage
-              : step === "propose_edit"
-                ? labels.writingEdit
-                : step === "add_comment"
-                  ? labels.writingNotes
-                  : labels.thinking
-          }
-        />
-      )}
+      {busy &&
+        !streaming?.permission &&
+        (streaming?.thought?.since == null || thoughtAbove) && (
+          <ThinkingIndicator
+            key={step ?? streaming?.text.length ?? 0}
+            after={!!streaming?.text && !step}
+            soon={!streaming?.text && !step && !streaming?.thought}
+            waitedFor={labels.waitedFor}
+            label={
+              step === "generate_image"
+                ? labels.generatingImage
+                : step === "propose_edit"
+                  ? labels.writingEdit
+                  : step === "add_comment"
+                    ? labels.writingNotes
+                    : labels.thinking
+            }
+          />
+        )}
       {error && (
         <ErrorRow
           error={error}

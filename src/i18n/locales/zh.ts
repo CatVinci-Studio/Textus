@@ -800,6 +800,12 @@ export default {
   agentSend: "发送",
   agentStop: "停止",
   agentRetry: "重试",
+  agentNeedsFolder:
+    "请先打开一个文件夹或保存文档：Agent 需要在一个文件夹里工作。",
+  agentStopped: "{agent} 已停止。",
+  agentSignIn: "请先登录 {agent}。",
+  chatAgentsGroup: "Agent",
+  chatAgentPermission: "Agent 请求继续",
   pictureRedraw: "重画…",
   pictureRedrawTitle: "重画这张图",
   pictureRedrawPrompt: "图片的描述，改好后 Textus 会重新画：",
@@ -1618,6 +1624,7 @@ export default {
   pluginPermProjectData: "在打开的文件夹里（.textus/plugins）保存它自己的数据",
   pluginPermAiTools: "给 Textus AI 提供它自己的工具",
   pluginPermNotifications: "显示系统通知",
+  pluginPermAgents: "运行这台电脑上安装的 AI Agent（它能读取和修改文件）",
   pluginPermBackground: "按计划运行代码，关闭所有窗口后也会运行",
   pluginScheduleNotice:
     "「{name}」安排了定时任务。它只在 Textus 运行时执行：打开「{setting}」，关闭所有窗口后也会执行。",

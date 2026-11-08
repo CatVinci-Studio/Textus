@@ -127,6 +127,8 @@ function readSettings(parsed: Raw | null): Settings {
           ? parsed.aiProvider
           : DEFAULT_SETTINGS.aiProvider,
       agentModels: stringMap(parsed.agentModels),
+      chatAgent:
+        typeof parsed.chatAgent === "string" ? parsed.chatAgent : "",
       writingModels: stringMap(parsed.writingModels),
       agentDefaultMode:
         storedAgentMode(parsed.agentDefaultMode) ??

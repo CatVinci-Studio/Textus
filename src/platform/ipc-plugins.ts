@@ -3,6 +3,7 @@ import type * as Access from "./bindings/plugin-access";
 
 /** A plugin file as text. */
 export type PluginFile = Generated.PluginFile;
+import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
@@ -39,6 +40,26 @@ export const mcp = {
   /** Starts a server not saved yet, asks for its tools and stops it. The
    *  server is a settings entry, opaque JSON to Rust. */
   try: (server: unknown) => command("mcp_try", server as Generated.Value),
+};
+
+/** What an external agent's process says: a protocol line, or its end. */
+export type AgentOutput = Generated.AgentOutput_Deserialize;
+
+/** External agents a plugin names, started by Rust from its manifest
+ *  (src-tauri/src/agents.rs). Desktop only. */
+export const agentsIpc = {
+  start: (
+    plugin: string,
+    agent: string,
+    cwd: string | null,
+    onOutput: (out: AgentOutput) => void,
+  ): Promise<number> => {
+    const channel = new Channel<AgentOutput>();
+    channel.onmessage = onOutput;
+    return command("agent_start", plugin, agent, cwd, channel);
+  },
+  send: (handle: number, line: string) => command("agent_send", handle, line),
+  stop: (handle: number) => command("agent_stop", handle),
 };
 
 export const plugins = {

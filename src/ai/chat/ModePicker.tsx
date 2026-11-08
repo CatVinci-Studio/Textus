@@ -3,7 +3,11 @@ import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../ui/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
-import { useChatModels, type ChatModels } from "./chat-models";
+import {
+  AGENTS_GROUP,
+  useChatModels,
+  type ChatModels,
+} from "./chat-models";
 import "./ModePicker.css";
 import { isImeKeydown } from "../../utils/ime";
 
@@ -41,7 +45,9 @@ export function ModePicker({
   holdFocus?: boolean;
 }) {
   const groups = models?.groups ?? [];
-  const shownModes = modes.length > 1 ? modes : [];
+  // An external agent works its own way: Textus AI's modes are for models.
+  const shownModes =
+    modes.length > 1 && models?.provider !== AGENTS_GROUP ? modes : [];
   const items: Item[] = [
     ...shownModes.map((choice) => ({ kind: "mode" as const, choice })),
     ...groups.flatMap((g) =>
@@ -93,7 +99,12 @@ export function ModePicker({
     close();
     if (isSelected(item)) return;
     if (item.kind === "mode") onMode(item.choice.value);
-    else models?.choose(item.provider, item.model);
+    else {
+      models?.choose(item.provider, item.model);
+      // An agent answers as itself: Research's paper isn't one of its modes.
+      if (item.provider === AGENTS_GROUP && mode === "research" && modes[0])
+        onMode(modes[0].value);
+    }
   }
 
   function onTriggerKey(e: KeyboardEvent<HTMLElement>) {

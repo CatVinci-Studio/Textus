@@ -18,6 +18,8 @@ mod distribution;
 mod ext_stats;
 mod extract;
 #[cfg(desktop)]
+mod agents;
+#[cfg(desktop)]
 mod mcp;
 #[cfg(desktop)]
 mod menu;
@@ -97,6 +99,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(agents::Agents::default())
         .manage(cli::app::CliBridge::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
@@ -381,6 +384,12 @@ pub fn run() {
             mcp::mcp_restart,
             #[cfg(desktop)]
             mcp::mcp_try,
+            #[cfg(desktop)]
+            agents::agent_start,
+            #[cfg(desktop)]
+            agents::agent_send,
+            #[cfg(desktop)]
+            agents::agent_stop,
             // iOS only: rename and delete in the document list.
             #[cfg(mobile)]
             commands::documents::rename_entry,

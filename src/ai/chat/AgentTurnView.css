@@ -638,3 +638,25 @@ button.agent-context-chip:hover {
   margin: 0;
   padding-left: var(--space-4);
 }
+
+/* An external agent asking to take a step: the step, then its choices. */
+.agent-permission {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  color: var(--ui-text);
+  word-break: break-word;
+}
+
+.agent-permission-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

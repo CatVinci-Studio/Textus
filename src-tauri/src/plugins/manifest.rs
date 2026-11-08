@@ -24,6 +24,7 @@ const PLAIN_PERMISSIONS: &[&str] = &[
     "ai.tools",
     "notifications",
     "background",
+    "agents",
 ];
 
 const REQUIRED_SETTINGS: &[&str] = &["runInBackground"];

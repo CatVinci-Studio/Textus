@@ -261,11 +261,14 @@ export function noteLinkIn(
   const self =
     !!(options.heading || options.block) &&
     to.toLowerCase() === from.toLowerCase();
-  return noteLinkSource({
-    ...options,
-    wiki: style.wiki,
-    target: self ? "" : namedAs(index, to, from, style),
-  });
+  const target = self ? "" : namedAs(index, to, from, style);
+  // A [[link]] that needs its path shows the note's name, not the path.
+  const alias =
+    options.alias ??
+    (style.wiki && target.includes("/")
+      ? target.slice(target.lastIndexOf("/") + 1)
+      : undefined);
+  return noteLinkSource({ ...options, alias, wiki: style.wiki, target });
 }
 
 /** `noteLinkIn` for absolute paths in the folder `paths` indexes. */

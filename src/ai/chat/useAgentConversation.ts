@@ -27,6 +27,17 @@ import {
 } from "./memory-pass";
 import { useNextMessage } from "./next-message";
 import { reportAiState } from "../../plugins/ai-state";
+import { externalAgent } from "../../plugins/contributions/agents";
+import {
+  AGENT_REQUEST,
+  agentFolder,
+  agentRequest,
+} from "../agents/agent-request";
+import {
+  cancelAgentExchange,
+  endAgentSession,
+  type PendingPermission,
+} from "../agents/agent-exchange";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -50,6 +61,8 @@ export interface StreamingState {
   /** add_comment calls whose passage and note have streamed in, before their
    *  ToolCall lands, so the margin shows each as it is written. */
   comments?: AgentTurn[];
+  /** A step an external agent asks the user to allow. */
+  permission?: PendingPermission | null;
 }
 
 /** The (document, message) pair behind the last failed send, for a retry
@@ -199,7 +212,14 @@ export function useAgentConversation(
       );
       if (thought) setThoughts((prev) => ({ ...prev, [at]: thought }));
     };
-    const requestId = crypto.randomUUID();
+    // An external agent answers the chat, not a model; never in Create or
+    // Quick Ask.
+    const agent =
+      persist && options.mode !== "create"
+        ? externalAgent(settings.chatAgent)
+        : undefined;
+    const folder = agent ? agentFolder(workspaceRoot, docPath) : null;
+    const requestId = (agent ? AGENT_REQUEST : "") + crypto.randomUUID();
     const generation = generationRef.current;
     reportAiState("thinking", provider, model || null);
     let ended: "done" | "failed" | "stopped" = "stopped";
@@ -207,143 +227,162 @@ export function useAgentConversation(
     // add_comment arguments streaming in, by call id.
     const commentArgs = new Map<string, string>();
     try {
-      const newTurns = await ai.agentMessage({
-        provider,
-        blocks: document.blocks,
-        docPath,
-        workspaceRoot,
-        conversation: conversationId,
-        history: annotateProposalStatuses(history, proposalStatuses ?? {}),
-        message: trimmed,
-        images,
-        webSearch: options.webSearch,
-        thinking: options.thinking,
-        searchService: search.current.service,
-        searxngUrl: search.current.searxngUrl,
-        mode: options.mode,
-        focusHeading: options.focusHeading ?? null,
-        uiLanguage: uiLanguage.current,
-        model: model || null,
-        imageModel: imageModel.current,
-        requestId,
-        onEvent: (event) => {
-          if (generation !== generationRef.current) return;
-          onStreamEventRef.current?.(event);
-          const prev = streamingRef.current;
-          if (event.type === "thinking") {
-            setStreaming(
-              {
-                turns: prev?.turns ?? [],
-                text: prev?.text ?? "",
-                thought: thinkingEvent(
-                  prev?.thought ?? null,
-                  event.text,
-                  Date.now(),
-                ),
-              },
-              { textOnly: true },
-            );
-            return;
-          }
-          // Anything else means the model has stopped thinking for now.
-          const thought = thinkingDone(prev?.thought ?? null, Date.now());
-          if (event.type === "delta") {
-            reportAiState("writing", provider, model || null);
-            setStreaming(
-              {
-                turns: prev?.turns ?? [],
-                text: (prev?.text ?? "") + event.text,
-                thought,
-              },
-              { textOnly: true },
-            );
-          } else if (event.type === "retry") {
-            // The attempt that streamed this prose came back garbled and
-            // is being sent again; the new attempt streams in its place.
-            setStreaming({ turns: prev?.turns ?? [], text: "", thought });
-          } else if (
-            event.type === "toolStart" &&
-            event.name === "generate_image"
-          ) {
-            setStreaming({
-              turns: prev?.turns ?? [],
-              text: "",
-              thought,
-              tool: event.name,
-            });
-          } else if (
-            event.type === "toolStart" &&
-            (event.name === "propose_edit" || event.name === "add_comment")
-          ) {
-            reportAiState("proposing", provider, model || null);
-            // The reply stays; the row under it says an edit (or a note)
-            // is coming.
-            if (event.name === "add_comment") commentArgs.set(event.callId, "");
-            setStreaming({
-              turns: prev?.turns ?? [],
-              text: prev?.text ?? "",
-              thought,
-              tool: event.name,
-              comments: prev?.comments,
-            });
-          } else if (
-            event.type === "toolArgsDelta" &&
-            commentArgs.has(event.callId)
-          ) {
-            const args = (commentArgs.get(event.callId) ?? "") + event.delta;
-            commentArgs.set(event.callId, args);
-            const { anchor, block, comment } = parsePartialToolArgs(args);
-            const shown = prev?.comments?.some(
-              (c) => c.kind === "ToolCall" && c.call_id === event.callId,
-            );
-            // Once: the passage and the whole note are in. The passage is
-            // the block it names, and the words in it it quotes.
-            if (!prev || shown || !comment?.complete) return;
-            if (block && !block.complete) return;
-            const target = resolveBlockTarget(document.blocks, {
-              block: block?.value,
-              anchor: anchor?.complete ? anchor.value : undefined,
-            });
-            if (!target) return;
-            const call: AgentTurn = {
-              kind: "ToolCall",
-              call_id: event.callId,
-              name: "add_comment",
-              arguments: JSON.stringify({
-                block: target.block,
-                anchor: target.anchor,
-                comment: comment.value,
-              }),
-            };
-            setStreaming({
-              ...prev,
-              thought,
-              comments: [...(prev.comments ?? []), call],
-            });
-          } else if (event.type === "turn") {
-            // Interim prose that streamed before a tool call is dropped, as
-            // the backend prefers tool calls over accompanying text.
-            const landed =
-              event.turn.kind === "ToolCall" ? event.turn.call_id : null;
-            setStreaming({
-              turns: [...(prev?.turns ?? []), event.turn],
-              text: "",
-              thought,
-              comments: prev?.comments?.filter(
-                (c) => c.kind !== "ToolCall" || c.call_id !== landed,
-              ),
-            });
-          } else if (thought !== prev?.thought && prev) {
-            setStreaming({ ...prev, thought });
-          }
-        },
-      });
+      if (agent && !folder) throw new Error(t.agentNeedsFolder);
+      const newTurns = agent
+        ? await agentRequest({
+            agent,
+            conversation: conversationId,
+            folder: folder!,
+            docPath,
+            message: trimmed,
+            get: () => streamingRef.current,
+            set: (value, opts) => {
+              if (generation === generationRef.current)
+                setStreaming(value, opts);
+            },
+          })
+        : await ai.agentMessage({
+            provider,
+            blocks: document.blocks,
+            docPath,
+            workspaceRoot,
+            conversation: conversationId,
+            history: annotateProposalStatuses(history, proposalStatuses ?? {}),
+            message: trimmed,
+            images,
+            webSearch: options.webSearch,
+            thinking: options.thinking,
+            searchService: search.current.service,
+            searxngUrl: search.current.searxngUrl,
+            mode: options.mode,
+            focusHeading: options.focusHeading ?? null,
+            uiLanguage: uiLanguage.current,
+            model: model || null,
+            imageModel: imageModel.current,
+            requestId,
+            onEvent: (event) => {
+              if (generation !== generationRef.current) return;
+              onStreamEventRef.current?.(event);
+              const prev = streamingRef.current;
+              if (event.type === "thinking") {
+                setStreaming(
+                  {
+                    turns: prev?.turns ?? [],
+                    text: prev?.text ?? "",
+                    thought: thinkingEvent(
+                      prev?.thought ?? null,
+                      event.text,
+                      Date.now(),
+                    ),
+                  },
+                  { textOnly: true },
+                );
+                return;
+              }
+              // Anything else means the model has stopped thinking for now.
+              const thought = thinkingDone(prev?.thought ?? null, Date.now());
+              if (event.type === "delta") {
+                reportAiState("writing", provider, model || null);
+                setStreaming(
+                  {
+                    turns: prev?.turns ?? [],
+                    text: (prev?.text ?? "") + event.text,
+                    thought,
+                  },
+                  { textOnly: true },
+                );
+              } else if (event.type === "retry") {
+                // The attempt that streamed this prose came back garbled and
+                // is being sent again; the new attempt streams in its place.
+                setStreaming({ turns: prev?.turns ?? [], text: "", thought });
+              } else if (
+                event.type === "toolStart" &&
+                event.name === "generate_image"
+              ) {
+                setStreaming({
+                  turns: prev?.turns ?? [],
+                  text: "",
+                  thought,
+                  tool: event.name,
+                });
+              } else if (
+                event.type === "toolStart" &&
+                (event.name === "propose_edit" || event.name === "add_comment")
+              ) {
+                reportAiState("proposing", provider, model || null);
+                // The reply stays; the row under it says an edit (or a note)
+                // is coming.
+                if (event.name === "add_comment")
+                  commentArgs.set(event.callId, "");
+                setStreaming({
+                  turns: prev?.turns ?? [],
+                  text: prev?.text ?? "",
+                  thought,
+                  tool: event.name,
+                  comments: prev?.comments,
+                });
+              } else if (
+                event.type === "toolArgsDelta" &&
+                commentArgs.has(event.callId)
+              ) {
+                const args =
+                  (commentArgs.get(event.callId) ?? "") + event.delta;
+                commentArgs.set(event.callId, args);
+                const { anchor, block, comment } = parsePartialToolArgs(args);
+                const shown = prev?.comments?.some(
+                  (c) => c.kind === "ToolCall" && c.call_id === event.callId,
+                );
+                // Once: the passage and the whole note are in. The passage is
+                // the block it names, and the words in it it quotes.
+                if (!prev || shown || !comment?.complete) return;
+                if (block && !block.complete) return;
+                const target = resolveBlockTarget(document.blocks, {
+                  block: block?.value,
+                  anchor: anchor?.complete ? anchor.value : undefined,
+                });
+                if (!target) return;
+                const call: AgentTurn = {
+                  kind: "ToolCall",
+                  call_id: event.callId,
+                  name: "add_comment",
+                  arguments: JSON.stringify({
+                    block: target.block,
+                    anchor: target.anchor,
+                    comment: comment.value,
+                  }),
+                };
+                setStreaming({
+                  ...prev,
+                  thought,
+                  comments: [...(prev.comments ?? []), call],
+                });
+              } else if (event.type === "turn") {
+                // Interim prose that streamed before a tool call is dropped, as
+                // the backend prefers tool calls over accompanying text.
+                const landed =
+                  event.turn.kind === "ToolCall" ? event.turn.call_id : null;
+                setStreaming({
+                  turns: [...(prev?.turns ?? []), event.turn],
+                  text: "",
+                  thought,
+                  comments: prev?.comments?.filter(
+                    (c) => c.kind !== "ToolCall" || c.call_id !== landed,
+                  ),
+                });
+              } else if (thought !== prev?.thought && prev) {
+                setStreaming({ ...prev, thought });
+              }
+            },
+          });
       if (generation !== generationRef.current) return undefined;
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
-      void rememberAfter([...history, ...newTurns], at + newTurns.length);
-      void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
-      next.suggestAfter([...history, ...newTurns]);
+      // What follows asks Textus AI's model, which an agent's chat doesn't use.
+      if (!agent) {
+        void rememberAfter([...history, ...newTurns], at + newTurns.length);
+        void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
+        next.suggestAfter([...history, ...newTurns]);
+      }
       ended = "done";
       return newTurns;
     } catch (err) {
@@ -422,26 +461,34 @@ export function useAgentConversation(
 
   /** Cancels the in-flight request, if any - a no-op otherwise. */
   function stop() {
-    if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
+    if (requestIdRef.current?.startsWith(AGENT_REQUEST))
+      cancelAgentExchange(conversationId);
+    else if (requestIdRef.current)
+      void ai.cancelAgentMessage(requestIdRef.current);
   }
 
   // Textus AI was turned off - here, in Settings or in another window: a
   // request still running stops, as Stop would stop it, keeping what has
   // streamed so far.
   const aiOn = settings.textusAi;
+  const conversationRef = useLatest(conversationId);
   useEffect(() => {
-    if (!aiOn && requestIdRef.current)
-      void ai.cancelAgentMessage(requestIdRef.current);
-  }, [aiOn]);
+    const running = requestIdRef.current;
+    if (aiOn || !running) return;
+    if (running.startsWith(AGENT_REQUEST))
+      cancelAgentExchange(conversationRef.current);
+    else void ai.cancelAgentMessage(running);
+  }, [aiOn, conversationRef]);
 
   // The editor that owns this conversation went away (tab closed, source
   // mode): nobody is left to show the reply, so stop paying for it.
   useEffect(
     () => () => {
+      endAgentSession(conversationRef.current);
       if (requestIdRef.current)
         void ai.cancelAgentMessage(requestIdRef.current);
     },
-    [],
+    [conversationRef],
   );
 
   /** Resends the last failed message unchanged. */
@@ -460,6 +507,7 @@ export function useAgentConversation(
    *  `reset` and `restore` so neither misses a step. */
   function load(id: string, turns: AgentTurn[]) {
     generationRef.current += 1;
+    endAgentSession(conversationId);
     if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
     requestIdRef.current = null;
     setConversationId(id);

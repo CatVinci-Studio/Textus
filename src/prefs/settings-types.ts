@@ -259,6 +259,10 @@ export interface Settings {
   /// default. Keyed by catalog id, so adding a provider needs no Settings
   /// shape change.
   agentModels: Record<string, string>;
+  /** The external agent ("<plugin>/<agent id>", a plugin's
+   *  `contributes.agents`) Textus AI's chat talks to instead of a model;
+   *  "" for none. */
+  chatAgent: string;
   /** Initial mode shown in a newly mounted Agent composer. */
   agentDefaultMode: AgentMode;
   /// How a pending rewrite shows, as Word's markup views: "final" (result in
@@ -449,6 +453,7 @@ export const DEFAULT_SETTINGS: Settings = {
   aiProvider: "openai",
   writingModels: {},
   agentModels: {},
+  chatAgent: "",
   agentDefaultMode: "review",
   revisionDisplay: "final",
   completionTone: "default",

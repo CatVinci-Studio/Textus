@@ -96,8 +96,10 @@ describe("noteLinkIn writes links as the folder wants them", () => {
     expect(noteLinkIn(files, "pic.png", "a/Idea.md", wiki)).toBe("[[pic.png]]");
   });
 
-  it("names a note that shares its name by its path", () => {
-    expect(noteLinkIn(files, "b/Idea.md", "Inbox.md", wiki)).toBe("[[b/Idea]]");
+  it("names a note that shares its name by its path, shown by its name", () => {
+    expect(noteLinkIn(files, "b/Idea.md", "Inbox.md", wiki)).toBe(
+      "[[b/Idea|Idea]]",
+    );
   });
 
   it("adds a heading, a block, an alias and the embed mark", () => {

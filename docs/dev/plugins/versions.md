@@ -8,6 +8,7 @@ numbers ("1.10" is after "1.9").
 
 | API | Textus       | Added                                                                                                                                                                 |
 | --- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.5 | 1.3.11-rc.1  | `contributes.agents` and the `agents` permission: AI agents on the computer in Textus AI's model menu                                                                 |
 | 1.4 | 1.3.10       | `dates`, `templates`, `files.appSettings`, `layout.panels` / `onDidChangePanels`; conventions' `weekly`, `monthly`, `templateFormats`; `files.write` includes reading |
 | 1.3 | 1.3.10-rc.1  | `env.onDidCopy`, `layout.showSidebarTab`, a list's `onMove`                                                                                                           |
 | 1.2 | 1.3.9        | `files.conventions`, `metadata.resolveNote`, `metadata.linkTo`, completions' new fields, `keys.capture`'s answer, `onWillSave`'s blocks, `offerPlugin`                |

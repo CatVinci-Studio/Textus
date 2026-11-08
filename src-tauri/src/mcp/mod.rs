@@ -3,7 +3,7 @@
 //! ready one. They come from settings.json's `mcpServers`.
 
 mod client;
-mod path;
+pub(crate) mod path;
 
 pub use client::{Connection, Endpoint, McpTool};
 

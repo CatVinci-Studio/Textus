@@ -842,6 +842,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentSend: "보내기",
   agentStop: "중지",
   agentRetry: "다시 시도",
+  agentNeedsFolder:
+    "먼저 폴더를 열거나 문서를 저장하세요. 에이전트는 폴더 안에서 작업합니다.",
+  agentStopped: "{agent}이(가) 멈췄습니다.",
+  agentSignIn: "먼저 {agent}에 로그인하세요.",
+  chatAgentsGroup: "에이전트",
+  chatAgentPermission: "에이전트가 계속하도록 허락을 구합니다",
   pictureRedraw: "다시 그리기…",
   pictureRedrawTitle: "그림 다시 그리기",
   pictureRedrawPrompt: "그림 설명 - 고치면 Textus가 다시 그립니다:",
@@ -1694,6 +1700,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",
   pluginPermNotifications: "시스템 알림 표시하기",
+  pluginPermAgents:
+    "이 컴퓨터에 설치된 AI 에이전트 실행하기(파일을 읽고 바꿀 수 있음)",
   pluginPermBackground: "일정에 따라 코드 실행하기(모든 창을 닫아도)",
   pluginScheduleNotice:
     "{name}에서 예약 작업을 설정했습니다. Textus가 실행 중일 때만 동작합니다. “{setting}”을(를) 켜면 모든 창을 닫아도 동작합니다.",
