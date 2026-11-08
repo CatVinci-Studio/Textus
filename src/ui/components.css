@@ -387,7 +387,8 @@ textarea.tx-input {
 }
 
 /* Anything dragged looks lifted the same way: a little larger, on the
-   popover's surface and shadow. */
+   popover's surface and shadow. A plugin's copy grows only once its
+   lib/drag.js has measured it (.is-lifted): an older one measures after. */
 .tx-drag-ghost,
 .tree-drag-ghost,
 .tab-pull-ghost,
@@ -397,6 +398,9 @@ textarea.tx-input {
   background: var(--ui-surface);
   color: var(--ui-text);
   box-shadow: var(--shadow-popover);
+}
+.tx-drag-ghost:not(.is-lifted) {
+  scale: none;
 }
 
 /* Dragged on a plugin's page (lib/drag.js): the copy under the pointer, and
