@@ -1790,6 +1790,8 @@ export default {
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",
   menuManagePlugins: "Управление плагинами…",
+  menuPluginSettings: "Настройки…",
+  menuPluginSettingsOf: "Настройки {name}…",
   menuNoPluginCommands: "Нет команд плагинов",
   webPageAddress: "Адрес",
   webPageReload: "Обновить",

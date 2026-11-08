@@ -1634,6 +1634,8 @@ export default {
   pluginPermNetworkAny: "連線至任何網站",
   menuPlugins: "外掛程式",
   menuManagePlugins: "管理外掛程式…",
+  menuPluginSettings: "設定…",
+  menuPluginSettingsOf: "{name} 設定…",
   menuNoPluginCommands: "沒有外掛程式指令",
   webPageAddress: "網址",
   webPageReload: "重新載入",

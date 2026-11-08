@@ -135,11 +135,17 @@
 /* What it found in the page, and the one it is on. */
 .tx-hit {
   border-radius: 2px;
-  background: var(--find-match-bg, color-mix(in srgb, var(--ui-warning) 35%, transparent));
+  background: var(
+    --find-match-bg,
+    color-mix(in srgb, var(--ui-warning) 35%, transparent)
+  );
   color: inherit;
 }
 .tx-hit.is-current {
-  background: var(--find-current-bg, color-mix(in srgb, var(--ui-accent) 40%, transparent));
+  background: var(
+    --find-current-bg,
+    color-mix(in srgb, var(--ui-accent) 40%, transparent)
+  );
 }
 
 /* A switch, as Settings draws its toggles: <input type="checkbox"

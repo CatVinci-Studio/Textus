@@ -1821,6 +1821,8 @@ utiliser une.
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",
   menuManagePlugins: "Gérer les extensions…",
+  menuPluginSettings: "Réglages…",
+  menuPluginSettingsOf: "Réglages de {name}…",
   menuNoPluginCommands: "Aucune commande d’extension",
   webPageAddress: "Adresse web",
   webPageReload: "Recharger",

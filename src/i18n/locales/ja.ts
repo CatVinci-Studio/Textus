@@ -1723,6 +1723,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNetworkAny: "任意のウェブサイトに接続する",
   menuPlugins: "プラグイン",
   menuManagePlugins: "プラグインを管理…",
+  menuPluginSettings: "設定…",
+  menuPluginSettingsOf: "{name} の設定…",
   menuNoPluginCommands: "プラグインのコマンドはありません",
   webPageAddress: "アドレス",
   webPageReload: "再読み込み",

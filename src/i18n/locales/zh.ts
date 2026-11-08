@@ -1628,6 +1628,8 @@ export default {
   pluginPermNetworkAny: "连接任意网站",
   menuPlugins: "插件",
   menuManagePlugins: "管理插件…",
+  menuPluginSettings: "设置…",
+  menuPluginSettingsOf: "{name} 设置…",
   menuNoPluginCommands: "没有插件命令",
   webPageAddress: "网址",
   webPageReload: "重新载入",

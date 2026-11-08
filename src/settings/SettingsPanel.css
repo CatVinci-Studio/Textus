@@ -341,10 +341,6 @@ button.settings-danger-button {
   max-width: 100%;
 }
 
-.settings-toggle-row {
-  cursor: pointer;
-}
-
 .settings-row-label {
   color: var(--ui-text);
   font-size: var(--text-body-large);

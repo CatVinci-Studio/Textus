@@ -1,3 +1,4 @@
+import { PLUGIN_SETTINGS } from "./plugin-menu";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useSyncExternalStore } from "react";
 import {
@@ -49,7 +50,8 @@ export interface MenuBridgeHandlers {
   onOpenSettings: () => void;
   /** Textus › Check for Updates…: Settings › About, checking. */
   onCheckUpdates: () => void;
-  onOpenPluginSettings: () => void;
+  /** Settings › Extensions › Plugins, at plugin `id`'s page if given. */
+  onOpenPluginSettings: (id?: string) => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
   /** Opens the sidebar on the tab with this id. */
@@ -115,7 +117,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onOpenPluginSettings(),
       ),
       listenToThisWindow<string>("menu-plugin-command", (event) =>
-        runCommand(event.payload),
+        event.payload.startsWith(PLUGIN_SETTINGS)
+          ? h().onOpenPluginSettings(
+              event.payload.slice(PLUGIN_SETTINGS.length),
+            )
+          : runCommand(event.payload),
       ),
       // File > New Tab (menu.rs).
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),

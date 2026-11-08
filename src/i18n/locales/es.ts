@@ -1797,6 +1797,8 @@ para usar una.
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",
   menuManagePlugins: "Gestionar complementos…",
+  menuPluginSettings: "Ajustes…",
+  menuPluginSettingsOf: "Ajustes de {name}…",
   menuNoPluginCommands: "No hay comandos de complementos",
   webPageAddress: "Dirección web",
   webPageReload: "Recargar",

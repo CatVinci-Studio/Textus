@@ -1,3 +1,4 @@
+import { takeStartPlugin } from "./extensions-tab";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import {
   useEffect,
@@ -49,7 +50,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { installing, install, updateAll, enable, attempt, actionFor } =
     usePluginActions(t);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(takeStartPlugin);
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   useEffect(() => {

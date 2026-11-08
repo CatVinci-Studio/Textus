@@ -1704,6 +1704,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",
   menuManagePlugins: "플러그인 관리…",
+  menuPluginSettings: "설정…",
+  menuPluginSettingsOf: "{name} 설정…",
   menuNoPluginCommands: "플러그인 명령 없음",
   webPageAddress: "웹 주소",
   webPageReload: "새로고침",

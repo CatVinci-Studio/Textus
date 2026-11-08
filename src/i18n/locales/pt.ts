@@ -1774,6 +1774,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",
   menuManagePlugins: "Gerenciar plugins…",
+  menuPluginSettings: "Configurações…",
+  menuPluginSettingsOf: "Configurações de {name}…",
   menuNoPluginCommands: "Nenhum comando de plugin",
   webPageAddress: "Endereço web",
   webPageReload: "Recarregar",

@@ -1791,6 +1791,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",
   menuManagePlugins: "Plugins verwalten…",
+  menuPluginSettings: "Einstellungen…",
+  menuPluginSettingsOf: "{name}-Einstellungen…",
   menuNoPluginCommands: "Keine Plugin-Befehle",
   webPageAddress: "Webadresse",
   webPageReload: "Neu laden",

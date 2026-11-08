@@ -1749,6 +1749,8 @@ type /name in a conversation to use one.
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",
   menuManagePlugins: "Manage Plugins…",
+  menuPluginSettings: "Settings…",
+  menuPluginSettingsOf: "{name} Settings…",
   menuNoPluginCommands: "No plugin commands",
   webPageAddress: "Web address",
   webPageReload: "Reload",
