@@ -1186,6 +1186,7 @@ export default {
   closeLastWindow: "关闭窗口",
   closeLastStartPage: "显示起始页",
   startPageRecentProjects: "最近的项目",
+  startPagePickDocument: "从侧栏里选一篇 {folder} 中的文档开始。",
   startPageRecentFiles: "最近的文件",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",

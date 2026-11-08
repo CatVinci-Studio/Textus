@@ -1313,6 +1313,7 @@ para usar una.
   closeLastWindow: "Cerrar la ventana",
   closeLastStartPage: "Mostrar la página de inicio",
   startPageRecentProjects: "Proyectos recientes",
+  startPagePickDocument: "Elige un documento de {folder} en la barra lateral para empezar.",
   startPageRecentFiles: "Archivos recientes",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",

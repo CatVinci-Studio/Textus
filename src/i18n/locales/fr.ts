@@ -1325,6 +1325,7 @@ utiliser une.
   closeLastWindow: "Fermer la fenêtre",
   closeLastStartPage: "Afficher la page d'accueil",
   startPageRecentProjects: "Projets récents",
+  startPagePickDocument: "Choisissez un document de {folder} dans la barre latérale pour commencer.",
   startPageRecentFiles: "Fichiers récents",
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",

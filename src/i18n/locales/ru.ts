@@ -1309,6 +1309,7 @@ export default {
   closeLastWindow: "Закрыть окно",
   closeLastStartPage: "Показать начальную страницу",
   startPageRecentProjects: "Недавние проекты",
+  startPagePickDocument: "Выберите документ из {folder} на боковой панели, чтобы начать.",
   startPageRecentFiles: "Недавние файлы",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",

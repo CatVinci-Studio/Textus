@@ -9,4 +9,4 @@
 
 ### Fixed
 
-- Opening a recent project from the start page opens a document in it, not only the sidebar.
+- Opening a recent project from the start page brings back the tabs you left it with; a project you haven't worked in opens its last document or its README, and otherwise shows its files and asks you to pick one, instead of looking untouched.

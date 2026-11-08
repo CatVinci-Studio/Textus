@@ -124,6 +124,12 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         "menu-open-recent",
         (event) => void h().openRecentFile(event.payload),
       ),
+      // A project's documents from the start page, in order: the last in front.
+      listenToThisWindow<string[]>("open-project-documents", (event) => {
+        void (async () => {
+          for (const path of event.payload) await h().openRecentFile(path);
+        })();
+      }),
       listenToThisWindow("menu-open-folder", () => void h().openFolderDialog()),
       listenToThisWindow<string>("menu-open-recent-folder", (event) =>
         h().openFolder(event.payload),

@@ -78,6 +78,9 @@ export interface UiState {
   /** The folder a document was last saved into with Save As, where the
    *  next untitled one is offered to go when no folder is open. */
   lastSaveFolder: string;
+  /** Each project's tabs as it was left, by folder, the one in front last
+   *  (app/start-project.ts). */
+  projectTabs: Record<string, string[]>;
 }
 
 export interface ThemeChromeCache {
@@ -103,6 +106,11 @@ const LOCAL: {
     encode: (value: UiState[K]) => string;
   };
 } = {
+  projectTabs: {
+    key: "textus-project-tabs",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
   lastSaveFolder: {
     key: "textus-last-save-folder",
     decode: (raw) => raw,

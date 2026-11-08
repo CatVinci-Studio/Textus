@@ -1237,6 +1237,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closeLastWindow: "창 닫기",
   closeLastStartPage: "시작 페이지 표시",
   startPageRecentProjects: "최근 프로젝트",
+  startPagePickDocument: "사이드바에서 {folder}의 문서를 골라 시작하세요.",
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",

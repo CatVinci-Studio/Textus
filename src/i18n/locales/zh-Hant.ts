@@ -1188,6 +1188,7 @@ export default {
   closeLastWindow: "關閉視窗",
   closeLastStartPage: "顯示起始頁",
   startPageRecentProjects: "最近的專案",
+  startPagePickDocument: "從側邊欄選一篇 {folder} 裡的文件開始。",
   startPageRecentFiles: "最近的檔案",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   autosaveLabel: "自動儲存",
