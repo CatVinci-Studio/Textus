@@ -1,7 +1,10 @@
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { currentStrings } from "../../i18n/current";
-import { codeBlockPlugin } from "../../plugins/contributions/code-blocks";
+import {
+  codeBlockPlugin,
+  onCodeBlockLanguages,
+} from "../../plugins/contributions/code-blocks";
 import { pluginName, pluginRecord } from "../../plugins/store/plugin-records";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
 
@@ -16,12 +19,13 @@ export function drawPluginBlocksIn(
   signal: AbortSignal,
 ): void {
   let n = 0;
-  for (const code of body.querySelectorAll<HTMLElement>("pre > code")) {
+  const waiting: HTMLElement[] = [];
+  const draw = (code: HTMLElement): boolean => {
     const language = /(?:^|\s)language-(\S+)/
       .exec(code.className)?.[1]
       ?.toLowerCase();
     const plugin = language ? codeBlockPlugin(language) : null;
-    if (!language || !plugin) continue;
+    if (!language || !plugin) return false;
     const record = pluginRecord(plugin);
     const name = record ? pluginName(record) : plugin;
     const source = (code.textContent ?? "").replace(/\n$/, "");
@@ -32,6 +36,11 @@ export function drawPluginBlocksIn(
     open.type = "button";
     open.className = "note-embed-block-open";
     open.textContent = currentStrings().embedBlockCard.replace("{0}", name);
+    // The editor never sees the press: it would select the embed and show its source.
+    open.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
     open.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -51,5 +60,16 @@ export function drawPluginBlocksIn(
     });
     card.append(open);
     code.closest("pre")?.replaceWith(card);
-  }
+    return true;
+  };
+  for (const code of body.querySelectorAll<HTMLElement>("pre > code"))
+    if (!draw(code)) waiting.push(code);
+  // A plugin that starts after the embed was drawn takes its blocks then.
+  if (!waiting.length) return;
+  const stop = onCodeBlockLanguages(() => {
+    for (const code of waiting.splice(0))
+      if (code.isConnected && !draw(code)) waiting.push(code);
+    if (!waiting.length) stop();
+  });
+  signal.addEventListener("abort", stop, { once: true });
 }

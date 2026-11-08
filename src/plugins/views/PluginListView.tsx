@@ -31,7 +31,7 @@ import {
   listViewsVersion,
   subscribeListViews,
 } from "../contributions/list-views";
-import { windowInfo } from "../store/plugin-records";
+import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
 
@@ -209,7 +209,8 @@ export const PluginListPane = memo(function PluginListPane({
     }
   };
 
-  const name = pluginRecord(plugin)?.manifest?.name ?? plugin;
+  const record = pluginRecord(plugin);
+  const name = record ? pluginName(record) : plugin;
   let lastGroup: string | undefined;
   return (
     <div className={`plugin-list ${className ?? ""}`}>
