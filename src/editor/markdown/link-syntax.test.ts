@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { labelParts } from "./link-label";
 import {
+  encodeDestSpaces,
+  encodedRuns,
   hiddenLinkParts,
   inlinedReference,
   linkHref,
@@ -125,5 +127,22 @@ describe("labelParts", () => {
         throw new Error("parsed");
       }),
     ).toEqual([]);
+  });
+});
+
+describe("percent-escapes in a destination", () => {
+  it("read as what they stand for, leaving Markdown and bad bytes escaped", () => {
+    expect(encodedRuns("a%20b%E4%B8%AD%zz%29%FF")).toEqual([
+      { from: 1, to: 4, text: " " },
+      { from: 5, to: 14, text: "中" },
+    ]);
+  });
+
+  it("are written for a space typed into a destination", () => {
+    expect(encodeDestSpaces("[Nov 8](Life/Nov 8.md)")).toBe(
+      "[Nov 8](Life/Nov%208.md)",
+    );
+    expect(encodeDestSpaces('[a](b c.md "T")')).toBe('[a](b%20c.md "T")');
+    expect(encodeDestSpaces("[a](b.md)")).toBe("[a](b.md)");
   });
 });

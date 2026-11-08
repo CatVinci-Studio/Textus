@@ -346,3 +346,25 @@ describe("linkHrefAt", () => {
     expect(linkHrefAt(t.view, t.view.dom)).toBeNull();
   });
 });
+
+describe("percent-escapes in a link's destination", () => {
+  it("show as what they stand for while its source shows, the file unchanged", async () => {
+    const md = "See [Nov 8](Life/Nov%208.md) here.";
+    const t = await open(md);
+    t.caretAt("Nov 8");
+    expect(shown(t.view)).toBe("[Nov 8](Life/Nov 8.md)");
+    expect(t.markdown().trim()).toBe(md);
+  });
+
+  it("are passed and deleted as one character", async () => {
+    const t = await open("See [x](a%20b.md) here.");
+    const { pos } = firstLink(t.view.state.doc);
+    caret(t.view, pos + 1 + "[x](a".length);
+    t.press("ArrowRight");
+    expect(t.caretLine()).toContain("a%20|b.md");
+    t.press("ArrowLeft");
+    expect(t.caretLine()).toContain("a|%20b.md");
+    t.press("Delete");
+    expect(t.markdown().trim()).toBe("See [x](ab.md) here.");
+  });
+});

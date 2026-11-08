@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { dragWithMouse, emit, swallowHtmlDrop } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
@@ -330,6 +330,40 @@ test("a column's head dragged along the others, and its edge to a width, kept in
   await page.mouse.move(box.x + 80, box.y + box.height / 2, { steps: 6 });
   await page.mouse.up();
   await expect.poll(() => docText(page)).toMatch(/columnSize:\n\s+end: \d+/);
+});
+
+/** Where the pointer sits in the dragged copy, as a share of its size,
+ *  and where it took `head`: the two match when the copy follows. */
+async function grabOffset(page: Page, head: Locator, frame: Locator) {
+  const box = (await head.boundingBox())!;
+  const at = { x: box.x + 12, y: box.y + 6 };
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await page.mouse.move(at.x + 20, at.y + 4, { steps: 3 });
+  await page.mouse.move(at.x + 90, at.y + 10, { steps: 3 });
+  const ghost = (await frame.locator(".tx-drag-ghost").boundingBox())!;
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  // The copy is lifted (scaled about its middle): compare in its own size.
+  return {
+    x: (at.x + 90 - ghost.x) / ghost.width,
+    y: (at.y + 10 - ghost.y) / ghost.height,
+    taken: { x: 12 / box.width, y: 6 / box.height },
+  };
+}
+
+test("a dragged column's copy stays under the point it was taken by, zoomed or not", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const head = db.locator('thead th[data-key="status"]');
+  for (const zoomIn of [0, 3]) {
+    for (let i = 0; i < zoomIn; i++) await emit(page, "menu-zoom-in");
+    const at = await grabOffset(page, head, db.locator("body"));
+    // A padded head cell once threw it off by tens of pixels.
+    expect(Math.abs(at.x - at.taken.x)).toBeLessThan(0.08);
+    expect(Math.abs(at.y - at.taken.y)).toBeLessThan(0.15);
+  }
 });
 
 test("any view's menu opens on a right click, and a view is deleted from it", async ({
