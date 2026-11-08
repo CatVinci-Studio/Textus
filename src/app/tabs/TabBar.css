@@ -88,8 +88,9 @@
   white-space: nowrap;
 }
 
-/* Opened to look: the next file looked at takes its place. */
-.tab-pill-preview .tab-pill-title {
+/* Opened to look: the next file looked at takes its place. Not
+   .tab-pill-preview, the pill a dragged-in tab shows, which takes no clicks. */
+.tab-pill-looking .tab-pill-title {
   font-style: italic;
 }
 
@@ -103,7 +104,10 @@
   opacity: 0.7;
 }
 
+/* At the pill's end: a short name's tab is wider than its name, and a
+   click in its middle opens it, never closes it. */
 .tab-pill-close {
+  margin-left: auto;
   border: none;
   background: none;
   cursor: pointer;

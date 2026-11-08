@@ -501,7 +501,7 @@ test("backlinks list what links here, what names it, and link a mention", async 
         "/notes/b.md"
       ],
   );
-  expect(file).toBe("The [[Zettel|zettel]] way works.");
+  expect(file).toBe("The [zettel](Zettel.md) way works.");
 });
 
 test("Insert References List lists the works the document cites", async ({

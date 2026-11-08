@@ -537,7 +537,7 @@ test("a click looks in the preview tab; a double click or an edit keeps it", asy
   const count = 1;
   await rows(page).filter({ hasText: "b.md" }).click();
   await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
-  const look = page.locator(".tab-pill-preview");
+  const look = page.locator(".tab-pill-looking");
   await expect(look).toHaveCount(1);
   await expect(tabs).toHaveCount(count + 1);
   // The next look takes the same tab.
@@ -556,4 +556,24 @@ test("a click looks in the preview tab; a double click or an edit keeps it", asy
   // A double click on the file keeps it too.
   await rows(page).filter({ hasText: "b.md" }).dblclick();
   await expect(look).toHaveCount(0);
+});
+
+test("a preview tab is clicked back to and closed like any other", async ({
+  page,
+}) => {
+  await open(page);
+  const tabs = page.locator(".tab-bar .tab-pill");
+  await rows(page).filter({ hasText: "b.md" }).click();
+  const look = page.locator(".tab-pill-looking");
+  await expect(look).toHaveCount(1);
+  // In front of it, a.md; a click on the preview tab brings it back.
+  // A click in the middle of a short name's tab opens it, never closes it.
+  await tabs.filter({ hasText: "a.md" }).click();
+  await expect(page.locator(`${editor} h1`)).not.toContainText("Bravo");
+  await look.click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  await look.hover();
+  await look.locator(".tab-pill-close").click();
+  await expect(look).toHaveCount(0);
+  await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
 });
