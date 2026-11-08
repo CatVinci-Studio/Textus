@@ -39,7 +39,6 @@ const LINES_NOW = {
   "src/platform/ipc.ts": 524,
   "src/prefs/settings-types.ts": 520,
   "src/settings/sections/agent.tsx": 524,
-  "src/sidebar/FileTree.tsx": 586,
 };
 
 /** Over the hook limit today: the roots that wire a window together. */
