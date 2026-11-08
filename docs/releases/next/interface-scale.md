@@ -10,3 +10,4 @@
 ### Fixed
 
 - Opening a recent project from the start page brings back the tabs you left it with; a project you haven't worked in opens its last document or its README, and otherwise shows its files and asks you to pick one, instead of looking untouched.
+- In source mode, an undo pressed right after an edit (a pasted picture, say) is no longer undone again a moment later.
