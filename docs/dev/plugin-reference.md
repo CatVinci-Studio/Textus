@@ -242,6 +242,8 @@ type FormField =
 | `split(): Promise<{ direction: "row" \| "column" \| null; panes: string[]; }>`                          | How the panes run at the outermost, side by side ("row") or one above the other ("column"), and the tab each pane shows, in reading order; or one.                                                                                                                           |
 | `onDidChangeActiveTab: Event<TabInfo \| null>`                                                          |                                                                                                                                                                                                                                                                              |
 | `onDidChangeLayout: Event<void>`                                                                        |                                                                                                                                                                                                                                                                              |
+| `panels(): Promise<PanelsState>`                                                                        | From 1.3.10: which of the window's panels are open - the sidebar (and the tab it shows) and Textus AI's. Read only; Zen mode closes them all. A panel added later is a new key.                                                                                              |
+| `onDidChangePanels: Event<PanelsState>`                                                                 |                                                                                                                                                                                                                                                                              |
 | `openFloating(viewId: string): Promise<void>`                                                           | Shows one of the plugin's floating views (`contributes.floatingViews`): a small transparent page of its own size, floating where the user left it. The user moves, folds and closes it; nothing floats until the plugin opens it, usually from a command. From Textus 1.3.6. |
 | `closeFloating(viewId: string): Promise<void>`                                                          |                                                                                                                                                                                                                                                                              |
 | `floatingViews(): Promise<FloatingViewState[]>`                                                         | The plugin's floating views that are open.                                                                                                                                                                                                                                   |
@@ -726,6 +728,13 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 | `registerTool(name: string, run: (args: Record<string, unknown>) => string \| Promise<string> \| unknown): Disposable` |                                                                                            |
 | `state(): Promise<AiState>`                                                                                            | What Textus AI is doing and with which service and model - never what is said. From 1.3.6. |
 | `onDidChangeState: Event<AiState>`                                                                                     |                                                                                            |
+
+## PanelsState
+
+| Member                                    |                                                               |
+| ----------------------------------------- | ------------------------------------------------------------- |
+| `sidebar: { open: boolean; tab: string }` | `tab`: the sidebar tab's id ("files", or a plugin's view id). |
+| `ai: { open: boolean }`                   |                                                               |
 
 ## AiState
 

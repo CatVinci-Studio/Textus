@@ -12,6 +12,7 @@ import {
   showContribution,
 } from "../views/floating-views";
 import { webPageUrl } from "../views/web-page-url";
+import { panelsState } from "../panels-state";
 import {
   optionalStr,
   str,
@@ -157,6 +158,7 @@ export function layoutHandlers(p: PluginScope) {
         })),
     "layout.activeTab": () => access().activeTab(),
     "layout.tabs": () => access().tabs(),
+    "layout.panels": () => panelsState(),
     "layout.split": () => {
       // The outermost way the panes run, and each pane's tab in front.
       const layout = splitLayout();

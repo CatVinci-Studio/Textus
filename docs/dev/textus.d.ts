@@ -348,6 +348,11 @@ declare global {
       }>;
       onDidChangeActiveTab: Event<TabInfo | null>;
       onDidChangeLayout: Event<void>;
+      /** From 1.3.10: which of the window's panels are open - the sidebar
+       *  (and the tab it shows) and Textus AI's. Read only; Zen mode closes
+       *  them all. A panel added later is a new key. */
+      panels(): Promise<PanelsState>;
+      onDidChangePanels: Event<PanelsState>;
       /** Shows one of the plugin's floating views (`contributes.floatingViews`):
        *  a small transparent page of its own size, floating where the user
        *  left it. The user moves, folds and closes it; nothing floats until
@@ -1130,6 +1135,12 @@ declare global {
        *  what is said. From 1.3.6. */
       state(): Promise<AiState>;
       onDidChangeState: Event<AiState>;
+    }
+
+    interface PanelsState {
+      /** `tab`: the sidebar tab's id ("files", or a plugin's view id). */
+      sidebar: { open: boolean; tab: string };
+      ai: { open: boolean };
     }
 
     interface AiState {

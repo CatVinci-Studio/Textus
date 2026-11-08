@@ -1,3 +1,4 @@
+import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
 import type { SentBlock } from "../ai/doc-blocks";
@@ -179,6 +180,8 @@ export interface PluginEventMap {
   appState: AppState;
   /** What Textus AI is doing and with which model, never what it says. */
   aiState: AiState;
+  /** Which of the window's panels are open. */
+  panels: PanelsState;
   /** The user typed (once typing pauses) or saved: that it happened, with
    *  nothing of the document. */
   activity: { kind: "typing" | "saved" };
