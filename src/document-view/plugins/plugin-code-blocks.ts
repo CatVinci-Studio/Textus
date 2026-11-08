@@ -45,6 +45,9 @@ interface BlocksState {
 const key = new PluginKey<BlocksState>("plugin-code-blocks");
 const BLOCK_CLASS = "plugin-code-block";
 const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
+/** The block whose source shows: its drawing waits, hidden, as a diagram's
+ *  does - one of the two at a time. */
+const OPEN_SOURCE_CLASS = "plugin-code-source-open";
 /** How long an export waits for a drawing just made to have its page. */
 const PAGE_WAIT_MS = 5000;
 /** How long typing pauses before a drawn block is told its new source. */
@@ -83,8 +86,11 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
-        if (pos !== open)
-          out.push(Decoration.node(pos, end, { class: HIDDEN_SOURCE_CLASS }));
+        out.push(
+          Decoration.node(pos, end, {
+            class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
+          }),
+        );
         const widget = `${plugin}:${language}:${n}`;
         out.push(
           Decoration.widget(

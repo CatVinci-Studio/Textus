@@ -1,8 +1,18 @@
 /* Code blocks a plugin draws: its page below the block, the source hidden
-   while the caret is elsewhere. */
+   while the caret is elsewhere; with its source open, its page hides (kept,
+   not remade): the source or the drawing, as a diagram shows them. */
 
 .plugin-code-source-hidden {
   display: none;
+}
+
+/* Folded to nothing rather than taken out: out of the page, a drawing is
+   let go (drawWhileNear) and would start over. */
+.plugin-code-source-open + .plugin-code-block {
+  height: 0;
+  margin: 0;
+  border: 0;
+  overflow: hidden;
 }
 
 .plugin-code-block {

@@ -88,9 +88,14 @@ test("a plugin draws its code block, follows its source and can change it", asyn
   await page.locator(`${editor} .plugin-code-block`).hover();
   await page.getByRole("button", { name: "Edit Source" }).click();
   await expect(page.locator(`${editor} pre`)).toBeVisible();
+  // The source or the drawing, as a diagram shows them: not both.
+  await expect(page.locator(`${editor} .plugin-code-block`)).toBeHidden();
   await page.keyboard.press(END);
   await page.keyboard.type(" there");
   await expect(frame.locator("#out")).toHaveText("HELLO THERE!");
+  // Left, the drawing is back - the same page, told the new source.
+  await page.locator(`${editor} p`).last().click();
+  await expect(page.locator(`${editor} .plugin-code-block`)).toBeVisible();
 
   // The page sets the source: one undo step in the document.
   await frame.locator("#set").click();
