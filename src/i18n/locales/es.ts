@@ -366,6 +366,8 @@ para usar una.
   chatPluginCheckDom:
     "Dibuja en la propia página, algo que un complemento no puede hacer: no se verá nada.",
   chatPluginCheckPermission: "Usa {permission} sin pedir ese permiso.",
+  chatPluginCheckWhen:
+    "La condición de un elemento del menú lee {key}, que Textus no define: el elemento nunca aparece.",
   chatPluginCheckUnregistered: "Declara {id} pero nunca lo registra.",
   chatPluginRunError: "Se detuvo con: {error}",
   chatPluginFix: "Arreglar con IA",

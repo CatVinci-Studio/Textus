@@ -368,6 +368,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatPluginCheckDom:
     "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",
   chatPluginCheckPermission: "Usa {permission} sem pedir essa permissão.",
+  chatPluginCheckWhen:
+    "A condição de um item de menu lê {key}, que o Textus não define: o item nunca aparece.",
   chatPluginCheckUnregistered: "Declara {id} mas nunca o registra.",
   chatPluginRunError: "Parou com: {error}",
   chatPluginFix: "Corrigir com IA",

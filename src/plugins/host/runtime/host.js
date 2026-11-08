@@ -10,7 +10,7 @@
 /* global createEndpoint */
 (function () {
   "use strict";
-  var API_VERSION = "1.3";
+  var API_VERSION = "1.4";
   var app = null;
   var waiting = [];
   var module = { exports: {} };

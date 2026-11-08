@@ -139,7 +139,7 @@ Values kept for one document.
 | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `readonly language: string`                                   | Textus's UI language ("en", "zh", "zh-Hant", ...).                                                                                                                                      |
 | `readonly appVersion: string`                                 |                                                                                                                                                                                         |
-| `readonly apiVersion: string`                                 | This API's version: "1.1". Check it before using what 1.1 added (schedule, notify, app, change sources), or set engines.textus to ">=1.3.0-beta.8".                                     |
+| `readonly apiVersion: string`                                 | This API's version: "1.4" from Textus 1.3.10 ("1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare it as numbers, not as text ("1.10" > "1.9").       |
 | `readonly platform: "macos" \| "windows" \| "linux" \| "ios"` |                                                                                                                                                                                         |
 | `readonly theme: "light" \| "dark"`                           |                                                                                                                                                                                         |
 | `onDidChangeTheme: Event<"light" \| "dark">`                  |                                                                                                                                                                                         |
@@ -731,10 +731,10 @@ Tools for Textus AI (ai.tools): each one named in the manifest's contributes.aiT
 
 ## PanelsState
 
-| Member                                    |                                                               |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `sidebar: { open: boolean; tab: string }` | `tab`: the sidebar tab's id ("files", or a plugin's view id). |
-| `ai: { open: boolean }`                   |                                                               |
+| Member                                    |                                                                                       |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `sidebar: { open: boolean; tab: string }` | `tab`: the sidebar tab's id ("tree" for the files, "outline", or a plugin's view id). |
+| `ai: { open: boolean }`                   |                                                                                       |
 
 ## AiState
 

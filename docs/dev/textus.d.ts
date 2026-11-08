@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.1: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.4: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
  * of truth: docs/dev/writing-plugins.md explains it, the reference pages are
@@ -160,9 +160,9 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.1". Check it before using what 1.1 added
-       *  (schedule, notify, app, change sources), or set engines.textus to
-       *  ">=1.3.0-beta.8". */
+      /** This API's version: "1.4" from Textus 1.3.10 ("1.3": 1.3.10-rc.1,
+       *  "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
+       *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
       readonly platform: "macos" | "windows" | "linux" | "ios";
       readonly theme: "light" | "dark";
@@ -1138,7 +1138,8 @@ declare global {
     }
 
     interface PanelsState {
-      /** `tab`: the sidebar tab's id ("files", or a plugin's view id). */
+      /** `tab`: the sidebar tab's id ("tree" for the files, "outline", or a
+       *  plugin's view id). */
       sidebar: { open: boolean; tab: string };
       ai: { open: boolean };
     }

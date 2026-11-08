@@ -29,7 +29,7 @@ import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint, Handlers } from "./rpc";
-import { guarded } from "../api-permissions";
+import { grants, guarded } from "../api-permissions";
 import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 
@@ -290,7 +290,7 @@ export class PluginHost {
   }
 
   private need(permission: Permission): void {
-    if (!this.info.granted.includes(permission))
+    if (!grants(this.info.granted, permission))
       throw new Error(`${this.id} was not granted ${permission}.`);
   }
 

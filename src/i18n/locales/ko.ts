@@ -333,6 +333,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "페이지에 직접 그리려 하지만 플러그인은 그럴 수 없습니다. 아무것도 표시되지 않습니다.",
   chatPluginCheckPermission:
     "{permission}을(를) 사용하지만 권한을 요청하지 않았습니다.",
+  chatPluginCheckWhen:
+    "메뉴 항목의 조건이 {key}를 읽지만 Textus에는 없는 값이라 항목이 표시되지 않습니다.",
   chatPluginCheckUnregistered:
     "{id}을(를) 선언했지만 코드에서 등록하지 않습니다.",
   chatPluginRunError: "실행 중 오류: {error}",

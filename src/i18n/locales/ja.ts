@@ -339,6 +339,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "ページに直接描こうとしていますが、プラグインにはできません。何も表示されません。",
   chatPluginCheckPermission:
     "「{permission}」を使っていますが、その権限を求めていません。",
+  chatPluginCheckWhen:
+    "メニュー項目の条件が {key} を使っていますが、Textus にはありません。この項目は表示されません。",
   chatPluginCheckUnregistered:
     "{id} を宣言していますが、コードで登録していません。",
   chatPluginRunError: "実行中にエラー：{error}",

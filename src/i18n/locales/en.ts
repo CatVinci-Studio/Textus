@@ -352,6 +352,8 @@ type /name in a conversation to use one.
   chatPluginCheckDom:
     "It draws on the page itself, which a plugin can't: nothing it draws will show.",
   chatPluginCheckPermission: "It uses {permission} without asking for it.",
+  chatPluginCheckWhen:
+    "A menu item's condition reads {key}, which Textus doesn't set: the item never shows.",
   chatPluginCheckUnregistered: "It declares {id} but never sets it up.",
   chatPluginRunError: "It stopped with: {error}",
   chatPluginFix: "Fix with AI",

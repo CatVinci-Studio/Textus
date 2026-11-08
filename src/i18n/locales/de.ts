@@ -372,6 +372,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Es zeichnet direkt in die Seite, was ein Plugin nicht kann: nichts davon wird sichtbar.",
   chatPluginCheckPermission:
     "Es nutzt {permission}, ohne die Berechtigung anzufordern.",
+  chatPluginCheckWhen:
+    "Die Bedingung eines Menüeintrags liest {key}, das Textus nicht setzt: Der Eintrag erscheint nie.",
   chatPluginCheckUnregistered: "Es deklariert {id}, registriert es aber nie.",
   chatPluginRunError: "Es brach ab mit: {error}",
   chatPluginFix: "Mit KI beheben",

@@ -383,6 +383,8 @@ utiliser une.
   chatPluginCheckDom:
     "Elle dessine dans la page elle-même, ce qu'une extension ne peut pas faire : rien ne s'affichera.",
   chatPluginCheckPermission: "Elle utilise {permission} sans le demander.",
+  chatPluginCheckWhen:
+    "La condition d'un élément de menu lit {key}, que Textus ne définit pas : l'élément n'apparaît jamais.",
   chatPluginCheckUnregistered: "Elle déclare {id} mais ne l'enregistre jamais.",
   chatPluginRunError: "Elle s'est arrêtée avec : {error}",
   chatPluginFix: "Corriger avec l'IA",

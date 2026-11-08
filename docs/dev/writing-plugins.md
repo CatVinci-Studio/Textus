@@ -147,7 +147,7 @@ made when they are first shown.
 | `floatingViews` | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6. |
 
 A menu item's `when` is a small expression over the moment it is shown:
-`editorHasSelection`, `resourceExtname == .pdf`, `view == jane.tasks.list`,
+`editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
 `isMac`, joined with `&&`, `||` and `!`.
 
 ## Permissions
@@ -157,12 +157,12 @@ turning it on, or leaves it off, and can take each back later.
 
 | Permission       | Lets the plugin                                                                        |
 | ---------------- | -------------------------------------------------------------------------------------- |
-| `editor.read`    | read the document in front: its text, selection, blocks and outline                    |
+| `editor.read`    | read the document in front: its text, selection, blocks and outline; also completions  |
 | `editor.write`   | change it at once, each change one undo step                                           |
 | `editor.propose` | suggest changes to it, shown as Textus AI's are, accepted or rejected by the user      |
 | `editor.input`   | take the editor's keys and move, select and edit with them (Vim, Emacs)                |
 | `files.read`     | list, find and read files in the open folder, and what Textus knows of them (metadata) |
-| `files.write`    | create, change, rename and trash files in the open folder                              |
+| `files.write`    | create, change, rename and trash files in the open folder (reading them comes with it) |
 | `clipboard`      | read and write the clipboard                                                           |
 | `project.data`   | keep its own data in the open folder, in `.textus/plugins/<id>/`                       |
 | `ai.tools`       | give Textus AI tools to call                                                           |
@@ -213,7 +213,7 @@ The rest of this section goes by what you want to do. The
 `commands.register(id, run)` for a command of the manifest's;
 `commands.execute(id, ...args)` runs any command - Textus's own
 (`textus.save`, `textus.closeTab` with `{ save: true }`) or another
-plugin's. `textus.offerPlugin` with `{ id, reason }` suggests an official
+plugin's. `textus.offerPlugin` with `{ id }` suggests an official
 plugin that works well with yours - the user decides, and it resolves
 whether that plugin is on (best from something the user does; never
 await it in `activate`, which has 10 seconds). `ui` draws Textus's own

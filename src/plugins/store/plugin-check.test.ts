@@ -57,10 +57,38 @@ describe("checkPlugin", () => {
         { permissions: ["files.write"] },
         `textus.editor.insertText("x"); textus.files.writeText("a.md", "");`,
       ),
-    ).toEqual([
-      { kind: "permission", permission: "editor.write" },
-      { kind: "permission", permission: "files.read" },
-    ]);
+    ).toEqual([{ kind: "permission", permission: "editor.write" }]);
+  });
+
+  it("counts writing files as reading them too, and completions as reading the editor", () => {
+    expect(
+      plugin(
+        { permissions: ["files.write"] },
+        `textus.files.writeText("a.md", ""); textus.editor.registerCompletion({});`,
+      ),
+    ).toEqual([{ kind: "permission", permission: "editor.read" }]);
+  });
+
+  it("flags a menu condition that reads a key Textus never sets", () => {
+    expect(
+      plugin(
+        {
+          contributes: {
+            commands: [{ command: "local.demo.add", title: "Add" }],
+            menus: {
+              "file/context": [
+                { command: "local.demo.add", when: "resourceExtname == .pdf" },
+                {
+                  command: "local.demo.add",
+                  when: "fileExtension == .md && !isMac",
+                },
+              ],
+            },
+          },
+        },
+        `textus.commands.register("local.demo.add", f);`,
+      ),
+    ).toEqual([{ kind: "when", key: "resourceExtname" }]);
   });
 
   it("flags a declared command or tab the code never registers", () => {
