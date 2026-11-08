@@ -1129,6 +1129,25 @@ export function installDevTauriShim(): void {
           truncated: hits.length > limit,
         });
       }
+      // A file, or a folder with everything in it; and a path to the Trash.
+      case "plugin_fs_rename": {
+        const from = String(args.from);
+        const to = String(args.to);
+        const moved = Object.keys(folder).filter(
+          (p) => p === from || p.startsWith(`${from}/`),
+        );
+        if (!moved.length) return Promise.reject(`${from}: No such file`);
+        if (to in folder) return Promise.reject(`${to} is already there.`);
+        for (const p of moved) {
+          folder[to + p.slice(from.length)] = folder[p];
+          delete folder[p];
+        }
+        return Promise.resolve(null);
+      }
+      case "plugin_fs_trash":
+        for (const p of Object.keys(folder))
+          if (p === path || p.startsWith(`${path}/`)) delete folder[p];
+        return Promise.resolve(null);
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))
