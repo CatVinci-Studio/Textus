@@ -109,8 +109,22 @@ Release notes aren't required for a pre-release: the fragments stay in
    `check-versions.mjs --tag` (step 3, and the workflow's preflight) a
    stable tag with fragments left over or the summary unwritten; the notes
    are the GitHub release's text and the updater's.
-2. Open one pull request from `main` into `stable`, titled
-   `Textus X.Y.Z`, and squash-merge it once CI passes.
+2. Open one pull request into `stable`, titled `Textus X.Y.Z`, from a
+   release branch made from `main`, and squash-merge it once CI passes.
+   Each earlier release was squashed into `stable`, so `main` and `stable`
+   share no recent history and a pull request straight from `main`
+   conflicts. The release branch records `stable` as merged and keeps
+   `main`'s content (nothing lands on `stable` but releases, so there is
+   nothing of its own to keep):
+
+   ```sh
+   git fetch origin
+   git checkout -b release/vX.Y.Z origin/main
+   git merge -s ours origin/stable -m "Merge stable into the X.Y.Z release"
+   git diff origin/main --stat   # empty: the content is main's
+   git push -u origin release/vX.Y.Z
+   ```
+
 3. Check the merged `stable` and tag that exact commit:
 
    ```sh
