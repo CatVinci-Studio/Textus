@@ -23,8 +23,8 @@ where the project is heading.
 | [windows-installer.md](dev/windows-installer.md)    | The NSIS installer, and why there is no MSI                                                       |
 | [cli.md](dev/cli.md)                                | The `textus` command: how a command line is read, what runs without the app, the app connection   |
 | [webview-support.md](dev/webview-support.md)        | The oldest web engines supported (WebView2 on Chromium 105), what broke below, the check that guards it |
-| [writing-plugins.md](dev/writing-plugins.md)        | Writing a plugin: the manifest, the API, webviews, testing and publishing to the market          |
-| [plugin-reference.md](dev/plugin-reference.md)      | The plugin API, every call and type (made from [textus.d.ts](dev/textus.d.ts))                    |
+| [plugins/](dev/plugins/README.md)                    | Writing a plugin: the guide, pages, permissions, versions, testing, publishing, and an AI skill          |
+| [plugins/reference.md](dev/plugins/reference.md)    | The plugin API, every call and type (made from [textus.d.ts](dev/textus.d.ts))                    |
 | [plugin-api.md](dev/plugin-api.md)                  | Inside the app: the registries plugins and built-in features add to                               |
 
 ## Design (`design/`)

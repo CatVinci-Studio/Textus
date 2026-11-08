@@ -5,7 +5,7 @@
 - A plugin can say a Textus setting it needs on - Quick Notes, background mode - and offers to turn it on.
 - A plugin runs sealed off from Textus and your files: it can do only what you allowed, and an edit it makes to a document is a suggestion you accept or reject, like Textus AI's. A plugin that stops answering or keeps failing is turned off, and Textus says which and why.
 - Plugins can add commands with their own shortcuts, items in the editor's right-click menu, in a new Plugins menu and in background mode's tray or menu-bar menu (there with every window closed), sidebar tabs, settings, a status in the window bar, and tabs of their own - a file type they open, or a view.
-- Install a plugin from a file (.textusplugin), or load a plugin folder you are writing; Reload picks up your changes. docs/dev/writing-plugins.md is the guide.
+- Install a plugin from a file (.textusplugin), or load a plugin folder you are writing; Reload picks up your changes. docs/dev/plugins/guide.md is the guide.
 - A plugin can take the editor's keys, with your permission, and move, select and edit with them, each change its own undo step.
 - Thirteen official plugins to install:
   - PDF Viewer: PDFs in a tab, pages drawn as you reach them, text to select and copy.

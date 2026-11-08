@@ -15,7 +15,7 @@ metadata:
   textus-category: "create"
   textus-modes: "create"
   textus-packs: ""
-  textus-sources: "Our own text, from docs/dev/writing-plugins.md and docs/dev/textus.d.ts."
+  textus-sources: "Our own text, from docs/dev/plugins/ and docs/dev/textus.d.ts."
   textus-aliases-en: "make-plugin, extension, add-on"
   textus-aliases-zh: "做插件, 插件, 小工具"
   textus-aliases-zh-Hant: "做外掛, 外掛, 小工具"

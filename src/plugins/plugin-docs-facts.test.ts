@@ -8,7 +8,10 @@ import { WEBVIEW_THEME_VARS } from "./views/theme-vars";
 const read = (path: string) =>
   readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 const DOCS = [
-  "docs/dev/writing-plugins.md",
+  "docs/dev/plugins/guide.md",
+  "docs/dev/plugins/pages.md",
+  "docs/dev/plugins/permissions.md",
+  "docs/dev/plugins/skill/SKILL.md",
   "docs/dev/textus.d.ts",
   "src-tauri/src/ai/skills/plugin.md",
 ];
@@ -43,4 +46,15 @@ it("names only style variables a plugin page is given", () => {
   for (const doc of DOCS)
     for (const m of read(doc).matchAll(/`(--[a-z][\w-]*)`/g))
       expect(given.has(m[1]), `${doc}: ${m[1]}`).toBe(true);
+});
+
+it("gives every permission a row on the permissions page", () => {
+  const manifest = read("src/plugins/store/manifest.ts");
+  const list = manifest.slice(manifest.indexOf("const PLAIN_PERMISSIONS"));
+  const names = [
+    ...list.slice(0, list.indexOf("] as const")).matchAll(/"([\w.]+)"/g),
+  ].map((m) => m[1]);
+  const page = read("docs/dev/plugins/permissions.md");
+  expect(names.length).toBeGreaterThan(5);
+  for (const name of names) expect(page, name).toContain(`| \`${name}\``);
 });

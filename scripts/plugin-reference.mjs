@@ -1,7 +1,7 @@
 // Writes the plugin API reference page from textus.d.ts, the API's one
 // source of truth. `--check` fails when the page is out of date.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as prettier from "prettier";
@@ -9,7 +9,9 @@ import ts from "typescript";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE = join(root, "docs/dev/textus.d.ts");
-const PAGE = join(root, "docs/dev/plugin-reference.md");
+const PAGE = join(root, "docs/dev/plugins/reference.md");
+// The skill an AI coding assistant loads carries the API with it.
+const SKILL_REFS = join(root, "docs/dev/plugins/skill/references");
 
 /** A node's /** comment *\/, as plain lines. */
 function commentOf(node, text) {
@@ -64,7 +66,7 @@ export async function reference() {
     "",
     "Made from [textus.d.ts](textus.d.ts) by `scripts/plugin-reference.mjs` -",
     "change that file, then run the script; don't edit this page. How the",
-    "parts fit together is in [Writing a plugin](writing-plugins.md).",
+    "parts fit together is in [the guide](guide.md).",
     "",
     "`textus` is a `Textus.Api`; `activate` is given a `PluginContext`;",
     "a webview's page has `acquireTextusApi()`, a `WebviewApi`.",
@@ -105,15 +107,23 @@ export async function reference() {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const page = await reference();
+  const outputs = [
+    [PAGE, page],
+    [join(SKILL_REFS, "reference.md"), page],
+    [join(SKILL_REFS, "textus.d.ts"), readFileSync(SOURCE, "utf8")],
+  ];
   if (process.argv.includes("--check")) {
-    if (readFileSync(PAGE, "utf8") !== page) {
+    const stale = outputs.filter(
+      ([path, text]) => !existsSync(path) || readFileSync(path, "utf8") !== text,
+    );
+    if (stale.length) {
       console.error(
-        "docs/dev/plugin-reference.md is out of date: run node scripts/plugin-reference.mjs",
+        `${stale.map(([path]) => path.slice(root.length + 1)).join(", ")} out of date: run node scripts/plugin-reference.mjs`,
       );
       process.exit(1);
     }
   } else {
-    writeFileSync(PAGE, page);
-    console.log("wrote docs/dev/plugin-reference.md");
+    for (const [path, text] of outputs) writeFileSync(path, text);
+    console.log("wrote docs/dev/plugins/reference.md and the skill's references");
   }
 }
