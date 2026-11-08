@@ -46,10 +46,7 @@ export function clampScale(scale: number) {
 
 /** Its size now, in points; `chrome` is the interface's scale, which its
  *  page's own controls follow too. */
-export function floatingSize(
-  view: FloatingView,
-  chrome = 1,
-): [number, number] {
+export function floatingSize(view: FloatingView, chrome = 1): [number, number] {
   return [
     Math.round(view.width * view.scale * chrome),
     Math.round(view.height * view.scale * chrome),
