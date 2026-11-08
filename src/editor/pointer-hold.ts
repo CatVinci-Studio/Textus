@@ -70,12 +70,13 @@ function stillHeld(event: Event): boolean {
  *  its source moves the text the caret is in (a "[" appears before it), and
  *  WebKit kept drawing the caret at its old place on screen for a few frames,
  *  in the middle of a word. */
-function redrawCaret(view: EditorView) {
+function redrawCaret() {
   const selection = document.getSelection();
-  if (!selection?.isCollapsed || !selection.anchorNode) return;
-  const { node, offset } = view.domAtPos(view.state.selection.head);
+  const at = selection?.anchorNode;
+  if (!selection?.isCollapsed || !at) return;
+  // Where the browser has it, set again: only drawn anew.
   const range = document.createRange();
-  range.setStart(node, offset);
+  range.setStart(at, selection.anchorOffset);
   selection.removeAllRanges();
   selection.addRange(range);
 }
@@ -140,7 +141,7 @@ export const pointerHoldPlugin = $prose(
               view.hasFocus() &&
               revealMoved(prev, view.state)
             )
-              redrawCaret(view);
+              redrawCaret();
           },
           destroy() {
             listen(false);
