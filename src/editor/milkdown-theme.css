@@ -651,6 +651,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--doc-muted);
 }
 
+/* `%20` in a link's destination, drawn as the space it stands for. */
+.link-source .link-source-decoded {
+  color: var(--doc-muted);
+}
+
 /* An image in a link's text, drawn while its source is hidden. */
 .link-image {
   max-width: 100%;

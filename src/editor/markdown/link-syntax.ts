@@ -337,3 +337,56 @@ export function noteLinkSource(link: NoteLinkParts): string {
     bang + linkSource(label, `${link.target}${anchor}`.replace(/ /g, "%20"))
   );
 }
+
+/** A run of percent-escapes in a link's source, read as the characters it
+ *  stands for. */
+export interface EncodedRun {
+  from: number;
+  to: number;
+  text: string;
+}
+
+const ESCAPES = /(?:%[0-9A-Fa-f]{2})+/g;
+/** Characters shown as their escape: they would read as Markdown, or as
+ *  nothing at all. */
+const KEEP_ESCAPED = /[\x00-\x1f\x7f%()<>[\]\\"]/;
+
+/** Where `text` holds percent-escapes between `from` and `to`, each run
+ *  with what it reads as: `%20` a space, `%E4%B8%AD` 中. */
+export function encodedRuns(
+  text: string,
+  from = 0,
+  to = text.length,
+): EncodedRun[] {
+  const runs: EncodedRun[] = [];
+  for (const match of text.slice(from, to).matchAll(ESCAPES)) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(match[0]);
+    } catch {
+      continue;
+    }
+    if (KEEP_ESCAPED.test(decoded)) continue;
+    const start = from + match.index;
+    runs.push({ from: start, to: start + match[0].length, text: decoded });
+  }
+  return runs;
+}
+
+/** Where an inline link's destination sits in its source, or null. */
+export function destRange(text: string): [number, number] | null {
+  const parts = parseLink(text);
+  if (!parts || parts.kind !== "inline" || !parts.dest) return null;
+  const at = text.indexOf(parts.dest, parts.label[1]);
+  return at < 0 ? null : [at, at + parts.dest.length];
+}
+
+/** An inline link typed with spaces in its destination, which Markdown
+ *  doesn't read as a link: the spaces written as `%20`. Else `text`. */
+export function encodeDestSpaces(text: string): string {
+  if (parseLink(text)) return text;
+  const match = /^(\[[^\n]*\]\()([^()<>"\n]*?)(\s+"[^"\n]*")?\)$/.exec(text);
+  if (!match || !/\S\s+\S/.test(match[2].trim())) return text;
+  const fixed = `${match[1]}${match[2].trim().replace(/\s/g, "%20")}${match[3] ?? ""})`;
+  return parseLink(fixed) ? fixed : text;
+}
