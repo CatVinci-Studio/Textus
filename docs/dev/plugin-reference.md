@@ -317,6 +317,7 @@ What `![[...]]` points at, as `metadata.resolveNote` resolves it.
 | `items(parent?: ListItem): ListItem[] \| Promise<ListItem[]>`       | The items at the top, or under `parent` (one with `children`).                                                              |
 | `onSelect?(item: ListItem): void \| Promise<void>`                  | An item clicked or Enter on it: by default, its `location` opens and its `command` runs.                                    |
 | `onCheck?(item: ListItem, checked: boolean): void \| Promise<void>` | Its checkbox ticked or unticked.                                                                                            |
+| `onMove?(item: ListItem, target: ListItem): void \| Promise<void>`  | An item dragged onto another; with it, the rows can be dragged. From 1.3.10.                                                |
 | `filterPlaceholder?: string`                                        | What the field over the list says; without it, there is no field. The list filters itself by label, description and detail. |
 | `emptyText?: string`                                                | Shown when there are no items.                                                                                              |
 
