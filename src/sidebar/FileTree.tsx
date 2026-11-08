@@ -28,7 +28,9 @@ import { DirNode } from "./TreeNodes";
 import { TreeFollowing } from "./TreeFollowing";
 import "./FileTree.css";
 import type { FileOpenHow } from "./tree-shared";
-import { useNewEntry, useRowMenu, useTreeView } from "./file-tree-hooks";
+import { useTreeView } from "./useTreeData";
+import { useRowMenu } from "./useRowMenu";
+import { useNewEntry } from "./useNewEntry";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
