@@ -163,7 +163,7 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.5" from Textus 1.3.11-rc.1 ("1.4": 1.3.10, "1.3": 1.3.10-rc.1,
+      /** This API's version: "1.5" from Textus 1.3.12-rc.1 ("1.4": 1.3.10, "1.3": 1.3.10-rc.1,
        *  "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;

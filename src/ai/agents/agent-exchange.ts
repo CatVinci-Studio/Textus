@@ -2,7 +2,7 @@ import { agentsIpc } from "../../platform/ipc-plugins";
 import { fs } from "../../platform/ipc-files";
 import { appVersion } from "../../platform/app-info";
 import { currentStrings } from "../../i18n/current";
-import { getWindowAccess } from "../../plugins/app-bridge";
+import { getWindowAccess, openDocumentAt } from "../../plugins/app-bridge";
 import type { ExternalAgent } from "../../plugins/contributions/agents";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import type { AgentTurn } from "../types";
@@ -100,16 +100,21 @@ async function start(
     {
       update: ({ update }) => deliver(session, update),
       requestPermission: (p) => ask(session, p.toolCall.title ?? "", p.options),
+      // An open document as the editor has it, typed or not.
       readTextFile: async ({ path, line, limit }) => {
-        const doc = getWindowAccess()?.documentAt(path);
+        const doc = openDocumentAt(path);
         const content = doc ? doc.text() : await fs.readTextFile(path);
         return { content: lines(content, line, limit) };
       },
+      // An open document is changed in its editor, one undo step, and
+      // saved: read again from disk, it would start over and lose the
+      // conversation beside it.
       writeTextFile: async ({ path, content }) => {
-        const doc = getWindowAccess()?.documentAt(path);
+        const doc = openDocumentAt(path);
         if (doc) {
           if (!doc.replaceText(content, doc.revision()))
             throw new Error(`${path} changed while it was being written.`);
+          await getWindowAccess()?.saveAt(path);
           return null;
         }
         await fs.writeTextFile(path, content);

@@ -53,6 +53,7 @@ export function usePluginWindow({
   openPathInTab,
   openFile,
   saveActiveTab,
+  saveTab,
   closeActiveTab,
 }: {
   t: Strings;
@@ -65,6 +66,8 @@ export function usePluginWindow({
   openFile: (path: string, open?: OpenOptions) => Promise<void>;
   /** File › Save, for the active tab; whether it was saved. */
   saveActiveTab: () => Promise<boolean>;
+  /** The same for any tab, by its id. */
+  saveTab: (id: string) => Promise<boolean>;
   /** File › Close Tab, asking first if it has unsaved changes. */
   closeActiveTab: () => void;
 }): PluginsSnapshot {
@@ -73,6 +76,7 @@ export function usePluginWindow({
   const rootRef = useLatest(rootPath);
   const openRef = useLatest(openPathInTab);
   const lookRef = useLatest(openFile);
+  const saveTabRef = useLatest(saveTab);
   const saveRef = useLatest(saveActiveTab);
   const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
@@ -168,6 +172,10 @@ export function usePluginWindow({
         return tab ? info(tab) : null;
       },
       // Only a tab with unsaved changes; a clean one is changed on disk and reloads.
+      saveAt: (path) => {
+        const tab = tabsRef.current.find((t) => t.path === path);
+        return tab ? saveTabRef.current(tab.id) : Promise.resolve(false);
+      },
       documentAt: (path) => {
         const tab = tabsRef.current.find((t) => t.path === path);
         return tab && tab.content !== tab.savedContent

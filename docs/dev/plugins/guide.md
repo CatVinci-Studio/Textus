@@ -145,7 +145,7 @@ made when they are first shown.
 | `settingsPage`  | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `floatingViews` | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6. |
 
-| `agents` | `{ id, name, command, args, env, setup }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start. Needs `agents`; desktop only. From 1.3.11. |
+| `agents` | `{ id, name, command, args, env, setup }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start. Needs `agents`; desktop only. From 1.3.12. |
 
 A menu item's `when` is a small expression over the moment it is shown:
 `editorHasSelection`, `fileExtension == .pdf`, `view == jane.tasks.list`,
@@ -169,7 +169,7 @@ turning it on, or leaves it off, and can take each back later.
 | `ai.tools`       | give Textus AI tools to call                                                           |
 | `notifications`  | show system notifications, at once or on a schedule (API 1.1)                          |
 | `background`     | run its `background` code on a schedule, also with every window closed (API 1.1)       |
-| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.11) |
+| `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.12) |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)   |
 
 Ask for what the plugin's purpose explains, and no more: each permission
