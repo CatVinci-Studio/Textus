@@ -7,9 +7,9 @@ import {
   createEditorInputPlugin,
   keyHolder,
   releaseKeys,
-  runEditorOp,
   setKeyCapture,
 } from "./editor-input";
+import { runEditorOp } from "./editor-ops";
 
 const schema = new Schema({
   nodes: {

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks the code shape rules: at most 600 lines per source file, at most 8
+// Checks the code shape rules: at most 500 lines per source file, at most 8
 // hooks per component, and no provider id compared outside its adapter.
 // Files listed over a limit may shrink, not grow.
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -7,17 +7,52 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const MAX_LINES = 600;
+const MAX_LINES = 500;
 const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
-const LINES_NOW = {};
+const LINES_NOW = {
+  "src-tauri/src/ai/memory.rs": 548,
+  "src-tauri/src/ai/paper/draft.rs": 562,
+  "src-tauri/src/ai/rules/document.rs": 535,
+  "src-tauri/src/ai/web/mod.rs": 596,
+  "src-tauri/src/extract/docx.rs": 571,
+  "src-tauri/src/lib.rs": 585,
+  "src-tauri/src/mcp/mod.rs": 503,
+  "src-tauri/src/plugins/access.rs": 528,
+  "src-tauri/src/plugins/catalog.rs": 566,
+  "src-tauri/src/plugins/install.rs": 557,
+  "src-tauri/src/plugins/metadata.rs": 528,
+  "src-tauri/src/tab_drag.rs": 523,
+  "src/ai/chat/ChatBody.tsx": 530,
+  "src/ai/chat/ChatComposer.tsx": 541,
+  "src/ai/chat/ChatMessages.tsx": 571,
+  "src/ai/chat/panel/MemoryView.tsx": 567,
+  "src/ai/chat/panel/ProjectBar.tsx": 512,
+  "src/ai/chat/useAgentConversation.ts": 527,
+  "src/ai/margin/MarginCards.tsx": 568,
+  "src/ai/revision/pending-actions.ts": 516,
+  "src/ai/revision/pending-animation.ts": 525,
+  "src/ai/revision/sentence-diff.ts": 514,
+  "src/app/menu/app-menu-model.ts": 580,
+  "src/editor/markdown/source-preserving.ts": 560,
+  "src/platform/ipc.ts": 524,
+  "src/plugins/manager.ts": 587,
+  "src/prefs/settings-types.ts": 520,
+  "src/settings/sections/agent.tsx": 524,
+  "src/sidebar/FileTree.tsx": 586,
+};
 
 /** Over the hook limit today: the roots that wire a window together. */
 const HOOKS_NOW = {};
 
 /** Not held to the line limit: tables, not logic. */
-const TABLES = [/^src\/i18n\/locales\//, /^src\/ui\/icons\.tsx$/];
+const TABLES = [
+  /^src\/i18n\/locales\//,
+  /^src\/ui\/icons\.tsx$/,
+  // Written by src-tauri/src/bindings.rs.
+  /^src\/platform\/bindings\//,
+];
 
 function walk(dir, out = []) {
   for (const name of readdirSync(join(root, dir))) {
