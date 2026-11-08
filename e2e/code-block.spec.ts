@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp, pasteMarkdown } from "./helpers";
+import { END, openApp, pasteMarkdown, settled } from "./helpers";
 
 // A code block's copy and select buttons, its language picker, and the
 // line numbers Settings › Editor & Appearance can turn on (off by default).
@@ -35,6 +35,8 @@ test("the copy button copies the block's code and says so", async ({
   test.skip(browserName === "webkit", "WebKit has no clipboard permission");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await openWithCode(page, {});
+  // Line numbers are off by default.
+  await expect(page.locator(`${block} .code-line-gutter`)).toHaveCount(0);
   await page.locator(block).hover();
   const copy = page.locator(`${block} .code-block-copy`);
   await expect(copy).toHaveText("Copy");
@@ -113,14 +115,6 @@ test("the header and line numbers stay out of a printout", async ({ page }) => {
   await expect(page.locator(`${block} .code-line-gutter`)).toBeHidden();
 });
 
-test("line numbers are off by default", async ({ page }) => {
-  await openWithCode(page, {});
-  await expect(page.locator(`${block} .code-line-gutter`)).toHaveCount(0);
-  // The long line wraps.
-  const lines = await codeLineMiddles(page);
-  expect(lines.length).toBeGreaterThan(4);
-});
-
 for (const zoom of [1, 1.25])
   test(`line numbers sit beside their lines, a long line wrapping as without them, at ${zoom * 100}% (#353)`, async ({
     page,
@@ -185,9 +179,9 @@ test("a line typed into the block gets its number", async ({ page }) => {
   await page.locator(`${block} code .token`, { hasText: "return" }).click();
   // The editor reads a moved caret on the next selectionchange: a key
   // pressed at once would act where the caret was before.
-  await page.waitForTimeout(100);
+  await settled(page);
   await page.keyboard.press(END);
-  await page.waitForTimeout(100);
+  await settled(page);
   await page.keyboard.press("Enter");
   await page.keyboard.type("return 2;");
   await expect(page.locator(`${block} .code-line-gutter > span`)).toHaveText([
@@ -235,10 +229,9 @@ test("Select All in a document that opens with a code block selects its text", a
   expect(ends).toEqual([3, 3, CODE]);
 });
 
+// Every kind of list is in block-join-plugin's unit tests.
 for (const [kind, item, selector] of [
-  ["list", "- a", "ul"],
   ["task list", "- [ ] a", "ul"],
-  ["numbered list", "1. a", "ol"],
 ] as const) {
   test(`Backspace in an empty ${kind} item under a code block ends the list`, async ({
     page,

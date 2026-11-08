@@ -1,0 +1,105 @@
+/* Source mode's CodeMirror. The document theme's own variables colour the
+   tokens (source-highlight.ts); only the editor's furniture lives here. */
+
+:root {
+  --src-heading: var(--doc-accent);
+  --src-marker: var(--doc-muted);
+  --src-strong: var(--doc-token-keyword, var(--doc-accent));
+  --src-emphasis: var(--doc-token-function, var(--doc-accent));
+  --src-link: var(--doc-token-string, var(--doc-accent));
+  --src-url: var(--doc-token-number, var(--doc-accent));
+  --src-code: var(--doc-token-tag, var(--doc-accent));
+  --src-quote: var(--doc-muted);
+  --src-list: var(--doc-token-function, var(--doc-accent));
+}
+
+/* The container lays out the column; CodeMirror's own scroller scrolls it. */
+.source-view {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.source-view .cm-editor {
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  color: var(--doc-text);
+  font-family: var(--font-mono);
+  font-size: inherit;
+  line-height: 1.7;
+  font-variant-ligatures: no-common-ligatures;
+}
+
+/* A dotted outline around the pane is CodeMirror's default focus ring. */
+.source-view .cm-editor.cm-focused {
+  outline: none;
+}
+
+/* The column: the text where the rendered view's is (editor-column.css's
+   .editor-content: the column times the zoom, centred, 1.5rem inside). */
+.source-view .cm-scroller {
+  --source-gutter: max(
+    1.5rem,
+    calc(
+      (100% - min(100%, var(--content-width) * var(--content-zoom, 1))) / 2 +
+        1.5rem
+    )
+  );
+  /* Room below, as the rendered view has, so the last line can come up to the middle. */
+  padding: 3rem var(--source-gutter) 42vh;
+  overflow-y: auto;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+}
+
+/* Centred on a whole pixel: WebKitGTK resamples a focused textarea's layer
+   at x.5 and the text goes soft. Behind @supports, since an engine without
+   round() would compute it to 0. */
+@supports (padding-left: round(down, 1px, 1px)) {
+  .source-view .cm-scroller {
+    padding-left: round(down, var(--source-gutter), 1px);
+  }
+}
+
+.source-view .cm-content {
+  padding: 0;
+  min-height: 0;
+  caret-color: var(--doc-text);
+}
+
+.source-view .cm-line {
+  padding: 0;
+}
+
+.source-view .cm-cursor,
+.source-view .cm-dropCursor {
+  border-left-color: var(--doc-text);
+}
+
+.source-view .cm-activeLine {
+  background: color-mix(in srgb, var(--doc-text) 4%, transparent);
+}
+
+/* Over CodeMirror's own light-theme colours, focused or not. */
+.source-view .cm-editor .cm-selectionBackground,
+.source-view
+  .cm-editor.cm-focused
+  > .cm-scroller
+  > .cm-selectionLayer
+  .cm-selectionBackground {
+  background: color-mix(in srgb, var(--doc-accent) 26%, transparent);
+}
+
+.source-view .cm-selectionMatch {
+  background: color-mix(in srgb, var(--doc-accent) 14%, transparent);
+}
+
+/* A read-only tab keeps its caret and selection, but draws no cursor. */
+.source-view .cm-editor:not(.cm-focused) .cm-cursor {
+  display: none;
+}

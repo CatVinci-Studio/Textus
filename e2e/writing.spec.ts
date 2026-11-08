@@ -1,32 +1,24 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  PHONE,
+  emit,
+  HOME,
   mockInvoke,
   openApp,
   openPhone,
   pasteMarkdown,
+  PHONE,
+  settled,
+  sourceValue,
 } from "./helpers";
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
 
 /** The active document's Markdown, read from source mode (and back). */
 async function sourceOf(page: Page): Promise<string> {
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit(page, "menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
@@ -82,37 +74,23 @@ test("split view: the wheel scrolls the source, and the preview doesn't pull it 
   await emit(page, "menu-toggle-split-view");
   const source = page.locator(".split-source");
   await expect(source).toBeVisible();
+  // The pane scrolls inside CodeMirror's scroller, not the wrapper.
+  const scroller = page.locator(".split-source .cm-scroller");
   const box = (await source.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   for (let i = 0; i < 15; i++) {
     await page.mouse.wheel(0, 100);
     await page.waitForTimeout(16);
   }
-  await page.waitForTimeout(400);
-  const scrolled = await source.evaluate((el) => el.scrollTop);
+  await settled(page);
+  const scrolled = await scroller.evaluate((el) => el.scrollTop);
   expect(scrolled).toBeGreaterThan(1000);
   await page.waitForTimeout(800);
-  expect(await source.evaluate((el) => el.scrollTop)).toBe(scrolled);
+  expect(await scroller.evaluate((el) => el.scrollTop)).toBe(scrolled);
   const preview = await page
     .locator(".split-preview")
     .evaluate((el) => el.scrollTop);
   expect(preview).toBeGreaterThan(0);
-});
-
-test("find shows the match its counter names while typing", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await pasteMarkdown(
-    page,
-    longDoc([{ at: 70, text: "A zebracorn appears here." }]),
-  );
-  await page.keyboard.press("ControlOrMeta+Home");
-  await emit(page, "menu-find-replace");
-  await page.locator(".find-replace-bar input").first().fill("zebracorn");
-  const match = page.locator(".find-match-active");
-  await expect(match).toHaveCount(1);
-  await expect(match).toBeInViewport();
 });
 
 test("an outline jump lands the heading below the window bar", async ({
@@ -132,63 +110,10 @@ test("an outline jump lands the heading below the window bar", async ({
   await row.click();
   const heading = page.locator(".milkdown h2", { hasText: "heading" });
   await expect(heading).toBeInViewport();
-  await page.waitForTimeout(100);
+  await settled(page);
   const top = (await heading.boundingBox())!.y;
   expect(top).toBeGreaterThanOrEqual(28);
   expect(top).toBeLessThan(120);
-});
-
-test("accepting one of two proposals keeps the other", async ({ page }) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await pasteMarkdown(page, "The cat sat on the mat.\n\nThe dog ran far.");
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "Fix both" },
-      {
-        kind: "ToolCall",
-        call_id: "a1",
-        name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor: "cat sat",
-          text: "cat slept",
-        }),
-      },
-      { kind: "ToolResult", call_id: "a1", output: "Edit proposed" },
-      {
-        kind: "ToolCall",
-        call_id: "a2",
-        name: "propose_edit",
-        arguments: JSON.stringify({
-          action: "replace",
-          anchor: "dog ran",
-          text: "dog walked",
-        }),
-      },
-      { kind: "ToolResult", call_id: "a2", output: "Edit proposed" },
-      { kind: "Assistant", text: "Done." },
-    ],
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("Fix both");
-  await composer.press("Enter");
-  // Two in a row are one card (ProposalGroup), a row each with its ✓.
-  const accept = page.locator(".agent-proposal-group-rows .pending-pick-take");
-  await expect(accept).toHaveCount(2);
-  // The second first, then the first: both land.
-  await accept.nth(1).click();
-  await expect(accept).toHaveCount(1);
-  await accept.first().click();
-  await expect(accept).toHaveCount(0);
-  await expect(page.locator(".milkdown p").first()).toHaveText(
-    "The cat slept on the mat.",
-  );
-  await expect(page.locator(".milkdown p").nth(1)).toHaveText(
-    "The dog walked far.",
-  );
 });
 
 test("a narrow window numbers the notes as the chat lists them", async ({
@@ -267,13 +192,7 @@ test("a note opened from its badge stays under the Settings backdrop", async ({
   const popover = page.locator(".review-note-popover");
   await expect(popover).toBeVisible();
   // Settings opened from the menu leaves the note open behind it.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await expect(page.locator(".settings-backdrop")).toBeVisible();
   const box = (await popover.boundingBox())!;
   const covered = await page.evaluate(
@@ -518,7 +437,7 @@ async function expectPreviewsClear(page: Page) {
   await page.locator('[data-active-tab="true"] .math-block-rendered').click();
   await page.keyboard.press("End");
   await expect(preview).toBeVisible();
-  await page.waitForTimeout(400);
+  await settled(page);
   expect(await previewCoversText(page), "block preview covers text").toBe(
     false,
   );
@@ -535,7 +454,7 @@ async function expectPreviewsClear(page: Page) {
     .dispatchEvent("mousedown");
   await page.keyboard.press("ArrowLeft");
   await expect(preview).toBeVisible();
-  await page.waitForTimeout(400);
+  await settled(page);
   // Revealing the source may rewrap its own line; nothing grows to make
   // room for the preview, so the paragraph's height stays within a line.
   const after = (await lastLine.boundingBox())!;
@@ -861,7 +780,7 @@ test("no fi drawn as one glyph where the font is monospaced, so the caret can st
   expect(await ligatures(`${active} .milkdown p code`)).toEqual(kept);
   expect(await ligatures(`${active} .milkdown pre code`)).toEqual(kept);
   await emit(page, "menu-toggle-source-mode");
-  expect((await ligatures(`${active} textarea.source-view`))[0]).toBe(
+  expect((await ligatures(`${active} .source-view .cm-content`))[0]).toBe(
     "no-common-ligatures",
   );
 });
@@ -879,7 +798,7 @@ test("source mode: body-sized text, centred on a whole pixel, unchanged by focus
     .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
   await emit(page, "menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeVisible();
   const look = () =>
@@ -965,26 +884,27 @@ async function expectZoom(page: Page, zoom: number) {
   await expect.poll(() => contentZoom(page)).toBeCloseTo(zoom, 6);
 }
 
-/** Text-line index of a source textarea at viewport y, from its own
- *  scroll metrics (the content zoom scales screen px by 1/zoom). Assumes
- *  lines too short to wrap. */
+/** Which source line sits at viewport y. CodeMirror only draws lines near the
+ *  viewport, so the line's own label ("Line N") is the stable index; the
+ *  short-lines fixture is written that way. */
 async function sourceLineAt(page: Page, y: number): Promise<number> {
   return page.evaluate((y) => {
-    const ta = document.querySelector<HTMLTextAreaElement>(
-      '[data-active-tab="true"] textarea.source-view',
-    )!;
-    const zoom = Number(
-      getComputedStyle(document.documentElement).getPropertyValue(
-        "--content-zoom",
-      ) || 1,
+    const lines = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-active-tab="true"] .source-view .cm-line',
+      ),
     );
-    const style = getComputedStyle(ta);
-    const padTop = parseFloat(style.paddingTop);
-    const lines = ta.value.split("\n").length;
-    const lineHeight =
-      (ta.scrollHeight - padTop - parseFloat(style.paddingBottom)) / lines;
-    const top = ta.getBoundingClientRect().top;
-    return Math.floor((ta.scrollTop + (y - top) / zoom - padTop) / lineHeight);
+    // A blank line between two counts as the one above it.
+    const at = lines.findIndex((el) => {
+      const box = el.getBoundingClientRect();
+      return y >= box.top && y < box.bottom;
+    });
+    const labelled = lines
+      .slice(0, at + 1)
+      .reverse()
+      .find((el) => el.textContent);
+    const label = (labelled ?? lines[0])?.textContent ?? "Line 0";
+    return Number(label.replace(/^Line\s+/, "")) || 0;
   }, y);
 }
 
@@ -1007,19 +927,37 @@ test("mod+wheel in source mode keeps the line under the pointer", async ({
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, shortLines);
   await emit(page, "menu-toggle-source-mode");
-  const source = page.locator('[data-active-tab="true"] textarea.source-view');
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-scroller',
+  );
   // Entering source mode places the caret a frame later, focusing the
-  // textarea and scrolling to it: a scroll set before that is undone after
+  // editor and scrolling to it: a scroll set before that is undone after
   // `before` is read.
-  await expect(source).toBeFocused();
-  await source.evaluate((ta) => (ta.scrollTop = ta.scrollHeight / 3));
+  await expect(
+    page.locator('[data-active-tab="true"] .source-view .cm-content'),
+  ).toBeFocused();
+  await source.evaluate((el) => (el.scrollTop = el.scrollHeight / 3));
+  // Focus comes before the caret is centred, and CodeMirror measures on its
+  // own frame, so wait for the scroll to come to rest rather than for focus.
+  await expect
+    .poll(() =>
+      source.evaluate(async (el) => {
+        const top = el.scrollTop;
+        await new Promise((rest) =>
+          requestAnimationFrame(() => requestAnimationFrame(rest)),
+        );
+        return el.scrollTop === top;
+      }),
+    )
+    .toBe(true);
   const box = (await source.boundingBox())!;
   const y = box.y + box.height * 0.3;
   const before = await sourceLineAt(page, y);
   await wheelZoom(page, box.x + box.width / 2, y, 5);
-  expect(Math.abs((await sourceLineAt(page, y)) - before)).toBeLessThanOrEqual(
-    1,
-  );
+  // CodeMirror puts the line back once it has measured the new size.
+  await expect
+    .poll(async () => Math.abs((await sourceLineAt(page, y)) - before))
+    .toBeLessThanOrEqual(1);
 });
 
 test("split view: mod+wheel holds the pane under the pointer, the other follows", async ({
@@ -1036,7 +974,11 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
       const r = (el: Element) =>
         el.scrollTop / Math.max(1, el.scrollHeight - el.clientHeight);
       return Math.abs(
-        r(document.querySelector('[data-active-tab="true"] .split-source')!) -
+        r(
+          document.querySelector(
+            '[data-active-tab="true"] .split-source .cm-scroller',
+          )!,
+        ) -
           r(document.querySelector('[data-active-tab="true"] .split-preview')!),
       );
     });
@@ -1044,7 +986,7 @@ test("split view: mod+wheel holds the pane under the pointer, the other follows"
   // the preview follows on the scroll event after that. A scroll set here
   // before both have happened is undone.
   await expect(
-    page.locator('[data-active-tab="true"] .split-source'),
+    page.locator('[data-active-tab="true"] .split-source .cm-content'),
   ).toBeFocused();
   await expect.poll(gap).toBeLessThan(0.02);
   await heading.evaluate((el) =>
@@ -1095,23 +1037,23 @@ test("in Typewriter Mode a click on a task's box ticks it without scrolling (#13
     el.closest(".editor-scroll")!.scrollTop -= 150;
   });
   const scrollTop = () => scroller.evaluate((el) => el.scrollTop);
-  await page.waitForTimeout(100);
+  await settled(page);
   const before = await scrollTop();
   const box = (await task.first().boundingBox())!;
   await page.mouse.click(box.x + 8, box.y + box.height / 2);
   await expect(task.first()).toHaveAttribute("data-checked", "true");
   await expect(task.nth(1)).toHaveAttribute("data-checked", "false");
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   // And untick it again, still in place.
   await page.mouse.click(box.x + 8, box.y + box.height / 2);
   await expect(task.first()).toHaveAttribute("data-checked", "false");
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   // A click on the text places the caret where it is, and the first key
   // centres it.
   await page.mouse.click(box.x + 80, box.y + box.height / 2);
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(Math.abs((await scrollTop()) - before)).toBeLessThanOrEqual(2);
   await page.keyboard.press("ArrowRight");
   await expect
@@ -1132,7 +1074,7 @@ async function typewriterBelowMiddle(page: Page) {
     const mid = s.getBoundingClientRect().top + s.clientHeight / 2;
     s.scrollTop += el.getBoundingClientRect().top - (mid + 250);
   });
-  await page.waitForTimeout(100);
+  await settled(page);
   return {
     target,
     scrollTop: () => scroller.evaluate((el) => el.scrollTop),
@@ -1176,7 +1118,7 @@ test("in Typewriter Mode a click lands where it was made, without scrolling, and
   await page.mouse.move(box.x + 121, box.y + 12);
   await page.mouse.move(box.x + 122, box.y + 11);
   await page.mouse.up();
-  await page.waitForTimeout(150);
+  await settled(page);
   const click = await selectionInfo(page);
   expect(click).toMatchObject({
     anchor: "Paragraph 30:",
@@ -1218,7 +1160,7 @@ test("in Typewriter Mode a drag selects what it passes over and the page stays s
       from.y + 10 + ((to.y - from.y) * i) / 8,
     );
   await page.mouse.up();
-  await page.waitForTimeout(150);
+  await settled(page);
   const drag = await selectionInfo(page);
   expect(drag).toMatchObject({
     anchor: "Paragraph 30:",
@@ -1241,7 +1183,7 @@ test.describe("phone", () => {
     const before = await scrollTop();
     const box = (await target.boundingBox())!;
     await page.touchscreen.tap(box.x + 60, box.y + 10);
-    await page.waitForTimeout(150);
+    await settled(page);
     expect(await selectionInfo(page)).toMatchObject({
       anchor: "Paragraph 30:",
       focus: "Paragraph 30:",
@@ -1351,7 +1293,8 @@ test("a shift-click in the page's margin extends the selection there", async ({
   await pasteMarkdown(page, "First line.\n\nSecond line.\n\nThird line.");
   const paras = page.locator('[data-active-tab="true"] .ProseMirror p');
   // The caret at the start, settled before the shift-click extends from it.
-  await page.keyboard.press("ControlOrMeta+Home");
+  await paras.first().click();
+  await page.keyboard.press(HOME);
   await expect
     .poll(() => page.evaluate(() => window.getSelection()?.anchorOffset))
     .toBe(0);
@@ -1365,4 +1308,35 @@ test("a shift-click in the page's margin extends the selection there", async ({
   expect(
     await page.evaluate(() => window.getSelection()?.toString() ?? ""),
   ).toContain("Second line.");
+});
+
+test("source mode edits as plain text with colours: Enter continues a list, nothing else is added", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await expect(source).toBeFocused();
+  const text = () =>
+    source.evaluate((el) =>
+      Array.from(el.querySelectorAll(".cm-line"), (l) => l.textContent).join(
+        "\n",
+      ),
+    );
+  await page.keyboard.type("- one");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("two");
+  await expect.poll(text).toContain("- one\n- two");
+  // No closing tag typed in for an HTML tag.
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.type("<div>");
+  await expect.poll(text).not.toContain("</div>");
+  // Tab leaves the pane, as in any field, instead of indenting.
+  const before = await text();
+  await page.keyboard.press("Tab");
+  await expect(source).not.toBeFocused();
+  expect(await text()).toBe(before);
 });

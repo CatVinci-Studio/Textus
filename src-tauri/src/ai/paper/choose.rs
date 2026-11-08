@@ -3,10 +3,9 @@
 //! piece it asks for - a paper, a review, a report - without the user
 //! having to say.
 
-use super::model::ask;
 use super::prompts;
-use super::research::Model;
 use super::Genre;
+use crate::ai::agent::{ask, Model};
 use serde_json::Value;
 
 /// The genre and length in characters `request` calls for. `asked` is the

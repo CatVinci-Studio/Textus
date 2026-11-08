@@ -29,7 +29,7 @@ import { forgetWillSave } from "../contributions/will-save";
 import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint, Handlers } from "./rpc";
-import { guarded } from "../api-permissions";
+import { grants, guarded } from "../api-permissions";
 import { lazyModule, type LazyModule } from "../../lazy/lazy-module";
 import { webview } from "../views/webviews";
 
@@ -120,6 +120,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   activeDocument: "editor.read",
   documentChange: "editor.read",
   selection: "editor.read",
+  copy: "clipboard",
   activeTab: null,
   layout: null,
   root: "files.read",
@@ -135,6 +136,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   editorKey: "editor.input",
   appState: null,
   aiState: null,
+  panels: null,
   activity: null,
   floating: null,
   floatingTouch: null,
@@ -288,7 +290,7 @@ export class PluginHost {
   }
 
   private need(permission: Permission): void {
-    if (!this.info.granted.includes(permission))
+    if (!grants(this.info.granted, permission))
       throw new Error(`${this.id} was not granted ${permission}.`);
   }
 

@@ -34,16 +34,21 @@ async function open(page: Page) {
   await expect(page.locator(`${editor} a`).first()).toBeVisible();
 }
 
-for (const [link, target] of [
-  ["Seven", "Under seven."],
-  ["Custom", "After the anchor."],
-]) {
-  test(`a link to an HTML anchor scrolls to it: ${link}`, async ({ page }) => {
-    await open(page);
+test("a link to an HTML anchor scrolls to it, by name or by id", async ({
+  page,
+}) => {
+  await open(page);
+  for (const [link, target] of [
+    ["Seven", "Under seven."],
+    ["Custom", "After the anchor."],
+  ]) {
+    await page
+      .locator(`${editor} a`, { hasText: link })
+      .scrollIntoViewIfNeeded();
     await expect(page.getByText(target)).not.toBeInViewport();
     await page
       .locator(`${editor} a`, { hasText: link })
       .click({ modifiers: ["ControlOrMeta"] });
     await expect(page.getByText(target)).toBeInViewport();
-  });
-}
+  }
+});

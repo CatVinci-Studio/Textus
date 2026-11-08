@@ -1,12 +1,13 @@
+import { getUiState, setUiState } from "../storage/ui-state";
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
-import { ClipboardHistory } from "../sidebar/ClipboardHistory";
-import { TreeTabIcon, OutlineTabIcon, ClipboardTabIcon } from "../ui/icons";
+import { TreeTabIcon, OutlineTabIcon } from "../ui/icons";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { PHONE_QUERY } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 import type { OpenFolder } from "./useOpenFolder";
+import type { FileOpenHow } from "../sidebar/tree-shared";
 
 /** What every sidebar tab's panel is given: the window's document and
  *  folder, and its ways to open a file or close the sidebar. */
@@ -19,7 +20,7 @@ export interface SidebarTabProps {
   /** The tab in front, for a jump inside its document. */
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, beside?: boolean) => void;
+  onOpenFile: (path: string, how?: FileOpenHow) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
@@ -59,12 +60,11 @@ function FilesPanel({
       onRootChange={openFolder.setTreeRoot}
       folder={openFolder.folder}
       activePath={activePath}
-      onFileSelect={(path, beside) => {
+      onFileSelect={(path, how) => {
         // On a phone the drawer covers the page it just opened.
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
-        onOpenFile(path, beside);
+        onOpenFile(path, how);
       }}
-      onOpenFolder={canOpenFolder ? openFolder.openFolderDialog : undefined}
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}
@@ -89,12 +89,6 @@ const BUILT_IN: SidebarTabDef[] = [
       <Outline content={activeContent} tabId={activeTabId} />
     ),
   },
-  {
-    id: "clipboard",
-    label: (t) => t.clipboardTab,
-    Icon: ClipboardTabIcon,
-    Panel: () => <ClipboardHistory />,
-  },
 ];
 
 const added: SidebarTabDef[] = [];
@@ -114,9 +108,38 @@ export function registerSidebarTab(tab: SidebarTabDef): () => void {
   };
 }
 
-/** The tabs, in the header's order. */
+/** The tabs, in the header's order: as the user dragged them, a tab new
+ *  since then where it comes. */
 export function sidebarTabs(): SidebarTabDef[] {
-  return [...BUILT_IN, ...added];
+  const kept = getUiState("sidebarTabOrder");
+  return orderTabs([...BUILT_IN, ...added], Array.isArray(kept) ? kept : []);
+}
+
+/** `tabs` in `order`, those it doesn't name kept after the one before them. */
+export function orderTabs<T extends { id: string }>(
+  tabs: readonly T[],
+  order: readonly string[],
+): T[] {
+  const out = order
+    .map((id) => tabs.find((tab) => tab.id === id))
+    .filter((tab): tab is T => !!tab);
+  tabs.forEach((tab, i) => {
+    if (out.includes(tab)) return;
+    const before = i > 0 ? out.indexOf(tabs[i - 1]) : -1;
+    out.splice(before + 1, 0, tab);
+  });
+  return out;
+}
+
+/** The tabs' order after `id` is dropped on `target`'s place. */
+export function moveSidebarTab(id: string, target: string): void {
+  const ids = sidebarTabs().map((tab) => tab.id);
+  const from = ids.indexOf(id);
+  const to = ids.indexOf(target);
+  if (from < 0 || to < 0 || from === to) return;
+  ids.splice(from, 1);
+  ids.splice(to, 0, id);
+  setUiState("sidebarTabOrder", ids);
 }
 
 /** The tab with this id, or Files for one no longer there. */

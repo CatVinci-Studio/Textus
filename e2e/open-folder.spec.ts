@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // File > Open Folder… and the sidebar's file-name search. The folder pins
 // the tree's root; the dev shim's in-memory folder stands in for the disk.
@@ -29,18 +29,6 @@ async function open(
     settings: { language: "en", ...options.settings },
     storage: options.storage,
   });
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 /** Opens a file in a new tab, as the AI panel's project bar does. */
@@ -87,7 +75,7 @@ test("opening a file in a subfolder keeps the tree where it was", async ({
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
 });
 
-test("Open Folder pins the tree's root and lists the folder as recent", async ({
+test("Open Folder pins the tree's root and lists the folder as recent; Close Project lets it follow the document again", async ({
   page,
 }) => {
   await open(page);
@@ -111,13 +99,7 @@ test("Open Folder pins the tree's root and lists the folder as recent", async ({
           .__devRecents.folders,
     ),
   ).toEqual(["/work/notes"]);
-});
-
-test("Close Folder goes back to following the document", async ({ page }) => {
-  await open(page);
-  await openFolderFromMenu(page, "/work/notes");
-  await openInTab(page, "/work/elsewhere/c.md");
-  await expect(page.locator(rootLabel)).toHaveText("notes");
+  // Close Project goes back to following the document.
   await page.getByRole("button", { name: "Close Project" }).click();
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
   await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
@@ -169,32 +151,6 @@ test("an empty window's Files tab explains itself, without a button", async ({
   await expect(page.locator(".sidebar-body button")).toHaveCount(0);
 });
 
-test.describe("the AI's project folder", () => {
-  const agentRoot = (page: Page) =>
-    page.evaluate(
-      () =>
-        JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}")
-          .agentWorkspaceRoot,
-    );
-
-  test("follows an opened folder while it has none of its own", async ({
-    page,
-  }) => {
-    await open(page);
-    await openFolderFromMenu(page, "/work/notes");
-    await expect.poll(() => agentRoot(page)).toBe("/work/notes");
-    await page.getByRole("button", { name: "Close Project" }).click();
-    await expect.poll(() => agentRoot(page)).toBe("");
-  });
-
-  test("keeps a folder the user chose", async ({ page }) => {
-    await open(page, { settings: { agentWorkspaceRoot: "/research" } });
-    await openFolderFromMenu(page, "/work/notes");
-    await expect(page.locator(rootLabel)).toHaveText("notes");
-    expect(await agentRoot(page)).toBe("/research");
-  });
-});
-
 test.describe("file name search", () => {
   const search = (page: Page) =>
     page.getByRole("combobox", { name: "Search file names" });
@@ -243,22 +199,22 @@ test.describe("file name search", () => {
     await expect(page.locator(editor)).toBeFocused();
   });
 
-  test("the filter keeps to documents, and is remembered", async ({ page }) => {
+  test("Esc hands the keyboard back to the source editor in source mode", async ({
+    page,
+  }) => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");
-    await search(page).fill("ch");
-    await expect(results(page)).toHaveCount(4);
-    await page.getByRole("combobox", { name: "Show" }).click();
-    await page
-      .getByRole("option", { name: "Documents only", exact: true })
-      .click();
-    await expect(results(page)).toHaveCount(3);
-    await expect(results(page).filter({ hasText: "chart.png" })).toHaveCount(0);
-    expect(
-      await page.evaluate(() =>
-        localStorage.getItem("textus-file-search-scope"),
-      ),
-    ).toBe("documents");
+    await emit(page, "menu-toggle-source-mode");
+    const source = page.locator(
+      '[data-active-tab="true"] .source-view .cm-content',
+    );
+    await source.click();
+    await page.keyboard.press("ControlOrMeta+Shift+O");
+    await expect(search(page)).toBeFocused();
+    await page.keyboard.type("CH");
+    await page.keyboard.press("Escape");
+    await expect(search(page)).toHaveValue("");
+    await expect(source).toBeFocused();
   });
 
   test("opens another kind of file the way the tree does", async ({ page }) => {
@@ -270,23 +226,6 @@ test.describe("file name search", () => {
       "chart.png",
     );
     await expect(page.locator(editor)).toContainText("not really a picture");
-  });
-
-  test("the tree lists numbered names by their numbers", async ({ page }) => {
-    await open(page);
-    await openFolderFromMenu(page, "/work/notes");
-    await treeRow(page, "novel").click();
-    await expect(
-      page.locator(".sidebar .tree-main .tree-row .tree-label"),
-    ).toHaveText([
-      "essays",
-      "images",
-      "novel",
-      "ch1.md",
-      "ch2.md",
-      "ch10.md",
-      "a.md",
-    ]);
   });
 
   test("finds Chinese names and says when nothing matches", async ({

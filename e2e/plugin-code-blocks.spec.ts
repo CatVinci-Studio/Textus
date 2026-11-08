@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp } from "./helpers";
+import { emit, END, openApp } from "./helpers";
 
 /**
  * Code blocks a plugin draws (textus.views.registerCodeBlock): the page
@@ -67,13 +67,7 @@ async function open(page: Page, source = "hello") {
     [ENTRY, source] as const,
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/a.md");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
 }
 
@@ -102,6 +96,48 @@ test("a plugin draws its code block, follows its source and can change it", asyn
   await frame.locator("#set").click();
   await expect(page.locator(`${editor} pre`)).toContainText("set by the page");
   await expect(frame.locator("#out")).toHaveText("SET BY THE PAGE!");
+});
+
+test("a drawn block's source shows only from Edit Source, not wherever the caret lands", async ({
+  page,
+}) => {
+  await open(page);
+  const frame = page
+    .frameLocator(`${editor} .plugin-code-block iframe`)
+    .first();
+  await expect(frame.locator("#out")).toHaveText("HELLO!");
+  const pre = page.locator(`${editor} pre`);
+  // The caret put inside the block (an undo, a jump to a match): it steps
+  // out, and the source stays hidden.
+  await page.locator(`${editor} h1`).click();
+  await page.evaluate(() => {
+    const view = (
+      window as unknown as {
+        __pmView: import("@milkdown/kit/prose/view").EditorView;
+      }
+    ).__pmView;
+    let inside = -1;
+    view.state.doc.descendants((node, pos) => {
+      if (inside < 0 && node.type.name === "code_block") inside = pos + 2;
+    });
+    // The caret is in the heading: its selection's class makes the new one.
+    const Sel = view.state.selection.constructor as unknown as {
+      create: (
+        doc: unknown,
+        pos: number,
+      ) => import("@milkdown/kit/prose/state").Selection;
+    };
+    view.dispatch(
+      view.state.tr.setSelection(Sel.create(view.state.doc, inside)),
+    );
+  });
+  await expect(pre).toBeHidden();
+  // Edit Source shows it; leaving hides it again.
+  await page.locator(`${editor} .plugin-code-block`).hover();
+  await page.getByRole("button", { name: "Edit Source" }).click();
+  await expect(pre).toBeVisible();
+  await page.locator(`${editor} p`, { hasText: "After." }).click();
+  await expect(pre).toBeHidden();
 });
 
 test("a block's frame fits its page as the page grows and shrinks", async ({

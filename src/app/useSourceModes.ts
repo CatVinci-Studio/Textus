@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
-  applyTextareaCaret,
+  applySourceCaret,
   captureEditorCaret,
-  readTextareaCaret,
+  readSourceCaret,
   setPendingCaret,
   takePendingCaret,
 } from "../editor/modes/mode-switch";
+import { sourceViewAt } from "../editor/modes/source-view-registry";
 import {
   setCurrentViewMode,
   viewModeFields,
@@ -13,7 +14,8 @@ import {
 } from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import { useSettings } from "../prefs/SettingsContext";
-import type { ViewMode } from "../prefs/settings-types";
+/** View › Mode's four. */
+export type ViewModeChoice = "default" | "source" | "split" | "read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** The rich editor, plain source mode and split view, one for every tab of
@@ -37,10 +39,9 @@ export function useSourceModes(tabState: TabState) {
       if (mode === "rich") {
         // The view being left records its caret; the one entered places it.
         if (front) {
-          const textarea = document.querySelector<HTMLTextAreaElement>(
-            '[data-active-tab="true"] textarea.source-view',
-          );
-          setPendingCaret(textarea ? readTextareaCaret(textarea) : null);
+          const activeTab = document.querySelector('[data-active-tab="true"]');
+          const source = activeTab ? sourceViewAt(activeTab) : null;
+          setPendingCaret(source ? readSourceCaret(source.view) : null);
         }
         // Remount the rich editor so it picks up the raw text.
         updateTab(tab.id, {
@@ -57,20 +58,32 @@ export function useSourceModes(tabState: TabState) {
     }
   }, [mode, tabs, activeTabId, liveTabs, updateTab]);
 
-  const switchTo = useCallback(
-    (next: ViewMode) => setSettings({ viewMode: next }),
-    [setSettings],
+  // View › Mode: one of four. The rendered editor, source mode and split
+  // view are every window's; read-only is the document's, in the rendered
+  // editor. Choosing the one in force goes back to the default.
+  const chooseViewMode = useCallback(
+    (kind: ViewModeChoice) => {
+      const tab = liveTabs().find((tb) => tb.id === activeTabId);
+      const readOnly = !!tab && !tab.view && tabReadOnly(tab);
+      const now: ViewModeChoice = readOnly
+        ? "read-only"
+        : mode === "rich"
+          ? "default"
+          : mode;
+      const next = kind === now ? "default" : kind;
+      const keep = next === "read-only";
+      if (tab && !tab.view && readOnly !== keep) {
+        if (tab.path) keepReadOnly(tab.path, keep);
+        updateTab(tab.id, { readOnly: keep });
+      }
+      setSettings({
+        viewMode: next === "source" || next === "split" ? next : "rich",
+      });
+    },
+    [activeTabId, liveTabs, mode, setSettings, updateTab],
   );
-  // Source mode from the rich editor or split view (whose preview goes);
-  // back to the rich editor from source mode.
-  const toggleSourceMode = useCallback(
-    () => switchTo(mode === "source" ? "rich" : "source"),
-    [mode, switchTo],
-  );
-  const toggleSplitView = useCallback(
-    () => switchTo(mode === "split" ? "rich" : "split"),
-    [mode, switchTo],
-  );
+  const toggleSourceMode = () => chooseViewMode("source");
+  const toggleSplitView = () => chooseViewMode("split");
 
   // View › Read Only, or a tab's own menu: kept by the file's path.
   const toggleReadOnly = useCallback(
@@ -91,20 +104,19 @@ export function useSourceModes(tabState: TabState) {
     if (!activeSourceMode) return;
     const caret = takePendingCaret();
     if (!caret) return;
-    // Split View loads on first use, so look for its textarea each frame,
-    // for a second.
-    let frames = 60;
+    // Source mode loads CodeMirror on first use, so look for its editor
+    // each frame for a few seconds.
+    let frames = 180;
     let frame = 0;
     const place = () => {
-      const textarea = document.querySelector<HTMLTextAreaElement>(
-        '[data-active-tab="true"] textarea.source-view',
-      );
-      if (textarea) applyTextareaCaret(textarea, caret);
+      const activeTab = document.querySelector('[data-active-tab="true"]');
+      const source = activeTab ? sourceViewAt(activeTab) : null;
+      if (source) applySourceCaret(source.view, caret);
       else if (--frames > 0) frame = requestAnimationFrame(place);
     };
     frame = requestAnimationFrame(place);
     return () => cancelAnimationFrame(frame);
   }, [activeSourceMode, activeTabId]);
 
-  return { toggleSourceMode, toggleSplitView, toggleReadOnly };
+  return { toggleSourceMode, toggleSplitView, toggleReadOnly, chooseViewMode };
 }

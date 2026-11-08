@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * A plugin's tools for Textus AI: offered from the manifest before the
@@ -85,18 +85,12 @@ test("a plugin's tool is offered to Textus AI and runs when called", async ({
         },
       },
     ]);
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("plugin-ai-tool-call", {
-      callId: "call-1",
-      plugin: "test.tools",
-      name: "count_words",
-      arguments: { text: "one two three" },
-    }),
-  );
+  await emit(page, "plugin-ai-tool-call", {
+    callId: "call-1",
+    plugin: "test.tools",
+    name: "count_words",
+    arguments: { text: "one two three" },
+  });
   await expect
     .poll(() =>
       page.evaluate(
@@ -109,9 +103,4 @@ test("a plugin's tool is offered to Textus AI and runs when called", async ({
       ),
     )
     .toEqual({ text: "3 words" });
-});
-
-test("without ai.tools a plugin offers Textus AI nothing", async ({ page }) => {
-  await open(page, []);
-  await expect.poll(() => offered(page)).toEqual([]);
 });

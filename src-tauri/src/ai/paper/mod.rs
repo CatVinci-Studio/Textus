@@ -7,20 +7,23 @@
 mod budget;
 mod checks;
 mod choose;
+mod claims;
+mod delegate;
 mod draft;
 pub mod drafting;
 mod events;
 pub mod figures;
 mod finish;
 mod genre;
+mod grounding;
 mod handover;
+mod helper;
 mod model;
 mod notes;
 mod outline;
 mod prompts;
 mod research;
 mod review;
-mod session;
 mod sources;
 pub mod status;
 mod store;
@@ -30,11 +33,11 @@ mod timeline;
 mod tuning;
 mod web_figures;
 
+use crate::ai::agent::Session;
 use budget::KeepSpent;
 pub(crate) use budget::{BudgetCounts, ResearchBudget, SharedBudget};
 pub(crate) use events::{PaperEvent, PaperPhase, SectionStatus, SourceEntry};
 pub use genre::{Genre, GenreForm};
-use session::Session;
 #[cfg(test)]
 use status::progress;
 pub(crate) use store::{
@@ -43,6 +46,12 @@ pub(crate) use store::{
 
 use serde::{Deserialize, Serialize};
 use tauri::ipc::Channel;
+
+/// The folder paper `id` is kept in, in the session's project; None for a
+/// new id.
+fn session_root(session: &Session, id: Option<&str>) -> Result<std::path::PathBuf, String> {
+    paper_root(session.app, session.doc_path, session.workspace_root, id)
+}
 
 /// One paper being written. Kept as `.textus/papers/<id>/paper.json`.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -65,6 +74,10 @@ pub struct Paper {
     /// from there.
     #[serde(default)]
     pub stage: PaperStage,
+    /// Whether a question's researcher may hand parts of it to helpers of
+    /// its own: the user's choice, set again on every run.
+    #[serde(default)]
+    pub sub_helpers: bool,
 }
 
 /// How far a paper has come.
@@ -115,6 +128,35 @@ pub struct Note {
     /// The sources' numbers in the paper's source book.
     pub sources: Vec<u32>,
     pub leads: Vec<Lead>,
+    /// How much of its sources the note was checked against.
+    #[serde(default)]
+    pub grounding: Grounding,
+    /// The passage of a source the note rests on, in the source's words.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub excerpt: Option<String>,
+    /// Figures the note gives that its sources didn't, kept because its
+    /// researcher sent it again unchanged.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unmatched: Vec<String>,
+}
+
+/// How much of its sources a note was checked against.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub enum Grounding {
+    /// None of them was shown to the researcher (a page the provider's own
+    /// search cited, an address from a plugin), or the note is older than
+    /// the checks.
+    #[default]
+    Unchecked,
+    /// Cited by an address nothing showed it: no search, read or the
+    /// provider's own search (a plugin's or a tool's, or one made up).
+    Unread,
+    /// Search snippets or abstracts only.
+    Snippet,
+    /// A page read in full, or a file.
+    Read,
 }
 
 /// A picture or a data set a note's source has that a figure could use.
@@ -185,14 +227,11 @@ pub enum FigureKind {
 #[cfg_attr(test, derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PaperRequest {
-    pub provider: String,
-    pub model: Option<String>,
-    pub doc_path: Option<String>,
-    pub workspace_root: Option<String>,
-    /// What web_search uses when the model can't search by itself.
-    pub search_service: Option<String>,
-    pub searxng_url: Option<String>,
-    pub request_id: String,
+    /// What every request names: provider, project, image model, the
+    /// conversation whose attached files its research reads (copied into
+    /// the paper's folder when it starts, so going on with it needs none).
+    #[serde(flatten)]
+    pub request: crate::ai::agent::AgentRequest,
     /// The paper to go on with, or the id a new one is kept under; None
     /// for a new id.
     pub id: Option<String>,
@@ -207,14 +246,9 @@ pub struct PaperRequest {
     /// choice.
     #[serde(default)]
     pub target_chars: Option<u32>,
-    /// The image model, for the pictures the outline may plan; None for
-    /// none.
-    pub image_model: Option<crate::ai::images::ImageModel>,
-    /// The conversation whose attached files its research reads: copied
-    /// into the paper's folder when it starts, so going on with it needs
-    /// none.
+    /// Research hands parts of a question to helpers of its own.
     #[serde(default)]
-    pub conversation: Option<String>,
+    pub sub_helpers: bool,
 }
 
 /// Researches and outlines a paper on `topic` in the document's project,
@@ -229,31 +263,17 @@ pub async fn ai_paper_run(
     channel: Channel<PaperEvent>,
 ) -> Result<Paper, String> {
     let PaperRequest {
-        provider,
-        model,
-        doc_path,
-        workspace_root,
-        search_service,
-        searxng_url,
-        request_id,
+        request,
         id,
         topic,
         genre,
         language,
         target_chars,
-        image_model,
-        conversation,
+        sub_helpers,
     } = request;
-    let session = Session::open(
-        &app,
-        &provider,
-        model,
-        doc_path.as_deref(),
-        workspace_root.as_deref(),
-    )?;
-    let root = session.root(id.as_deref())?;
-    let project =
-        crate::ai::workspace::project_root(doc_path.as_deref(), workspace_root.as_deref());
+    let session = request.session(&app)?;
+    let root = session_root(&session, id.as_deref())?;
+    let project = crate::ai::workspace::project_root(session.doc_path, session.workspace_root);
     let entry = session.entry;
     // A paper begun before goes on from what it kept: its research, its
     // outline, what its research may still spend.
@@ -265,22 +285,23 @@ pub async fn ai_paper_run(
         .map_or_else(ResearchBudget::for_paper, |f| f.paper.budget.renewed());
     let mut images = research_budget.limits.images;
     let image_cap = session
-        .pictures(image_model.as_ref())
+        .pictures(request.image_model.as_ref())
         .map_or(0, |run| run.limit as u32);
     research_budget.limits.images = images.min(image_cap);
     let budget = std::sync::Arc::new(SharedBudget::new(research_budget));
     let native = session.native_search();
-    let service =
-        crate::ai::web::resolve_service(&app, search_service.as_deref(), searxng_url.as_deref());
+    let service = request.search_service(&app);
     let can_search = native.is_some() || service.is_some();
-    let web = crate::ai::web::WebPlan::new(true, native, service, &[]).with_budget(budget.clone());
+    let web = crate::ai::web::WebPlan::new(true, native, service, &[])
+        .with_budget(budget.clone())
+        .keeping_seen_text();
     let send = |event: PaperEvent| {
         let _ = channel.send(event);
     };
     send(PaperEvent::WebSearch {
         available: can_search,
     });
-    crate::ai::cancel::cancellable(request_id, async {
+    crate::ai::cancel::cancellable(request.request_id.clone(), async {
         let agent = session.agent(native).await?;
         let throttled = throttle::Throttled::new(&agent, entry.paper_at_once);
         let agent = model::Metered {
@@ -312,6 +333,7 @@ pub async fn ai_paper_run(
                         target_chars,
                         budget: budget.snapshot(),
                         stage: PaperStage::Researching,
+                        sub_helpers,
                     },
                     dossier: Dossier::default(),
                     outline: None,
@@ -321,7 +343,7 @@ pub async fn ai_paper_run(
         // Kept at once, so a paper stopped while researching is found and
         // begun again.
         save(&root, &files)?;
-        let conversation = crate::ai::scratch::with_attachments(conversation.as_deref());
+        let conversation = crate::ai::scratch::with_attachments(request.conversation.as_deref());
         let paper_folder =
             store::keep_attachments(&root, &files.paper.id, conversation.as_deref())?;
         let mut keep_spent = KeepSpent {
@@ -383,7 +405,7 @@ pub async fn ai_paper_run(
                 // Outlined, like everything written, as the user asks of
                 // their writing; researched plainly.
                 let guidance = session.guidance(&files.paper.topic);
-                let guided = model::Guided {
+                let guided = crate::ai::agent::Guided {
                     inner: &agent,
                     guidance: &guidance,
                 };

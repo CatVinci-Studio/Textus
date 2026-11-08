@@ -23,7 +23,6 @@ const ALLOWED: Record<string, string> = {
   "app/useFileOpening.ts": "no files dropped on the window",
   "app/useSidePanels.ts":
     "a drawer that starts closed, a sheet over the keyboard",
-  "document-view/EditorPane.tsx": "the system's own overscroll",
   "document-view/useQuickAskReview.ts": "the keyboard and the review's focus",
   "document/ios-recents.ts": "the document list's recent documents",
   "document/startup-restore.ts": "reopens the last document; no shortcut tour",
@@ -42,6 +41,7 @@ const ALLOWED: Record<string, string> = {
   "theme/apply-appearance.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "ui/Select.tsx": "the system's picker",
+  "ui/elastic-overscroll.ts": "the system's own overscroll",
   "ui/usePhoneLayout.ts": "the phone layout itself",
 };
 

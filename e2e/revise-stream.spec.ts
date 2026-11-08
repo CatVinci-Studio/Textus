@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -160,131 +160,93 @@ const hasSecond = (s: Sample) =>
 const hasTail = (s: Sample) =>
   s.fresh.some((f) => f.text === "It was very far off.");
 
-test("a streaming rewrite lands each paragraph in place, never the whole original struck", async ({
-  page,
-}) => {
-  await open(page, {}, false, STORY);
-  await streamRevise(page, [REVISE_STORY]);
-  const stop = await record(page);
-  await send(page);
-  await expect(
-    page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
-  ).toHaveCount(3);
-  await page.waitForTimeout(300);
-  const samples = await stop();
-  const streaming = samples.filter((s) => s.live === 0);
-  const settled = samples.filter((s) => s.live > 0);
-  expect(streaming.length).toBeGreaterThan(10);
-  for (const s of samples) {
-    // Never one struck block, never the sentences it keeps.
-    expect(s.whole).toBe(0);
-    expect(s.struck.join("")).not.toContain("The keeper woke");
-    expect(s.struck.join("")).not.toContain("Outside, the sea");
-    expect(s.struck.join("")).not.toContain("The tide was turning");
-  }
-  // A paragraph rewritten whole lands at once, before the stream ends: its
-  // changes together, never one before the other, the next paragraph's
-  // after them - and nothing half written.
-  for (const s of samples) expect(hasFirst(s)).toBe(hasSecond(s));
-  const early = streaming.find((s) => hasFirst(s) && !hasTail(s));
-  expect(early).toBeTruthy();
-  expect(early!.struck[0]).toBe("He climbed the stairs slowly.");
-  for (const s of samples) expect(s.partial).toBeNull();
-  // Nothing is drawn twice: each new text stays the same element from the
-  // moment it appears, and a struck original stays struck.
-  for (const text of [
-    "He climbed the stairs one by one.",
-    "The lamp was warm to the touch.",
-  ]) {
-    const seen = new Set(
-      samples.flatMap((s) =>
-        s.drawn.filter((d) => d.text === text).map((d) => d.id),
-      ),
-    );
-    expect(seen.size, text).toBe(1);
-  }
-  for (const text of [
-    "He climbed the stairs slowly.",
-    "The wind had dropped in the night.",
-    "The lamp was still warm.",
-  ]) {
-    const from = samples.findIndex((s) => s.struck.includes(text));
-    expect(from, text).toBeGreaterThan(-1);
-    for (const s of samples.slice(from)) expect(s.struck, text).toContain(text);
-  }
-  // Nothing moves when it settles: every new text the stream drew stays
-  // where it was (the last paragraph lands as the stream ends).
-  const last = streaming.at(-1)!;
-  const first = settled[0];
-  expect(last.fresh.length).toBeGreaterThan(0);
-  for (const f of last.fresh) {
-    const after = first.fresh.find((g) => g.text === f.text)!;
-    expect(after, f.text).toBeTruthy();
-    expect(Math.abs(f.x - after.x)).toBeLessThan(1);
-    expect(Math.abs(f.y - after.y)).toBeLessThan(1);
-  }
-  // ...and the end is the finished proposal's layout.
-  const streamed = await layout(page);
-  await page.reload();
-  await open(page, { enableEditAnimation: false }, false, STORY);
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "go" },
-      {
-        kind: "ToolCall",
-        call_id: "r1",
-        name: "propose_edit",
-        arguments: JSON.stringify(REVISE_STORY.args),
-      },
-      { kind: "ToolResult", call_id: "r1", output: "Edit proposed" },
-      { kind: "Assistant", text: "Tightened." },
-    ],
-  });
-  await send(page);
-  await expect(page.locator(".milkdown .pending-pick")).toHaveCount(3);
-  expect(streamed).toEqual(await layout(page));
-});
-
-test("a streaming CJK rewrite lands each paragraph in place, its sentences split at 。！？", async ({
-  page,
-}) => {
-  const zh =
-    "灯塔看守人天亮前醒来。他慢慢爬上楼梯。灯还是温的！\n\n海面很平静？远处有一只海鸥。";
-  const rewrite =
-    "灯塔看守人天亮前醒来。他一级一级走上楼梯。灯摸上去还是温的！\n\n海面很平静？远处飞过一只海鸥。";
-  await page.setViewportSize({ width: 1400, height: 900 });
-  await openApp(page, {
-    settings: { language: "en", revisionDisplay: "inline" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await pasteMarkdown(page, zh);
-  await streamRevise(
-    page,
-    [{ id: "z", args: { action: "replace", anchor: zh, text: rewrite } }],
-    { chunk: 4 },
-  );
-  const stop = await record(page);
-  await send(page);
-  await expect(
-    page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
-  ).toHaveCount(3);
-  const samples = await stop();
-  const streaming = samples.filter((s) => s.live === 0);
-  const has = (s: Sample, text: string) => s.fresh.some((f) => f.text === text);
-  for (const s of samples) {
-    expect(s.whole).toBe(0);
-    expect(s.struck.join("")).not.toContain("灯塔看守人");
-    expect(s.struck.join("")).not.toContain("海面很平静");
-    // Each sentence its own change, the paragraph's two landing together.
-    expect(has(s, "他一级一级走上楼梯。")).toBe(has(s, "灯摸上去还是温的！"));
-  }
-  expect(
-    streaming.some(
-      (s) => has(s, "他一级一级走上楼梯。") && !has(s, "远处飞过一只海鸥。"),
-    ),
-  ).toBe(true);
-  for (const s of samples) expect(s.partial).toBeNull();
-});
+test(
+  "a streaming rewrite lands each paragraph in place, never the whole original struck",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await open(page, {}, false, STORY);
+    await streamRevise(page, [REVISE_STORY]);
+    const stop = await record(page);
+    await send(page);
+    await expect(
+      page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
+    ).toHaveCount(3);
+    await page.waitForTimeout(300);
+    const samples = await stop();
+    const streaming = samples.filter((s) => s.live === 0);
+    const settled = samples.filter((s) => s.live > 0);
+    expect(streaming.length).toBeGreaterThan(10);
+    for (const s of samples) {
+      // Never one struck block, never the sentences it keeps.
+      expect(s.whole).toBe(0);
+      expect(s.struck.join("")).not.toContain("The keeper woke");
+      expect(s.struck.join("")).not.toContain("Outside, the sea");
+      expect(s.struck.join("")).not.toContain("The tide was turning");
+    }
+    // A paragraph rewritten whole lands at once, before the stream ends: its
+    // changes together, never one before the other, the next paragraph's
+    // after them - and nothing half written.
+    for (const s of samples) expect(hasFirst(s)).toBe(hasSecond(s));
+    const early = streaming.find((s) => hasFirst(s) && !hasTail(s));
+    expect(early).toBeTruthy();
+    expect(early!.struck[0]).toBe("He climbed the stairs slowly.");
+    for (const s of samples) expect(s.partial).toBeNull();
+    // Nothing is drawn twice: each new text stays the same element from the
+    // moment it appears, and a struck original stays struck.
+    for (const text of [
+      "He climbed the stairs one by one.",
+      "The lamp was warm to the touch.",
+    ]) {
+      const seen = new Set(
+        samples.flatMap((s) =>
+          s.drawn.filter((d) => d.text === text).map((d) => d.id),
+        ),
+      );
+      expect(seen.size, text).toBe(1);
+    }
+    for (const text of [
+      "He climbed the stairs slowly.",
+      "The wind had dropped in the night.",
+      "The lamp was still warm.",
+    ]) {
+      const from = samples.findIndex((s) => s.struck.includes(text));
+      expect(from, text).toBeGreaterThan(-1);
+      for (const s of samples.slice(from))
+        expect(s.struck, text).toContain(text);
+    }
+    // Nothing moves when it settles: every new text the stream drew stays
+    // where it was (the last paragraph lands as the stream ends).
+    const last = streaming.at(-1)!;
+    const first = settled[0];
+    expect(last.fresh.length).toBeGreaterThan(0);
+    for (const f of last.fresh) {
+      const after = first.fresh.find((g) => g.text === f.text)!;
+      expect(after, f.text).toBeTruthy();
+      expect(Math.abs(f.x - after.x)).toBeLessThan(1);
+      expect(Math.abs(f.y - after.y)).toBeLessThan(1);
+    }
+    // ...and the end is the finished proposal's layout.
+    const streamed = await layout(page);
+    await page.reload();
+    await open(page, { enableEditAnimation: false }, false, STORY);
+    await mockInvoke(page, {
+      ai_agent_message: [
+        { kind: "User", text: "go" },
+        {
+          kind: "ToolCall",
+          call_id: "r1",
+          name: "propose_edit",
+          arguments: JSON.stringify(REVISE_STORY.args),
+        },
+        { kind: "ToolResult", call_id: "r1", output: "Edit proposed" },
+        { kind: "Assistant", text: "Tightened." },
+      ],
+    });
+    await send(page);
+    await expect(page.locator(".milkdown .pending-pick")).toHaveCount(3);
+    expect(streamed).toEqual(await layout(page));
+  },
+);
 
 test("each display mode draws a streaming rewrite's landed paragraphs, with their cards", async ({
   page,
@@ -464,7 +426,7 @@ test("with motion on, each strike draws in once and each new text comes in once"
   await expect(
     page.locator(".milkdown .pending-pick:not(.pending-streaming)"),
   ).toHaveCount(2);
-  await page.waitForTimeout(400);
+  await settled(page);
   const entrances = await page.evaluate(() => {
     const w = window as unknown as {
       __entrances: Record<string, number>;

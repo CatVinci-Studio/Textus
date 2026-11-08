@@ -295,6 +295,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Depois de cada resposta, até três coisas que você provavelmente dirá a seguir aparecem como botões acima da caixa de mensagem, a mais provável também em cinza dentro dela; clique numa para enviá-la, ou use Tab para a cinza. Custa mais um pedido curto.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Próximas mensagens sugeridas",
+  researchSubHelpersLabel:
+    "Pesquisa: passar partes de uma pergunta a ajudantes",
+  researchSubHelpersHint:
+    "Na Pesquisa, quem investiga uma pergunta pode passar uma parte mais específica a um ajudante próprio. Mais completo, porém mais lento, com um quarto a metade a mais de chamadas ao modelo.",
+  researchCheckClaimsLabel: "Pesquisa: verificar cada frase citada",
+  researchCheckClaimsHint:
+    "Antes de revisar o rascunho, cada frase que cita uma fonte é comparada com as notas dessa fonte, e a que diz mais do que elas é reescrita. Mais cuidadoso, com uma chamada ao modelo a mais por seção.",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
   rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Projeto, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
@@ -361,6 +368,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatPluginCheckDom:
     "Desenha na própria página, algo que um plugin não pode fazer: nada vai aparecer.",
   chatPluginCheckPermission: "Usa {permission} sem pedir essa permissão.",
+  chatPluginCheckWhen:
+    "A condição de um item de menu lê {key}, que o Textus não define: o item nunca aparece.",
   chatPluginCheckUnregistered: "Declara {id} mas nunca o registra.",
   chatPluginRunError: "Parou com: {error}",
   chatPluginFix: "Corrigir com IA",
@@ -384,6 +393,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolSearchPapers: "Buscando artigos sobre “{arg}”",
   toolSearchReferences: "Buscando “{arg}” nas referências",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esboço",
   paperOutlineTotal: "Cerca de {n} {unit} no total",
   paperOutlineThesis: "Tese",
@@ -471,6 +481,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webSources: "Fontes",
   proposalSourcesAsFootnotes: "Adicionar as fontes como notas de rodapé",
   menuToggleSplitView: "Código e pré-visualização",
+  menuViewMode: "Modo",
+  menuViewModeDefault: "Padrão",
   splitPreview: "Pré-visualização",
   menuToggleZenMode: "Modo Zen",
   menuSplitRight: "Dividir à direita",
@@ -553,6 +565,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchScopeDocuments: "Só documentos",
   treeNewDocument: "Novo documento",
   treeNewFolder: "Nova pasta",
+  treeEmptyHint: "Clique duas vezes aqui para um documento novo.",
   treeNewDocumentPrompt: "Nome do novo documento",
   treeNewFolderPrompt: "Nome da nova pasta",
   treeNewDocumentDefault: "Sem título",
@@ -739,6 +752,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restaurar",
+  madeByTextusAi: `Feito com ${AI_NAME}`,
+  skillDelete: "Excluir",
+  skillDeleteAsk: "Excluir “{name}”? Os arquivos vão para a Lixeira.",
+  skillDeleteAskMobile: "Excluir “{name}”?",
   agentSkillsResetConfirm:
     "Excluir sua cópia de “{name}” e voltar a usar a habilidade integrada?",
   agentSkillsShadows: "Substitui uma habilidade integrada",
@@ -1078,9 +1095,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuCloseTab: "Fechar Aba",
   menuReopenClosedTab: "Reabrir Aba Fechada",
   readOnlyRefused:
-    "Este documento é só de leitura. Desative Visualizar › Só leitura para alterá-lo.",
-  menuToggleReadOnly: "Só leitura",
-  readOnlyLock: "Só leitura: clique para permitir alterações",
+    "Este documento está no modo leitura. Para alterá-lo, escolha Visualizar › Modo › Padrão.",
+  menuToggleReadOnly: "Modo leitura",
+  readOnlyLock: "Modo leitura: clique para permitir alterações",
   closeOtherTabs: "Fechar as outras",
   closeTabsToLeft: "Fechar abas à esquerda",
   closeTabsToRight: "Fechar abas à direita",
@@ -1148,7 +1165,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reportLimit:
     "Você já enviou vários relatos hoje. Tente amanhã ou envie no GitHub.",
   reportFailed: "Não foi possível enviar.",
-  menuHelpTutorials: "Tutoriais em vídeo",
+  menuHelpTutorials: "Tutoriais online",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
@@ -1242,6 +1259,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageAlignLabel: "Imagens em linha própria",
   imageAlignCenter: "Centralizadas",
   imageAlignLeft: "À esquerda",
+  embedDisplayLabel: "Notas incorporadas",
+  embedDisplayExpand: "Mostrar inteiras",
+  embedDisplayCard: "Como cartão de link",
+  embedBlockCard: "{0} · clique para mostrar",
+  embedBlockShow: "Mostrar",
   docTextSizeLabel: "Tamanho do texto",
   docTextSizeAuto: "O do tema",
   docTextLabel: "Texto do documento",
@@ -1354,7 +1376,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody:
-    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais em vídeo.",
+    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Projeto, o botão de pasta no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
@@ -1459,10 +1481,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   privacyChatHistoryToggle: "Salvar as conversas do chat",
   privacyChatHistoryClearHint:
     "Remove todas as conversas salvas. Esta ação não pode ser desfeita.",
-  privacyClipboardHistoryLabel: "Histórico da área de transferência",
-  privacyClipboardHistoryToggle: "Salvar o histórico da área de transferência",
-  privacyClipboardHistoryClearHint:
-    "Remove tudo do histórico da área de transferência. Esta ação não pode ser desfeita.",
   privacyDraftRecoveryLabel: "Recuperação de rascunhos",
   privacyDraftRecoveryToggle: "Recuperar conteúdo não salvo após uma falha",
   privacyKeepUnsavedToggle:
@@ -1473,12 +1491,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Remove os instantâneos que estiverem no disco. Esta ação não pode ser desfeita.",
   privacyClearButton: "Limpar",
   privacyClearChatHistory: "Limpar histórico de conversas",
-  privacyClearClipboard: "Limpar histórico da área de transferência",
   privacyClearDrafts: "Apagar rascunhos de recuperação",
-  clipboardTab: "Área de transferência",
-  clipboardEmpty: "O texto que você copiar e colar aparecerá aqui.",
-  clipboardClear: "Limpar",
-  clipboardCopy: "Copiar",
   clipboardInsertHint: "Clique para inserir no cursor",
   exportNeedsWysiwyg:
     "A exportação para HTML usa a visualização renderizada. Saia do modo código-fonte e exporte de novo.",
@@ -1612,6 +1625,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsCatalogKept:
     "Mostrando a lista da última vez - não foi possível obter uma mais recente: {reason}",
   pluginInstall: "Instalar",
+  pluginNeedsTextus: "Requer o Textus {version}",
   pluginInstalling: "Instalando…",
   pluginsSortLabel: "Ordenar por",
   pluginsSortPopular: "Mais instalados",
@@ -1623,6 +1637,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginUpdatedOn: "Atualizado em {date}",
   pluginReadmeLabel: "Sobre {name}",
   pluginUpdate: "Atualizar para {version}",
+  pluginsUpdateAll: "Atualizar todos ({count})",
+  pluginsUpdateAllFailed: "Estes plugins não foram atualizados: {names}.",
   pluginOfficial: "Oficial",
   pluginBy: "por {author}",
   pluginOpenDetails: "{name}: detalhes e ajustes",
@@ -1671,6 +1687,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginOpenInstall: "Instalar e abrir",
   pluginOpenTurnOnButton: "Ligar e abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  pluginCardMovedLine: "{name} agora é um plugin",
   conventionsCardLine:
     "As configurações do {app} desta pasta guardam as imagens em {folder}",
   conventionsCardDetails:

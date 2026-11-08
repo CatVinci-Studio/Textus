@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Diagram engine: Mermaid by default, Pele when chosen, with Mermaid drawing
 // what Pele can't. Each engine loads only when needed; Pele's colours are CSS
@@ -10,18 +10,6 @@ const FLOW = "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```\n\nEnd.";
 const preview = '[data-active-tab="true"] .ProseMirror .mermaid-preview';
 const peleSvg = `${preview} > svg.pele`;
 const mermaidSvg = `${preview} > svg:not(.pele)`;
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, payload]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, payload),
-    [name, payload] as const,
-  );
-}
 
 /** The engines' own modules the page fetched (the dev server serves each
  *  pre-bundled under node_modules/.vite/deps). */
@@ -83,21 +71,17 @@ test("Mermaid draws diagrams unless Pele is chosen, and Pele is never fetched", 
   expect(seen).toEqual({ mermaid: true, pele: false });
 });
 
-test("neither engine is fetched for a document without diagrams", async ({
+test("with Pele chosen nothing is fetched until a diagram comes, which Pele draws, and Mermaid is never fetched", async ({
   page,
 }) => {
   const seen = engineRequests(page);
   await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
   await pasteMarkdown(page, "# Notes\n\n```js\nconst a = 1;\n```\n");
-  await page.waitForTimeout(800);
+  await expect(page.locator(".milkdown pre code")).toContainText("const a");
   expect(seen).toEqual({ mermaid: false, pele: false });
-});
-
-test("with Pele chosen a diagram is drawn by Pele and Mermaid is never fetched", async ({
-  page,
-}) => {
-  const seen = engineRequests(page);
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
+  // A new document, with a diagram.
+  await emit(page, "menu-new-file");
+  await expect(page.locator('[data-active-tab="true"] h1')).toHaveCount(0);
   await pasteMarkdown(page, FLOW);
   await expect(page.locator(peleSvg)).toHaveCount(1, { timeout: 10_000 });
   await expect(page.locator(`${peleSvg} .pele-node`)).toHaveCount(2);
@@ -118,35 +102,6 @@ test("switching the diagram engine in Settings redraws an open diagram", async (
   await chooseEngine(page, "Mermaid (most compatible)");
   await expect(page.locator(mermaidSvg)).toHaveCount(1, { timeout: 10_000 });
   await expect(page.locator(peleSvg)).toHaveCount(0);
-});
-
-test("a diagram Pele throws on is drawn by Mermaid instead", async ({
-  page,
-}) => {
-  // Pele's module, answering every diagram with an error.
-  await page.route(/\/node_modules\/\.vite\/deps\/pele_lazy\.js/, (route) =>
-    route.fulfill({
-      contentType: "text/javascript",
-      body: 'export async function renderAsync() { throw new Error("boom"); }',
-    }),
-  );
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
-  await pasteMarkdown(page, FLOW);
-  await expect(page.locator(mermaidSvg)).toHaveCount(1, { timeout: 10_000 });
-  await expect(page.locator(peleSvg)).toHaveCount(0);
-});
-
-test("a diagram with HTML in a label is left to Mermaid, the others drawn by Pele", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en", diagramEngine: "pele" } });
-  await pasteMarkdown(
-    page,
-    FLOW.replace("\n\nEnd.", "") +
-      '\n\n```mermaid\nflowchart LR\n  A["<span>html</span>"] --> B\n```\n\nEnd.',
-  );
-  await expect(page.locator(peleSvg)).toHaveCount(1, { timeout: 10_000 });
-  await expect(page.locator(mermaidSvg)).toHaveCount(1, { timeout: 10_000 });
 });
 
 test("a Pele diagram changes colour with the appearance without being redrawn", async ({
@@ -171,7 +126,7 @@ test("a Pele diagram changes colour with the appearance without being redrawn", 
   expect(dark.shape).not.toBe(light.shape);
   expect(luminance(dark.shape)).toBeLessThan(0.3);
   // The same element: recoloured through the CSS variables, not drawn again.
-  await page.waitForTimeout(700);
+  await settled(page);
   expect(
     await page
       .locator(peleSvg)

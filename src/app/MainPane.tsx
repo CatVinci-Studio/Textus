@@ -10,7 +10,7 @@ import {
 } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { DocSourceTextarea } from "../editor/modes/DocSourceTextarea";
+import { DocSourceEditor } from "../editor/modes/lazy-doc-source-editor";
 import {
   showsStartPage,
   tabIsDirty,
@@ -41,6 +41,7 @@ import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 import { copyPathItem } from "../clipboard/copy-path";
+import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -112,6 +113,7 @@ export function MainPane({
   onMoveToNewWindow,
   onToggleReadOnly,
   onReorder,
+  onKeep,
   previewTab,
   onChange,
   typewriter,
@@ -129,6 +131,8 @@ export function MainPane({
   onMoveToNewWindow: (tabId: string) => void;
   onToggleReadOnly: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
+  /** A preview tab kept. */
+  onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
@@ -200,7 +204,9 @@ export function MainPane({
         id: tab.id,
         title: tabTitle(tab, t),
         dirty: tabIsDirty(tab),
+        preview: tab.preview,
       }))}
+      onKeep={onKeep}
       activeTabId={active}
       onActivate={onActivate}
       onClose={onClose}
@@ -343,16 +349,19 @@ export function MainPane({
                   typewriter={typewriter}
                   onChange={(markdown) => onChange(tab.id, markdown)}
                   readOnly={tabReadOnly(tab)}
+                  previewExtras={withPluginBlocks}
                 />
               </Suspense>
             ) : tab.sourceMode ? (
-              <DocSourceTextarea
-                value={tab.content}
-                docPath={tab.path}
-                typewriter={typewriter}
-                onChange={(markdown) => onChange(tab.id, markdown)}
-                readOnly={tabReadOnly(tab)}
-              />
+              <Suspense fallback={null}>
+                <DocSourceEditor
+                  value={tab.content}
+                  docPath={tab.path}
+                  typewriter={typewriter}
+                  onChange={(markdown) => onChange(tab.id, markdown)}
+                  readOnly={tabReadOnly(tab)}
+                />
+              </Suspense>
             ) : (
               <EditorKept
                 tabId={tab.id}

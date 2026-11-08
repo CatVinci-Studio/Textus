@@ -7,10 +7,13 @@ name: CI
 #                                  README/version/updater checks; and the build
 #   e2e      npm run test:e2e      the Playwright flows in Chromium, split by
 #                                  test across four machines; e2e-webkit runs
-#                                  the WebKit ones (not yet required)
+#                                  the WebKit ones after a merge (not required);
+#                                  stopwatch tests (@perf) run only locally,
+#                                  with npm run test:perf
 #   native   npm run check:native  rustfmt, clippy, Rust tests - on Linux,
 #                                  macOS and Windows; and npm test on macOS
-#                                  and Windows
+#                                  and Windows. A pull request runs macOS,
+#                                  Windows and ios only for platform code
 #   ios      the iOS simulator build
 #
 # `check` always runs. Its save round trip (src/document-view/
@@ -65,6 +68,7 @@ jobs:
     outputs:
       e2e: ${{ steps.diff.outputs.e2e }}
       native: ${{ steps.diff.outputs.native }}
+      platforms: ${{ steps.diff.outputs.platforms }}
       roundtrip: ${{ steps.diff.outputs.roundtrip }}
     steps:
       - uses: actions/checkout@v7
@@ -172,7 +176,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 3681245d10959d2a4d1d644312a80e3e2bc84f2e
+          ref: f8752b784d8693deee63fedfcef9a3c69209dbd7
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -222,11 +226,11 @@ jobs:
           test "$RESULT" = success || test "$RESULT" = skipped
 
   # The flows macOS, iOS and Linux users meet in WebKit
-  # (playwright.config.ts's WEBKIT_SPECS). Not required until it has run
-  # green for a while.
+  # (playwright.config.ts's WEBKIT_SPECS). Not required: it runs after a
+  # merge to main or stable, not on every pull request.
   e2e-webkit:
     needs: changes
-    if: needs.changes.outputs.e2e == 'true'
+    if: needs.changes.outputs.e2e == 'true' && github.event_name == 'push'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -239,7 +243,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 3681245d10959d2a4d1d644312a80e3e2bc84f2e
+          ref: f8752b784d8693deee63fedfcef9a3c69209dbd7
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       - run: npx playwright install --with-deps webkit
@@ -254,10 +258,13 @@ jobs:
           retention-days: 7
 
   # Unit tests on macOS and Windows run for frontend changes too (path and
-  # line-ending code); the Rust steps only where Rust can change.
+  # line-ending code); the Rust steps only where Rust can change. A pull
+  # request runs Linux alone unless it touches code that differs between
+  # platforms (scripts/ci-changes.mjs, `platforms`); a push runs all three,
+  # and the release waits for that run on the tagged commit.
   native-platform:
     needs: changes
-    if: needs.changes.outputs.native == 'true' || needs.changes.outputs.e2e == 'true'
+    if: needs.changes.outputs.native == 'true' || (needs.changes.outputs.e2e == 'true' && needs.changes.outputs.platforms == 'true')
     name: native (${{ matrix.name }})
     strategy:
       fail-fast: false
@@ -271,20 +278,9 @@ jobs:
         #
         # macos-26: what macos-latest points at today, pinned (as in the
         # release workflows) so an image switch is a deliberate change.
-        include:
-          - name: ubuntu-22.04
-            os: ubuntu-22.04
-            rust: true
-          - name: macos-26
-            os: macos-26
-            rust: true
-            unit: true
-          - name: windows-2025
-            os: windows-2025
-            rust: true
-          - name: windows-2025, unit tests
-            os: windows-2025
-            unit: true
+        #
+        # Linux alone, or all of them when `platforms` (see above).
+        include: ${{ fromJSON(needs.changes.outputs.platforms == 'true' && '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true},{"name":"macos-26","os":"macos-26","rust":true,"unit":true},{"name":"windows-2025","os":"windows-2025","rust":true},{"name":"windows-2025, unit tests","os":"windows-2025","unit":true}]' || '[{"name":"ubuntu-22.04","os":"ubuntu-22.04","rust":true}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
@@ -350,7 +346,7 @@ jobs:
   # iOS port is young.
   ios:
     needs: changes
-    if: needs.changes.outputs.native == 'true'
+    if: needs.changes.outputs.native == 'true' && needs.changes.outputs.platforms == 'true'
     runs-on: macos-26
     timeout-minutes: 60
     env:

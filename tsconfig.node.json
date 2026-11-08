@@ -8,6 +8,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "strict": true,
+    "resolveJsonModule": true,
     "types": ["node"]
   },
   "include": [
@@ -19,6 +20,7 @@
     "vite.color-mix-fallback.test.ts",
     "vite.dev-plugins.ts",
     "vite.startup-budget.ts",
+    "vite.csp.ts",
     "playwright.webview.config.ts",
     "playwright.config.ts",
     "e2e",

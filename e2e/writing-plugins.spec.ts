@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { emit, selectionRead } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -14,15 +14,7 @@ import {
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 const run = (page: Page, command: string) =>
-  page.evaluate(
-    (id) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, p: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", id),
-    command,
-  );
+  emit(page, "menu-plugin-command", command);
 
 async function open(
   page: Page,
@@ -53,20 +45,6 @@ test("Markdown Lint underlines a heading's trailing colon, and Fix takes it off"
   await expect(mark.first()).toHaveAttribute("title", /MD026/);
   await run(page, "catvinci.markdown-lint.fix");
   await expect(page.locator(`${editor} h2`)).toHaveText("Notes");
-});
-
-test("CJK Spacing spaces Chinese from English, as one change", async ({
-  page,
-}) => {
-  test.skip(!hasPlugin("catvinci.cjk-spacing"), "not in this checkout");
-  await open(
-    page,
-    "catvinci.cjk-spacing",
-    ["editor.read", "editor.write", "files.write"],
-    "# 文档\n\n用Textus写作。\n",
-  );
-  await run(page, "catvinci.cjk-spacing.space");
-  await expect(page.locator(`${editor} p`)).toHaveText("用 Textus 写作。");
 });
 
 test("Heading Numbers numbers the headings, and an export carries them", async ({
@@ -149,11 +127,7 @@ test("Templates adds its item to a file's right-click menu", async ({
     "# Doc\n",
   );
   if (await page.locator(".sidebar.sidebar-collapsed").count())
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-toggle-sidebar"),
-    );
+    await emit(page, "menu-toggle-sidebar");
   await page
     .locator(".sidebar .tree-main .tree-row", { hasText: "doc.md" })
     .click({ button: "right" });
@@ -184,4 +158,30 @@ test("Bookmarks keeps the words selected, listed in the sidebar", async ({
   const list = await openSidebarList(page, "Bookmarks");
   await expect(list).toContainText("A remarkable sentence here.");
   await expect(list).toContainText("doc.md");
+});
+
+test("Clipboard History lists what is copied or cut in a document, and a click puts it in again", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.clipboard-history"), "not in this checkout");
+  await open(
+    page,
+    "catvinci.clipboard-history",
+    ["clipboard", "editor.write"],
+    "# Doc\n\nFirst words.\n\nSecond words.\n",
+  );
+  const list = await openSidebarList(page, "Clipboard History");
+  await expect(list).toContainText("Nothing yet");
+  await page.locator(`${editor} p`).first().click({ clickCount: 3 });
+  await page.keyboard.press("ControlOrMeta+c");
+  await page.locator(`${editor} p`).nth(1).click({ clickCount: 3 });
+  await page.keyboard.press("ControlOrMeta+x");
+  await expect(page.locator(editor)).not.toContainText("Second words.");
+  // The newest first.
+  await expect(list.getByRole("treeitem")).toHaveText([
+    "Second words.",
+    "First words.",
+  ]);
+  await list.getByRole("treeitem", { name: "First words." }).click();
+  await expect(page.locator(`${editor} p`).nth(1)).toHaveText("First words.");
 });

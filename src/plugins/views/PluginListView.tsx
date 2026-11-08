@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -30,9 +31,10 @@ import {
   listViewsVersion,
   subscribeListViews,
 } from "../contributions/list-views";
-import { windowInfo } from "../store/plugin-records";
+import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
+import { trackDrag } from "../../ui/pointer-drag";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -89,7 +91,7 @@ function keyOf(item: PluginListItem, index: number): string {
 function defaultSelect(item: PluginListItem) {
   if (item.location) {
     const { path, ...place } = item.location;
-    getWindowAccess()?.openFile(path, { place, where: "tab" });
+    getWindowAccess()?.openFile(path, { place, preview: true });
   } else if (item.command) runCommand(item.command.id, item.command.args ?? []);
 }
 
@@ -137,6 +139,42 @@ export const PluginListPane = memo(function PluginListPane({
     }).catch(() => {});
   };
 
+  // A row dragged onto another: the plugin moves it there (onMove).
+  const dragHandlers = (item: PluginListItem, key: string) => ({
+    "data-list-key": key,
+    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => {
+      const row = e.currentTarget;
+      const list = row.closest<HTMLElement>(".plugin-list-rows");
+      if (!list || e.pointerType === "touch") return;
+      let over: HTMLElement | null = null;
+      const hover = (next: HTMLElement | null) => {
+        over?.classList.remove("is-drop");
+        over = next && next !== row ? next : null;
+        over?.classList.add("is-drop");
+      };
+      trackDrag(e, {
+        start: () => row.classList.add("is-dragging"),
+        move: (x, y) =>
+          hover(
+            document
+              .elementFromPoint(x, y)
+              ?.closest<HTMLElement>("[data-list-key]") ?? null,
+          ),
+        end: (_x, _y, dropped) => {
+          const target = rows.find((r) => r.key === over?.dataset.listKey);
+          row.classList.remove("is-dragging");
+          hover(null);
+          if (!dropped || !target || !list.contains(row)) return;
+          void askPlugin(plugin, "$listMove", {
+            view,
+            item,
+            target: target.item,
+          }).catch(() => {});
+        },
+      });
+    },
+  });
+
   // The rows as shown: filtered, open items' children under them.
   const rows = useMemo(() => {
     const out: { item: PluginListItem; key: string; depth: number }[] = [];
@@ -178,7 +216,8 @@ export const PluginListPane = memo(function PluginListPane({
     }
   };
 
-  const name = pluginRecord(plugin)?.manifest?.name ?? plugin;
+  const record = pluginRecord(plugin);
+  const name = record ? pluginName(record) : plugin;
   let lastGroup: string | undefined;
   return (
     <div className={`plugin-list ${className ?? ""}`}>
@@ -233,6 +272,7 @@ export const PluginListPane = memo(function PluginListPane({
                 style={{ paddingInlineStart: `${8 + depth * 14}px` }}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => select(item)}
+                {...(info?.move ? dragHandlers(item, key) : {})}
                 onContextMenu={(e) => {
                   if (!item.actions?.length) return;
                   e.preventDefault();

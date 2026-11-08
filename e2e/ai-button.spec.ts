@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, openApp, openPhone } from "./helpers";
+import { openApp, openPhone, PHONE } from "./helpers";
 
 // The window bar's AI panel button: the app icon's quill, struck through
 // while Textus AI is off. The phone's title row draws the same button.

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { setReadOnlyShown } from "../document/read-only-state";
-import { installClipboardCapture } from "../clipboard/history";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useNavHistory } from "./useNavHistory";
@@ -68,7 +67,6 @@ export function useWindowWiring({
   });
 
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
-  useEffect(() => installClipboardCapture(), []);
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
   usePracticeNotes({
@@ -164,13 +162,18 @@ export function useWindowWiring({
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: panels.toggleSidebar,
+    showSidebarTab: (id: string) => {
+      panels.setPanelMode(id);
+      panels.setPanelOpen(true);
+    },
     onToggleAgentPanel: panels.toggleAgentPanel,
     onOpenAgentPanel: () => {
       if (!panels.agentPanel.open) panels.toggleAgentPanel();
     },
     onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: docs.toggleSplitView,
-    onToggleReadOnly: () => docs.toggleReadOnly(),
+    onToggleReadOnly: () => docs.chooseViewMode("read-only"),
+    onViewModeDefault: () => docs.chooseViewMode("default"),
     onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,

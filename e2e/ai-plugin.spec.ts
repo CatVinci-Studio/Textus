@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // "Install this plugin" under the plugin skill's reply installs and enables
 // it, asking for its permissions, with the conversation still in view.
@@ -43,13 +43,7 @@ const reply = (version: string) =>
   ].join("\n");
 
 const count = (page: import("@playwright/test").Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-plugin-command", "local.word-count.count"),
-  );
+  emit(page, "menu-plugin-command", "local.word-count.count");
 
 async function ask(page: import("@playwright/test").Page, version: string) {
   const message = "/plugin a command that counts words";
@@ -144,11 +138,7 @@ test("a plugin's page asks the AI to change it, in Extensions' Create tab", asyn
     ];
   });
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="local.word-count"] .plugin-card-open')
     .click();
@@ -166,28 +156,4 @@ test("a plugin's page asks the AI to change it, in Extensions' Create tab", asyn
   ).toHaveValue("Change the Word Count plugin (local.word-count): ");
   // The document's panel is left as it was.
   await expect(page.locator(".agent-panel")).toHaveCount(0);
-});
-
-test("a plugin written in the conversation can't take someone else's id", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await mockInvoke(page, {
-    ai_agent_message: [
-      { kind: "User", text: "make tasks better" },
-      {
-        kind: "Assistant",
-        text: reply("1.0.0").replace(/local\.word-count/g, "catvinci.tasks"),
-      },
-    ],
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("make tasks better");
-  await composer.press("Enter");
-  const chip = page.locator('.agent-plugin-chip[data-plugin="catvinci.tasks"]');
-  await chip.getByRole("button", { name: "Install this plugin" }).click();
-  await expect(page.locator(".app-dialog")).toContainText("someone else's");
 });

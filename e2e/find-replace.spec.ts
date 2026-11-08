@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { HOME, openApp, pasteMarkdown, selectionRead } from "./helpers";
+import { emit, HOME, openApp, pasteMarkdown, selectionRead } from "./helpers";
 
 // Find and replace as other editors have it: the selected words become the
 // query, Find again goes back to the box, closing leaves the match
@@ -62,4 +62,28 @@ test("Replace All is taken back by one undo", async ({ page }) => {
     "zebra two",
     "zebra three",
   ]);
+});
+
+test("Find Next steps through the matches from the text, and Replace opens with its box", async ({
+  page,
+}) => {
+  const editor = await openDoc(page);
+  await page.keyboard.press("ControlOrMeta+f");
+  const input = page.locator(".find-replace-input").first();
+  await input.fill("zebra");
+  await expect(page.locator(".find-replace-count")).toContainText("1 / 3");
+  await page.keyboard.press("Escape");
+  await expect(editor).toBeFocused();
+
+  // Closed, it opens the bar again on what was looked for; open, it steps.
+  const count = page.locator(".find-replace-count");
+  await emit(page, "menu-find-next");
+  await expect(count).toContainText("/ 3");
+  const at = Number((await count.textContent())!.split("/")[0].trim());
+  await emit(page, "menu-find-next");
+  await expect(count).toContainText(`${(at % 3) + 1} / 3`);
+
+  await page.keyboard.press("Escape");
+  await emit(page, "menu-replace");
+  await expect(page.locator(".find-replace-input").nth(1)).toBeVisible();
 });

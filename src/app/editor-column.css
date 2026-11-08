@@ -49,38 +49,23 @@
   padding-bottom: 42vh;
 }
 
+/* The source editor: as wide as the pane, as the rendered one's scroller
+   is, so its scrollbar is at the pane's edge; CodeMirror's scroller pads
+   the text into the column (editor/modes/source-editor.css). */
 .source-view {
-  zoom: var(--content-zoom, 1);
   flex: 1;
+  min-height: 0;
   width: 100%;
-  max-width: var(--content-width);
-  margin: 0 auto;
-  padding: 3rem 1.5rem 6rem;
-  border: none;
-  outline: none;
-  resize: none;
   background: var(--doc-bg);
   color: var(--doc-text);
   font-family: var(--font-mono);
   /* As in code (content-base.css): no fi drawn as one glyph. */
   font-variant-ligatures: no-common-ligatures;
-  /* The rich editor's size at the standard column. rem, so an imported
-     theme's `html { font-size }` reaches it. */
-  font-size: 1.03125rem;
+  /* The rich editor's size at the standard column, times the document's
+     zoom: the text grows, the pane and its scrollbar don't. rem, so an
+     imported theme's `html { font-size }` reaches it. */
+  font-size: calc(1.03125rem * var(--content-zoom, 1));
   line-height: 1.7;
-}
-
-/* Centred on a whole pixel: WebKitGTK resamples a focused textarea's layer
-   at x.5 and the text goes soft. Behind @supports, since an engine without
-   round() would compute it to 0. */
-@supports (margin-left: round(down, 1px, 1px)) {
-  .source-view {
-    margin-left: round(
-      down,
-      calc((100% - min(100%, var(--content-width))) / 2),
-      calc(1px / var(--content-zoom, 1))
-    );
-  }
 }
 
 /* No focus ring: the pane is the field, and on WebKitGTK the ring made the

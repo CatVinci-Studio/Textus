@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { dropPaths, openApp } from "./helpers";
 
 // Redoing a picture the writer selected: the new one takes the old one's
 // place in the text. The reply copies the picture's Markdown from the request.
@@ -27,18 +27,7 @@ async function open(page: Page, picture: string) {
       ((window as unknown as Record<string, unknown>).__devFiles = files),
     { [path]: `${FIRST}\n\n${picture}\n\n${LAST}\n` },
   );
-  await page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", {
-        paths: [p],
-        position: { x: 0, y: 0 },
-      }),
-    path,
-  );
+  await dropPaths(page, [path]);
   await expect(page.locator(`${editor} .image-view img`)).toHaveCount(1);
 }
 

@@ -4,7 +4,7 @@
 
 use crate::ai::scratch::ATTACHED;
 use crate::ai::tools::ToolContext;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// What a path can't hold inside a Markdown link: spaces, brackets,
 /// parentheses, `%` and control characters (and, as always, non-ASCII).
@@ -83,11 +83,20 @@ pub(crate) fn material_name(address: &str) -> Option<String> {
         .map(decoded)
 }
 
-/// The local file a note cites, as its address and title: `attached/...`
-/// from the paper's folder, or a file of the project folder - a bare name
-/// of an attached file too. None when `cited` names no readable file there
-/// (a source's number or a web address).
-pub(super) fn cited_file(ctx: &ToolContext, cited: &str) -> Option<(String, String)> {
+/// A local file a note cites.
+pub(super) struct CitedFile {
+    /// Its address among the paper's sources.
+    pub address: String,
+    pub title: String,
+    /// Where it is on disk, to check the note against.
+    pub path: PathBuf,
+}
+
+/// The local file a note cites: `attached/...` from the paper's folder, or a
+/// file of the project folder - a bare name of an attached file too. None
+/// when `cited` names no readable file there (a source's number or a web
+/// address).
+pub(super) fn cited_file(ctx: &ToolContext, cited: &str) -> Option<CitedFile> {
     let cited = cited
         .trim()
         .trim_start_matches('@')
@@ -97,18 +106,22 @@ pub(super) fn cited_file(ctx: &ToolContext, cited: &str) -> Option<(String, Stri
         return None;
     }
     let path = decoded(cited);
-    let found = |folder: Option<&Path>, path: &str| {
-        crate::ai::project::resolve(folder?, path)
-            .ok()
-            .map(|(_, rel)| rel)
-    };
+    let found = |folder: Option<&Path>, path: &str| crate::ai::project::resolve(folder?, path).ok();
     let title = |path: &str| path.rsplit('/').next().unwrap_or(path).to_string();
-    let attached = |name: &str| (material_address(name), title(name));
+    let attached = |name: &str, (path, _): (PathBuf, String)| CitedFile {
+        address: material_address(name),
+        title: title(name),
+        path,
+    };
     if let Some(name) = material_name(&path) {
-        return found(ctx.scratch, &path).map(|_| attached(&name));
+        return found(ctx.scratch, &path).map(|f| attached(&name, f));
     }
-    if let Some(rel) = found(ctx.root, &path) {
-        return Some((reference_address(&rel), title(&rel)));
+    if let Some((abs, rel)) = found(ctx.root, &path) {
+        return Some(CitedFile {
+            address: reference_address(&rel),
+            title: title(&rel),
+            path: abs,
+        });
     }
-    found(ctx.scratch, &format!("{ATTACHED}/{path}")).map(|_| attached(&path))
+    found(ctx.scratch, &format!("{ATTACHED}/{path}")).map(|f| attached(&path, f))
 }

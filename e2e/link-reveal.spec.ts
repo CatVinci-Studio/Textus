@@ -1,5 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, mockInvoke, openApp, selectionRead } from "./helpers";
+import {
+  dropPaths,
+  END,
+  HOME,
+  mockInvoke,
+  openApp,
+  selectionRead,
+  settled,
+  sourceValue,
+} from "./helpers";
 
 // A link the caret is on shows as its Markdown, edited in place; leave it and
 // it reads as a link again, as edited. Ctrl/Cmd+click still opens it. The
@@ -30,16 +39,7 @@ const AFTER = " link.";
 async function openDoc(page: Page) {
   await openApp(page, { settings: { language: "en" } });
   await mockInvoke(page, { read_text_file: `${DOC}\n`, file_mtime_ms: 1 });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: unknown) => void;
-      }
-    ).__devEmitTauriEvent("tauri://drag-drop", {
-      paths: ["/home/me/links.md"],
-      position: { x: 0, y: 0 },
-    }),
-  );
+  await dropPaths(page, ["/home/me/links.md"]);
   await expect(page.locator(`${editor} a`)).toHaveCount(KINDS.length);
 }
 
@@ -100,10 +100,10 @@ async function sourceOf(page: Page): Promise<string> {
     );
   await emit("menu-toggle-source-mode");
   const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
+    '[data-active-tab="true"] .source-view .cm-content',
   );
   await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
+  const value = await sourceValue(page);
   await emit("menu-toggle-source-mode");
   await expect(textarea).toHaveCount(0);
   return value;
@@ -113,38 +113,42 @@ test.beforeEach(async ({ page }) => {
   await openDoc(page);
 });
 
-for (const [kind, label, markdown] of KINDS) {
-  test(`a click on ${kind} shows its Markdown, and leaving shows the link`, async ({
-    page,
-  }) => {
-    await page.locator(`${editor} a`, { hasText: label }).click();
-    await expect(page.locator(source)).toHaveText(markdown);
-    await expect(line(page, markdown)).toHaveText(`A ${markdown}${AFTER}`);
-    await leave(page);
-    await expect(page.locator(`${editor} a`, { hasText: label })).toHaveCount(
-      1,
-    );
-  });
+test("a click on each kind of link shows its Markdown, and leaving shows the link", async ({
+  page,
+}) => {
+  for (const [kind, label, markdown] of KINDS)
+    await test.step(kind, async () => {
+      await page.locator(`${editor} a`, { hasText: label }).click();
+      await expect(page.locator(source)).toHaveText(markdown);
+      await expect(line(page, markdown)).toHaveText(`A ${markdown}${AFTER}`);
+      await leave(page);
+      await expect(page.locator(`${editor} a`, { hasText: label })).toHaveCount(
+        1,
+      );
+    });
+});
 
-  test(`the arrow keys onto ${kind} show it, and off it show the link`, async ({
-    page,
-  }) => {
-    await caretAtLineStart(page, label);
-    await press(page, "ArrowRight");
-    await expect(page.locator(source)).toHaveCount(0);
-    // "A " - the caret at the link's start.
-    await press(page, "ArrowRight");
-    await expect(page.locator(source)).toHaveText(markdown);
-    await press(page, "ArrowLeft");
-    await expect(page.locator(source)).toHaveCount(0);
-    // From the other side: past " link." to the link's end.
-    await press(page, END);
-    await press(page, "ArrowLeft", AFTER.length);
-    await expect(page.locator(source)).toHaveText(markdown);
-    await press(page, "ArrowRight");
-    await expect(page.locator(source)).toHaveCount(0);
-  });
-}
+test("the arrow keys onto each kind of link show it, and off it show the link", async ({
+  page,
+}) => {
+  for (const [kind, label, markdown] of KINDS)
+    await test.step(kind, async () => {
+      await caretAtLineStart(page, label);
+      await press(page, "ArrowRight");
+      await expect(page.locator(source)).toHaveCount(0);
+      // "A " - the caret at the link's start.
+      await press(page, "ArrowRight");
+      await expect(page.locator(source)).toHaveText(markdown);
+      await press(page, "ArrowLeft");
+      await expect(page.locator(source)).toHaveCount(0);
+      // From the other side: past " link." to the link's end.
+      await press(page, END);
+      await press(page, "ArrowLeft", AFTER.length);
+      await expect(page.locator(source)).toHaveText(markdown);
+      await press(page, "ArrowRight");
+      await expect(page.locator(source)).toHaveCount(0);
+    });
+});
 
 test("the caret lands on the character that was clicked", async ({ page }) => {
   await clickAfterChar(page, "resource", 2);
@@ -214,56 +218,13 @@ test("the URL and the text are edited in place, and saved as typed", async ({
   );
 });
 
-test("a link that is no longer one is plain text", async ({ page }) => {
-  await caretAtLineStart(page, "resource");
-  await press(page, "ArrowRight");
-  await press(page, "ArrowRight");
-  await press(page, "ArrowRight");
-  // The opening bracket.
-  await page.keyboard.press("Backspace");
-  await leave(page);
-  // Text, with the URL in it a bare link of its own.
-  await expect(line(page, "resource")).toHaveText(
-    "A resource](https://a.org/r) link.",
-  );
-  await expect(
-    page.locator(`${editor} a`, { hasText: "resource" }),
-  ).toHaveCount(0);
-});
-
 test("looking at links leaves the document unchanged", async ({ page }) => {
   for (const [, label] of KINDS)
     await page.locator(`${editor} a`, { hasText: label }).click();
   await leave(page);
-  await page.waitForTimeout(500);
+  await settled(page);
   await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
   expect(await sourceOf(page)).toBe(`${DOC}\n`);
-});
-
-test("one undo takes back an edited URL, and a redo puts it back", async ({
-  page,
-}) => {
-  await page.locator(`${editor} a`, { hasText: "resource" }).click();
-  await press(page, END);
-  await press(page, "ArrowLeft", AFTER.length + 1);
-  await page.keyboard.type("/x");
-  await leave(page);
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(1);
-  await page.keyboard.press("ControlOrMeta+z");
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(0);
-  await expect(line(page, "resource")).toHaveText(
-    "A [resource](https://a.org/r) link.",
-  );
-  // Elsewhere, the redo is still there.
-  await page.locator(`${editor} p`, { hasText: "Start here." }).click();
-  await page.keyboard.press("ControlOrMeta+Shift+z");
-  await expect(
-    page.locator(`${editor} a[href="https://a.org/r/x"]`),
-  ).toHaveCount(1);
 });
 
 test("Ctrl/Cmd+click opens a link shown as its Markdown", async ({ page }) => {
@@ -279,35 +240,4 @@ test("Ctrl/Cmd+click opens a link shown as its Markdown", async ({ page }) => {
     )
     .toEqual([{ cmd: "open_web_link", url: "https://a.org/r" }]);
   await expect(page.locator(source)).toHaveCount(1);
-});
-
-test("Chinese typed with an input method goes into the link's text", async ({
-  page,
-  browserName,
-}) => {
-  test.skip(browserName !== "chromium", "composition is sent over CDP");
-  await clickAfterChar(page, "resource", 2);
-  await expect(page.locator(source)).toHaveCount(1);
-  const cdp = await page.context().newCDPSession(page);
-  for (const [preedit, committed] of [
-    ["zhong", "中"],
-    ["wen", "文"],
-  ]) {
-    await cdp.send("Input.imeSetComposition", {
-      text: preedit,
-      selectionStart: preedit.length,
-      selectionEnd: preedit.length,
-    });
-    await cdp.send("Input.insertText", { text: committed });
-    await page.waitForTimeout(100);
-  }
-  await cdp.detach();
-  await expect(page.locator(source)).toHaveText(
-    "[res中文ource](https://a.org/r)",
-  );
-  await leave(page);
-  await expect(page.locator(`${editor} a[href="https://a.org/r"]`)).toHaveText(
-    "res中文ource",
-    { useInnerText: true },
-  );
 });

@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  invokeCalls,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  release,
+} from "./helpers";
 
 /**
  * Messages sent while a reply is coming wait over the composer and go in
@@ -14,10 +20,10 @@ async function open(page: Page) {
     storage: { "textus-agent-panel-open": "1" },
   });
   await pasteMarkdown(page, "A short note.");
-  // Each reply takes a moment, long enough to send more meanwhile.
+  // Each reply waits for release(), so more can be sent meanwhile.
   await mockInvoke(page, {
     ai_agent_message: {
-      __delay: 1200,
+      __hold: true,
       value: [
         { kind: "User", text: "…" },
         { kind: "Assistant", text: "Done." },
@@ -31,17 +37,9 @@ async function send(page: Page, text: string) {
   await composer(page).press("Enter");
 }
 
-const sent = (page: Page) =>
-  page.evaluate(() =>
-    (
-      (
-        window as unknown as {
-          __devInvokeCalls?: { cmd: string; message?: string }[];
-        }
-      ).__devInvokeCalls ?? []
-    )
-      .filter((c) => c.cmd === "ai_agent_message")
-      .map((c) => c.message ?? ""),
+const sent = async (page: Page) =>
+  (await invokeCalls(page, "ai_agent_message")).map((c) =>
+    String(c.message ?? ""),
   );
 
 test("messages sent during a reply wait their turn and go in order", async ({
@@ -59,7 +57,11 @@ test("messages sent during a reply wait their turn and go in order", async ({
   ]);
   await expect(queue).toContainText("Queued (2)");
   // Each goes once the one before has finished.
-  await expect.poll(() => sent(page), { timeout: 10_000 }).toHaveLength(3);
+  for (const n of [2, 3]) {
+    await release(page, "ai_agent_message");
+    await expect.poll(() => sent(page)).toHaveLength(n);
+  }
+  await release(page, "ai_agent_message");
   const messages = await sent(page);
   expect(messages[0]).toContain("First request");
   expect(messages[1]).toContain("Second request");
@@ -91,6 +93,10 @@ test("Stop stops the reply and gives the queue back to the box", async ({
   await page.locator(".inline-chat-send").click();
   await expect(page.locator(".chat-queue")).toHaveCount(0);
   await expect(composer(page)).toHaveValue("Second request");
-  await page.waitForTimeout(1500);
-  expect(await sent(page)).toHaveLength(1);
+  // The stopped reply coming late sends nothing queued: the next message
+  // sent is the one typed now.
+  await release(page, "ai_agent_message");
+  await send(page, "Something else");
+  await expect.poll(() => sent(page)).toHaveLength(2);
+  expect((await sent(page))[1]).toContain("Something else");
 });

@@ -1,104 +1,143 @@
 # Releasing
 
-Maintainers only. Releases are tags: the next minor version's on `main`,
-the current stable version's fixes on `stable`. The desktop app ships from a `vX.Y.Z` tag through
+How work reaches `main`, how a test build and a release are cut, and what
+the release workflows do. This page is the one place for the branch,
+pull request and commit rules; other documents link here.
+
+The desktop app ships from a `vX.Y.Z` tag through
 `.github/workflows/release.yml`; the iOS app ships from an `ios-vX.Y.Z` tag
 through `.github/workflows/ios-release.yml` (see [ios-release.md](ios-release.md)).
-The browser playground isn't released: it deploys from `main` on every
-change ([infrastructure.md](infrastructure.md#playground)).
+The browser playground isn't released: it is deployed after each newest
+stable release ([infrastructure.md](infrastructure.md#playground)).
 
 ## Branches
 
-Two long-lived branches, each with its own tags:
+| Branch   | What it is                                                   | Tagged there               |
+| -------- | ------------------------------------------------------------ | -------------------------- |
+| `main`   | Where all work lands: features and fixes                     | test builds, `vX.Y.Z-rc.N` |
+| `stable` | The released version. It moves only by a release from `main` | releases, `vX.Y.Z`         |
 
-| Branch   | What it is                                     | Tagged there                   |
-| -------- | ---------------------------------------------- | ------------------------------ |
-| `main`   | The next minor version: new features land here | `vX.Y.0-beta.N`, then `vX.Y.0` |
-| `stable` | The version people have installed: fixes only  | `vX.Y.1`, `vX.Y.2`…            |
+- **Test builds are tags on `main`**: `vX.Y.Z-rc.N`, published as GitHub
+  pre-releases and offered on the Beta update channel
+  ([Pre-releases](#pre-releases)).
+- **A release goes from `main` into `stable` in one pull request**
+  ("Textus X.Y.Z"), and is published from `stable`: the `vX.Y.Z` tag is
+  pushed on the merged `stable` commit ([Desktop release](#desktop-release)).
+- A fix the released version needs lands on `main` like any other change,
+  and ships in the next release. Nothing is committed to `stable` except a
+  release.
+- Never push to `main` or `stable` directly. Branch protection requires
+  the `check`, `e2e` and `native` CI jobs (and `ci-config`, which only a
+  fork's pull request runs). It doesn't require the branch to be up to
+  date: a pull request that passed is merged as it is, and the CI run after
+  the merge catches the rare case where two changes only break together.
+- Older versions are kept as tags (`v1.2.8`, `v1.1.2`; `v0.9.8` for Levis),
+  not branches.
 
-Everything else is short-lived and deleted on merge (the repository does
-it):
+## Pull requests and commits
 
-| Branch                                 | For                                                                             | Merges into        |
-| -------------------------------------- | ------------------------------------------------------------------------------- | ------------------ |
-| `feat/…`, `fix/…`, `docs/…`, `chore/…` | One change                                                                      | `main` or `stable` |
-| `feat/<name>` as an integration branch | A large feature built in several pull requests (below)                          | `main`             |
-| `release/vX.Y.Z`                       | One release: the version bump and its notes, or a patch's fixes tested together | `main` or `stable` |
+- **One pull request per repository per release.** Maintainers batch the
+  work for a release into one branch and one pull request to `main`; its
+  steps are commits in it. Don't open a pull request per change, and don't
+  stack pull requests. A contributor's pull request goes to `main` as it
+  is: we take it from there.
+- **Pull requests are squash-merged.** The pull request's title and
+  description become the one commit on `main`, so write them as a commit
+  message. Merged branches are deleted automatically.
+- **Commit messages are plain English sentences** that say what changed,
+  not Conventional Commits:
 
-- Branch protection on `main` and `stable` requires the `check`, `e2e` and
-  `native` CI jobs (and `ci-config`, which only a fork's pull request
-  runs). It doesn't require the branch to be up to date: a pull request
-  that passed is merged as it is, and the CI run after the merge catches
-  the rare case where two changes only break together.
-- **Betas, then the release.** A minor version is tried out as
-  `vX.Y.0-beta.N`, tagged on `main` while its features land, and released
-  as `vX.Y.0` when they hold up.
-- **Fixes are patch releases**: `vX.Y.1`, `vX.Y.2`… from `stable`,
-  released as they are, with no beta first.
-- **A fix goes where the bug is.** One the stable version has is a pull
-  request to `stable` (an outside contributor's goes to `main`, and is
-  carried over); one only `main` has goes to `main`. New features never go
-  to `stable`.
-- **After every release from `stable`, merge it back into `main`**
-  (a merge commit, not a cherry-pick), in a pull request of its own:
-  keep `main`'s side of the version lines; where `main` has restructured
-  the code a fix touches, carry the fix over by hand.
-- **`stable` moves on at each minor release.** Once `vX.Y.0` is tagged on
-  `main`, `stable` is fast-forwarded to that tag (it can be, since every
-  patch was merged back), and the next fixes are `vX.Y.1`… The last patch
-  of the line before stays as its tag (`v1.2.8`, `v1.1.2`; `v0.9.8` for
-  Levis).
-- **Integration branches.** A feature too large for one pull request
-  (multiple panes, say) gets a `feat/<name>` branch from `main`; its steps
-  are pull requests into that branch, `main` is merged into it at least
-  weekly, and the finished feature is one pull request into `main`. Small
-  features never need one.
-- Small, unrelated fixes can share one branch and one pull request, one
-  commit per fix, so CI runs once.
+  ```
+  Preview tabs: a single click in the file tree opens a file to look at
+  Source mode edits as plain text with colours; Enter still continues a list
+  ```
 
-Both lines can release in the same week. A stable tag becomes GitHub's
-"Latest" release - the one the updater, the website's downloads, Homebrew,
-the mirror and the Arch repository follow - only when it is the highest
-stable version (release.yml's "Is this the newest stable tag?"), and a
-pre-release never does. The beta channel's manifest only moves
-forward (`scripts/updater-manifest.mjs beta`): a `1.2.2` released after
-`1.3.0-beta.1` leaves beta users on the beta, and reaches them
-in the next one, through the merge back.
+  The body, when there is one, says why the old behaviour was wrong: the
+  failure it prevents, not a restatement of the diff. No "generated with"
+  trailers, and no `Co-authored-by` except to credit an outside contributor
+  whose work the commit carries.
+
+- Name a branch after what it does: `fix/pdf-margins`, `feat/sidebar-width`,
+  `docs/dev-1310`. Branch from `origin/main`; if `main` moves on while you
+  work, merge it into your branch.
+- Each pull request adds its release note as a fragment in
+  `docs/releases/next/` ([its README](../releases/next/README.md)), never
+  into `docs/releases/X.Y.Z.md`.
+
+Both kinds of tag can be published in the same week. A stable tag becomes
+GitHub's "Latest" release - the one the updater, the website's downloads,
+Homebrew, the mirror and the Arch repository follow - only when it is the
+highest stable version (release.yml's "Is this the newest stable tag?"),
+and a pre-release never does. The beta channel's manifest only moves
+forward (`scripts/updater-manifest.mjs beta`).
 
 ## Desktop release
 
-1. Bump the version in `package.json`, `src-tauri/Cargo.toml` and
+A test build and a release run the same workflow; they differ in the
+version, the branch the tag is on, and the notes.
+
+### A test build (`vX.Y.Z-rc.N`)
+
+1. In the release's pull request to `main`, set the version to
+   `X.Y.Z-rc.N` in `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json`, then run `npm install --package-lock-only`
    and `cargo check` (in `src-tauri/`) so `package-lock.json` (both of its
    version fields) and `Cargo.lock` follow. `node scripts/check-versions.mjs`
    (part of `npm run check`) fails until all five files agree.
-2. Collect the release notes: `node scripts/release-notes.mjs build X.Y.Z`
-   adds every fragment in `docs/releases/next/` to `docs/releases/X.Y.Z.md`
+2. Once it is merged, tag that exact commit on `main`:
+
+   ```sh
+   git fetch origin
+   node scripts/check-versions.mjs --tag vX.Y.Z-rc.N   # on a checkout of origin/main
+   git tag -a vX.Y.Z-rc.N origin/main -m "Textus X.Y.Z-rc.N"
+   git push origin vX.Y.Z-rc.N
+   ```
+
+Release notes aren't required for a pre-release: the fragments stay in
+`docs/releases/next/` until the stable release collects them.
+
+### A release (`vX.Y.Z`)
+
+1. On `main`, set the version to `X.Y.Z` as in step 1 above, and collect
+   the release notes: `node scripts/release-notes.mjs build X.Y.Z` adds
+   every fragment in `docs/releases/next/` to `docs/releases/X.Y.Z.md`
    (creating it in the outline of [TEMPLATE.md](../releases/TEMPLATE.md)
    if it doesn't exist), each bullet at the end of its section, oldest
    first, and deletes the fragments. Then edit the file: write the summary
    sentence, merge bullets that describe one change, order each section.
    The release workflow refuses a stable tag without the notes, and
-   `check-versions.mjs --tag` (step 4, and the workflow's preflight) a stable
-   tag with fragments left over or the summary unwritten; the notes are the
-   GitHub release's text and the updater's.
-3. Commit as `chore: bump version to X.Y.Z` in a pull request and merge it.
-4. Check the merged `main` and tag that exact commit:
+   `check-versions.mjs --tag` (step 3, and the workflow's preflight) a
+   stable tag with fragments left over or the summary unwritten; the notes
+   are the GitHub release's text and the updater's.
+2. Open one pull request from `main` into `stable`, titled
+   `Textus X.Y.Z`, and squash-merge it once CI passes.
+3. Check the merged `stable` and tag that exact commit:
 
    ```sh
    git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z   # run on a checkout of origin/main
-   git tag -a vX.Y.Z origin/main -m "Textus X.Y.Z"
+   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/stable
+   git tag -a vX.Y.Z origin/stable -m "Textus X.Y.Z"
    git push origin vX.Y.Z
    ```
 
    Tag only after the merge has landed: a tag pushed before it points at the
    old commit, and the workflow's preflight stops it.
 
-5. `release.yml` checks that the tag matches the version files and that CI
+4. `release.yml` runs, as for every tag (below).
+
+### What the workflow does
+
+1. `release.yml` checks that the tag matches the version files and that CI
    (`check`, `e2e`, `native`) passed on the tagged commit - it waits if CI is
    still running, and stops if it failed, so the builds don't run the tests
-   again. Then it builds,
+   again. A pull request runs macOS, Windows and the iOS build only for
+   platform code, so this run after the merge is the first to run all of
+   them: before tagging, look at it whole, `e2e-webkit` and `ios` included,
+   which the gate doesn't wait for. A flaky job is rerun alone
+   (`gh run rerun <run> --failed`); a real failure is fixed on `main`,
+   brought to `stable` again, and the unpublished tag moved to the new
+   commit. Run `npm run test:perf` once and compare its numbers with the
+   last release's: a reference, not a gate. Then it builds,
    signs and notarizes for macOS (Apple silicon and Intel), Windows and Linux
    (x64 and ARM64 each; see [Installers](#installers)),
    writes the updater manifest onto the draft, publishes the GitHub release,
@@ -112,7 +151,7 @@ in the next one, through the merge back.
    (`Casks/t/textus.rb` in `Homebrew/homebrew-cask`), and Homebrew's bot
    bumps it after each stable release, usually within a few hours.
 
-6. Verify the release:
+2. Verify the release:
    - the GitHub release is public and has every file in
      [Installers](#installers), and a `.sig` beside each one with updater
      keys;
@@ -132,13 +171,14 @@ in the next one, through the merge back.
      request by hand with `brew bump-cask-pr textus --version X.Y.Z`.
 
 A failed run can be rebuilt with
-`gh workflow run release.yml --ref main -f tag=vX.Y.Z`: the workflows, the
+`gh workflow run release.yml --ref vX.Y.Z -f tag=vX.Y.Z`: the workflows, the
 preflight checks and the Arch package's scripts (`packaging/arch/`) come from
 the ref; the app, its installers and tarball, and the updater manifest are
-built from the tag. The three steps after
-publishing are separate workflows, so one of them can be retried alone:
-`gh workflow run mirror-downloads.yml -f tag=vX.Y.Z`, and the same for
-`update-beta-manifest.yml` and `update-arch-repo.yml`.
+built from the tag. The ref is the tag because the **release** environment
+admits only tags ([Secrets](#secrets)). The three steps after publishing are
+separate workflows, so one of them can be retried alone:
+`gh workflow run mirror-downloads.yml --ref vX.Y.Z -f tag=vX.Y.Z`, and the
+same for `update-beta-manifest.yml` and `update-arch-repo.yml`.
 
 ## Installers
 
@@ -172,36 +212,11 @@ repository. `scripts/updater-manifest.mjs` (`platformKeys`) and
 `scripts/mirror-keys.mjs` map the file names to the keys; their tests
 list every name above.
 
-## A patch release from `stable`
-
-The same steps as [Desktop release](#desktop-release), on `stable`
-instead of `main`:
-
-1. Each fix is a `fix/…` branch from `origin/stable` and a pull
-   request to `stable`, with its release-note fragment. A fix sent
-   to `main` that the stable version also needs is carried over in a
-   branch of its own, its author credited (`Co-authored-by:`).
-2. The version bump (`X.Y.Z`, its notes built from the fragments) is a
-   `release/vX.Y.Z` branch and a pull request to `stable`.
-3. Tag the merged line, after the same check:
-
-   ```sh
-   git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/stable
-   git tag -a vX.Y.Z origin/stable -m "Textus X.Y.Z"
-   git push origin vX.Y.Z
-   ```
-
-4. Verify it as any release.
-5. Merge `stable` into `main` in a pull request
-   (`chore: merge stable after vX.Y.Z`), keeping `main`'s version
-   lines; the notes file `docs/releases/X.Y.Z.md` comes along.
-
 ## Pre-releases
 
-A tag with a semver pre-release suffix (`v1.3.0-beta.1`; up to 1.2,
-`v1.2.0-rc.1`) is published as a GitHub pre-release. The version files
-carry the same suffix (`1.3.0-beta.1`):
+A tag with a semver pre-release suffix (`v1.3.10-rc.1`; the 1.3.0 test
+builds were `v1.3.0-beta.N`) is published as a GitHub pre-release. The
+version files carry the same suffix (`1.3.10-rc.1`):
 the tag check compares the whole version, and release notes are only
 required for stable tags. Linux (x64 and ARM64) gets the `.deb` and AppImage but no `.rpm`
 (RPM versions can't contain `-`).

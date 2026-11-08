@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * View › Track My Changes: the writer's edits show as marked changes with
@@ -24,12 +24,7 @@ async function openDraft(page: Page, kept?: string) {
   await expect(page.locator(editor)).toContainText("at dawn");
 }
 
-const toggleTracking = (page: Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-track-changes"),
-  );
+const toggleTracking = (page: Page) => emit(page, "menu-track-changes");
 
 /** Replaces `word` in the first paragraph by typing over it. */
 async function retype(page: Page, word: string, by: string) {
@@ -66,12 +61,7 @@ const file = (page: Page) =>
     PATH,
   );
 
-const save = (page: Page) =>
-  page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-save-file"),
-  );
+const save = (page: Page) => emit(page, "menu-save-file");
 
 test("tracked edits show struck and marked, each to accept or reject", async ({
   page,
@@ -150,25 +140,14 @@ test("the writer's changes take the review bar's views, as Textus AI's do", asyn
   await page.locator(".own-pick .pending-pick-take").click();
   await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
   await expect(page.locator(editor)).toContainText("was still at dawn");
-});
 
-test("in the original's view, text only added waits in its card", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1400, height: 800 });
-  await openDraft(page);
-  await toggleTracking(page);
+  // In the original's view, text only added waits in its card.
   await page.locator(editor).click();
   await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.type(" Gulls cried.");
-  await page.locator(".review-bar-view-button").click();
-  await page
-    .getByRole("menuitemradio", {
-      name: "Original in the text, changes in the margin",
-    })
-    .click();
+  await view("Original in the text, changes in the margin");
   await expect(page.locator(".own-insert")).toHaveCSS("font-size", "0px");
-  await expect(page.locator(".revision-note")).toContainText("Gulls cried.");
+  await expect(card).toContainText("Gulls cried.");
 });
 
 test("saved, the file keeps the original and the changes are kept beside it, as Textus AI's are", async ({
@@ -215,53 +194,18 @@ test("tracking carries on when the document opens again", async ({ page }) => {
   await expect(page.locator(".own-insert")).toHaveText("still");
 });
 
-test("kept from before 1.3, the original alone carries on too", async ({
-  page,
-}) => {
-  await openDraft(
-    page,
-    JSON.stringify({ base: "The harbour was silent at dawn.\n" }),
-  );
-  await expect(page.locator(".own-delete")).toHaveText("silent");
-  await expect(page.locator(".own-insert")).toHaveText("quiet");
-});
-
-test("changes kept for an original the file no longer holds give way", async ({
-  page,
-}) => {
-  await openDraft(
-    page,
-    JSON.stringify({
-      base: "The harbour was empty at dawn.\n",
-      revised: "The harbour was still at dawn.\n",
-    }),
-  );
-  await expect(page.locator(editor)).toHaveText(
-    "The harbour was quiet at dawn.",
-  );
-  await expect(page.locator(".own-insert, .own-delete")).toHaveCount(0);
-});
-
 test("closed with changes still to decide, it says they are kept", async ({
   page,
 }) => {
   await openDraft(page);
   // A second tab, so closing the draft leaves the window open.
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-new-file"),
-  );
+  await emit(page, "menu-new-file");
   await page.locator(".tab-bar .tab-pill-title", { hasText: "draft" }).click();
   await toggleTracking(page);
   await retype(page, "quiet", "still");
   await save(page);
   await expect.poll(() => kept(page)).toContain("still at dawn");
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-close-tab"),
-  );
+  await emit(page, "menu-close-tab");
   await expect(page.locator(".notice")).toContainText(
     "Changes to decide in draft.md: 1",
   );

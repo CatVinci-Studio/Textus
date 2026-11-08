@@ -23,7 +23,8 @@ topic, files ─► ① plan research ─► ② research helpers ─► dossier
    search, page reads, scholarly search, the project's files, the files
    attached and the user's references. Each
    returns notes: a claim, its evidence, a quote, the sources' numbers, and
-   leads to pictures or data.
+   leads to pictures or data. A helper may hand up to two narrower parts of
+   its question to sub-helpers of its own (`delegate_task`).
 3. **Outline**: a thesis, and per section its key points, the notes it
    draws on, a target length and its figures. The one checkpoint: the user
    edits and approves it on a card in the chat.
@@ -135,6 +136,20 @@ it, lazily loaded. Each stage and helper is one run of
   run on the `Model` trait, so tests drive them with a scripted model.
   Each question is kept as its helper ends (`research::Progress`), not
   when all have.
+  **Grounding** (`paper/grounding.rs`): the paper's `WebPlan` keeps what
+  each source said when shown - a page's text, a result's snippet, a
+  paper's abstract (`WebPlan::seen`) - and a cited file is read for it. A
+  note is checked against those words: a quote they don't have is refused
+  (spacing and punctuation aside); a figure they don't give ("1,200" and
+  "1200" alike; whole numbers under ten aside) is sent back once, and kept
+  marked `unmatched` if sent again unchanged. A note keeps the passage it
+  rests on as `excerpt` and its `grounding` - `read`, `snippet`, or
+  `unchecked` for a source never shown (the provider's own search, a
+  plugin's address) - and its writer is shown all three.
+  A drafted section is checked the same way: a sentence citing `[n]` that
+  gives a figure none of its cited sources' notes give (less their
+  `unmatched` ones) is sent back to its writer - soft, as a length is, so a
+  last try keeps it.
 - **Tools** (`research::Kit`): a helper runs on the agent's tool layer. One
   `ToolRegistry` shared by every helper has the file tools (`read_file`,
   `find_files`, `search_files`), `search_references` when the project has a
@@ -145,6 +160,17 @@ it, lazily loaded. Each stage and helper is one run of
   web tools, ranked by its question, and `add_note` (`paper/notes.rs`), the
   one tool of research's own. Around both, each question's share of the
   budget and the card's activity and budget events.
+- **Sub-helpers** (`paper/delegate.rs`): a question's helper also has
+  `delegate_task`, which hands a narrower part of its question - a case, a
+  data set, a dispute - to a helper of its own while it waits, at most twice
+  (`MAX_HANDED`). The part's helper runs the same loop with `SUB_STEPS`
+  steps and without `delegate_task`, so it hands nothing on; it keeps its
+  notes with the question's, under its own sub-question, and spends the
+  question's share of the budget (`research::Desk`), so handing over costs
+  no more than searching. The call's answer lists the notes it kept with
+  their source numbers, so the helper doesn't note them again. A part isn't
+  handed over once the question's share is used up, and a sub-helper that
+  fails costs the part, not the question.
 - **Attached files**: the request names its `conversation`; the files the
   composer staged in that conversation's `attached/` are copied into the
   paper's own `attached/` when it starts (`store::keep_attachments`), so a
@@ -194,7 +220,13 @@ it, lazily loaded. Each stage and helper is one run of
   who sees them all reports with `report_issues` what only the whole shows -
   repetition, contradictions, an outline point no section makes, a figure
   never referred to, a claim stronger than its notes - at most three points
-  a section. Each faulted section is revised once by its writer, under the
+  a section. Beside it, at once, every cited sentence is checked against
+  its notes (`paper/claims.rs`): each section's sentences that cite are
+  paired, by code, with the notes on the sources they cite - claim,
+  evidence, quote and the source's own passage - and a checker gives each
+  a verdict, `supported`, `overstated`, `unsupported` or `wrong_source`,
+  judged by the notes alone; the worst three of a section join the
+  review's points. Each faulted section is revised once by its writer, under the
   same checks; a revision that doesn't hold, or a review that fails, leaves
   the drafts. Only then are the sections sent, so no proposal is replaced.
 - **Finish** (`paper/finish.rs`): picture lines are begun with the user's

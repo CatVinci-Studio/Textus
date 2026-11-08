@@ -1,6 +1,6 @@
 /* Typewriter mode in source mode / split view: room above and below so the
    first and last lines can reach the middle. */
-.source-view.typewriter-source {
+.source-view.typewriter-source .cm-scroller {
   padding-top: 42vh;
   padding-bottom: 42vh;
 }

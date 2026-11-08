@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // A colour code gets a swatch before it, per Settings: off (the default), in
 // code only, or everywhere. The text, the caret's moves, find and what is
@@ -19,12 +19,6 @@ async function open(page: Page, mode: ColorSwatchMode, doc = DOC) {
   await pasteMarkdown(page, doc);
   if (doc === DOC) await expect(page.locator(`${editor} code`)).toHaveCount(3);
 }
-
-test("swatches stay out of a printout", async ({ page }) => {
-  await open(page, "everywhere");
-  await page.emulateMedia({ media: "print" });
-  await expect(page.locator(swatch).first()).toBeHidden();
-});
 
 /** The paragraph's content as the editor holds it. */
 const paragraph = (page: Page) =>
@@ -191,9 +185,13 @@ test("every swatch is painted, in its colour, at a size that shows", async ({
     expect(p, p.colour).toMatchObject({ shows: true, paints: true });
 });
 
-test("a plain-text swatch stays out of a printout", async ({ page }) => {
-  await open(page, "everywhere", RICH);
+test("swatches, in code and in plain text, stay out of a printout", async ({
+  page,
+}) => {
+  await open(page, "everywhere", `${RICH}\n\n${DOC}`);
+  await expect(page.locator(swatch).first()).toBeVisible();
   await page.emulateMedia({ media: "print" });
+  await expect(page.locator(swatch).first()).toBeHidden();
   const display = await page
     .locator(textSwatch)
     .first()
@@ -226,16 +224,6 @@ test("the caret crosses a plain-text colour code as it does without the swatch",
   );
   expect(before.content[0].text).toBe("Orange Y#ff8800 here.");
 });
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
 
 test("find matches inside a colour code, which keeps one swatch", async ({
   page,

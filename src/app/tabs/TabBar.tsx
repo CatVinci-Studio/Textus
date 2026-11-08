@@ -13,7 +13,8 @@ import { ListMotion, measure, type PendingFlip } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
-import { SLIDE, TabPill, type TabInfo } from "./TabPill";
+import { TabPill, type TabInfo } from "./TabPill";
+import { SLIDE } from "../../ui/pointer-drag";
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -26,6 +27,8 @@ interface TabBarProps {
   onPullOut?: (id: string, title: string) => void;
   // Move the tab so it sits at `index` among the OTHER tabs.
   onReorder: (id: string, index: number) => void;
+  /** A preview tab kept (double-clicked). */
+  onKeep?: (id: string) => void;
   // A tab dragged in from another window, shown as a pill riding the
   // cursor; on release it becomes the real tab in that slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
@@ -49,6 +52,7 @@ export function TabBar({
   onAdd,
   onPullOut,
   onReorder,
+  onKeep,
   previewTab,
   menuFor,
   labels,
@@ -153,6 +157,7 @@ export function TabBar({
           onClose={onClose}
           onPullOut={onPullOut}
           onReorder={onReorder}
+          onKeep={onKeep}
           captureFlip={captureFlip}
           onMenu={
             menuFor && ((x, y) => setMenu({ x, y, items: menuFor(tab.id) }))

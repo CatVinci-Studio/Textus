@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * Settings › Extensions: plugins, themes, skills and MCP servers, one tab
@@ -8,11 +8,7 @@ import { openApp } from "./helpers";
  */
 
 async function openExtensions(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.locator(".settings-nav-item", { hasText: "Extensions" }).click();
   return panel;
@@ -90,7 +86,7 @@ test("Extensions has a tab each for themes, plugins, skills and MCP, and one to 
   await expect(panel.getByRole("menu")).toHaveCount(0);
 });
 
-test("the Skills tab lists the skills added, never the built-ins, installed or available", async ({
+test("the Skills tab lists the skills added, never the built-ins, which Textus AI's page lists and links back from", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -103,14 +99,7 @@ test("the Skills tab lists the skills added, never the built-ins, installed or a
   const proofread = panel.locator('[data-skill="proofread"]');
   await expect(proofread).toContainText("Built-in");
   await expect(proofread.getByRole("checkbox")).toHaveCount(0);
-});
-
-test("Textus AI's Skills row opens Extensions on its Skills tab", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  const panel = await openExtensions(page);
-  await panel.locator(".settings-nav-item", { hasText: "Textus AI" }).click();
+  // Its Skills row opens Extensions on its Skills tab.
   await panel.getByRole("button", { name: "Open", exact: true }).click();
   await expect(panel.getByRole("tab", { name: "Skills" })).toHaveAttribute(
     "aria-selected",
@@ -118,7 +107,7 @@ test("Textus AI's Skills row opens Extensions on its Skills tab", async ({
   );
 });
 
-test("an MCP server is added, tried, saved, and shows its tools", async ({
+test("an MCP server is added, tried, saved, and shows its tools; one that can't start says why and is removed", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -149,28 +138,23 @@ test("an MCP server is added, tried, saved, and shows its tools", async ({
   // Off: no longer running.
   await card.getByRole("checkbox", { name: "Context7" }).uncheck();
   await expect(card.locator(".mcp-state")).toHaveText("Off");
-});
 
-test("a server that can't start says why, and is removed after asking", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  const panel = await openExtensions(page);
-  await panel.getByRole("tab", { name: "MCP" }).click();
+  // One that can't start says why, and is removed after asking.
   await panel.getByRole("button", { name: "Add MCP server" }).click();
   await panel.getByLabel("Name").fill("Broken");
   await panel.getByLabel("Command", { exact: true }).fill("missing --flag");
   await panel.getByRole("button", { name: "Try it" }).click();
   await expect(panel.getByRole("alert")).toContainText("isn't installed");
   await panel.getByRole("button", { name: "Save" }).click();
-  const card = panel.locator(".mcp-card", { hasText: "Broken" });
-  await expect(card.locator(".mcp-state")).toContainText(
+  const broken = panel.locator(".mcp-card", { hasText: "Broken" });
+  await expect(broken.locator(".mcp-state")).toContainText(
     "Couldn't start: `missing` isn't installed",
   );
-  await card.getByRole("button", { name: "Remove" }).click();
+  await broken.getByRole("button", { name: "Remove" }).click();
   await page
     .getByRole("dialog", { name: /Remove the MCP server/ })
     .getByRole("button", { name: "Remove" })
     .click();
-  await expect(panel.locator(".mcp-card")).toHaveCount(0);
+  await expect(broken).toHaveCount(0);
+  await expect(card).toHaveCount(1);
 });

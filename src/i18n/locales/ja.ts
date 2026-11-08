@@ -280,6 +280,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "返答のたびに、次に送りそうな言葉を最大 3 つ入力欄の上にボタンで表示し、いちばん可能性の高いものは入力欄に灰色でも表示します。クリックで送信、Tab で灰色のものを使えます。短い依頼が一回増えます。",
   composerSuggestionTab: "Tab で使う",
   composerFollowUps: "次のメッセージの候補",
+  researchSubHelpersLabel: "リサーチ：問いの一部をサブ助手に任せる",
+  researchSubHelpersHint:
+    "リサーチで、ひとつの問いを調べる助手が、その一部を自分のサブ助手に任せられます。より詳しくなりますが、遅くなり、モデルの呼び出しが 25〜50% ほど増えます。",
+  researchCheckClaimsLabel: "リサーチ：引用した文を一文ずつ確認",
+  researchCheckClaimsHint:
+    "リサーチが草稿を直す前に、出典を引く文をその出典のメモと照らし合わせ、言い過ぎている文を書き直します。より慎重になりますが、セクションごとにモデル呼び出しが1回増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
   rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
@@ -333,6 +339,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "ページに直接描こうとしていますが、プラグインにはできません。何も表示されません。",
   chatPluginCheckPermission:
     "「{permission}」を使っていますが、その権限を求めていません。",
+  chatPluginCheckWhen:
+    "メニュー項目の条件が {key} を使っていますが、Textus にはありません。この項目は表示されません。",
   chatPluginCheckUnregistered:
     "{id} を宣言していますが、コードで登録していません。",
   chatPluginRunError: "実行中にエラー：{error}",
@@ -370,6 +378,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolSearchPapers: "論文で「{arg}」を検索",
   toolSearchReferences: "参考資料で「{arg}」を検索",
   toolAddNote: "メモ：{arg}",
+  toolDelegateTask: "分担：{arg}",
   paperOutlineTitle: "アウトライン",
   paperOutlineTotal: "合計 約 {n} {unit}",
   paperOutlineThesis: "主題文",
@@ -450,6 +459,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webSources: "出典",
   proposalSourcesAsFootnotes: "出典を脚注として追加",
   menuToggleSplitView: "ソースとプレビュー",
+  menuViewMode: "モード",
+  menuViewModeDefault: "標準",
   splitPreview: "プレビュー",
   menuToggleZenMode: "禅モード",
   menuSplitRight: "右に分割",
@@ -532,6 +543,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchScopeDocuments: "文書のみ",
   treeNewDocument: "新規ドキュメント",
   treeNewFolder: "新規フォルダ",
+  treeEmptyHint: "ここをダブルクリックすると新しい文書を作れます。",
   treeNewDocumentPrompt: "新しいドキュメントの名前",
   treeNewFolderPrompt: "新しいフォルダの名前",
   treeNewDocumentDefault: "名称未設定",
@@ -717,6 +729,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSkillsBuiltinTag: "組み込み",
   agentSkillsOpen: "開く",
   agentSkillsReset: "リセット",
+  madeByTextusAi: `${AI_NAME} で作成`,
+  skillDelete: "削除",
+  skillDeleteAsk: "「{name}」を削除しますか？ファイルはゴミ箱に移動します。",
+  skillDeleteAskMobile: "「{name}」を削除しますか？",
   agentSkillsResetConfirm:
     "「{name}」のコピーを削除して、組み込みスキルに戻しますか？",
   agentSkillsShadows: "組み込みスキルを置き換えています",
@@ -1038,9 +1054,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuCloseTab: "タブを閉じる",
   menuReopenClosedTab: "閉じたタブを再度開く",
   readOnlyRefused:
-    "この書類は読み取り専用です。変更するには「表示 › 読み取り専用」をオフにしてください。",
-  menuToggleReadOnly: "読み取り専用",
-  readOnlyLock: "読み取り専用：クリックで編集を許可",
+    "この書類は閲覧モードです。編集するには「表示 › モード › 標準」を選んでください。",
+  menuToggleReadOnly: "閲覧モード",
+  readOnlyLock: "閲覧モード：クリックで編集を許可",
   closeOtherTabs: "他のタブを閉じる",
   closeTabsToLeft: "左側のタブを閉じる",
   closeTabsToRight: "右側のタブを閉じる",
@@ -1108,7 +1124,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportLimit:
     "今日はすでに何件か送信しています。明日もう一度送るか、GitHub で送信してください。",
   reportFailed: "送信できませんでした。",
-  menuHelpTutorials: "動画チュートリアル",
+  menuHelpTutorials: "オンラインチュートリアル",
   windowMinimize: "最小化",
   windowMaximize: "最大化",
   windowRestore: "元のサイズに戻す",
@@ -1197,6 +1213,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageAlignLabel: "単独行の画像",
   imageAlignCenter: "中央",
   imageAlignLeft: "左寄せ",
+  embedDisplayLabel: "埋め込んだノート",
+  embedDisplayExpand: "内容をすべて表示",
+  embedDisplayCard: "リンクカードだけ表示",
+  embedBlockCard: "{0} · クリックで表示",
+  embedBlockShow: "表示",
   docTextSizeLabel: "本文の文字サイズ",
   docTextSizeAuto: "テーマに合わせる",
   docTextLabel: "本文の文字",
@@ -1305,7 +1326,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
   tutorialDoneTitle: "完了",
   tutorialDoneBody:
-    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどは動画チュートリアルにあります。",
+    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",
@@ -1413,10 +1434,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   privacyChatHistoryToggle: "チャット履歴を保存",
   privacyChatHistoryClearHint:
     "保存済みの会話をすべて削除します。元に戻せません。",
-  privacyClipboardHistoryLabel: "クリップボード履歴",
-  privacyClipboardHistoryToggle: "クリップボード履歴を保存",
-  privacyClipboardHistoryClearHint:
-    "クリップボード履歴の内容をすべて削除します。元に戻せません。",
   privacyDraftRecoveryLabel: "下書きの復元",
   privacyDraftRecoveryToggle: "クラッシュ後に未保存の内容を復元する",
   privacyKeepUnsavedToggle: "閉じるときに未保存の変更を残す（確認しない）",
@@ -1426,12 +1443,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "ディスク上のスナップショットをすべて削除します。元に戻せません。",
   privacyClearButton: "消去",
   privacyClearChatHistory: "チャット履歴を消去",
-  privacyClearClipboard: "クリップボード履歴を消去",
   privacyClearDrafts: "復元用の下書きを削除",
-  clipboardTab: "クリップボード",
-  clipboardEmpty: "コピーまたは貼り付けたテキストがここに表示されます。",
-  clipboardClear: "クリア",
-  clipboardCopy: "コピー",
   clipboardInsertHint: "クリックしてカーソル位置に挿入",
   exportNeedsWysiwyg:
     "HTMLエクスポートは表示モードの内容を使用します。まずソースコードモードを終了してから、再度エクスポートしてください。",
@@ -1564,6 +1576,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogKept:
     "前回の一覧を表示しています。新しい一覧を取得できませんでした：{reason}",
   pluginInstall: "インストール",
+  pluginNeedsTextus: "Textus {version} が必要",
   pluginInstalling: "インストール中…",
   pluginsSortLabel: "並べ替え",
   pluginsSortPopular: "インストール数",
@@ -1575,6 +1588,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginUpdatedOn: "{date} に更新",
   pluginReadmeLabel: "{name}について",
   pluginUpdate: "{version} に更新",
+  pluginsUpdateAll: "すべて更新（{count}）",
+  pluginsUpdateAllFailed: "次のプラグインは更新できませんでした：{names}。",
   pluginOfficial: "公式",
   pluginBy: "作者: {author}",
   pluginOpenDetails: "{name}: 詳細と設定",
@@ -1623,6 +1638,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginOpenInstall: "インストールして開く",
   pluginOpenTurnOnButton: "オンにして開く",
   pluginCardLine: "おすすめのプラグイン：{name}",
+  pluginCardMovedLine: "{name}はプラグインになりました",
   conventionsCardLine:
     "このフォルダの {app} 設定では、画像を {folder} に保存します",
   conventionsCardDetails:

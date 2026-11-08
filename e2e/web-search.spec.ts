@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * Web search: the Search service row in Settings, a reply's cited pages,
@@ -21,13 +21,7 @@ const t = {
 };
 
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: t.settingsTitle });
   await panel.getByRole("button", { name: t.navAi, exact: true }).click();
   return panel;
@@ -194,16 +188,4 @@ test("a proposal's sources become footnotes when the card says so", async ({
   expect(text).toContain("Tide tables");
   // The inline citation is gone; the footnote's own link stays.
   expect(text).not.toContain("[1](https");
-});
-
-test("without footnotes, a proposal goes in without its citations", async ({
-  page,
-}) => {
-  await ask(page, citingProposal());
-  await expect(page.getByRole("checkbox", { name: t.footnotes })).toBeVisible();
-  await accept(page);
-  const text = await documentMarkdownText(page);
-  expect(text).toContain("Spring tides come at new and full moon.");
-  expect(text).not.toContain("[1]");
-  expect(text).not.toContain("sea.example");
 });

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, release } from "./helpers";
 
 // A proposed picture drawn again from the writer's own change to its
 // description: Redraw… over the picture, the description to change, and
@@ -64,17 +64,27 @@ async function propose(page: Page) {
   });
 }
 
-test("a proposed picture is drawn again from the description the writer changed", async ({
+test("a proposed picture is drawn again from the description the writer changed, and not when it is left as it was", async ({
   page,
 }) => {
   await propose(page);
   const before = await page.locator(pending).getAttribute("src");
+  // Left as it was, the description draws nothing again.
+  await page.locator(pending).hover();
+  await page.getByRole("button", { name: "Redraw…" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Redraw" })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await calls(page, "ai_redraw_generated_image")).toHaveLength(0);
+
   // The new picture takes a moment: its frame paints meanwhile.
   await page.evaluate((png) => {
     (
       window as unknown as { __devInvokeResults: Record<string, unknown> }
     ).__devInvokeResults.ai_generated_image = {
-      __delay: 400,
+      __hold: true,
       value: { mime: "image/png", ext: "png", dataBase64: png },
     };
   }, PNG);
@@ -89,6 +99,7 @@ test("a proposed picture is drawn again from the description the writer changed"
     .click();
 
   await expect(page.locator(`${editor} .pending-picture`)).toHaveCount(1);
+  await release(page, "ai_generated_image");
   await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/);
   expect(await page.locator(pending).getAttribute("src")).not.toBe(before);
   const redrawn = await calls(page, "ai_redraw_generated_image");
@@ -99,17 +110,4 @@ test("a proposed picture is drawn again from the description the writer changed"
     "src",
     /^blob:/,
   );
-});
-
-test("a description left as it was draws nothing again", async ({ page }) => {
-  await propose(page);
-  await page.locator(pending).hover();
-  await page.getByRole("button", { name: "Redraw…" }).click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Redraw" })
-    .click();
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  expect(await calls(page, "ai_redraw_generated_image")).toHaveLength(0);
-  await expect(page.locator(pending)).toHaveAttribute("src", /^blob:/);
 });

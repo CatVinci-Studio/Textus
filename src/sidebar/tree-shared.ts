@@ -49,6 +49,17 @@ export interface TreeShared {
   openInNewWindow: ((path: string) => void) | null;
   /** True once, for the click that ends a drag. */
   takeDragClick: () => boolean;
+  /** A new document or folder being named in place, in `dir`. */
+  draft: TreeDraft | null;
+  /** Its name, or null when it was given up. */
+  finishDraft: (name: string | null) => void;
+  /** What an empty folder says where new things can be made. */
+  draftHint: string | null;
+}
+
+export interface TreeDraft {
+  dir: string;
+  kind: "document" | "folder";
 }
 
 export const TreeContext = createContext<TreeShared | null>(null);
@@ -78,3 +89,7 @@ export function failureText(t: Strings, err: unknown, name: string): string {
     return t.treeNameTaken.replace("{name}", name);
   return t.treeActionFailed.replace("{reason}", explainError(err, t));
 }
+
+/** How a file chosen in the sidebar opens: to look (a click, the preview
+ *  tab), beside the one in front, or (none) in a tab of its own. */
+export type FileOpenHow = "preview" | "beside";

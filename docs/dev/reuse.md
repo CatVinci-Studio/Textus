@@ -24,6 +24,25 @@ The pieces:
 | A card to act on, bottom right             | `ui/CornerToast.tsx` in a `CornerStack`                                                                              |
 | A phone's sheet                            | `ui/Sheet.tsx` (`ActionSheet` and `BottomCard` are its bodies)                                                       |
 | A select, a switch, a settings row         | `ui/Select.tsx`; `settings/sections/controls.tsx`                                                                    |
+| A panel's top row                          | `ui/PanelHeader.tsx`                                                                                                 |
+| A "?" that explains                        | `ui/InfoTip.tsx`                                                                                                     |
+| A handle that resizes a panel              | `ui/ResizeHandle.tsx`                                                                                                |
+| Dragging to reorder or move                | `ui/pointer-drag.ts` (`trackDrag`, `reorderDrag`, `SLIDE`) - pointer events, never HTML drag and drop                |
+| A file's icon                              | `ui/file-icons.tsx` (`fileIconFor`)                                                                                  |
+| A Mac-style rubber band past a scroll end  | `ui/elastic-overscroll.ts`                                                                                           |
+| A long press on touch                      | `utils/hooks/useLongPress.ts`                                                                                        |
+| Telling a screen reader                    | `announce` (`ui/announce.ts`)                                                                                        |
+
+## Loading, platforms and plugins
+
+| Need                                          | Use                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Loading code on first use                     | `lazyModule` (`lazy/lazy-module.ts`), `lazyComponent` (`lazy/lazy-component.ts`)                 |
+| Whether this platform can do something        | a flag in `platform/capabilities.ts`, never a check of the OS                                    |
+| The phone layout                              | `usePhoneLayout` (`ui/usePhoneLayout.ts`)                                                        |
+| Calling the backend                           | the areas in `platform/ipc.ts` ([recipes.md](recipes.md#add-a-backend-command))                  |
+| Telling plugins about something in the window | `emitPluginEvent` (`plugins/app-bridge.ts`), as `plugins/panels-state.ts` does                   |
+| Letting go of what is out of sight            | `keepLoaded` / `useKeptLoaded` (`utils/kept-loaded.ts`), `onMemoryIdle` (`utils/memory-idle.ts`) |
 
 ## Text, links and folders
 

@@ -1,7 +1,7 @@
 /* The menu button sits where the macOS traffic lights would be, narrower
    than a caption button. */
 .window-menu-button {
-  width: 34px;
+  width: calc(34px * var(--chrome-scale));
   margin-left: -8px;
   color: var(--ui-muted);
   pointer-events: auto;

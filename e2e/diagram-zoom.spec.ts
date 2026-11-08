@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, settled } from "./helpers";
 
 // A drawn diagram's corner button opens it in a viewer over the window: the
 // wheel zooms, Escape closes it, and the press doesn't put the caret into the
@@ -45,7 +45,7 @@ test("a diagram opens in the viewer, zooms with the wheel and closes with Escape
   await page.mouse.move(box.x - 10, box.y + box.height / 2);
   await page.mouse.wheel(0, -200);
   await page.keyboard.up("Control");
-  await page.waitForTimeout(100);
+  await settled(page);
   expect(await windowZoom()).toBe(zoomBefore);
 
   await page.keyboard.press("Escape");

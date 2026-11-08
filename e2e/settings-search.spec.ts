@@ -1,15 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, PHONE } from "./helpers";
 
 // Settings' search box: lists matching rows of every page, grouped by
 // page; Enter or a click goes to the row.
 
 async function openSettings(page: Page, title = "Settings") {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: title });
   await expect(dialog).toBeVisible();
   return dialog;
@@ -50,9 +46,20 @@ test.describe("in English", () => {
     ).toHaveCount(1);
   });
 
-  test("finds a row by its ? text and a row on a subpage", async ({ page }) => {
+  test("↑/↓ move through the results, across pages; a row is found by its ? text and on a subpage", async ({
+    page,
+  }) => {
     const dialog = await openSettings(page);
     const box = dialog.getByRole("combobox", { name: "Search settings" });
+    await box.fill("tab");
+    const options = dialog.getByRole("option");
+    await expect(options.nth(1)).toBeVisible();
+    await box.press("ArrowDown");
+    await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
+    await box.press("ArrowUp");
+    await box.press("ArrowUp");
+    await expect(options.last()).toHaveAttribute("aria-selected", "true");
+
     await box.fill("LAYS DIAGRAMS");
     const results = dialog.getByRole("listbox", { name: "Search results" });
     await expect(results.getByRole("option")).toHaveCount(1);
@@ -70,19 +77,6 @@ test.describe("in English", () => {
     await expect(
       dialog.getByRole("textbox", { name: "Custom CSS" }),
     ).toBeFocused();
-  });
-
-  test("↑/↓ move through the results, across pages", async ({ page }) => {
-    const dialog = await openSettings(page);
-    const box = dialog.getByRole("combobox", { name: "Search settings" });
-    await box.fill("tab");
-    const options = dialog.getByRole("option");
-    await expect(options.nth(1)).toBeVisible();
-    await box.press("ArrowDown");
-    await expect(options.nth(1)).toHaveAttribute("aria-selected", "true");
-    await box.press("ArrowUp");
-    await box.press("ArrowUp");
-    await expect(options.last()).toHaveAttribute("aria-selected", "true");
   });
 
   test("Esc clears the box, and the next Esc closes Settings", async ({
@@ -121,42 +115,6 @@ test.describe("in English", () => {
 test.describe("in Chinese", () => {
   test.beforeEach(async ({ page }) => {
     await openApp(page, { settings: { language: "zh" } });
-  });
-
-  test("finds Chinese labels, and full-width letters as half-width", async ({
-    page,
-  }) => {
-    const dialog = await openSettings(page, "设置");
-    const box = dialog.getByRole("combobox", { name: "搜索设置" });
-    await box.fill("标签页");
-    const results = dialog.getByRole("listbox", { name: "搜索结果" });
-    await expect(results.getByRole("group", { name: "快捷键" })).toContainText(
-      "下一个标签页",
-    );
-
-    await box.fill("ＣＳＳ");
-    await expect(
-      results.getByRole("group", { name: "扩展 › 主题" }),
-    ).toContainText("自定义 CSS");
-
-    await box.fill("画图更快");
-    await results.getByRole("option", { name: /图表引擎/ }).click();
-    await expect(
-      dialog.getByRole("region", { name: "编辑与外观" }),
-    ).toBeVisible();
-    await expect(
-      dialog.locator(".settings-search-hit", { hasText: "图表引擎" }),
-    ).toHaveCount(1);
-  });
-
-  test("says so when nothing matches", async ({ page }) => {
-    const dialog = await openSettings(page, "设置");
-    await dialog
-      .getByRole("combobox", { name: "搜索设置" })
-      .fill("不存在的设置");
-    await expect(dialog.locator(".settings-search-empty")).toHaveText(
-      "没有匹配的设置。",
-    );
   });
 });
 

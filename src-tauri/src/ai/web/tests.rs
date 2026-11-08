@@ -1,4 +1,5 @@
 use super::*;
+use seen::Seen;
 
 fn plan(service: Option<Service>) -> WebPlan {
     WebPlan::new(true, None, service, &[])
@@ -116,7 +117,8 @@ async fn search_results_are_numbered_and_the_reply_lists_what_it_cites() {
         backend: Backend::Tavily,
         credential: "k".into(),
         endpoint: Some(endpoint),
-    }));
+    }))
+    .keeping_seen_text();
     let out = web
         .execute(
             WEB_SEARCH_TOOL,
@@ -133,6 +135,14 @@ async fn search_results_are_numbered_and_the_reply_lists_what_it_cites() {
         "{out}"
     );
     assert!(out.contains("[2] Moon"), "{out}");
+    // What each result said is kept for the paper's notes.
+    assert_eq!(
+        web.seen(1),
+        Some(Seen {
+            text: "Tides\nTwice a day.".into(),
+            reach: Reach::Snippet,
+        })
+    );
 
     let mut turns = vec![
         AgentTurn::ToolCall {
@@ -358,4 +368,61 @@ fn a_fetched_picture_s_type_comes_from_the_server_or_its_address() {
         commons::picture_type("application/octet-stream", "https://x/a"),
         ("image/jpeg", "jpg")
     );
+}
+
+/// A server answering once with `head` (status line and headers) and `body`.
+fn answer_once(head: &'static str, body: Vec<u8>) -> String {
+    use std::io::{Read, Write};
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let url = format!("http://{}/a.png", listener.local_addr().unwrap());
+    std::thread::spawn(move || {
+        let (mut stream, _) = listener.accept().unwrap();
+        let mut buf = [0u8; 4096];
+        let _ = stream.read(&mut buf);
+        let _ = stream.write_all(head.as_bytes());
+        let _ = stream.write_all(&body);
+    });
+    url
+}
+
+fn commons_image(url: String) -> commons::CommonsImage {
+    commons::CommonsImage {
+        page: String::new(),
+        url,
+        mime: "image/png".into(),
+        width: 1,
+        height: 1,
+        author: String::new(),
+        license: "CC0".into(),
+    }
+}
+
+#[tokio::test]
+async fn a_commons_picture_too_large_is_refused_before_it_downloads() {
+    let url = answer_once(
+        "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: 99999999\r\nConnection: close\r\n\r\n",
+        Vec::new(),
+    );
+    let err = commons::fetch(&commons_image(url)).await.unwrap_err();
+    assert!(err.contains("too large"), "{err}");
+
+    let url = answer_once(
+        "HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: 4\r\nConnection: close\r\n\r\n",
+        b"\x89PNG".to_vec(),
+    );
+    let picture = commons::fetch(&commons_image(url)).await.unwrap();
+    assert_eq!(picture.bytes, b"\x89PNG");
+    assert_eq!(picture.mime, "image/png");
+}
+
+#[test]
+fn only_a_plan_that_keeps_seen_text_keeps_it() {
+    let chat = plan(None);
+    let n = chat.add_source("https://sea.example/", "Sea");
+    chat.saw(n, "Tides turn.", Reach::Read);
+    assert_eq!(chat.seen(n), None);
+    let paper = plan(None).keeping_seen_text();
+    let n = paper.add_source("https://sea.example/", "Sea");
+    paper.saw(n, "Tides turn.", Reach::Read);
+    assert_eq!(paper.seen(n).map(|s| s.reach), Some(Reach::Read));
 }

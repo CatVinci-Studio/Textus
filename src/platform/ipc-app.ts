@@ -155,8 +155,9 @@ export const menuIpc = {
   setMenuAccelerators: (accelerators: Record<string, string>) =>
     desktopQueryCommand("set_menu_accelerators", undefined, accelerators),
   /** Fills the native Plugins menu with the enabled plugins' items. */
-  setPluginMenu: (items: { command: string; label: string }[]) =>
-    desktopQueryCommand("set_plugin_menu", undefined, items),
+  setPluginMenu: (
+    items: { command: string; label: string; group?: string }[],
+  ) => desktopQueryCommand("set_plugin_menu", undefined, items),
   /** The plugin commands the background tray icon lists. */
   setTrayPluginItems: (items: { command: string; label: string }[]) =>
     desktopQueryCommand("set_tray_plugin_items", undefined, items),
@@ -217,6 +218,14 @@ export const links = {
     command("open_about_link", page),
   /** A web or mail link Ctrl/Cmd+clicked in a document. */
   openWebLink: (url: string) => command("open_web_link", url),
+};
+
+/** Web fonts, their stylesheets and web pictures, fetched by Rust: the
+ *  window's Content Security Policy keeps the page from loading them. A
+ *  stylesheet comes as its text, a font or picture as a data URL. */
+export const webAssets = {
+  get: (url: string, kind: "stylesheet" | "font" | "image") =>
+    command("web_asset", url, kind),
 };
 
 /** Web pages in tabs as native webviews laid over each tab's area. Desktop. */

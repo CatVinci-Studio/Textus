@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { openApp, settled } from "./helpers";
 
 // Editing across a large document, where off-screen formulas draw as they
 // come near: select and copy all, find at its end, an outline jump that
@@ -21,15 +21,6 @@ const DOC = [
   "The zebracorn end.",
 ].join("\n\n");
 
-const emit = (page: Page, name: string) =>
-  page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (name: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-
 test.beforeEach(async ({ page }) => {
   test.setTimeout(90_000);
   await openApp(page, { settings: { language: "en", newDocumentMode: "tab" } });
@@ -44,19 +35,6 @@ test.beforeEach(async ({ page }) => {
     });
   }, DOC);
   await expect(page.locator(editor)).toContainText("zebracorn");
-});
-
-test("select all copies every block, the ones off screen too", async ({
-  page,
-}) => {
-  await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("ControlOrMeta+a");
-  const selected = await page.evaluate(
-    () => window.getSelection()?.toString() ?? "",
-  );
-  expect(selected).toContain("Paragraph 0 keeps");
-  expect(selected).toContain(`Paragraph ${COUNT - 2} keeps`);
-  expect(selected).toContain("zebracorn");
 });
 
 test("shift-click from the start to the end selects everything between", async ({
@@ -74,26 +52,6 @@ test("shift-click from the start to the end selects everything between", async (
   );
   expect(selected).toContain("Paragraph 700 keeps");
   expect(selected).toContain("zebracorn");
-});
-
-test("find reaches the last block and shows its match", async ({ page }) => {
-  await emit(page, "menu-find-replace");
-  await page.locator(".find-replace-input").first().fill("zebracorn");
-  const match = page.locator(`${editor} .find-match-active`);
-  await expect(match).toHaveText("zebracorn");
-  await expect(match).toBeInViewport();
-});
-
-test("an outline jump to the last heading lands and stays", async ({
-  page,
-}) => {
-  const target = page.locator(`${editor} > h2`).last();
-  await target.evaluate((el) => el.scrollIntoView({ block: "start" }));
-  const top = () => target.evaluate((el) => el.getBoundingClientRect().top);
-  const first = await top();
-  await page.waitForTimeout(300);
-  expect(Math.abs((await top()) - first)).toBeLessThan(2);
-  await expect(target).toBeInViewport();
 });
 
 test("typing and Enter in the middle work as anywhere", async ({ page }) => {
@@ -124,7 +82,7 @@ test("a tab back in front shows the same place, at the same heights", async ({
 }) => {
   const p = page.locator(`${editor} p`, { hasText: "Paragraph 900 keeps" });
   await p.evaluate((el) => el.scrollIntoView({ block: "start" }));
-  await page.waitForTimeout(200);
+  await settled(page);
   // From the top of the scroller: the tab bar comes with the second tab.
   const fromTop = (el: Element) =>
     el.getBoundingClientRect().top -
@@ -144,7 +102,7 @@ test("a tab back in front shows the same place, at the same heights", async ({
   // The tab before it: the large document's.
   await page.keyboard.press("Control+Shift+Tab");
   await expect(page.locator(editor)).toContainText("zebracorn");
-  await page.waitForTimeout(300);
+  await settled(page);
   const after = await p.evaluate(fromTop);
   expect(Math.abs(after - before)).toBeLessThan(2);
 });

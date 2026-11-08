@@ -54,6 +54,14 @@ pub fn read_recent_folders(app: &tauri::AppHandle) -> Vec<String> {
     read_list(app, FOLDERS_LIST)
 }
 
+/// The entries of a recent list that are still there, for showing. The list
+/// keeps the rest: a folder on a drive that isn't plugged in comes back.
+pub fn still_there(list: Vec<String>) -> Vec<String> {
+    list.into_iter()
+        .filter(|path| std::path::Path::new(path).exists())
+        .collect()
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn add_recent_file(app: tauri::AppHandle, path: String) {
@@ -88,6 +96,16 @@ mod tests {
 
     fn list(items: &[&str]) -> Vec<String> {
         items.iter().map(|s| (*s).to_string()).collect()
+    }
+
+    #[test]
+    fn a_deleted_folder_is_not_shown() {
+        let dir = std::env::temp_dir().join(format!("textus-recent-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let here = dir.to_string_lossy().to_string();
+        let gone = dir.join("gone").to_string_lossy().to_string();
+        assert_eq!(still_there(vec![gone, here.clone()]), vec![here]);
+        let _ = std::fs::remove_dir(&dir);
     }
 
     #[test]

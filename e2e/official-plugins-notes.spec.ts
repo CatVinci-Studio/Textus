@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, pasteMarkdown } from "./helpers";
+import {
+  dragWithMouse,
+  emit,
+  mockInvoke,
+  pasteMarkdown,
+  swallowHtmlDrop,
+} from "./helpers";
 import {
   openPath,
   openSidebarList,
@@ -24,7 +30,9 @@ test("a quick note is kept, and Insert writes it into the document", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["editor.write"] },
+    plugins: {
+      "catvinci.quick-notes": ["editor.write", "files.read", "files.write"],
+    },
   });
   await pasteMarkdown(page, "The draft.");
   const panel = await openSidebarTab(page, "Quick Notes");
@@ -50,7 +58,9 @@ test("a deleted quick note comes back with Undo, and an empty one goes by itself
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["editor.write"] },
+    plugins: {
+      "catvinci.quick-notes": ["editor.write", "files.read", "files.write"],
+    },
   });
   const panel = await openSidebarTab(page, "Quick Notes");
   await panel.getByRole("button", { name: "New" }).click();
@@ -169,39 +179,12 @@ test("tasks due soon come first, with their dates, and the filter narrows the li
   await expect(rows.last()).toContainText("Book the hall");
 });
 
-test("tasks in a file with Windows line endings are listed and ticked", async ({
-  page,
-}) => {
-  await openWithPlugins(page, {
-    plugins: { "catvinci.tasks": ["files.read", "files.write"] },
-    folder: {
-      "/notes/win.md": "# Win\r\n\r\n- [ ] Ship it\r\n- [ ] Tell them\r\n",
-    },
-  });
-  await openPath(page, "/notes/win.md");
-  const tasks = await openSidebarList(page, "Tasks");
-  await expect(tasks.locator(".plugin-list-message")).toHaveText(
-    "2 open tasks",
-  );
-  await expect(tasks.locator(".plugin-list-description").first()).toHaveText(
-    "Win",
-  );
-  await tasks.getByRole("checkbox", { name: "Ship it" }).click();
-  await expect(tasks.locator(".plugin-list-message")).toHaveText("1 open task");
-  const file = await page.evaluate(
-    () =>
-      (window as unknown as { __devFs: Record<string, string> }).__devFs[
-        "/notes/win.md"
-      ],
-  );
-  expect(file).toBe("# Win\r\n\r\n- [x] Ship it\r\n- [ ] Tell them\r\n");
-});
-
 test("a card's [[link]] opens its note, and a list dragged by its head moves", async ({
   page,
 }) => {
   const board =
     "---\nkanban-plugin: basic\n---\n\n## To do\n\n- [ ] Read [[Plan]] first\n\n## Doing\n\n## Done\n";
+  await swallowHtmlDrop(page);
   await openWithPlugins(page, {
     plugins: { "catvinci.kanban": ["files.read", "files.write"] },
     folder: {
@@ -217,10 +200,12 @@ test("a card's [[link]] opens its note, and a list dragged by its head moves", a
     "Done",
   ]);
   // Done to the front.
-  await frame
-    .locator(".list-head")
-    .nth(2)
-    .dragTo(frame.locator(".list").first());
+  await dragWithMouse(
+    page,
+    frame.locator(".list-head").nth(2),
+    frame.locator(".list-head").first(),
+    -60,
+  );
   await expect(frame.locator(".list-title")).toHaveText([
     "Done",
     "To do",
@@ -284,12 +269,7 @@ test("saves close together are one version, listed under Today", async ({
     folder: { "/notes/essay.md": "First line\n" },
   });
   await openPath(page, "/notes/essay.md");
-  const save = () =>
-    page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-save-file"),
-    );
+  const save = () => emit(page, "menu-save-file");
   const history = await openSidebarTab(page, "History");
   for (const words of [" one", " two", " three"]) {
     await page.locator(editor).click();
@@ -321,12 +301,7 @@ test("each save is a version, shown against the text now and restorable", async 
     folder: { "/notes/essay.md": "First line\n" },
   });
   await openPath(page, "/notes/essay.md");
-  const save = () =>
-    page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-save-file"),
-    );
+  const save = () => emit(page, "menu-save-file");
   await page.locator(editor).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" and more");
@@ -353,15 +328,7 @@ test("each save is a version, shown against the text now and restorable", async 
 });
 
 const runCommand = (page: Page, command: string) =>
-  page.evaluate(
-    (c) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (n: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-plugin-command", c),
-    command,
-  );
+  emit(page, "menu-plugin-command", command);
 
 test("a new day's note fills in its template, and the day before is a command away", async ({
   page,

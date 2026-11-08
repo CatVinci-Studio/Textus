@@ -6,8 +6,11 @@ import type { SkillEntry_Serialize as SkillEntry } from "../../platform/bindings
 import {
   parseManifest,
   compareVersions,
+  engineSatisfied,
   type PluginManifest,
 } from "./manifest";
+import { version as APP_VERSION } from "../../../package.json";
+import { currentStrings } from "../../i18n/current";
 import {
   loadPlugins,
   runsHere,
@@ -17,6 +20,7 @@ import {
 } from "../manager";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
+import { compareNames } from "../../utils/name-order";
 
 /**
  * The plugins Textus offers to install, from the textus-plugins catalog that
@@ -40,6 +44,8 @@ export interface CatalogItem {
   installs30?: number;
   /** Its latest version's date, YYYY-MM-DD. */
   updated?: string;
+  /** Not offered to install any more (merged into another); updated still. */
+  unlisted?: boolean;
 }
 
 export type { SkillEntry };
@@ -69,6 +75,14 @@ export function subscribeCatalog(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/** What the market offers to install: not installed, not unlisted. */
+export function offeredItems(
+  items: readonly CatalogItem[],
+  installed: ReadonlySet<string>,
+): CatalogItem[] {
+  return items.filter((item) => !installed.has(item.id) && !item.unlisted);
+}
+
 export function catalogSnapshot(): CatalogState {
   return state;
 }
@@ -88,6 +102,7 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
       installs: entry.installs ?? undefined,
       installs30: entry.installs30 ?? undefined,
       updated: entry.updated ?? undefined,
+      unlisted: entry.unlisted || undefined,
     };
   } catch {
     return null;
@@ -139,22 +154,42 @@ export function loadCatalog(force = false): Promise<void> {
   return fetching;
 }
 
-/** The catalog's newer version of an installed plugin, if it has one. */
+/** The Textus version the catalog's `item` needs, when it is newer than
+ *  this one; null when it runs here. */
+export function neededTextus(item: CatalogItem): string | null {
+  const range = item.manifest.engine;
+  if (engineSatisfied(range, APP_VERSION)) return null;
+  return range.replace(/^(>=|\^)/, "").trim();
+}
+
+/** The catalog's newer version of an installed plugin, if it has one that
+ *  runs on this Textus; one that needs a newer Textus waits for it. */
 export function updateFor(
   id: string,
   from: CatalogState = state,
 ): string | null {
   if (from.status !== "ready") return null;
   const installed = pluginRecord(id)?.manifest?.version;
-  const offered = from.items.find((i) => i.id === id)?.version;
-  return installed && offered && compareVersions(offered, installed) > 0
-    ? offered
+  const offered = from.items.find((i) => i.id === id);
+  return installed &&
+    offered &&
+    !neededTextus(offered) &&
+    compareVersions(offered.version, installed) > 0
+    ? offered.version
     : null;
 }
 
 /** Installs (or updates) `id` from the catalog. A new plugin is turned on,
- *  which asks for its permissions; an update keeps it as it was. */
+ *  which asks for its permissions; an update keeps it as it was. One that
+ *  needs a newer Textus is refused before anything is fetched. */
 export async function installFromCatalog(id: string): Promise<void> {
+  const offered =
+    state.status === "ready" ? state.items.find((i) => i.id === id) : null;
+  const needs = offered && neededTextus(offered);
+  if (needs)
+    throw new Error(
+      currentStrings().pluginNeedsTextus.replace("{version}", needs),
+    );
   const before = pluginRecord(id);
   await pluginsIpc.installFromCatalog(id);
   await loadPlugins(true);
@@ -173,7 +208,7 @@ export function sortCatalog(
   const name = (i: CatalogItem) =>
     pluginName({ id: i.id, manifest: i.manifest });
   const byName = (a: CatalogItem, b: CatalogItem) =>
-    name(a).localeCompare(name(b));
+    compareNames(name(a), name(b));
   const key: Record<CatalogSort, (a: CatalogItem, b: CatalogItem) => number> = {
     popular: (a, b) => (b.installs ?? 0) - (a.installs ?? 0),
     newest: (a, b) => (b.updated ?? "").localeCompare(a.updated ?? ""),

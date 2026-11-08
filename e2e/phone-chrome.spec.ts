@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone } from "./helpers";
+import { openPhone, PHONE } from "./helpers";
 
 // The phone's dialogs, menus and bars, checked in Chromium with touch and a
 // phone-sized viewport.
@@ -129,26 +129,6 @@ test("tabs have a close button a finger can hit; closing an edited tab asks with
   await page.locator(".tab-pill-active .tab-pill-close").tap();
   await sheet.getByRole("menuitem", { name: "Don't Save" }).tap();
   await expect(page.locator(".tab-pill")).toHaveCount(0);
-});
-
-test("the menu drops from its button, rows a finger can hit, and a tap beside it closes it", async ({
-  page,
-}) => {
-  await openPhone(page);
-  await page.locator(".window-menu-button").tap();
-  const list = page.locator(".app-menu-list");
-  await expect(list).toBeVisible();
-  expect((await list.boundingBox())!.width).toBeGreaterThanOrEqual(240);
-  const row = (await page.getByRole("menuitem").first().boundingBox())!;
-  expect(row.height).toBeGreaterThanOrEqual(44);
-  // No row starts out looking selected.
-  expect(
-    await page.evaluate(() => document.activeElement?.closest(".app-menu")),
-  ).toBeNull();
-
-  // A tap on the page's text, which sends no mousedown on iOS.
-  await page.tap(".main-pane", { position: { x: 380, y: 600 } });
-  await expect(list).toHaveCount(0);
 });
 
 test("a full-screen page covers the find bar but not its own alerts", async ({

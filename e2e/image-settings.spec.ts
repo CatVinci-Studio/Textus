@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Settings › Images: where a pasted image goes, handed to the backend with
 // the paste. The dev shim answers with canned srcs; where the file really
@@ -30,11 +30,7 @@ const PNG =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 async function openImageSettings(page: Page): Promise<Locator> {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: t.settingsTitle });
   await panel.getByRole("button", { name: t.navEditor }).click();
   return panel;
@@ -145,23 +141,6 @@ test("a subfolder's name shows its link as it is typed, and a refused one is nev
   await pasteScreenshot(page);
   await expect.poll(() => imageSrcs(page)).toEqual(["img/photo.png"]);
   expect((await calls(page, "save_pasted_image"))[0].folder).toBe("img");
-});
-
-// How a stored folder (Typora's ${filename}.assets, one outside the
-// document's) maps to a choice is unit-tested; here, Settings shows the result.
-test("an image folder from before shows as the subfolder it names", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", imageFolder: "pictures" },
-  });
-  const panel = await openImageSettings(page);
-  await expect(
-    panel.getByRole("combobox", { name: t.imageFolderLabel }),
-  ).toHaveText(t.imageFolderSubfolder);
-  await expect(
-    panel.getByRole("textbox", { name: t.imageFolderNameLabel }),
-  ).toHaveValue("pictures");
 });
 
 test("an upload shows only the chosen service's settings and goes to it", async ({

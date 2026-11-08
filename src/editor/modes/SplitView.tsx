@@ -1,7 +1,8 @@
-import { useDeferredValue, useRef } from "react";
-import { SplitPreview } from "./SplitPreview";
+import { useDeferredValue, useEffect, useRef } from "react";
+import { SplitPreview, type PreviewExtras } from "./SplitPreview";
 import { useVaultLineBreaks } from "./useVaultLineBreaks";
-import { DocSourceTextarea } from "./DocSourceTextarea";
+import { DocSourceEditor } from "./lazy-doc-source-editor";
+import { elasticOverscroll } from "../../ui/elastic-overscroll";
 import "./SplitView.css";
 
 /**
@@ -15,19 +16,31 @@ export function SplitView({
   typewriter,
   onChange,
   readOnly,
+  previewExtras,
 }: {
   content: string;
   filePath: string | null;
   typewriter: boolean;
   onChange: (markdown: string) => void;
   readOnly: boolean;
+  previewExtras?: PreviewExtras;
 }) {
-  const sourceRef = useRef<HTMLTextAreaElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const sourceScroller = () =>
+    rootRef.current?.querySelector<HTMLElement>(".split-source .cm-scroller") ??
+    null;
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
   const breaks = useVaultLineBreaks(filePath);
+  // The preview gives at either end as the source beside it does, on a Mac.
+  useEffect(() => {
+    const preview = previewRef.current;
+    const content = preview?.firstElementChild;
+    if (!preview || !(content instanceof HTMLElement)) return;
+    return elasticOverscroll(preview, content);
+  }, []);
 
   // The scrollTop each side was last moved to by the other. Its scroll event
   // can arrive frames later (WebKitGTK), so it is matched by position, not a
@@ -56,29 +69,31 @@ export function SplitView({
   }
 
   return (
-    <div className="split-view">
-      <DocSourceTextarea
-        ref={sourceRef}
+    <div ref={rootRef} className="split-view">
+      <DocSourceEditor
         className="split-source"
         value={content}
         docPath={filePath}
         typewriter={typewriter}
         onChange={onChange}
         readOnly={readOnly}
-        onScroll={(e) =>
-          previewRef.current &&
-          follow(e.currentTarget, previewRef.current, "source")
+        onScroll={(scroller) =>
+          previewRef.current && follow(scroller, previewRef.current, "source")
         }
       />
       <div
         ref={previewRef}
         className={`split-preview${breaks ? " split-preview-breaks" : ""}`}
-        onScroll={(e) =>
-          sourceRef.current &&
-          follow(e.currentTarget, sourceRef.current, "preview")
-        }
+        onScroll={(e) => {
+          const source = sourceScroller();
+          if (source) follow(e.currentTarget, source, "preview");
+        }}
       >
-        <SplitPreview markdown={deferred} filePath={filePath} />
+        <SplitPreview
+          markdown={deferred}
+          filePath={filePath}
+          extras={previewExtras}
+        />
       </div>
     </div>
   );

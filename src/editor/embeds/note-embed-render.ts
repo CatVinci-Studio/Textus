@@ -10,6 +10,7 @@ import { basename, isNoteFile, noteStem } from "../../utils/path";
 import { showDocImage } from "../images/image-plugin";
 import { renderDocumentHtml } from "../markdown/render-html";
 import { embedProvider, type EmbedKind } from "./embed-sources";
+import { drawEmbeddedBlocks } from "./embed-plugin-blocks";
 
 /**
  * A note's, a section's or a block's `![[embed]]`, drawn read-only from what
@@ -173,6 +174,7 @@ export async function fillEmbed(
     const src = img.getAttribute("src");
     if (src) showDocImage(img, src, found.path);
   }
+  drawEmbeddedBlocks(body, found.path, place.signal);
   replaceText(body, WIKILINK, (source) => {
     const span = document.createElement("span");
     span.className = "wikilink";

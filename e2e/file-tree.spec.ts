@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, openApp } from "./helpers";
+import { emit, END, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The
@@ -37,18 +37,6 @@ async function open(page: Page, more: Record<string, string> = {}) {
   await emit(page, "menu-toggle-sidebar");
 }
 
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
-}
-
 const rows = (page: Page) => page.locator(".sidebar .tree-main .tree-row");
 const row = (page: Page, name: string) =>
   page.locator(".sidebar .tree-main .tree-row", { hasText: name });
@@ -71,10 +59,30 @@ test("the parent folder's name takes the tree up a level in one click", async ({
   await expect(row(page, "other.md")).toBeVisible();
 });
 
-test("sorts by name or by date modified, and filters to documents", async ({
+test("the Sort menu shows hidden files and sorts by name or by date modified; the filter keeps documents", async ({
   page,
 }) => {
-  await open(page);
+  await open(page, {
+    "/work/notes/.obsidian/app.json": "{}",
+    "/work/notes/.env": "x",
+  });
+  // Hidden files stay out of the tree until it shows them (#357).
+  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
+  await expect(rows(page)).toHaveText([
+    ".obsidian",
+    "drafts",
+    ".env",
+    "a.md",
+    "b.md",
+    "chart.png",
+  ]);
+  expect(
+    await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
+  ).toBe("1");
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
   await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
 
   await page.getByRole("button", { name: "Sort" }).click();
@@ -101,16 +109,18 @@ test("sorts by name or by date modified, and filters to documents", async ({
   ).toEqual(["modified", "documents"]);
 });
 
-test("New Document and New Folder from the right-click menu", async ({
+test("New Document and New Folder are named in place: right-click, the toolbar, a double-click on the blank", async ({
   page,
 }) => {
   await open(page);
-  // On a folder: inside it.
+  const draft = page.locator(".sidebar .tree-draft-input");
+  // On a folder: inside it, under a name nothing there has.
   await row(page, "drafts").click({ button: "right" });
   await page.getByRole("menuitem", { name: "New Document" }).click();
-  const name = page.getByRole("dialog").getByRole("textbox");
-  await name.fill("Chapter 1");
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await expect(draft).toHaveValue("Untitled");
+  await expect(draft).toBeFocused();
+  await draft.fill("Chapter 1");
+  await draft.press("Enter");
   await expect(row(page, "Chapter 1.md")).toBeVisible();
   // The new document opens.
   await expect(page.locator(".window-bar-title-text")).toHaveText(
@@ -123,20 +133,54 @@ test("New Document and New Folder from the right-click menu", async ({
     button: "right",
   });
   await page.getByRole("menuitem", { name: "New Folder" }).click();
-  await page.getByRole("dialog").getByRole("textbox").fill("Research");
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await draft.fill("Research");
+  await draft.press("Enter");
   await expect(row(page, "Research")).toBeVisible();
   expect(await files(page)).toContain("/work/notes/Research/.keep");
   expect(await files(page)).toContain("/work/notes/drafts/Chapter 1.md");
 
+  // Double-clicking the blank: a new document in the root, numbered past
+  // one already there; clicking away keeps the name.
+  await page.evaluate(() => {
+    (window as unknown as { __devFs: Record<string, string> }).__devFs[
+      "/work/notes/Untitled.md"
+    ] = "";
+  });
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await page.mouse.dblclick(body.x + 40, body.y + body.height - 20);
+  await expect(draft).toHaveValue("Untitled 2");
+  await page.locator(".sidebar .tree-root-label").click();
+  await expect(row(page, "Untitled 2.md")).toBeVisible();
+
+  // The toolbar's button; Escape gives it up.
+  await page.getByRole("button", { name: "New Folder" }).click();
+  await expect(draft).toHaveValue("New Folder");
+  await draft.press("Escape");
+  await expect(draft).toHaveCount(0);
+  expect(await files(page)).not.toContain("/work/notes/New Folder/.keep");
+
   // A name already taken says so, and nothing is replaced.
-  await row(page, "a.md").click({ button: "right" });
-  await page.getByRole("menuitem", { name: "New Document" }).click();
-  await page.getByRole("dialog").getByRole("textbox").fill("b");
-  await page.getByRole("dialog").getByRole("button", { name: "OK" }).click();
+  await page.getByRole("button", { name: "New Document" }).click();
+  await expect(draft).toHaveValue("Untitled 3");
+  await draft.fill("b");
+  await draft.press("Enter");
   await expect(
     page.getByText("There is already something named “b” here."),
   ).toBeVisible();
+});
+
+test("an empty folder says a double-click makes a document", async ({
+  page,
+}) => {
+  await open(page, { "/work/notes/empty/.keep": "" });
+  await row(page, "empty").dblclick();
+  await expect(page.locator(".sidebar .tree-empty-hint")).toHaveText(
+    "Double-click here for a new document.",
+  );
+  await page.locator(".sidebar .tree-empty-hint").dblclick();
+  await page.locator(".sidebar .tree-draft-input").press("Enter");
+  await expect(row(page, "Untitled.md")).toBeVisible();
+  await expect(page.locator(".sidebar .tree-empty-hint")).toHaveCount(0);
 });
 
 test("Rename and Move to Trash from the right-click menu (#351)", async ({
@@ -385,65 +429,6 @@ test("a row dragged onto a folder moves into it, and its open tab follows", asyn
     .toContain("moved");
 });
 
-test("a folder can't be dragged into itself", async ({ page }) => {
-  await open(page);
-  await row(page, "drafts").click();
-  await expect(row(page, "old.md")).toBeVisible();
-  const from = (await row(page, "drafts").boundingBox())!;
-  const into = (await row(page, "old.md").boundingBox())!;
-  await page.mouse.move(from.x + 30, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(into.x + 40, into.y + into.height / 2, { steps: 6 });
-  await expect(page.locator(".tree-row-drop")).toHaveCount(0);
-  await page.mouse.up();
-  expect(await files(page)).toContain("/work/notes/drafts/old.md");
-});
-
-test("hidden files stay out of the tree until it shows them (#357)", async ({
-  page,
-}) => {
-  await open(page, {
-    "/work/notes/.obsidian/app.json": "{}",
-    "/work/notes/.env": "x",
-  });
-  await expect(rows(page)).toHaveText(["drafts", "a.md", "b.md", "chart.png"]);
-  await page.getByRole("button", { name: "Sort" }).click();
-  await page.getByRole("menuitemradio", { name: "Show Hidden Files" }).click();
-  await expect(rows(page)).toHaveText([
-    ".obsidian",
-    "drafts",
-    ".env",
-    "a.md",
-    "b.md",
-    "chart.png",
-  ]);
-  expect(
-    await page.evaluate(() => localStorage.getItem("textus-file-tree-hidden")),
-  ).toBe("1");
-});
-
-test("a file dragged over a plugin's frame still splits where it is let go", async ({
-  page,
-}) => {
-  await open(page);
-  // A plugin's view (a PDF) is an iframe over the document.
-  await page.evaluate(() => {
-    const frame = document.createElement("iframe");
-    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
-    document.querySelector(".main-pane")!.append(frame);
-  });
-  const from = (await row(page, "b.md").boundingBox())!;
-  const main = (await page.locator(".main-pane").boundingBox())!;
-  await page.mouse.move(from.x + 20, from.y + from.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(main.x + main.width - 30, main.y + main.height / 2, {
-    steps: 8,
-  });
-  await expect(page.locator(".split-drop-hint")).toBeVisible();
-  await page.mouse.up();
-  await expect(page.locator(".main-pane-split > .split-pane")).toHaveCount(2);
-});
-
 test("a file clicked opens in a tab of its own, and an open one comes to the front", async ({
   page,
 }) => {
@@ -472,10 +457,16 @@ test("Open to the Side shows a document beside the one in front", async ({
   ).toContainText("Bravo");
 });
 
-test("a file dragged onto the lower half of the document opens below it", async ({
+test("a file dragged onto the lower half of the document opens below it, over a plugin's frame too", async ({
   page,
 }) => {
   await open(page);
+  // A plugin's view (a PDF) is an iframe over the document.
+  await page.evaluate(() => {
+    const frame = document.createElement("iframe");
+    frame.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
+    document.querySelector(".main-pane")!.append(frame);
+  });
   const from = (await row(page, "b.md").boundingBox())!;
   const main = (await page.locator(".main-pane").boundingBox())!;
   await page.mouse.move(from.x + 20, from.y + from.height / 2);
@@ -535,4 +526,34 @@ test("Copy Path in the tree's and a tab's right-click menus and in File copies t
   // As the native menu sends it (Rust's menu.rs does for the drawn one).
   await emit(page, "menu-copy-path");
   await expect.poll(clipboard).toBe("/work/notes/b.md");
+});
+
+test("a click looks in the preview tab; a double click or an edit keeps it", async ({
+  page,
+}) => {
+  await open(page);
+  // a.md, opened from Recent, is a tab of its own.
+  const tabs = page.locator(".tab-bar .tab-pill");
+  const count = 1;
+  await rows(page).filter({ hasText: "b.md" }).click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  const look = page.locator(".tab-pill-preview");
+  await expect(look).toHaveCount(1);
+  await expect(tabs).toHaveCount(count + 1);
+  // The next look takes the same tab.
+  await rows(page).filter({ hasText: "drafts" }).click();
+  await rows(page).filter({ hasText: "old.md" }).click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Old");
+  await expect(tabs).toHaveCount(count + 1);
+  // Written in, it stays; the next look gets a tab of its own.
+  await page.locator(editor).click();
+  await page.keyboard.press("End");
+  await page.keyboard.type("er");
+  await expect(look).toHaveCount(0);
+  await rows(page).filter({ hasText: "b.md" }).click();
+  await expect(tabs).toHaveCount(count + 2);
+  await expect(look).toHaveCount(1);
+  // A double click on the file keeps it too.
+  await rows(page).filter({ hasText: "b.md" }).dblclick();
+  await expect(look).toHaveCount(0);
 });

@@ -18,6 +18,23 @@ const NO_PLUGIN_COMMANDS_ID: &str = "plugin-commands-none";
 pub struct PluginMenuItem {
     command: String,
     label: String,
+    /// The plugin's name: two or more of its commands go in a submenu of it.
+    #[serde(default)]
+    group: Option<String>,
+}
+
+/// The items by plugin, in name order: a plugin's name and its commands.
+fn by_plugin(items: &[PluginMenuItem]) -> Vec<(String, Vec<&PluginMenuItem>)> {
+    let mut groups: Vec<(String, Vec<&PluginMenuItem>)> = Vec::new();
+    for item in items {
+        let key = item.group.clone().unwrap_or_else(|| item.label.clone());
+        match groups.iter_mut().find(|(name, _)| *name == key) {
+            Some((_, list)) => list.push(item),
+            None => groups.push((key, vec![item])),
+        }
+    }
+    groups.sort_by_key(|group| group.0.to_lowercase());
+    groups
 }
 
 /// The Plugins submenu and the commands the frontend last put in it, kept so a
@@ -60,14 +77,28 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
                 let _ = submenu.append(&item);
             }
         }
-        for entry in &items {
-            if let Ok(item) = MenuItemBuilder::with_id(
+        let command = |entry: &PluginMenuItem| {
+            MenuItemBuilder::with_id(
                 format!("{PLUGIN_COMMAND_PREFIX}{}", entry.command),
                 menu_text(&entry.label),
             )
             .build(&app)
-            {
-                let _ = submenu.append(&item);
+        };
+        for (name, entries) in by_plugin(&items) {
+            if entries.len() == 1 {
+                if let Ok(item) = command(entries[0]) {
+                    let _ = submenu.append(&item);
+                }
+                continue;
+            }
+            let mut inner = SubmenuBuilder::new(&app, menu_text(&name));
+            for entry in entries {
+                if let Ok(item) = command(entry) {
+                    inner = inner.item(&item);
+                }
+            }
+            if let Ok(inner) = inner.build() {
+                let _ = submenu.append(&inner);
             }
         }
         if let Ok(sep) = PredefinedMenuItem::separator(&app) {

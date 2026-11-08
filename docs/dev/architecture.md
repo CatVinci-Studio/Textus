@@ -1,119 +1,195 @@
 # Architecture
 
 Where things live and which way the dependencies point. Read this before
-adding a folder or an import that crosses one. The other documents go deeper
-on one area each: [AI-PROPOSALS.md](../design/ai-proposals.md) (an AI edit from stream
-to document), [AI-CONCEPTS.md](../design/ai-concepts.md) (project folder, style
-profile, library, skills), [STORAGE.md](storage.md) (what is saved where),
-[TESTING.md](testing.md) (what each suite covers).
+adding a folder or an import that crosses one. Other documents go deeper:
+[documents.md](documents.md) (a document from opening to closing),
+[storage.md](storage.md) (what is saved where), [testing.md](testing.md)
+(what each suite covers), [recipes.md](recipes.md) (adding a setting, a
+menu item, a command), [ai-proposals.md](../design/ai-proposals.md) (an AI
+edit from stream to document) and [plugin-api.md](plugin-api.md) (the
+registries plugins add to).
 
-Textus is a Tauri 2 app: a React + Milkdown (ProseMirror) frontend in `src/`
-and a Rust backend in `src-tauri/`. They talk only through
-`src/platform/ipc.ts` on one side and `src-tauri/src/commands/` (plus
-`ai/` and `auth/`) on the other.
+Textus is a Tauri 2 app. The frontend in `src/` is React and TypeScript;
+the document is edited in Milkdown (ProseMirror), and source mode in
+CodeMirror 6 (`src/editor/modes/SourceEditor.tsx`, `DocSourceEditor.tsx`).
+The backend in `src-tauri/` is Rust; the code that talks to AI providers is
+the crate `src-tauri/crates/aicompat/`, which has no Tauri in it.
 
-## Frontend layers
+## Layers
 
-`src/` is grouped by feature, and the features are stacked in layers. A
-folder imports from its own layer and the layers below it, never above.
-ESLint enforces this (`no-restricted-imports` in `eslint.config.js`); a
-type-only import may cross, since it leaves nothing behind at runtime.
+`src/` is grouped by feature, and the features are stacked in layers.
+ESLint enforces the import direction (`no-restricted-imports` in
+`eslint.config.js`, run by `npm run lint`); a type-only import may cross,
+since it leaves nothing behind at runtime, and tests (`*.test.*`) are not
+held to it.
 
 ```
-5  app/                window shell: App, tabs, window bar, app menu, shortcuts
-   plugins/            the plugin system: plugs into the shell's commands, tabs, panes
-   playground/         the browser playground: the editor core in a web page
-   document-view/      the document on screen: MilkdownEditor + its AI, assembled
-4  ai/  editor/  export/  links/  sidebar/  mobile/  onboarding/  document/  clipboard/
-   settings/  theme/   features (editor is below ai: ai builds on it);
-                       settings/ is the Settings window
-3  ui/                 shared widgets: dialogs, Select, icons, sheets, motion
-   prefs/              the settings model: SettingsProvider, useSettings, types
-2  storage/            persisted state: settings file, ui-state, history lists
-1  platform/  i18n/  utils/   the backend bridge, OS facts, strings, pure helpers
+shell     app/  document-view/  lazy/  playground/  help/       may import anything
+features  ai/  clipboard/  document/  editor/  export/  links/
+          mobile/  onboarding/  settings/  sidebar/  theme/     each other, ui/ and base; never the shell
+ui        ui/                                                   base only
+base      platform/  utils/  i18n/  storage/  prefs/            each other; never ui/, a feature or the shell
+-         plugins/, the entry files src/*.ts(x), dev/            not layered (below)
 ```
 
-Inside layer 4, `editor/` never imports `ai/`, `document/`, `export/`, `links/`,
-`sidebar/`, `mobile/` or `onboarding/`: the Markdown editor works on its own,
-and the features attach to it, not the other way round. `main.tsx` picks the
-window to render (the editor window, or the detached chat window).
+What the lint enforces:
 
-`plugins/` belongs with the shell: it registers what plugins add into the
-app's own registries (`app/commands.ts`, `app/sidebar-tabs.tsx`,
-`app/split/split-layout.ts`). Features use it only through its front -
-`plugins/manager.ts` (records, install, turning on and off),
-`plugins/app-bridge.ts` (what the window lends plugins) and
-`plugins/views/plugin-views.tsx` (what draws them, loaded lazily). Its
-inside is in folders by job:
+- **Base** (`platform/`, `utils/`, `i18n/`, `storage/`, `prefs/`) imports
+  no `ui/`, feature or shell folder. The five are one layer to the lint:
+  nothing stops `utils/` importing `storage/` or `prefs/`.
+- **`ui/`** imports no feature or shell folder.
+- **Features** import no shell folder (`app/`, `document-view/`). They may
+  import each other, with one exception: **`editor/`** never imports
+  `ai/`, `document/`, `export/`, `links/`, `mobile/`, `onboarding/`,
+  `sidebar/` or `plugins/`. The Markdown editor works on its own; features
+  and plugins attach to it, plugins through `editor/extension-points.ts`.
+- **The shell** (`app/`, `document-view/`, `lazy/`, `playground/`,
+  `help/`) may import anything except the plugin system's insides.
+- **Nothing outside `plugins/` imports `plugins/host/`**: the sandbox, the
+  runtimes and the broker can change without the app noticing.
+- **Only `src/platform/` and `src/dev/` import `@tauri-apps/*`**, so the
+  same code runs in the browser build, where each platform module has a
+  stand-in (`TEXTUS_BROWSER`, `platform/runtime.ts`).
 
-| `plugins/`       | Holds                                                                                                                                            |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `host/`          | Running a plugin: the sandboxed frames, the runtimes put in them (`runtime/`), the broker that answers every call (`broker*.ts`), the RPC.       |
-| `contributions/` | The registries of what plugins add: commands and menus, code blocks, decorations, completions, hover cards, links, lists, AI tools, before-save. |
-| `views/`         | What draws plugins: webviews, lists, web pages, forms, the theme given to a page.                                                                |
-| `store/`         | What is installed and how: manifests, the catalog, records and their state, permissions, settings, logs, export, migration.                      |
-| `workspace/`     | What plugins know of the folder: the metadata index, globs, front matter, links that follow a rename.                                            |
+What is only convention:
 
-Only the plugin system imports `plugins/host/` - ESLint refuses it
-anywhere else - so the sandbox can change without the app noticing.
+- **`plugins/`, `src/*.ts(x)` and `dev/` are not layered.** Their own
+  imports are limited only by the Tauri rule, and any folder but `editor/`
+  may import `plugins/`. Features do: Settings' plugin pages use
+  `plugins/store/*` (catalog, manifest, permissions, lifecycle), the chat
+  uses `plugins/chat-plugin.ts` and `plugins/ai-state.ts`, `document/` and
+  `sidebar/` use `plugins/manager.ts` and `plugins/app-bridge.ts`. Prefer
+  `manager.ts` (records, install, on and off), `app-bridge.ts` (what the
+  window lends plugins and the events they hear) and `store/` over
+  anything deeper.
+- **`lazy/` and `help/`** are linted as shell but are used from every
+  layer: `lazy/lazy-module.ts` is how anything loads on first use, and
+  `help/` is only the bundled guides.
+- **Nothing imports `playground/`**; it is its own entry.
+- The entry files: `main.tsx` picks the window to render (an editor
+  window, the detached chat, a floating plugin view, the background host);
+  `plugin-api.ts` is the in-process registry API (`window.__textusPlugins`
+  in a development build); `test-setup.ts` is vitest's.
 
-## Checked on every change
+The other checks `npm run check` runs (cycles, copies, dead code, code
+shape) are listed in [CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push).
 
-`npm run check` holds the code to these, so they stay true without anyone
-remembering them:
+## UI layering
 
-- **Layers**: a folder imports from its own layer and the ones below
-  (ESLint, `no-restricted-imports`), and nothing outside `plugins/` reaches
-  into `plugins/host/`.
-- **Tauri behind `src/platform/`**: nothing else imports `@tauri-apps/*`
-  (ESLint). Each platform module has a browser stand-in, chosen by the
-  browser build's `TEXTUS_BROWSER` flag (`platform/runtime.ts`).
-- **No import cycles**: no module imports itself through others
-  (`scripts/check-cycles.mjs`). A cycle ties its modules into one: none can
-  be read, tested or loaded lazily on its own.
-- **No dead code**: no unused file, export or dependency (`knip`, set up
-  in `knip.json`).
-- **No copies**: no run of code found twice in `src/` or `src-tauri/src/`
-  (`scripts/check-duplicates.mjs`, with jscpd; `jscpd` is run by path, so
-  `knip.json` names it). The copies there today are listed and may only
-  go. Share the code instead: a function, a table, a component.
-- **Shape**: no file over 600 lines, no component with more than eight
-  hooks (`scripts/check-code-shape.mjs`) - split by concern, as
-  `MilkdownEditor` and `App` were.
-- **Startup**: what loads with the window stays within its budget
-  (`e2e/lazy-loading.spec.ts`); heavy parts load on first use
-  (`lazy/lazy-module.ts`).
-- **The plugin API**: `docs/dev/textus.d.ts` matches the runtime
-  (`textus-types.test.ts`), and the reference page is made from it
-  (`plugin-reference.test.ts`).
+Inside the interface, a second, finer order: **tokens → styles →
+components → patterns → features**. A layer never re-defines a value an
+earlier one defines, and never imports from a later one. The design rules
+for each are in [design-language.md](../design/design-language.md).
 
-## What each folder holds
+| Layer      | Today                                                                                   | Holds                                   |
+| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- |
+| Tokens     | `src/ui/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
+| Styles     | `src/ui/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
+| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)   | React wrappers; no own colours or sizes |
+| Patterns   | Settings rows, the sidebar, menus, the command palette                                  | Arrangements of components              |
+| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                   | Compose the layers above                |
 
-| Folder           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`           | `App.tsx` (the window's composition) and the hooks it calls (open / save / close, side panels, zen, source modes), `WindowBar`, global shortcuts, zoom, update notice. `tabs/` is the tab bar, the tabs' state and tab drag between windows; `split/` two documents at once (the layout, the divider, drag to split, restoring it); `menu/` the app-drawn menu (`AppMenu`, `app-menu-model`), native menu events (`menu-bridge`) and what the macOS bar is sent. `App.css` is the main window's ordered stylesheet index. |
-| `document-view/` | `MilkdownEditor.tsx` - one tab's editor with everything attached (AI panel, Quick Ask, review margin, grammar card, tutorial hooks). `editor-extensions.ts` puts the editor core and the AI plugins together. `EditorPane` switches between WYSIWYG, source and split view. `plugins/` is what plugins do in the editor: their code blocks and marks drawn, their edits placed, what they are told of it.                                                                                                                 |
-| `document/`      | A document's life outside the editor: the tab model (`doc-tabs`), draft autosave and recovery, Save Automatically (`autosave`), restoring the last session, reloading after an outside change, default file names, the iPhone's recent-documents list.                                                                                                                                                                                                                                                                    |
-| `editor/`        | The Markdown editor. Core plugins register in `editor-extensions.ts`, in load order. Subfolders by feature: `markdown/` (parse, save, paste, front matter, alerts, render to HTML), `marks/` (Typora-style inline delimiters), `math/`, `code/`, `tables/`, `images/`, `html/`, `find/`, `modes/` (source, split, typewriter, zen), `keys/` (key handling per platform). Diagrams are `mermaid-plugin`, drawn by Mermaid or Pele through `diagram-engine`.                                                                |
-| `ai/`            | Everything Textus AI. `editor-plugins.ts` registers its plugins on the editor. `chat/` is the conversation shared by the three chat surfaces and its history, with `chat/quick-ask/` (in the text), `chat/panel/` (docked panel, Memory tab) and `chat/window/` (detached window). `revision/` turns a proposed edit into decided sentences; `margin/` draws revisions and review notes beside the text; `writing/` is completion and grammar check; `skills/` the built-in skills and their translations.                |
-| `export/`        | File > Export: PDF and HTML from the rendered page (`exporters`, `paginate`, `print.css`), everything else through pandoc (`pandoc-markdown` rewrites what pandoc can't read; `diagram-images` draws diagrams as pictures for Word, OpenDocument, EPUB and RTF).                                                                                                                                                                                                                                                          |
-| `theme/`         | How documents look and how themes are read: the default look, the document CSS (`content-base.css`), importing a Typora theme (`theme-import`, `typora-compat`), installing one from the public theme gallery (`theme-gallery`) or from an AI reply (`chat-theme`), deriving window colours from it (`theme-chrome`), exporting one (`theme-export`), and putting the appearance settings on the page (`apply-appearance`).                                                                                               |
-| `settings/`      | The settings model and store (`SettingsContext`, `settings-sync`), the Settings window and its sections.                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `links/`         | Notes and the links between them, for the whole app: one resolver for every way a link is followed (`link-resolve`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder or vault does (`link-style`), rewriting links when a note moves (`link-rewrite`), block ids (`block-id`).                                                                                                                                                                                                          |
-| `sidebar/`       | File tree, outline, clipboard history.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `clipboard/`     | The clipboard history: the list and the editor plugin that records copies.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `mobile/`        | Phone-only screens: the document list and the keyboard toolbar; `styles/` holds the phone layout's CSS.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `onboarding/`    | First-run language picker and the tutorial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `ui/`            | Widgets any feature may use: app dialogs, `Select`, icons, `ActionSheet`, `BottomCard`, presence and FLIP animation, window caption buttons. `base.css` holds the fonts and the colours (the document's `--doc-*`, and the interface's `--ui-*` drawn from them) every window loads first; `design-system.css` the shapes, text roles, control sizes and shared control styles; `motion.css` durations and curves.                                                                                                        |
-| `storage/`       | Persisted state through the backend: boot snapshot, pending writes, ui-state, persisted lists, the legacy browser-storage import.                                                                                                                                                                                                                                                                                                                                                                                         |
-| `platform/`      | `ipc.ts` (every backend command, typed), OS and capability facts, window chrome, iOS file access, menu events.                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `i18n/`          | The UI strings (`locales/`), language names and plural rules. See [TRANSLATING.md](translating.md).                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `utils/`         | Pure helpers (paths, CJK, word count, shortcuts, events) and small React hooks (`hooks/`).                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `dev/`           | The browser shim that stands in for Tauri under `npm run dev` and the end-to-end tests, and a test helper.                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `help/`          | The bundled Markdown and AI guides, one file per language.                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+Held by tests: `src/ui/spacing-grid.test.ts`, `theme-reach.test.ts`,
+`motion-tokens.test.ts`, `motion-properties.test.ts`,
+`style-invalidation.test.ts`, `e2e/a11y.spec.ts`, and the contrast tests in
+`src/theme/theme-chrome.test.ts`.
+
+Planned, not built: a layout that gives each layer a folder of its own
+(`src/ui/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
+`plugins/host/` injecting tokens, styles and icons into plugin pages),
+moved file by file as files are touched; a Stylelint configuration banning
+literal colours, px font sizes, off-grid spacing, raw radii and raw
+durations, offered to plugin authors too; a test that every public token
+resolves in every built-in theme; and a component gallery page in dev mode
+that is also the visual regression target.
+
+## The frontend's folders
+
+| Folder           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/`           | The editor window. `App.tsx` composes it from the window hooks (`useWindowShell`, `useWindowDocuments`, `useWindowWiring`, `useFileOpening`, `useSaveTabs`, `close-flow.ts`, `ClosePrompt.tsx`), `WindowBar`, `StartPage`, the sidebar frame and its draggable tabs (`sidebar-tabs.tsx`, `SidebarTabBar.tsx`), the command palette, global shortcuts, zoom, F6 regions (`regions.ts`), plugins' status items.                                                                                                            |
+| `app/tabs/`      | The tab bar, the tabs' state (`useTabState`), tab drag between windows (`useTabDragMerge`).                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `app/split/`     | Two documents at once: the layout tree, the divider, drag to split, restoring it.                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `app/menu/`      | The menu model (`app-menu-model.ts`, drawn by `AppMenu.tsx` and `MenuBar.tsx` on Windows, Linux and iPad, and on the phone), native menu events (`menu-bridge.ts`), the macOS bar's labels (`native-menu-text.ts`), plugins' items (`plugin-menu.ts`), Open Recent (`recents.ts`).                                                                                                                                                                                                                                       |
+| `app/report/`    | The error boundary and **Help › Report a Problem**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `document-view/` | One tab's document on screen. `MilkdownEditor.tsx` is the editor with everything attached (AI panel, Quick Ask, review margin, grammar card, tutorial hooks), split into `use*.ts` hooks beside it. `editor-extensions.ts` puts the editor core and the AI plugins together. `EditorPane` switches between the rich editor, source and split view. `plugins/` is what plugins do in the editor. The editor test harnesses live here too.                                                                                 |
+| `document/`      | A document's life outside the editor ([documents.md](documents.md)): the tab model (`doc-tabs.ts`), autosave, draft recovery, reload after an outside change, the session and reload restore, read-only, line endings (`file-format.ts`), Word import, last carets, the iPhone's recent documents.                                                                                                                                                                                                                       |
+| `editor/`        | The Markdown editor. Core plugins register in `editor-extensions.ts`, in load order. Subfolders by feature: `markdown/` (parse, save, paste, front matter, render to HTML), `marks/`, `math/`, `code/`, `tables/`, `images/`, `html/`, `find/`, `embeds/`, `chart/`, `emoji/`, `hover/`, `completion/`, `clipboard/`, `lazy-blocks/`, `keys/` (key handling per platform), `modes/` (source in CodeMirror, split, typewriter, zen; `view-mode.ts` is **View › Mode**). `extension-points.ts` is where plugins add to it. |
+| `ai/`            | Textus AI. `editor-plugins.ts` registers its plugins on the editor. `chat/` is the conversation the three chat surfaces share, with `quick-ask/`, `panel/` and `window/`; `revision/` turns a proposed edit into decided sentences; `margin/` draws revisions and notes beside the text; `writing/` is completion and the grammar check; `paper/` the long-form paper writer ([ai-paper.md](../design/ai-paper.md)); `skills/` the built-in skills and their translations; `citations.ts` sources as footnotes.          |
+| `export/`        | **File › Export**: PDF and HTML from the rendered page, everything else through pandoc.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `theme/`         | How documents look and how themes are read: the built-in themes, the document CSS (`content-base.css`), importing a Typora theme, the theme gallery, window colours from a theme (`theme-chrome.ts`), putting the appearance settings on the page.                                                                                                                                                                                                                                                                       |
+| `settings/`      | The Settings window: `pages/` (General, Editor, AI, Extensions with the plugin pages, Create), `sections/` (the rows; `controls.tsx` holds `SettingRow` and `ToggleRow`), search over the pages (`settings-search.ts`).                                                                                                                                                                                                                                                                                                  |
+| `links/`         | Notes and the links between them: one resolver for every way a link is followed (`link-resolve.ts`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder does, rewriting links when a note moves, block ids.                                                                                                                                                                                                                                                                               |
+| `sidebar/`       | The file tree, file search, the outline, moving files with their links.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `clipboard/`     | What a copy tells plugins (`copied.ts`, `copied-plugin.ts`) and Copy Path. The clipboard history itself is the official Clipboard History plugin.                                                                                                                                                                                                                                                                                                                                                                        |
+| `mobile/`        | Phone-only screens: the document list, the keyboard toolbar, page swipes; `styles/` holds the phone layout's CSS ([ios-code-map.md](ios-code-map.md)).                                                                                                                                                                                                                                                                                                                                                                   |
+| `onboarding/`    | The first-run language picker and the tutorial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `plugins/`       | The plugin system ([below](#the-plugin-system)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `ui/`            | Widgets and helpers any feature may use: dialogs, `Select`, `ContextMenu`, `Tooltip`, `InfoTip`, `PanelHeader`, `ResizeHandle`, `Sheet`, `CornerToast`, notices, the quick pick, icons and file icons (`file-icons.tsx`), presence and FLIP motion, dragging (`pointer-drag.ts`), Mac-style overscroll (`elastic-overscroll.ts`), engine quirks and guards, `usePhoneLayout`. And the base stylesheets: `base.css`, `design-system.css`, `motion.css`. [reuse.md](reuse.md) says which to use for what.                  |
+| `prefs/`         | The settings model: the `Settings` type and defaults (`settings-types.ts`), reading a stored file back (`settings-normalise.ts`), the store and its sync between windows, `SettingsProvider` / `useSettings` (`SettingsContext.tsx`), the rebindable shortcuts (`shortcut-defaults.ts`).                                                                                                                                                                                                                                 |
+| `storage/`       | Persisted state through the backend: the boot snapshot, pending writes, UI state, persisted lists, a project's `.textus/settings.json` (`project-settings.ts`), the webview's own localStorage (`local.ts`).                                                                                                                                                                                                                                                                                                             |
+| `platform/`      | The backend bridge ([below](#talking-to-the-backend)), OS and capability facts (`os.ts`, `capabilities.ts`), window chrome, events, iOS file access, menu events on iOS.                                                                                                                                                                                                                                                                                                                                                 |
+| `i18n/`          | The UI strings (`locales/`), language names, plural rules. See [translating.md](translating.md).                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `utils/`         | Pure helpers (paths, CJK, word count, shortcuts, events, front matter) and small React hooks (`hooks/`).                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `lazy/`          | Loading on first use: `lazyModule`, `lazyComponent`, and warming what is likely soon.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `help/`          | The bundled Markdown and AI guides, one file per language.                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `playground/`    | The browser playground: the editor alone in a web page.                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `dev/`           | The browser shim that stands in for Tauri under `npm run dev` and in the e2e flows (`tauri-shim.ts`, with `plugin-shim-api.ts` for the plugin commands).                                                                                                                                                                                                                                                                                                                                                                 |
 
 Tests sit next to the file they test (`x.ts` and `x.test.ts`). End-to-end
-tests are in `e2e/`.
+flows are in `e2e/`.
+
+## The plugin system
+
+`src/plugins/` runs plugins in sandboxed frames and registers what they
+add into the app's own registries (`app/commands.ts`,
+`app/sidebar-tabs.tsx`, `app/split/split-layout.ts`, the editor's extension
+points). Its folders, by job:
+
+| `plugins/`       | Holds                                                                                                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `host/`          | Running a plugin: the sandboxed frames, the runtimes put in them (`runtime/host.js`, `text.js`, `webview.js`), the broker that answers every call (`broker*.ts`), the RPC. |
+| `contributions/` | The registries of what plugins add: commands and menus, code blocks, decorations, completions, hover cards, links, lists, AI tools, before-save.                           |
+| `views/`         | What draws plugins: webviews, lists, web pages, forms, floating views, the theme given to a page.                                                                          |
+| `store/`         | What is installed and how: manifests, the catalog, records and their state, permissions, settings, logs, export, migration, offers.                                        |
+| `workspace/`     | What plugins know of the folder: the metadata index, globs.                                                                                                                |
+| `background/`    | Scheduled jobs and the hidden background host window that runs them when no editor window is open (desktop).                                                               |
+
+At its top: `manager.ts` (records, install, on and off; the loader),
+`app-bridge.ts` (what the window lends plugins, and `emitPluginEvent` for
+what they hear), `api-permissions.ts` (the one table of which call needs
+which permission, read by the broker and the install check),
+`panels-state.ts` and `ai-state.ts` (what plugins hear of the window's
+panels and of Textus AI), `chat-plugin.ts`, `plugin-uri.ts` and
+`usePluginWindow.ts` (the window's side of the bridge).
+
+The public API is `docs/dev/textus.d.ts`; [plugins/](plugins/README.md) is
+the plugin author's guide, and [recipes.md](recipes.md#add-a-plugin-api-call)
+says how a call is added.
+
+## Talking to the backend
+
+The frontend reaches Rust only through `src/platform/`:
+
+- **`ipc.ts`** exports one object per area (`fs`, `drafts`, `session`,
+  `ai`, `exportDoc`, …); the areas are split over `ipc-app.ts`,
+  `ipc-files.ts`, `ipc-plugins.ts`, `ipc-auth.ts`, `ipc-schedule.ts` and
+  `ipc-ai-types.ts`, and `ipc.ts` re-exports them.
+- **`ipc-call.ts`** is how every command is called: `command(name, …args)`
+  for a command with generated types, `call(name, args)` for one without;
+  `aiCommand` / `aiCall` refuse while Textus AI is off; `desktopQueryCommand`
+  answers a fallback and `desktopActionCommand` / `desktopAction` reject on
+  iOS, where desktop-only commands aren't registered.
+- **`bindings/*.ts`** are generated from the Rust commands by tauri-specta
+  (`src-tauri/src/bindings.rs` lists which command goes into which file).
+  Never edit them: `npm run bindings` writes them again, and `cargo test`
+  fails while they are out of date. A command whose arguments specta can't
+  describe (struct inputs, raw bytes, iOS-only) is called with `call`.
+- **`events.ts`** listens to events Tauri sends this window or webview, and
+  sends events to other windows.
+
+[recipes.md](recipes.md#add-a-backend-command) walks through a new command
+end to end.
 
 ## CSS
 
@@ -138,30 +214,79 @@ tests are in `e2e/`.
 
 ## Backend (`src-tauri/`)
 
-| Path                                                                                    | Holds                                                                                                                                                                                                                                                                                                                                                                      |
-| --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/lib.rs`                                                                            | App setup: plugins, windows, the command list.                                                                                                                                                                                                                                                                                                                             |
-| `src/commands/`                                                                         | Commands the frontend calls, one file per area (files, export, drafts, session, chat window, attachments...).                                                                                                                                                                                                                                                              |
-| `src/background/`                                                                       | Background mode (desktop): whether closing the last window keeps the app running, the tray icon. [lifecycle.md](lifecycle.md) tells the story.                                                                                                                                                                                                                             |
-| `src/ai/`                                                                               | The AI client and agent loop, tools, providers (`catalog`), built-in skills, writing conventions and grammar rules (`rules/`), project files (`project`, `workspace`), and the live evaluation harness (`live_eval/`, run on demand - see [AI-EVAL.md](../design/ai-eval.md)).                                                                                             |
-| `src/auth/`                                                                             | Provider sign-in and keys.                                                                                                                                                                                                                                                                                                                                                 |
-| `src/settings/`, `menu.rs`, `tab_drag.rs`, `atomic.rs`, `net.rs`, `walk.rs`, `extract/` | The settings file, the native menu, tabs dragged between windows, atomic file writes and private temp files, HTTP timeouts and size-capped reads, the folder walk shared by the sidebar's file search and the AI's project tools, and the Markdown of PDF, Word, PowerPoint, spreadsheet, EPUB, RTF and HTML files, shared by chat attachments and the AI's project tools. |
-| `plugins/textus-files/`                                                                 | The iOS document-access plugin.                                                                                                                                                                                                                                                                                                                                            |
-| `crates/aicompat/`                                                                      | The providers' APIs, the agent loop and its events, with no Tauri in it (a test checks), so it can run outside the app; `src/auth/` (the browser sign-in) and `src/ai/` wrap it.                                                                                                                                                                                           |
+| Path                                                     | Holds                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/main.rs`, `src/lib.rs`                              | The entry (`main` asks the CLI first) and app setup: plugins, state, the one `invoke_handler` list (shared commands, then `#[cfg(desktop)]` ones), `desktop_builder` and `desktop_setup`.                                                                                                                  |
+| `src/commands/`                                          | Commands the frontend calls, one file per area: files and folders (`fs`, `folder`, `tree_ops`, `documents`), drafts, undo files, session, recents, export, the chat window, attachments, themes, the theme gallery, links, update, …                                                                       |
+| `src/bindings.rs`                                        | Which command goes into which generated `src/platform/bindings/*.ts` file, and the test that keeps them current.                                                                                                                                                                                           |
+| `src/settings/`, `settings.rs`, `boot.js`                | The settings, UI state and history files, the chat history folder, the boot script every webview gets ([storage.md](storage.md)).                                                                                                                                                                          |
+| `src/editor_windows.rs`, `window_frame.rs`               | Editor windows: built with each platform's chrome, numbered, opened and reopened (`build_main_window`, `open_new_window`, `reopen_without_windows`), and where a window opens.                                                                                                                             |
+| `src/launch.rs`                                          | Files the app is asked to open, held until a window is ready (`PendingOpenPaths`, `queue_paths_to_open`, `paths_from_argv`).                                                                                                                                                                               |
+| `src/menu.rs`, `src/menu/`                               | The native menu bar: ids and the id → `menu-<id>` event dispatch in `menu.rs`; `build.rs` builds it, `state.rs` keeps labels, checks and accelerators between rebuilds, `recent.rs` Open Recent, `dock.rs` the Dock menu, `plugins.rs` plugins' items.                                                     |
+| `src/tab_drag.rs`                                        | Tabs dragged between windows.                                                                                                                                                                                                                                                                              |
+| `src/background/`                                        | Background mode (desktop): whether closing the last window keeps the app running, and the tray icon ([lifecycle.md](lifecycle.md)).                                                                                                                                                                        |
+| `src/plugins/`                                           | The plugins' backend: installed plugins and their state, the catalog, installing, their files, storage and secrets, the `textus-plugin:` scheme, AI tools, the metadata index, scripts. Each permission is checked again here. Its commands are registered by `with_plugin_commands!` in `plugins/mod.rs`. |
+| `src/schedule/`                                          | Plugins' scheduled jobs and notifications, and the hidden `background-host` window that runs them with no window open (desktop).                                                                                                                                                                           |
+| `src/conventions/`                                       | What a folder says about how it is written, whichever app made it: link style, picture folder, line breaks, templates, daily, weekly and monthly notes (`folder_conventions`).                                                                                                                             |
+| `src/ai/`                                                | The AI client and agent loop, tools, providers (`catalog`), memory, the paper writer (`paper/`), built-in skills, writing conventions and grammar rules (`rules/`), project files, and the live evaluation (`live_eval/`, run on demand - [ai-eval.md](../design/ai-eval.md)).                             |
+| `src/auth/`                                              | Provider sign-in and keys.                                                                                                                                                                                                                                                                                 |
+| `src/mcp/`                                               | MCP servers: programs or web services that give Textus AI more tools (desktop).                                                                                                                                                                                                                            |
+| `src/cli/`                                               | The `textus` terminal command ([cli.md](cli.md)).                                                                                                                                                                                                                                                          |
+| `src/extract/`                                           | The Markdown of PDF, Word, PowerPoint, spreadsheet, EPUB, RTF and HTML files, shared by chat attachments and the AI's project tools.                                                                                                                                                                       |
+| `src/atomic.rs`, `net.rs`, `walk.rs`                     | Atomic file writes and private temp files; HTTP timeouts and size-capped reads; the one folder walk, shared by the sidebar's search and the AI's project tools.                                                                                                                                            |
+| `src/webview_memory.rs`                                  | Windows: a minimized window's WebView2 is asked to use less memory.                                                                                                                                                                                                                                        |
+| `src/distribution.rs`, `app_identity.rs`, `ext_stats.rs` | Which channel installed this build; the identity passed to `aicompat`; extension download counts.                                                                                                                                                                                                          |
+| `plugins/textus-files/`                                  | Not the plugin system: the iOS document-access Tauri plugin (Swift), compiled only on iOS.                                                                                                                                                                                                                 |
+| `crates/aicompat/`                                       | The providers' APIs, the agent loop and its events, with no Tauri in it (a test checks), so it can run outside the app; `src/auth/` and `src/ai/` wrap it.                                                                                                                                                 |
+| `capabilities/`, `tauri*.conf.json`                      | Tauri's permissions (`default.json` shared, `desktop.json`, `ios.json`) and configuration per platform.                                                                                                                                                                                                    |
 
 A shape that exists on both sides (`AgentTurn`, `ChatAttachment`,
 `StreamEvent`, ...) carries a comment on each side naming the other; change
-both together.
+both together. Desktop-only code is `#[cfg(desktop)]`;
+[ios-code-map.md](ios-code-map.md) has the rules.
 
 ## Where things meet
 
 `document-view/MilkdownEditor.tsx` (one tab's editor and every AI surface
-attached to it) and `app/App.tsx` (tab state and the window's commands) are
-where everything meets, and are kept as compositions: each calls hooks and
-renders components that live beside it (`document-view/use*.ts`,
-`app/use*.ts`, `app/Sidebar.tsx`, `app/MainPane.tsx`...) or in the feature's
-own folder (`ai/margin/useReviewNotes.ts`, `editor/modes/...`). Both were
-split this way in 1.0.2, from about 2,260 and 1,520 lines. When you add to
-them, add a hook or component in the same way - as `WindowBar`,
+attached to it) and `app/App.tsx` (the window) are where everything meets,
+and are kept as compositions: each calls hooks and renders components that
+live beside it (`document-view/use*.ts`, `app/useWindow*.ts`,
+`app/Sidebar.tsx`, `app/MainPane.tsx`) or in the feature's own folder
+(`ai/margin/useReviewNotes.ts`, `editor/modes/...`). When you add to them,
+add a hook or a component the same way - as `WindowBar`,
 `useDraftAutosave` or `useApplyAppearance` are - rather than more code in
 the file itself, and keep the hooks' call order.
+
+## The window's Content Security Policy
+
+Every window's page loads under the policy in `src-tauri/tauri.conf.json`
+(`app.security.csp`). It keeps the network out of everything a stylesheet
+or a document can make the page load - an imported or gallery theme, Custom
+CSS, a document's HTML - while the app's own traffic goes through Rust:
+the AI providers, the theme gallery, the plugin catalog and the updater all
+use `reqwest`, so the page itself never needs a remote origin. A desktop
+`npm run tauri dev` loads the Vite page directly, without Tauri's header,
+so the dev server sends the same policy (`vite.csp.ts`), and the e2e flows
+run under it too. `src/plugins/host/window-csp.test.ts` checks the rules
+below.
+
+| Directive     | Allows                                                                                              | Because                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `default-src` | `'self'`                                                                                            | Anything not listed: the app's own files only.                                                                                                       |
+| `script-src`  | `'self'`, `'unsafe-inline'`, `'wasm-unsafe-eval'`, `data:`, `blob:`, the plugins' files             | A plugin's page is a `srcdoc` frame, which takes the window's policy on top of its own, so the window allows what `webviewCsp` (`frames.ts`) allows. |
+| `style-src`   | `'self'`, `'unsafe-inline'`, `data:`, the plugins' files                                            | Themes and Custom CSS are `<style>` elements, and the editor sets `style=""`. No remote `@import`.                                                   |
+| `img-src`     | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files, `https:`, `http:`               | A document shows its pictures from the web as written. A stylesheet's `url()` picture is one too; CSP can't tell the two apart.                      |
+| `font-src`    | `'self'`, `data:`, the asset protocol, the plugins' files                                           | KaTeX's fonts are bundled; an imported theme's fonts are inlined as `data:` (`theme-import.ts`). No web fonts.                                       |
+| `media-src`   | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files                                  | What a plugin's page may play.                                                                                                                       |
+| `connect-src` | `'self'`, `ipc:` / `http://ipc.localhost`, `data:`, `blob:`, the asset protocol, the plugins' files | Tauri's IPC, and reading a picture's bytes back for export and copy. No `fetch` to the web.                                                          |
+| `worker-src`  | `'self'`, `data:`, `blob:`, the plugins' files                                                      | A plugin's page may start a worker from its own files.                                                                                               |
+| `frame-src`   | `'self'`, `https:`, `http:`                                                                         | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
+| `object-src`  | `'none'`                                                                                            | No plugins of the old kind.                                                                                                                          |
+| `base-uri`    | `'self'`                                                                                            | A `<base>` can't move where relative URLs go.                                                                                                        |
+
+Each scheme appears twice where it is served: `asset:` and
+`textus-plugin:` on macOS, Linux and iOS, `http://asset.localhost` and
+`http://textus-plugin.localhost` on Windows. `dangerousDisableAssetCspModification`
+stops Tauri adding hashes of the pages' inline `<style>` and `<script>` to
+the policy: with a hash in a directive the browser ignores
+`'unsafe-inline'`, and themes and plugin frames would stop working.

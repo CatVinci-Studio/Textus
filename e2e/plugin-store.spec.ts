@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * A plugin's own data: `ctx.storage.global`, and `ctx.storage.project`
@@ -67,24 +67,12 @@ async function open(page: Page, granted: string[]) {
     { entry: plugin("test.keep", granted), granted },
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/notes/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/notes/a.md");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText("A");
 }
 
 async function save(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-plugin-command", "test.keep.save"),
-  );
+  await emit(page, "menu-plugin-command", "test.keep.save");
 }
 
 test("a plugin keeps its data globally and, granted, in the project", async ({
@@ -123,11 +111,7 @@ test("its page says what a plugin keeps, and Clear empties it", async ({
   await save(page);
   await expect(page.getByText(/^global 1 /)).toBeVisible();
   await page.getByRole("button", { name: "OK" }).click();
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="test.keep"] .plugin-card-open')
     .click();
@@ -156,11 +140,7 @@ test("uninstalled, a plugin's own data and secrets go; the project's stays", asy
   await save(page);
   await expect(page.getByText(/^global 1 /)).toBeVisible();
   await page.getByRole("button", { name: "OK" }).click();
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-manage-plugins"),
-  );
+  await emit(page, "menu-manage-plugins");
   await page
     .locator('.plugin-card[data-plugin="test.keep"] .plugin-card-open')
     .click();

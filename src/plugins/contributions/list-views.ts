@@ -8,6 +8,8 @@ export interface ListViewInfo {
   view: string;
   select: boolean;
   check: boolean;
+  /** Its rows can be dragged onto one another (the provider's onMove). */
+  move?: boolean;
   filterPlaceholder?: string;
   emptyText?: string;
   message: string;
@@ -46,7 +48,7 @@ export function registerListView(
   view: string,
   info: Pick<
     ListViewInfo,
-    "select" | "check" | "filterPlaceholder" | "emptyText"
+    "select" | "check" | "move" | "filterPlaceholder" | "emptyText"
   >,
 ): void {
   const before = views.get(key(plugin, view));

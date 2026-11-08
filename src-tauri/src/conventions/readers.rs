@@ -3,7 +3,7 @@
 //! (a Docusaurus config, a Foam `.js` template) is ever run.
 
 use super::text::{flat_key, json, json_bool, json_str, moment_format, read, DateSyntax};
-use super::{Conventions, Daily, Setting};
+use super::{Conventions, Daily, Setting, TemplateFormats};
 use std::path::Path;
 
 /// The readers in the order one folder's apps are asked: Textus's own
@@ -135,23 +135,41 @@ fn obsidian(dir: &Path) -> Option<Conventions> {
         .or_else(|| plugin("templater-obsidian").and_then(|t| json_str(&t, "templates_folder")))
         .filter(|f| !f.trim().is_empty())
         .and_then(|f| at.set(at.folder(&f)));
-    let daily = json(&config.join("daily-notes.json")).or_else(|| {
-        plugin("periodic-notes")
-            .and_then(|p| p.get("daily").cloned())
-            .filter(|d| json_bool(d, "enabled") != Some(false))
+    let formats = json(&config.join("templates.json")).map(|t| TemplateFormats {
+        date: json_str(&t, "dateFormat").filter(|f| !f.is_empty()),
+        time: json_str(&t, "timeFormat").filter(|f| !f.is_empty()),
     });
-    out.daily = daily.and_then(|d| {
-        at.set(Daily {
-            folder: at.folder(&json_str(&d, "folder").unwrap_or_default()),
-            format: json_str(&d, "format")
-                .filter(|f| !f.is_empty())
-                .unwrap_or_else(|| "YYYY-MM-DD".into()),
-            template: json_str(&d, "template")
-                .filter(|t| !t.is_empty())
-                .map(|t| at.folder(&with_md(&t))),
-        })
-    });
+    out.template_formats = formats
+        .filter(|f| f.date.is_some() || f.time.is_some())
+        .and_then(|f| at.set(f));
+    let periodic = plugin("periodic-notes");
+    let turned_on = |kind: &str| {
+        periodic
+            .as_ref()
+            .and_then(|p| p.get(kind).cloned())
+            .filter(|d| json_bool(d, "enabled") == Some(true))
+    };
+    // Without settings, Obsidian keeps daily notes at the vault's top.
+    let daily = json(&config.join("daily-notes.json"))
+        .or_else(|| turned_on("daily"))
+        .unwrap_or_default();
+    out.daily = notes(&at, &daily, "YYYY-MM-DD");
+    out.weekly = turned_on("weekly").and_then(|w| notes(&at, &w, "gggg-[W]ww"));
+    out.monthly = turned_on("monthly").and_then(|m| notes(&at, &m, "YYYY-MM"));
     Some(out)
+}
+
+/// A kind of periodic note from its settings, `format` where they name none.
+fn notes(at: &At, settings: &serde_json::Value, format: &str) -> Option<Setting<Daily>> {
+    at.set(Daily {
+        folder: at.folder(&json_str(settings, "folder").unwrap_or_default()),
+        format: json_str(settings, "format")
+            .filter(|f| !f.is_empty())
+            .unwrap_or_else(|| format.into()),
+        template: json_str(settings, "template")
+            .filter(|t| !t.is_empty())
+            .map(|t| at.folder(&with_md(&t))),
+    })
 }
 
 /// A template named without its extension, as Obsidian stores it.

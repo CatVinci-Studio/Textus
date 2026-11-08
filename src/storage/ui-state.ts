@@ -18,6 +18,8 @@ export interface UiState {
   sidebarOpen: boolean;
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
+  /** The sidebar's tabs as the user dragged them, by id. */
+  sidebarTabOrder: string[];
   /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout. */
@@ -51,12 +53,17 @@ export interface UiState {
   /** The note embeds folded, by the document they are in and what they
    *  show, oldest first. */
   foldedEmbeds: string[];
+  /** With embeds shown as cards, the ones opened, the same way. */
+  openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
    *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
   pluginCardAnswers: Record<string, number | "never">;
   /** The plugins whose first scheduled job brought up the notice about
    *  background mode, once each. */
   pluginsToldOfSchedule: string[];
+  /** Features that left the core for an official plugin, each offered to
+   *  those who used it once (plugins/store/moved-offer.ts). */
+  movedToPluginsOffered: string[];
   /** "plugin key" pairs whose manifest key was someone else's, told once. */
   pluginKeysTold: string[];
   /** Who the user chose to do what more than one plugin on claims
@@ -131,6 +138,11 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
+  sidebarTabOrder: {
+    key: "textus-sidebar-tab-order",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
   iosRecentDocuments: {
     key: "textus-ios-recent-documents",
     decode: (raw) => JSON.parse(raw),
@@ -188,6 +200,11 @@ const LOCAL: {
   },
   foldedEmbeds: {
     key: "textus-folded-embeds",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  openedEmbeds: {
+    key: "textus-opened-embeds",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

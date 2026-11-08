@@ -89,6 +89,7 @@ fn live_paper() {
         target_chars: env_or("TEXTUS_PAPER_CHARS", "5000").parse().unwrap_or(5000),
         budget,
         stage: PaperStage::Researching,
+        sub_helpers: false,
     };
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../tmp/live-paper")
@@ -194,9 +195,7 @@ fn live_paper() {
         write("draft-before-review.md", &sections.join("\n\n"));
 
         let t = Instant::now();
-        let issues = review::review(&agent, &paper, &outline, &sections)
-            .await
-            .unwrap_or_default();
+        let issues = review::review_all(&agent, &paper, &outline, &dossier, &sections, true).await;
         for issue in &issues {
             eprintln!(
                 "live_paper: review, section {}: {} -> {}",

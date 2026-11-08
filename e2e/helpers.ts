@@ -1,4 +1,4 @@
-import { devices, expect, type Page } from "@playwright/test";
+import { devices, expect, type Locator, type Page } from "@playwright/test";
 
 /** A document exercising most of the content styling. */
 export const SAMPLE_DOC = `# 老城区更新的几点思考
@@ -30,6 +30,31 @@ console.log("a fairly long first line of code to see whether the language label 
  *  Cmd+Right move the caret. */
 export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
 export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
+
+/** The raw Markdown source mode is showing, one `.cm-line` per line. Short
+ *  documents are fully rendered; CodeMirror only draws lines near the viewport
+ *  in a long one. */
+export async function sourceValue(
+  page: Page,
+  root = '[data-active-tab="true"]',
+): Promise<string> {
+  return (
+    await page.locator(`${root} .source-view .cm-line`).allTextContents()
+  ).join("\n");
+}
+
+/** The active document's Markdown, read from source mode (and back). */
+export async function sourceOf(page: Page): Promise<string> {
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await emit(page, "menu-toggle-source-mode");
+  await expect(source).toBeAttached();
+  const value = await sourceValue(page);
+  await emit(page, "menu-toggle-source-mode");
+  await expect(source).toHaveCount(0);
+  return value.trim();
+}
 
 /** Has ProseMirror read the selection a click or a key made. It reads it
  *  on the selectionchange that follows, which in WebKit the next key sent
@@ -79,6 +104,8 @@ export async function openApp(
     settings?: Record<string, unknown>;
     colorScheme?: "light" | "dark";
     animations?: boolean;
+    /** What shows once the window is ready; an editor by default. */
+    ready?: string;
   } = {},
 ) {
   await page.emulateMedia({ colorScheme: options.colorScheme ?? "light" });
@@ -117,15 +144,19 @@ export async function openApp(
       content:
         "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }",
     });
-  await page.waitForSelector('[data-active-tab="true"] .ProseMirror');
+  await page.waitForSelector(
+    options.ready ?? '[data-active-tab="true"] .ProseMirror',
+  );
 }
 
 /** Puts markdown into the active editor the way a paste does. */
 export async function pasteMarkdown(page: Page, markdown: string) {
-  await page.evaluate((md) => {
+  // The paste may land a moment later: wait until the document changed.
+  await page.evaluate(async (md) => {
     const target = document.querySelector<HTMLElement>(
       '[data-active-tab="true"] .ProseMirror',
     )!;
+    const before = target.innerHTML;
     target.focus();
     const data = new DataTransfer();
     data.setData("text/plain", md);
@@ -136,8 +167,11 @@ export async function pasteMarkdown(page: Page, markdown: string) {
         cancelable: true,
       }),
     );
+    const end = performance.now() + 3000;
+    while (target.innerHTML === before && performance.now() < end)
+      await new Promise((resolve) => setTimeout(resolve, 16));
   }, markdown);
-  await page.waitForTimeout(300);
+  await settled(page);
 }
 
 /** The ids of a document's blocks, as the app makes them - its own module,
@@ -161,6 +195,111 @@ export async function mockInvoke(page: Page, results: Record<string, unknown>) {
     (window as unknown as { __devInvokeResults: unknown }).__devInvokeResults =
       r;
   }, results);
+}
+
+/** The active tab's editor. */
+export const editor = '[data-active-tab="true"] .ProseMirror';
+
+type DevWindow = {
+  __devEmitTauriEvent: (name: string, payload?: unknown) => void;
+  __devInvokeCalls?: ({ cmd: string } & Record<string, unknown>)[];
+  __devHeld?: Record<string, unknown[]>;
+  __devRelease: (cmd: string) => void;
+};
+
+/** Sends a backend event, as a menu item or the OS would. */
+export function emit(page: Page, name: string, payload?: unknown) {
+  return page.evaluate(
+    ([n, p]) =>
+      (window as unknown as DevWindow).__devEmitTauriEvent(n as string, p),
+    [name, payload] as const,
+  );
+}
+
+/** Opens files the way dropping them on the window does. */
+export function dropPaths(page: Page, paths: string[]) {
+  return emit(page, "tauri://drag-drop", { paths, position: { x: 0, y: 0 } });
+}
+
+/** The calls made to a mocked command, with their arguments. */
+export function invokeCalls(
+  page: Page,
+  cmd: string,
+): Promise<Record<string, unknown>[]> {
+  return page.evaluate(
+    (c) =>
+      ((window as unknown as DevWindow).__devInvokeCalls ?? []).filter(
+        (call) => call.cmd === c,
+      ),
+    cmd,
+  );
+}
+
+/** Changes settings while the app runs, as another window's change arrives. */
+export function changeSettings(page: Page, patch: Record<string, unknown>) {
+  return page.evaluate((patch) => {
+    const key = "catvinci-settings";
+    const next = JSON.stringify({
+      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
+      ...patch,
+    });
+    localStorage.setItem(key, next);
+    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
+  }, patch);
+}
+
+/** Waits until nothing moves: no animation running and every scroll
+ *  position the same for a few frames (at most 3 s). In place of a fixed
+ *  pause before checking where things came to rest. */
+export function settled(page: Page) {
+  return page.evaluate(
+    () =>
+      new Promise<void>((resolve) => {
+        const positions = () =>
+          [document.scrollingElement, ...document.querySelectorAll("*")]
+            .filter(
+              (el): el is Element =>
+                !!el && (el.scrollTop !== 0 || el.scrollLeft !== 0),
+            )
+            .map((el) => `${el.scrollTop},${el.scrollLeft}`)
+            .join(";");
+        const running = () =>
+          document
+            .getAnimations()
+            .some(
+              (a) =>
+                a.playState === "running" &&
+                a.effect?.getTiming().iterations !== Infinity,
+            );
+        const end = performance.now() + 3000;
+        let last = positions();
+        let still = 0;
+        const tick = () => {
+          const now = positions();
+          still = now === last && !running() ? still + 1 : 0;
+          last = now;
+          if (still >= 4 || performance.now() > end) resolve();
+          else requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+}
+
+/** Lets a mocked `{ __hold: true }` command answer, once it has been called. */
+export async function release(page: Page, cmd: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(
+        (c) => (window as unknown as DevWindow).__devHeld?.[c]?.length ?? 0,
+        cmd,
+      ),
+    )
+    .toBeGreaterThan(0);
+  await page.evaluate(
+    (c) => (window as unknown as DevWindow).__devRelease(c),
+    cmd,
+  );
 }
 
 /** An iPhone, as far as Chromium can be one: touch and a phone-sized
@@ -195,4 +334,30 @@ export async function openPhone(
     "data-window-chrome",
     "mobile",
   );
+}
+
+/** As in the app's window, whose file drop swallows HTML drag and drop: a
+ *  drag that still works here works there. Call before openApp. */
+export async function swallowHtmlDrop(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    for (const type of ["dragover", "drop"])
+      window.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+  });
+}
+
+/** Presses on `from`, moves in steps onto `to` (nudged by `dx`), lets go. */
+export async function dragWithMouse(
+  page: Page,
+  from: Locator,
+  to: Locator,
+  dx = 0,
+): Promise<void> {
+  const a = (await from.boundingBox())!;
+  const b = (await to.boundingBox())!;
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2 + dx, b.y + b.height / 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
 }

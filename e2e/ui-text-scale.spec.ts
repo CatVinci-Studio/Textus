@@ -1,20 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
 // Interface Text Size scales the app's own text and leaves the document's
 // alone, which has its own zoom.
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, payload]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, payload),
-    [name, payload] as const,
-  );
-}
 
 async function fontSize(page: Page, selector: string): Promise<number> {
   return page
@@ -23,8 +11,17 @@ async function fontSize(page: Page, selector: string): Promise<number> {
     .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 }
 
+async function box(page: Page, selector: string) {
+  const b = await page.locator(selector).first().boundingBox();
+  if (!b) throw new Error(`${selector} isn't shown`);
+  return b;
+}
+
 async function sizes(page: Page) {
   return {
+    bar: (await box(page, ".window-bar")).height,
+    barButton: (await box(page, ".window-bar-sidebar-toggle")).width,
+    tabIcon: (await box(page, ".sidebar-tab svg")).width,
     outline: await fontSize(page, ".sidebar .outline-row .tree-label"),
     composer: await fontSize(page, ".agent-panel-view textarea"),
     tab: await fontSize(page, ".tab-pill-title"),
@@ -32,7 +29,7 @@ async function sizes(page: Page) {
   };
 }
 
-test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the document", async ({
+test("Interface Text Size scales the sidebar, the tabs, the AI panel and the icons, not the document", async ({
   page,
 }) => {
   await openApp(page, {
@@ -59,7 +56,33 @@ test("Interface Text Size scales the sidebar, the tabs and the AI panel, not the
   expect(after.outline).toBeCloseTo(before.outline * 1.25, 1);
   expect(after.composer).toBeCloseTo(before.composer * 1.25, 1);
   expect(after.tab).toBeCloseTo(before.tab * 1.25, 1);
+  expect(after.bar).toBeCloseTo(before.bar * 1.25, 0);
+  expect(after.barButton).toBeCloseTo(before.barButton * 1.25, 0);
+  expect(after.tabIcon).toBeCloseTo(before.tabIcon * 1.25, 0);
   expect(after.document).toBe(before.document);
+});
+
+test("a wider window takes the icons and the bar up in a straight line", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { language: "en" },
+    storage: { "textus-sidebar-open": "1" },
+  });
+  const chrome = async () => ({
+    bar: (await box(page, ".window-bar")).height,
+    button: (await box(page, ".window-bar-sidebar-toggle")).width,
+    tabIcon: (await box(page, ".sidebar-tab svg")).width,
+  });
+  const small = await chrome();
+  await page.setViewportSize({ width: 1840, height: 1000 });
+  await expect
+    .poll(async () => (await box(page, ".window-bar")).height)
+    .toBeCloseTo(small.bar * 1.2, 0);
+  const wide = await chrome();
+  expect(wide.button).toBeCloseTo(small.button * 1.2, 0);
+  expect(wide.tabIcon).toBeCloseTo(small.tabIcon * 1.2, 0);
 });
 
 test("the detached chat window follows Interface Text Size too", async ({

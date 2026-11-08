@@ -308,6 +308,12 @@ para usar una.
     "Tras cada respuesta, hasta tres cosas que probablemente dirás después aparecen como botones sobre el cuadro de mensaje, la más probable también en gris dentro; haz clic en una para enviarla, o pulsa Tab para usar la gris. Cuesta una petición breve más.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Siguientes mensajes sugeridos",
+  researchSubHelpersLabel: "Investigación: delegar partes de una pregunta",
+  researchSubHelpersHint:
+    "En Investigación, quien estudia una pregunta puede pasar una parte más concreta a un ayudante propio. Más a fondo, pero más lento, con entre un cuarto y la mitad más de llamadas al modelo.",
+  researchCheckClaimsLabel: "Investigación: comprobar cada frase citada",
+  researchCheckClaimsHint:
+    "Antes de revisar el borrador, cada frase que cita una fuente se compara con las notas de esa fuente, y la que dice más que ellas se reescribe. Más cuidadoso, con una llamada al modelo más por sección.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
@@ -360,6 +366,8 @@ para usar una.
   chatPluginCheckDom:
     "Dibuja en la propia página, algo que un complemento no puede hacer: no se verá nada.",
   chatPluginCheckPermission: "Usa {permission} sin pedir ese permiso.",
+  chatPluginCheckWhen:
+    "La condición de un elemento del menú lee {key}, que Textus no define: el elemento nunca aparece.",
   chatPluginCheckUnregistered: "Declara {id} pero nunca lo registra.",
   chatPluginRunError: "Se detuvo con: {error}",
   chatPluginFix: "Arreglar con IA",
@@ -396,6 +404,7 @@ para usar una.
   toolSearchPapers: "Buscando artículos sobre «{arg}»",
   toolSearchReferences: "Buscando «{arg}» en las referencias",
   toolAddNote: "Anotado: {arg}",
+  toolDelegateTask: "Delegado: {arg}",
   paperOutlineTitle: "Esquema",
   paperOutlineTotal: "Unas {n} {unit} en total",
   paperOutlineThesis: "Tesis",
@@ -483,6 +492,8 @@ para usar una.
   webSources: "Fuentes",
   proposalSourcesAsFootnotes: "Añadir las fuentes como notas al pie",
   menuToggleSplitView: "Código y vista previa",
+  menuViewMode: "Modo",
+  menuViewModeDefault: "Predeterminado",
   splitPreview: "Vista previa",
   menuToggleZenMode: "Modo zen",
   menuSplitRight: "Dividir a la derecha",
@@ -566,6 +577,7 @@ para usar una.
   treeSearchScopeDocuments: "Solo documentos",
   treeNewDocument: "Nuevo documento",
   treeNewFolder: "Nueva carpeta",
+  treeEmptyHint: "Haz doble clic aquí para un documento nuevo.",
   treeNewDocumentPrompt: "Nombre del nuevo documento",
   treeNewFolderPrompt: "Nombre de la nueva carpeta",
   treeNewDocumentDefault: "Sin título",
@@ -756,6 +768,10 @@ para usar una.
   agentSkillsBuiltinTag: "Integrada",
   agentSkillsOpen: "Abrir",
   agentSkillsReset: "Restablecer",
+  madeByTextusAi: `Hecho con ${AI_NAME}`,
+  skillDelete: "Eliminar",
+  skillDeleteAsk: "¿Eliminar «{name}»? Sus archivos irán a la Papelera.",
+  skillDeleteAskMobile: "¿Eliminar «{name}»?",
   agentSkillsResetConfirm:
     "¿Eliminar tu copia de «{name}» y volver a usar la habilidad integrada?",
   agentSkillsShadows: "Sustituye a una habilidad integrada",
@@ -1098,9 +1114,9 @@ para usar una.
   menuCloseTab: "Cerrar pestaña",
   menuReopenClosedTab: "Reabrir pestaña cerrada",
   readOnlyRefused:
-    "Este documento es de solo lectura. Desactiva Visualización › Solo lectura para cambiarlo.",
-  menuToggleReadOnly: "Solo lectura",
-  readOnlyLock: "Solo lectura: haz clic para permitir cambios",
+    "Este documento está en modo lectura. Para cambiarlo, elige Visualización › Modo › Predeterminado.",
+  menuToggleReadOnly: "Modo lectura",
+  readOnlyLock: "Modo lectura: haz clic para permitir cambios",
   closeOtherTabs: "Cerrar las demás",
   closeTabsToLeft: "Cerrar pestañas a la izquierda",
   closeTabsToRight: "Cerrar pestañas a la derecha",
@@ -1168,7 +1184,7 @@ para usar una.
   reportLimit:
     "Ya enviaste varios informes hoy. Inténtalo mañana o envíalo en GitHub.",
   reportFailed: "No se pudo enviar.",
-  menuHelpTutorials: "Videotutoriales",
+  menuHelpTutorials: "Tutoriales en línea",
   windowMinimize: "Minimizar",
   windowMaximize: "Maximizar",
   windowRestore: "Restaurar",
@@ -1262,6 +1278,11 @@ para usar una.
   imageAlignLabel: "Imágenes en su propia línea",
   imageAlignCenter: "Centradas",
   imageAlignLeft: "A la izquierda",
+  embedDisplayLabel: "Notas incrustadas",
+  embedDisplayExpand: "Mostrar completas",
+  embedDisplayCard: "Como tarjeta de enlace",
+  embedBlockCard: "{0} · haz clic para mostrar",
+  embedBlockShow: "Mostrar",
   docTextSizeLabel: "Tamaño del texto",
   docTextSizeAuto: "El del tema",
   docTextLabel: "Texto del documento",
@@ -1374,7 +1395,7 @@ para usar una.
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
-    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Videotutoriales.",
+    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Proyecto, el botón de carpeta del panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
@@ -1480,10 +1501,6 @@ para usar una.
   privacyChatHistoryToggle: "Guardar las conversaciones",
   privacyChatHistoryClearHint:
     "Elimina todas las conversaciones guardadas. Esta acción no se puede deshacer.",
-  privacyClipboardHistoryLabel: "Historial del portapapeles",
-  privacyClipboardHistoryToggle: "Guardar el historial del portapapeles",
-  privacyClipboardHistoryClearHint:
-    "Elimina todo el historial del portapapeles. Esta acción no se puede deshacer.",
   privacyDraftRecoveryLabel: "Recuperación de borradores",
   privacyDraftRecoveryToggle:
     "Recuperar lo no guardado tras un cierre inesperado",
@@ -1495,12 +1512,7 @@ para usar una.
     "Elimina las copias de recuperación que haya en el disco. Esta acción no se puede deshacer.",
   privacyClearButton: "Borrar",
   privacyClearChatHistory: "Borrar historial de chats",
-  privacyClearClipboard: "Borrar historial del portapapeles",
   privacyClearDrafts: "Eliminar borradores de recuperación",
-  clipboardTab: "Portapapeles",
-  clipboardEmpty: "El texto que copies y pegues aparecerá aquí.",
-  clipboardClear: "Borrar",
-  clipboardCopy: "Copiar",
   clipboardInsertHint: "Haz clic para insertarlo en el cursor",
   exportNeedsWysiwyg:
     "La exportación a HTML usa la vista con formato. Sal primero del modo código fuente y vuelve a exportar.",
@@ -1636,6 +1648,7 @@ para usar una.
   pluginsCatalogKept:
     "Se muestra la lista de la última vez; no se pudo obtener una más reciente: {reason}",
   pluginInstall: "Instalar",
+  pluginNeedsTextus: "Requiere Textus {version}",
   pluginInstalling: "Instalando…",
   pluginsSortLabel: "Ordenar por",
   pluginsSortPopular: "Más instalados",
@@ -1647,6 +1660,8 @@ para usar una.
   pluginUpdatedOn: "Actualizado el {date}",
   pluginReadmeLabel: "Acerca de {name}",
   pluginUpdate: "Actualizar a {version}",
+  pluginsUpdateAll: "Actualizar todo ({count})",
+  pluginsUpdateAllFailed: "No se actualizaron estos plugins: {names}.",
   pluginOfficial: "Oficial",
   pluginBy: "de {author}",
   pluginOpenDetails: "{name}: detalles y ajustes",
@@ -1695,6 +1710,7 @@ para usar una.
   pluginOpenInstall: "Instalar y abrir",
   pluginOpenTurnOnButton: "Activar y abrir",
   pluginCardLine: "Plugin recomendado: {name}",
+  pluginCardMovedLine: "{name} ahora es un plugin",
   conventionsCardLine:
     "Los ajustes de {app} de esta carpeta guardan las imágenes en {folder}",
   conventionsCardDetails:

@@ -24,6 +24,17 @@ vi.mock("../store/plugin-records", async (importOriginal) => {
             },
           },
         },
+        {
+          id: "acme.ungranted",
+          status: "on",
+          granted: [],
+          manifest: {
+            l10n: {},
+            contributes: {
+              aiTools: [{ name: "secret", description: "x", parameters: {} }],
+            },
+          },
+        },
       ],
     }),
   };
@@ -40,5 +51,12 @@ describe("plugin AI tools", () => {
         description: "List the tasks in the open folder.",
       }),
     ]);
+  });
+});
+
+describe("a plugin's tools", () => {
+  it("are offered to Textus AI only with the ai.tools grant", async () => {
+    const { offered } = await import("./ai-tools");
+    expect(offered().map((t) => t.name)).toEqual(["list_tasks"]);
   });
 });

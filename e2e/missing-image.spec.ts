@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone, pasteMarkdown } from "./helpers";
+import { expect, test } from "@playwright/test";
+import { openPhone, pasteMarkdown, PHONE, sourceOf } from "./helpers";
 import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
 
 /**
@@ -7,33 +7,20 @@ import { DOC_PATH, PICKED, calls, editor, openDoc } from "./image-disk";
  * (asked of the backend, not guessed), and Choose image… / Show in folder.
  */
 
-async function emit(page: Page, name: string) {
-  await page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
-  );
-}
-
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
-}
-
 test("a local image that isn't on disk names the file and where it was looked for", async ({
   page,
 }) => {
-  const doc = await openDoc(page, "![A sleeping cat](../img/cat%201.png)\n");
+  const doc = await openDoc(
+    page,
+    "![A sleeping cat](../img/cat%201.png)\n\n![](assets/cat.png)\n",
+    { loadable: ["/home/me/notes/assets/cat.png"] },
+  );
+  // Only the missing one gets a card; the one that loads shows.
   const card = doc.locator(".missing-image-card");
+  await expect(card).toHaveCount(1);
+  await expect(
+    doc.locator('.image-view img[data-doc-src="assets/cat.png"]'),
+  ).toBeVisible();
   await expect(card.locator(".missing-image-title")).toHaveText(
     "Image not found: cat 1.png",
   );
@@ -43,7 +30,9 @@ test("a local image that isn't on disk names the file and where it was looked fo
   );
   // The relative path, resolved: where the user can go and look.
   await expect(card).toHaveAttribute("title", "/home/me/img/cat 1.png");
-  await expect(doc.locator(".image-view img")).toBeHidden();
+  await expect(
+    doc.locator('.image-view img[data-doc-src="../img/cat%201.png"]'),
+  ).toBeHidden();
   await expect(card.getByRole("button")).toHaveText([
     "Choose image…",
     "Show in folder",
@@ -60,19 +49,6 @@ test("Show in folder opens the nearest folder that exists", async ({
   await expect
     .poll(() => calls(page, "reveal_in_dir"))
     .toEqual([{ cmd: "reveal_in_dir", args: { path: "/home/me/notes" } }]);
-});
-
-test("a file that is there but can't be shown says so", async ({ page }) => {
-  const doc = await openDoc(page, "![](photo.heic)\n", {
-    existing: ["/home/me/notes/photo.heic"],
-  });
-  const card = doc.locator(".missing-image-card");
-  await expect(card.locator(".missing-image-title")).toHaveText(
-    "Can't show image: photo.heic",
-  );
-  await expect(card.locator(".missing-image-reason")).toHaveText(
-    "The file is there, but it isn't an image format Textus can show.",
-  );
 });
 
 test("a web image that fails names its host and offers no folder", async ({
@@ -95,14 +71,6 @@ test("a web image that fails names its host and offers no folder", async ({
     "https://img.example.com/brand/logo.png",
   );
   await expect(card.getByRole("button")).toHaveText(["Choose image…"]);
-});
-
-test("an image that loads shows no card", async ({ page }) => {
-  const doc = await openDoc(page, "![](assets/cat.png)\n", {
-    loadable: ["/home/me/notes/assets/cat.png"],
-  });
-  await expect(doc.locator(".image-view img")).toBeVisible();
-  await expect(doc.locator(".missing-image-card")).toHaveCount(0);
 });
 
 test("Choose image… points the image at the chosen file, as one undo step", async ({

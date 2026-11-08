@@ -17,6 +17,8 @@ export type NewDocumentMode = "window" | "tab";
  *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";
 export type ImageAlign = "center" | "left";
+/** How an ![[embed]] of a note shows: its content, or a card to open it by. */
+export type EmbedDisplay = "expand" | "card";
 /** How every document shows: the rich editor, its Markdown source, or the
  *  source beside a preview. One for all windows. */
 export type ViewMode = "rich" | "source" | "split";
@@ -156,6 +158,25 @@ export interface UserThemeMeta {
   gallery?: GalleryOrigin;
 }
 
+/** What Textus AI made and the user installed from a reply's card: a
+ *  plugin (its manifest id), a user theme (its `UserThemeMeta.id`) or a
+ *  global skill (its name). Each still lives in its own store; this only
+ *  remembers which of them came from Create, for its "Made here" list. */
+export interface Creation {
+  kind: CreationKind;
+  id: string;
+  name: string;
+  /** When it was last installed or updated, in ms. */
+  at: number;
+}
+
+export type CreationKind = "plugin" | "theme" | "skill";
+export const CREATION_KINDS: readonly CreationKind[] = [
+  "plugin",
+  "theme",
+  "skill",
+];
+
 export interface GalleryOrigin {
   id: string;
   /// The installed copy's `GalleryTheme.updated`.
@@ -268,6 +289,12 @@ export interface Settings {
   /// Textus AI may keep requirements, preferences, style and facts it learns
   /// in a conversation. Rust reads it from settings.json.
   rememberAutomatically: boolean;
+  /// In Research, a question's researcher may hand parts of it to helpers of
+  /// its own: more thorough, slower and dearer. Off unless chosen.
+  researchSubHelpers: boolean;
+  /** Research checks every cited sentence against its sources' notes before
+   *  the review's revision. Off: one more model call a section. */
+  researchCheckClaims: boolean;
   /// The MCP servers Textus AI may use; Rust reads them from the settings file.
   mcpServers: McpServer[];
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
@@ -306,6 +333,8 @@ export interface Settings {
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// ![[note]] embeds drawn in full, or folded to a card each until opened.
+  embedDisplay: EmbedDisplay;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
   /// a complete "**text**" still turns into bold.
   autoCloseMarks: boolean;
@@ -339,6 +368,8 @@ export interface Settings {
   /// A built-in theme id or a `UserThemeMeta.id`.
   themeId: string;
   userThemes: UserThemeMeta[];
+  /** What Create made, newest first (see `Creation`). */
+  creations: Creation[];
   /// "window" (default): another document opens a new OS window; "tab": a
   /// tab in this one. Rust reads it from the settings file, often before any webview exists.
   newDocumentMode: NewDocumentMode;
@@ -383,7 +414,6 @@ export interface Settings {
   /// Privacy toggles: each stops one kind of locally stored history going
   /// forward; turning one off does not clear what's already stored.
   enableChatHistory: boolean;
-  enableClipboardHistory: boolean;
   enableDraftRecovery: boolean;
   /** Closing a window with unsaved changes keeps them as drafts for the next
    *  launch instead of asking. Needs enableDraftRecovery. */
@@ -432,6 +462,8 @@ export const DEFAULT_SETTINGS: Settings = {
   searxngUrl: "",
   sourcesAsFootnotes: false,
   rememberAutomatically: true,
+  researchSubHelpers: false,
+  researchCheckClaims: false,
   mcpServers: [],
   plugins: {},
   suggestNextMessage: true,
@@ -448,6 +480,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contentWidth: "auto",
   imageAlign: "center",
   menuBarShown: false,
+  embedDisplay: "expand",
   autoCloseMarks: true,
   autoCloseBrackets: true,
   plainTextMenu: false,
@@ -463,6 +496,7 @@ export const DEFAULT_SETTINGS: Settings = {
   commandShortcuts: {},
   themeId: "default",
   userThemes: [],
+  creations: [],
   newDocumentMode: "window",
   restoreSessionOnStartup: true,
   startPageOnLaunch: false,
@@ -480,7 +514,6 @@ export const DEFAULT_SETTINGS: Settings = {
   updateChannel: "stable",
   onboardingShown: false,
   enableChatHistory: true,
-  enableClipboardHistory: true,
   enableDraftRecovery: true,
   keepUnsavedOnClose: false,
   runInBackground: false,

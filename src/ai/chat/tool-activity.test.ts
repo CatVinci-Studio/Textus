@@ -25,5 +25,8 @@ describe("a tool call in the conversation", () => {
     expect(
       toolActivityText("web_search", '{"queries":["green roofs"]}', labels),
     ).toContain("green roofs");
+    expect(
+      toolActivityText("delegate_task", '{"question":"Gauge A?"}', labels),
+    ).toBe("Handing over: Gauge A?");
   });
 });

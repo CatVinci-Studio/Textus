@@ -1,6 +1,6 @@
 # The app's registries
 
-**Writing a plugin? See [writing-plugins.md](writing-plugins.md)** - this
+**Writing a plugin? See [plugins/](plugins/README.md)** - this
 page is about the inside of the app.
 
 The places a plugin adds to the app are four registries, each a plain list
@@ -108,6 +108,6 @@ variables are listed in
 ## Plugins
 
 The plugin API built on these registries is in
-[writing-plugins.md](writing-plugins.md), typed in
+[plugins/guide.md](plugins/guide.md), typed in
 [textus.d.ts](textus.d.ts), with the manifest's
 [JSON Schema](textus-plugin.schema.json).

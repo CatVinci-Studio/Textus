@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareEntries, nameCollator } from "./name-order";
+import { compareEntries, nameCollator, compareNames } from "./name-order";
 
 const sorted = (locale: string, names: string[], dirs: string[] = []) =>
   [
@@ -46,4 +46,14 @@ describe("the order of file names", () => {
       "上海.md",
     ]);
   });
+});
+
+it("puts names in reading order, numbers by value", () => {
+  const names = ["Week 10", "Week 2", "week 1", "Week 11"];
+  expect([...names].sort(compareNames)).toEqual([
+    "week 1",
+    "Week 2",
+    "Week 10",
+    "Week 11",
+  ]);
 });

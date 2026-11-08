@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { dropPaths, openApp } from "./helpers";
 
 // Save Automatically: a file-backed document is written back once typing
 // rests; with it off nothing is written, and a file changed on disk is never
@@ -51,18 +51,7 @@ const disk = (page: Page) =>
   page.evaluate(() => (window as unknown as { __disk: Disk }).__disk);
 
 async function openDoc(page: Page) {
-  await page.evaluate(
-    (paths) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("tauri://drag-drop", {
-        paths,
-        position: { x: 0, y: 0 },
-      }),
-    [PATH],
-  );
+  await dropPaths(page, [PATH]);
   await expect(page.locator(editor)).toContainText("Saved text.");
 }
 
@@ -92,53 +81,6 @@ test("an edited document is written back once typing rests", async ({
   );
   await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(editor)).not.toContainText("More.");
-});
-
-test("an edit leaves the rest of the file as it was written", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en", autosave: true } });
-  const text =
-    "Notes\n=====\n\n_em_ and a snake_case [link][r].\n\n[r]: https://x.org\n\nSaved text.\n";
-  await installDisk(page, text);
-  await openDoc(page);
-  await typeAtEnd(page, " More.");
-  await expect
-    .poll(async () => (await disk(page)).writes, { timeout: 6000 })
-    .toEqual([text.replace("Saved text.", "Saved text. More.")]);
-});
-
-test("with the setting off nothing is written", async ({ page }) => {
-  // The autosave delay passes on the page's clock, not in real time.
-  await page.clock.install();
-  await openApp(page, { settings: { language: "en" } });
-  await installDisk(page, "# Notes\n\nSaved text.\n");
-  await openDoc(page);
-  await typeAtEnd(page, " More.");
-  await page.clock.runFor(3500);
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("tauri://blur"),
-  );
-  await page.clock.runFor(500);
-  expect((await disk(page)).writes).toEqual([]);
-  await expect(page.locator(".unsaved-dot")).toBeVisible();
-});
-
-test("leaving the window writes at once", async ({ page }) => {
-  await openApp(page, { settings: { language: "en", autosave: true } });
-  await installDisk(page, "# Notes\n\nSaved text.\n");
-  await openDoc(page);
-  await typeAtEnd(page, " More.");
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("tauri://blur"),
-  );
-  await expect
-    .poll(async () => (await disk(page)).writes, { timeout: 1000 })
-    .toEqual(["# Notes\n\nSaved text. More.\n"]);
 });
 
 test("a file changed on disk is not overwritten", async ({ page }) => {

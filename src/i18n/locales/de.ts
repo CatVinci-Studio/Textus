@@ -298,6 +298,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nach jeder Antwort stehen bis zu drei Dinge, die du wahrscheinlich als Nächstes schreibst, als Schaltflächen über dem Eingabefeld, das wahrscheinlichste auch grau darin; ein Klick sendet es, Tab übernimmt das graue. Kostet eine weitere kurze Anfrage.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Vorgeschlagene nächste Nachrichten",
+  researchSubHelpersLabel: "Recherche: Teilfragen an Helfer abgeben",
+  researchSubHelpersHint:
+    "In der Recherche darf der Helfer einer Frage einen engeren Teil an einen eigenen Helfer abgeben. Gründlicher, aber langsamer, mit einem Viertel bis zur Hälfte mehr Modellaufrufen.",
+  researchCheckClaimsLabel: "Recherche: jeden zitierten Satz prüfen",
+  researchCheckClaimsHint:
+    "Bevor die Recherche ihren Entwurf überarbeitet, wird jeder Satz mit Quelle mit den Notizen zu dieser Quelle verglichen, und einer, der mehr sagt als sie, wird neu geschrieben. Sorgfältiger, mit einem Modellaufruf mehr pro Abschnitt.",
   rememberAutomaticallyLabel: "Automatisch merken",
   rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Projekt im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
@@ -366,6 +372,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Es zeichnet direkt in die Seite, was ein Plugin nicht kann: nichts davon wird sichtbar.",
   chatPluginCheckPermission:
     "Es nutzt {permission}, ohne die Berechtigung anzufordern.",
+  chatPluginCheckWhen:
+    "Die Bedingung eines Menüeintrags liest {key}, das Textus nicht setzt: Der Eintrag erscheint nie.",
   chatPluginCheckUnregistered: "Es deklariert {id}, registriert es aber nie.",
   chatPluginRunError: "Es brach ab mit: {error}",
   chatPluginFix: "Mit KI beheben",
@@ -389,6 +397,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolSearchPapers: "Sucht Fachartikel zu „{arg}“",
   toolSearchReferences: "Sucht in den Quellen nach „{arg}“",
   toolAddNote: "Notiert: {arg}",
+  toolDelegateTask: "Übergeben: {arg}",
   paperOutlineTitle: "Gliederung",
   paperOutlineTotal: "Insgesamt etwa {n} {unit}",
   paperOutlineThesis: "These",
@@ -475,6 +484,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webSources: "Quellen",
   proposalSourcesAsFootnotes: "Quellen als Fußnoten einfügen",
   menuToggleSplitView: "Quelltext und Vorschau",
+  menuViewMode: "Modus",
+  menuViewModeDefault: "Standard",
   splitPreview: "Vorschau",
   menuToggleZenMode: "Zen-Modus",
   menuSplitRight: "Rechts teilen",
@@ -558,6 +569,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchScopeDocuments: "Nur Dokumente",
   treeNewDocument: "Neues Dokument",
   treeNewFolder: "Neuer Ordner",
+  treeEmptyHint: "Hier doppelklicken für ein neues Dokument.",
   treeNewDocumentPrompt: "Name des neuen Dokuments",
   treeNewFolderPrompt: "Name des neuen Ordners",
   treeNewDocumentDefault: "Unbenannt",
@@ -746,6 +758,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSkillsBuiltinTag: "Integriert",
   agentSkillsOpen: "Öffnen",
   agentSkillsReset: "Zurücksetzen",
+  madeByTextusAi: `Mit ${AI_NAME} erstellt`,
+  skillDelete: "Löschen",
+  skillDeleteAsk: "„{name}“ löschen? Seine Dateien kommen in den Papierkorb.",
+  skillDeleteAskMobile: "„{name}“ löschen?",
   agentSkillsResetConfirm:
     "Deine Kopie von „{name}“ löschen und wieder den integrierten Skill verwenden?",
   agentSkillsShadows: "Ersetzt einen integrierten Skill",
@@ -1085,9 +1101,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuCloseTab: "Tab schließen",
   menuReopenClosedTab: "Geschlossenen Tab wieder öffnen",
   readOnlyRefused:
-    "Dieses Dokument ist schreibgeschützt. Schalte Ansicht › Schreibgeschützt aus, um es zu ändern.",
-  menuToggleReadOnly: "Schreibgeschützt",
-  readOnlyLock: "Schreibgeschützt: klicken, um Änderungen zu erlauben",
+    "Dieses Dokument ist im Lesemodus. Zum Ändern Ansicht › Modus › Standard wählen.",
+  menuToggleReadOnly: "Lesemodus",
+  readOnlyLock: "Lesemodus: klicken, um Änderungen zu erlauben",
   closeOtherTabs: "Andere schließen",
   closeTabsToLeft: "Tabs links schließen",
   closeTabsToRight: "Tabs rechts schließen",
@@ -1155,7 +1171,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportLimit:
     "Du hast heute schon mehrere Berichte gesendet. Versuch es morgen wieder oder reiche ihn auf GitHub ein.",
   reportFailed: "Konnte nicht gesendet werden.",
-  menuHelpTutorials: "Video-Tutorials",
+  menuHelpTutorials: "Online-Tutorials",
   windowMinimize: "Minimieren",
   windowMaximize: "Maximieren",
   windowRestore: "Wiederherstellen",
@@ -1248,6 +1264,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageAlignLabel: "Bilder in eigener Zeile",
   imageAlignCenter: "Zentriert",
   imageAlignLeft: "Links",
+  embedDisplayLabel: "Eingebettete Notizen",
+  embedDisplayExpand: "Ganz zeigen",
+  embedDisplayCard: "Als Linkkarte",
+  embedBlockCard: "{0} · zum Zeigen klicken",
+  embedBlockShow: "Zeigen",
   docTextSizeLabel: "Textgröße",
   docTextSizeAuto: "Wie im Design",
   docTextLabel: "Fließtext",
@@ -1365,7 +1386,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody:
-    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Video-Tutorials.",
+    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
@@ -1475,10 +1496,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyChatHistoryToggle: "Unterhaltungen speichern",
   privacyChatHistoryClearHint:
     "Entfernt alle gespeicherten Unterhaltungen. Das lässt sich nicht rückgängig machen.",
-  privacyClipboardHistoryLabel: "Verlauf der Zwischenablage",
-  privacyClipboardHistoryToggle: "Verlauf der Zwischenablage speichern",
-  privacyClipboardHistoryClearHint:
-    "Entfernt alles aus dem Verlauf der Zwischenablage. Das lässt sich nicht rückgängig machen.",
   privacyDraftRecoveryLabel: "Wiederherstellung von Entwürfen",
   privacyDraftRecoveryToggle:
     "Nicht gespeicherte Inhalte nach einem Absturz wiederherstellen",
@@ -1490,12 +1507,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Entfernt alle derzeit gespeicherten Zwischenstände. Das lässt sich nicht rückgängig machen.",
   privacyClearButton: "Löschen",
   privacyClearChatHistory: "Chatverlauf löschen",
-  privacyClearClipboard: "Verlauf der Zwischenablage löschen",
   privacyClearDrafts: "Wiederherstellungsdaten löschen",
-  clipboardTab: "Zwischenablage",
-  clipboardEmpty: "Kopierter und eingefügter Text erscheint hier.",
-  clipboardClear: "Leeren",
-  clipboardCopy: "Kopieren",
   clipboardInsertHint: "Klicken, um am Cursor einzufügen",
   exportNeedsWysiwyg:
     "Der HTML-Export verwendet die gerenderte Ansicht. Verlasse zuerst den Quellcodemodus und exportiere dann erneut.",
@@ -1628,6 +1640,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogKept:
     "Die Liste vom letzten Mal - eine neuere ließ sich nicht laden: {reason}",
   pluginInstall: "Installieren",
+  pluginNeedsTextus: "Benötigt Textus {version}",
   pluginInstalling: "Wird installiert …",
   pluginsSortLabel: "Sortieren nach",
   pluginsSortPopular: "Meist installiert",
@@ -1639,6 +1652,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginUpdatedOn: "Aktualisiert am {date}",
   pluginReadmeLabel: "Über {name}",
   pluginUpdate: "Auf {version} aktualisieren",
+  pluginsUpdateAll: "Alle aktualisieren ({count})",
+  pluginsUpdateAllFailed: "Diese Plugins wurden nicht aktualisiert: {names}.",
   pluginOfficial: "Offiziell",
   pluginBy: "von {author}",
   pluginOpenDetails: "{name}: Details und Einstellungen",
@@ -1689,6 +1704,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginOpenInstall: "Installieren und öffnen",
   pluginOpenTurnOnButton: "Einschalten und öffnen",
   pluginCardLine: "Plugin-Empfehlung: {name}",
+  pluginCardMovedLine: "{name} ist jetzt ein Plugin",
   conventionsCardLine:
     "Die {app}-Einstellungen dieses Ordners legen Bilder in {folder} ab",
   conventionsCardDetails:

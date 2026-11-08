@@ -420,15 +420,19 @@ function Flyout({
     setPos({ left, top });
   }, [anchor, children]);
 
-  return (
+  // On <body>, as the menu is: inside a submenu's panel, which moves as it
+  // opens, a submenu of a submenu would be placed from that panel instead.
+  return createPortal(
     <div
       ref={ref}
       className={`app-menu-flyout${instant ? " app-menu-flyout-instant" : ""}`}
       onMouseEnter={onMouseEnter}
+      data-floating-menu=""
       // Painted only once measured.
       style={pos ?? { visibility: "hidden", left: 0, top: 0 }}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }

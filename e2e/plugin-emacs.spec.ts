@@ -57,15 +57,25 @@ test("typing stays the editor's, and M- keys move by words", async ({
   await expect(firstParagraph(page)).toHaveText("Xone and two three");
 });
 
-test("M-d kills a word, and C-y yanks it back", async ({ page }) => {
-  await open(page, "alpha beta gamma", { ctrlKeys: true });
+test("M-d kills a word and C-y yanks it back; M-u, M-c and M-l recase the next word", async ({
+  page,
+}) => {
+  await open(page, "alpha one two three", { ctrlKeys: true });
   await keys(page, ["Alt+d"]);
-  await expect(firstParagraph(page)).toHaveText(" beta gamma");
+  await expect(firstParagraph(page)).toHaveText(" one two three");
   await keys(page, ["Control+e"]);
   await keys(page, ["Control+y"]);
-  await expect(firstParagraph(page)).toHaveText(" beta gammaalpha");
+  await expect(firstParagraph(page)).toHaveText(" one two threealpha");
   await keys(page, ["Control+/"]);
-  await expect(firstParagraph(page)).toHaveText(" beta gamma");
+  await expect(firstParagraph(page)).toHaveText(" one two three");
+  await keys(page, ["Control+a", "Alt+u"]);
+  await expect(firstParagraph(page)).toHaveText(" ONE two three");
+  await keys(page, ["Alt+c"]);
+  await expect(firstParagraph(page)).toHaveText(" ONE Two three");
+  await keys(page, ["Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText(" ONE Two three");
+  await keys(page, ["Alt+b", "Alt+b", "Alt+l"]);
+  await expect(firstParagraph(page)).toHaveText(" ONE two three");
 });
 
 test("C-k kills to the line's end; C-SPC and a motion mark a region C-w kills", async ({
@@ -94,16 +104,4 @@ test("without the Ctrl setting, Ctrl keys stay the app's on Windows and Linux", 
   await page.keyboard.type("!");
   // C-e didn't move to the end: the typing went in at the start.
   await expect(firstParagraph(page)).toHaveText("!plain text");
-});
-
-test("M-u, M-c and M-l recase the next word", async ({ page }) => {
-  await open(page, "one two three", { ctrlKeys: true });
-  await keys(page, ["Alt+u"]);
-  await expect(firstParagraph(page)).toHaveText("ONE two three");
-  await keys(page, ["Alt+c"]);
-  await expect(firstParagraph(page)).toHaveText("ONE Two three");
-  await keys(page, ["Alt+l"]);
-  await expect(firstParagraph(page)).toHaveText("ONE Two three");
-  await keys(page, ["Alt+b", "Alt+b", "Alt+l"]);
-  await expect(firstParagraph(page)).toHaveText("ONE two three");
 });

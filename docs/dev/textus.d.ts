@@ -1,8 +1,8 @@
 /**
- * The Textus plugin API, 1.1: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.4: the `textus` object a plugin's code is given
  * (src/plugins/host/runtime/host.js), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (runtime/webview.js). The one source
- * of truth: docs/dev/writing-plugins.md explains it, the reference pages are
+ * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
  * made from it, Textus AI writes plugins from it, and
  * src/plugins/host/textus-types.test.ts keeps it in step with the runtime.
  *
@@ -142,6 +142,9 @@ declare global {
       editor: Editor;
       files: Files;
       metadata: Metadata;
+      /** From 1.3.10: no permission, nothing leaves the plugin's frame. */
+      dates: Dates;
+      templates: Templates;
       net: Net;
       settings: Settings;
       ai: Ai;
@@ -160,9 +163,9 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.1". Check it before using what 1.1 added
-       *  (schedule, notify, app, change sources), or set engines.textus to
-       *  ">=1.3.0-beta.8". */
+      /** This API's version: "1.4" from Textus 1.3.10 ("1.3": 1.3.10-rc.1,
+       *  "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
+       *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
       readonly platform: "macos" | "windows" | "linux" | "ios";
       readonly theme: "light" | "dark";
@@ -171,6 +174,10 @@ declare global {
       /** Plain text on the system clipboard (needs clipboard). */
       readClipboard(): Promise<string>;
       writeClipboard(text: string): Promise<void>;
+      /** 1.3: the user copied or cut text from a document (needs
+       *  clipboard): the Markdown that went on the clipboard, math source
+       *  kept. Not what is copied elsewhere in Textus or in other apps. */
+      onDidCopy: Event<{ text: string; cut: boolean }>;
     }
 
     interface L10n {
@@ -318,6 +325,9 @@ declare global {
         viewId: string,
         options?: { where?: Where; title?: string; state?: unknown },
       ): Promise<void>;
+      /** Opens the sidebar on a tab: a plugin's sidebar tab id, or `tree`
+       *  (Files) or `outline`. From 1.3.10. */
+      showSidebarTab(id: string): Promise<void>;
       /** A web page in a tab, for a host the plugin was granted. */
       openWebPage(
         url: string,
@@ -341,6 +351,11 @@ declare global {
       }>;
       onDidChangeActiveTab: Event<TabInfo | null>;
       onDidChangeLayout: Event<void>;
+      /** From 1.3.10: which of the window's panels are open - the sidebar
+       *  (and the tab it shows) and Textus AI's. Read only; Zen mode closes
+       *  them all. A panel added later is a new key. */
+      panels(): Promise<PanelsState>;
+      onDidChangePanels: Event<PanelsState>;
       /** Shows one of the plugin's floating views (`contributes.floatingViews`):
        *  a small transparent page of its own size, floating where the user
        *  left it. The user moves, folds and closes it; nothing floats until
@@ -473,6 +488,9 @@ declare global {
       onSelect?(item: ListItem): void | Promise<void>;
       /** Its checkbox ticked or unticked. */
       onCheck?(item: ListItem, checked: boolean): void | Promise<void>;
+      /** An item dragged onto another; with it, the rows can be dragged.
+       *  From 1.3.10. */
+      onMove?(item: ListItem, target: ListItem): void | Promise<void>;
       /** What the field over the list says; without it, there is no
        *  field. The list filters itself by label, description and detail. */
       filterPlaceholder?: string;
@@ -816,6 +834,68 @@ declare global {
     // to the front.
     // ---------------------------------------------------------------
 
+    /** Dates written and read in Moment's tokens, as Obsidian's settings and
+     *  templates name them: YYYY YY Q MMMM MMM MM M Do DD D dddd ddd gggg
+     *  GGGG ww w WW W HH H hh h mm ss s A a, `[literal]`. Names, ordinals
+     *  and where a week starts follow `language` (the UI's by default). */
+    interface Dates {
+      /** `date` (a Date, a time in ms, or "YYYY-MM-DD") in `format`
+       *  (default "YYYY-MM-DD"). */
+      format(
+        date: Date | number | string,
+        format?: string,
+        options?: { language?: string },
+      ): string;
+      /** The day a name written in `format` stands for, as "YYYY-MM-DD";
+       *  null when it isn't one. Days only: a week's or month's name
+       *  ("2026-W45") reads as null. */
+      parse(
+        text: string,
+        format?: string,
+        options?: { language?: string },
+      ): string | null;
+    }
+
+    /** Templates filled in as Obsidian's Templates core plugin and then the
+     *  Templater plugin's common tags fill them. */
+    interface Templates {
+      /**
+       * `text` with {{date}}, {{time}}, {{title}}, {{date:FORMAT}},
+       * {{date+1d}} and every {{key}} of `values` filled in (a list joined
+       * with ", ", nothing for null, a date in its format); then Templater's
+       * `<% tp.date.now(...) %>`, `tp.date.tomorrow/yesterday/weekday`,
+       * `tp.file.title`, `tp.file.folder`, `tp.file.creation_date` and
+       * `tp.file.cursor()`. Any other tag or script stays as written and is
+       * listed in `skipped`. With `format` (a periodic note's name format),
+       * also {{yesterday}}, {{tomorrow}}, {{weekday}} and {{monday}} …
+       * {{sunday:FORMAT}} for `date`'s week, as Periodic Notes fills them.
+       * {{date}} and {{time}} use the folder's Templates formats when the
+       * plugin may read files and the caller gives none.
+       */
+      fill(
+        text: string,
+        options?: {
+          values?: Record<string, unknown>;
+          /** The note's day: "YYYY-MM-DD", a Date or ms (default today). */
+          date?: Date | number | string;
+          /** The clock {{time}} reads (default now). */
+          now?: Date | number | string;
+          title?: string;
+          /** "/"-separated, from the open folder: tp.file.folder. */
+          folder?: string;
+          format?: string;
+          dateFormat?: string;
+          timeFormat?: string;
+          language?: string;
+        },
+      ): Promise<{
+        text: string;
+        /** Where tp.file.cursor() was, as an offset in `text`; null if none. */
+        cursor: number | null;
+        skipped: string[];
+      }>;
+    }
+
     interface Files {
       root(): Promise<string | null>;
       list(dir?: string): Promise<FileEntry[]>;
@@ -891,6 +971,15 @@ declare global {
        *  instead of other apps' settings files; a field no app sets is
        *  null, for Textus's own settings. From 1.3.9 (files.read). */
       conventions(path?: string): Promise<FolderConventions>;
+      /** From 1.3.10: a settings file of the nearest Obsidian vault -
+       *  `appSettings("obsidian", "bookmarks.json")` reads
+       *  `.obsidian/bookmarks.json` - parsed as JSON, found above the open
+       *  folder too; null where there is none. Read only (files.read). */
+      appSettings(
+        app: "obsidian",
+        file: string,
+        path?: string,
+      ): Promise<unknown | null>;
       /** The open folder's conventions changed: another folder, or its
        *  app's settings edited. From 1.3.9. */
       onDidChangeConventions: Event<{ root: string }>;
@@ -905,6 +994,15 @@ declare global {
       app: string;
       /** The folder these settings belong to. */
       root: string;
+    }
+
+    /** A kind of periodic note: its folder (full path), file name format
+     *  (moment.js tokens, `[literal]` text) and template file (full path).
+     *  An Obsidian vault with no daily notes settings keeps them at its top. */
+    interface PeriodicNotes {
+      folder: string;
+      format: string;
+      template: string | null;
     }
 
     interface FolderConventions {
@@ -928,10 +1026,16 @@ declare global {
       templates: ConventionSetting<string> | null;
       /** Daily notes: folder (full path), file name format (moment.js
        *  tokens, `[literal]` text), template file (full path). */
-      daily: ConventionSetting<{
-        folder: string;
-        format: string;
-        template: string | null;
+      daily: ConventionSetting<PeriodicNotes> | null;
+      /** From 1.3.10: weekly and monthly notes (Periodic Notes), only where
+       *  turned on. */
+      weekly: ConventionSetting<PeriodicNotes> | null;
+      monthly: ConventionSetting<PeriodicNotes> | null;
+      /** From 1.3.10: how a template writes {{date}} and {{time}}
+       *  (Obsidian's Templates settings); null where unset. */
+      templateFormats: ConventionSetting<{
+        date: string | null;
+        time: string | null;
       }> | null;
       /** Where new notes go, as `attachments` names a folder. */
       newNotes: ConventionSetting<string> | null;
@@ -1120,6 +1224,13 @@ declare global {
        *  what is said. From 1.3.6. */
       state(): Promise<AiState>;
       onDidChangeState: Event<AiState>;
+    }
+
+    interface PanelsState {
+      /** `tab`: the sidebar tab's id ("tree" for the files, "outline", or a
+       *  plugin's view id). */
+      sidebar: { open: boolean; tab: string };
+      ai: { open: boolean };
     }
 
     interface AiState {

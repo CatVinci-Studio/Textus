@@ -1,5 +1,7 @@
 import { watchConventions } from "./contributions/conventions-watch";
 import { useEffect, useSyncExternalStore } from "react";
+import { onCopied } from "../clipboard/copied";
+import { offerMovedFeatures } from "./store/moved-offer";
 import { watchDevPlugins } from "./store/dev-reload";
 import { watchPluginAiTools } from "./contributions/ai-tools";
 import { setCompletionAsker } from "./contributions/completion-sources";
@@ -49,6 +51,7 @@ export function usePluginWindow({
   activePath,
   tabState,
   openPathInTab,
+  openFile,
   saveActiveTab,
   closeActiveTab,
 }: {
@@ -58,6 +61,8 @@ export function usePluginWindow({
   activePath: string | null;
   tabState: TabState;
   openPathInTab: (path: string, open?: OpenOptions) => Promise<void>;
+  /** The window's own rule, for a look: the preview tab. */
+  openFile: (path: string, open?: OpenOptions) => Promise<void>;
   /** File › Save, for the active tab; whether it was saved. */
   saveActiveTab: () => Promise<boolean>;
   /** File › Close Tab, asking first if it has unsaved changes. */
@@ -67,6 +72,7 @@ export function usePluginWindow({
   const languageRef = useLatest(language);
   const rootRef = useLatest(rootPath);
   const openRef = useLatest(openPathInTab);
+  const lookRef = useLatest(openFile);
   const saveRef = useLatest(saveActiveTab);
   const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
@@ -84,8 +90,10 @@ export function usePluginWindow({
       }),
     });
     // Then, once, move the official plugins from before API 1.0 to their rewrites.
+    // And offer, once, the plugins features of the core became.
     void loadPlugins()
       .then(() => migrateOfficialPlugins())
+      .then(() => offerMovedFeatures(tRef.current))
       .catch(() => {});
   }, [tRef, languageRef, settingsRef]);
 
@@ -124,11 +132,12 @@ export function usePluginWindow({
     });
     setWindowAccess({
       rootPath: () => rootRef.current,
-      openFile: (path, { place, asDocument, where }) =>
-        void openRef.current(path, {
+      openFile: (path, { place, asDocument, where, preview }) =>
+        void (preview ? lookRef : openRef).current(path, {
           ...(place ? { place } : {}),
           ...(asDocument ? { asDocument } : {}),
           ...(where ? { where } : {}),
+          ...(preview ? { preview } : {}),
         }),
       openUntitled: (content, title, where) =>
         addTab({ content, savedContent: "", draftTitle: title }, where),
@@ -171,7 +180,16 @@ export function usePluginWindow({
       setWindowAccess(null);
       setWindowFolderSource(null);
     };
-  }, [rootRef, openRef, tabsRef, setTabs, setActiveTabId, activeIdRef, tRef]);
+  }, [
+    rootRef,
+    openRef,
+    lookRef,
+    tabsRef,
+    setTabs,
+    setActiveTabId,
+    activeIdRef,
+    tRef,
+  ]);
 
   // File › Save and Close Tab for plugins with their own keys (Vim's :w, :q).
   // Close Tab with { save: true } closes only once it is saved.
@@ -251,6 +269,7 @@ export function usePluginWindow({
     [activePath],
   );
   useEffect(() => emitPluginEvent("language", language), [language]);
+  useEffect(() => onCopied((copied) => emitPluginEvent("copy", copied)), []);
   useEffect(() => {
     let dark = windowIsDark();
     return watchTheme(() => {

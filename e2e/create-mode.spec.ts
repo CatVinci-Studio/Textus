@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // Create: Settings › Extensions' tab for making a theme, a plugin or a
 // skill, in a conversation of its own. A skill the reply writes is saved
@@ -22,11 +22,7 @@ const skill = [
 
 test("Create makes a skill, saved in the modes picked", async ({ page }) => {
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings
     .locator(".settings-nav-item", { hasText: "Extensions" })
@@ -104,11 +100,7 @@ test("a written skill that asks for Create starts without it, and saves there on
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings
     .locator(".settings-nav-item", { hasText: "Extensions" })

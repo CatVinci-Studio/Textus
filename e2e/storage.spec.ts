@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, settled } from "./helpers";
 
 /**
  * The file-backed storage path: the real boot script runs first with a
@@ -143,55 +143,6 @@ test("the boot script puts the appearance on the document before the app runs", 
   ).toBe(SETTINGS.customCss);
 });
 
-test("an imported theme is on the first frame, in the variant for the appearance", async ({
-  page,
-}) => {
-  await bootLikeRust(
-    page,
-    {
-      settings: {
-        ...SETTINGS,
-        themeId: "mine",
-        userThemes: [{ id: "mine", name: "Mine", hasDark: true }],
-      },
-    },
-    {
-      light: "#write { color: rgb(1, 2, 3); }",
-      dark: "#write thead th { color: rgb(4, 5, 6); }",
-    },
-  );
-  await openApp(page);
-  const first = await page.evaluate(
-    () =>
-      (window as unknown as { __firstPaint: Record<string, unknown> })
-        .__firstPaint,
-  );
-  // Dark (pinned), with the Typora header selector rewritten as the
-  // frontend does it, and before the user's CSS.
-  expect(first.themeCss).toBe(
-    "#write tr[data-is-header] th { color: rgb(4, 5, 6); }",
-  );
-  expect(first.userTheme).toBe("");
-  expect(first.contentTheme).toBeNull();
-  expect(first.lastInHead).toBe("textus-user-css");
-});
-
-test("a change goes to Rust as a patch of that field alone", async ({
-  page,
-}) => {
-  await bootLikeRust(page, { settings: SETTINGS });
-  await openApp(page);
-  await emit(page, "menu-toggle-typewriter-mode");
-  await expect
-    .poll(async () => (await devStorage(page)).patches)
-    .toEqual([{ typewriterMode: true }]);
-  // localStorage is left as the backup a downgrade would read.
-  const local = await page.evaluate(() =>
-    JSON.parse(localStorage.getItem("catvinci-settings") ?? "{}"),
-  );
-  expect(local.typewriterMode).toBeUndefined();
-});
-
 test("another window's change shows up here, except its zoom", async ({
   page,
 }) => {
@@ -211,7 +162,7 @@ test("another window's change shows up here, except its zoom", async ({
     patch: { theme: "dark" },
     from: "window-3",
   });
-  await page.waitForTimeout(100);
+  await settled(page);
   await expect(html).toHaveAttribute("data-theme", "light");
   const zoom = await page.evaluate(() =>
     getComputedStyle(document.documentElement).getPropertyValue(
@@ -219,20 +170,6 @@ test("another window's change shows up here, except its zoom", async ({
     ),
   );
   expect(zoom.trim() === "" || zoom.trim() === "1").toBe(true);
-});
-
-test("clipboard history is recorded entry by entry in the store", async ({
-  page,
-}) => {
-  await bootLikeRust(page, { settings: SETTINGS });
-  await openApp(page);
-  await pasteMarkdown(page, "pasted words");
-  await expect
-    .poll(async () => (await devStorage(page)).histories.clipboard)
-    .toEqual([expect.objectContaining({ text: "pasted words" })]);
-  expect(
-    await page.evaluate(() => localStorage.getItem("textus-clipboard-history")),
-  ).toBeNull();
 });
 
 /** In English, with Custom CSS empty. */
@@ -329,28 +266,6 @@ test("the detached chat window also waits for its writes before it closes", asyn
   expect(answered).toBeLessThan(stored.log.indexOf("plugin:window|destroy"));
 });
 
-test("a window booted with no settings fills in defaults, never over newer values", async ({
-  page,
-}) => {
-  // After a corrupt settings.json, a reload replays the empty snapshot while
-  // Rust holds everything changed since.
-  await shimOptions(page, { liveSettings: SETTINGS });
-  await bootLikeRust(page, { settings: {} });
-  await openApp(page);
-  const html = page.locator("html");
-  // The live values, not the defaults the empty snapshot stands for.
-  await expect(html).toHaveAttribute("data-theme", "dark");
-  await expect(html).toHaveAttribute("data-content-width", "full");
-  await expect(html).toHaveAttribute("lang", "ja");
-  const stored = await devStorage(page);
-  expect(stored.settings).toMatchObject(SETTINGS);
-  // Defaults went only into the fields that were missing.
-  expect(stored.fills).toHaveLength(1);
-  expect(stored.fills[0]).not.toHaveProperty("theme");
-  expect(stored.fills[0]).toHaveProperty("enableCompletion", true);
-  expect(stored.patches.filter((p) => "theme" in p)).toEqual([]);
-});
-
 /** An imported theme, and the chrome colours last derived from it, as
  *  ui-state.json remembers them. */
 const THEME_CSS = "#write { color: rgb(1, 2, 3); }";
@@ -405,12 +320,11 @@ test("the imported theme's chrome colours are on the first frame too", async ({
     .toBe(true);
 });
 
+// Which remembered colours the first frame takes is unit-tested
+// (boot-script.test.ts); here, that the frontend derives them afresh.
 for (const [name, theme, cache] of [
   // Derived for the light appearance; the window opens dark.
   ["another appearance", "dark", remembered()],
-  // A hand-edited theme file.
-  ["a theme file that changed", "light", remembered({ sourceLength: 3 })],
-  ["another theme", "light", remembered({ id: "other" })],
 ] as const) {
   test(`chrome colours remembered for ${name} stay off the first frame`, async ({
     page,

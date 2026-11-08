@@ -214,86 +214,88 @@ type Sample = {
   tops: number[];
 };
 
-test("a streaming rewrite brings its changes one at a time: text, card and count", async ({
-  page,
-}) => {
-  const story = LINES.join("\n\n");
-  await open(page, story, "original");
-  await streamRevise(
-    page,
-    [
-      {
-        id: "s1",
-        args: {
-          action: "replace",
-          anchor: story,
-          text: LINES_CLASSICAL.join("\n\n"),
+test(
+  "a streaming rewrite brings its changes one at a time: text, card and count",
+  { tag: "@perf" },
+  async ({ page }) => {
+    const story = LINES.join("\n\n");
+    await open(page, story, "original");
+    await streamRevise(
+      page,
+      [
+        {
+          id: "s1",
+          args: {
+            action: "replace",
+            anchor: story,
+            text: LINES_CLASSICAL.join("\n\n"),
+          },
         },
-      },
-    ],
-    { chunk: 4, every: 20 },
-  );
-  await page.evaluate(() => {
-    const w = window as unknown as { __samples: Sample[]; __on: boolean };
-    w.__samples = [];
-    w.__on = true;
-    const tick = () => {
-      if (!w.__on) return;
-      const pos = document.querySelector(".review-bar-pos")?.textContent;
-      w.__samples.push({
-        streaming:
-          document.querySelector(
-            ".milkdown .pending-partial, .pending-pick.pending-streaming",
-          ) !== null,
-        count: pos ? parseInt(pos, 10) : null,
-        cards: document.querySelectorAll(".revision-note").length,
-        fresh: document.querySelectorAll(".milkdown .pending-sentence-new")
-          .length,
-        tops: Array.from(
-          document.querySelectorAll<HTMLElement>(".revision-note"),
-        ).map((e) => e.offsetTop),
-      });
+      ],
+      { chunk: 4, every: 20 },
+    );
+    await page.evaluate(() => {
+      const w = window as unknown as { __samples: Sample[]; __on: boolean };
+      w.__samples = [];
+      w.__on = true;
+      const tick = () => {
+        if (!w.__on) return;
+        const pos = document.querySelector(".review-bar-pos")?.textContent;
+        w.__samples.push({
+          streaming:
+            document.querySelector(
+              ".milkdown .pending-partial, .pending-pick.pending-streaming",
+            ) !== null,
+          count: pos ? parseInt(pos, 10) : null,
+          cards: document.querySelectorAll(".revision-note").length,
+          fresh: document.querySelectorAll(".milkdown .pending-sentence-new")
+            .length,
+          tops: Array.from(
+            document.querySelectorAll<HTMLElement>(".revision-note"),
+          ).map((e) => e.offsetTop),
+        });
+        requestAnimationFrame(tick);
+      };
       requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-  await send(page);
-  // Hundreds of fragments 20ms apart, and timers run late on a loaded machine:
-  // well past the 5s an expect waits by default.
-  await expect(page.locator(".review-bar-accept")).toBeEnabled({
-    timeout: 25_000,
-  });
-  await page.waitForTimeout(300);
-  const samples = await page.evaluate(() => {
-    const w = window as unknown as { __samples: Sample[]; __on: boolean };
-    w.__on = false;
-    return w.__samples;
-  });
-  const streaming = samples.filter((s) => s.streaming);
-  // The bar is there from the start, counting from nothing.
-  const counted = streaming.filter((s) => s.count !== null);
-  expect(counted.length).toBeGreaterThan(10);
-  expect(counted[0].count).toBeLessThanOrEqual(1);
-  // One more card and count as each change completes, never fewer.
-  const seen = new Set<number>();
-  for (let i = 0; i < counted.length; i++) {
-    const s = counted[i];
-    expect(s.count).toBe(s.cards);
-    expect(s.cards).toBeLessThanOrEqual(s.fresh);
-    if (i > 0) expect(s.cards).toBeGreaterThanOrEqual(counted[i - 1].cards);
-    seen.add(s.cards);
-  }
-  for (const n of [1, 2, 3, 4, 5, 6]) expect(seen.has(n), `${n}`).toBe(true);
-  // Nothing moves when it settles: the last sentence, complete only once
-  // the stream ends, brings the last card, and the others stay put.
-  const last = streaming.at(-1)!;
-  const settled = samples.at(-1)!;
-  expect(settled.cards).toBe(7);
-  expect(last.cards).toBeGreaterThanOrEqual(6);
-  last.tops.forEach((top, i) =>
-    expect(Math.abs(top - settled.tops[i])).toBeLessThan(1),
-  );
-});
+    });
+    await send(page);
+    // Hundreds of fragments 20ms apart, and timers run late on a loaded machine:
+    // well past the 5s an expect waits by default.
+    await expect(page.locator(".review-bar-accept")).toBeEnabled({
+      timeout: 25_000,
+    });
+    await page.waitForTimeout(300);
+    const samples = await page.evaluate(() => {
+      const w = window as unknown as { __samples: Sample[]; __on: boolean };
+      w.__on = false;
+      return w.__samples;
+    });
+    const streaming = samples.filter((s) => s.streaming);
+    // The bar is there from the start, counting from nothing.
+    const counted = streaming.filter((s) => s.count !== null);
+    expect(counted.length).toBeGreaterThan(10);
+    expect(counted[0].count).toBeLessThanOrEqual(1);
+    // One more card and count as each change completes, never fewer.
+    const seen = new Set<number>();
+    for (let i = 0; i < counted.length; i++) {
+      const s = counted[i];
+      expect(s.count).toBe(s.cards);
+      expect(s.cards).toBeLessThanOrEqual(s.fresh);
+      if (i > 0) expect(s.cards).toBeGreaterThanOrEqual(counted[i - 1].cards);
+      seen.add(s.cards);
+    }
+    for (const n of [1, 2, 3, 4, 5, 6]) expect(seen.has(n), `${n}`).toBe(true);
+    // Nothing moves when it settles: the last sentence, complete only once
+    // the stream ends, brings the last card, and the others stay put.
+    const last = streaming.at(-1)!;
+    const settled = samples.at(-1)!;
+    expect(settled.cards).toBe(7);
+    expect(last.cards).toBeGreaterThanOrEqual(6);
+    last.tops.forEach((top, i) =>
+      expect(Math.abs(top - settled.tops[i])).toBeLessThan(1),
+    );
+  },
+);
 
 test("mid-stream, ‹ › step through the changes so far; Accept and Reject wait", async ({
   page,

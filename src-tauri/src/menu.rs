@@ -62,6 +62,8 @@ const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
 const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
 /// View > Read Only: the document on screen can't be changed.
 const TOGGLE_READ_ONLY_ID: &str = "toggle-read-only";
+/// View > Mode > Default: the rendered editor, the document writable.
+const VIEW_MODE_DEFAULT_ID: &str = "view-mode-default";
 /// Two documents at once, side by side or one above the other.
 const SPLIT_RIGHT_ID: &str = "split-right";
 /// Everything the menus do, found by typing.
@@ -98,7 +100,7 @@ const COMMUNITY_ID: &str = "help-community";
 const REPORT_ID: &str = "help-report";
 /// Textus > Check for Updates… (macOS): Settings › About, checking.
 const UPDATES_ID: &str = "check-updates";
-/// Help > Video Tutorials, opened the same way as Join the Community.
+/// Help > Online Tutorials, opened the same way as Join the Community.
 const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
@@ -268,14 +270,14 @@ thread_local! {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_recent_files(app: tauri::AppHandle) -> Vec<String> {
-    commands::recents::read_recent_files(&app)
+    commands::recents::still_there(commands::recents::read_recent_files(&app))
 }
 
 /// The recent folders, listed above the files there.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
-    commands::recents::read_recent_folders(&app)
+    commands::recents::still_there(commands::recents::read_recent_folders(&app))
 }
 
 /// Quit: every window is asked to close, so each unsaved document gets its
@@ -390,6 +392,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
     } else if id == TOGGLE_READ_ONLY_ID {
         emit_to_focused(app_handle, "menu-toggle-read-only");
+    } else if id == VIEW_MODE_DEFAULT_ID {
+        emit_to_focused(app_handle, "menu-view-mode-default");
     } else if id == COMMAND_PALETTE_ID {
         emit_to_focused(app_handle, "menu-command-palette");
     } else if id == SPLIT_RIGHT_ID {

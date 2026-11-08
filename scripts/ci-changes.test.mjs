@@ -41,16 +41,18 @@ const bumped = {
 
 const rustReads = rustIncludes();
 
-/** A change from `before` to `after` (maps of file to text); files missing
- *  from either side don't exist there. */
-function change(before, after, { push = false } = {}) {
+/** The jobs for a change from `before` to `after` (maps of file to text;
+ *  files missing from either side don't exist there): e2e and native, and
+ *  with `platforms` also whether macOS, Windows and iOS run. */
+function change(before, after, { push = false, platforms = false } = {}) {
   const files = [...new Set([...Object.keys(before), ...Object.keys(after)])];
-  return classify({
+  const jobs = classify({
     files,
     push,
     read: (file) => [before[file] ?? null, after[file] ?? null],
     rustReads,
   });
+  return platforms ? jobs : { e2e: jobs.e2e, native: jobs.native };
 }
 
 /** Each of `files` edited from "a" to "b". */
@@ -210,6 +212,41 @@ describe("which CI jobs a pull request needs", () => {
   it("runs everything when a version file is added or removed", () => {
     expect(change({}, { "package.json": "{}" })).toEqual(ALL);
     expect(change({ "package.json": "{}" }, {})).toEqual(ALL);
+  });
+});
+
+describe("whether a pull request runs macOS, Windows and iOS", () => {
+  const onAll = (file) => edit([file], { platforms: true }).platforms;
+
+  it("runs them for code that differs between platforms", () => {
+    for (const file of [
+      "src-tauri/src/schedule/notify/windows.rs",
+      "src-tauri/src/commands/export/pdf_macos.rs",
+      "src-tauri/src/lib.rs",
+      "src-tauri/Cargo.toml",
+      "src-tauri/tauri.windows.conf.json",
+      "src-tauri/rust-toolchain.toml",
+      "scripts/ios-prepare.sh",
+      "src/utils/path.ts",
+      "src/platform/os.ts",
+    ])
+      expect(onAll(file), file).toBe(true);
+  });
+
+  it("leaves them for after the merge otherwise", () => {
+    for (const file of [
+      "src-tauri/src/plugins/catalog.rs",
+      "src/editor/editor.ts",
+      "e2e/writing.spec.ts",
+    ])
+      expect(onAll(file), file).toBe(false);
+  });
+
+  it("runs them on a push and for a workflow change", () => {
+    expect(
+      edit(["src/editor/editor.ts"], { push: true, platforms: true }).platforms,
+    ).toBe(true);
+    expect(onAll(".github/workflows/ci.yml")).toBe(true);
   });
 });
 

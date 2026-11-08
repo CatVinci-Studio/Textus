@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { dragWithMouse, selectionRead, swallowHtmlDrop } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -7,10 +7,11 @@ import {
   openWithPlugins,
 } from "./plugin-helpers";
 
-// The Pages plugin: the folder as a tree of pages, sub-pages made from the
-// / menu beside their page, and the pages above the one in front.
+// Workspace's pages: the folder as a tree of pages, sub-pages made from the
+// / menu beside their page, pages dragged onto others, and the pages above
+// the one in front.
 
-const ID = "catvinci.pages";
+const ID = "catvinci.database";
 test.skip(!hasPlugin(ID), `${ID} is not in this checkout`);
 
 const FOLDER = {
@@ -23,7 +24,13 @@ const FOLDER = {
 async function open(page: Page) {
   await openWithPlugins(page, {
     plugins: {
-      [ID]: ["files.read", "files.write", "editor.read", "editor.write"],
+      [ID]: [
+        "files.read",
+        "files.write",
+        "editor.read",
+        "editor.write",
+        "ai.tools",
+      ],
     },
     folder: FOLDER,
   });
@@ -86,4 +93,21 @@ test("/page makes a sub-page beside its page, links it, and opens it", async ({
   await expect(
     editor.locator(".wikilink, a").filter({ hasText: "Trip" }),
   ).toHaveCount(1);
+});
+
+test("a page dragged onto another becomes its sub-page", async ({ page }) => {
+  await swallowHtmlDrop(page);
+  await open(page);
+  await openPath(page, "/notes/Inbox.md");
+  const pages = await openSidebarList(page, "Pages");
+  const rows = pages.locator(".plugin-list-row");
+  await dragWithMouse(
+    page,
+    rows.filter({ hasText: "Inbox" }),
+    rows.filter({ hasText: "Life" }),
+  );
+  await expect
+    .poll(() => fileText(page, "/notes/Life/Inbox.md"))
+    .toBe("# Inbox\n");
+  await expect(rows).toHaveText(["☀️ Life"]);
 });

@@ -42,7 +42,7 @@
   min-width: 0;
   /* Clear of the floating window bar, as the editor's page is, unless the tab
      bar is there to do it. */
-  padding-top: 28px;
+  padding-top: var(--window-bar-height);
 }
 .tab-bar ~ * .plugin-tab-pane {
   padding-top: 0;
@@ -414,7 +414,7 @@ button.plugin-card-open:hover .plugin-card-name {
   flex: 1;
   min-height: 0;
   min-width: 0;
-  padding-top: 28px;
+  padding-top: var(--window-bar-height);
 }
 .tab-bar ~ * .web-page-pane {
   padding-top: 0;
@@ -486,17 +486,18 @@ button.plugin-card-open:hover .plugin-card-name {
   width: auto;
 }
 
+/* Folded: the handle where the hide button was, at the bar's right end. */
 .web-page-bar-folded {
-  justify-content: center;
+  justify-content: flex-end;
   height: 10px;
-  padding: 0;
+  padding: 0 var(--space-2);
   border-bottom: 0;
 }
 .web-page-handle {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  width: 26px;
   height: 10px;
   padding: 0;
   border: 0;
@@ -637,6 +638,21 @@ button.plugin-card-open:hover .plugin-card-name {
   margin-left: 8px;
   color: var(--ui-muted);
   font-weight: 400;
+}
+/* Update All, at the end of the Installed title's line while there are updates. */
+.settings-group-title:has(> .extensions-title-action) {
+  display: flex;
+  align-items: center;
+}
+.settings-group-title:has(> .extensions-title-action) {
+  white-space: nowrap;
+}
+.settings-group-title > .extensions-title-action {
+  flex: none;
+  width: auto;
+  margin-left: auto;
+  font-size: var(--text-control);
+  font-weight: 500;
 }
 .extensions-available-head {
   display: flex;

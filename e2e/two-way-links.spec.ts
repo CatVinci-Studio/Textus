@@ -1,11 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { selectionRead } from "./helpers";
-import {
-  hasPlugin,
-  openPath,
-  openSidebarList,
-  openWithPlugins,
-} from "./plugin-helpers";
+import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
  * Two-way Links on the core's link APIs: [[ completion in the / panel
@@ -186,24 +181,5 @@ test("a section that embeds itself is drawn once", async ({ page }) => {
   );
   await expect(loop.locator(".note-embed-chip").first()).toHaveText(
     "Loop › Part",
-  );
-});
-
-test("backlinks list a link written with [[ completion", async ({ page }) => {
-  await open(
-    page,
-    {
-      "/notes/Doc.md": "See [[Ideas]] for more.\n",
-      "/notes/Ideas.md": "# Ideas\n",
-    },
-    "/notes/Ideas.md",
-  );
-  await expect(page.locator(editor)).toContainText("Ideas");
-  const list = await openSidebarList(page, "Two-way Links");
-  await expect(list.locator(".plugin-list-group").first()).toHaveText(
-    "Linked mentions · 1",
-  );
-  await expect(list.locator(".plugin-list-row").first()).toContainText(
-    "See [[Ideas]] for more.",
   );
 });

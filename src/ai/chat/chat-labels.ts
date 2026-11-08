@@ -104,6 +104,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
       dom: t.chatPluginCheckDom,
       permission: t.chatPluginCheckPermission,
       unregistered: t.chatPluginCheckUnregistered,
+      when: t.chatPluginCheckWhen,
       runError: t.chatPluginRunError,
       fix: t.chatPluginFix,
       fixRequest: t.chatPluginFixRequest,

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // Another app's settings found in a folder are offered on a corner card and
 // never applied by themselves; taking them writes the project's own
@@ -10,13 +10,7 @@ async function open(page: Page, files: Record<string, string>) {
     (window as unknown as Record<string, unknown>).__devFs = fs;
   }, files);
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/vault/notes/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/vault/notes/a.md");
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror h1'),
   ).toContainText("Alpha");
@@ -77,11 +71,7 @@ test("Settings says where the project puts pictures", async ({ page }) => {
     }),
     "/vault/notes/a.md": "# Alpha\n",
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (name: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
   await expect(panel).toContainText(

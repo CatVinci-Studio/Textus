@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * A plugin page is drawn with the app's own controls - the same rules,
@@ -70,11 +70,7 @@ test("a plugin page's controls are the app's, and its menu is the app's menu", a
     { manifest: MANIFEST, host: HOST },
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-toggle-sidebar"),
-  );
+  await emit(page, "menu-toggle-sidebar");
   await page
     .locator(".sidebar-tabs")
     .getByRole("button", { name: "UI" })

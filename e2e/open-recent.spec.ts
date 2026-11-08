@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // File > Open Recent: an empty focused window keeps the file itself;
 // otherwise it opens elsewhere.
@@ -7,15 +7,7 @@ import { mockInvoke, openApp } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 function openRecent(page: Page, path: string) {
-  return page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-open-recent", p),
-    path,
-  );
+  return emit(page, "menu-open-recent", path);
 }
 
 function openPathsCalls(page: Page) {

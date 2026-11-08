@@ -7,6 +7,8 @@ import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
 import { confirmedFor, SkillWarnings, warningsIn } from "./skill-warnings";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { withCreation } from "./creations";
 
 /**
  * Save this skill, under a reply that wrote one: pick its modes and save it
@@ -26,7 +28,8 @@ export function ReplySkills({ text }: { text: string }) {
 }
 
 function ReplySkillChip({ skill }: { skill: ReplySkill }) {
-  const { t, settings } = useSettings();
+  const { t, settings, setSettings } = useSettings();
+  const latest = useLatest(settings);
   const [modes, setModes] = useState(skill.modes);
   const [had, setHad] = useState(false);
   const [state, setState] = useState<
@@ -55,7 +58,17 @@ function ReplySkillChip({ skill }: { skill: ReplySkill }) {
   );
   const save = () =>
     ai.saveWrittenSkill(skill.text, modes, confirming !== null).then(
-      () => setState({ kind: "saved" }),
+      () => {
+        setState({ kind: "saved" });
+        setSettings({
+          creations: withCreation(latest.current.creations, {
+            kind: "skill",
+            id: skill.name,
+            name: label,
+            at: Date.now(),
+          }),
+        });
+      },
       (err: unknown) => {
         const warnings = warningsIn(err);
         setState(

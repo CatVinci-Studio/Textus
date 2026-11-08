@@ -15,6 +15,13 @@ import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
+import {
+  contentZoom,
+  passZoomGesture,
+  passZoomWheel,
+  watchContentZoom,
+} from "./frame-zoom";
+import { createPortal } from "react-dom";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 import {
@@ -109,6 +116,10 @@ export function PluginWebview({
             });
           }),
         menuClose: () => closeMenuRef.current?.(),
+        zoomWheel: (params: Parameters<typeof passZoomWheel>[1]) =>
+          passZoomWheel(frame, params),
+        zoomGesture: (params: Parameters<typeof passZoomGesture>[1]) =>
+          passZoomGesture(frame, params),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
             frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;
@@ -121,8 +132,13 @@ export function PluginWebview({
       (connected) => {
         endpoint = connected;
         webviewConnected(id, connected);
+        if (fitHeight) connected?.notify("zoom", { zoom: contentZoom() });
       },
     );
+    // A page in the document draws at the document's zoom itself.
+    const stopZoom = fitHeight
+      ? watchContentZoom((zoom) => endpoint?.notify("zoom", { zoom }))
+      : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {
         css: webviewThemeCss(),
@@ -132,6 +148,7 @@ export function PluginWebview({
     box.replaceChildren(frame);
     return () => {
       stopTheme();
+      stopZoom();
       disconnect();
       webviewConnected(id, null);
       frame.remove();
@@ -145,16 +162,21 @@ export function PluginWebview({
         className={`plugin-webview ${className ?? ""}`}
         data-webview-id={id}
       />
-      <Presence show={menu !== null} exitMs={120}>
-        {menu && (
-          <ContextMenu
-            x={menu.x}
-            y={menu.y}
-            items={menu.items}
-            onClose={menu.close}
-          />
-        )}
-      </Presence>
+      {/* On the body: a page in a document sits inside its zoom, which
+          would scale the menu's window coordinates a second time. */}
+      {createPortal(
+        <Presence show={menu !== null} exitMs={120}>
+          {menu && (
+            <ContextMenu
+              x={menu.x}
+              y={menu.y}
+              items={menu.items}
+              onClose={menu.close}
+            />
+          )}
+        </Presence>,
+        document.body,
+      )}
     </>
   );
 }

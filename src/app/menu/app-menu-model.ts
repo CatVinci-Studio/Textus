@@ -2,6 +2,7 @@ import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
+import { pluginMenuNodes, type PluginMenuEntry } from "./plugin-menu";
 
 /**
  * The app-drawn menu, as data, for windows with no native menu bar. Entries
@@ -33,6 +34,7 @@ export type NativeMenuId =
   | "copy-as-plain-text"
   | "paste-as-plain-text"
   | "toggle-source-mode"
+  | "view-mode-default"
   | "toggle-typewriter-mode"
   | "track-changes"
   | "toggle-sidebar"
@@ -117,22 +119,29 @@ export type MenuNode = MenuEntry | "separator";
  * Screen is left out: AppKit marks its own.
  */
 export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
+  const mode = viewModeChecks(checks);
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
-    "toggle-source-mode": !!checks.sourceMode,
-    "toggle-split-view": !!checks.splitView,
+    "view-mode-default": mode.default,
+    "toggle-source-mode": mode.source,
+    "toggle-split-view": mode.split,
     "toggle-typewriter-mode": !!checks.typewriter,
     "toggle-zen-mode": !!checks.zen,
-    "toggle-read-only": !!checks.readOnly,
+    "toggle-read-only": mode.readOnly,
     "track-changes": !!checks.trackChanges,
   };
 }
 
-/** A command a plugin put in the Plugins menu. */
-export interface PluginMenuEntry {
-  command: string;
-  label: string;
+/** View › Mode's one check: read-only first, it is the document's. */
+function viewModeChecks(checks: MenuChecks) {
+  const readOnly = !!checks.readOnly;
+  return {
+    default: !readOnly && !checks.sourceMode && !checks.splitView,
+    source: !readOnly && !!checks.sourceMode,
+    split: !readOnly && !!checks.splitView,
+    readOnly,
+  };
 }
 
 /** What File > Open Recent lists, most recent first. */
@@ -264,10 +273,7 @@ function pluginsMenu(
       label: t.menuPlugins,
       submenu: [
         ...(plugins.length
-          ? plugins.map((p): MenuEntry => ({
-              label: p.label,
-              action: { native: `plugin-command:${p.command}` },
-            }))
+          ? pluginMenuNodes(plugins)
           : [{ label: t.menuNoPluginCommands, disabled: true }]),
         "separator",
         { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
@@ -283,6 +289,7 @@ export function buildAppMenu(
   checks: MenuChecks = {},
   plugins: readonly PluginMenuEntry[] = [],
 ): MenuNode[] {
+  const mode = viewModeChecks(checks);
   return [
     {
       label: t.menuFile,
@@ -393,22 +400,36 @@ export function buildAppMenu(
         },
         "separator",
         {
-          label: t.menuToggleSourceMode,
-          accel: shortcuts.toggleSourceMode,
-          action: { native: "toggle-source-mode" },
-          checked: !!checks.sourceMode,
+          label: t.menuViewMode,
+          submenu: [
+            {
+              label: t.menuViewModeDefault,
+              action: { native: "view-mode-default" },
+              checked: mode.default,
+            },
+            {
+              label: t.menuToggleSourceMode,
+              accel: shortcuts.toggleSourceMode,
+              action: { native: "toggle-source-mode" },
+              checked: mode.source,
+            },
+            {
+              label: t.menuToggleSplitView,
+              accel: shortcuts.toggleSplitView,
+              action: { native: "toggle-split-view" },
+              checked: mode.split,
+            },
+            {
+              label: t.menuToggleReadOnly,
+              action: { native: "toggle-read-only" },
+              checked: mode.readOnly,
+            },
+          ],
         },
         {
-          label: t.menuToggleSplitView,
-          accel: shortcuts.toggleSplitView,
-          action: { native: "toggle-split-view" },
-          checked: !!checks.splitView,
-        },
-        {
-          label: t.menuToggleTypewriterMode,
-          accel: shortcuts.toggleTypewriterMode,
-          action: { native: "toggle-typewriter-mode" },
-          checked: !!checks.typewriter,
+          label: t.menuTrackChanges,
+          action: { native: "track-changes" },
+          checked: !!checks.trackChanges,
         },
         {
           label: t.menuToggleZenMode,
@@ -417,14 +438,10 @@ export function buildAppMenu(
           checked: !!checks.zen,
         },
         {
-          label: t.menuTrackChanges,
-          action: { native: "track-changes" },
-          checked: !!checks.trackChanges,
-        },
-        {
-          label: t.menuToggleReadOnly,
-          action: { native: "toggle-read-only" },
-          checked: !!checks.readOnly,
+          label: t.menuToggleTypewriterMode,
+          accel: shortcuts.toggleTypewriterMode,
+          action: { native: "toggle-typewriter-mode" },
+          checked: !!checks.typewriter,
         },
         "separator",
         {

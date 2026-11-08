@@ -66,8 +66,19 @@ function proposal(args: object) {
   ];
 }
 
+/** The document's paragraphs that hold words. */
+const paragraphs = (page: Page) =>
+  page
+    .locator(".milkdown p")
+    .allTextContents()
+    .then((texts) => texts.filter((text) => text.trim()));
+
+/** Accepts the latest proposal. */
 const accept = (page: Page) =>
-  page.locator(".agent-proposal-actions .inline-chat-action-primary").click();
+  page
+    .locator(".agent-proposal-actions .inline-chat-action-primary")
+    .last()
+    .click();
 
 test("Quick Ask starts on Write, even after Review was picked in the panel", async ({
   page,
@@ -166,7 +177,7 @@ for (const language of ["en", "zh"] as const)
     }
   });
 
-test("Write in an empty document proposes a green block that waits for Accept", async ({
+test("Write proposes and Accept writes: into an empty document, over text, after a selection", async ({
   page,
 }) => {
   await openPanel(page);
@@ -184,42 +195,54 @@ test("Write in an empty document proposes a green block that waits for Accept", 
   expect((await agentCalls(page)).at(-1)?.mode).toBe("write");
   // Shown, not written: the document is still empty.
   expect((await documentText(page)).trim()).toBe("");
-
   await accept(page);
   await expect(insert).toHaveCount(0);
-  expect(await documentText(page)).toContain(
-    "The lighthouse keeper woke before dawn.",
-  );
-});
+  await expect
+    .poll(() => paragraphs(page))
+    .toEqual(["The lighthouse keeper woke before dawn."]);
 
-test("Write with a selection adds after it and leaves it as it is", async ({
-  page,
-}) => {
-  await openPanel(page);
-  await pasteMarkdown(page, "The first paragraph.\n\nThe second paragraph.");
-  await page.locator(".milkdown p").first().click({ clickCount: 3 });
+  // A replacement: struck through until accepted.
+  await mockInvoke(page, {
+    ai_agent_message: proposal({
+      action: "replace",
+      anchor: "The lighthouse keeper woke before dawn.",
+      text: "The keeper woke early.\n\nThe second paragraph.",
+    }),
+  });
+  await send(page, "Tighten it");
+  expect((await agentCalls(page)).at(-1)?.mode).toBe("write");
+  await expect(page.locator(".milkdown .pending-delete")).toBeAttached();
+  await accept(page);
+  await expect
+    .poll(() => paragraphs(page))
+    .toEqual(["The keeper woke early.", "The second paragraph."]);
+
+  // With a selection: added after it, the selection left as it is.
+  await page
+    .locator(".milkdown p", { hasText: "The keeper woke early." })
+    .click({ clickCount: 3 });
   await mockInvoke(page, {
     ai_agent_message: proposal({
       action: "insert_after",
-      anchor: "The first paragraph.",
+      anchor: "The keeper woke early.",
       text: "A new paragraph in between.",
     }),
   });
-  await pickMode(page, "Write");
   await send(page, "Continue from here");
-
   const sent = (await agentCalls(page)).at(-1);
   expect(sent?.mode).toBe("write");
   expect(sent?.message).toContain(
-    "<selected-text>\nThe first paragraph.\n</selected-text>",
+    "<selected-text>\nThe keeper woke early.\n</selected-text>",
   );
   await expect(page.locator(".milkdown .pending-delete")).toHaveCount(0);
   await accept(page);
-  await expect(page.locator(".milkdown p")).toHaveText([
-    "The first paragraph.",
-    "A new paragraph in between.",
-    "The second paragraph.",
-  ]);
+  await expect
+    .poll(() => paragraphs(page))
+    .toEqual([
+      "The keeper woke early.",
+      "A new paragraph in between.",
+      "The second paragraph.",
+    ]);
 });
 
 test("Review answers without proposing anything", async ({ page }) => {
@@ -238,24 +261,6 @@ test("Review answers without proposing anything", async ({ page }) => {
   expect((await agentCalls(page)).at(-1)?.mode).toBe("review");
   await expect(page.locator(".milkdown .pending-insert")).toHaveCount(0);
   await expect(page.locator(".review-bar")).toHaveCount(0);
-});
-
-test("Write also replaces text, after Accept", async ({ page }) => {
-  await openPanel(page);
-  await pasteMarkdown(page, "The meeting was very long and quite boring.");
-  await mockInvoke(page, {
-    ai_agent_message: proposal({
-      action: "replace",
-      anchor: "The meeting was very long and quite boring.",
-      text: "The meeting dragged.",
-    }),
-  });
-  await pickMode(page, "Write");
-  await send(page, "Tighten it");
-  expect((await agentCalls(page)).at(-1)?.mode).toBe("write");
-  await expect(page.locator(".milkdown .pending-delete")).toBeAttached();
-  await accept(page);
-  await expect(page.locator(".milkdown p")).toHaveText("The meeting dragged.");
 });
 
 test.describe("the selection the chip refers to", () => {

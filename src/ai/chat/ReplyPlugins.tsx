@@ -23,6 +23,9 @@ import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
+import { useSettings } from "../../prefs/SettingsContext";
+import { useLatest } from "../../utils/hooks/useLatest";
+import { withCreation } from "./creations";
 
 export interface ReplyPluginLabels {
   installPlugin: string;
@@ -44,6 +47,8 @@ export interface ReplyPluginLabels {
     permission: string;
     /** "{id}". */
     unregistered: string;
+    /** "{key}". */
+    when: string;
     /** "{error}". */
     runError: string;
     fix: string;
@@ -84,6 +89,8 @@ function ReplyPluginChip({
   plugin: ReplyPlugin;
   labels: ReplyPluginLabels;
 }) {
+  const { settings, setSettings } = useSettings();
+  const latest = useLatest(settings);
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   useSyncExternalStore(subscribePluginLog, pluginLogVersion);
   const [busy, setBusy] = useState(false);
@@ -126,6 +133,14 @@ function ReplyPluginChip({
       setInstalledAt(Date.now());
       const id = await installPlugin(plugin.files);
       await setPluginEnabled(id, true);
+      setSettings({
+        creations: withCreation(latest.current.creations, {
+          kind: "plugin",
+          id,
+          name,
+          at: Date.now(),
+        }),
+      });
     } catch (err) {
       await showMessage(explainError(err, currentStrings()), { tone: "error" });
     } finally {
@@ -216,5 +231,7 @@ function checkText(check: PluginCheck, labels: ReplyPluginLabels): string {
       );
     case "unregistered":
       return t.unregistered.replace("{id}", check.id);
+    case "when":
+      return t.when.replace("{key}", check.key);
   }
 }

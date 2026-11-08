@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 /**
  * A key's field in Settings shows the key masked (first six and last four
@@ -15,13 +15,7 @@ async function keyField(page: Page) {
     provider_api_key_status: false,
     set_provider_api_key: null,
   });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Textus AI", exact: true }).click();
   await panel.getByRole("combobox", { name: "Search service" }).click();

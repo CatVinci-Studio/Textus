@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { FIRST_LOAD, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  emit,
+  FIRST_LOAD,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+} from "./helpers";
 
 // KaTeX loads on a document's first formula instead of with the app. A
 // document that has maths waits for it before it opens, so its formulas are
@@ -8,15 +14,7 @@ import { FIRST_LOAD, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 function openRecent(page: Page, path: string) {
-  return page.evaluate(
-    (p) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-open-recent", p),
-    path,
-  );
+  return emit(page, "menu-open-recent", path);
 }
 
 test("the app opens without loading KaTeX", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 
 /**
@@ -10,17 +10,6 @@ import { openPath, openWithPlugins, pluginsAtStart } from "./plugin-helpers";
 const panes = ".main-pane-split > .split-pane";
 const pane = (which: "first" | "second" | "third") =>
   `.split-pane[data-pane="${which}"]`;
-
-/** A View menu item, as the native menu sends it. */
-async function emit(page: Page, name: string) {
-  await page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    name,
-  );
-}
 
 /** An item of the divider's right-click menu. */
 async function dividerMenu(page: Page, item: string) {
@@ -434,7 +423,7 @@ test("an open split turns, swaps its sides and evens them out", async ({
   await expect(page.locator(panes)).toHaveCount(0);
 });
 
-test("a tab's right-click menu opens it beside the one in front", async ({
+test("a tab's right-click menu opens it beside the one in front, or moves it to a new window", async ({
   page,
 }) => {
   await openTwo(page);
@@ -446,51 +435,64 @@ test("a tab's right-click menu opens it beside the one in front", async ({
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
   await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+
+  // Move to New Window hands one.md over and takes it, and its pane, out.
+  await mockInvoke(page, { move_tab_to_new_window: null });
+  await page
+    .locator('.tab-bar [role="tab"]', { hasText: "one.md" })
+    .click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Move to New Window" }).click();
+  await expect(
+    page.locator('.tab-bar [role="tab"]', { hasText: "one.md" }),
+  ).toHaveCount(0);
+  await expect(page.locator(panes)).toHaveCount(0);
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "Two",
+  );
+  const sent = await page.evaluate(() =>
+    (
+      (
+        window as unknown as {
+          __devInvokeCalls?: { cmd: string; tab?: { path?: string } }[];
+        }
+      ).__devInvokeCalls ?? []
+    ).filter((c) => c.cmd === "move_tab_to_new_window"),
+  );
+  expect(sent).toHaveLength(1);
+  expect(sent[0].tab?.path).toBe("/notes/one.md");
 });
 
-test("a tab pulled down onto the document splits it on the side it is let go", async ({
+test("a tab pulled down onto the document comes to the front in the middle, and splits it at an edge", async ({
   page,
 }) => {
   await openTwo(page);
   const tab = page.locator('.tab-bar [role="tab"]').first();
-  const box = (await tab.boundingBox())!;
   const main = (await page.locator(".main-pane").boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  // Down out of the bar, then to the document's right edge.
-  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
-  await page.mouse.move(main.x + main.width - 20, main.y + main.height / 2, {
-    steps: 6,
-  });
-  await expect(page.locator(".split-drop-hint")).toBeVisible();
-  await expect(page.locator(".tab-pull-ghost")).toHaveText("one.md");
-  await page.mouse.up();
-  await expect(page.locator(".split-drop-hint")).toHaveCount(0);
-  await expect(page.locator(panes)).toHaveCount(2);
-  // One on the right, the other on the left.
-  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
-  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
-  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
-});
-
-test("a tab pulled down and let go in the middle only comes to the front", async ({
-  page,
-}) => {
-  await openTwo(page);
-  const tab = page.locator('.tab-bar [role="tab"]').first();
-  const box = (await tab.boundingBox())!;
-  const main = (await page.locator(".main-pane").boundingBox())!;
-  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
-  await page.mouse.move(main.x + main.width / 2, main.y + main.height / 2, {
-    steps: 6,
-  });
+  /** Down out of the bar, then to `x` across the document. */
+  const pullTo = async (x: number) => {
+    const box = (await tab.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + 80, { steps: 4 });
+    await page.mouse.move(x, main.y + main.height / 2, { steps: 6 });
+  };
+  // Let go in the middle: it only comes to the front.
+  await pullTo(main.x + main.width / 2);
   await page.mouse.up();
   await expect(page.locator(panes)).toHaveCount(0);
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
     "One",
   );
+  // At the right edge: one on the right, the other on the left.
+  await pullTo(main.x + main.width - 20);
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  await expect(page.locator(".tab-pull-ghost")).toHaveText("one.md");
+  await page.mouse.up();
+  await expect(page.locator(".split-drop-hint")).toHaveCount(0);
+  await expect(page.locator(panes)).toHaveCount(2);
+  await expect(page.locator(`${pane("first")} h1`)).toContainText("Two");
+  await expect(page.locator(`${pane("second")} h1`)).toContainText("One");
+  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(2);
 });
 
 test("the split is remembered and comes back once its documents are open", async ({
@@ -523,13 +525,7 @@ test("the split is remembered and comes back once its documents are open", async
     "One",
   );
   // As the next document of a session arrives: a tab of its own.
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("open-paths-as-tabs", ["/notes/two.md"]),
-  );
+  await emit(page, "open-paths-as-tabs", ["/notes/two.md"]);
   await expect(page.locator(panes)).toHaveCount(2);
   await expect(page.locator(".main-pane-split")).toHaveAttribute(
     "data-split",
@@ -551,35 +547,6 @@ test("the split is remembered and comes back once its documents are open", async
       page.evaluate(() => localStorage.getItem("textus-split-layout")),
     )
     .toBe("null");
-});
-
-test("a tab's Move to New Window hands it to a new window and takes it out of this one", async ({
-  page,
-}) => {
-  await openTwo(page);
-  await mockInvoke(page, { move_tab_to_new_window: null });
-  await page
-    .locator('.tab-bar [role="tab"]', { hasText: "one.md" })
-    .click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Move to New Window" }).click();
-  await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(0);
-  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
-    "Two",
-  );
-  const sent = await page.evaluate(() =>
-    (
-      (
-        window as unknown as {
-          __devInvokeCalls?: {
-            cmd: string;
-            tab?: { path?: string };
-          }[];
-        }
-      ).__devInvokeCalls ?? []
-    ).filter((c) => c.cmd === "move_tab_to_new_window"),
-  );
-  expect(sent).toHaveLength(1);
-  expect(sent[0].tab?.path).toBe("/notes/one.md");
 });
 
 test.describe("on Linux", () => {

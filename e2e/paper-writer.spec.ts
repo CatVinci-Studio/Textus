@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, release } from "./helpers";
 
 // Research mode: the message is the topic, which goes to ai_paper_run; its
 // outline waits on a card, Approve drafts it into the document as it is
@@ -170,7 +170,7 @@ test("a paused paper goes on from what it kept, in place of what it wrote", asyn
         },
         ai_paper_save_outline: outline,
         // Paused while its first section is written.
-        ai_paper_draft: { __delay: 300, __reject: "cancelled" },
+        ai_paper_draft: { __hold: true, __reject: "cancelled" },
       };
     },
     { outline },
@@ -186,6 +186,7 @@ test("a paused paper goes on from what it kept, in place of what it wrote", asyn
   await panel.locator("textarea").press("Enter");
   const card = page.locator(".paper-card");
   await page.getByRole("button", { name: "Approve and write" }).click();
+  await release(page, "ai_paper_draft");
 
   await expect(card).toContainText("Paused");
   await expect(card).not.toHaveAttribute("role", "alert");

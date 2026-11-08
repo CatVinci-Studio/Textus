@@ -3,6 +3,7 @@ import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { MoreIcon } from "../ui/icons";
+import { reorderDrag } from "../ui/pointer-drag";
 import type { Strings } from "../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 
@@ -29,11 +30,14 @@ export function SidebarTabBar({
   tabs,
   shownId,
   onSelect,
+  onMove,
   t,
 }: {
   tabs: SidebarTabDef[];
   shownId: string;
   onSelect: (id: string) => void;
+  /** A tab dragged into another's place. */
+  onMove: (id: string, target: string) => void;
   t: Strings;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -62,6 +66,17 @@ export function SidebarTabBar({
             className={`sidebar-tab ${shownId === id ? "sidebar-tab-active" : ""}`}
             onClick={() => onSelect(id)}
             aria-label={label(t)}
+            data-reorder-id={id}
+            // Dragged along the bar, the others make way; let go, it stays.
+            onPointerDown={(e) => {
+              const bar = ref.current;
+              if (!bar || e.pointerType === "touch") return;
+              reorderDrag(e, {
+                container: bar,
+                id,
+                onDrop: (dragged, index) => onMove(dragged, inline[index].id),
+              });
+            }}
           >
             <Icon />
           </button>

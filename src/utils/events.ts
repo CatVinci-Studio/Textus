@@ -9,6 +9,9 @@ export const SHOW_REPLACE_EVENT = "textus:show-replace";
 export const FIND_NEXT_EVENT = "textus:find-next";
 /** Format › Link: a link around the selection. */
 export const INSERT_LINK_EVENT = "textus:insert-link";
+/// detail: a sidebar tab's id - a plugin asked for it to be shown
+/// (layout.showSidebarTab); the sidebar opens on it.
+export const SHOW_SIDEBAR_TAB_EVENT = "textus:show-sidebar-tab";
 /// Closes the find bar: the iPhone's sidebar drawer opens over it.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
@@ -16,15 +19,17 @@ export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 /// manager and where they landed; the editor on screen inserts them.
 export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 
-/// detail: the markdown text to insert at the cursor.
-export const INSERT_CLIPBOARD_TEXT_EVENT = "textus:insert-clipboard-text";
-
 /// A saved conversation is waiting to be restored by the editor it is for.
 export const RESTORE_CHAT_EVENT = "textus:restore-chat";
 
 /// detail: "undo", "redo", "cut", "copy", "paste" or "select-all". Native
 /// predefined menu items have no id, so on Windows they come through here.
 export const EDIT_ACTION_EVENT = "textus:edit-action";
+
+/// On the source editor's content, detail "undo", "redo" or "select-all": the
+/// Edit menu asking CodeMirror for its own, whose history the system's
+/// commands don't reach off macOS.
+export const SOURCE_EDIT_EVENT = "textus:source-edit";
 
 /// detail: what to do with the writer's tracked changes in the document on screen.
 export const TRACK_CHANGES_EVENT = "textus:track-changes";

@@ -287,6 +287,9 @@ pub(crate) fn build(
             .checked(checked.get(id).copied().unwrap_or(false))
             .build(app)
     };
+    // View > Mode: one of four (the frontend sends which); the source and
+    // split items keep their ids, so their keys still flip them.
+    let view_mode_default_item = check(VIEW_MODE_DEFAULT_ID, "Default")?;
     let toggle_source_mode_item = check(TOGGLE_SOURCE_MODE_ID, "Source Code Mode")?;
     let toggle_typewriter_mode_item = check(TOGGLE_TYPEWRITER_MODE_ID, "Typewriter Mode")?;
     let toggle_sidebar_item = check(TOGGLE_SIDEBAR_ID, "Sidebar")?;
@@ -313,18 +316,22 @@ pub(crate) fn build(
         .accelerator("CmdOrCtrl+0")
         .build(app)?;
 
+    let mode_menu = SubmenuBuilder::new(app, l("menu:view-mode", "Mode"))
+        .item(&view_mode_default_item)
+        .item(&toggle_source_mode_item)
+        .item(&toggle_split_view_item)
+        .item(&toggle_read_only_item)
+        .build()?;
     let view_menu = {
         let builder = SubmenuBuilder::new(app, l("menu:view", "View"))
             // Panels, then ways of viewing the text, then size.
             .item(&toggle_sidebar_item)
             .item(&toggle_agent_panel_item)
             .separator()
-            .item(&toggle_source_mode_item)
-            .item(&toggle_split_view_item)
-            .item(&toggle_typewriter_mode_item)
-            .item(&toggle_zen_mode_item)
+            .item(&mode_menu)
             .item(&track_changes_item)
-            .item(&toggle_read_only_item)
+            .item(&toggle_zen_mode_item)
+            .item(&toggle_typewriter_mode_item)
             .separator()
             .item(&command_palette_item)
             .separator()
@@ -384,7 +391,7 @@ pub(crate) fn build(
         .separator()
         .text(markdown_id, markdown)
         .text(agent_id, agent)
-        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Video Tutorials"))
+        .text(TUTORIALS_ID, l(TUTORIALS_ID, "Online Tutorials"))
         .separator()
         .text(COMMUNITY_ID, l(COMMUNITY_ID, "Join the Community"))
         .text(REPORT_ID, l(REPORT_ID, "Report a Problem…"))
@@ -408,6 +415,7 @@ pub(crate) fn build(
     ]);
     let menu = MenuBuilder::new(app).items(&items).build()?;
     let check_items = vec![
+        view_mode_default_item,
         toggle_sidebar_item,
         toggle_agent_panel_item,
         toggle_source_mode_item,

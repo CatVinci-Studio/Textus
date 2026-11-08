@@ -5,43 +5,51 @@ import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
 import { configureEditorRoot, withEditorCore } from "../editor-extensions";
 import { useEditorRunner } from "../useEditorRunner";
 import { parseMarkdownSource } from "../markdown/parse-markdown-source";
-import { setReadOnly } from "../read-only-plugin";
+import { pastReadOnly, setReadOnly } from "../read-only-plugin";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useLatest } from "../../utils/hooks/useLatest";
+
+/** More for the preview to draw, from the layer above (plugins' blocks). */
+export type PreviewExtras = (
+  editor: Editor,
+  docPath: { readonly current: string | null },
+) => Editor;
 
 interface Props {
   markdown: string;
   filePath: string | null;
+  extras?: PreviewExtras;
 }
 
 /** The editor itself, read-only, with every syntax drawn: the preview shows
  *  exactly what the editor reads, from the same parser and plugins. */
-function PreviewEditor({ markdown, filePath }: Props) {
+function PreviewEditor({ markdown, filePath, extras }: Props) {
   const { settings, t } = useSettings();
   const settingsRef = useLatest(settings);
   const docPathRef = useLatest(filePath);
   const labelRef = useLatest(t.splitPreview);
 
-  useEditor(
-    (root) =>
-      withEditorCore(
-        Editor.make().config((ctx) => {
-          configureEditorRoot(ctx, root, markdown, () => labelRef.current);
-          ctx
-            .get(listenerCtx)
-            .mounted((ctx) => setReadOnly(ctx.get(editorViewCtx), true));
-        }),
-        {
-          settings: settingsRef,
-          docPath: docPathRef,
-          // Read-only: nothing is ever pasted here.
-          onImagePasteError: () => "",
-          requestImageName: async () => null,
-          preview: true,
-        },
-      ),
-    [],
-  );
+  useEditor((root) => {
+    const editor = withEditorCore(
+      Editor.make().config((ctx) => {
+        configureEditorRoot(ctx, root, markdown, () => labelRef.current);
+        ctx
+          .get(listenerCtx)
+          .mounted((ctx) => setReadOnly(ctx.get(editorViewCtx), true));
+      }),
+      {
+        settings: settingsRef,
+        docPath: docPathRef,
+        // Read-only: nothing is ever pasted here.
+        onImagePasteError: () => "",
+        requestImageName: async () => null,
+        preview: true,
+      },
+    );
+    // What plugins draw (a chart, a mind map, a database) is drawn here too,
+    // as in the rendered view.
+    return extras ? extras(editor, docPathRef) : editor;
+  }, []);
 
   // Only the blocks that changed are replaced, so the rest keep their drawing.
   const run = useEditorRunner();
@@ -60,10 +68,11 @@ function PreviewEditor({ markdown, filePath }: Props) {
         b += overlap;
       }
       view.dispatch(
-        view.state.tr
-          .replace(start, a, next.slice(start, b))
-          // Passes the read-only guard, which refuses only the writer's edits.
-          .setMeta("addToHistory", false),
+        pastReadOnly(
+          view.state.tr
+            .replace(start, a, next.slice(start, b))
+            .setMeta("addToHistory", false),
+        ),
       );
     });
   }, [markdown, run]);

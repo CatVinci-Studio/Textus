@@ -1,3 +1,4 @@
+import { useReducer } from "react";
 import { isIOSApp } from "../platform/capabilities";
 import { Presence, PresenceDiv, type PresenceHandle } from "../ui/usePresence";
 import { ResizeHandle } from "../ui/ResizeHandle";
@@ -6,8 +7,9 @@ import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
 import { SidebarTabBar } from "./SidebarTabBar";
-import { sidebarTab, sidebarTabs } from "./sidebar-tabs";
+import { moveSidebarTab, sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../plugins/views/plugin-views";
+import type { FileOpenHow } from "../sidebar/tree-shared";
 
 /** The left sidebar and its tabs, plus the scrim behind its drawer on iPhone. */
 export function Sidebar({
@@ -42,7 +44,7 @@ export function Sidebar({
   onToggle: () => void;
   onClose: () => void;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, beside?: boolean) => void;
+  onOpenFile: (path: string, how?: FileOpenHow) => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
   /** The search shortcut asked for the Files tab's search box. */
@@ -52,6 +54,8 @@ export function Sidebar({
 }) {
   // The tab chosen, or Files for one no longer there.
   const shown = sidebarTab(mode);
+  // A tab dragged: drawn again in its new order.
+  const [, moved] = useReducer((n: number) => n + 1, 0);
   return (
     <>
       {/* iPhone: a tap beside the drawer closes it. */}
@@ -74,6 +78,10 @@ export function Sidebar({
                 tabs={sidebarTabs()}
                 shownId={shown.id}
                 onSelect={onModeChange}
+                onMove={(id, target) => {
+                  moveSidebarTab(id, target);
+                  moved();
+                }}
                 t={t}
               />
             </div>

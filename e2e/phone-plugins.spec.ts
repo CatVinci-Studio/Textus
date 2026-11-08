@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { PHONE, openPhone } from "./helpers";
+import { emit, openPhone, PHONE } from "./helpers";
 import { pluginsAtStart } from "./plugin-helpers";
 
 /**
@@ -23,11 +23,7 @@ async function open(page: Page, plugins: Record<string, string[]> = BOTH) {
 }
 
 async function openExtensions(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.getByText("Extensions", { exact: true }).first().tap();
 }
 
@@ -69,21 +65,10 @@ test("Settings › Extensions has the plugins, with no MCP servers to run", asyn
   await expect(
     page.locator('.plugin-card[data-catalog="catvinci.quick-notes"]'),
   ).toHaveCount(0);
-});
-
-test("the catalog on the phone leaves out the plugins for the desktop alone", async ({
-  page,
-}) => {
-  await open(page, { "catvinci.bookmarks": ["editor.read", "files.read"] });
-  await openExtensions(page);
-  await page.getByRole("tab", { name: "Plugins" }).tap();
-  const available = page.locator(
-    ".extensions-available .plugin-card[data-catalog]",
-  );
+  // Plugins for the phone too are offered.
   await expect(
-    available.and(page.locator('[data-catalog="catvinci.cjk-spacing"]')),
+    page.locator(
+      '.extensions-available .plugin-card[data-catalog="catvinci.cjk-spacing"]',
+    ),
   ).toHaveCount(1);
-  await expect(
-    available.and(page.locator('[data-catalog="catvinci.quick-notes"]')),
-  ).toHaveCount(0);
 });

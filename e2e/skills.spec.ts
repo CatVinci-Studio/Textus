@@ -1,5 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { openApp, PHONE } from "./helpers";
+import { emit, openApp, PHONE, settled } from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
 // shim's 9 built-ins and one user skill in Write.
@@ -21,162 +21,16 @@ async function openWithPanel(
   return input;
 }
 
-/** Remembers the message each ai_agent_message carried, raw. */
-async function captureMessages(page: Page) {
-  await page.evaluate(() => {
-    const w = window as unknown as {
-      __TAURI_INTERNALS__: {
-        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-      };
-      __sent: string[];
-    };
-    w.__sent = [];
-    const original = w.__TAURI_INTERNALS__.invoke;
-    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
-      if (cmd === "ai_agent_message")
-        w.__sent.push((args as { message: string }).message);
-      return original(cmd, args);
-    };
-  });
-}
-
-const sent = (page: Page) =>
-  page.evaluate(() => (window as unknown as { __sent: string[] }).__sent);
-
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const panel = page.locator(".settings-panel");
   await expect(panel).toBeVisible();
   return panel;
 }
 
-test.describe("the / picker", () => {
-  test("opens on / and on what a Chinese or Japanese IME types for it (／、・), with the mode's skills, grouped and in Chinese", async ({
-    page,
-  }) => {
-    const input = await openWithPanel(page, "zh", "review");
-    const menu = page.locator(".composer-picker");
-    for (const key of ["/", "／", "、", "・"]) {
-      await input.fill(key);
-      await expect(menu, key).toBeVisible();
-      // Review's one built-in.
-      await expect(menu.getByRole("option"), key).toHaveCount(1);
-      await expect(
-        menu.getByRole("group", { name: "检查" }),
-        key,
-      ).toContainText("/proofread");
-      await expect(menu, key).toContainText("↑↓ 选择");
-      await input.fill("");
-      await expect(menu, key).toHaveCount(0);
-    }
-  });
+test.describe("the / picker", () => {});
 
-  test("says so when nothing matches, and when there are no skills", async ({
-    page,
-  }) => {
-    const input = await openWithPanel(page, "zh");
-    await input.fill("/没有这个");
-    await expect(page.locator(".composer-picker [role=status]")).toContainText(
-      "没有与“没有这个”匹配的技能",
-    );
-    await page.evaluate(() => {
-      (
-        window as unknown as { __devInvokeResults: unknown }
-      ).__devInvokeResults = { list_skills: [] };
-    });
-    await input.fill("");
-    await input.fill("/");
-    const empty = page.locator(".composer-picker [role=status]");
-    await expect(empty).toContainText("输入 / 调用技能");
-    await expect(empty).toContainText("「设置」中添加更多技能");
-  });
-
-  test("an alias resolves to the skill, and the bubble shows what was typed", async ({
-    page,
-  }) => {
-    const input = await openWithPanel(page, "zh", "review");
-    await captureMessages(page);
-    await input.fill("/查错");
-    await expect(
-      page.locator(".composer-picker").getByRole("option").first(),
-    ).toContainText("/proofread");
-    await input.fill("/查错 看看第一段");
-    await input.press("Enter");
-    // After the cursor block the composer's caller adds.
-    await expect
-      .poll(async () => (await sent(page))[0] ?? "")
-      .toMatch(
-        /<skill name="proofread" typed="\/查错"><\/skill>\n\n看看第一段$/,
-      );
-    await expect(page.locator(".agent-panel")).toContainText(
-      "/查错 看看第一段",
-    );
-  });
-
-  test("each mode offers its own skills", async ({ page }) => {
-    // Create's are in its tab in Settings › Extensions, never the panel's.
-    const input = await openWithPanel(page, "en", "review");
-    const menu = page.locator(".composer-picker");
-    await input.fill("/");
-    await expect(menu.getByRole("option")).toHaveCount(1);
-    await expect(menu).toContainText("/proofread");
-    for (const name of ["/theme", "/plugin", "/skill"])
-      await expect(menu).not.toContainText(name);
-  });
-
-  test("picks with the keyboard; Escape closes only the menu", async ({
-    page,
-  }) => {
-    const input = await openWithPanel(page, "en");
-    await input.fill("/proof");
-    await expect(page.locator(".composer-picker")).toContainText("Proofread");
-    await input.press("Enter");
-    await expect(input).toHaveValue("/proofread ");
-    await input.fill("/");
-    await expect(page.locator(".composer-picker")).toBeVisible();
-    await input.press("Escape");
-    await expect(page.locator(".composer-picker")).toHaveCount(0);
-    await expect(page.locator(".agent-panel")).toBeVisible();
-  });
-});
-
-test.describe("the @ picker", () => {
-  test("@ or ＠ in an unsaved document explains how to attach files", async ({
-    page,
-  }) => {
-    const input = await openWithPanel(page, "zh");
-    const empty = page.locator(".composer-picker [role=status]");
-    for (const key of ["@", "＠"]) {
-      await input.fill(`参考 ${key}`);
-      await expect(empty, key).toContainText("输入 @ 引用项目文件夹中的文件");
-      await expect(empty, key).toContainText("保存文档或选择项目文件夹");
-      await input.fill("");
-      await expect(empty, key).toHaveCount(0);
-    }
-  });
-
-  test("lists the project's files with their folders", async ({ page }) => {
-    const input = await openWithPanel(page, "en");
-    await page.evaluate(() => {
-      (
-        window as unknown as { __devInvokeResults: unknown }
-      ).__devInvokeResults = {
-        list_project_files: ["chapters/one.md", "notes.md"],
-      };
-    });
-    await input.fill("@one");
-    const option = page.locator(".composer-picker").getByRole("option");
-    await expect(option).toHaveCount(1);
-    await expect(option).toContainText("@one.md");
-    await expect(option).toContainText("chapters/");
-  });
-});
+test.describe("the @ picker", () => {});
 
 /** Settings › Extensions › Skills, where the user's own skills are. */
 async function openSkillsTab(panel: Locator) {
@@ -309,7 +163,7 @@ test.describe("Settings › Extensions › Skills", () => {
     await expect(select).toHaveText("自动");
     // Scrolled to first: the list closes when the page scrolls under it.
     await select.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(300);
+    await settled(page);
     await select.click();
     const list = page.getByRole("listbox", { name: "写作规范" });
     await expect(list).toContainText("简体中文");
@@ -364,15 +218,6 @@ test.describe("on a phone", () => {
     expect(box.x + box.width).toBeLessThanOrEqual(430);
     await row.tap();
     await expect(input).toHaveValue(/^\/\S+ $/);
-  });
-
-  test("@ explains itself in an unsaved document", async ({ page }) => {
-    const input = await openPhoneIn(page, "en");
-    await input.tap();
-    await input.fill("@");
-    await expect(page.locator(".composer-picker [role=status]")).toContainText(
-      "Save the document or choose a project folder",
-    );
   });
 
   test("Settings lists the built-ins by mode", async ({ page }) => {

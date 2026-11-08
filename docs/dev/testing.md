@@ -27,6 +27,10 @@ mistake:
   (`paste(text, html)`), places the caret (`caretAt("word", 2)`) and reads
   back what the app would save (`markdown()`) or the editor's DOM
   (`view.dom`). `src/editor/keys/markdown-keys.test.ts` is an example.
+  For a test that only needs the full extension chain to parse and
+  serialize, without keys, `createTestEditor`
+  (`src/document-view/editor-test-harness.ts`) mounts it with no-op
+  callbacks.
 - **Only a browser can tell**: an e2e flow in Chromium. Arrow keys, Home
   and End, and clicks move the caret natively, which jsdom doesn't; focus
   moving between regions, a menu or dialog opening, something scrolling into
@@ -65,43 +69,114 @@ E2E_WEBKIT=1 npx playwright test --project=webkit             # the WebKit flows
 On macOS the e2e flows don't behave as on CI: Home and End scroll, the
 fonts differ, and some key handling is the platform's. Run them in
 Playwright's Linux image (`mcr.microsoft.com/playwright`, the version in
-`package-lock.json`) to see what CI sees.
+`package-lock.json`) to see what CI sees, on a checkout whose
+`node_modules` was installed there, not copied from macOS.
+
+If another copy of the suite may be running (another worktree), set
+`PLAYWRIGHT_PORT` to a free port; the dev server listens on 1430 otherwise.
+
+## Writing an e2e flow
+
+The flows run the real frontend from the Vite dev server, with the dev
+shim (`src/dev/tauri-shim.ts`) answering every backend command and event.
+A flow imports its helpers from `e2e/helpers.ts`, never from `src/` (the
+e2e project can't import it; `blockIds` loads a module from the dev server
+instead).
+
+| Helper                              | What it does                                                                                                                                                                                                                                                                  |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openApp(page, options)`            | Opens the window with onboarding done, animations and the caret blink off. `settings` seeds the settings (Chinese UI unless set), `storage` localStorage, `colorScheme` the appearance, `animations: true` keeps the motion, `ready` what to wait for (an editor by default). |
+| `openPhone(page)`, `PHONE`          | `openApp` as an iPhone, in English: `test.use(PHONE)` gives the viewport and touch, `openPhone` the phone layout.                                                                                                                                                             |
+| `editor`                            | The selector of the active tab's editor.                                                                                                                                                                                                                                      |
+| `emit(page, name, payload)`         | Sends a backend event as Rust would: a menu item (`"menu-toggle-sidebar"`), a file drop, a window event.                                                                                                                                                                      |
+| `mockInvoke(page, { cmd: value })`  | Answers a command with a canned value. `{ __reject: message }` fails it; `{ __hold: true, value }` answers only when the test calls `release(page, cmd)`.                                                                                                                     |
+| `invokeCalls(page, cmd)`            | The calls a mocked command got, with their arguments.                                                                                                                                                                                                                         |
+| `release(page, cmd)`                | Lets a held command answer, once it has been called. Use it to see a state in between (a reply streaming, a save waiting) instead of a timer.                                                                                                                                 |
+| `settled(page)`                     | Waits until no animation runs and nothing scrolls for a few frames (at most 3 s), in place of a fixed pause before checking where things came to rest.                                                                                                                        |
+| `selectionRead(page)`               | Waits until ProseMirror has read the selection a click or a key made; call it between a caret move and the next key.                                                                                                                                                          |
+| `changeSettings(page, patch)`       | Changes settings while the app runs, as another window's change arrives.                                                                                                                                                                                                      |
+| `dropPaths(page, paths)`            | Opens files as dropping them on the window does.                                                                                                                                                                                                                              |
+| `pasteMarkdown(page, md)`           | Pastes text into the active editor and waits for it to land.                                                                                                                                                                                                                  |
+| `sourceOf(page)`                    | The active document's Markdown, read by switching to source mode and back.                                                                                                                                                                                                    |
+| `swallowHtmlDrop(page)`             | Before `openApp`: swallows HTML drag and drop as the app's window does (its file drop takes `dragover` and `drop`), so a drag that works here works there.                                                                                                                    |
+| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/ui/pointer-drag.ts` reads them.                                                                                                                                                  |
+
+Files on disk are in memory: `window.__devFs` (a folder, path to text) and
+`window.__devFiles` (single documents), set from an init script before
+`openApp`.
+
+### The official plugins
+
+The official plugins no longer ship with the app. The dev server serves
+them from a checkout of `CatVinci-Studio/textus-plugins`
+(`vite.dev-plugins.ts`): the folder named by `TEXTUS_PLUGINS_DIR`, or a
+folder `textus-plugins` beside or above the repository, with `npm ci` run
+in it once. Without one the catalog is empty, and the plugin flows fail or
+skip. CI checks one out at a pinned commit in `ci.yml`'s e2e job; it is
+bumped on purpose, with the app change that needs it.
+
+`e2e/plugin-helpers.ts` has the helpers for these flows:
+
+| Helper                                                      | What it does                                                                                                                                    |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openWithPlugins(page, options)`                            | Opens the window with these plugins installed and on (`plugins: { id: [granted permissions] }`), plus `folder`, `files`, a plugin's `settings`. |
+| `pluginsAtStart(page, options)`                             | The same set-up without opening, for a flow that opens the window itself.                                                                       |
+| `hasPlugin(id)`                                             | Whether the checkout has plugin `id`; a flow for an unpublished plugin skips without it (`test.skip(!hasPlugin(…))`).                           |
+| `openPath(page, path)`                                      | Opens a file as Open Recent would, once the window listens.                                                                                     |
+| `openSidebarTab(page, name)`, `openSidebarList(page, name)` | Opens the sidebar on a plugin's tab: its frame, or the list Textus draws for it.                                                                |
+| `tabFrame(page)`                                            | The frame of the plugin tab in front.                                                                                                           |
+
+### A command the shim doesn't know
+
+The shim answers a command it doesn't know with `null`. Where the
+frontend needs more, add a case to `src/dev/tauri-shim.ts` (the plugin
+file and index commands are in `src/dev/plugin-shim-api.ts`), or answer it
+in the flow with `mockInvoke`. The shim drops an event no listener has asked for
+yet, so wait for the listener before you `emit` (as `openPath` does).
 
 ## Every suite
 
+`npm run check`, `npm run test:e2e` and `npm run check:native` are the
+three CI runs, the same commands on every platform;
+[CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push) lists what each
+holds. The rest are run by hand:
+
 ```sh
-npm run check                          # typecheck, lint, vitest, prettier, README structure
-npm run check:native                   # rustfmt, clippy, Rust tests (app crate + aicompat)
-npm run test:e2e                       # Playwright flows in Chromium, desktop and phone
+npm run test:visual                    # the e2e flows plus screenshot comparison (Linux baselines)
+E2E_WEBKIT=1 npm run test:e2e          # adds the WebKit project (npx playwright install webkit once)
+npm run test:perf                      # the stopwatch flows (@perf: frame budgets, slides) - never in CI
+npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
+npm run bench:large-doc                # large documents (below)
+npm run bench:plugins                  # the official plugins on a large folder (below)
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
 npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
-npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```
 
-The first three run in CI, the same commands on every platform. One part
-of `npm run check` runs in CI only once, in the `check` job, and on a pull
-request only when the change can reach saving: the save round trip
-(`src/document-view/save-roundtrip*.test.ts`, see
-[saving.md](saving.md#the-round-trip-test)), which tests
-platform-independent code. The native jobs' `npm test` skips it with
-`TEXTUS_SKIP_ROUNDTRIP=1`; locally `npm run check` always runs it - on the
+A flow that times itself (a frame budget, a slide checked frame by frame)
+is tagged `{ tag: "@perf" }`: it depends on how busy the machine is, so CI
+leaves it out (`grepInvert` in `playwright.config.ts`) and it never blocks a
+pull request or a release. Write e2e flows that check what happened, not
+how fast.
+
+The save round trip (`src/document-view/save-roundtrip*.test.ts`, see
+[markdown-roundtrip.md](markdown-roundtrip.md#the-round-trip-test)) is part
+of `npm test`. It tests platform-independent code, so CI runs it only in
+the `check` job, and on a pull request only when the change can reach
+saving; the native jobs' `npm test` skips it with
+`TEXTUS_SKIP_ROUNDTRIP=1`. Locally `npm run check` always runs it - on the
 help guides in English, Chinese and Japanese, all ten languages with
-`TEXTUS_ROUNDTRIP_ALL=1`. The rest
-need a display, a desktop session or an API key, and are run by hand before
-a release. The e2e flows need Chromium once: `npm run setup:e2e`.
-`npm run test:visual` adds the screenshot comparison of `e2e/visual.spec.ts`
-against Linux baselines (they depend on the fonts of the machine that took
-them). `E2E_WEBKIT=1 npm run test:e2e` adds a WebKit project for the few
-flows where WebKit differs (`WEBKIT_SPECS` in `playwright.config.ts`); it
-needs `npx playwright install webkit` once. CI runs it in a job of its own,
-`e2e-webkit`, not yet required.
-`playwright.webview.config.ts` runs the flows in an old Chromium you point
-it at, the oldest WebView2 Textus supports
-([webview-support.md](webview-support.md#testing)); CI doesn't run it
-either.
+`TEXTUS_ROUNDTRIP_ALL=1`.
+
+`npm run test:visual` compares `e2e/visual.spec.ts` against Linux baselines
+(they depend on the fonts of the machine that took them). The WebKit
+project covers the few flows where WebKit differs (`WEBKIT_SPECS` in
+`playwright.config.ts`); CI runs it after a merge, in the `e2e-webkit`
+job. `playwright.webview.config.ts` runs the flows in an old Chromium you
+point it at, the oldest WebView2 Textus supports
+([webview-support.md](webview-support.md#testing)); CI doesn't run it.
 
 `npm run bench:motion` is a measurement, not a test: it plays every
 animated surface (the side panels and their resize, Settings, tabs, menus,
@@ -113,7 +188,7 @@ branch, on a quiet machine (other builds or test runs skew it), and
 compare. `BENCH_CPU=1` runs it at full speed, `BENCH_TRACE=1` also saves a
 Chromium trace of each scenario; the header of `e2e/bench/motion.bench.ts`
 has the rest. Animations only move `opacity` and `transform`
-([design-language.md](../design/design-language.md#motion)); the unit test
+([design-language.md](../design/design-language.md#10-motion---in-force)); the unit test
 `src/ui/motion-properties.test.ts` reads every stylesheet and fails on
 anything else.
 
@@ -127,22 +202,28 @@ device is a manual step on a Mac.
 
 ## How CI is laid out
 
-`.github/workflows/ci.yml` runs these jobs on a pull request. The required
-checks are `check`, `e2e` and `native`; `e2e` and `native` are one-line jobs
-that pass when every job they stand for passed, or when all of them were
-skipped.
+`.github/workflows/ci.yml` runs these jobs on a pull request and on every
+push to `main` and `stable`. The required checks are `check`, `e2e`,
+`native` and `ci-config`; `e2e` and `native` are one-line jobs that pass
+when every job they stand for passed, or when all of them were skipped.
 
-| Job                                   | Runs                                                                | When                           |
-| ------------------------------------- | ------------------------------------------------------------------- | ------------------------------ |
-| `changes`                             | `scripts/ci-changes.mjs`: which of the jobs below to run            | always                         |
-| `check`                               | `npm run check`, then `vite build` of the app and of the playground | always                         |
-| `e2e (1/4)` to `e2e (4/4)`            | `npm run test:e2e -- --shard=N/4`                                   | the change reaches the browser |
-| `e2e-webkit`                          | the `WEBKIT_SPECS` flows in WebKit (not required yet)               | the change reaches the browser |
-| `native (ubuntu-22.04)`               | `npm run check:native`                                              | the change reaches Rust        |
-| `native (macos-26)`                   | `npm test`, then `npm run check:native`                             | the change reaches Rust        |
-| `native (windows-latest)`             | `npm run check:native`                                              | the change reaches Rust        |
-| `native (windows-latest, unit tests)` | `npm test`                                                          | the change reaches Rust        |
-| `ios`                                 | the unsigned iOS simulator build                                    | the change reaches Rust        |
+| Job                                 | Runs                                                                      | When                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                    |
+| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise    |
+| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                    |
+| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the change reaches the browser                            |
+| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | a push after a merge, when the change reaches the browser |
+| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                   |
+| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                          |
+| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code                 |
+| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                          |
+| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code                 |
+
+On a pull request, macOS, Windows and iOS run only when the change reaches
+code that differs between platforms; otherwise `native` is the Linux job
+alone. A push to `main` or `stable` runs everything, and a release waits
+for that run ([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. Some choices that keep a pull request's checks short:
@@ -263,16 +344,16 @@ the suite to see them.
 The group most worth having: this is where a bug is silent and destroys the
 user's document.
 
-| Area                    | Catches                                                                                                                       |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `ai/doc-markdown`       | Markdown-space matching (exact, then typography-normalized), anchor disambiguation, inline vs block insertion, caret context. |
-| `ai/chat/sentence-diff` | Splitting a proposal into per-sentence changes, and rebuilding the text from the subset the user ticked.                      |
-| `ai/chat/line-diff`     | The diff shown on a proposal card.                                                                                            |
-| `ai/pending-edit-focus` | Review order and where focus lands after accept/reject.                                                                       |
-| `ai/text-locate`        | Locating plain text inside a block for the strike range.                                                                      |
-| `ai/chat/user-message`  | The `<selected-text>`/`<attached-file>` wire format, round-tripped through the writer.                                        |
-| `ai/ghost-text-plugin`  | Completion echo stripping, word-by-word accept, candidate splitting.                                                          |
-| `save-roundtrip`        | Saving after an edit: untouched blocks kept byte for byte, no text lost on reading back (saving.md).                          |
+| Area                             | Catches                                                                                                                       |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ai/doc-markdown`                | Markdown-space matching (exact, then typography-normalized), anchor disambiguation, inline vs block insertion, caret context. |
+| `ai/revision/sentence-diff`      | Splitting a proposal into per-sentence changes, and rebuilding the text from the subset the user ticked.                      |
+| `ai/chat/line-diff`              | The diff shown on a proposal card.                                                                                            |
+| `ai/revision/pending-edit-focus` | Review order and where focus lands after accept/reject.                                                                       |
+| `ai/revision/text-locate`        | Locating plain text inside a block for the strike range.                                                                      |
+| `ai/chat/user-message`           | The `<selected-text>`/`<attached-file>` wire format, round-tripped through the writer.                                        |
+| `ai/writing/ghost-text-plugin`   | Completion echo stripping, word-by-word accept, candidate splitting.                                                          |
+| `save-roundtrip`                 | Saving after an edit: untouched blocks kept byte for byte, no text lost on reading back (markdown-roundtrip.md).              |
 
 ### 2. Wire formats and provider dialects (`aicompat`)
 

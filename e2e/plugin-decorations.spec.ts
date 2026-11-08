@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * Marks a plugin puts on the text (textus.editor.registerDecorations),
@@ -55,13 +55,7 @@ test("a plugin's marks are drawn on its words and follow the text", async ({
     w.__devFs = { "/work/a.md": "# Plan\n\nWrite it. TODO check.\n" };
   }, ENTRY);
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (n: string, p: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-recent", "/work/a.md"),
-  );
+  await emit(page, "menu-open-recent", "/work/a.md");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   const mark = editor.locator(".plugin-mark-highlight");
   await expect(mark).toHaveText("TODO", { timeout: 10_000 });

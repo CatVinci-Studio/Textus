@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * A plugin command's key in Settings › Shortcuts: rebindable, and refused
@@ -53,11 +53,7 @@ test("a plugin command's key is listed, set again, and refused where an app acti
   await page.keyboard.press("Control+Alt+Y");
   await expect(notice).toContainText("Ping 1");
 
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   await page.locator(".settings-nav-item", { hasText: "Shortcuts" }).click();
   const plugins = page.locator(".settings-group", { hasText: "Plugins" });
   const key = plugins.getByRole("button", { name: /^Ping: / });

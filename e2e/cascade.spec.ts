@@ -99,63 +99,65 @@ test("a diagram is built up a part at a time, its nodes first", async ({
   expect(Math.max(...nodes)).toBeLessThan(Math.min(...rest));
 });
 
-test("a reply streaming into the chat comes in a word at a time, its words still coming in carrying on", async ({
-  page,
-}) => {
-  await open(page);
-  await page.evaluate(() => {
-    const w = window as unknown as {
-      __TAURI_INTERNALS__: {
-        invoke: (cmd: string, args?: unknown) => Promise<unknown>;
-      };
-    };
-    const original = w.__TAURI_INTERNALS__.invoke;
-    w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
-      if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
-        message: string;
-        onEvent?: { onmessage?: (e: unknown) => void };
-      };
-      const text =
-        "The opening reads well, and the second sentence carries the scene; the third could be shorter.";
-      const pieces = text.split(/(?<=\s)/);
-      return new Promise((resolve) => {
-        let i = 0;
-        const tick = () => {
-          if (i < pieces.length) {
-            onEvent?.onmessage?.({ type: "delta", text: pieces[i++] });
-            setTimeout(tick, 60);
-          } else {
-            const reply = { kind: "Assistant", text };
-            onEvent?.onmessage?.({ type: "turn", turn: reply });
-            resolve([{ kind: "User", text: message }, reply]);
-          }
+test(
+  "a reply streaming into the chat comes in a word at a time, its words still coming in carrying on",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await open(page);
+    await page.evaluate(() => {
+      const w = window as unknown as {
+        __TAURI_INTERNALS__: {
+          invoke: (cmd: string, args?: unknown) => Promise<unknown>;
         };
-        setTimeout(tick, 60);
-      });
-    };
-  });
-  const composer = page.locator(".agent-panel-view textarea");
-  await composer.fill("How does it read?");
-  await composer.press("Enter");
-  const words = ".agent-streaming .cascade-word";
-  await expect(page.locator(words).first()).toBeAttached();
-  // Mid-stream: the newest words still fading in.
-  const fading = await page.evaluate(
-    (sel) =>
-      [...document.querySelectorAll(sel)].filter(
-        (el) => Number(getComputedStyle(el).opacity) < 1,
-      ).length,
-    words,
-  );
-  expect(fading).toBeGreaterThan(0);
-  await expect(page.locator(".agent-message-assistant").last()).toContainText(
-    "the third could be shorter.",
-  );
-  // Shown again from the conversation, a reply is simply there.
-  await expect(
-    page.locator(
-      ".agent-message-assistant:not(.agent-streaming *) .cascade-word",
-    ),
-  ).toHaveCount(0);
-});
+      };
+      const original = w.__TAURI_INTERNALS__.invoke;
+      w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
+        if (cmd !== "ai_agent_message") return original(cmd, args);
+        const { message, onEvent } = args as {
+          message: string;
+          onEvent?: { onmessage?: (e: unknown) => void };
+        };
+        const text =
+          "The opening reads well, and the second sentence carries the scene; the third could be shorter.";
+        const pieces = text.split(/(?<=\s)/);
+        return new Promise((resolve) => {
+          let i = 0;
+          const tick = () => {
+            if (i < pieces.length) {
+              onEvent?.onmessage?.({ type: "delta", text: pieces[i++] });
+              setTimeout(tick, 60);
+            } else {
+              const reply = { kind: "Assistant", text };
+              onEvent?.onmessage?.({ type: "turn", turn: reply });
+              resolve([{ kind: "User", text: message }, reply]);
+            }
+          };
+          setTimeout(tick, 60);
+        });
+      };
+    });
+    const composer = page.locator(".agent-panel-view textarea");
+    await composer.fill("How does it read?");
+    await composer.press("Enter");
+    const words = ".agent-streaming .cascade-word";
+    await expect(page.locator(words).first()).toBeAttached();
+    // Mid-stream: the newest words still fading in.
+    const fading = await page.evaluate(
+      (sel) =>
+        [...document.querySelectorAll(sel)].filter(
+          (el) => Number(getComputedStyle(el).opacity) < 1,
+        ).length,
+      words,
+    );
+    expect(fading).toBeGreaterThan(0);
+    await expect(page.locator(".agent-message-assistant").last()).toContainText(
+      "the third could be shorter.",
+    );
+    // Shown again from the conversation, a reply is simply there.
+    await expect(
+      page.locator(
+        ".agent-message-assistant:not(.agent-streaming *) .cascade-word",
+      ),
+    ).toHaveCount(0);
+  },
+);

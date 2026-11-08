@@ -46,6 +46,10 @@ export default defineConfig({
   testDir: "./e2e",
   // Screenshot generators run on their own.
   testIgnore: ["shots/**"],
+  // Stopwatch tests (@perf: frame budgets, frame-by-frame slides) depend on
+  // the machine's load: they run with `npm run test:perf`, never in CI.
+  grepInvert: process.env.TEXTUS_PERF ? undefined : /@perf/,
+  grep: process.env.TEXTUS_PERF ? /@perf/ : undefined,
   timeout: 30_000,
   // Tests share nothing, so tests rather than files spread over workers and
   // shards, which keeps the shards even.

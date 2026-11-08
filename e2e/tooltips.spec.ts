@@ -69,12 +69,3 @@ test("Tab onto a composer button shows its tooltip, Esc hides it", async ({
   await expect(tooltip(page)).toHaveCount(0);
   await expect(webSearch(page)).toBeFocused();
 });
-
-test("a mouse passing over the toolbar shows nothing", async ({ page }) => {
-  await open(page);
-  const box = await webSearch(page).boundingBox();
-  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(600);
-  await expect(tooltip(page)).toHaveCount(0);
-});

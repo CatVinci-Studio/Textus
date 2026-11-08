@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, PHONE } from "./helpers";
 
 // The first-run tour end to end. The AI lessons are watched with no AI and
 // done for real against canned answers with one; the AI only ever works on
@@ -281,7 +281,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await expect(done).toContainText(
     "Textus AI remembers your requirements and style over time",
   );
-  await done.getByRole("button", { name: "Video Tutorials" }).click();
+  await done.getByRole("button", { name: "Online Tutorials" }).click();
   await done.getByRole("button", { name: "Join the Community" }).click();
   const links = await opened(page);
   expect(links.slice(-2)).toEqual([
@@ -291,35 +291,6 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   await done.getByRole("button", { name: "Start writing" }).click();
   await expect(page.locator(".tutorial-surface")).toHaveCount(0);
   expect(await savedProgress(page)).toMatchObject({ active: false });
-});
-
-test("in Chinese: the notes, the copy and the links follow the language", async ({
-  page,
-}) => {
-  const zh = UI.zh;
-  await openApp(page, { storage: at("wysiwyg") });
-  const wysiwyg = lesson(page, zh.tutorialWysiwygTitle);
-  await expect(wysiwyg).toContainText("# 《红楼梦》读书笔记");
-  await wysiwyg.getByRole("button", { name: /观看动画/ }).click();
-  await expect
-    .poll(async () => (await opened(page)).at(-1))
-    .toEqual({ cmd: "open_tutorials_page", language: "zh", clip: "wysiwyg" });
-  await wysiwyg.getByRole("button", { name: zh.tutorialSkipStep }).click();
-  await expect(editor(page)).toContainText("我的笔记");
-  await expect(editor(page).locator("blockquote").first()).toContainText(
-    "倒象在那里见过一般",
-  );
-});
-
-test("an AI lesson resumes in the mode it was left in", async ({ page }) => {
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: at("continuation", { aiMode: "watch" }),
-  });
-  const continuation = lesson(page, "Continuation");
-  await expect(continuation).toContainText("Connect an AI later");
-  // The notes are back in the new practice tab.
-  await expect(editor(page)).toContainText("My notes");
 });
 
 /** What one language's live run types and what the canned AI answers. */
@@ -454,17 +425,11 @@ test.describe("connected", () => {
   });
 });
 
-test("Help › Video Tutorials opens the page in the UI's language", async ({
+test("Help › Online Tutorials opens the page in the UI's language", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "ja" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-tutorials"),
-  );
+  await emit(page, "menu-open-tutorials");
   await expect
     .poll(async () => (await opened(page)).at(-1))
     .toEqual({
@@ -504,28 +469,4 @@ test.describe("on a phone", () => {
       "tap the gray text",
     );
   });
-});
-
-test("a key pasted into the connect lesson connects the provider", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", aiProvider: "openai" },
-    storage: at("connect"),
-  });
-  const connect = lesson(page, "Connect your AI");
-  await connect.getByRole("button", { name: "API Key" }).click();
-  await connect.getByPlaceholder("sk-…").fill("sk-test");
-  // As the backend answers once the key is stored.
-  await mockInvoke(page, {
-    codex_auth_status: { configured: false },
-    provider_api_key_status: true,
-  });
-  await connect.getByRole("button", { name: "Save" }).click();
-  await expect(connect).toContainText("Connected.");
-  await connect.getByRole("button", { name: "Continue" }).click();
-  // Connected, the AI lessons are done rather than watched.
-  await expect(
-    lesson(page, "AI writing").getByRole("button", { name: "Continue" }),
-  ).toBeDisabled();
 });

@@ -5,7 +5,6 @@ import { SettingRow, ToggleRow } from "./controls";
 import { showConfirm } from "../../ui/app-dialog";
 import { CheckIcon } from "../../ui/icons";
 import { clearAllConversations } from "../../ai/chat/chat-history";
-import { clearClipboardHistory } from "../../clipboard/history";
 import { drafts } from "../../platform/ipc";
 import { hasTextusAi, isDesktopApp } from "../../platform/capabilities";
 import { SettingsFileSection } from "./settings-file";
@@ -77,25 +76,6 @@ export function PrivacySection({ t }: { t: Strings }) {
           </div>
         </section>
       )}
-
-      <section className="settings-group">
-        <h2 className="settings-group-title">
-          {t.privacyClipboardHistoryLabel}
-        </h2>
-        <div className="settings-group-body">
-          <ToggleRow
-            label={t.privacyClipboardHistoryToggle}
-            checked={settings.enableClipboardHistory}
-            onChange={(v) => setSettings({ enableClipboardHistory: v })}
-          />
-          <ClearRow
-            label={t.privacyClearClipboard}
-            warning={t.privacyClipboardHistoryClearHint}
-            t={t}
-            onClear={clearClipboardHistory}
-          />
-        </div>
-      </section>
 
       <section className="settings-group">
         <h2 className="settings-group-title">{t.privacyDraftRecoveryLabel}</h2>

@@ -99,7 +99,7 @@ export const commands = {
 	 *  The commands the enabled plugins put in the Plugins menu, refilled when they
 	 *  change.
 	 */
-	set_plugin_menu: (items: PluginMenuItem[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
+	set_plugin_menu: (items: PluginMenuItem_Deserialize[]) => __TAURI_INVOKE<void>("set_plugin_menu", { items }),
 	/**  The plugin commands the menu lists, refilled when the enabled plugins change. */
 	set_tray_plugin_items: (items: TrayPluginItem[]) => __TAURI_INVOKE<void>("set_tray_plugin_items", { items }),
 	/**  The tray command waiting for a window to run it, taken. */
@@ -194,6 +194,11 @@ export type CatalogEntry_Deserialize = {
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published?: string | null,
 	updated?: string | null,
+	/**
+	 *  Kept for those who have it (its updates still come) but no longer
+	 *  offered to install: a plugin merged into another.
+	 */
+	unlisted?: boolean,
 };
 
 /**  One plugin in the catalog. */
@@ -227,6 +232,11 @@ export type CatalogEntry_Serialize = {
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published: string | null,
 	updated: string | null,
+	/**
+	 *  Kept for those who have it (its updates still come) but no longer
+	 *  offered to install: a plugin merged into another.
+	 */
+	unlisted: boolean,
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */
@@ -298,9 +308,22 @@ export type PluginFile = {
 };
 
 /**  One command in the Plugins menu, as the frontend sends it. */
-export type PluginMenuItem = {
+export type PluginMenuItem = PluginMenuItem_Serialize | PluginMenuItem_Deserialize;
+
+/**  One command in the Plugins menu, as the frontend sends it. */
+export type PluginMenuItem_Deserialize = {
 	command: string,
 	label: string,
+	/**  The plugin's name: two or more of its commands go in a submenu of it. */
+	group?: string | null,
+};
+
+/**  One command in the Plugins menu, as the frontend sends it. */
+export type PluginMenuItem_Serialize = {
+	command: string,
+	label: string,
+	/**  The plugin's name: two or more of its commands go in a submenu of it. */
+	group: string | null,
 };
 
 export type PluginsState = PluginsState_Serialize | PluginsState_Deserialize;

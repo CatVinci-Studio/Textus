@@ -7,10 +7,10 @@
 //
 // Plain JavaScript, put into the frame as is: no imports, nothing of the
 // app's build.
-/* global createEndpoint */
+/* global createEndpoint, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.2";
+  var API_VERSION = "1.4";
   var app = null;
   var waiting = [];
   var module = { exports: {} };
@@ -402,6 +402,70 @@
     });
   }
 
+  function asDate(value) {
+    var at =
+      value instanceof Date
+        ? value
+        : new Date(value === undefined ? Date.now() : value);
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value))
+      at = new Date(value + "T00:00:00");
+    if (isNaN(at.getTime())) throw new Error("Not a date: " + value);
+    return at;
+  }
+
+  function languageOf(options) {
+    return (options && options.language) || env.language || "en";
+  }
+
+  /** A template filled in as Obsidian's Templates (in the folder's date and
+   *  time formats, read when the plugin may read files) and then
+   *  Templater's common tags. */
+  async function fillTemplate(text, o) {
+    var language = languageOf(o);
+    var now = o.now ? asDate(o.now) : new Date();
+    var day = o.date === undefined ? now : asDate(o.date);
+    var formats = {};
+    if (!o.format && (!o.dateFormat || !o.timeFormat)) {
+      var found = await call("files.conventions", { path: null }).catch(
+        function () {
+          return null;
+        },
+      );
+      // An app's settings count here whether or not the folder took them.
+      var set =
+        found &&
+        (found.templateFormats ||
+          (found.detected && found.detected.templateFormats));
+      formats = (set && set.value) || {};
+    }
+    var values = Object.assign({}, o.values);
+    if (o.title !== undefined && !("title" in values)) values.title = o.title;
+    var T = __textusText.dates;
+    var body = o.format
+      ? T.fillNote(text, day, {
+          format: o.format,
+          language: language,
+          title: o.title,
+          now: now,
+          values: values,
+        })
+      : T.fill(text, {
+          day: day,
+          now: now,
+          language: language,
+          dateFormat: o.dateFormat || formats.date || undefined,
+          timeFormat: o.timeFormat || formats.time || undefined,
+          values: values,
+        });
+    var done = __textusText.templater.fill(body, {
+      title: o.title === undefined ? "" : String(o.title),
+      folder: o.folder || "",
+      now: day,
+      language: language,
+    });
+    return { text: done.text, cursor: done.cursor, skipped: done.skipped };
+  }
+
   function where(options) {
     return (options && options.where) || "tab";
   }
@@ -431,6 +495,7 @@
       writeClipboard: function (value) {
         return call("clipboard.writeText", { text: String(value) });
       },
+      onDidCopy: on("copy"),
     },
     l10n: {
       t: function (key) {
@@ -566,6 +631,9 @@
           state: options && plain(options.state),
         });
       },
+      showSidebarTab: function (id) {
+        return call("layout.showSidebarTab", { id: String(id) });
+      },
       openWebPage: function (url, options) {
         return call("layout.openWebPage", {
           url: String(url),
@@ -594,6 +662,12 @@
       },
       onDidChangeActiveTab: on("activeTab"),
       onDidChangeLayout: on("layout"),
+      // Which of the window's panels are open: the sidebar (and its tab),
+      // Textus AI's.
+      panels: function () {
+        return call("layout.panels");
+      },
+      onDidChangePanels: on("panels"),
       // A floating view (contributes.floatingViews) shown or closed; the
       // user moves, folds and closes it too.
       openFloating: function (viewId) {
@@ -617,6 +691,7 @@
             view: key,
             select: typeof provider.onSelect === "function",
             check: typeof provider.onCheck === "function",
+            move: typeof provider.onMove === "function",
             filterPlaceholder: provider.filterPlaceholder,
             emptyText: provider.emptyText,
           }),
@@ -751,6 +826,28 @@
         },
       },
     },
+    // Dates and templates: computed here, no permission, nothing sent.
+    dates: {
+      format: function (date, form, options) {
+        return __textusText.dates.format(
+          asDate(date),
+          form || "YYYY-MM-DD",
+          languageOf(options),
+        );
+      },
+      parse: function (text, form, options) {
+        return __textusText.dates.parse(
+          String(text),
+          form || "YYYY-MM-DD",
+          languageOf(options),
+        );
+      },
+    },
+    templates: {
+      fill: function (text, options) {
+        return fillTemplate(String(text), options || {});
+      },
+    },
     files: {
       root: function () {
         return call("files.root");
@@ -768,6 +865,13 @@
       },
       conventions: function (path) {
         return call("files.conventions", {
+          path: path === undefined ? null : String(path),
+        });
+      },
+      appSettings: function (app, file, path) {
+        return call("files.appSettings", {
+          app: String(app),
+          file: String(file),
           path: path === undefined ? null : String(path),
         });
       },
@@ -1104,6 +1208,11 @@
       var provider = lists.get(params.view);
       if (provider && provider.onCheck)
         return provider.onCheck(params.item, !!params.checked);
+    },
+    $listMove: function (params) {
+      var provider = lists.get(params.view);
+      if (provider && provider.onMove)
+        return provider.onMove(params.item, params.target || null);
     },
     $resolveWebview: function (params) {
       var provider = webviewProviders.get(params.view);

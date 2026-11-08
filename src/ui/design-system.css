@@ -15,6 +15,11 @@
   /* Control heights: in bars, cards and segments; in forms and dialogs. */
   --control-height-sm: 24px;
   --control-height: 28px;
+  /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
+     the interface text and, in a straight line, with the window's width
+     (--window-scale). */
+  --chrome-scale: calc(var(--ui-text-scale, 1) * var(--window-scale, 1));
+  --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
      styles) under :root[data-window-chrome="mobile"] below; both times
@@ -130,6 +135,7 @@
 :root[data-window-chrome="mobile"] {
   --control-height-sm: 32px;
   --control-height: 36px;
+  --chrome-scale: 1;
   --text-caption: calc(12px * var(--ui-text-scale, 1));
   --text-footnote: calc(13px * var(--ui-text-scale, 1));
   --text-secondary: calc(15px * var(--ui-text-scale, 1));
@@ -505,6 +511,27 @@
   background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
 }
 
+/* Icons are drawn at fixed pixel sizes: each grows as a picture, without
+   moving what is around it; the buttons' own sizes are scaled below. */
+:root:not([data-window-chrome="mobile"])
+  :is(
+    .window-bar-toggle,
+    .window-bar-sidebar-toggle,
+    .window-menu-button,
+    .tree-tool,
+    .icon-button,
+    .tx-icon-button,
+    .inline-chat-header-button,
+    .tab-bar-add,
+    .sidebar-tab,
+    .window-caption-button,
+    .window-bar-lock,
+    .tree-row
+  )
+  > svg {
+  scale: var(--chrome-scale);
+}
+
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
    toolbar's are framed to match its 26px controls. */
 :is(
@@ -538,13 +565,13 @@
   .tree-tool,
   .tx-icon-button
 ) {
-  width: 24px;
-  height: 24px;
+  width: calc(24px * var(--chrome-scale));
+  height: calc(24px * var(--chrome-scale));
 }
 
 .icon-button {
-  width: 30px;
-  height: 30px;
+  width: calc(30px * var(--chrome-scale));
+  height: calc(30px * var(--chrome-scale));
 }
 
 :is(.inline-chat-attach, .inline-chat-toggle) {
@@ -895,7 +922,7 @@ input[type="checkbox"].ui-check:checked {
 
 /* The document's own bar shows only while it scrolls or under the pointer,
    so it doesn't run down the middle of the window beside the AI panel. */
-:is(.editor-scroll, .source-view):not(
+:is(.editor-scroll, .source-view, .source-view .cm-scroller):not(
     .is-scrolling
   )::-webkit-scrollbar-thumb:not(:hover) {
   background-color: transparent;
@@ -903,7 +930,7 @@ input[type="checkbox"].ui-check:checked {
 
 /* WebKit restyles a scrollbar only when its element's own style changes; a
    property with no visible effect here (no columns) makes the change real. */
-:is(.editor-scroll, .source-view).is-scrolling {
+:is(.editor-scroll, .source-view, .source-view .cm-scroller).is-scrolling {
   column-rule-color: transparent;
 }
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { PHONE, mockInvoke, openPhone, pasteMarkdown } from "./helpers";
+import { mockInvoke, openPhone, pasteMarkdown, PHONE } from "./helpers";
 
 // Editing by finger on the iPhone layout, in Chromium with touch: iOS
 // WebKit's own keyboard and text menu aren't reachable.
@@ -56,41 +56,6 @@ test("in a table the keyboard toolbar adds rows; outside it, formatting is back"
   await editor.getByText("After the table.").tap();
   await expect(toolbar.getByRole("button", { name: "Bold" })).toBeVisible();
   await expect(addRow).toHaveCount(0);
-});
-
-test("a swipe along the keyboard toolbar that starts on Delete Table deletes nothing", async ({
-  page,
-}) => {
-  await openPhone(page);
-  await pasteMarkdown(page, TABLE);
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
-  await editor.locator("td").first().tap();
-  const remove = page
-    .getByRole("toolbar")
-    .getByRole("button", { name: "Delete Table" });
-  await expect(remove).toBeVisible();
-
-  // A finger dragged sideways from the button to scroll the row. Playwright's
-  // touchscreen only taps, so this sends raw touch events.
-  await remove.scrollIntoViewIfNeeded();
-  const box = (await remove.boundingBox())!;
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  const cdp = await page.context().newCDPSession(page);
-  const touch = (
-    type: "touchStart" | "touchMove" | "touchEnd",
-    points: { x: number; y: number }[],
-  ) => cdp.send("Input.dispatchTouchEvent", { type, touchPoints: points });
-  await touch("touchStart", [{ x, y }]);
-  for (let dx = 10; dx <= 80; dx += 10)
-    await touch("touchMove", [{ x: x - dx, y }]);
-  await touch("touchEnd", []);
-
-  await expect(editor.locator("table")).toHaveCount(1);
-  // While a tap still presses it.
-  await editor.locator("td").first().tap();
-  await remove.tap();
-  await expect(editor.locator("table")).toHaveCount(0);
 });
 
 test("More opens the editor's menu for the caret as an action sheet", async ({

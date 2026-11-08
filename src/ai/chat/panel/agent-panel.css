@@ -6,8 +6,8 @@
   flex-shrink: 0;
   display: flex;
   min-width: 0;
-  /* The window bar is a fixed 28px strip over the top of the layout. */
-  padding-top: 28px;
+  /* The window bar is a fixed strip over the top of the layout. */
+  padding-top: var(--window-bar-height);
   background: var(--ui-surface);
   border-left: 1px solid var(--ui-border);
   color: var(--ui-text);
@@ -36,7 +36,7 @@
 
 /* Its resize handle, astride the left edge below the window bar. */
 .agent-panel-resizer {
-  top: 28px;
+  top: var(--window-bar-height);
   left: -3px;
 }
 
@@ -54,7 +54,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: calc(40px * var(--chrome-scale));
   padding: 4px 8px 4px 12px;
   border-bottom: 1px solid var(--chat-hairline, var(--ui-border));
 }
@@ -347,7 +347,7 @@
 
 .agent-panel-placeholder {
   position: absolute;
-  inset: 28px 0 0;
+  inset: var(--window-bar-height) 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;

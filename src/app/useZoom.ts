@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../ui/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
+import type { EditorView } from "@codemirror/view";
+import { sourceViewAt } from "../editor/modes/source-view-registry";
 
 /// Document zoom, scoped to the editor content; the window chrome stays at
 /// 100%. Published as `--content-zoom`, so fixed overlays keep unzoomed
@@ -32,11 +34,11 @@ function snap(zoom: number): number {
   return Math.abs(clamped - 1) < 0.03 ? 1 : clamped;
 }
 
-/// Where a zoom step is held still: a rendered scroller, or a source
-/// textarea, which scrolls itself.
+/// Where a zoom step is held still: a rendered scroller, or the source
+/// editor's own scroller.
 type Pane =
   | { kind: "rendered"; scroller: HTMLElement; content: Element }
-  | { kind: "source"; scroller: HTMLTextAreaElement };
+  | { kind: "source"; scroller: HTMLElement };
 
 /// The pane under the pointer, else the focused one, else the first on
 /// screen. Split panes sit side by side, hence the x.
@@ -49,8 +51,8 @@ function zoomPane(x: number | null, y: number | null): Pane | null {
     if (scroller && content)
       panes.push({ kind: "rendered", scroller, content });
   }
-  const source = document.querySelector<HTMLTextAreaElement>(
-    `${tab} textarea.source-view`,
+  const source = document.querySelector<HTMLElement>(
+    `${tab} .source-view .cm-scroller`,
   );
   if (source) panes.push({ kind: "source", scroller: source });
   const shown = panes.filter((pane) => {
@@ -101,21 +103,55 @@ function holdRendered(
   scroller.scrollTop = contentTop() + (into * next) / prev - anchor;
 }
 
-/// The same for a source textarea, which scrolls in zoomed px. Its lines
-/// rewrap, so the anchor keeps its share of the whole text height.
+/// The same for the source editor's scroller, whose text grows by its font
+/// size (the pane isn't zoomed). CodeMirror keeps a line of its own still
+/// while heights change and only knows the new ones once it measures, so
+/// the line under the pointer is handed to it to put back.
 function holdSource(
-  source: HTMLTextAreaElement,
+  source: HTMLElement,
   line: number,
   prev: number,
   next: number,
   setZoomVar: () => void,
 ) {
-  const anchor = line - source.getBoundingClientRect().top;
-  const share =
-    (source.scrollTop + anchor / prev) / Math.max(1, source.scrollHeight);
+  const host = source.closest<HTMLElement>(".source-view");
+  const cm = host?.parentElement && sourceViewAt(host.parentElement)?.view;
+  if (!cm) return setZoomVar();
+  // Steps that come before CodeMirror has measured keep the first one's
+  // anchor: until then its heights are the old zoom's.
+  let held = heldSource.get(source);
+  if (!held) {
+    const block = cm.lineBlockAtHeight(line - cm.documentTop);
+    held = {
+      pos: block.from,
+      into: line - cm.documentTop - block.top,
+      line,
+      zoom: prev,
+    };
+    heldSource.set(source, held);
+    cm.requestMeasure({
+      read: () => null,
+      write: () => heldSource.delete(source),
+    });
+  }
   setZoomVar();
-  source.scrollTop = share * source.scrollHeight - anchor / next;
+  const scroll = (cm.constructor as typeof EditorView).scrollIntoView;
+  cm.dispatch({
+    effects: scroll(held.pos, {
+      y: "start",
+      yMargin:
+        held.line -
+        source.getBoundingClientRect().top -
+        (held.into * next) / held.zoom,
+    }),
+  });
 }
+
+/** A source pane's anchor while a zoom waits for CodeMirror's measure. */
+const heldSource = new WeakMap<
+  HTMLElement,
+  { pos: number; into: number; line: number; zoom: number }
+>();
 
 /**
  * Applies `initialZoom` on mount and owns every zoom input for this window.
@@ -163,8 +199,20 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       else holdRendered(pane, line, prev, next, setZoomVar);
       // Split panes sync on scroll, and the held pane may not have moved:
       // let the other follow it.
-      if (pane.scroller.closest(".split-view"))
+      if (!pane.scroller.closest(".split-view")) return;
+      const held = pane.scroller.scrollTop;
+      pane.scroller.dispatchEvent(new Event("scroll"));
+      // The follower writes back through the same handler when its own
+      // reflow moves it - CodeMirror re-measures after a resize and shifts
+      // its scrollTop, so the position the sync expects is not the one it
+      // finds and the pane under the pointer gets pulled with it. One frame
+      // later, put that pane back where the step left it and let the other
+      // follow again.
+      requestAnimationFrame(() => {
+        if (pane.scroller.scrollTop === held) return;
+        pane.scroller.scrollTop = held;
         pane.scroller.dispatchEvent(new Event("scroll"));
+      });
     };
 
     const applyFrame = () => {

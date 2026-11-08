@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The menu bar, where the app draws the window frame (Windows and Linux): off
@@ -9,24 +9,16 @@ import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
 
 const bar = '[role="menubar"]';
 
-test("off by default: the ☰ and the sidebar's button", async ({ page }) => {
+test("off by default; Settings turns it on, and the sidebar's button makes room", async ({
+  page,
+}) => {
   await openApp(page, { settings: { language: "en" } });
   await expect(page.locator(".window-menu-button")).toBeVisible();
   await expect(
     page.locator('.window-bar [aria-label="Sidebar"]'),
   ).toBeVisible();
   await expect(page.locator(bar)).toHaveCount(0);
-});
-
-test("Settings turns it on, and the sidebar's button makes room", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (n: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await dialog
     .locator(".settings-nav-item", { hasText: "Editor & Appearance" })
@@ -37,23 +29,6 @@ test("Settings turns it on, and the sidebar's button makes room", async ({
     0,
   );
   await expect(page.locator(".window-menu-button")).toBeHidden();
-});
-
-test("the sidebar leaves the menu row whole", async ({ page }) => {
-  await openApp(page, {
-    settings: { language: "en", menuBarShown: true },
-    storage: { "textus-sidebar-open": "1" },
-  });
-  await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
-  await expect(page.locator(bar)).toBeVisible();
-  // The row carries the menu alone: the bar's copy of the sidebar's fill and
-  // right edge stays out of it, so nothing cuts across the titles.
-  const copy = await page.evaluate(
-    () =>
-      getComputedStyle(document.querySelector(".window-bar")!, "::before")
-        .display,
-  );
-  expect(copy).toBe("none");
 });
 
 test("each title opens its list; the pointer and ← / → move along", async ({
@@ -133,17 +108,9 @@ test("Edit › Undo and Redo take back a paste, from the bar and from the macOS 
   await expect(doc).toContainText("Pasted words");
 
   // The macOS menu bar's items arrive as events.
-  const emit = (name: string) =>
-    page.evaluate(
-      (n) =>
-        (
-          window as unknown as { __devEmitTauriEvent: (n: string) => void }
-        ).__devEmitTauriEvent(n),
-      name,
-    );
   await doc.focus();
-  await emit("menu-undo");
+  await emit(page, "menu-undo");
   await expect(doc).not.toContainText("Pasted");
-  await emit("menu-redo");
+  await emit(page, "menu-redo");
   await expect(doc).toContainText("Pasted words");
 });

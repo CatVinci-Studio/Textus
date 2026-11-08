@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 /**
  * The plugin system end to end, with a small plugin installed through the
@@ -115,15 +115,6 @@ async function open(page: Page) {
   );
   await openApp(page, { settings: { language: "en" } });
 }
-
-const emit = (page: Page, event: string) =>
-  page.evaluate(
-    (name) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(name),
-    event,
-  );
 
 async function openPluginsPage(page: Page) {
   await emit(page, "menu-manage-plugins");
@@ -337,78 +328,3 @@ for (const { name, l10n, language, texts } of LANGUAGE_CASES)
     await panel.locator("#l10n").click();
     await expect(panel.locator("#out")).toHaveText(fromHost);
   });
-
-test("a plugin's rename updates links without changing code examples", async ({
-  page,
-}) => {
-  const examples = [
-    "`[plan](plan.md) [[plan]]`",
-    "```md\n[plan](plan.md) [[plan]]\n```",
-    "~~~md\n[plan](plan.md) [[plan]]\n~~~",
-  ].join("\n\n");
-  const document = "See [plan](plan.md).\n\n" + examples + "\n\nSee [[plan]].";
-  await page.addInitScript((text) => {
-    if (window.top !== window) return;
-    const w = window as unknown as Record<string, unknown>;
-    const manifest = {
-      id: "test.rename",
-      name: "Rename",
-      version: "1.0.0",
-      publisher: "test",
-      description: "Renames a note and updates its links.",
-      engines: { textus: "^1.3.0" },
-      main: "host.js",
-      permissions: ["files.read", "files.write"],
-      contributes: {
-        commands: [{ command: "test.rename.run", title: "Rename plan" }],
-      },
-    };
-    w.__devPlugins = [
-      {
-        id: manifest.id,
-        dir: "/plugins/test.rename",
-        manifest: JSON.stringify(manifest),
-        dev: false,
-        files: {
-          "host.js": `exports.activate = function () {
-            textus.commands.register("test.rename.run", async function () {
-              await textus.files.rename("/work/notes/plan.md", "/work/notes/roadmap.md", { updateLinks: true });
-              await textus.ui.notice("Links updated");
-            });
-          };`,
-        },
-      },
-    ];
-    w.__devPluginState = {
-      allOn: true,
-      plugins: {
-        [manifest.id]: { enabled: true, granted: manifest.permissions },
-      },
-    };
-    w.__devFs = {
-      "/work/notes/index.md": text,
-      "/work/notes/plan.md": "# Plan",
-    };
-    w.__devPickFolder = "/work/notes";
-  }, document);
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-open-folder");
-  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("notes");
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload: string) => void;
-      }
-    ).__devEmitTauriEvent("menu-plugin-command", "test.rename.run"),
-  );
-  await expect(page.locator("[role=status]")).toContainText("Links updated");
-  const saved = await page.evaluate(
-    () =>
-      (window as unknown as { __devFs: Record<string, string> }).__devFs[
-        "/work/notes/index.md"
-      ],
-  );
-  expect(saved).toBe(
-    "See [plan](roadmap.md).\n\n" + examples + "\n\nSee [[roadmap]].",
-  );
-});

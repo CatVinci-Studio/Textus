@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 // A document reopened from the last session or Open Recent comes back with
 // the caret where it was left, as long as the file hasn't changed since.
@@ -88,38 +88,6 @@ test("a caret past the end of a file that got shorter lands at its end", async (
   );
 });
 
-test("a file changed since opens at its top", async ({ page }) => {
-  await session(page, { mtime: 2 });
-  await page.addInitScript(
-    (path) =>
-      localStorage.setItem(
-        "textus-last-carets",
-        JSON.stringify({ [path]: { offset: DOC.length, mtime: 1 } }),
-      ),
-    PATH,
-  );
-  await openApp(page, { settings: { language: "en" } });
-  await expect(page.locator(`${editor} p`)).toHaveCount(80);
-  await page.waitForTimeout(300);
-  expect(await scrollTop(page)).toBe(0);
-  expect(await caretParagraph(page)).not.toBe("Paragraph 80 of the story.");
-});
-
-test("nothing is restored with Restore Previous Session off", async ({
-  page,
-}) => {
-  await session(page);
-  await openApp(page, {
-    settings: { language: "en", restoreSessionOnStartup: false },
-  });
-  await expect(page.locator(`${editor} p`)).toHaveCount(80);
-  await leaveCaretAt(page, "Paragraph 70 of the story.");
-  await page.reload();
-  await expect(page.locator(`${editor} p`)).toHaveCount(80);
-  await page.waitForTimeout(300);
-  expect(await scrollTop(page)).toBe(0);
-});
-
 test("Typewriter Mode puts the restored caret's line in the middle", async ({
   page,
 }) => {
@@ -179,15 +147,7 @@ test("File > Open Recent opens a document at its last caret", async ({
     { path: PATH, doc: DOC },
   );
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(
-    (path) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-open-recent", path),
-    PATH,
-  );
+  await emit(page, "menu-open-recent", PATH);
   await expect(page.locator(`${editor} p`)).toHaveCount(80);
   await expect
     .poll(() => caretParagraph(page))

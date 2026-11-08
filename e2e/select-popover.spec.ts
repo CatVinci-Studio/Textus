@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 // The app's own select keeps its list inside the window even when the
 // list is wider than its button.
@@ -24,11 +24,7 @@ test("a list wider than its button stays inside the window", async ({
       };
   });
   await openApp(page, { settings: { language: "en" } });
-  await page.evaluate(() =>
-    (
-      window as unknown as { __devEmitTauriEvent: (e: string) => void }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   const settings = page.getByRole("dialog", { name: "Settings" });
   await settings.getByRole("button", { name: "Textus AI" }).click();
   const trigger = settings.getByRole("combobox", { name: "Image model" });
@@ -38,7 +34,7 @@ test("a list wider than its button stays inside the window", async ({
   await expect(list).toBeVisible();
   await expect(list.getByRole("option")).not.toHaveCount(1);
   // Settled, past its entrance.
-  await page.waitForTimeout(400);
+  await settled(page);
   const box = (await list.boundingBox())!;
   const button = (await trigger.boundingBox())!;
   expect(box.width).toBeGreaterThan(button.width);

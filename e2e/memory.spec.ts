@@ -190,7 +190,7 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
   ]);
 });
 
-test("with Remember automatically off, nothing is asked after the reply", async ({
+test("with Remember automatically off, nothing is asked after the reply, and the Memory tab says so", async ({
   page,
 }) => {
   await openApp(page, {
@@ -212,6 +212,14 @@ test("with Remember automatically off, nothing is asked after the reply", async 
   await expect(page.locator(".agent-panel-view")).toContainText("Done.");
   expect(await calls(page, "memory_pass")).toEqual([]);
   await expect(page.locator(".agent-memory-chip")).toHaveCount(0);
+  // And the Memory tab says so.
+  await page
+    .locator(".agent-panel-view")
+    .getByRole("button", { name: "Project", exact: true })
+    .click();
+  await expect(page.locator(".memory-remembered")).toContainText(
+    "Remember automatically is off",
+  );
 });
 
 test("the Memory tab lists what was remembered, and moves and deletes it", async ({
@@ -256,26 +264,6 @@ test("the Memory tab lists what was remembered, and moves and deletes it", async
   expect((await calls(page, "memory_delete"))[0]).toMatchObject({
     id: REMEMBERED.remembered,
   });
-});
-
-test("with Remember automatically off, the Memory tab says so", async ({
-  page,
-}) => {
-  await openApp(page, {
-    settings: { language: "en", rememberAutomatically: false },
-    storage: { "textus-agent-panel-open": "1" },
-  });
-  await mockInvoke(page, {
-    load_agent_workspace: memoryWorkspace(false),
-    library_use: LIBRARY_USE,
-  });
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Project", exact: true })
-    .click();
-  await expect(page.locator(".memory-remembered")).toContainText(
-    "Remember automatically is off",
-  );
 });
 
 test("a request worth doing again is offered as a skill, saved only when asked", async ({

@@ -26,6 +26,8 @@ const API_PERMISSIONS: readonly {
       "editor.registerDecorations",
       "export.willExport",
     ],
+    // Completions without it are left out, with no error to say so.
+    calls: ["editor.registerCompletion"],
   },
   {
     permission: "editor.write",
@@ -42,6 +44,7 @@ const API_PERMISSIONS: readonly {
     methods: [
       "files.root",
       "files.conventions",
+      "files.appSettings",
       "files.list",
       "files.find",
       "files.stat",
@@ -142,3 +145,15 @@ export const PERMISSION_CALLS: readonly [RegExp, Permission][] =
     );
     return [new RegExp(`\\.(?:${names.join("|")})`), permission];
   });
+
+/** Whether `granted` covers `permission`: writing files includes reading
+ *  them, as every write goes through the folder's root. */
+export function grants(
+  granted: readonly string[],
+  permission: Permission,
+): boolean {
+  return (
+    granted.includes(permission) ||
+    (permission === "files.read" && granted.includes("files.write"))
+  );
+}

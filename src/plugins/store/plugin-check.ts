@@ -1,6 +1,7 @@
 import type { PluginFile } from "../../platform/ipc";
 import type { Permission, PluginManifest } from "./manifest";
-import { PERMISSION_CALLS } from "../api-permissions";
+import { grants, PERMISSION_CALLS } from "../api-permissions";
+import { WHEN_KEYS, whenKeys } from "../contributions/when";
 
 /**
  * What a plugin's own code shows will go wrong once it runs, read before it
@@ -14,7 +15,9 @@ export type PluginCheck =
   | { kind: "permission"; permission: Permission }
   /** A command, tab or view the manifest declares that the code never
    *  registers: its menu item or tab does nothing. */
-  | { kind: "unregistered"; id: string };
+  | { kind: "unregistered"; id: string }
+  /** A menu item's `when` reads a key Textus doesn't set: it never shows. */
+  | { kind: "when"; key: string };
 
 /** Timers are the frame's own and fine; anything else on these is the
  *  frame's page. */
@@ -43,10 +46,11 @@ export function checkPlugin(
   if (!source) return [];
   const checks: PluginCheck[] = [];
   if (DOM.test(source)) checks.push({ kind: "dom" });
-  const granted = new Set<string>(manifest.permissions);
   for (const [call, permission] of PERMISSION_CALLS)
-    if (call.test(source) && !granted.has(permission))
+    if (call.test(source) && !grants(manifest.permissions, permission))
       checks.push({ kind: "permission", permission });
+  for (const key of unknownWhenKeys(manifest))
+    checks.push({ kind: "when", key });
   const { commands, sidebarTabs, views } = manifest.contributes;
   const ids = [
     ...commands.map((c) => c.command),
@@ -66,4 +70,14 @@ function registered(source: string, pluginId: string, id: string): boolean {
   if (!id.startsWith(`${pluginId}.`)) return false;
   const rest = id.slice(pluginId.length);
   return ['"', "'", "`"].some((q) => source.includes(`${rest}${q}`));
+}
+
+/** The keys the manifest's menu `when` clauses read that Textus never sets. */
+function unknownWhenKeys(manifest: PluginManifest): string[] {
+  const keys = new Set<string>();
+  for (const items of Object.values(manifest.contributes.menus ?? {}))
+    for (const item of items ?? [])
+      for (const key of whenKeys(item.when ?? ""))
+        if (!WHEN_KEYS.includes(key)) keys.add(key);
+  return [...keys];
 }

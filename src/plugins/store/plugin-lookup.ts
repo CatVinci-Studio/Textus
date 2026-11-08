@@ -1,6 +1,6 @@
 import { basename } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
-import { claimKey, ownerOf } from "../contributions/owners";
+import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";
 import {
   pluginsSnapshot,
   windowInfo,
@@ -35,16 +35,57 @@ export function customEditorFor(
   return null;
 }
 
+/** The keys of a Markdown document's front matter, none without one. */
+export function frontMatterKeys(content: string): string[] {
+  const m = /^\uFEFF?---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\s*(?:\r?\n|$)/.exec(
+    content,
+  );
+  if (!m) return [];
+  return [...m[1].matchAll(/^([\w-]+)\s*:/gm)].map((k) => k[1]);
+}
+
+/** The plugin that opens Markdown `path` in a tab of its own because of
+ *  what its front matter says (a board's "kanban-plugin: board"). */
+export function customEditorForContent(
+  path: string,
+  content: string,
+): { plugin: string; viewType: string; title: string } | null {
+  if (!pluginsSnapshot().allOn || !/\.(md|markdown)$/i.test(path)) return null;
+  const keys = frontMatterKeys(content);
+  if (!keys.length) return null;
+  for (const record of pluginsSnapshot().records) {
+    if (record.status !== "on" || !record.manifest) continue;
+    for (const editor of record.manifest.contributes.customEditors)
+      if (
+        editor.priority === "default" &&
+        editor.frontMatter.some(
+          (key) =>
+            keys.includes(key) &&
+            (ownerOf(claimKey.editor(frontMatterClaim(key))) ?? record.id) ===
+              record.id,
+        )
+      )
+        return {
+          plugin: record.id,
+          viewType: editor.viewType,
+          title: basename(path),
+        };
+  }
+  return null;
+}
+
 /** The commands the plugins that are on put in the Plugins menu, in order. */
 export function pluginMenuEntries(
   from: PluginsSnapshot = pluginsSnapshot(),
   menu: "app/plugins" | "app/tray" = "app/plugins",
   language: string = windowInfo().language(),
-): { command: string; label: string }[] {
+): { command: string; label: string; group: string }[] {
   if (!from.allOn) return [];
   return from.records.flatMap((record) => {
     const manifest = record.manifest;
     if (record.status !== "on" || !manifest) return [];
+    // Each command under its plugin's name, for a submenu of its own.
+    const group = localize(manifest, manifest.name, language);
     return (manifest.contributes.menus[menu] ?? []).map((item) => {
       const command = manifest.contributes.commands.find(
         (c) => c.command === item.command,
@@ -52,6 +93,7 @@ export function pluginMenuEntries(
       return {
         command: item.command,
         label: localize(manifest, command?.title ?? item.command, language),
+        group,
       };
     });
   });

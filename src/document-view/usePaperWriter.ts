@@ -112,6 +112,7 @@ export function usePaperWriter({
               requestId,
               id,
               imageModel: base.imageModel,
+              checkClaims: latest.current.settings.researchCheckClaims,
             },
             (event) => {
               if (event.type === "drawFigures") {
@@ -201,6 +202,7 @@ export function usePaperWriter({
             genre,
             targetChars,
             conversation,
+            subHelpers: s.researchSubHelpers,
           },
           (event) => applyPaperEvent(key, event),
         )

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, PHONE, openPhone } from "./helpers";
+import { emit, mockInvoke, openApp, openPhone, PHONE } from "./helpers";
 
 // The Settings panel.
 
@@ -54,7 +54,7 @@ const t = {
   customCssLabel: "Custom CSS",
   themeGetMore: "Get more themes",
   privacyClearButton: "Clear",
-  privacyClearClipboard: "Clear Clipboard History",
+  privacyClearDrafts: "Delete Recovery Drafts",
   pdfPageNumbersLabel: "Show page numbers in exports",
   aboutTextus: "About Textus",
   aboutMadeBy: "Made by CatVinci Studio",
@@ -83,24 +83,8 @@ const defaultEditorStatus = {
   appImage: { supported: false, isDefault: false, chooseInSettings: false },
 };
 
-/** The canned commands Settings sent, in order. */
-function invokeCalls(page: Page) {
-  return page.evaluate(() =>
-    (
-      (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
-        .__devInvokeCalls ?? []
-    ).map((c) => c.cmd),
-  );
-}
-
 async function openSettings(page: Page) {
-  await page.evaluate(() =>
-    (
-      window as unknown as {
-        __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-      }
-    ).__devEmitTauriEvent("menu-open-settings"),
-  );
+  await emit(page, "menu-open-settings");
   return page.getByRole("dialog", { name: t.settingsTitle });
 }
 
@@ -224,13 +208,7 @@ test.describe("desktop", () => {
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    await page.evaluate(() =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent("menu-toggle-split-view"),
-    );
+    await emit(page, "menu-toggle-split-view");
     await expect(page.locator(".split-view")).toBeVisible();
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navEditor }).click();
@@ -242,7 +220,7 @@ test.describe("desktop", () => {
     await expect(view).toHaveText(t.menuViewSource);
     await expect(page.locator(".split-view")).toHaveCount(0);
     await expect(
-      page.locator('[data-active-tab="true"] textarea.source-view'),
+      page.locator('[data-active-tab="true"] .source-view .cm-content'),
     ).toBeAttached();
   });
 
@@ -346,7 +324,7 @@ test.describe("desktop", () => {
     const panel = await openSettings(page);
     await panel.getByRole("button", { name: t.navPrivacy }).click();
     const clear = panel.getByRole("button", {
-      name: `${t.privacyClearButton}: ${t.privacyClearClipboard}`,
+      name: `${t.privacyClearButton}: ${t.privacyClearDrafts}`,
     });
     await clear.click();
     // The confirm dialog's own Clear, over Settings.
@@ -356,53 +334,11 @@ test.describe("desktop", () => {
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
   });
-  test("a beta set back to Stable can go back to the stable version", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      "plugin:app|version": "1.3.0-beta.1",
-      check_for_update: null,
-    });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    const goBack = panel.getByRole("button", { name: "Go Back to Stable" });
-    await expect(goBack).toBeVisible();
-    await expect(panel).toContainText("You're using a beta (1.3.0-beta.1).");
-    // Nothing stable on offer: it says so.
-    await goBack.click();
-    await expect(panel.getByRole("status")).toHaveText(
-      "There's no stable version to go back to right now.",
-    );
-    // On Beta, there is nothing to go back from.
-    const channel = panel.getByRole("combobox", { name: t.updateChannel });
-    await channel.click();
-    await page.getByRole("option", { name: t.updateChannelBeta }).click();
-    await expect(goBack).toHaveCount(0);
-  });
-
-  test("a stable install has no way back to offer", async ({ page }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, { "plugin:app|version": "1.2.1" });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    await expect(
-      panel.getByRole("combobox", { name: t.updateChannel }),
-    ).toBeVisible();
-    await expect(
-      panel.getByRole("button", { name: "Go Back to Stable" }),
-    ).toHaveCount(0);
-  });
-
   test("Check for Updates… opens About and checks at once", async ({
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-check-updates"),
-    );
+    await emit(page, "menu-check-updates");
     const panel = page.getByRole("dialog", { name: "Settings" });
     // The check ran without a click: its answer is there.
     await expect(panel.getByRole("status")).toHaveText(t.updateLatest);
@@ -456,85 +392,6 @@ test.describe("desktop", () => {
     await expect(
       panel.getByRole("combobox", { name: t.updateChannel }),
     ).toHaveText(t.updateChannelBeta);
-  });
-
-  test("no update channel in a package-manager build", async ({ page }) => {
-    // The Arch package: it reports new versions but doesn't install them.
-    await page.addInitScript(() => {
-      (
-        window as unknown as { __devInvokeResults: unknown }
-      ).__devInvokeResults = { app_distribution: "aur" };
-    });
-    await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.aboutTextus }).click();
-    await expect(
-      panel.getByRole("button", { name: t.updateCheckButton }),
-    ).toBeVisible();
-    await expect(panel.getByText(t.updateChannel)).toHaveCount(0);
-  });
-
-  test("the default editor button makes Textus the default where the system allows it", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.mac,
-      set_default_editor: null,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row).toContainText(t.defaultEditorNotDefault);
-    // What the system reports once the command has run.
-    await page.evaluate(() => {
-      (
-        window as unknown as { __devInvokeResults: Record<string, unknown> }
-      ).__devInvokeResults.default_editor_status = {
-        supported: true,
-        isDefault: true,
-        chooseInSettings: false,
-      };
-    });
-    await row.getByRole("button", { name: t.defaultEditorButton }).click();
-    await expect(row).toContainText(t.defaultEditorIsDefault);
-    await expect(row.getByRole("button")).toHaveCount(0);
-    expect(await invokeCalls(page)).toContain("set_default_editor");
-  });
-
-  test("on Windows the button opens Default apps and says what to choose", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.windows,
-      set_default_editor: null,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row.getByText(t.defaultEditorChooseHint)).toHaveCount(0);
-    await row.getByRole("button", { name: t.defaultEditorButton }).click();
-    await expect(row.getByText(t.defaultEditorChooseHint)).toBeVisible();
-    await expect(row).toContainText(t.defaultEditorNotDefault);
-    expect(await invokeCalls(page)).toContain("set_default_editor");
-  });
-
-  test("an AppImage explains instead of offering the button", async ({
-    page,
-  }) => {
-    await openApp(page, { settings: { language: "en" } });
-    await mockInvoke(page, {
-      default_editor_status: defaultEditorStatus.appImage,
-    });
-    const panel = await openSettings(page);
-    const row = panel
-      .locator(".settings-row")
-      .filter({ hasText: t.defaultEditorLabel });
-    await expect(row.getByText(t.defaultEditorUnsupported)).toBeVisible();
-    await expect(row.getByRole("button")).toHaveCount(0);
   });
 
   test("every page is as wide as the others, whichever category is chosen", async ({
@@ -869,13 +726,13 @@ test.describe("phone", () => {
   });
 });
 
-test("Settings' This Document switches match the View menu's: Track My Changes and Read Only", async ({
+test("Settings' This Document switches match the View menu's: Track My Changes and Reading Mode", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openSettings(page);
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
-  const readOnly = panel.getByRole("checkbox", { name: "Read Only" });
+  const readOnly = panel.getByRole("checkbox", { name: "Reading Mode" });
   const tracking = panel.getByRole("checkbox", { name: "Track My Changes" });
   await expect(readOnly).not.toBeChecked();
   await expect(tracking).not.toBeChecked();

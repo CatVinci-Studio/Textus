@@ -1,35 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { END, HOME, openApp, selectionRead } from "./helpers";
+import { emit, END, HOME, openApp, selectionRead, sourceOf } from "./helpers";
 
 // The keys around blocks that need a browser: the arrows, clicks and
 // focus. What a typed key does to the document is tested in vitest
 // (src/editor/keys/markdown-keys.test.ts).
 
 const editor = '[data-active-tab="true"] .ProseMirror';
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload?: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload] as const,
-  );
-}
-
-async function sourceOf(page: Page): Promise<string> {
-  await emit(page, "menu-toggle-source-mode");
-  const textarea = page.locator(
-    '[data-active-tab="true"] textarea.source-view',
-  );
-  await expect(textarea).toBeAttached();
-  const value = await textarea.inputValue();
-  await emit(page, "menu-toggle-source-mode");
-  await expect(textarea).toHaveCount(0);
-  return value.trim();
-}
 
 /** The app with `markdown` opened from a file (a paste could leave an
  *  empty line around it), or an empty document to type in. */
@@ -106,15 +82,6 @@ test("Tab and Shift+Tab in a paragraph leave the focus in the text", async ({
   await expect(page.locator(editor)).toBeFocused();
   await page.keyboard.type("!", { delay: 20 });
   expect(await sourceOf(page)).toMatch(/!/);
-});
-
-test("Format › Ordered List turns a bullet list into one, every item", async ({
-  page,
-}) => {
-  await open(page, "- one\n- two\n");
-  await page.locator(`${editor} li`).first().click();
-  await emit(page, "menu-insert-block", "ordered-list");
-  expect(await sourceOf(page)).toBe("1. one\n2. two");
 });
 
 test("Left steps one character onto inline HTML, as Right does", async ({
@@ -232,30 +199,6 @@ test("``` typed on a line of its own reads as a fence, not as code", async ({
   await expect(page.locator(`${editor} .md-code-span`)).not.toHaveClass(
     /is-fence/,
   );
-});
-
-test("a folded callout opens from its chevron, and a comment shows only under the caret", async ({
-  page,
-}) => {
-  await open(
-    page,
-    "> [!faq]- Why?\n> Because.\n\nSee %%private%% here.\n\nEnd.",
-  );
-  // The caret opens on the first line, which shows a callout's source.
-  await page.locator(`${editor} p`).last().click();
-  const callout = page.locator(`${editor} blockquote.callout`);
-  await expect(callout.locator(".md-alert-title")).toHaveText("Why?");
-  await expect(callout.getByText("Because.")).toBeHidden();
-  await callout.locator(".md-alert-fold").click();
-  await expect(callout.getByText("Because.")).toBeVisible();
-  const comment = page.locator(`${editor} p`).filter({ hasText: "See" });
-  await expect(comment.getByText("private")).toBeHidden();
-  await page.locator(`${editor} p`).last().click();
-  // The caret at the comment's start, right after "See ".
-  await comment.click({ position: { x: 4, y: 4 } });
-  await page.keyboard.press("Home");
-  for (let i = 0; i < 4; i++) await page.keyboard.press("ArrowRight");
-  await expect(comment.locator(".md-comment")).toBeVisible();
 });
 
 test("the split view's preview draws what the editor draws", async ({

@@ -37,8 +37,10 @@ const inMode = (page: Page, mode: "NORMAL" | "INSERT") =>
 
 const firstParagraph = (page: Page) => page.locator(`${editor} p`).first();
 
-test("normal mode's keys move and edit, and never type", async ({ page }) => {
-  await open(page, "one two three");
+test("normal mode's keys move and edit, and never type; dd deletes a line and p puts it back below", async ({
+  page,
+}) => {
+  await open(page, "one two three\n\nsecond\n\nthird");
   await keys(page, ["w", "d", "w"]);
   await expect(firstParagraph(page)).toHaveText("one three");
   await keys(page, ["x"]);
@@ -48,6 +50,14 @@ test("normal mode's keys move and edit, and never type", async ({ page }) => {
   // A letter with no meaning in Vim types nothing.
   await keys(page, ["q"]);
   await expect(firstParagraph(page)).toHaveText("one three");
+  await keys(page, ["d", "d"]);
+  await expect(page.locator(`${editor} p`)).toHaveText(["second", "third"]);
+  await keys(page, ["p"]);
+  await expect(page.locator(`${editor} p`)).toHaveText([
+    "second",
+    "one three",
+    "third",
+  ]);
 });
 
 test("insert mode types, Escape goes back, and dot repeats a change", async ({
@@ -64,35 +74,6 @@ test("insert mode types, Escape goes back, and dot repeats a change", async ({
   await expect(firstParagraph(page)).toHaveText("alpha beta gamma delta");
   await keys(page, ["."]);
   await expect(firstParagraph(page)).toHaveText("beta gamma delta");
-});
-
-test("dd deletes a line and p puts it back below", async ({ page }) => {
-  await open(page, "first\n\nsecond\n\nthird");
-  await keys(page, ["d", "d"]);
-  await expect(page.locator(`${editor} p`)).toHaveText(["second", "third"]);
-  await keys(page, ["p"]);
-  await expect(page.locator(`${editor} p`)).toHaveText([
-    "second",
-    "first",
-    "third",
-  ]);
-});
-
-test("flash: s and a letter label each place, and a label jumps there", async ({
-  page,
-}) => {
-  await open(page, "the cat sat on the mat by the hat");
-  await keys(page, ["s", "a", "t"]);
-  const labels = page.locator(`${editor} .plugin-flash-label`);
-  await expect(labels).toHaveCount(4);
-  const second = (await labels.nth(1).textContent())!;
-  await keys(page, [second]);
-  await expect(labels).toHaveCount(0);
-  // The caret is on "sat"'s "a": x takes it.
-  await keys(page, ["x"]);
-  await expect(firstParagraph(page)).toHaveText(
-    "the cat st on the mat by the hat",
-  );
 });
 
 test("counts, cw, ciw, f and visual mode", async ({ page }) => {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { emit, END, openApp, pasteMarkdown } from "./helpers";
 
 // The heavy parts load on first use: a window opens with its own language's
 // strings only, Settings and the diagram and formula engines come when
@@ -10,16 +10,6 @@ function loaded(page: Page): Promise<string[]> {
     (
       window as unknown as { __loadedModules: () => string[] }
     ).__loadedModules(),
-  );
-}
-
-function emit(page: Page, name: string) {
-  return page.evaluate(
-    (n) =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent(n),
-    name,
   );
 }
 
@@ -39,11 +29,12 @@ test("a window opens in its language with only that language's strings", async (
   expect(now).not.toContain("katex");
 });
 
-test("Settings is warmed while the window is idle and opens at once", async ({
+test("Settings and source mode are warmed while the window is idle; Settings opens at once", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await expect.poll(() => loaded(page)).toContain("settings");
+  await expect.poll(() => loaded(page)).toContain("doc-source-editor");
   await emit(page, "menu-open-settings");
   await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
 });
@@ -68,22 +59,7 @@ test("a language picked loads its strings and shows them", async ({ page }) => {
   expect(await loaded(page)).toContain("locale:ja");
 });
 
-test("a diagram loads its engine when one is drawn", async ({ page }) => {
-  await openApp(page, { settings: { language: "en" } });
-  expect(await loaded(page)).not.toContain("mermaid");
-  await pasteMarkdown(
-    page,
-    "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```\n\nEnd.",
-  );
-  await expect(
-    page.locator(
-      '[data-active-tab="true"] .ProseMirror .mermaid-preview > svg',
-    ),
-  ).toHaveCount(1, { timeout: 10_000 });
-  expect(await loaded(page)).toContain("mermaid");
-});
-
-test("a chart loads its renderer, and not Mermaid, when one is drawn", async ({
+test("a chart loads its renderer, not Mermaid, and a diagram then loads Mermaid", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -100,6 +76,22 @@ test("a chart loads its renderer, and not Mermaid, when one is drawn", async ({
   const now = await loaded(page);
   expect(now).toContain("chart");
   expect(now).not.toContain("mermaid");
+  // A diagram then loads its engine.
+  await page
+    .locator('[data-active-tab="true"] .ProseMirror p', { hasText: "End." })
+    .click();
+  await page.keyboard.press(END);
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(
+    page,
+    "```mermaid\nflowchart LR\n  A[Start] --> B[Finish]\n```\n\nDone.",
+  );
+  await expect(
+    page.locator(
+      '[data-active-tab="true"] .ProseMirror .mermaid-preview > svg:not(.textus-chart)',
+    ),
+  ).toHaveCount(1, { timeout: 10_000 });
+  expect(await loaded(page)).toContain("mermaid");
 });
 
 test("an installed plugin starts, and its views load, only once it is needed", async ({
@@ -139,16 +131,7 @@ test("an installed plugin starts, and its views load, only once it is needed", a
     };
   }, entry);
   await openApp(page, { settings: { language: "en" } });
-  const open = (path: string) =>
-    page.evaluate(
-      (p) =>
-        (
-          window as unknown as {
-            __devEmitTauriEvent: (n: string, payload: unknown) => void;
-          }
-        ).__devEmitTauriEvent("menu-open-recent", p),
-      path,
-    );
+  const open = (path: string) => emit(page, "menu-open-recent", path);
   await open("/work/plain.md");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator("h1")).toContainText("Plain");

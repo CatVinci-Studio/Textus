@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { SAMPLE_DOC, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  SAMPLE_DOC,
+} from "./helpers";
 import { streamRevise } from "./revise-mock";
 
 /**
@@ -45,18 +51,6 @@ async function scan(page: Page, name: string) {
       nodes: v.nodes.slice(0, 5).map((n) => n.target.join(" ")),
     }));
   expect(blocking, name).toEqual([]);
-}
-
-function emit(page: Page, event: string, payload?: unknown) {
-  return page.evaluate(
-    ([name, value]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(name as string, value),
-    [event, payload] as const,
-  );
 }
 
 async function open(
@@ -411,39 +405,41 @@ test.describe("the system's contrast settings", () => {
   });
 });
 
-test("reduced motion: the review bar fades in, without travel or scale", async ({
-  page,
-}) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.addInitScript((files) => {
-    (window as unknown as { __devFs: unknown }).__devFs = files;
-  }, FILES);
-  await openApp(page, {
-    settings: { language: "en" },
-    storage: { "textus-agent-panel-open": "1" },
-    animations: true,
-  });
-  // Every transform the bar shows as it comes in, one per frame.
-  await page.evaluate(() => {
-    const seen: string[] = [];
-    (window as unknown as { __seen: string[] }).__seen = seen;
-    const frame = () => {
-      const bar = document.querySelector(".review-bar");
-      if (bar) seen.push(getComputedStyle(bar).transform);
-      if (seen.length < 30) requestAnimationFrame(frame);
-    };
-    frame();
-  });
-  await propose(page);
-  const seen = await page.evaluate(
-    () => (window as unknown as { __seen: string[] }).__seen,
-  );
-  expect(seen.length).toBeGreaterThan(0);
-  // translateX(-50%) alone: a scale of 1 and no vertical travel.
-  for (const transform of Array.from(new Set(seen)))
-    expect(transform).toMatch(/^matrix\(1, 0, 0, 1, -?[\d.]+, 0\)$/);
-});
+test(
+  "reduced motion: the review bar fades in, without travel or scale",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.addInitScript((files) => {
+      (window as unknown as { __devFs: unknown }).__devFs = files;
+    }, FILES);
+    await openApp(page, {
+      settings: { language: "en" },
+      storage: { "textus-agent-panel-open": "1" },
+      animations: true,
+    });
+    // Every transform the bar shows as it comes in, one per frame.
+    await page.evaluate(() => {
+      const seen: string[] = [];
+      (window as unknown as { __seen: string[] }).__seen = seen;
+      const frame = () => {
+        const bar = document.querySelector(".review-bar");
+        if (bar) seen.push(getComputedStyle(bar).transform);
+        if (seen.length < 30) requestAnimationFrame(frame);
+      };
+      frame();
+    });
+    await propose(page);
+    const seen = await page.evaluate(
+      () => (window as unknown as { __seen: string[] }).__seen,
+    );
+    expect(seen.length).toBeGreaterThan(0);
+    // translateX(-50%) alone: a scale of 1 and no vertical travel.
+    for (const transform of Array.from(new Set(seen)))
+      expect(transform).toMatch(/^matrix\(1, 0, 0, 1, -?[\d.]+, 0\)$/);
+  },
+);
 
 test("the editor is a labelled, multi-line text box", async ({ page }) => {
   await open(page);

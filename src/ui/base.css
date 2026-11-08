@@ -163,8 +163,8 @@
   word-break: keep-all;
 }
 
-:root:lang(ko) :is(.editor-content, .source-view) :is(td, th),
-:root:lang(ko) :is(.editor-content, .source-view) :is(td, th) * {
+:root:lang(ko) :is(.editor-content, .source-view .cm-content) :is(td, th),
+:root:lang(ko) :is(.editor-content, .source-view .cm-content) :is(td, th) * {
   word-break: normal;
 }
 

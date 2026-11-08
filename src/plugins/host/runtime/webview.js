@@ -48,6 +48,46 @@
   window.addEventListener("pointerdown", closeMenu, true);
   window.addEventListener("keydown", closeMenu, true);
 
+  // A pinch or a mod+wheel over the page zooms the document around it, as
+  // it does anywhere else in the window: passed on, not kept here.
+  window.addEventListener(
+    "wheel",
+    function (event) {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      send("zoomWheel", {
+        deltaY: event.deltaY,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    { passive: false },
+  );
+  // No engine menu on a page, as in the window: text fields keep theirs.
+  window.addEventListener("contextmenu", function (event) {
+    var target = event.target;
+    if (
+      target &&
+      target.closest &&
+      target.closest("input, textarea, [contenteditable]")
+    )
+      return;
+    event.preventDefault();
+  });
+  ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
+    window.addEventListener(type, function (event) {
+      event.preventDefault();
+      send("zoomGesture", {
+        type: type,
+        scale: event.scale,
+        x: event.clientX,
+        y: event.clientY,
+      });
+    });
+  });
+
   // Where a menu opens: under an element, or at a point of the page.
   function anchor(at) {
     if (at && typeof at.getBoundingClientRect === "function") {
@@ -184,6 +224,12 @@
         },
         theme: function (params) {
           setTheme(params.css, params.dark);
+        },
+        // A page drawn in the document takes the document's zoom itself:
+        // its frame is kept out of the window's, so it draws sharp.
+        zoom: function (params) {
+          document.documentElement.style.zoom =
+            params.zoom === 1 ? "" : String(params.zoom);
         },
         export: function (params) {
           return loaded.then(function () {

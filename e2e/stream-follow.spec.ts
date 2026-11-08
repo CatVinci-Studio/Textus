@@ -98,37 +98,45 @@ test("the page follows the writing while the reader is with it", async ({
   expect(edge.bottom).toBeLessThanOrEqual(edge.view + 2);
 });
 
-test("scrolled away, the page stays where the reader put it while the writing goes on", async ({
-  page,
-}) => {
-  await start(page);
-  await expect.poll(() => top(page), { timeout: 15_000 }).toBeGreaterThan(300);
-  await page.locator(scroller).hover();
-  await page.mouse.wheel(0, -5000);
-  await expect.poll(() => top(page)).toBe(0);
-  // The rest of the writing comes in below; the page doesn't move.
-  const samples: number[] = [];
-  while ((await writing(page).count()) > 0) {
-    samples.push(await top(page));
-    await page.waitForTimeout(100);
-  }
-  expect(samples.length).toBeGreaterThan(5);
-  expect(Math.max(...samples)).toBe(0);
-});
+test(
+  "scrolled away, the page stays where the reader put it while the writing goes on",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await start(page);
+    await expect
+      .poll(() => top(page), { timeout: 15_000 })
+      .toBeGreaterThan(300);
+    await page.locator(scroller).hover();
+    await page.mouse.wheel(0, -5000);
+    await expect.poll(() => top(page)).toBe(0);
+    // The rest of the writing comes in below; the page doesn't move.
+    const samples: number[] = [];
+    while ((await writing(page).count()) > 0) {
+      samples.push(await top(page));
+      await page.waitForTimeout(100);
+    }
+    expect(samples.length).toBeGreaterThan(5);
+    expect(Math.max(...samples)).toBe(0);
+  },
+);
 
-test("a jump the reader didn't make, while it writes, is undone", async ({
-  page,
-}) => {
-  await start(page);
-  await expect.poll(() => top(page), { timeout: 15_000 }).toBeGreaterThan(300);
-  await page.locator(scroller).hover();
-  await page.mouse.wheel(0, -5000);
-  await expect.poll(() => top(page)).toBe(0);
-  await page.waitForTimeout(900);
-  // As WebKit would: back to the caret, far below.
-  await page
-    .locator(scroller)
-    .evaluate((el) => (el.scrollTop = el.scrollHeight));
-  await expect.poll(() => top(page)).toBe(0);
-  await expect(writing(page)).toHaveCount(1);
-});
+test(
+  "a jump the reader didn't make, while it writes, is undone",
+  { tag: "@perf" },
+  async ({ page }) => {
+    await start(page);
+    await expect
+      .poll(() => top(page), { timeout: 15_000 })
+      .toBeGreaterThan(300);
+    await page.locator(scroller).hover();
+    await page.mouse.wheel(0, -5000);
+    await expect.poll(() => top(page)).toBe(0);
+    await page.waitForTimeout(900);
+    // As WebKit would: back to the caret, far below.
+    await page
+      .locator(scroller)
+      .evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await expect.poll(() => top(page)).toBe(0);
+    await expect(writing(page)).toHaveCount(1);
+  },
+);

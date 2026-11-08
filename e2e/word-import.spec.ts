@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { emit, mockInvoke, openApp } from "./helpers";
 
 // A Word document opens as a new, unsaved Markdown document. The backend's
 // conversion is canned; this checks the flow around it.
@@ -7,18 +7,6 @@ import { mockInvoke, openApp } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 
 const MARKDOWN = "# Report\n\nPrice: \\$5 \\*each\\*\n\n1. First\n2. Second";
-
-function emit(page: Page, name: string, payload?: unknown) {
-  return page.evaluate(
-    ([n, p]) =>
-      (
-        window as unknown as {
-          __devEmitTauriEvent: (name: string, payload: unknown) => void;
-        }
-      ).__devEmitTauriEvent(n as string, p),
-    [name, payload],
-  );
-}
 
 type Call = { cmd: string; [arg: string]: unknown };
 function calls(page: Page, cmd: string): Promise<Call[]> {

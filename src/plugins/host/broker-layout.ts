@@ -1,3 +1,4 @@
+import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
 import { splitLayout } from "../../app/split/split-layout";
 import { panesOf } from "../../app/split/split-tree";
@@ -11,6 +12,7 @@ import {
   showContribution,
 } from "../views/floating-views";
 import { webPageUrl } from "../views/web-page-url";
+import { panelsState } from "../panels-state";
 import {
   optionalStr,
   str,
@@ -91,6 +93,12 @@ export function layoutHandlers(p: PluginScope) {
         whereOf(where),
       );
     },
+    // A sidebar tab - any plugin's, or Files and Outline - shown.
+    "layout.showSidebarTab": ({ id }: Params) => {
+      window.dispatchEvent(
+        new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: str(id, "id") }),
+      );
+    },
     "layout.openWebPage": ({ url, where, title }: Params) => {
       const address = webPageUrl(str(url, "url"));
       if (!address) throw new Error("Only an https:// page opens in a tab.");
@@ -150,6 +158,7 @@ export function layoutHandlers(p: PluginScope) {
         })),
     "layout.activeTab": () => access().activeTab(),
     "layout.tabs": () => access().tabs(),
+    "layout.panels": () => panelsState(),
     "layout.split": () => {
       // The outermost way the panes run, and each pane's tab in front.
       const layout = splitLayout();

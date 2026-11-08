@@ -74,7 +74,7 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   await openWithOfferingPlugin(page);
   const card = page.locator(".suggest-card");
   // One line naming the plugin; the editor keeps the focus.
-  await expect(card).toContainText("Plugin suggestion: Kanban");
+  await expect(card).toContainText("Plugin suggestion: Task Board");
   await expect(card).toHaveCount(1);
   await expect(card.locator(":focus")).toHaveCount(0);
   await card.locator(".corner-toast-summary").click();
@@ -82,7 +82,7 @@ test("a plugin's suggestion asks once, installs the plugin and answers true", as
   await card.getByRole("button", { name: "Install", exact: true }).click();
   // Its permissions, as any install asks.
   const ask = page.locator(".app-dialog");
-  await expect(ask).toContainText("Kanban asks to:");
+  await expect(ask).toContainText("Task Board asks to:");
   await ask.getByRole("button", { name: "Allow" }).click();
   await expect(page.getByText("answers: false,true,false,false")).toBeVisible();
   await expect(card).toHaveCount(0);
