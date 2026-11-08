@@ -22,20 +22,17 @@
   color: var(--ui-danger);
 }
 
-/* A choice of several (the file tree's sort): the check before the one in
-   force, its room kept before the others so the labels line up. */
+/* A choice of several (the file tree's sort): the check at the far end of
+   the one in force, so every label starts at the same place. */
 .context-menu-item[role="menuitemradio"] {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
 }
 
 .context-menu-check {
   flex-shrink: 0;
-}
-
-.context-menu-check-off {
-  visibility: hidden;
+  margin-left: auto;
 }
 
 /* A row that opens a submenu: its chevron at the far end. */
