@@ -34,6 +34,17 @@ import { setEmbeddedBlocks } from "../../editor/embeds/embed-plugin-blocks";
 import { drawPluginBlocksIn } from "./embedded-plugin-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
+import { addBlockFold } from "../../editor/fold/block-fold";
+import {
+  pluginName,
+  pluginsSnapshot,
+} from "../../plugins/store/plugin-records";
+
+/** What a folded block says it is: its plugin's name. */
+function blockName(plugin: string): string {
+  const record = pluginsSnapshot().records.find((r) => r.id === plugin);
+  return record ? pluginName(record) : plugin;
+}
 
 /** The drawings, and the block whose source </> opened (its start), if any:
  *  only that one shows its source, until the caret leaves it. */
@@ -129,7 +140,14 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
       const holder = document.createElement("div");
+      holder.className = "plugin-code-holder";
       el.append(holder);
+      // Folded as Textus folds drawn blocks: by the document and its place.
+      addBlockFold(
+        el,
+        blockName(plugin),
+        `${docPath.current ?? ""}\n${widget}`,
+      );
       // A plugin's frame is heavy: drawn near the screen, let go far from
       // it (its state kept through setWebviewState).
       drawWhileNear(

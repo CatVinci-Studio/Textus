@@ -53,6 +53,9 @@ export interface UiState {
   /** The note embeds folded, by the document they are in and what they
    *  show, oldest first. */
   foldedEmbeds: string[];
+  /** The drawn blocks folded (editor/fold/block-fold.ts), by document and
+   *  place, oldest first. */
+  foldedBlocks: string[];
   /** With embeds shown as cards, the ones opened, the same way. */
   openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
@@ -203,6 +206,11 @@ const LOCAL: {
   },
   readOnlyPaths: {
     key: "textus-read-only-paths",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  foldedBlocks: {
+    key: "textus-folded-blocks",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

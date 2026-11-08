@@ -15,3 +15,5 @@
 - Plugin pages' own styles grow with the interface too, without any change to the plugins.
 - The Plugins menu has each plugin's Settings…, opening its page in Settings.
 - A setting's row no longer changes when you click its words or its description, only its switch; a plugin's name on its page no longer turns it off.
+- Embedded notes and plugin blocks (a database) fold the same way: a caret in the margin on their left, on hover, folds them to one line with their name. An embed shows its content alone beside a quiet rule, its source opened from ↗ at its top right; nothing shows its name or a fold arrow twice.
+- A plugin block shows its source or its drawing, as a diagram does, not both at once.

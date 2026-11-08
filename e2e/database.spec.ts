@@ -278,7 +278,7 @@ test("zoomed, the block's page draws at the zoom across the column's width, and 
   await expect.poll(zoom).not.toBe(before);
 });
 
-test("a long view loads more rows once its end is in sight; folded, only its bar", async ({
+test("a long view loads more rows once its end is in sight; folded by Textus, one line", async ({
   page,
 }) => {
   const db = await open(page, {
@@ -291,8 +291,13 @@ test("a long view loads more rows once its end is in sight; folded, only its bar
   await expect(db.locator(rows)).toHaveCount(3);
   await expect(db.getByRole("button", { name: /more/i })).toHaveCount(0);
   await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
-  await db.locator("#fold").click();
-  await expect(db.locator("#body")).toBeHidden();
+  // Folded as every drawn block is: the caret on its left, its name left.
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await block.hover();
+  await block.locator(".block-fold").click();
+  await expect(block.locator("iframe")).toBeHidden();
+  await expect(block.locator(".block-folded-line")).toHaveText("Workspace");
+  await block.locator(".block-folded-line").click();
   await expect(db.locator("#count")).toHaveText("3 pages");
 });
 

@@ -54,9 +54,10 @@ async function draw(
 }
 
 describe("a note embed", () => {
-  it("draws the note's Markdown under its title, read-only", async () => {
+  it("draws the note's Markdown read-only, named for when it is folded", async () => {
     const { el } = await draw("![[A]]", "/v/Doc.md");
-    expect(el.querySelector(".note-embed-title")?.textContent).toBe("A");
+    expect(el.querySelector(".block-folded-name")?.textContent).toBe("A");
+    expect(el.hasAttribute("data-folded")).toBe(false);
     expect(el.querySelector(".note-embed-body p")?.textContent).toContain(
       "Alpha",
     );

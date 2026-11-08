@@ -39,7 +39,7 @@ test("a database in an embedded note is a line until clicked", async ({
   const frame = page.locator(".note-embed-block-page iframe");
   await expect(frame).toBeVisible();
   // Still the embed, not its ![[...]] source.
-  await expect(page.locator(".note-embed-title")).toBeVisible();
+  await expect(page.locator(".note-embed-body")).toBeVisible();
   await expect(
     page.frameLocator(".note-embed-block-page iframe").locator("#count"),
   ).toHaveText("1 pages");

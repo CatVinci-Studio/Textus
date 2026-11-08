@@ -21,7 +21,19 @@
   border: 1px solid var(--doc-border);
   border-radius: var(--doc-radius);
   background: var(--doc-code-bg);
+}
+
+/* The drawing keeps to the box's corners; the fold's caret sits outside it,
+   in the margin. */
+.plugin-code-holder {
   overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Folded: the line alone, no box around it. */
+.plugin-code-block[data-folded] {
+  border-color: transparent;
+  background: transparent;
 }
 
 /* A block that reads as part of the page (a database's table): no box. */
