@@ -36,7 +36,6 @@ test("split view shows source and preview", async ({ page }) => {
   await expect(page.locator(".split-preview h1")).toHaveText(
     "老城区更新的几点思考",
   );
-  await expect(page).toHaveScreenshot("split-view.png");
   // And back to the editor.
   await page.keyboard.press("Control+Shift+E");
   await expect(page.locator(".split-view")).toHaveCount(0);
@@ -52,7 +51,6 @@ test("zen mode hides the chrome and dims all but the current block", async ({
   await expect(page.locator("html")).toHaveClass(/zen/);
   await expect(page.locator(".zen-current")).toHaveCount(1);
   await expect(page.locator(".sidebar")).toBeHidden();
-  await expect(page).toHaveScreenshot("zen-mode.png");
   await page.keyboard.press("Escape");
   await expect(page.locator("html")).not.toHaveClass(/zen/);
 });
@@ -427,7 +425,6 @@ test("selects open the app's own list; notices are the app's own dialog", async 
   await page.getByRole("combobox", { name: "编辑器主题" }).click();
   const list = page.getByRole("listbox");
   await expect(list).toBeVisible();
-  await expect(page).toHaveScreenshot("select-open.png");
   // Escape closes the list and leaves Settings open.
   await page.keyboard.press("Escape");
   await expect(list).toHaveCount(0);

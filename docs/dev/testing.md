@@ -55,6 +55,27 @@ answers it on each platform: the native menu (read from
 goes into that table; the test fails if two features claim one key, or if
 a key the macOS menu takes reaches nothing.
 
+## Which tests run when
+
+| Kind                                                            | Where                              | When                                                    | Blocks                         |
+| --------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------- | ------------------------------ |
+| `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request                        | yes                            |
+| e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (4 shards) | before a push; every pull request touching the frontend | yes                            |
+| e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | after a merge to `main`                                 | no: looked at before a release |
+| Screenshots (`e2e/visual.spec.ts`)                              | Linux only                         | before a release; after a change to the look            | no                             |
+| Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point                                | never                          |
+| Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed                     | never: compared by hand        |
+
+The e2e server makes every run read as Linux (`vite.e2e-platform.ts`), so
+Ctrl is the shortcut key on a Mac too; Mac-only keys and window chrome are
+checked in the real app. Screenshot baselines are Linux's alone and are
+skipped on a Mac (`ignoreSnapshots` in `playwright.config.ts`); keep them
+few - each one shows a whole screen someone would notice changing.
+
+A flow that takes more than about 15 seconds says so with `test.slow()` and
+a line on why; a check of timing or frames is `@perf`, never a plain
+assertion.
+
 ## Running each layer
 
 ```sh
