@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, pasteMarkdown, END } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  END,
+  selectionRead,
+} from "./helpers";
 
 /**
  * A <details> around markdown folds it away. Whatever points into the folded
@@ -255,10 +262,14 @@ test("the arrow keys stop on a fold's source lines instead of skipping them", as
   await page.keyboard.press("ArrowUp");
   await expect(editor).toContainText("</details>", { useInnerText: true });
 
-  // From the paragraph above, down stops on the head's source.
+  // From the paragraph above, down stops on the head's source. Each key
+  // waits for the editor to have read the last one's caret.
   await page.keyboard.press("ControlOrMeta+Home");
+  await selectionRead(page);
   await page.keyboard.press("ArrowDown");
+  await selectionRead(page);
   await page.keyboard.press(END);
+  await selectionRead(page);
   await expect(editor).not.toContainText("</details>", { useInnerText: true });
   await page.keyboard.press("ArrowDown");
   await expect(editor).toContainText("<summary>Folded notes</summary>", {

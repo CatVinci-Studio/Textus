@@ -93,7 +93,8 @@ test("a plugin's settings of every kind", async ({ page }) => {
   // The colour shows only while the legend is on.
   const color = own.getByLabel("Legend colour");
   await expect(color).toHaveCount(0);
-  await own.getByText("Legend", { exact: true }).click();
+  // Only the switch turns it on, not its words.
+  await own.getByRole("checkbox", { name: "Legend", exact: true }).click();
   await expect(color).toHaveValue("#3366ff");
 
   // A number past its bounds is kept within them.
