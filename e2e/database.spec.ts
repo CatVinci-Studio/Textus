@@ -121,7 +121,7 @@ test("a table of the folder's pages, a cell edited into its page's front matter"
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("rate: 3");
-  await expect(db.locator(rows).first().locator(".stars")).toHaveText("★★★☆☆");
+  await expect(db.locator(rows).first().locator(".tx-rating")).toHaveText("★★★☆☆");
 });
 
 /** Textus's own menu, which the page opens over itself. */

@@ -72,7 +72,8 @@ test("a deleted quick note comes back with Undo, and an empty one goes by itself
     .getByRole("menuitem", { name: "Delete" })
     .click();
   await expect(panel.locator("textarea")).toHaveCount(0);
-  await panel.getByRole("button", { name: "Undo" }).click();
+  // Undo is on Textus's own note at the foot of the window.
+  await page.locator(".notice").getByRole("button", { name: "Undo" }).click();
   await expect(panel.locator("textarea")).toHaveValue("Keep me");
   // A new note left empty doesn't stay.
   await panel.getByRole("button", { name: "New" }).click();
@@ -93,7 +94,7 @@ test("a day in the calendar opens its note, made the first time", async ({
   await openPath(page, "/notes/ideas.md");
   await expect(page.locator(editor)).toContainText("Ideas");
   const calendar = await openSidebarTab(page, "Calendar");
-  await calendar.locator(`.day[data-date="${today()}"]`).click();
+  await calendar.locator(`.tx-calendar-day[data-date="${today()}"]`).click();
   await expect(page.locator(editor)).toContainText(today());
   const written = await page.evaluate(
     (date) =>
@@ -103,9 +104,9 @@ test("a day in the calendar opens its note, made the first time", async ({
     today(),
   );
   expect(written).toBe(`# ${today()}\n\n`);
-  await expect(calendar.locator(`.day[data-date="${today()}"]`)).toHaveClass(
-    /has-note/,
-  );
+  await expect(
+    calendar.locator(`.tx-calendar-day[data-date="${today()}"]`),
+  ).toHaveClass(/is-marked/);
 });
 
 test("the folder's tasks are listed, and ticking one writes its line", async ({
@@ -278,10 +279,12 @@ test("saves close together are one version, listed under Today", async ({
     await save();
     await page.waitForTimeout(300);
   }
-  await expect(history.locator(".day-head")).toHaveText("Today");
+  await expect(history.locator(".tx-list-heading")).toHaveText("Today");
   // Within 15 minutes (the default): one version, the latest text.
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(1);
-  await history.locator("#versions > li:not(.day-head)").click();
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(1);
+  await history.locator("#versions > li:not(.tx-list-heading)").click();
   await expect(history.locator(".diff")).toContainText("three");
 });
 
@@ -307,14 +310,18 @@ test("each save is a version, shown against the text now and restorable", async 
   await page.keyboard.type(" and more");
   await save();
   const history = await openSidebarTab(page, "History");
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(1);
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(1);
   await page.clock.fastForward("16:00");
   await page.locator(editor).click();
   await page.keyboard.press("End");
   await page.keyboard.type(" again");
   await save();
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(2);
-  await history.locator("#versions > li:not(.day-head)").nth(1).click();
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(2);
+  await history.locator("#versions > li:not(.tx-list-heading)").nth(1).click();
   await expect(history.locator(".diff .added")).toContainText("again");
   await history.getByRole("button", { name: "Restore This Version" }).click();
   // The version now as a proposal over the text: the old line offered,

@@ -286,29 +286,31 @@ input[type="range"].tx-slider {
   outline: none;
 }
 
-/* A month: seven columns, a heading row of weekdays, days that may be
-   today, out of the month, picked, or marked (a dot). */
+/* A month: seven columns, a heading row of weekdays, round days that may
+   be today, out of the month, picked, or marked (a dot). */
 .tx-calendar {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 1px;
+  gap: 2px;
 }
 .tx-calendar-weekday {
-  padding: var(--space-1) 0;
+  padding-bottom: var(--space-1);
   color: var(--ui-muted);
   font-size: var(--text-caption);
   text-align: center;
 }
 .tx-calendar-day {
   position: relative;
-  min-height: var(--control-height);
-  padding: var(--space-1);
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
   border: none;
-  border-radius: var(--shape-s);
-  background: none;
-  color: inherit;
+  border-radius: 50%;
+  corner-shape: round;
+  background: transparent;
+  color: var(--ui-text);
   font: inherit;
-  font-size: var(--text-secondary);
+  font-size: var(--text-footnote);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
@@ -318,25 +320,29 @@ input[type="range"].tx-slider {
 .tx-calendar-day.is-other {
   color: var(--ui-muted);
 }
-.tx-calendar-day.is-today {
-  color: var(--ui-accent);
+.tx-calendar-day:is(.is-today, [aria-selected="true"], .is-selected) {
+  background: var(--ui-accent-fill);
+  color: var(--ui-on-fill);
   font-weight: 600;
 }
-.tx-calendar-day:is([aria-selected="true"], .is-selected) {
+/* Picked, not today: the selection's colour. */
+.tx-calendar-day:is([aria-selected="true"], .is-selected):not(.is-today) {
   background: var(--ui-selected);
   color: var(--ui-selected-text);
 }
 .tx-calendar-day.is-marked::after {
   content: "";
   position: absolute;
-  bottom: 4px;
+  bottom: 12%;
   left: 50%;
-  width: 4px;
-  height: 4px;
+  width: var(--space-1);
+  height: var(--space-1);
   margin-left: -2px;
   border-radius: 50%;
-  background: currentColor;
-  opacity: 0.6;
+  background: var(--ui-accent);
+}
+.tx-calendar-day.is-today.is-marked::after {
+  background: var(--ui-on-fill);
 }
 
 /* A board's list: its head (a tag and a count) and its cards. */
