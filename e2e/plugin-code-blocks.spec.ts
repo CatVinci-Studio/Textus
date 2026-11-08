@@ -140,13 +140,16 @@ test("a drawn block's source shows only from Edit Source, not wherever the caret
   await expect(pre).toBeHidden();
 });
 
-test("a block's frame fits its page as the page grows and shrinks", async ({
+test("a block's frame fits its page as the page grows, up to 70% of the window, and shrinks", async ({
   page,
 }) => {
   await open(page, "tall");
   const block = page.locator(`${editor} .plugin-code-block iframe`).first();
   const height = async () => (await block.boundingBox())?.height ?? 0;
-  await expect.poll(height).toBeGreaterThan(600);
+  // A tall page grows the frame up to 70% of the window, then scrolls.
+  const cap = Math.round(page.viewportSize()!.height * 0.7);
+  await expect.poll(height).toBeGreaterThan(cap - 2);
+  expect(await height()).toBeLessThanOrEqual(cap + 1);
   // The page sets a short source: the frame comes back down with it.
   await page
     .frameLocator(`${editor} .plugin-code-block iframe`)
