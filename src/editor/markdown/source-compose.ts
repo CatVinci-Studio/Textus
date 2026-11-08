@@ -6,9 +6,9 @@ import {
   readBlocks,
   sameBlock,
   type Piece,
+  type SaveMemo,
   type SourceBlocks,
 } from "./source-parts";
-import { SaveMemo } from "./source-parts";
 
 /** Saving with the file's own text: kept pieces and changed runs put back
  *  together, and each join checked to read back as the document has it. */
