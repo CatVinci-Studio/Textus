@@ -7,6 +7,7 @@ import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { PHONE_QUERY } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 import type { OpenFolder } from "./useOpenFolder";
+import type { FileOpenHow } from "../sidebar/tree-shared";
 
 /** What every sidebar tab's panel is given: the window's document and
  *  folder, and its ways to open a file or close the sidebar. */
@@ -19,7 +20,7 @@ export interface SidebarTabProps {
   /** The tab in front, for a jump inside its document. */
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, beside?: boolean) => void;
+  onOpenFile: (path: string, how?: FileOpenHow) => void;
   /** Closes the sidebar (the phone's drawer, once a file is opened). */
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
@@ -59,10 +60,10 @@ function FilesPanel({
       onRootChange={openFolder.setTreeRoot}
       folder={openFolder.folder}
       activePath={activePath}
-      onFileSelect={(path, beside) => {
+      onFileSelect={(path, how) => {
         // On a phone the drawer covers the page it just opened.
         if (isIOSApp && window.matchMedia(PHONE_QUERY).matches) onClose();
-        onOpenFile(path, beside);
+        onOpenFile(path, how);
       }}
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}

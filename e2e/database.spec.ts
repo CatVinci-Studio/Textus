@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit } from "./helpers";
+import { dragWithMouse, emit, swallowHtmlDrop } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 // The Database plugin: a folder's documents as a table, a board or a
@@ -59,6 +59,7 @@ const FOLDER = {
 };
 
 async function open(page: Page, more: Record<string, string> = {}) {
+  await swallowHtmlDrop(page);
   await openWithPlugins(page, {
     plugins: {
       [ID]: [
@@ -77,7 +78,7 @@ async function open(page: Page, more: Record<string, string> = {}) {
     .first();
 }
 
-const rows = "#body tbody tr:not(.new-row)";
+const rows = "#body tbody tr:not(.new-row, .more-row)";
 
 /** The document's text: a block's lines are kept in it. */
 const docText = (page: Page) =>
@@ -210,16 +211,21 @@ test("the board groups pages by a select, its lists put in order by dragging", a
   await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Doing", "Done"]);
   await expect(db.locator('.lane[data-value="Doing"] .record')).toHaveCount(2);
   // A list's head dragged before another: the order kept in the view.
-  await db
-    .locator('.lane[data-value="Done"] .lane-head')
-    .dragTo(db.locator('.lane[data-value="Doing"]'));
+  await dragWithMouse(
+    page,
+    db.locator('.lane[data-value="Done"] .lane-head'),
+    db.locator('.lane[data-value="Doing"] .lane-head'),
+    -40,
+  );
   await expect
     .poll(() => docText(page))
     .toContain("groupOrder:\n      - Done\n      - Doing");
   await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Done", "Doing"]);
-  await db
-    .locator('.lane[data-value="Doing"] .record', { hasText: "Week1" })
-    .dragTo(db.locator('.lane[data-value="Done"]'));
+  await dragWithMouse(
+    page,
+    db.locator('.lane[data-value="Doing"] .record', { hasText: "Week1" }),
+    db.locator('.lane[data-value="Done"] .record').first(),
+  );
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("status: Done");
@@ -301,4 +307,47 @@ test("zoomed, a column's menu opens under its header", async ({ page }) => {
   const box = (await menu(page).boundingBox())!;
   expect(Math.abs(box.x - head.x)).toBeLessThan(4);
   expect(Math.abs(box.y - (head.y + head.height))).toBeLessThan(8);
+});
+
+test("a column's head dragged along the others, and its edge to a width, kept in the base", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await dragWithMouse(
+    page,
+    db.locator('thead th[data-key="status"]'),
+    db.locator('thead th[data-key="start"]'),
+    -30,
+  );
+  await expect
+    .poll(() => docText(page))
+    .toContain("order:\n      - file.name\n      - status\n      - start");
+  const edge = db.locator('thead th[data-key="end"] .col-resize');
+  const box = (await edge.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 80, box.y + box.height / 2, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => docText(page)).toMatch(/columnSize:\n\s+end: \d+/);
+});
+
+test("any view's menu opens on a right click, and a view is deleted from it", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await db.getByRole("tab", { name: "Calendar" }).click({ button: "right" });
+  await page.getByRole("menuitem", { name: /Delete view/i }).click();
+  await expect(db.getByRole("tab")).toHaveText([/Table/, /Board/]);
+  await expect.poll(() => docText(page)).not.toContain("type: calendar");
+});
+
+test("Show more comes before New at a table's end", async ({ page }) => {
+  const db = await open(page, {
+    "/work/2026 Calendar/2026 Calendar.md":
+      "# 2026 Calendar\n\n```base\n" +
+      BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
+      "\n```\n",
+  });
+  await expect(db.locator("#body tbody tr").nth(-2)).toHaveClass(/more-row/);
+  await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
 });

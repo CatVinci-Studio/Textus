@@ -598,6 +598,12 @@
       },
       onDidChangeActiveTab: on("activeTab"),
       onDidChangeLayout: on("layout"),
+      // Which of the window's panels are open: the sidebar (and its tab),
+      // Textus AI's.
+      panels: function () {
+        return call("layout.panels");
+      },
+      onDidChangePanels: on("panels"),
       // A floating view (contributes.floatingViews) shown or closed; the
       // user moves, folds and closes it too.
       openFloating: function (viewId) {

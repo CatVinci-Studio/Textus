@@ -46,6 +46,7 @@ import { DirNode } from "./TreeNodes";
 import { TreeFollowing } from "./TreeFollowing";
 import "./FileTree.css";
 import { copyPathItem } from "../clipboard/copy-path";
+import type { FileOpenHow } from "./tree-shared";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
@@ -57,8 +58,9 @@ interface FileTreeProps {
    *  inside it, and the search covers all of it. */
   folder: string | null;
   activePath: string | null;
-  /** `beside`: Open to the Side, in a split beside the one in front. */
-  onFileSelect: (path: string, beside?: boolean) => void;
+  /** How it opens: a tab of its own unless `how` says to look (a click,
+   *  the preview tab) or Open to the Side. */
+  onFileSelect: (path: string, how?: FileOpenHow) => void;
   /** Opens the folder the tree shows as the window's folder; desktop only. */
   onOpenAsFolder?: (path: string) => void;
   /** File > Close Folder. */
@@ -468,7 +470,7 @@ function useRowMenu(
   linkBase: string,
   t: Strings,
   reload: (...dirs: string[]) => void,
-  onFileSelect: (path: string, beside?: boolean) => void,
+  onFileSelect: (path: string, how?: FileOpenHow) => void,
   onEntryMoved: (from: string, to: string) => void,
   setDraft: (draft: TreeDraft) => void,
 ) {
@@ -523,7 +525,7 @@ function useRowMenu(
       if (path !== root && !isDir)
         items.push(
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
-          { label: t.openBeside, onSelect: () => onFileSelect(path, true) },
+          { label: t.openBeside, onSelect: () => onFileSelect(path, "beside") },
           "separator",
         );
       items.push(

@@ -1,4 +1,4 @@
-import { devices, expect, type Page } from "@playwright/test";
+import { devices, expect, type Locator, type Page } from "@playwright/test";
 
 /** A document exercising most of the content styling. */
 export const SAMPLE_DOC = `# 老城区更新的几点思考
@@ -334,4 +334,30 @@ export async function openPhone(
     "data-window-chrome",
     "mobile",
   );
+}
+
+/** As in the app's window, whose file drop swallows HTML drag and drop: a
+ *  drag that still works here works there. Call before openApp. */
+export async function swallowHtmlDrop(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    for (const type of ["dragover", "drop"])
+      window.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+  });
+}
+
+/** Presses on `from`, moves in steps onto `to` (nudged by `dx`), lets go. */
+export async function dragWithMouse(
+  page: Page,
+  from: Locator,
+  to: Locator,
+  dx = 0,
+): Promise<void> {
+  const a = (await from.boundingBox())!;
+  const b = (await to.boundingBox())!;
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(b.x + b.width / 2 + dx, b.y + b.height / 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
 }

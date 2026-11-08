@@ -145,7 +145,7 @@ export function NewDocumentIcon({ className }: IconProps) {
   );
 }
 
-function MarkdownFileIcon({ className }: IconProps) {
+export function MarkdownFileIcon({ className }: IconProps) {
   return (
     <svg
       className={className}
@@ -795,15 +795,6 @@ export function WindowCloseIcon({ className }: IconProps) {
       />
     </svg>
   );
-}
-
-const IMAGE_EXTS = new Set(["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"]);
-
-export function fileIconFor(name: string) {
-  const ext = name.split(".").pop()?.toLowerCase() ?? "";
-  if (ext === "md" || ext === "markdown") return MarkdownFileIcon;
-  if (IMAGE_EXTS.has(ext)) return ImageFileIcon;
-  return GenericFileIcon;
 }
 
 /** Undo (the iPhone keyboard toolbar). */

@@ -9,6 +9,7 @@ import type { OpenFolder } from "./useOpenFolder";
 import { SidebarTabBar } from "./SidebarTabBar";
 import { moveSidebarTab, sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../plugins/views/plugin-views";
+import type { FileOpenHow } from "../sidebar/tree-shared";
 
 /** The left sidebar and its tabs, plus the scrim behind its drawer on iPhone. */
 export function Sidebar({
@@ -43,7 +44,7 @@ export function Sidebar({
   onToggle: () => void;
   onClose: () => void;
   /** `beside`: in a split beside the document in front. */
-  onOpenFile: (path: string, beside?: boolean) => void;
+  onOpenFile: (path: string, how?: FileOpenHow) => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
   /** The search shortcut asked for the Files tab's search box. */

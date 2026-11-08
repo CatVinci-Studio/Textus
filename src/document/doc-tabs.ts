@@ -57,6 +57,9 @@ export interface DocTab {
   view?: PluginTabView;
   /** The start page, shown until something opens in this tab. */
   start?: boolean;
+  /** Opened by a single click, to look: the next such click shows its file
+   *  here instead. Kept once edited or double-clicked. */
+  preview?: boolean;
 }
 
 // The document part of a tab in flight between windows.

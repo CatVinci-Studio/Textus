@@ -84,10 +84,8 @@ export function ModeChoice({
                   );
                 }}
               >
-                <CheckIcon
-                  className={`context-menu-check${on ? "" : " context-menu-check-off"}`}
-                />
                 {t[MODES[mode].label]}
+                {on && <CheckIcon className="context-menu-check" />}
               </button>
             );
           })}

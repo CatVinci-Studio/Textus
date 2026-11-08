@@ -386,6 +386,24 @@ textarea.tx-input {
   background: var(--ui-surface);
 }
 
+/* Dragged on a plugin's page (lib/drag.js): the copy under the pointer, and
+   the place the item will land, kept as an empty outline. */
+.tx-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  margin: 0;
+  pointer-events: none;
+  box-shadow: var(--shadow-popover);
+}
+.tx-drag-source {
+  border-style: dashed;
+  background: transparent;
+  box-shadow: none;
+}
+.tx-drag-source > * {
+  visibility: hidden;
+}
+
 /* What will appear here and how to get it: one sentence, at most one
    button. */
 .tx-empty {

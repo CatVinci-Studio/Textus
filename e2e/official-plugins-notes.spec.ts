@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, pasteMarkdown } from "./helpers";
+import {
+  dragWithMouse,
+  emit,
+  mockInvoke,
+  pasteMarkdown,
+  swallowHtmlDrop,
+} from "./helpers";
 import {
   openPath,
   openSidebarList,
@@ -24,7 +30,9 @@ test("a quick note is kept, and Insert writes it into the document", async ({
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["editor.write"] },
+    plugins: {
+      "catvinci.quick-notes": ["editor.write", "files.read", "files.write"],
+    },
   });
   await pasteMarkdown(page, "The draft.");
   const panel = await openSidebarTab(page, "Quick Notes");
@@ -50,7 +58,9 @@ test("a deleted quick note comes back with Undo, and an empty one goes by itself
   page,
 }) => {
   await openWithPlugins(page, {
-    plugins: { "catvinci.quick-notes": ["editor.write"] },
+    plugins: {
+      "catvinci.quick-notes": ["editor.write", "files.read", "files.write"],
+    },
   });
   const panel = await openSidebarTab(page, "Quick Notes");
   await panel.getByRole("button", { name: "New" }).click();
@@ -174,6 +184,7 @@ test("a card's [[link]] opens its note, and a list dragged by its head moves", a
 }) => {
   const board =
     "---\nkanban-plugin: basic\n---\n\n## To do\n\n- [ ] Read [[Plan]] first\n\n## Doing\n\n## Done\n";
+  await swallowHtmlDrop(page);
   await openWithPlugins(page, {
     plugins: { "catvinci.kanban": ["files.read", "files.write"] },
     folder: {
@@ -189,10 +200,12 @@ test("a card's [[link]] opens its note, and a list dragged by its head moves", a
     "Done",
   ]);
   // Done to the front.
-  await frame
-    .locator(".list-head")
-    .nth(2)
-    .dragTo(frame.locator(".list").first());
+  await dragWithMouse(
+    page,
+    frame.locator(".list-head").nth(2),
+    frame.locator(".list-head").first(),
+    -60,
+  );
   await expect(frame.locator(".list-title")).toHaveText([
     "Done",
     "To do",

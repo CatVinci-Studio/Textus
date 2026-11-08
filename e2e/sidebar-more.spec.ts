@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { dragWithMouse, openApp, swallowHtmlDrop } from "./helpers";
 
 /** Plugin tabs that don't fit the sidebar's width go under More. */
 
@@ -46,4 +46,39 @@ test("tabs past the sidebar's width go under More, the one shown keeps its butto
   const shown = page.locator('.sidebar-tab[aria-label="Example 6"]');
   await expect(shown).toHaveClass(/sidebar-tab-active/);
   await expect(more).toBeVisible();
+});
+
+test("a tab dragged along the bar takes the place it is let go at", async ({
+  page,
+}) => {
+  await swallowHtmlDrop(page);
+  await openApp(page, { settings: { language: "en" } });
+  await page.waitForFunction(
+    () => !!(window as unknown as { __textusPlugins?: Api }).__textusPlugins,
+  );
+  await page.evaluate(() => {
+    const { sidebarTabs } = (window as unknown as { __textusPlugins: Api })
+      .__textusPlugins;
+    sidebarTabs.register({
+      id: "example-1",
+      label: () => "Example 1",
+      Icon: () => "1",
+      Panel: () => null,
+    });
+  });
+  await page.keyboard.press("ControlOrMeta+\\");
+  const labels = () =>
+    page
+      .locator(".sidebar-tabs .sidebar-tab")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+  const before = await labels();
+  const tabs = page.locator(".sidebar-tabs .sidebar-tab");
+  await dragWithMouse(page, tabs.last(), tabs.first(), -4);
+  await expect
+    .poll(labels)
+    .toEqual([before[before.length - 1], ...before.slice(0, -1)]);
+  // The release is no click: the dragged tab isn't shown.
+  await expect(
+    page.locator('.sidebar-tab[aria-label="Example 1"]'),
+  ).not.toHaveClass(/sidebar-tab-active/);
 });

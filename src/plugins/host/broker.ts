@@ -136,6 +136,7 @@ const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
   editorKey: "editor.input",
   appState: null,
   aiState: null,
+  panels: null,
   activity: null,
   floating: null,
   floatingTouch: null,

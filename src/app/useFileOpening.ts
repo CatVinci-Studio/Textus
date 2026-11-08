@@ -61,6 +61,8 @@ export interface OpenOptions {
   where?: Where;
   /** Dropped over the documents: opens on that side. */
   drop?: DropTarget;
+  /** A single click to look: in the preview tab (DocTab.preview). */
+  preview?: boolean;
 }
 
 /** Where a document just read from disk should open, if not at its top. */
@@ -209,6 +211,13 @@ export function useFileOpening(opts: {
           (!open.asDocument && tab.view?.resource === path),
       );
       if (existing) {
+        // Opened on purpose (not a look): the preview tab stays.
+        if (existing.preview && !open.preview)
+          setTabs((prev) =>
+            prev.map((tab) =>
+              tab.id === existing.id ? { ...tab, preview: false } : tab,
+            ),
+          );
         // A plugin's file editor is asked to show the place itself.
         if (open.place && existing.view?.kind === "editor")
           revealInPluginTab(existing.id, { path, ...open.place });
@@ -231,6 +240,7 @@ export function useFileOpening(opts: {
         ...makeBlankTab(),
         ...(doc.view ? {} : lastViewMode()),
         ...doc,
+        ...(open.preview ? { preview: true } : {}),
       };
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
@@ -261,13 +271,14 @@ export function useFileOpening(opts: {
       if (jump) setTabJump(tabId, jump);
       const reloadKey =
         (tabsRef.current.find((tb) => tb.id === tabId)?.reloadKey ?? 0) + 1;
-      updateTab(tabId, { ...doc, reloadKey });
+      updateTab(tabId, { ...doc, reloadKey, preview: !!open.preview });
     },
     [tabsRef, updateTab, restoreCarets, readDocument],
   );
 
   // One rule in the window: a file open already comes to the front, an
-  // untouched draft in front gives way to it, anything else gets a tab of
+  // untouched draft in front gives way to it, a look (preview) takes the
+  // preview tab while nothing is written in it, anything else gets a tab of
   // its own; nothing written is replaced. (The setting only says where files
   // from outside go: startup-restore and the native side.)
   const openFile = useCallback(
@@ -278,6 +289,17 @@ export function useFileOpening(opts: {
       const alreadyOpen = tabs.some(
         (tab) => tab.path === path || tab.importedFrom === path,
       );
+      const spare =
+        open.preview &&
+        !alreadyOpen &&
+        tabs.find(
+          (tab) => tab.preview && tab.content === tab.savedContent && !tab.view,
+        );
+      if (spare) {
+        await replaceTabWithFile(spare.id, path, open);
+        setActiveTabId(spare.id);
+        return;
+      }
       if (
         front &&
         tabIsUntouchedDraft(front) &&
@@ -288,7 +310,7 @@ export function useFileOpening(opts: {
         await replaceTabWithFile(activeTabId, path, open);
       else await openPathInTab(path, open);
     },
-    [activeTabId, openPathInTab, replaceTabWithFile, liveTabs],
+    [activeTabId, openPathInTab, replaceTabWithFile, liveTabs, setActiveTabId],
   );
 
   // Project-bar entries and followed links always open in a new tab, never

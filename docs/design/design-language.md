@@ -221,6 +221,7 @@ Every surface that appears in the window is one of these. Each row says where it
 ## 8. Icons - In force
 
 - One set (`src/ui/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
+- File types (`src/ui/file-icons.tsx`): Markdown, pictures and other files are ours; the rest are Lucide's (ISC), stroked thinner to match. A new kind of file takes a Lucide icon before one of our own.
 - Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
 - A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
 - Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.

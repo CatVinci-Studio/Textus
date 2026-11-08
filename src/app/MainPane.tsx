@@ -113,6 +113,7 @@ export function MainPane({
   onMoveToNewWindow,
   onToggleReadOnly,
   onReorder,
+  onKeep,
   previewTab,
   onChange,
   typewriter,
@@ -130,6 +131,8 @@ export function MainPane({
   onMoveToNewWindow: (tabId: string) => void;
   onToggleReadOnly: (tabId: string) => void;
   onReorder: (tabId: string, index: number) => void;
+  /** A preview tab kept. */
+  onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
@@ -201,7 +204,9 @@ export function MainPane({
         id: tab.id,
         title: tabTitle(tab, t),
         dirty: tabIsDirty(tab),
+        preview: tab.preview,
       }))}
+      onKeep={onKeep}
       activeTabId={active}
       onActivate={onActivate}
       onClose={onClose}

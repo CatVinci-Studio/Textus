@@ -1,3 +1,4 @@
+import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
 import type { SentBlock } from "../ai/doc-blocks";
@@ -91,7 +92,13 @@ export interface WindowAccess {
    *  its type. */
   openFile(
     path: string,
-    options: { place?: DocumentPlace; asDocument?: boolean; where?: Where },
+    options: {
+      place?: DocumentPlace;
+      asDocument?: boolean;
+      where?: Where;
+      /** A look: the preview tab, as a click in the file tree. */
+      preview?: boolean;
+    },
   ): void;
   openUntitled(content: string, title?: string, where?: Where): void;
   /** A guide to read: a clean draft, closed without asking; the same guide
@@ -179,6 +186,8 @@ export interface PluginEventMap {
   appState: AppState;
   /** What Textus AI is doing and with which model, never what it says. */
   aiState: AiState;
+  /** Which of the window's panels are open. */
+  panels: PanelsState;
   /** The user typed (once typing pauses) or saved: that it happened, with
    *  nothing of the document. */
   activity: { kind: "typing" | "saved" };

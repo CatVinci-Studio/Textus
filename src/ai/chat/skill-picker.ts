@@ -21,6 +21,7 @@ export {
   SKILL_COMMAND,
   SKILL_TRIGGER,
 } from "./skill-syntax";
+import { compareNames } from "../../utils/name-order";
 
 /** How many recently used skills lead the menu. */
 const RECENT_LIMIT = 5;
@@ -190,7 +191,7 @@ export function matchSkills(
         a.score - b.score ||
         rank(a.skill.name) - rank(b.skill.name) ||
         sortKey(a.skill) - sortKey(b.skill) ||
-        a.skill.name.localeCompare(b.skill.name),
+        compareNames(a.skill.name, b.skill.name),
     )
     .map((entry) => entry.skill);
 }
@@ -215,7 +216,7 @@ export function groupSkills(
   const shown = new Set(recentSkills.map((s) => s.name));
   const rest = skills.filter((s) => !shown.has(s.name));
   const byName = (a: PickerSkill, b: PickerSkill) =>
-    sortKey(a) - sortKey(b) || a.name.localeCompare(b.name);
+    sortKey(a) - sortKey(b) || compareNames(a.name, b.name);
   const groups: PickerGroup[] = [
     { id: "recent", skills: recentSkills },
     {

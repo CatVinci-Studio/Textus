@@ -3,12 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
-import {
-  ChevronIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  fileIconFor,
-} from "../ui/icons";
+import { ChevronIcon, FolderIcon, FolderOpenIcon } from "../ui/icons";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, parentDir } from "../utils/path";
@@ -22,6 +17,8 @@ import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree } from "./tree-shared";
 import { DraftRow } from "./DraftRow";
+import type { FileOpenHow } from "./tree-shared";
+import { fileIconFor } from "../ui/file-icons";
 
 interface DirNodeProps {
   path: string;
@@ -29,7 +26,7 @@ interface DirNodeProps {
   /** Left out by a .gitignore: shown dimmed, as the search leaves it out. */
   ignored?: boolean;
   activePath: string | null;
-  onFileSelect: (path: string) => void;
+  onFileSelect: (path: string, how?: FileOpenHow) => void;
   /** Re-roots the tree at a folder (double-click on its row). */
   onEnter: (path: string) => void;
 }
@@ -185,7 +182,7 @@ function FileNode({
   entry: DirEntryInfo;
   depth: number;
   active: boolean;
-  onSelect: (path: string) => void;
+  onSelect: (path: string, how?: FileOpenHow) => void;
 }) {
   const { t } = useSettings();
   const tree = useTree();
@@ -205,8 +202,10 @@ function FileNode({
           if (tree.takeDragClick()) return;
           if ((e.metaKey || e.ctrlKey) && tree.openInNewWindow)
             return tree.openInNewWindow(entry.path);
-          if (!press.consumeClick()) onSelect(entry.path);
+          // A click looks (the preview tab); a double click keeps it.
+          if (!press.consumeClick()) onSelect(entry.path, "preview");
         }}
+        onDoubleClick={() => onSelect(entry.path)}
         onContextMenu={
           tree.onRowMenu
             ? (e) => tree.onRowMenu!(e, entry.path, false)

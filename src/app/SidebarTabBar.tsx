@@ -3,11 +3,9 @@ import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { MoreIcon } from "../ui/icons";
+import { reorderDrag } from "../ui/pointer-drag";
 import type { Strings } from "../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
-
-/** A tab being dragged to another place in the bar. */
-const TAB_DRAG = "application/x-textus-sidebar-tab";
 
 /** The narrowest a tab's button gets before the rest go under "More". */
 export const TAB_MIN_PX = 30;
@@ -38,7 +36,7 @@ export function SidebarTabBar({
   tabs: SidebarTabDef[];
   shownId: string;
   onSelect: (id: string) => void;
-  /** A tab dragged onto another's place. */
+  /** A tab dragged into another's place. */
   onMove: (id: string, target: string) => void;
   t: Strings;
 }) {
@@ -68,16 +66,16 @@ export function SidebarTabBar({
             className={`sidebar-tab ${shownId === id ? "sidebar-tab-active" : ""}`}
             onClick={() => onSelect(id)}
             aria-label={label(t)}
-            draggable
-            onDragStart={(e) => e.dataTransfer.setData(TAB_DRAG, id)}
-            onDragOver={(e) => {
-              if (e.dataTransfer.types.includes(TAB_DRAG)) e.preventDefault();
-            }}
-            onDrop={(e) => {
-              const dragged = e.dataTransfer.getData(TAB_DRAG);
-              if (!dragged) return;
-              e.preventDefault();
-              onMove(dragged, id);
+            data-reorder-id={id}
+            // Dragged along the bar, the others make way; let go, it stays.
+            onPointerDown={(e) => {
+              const bar = ref.current;
+              if (!bar || e.pointerType === "touch") return;
+              reorderDrag(e, {
+                container: bar,
+                id,
+                onDrop: (dragged, index) => onMove(dragged, inline[index].id),
+              });
             }}
           >
             <Icon />
