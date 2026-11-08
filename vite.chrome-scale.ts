@@ -12,6 +12,7 @@ import type { Plugin } from "postcss";
 const DOCUMENT = [
   /\/theme\/content-[^/]+\.css$/,
   /\/editor\/milkdown-theme\.css$/,
+  /\/app\/editor-column\.css$/,
   /\/editor\/modes\/source-editor\.css$/,
   /\/editor\/embeds\/note-embed\.css$/,
   /\/editor\/diagram-zoom\.css$/,
@@ -44,9 +45,15 @@ export function chromeScale(): Plugin {
   return {
     postcssPlugin: "chrome-scale",
     Once(root) {
-      const file = root.source?.input.file?.replace(/\\/g, "/") ?? "";
-      if (!file.includes("/src/") || isDocumentSheet(file)) return;
+      // Each declaration by the sheet it was written in: an @import brings
+      // the document's own sheets into the app's.
       root.walkDecls((decl) => {
+        const file = (
+          decl.source?.input.file ??
+          root.source?.input.file ??
+          ""
+        ).replace(/\\/g, "/");
+        if (!file.includes("/src/") || isDocumentSheet(file)) return;
         decl.value = scaleLengths(decl.value);
       });
     },

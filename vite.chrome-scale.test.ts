@@ -40,4 +40,19 @@ describe("one size for the whole interface", () => {
       "@media (max-width: 600px) { .a { padding: calc(8px * var(--chrome-scale, 1)); } }",
     );
   });
+
+  it("leaves the document's own sheet alone once an @import brings it in", async () => {
+    const app = postcss.parse(".a { padding: 8px; }", {
+      from: "/repo/src/app/App.css",
+    });
+    const column = postcss.parse(".editor-content { max-width: 680px; }", {
+      from: "/repo/src/app/editor-column.css",
+    });
+    app.append(column.nodes);
+    const out = await postcss([chromeScale()]).process(app, {
+      from: "/repo/src/app/App.css",
+    });
+    expect(out.css).toContain("max-width: 680px");
+    expect(out.css).toContain("calc(8px * var(--chrome-scale, 1))");
+  });
 });
