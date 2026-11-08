@@ -118,8 +118,6 @@ export default defineConfig({
     {
       command: `npx vite --port ${port} --strictPort`,
       url: `http://localhost:${port}`,
-      // Every run reads as CI's Linux, on a Mac too: Ctrl is the shortcut key.
-      env: { TEXTUS_E2E_PLATFORM: "Linux x86_64" },
       reuseExistingServer: false,
       timeout: 60_000,
     },
