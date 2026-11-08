@@ -1,9 +1,11 @@
 # Launching, closing and quitting
 
 How a Textus process starts, what keeps it running, and how it ends:
-background mode and its tray icon, and updates. The code is
-`src-tauri/src/lib.rs` (setup and the run loop), `src-tauri/src/background/`
-and `src-tauri/src/menu.rs` (`quit`). The desktop app only; iOS has one
+background mode and its tray icon, plugins' scheduled jobs, and updates.
+The code is `src-tauri/src/lib.rs` (setup and the run loop),
+`src-tauri/src/launch.rs` (files to open), `src-tauri/src/editor_windows.rs`
+(the windows), `src-tauri/src/background/`, `src-tauri/src/schedule/` and
+`src-tauri/src/menu.rs` (`quit`). The desktop app only; iOS has one
 window that the system manages.
 
 ## Launching
@@ -18,7 +20,9 @@ running process then opens the files, or - with no file - restores the
 session when no editor window is open (as a first launch would) and opens a
 new window otherwise. On macOS, Finder and `open` reach the running app
 themselves; the Dock icon clicked with no window open restores the session
-the same way (`reopen_without_windows`).
+the same way (`reopen_without_windows` in `editor_windows.rs`). Paths
+that arrive before a window is ready wait in `PendingOpenPaths`
+(`launch.rs`) until the window asks for them.
 
 ## Closing the last window
 
@@ -32,7 +36,7 @@ Tauri asks to exit when its last window is destroyed. `keeps_running` in
 
 Every window is destroyed when it closes; nothing is kept hidden for later.
 On Linux each window's web process is also ended with the window
-(`end_web_process_with_window` in `lib.rs`): WebKitGTK kept a closed
+(`end_web_process_with_window` in `editor_windows.rs`): WebKitGTK kept a closed
 window's page running otherwise, which nobody saw while the process exited
 with its last window.
 
@@ -79,6 +83,15 @@ library, the `.rpm` recommends it, and the Arch package lists it as an
 optional dependency. GNOME shows no tray icons without the AppIndicator
 extension.
 
+## Plugins' scheduled jobs
+
+A plugin can schedule a job (`textus.schedule`; desktop only). Rust keeps
+the jobs in `plugins/schedule.json` and one timer for the soonest
+(`src-tauri/src/schedule/`). A due job shows its notification from Rust
+and hands its `run` to a window's plugins; with no window open, Rust opens
+the hidden `background-host` window to run it (`src/plugins/background/`,
+`schedule/host.rs`) and closes it once the jobs have run.
+
 ## Updates
 
 The update check runs in an editor window's frontend
@@ -124,3 +137,10 @@ the last window closing. Either way, measure the idle process for a minute
 with nothing open (Activity Monitor's Memory and CPU columns, or
 `Get-Process textus, msedgewebview2 | Select WS, CPU` in PowerShell before
 and after) and compare with the table above.
+
+While windows are open, what isn't in use is given back too: a document's
+editor out of sight for 10 minutes is let go
+([documents.md](documents.md#tabs-out-of-sight)), a window hidden or out of
+focus for 10 minutes releases its caches (`src/utils/memory-idle.ts`), and
+on Windows a minimized window's WebView2 is asked to use less memory
+(`src-tauri/src/webview_memory.rs`).
