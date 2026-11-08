@@ -13,7 +13,8 @@ import { ListMotion, measure, type PendingFlip } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
-import { SLIDE, TabPill, type TabInfo } from "./TabPill";
+import { TabPill, type TabInfo } from "./TabPill";
+import { SLIDE } from "../../ui/pointer-drag";
 
 interface TabBarProps {
   tabs: TabInfo[];

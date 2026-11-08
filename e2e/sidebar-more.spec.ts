@@ -47,3 +47,50 @@ test("tabs past the sidebar's width go under More, the one shown keeps its butto
   await expect(shown).toHaveClass(/sidebar-tab-active/);
   await expect(more).toBeVisible();
 });
+
+test("a tab dragged along the bar takes the place it is let go at", async ({
+  page,
+}) => {
+  // As in the app's window, whose file drop swallows HTML drag and drop.
+  await page.addInitScript(() => {
+    for (const type of ["dragover", "drop"])
+      window.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await page.waitForFunction(
+    () => !!(window as unknown as { __textusPlugins?: Api }).__textusPlugins,
+  );
+  await page.evaluate(() => {
+    const { sidebarTabs } = (window as unknown as { __textusPlugins: Api })
+      .__textusPlugins;
+    sidebarTabs.register({
+      id: "example-1",
+      label: () => "Example 1",
+      Icon: () => "1",
+      Panel: () => null,
+    });
+  });
+  await page.keyboard.press("ControlOrMeta+\\");
+  const labels = () =>
+    page
+      .locator(".sidebar-tabs .sidebar-tab")
+      .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label")));
+  const before = await labels();
+  const first = page.locator(".sidebar-tabs .sidebar-tab").first();
+  const last = page.locator(".sidebar-tabs .sidebar-tab").last();
+  const from = (await last.boundingBox())!;
+  const to = (await first.boundingBox())!;
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2 - 4, to.y + to.height / 2, {
+    steps: 8,
+  });
+  await page.mouse.up();
+  await expect
+    .poll(labels)
+    .toEqual([before[before.length - 1], ...before.slice(0, -1)]);
+  // The release is no click: the dragged tab isn't shown.
+  await expect(
+    page.locator('.sidebar-tab[aria-label="Example 1"]'),
+  ).not.toHaveClass(/sidebar-tab-active/);
+});
