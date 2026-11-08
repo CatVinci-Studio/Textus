@@ -522,6 +522,8 @@
     .icon-button,
     .tx-icon-button,
     .inline-chat-header-button,
+    .inline-chat-attach,
+    .inline-chat-toggle,
     .tab-bar-add,
     .sidebar-tab,
     .window-caption-button,
@@ -574,9 +576,10 @@
   height: calc(30px * var(--chrome-scale));
 }
 
+/* They grow with the window as the chrome's other icons do. */
 :is(.inline-chat-attach, .inline-chat-toggle) {
-  width: var(--control-height-sm);
-  height: var(--control-height-sm);
+  width: calc(var(--control-height-sm) * var(--chrome-scale));
+  height: calc(var(--control-height-sm) * var(--chrome-scale));
   border: 1px solid var(--ui-border);
 }
 

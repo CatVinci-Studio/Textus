@@ -1,27 +1,21 @@
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../storage/ui-state";
+import { clampSidePanel, sidePanelMax } from "../ui/side-panel-width";
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
  *  under this the tree's names are cut to a few letters. */
 export const SIDEBAR_DEFAULT_WIDTH = 240;
 export const SIDEBAR_MIN_WIDTH = 180;
-/** The widest it can be dragged to, and the share of a small window it may
- *  take. */
-const SIDEBAR_MAX_WIDTH = 480;
-const SIDEBAR_MAX_SHARE = 0.45;
+/** The widest it can be dragged to, in a window with room. */
+const LIMITS = { min: SIDEBAR_MIN_WIDTH, max: 480 };
 
-/** The widest the sidebar may be in a window this wide. */
+/** The widest the sidebar may be in a window this wide (side-panel-width). */
 export function sidebarMaxWidth(windowWidth: number): number {
-  return Math.max(
-    SIDEBAR_MIN_WIDTH,
-    Math.min(SIDEBAR_MAX_WIDTH, Math.floor(windowWidth * SIDEBAR_MAX_SHARE)),
-  );
+  return sidePanelMax(windowWidth, LIMITS);
 }
 
 export function clampSidebarWidth(width: number, windowWidth: number): number {
-  return Math.round(
-    Math.min(sidebarMaxWidth(windowWidth), Math.max(SIDEBAR_MIN_WIDTH, width)),
-  );
+  return clampSidePanel(width, windowWidth, LIMITS);
 }
 
 /** The width last chosen, or the default for anything invalid there. */

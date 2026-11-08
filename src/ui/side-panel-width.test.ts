@@ -1,0 +1,25 @@
+import { describe, expect, it } from "vitest";
+import {
+  DOCUMENT_MIN_WIDTH,
+  clampSidePanel,
+  sidePanelMax,
+} from "./side-panel-width";
+
+const AI = { min: 300, max: 720 };
+
+describe("a side panel in a window too small for it", () => {
+  it("keeps the width dragged to where there is room", () => {
+    expect(clampSidePanel(600, 2400, AI)).toBe(600);
+  });
+
+  it("narrows with the window, never past a share of it", () => {
+    // 720 chosen in a wide window, then the window made 1000 wide.
+    expect(clampSidePanel(720, 1000, AI)).toBe(450);
+  });
+
+  it("leaves the document its room beside the other panel", () => {
+    expect(sidePanelMax(1200, AI, 240)).toBe(1200 - 240 - DOCUMENT_MIN_WIDTH);
+    // Never narrower than it can be dragged to.
+    expect(clampSidePanel(500, 800, AI, 240)).toBe(300);
+  });
+});

@@ -130,6 +130,10 @@ function App() {
             "--window-bar-title-shift": `${
               agentPresence.mounted ? -(agentPanel.width / 2) : 0
             }px`,
+            // The AI panel's edge and fill up through the window bar.
+            "--agent-panel-width": `${
+              agentPresence.mounted ? agentPanel.width : 0
+            }px`,
           } as React.CSSProperties
         }
       >

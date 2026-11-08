@@ -14,6 +14,7 @@ import {
 import { Tooltip } from "../ui/Tooltip";
 import type { Strings } from "../i18n/strings";
 import mark from "../../src-tauri/icons/128x128.png";
+import { openingDocument } from "./start-project";
 import "./start-page.css";
 
 /** Recent projects and files each list this many at most. */
@@ -54,12 +55,15 @@ function RecentList({
   paths,
   event,
   icon,
+  then,
 }: {
   title: string;
   paths: string[];
   /** The menu event that opens one, here. */
   event: string;
   icon: ReactNode;
+  /** What else opening one does. */
+  then?: (path: string) => void;
 }) {
   if (paths.length === 0) return null;
   return (
@@ -70,7 +74,10 @@ function RecentList({
           <button
             type="button"
             className="start-page-row"
-            onClick={() => emitToThisWindow(event, path)}
+            onClick={() => {
+              emitToThisWindow(event, path);
+              then?.(path);
+            }}
           >
             <span className="start-page-row-icon" aria-hidden="true">
               {icon}
@@ -149,6 +156,13 @@ export function StartPage({ t }: { t: Strings }) {
               paths={recents.folders}
               event="menu-open-recent-folder"
               icon={<FolderIcon />}
+              // A project shows a document of its own too: the sidebar
+              // alone changing left the start page looking untouched.
+              then={(folder) =>
+                void openingDocument(folder, recents.files).then(
+                  (doc) => doc && emitToThisWindow("menu-open-recent", doc),
+                )
+              }
             />
             <RecentList
               title={t.startPageRecentFiles}
