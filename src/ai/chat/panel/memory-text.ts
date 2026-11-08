@@ -1,7 +1,6 @@
 import type { LibraryEntry } from "../../../platform/ipc";
 import { localeOf, type Lang } from "../../../i18n/strings";
 import { basename } from "../../../utils/path";
-import "./MemoryView.css";
 
 /** The Memory page's text: dates, ids, search and the lines a rule or a style reads as. */
 
