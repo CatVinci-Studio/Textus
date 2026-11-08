@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useChromeScale } from "../../ui/useChromeScale";
 import { windowInfo } from "../store/plugin-records";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
@@ -97,10 +98,11 @@ function FloatingBox({
   /** The scale while the user resizes it. */
   const [sizing, setSizing] = useState<number | null>(null);
   const moved = useRef(false);
-  const [fullWidth, fullHeight] = floatingSize({
-    ...view,
-    scale: sizing ?? view.scale,
-  });
+  const chrome = useChromeScale();
+  const [fullWidth, fullHeight] = floatingSize(
+    { ...view, scale: sizing ?? view.scale },
+    chrome,
+  );
   const width = view.folded ? DOT : fullWidth;
   const height = view.folded ? DOT : fullHeight;
   const side = floatingSide(view);
@@ -111,8 +113,8 @@ function FloatingBox({
 
   /** Resized, its bottom and outer edge stay where they were. */
   function resized(scale: number) {
-    const [w, h] = floatingSize(view);
-    const [toW, toH] = floatingSize({ ...view, scale });
+    const [w, h] = floatingSize(view, chrome);
+    const [toW, toH] = floatingSize({ ...view, scale }, chrome);
     const was = position(view, w, h);
     const left = side === "left" ? was.left : was.left + w - toW;
     return {
