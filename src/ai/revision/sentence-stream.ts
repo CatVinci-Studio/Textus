@@ -1,4 +1,4 @@
-import { alignRun, ENDS_PARAGRAPH } from "./sentence-diff";
+import { alignRun, ENDS_PARAGRAPH } from "./paragraph-align";
 import { MATCH, similarity } from "./sentence-similarity";
 import { diffUnits, splitUnits } from "./unit-diff";
 

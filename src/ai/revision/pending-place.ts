@@ -18,7 +18,8 @@ import {
   type PendingPreview,
   type PendingSentence,
 } from "./pending-edit-plugin";
-import { pairedPrefix, splitSentences, trimBreaks } from "./sentence-diff";
+import { pairedPrefix, trimBreaks } from "./sentence-diff";
+import { splitSentences } from "./sentence-pairs";
 import { diffSentences, splitUnits } from "./unit-diff";
 import { matchableMarkdown } from "./markdown-forms";
 import { findInOrder, locateHunks } from "./sentence-locate";

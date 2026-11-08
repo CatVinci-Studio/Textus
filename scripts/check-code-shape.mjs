@@ -27,7 +27,6 @@ const LINES_NOW = {
   "src/ai/chat/panel/ProjectBar.tsx": 512,
   "src/ai/chat/useAgentConversation.ts": 527,
   "src/ai/revision/pending-actions.ts": 516,
-  "src/ai/revision/sentence-diff.ts": 514,
   "src/platform/ipc.ts": 524,
   "src/prefs/settings-types.ts": 520,
   "src/settings/sections/agent.tsx": 524,
