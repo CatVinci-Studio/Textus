@@ -1,8 +1,9 @@
 import webviewRuntime from "./runtime/webview.js?raw";
-import componentsCss from "../../ui/components.css?raw";
-import designSystemCss from "../../ui/design-system.css?raw";
-import motionCss from "../../ui/motion.css?raw";
-import pluginUiCss from "./runtime/plugin-ui.css?raw";
+import componentsCss from "../../ui/components.css?inline";
+import designSystemCss from "../../ui/design-system.css?inline";
+import motionCss from "../../ui/motion.css?inline";
+// Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).
+import pluginUiCss from "./runtime/plugin-ui.css?inline";
 
 /** The window's own stylesheets, as one: a plugin page's controls are the
  *  app's, from the same rules. Their @imports are inlined here. */

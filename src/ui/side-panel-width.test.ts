@@ -18,7 +18,7 @@ describe("a side panel in a window too small for it", () => {
   });
 
   it("leaves the document its room beside the other panel", () => {
-    expect(sidePanelMax(1200, AI, 240)).toBe(1200 - 240 - DOCUMENT_MIN_WIDTH);
+    expect(sidePanelMax(1000, AI, 240)).toBe(1000 - 240 - DOCUMENT_MIN_WIDTH);
     // Never narrower than it can be dragged to.
     expect(clampSidePanel(500, 800, AI, 240)).toBe(300);
   });

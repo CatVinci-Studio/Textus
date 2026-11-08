@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
-import { clampSidePanel } from "../../../ui/side-panel-width";
+import { chromeScaleAt, clampSidePanel } from "../../../ui/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";
@@ -57,7 +57,15 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
       ? stored
       : AGENT_PANEL_DEFAULT_WIDTH;
   });
-  const width = clampSidePanel(chosen, windowWidth, LIMITS, beside);
+  // Kept in the interface's size units, shown at its size now.
+  const scale = chromeScaleAt(windowWidth);
+  const width = clampSidePanel(
+    chosen * scale,
+    windowWidth,
+    LIMITS,
+    beside,
+    scale,
+  );
   const [tab, setTab] = useState<AgentPanelTab>("chat");
   const setOpen = useCallback((next: boolean) => {
     setOpenState(next);
@@ -69,9 +77,12 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback(
     (next: number, persist = true) => {
-      const clamped = clampSidePanel(next, windowWidth, LIMITS, beside);
-      setChosen(clamped);
-      if (persist) setUiState("agentPanelWidth", clamped);
+      const step = chromeScaleAt(windowWidth);
+      const base = Math.round(
+        clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
+      );
+      setChosen(base);
+      if (persist) setUiState("agentPanelWidth", base);
     },
     [windowWidth, beside],
   );

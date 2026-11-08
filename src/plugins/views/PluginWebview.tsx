@@ -41,7 +41,7 @@ export function webviewPage(record: WebviewRecord, html: string) {
   const plugin = pluginRecord(record.plugin);
   return {
     srcdoc: webviewDocument(html, {
-      themeCss: webviewThemeCss(),
+      themeCss: webviewThemeCss(record.kind === "codeBlock"),
       dark: windowIsDark(),
       frameHosts: grantedHosts(plugin?.granted ?? []),
       language: windowInfo().language(),
@@ -141,7 +141,7 @@ export function PluginWebview({
       : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {
-        css: webviewThemeCss(),
+        css: webviewThemeCss(!!fitHeight),
         dark: windowIsDark(),
       }),
     );

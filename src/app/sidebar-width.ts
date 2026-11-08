@@ -1,6 +1,10 @@
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../storage/ui-state";
-import { clampSidePanel, sidePanelMax } from "../ui/side-panel-width";
+import {
+  chromeScaleAt,
+  clampSidePanel,
+  sidePanelMax,
+} from "../ui/side-panel-width";
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
  *  under this the tree's names are cut to a few letters. */
@@ -31,24 +35,29 @@ export function storedSidebarWidth(): number {
  * small for it shows it narrower, and a drag remembers only where it let go.
  */
 export function useSidebarWidth(windowWidth: number) {
+  // Kept in the interface's size units, shown at its size now.
   const [chosen, setChosen] = useState(storedSidebarWidth);
-  const width = clampSidebarWidth(chosen, windowWidth);
+  const scale = chromeScaleAt(windowWidth);
+  const width = clampSidePanel(chosen * scale, windowWidth, LIMITS, 0, scale);
   const setWidth = useCallback(
     (next: number, persist = true) => {
-      const clamped = clampSidebarWidth(next, windowWidth);
-      setChosen(clamped);
-      if (persist) setUiState("sidebarWidth", clamped);
+      const step = chromeScaleAt(windowWidth);
+      const base = Math.round(
+        clampSidePanel(next, windowWidth, LIMITS, 0, step) / step,
+      );
+      setChosen(base);
+      if (persist) setUiState("sidebarWidth", base);
     },
     [windowWidth],
   );
-  const resetWidth = useCallback(
-    () => setWidth(SIDEBAR_DEFAULT_WIDTH),
-    [setWidth],
-  );
+  const resetWidth = useCallback(() => {
+    setChosen(SIDEBAR_DEFAULT_WIDTH);
+    setUiState("sidebarWidth", SIDEBAR_DEFAULT_WIDTH);
+  }, []);
   return {
     width,
-    min: SIDEBAR_MIN_WIDTH,
-    max: sidebarMaxWidth(windowWidth),
+    min: Math.round(SIDEBAR_MIN_WIDTH * scale),
+    max: sidePanelMax(windowWidth, LIMITS, 0, scale),
     setWidth,
     resetWidth,
   };

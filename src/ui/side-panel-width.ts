@@ -5,6 +5,21 @@
  * always leaving the document room between them.
  */
 
+import { windowScale } from "./window-scale";
+
+/** The interface's size step now, as `--chrome-scale` has it: Interface
+ *  Text Size times the window's width step. A panel's widths are in this
+ *  step's units, so it grows with what it holds. */
+export function chromeScaleAt(windowWidth: number): number {
+  const text =
+    typeof document === "undefined"
+      ? 1
+      : Number.parseFloat(
+          document.documentElement.style.getPropertyValue("--ui-text-scale"),
+        ) || 1;
+  return text * windowScale(windowWidth);
+}
+
 /** The narrowest the document column is squeezed to by a panel. */
 export const DOCUMENT_MIN_WIDTH = 360;
 /** The most of the window one panel takes. */
@@ -23,27 +38,30 @@ export function sidePanelMax(
   windowWidth: number,
   limits: PanelLimits,
   beside = 0,
+  scale = 1,
 ): number {
   return Math.max(
-    limits.min,
+    limits.min * scale,
     Math.min(
-      limits.max,
+      limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - DOCUMENT_MIN_WIDTH,
+      windowWidth - beside - DOCUMENT_MIN_WIDTH * scale,
     ),
   );
 }
 
+/** `width` (px on screen) as the panel shows it at `scale`. */
 export function clampSidePanel(
   width: number,
   windowWidth: number,
   limits: PanelLimits,
   beside = 0,
+  scale = 1,
 ): number {
   return Math.round(
     Math.min(
-      sidePanelMax(windowWidth, limits, beside),
-      Math.max(limits.min, width),
+      sidePanelMax(windowWidth, limits, beside, scale),
+      Math.max(limits.min * scale, width),
     ),
   );
 }

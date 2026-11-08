@@ -4,6 +4,9 @@
  * variables doesn't change what a plugin sees.
  */
 export const WEBVIEW_THEME_VARS = [
+  // The interface's size step, which the page's lengths grow with.
+  "--ui-text-scale",
+  "--window-scale",
   "--ui-bg",
   "--ui-surface",
   "--ui-subtle",
@@ -108,8 +111,10 @@ export function windowIsDark(): boolean {
   return getComputedStyle(document.documentElement).colorScheme === "dark";
 }
 
-/** A `:root {…}` rule giving each variable its value in the window now. */
-export function webviewThemeCss(): string {
+/** A `:root {…}` rule giving each variable its value in the window now. A
+ *  page drawn in the document grows with the document's zoom, not with
+ *  the window. */
+export function webviewThemeCss(inDocument = false): string {
   const style = getComputedStyle(document.documentElement);
   // The alert colours are the document's, set on the editor.
   const editor = document.querySelector(".milkdown");
@@ -120,6 +125,7 @@ export function webviewThemeCss(): string {
     return value ? `  ${name}: ${value};` : "";
   })
     .filter(Boolean)
+    .concat(inDocument ? ["  --window-scale: 1;"] : [])
     .join("\n");
   return `:root {\n${body}\n}`;
 }

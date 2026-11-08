@@ -22,26 +22,27 @@
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
-     styles) under :root[data-window-chrome="mobile"] below; both times
-     --ui-text-scale (Interface Text Size), as any other UI size should be.
+     styles) under :root[data-window-chrome="mobile"] below. The desktop's
+     grow with --chrome-scale, as every other interface length does
+     (vite.chrome-scale.ts); the phone's with --ui-text-scale.
      The document's own text is the theme's, in em. */
   /* A badge, a count, a key on a keycap. */
-  --text-caption: calc(11px * var(--ui-text-scale, 1));
+  --text-caption: calc(11px * var(--chrome-scale, 1));
   /* What explains: a hint, a note, a group's title, an empty state. */
-  --text-footnote: calc(12px * var(--ui-text-scale, 1));
+  --text-footnote: calc(12px * var(--chrome-scale, 1));
   /* What sits beside or under the main text in a dense surface: a card's
      text, a list's entries, a field in a bar. */
-  --text-secondary: calc(12px * var(--ui-text-scale, 1));
+  --text-secondary: calc(12px * var(--chrome-scale, 1));
   /* A control's label: buttons, segments, selects. */
-  --text-control: calc(13px * var(--ui-text-scale, 1));
+  --text-control: calc(13px * var(--chrome-scale, 1));
   /* The main text of a panel, a menu, a list or a field. */
-  --text-body: calc(13px * var(--ui-text-scale, 1));
+  --text-body: calc(13px * var(--chrome-scale, 1));
   /* The main text where there is room: Settings' rows, a dialog's. */
-  --text-body-large: calc(14px * var(--ui-text-scale, 1));
+  --text-body-large: calc(14px * var(--chrome-scale, 1));
   /* A sheet's, a panel's or a navigation bar's title. */
-  --text-title: calc(17px * var(--ui-text-scale, 1));
+  --text-title: calc(17px * var(--chrome-scale, 1));
   /* A page's own title, a welcome. */
-  --text-large-title: calc(22px * var(--ui-text-scale, 1));
+  --text-large-title: calc(22px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
   --text-sm: var(--text-footnote);
