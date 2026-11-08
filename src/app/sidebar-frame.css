@@ -46,26 +46,32 @@
 }
 
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over
-   the sidebar, so it reads like a macOS overlay scrollbar. */
-.sidebar-body::-webkit-scrollbar {
+   the sidebar, so it reads like a macOS overlay scrollbar. A plugin's list
+   scrolls inside the body and wears the same one. */
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar {
   width: 5px;
 }
 
-.sidebar-body::-webkit-scrollbar-track {
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.sidebar-body::-webkit-scrollbar-thumb {
+:is(.sidebar-body, .sidebar-body .plugin-list-rows)::-webkit-scrollbar-thumb {
+  border: 0;
   background: transparent;
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
 
-.sidebar-body:hover::-webkit-scrollbar-thumb {
+.sidebar-body:hover::-webkit-scrollbar-thumb,
+.sidebar-body:hover .plugin-list-rows::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--ui-text) 28%, transparent);
 }
 
-.sidebar-body::-webkit-scrollbar-thumb:hover {
+:is(
+    .sidebar-body,
+    .sidebar-body .plugin-list-rows
+  )::-webkit-scrollbar-thumb:hover {
   background: color-mix(in srgb, var(--ui-text) 45%, transparent);
 }
 
