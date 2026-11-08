@@ -1,4 +1,5 @@
-/** Text cut into sentences, and two lists of them paired. */
+/** Text cut into sentences, each keeping the space and breaks after it, so
+ *  they join back into the text exactly. */
 
 export function splitSentences(text: string): string[] {
   // A full stop ends a sentence only before a space, a line break or the

@@ -1,7 +1,3 @@
-/** Sentence-level diff for partially accepting a rewrite. Sentences, not
- *  words, as word-level picks make broken grammar; the pieces join back into
- *  the text exactly. */
-
 import { MATCH, similarity } from "./sentence-similarity";
 import { splitSentences } from "./sentence-pairs";
 import { formKey } from "./markdown-forms";
