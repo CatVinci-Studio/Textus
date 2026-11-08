@@ -268,7 +268,7 @@ export function TabPill({
     <div
       ref={elRef}
       data-flip-id={tab.id}
-      className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-preview" : ""}`}
+      className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
       onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
       role="tab"
       aria-selected={isActive}

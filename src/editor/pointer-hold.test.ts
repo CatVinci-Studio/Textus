@@ -100,3 +100,31 @@ it("a wikilink's brackets wait too while the button is held", async () => {
   release();
   expect(hidden()).toBe(0);
 });
+
+it("puts the caret again where it is once a link's source shows around it", async () => {
+  const t = await openView("A [link](u) here.");
+  t.view.focus();
+  Object.defineProperty(t.view, "hasFocus", { value: () => true });
+  t.caretAtEnd();
+  const placed: Range[] = [];
+  const selection = document.getSelection()!;
+  const add = selection.addRange.bind(selection);
+  selection.addRange = (range: Range) => {
+    placed.push(range);
+    add(range);
+  };
+  try {
+    // A click into the link: its "[" appears before the caret.
+    (
+      t.view as unknown as { input: { lastSelectionOrigin: string } }
+    ).input.lastSelectionOrigin = "pointer";
+    t.caretAt("link", 2);
+    expect(placed.length).toBeGreaterThan(0);
+    // Set again where the browser had it, the same node and offset.
+    const shown = document.getSelection()!;
+    expect(placed.at(-1)!.startContainer).toBe(shown.anchorNode);
+    expect(placed.at(-1)!.startOffset).toBe(shown.anchorOffset);
+  } finally {
+    selection.addRange = add;
+  }
+});

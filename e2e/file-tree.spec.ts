@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, END, openApp } from "./helpers";
+import { dragWithMouse, emit, END, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The
@@ -537,7 +537,7 @@ test("a click looks in the preview tab; a double click or an edit keeps it", asy
   const count = 1;
   await rows(page).filter({ hasText: "b.md" }).click();
   await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
-  const look = page.locator(".tab-pill-preview");
+  const look = page.locator(".tab-pill-looking");
   await expect(look).toHaveCount(1);
   await expect(tabs).toHaveCount(count + 1);
   // The next look takes the same tab.
@@ -556,4 +556,28 @@ test("a click looks in the preview tab; a double click or an edit keeps it", asy
   // A double click on the file keeps it too.
   await rows(page).filter({ hasText: "b.md" }).dblclick();
   await expect(look).toHaveCount(0);
+});
+
+test("a preview tab is clicked back to and closed like any other", async ({
+  page,
+}) => {
+  await open(page);
+  const tabs = page.locator(".tab-bar .tab-pill");
+  await rows(page).filter({ hasText: "b.md" }).click();
+  const look = page.locator(".tab-pill-looking");
+  await expect(look).toHaveCount(1);
+  // In front of it, a.md; a click on the preview tab brings it back.
+  // A click in the middle of a short name's tab opens it, never closes it.
+  await tabs.filter({ hasText: "a.md" }).click();
+  await expect(page.locator(`${editor} h1`)).not.toContainText("Bravo");
+  await look.click();
+  await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  // Dragged along the bar, it moves as any tab does, and stays a preview.
+  await dragWithMouse(page, look, tabs.filter({ hasText: "a.md" }), -30);
+  await expect(tabs).toHaveText(["b.md", "a.md"]);
+  await expect(look).toHaveCount(1);
+  await look.hover();
+  await look.locator(".tab-pill-close").click();
+  await expect(look).toHaveCount(0);
+  await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
 });
