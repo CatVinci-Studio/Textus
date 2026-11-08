@@ -162,6 +162,10 @@ export function useWindowWiring({
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: panels.toggleSidebar,
+    showSidebarTab: (id: string) => {
+      panels.setPanelMode(id);
+      panels.setPanelOpen(true);
+    },
     onToggleAgentPanel: panels.toggleAgentPanel,
     onOpenAgentPanel: () => {
       if (!panels.agentPanel.open) panels.toggleAgentPanel();

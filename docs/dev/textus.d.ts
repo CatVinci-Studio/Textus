@@ -322,6 +322,9 @@ declare global {
         viewId: string,
         options?: { where?: Where; title?: string; state?: unknown },
       ): Promise<void>;
+      /** Opens the sidebar on a tab: a plugin's sidebar tab id, or `tree`
+       *  (Files) or `outline`. From 1.3.10. */
+      showSidebarTab(id: string): Promise<void>;
       /** A web page in a tab, for a host the plugin was granted. */
       openWebPage(
         url: string,

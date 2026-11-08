@@ -1,3 +1,4 @@
+import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
 import { splitLayout } from "../../app/split/split-layout";
 import { panesOf } from "../../app/split/split-tree";
@@ -89,6 +90,12 @@ export function layoutHandlers(p: PluginScope) {
           state,
         },
         whereOf(where),
+      );
+    },
+    // A sidebar tab - any plugin's, or Files and Outline - shown.
+    "layout.showSidebarTab": ({ id }: Params) => {
+      window.dispatchEvent(
+        new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: str(id, "id") }),
       );
     },
     "layout.openWebPage": ({ url, where, title }: Params) => {

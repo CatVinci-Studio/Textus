@@ -567,6 +567,9 @@
           state: options && plain(options.state),
         });
       },
+      showSidebarTab: function (id) {
+        return call("layout.showSidebarTab", { id: String(id) });
+      },
       openWebPage: function (url, options) {
         return call("layout.openWebPage", {
           url: String(url),
