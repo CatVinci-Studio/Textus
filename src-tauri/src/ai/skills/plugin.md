@@ -14,7 +14,7 @@ metadata:
   textus-index: "Use when asked to make, build or change a plugin, extension, add-on or small tool for the app."
   textus-category: "create"
   textus-modes: "create"
-  textus-packs: "contract"
+  textus-packs: ""
   textus-sources: "Our own text, from docs/dev/writing-plugins.md and docs/dev/textus.d.ts."
   textus-aliases-en: "make-plugin, extension, add-on"
   textus-aliases-zh: "做插件, 插件, 小工具"
@@ -35,6 +35,7 @@ metadata:
 - When the request is too vague to build ("a plugin"), ask one question: what it should do and where they'd reach it (a command, a sidebar panel, a right-click item). Otherwise choose and say what you chose.
 - To change a plugin from earlier in the conversation, take its files from that reply as they were written and write every file again with the change, keeping its `id` and raising its `version` - the user installs the new one over the old. If that reply is no longer in the conversation, read it with `read_plugin` when it is installed; otherwise ask the user to install it or paste its files - never rewrite it from memory.
 - To change a plugin the user has installed, read it first with `read_plugin` (the list, then its manifest and every file you change) and build on its code - never rewrite it from memory. Their own (`local.` id) keeps its id and raises its version. Anyone else's - an official one too - becomes a copy of theirs: id `local.` plus the original's name part (`catvinci.tasks` -> `local.tasks`), publisher `local`, its name with "(mine)" in their language, version `0.1.0`; say in the reply that the original stays as it was and they can turn it off in Settings › Plugins to use theirs.
+- Before you reply, call `check_plugin` with every file you wrote: it reads them as install will and says what would fail or silently do nothing (permissions, the `local.` id, `engines`, commands never registered, menu conditions the app doesn't set). Fix what it reports and check again until it reports nothing; set `engines.textus` to `">=<the version it names>"`.
 - A message about an installed plugin's error comes with the error: find its cause in the plugin's code and fix that, not the symptom.
 - A request to change colours, fonts or the look of the document or the app (a dark mode, a night/day switch, a reading style) is a theme, not a plugin: load the `theme` skill with `use_skill` and make a theme - themes already follow the system's light and dark. A plugin can't restyle the app.
 - A plugin can mark the text (highlights, underlines, badges), draw its own fenced code blocks, add commands, menus, sidebar tabs, views, file viewers and tools for the app's AI. It can't change how the editor itself works, run native code, or reach files outside the open folder. When the request needs one of those, say so and offer what a plugin can do.
@@ -52,7 +53,7 @@ metadata:
   "publisher": "local",
   "author": "the app's AI",
   "description": "Counts the words of the selection.",
-  "engines": { "textus": ">=1.3.0-beta.2" },
+  "engines": { "textus": ">=1.3.10" },
   "main": "host.js",
   "permissions": ["editor.read"],
   "contributes": {

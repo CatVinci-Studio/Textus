@@ -15,7 +15,7 @@ metadata:
   textus-index: "Use when asked to make, write or change a skill, a saved procedure, a template for a recurring task or a /command."
   textus-category: "create"
   textus-modes: "create"
-  textus-packs: "contract"
+  textus-packs: ""
   textus-sources: "Our own text; the file format is the Agent Skills format (agentskills.io), summarised."
   textus-aliases-en: "make-skill, procedure, command"
   textus-aliases-zh: "做技能, 技能, 新建技能"

@@ -6,6 +6,7 @@ import {
   pluginText,
   subscribePlugins,
 } from "../store/plugin-records";
+import { appVersion } from "../../platform/app-info";
 
 /**
  * Tools plugins give Textus AI: the window tells Rust the tools of its on
@@ -37,6 +38,23 @@ export function offered() {
   );
 }
 
+/** The app's own tools that run in the window, called as a plugin's are
+ *  (Rust's create tools): by name. */
+const APP_TOOLS_OWNER = "textus";
+async function appTool(name: string, args: unknown): Promise<string> {
+  if (name === "check_plugin") {
+    const [{ checkWrittenPlugin }, version] = await Promise.all([
+      import("../store/check-written-plugin"),
+      appVersion(),
+    ]);
+    return checkWrittenPlugin(
+      (args as { files?: unknown } | null)?.files,
+      version,
+    );
+  }
+  throw new Error(`No tool ${name}.`);
+}
+
 /** Keeps Rust told and answers calls, until the returned function. `run`
  *  runs a plugin's tool. */
 export function watchPluginAiTools(
@@ -56,7 +74,11 @@ export function watchPluginAiTools(
     "plugin-ai-tool-call",
     (event) => {
       const { callId, plugin, name } = event.payload;
-      void run(plugin, name, event.payload.arguments).then(
+      const answer =
+        plugin === APP_TOOLS_OWNER
+          ? appTool(name, event.payload.arguments)
+          : run(plugin, name, event.payload.arguments);
+      void answer.then(
         (out) =>
           pluginsIpc.aiToolResult(
             callId,

@@ -2,6 +2,7 @@
 //! request offers the asking window's, and a call goes back there. Like MCP
 //! tools, calls run one at a time, in order.
 
+use crate::ai::agent::AgentMode;
 use crate::ai::tools::{Access, Run, Tool, EVERY_MODE};
 use aicompat::agent::{ToolCall, ToolOutput, ToolSpec};
 use serde::{Deserialize, Serialize};
@@ -121,10 +122,58 @@ pub fn tools_for_request<'a>(app: &AppHandle, asking: &str) -> Vec<Tool<'a>> {
     let window = asking.to_string();
     let hub = app.state::<PluginAiTools>();
     let offered = hub.offered.lock().unwrap_or_else(|e| e.into_inner());
-    window_tools(&offered, &window)
+    let mut tools: Vec<Tool<'a>> = window_tools(&offered, &window)
         .into_iter()
         .map(|(name, tool)| plugin_tool(app.clone(), window.clone(), name, tool.clone()))
-        .collect()
+        .collect();
+    // Create mode's alone: its modes keep it out of every other request.
+    tools.push(check_plugin_tool(app, &window));
+    tools
+}
+
+/// Create mode's check of a plugin it wrote, run in the editor window by
+/// the same rules install reads it with (check-written-plugin.ts).
+fn check_plugin_tool<'a>(app: &AppHandle, window: &str) -> Tool<'a> {
+    let (app, window) = (app.clone(), window.to_string());
+    Tool {
+        spec: ToolSpec {
+            name: "check_plugin".into(),
+            description: "Checks a plugin you wrote before you give it to the user, as Textus will read it at install: the manifest, the `local.` id, the files `main` names, the permissions the code needs, commands and views declared but never registered, menu conditions Textus never sets. Pass every file of the plugin. Fix what it reports and check again until it reports nothing.".into(),
+            parameters: json!({
+                "type": "object",
+                "properties": {
+                    "files": {
+                        "type": "array",
+                        "description": "Every file of the plugin: textus-plugin.json, host.js and the rest.",
+                        "items": {
+                            "type": "object",
+                            "properties": { "path": { "type": "string" }, "text": { "type": "string" } },
+                            "required": ["path", "text"]
+                        }
+                    }
+                },
+                "required": ["files"]
+            }),
+        },
+        access: Access::ReadOnly,
+        modes: &[AgentMode::Create],
+        run: Run::Async(Box::new(move |call: ToolCall| {
+            let (app, window) = (app.clone(), window.clone());
+            Box::pin(async move {
+                let tool = PluginAiTool {
+                    plugin: "textus".into(),
+                    name: "check_plugin".into(),
+                    description: String::new(),
+                    parameters: json!({}),
+                };
+                let arguments = serde_json::from_str(&call.arguments).unwrap_or_else(|_| json!({}));
+                let text = match call_tool(&app, &window, &tool, call.call_id, arguments).await {
+                    Ok(text) | Err(text) => text,
+                };
+                trimmed(text).into()
+            })
+        })),
+    }
 }
 
 /// `window`'s tools, each with the model's name for it, kept distinct.

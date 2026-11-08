@@ -132,8 +132,12 @@ fn every_builtin_skill_parses_and_follows_the_format() {
             "{stem}: category"
         );
         assert_eq!(skill.invocation, Invocation::Both, "{stem}: invocation");
-        assert!(
+        // The editing contract is for skills that work on the document;
+        // Create's make themes, plugins and skills and never touch it.
+        let creates = skill.category.as_deref() == Some("create");
+        assert_eq!(
             skill.packs.contains(&"contract".to_string()),
+            !creates,
             "{stem}: the contract"
         );
         let lines = body.lines().count();
