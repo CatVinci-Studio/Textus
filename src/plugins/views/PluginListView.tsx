@@ -153,7 +153,7 @@ export const PluginListPane = memo(function PluginListPane({
         over?.classList.add("is-drop");
       };
       trackDrag(e, {
-        start: () => row.classList.add("is-dragging"),
+        start: () => row.classList.add("is-drag-lifted"),
         move: (x, y) =>
           hover(
             document
@@ -162,7 +162,7 @@ export const PluginListPane = memo(function PluginListPane({
           ),
         end: (_x, _y, dropped) => {
           const target = rows.find((r) => r.key === over?.dataset.listKey);
-          row.classList.remove("is-dragging");
+          row.classList.remove("is-drag-lifted");
           hover(null);
           if (!dropped || !target || !list.contains(row)) return;
           void askPlugin(plugin, "$listMove", {

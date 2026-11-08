@@ -138,6 +138,7 @@ export function reorderDrag(
       n.style.transition = "";
       n.style.transform = "";
       n.style.zIndex = "";
+      n.classList.remove("is-drag-lifted");
     }
     container.classList.remove("is-reordering");
   };
@@ -165,6 +166,7 @@ export function reorderDrag(
           n.style.transition = "none";
           n.style.transform = `${translate}(${offset}px)`;
           n.style.zIndex = "10";
+          n.classList.add("is-drag-lifted");
         } else {
           const shift = shifts.get(nid) ?? 0;
           n.style.transition = SLIDE;

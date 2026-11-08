@@ -161,10 +161,6 @@
   height: 1px;
 }
 
-/* The row being dragged, and the one it would go onto. */
-.plugin-list-row.is-dragging {
-  color: var(--ui-muted);
-}
 /* A row another is being dragged onto. */
 .plugin-list-row.is-drop {
   outline: 2px solid var(--ui-accent);

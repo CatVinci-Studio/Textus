@@ -386,6 +386,19 @@ textarea.tx-input {
   background: var(--ui-surface);
 }
 
+/* Anything dragged looks lifted the same way: a little larger, on the
+   popover's surface and shadow. */
+.tx-drag-ghost,
+.tree-drag-ghost,
+.tab-pull-ghost,
+.tab-pill-lifted,
+.is-drag-lifted {
+  scale: 1.06;
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  box-shadow: var(--shadow-popover);
+}
+
 /* Dragged on a plugin's page (lib/drag.js): the copy under the pointer, and
    the place the item will land, kept as an empty outline. */
 .tx-drag-ghost {
@@ -393,7 +406,6 @@ textarea.tx-input {
   z-index: 1000;
   margin: 0;
   pointer-events: none;
-  box-shadow: var(--shadow-popover);
 }
 .tx-drag-source {
   border-style: dashed;
