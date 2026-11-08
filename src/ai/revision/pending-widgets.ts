@@ -11,12 +11,11 @@ import {
   maybeSettle,
   newAnimation,
   renderAnimation,
-  renderPendingHtml,
   stopFrame,
   textKey,
   updateAnimation,
-  hasBlocks,
 } from "./pending-animation";
+import { renderPendingHtml, hasBlocks } from "./pending-fill";
 import { type SentenceHooks } from "./pending-decorations";
 
 /** The pieces a proposal is drawn with: the green text widget, a sentence's
