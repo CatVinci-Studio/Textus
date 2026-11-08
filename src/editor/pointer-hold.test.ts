@@ -120,9 +120,10 @@ it("puts the caret again where it is once a link's source shows around it", asyn
     ).input.lastSelectionOrigin = "pointer";
     t.caretAt("link", 2);
     expect(placed.length).toBeGreaterThan(0);
-    const at = t.view.domAtPos(t.view.state.selection.head);
-    expect(placed.at(-1)!.startContainer).toBe(at.node);
-    expect(placed.at(-1)!.startOffset).toBe(at.offset);
+    // Set again where the browser had it, the same node and offset.
+    const shown = document.getSelection()!;
+    expect(placed.at(-1)!.startContainer).toBe(shown.anchorNode);
+    expect(placed.at(-1)!.startOffset).toBe(shown.anchorOffset);
   } finally {
     selection.addRange = add;
   }
