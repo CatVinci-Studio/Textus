@@ -28,6 +28,7 @@ import {
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { tellCopied } from "../../clipboard/copied";
+import { elasticOverscroll } from "../../ui/elastic-overscroll";
 import "./source-editor.css";
 
 /** What a copy or cut takes: the selected ranges, a line apart. */
@@ -143,7 +144,10 @@ export function SourceEditor({
     const scroller = view.scrollDOM;
     const onScrollEvent = () => latest.current.onScroll?.(scroller);
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
+    // The same give at either end as the rendered view's, on a Mac.
+    const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
+      stopElastic();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);
       unregisterSourceView(host);

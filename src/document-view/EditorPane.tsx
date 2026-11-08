@@ -10,9 +10,7 @@ import {
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
-import { isIOSApp } from "../platform/capabilities";
-import { isMacPlatform } from "../platform/os";
-import { elasticOverscroll } from "./elastic-overscroll";
+import { elasticOverscroll } from "../ui/elastic-overscroll";
 import {
   keepReadingPlace,
   placeIn,
@@ -129,7 +127,6 @@ function useKeptScroll(isActive: boolean | undefined, filePath: string | null) {
     const scroller = el.current;
     const content = scroller?.firstElementChild;
     if (!scroller || !(content instanceof HTMLElement)) return;
-    if (!isMacPlatform() || isIOSApp) return;
     return elasticOverscroll(scroller, content);
   }, []);
   return el;

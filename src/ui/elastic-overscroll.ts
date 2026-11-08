@@ -1,4 +1,6 @@
-import { motionAllowed } from "../ui/motion";
+import { motionAllowed } from "./motion";
+import { isIOSApp } from "../platform/capabilities";
+import { isMacPlatform } from "../platform/os";
 
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;
@@ -23,6 +25,8 @@ export function elasticOverscroll(
   scroller: HTMLElement,
   content: HTMLElement,
 ): () => void {
+  // Only a Mac: the iPhone's web view stretches by itself, Windows and Linux don't.
+  if (!isMacPlatform() || isIOSApp) return () => {};
   // The finger's travel past the end (top: positive), and what is drawn.
   let travel = 0;
   let pull = 0;
@@ -35,6 +39,17 @@ export function elasticOverscroll(
   let shrinking = 0;
   let bounced = false;
 
+  // A spring under way stopped where it is now, its place taken up as the
+  // finger's travel, so a new pull goes on from there without a jump.
+  const stopSettling = () => {
+    if (!settling) return;
+    const now = parseFloat((getComputedStyle(content).translate || "").split(" ")[1] ?? "");
+    settling.cancel();
+    settling = null;
+    if (!Number.isFinite(now) || !now) return;
+    const share = Math.min(Math.abs(now) / MAX_PULL, 0.99);
+    travel = Math.sign(now) * -MAX_PULL * Math.log(1 - share);
+  };
   const draw = () => {
     pull =
       Math.sign(travel) *
@@ -71,7 +86,7 @@ export function elasticOverscroll(
       (e.deltaX !== 0 && Math.abs(e.deltaX) > Math.abs(e.deltaY))
     )
       return;
-    if (Math.abs(e.deltaY) > MAX_TRACKPAD_DELTA || !motionAllowed()) return;
+    if (!motionAllowed()) return;
     const now = performance.now();
     const step = Math.abs(e.deltaY);
     if (now - lastAt > NEW_SWIPE_MS) {
@@ -85,6 +100,9 @@ export function elasticOverscroll(
     lastAt = now;
     lastStep = step;
     const coasting = shrinking >= COASTING_STEPS;
+    // A large step stretches nothing unless it is a flick's momentum, which
+    // bounces as it arrives rather than once it has slowed.
+    if (step > MAX_TRACKPAD_DELTA && !coasting) return;
     const atTop = scroller.scrollTop <= 0;
     const atBottom =
       scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
@@ -100,8 +118,7 @@ export function elasticOverscroll(
       bounced = true;
       return;
     }
-    settling?.cancel();
-    settling = null;
+    stopSettling();
     const next = travel - e.deltaY;
     travel = travel !== 0 && Math.sign(next) !== Math.sign(travel) ? 0 : next;
     draw();

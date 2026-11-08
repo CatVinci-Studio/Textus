@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../ui/motion", () => ({ motionAllowed: () => true }));
+vi.mock("./motion", () => ({ motionAllowed: () => true }));
+vi.mock("../platform/os", () => ({ isMacPlatform: () => true }));
+vi.mock("../platform/capabilities", () => ({ isIOSApp: false }));
 
 import { elasticOverscroll } from "./elastic-overscroll";
 
@@ -106,4 +108,35 @@ describe("the Mac's give at a document's end", () => {
     expect(content.style.translate).toBe("");
     stop();
   });
+
+  it("bounces as a fast flick arrives at the top, not once it has slowed", () => {
+    const { scroller, springs, stop } = page();
+    let top = 900;
+    Object.defineProperty(scroller, "scrollTop", { get: () => top });
+    swipe(scroller, [-150, -140, -130, -120, -110, -100]);
+    top = 0;
+    swipe(scroller, [-90]);
+    expect(springs).toHaveLength(1);
+    stop();
+  });
+
+  it("takes a new pull up from where the spring back is, without a jump", () => {
+    const { scroller, content, stop } = page();
+    swipe(scroller, [-8, -9, -8, -10, -8]);
+    vi.advanceTimersByTime(500);
+    expect(content.style.translate).toBe("");
+    // Half way back when the finger pulls again.
+    const real = window.getComputedStyle;
+    window.getComputedStyle = ((el: Element) =>
+      el === content
+        ? ({ translate: "0px 20px" } as CSSStyleDeclaration)
+        : real(el)) as typeof window.getComputedStyle;
+    swipe(scroller, [-1]);
+    window.getComputedStyle = real;
+    const y = parseFloat(content.style.translate.split(" ")[1]);
+    expect(y).toBeGreaterThan(20);
+    expect(y).toBeLessThan(22);
+    stop();
+  });
 });
+
