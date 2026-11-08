@@ -34,7 +34,6 @@ const LINES_NOW = {
   "src/ai/revision/pending-actions.ts": 516,
   "src/ai/revision/pending-animation.ts": 525,
   "src/ai/revision/sentence-diff.ts": 514,
-  "src/app/menu/app-menu-model.ts": 580,
   "src/editor/markdown/source-preserving.ts": 560,
   "src/platform/ipc.ts": 524,
   "src/prefs/settings-types.ts": 520,
