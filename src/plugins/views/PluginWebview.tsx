@@ -21,6 +21,7 @@ import {
   passZoomWheel,
   watchContentZoom,
 } from "./frame-zoom";
+import { createPortal } from "react-dom";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 import {
@@ -161,16 +162,21 @@ export function PluginWebview({
         className={`plugin-webview ${className ?? ""}`}
         data-webview-id={id}
       />
-      <Presence show={menu !== null} exitMs={120}>
-        {menu && (
-          <ContextMenu
-            x={menu.x}
-            y={menu.y}
-            items={menu.items}
-            onClose={menu.close}
-          />
-        )}
-      </Presence>
+      {/* On the body: a page in a document sits inside its zoom, which
+          would scale the menu's window coordinates a second time. */}
+      {createPortal(
+        <Presence show={menu !== null} exitMs={120}>
+          {menu && (
+            <ContextMenu
+              x={menu.x}
+              y={menu.y}
+              items={menu.items}
+              onClose={menu.close}
+            />
+          )}
+        </Presence>,
+        document.body,
+      )}
     </>
   );
 }
