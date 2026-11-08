@@ -1,17 +1,11 @@
 import { prepareList, rankList } from "../../utils/list-filter";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
-import {
-  ComposerPicker,
-  type PickerRow,
-  type PickerSection,
-} from "./ComposerPicker";
+import { ComposerPicker } from "./ComposerPicker";
 import {
   MENTION_TOKEN,
   MENTION_TRIGGER,
   SKILL_COMMAND,
-  groupSkills,
-  matchSkills,
   rememberSkill,
   resolveSkillName,
   type PickerSkill,
@@ -45,6 +39,7 @@ import {
   type ChatComposerProps,
 } from "./composer-types";
 import { isImeKeydown } from "../../utils/ime";
+import { pickerContent } from "./composer-picker-content";
 
 /** A tablet's sheet has no room for the model: it is picked in Settings
  *  there, as on a phone. */
@@ -185,78 +180,24 @@ export function ChatComposer({
 
   // What the open picker shows. Never nothing: an empty menu looks like a
   // dead key.
-  let pickerSections: PickerSection[] = [];
-  let pickerEmpty: string[] = [];
-  if (skillMenuOpen && skillTrigger && kinds.length > 0) {
-    // Where there are kinds (Research's pieces, Create's makings), `/`
-    // picks one.
-    const query = skillTrigger[1].toLowerCase();
-    pickerSections = [
-      {
-        rows: rankList(
-          prepareList(kinds.map((k) => ({ ...k, keywords: k.key }))),
-          query,
-          Infinity,
-        ).map((k) => ({
-          key: k.key,
-          primary: k.label,
-          secondary: `/${k.key}`,
-          pick: () => {
-            setInput("");
-            setPickerIndex(0);
-            k.pick();
-          },
-        })),
-      },
-    ];
-    pickerEmpty = [picker.skillNoMatch.replace("{query}", query)];
-  } else if (skillMenuOpen && skillTrigger) {
-    const query = skillTrigger[1];
-    const row = (skill: PickerSkill): PickerRow => ({
-      key: skill.name,
-      primary: skill.label ?? `/${skill.name}`,
-      secondary: skill.label ? `/${skill.name}` : undefined,
-      detail: skill.hint || undefined,
-      pick: () => pickSkill(skill),
-    });
-    pickerSections = query
-      ? [{ rows: matchSkills(available, query, recent).map(row) }]
-      : groupSkills(available, recent).map((group) => ({
-          title: picker.groups[group.id],
-          rows: group.skills.map(row),
-        }));
-    pickerEmpty =
-      available.length === 0
-        ? [picker.skillAbout, picker.skillHowTo]
-        : [picker.skillNoMatch.replace("{query}", query), picker.skillHowTo];
-  } else if (mentionMenuOpen && mentionQuery) {
-    pickerSections = [
-      {
-        rows: matchingFiles.map((path) => ({
-          key: path,
-          primary: `@${basename(path)}`,
-          // The folder, when there is one - for a file at the project root
-          // the name already says it all.
-          detail:
-            path !== basename(path)
-              ? path.slice(0, path.length - basename(path).length)
-              : undefined,
-          pick: () => void pickFile(path),
-        })),
-      },
-    ];
-    pickerEmpty =
-      projectFiles === null
-        ? [picker.mentionAbout]
-        : projectFiles.length > 0
-          ? [picker.mentionNoMatch.replace("{query}", mentionQuery[1])]
-          : [
-              picker.mentionAbout,
-              !docPath && !workspaceRoot
-                ? picker.mentionNoProject
-                : picker.mentionNoFiles,
-            ];
-  }
+  const { sections: pickerSections, empty: pickerEmpty } = pickerContent({
+    skillTrigger: skillMenuOpen ? skillTrigger : null,
+    mentionQuery: mentionMenuOpen ? mentionQuery : null,
+    kinds,
+    available,
+    recent,
+    matchingFiles,
+    projectFiles,
+    hasProject: !!docPath || !!workspaceRoot,
+    labels: picker,
+    pickKind: (k) => {
+      setInput("");
+      setPickerIndex(0);
+      k.pick();
+    },
+    pickSkill,
+    pickFile: (path) => void pickFile(path),
+  });
   const pickerRows = pickerSections.flatMap((s) => s.rows);
   const pickerOpen = skillMenuOpen || mentionMenuOpen;
   const activePickerIndex = Math.min(
