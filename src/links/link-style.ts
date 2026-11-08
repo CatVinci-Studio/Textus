@@ -2,17 +2,34 @@ import { fs } from "../platform/ipc";
 import type { Conventions } from "../platform/ipc-files";
 import { DEFAULT_LINK_STYLE, type LinkStyle } from "./link-resolve";
 
-/** How links are written where `conventions` hold; Textus's own where no
- *  app says. */
-export function folderLinkStyle(conventions: Conventions | null): LinkStyle {
-  const style = conventions?.linkStyle?.value;
-  if (!style) return DEFAULT_LINK_STYLE;
-  const path = conventions?.linkPath?.value;
+/** How links are written where `conventions` hold: the folder's own choice,
+ *  else a notes app's (an Obsidian vault's); null where none says. */
+export function folderLinkStyle(
+  conventions: Conventions | null,
+): LinkStyle | null {
+  const said = conventions?.linkStyle ?? conventions?.detected?.linkStyle;
+  if (!said?.value) return null;
+  const path = (conventions?.linkPath ?? conventions?.detected?.linkPath)
+    ?.value;
   return {
-    wiki: style === "wiki",
+    wiki: said.value === "wiki",
     format: path === "relative" || path === "absolute" ? path : "shortest",
   };
 }
+
+const WIKI_LINK = /\[\[[^\]\n]+\]\]/g;
+const NOTE_LINK = /\]\((?![a-z][a-z0-9+.-]*:|#)[^)\s]+\)/gi;
+
+/** The way `text` already links to notes, by count; null for neither. */
+export function linkStyleIn(text: string): LinkStyle | null {
+  const wiki = text.match(WIKI_LINK)?.length ?? 0;
+  const markdown = text.match(NOTE_LINK)?.length ?? 0;
+  if (wiki === markdown) return null;
+  return wiki > markdown ? WIKI_LINKS : DEFAULT_LINK_STYLE;
+}
+
+/** Obsidian's way, for a note that already links so. */
+const WIKI_LINKS: LinkStyle = { wiki: true, format: "shortest" };
 
 const NOTE_APPS = new Set(["obsidian", "logseq", "dendron", "foam"]);
 
@@ -38,10 +55,14 @@ export function renameRule(
   return rule === "always" || rule === "never" ? rule : "ask";
 }
 
-/** The link style of the folder holding the document `path` (the core keeps
- *  each folder's answer a moment). */
-export function linkStyleAt(path: string): Promise<LinkStyle> {
-  return fs
+/** How a link written in the document `path` is written: as its folder
+ *  says (the core keeps each folder's answer a moment), else as the note
+ *  already links, so one page never mixes the two, else a standard link. */
+export async function linkStyleAt(path: string): Promise<LinkStyle> {
+  const said = await fs
     .folderConventions(path)
-    .then(folderLinkStyle, () => DEFAULT_LINK_STYLE);
+    .then(folderLinkStyle, () => null);
+  if (said) return said;
+  const text = await fs.readTextFile(path).catch(() => "");
+  return linkStyleIn(text) ?? DEFAULT_LINK_STYLE;
 }

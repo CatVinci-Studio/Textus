@@ -96,8 +96,10 @@ describe("noteLinkIn writes links as the folder wants them", () => {
     expect(noteLinkIn(files, "pic.png", "a/Idea.md", wiki)).toBe("[[pic.png]]");
   });
 
-  it("names a note that shares its name by its path", () => {
-    expect(noteLinkIn(files, "b/Idea.md", "Inbox.md", wiki)).toBe("[[b/Idea]]");
+  it("names a note that shares its name by its path, shown by its name", () => {
+    expect(noteLinkIn(files, "b/Idea.md", "Inbox.md", wiki)).toBe(
+      "[[b/Idea|Idea]]",
+    );
   });
 
   it("adds a heading, a block, an alias and the embed mark", () => {
@@ -130,13 +132,13 @@ describe("noteLinkIn writes links as the folder wants them", () => {
         wiki: true,
         format: "relative",
       }),
-    ).toBe("[[../b/Idea]]");
+    ).toBe("[[../b/Idea|Idea]]");
     expect(
       noteLinkIn(files, "a/My Note.md", "Inbox.md", {
         wiki: true,
         format: "absolute",
       }),
-    ).toBe("[[a/My Note]]");
+    ).toBe("[[a/My Note|My Note]]");
     expect(
       noteLinkIn(
         files,

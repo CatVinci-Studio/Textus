@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, END, openApp } from "./helpers";
+import { dragWithMouse, emit, END, openApp } from "./helpers";
 
 // The sidebar's file tree as a small file manager: up to the parent, sort and
 // filter, New Document and New Folder, and dragging a row into a folder. The
@@ -572,6 +572,10 @@ test("a preview tab is clicked back to and closed like any other", async ({
   await expect(page.locator(`${editor} h1`)).not.toContainText("Bravo");
   await look.click();
   await expect(page.locator(`${editor} h1`)).toContainText("Bravo");
+  // Dragged along the bar, it moves as any tab does, and stays a preview.
+  await dragWithMouse(page, look, tabs.filter({ hasText: "a.md" }), -30);
+  await expect(tabs).toHaveText(["b.md", "a.md"]);
+  await expect(look).toHaveCount(1);
   await look.hover();
   await look.locator(".tab-pill-close").click();
   await expect(look).toHaveCount(0);

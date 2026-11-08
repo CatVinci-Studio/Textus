@@ -53,7 +53,7 @@ export function noteItems(
       const slash = f.rel.lastIndexOf("/");
       return {
         label: noteStem(f.rel.slice(slash + 1)),
-        insert: linkToTarget(paths, f.path, from, { ...style, wiki: true }),
+        insert: linkToTarget(paths, f.path, from, style),
         icon: "file",
         ...(slash > 0 ? { detail: f.rel.slice(0, slash) } : {}),
       };

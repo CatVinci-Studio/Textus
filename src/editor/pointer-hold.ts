@@ -1,5 +1,6 @@
 import { isReadOnly } from "./read-only-plugin";
 import { Plugin, PluginKey, type EditorState } from "@milkdown/kit/prose/state";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
 /** Where the selection was when the mouse button went down, mapped through
@@ -65,6 +66,29 @@ function stillHeld(event: Event): boolean {
   return event instanceof KeyboardEvent && MODIFIERS.has(event.key);
 }
 
+/** The caret placed again where it is. A link, a span or a heading showing
+ *  its source moves the text the caret is in (a "[" appears before it), and
+ *  WebKit kept drawing the caret at its old place on screen for a few frames,
+ *  in the middle of a word. */
+function redrawCaret(view: EditorView) {
+  const selection = document.getSelection();
+  if (!selection?.isCollapsed || !selection.anchorNode) return;
+  const { node, offset } = view.domAtPos(view.state.selection.head);
+  const range = document.createRange();
+  range.setStart(node, offset);
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+/** Whether the selection was last set by the pointer (ProseMirror's own
+ *  record of where it came from). */
+function clicked(view: EditorView): boolean {
+  const input = (
+    view as unknown as { input?: { lastSelectionOrigin?: string } }
+  ).input;
+  return input?.lastSelectionOrigin === "pointer";
+}
+
 export const pointerHoldPlugin = $prose(
   () =>
     new Plugin<Held>({
@@ -104,6 +128,20 @@ export const pointerHoldPlugin = $prose(
         // selection.
         page.addEventListener("mousedown", press, true);
         return {
+          // A click only moved the caret, and what shows as source moved
+          // with it: the text shifted under the caret. Not for keys, whose
+          // Up and Down keep their column through the browser's own caret.
+          update(view, prev) {
+            if (
+              clicked(view) &&
+              view.state.doc === prev.doc &&
+              view.state.selection.empty &&
+              !view.composing &&
+              view.hasFocus() &&
+              revealMoved(prev, view.state)
+            )
+              redrawCaret(view);
+          },
           destroy() {
             listen(false);
             page.removeEventListener("mousedown", press, true);
