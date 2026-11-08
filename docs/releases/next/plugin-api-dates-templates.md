@@ -1,0 +1,4 @@
+### Platform notes
+
+- Plugins: `textus.dates` (Moment-style `format` and `parse`) and `textus.templates.fill` (Obsidian's `{{date}}`/`{{title}}` templates and Templater's common tags, in the folder's formats) - no permission, nothing leaves the plugin. `files.appSettings("obsidian", file)` reads the nearest vault's own settings files, also above the open folder. The folder's conventions name its Templates date and time formats and its weekly and monthly notes, and an Obsidian vault with no daily notes settings keeps them at its top, as Obsidian does. The plugin API is 1.4.
+- Plugins: writing files includes reading them; Textus names, before installing a plugin, a completion without `editor.read` and a menu condition it never sets. The plugin documentation is in `docs/dev/plugins/`, with a skill an AI coding assistant can load.
