@@ -558,6 +558,8 @@ pub fn run() {
             // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
                 settings::flush_all(app_handle);
+                #[cfg(desktop)]
+                agents::stop_all(app_handle);
             }
             // Closing the last window leaves the app running on macOS, and elsewhere in
             // background mode. Tauri's codeless request after the last window is turned

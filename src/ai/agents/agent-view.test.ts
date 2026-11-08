@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
+import {
+  applyUpdate,
+  finish,
+  thoughtOf,
+  withoutAgentSteps,
+  type AgentView,
+} from "./agent-view";
 import type { SessionUpdate } from "./acp-client";
 
 const run = (updates: SessionUpdate[]) =>
@@ -83,5 +89,40 @@ describe("an agent's updates as the chat shows them", () => {
       { kind: "ToolResult", call_id: "t2", output: "Failed." },
     ]);
     expect(finish(view)).toHaveLength(3);
+  });
+});
+
+describe("a conversation handed back to a model", () => {
+  it("leaves out the agent's steps, keeping its prose", () => {
+    expect(
+      withoutAgentSteps([
+        { kind: "User", text: "Tidy" },
+        {
+          kind: "ToolCall",
+          call_id: "t1",
+          name: "agent_tool",
+          arguments: "{}",
+        },
+        { kind: "ToolResult", call_id: "t1", output: "Done." },
+        {
+          kind: "ToolCall",
+          call_id: "c1",
+          name: "read_document",
+          arguments: "{}",
+        },
+        { kind: "ToolResult", call_id: "c1", output: "# A" },
+        { kind: "Assistant", text: "Tidied." },
+      ]),
+    ).toEqual([
+      { kind: "User", text: "Tidy" },
+      {
+        kind: "ToolCall",
+        call_id: "c1",
+        name: "read_document",
+        arguments: "{}",
+      },
+      { kind: "ToolResult", call_id: "c1", output: "# A" },
+      { kind: "Assistant", text: "Tidied." },
+    ]);
   });
 });

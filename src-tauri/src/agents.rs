@@ -206,6 +206,21 @@ pub async fn agent_send(app: tauri::AppHandle, handle: u64, line: String) -> Res
         .map_err(|_| "The agent has stopped.".to_string())
 }
 
+/// Ends every agent: a child process outlives the app that started it.
+pub fn stop_all(app: &tauri::AppHandle) {
+    let running: Vec<Running> = app
+        .state::<Agents>()
+        .running
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .drain()
+        .map(|(_, r)| r)
+        .collect();
+    for r in running {
+        let _ = r.child.lock().unwrap_or_else(|e| e.into_inner()).start_kill();
+    }
+}
+
 /// Ends agent `handle`, if it is still running.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

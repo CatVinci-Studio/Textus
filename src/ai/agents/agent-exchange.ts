@@ -47,8 +47,6 @@ interface Session {
   sessionId: string;
   /** The exchange running now, which hears updates and asks permission. */
   events: ExchangeEvents | null;
-  /** Its stderr, kept for when it stops. */
-  stopped: string | null;
   /** Refuses the permission being asked, if one is. */
   refuse: (() => void) | null;
 }
@@ -88,14 +86,18 @@ async function start(
     agent: agent.key,
     cwd,
     events: null,
-    stopped: null,
     refuse: null,
     sessionId: "",
   } as unknown as Session;
   session.connection = new AcpConnection(
     {
       send: async (line) => agentsIpc.send(await handle!, line),
-      stop: () => void handle?.then((h) => agentsIpc.stop(h)),
+      // A start that failed has nothing to stop.
+      stop: () =>
+        void handle?.then(
+          (h) => agentsIpc.stop(h),
+          () => {},
+        ),
     },
     {
       update: ({ update }) => deliver(session, update),
@@ -128,7 +130,6 @@ async function start(
   handle = agentsIpc.start(agent.plugin, agent.id, cwd, (out) => {
     if (out.type === "line") session.connection.receive(out.text);
     else {
-      session.stopped = out.stderr.trim();
       session.connection.close(new Error(stoppedText(agent, out.stderr)));
       if (sessions.get(conversation) === session) sessions.delete(conversation);
     }
@@ -254,7 +255,7 @@ export async function runAgentExchange(o: {
   if (o.docPath)
     prompt.push({
       type: "resource_link",
-      uri: `file://${o.docPath}`,
+      uri: fileUri(o.docPath),
       name: o.docPath.split(/[\\/]/).pop() ?? o.docPath,
       mimeType: "text/markdown",
     });
@@ -272,9 +273,14 @@ export async function runAgentExchange(o: {
   }
 }
 
-/** What streamed before a stop or a failure, landed. */
-export function partialAgentTurns(conversation: string): AgentTurn[] {
-  const session = sessions.get(conversation);
-  const view = session && current.get(session);
-  return view ? finish(view) : [];
+/** `path` as a file: URI, its spaces and the rest encoded; a Windows
+ *  drive's path as file:///C:/… */
+export function fileUri(path: string): string {
+  const slashed = path.replace(/\\/g, "/");
+  const encoded = (slashed.startsWith("/") ? slashed : "/" + slashed)
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")
+    .replace(/^\/([A-Za-z])%3A/, "/$1:");
+  return "file://" + encoded;
 }

@@ -28,6 +28,7 @@ import {
 import { useNextMessage } from "./next-message";
 import { reportAiState } from "../../plugins/ai-state";
 import { externalAgent } from "../../plugins/contributions/agents";
+import { withoutAgentSteps } from "../agents/agent-view";
 import {
   AGENT_REQUEST,
   agentFolder,
@@ -247,7 +248,10 @@ export function useAgentConversation(
             docPath,
             workspaceRoot,
             conversation: conversationId,
-            history: annotateProposalStatuses(history, proposalStatuses ?? {}),
+            history: annotateProposalStatuses(
+              withoutAgentSteps(history),
+              proposalStatuses ?? {},
+            ),
             message: trimmed,
             images,
             webSearch: options.webSearch,

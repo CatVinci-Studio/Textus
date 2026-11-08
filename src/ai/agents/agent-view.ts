@@ -121,6 +121,23 @@ export function thoughtOf(update: SessionUpdate): string | null {
     : null;
 }
 
+/** `turns` without an external agent's steps, which a model was never
+ *  given as its own tools' and can refuse in its history. */
+export function withoutAgentSteps(turns: AgentTurn[]): AgentTurn[] {
+  const steps = new Set(
+    turns.flatMap((t) =>
+      t.kind === "ToolCall" && t.name === AGENT_TOOL ? [t.call_id] : [],
+    ),
+  );
+  return turns.filter(
+    (t) =>
+      !(
+        (t.kind === "ToolCall" || t.kind === "ToolResult") &&
+        steps.has(t.call_id)
+      ),
+  );
+}
+
 /** The exchange as it ends: its prose landed. */
 export function finish(view: AgentView): AgentTurn[] {
   return landText(view).turns;
