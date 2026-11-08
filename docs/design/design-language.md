@@ -163,7 +163,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 
 ### 5.4 Layout
 
-**Window** (desktop): sidebar (resizable, 240–360) | document column | AI panel (resizable, 320–480). The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
+**Window** (desktop): sidebar (resizable, 180–480, 240 to start) | document column | AI panel (resizable, 300–720, 380 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
 
 **Surface templates.** A new surface - in the app or a plugin - MUST use one of these:
 
@@ -199,6 +199,14 @@ Every surface that appears in the window is one of these. Each row says where it
 
 **Lists you type into** (the `/` panel, the command palette, the file search, the chat's `/` and `@`) filter with `utils/list-filter.ts`: a label starting with the query first, then a word starting with it, inside it, every word, then pinyin. The option the keys are on is selected (9).
 
+### 5.6 Scale and alignment - In force (Textus 1.3.12)
+
+- **One scale for the interface.** `--chrome-scale` is Interface Text Size times the window's width step (1 up to 1200 px, then a straight line to 1.35 at 2320 px; 1 on the phone). Every length of 3 px or more in the app's stylesheets is multiplied by it at build time (`vite.chrome-scale.ts`), so a control, its icon, its padding and its radius grow together. Hairlines (1–2 px) stay crisp. The document's own sheets are left out: it has its own zoom.
+- What a script sizes (panel widths, floating views) multiplies by the same number (`chromeScaleAt`, `useChromeScale`). Plugin pages get `--ui-text-scale` and `--window-scale` in their theme variables; a block drawn in the document takes `--window-scale: 1`.
+- A plugin page's own sizes SHOULD be proportional: `%`, `vw`, `clamp()`, or `calc(Npx * var(--chrome-scale, 1))`, not bare pixels.
+- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on one line, `--header-height` (the window bar plus 36 × scale). The panels' vertical edges run up through the window bar to the top. `e2e/panel-alignment.spec.ts` checks both at three widths.
+- **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside, so the note around it stays in view.
+
 ## 6. Shape - In force
 
 - **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
@@ -206,6 +214,7 @@ Every surface that appears in the window is one of these. Each row says where it
 - **Controls** are capsules (`--shape-pill`): buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips, tags and switches. A button with only an icon is a circle.
 - **Character-level marks are square**: the caret, Vim's block cursor, the selection, find and flash highlights - radius 0–2 px.
 - Where the engine supports it (Chromium 139+, so WebView2), container corners are continuous (`corner-shape: superellipse(1.25)`); capsules and circles stay `round`.
+- Radii are lengths like any other: they grow with `--chrome-scale` (5.6), so the concentric rule holds at every size.
 
 ## 7. Elevation and materials - In force
 
@@ -243,6 +252,7 @@ Every surface that appears in the window is one of these. Each row says where it
 - Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
 - Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
+- **Dragging** looks the same everywhere: the copy under the pointer is lifted - `scale: 1.06`, `--ui-surface`, `--shadow-popover` (`.tx-drag-ghost`, `.tree-drag-ghost`, `.tab-pull-ghost`, `.tab-pill-lifted`, `.is-drag-lifted`) - and the place it left, where it stays, is a dashed outline (`.tx-drag-source`). The copy stays exactly under the point it was taken by, zoomed or not.
 - Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
 - Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`ui/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
 
