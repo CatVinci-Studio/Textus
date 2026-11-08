@@ -1705,6 +1705,8 @@ para usar una.
   pluginsInstallHelp:
     "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
   pluginsInstallFile: "Instalar desde archivo…",
+  pluginFormPrevMonth: "Mes anterior",
+  pluginFormNextMonth: "Mes siguiente",
   pluginsLoadFolder: "Cargar carpeta de complemento…",
   pluginsOpenScripts: "Abrir la carpeta de scripts",
   pluginPackageFilter: "Complemento de Textus",

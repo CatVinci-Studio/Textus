@@ -71,7 +71,7 @@
 
 .notice-bar-fill.is-indeterminate {
   width: 40%;
-  animation: notice-indeterminate var(--dur-pulse) var(--ease-in-out) infinite;
+  animation: motion-sweep var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .notice-cancel {
@@ -86,15 +86,6 @@
 
 .notice-cancel:hover {
   color: var(--ui-text);
-}
-
-@keyframes notice-indeterminate {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(250%);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

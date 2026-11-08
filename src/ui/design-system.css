@@ -1,6 +1,7 @@
 /* Application UI contract. Content themes remain scoped to the document. */
 @import "./motion.css";
 @import "./components.css";
+@import "./controls.css";
 
 :root {
   /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
@@ -15,6 +16,20 @@
   /* Control heights: in bars, cards and segments; in forms and dialogs. */
   --control-height-sm: 24px;
   --control-height: 28px;
+  /* Layout sizes the shared controls and plugin pages take (5.6): a tab
+     view's bar, the room a document block leaves its source button, a
+     board's list, a find field, a slider, a progress ring, a bubble. */
+  --bar-height: 36px;
+  --block-source-room: 40px;
+  --board-lane-width: 260px;
+  --find-field-width: 180px;
+  --slider-width: 104px;
+  --progress-ring-size: 32px;
+  --bubble-width: 240px;
+  /* Surfaces that are what they show, whatever the theme: a sheet of
+     paper (a PDF's page), a stage (slides shown full screen). */
+  --paper-bg: #fff;
+  --stage-bg: #000;
   /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
      the interface text and, in a straight line, with the window's width
      (--window-scale). */

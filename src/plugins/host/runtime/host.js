@@ -556,6 +556,12 @@
       form: function (options) {
         return call("ui.form", plain(options));
       },
+      pickDate: function (options) {
+        return call("ui.pickDate", plain(options || {}));
+      },
+      pickColor: function (options) {
+        return call("ui.pickColor", plain(options || {}));
+      },
       withProgress: function (title, task) {
         var controller = new AbortController();
         return call("ui.progressStart", { title: String(title) }).then(

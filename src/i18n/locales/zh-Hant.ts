@@ -1550,6 +1550,8 @@ export default {
   pluginsInstallHelp:
     "外掛程式安裝檔（.textusplugin）會複製到 Textus 中。外掛程式資料夾則在原處載入，方便試用你正在撰寫的外掛程式；之後從原處重新載入。",
   pluginsInstallFile: "從檔案安裝…",
+  pluginFormPrevMonth: "上個月",
+  pluginFormNextMonth: "下個月",
   pluginsLoadFolder: "載入外掛程式資料夾…",
   pluginsOpenScripts: "打開腳本資料夾",
   pluginPackageFilter: "Textus 外掛程式",

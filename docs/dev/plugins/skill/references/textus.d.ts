@@ -248,6 +248,13 @@ declare global {
           commands?: boolean;
         },
       ): Promise<unknown>;
+      /** A date picked on Textus's month calendar, as `YYYY-MM-DD`, or
+       *  null when cancelled; `value` is the one picked to start with
+       *  (Textus 1.3.12). */
+      pickDate(options?: { title?: string; value?: string }): Promise<string | null>;
+      /** A colour picked from the tones or typed, as `#rrggbb`, or null
+       *  when cancelled (Textus 1.3.12). */
+      pickColor(options?: { title?: string; value?: string }): Promise<string | null>;
       /** A small form: the values by key, or null when cancelled. */
       form(options: {
         title?: string;
@@ -288,6 +295,10 @@ declare global {
         }
       | { key: string; type: "number"; label: string; value?: number }
       | { key: string; type: "boolean"; label: string; value?: boolean }
+      /** `YYYY-MM-DD`, picked on a month calendar (Textus 1.3.12). */
+      | { key: string; type: "date"; label: string; value?: string }
+      /** `#rrggbb`, from the tones or typed (Textus 1.3.12). */
+      | { key: string; type: "color"; label: string; value?: string }
       | {
           key: string;
           type: "choice";

@@ -1697,6 +1697,8 @@ export default {
   pluginsInstallHelp:
     "Пакет плагина (.textusplugin) копируется в Textus. Папка плагина загружается на месте — чтобы попробовать плагин, который вы пишете; перезагружается оттуда же.",
   pluginsInstallFile: "Установить из файла…",
+  pluginFormPrevMonth: "Предыдущий месяц",
+  pluginFormNextMonth: "Следующий месяц",
   pluginsLoadFolder: "Загрузить папку плагина…",
   pluginsOpenScripts: "Открыть папку скриптов",
   pluginPackageFilter: "Плагин Textus",

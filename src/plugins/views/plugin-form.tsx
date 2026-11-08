@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { useModalDialog } from "../../ui/useModalDialog";
 import { Select } from "../../ui/Select";
+import { ColorField, DateField } from "./plugin-form-fields";
 import "./plugin-form.css";
 
 /**
@@ -17,6 +18,7 @@ export type PluginFormField =
     }
   | { key: string; type: "number"; label: string; value?: number }
   | { key: string; type: "boolean"; label: string; value?: boolean }
+  | { key: string; type: "date" | "color"; label: string; value?: string }
   | {
       key: string;
       type: "choice";
@@ -55,7 +57,15 @@ export function showPluginForm(
       f &&
       typeof f.key === "string" &&
       typeof f.label === "string" &&
-      ["text", "multiline", "number", "boolean", "choice"].includes(f.type),
+      [
+        "text",
+        "multiline",
+        "number",
+        "boolean",
+        "choice",
+        "date",
+        "color",
+      ].includes(f.type),
   );
   return new Promise((resolve) => {
     queue = [...queue, { ...request, fields, id: nextId++, resolve }];
@@ -148,7 +158,19 @@ function PluginForm({ request }: { request: Request }) {
               ) : (
                 <>
                   <label htmlFor={id}>{field.label}</label>
-                  {field.type === "choice" ? (
+                  {field.type === "date" ? (
+                    <DateField
+                      id={id}
+                      value={String(value)}
+                      onChange={(next) => set(field.key, next)}
+                    />
+                  ) : field.type === "color" ? (
+                    <ColorField
+                      id={id}
+                      value={String(value)}
+                      onChange={(next) => set(field.key, next)}
+                    />
+                  ) : field.type === "choice" ? (
                     <Select
                       className="settings-select"
                       aria-label={field.label}

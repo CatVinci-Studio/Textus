@@ -1699,6 +1699,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsInstallHelp:
     "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
   pluginsInstallFile: "Aus Datei installieren…",
+  pluginFormPrevMonth: "Vorheriger Monat",
+  pluginFormNextMonth: "Nächster Monat",
   pluginsLoadFolder: "Plugin-Ordner laden…",
   pluginsOpenScripts: "Skriptordner öffnen",
   pluginPackageFilter: "Textus-Plugin",

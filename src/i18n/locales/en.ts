@@ -1659,6 +1659,8 @@ type /name in a conversation to use one.
   pluginsInstallHelp:
     "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",
+  pluginFormPrevMonth: "Previous month",
+  pluginFormNextMonth: "Next month",
   pluginsLoadFolder: "Load a plugin folder…",
   pluginsOpenScripts: "Open Scripts Folder",
   pluginPackageFilter: "Textus plugin",

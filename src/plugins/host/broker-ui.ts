@@ -94,6 +94,11 @@ export function uiHandlers(p: PluginScope) {
         cancelLabel: p.t().pluginCancel,
         fields: (Array.isArray(fields) ? fields : []) as PluginFormField[],
       }),
+    // One field of the form's, its value or null.
+    "ui.pickDate": ({ title, value }: Params) =>
+      pickOne(p, "date", title, value),
+    "ui.pickColor": ({ title, value }: Params) =>
+      pickOne(p, "color", title, value),
     "ui.progressStart": ({ title }: Params) => {
       const id = startProgress(str(title, "title"), {
         source: p.name(),
@@ -124,6 +129,20 @@ export function uiHandlers(p: PluginScope) {
       removeStatusItem(p.id, str(id, "id"));
     },
   };
+}
+
+function pickOne(
+  p: PluginScope,
+  type: "date" | "color",
+  title: unknown,
+  value: unknown,
+): Promise<string | null> {
+  return showPluginForm({
+    title: optionalStr(title) ?? p.name(),
+    okLabel: p.t().pluginOk,
+    cancelLabel: p.t().pluginCancel,
+    fields: [{ key: "value", type, label: "", value: optionalStr(value) }],
+  }).then((values) => (values ? String(values.value) : null));
 }
 
 /** The progress bars each plugin has showing. */

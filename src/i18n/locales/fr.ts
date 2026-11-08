@@ -1728,6 +1728,8 @@ utiliser une.
   pluginsInstallHelp:
     "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
   pluginsInstallFile: "Installer depuis un fichier…",
+  pluginFormPrevMonth: "Mois précédent",
+  pluginFormNextMonth: "Mois suivant",
   pluginsLoadFolder: "Charger un dossier d’extension…",
   pluginsOpenScripts: "Ouvrir le dossier des scripts",
   pluginPackageFilter: "Extension Textus",

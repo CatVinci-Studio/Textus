@@ -1544,6 +1544,8 @@ export default {
   pluginsInstallHelp:
     "插件安装包（.textusplugin）会复制到 Textus 里。插件文件夹则在原处加载，方便试用你正在写的插件；之后从原处重新加载。",
   pluginsInstallFile: "从文件安装…",
+  pluginFormPrevMonth: "上个月",
+  pluginFormNextMonth: "下个月",
   pluginsLoadFolder: "加载插件文件夹…",
   pluginsOpenScripts: "打开脚本文件夹",
   pluginPackageFilter: "Textus 插件",
