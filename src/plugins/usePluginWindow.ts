@@ -192,6 +192,7 @@ export function usePluginWindow({
     rootRef,
     openRef,
     lookRef,
+    saveTabRef,
     tabsRef,
     setTabs,
     setActiveTabId,
