@@ -114,7 +114,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   ];
   if (process.argv.includes("--check")) {
     const stale = outputs.filter(
-      ([path, text]) => !existsSync(path) || readFileSync(path, "utf8") !== text,
+      ([path, text]) =>
+        !existsSync(path) || readFileSync(path, "utf8") !== text,
     );
     if (stale.length) {
       console.error(
@@ -124,6 +125,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     }
   } else {
     for (const [path, text] of outputs) writeFileSync(path, text);
-    console.log("wrote docs/dev/plugins/reference.md and the skill's references");
+    console.log(
+      "wrote docs/dev/plugins/reference.md and the skill's references",
+    );
   }
 }

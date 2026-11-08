@@ -31,7 +31,9 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   "main": "host.js",
   "permissions": ["editor.read"],
   "contributes": {
-    "commands": [{ "command": "jane.word-count.count", "title": "Count Words" }],
+    "commands": [
+      { "command": "jane.word-count.count", "title": "Count Words" }
+    ],
     "menus": { "app/plugins": [{ "command": "jane.word-count.count" }] }
   }
 }
