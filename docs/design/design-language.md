@@ -438,37 +438,10 @@ Planned: `api.select()` for a field's dropdown and `data-tooltip` for the app's 
 
 No `<style>` is needed for any of it. A page's own CSS is for layout only (grid, flex, widths), with token values.
 
-## 16. Front-end architecture - In force (16.2 layout: Planned)
+## 16. Front-end architecture
 
-### 16.1 Layers
-
-Dependencies point one way: **tokens → styles → components → patterns → features**. A layer never re-defines a value an earlier layer defines, and never imports from a later one.
-
-| Layer      | Today                                                                                   | Holds                                   |
-| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- |
-| Tokens     | `src/ui/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
-| Styles     | `src/ui/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
-| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)   | React wrappers; no own colours or sizes |
-| Patterns   | Settings rows, the sidebar, menus, the command palette                                  | Arrangements of components              |
-| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                   | Compose the layers above                |
-
-### 16.2 Target layout - Planned
-
-```
-src/ui/tokens/      the token source -> tokens.css, the plugin token list, the docs table
-src/ui/styles/      textus-ui.css: base, states, tx-* components, surface templates
-src/ui/icons/       the icon set and its public name list
-src/ui/components/  React components over tx-* classes
-src/ui/patterns/    sidebar panel, settings page, dialogs, menus, command palette
-src/plugins/host/   injects tokens, styles and icons into plugin pages; bridges popups
-```
-
-Files move there as they are touched, not in one rewrite.
-
-### 16.3 Enforcement
-
-- In force: `spacing-grid.test.ts`, `theme-reach.test.ts`, `motion-tokens.test.ts`, `motion-properties.test.ts`, `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, the contrast tests in `src/theme/theme-chrome.test.ts`.
-- Planned: a Stylelint configuration banning literal colours, px font sizes, off-grid spacing, raw radii and raw durations, run on the app and official plugins and offered to third-party authors; the plugin listing review warns on a page that breaks it; a test that every public token resolves in every built-in theme; a component gallery page in dev mode, drawn in the current theme, that is also the visual regression target.
+Moved to [architecture.md › UI layering](../dev/architecture.md#ui-layering),
+with the folder layers.
 
 ## 17. Review checklist
 
@@ -484,4 +457,4 @@ Before a change to the interface, a plugin page or a theme is merged:
 - [ ] Hover, selected, disabled and focus follow section 9; the page works from the keyboard (13).
 - [ ] Motion uses the moves and tokens; nothing moves while typing (10).
 - [ ] Words follow section 12 and are localized.
-- [ ] Light and dark, the five built-in themes, and one imported theme were looked at; a plugin page also in one signature-palette theme.
+- [ ] Light and dark, the four built-in themes, and one imported theme were looked at; a plugin page also in one signature-palette theme.

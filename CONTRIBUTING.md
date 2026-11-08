@@ -5,10 +5,10 @@ CatVinci Studio, and every fix or idea from outside makes a real difference
 to us.
 
 This file is everything we'd tell you over a call: how to build the app,
-what to run before you push, and the habits the code has grown. It's long,
-but you don't need all of it for a first pull request - "Getting set up" and
-"Before you push" are enough to start. If you use an AI coding assistant, it
-can read the short version in [AGENTS.md](AGENTS.md).
+what to run before you push, and the habits the code has grown. You don't
+need all of it for a first pull request - "Getting set up" and "Before you
+push" are enough to start. If you use an AI coding assistant, it reads
+[AGENTS.md](AGENTS.md), which points back here.
 
 Textus is a Tauri 2 app: React and TypeScript in `src/`, Rust in
 `src-tauri/`, and the code that talks to AI providers in
@@ -43,6 +43,14 @@ browser. A dev-only shim (`src/dev/tauri-shim.ts`) stubs the Tauri IPC so the
 editor still mounts, which makes UI work fast to iterate on - but anything
 touching the backend (attachments, windows, AI requests) needs the real app.
 
+The official plugins no longer ship with the app. The dev server serves
+them from a checkout of
+[textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) in a
+folder named `textus-plugins` beside (or above) this repository, or at
+`TEXTUS_PLUGINS_DIR` (`vite.dev-plugins.ts`); without one the plugin
+catalog is empty and the plugin e2e flows fail or skip. Run `npm ci` in
+that checkout once.
+
 `npm run tauri build` makes the installers for your platform (`.dmg`,
 `-setup.exe`, `.AppImage`/`.deb`/`.rpm`).
 
@@ -50,8 +58,8 @@ touching the backend (attachments, windows, AI requests) needs the real app.
 
 `src/playground/` is a web edition of the editor alone (no AI, sidebar or
 settings), served at <https://textus.md/playground/>. It reuses the
-editor core (`editor/editor-extensions.ts`) with image storage and clipboard
-history left out, and keeps its one document in the browser's localStorage.
+editor core (`editor/editor-extensions.ts`) with image storage left out,
+and keeps its one document in the browser's localStorage.
 
 ```sh
 npm run dev:playground     # http://localhost:1450/playground/
@@ -61,7 +69,8 @@ npm run build:playground   # dist-playground/playground/, built for /playground/
 Its entry is `playground.html` and its Vite config `vite.playground.config.ts`,
 so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
 `e2e/playground.spec.ts` runs as the `playground` project of `npm run test:e2e`.
-Every push to `main` that touches it deploys it (`deploy-playground.yml`,
+It is deployed after each newest stable release, not from `main`
+(`deploy-playground.yml`, called by `release.yml`;
 [infrastructure.md](docs/dev/infrastructure.md#playground)).
 
 ## Where things are
@@ -89,43 +98,52 @@ Every push to `main` that touches it deploys it (`deploy-playground.yml`,
 Run what CI runs - the same commands on Linux, macOS and Windows:
 
 ```sh
-npm run check          # types, lint, unit tests, formatting, README/version/updater checks
+npm run check          # everything in the table below
 npm run test:e2e       # the Playwright flows (first time: npm run setup:e2e)
-npm run check:native   # rustfmt, clippy, Rust tests in src-tauri/ (builds dist/ if missing)
+npm run check:native   # rustfmt, clippy with warnings as errors, Rust tests (app crate and aicompat)
 npm run check:all      # all three, in that order
-npm run check:quick    # while you work: `check` for the files you changed only
+npm run check:quick    # while you work: typecheck, then lint, format and tests for the files you changed
 ```
 
 `npm run format` and `cargo fmt --all` (in `src-tauri/`) fix formatting in
-place. `check:native` passes `--workspace`, so the `aicompat` crate is
-checked too.
+place. `check:native` builds `dist/` first if it is missing, since the
+crate embeds it.
 
-CI runs `check` on every pull request, and `e2e`, `native` (on Linux, macOS
-and Windows) and an iOS simulator build where the change can reach them: a
-documentation-only change or a version bump runs `check` alone, a
-frontend-only change skips `native` and iOS, and a change only to the Rust
-backend (`src-tauri/`) skips `e2e`
-([scripts/ci-changes.mjs](scripts/ci-changes.mjs) decides).
+`npm run check` runs, in order:
+
+| Step                                 | Holds                                                                                                         |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `tsc` (`npm run typecheck`)          | Types                                                                                                         |
+| ESLint (`npm run lint`)              | The import layers, and Tauri only behind `src/platform/` ([architecture.md](docs/dev/architecture.md#layers)) |
+| vitest (`npm test`)                  | Unit and editor tests, the save round trip, the docs' facts held to the code                                  |
+| Prettier (`npm run format:check`)    | Formatting                                                                                                    |
+| `scripts/check-readmes.mjs`          | The README's translations keep the English one's headings, code blocks and links                              |
+| `scripts/check-code-shape.mjs`       | 600 lines a file, 8 hooks a component, no provider id compared outside its adapter                            |
+| `scripts/check-cycles.mjs`           | No import cycles                                                                                              |
+| `scripts/check-duplicates.mjs`       | No run of code copied instead of shared (jscpd); the copies there today are listed and may only go            |
+| `knip`                               | No unused file, export or dependency (`knip.json`)                                                            |
+| `scripts/check-versions.mjs`         | The five version files agree                                                                                  |
+| `scripts/check-nsis-template.mjs`    | The Windows installer template matches Tauri's                                                                |
+| `scripts/updater-manifest.mjs check` | The updater reads `textus-latest.json`, never `latest.json`                                                   |
+
+Two things only a build checks, so CI's `check` job builds after it: the
+startup budget (`vite.startup-budget.ts` fails a build whose entry chunk
+passes 1.25 MB) and CSS syntax. Run `npx vite build` if you changed what
+loads at startup. The Rust tests fail while the generated bindings in
+`src/platform/bindings/` are stale: `npm run bindings` writes them.
+
+CI runs `check` on every pull request, and the other jobs where the change
+can reach them; [testing.md](docs/dev/testing.md#how-ci-is-laid-out) has
+the table.
 
 ## Tests
 
 [docs/dev/testing.md](docs/dev/testing.md) says which layer a new test
-belongs in, how to run each, and what is deliberately not covered. A test
-goes in the lowest layer that can catch its mistake: what a key or a paste
-does to the document is an editor integration test in vitest, and an e2e
-flow is for what only a browser shows - focus, menus, scrolling, layout. In
-short:
-
-| Kind                     | Where                                   | Runs                                      |
-| ------------------------ | --------------------------------------- | ----------------------------------------- |
-| Unit and editor (vitest) | `src/**/*.test.ts(x)`, next to the code | `npm test`, in `check`, CI                |
-| Unit (Rust)              | `#[cfg(test)] mod tests` in the module  | `check:native`, CI                        |
-| E2E flows                | `e2e/*.spec.ts`                         | `npm run test:e2e`, CI                    |
-| Visual baselines         | `e2e/visual.spec.ts-snapshots/`         | `npm run test:visual`, Linux, by hand     |
-| Screenshot generators    | `e2e/shots/`                            | `npm run screenshots:*`, by hand          |
-| Built-app smoke test     | `scripts/smoke-linux.sh --build`        | by hand, before a release                 |
-| iOS simulator smoke test | `scripts/smoke-ios-sim.sh <app>`        | CI (`ios` job), on a Mac by hand          |
-| Live AI evaluation       | `src-tauri/src/ai/live_eval*`           | by hand, needs an API key and costs money |
+belongs in, how to run each suite, how to use the e2e helpers, and what is
+deliberately not covered. A test goes in the lowest layer that can catch
+its mistake: what a key or a paste does to the document is an editor
+integration test in vitest, and an e2e flow is for what only a browser
+shows - focus, menus, scrolling, layout.
 
 Name a test as the claim it makes, not as the function it calls:
 
@@ -145,33 +163,20 @@ exercised by hand.
 
 ## Branches and pull requests
 
-**Send every pull request to `main`.** That is the one rule; the rest of this
-section explains the other branches you may see.
+**Send every pull request to `main`.** Branch from `main` (or fork), name
+the branch after what it does (`fix/pdf-margins`), and if `main` moves on
+while you work, merge it into your branch. Pull requests are
+squash-merged, so the title and description become the commit on `main`:
+write the title as a plain English sentence that says what changed, and
+the description as why. The branch, release and commit rules are in
+[docs/dev/releasing.md](docs/dev/releasing.md#pull-requests-and-commits).
 
-| Branch                                 | What it is                                                                                      | Pull requests?   |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------- |
-| `main`                                 | The next version, including its betas. Features and fixes land here.                            | Yes, all of them |
-| `stable`                               | The version people have installed. Takes bug fixes only, carried over from `main` by us.        | No               |
-| `release/v…`                           | One release being put together, deleted once it is out.                                         | No               |
-| anything else (`feat/…`, `fix/…`, ...) | Work in progress, deleted once merged. A large feature may have its own branch others build on. | Only if asked    |
-
-Older versions are kept as tags (`v1.1.2`, `v1.0.4`), not branches.
-
-To start:
-
-1. Fork the repository, or branch from `main` if you have write access.
-2. Name the branch after what it does: `fix/pdf-margins`, `feat/sidebar-width`.
-3. Open the pull request against `main`. If `main` moves on while you work,
-   merge it into your branch; you don't need to rebase.
-
-If your pull request fixes a bug in the released version, say which version
-in the description (the template asks). We bring the fix to `stable`
-ourselves, with you credited. New features ship in the next minor version,
-never in a patch release.
+If your pull request fixes a bug in the released version, say which
+version in the description (the template asks); the fix ships in the next
+release.
 
 A few things make a pull request easy for us to say yes to:
 
-- It does one thing, from one branch. Two fixes are two pull requests.
 - The description says why. What was broken, or what you wanted to do; the
   commits can carry the details.
 - If it changes something you can see, a before and after screenshot.
@@ -182,51 +187,28 @@ A few things make a pull request easy for us to say yes to:
   The automated tests run in a browser and can't see any of this.
 - If it touches drafts or anything that could lose someone's writing, a
   line on what you tried by hand.
+- A release note as a file of its own in `docs/releases/next/` (see
+  [Writing](#writing)).
 - It leaves CI and the test setup alone. If a check looks wrong, open a
   separate pull request about the check. From a fork, a pull request that
   changes `.github/` or the test configuration fails the `ci-config` check
   on purpose, and asks the maintainers for a review: we take it from there.
 
-CI has to pass before we can merge, and a maintainer reviews
-every pull request ([who can do what](docs/dev/roles.md)). We try to answer within a few days. If we haven't, a
-friendly nudge on the pull request is welcome - it usually means it slipped
-past us, not that we're ignoring you.
-
-Releases are tags: betas and minor versions on `main`, patch releases on
-`stable`. See [docs/dev/releasing.md](docs/dev/releasing.md).
-
-## Commits
-
-[Conventional Commits](https://www.conventionalcommits.org/), with an
-optional scope naming the area (`chat`, `ai`, `ui`, `editor`, `settings`,
-`drafts`, `export`, `ci`):
-
-```
-fix(drafts): stop a new window recovering documents that are still open
-feat(chat): read PDF, Office and image attachments
-refactor(ui): one icon set, no emoji
-```
-
-Prefixes in use: `feat`, `fix`, `refactor`, `perf`, `style`, `docs`, `test`,
-`build`, `chore`, `ci`.
-
-**Split by concern, not by file.** A branch that fixes three things should be
-three commits. The subject says what changed; the body says **why it was
-wrong**: the failure it prevents, not a restatement of the diff. Silent
-failure modes are worth spelling out, because nobody will rediscover them
-from the code:
-
-> Draft recovery answers a LAUNCH-time question, but the drain is per-window,
-> and a window can be created at any time. Once the app is up, every snapshot
-> on disk belongs to a live dirty tab, so Cmd+T "recovered" a document that
-> was still open and unsaved.
+CI has to pass before we can merge, and a maintainer reviews every pull
+request ([who can do what](docs/dev/roles.md)). We try to answer within a
+few days. If we haven't, a friendly nudge on the pull request is welcome -
+it usually means it slipped past us, not that we're ignoring you.
 
 ## Code style
 
 **Know where code goes.** [docs/dev/architecture.md](docs/dev/architecture.md)
 maps the folders and the layers they sit in. A folder never imports from a
-layer above it; `npm run lint` fails if one does. Interface rules (spacing,
-type sizes, buttons, menus, motion) are in
+layer above it; `npm run lint` fails if one does.
+[docs/dev/recipes.md](docs/dev/recipes.md) walks through the common
+additions (a setting, a menu item, a backend command, a string, a plugin
+API call, an e2e test), and [docs/dev/reuse.md](docs/dev/reuse.md) lists
+the one place for each common need. Interface rules (spacing, type sizes,
+buttons, menus, motion) are in
 [docs/design/design-language.md](docs/design/design-language.md).
 
 Formatting is automated (Prettier, rustfmt, `.editorconfig`), so it is not
@@ -261,13 +243,16 @@ named for it (`useFloatingList`, `useComposerInput`, `useRowDrag`), in the
 component's file or beside it.
 
 **600 lines a file at most.** Split by concern, not by line count: each part
-is something you can name in its first comment. Rust tests live in a
-`tests.rs` beside their module (`foo.rs` and `foo/tests.rs`), not inline.
-Tests, the translation tables and the icon table are not held to it.
+is something you can name in its first comment. Tests, the dev shim
+(`src/dev/`), the live AI evaluation (`live_eval/`), the translation tables
+and the icon table are not held to it. Rust tests sit inline in a
+`#[cfg(test)] mod tests` or, once they would push a module past the limit,
+in a `tests.rs` beside it (`foo.rs` and `foo/tests.rs`): inline tests count
+towards the module's lines.
 
 **Provider differences are data.** What one AI provider does differently -
 a parameter, a name, a model list, a sign-in - is written in the catalog
-(`src-tauri/src/ai/catalog.rs`), `capabilities.rs` or a table beside the
+(`src-tauri/src/ai/catalog.rs`), `aicompat`'s `capabilities.rs` or a table beside the
 code that reads it. Outside a provider's own adapter in `aicompat`, no code
 compares a provider's id.
 
@@ -275,8 +260,8 @@ compares a provider's id.
 for something nothing writes any more.
 
 `npm run check` holds the hook count, the file size and the provider ids
-(`scripts/check-code-shape.mjs`). The few files over a limit today are
-listed there with where they stand, and may only shrink.
+(`scripts/check-code-shape.mjs`). No file is excused: the lists of
+exceptions in that script are empty, and stay so.
 
 **Names.** Files are `kebab-case.ts`, React components `PascalCase.tsx`,
 tests `name.test.ts` beside the file they test, e2e specs `name.spec.ts`,
@@ -290,8 +275,9 @@ and `npm run check` fails if one is missing. Put a new key beside the keys
 of the same feature, not at the end of the file, where every other pull
 request adds its own and they conflict. If you only know some of the
 languages, put the English text in the others and say so in the pull
-request; we'll translate them. More in
-[docs/dev/translating.md](docs/dev/translating.md).
+request; we'll translate them. The steps are in
+[docs/dev/recipes.md](docs/dev/recipes.md#add-a-ui-string); a whole
+language is [docs/dev/translating.md](docs/dev/translating.md).
 
 **Documentation and release notes** are in English. Write the way you'd
 explain something to a colleague: plain words, short sentences, what happens

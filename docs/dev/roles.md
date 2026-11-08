@@ -78,9 +78,9 @@ repositories.
 | textus-themes  | `main`              | No force push or deletion; the gallery's bot commits submissions directly                                                   |
 | textus-website | `main`              | Private; owners push, members read                                                                                          |
 
-Every repository merges by squash only: the pull request's title and
-description become the commit, so write them as one. Merged branches are
-deleted automatically.
+Every repository merges by squash only, and merged branches are deleted
+automatically. How branches, pull requests, commit messages and releases
+work is in [releasing.md](releasing.md#pull-requests-and-commits).
 
 ## Changing someone's role
 

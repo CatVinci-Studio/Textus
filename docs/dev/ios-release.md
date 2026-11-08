@@ -37,9 +37,12 @@ Then go to **Team Keys › +**:
 
 In **App Store Connect › Business**, enter the trader status that the EU Digital Services Act requires (an individual developer can also declare that they are not a trader). If you skip this, the new app cannot be published in the EU. Other regions are not affected.
 
-### 5. Add the repository secrets
+### 5. Add the secrets to the release environment
 
-In **GitHub repository › Settings › Secrets and variables › Actions**, add:
+The signing and upload secrets live in the repository's **release**
+environment (**Settings › Environments › release**), not in its own secrets
+([releasing.md](releasing.md#secrets)); `ios-release.yml` names that
+environment, which admits only `v*` and `ios-v*` tags. Add:
 
 | Name               | Value                           |
 | ------------------ | ------------------------------- |
@@ -47,7 +50,7 @@ In **GitHub repository › Settings › Secrets and variables › Actions**, add
 | `APPLE_API_KEY_ID` | Key ID                          |
 | `APPLE_API_KEY_P8` | The full text of the `.p8` file |
 
-`APPLE_TEAM_ID` already exists (the macOS release uses it). You do not need to add it again.
+`APPLE_TEAM_ID` is already there (the macOS release uses it).
 
 ## Each release
 
@@ -65,6 +68,20 @@ In **GitHub repository › Settings › Secrets and variables › Actions**, add
    The workflow generates the build number (run number × 10 + attempt number), so rerunning a failed run never reuses the number of a build that was already uploaded. After about 20 minutes, the build appears in **App Store Connect › TestFlight** (Apple's processing takes another few minutes to half an hour).
 3. In TestFlight, install the build on your own iPhone and iPad and try it. You can add internal testers first. They need no review.
 4. In **App Store Connect › your app › iOS App › + Version**, choose this build, fill in the information below, and submit for review.
+
+The `ios-v*` tag follows the version files at the tagged commit, not the
+desktop release: an iOS build of the code at `1.3.5` is `ios-v1.3.5`, even
+when the desktop has moved on.
+
+## The China App Store
+
+There is one build for every storefront. In the App Store for mainland
+China, Textus AI is left out at runtime: `Storefront.swift` (in the
+textus-files plugin) reads the App Store account's storefront, falling back
+to the device's region while it isn't known, Rust passes the answer to the
+page in the boot snapshot (`aiUnavailable`, `src-tauri/src/settings/app.rs`),
+and `hasTextusAi` in `src/platform/capabilities.ts` turns the AI off
+everywhere. Nothing else differs.
 
 ## Information the review needs
 
