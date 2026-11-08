@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, END } from "./helpers";
 
 /**
  * textus.files.onWillSave: a plugin's change before saving goes into the
@@ -54,7 +54,7 @@ test("a plugin's onWillSave changes what is saved, and the editor shows it", asy
   await expect(editor.locator("h1")).toContainText("A");
 
   await editor.locator("p").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" More.");
   // Saved once the plugin has started and listens.
   await expect(async () => {

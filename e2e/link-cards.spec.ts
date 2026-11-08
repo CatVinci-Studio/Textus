@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { selectionRead, END } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 // The Link Cards plugin: a link made a card from its page's Open Graph
@@ -30,7 +30,7 @@ test("/card makes a card of a link from what its page says", async ({
   await expect(editor).toContainText("Reading list");
   await editor.locator("p").click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await page.keyboard.type("/card");
   await page

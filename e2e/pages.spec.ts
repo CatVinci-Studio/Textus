@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dragWithMouse, selectionRead, swallowHtmlDrop } from "./helpers";
+import { dragWithMouse, selectionRead, swallowHtmlDrop, END } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -71,7 +71,7 @@ test("/page makes a sub-page beside its page, links it, and opens it", async ({
   await expect(editor).toContainText("Plans for the year.");
   await editor.getByText("Plans for the year.").click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await page.keyboard.type("/page");
   await page

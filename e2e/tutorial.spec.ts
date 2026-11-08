@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, openPhone, PHONE } from "./helpers";
+import { emit, openApp, openPhone, PHONE, keyLabel } from "./helpers";
 
 // The first-run tour end to end. The AI lessons are watched with no AI and
 // done for real against canned answers with one; the AI only ever works on
@@ -222,8 +222,8 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
 
   // The command palette: any command run from it ticks the line.
   const palette = lesson(page, "Command palette");
-  await expect(palette).toContainText("Press Ctrl+Shift+P");
-  await page.keyboard.press("Control+Shift+P");
+  await expect(palette).toContainText(`Press ${keyLabel("mod+shift+p")}`);
+  await page.keyboard.press("ControlOrMeta+Shift+P");
   await expect(
     page.getByRole("dialog", { name: "Type a command…" }).getByRole("combobox"),
   ).toBeFocused();
@@ -268,7 +268,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
       .toEqual({ cmd: "open_tutorials_page", language: "en", clip });
     if (clip === "ai-panel") {
       // The panel itself still opens, connected or not.
-      await page.keyboard.press("Control+Shift+L");
+      await page.keyboard.press("ControlOrMeta+Shift+L");
       await expect(page.locator(".agent-panel")).toBeVisible();
     }
     // Each lesson puts the panel in the mode it needs.
@@ -354,7 +354,7 @@ test.describe("connected", () => {
       const write = lesson(page, t.tutorialWriteTitle);
       await expect(write).not.toContainText(t.tutorialWatchNote);
       await expect(next(write)).toBeDisabled();
-      await page.keyboard.press("Control+Shift+L");
+      await page.keyboard.press("ControlOrMeta+Shift+L");
       await expect(ticked(write)).toHaveCount(1);
       await expect(mode.locator(".mode-picker-value")).toHaveText(
         run.mode.write,
@@ -413,7 +413,7 @@ test.describe("connected", () => {
     await answer(page, {
       ai_agent_message: { __reject: "The provider is unavailable." },
     });
-    await page.keyboard.press("Control+Shift+L");
+    await page.keyboard.press("ControlOrMeta+Shift+L");
     await composer(page).fill("Continue my notes");
     await composer(page).press("Enter");
     await expect(page.locator(".agent-panel")).toContainText(

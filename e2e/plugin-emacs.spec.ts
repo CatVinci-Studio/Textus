@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { pasteMarkdown } from "./helpers";
+import { pasteMarkdown, HOME } from "./helpers";
 import { hasPlugin, openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -27,7 +27,7 @@ async function open(
     .locator(`${editor} p`)
     .first()
     .click({ position: { x: 1, y: 5 } });
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
 }
 
 const keys = async (page: Page, sequence: string[]) => {

@@ -5,6 +5,7 @@ import {
   mockInvoke,
   pasteMarkdown,
   swallowHtmlDrop,
+  END,
 } from "./helpers";
 import {
   openPath,
@@ -274,7 +275,7 @@ test("saves close together are one version, listed under Today", async ({
   const history = await openSidebarTab(page, "History");
   for (const words of [" one", " two", " three"]) {
     await page.locator(editor).click();
-    await page.keyboard.press("End");
+    await page.keyboard.press(END);
     await page.keyboard.type(words);
     await save();
     await page.waitForTimeout(300);
@@ -306,7 +307,7 @@ test("each save is a version, shown against the text now and restorable", async 
   await openPath(page, "/notes/essay.md");
   const save = () => emit(page, "menu-save-file");
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" and more");
   await save();
   const history = await openSidebarTab(page, "History");
@@ -315,7 +316,7 @@ test("each save is a version, shown against the text now and restorable", async 
   ).toHaveCount(1);
   await page.clock.fastForward("16:00");
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" again");
   await save();
   await expect(
@@ -419,7 +420,7 @@ test("a citation searched in Zotero goes in where the caret is", async ({
     },
   });
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await runCommand(page, "catvinci.zotero.cite");
   await page.locator(".app-dialog-input").fill("darwin");
   await page.keyboard.press("Enter");

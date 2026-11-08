@@ -6,6 +6,7 @@ import {
   pasteMarkdown,
   SAMPLE_DOC,
   settled,
+  END,
 } from "./helpers";
 
 test("first run asks for a language", async ({ page }) => {
@@ -29,7 +30,7 @@ for (const colorScheme of ["light", "dark"] as const) {
 test("split view shows source and preview", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
-  await page.keyboard.press("Control+Shift+E");
+  await page.keyboard.press("ControlOrMeta+Shift+E");
   await expect(
     page.locator('[data-active-tab="true"] .split-view'),
   ).toBeVisible();
@@ -37,7 +38,7 @@ test("split view shows source and preview", async ({ page }) => {
     "老城区更新的几点思考",
   );
   // And back to the editor.
-  await page.keyboard.press("Control+Shift+E");
+  await page.keyboard.press("ControlOrMeta+Shift+E");
   await expect(page.locator(".split-view")).toHaveCount(0);
 });
 
@@ -47,7 +48,7 @@ test("zen mode hides the chrome and dims all but the current block", async ({
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown h2").first().click();
-  await page.keyboard.press("Control+Shift+J");
+  await page.keyboard.press("ControlOrMeta+Shift+J");
   await expect(page.locator("html")).toHaveClass(/zen/);
   await expect(page.locator(".zen-current")).toHaveCount(1);
   await expect(page.locator(".sidebar")).toBeHidden();
@@ -191,10 +192,10 @@ test("the last sentence decided in the text applies the edit", async ({
 
   // Undo puts the proposal back on offer, redo applies it again.
   await page.locator(".milkdown .ProseMirror").focus();
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   await expect(page.locator(".agent-proposal-status-accepted")).toHaveCount(0);
-  await page.keyboard.press("Control+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".agent-proposal-status-accepted")).toBeVisible();
 });
@@ -287,7 +288,7 @@ test("a pending replace keeps its strike on its text while the user types above 
   const strike = page.locator(".pending-delete");
   await expect(strike).toHaveText("Bravo two words here.");
   await page.locator(".milkdown p", { hasText: "Alpha" }).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type("XYZ");
   // The strike range is mapped with the preview, not left three characters
   // behind.
@@ -302,7 +303,7 @@ test("Quick Ask opens on a selection in Write mode", async ({ page }) => {
   await openApp(page);
   await pasteMarkdown(page, SAMPLE_DOC);
   await page.locator(".milkdown p").nth(1).click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
     "写作",
@@ -324,13 +325,15 @@ test("Ctrl+Right takes one word of a continuation and keeps the rest", async ({
   await openApp(page);
   await pasteMarkdown(page, "The plan");
   await page.locator(".milkdown p").first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" works");
   const ghost = page.locator(".ghost-text");
   await expect(ghost).toHaveAttribute(
     "data-suggestion",
     " and this ghost text is a canned dev-shim suggestion.",
   );
+  // Ctrl+Right on every platform (Cmd+Right too, but the Mac's own keys
+  // take that first in a test browser).
   await page.keyboard.press("Control+ArrowRight");
   await expect(page.locator(".milkdown p").first()).toHaveText(
     "The plan works and",
@@ -369,7 +372,7 @@ test("Quick Ask stays under its paragraph when an edit arrives", async ({
   });
   const paragraph = page.locator(".milkdown p").nth(1);
   await paragraph.click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   await expect(page.locator(".inline-chat-input")).toBeFocused();
   await page.keyboard.type("精简");
   await page.keyboard.press("Enter");
@@ -396,7 +399,7 @@ test("Quick Ask has its own conversation and hands it to the panel", async ({
     ],
   });
   await page.locator(".milkdown p").nth(1).click();
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   const quickInput = page.locator(".inline-chat .inline-chat-input");
   await expect(quickInput).toBeFocused();
   await page.keyboard.type("这段的主旨是什么？");

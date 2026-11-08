@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, openPhone, pasteMarkdown, PHONE } from "./helpers";
+import { emit, openApp, openPhone, pasteMarkdown, PHONE, END } from "./helpers";
 
 /**
  * Textus AI's switch on the window bar's AI button: off, nothing of it runs
@@ -54,7 +54,7 @@ const savedSetting = (page: Page, key: string) =>
 async function typeAtEnd(page: Page, text: string, typed: string) {
   await pasteMarkdown(page, text);
   await page.locator(".milkdown p", { hasText: text }).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(typed);
 }
 
@@ -169,7 +169,7 @@ test("while Textus AI is off, no request reaches an AI service, from launch on",
   // "off".
   await turnOn(page);
   await page.locator(".milkdown p", { hasText: "The keeper" }).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" was calm");
   await expect(page.locator(".ghost-text")).toBeVisible();
   await page.clock.fastForward(2000);

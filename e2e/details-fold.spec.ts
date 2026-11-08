@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown, END } from "./helpers";
 
 /**
  * A <details> around markdown folds it away. Whatever points into the folded
@@ -219,7 +219,7 @@ test("a continuation after a fold lands in its own paragraph and leaves the fold
 }) => {
   const { editor, hidden } = await openFolded(page);
   await editor.getByText("The end.").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" Now");
   const ghost = page.locator(".ghost-text");
   await expect(ghost).toHaveAttribute(
@@ -236,7 +236,7 @@ test("a continuation after a fold lands in its own paragraph and leaves the fold
   // offered too, and goes into that paragraph, inside the fold.
   await editor.locator(".raw-html-details-head summary").click();
   await editor.getByText(NOTED).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" More");
   await expect(ghost).toHaveCount(1);
   await page.keyboard.press("Tab");
@@ -258,7 +258,7 @@ test("the arrow keys stop on a fold's source lines instead of skipping them", as
   // From the paragraph above, down stops on the head's source.
   await page.keyboard.press("ControlOrMeta+Home");
   await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(editor).not.toContainText("</details>", { useInnerText: true });
   await page.keyboard.press("ArrowDown");
   await expect(editor).toContainText("<summary>Folded notes</summary>", {

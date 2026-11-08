@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, END } from "./helpers";
 
 // A diagram far wider than the column - a timeline of many periods - keeps a
 // scale it can be read at and scrolls from its left edge; and diagrams are
@@ -47,7 +47,7 @@ test(
       .locator('[data-active-tab="true"] .ProseMirror p')
       .last()
       .click();
-    await page.keyboard.press("End");
+    await page.keyboard.press(END);
     // A key every 200ms never leaves the editor the pause it used to wait for.
     const typing = (async () => {
       for (let i = 0; i < 25; i++) {

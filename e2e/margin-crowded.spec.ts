@@ -42,7 +42,7 @@ async function review(page: Page, anchors: string[]) {
   await composer.press("Enter");
   await expect(page.locator(".review-anchor")).toHaveCount(anchors.length);
   // The margin needs the room the panel takes.
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
 }
 
 test("more notes than lines make one chip, which opens to them all", async ({
@@ -110,7 +110,7 @@ test("the notes bar steps through the notes, marks them all done, and asks about
   await expect(page.locator(".review-note-pick")).toHaveCount(0);
 
   // All done: every note goes, and the bar with them.
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   await bar.getByRole("button", { name: "All done" }).click();
   await expect(page.locator(".review-anchor")).toHaveCount(0);
   await expect(bar).toHaveCount(0);

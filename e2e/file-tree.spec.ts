@@ -547,7 +547,7 @@ test("a click looks in the preview tab; a double click or an edit keeps it", asy
   await expect(tabs).toHaveCount(count + 1);
   // Written in, it stays; the next look gets a tab of its own.
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type("er");
   await expect(look).toHaveCount(0);
   await rows(page).filter({ hasText: "b.md" }).click();

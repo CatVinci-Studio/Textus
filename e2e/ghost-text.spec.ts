@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown, END } from "./helpers";
 
 // A paragraph for the AI edit to rewrite a sentence of.
 const ORIGINAL =
@@ -48,7 +48,7 @@ const release = (page: Page, index: number) =>
 async function typeAfter(page: Page, text: string, typed: string) {
   await pasteMarkdown(page, text);
   await page.locator(".milkdown p", { hasText: text }).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(typed);
 }
 
@@ -202,14 +202,14 @@ test("a read-only document asks for no suggestion, and asks again once editable"
   await emit(page, "menu-toggle-read-only");
   const line = page.locator(".milkdown p", { hasText: "The plan works" });
   await line.click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   // Past the debounce: nothing was asked.
   await page.waitForTimeout(1500);
   expect(await sent(page)).toBe(0);
   await emit(page, "menu-toggle-read-only");
   await expect(page.locator(".window-bar-lock")).toHaveCount(0);
   await line.click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" well");
   await expect.poll(() => sent(page)).toBe(1);
 });

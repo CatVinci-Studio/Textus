@@ -168,7 +168,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await open(page, colorScheme, true);
       await propose(page);
       await scan(page, `proposal ${colorScheme}`);
-      await page.keyboard.press("Control+Shift+L");
+      await page.keyboard.press("ControlOrMeta+Shift+L");
       await expect(page.locator(".revision-note")).toHaveCount(1);
       await scan(page, `margin ${colorScheme}`);
     });
@@ -460,7 +460,7 @@ test("a proposal reads as a deletion and an insertion, and its card says what it
   await expect(page.locator(`${editor} [role="insertion"]`)).toContainText(
     "The cat lay on the rug.",
   );
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   const card = page.getByRole("group", { name: "Revision 1" });
   await expect(card).toContainText("The cat sat on the mat.");
   await expect(card).toContainText("The cat lay on the rug.");

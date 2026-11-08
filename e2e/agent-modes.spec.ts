@@ -93,7 +93,7 @@ test("Quick Ask starts on Write, even after Review was picked in the panel", asy
   await page.getByRole("option", { name: "审阅" }).click();
   await pasteMarkdown(page, "A short note to ask about.");
   await page.locator(".milkdown p").first().click({ clickCount: 3 });
-  await page.keyboard.press("Control+Shift+K");
+  await page.keyboard.press("ControlOrMeta+Shift+K");
   const picker = page
     .locator(".inline-chat")
     .getByRole("combobox", { name: "模式" });
@@ -307,7 +307,7 @@ test.describe("the selection the chip refers to", () => {
       "First paragraph with **bold** and `code` in it, long enough to wrap onto a second line in the editor column at this width.\n\n- a list item\n\nLast paragraph.",
     );
     await page.locator(".milkdown p").first().click();
-    await page.keyboard.press("Control+a");
+    await page.keyboard.press("ControlOrMeta+a");
     await composer(page).click();
 
     const boxes = await layer(page)
