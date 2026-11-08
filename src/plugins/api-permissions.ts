@@ -44,6 +44,7 @@ const API_PERMISSIONS: readonly {
     methods: [
       "files.root",
       "files.conventions",
+      "files.appSettings",
       "files.list",
       "files.find",
       "files.stat",

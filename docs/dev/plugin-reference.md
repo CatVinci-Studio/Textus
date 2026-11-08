@@ -112,26 +112,28 @@ Values kept for one document.
 
 ## Api
 
-| Member               |                                                             |
-| -------------------- | ----------------------------------------------------------- |
-| `env: Env`           |                                                             |
-| `l10n: L10n`         |                                                             |
-| `commands: Commands` |                                                             |
-| `ui: Ui`             |                                                             |
-| `layout: Layout`     |                                                             |
-| `views: Views`       |                                                             |
-| `editor: Editor`     |                                                             |
-| `files: Files`       |                                                             |
-| `metadata: Metadata` |                                                             |
-| `net: Net`           |                                                             |
-| `settings: Settings` |                                                             |
-| `ai: Ai`             |                                                             |
-| `plugins: Plugins`   |                                                             |
-| `uri: Uri`           |                                                             |
-| `export: Export`     |                                                             |
-| `schedule: Schedule` | 1.1: jobs Textus fires on time (notifications, background). |
-| `notify: Notify`     | 1.1: system notifications (notifications).                  |
-| `app: App`           | 1.1: whether Textus is in front, behind, or has no window.  |
+| Member                 |                                                                |
+| ---------------------- | -------------------------------------------------------------- |
+| `env: Env`             |                                                                |
+| `l10n: L10n`           |                                                                |
+| `commands: Commands`   |                                                                |
+| `ui: Ui`               |                                                                |
+| `layout: Layout`       |                                                                |
+| `views: Views`         |                                                                |
+| `editor: Editor`       |                                                                |
+| `files: Files`         |                                                                |
+| `metadata: Metadata`   |                                                                |
+| `dates: Dates`         | From 1.3.10: no permission, nothing leaves the plugin's frame. |
+| `templates: Templates` |                                                                |
+| `net: Net`             |                                                                |
+| `settings: Settings`   |                                                                |
+| `ai: Ai`               |                                                                |
+| `plugins: Plugins`     |                                                                |
+| `uri: Uri`             |                                                                |
+| `export: Export`       |                                                                |
+| `schedule: Schedule`   | 1.1: jobs Textus fires on time (notifications, background).    |
+| `notify: Notify`       | 1.1: system notifications (notifications).                     |
+| `app: App`             | 1.1: whether Textus is in front, behind, or has no window.     |
 
 ## Env
 
@@ -576,6 +578,23 @@ type EditorOp =
 | `labels?: number` |     |
 | `empty: boolean`  |     |
 
+## Dates
+
+Dates written and read in Moment's tokens, as Obsidian's settings and templates name them: YYYY YY Q MMMM MMM MM M Do DD D dddd ddd gggg GGGG ww w WW W HH H hh h mm ss s A a, `[literal]`. Names, ordinals and where a week starts follow `language` (the UI's by default).
+
+| Member                                                                                             |                                                                                                                                                         |
+| -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `format(date: Date \| number \| string, format?: string, options?: { language?: string }): string` | `date` (a Date, a time in ms, or "YYYY-MM-DD") in `format` (default "YYYY-MM-DD").                                                                      |
+| `parse(text: string, format?: string, options?: { language?: string }): string \| null`            | The day a name written in `format` stands for, as "YYYY-MM-DD"; null when it isn't one. Days only: a week's or month's name ("2026-W45") reads as null. |
+
+## Templates
+
+Templates filled in as Obsidian's Templates core plugin and then the Templater plugin's common tags fill them.
+
+| Member                                                                                                                                                                                                                                                                                                                       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fill(text: string, options?: { values?: Record<string, unknown>; date?: Date \| number \| string; now?: Date \| number \| string; title?: string; folder?: string; format?: string; dateFormat?: string; timeFormat?: string; language?: string; }): Promise<{ text: string; cursor: number \| null; skipped: string[]; }>` | `text` with {{date}}, {{time}}, {{title}}, {{date:FORMAT}}, {{date+1d}} and every {{key}} of `values` filled in (a list joined with ", ", nothing for null, a date in its format); then Templater's `<% tp.date.now(...) %>`, `tp.date.tomorrow/yesterday/weekday`, `tp.file.title`, `tp.file.folder`, `tp.file.creation_date` and `tp.file.cursor()`. Any other tag or script stays as written and is listed in `skipped`. With `format` (a periodic note's name format), also {{yesterday}}, {{tomorrow}}, {{weekday}} and {{monday}} … {{sunday:FORMAT}} for `date`'s week, as Periodic Notes fills them. {{date}} and {{time}} use the folder's Templates formats when the plugin may read files and the caller gives none. |
+
 ## Files
 
 | Member                                                                                                                       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -603,6 +622,7 @@ type EditorOp =
 | `onDidSave: Event<{ path: string; text: string; trigger: "manual" \| "auto"; }>`                                             | 1.1: `trigger` is "manual" for File › Save or Save As, "auto" for autosave.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `onDidChangeRoot: Event<{ path: string \| null }>`                                                                           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `conventions(path?: string): Promise<FolderConventions>`                                                                     | How the folder of `path` (a document or folder, from the root; the open folder when left out) is written, whichever app made it - Obsidian, Logseq, Foam, Dendron, a site generator, git, or the folder's own `.textus/settings.json` "conventions". Read it instead of other apps' settings files; a field no app sets is null, for Textus's own settings. From 1.3.9 (files.read).                                                                                                                                                                                                                                |
+| `appSettings(app: "obsidian", file: string, path?: string): Promise<unknown \| null>`                                        | From 1.3.10: a settings file of the nearest Obsidian vault - `appSettings("obsidian", "bookmarks.json")` reads `.obsidian/bookmarks.json` - parsed as JSON, found above the open folder too; null where there is none. Read only (files.read).                                                                                                                                                                                                                                                                                                                                                                      |
 | `onDidChangeConventions: Event<{ root: string }>`                                                                            | The open folder's conventions changed: another folder, or its app's settings edited. From 1.3.9.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## ConventionSetting
@@ -615,21 +635,34 @@ One setting of a folder and where it came from.
 | `app: string`  | "textus", "typora", "obsidian", "logseq", "dendron", "foam", "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto" or "git". |
 | `root: string` | The folder these settings belong to.                                                                                                |
 
+## PeriodicNotes
+
+A kind of periodic note: its folder (full path), file name format (moment.js tokens, `[literal]` text) and template file (full path). An Obsidian vault with no daily notes settings keeps them at its top.
+
+| Member                     |     |
+| -------------------------- | --- |
+| `folder: string`           |     |
+| `format: string`           |     |
+| `template: string \| null` |     |
+
 ## FolderConventions
 
-| Member                                                                                            |                                                                                                                                              |
-| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sources: { app: string; root: string }[]`                                                        | The apps found, nearest first.                                                                                                               |
-| `linkStyle: ConventionSetting<string> \| null`                                                    | "wiki" or "markdown".                                                                                                                        |
-| `linkPath: ConventionSetting<string> \| null`                                                     | "shortest", "relative" or "absolute".                                                                                                        |
-| `linkRoot: ConventionSetting<string> \| null`                                                     | The folder a link starting with "/" is read from.                                                                                            |
-| `updateLinks: ConventionSetting<string> \| null`                                                  | On a rename: "always", "ask" or "never".                                                                                                     |
-| `attachments: ConventionSetting<string> \| null`                                                  | Where pictures go: "/" the root, "./" beside the document, "./sub" below it, else a folder from the root; `${filename}` the document's name. |
-| `softBreaks: ConventionSetting<boolean> \| null`                                                  | Whether a single newline shows as a line break.                                                                                              |
-| `templates: ConventionSetting<string> \| null`                                                    | The templates folder, a full path.                                                                                                           |
-| `daily: ConventionSetting<{ folder: string; format: string; template: string \| null; }> \| null` | Daily notes: folder (full path), file name format (moment.js tokens, `[literal]` text), template file (full path).                           |
-| `newNotes: ConventionSetting<string> \| null`                                                     | Where new notes go, as `attachments` names a folder.                                                                                         |
-| `ignore: string[]`                                                                                | Paths the app hides.                                                                                                                         |
+| Member                                                                                        |                                                                                                                                              |
+| --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sources: { app: string; root: string }[]`                                                    | The apps found, nearest first.                                                                                                               |
+| `linkStyle: ConventionSetting<string> \| null`                                                | "wiki" or "markdown".                                                                                                                        |
+| `linkPath: ConventionSetting<string> \| null`                                                 | "shortest", "relative" or "absolute".                                                                                                        |
+| `linkRoot: ConventionSetting<string> \| null`                                                 | The folder a link starting with "/" is read from.                                                                                            |
+| `updateLinks: ConventionSetting<string> \| null`                                              | On a rename: "always", "ask" or "never".                                                                                                     |
+| `attachments: ConventionSetting<string> \| null`                                              | Where pictures go: "/" the root, "./" beside the document, "./sub" below it, else a folder from the root; `${filename}` the document's name. |
+| `softBreaks: ConventionSetting<boolean> \| null`                                              | Whether a single newline shows as a line break.                                                                                              |
+| `templates: ConventionSetting<string> \| null`                                                | The templates folder, a full path.                                                                                                           |
+| `daily: ConventionSetting<PeriodicNotes> \| null`                                             | Daily notes: folder (full path), file name format (moment.js tokens, `[literal]` text), template file (full path).                           |
+| `weekly: ConventionSetting<PeriodicNotes> \| null`                                            | From 1.3.10: weekly and monthly notes (Periodic Notes), only where turned on.                                                                |
+| `monthly: ConventionSetting<PeriodicNotes> \| null`                                           |                                                                                                                                              |
+| `templateFormats: ConventionSetting<{ date: string \| null; time: string \| null; }> \| null` | From 1.3.10: how a template writes {{date}} and {{time}} (Obsidian's Templates settings); null where unset.                                  |
+| `newNotes: ConventionSetting<string> \| null`                                                 | Where new notes go, as `attachments` names a folder.                                                                                         |
+| `ignore: string[]`                                                                            | Paths the app hides.                                                                                                                         |
 
 ## FileEntry
 

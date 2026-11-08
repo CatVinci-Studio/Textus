@@ -75,6 +75,34 @@ fn reads_templates_and_daily_notes_with_their_plugins_as_fallback() {
 }
 
 #[test]
+fn reads_template_formats_and_periodic_notes_and_puts_unset_daily_notes_at_the_top() {
+    let dir = folder_with(&[
+        (".obsidian/app.json", "{}"),
+        (
+            ".obsidian/templates.json",
+            r#"{"folder":"T","dateFormat":"DD.MM.YYYY","timeFormat":""}"#,
+        ),
+        (
+            ".obsidian/plugins/periodic-notes/data.json",
+            r#"{"weekly":{"enabled":true,"folder":"Weeks"},"monthly":{"enabled":false,"folder":"M"}}"#,
+        ),
+    ]);
+    let root = dir.path();
+    let c = detected(&of_folder(root));
+    let formats = value(&c.template_formats).unwrap();
+    assert_eq!(formats.date.as_deref(), Some("DD.MM.YYYY"));
+    assert_eq!(formats.time, None);
+    let weekly = value(&c.weekly).unwrap();
+    assert_eq!(weekly.folder, root.join("Weeks").to_string_lossy());
+    assert_eq!(weekly.format, "gggg-[W]ww");
+    assert!(c.monthly.is_none());
+    // No daily-notes.json: Obsidian's own default, the vault's top.
+    let daily = value(&c.daily).unwrap();
+    assert_eq!(daily.folder, root.to_string_lossy());
+    assert_eq!(daily.format, "YYYY-MM-DD");
+}
+
+#[test]
 fn reads_logseq_foam_and_our_own_settings() {
     let logseq = folder_with(&[(
         "logseq/config.edn",

@@ -760,6 +760,9 @@ export function installDevTauriShim(): void {
           softBreaks: null,
           templates: null,
           daily: null,
+          weekly: null,
+          monthly: null,
+          templateFormats: null,
           newNotes: null,
           ignore: [],
           detected: null,
@@ -806,6 +809,14 @@ export function installDevTauriShim(): void {
               /* Obsidian's defaults */
             }
             const at = <T>(value: T) => ({ value, app: "obsidian", root: dir });
+            let templates: Record<string, unknown> | null = null;
+            try {
+              templates = JSON.parse(
+                files[`${dir}/.obsidian/templates.json`] ?? "null",
+              );
+            } catch {
+              /* none */
+            }
             return Promise.resolve({
               ...applied,
               sources: [{ app: "obsidian", root: dir }],
@@ -822,6 +833,12 @@ export function installDevTauriShim(): void {
                     updateLinks: at(
                       app.alwaysUpdateLinks === false ? "ask" : "always",
                     ),
+                    templateFormats: templates
+                      ? at({
+                          date: (templates.dateFormat as string) || null,
+                          time: (templates.timeFormat as string) || null,
+                        })
+                      : null,
                   },
             });
           }
