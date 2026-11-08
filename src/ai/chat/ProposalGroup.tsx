@@ -6,7 +6,7 @@ import { isProposalTool } from "./proposal";
 import { Tooltip } from "../../ui/Tooltip";
 import { diffLines } from "./line-diff";
 import { CHECK, CROSS, ChangeText } from "./ProposalCard";
-import type { ChatMessagesLabels } from "./ChatMessages";
+import type { ChatMessagesLabels } from "./chat-messages-types";
 
 /**
  * Two or more proposals one reply made in a row, shown as one card that
