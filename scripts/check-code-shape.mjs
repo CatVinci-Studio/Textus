@@ -30,7 +30,6 @@ const LINES_NOW = {
   "src/ai/chat/panel/MemoryView.tsx": 567,
   "src/ai/chat/panel/ProjectBar.tsx": 512,
   "src/ai/chat/useAgentConversation.ts": 527,
-  "src/ai/margin/MarginCards.tsx": 568,
   "src/ai/revision/pending-actions.ts": 516,
   "src/ai/revision/pending-animation.ts": 525,
   "src/ai/revision/sentence-diff.ts": 514,

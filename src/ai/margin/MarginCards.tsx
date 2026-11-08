@@ -1,19 +1,14 @@
+import { changeGlimpse } from "./change-glimpse";
 import { scaledPx } from "../../ui/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
-import { InlineMarkdownText } from "../MarkdownText";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
-import { createPortal } from "react-dom";
-import type { ReviewNote } from "./review-notes-plugin";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { animate } from "../../ui/motion";
 import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";
 import "./ReviewMargin.css";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
-import { changeGlimpse } from "./change-glimpse";
 import {
   blockNames,
   blockSummary,
@@ -22,13 +17,16 @@ import {
 
 /** A sentence as a card shows it on a line: a title's text without the
  *  `# ` that makes it one. */
-function plainLine(text: string): string {
+export function plainLine(text: string): string {
   return text.trim().replace(/^#{1,6}\s+/, "");
 }
 
 /** A change's new text on its card: a whole block other than a picture by
  *  what it is. */
-function revisionText(after: string, labels: ReviewMarginLabels): string {
+export function revisionText(
+  after: string,
+  labels: ReviewMarginLabels,
+): string {
   const text = after.trim();
   if (wholeBlockKind(text) === "picture") return text;
   return blockSummary(text, blockNames(labels)) ?? text;
@@ -75,7 +73,7 @@ type CardSpot = number | null;
 
 /** Where a card stands, and the height it is cut to - or, opened, its
  *  whole height over the cards below, none of them moved. */
-function cardStyle(
+export function cardStyle(
   top: CardSpot,
   left: number,
   cut: number | null,
@@ -91,7 +89,11 @@ function cardStyle(
 }
 
 /** A cut card's class: a chip, cut short, or opened whole above the rest. */
-function cutClass(cut: number | null, chip: boolean, open: boolean): string {
+export function cutClass(
+  cut: number | null,
+  chip: boolean,
+  open: boolean,
+): string {
   if (cut === null) return "";
   if (open) return " review-note-cut-open";
   return chip ? " review-note-chip" : " review-note-cut";
@@ -340,144 +342,6 @@ export const RevisionCard = memo(
     a.item.streaming === b.item.streaming,
 );
 
-export const NoteCard = memo(function NoteCard({
-  itemKey,
-  note,
-  hot,
-  picked,
-  onPick,
-  open,
-  onOpen,
-  cut,
-  chip,
-  labels,
-  top,
-  left,
-  onHot,
-  onDone,
-  onAsk,
-  onEdit,
-  onHeight,
-}: CardPlace & {
-  itemKey: string;
-  note: ReviewNote;
-  /** Picked on the notes bar, or null while not picking. */
-  picked: boolean | null;
-  onPick: (id: string) => void;
-  onDone: (id: string) => void;
-  onAsk: (note: ReviewNote) => void;
-  onEdit: (note: ReviewNote) => void;
-}) {
-  const ref = useCardBox(itemKey, top, onHeight, cut !== null);
-  return (
-    <div
-      ref={ref}
-      className={`review-note${hot ? " review-note-hot" : ""}${cutClass(cut, chip, open)}`}
-      style={cardStyle(top, left, cut, open)}
-      data-note={note.id}
-      onMouseEnter={() => onHot(itemKey, true)}
-      onMouseLeave={() => onHot(itemKey, false)}
-      // Picking, the whole card picks it; else a click selects it, its own
-      // buttons aside.
-      onClick={(e) => {
-        if ((e.target as HTMLElement).closest("button")) return;
-        if (picked !== null) onPick(note.id);
-        else onOpen(itemKey);
-      }}
-    >
-      {picked !== null && (
-        <input
-          type="checkbox"
-          className="review-note-pick"
-          checked={picked}
-          aria-label={labels.reviewNotesPickOne}
-          onChange={() => onPick(note.id)}
-          onClick={(e) => e.stopPropagation()}
-        />
-      )}
-      {chip && !open ? (
-        <>
-          <div className="review-note-by">
-            <NoteMark note={note} labels={labels} />
-            {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
-          </div>
-          <div className="review-note-chip-text">
-            <InlineMarkdownText text={note.comment} />
-          </div>
-        </>
-      ) : (
-        <NoteBody
-          note={note}
-          labels={labels}
-          onAsk={onAsk}
-          onEdit={onEdit}
-          onDone={onDone}
-        />
-      )}
-    </div>
-  );
-});
-
-/** Who wrote a note: Me for the writer's own, else the AI note's number. */
-function NoteMark({
-  note,
-  labels,
-}: {
-  note: ReviewNote;
-  labels: ReviewMarginLabels;
-}) {
-  return note.by === "me" ? (
-    <span className="review-note-mark review-note-mark-me" aria-hidden="true">
-      {labels.ownNoteMark}
-    </span>
-  ) : (
-    <span className="review-note-num" aria-hidden="true">
-      {note.num}
-    </span>
-  );
-}
-
-/** A note's card: who wrote it, the note, and its actions, in the margin
- *  and in the popover its badge opens. */
-function NoteBody({
-  note,
-  labels,
-  onAsk,
-  onEdit,
-  onDone,
-}: {
-  note: ReviewNote;
-  labels: ReviewMarginLabels;
-  onAsk: (note: ReviewNote) => void;
-  onEdit: (note: ReviewNote) => void;
-  onDone: (id: string) => void;
-}) {
-  return (
-    <>
-      <div className="review-note-by">
-        <NoteMark note={note} labels={labels} />
-        {note.by === "me" ? labels.ownNoteBy : labels.reviewNoteBy}
-      </div>
-      <div className="review-note-text">
-        <InlineMarkdownText text={note.comment} />
-      </div>
-      <div className="review-note-actions">
-        <button type="button" onClick={() => onAsk(note)}>
-          {labels.reviewNoteAsk}
-        </button>
-        {note.by === "me" && (
-          <button type="button" onClick={() => onEdit(note)}>
-            {labels.ownNoteEdit}
-          </button>
-        )}
-        <button type="button" onClick={() => onDone(note.id)}>
-          {note.by === "me" ? labels.ownNoteDelete : labels.reviewNoteDone}
-        </button>
-      </div>
-    </>
-  );
-}
-
 /** A change on its chip: a small one as what goes and what comes with a
  *  little context; a rewrite as the side the card shows. */
 function ChangeGlimpse({
@@ -509,60 +373,5 @@ function ChangeGlimpse({
       {g.tail}
       {g.cutTail && "…"}
     </div>
-  );
-}
-
-/** Compact mode: a note opened from its badge, as a small floating card
- *  under it. */
-export function NotePopover({
-  note,
-  x,
-  y,
-  labels,
-  onDone,
-  onAsk,
-  onEdit,
-  onClose,
-}: {
-  note: ReviewNote;
-  x: number;
-  y: number;
-  labels: ReviewMarginLabels;
-  onDone: (id: string) => void;
-  onAsk: (note: ReviewNote) => void;
-  onEdit: (note: ReviewNote) => void;
-  onClose: () => void;
-}) {
-  // A click outside it, or on another badge, or Escape closes it.
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    onClose,
-    true,
-    true,
-    ".review-badge",
-  );
-  // Kept within the document's column, off the AI panel.
-  const pos = useViewportClamp(ref, x, y, {
-    right: () =>
-      document
-        .querySelector('[data-active-tab="true"] > .editor-scroll')
-        ?.getBoundingClientRect().right,
-  });
-  return createPortal(
-    <div
-      ref={ref}
-      className="review-note review-note-popover floating-surface"
-      style={pos}
-      role="dialog"
-      aria-label={labels.reviewNoteBy}
-    >
-      <NoteBody
-        note={note}
-        labels={labels}
-        onAsk={onAsk}
-        onEdit={onEdit}
-        onDone={onDone}
-      />
-    </div>,
-    document.body,
   );
 }

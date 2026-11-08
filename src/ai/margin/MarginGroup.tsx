@@ -7,7 +7,8 @@ import {
   type MarginItem,
   type ReviewMarginLabels,
 } from "./margin-layout";
-import { NoteCard, RevisionCard } from "./MarginCards";
+import { RevisionCard } from "./MarginCards";
+import { NoteCard } from "./NoteCards";
 import "./ReviewMargin.css";
 
 /** A group's line: how many notes and changes it holds. */
