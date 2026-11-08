@@ -407,6 +407,18 @@ for settings still on their way), the CJK font stacks, the phone, an
 iPad's keyboard shortcuts and review-step focus, and the Windows PDF
 export's page margins around blocks taller than a page (#151).
 
+**Interface scale and alignment** (design standard 5.6). The numbers live
+in one place each and their tests sit beside them: the build plugin that
+scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
+(`src/ui/side-panel-width.test.ts`, `src/app/sidebar-width.test.ts`) and a
+floating view's size (`floating-views.test.ts`). Changing the scale curve
+(`src/ui/window-scale.ts`) means updating those numbers, not adding cases.
+`e2e/panel-alignment.spec.ts` checks the one header line at three widths;
+`e2e/database.spec.ts` checks that a dragged copy stays under the pointer,
+zoomed or not. Screenshots in `visual.spec.ts` are taken at the window
+widths where the scale is 1 or a known step, so they change only when the
+look does.
+
 Baselines are per platform. After an intended UI change:
 `npm run test:visual -- --update-snapshots`, then look at every changed
 image before keeping it - a baseline happily records a bug.
