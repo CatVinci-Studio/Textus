@@ -10,6 +10,7 @@ const read = (path: string) =>
 const DOCS = [
   "docs/dev/plugins/guide.md",
   "docs/dev/plugins/pages.md",
+  "docs/dev/plugins/ui.md",
   "docs/dev/plugins/permissions.md",
   "docs/dev/plugins/skill/SKILL.md",
   "docs/dev/textus.d.ts",
