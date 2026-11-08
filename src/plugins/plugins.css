@@ -486,17 +486,18 @@ button.plugin-card-open:hover .plugin-card-name {
   width: auto;
 }
 
+/* Folded: the handle where the hide button was, at the bar's right end. */
 .web-page-bar-folded {
-  justify-content: center;
+  justify-content: flex-end;
   height: 10px;
-  padding: 0;
+  padding: 0 var(--space-2);
   border-bottom: 0;
 }
 .web-page-handle {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
+  width: 26px;
   height: 10px;
   padding: 0;
   border: 0;

@@ -1,4 +1,5 @@
 import type { MenuEntry } from "./app-menu-model";
+import { compareNames } from "../../utils/name-order";
 
 /** A command a plugin put in the Plugins menu. */
 export interface PluginMenuEntry {
@@ -23,7 +24,7 @@ export function pluginMenuNodes(
     action: { native: `plugin-command:${p.command}` },
   });
   return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => compareNames(a, b))
     .map(([name, items]) =>
       items.length > 1
         ? { label: name, submenu: items.map(entry) }

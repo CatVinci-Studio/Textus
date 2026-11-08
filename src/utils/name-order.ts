@@ -30,3 +30,9 @@ export function compareEntries(
     (a.name < b.name ? -1 : a.name > b.name ? 1 : 0)
   );
 }
+
+/** Names in the order a person reads them: "Week 2" before "Week 10". */
+export function compareNames(a: string, b: string): number {
+  const locale = globalThis.document?.documentElement.lang || "en";
+  return nameCollator(locale).compare(a, b) || (a < b ? -1 : a > b ? 1 : 0);
+}

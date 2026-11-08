@@ -65,6 +65,17 @@
     },
     { passive: false },
   );
+  // No engine menu on a page, as in the window: text fields keep theirs.
+  window.addEventListener("contextmenu", function (event) {
+    var target = event.target;
+    if (
+      target &&
+      target.closest &&
+      target.closest("input, textarea, [contenteditable]")
+    )
+      return;
+    event.preventDefault();
+  });
   ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
     window.addEventListener(type, function (event) {
       event.preventDefault();

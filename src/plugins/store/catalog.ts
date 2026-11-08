@@ -20,6 +20,7 @@ import {
 } from "../manager";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
+import { compareNames } from "../../utils/name-order";
 
 /**
  * The plugins Textus offers to install, from the textus-plugins catalog that
@@ -207,7 +208,7 @@ export function sortCatalog(
   const name = (i: CatalogItem) =>
     pluginName({ id: i.id, manifest: i.manifest });
   const byName = (a: CatalogItem, b: CatalogItem) =>
-    name(a).localeCompare(name(b));
+    compareNames(name(a), name(b));
   const key: Record<CatalogSort, (a: CatalogItem, b: CatalogItem) => number> = {
     popular: (a, b) => (b.installs ?? 0) - (a.installs ?? 0),
     newest: (a, b) => (b.updated ?? "").localeCompare(a.updated ?? ""),

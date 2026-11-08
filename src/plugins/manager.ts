@@ -69,6 +69,7 @@ export {
   type PluginRecord,
   type PluginsSnapshot,
 } from "./store/plugin-records";
+import { compareNames } from "../utils/name-order";
 
 const hosts = new Map<string, PluginHost>();
 
@@ -154,7 +155,7 @@ export function loadPlugins(reload = false): Promise<void> {
       records.push(
         makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir),
       );
-    records.sort((a, b) => pluginName(a).localeCompare(pluginName(b)));
+    records.sort((a, b) => compareNames(pluginName(a), pluginName(b)));
     for (const id of contributingPlugins()) withdraw(id);
     publish({ loaded: true, allOn: state.allOn, records });
     for (const record of records)
