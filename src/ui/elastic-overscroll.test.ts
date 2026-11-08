@@ -139,4 +139,3 @@ describe("the Mac's give at a document's end", () => {
     stop();
   });
 });
-

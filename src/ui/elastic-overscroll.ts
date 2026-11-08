@@ -43,7 +43,9 @@ export function elasticOverscroll(
   // finger's travel, so a new pull goes on from there without a jump.
   const stopSettling = () => {
     if (!settling) return;
-    const now = parseFloat((getComputedStyle(content).translate || "").split(" ")[1] ?? "");
+    const now = parseFloat(
+      (getComputedStyle(content).translate || "").split(" ")[1] ?? "",
+    );
     settling.cancel();
     settling = null;
     if (!Number.isFinite(now) || !now) return;

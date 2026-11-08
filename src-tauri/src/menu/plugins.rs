@@ -33,7 +33,7 @@ fn by_plugin(items: &[PluginMenuItem]) -> Vec<(String, Vec<&PluginMenuItem>)> {
             None => groups.push((key, vec![item])),
         }
     }
-    groups.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    groups.sort_by_key(|group| group.0.to_lowercase());
     groups
 }
 
