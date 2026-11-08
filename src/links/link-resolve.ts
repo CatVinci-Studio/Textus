@@ -217,7 +217,12 @@ export interface LinkStyle {
   format: "shortest" | "relative" | "absolute";
 }
 
-export const DEFAULT_LINK_STYLE: LinkStyle = { wiki: true, format: "shortest" };
+/** Where nothing says otherwise: a standard link by its path from the
+ *  note, which opens in any app - [Nov 8](Week45/Nov%208.md). */
+export const DEFAULT_LINK_STYLE: LinkStyle = {
+  wiki: false,
+  format: "relative",
+};
 
 export interface LinkToOptions {
   heading?: string;
@@ -261,11 +266,14 @@ export function noteLinkIn(
   const self =
     !!(options.heading || options.block) &&
     to.toLowerCase() === from.toLowerCase();
-  return noteLinkSource({
-    ...options,
-    wiki: style.wiki,
-    target: self ? "" : namedAs(index, to, from, style),
-  });
+  const target = self ? "" : namedAs(index, to, from, style);
+  // A [[link]] that needs its path shows the note's name, not the path.
+  const alias =
+    options.alias ??
+    (style.wiki && target.includes("/")
+      ? target.slice(target.lastIndexOf("/") + 1)
+      : undefined);
+  return noteLinkSource({ ...options, alias, wiki: style.wiki, target });
 }
 
 /** `noteLinkIn` for absolute paths in the folder `paths` indexes. */

@@ -102,11 +102,36 @@ export const taskListClickPlugin = $prose(
 );
 
 // With a Chinese IME, "[" and "]" type as 【 and 】, so the GFM "[ ] " rule
-// never fires: an item whose whole text is 【】 or 【x】 (or ［］, "[]"), or a
-// paragraph "- 【】", becomes a task. The whole paragraph is checked so a
-// paired 【|】 counts. Typed input and IME commits only, never a paste.
-const CJK_TASK = /^\s*[【［[]\s*([xX√✓]?)\s*[】］\]]\s*$/;
-const CJK_TASK_PARAGRAPH = /^\s*[-*+]\s*[【［[]\s*([xX√✓]?)\s*[】］\]]\s*$/;
+// never fires: an item starting 【】 or 【x】 (or ［］, "[]"), or a paragraph
+// starting "- 【】", becomes a task, what follows the box its text. The box
+// is what is before the caret, with a 】 paired after it. Typed input and IME
+// commits only, never a paste.
+const BOX = "[【［[]\\s*([xX√✓]?)\\s*";
+const CLOSE = /^\s*[】］\]]/;
+const CJK_TASK = new RegExp(`^\\s*${BOX}(?:[】］\\]]\\s*)?$`);
+const CJK_TASK_PARAGRAPH = new RegExp(
+  `^\\s*[-*+]\\s*${BOX}(?:[】］\\]]\\s*)?$`,
+);
+
+/** The box `before` the caret ends with, closed there or by a paired 】
+ *  `after` it: whether it is ticked, and how much of `after` it takes. */
+function boxAt(
+  pattern: RegExp,
+  before: string,
+  after: string,
+): { checked: boolean; taken: number } | null {
+  const match = pattern.exec(before);
+  if (!match) return null;
+  if (/[】］\]]\s*$/.test(before))
+    return { checked: match[1] !== "", taken: after.match(/^\s*/)![0].length };
+  const close = CLOSE.exec(after);
+  if (!close) return null;
+  const rest = after.slice(close[0].length);
+  return {
+    checked: match[1] !== "",
+    taken: close[0].length + rest.match(/^\s*/)![0].length,
+  };
+}
 
 // The document and caret right after a conversion: a space typed while both
 // are still current is the separator of "[ ] " and is dropped.
@@ -121,33 +146,36 @@ function markConverted(view: EditorView) {
 
 function convertCjkTask(
   view: EditorView,
-  // The paragraph's text as it will read once this input lands.
-  text: string,
+  // The paragraph's text before the caret once this input lands, and after.
+  before: string,
+  after: string,
+  // Where the paragraph's text after the caret starts now.
+  afterAt: number,
 ): boolean {
   const { state } = view;
   const { $from, empty } = state.selection;
   if (!empty || $from.parent.type.name !== "paragraph") return false;
   const paraStart = $from.start();
-  const paraEnd = $from.end();
   const item = $from.depth >= 2 ? $from.node($from.depth - 1) : null;
 
   if (item?.type.name === "list_item" && $from.index($from.depth - 1) === 0) {
-    const match = CJK_TASK.exec(text);
-    if (!match || item.attrs.checked != null) return false;
+    const box = boxAt(CJK_TASK, before, after);
+    if (!box || item.attrs.checked != null) return false;
     const tr = state.tr
-      .delete(paraStart, paraEnd)
+      .delete(paraStart, afterAt + box.taken)
       .setNodeMarkup($from.before($from.depth - 1), undefined, {
         ...item.attrs,
-        checked: match[1] !== "",
+        checked: box.checked,
       });
+    tr.setSelection(TextSelection.create(tr.doc, paraStart));
     view.dispatch(tr.scrollIntoView());
     markConverted(view);
     return true;
   }
 
-  const match = CJK_TASK_PARAGRAPH.exec(text);
+  const box = boxAt(CJK_TASK_PARAGRAPH, before, after);
   const { bullet_list, list_item, paragraph } = state.schema.nodes;
-  if (!match || item?.type.name === "list_item") return false;
+  if (!box || item?.type.name === "list_item") return false;
   if (!bullet_list || !list_item || !paragraph) return false;
   // Only where a list can stand in for the paragraph: in a table cell it
   // would split the table.
@@ -156,13 +184,15 @@ function convertCjkTask(
     !$from.node($from.depth - 1).canReplaceWith(index, index + 1, bullet_list)
   )
     return false;
+  // What follows the box stays, marks and all, as the task's text.
+  const rest = $from.parent.content.cut(afterAt + box.taken - paraStart);
   const list = bullet_list.create(null, [
-    list_item.create({ checked: match[1] !== "" }, paragraph.create()),
+    list_item.create({ checked: box.checked }, paragraph.create(null, rest)),
   ]);
-  const before = $from.before();
-  const tr = state.tr.replaceWith(before, $from.after(), list);
+  const start = $from.before();
+  const tr = state.tr.replaceWith(start, $from.after(), list);
   // Inside the new paragraph: list, item, paragraph openings.
-  tr.setSelection(TextSelection.create(tr.doc, before + 3));
+  tr.setSelection(TextSelection.create(tr.doc, start + 3));
   view.dispatch(tr.scrollIntoView());
   markConverted(view);
   return true;
@@ -189,11 +219,12 @@ export const cjkTaskInputPlugin = $prose(
           const { $from } = view.state.selection;
           if ($from.parent.type.name !== "paragraph") return false;
           const start = $from.start();
-          const full =
-            view.state.doc.textBetween(start, from) +
-            text +
-            view.state.doc.textBetween(to, $from.end());
-          return convertCjkTask(view, full);
+          return convertCjkTask(
+            view,
+            view.state.doc.textBetween(start, from) + text,
+            view.state.doc.textBetween(to, $from.end()),
+            to,
+          );
         },
         handleDOMEvents: {
           // An IME commit doesn't go through handleTextInput; look once the commit is
@@ -215,7 +246,12 @@ export const cjkTaskInputPlugin = $prose(
                 markConverted(view);
                 return;
               }
-              convertCjkTask(view, $from.parent.textContent);
+              convertCjkTask(
+                view,
+                view.state.doc.textBetween($from.start(), $from.pos),
+                view.state.doc.textBetween($from.pos, $from.end()),
+                $from.pos,
+              );
             }, BRACKET_COMPOSITION_DELAY_MS + 10);
             return false;
           },
