@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { dragWithMouse, selectionRead, swallowHtmlDrop } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -96,13 +96,16 @@ test("/page makes a sub-page beside its page, links it, and opens it", async ({
 });
 
 test("a page dragged onto another becomes its sub-page", async ({ page }) => {
+  await swallowHtmlDrop(page);
   await open(page);
   await openPath(page, "/notes/Inbox.md");
   const pages = await openSidebarList(page, "Pages");
   const rows = pages.locator(".plugin-list-row");
-  await rows
-    .filter({ hasText: "Inbox" })
-    .dragTo(rows.filter({ hasText: "Life" }));
+  await dragWithMouse(
+    page,
+    rows.filter({ hasText: "Inbox" }),
+    rows.filter({ hasText: "Life" }),
+  );
   await expect
     .poll(() => fileText(page, "/notes/Life/Inbox.md"))
     .toBe("# Inbox\n");

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type DragEvent,
+  type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -34,6 +34,7 @@ import {
 import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
+import { trackDrag } from "../../ui/pointer-drag";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -98,9 +99,6 @@ function defaultSelect(item: PluginListItem) {
  * A plugin's list, drawn by Textus in a sidebar tab or a tab of its own: the
  * plugin gives the items, Textus the look, keys, filter and folding.
  */
-/** A row being dragged onto another in a plugin's list. */
-const LIST_DRAG = "application/x-textus-list-row";
-
 export const PluginListPane = memo(function PluginListPane({
   plugin,
   view,
@@ -143,28 +141,37 @@ export const PluginListPane = memo(function PluginListPane({
 
   // A row dragged onto another: the plugin moves it there (onMove).
   const dragHandlers = (item: PluginListItem, key: string) => ({
-    draggable: true,
-    onDragStart: (e: DragEvent<HTMLDivElement>) =>
-      e.dataTransfer.setData(LIST_DRAG, key),
-    onDragOver: (e: DragEvent<HTMLDivElement>) => {
-      if (!e.dataTransfer.types.includes(LIST_DRAG)) return;
-      e.preventDefault();
-      e.currentTarget.classList.add("is-drop");
-    },
-    onDragLeave: (e: DragEvent<HTMLDivElement>) =>
-      e.currentTarget.classList.remove("is-drop"),
-    onDrop: (e: DragEvent<HTMLDivElement>) => {
-      e.currentTarget.classList.remove("is-drop");
-      const from = rows.find(
-        (r) => r.key === e.dataTransfer.getData(LIST_DRAG),
-      );
-      if (!from || from.key === key) return;
-      e.preventDefault();
-      void askPlugin(plugin, "$listMove", {
-        view,
-        item: from.item,
-        target: item,
-      }).catch(() => {});
+    "data-list-key": key,
+    onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => {
+      const row = e.currentTarget;
+      const list = row.closest<HTMLElement>(".plugin-list-rows");
+      if (!list || e.pointerType === "touch") return;
+      let over: HTMLElement | null = null;
+      const hover = (next: HTMLElement | null) => {
+        over?.classList.remove("is-drop");
+        over = next && next !== row ? next : null;
+        over?.classList.add("is-drop");
+      };
+      trackDrag(e, {
+        start: () => row.classList.add("is-dragging"),
+        move: (x, y) =>
+          hover(
+            document
+              .elementFromPoint(x, y)
+              ?.closest<HTMLElement>("[data-list-key]") ?? null,
+          ),
+        end: (_x, _y, dropped) => {
+          const target = rows.find((r) => r.key === over?.dataset.listKey);
+          row.classList.remove("is-dragging");
+          hover(null);
+          if (!dropped || !target || !list.contains(row)) return;
+          void askPlugin(plugin, "$listMove", {
+            view,
+            item,
+            target: target.item,
+          }).catch(() => {});
+        },
+      });
     },
   });
 
