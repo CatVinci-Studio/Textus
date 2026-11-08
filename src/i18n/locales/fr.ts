@@ -1124,9 +1124,9 @@ utiliser une.
   menuCloseTab: "Fermer l'onglet",
   menuReopenClosedTab: "Rouvrir l'onglet fermé",
   readOnlyRefused:
-    "Ce document est en lecture seule. Désactivez Présentation › Lecture seule pour le modifier.",
-  menuToggleReadOnly: "Lecture seule",
-  readOnlyLock: "Lecture seule : cliquez pour autoriser les modifications",
+    "Ce document est en mode lecture. Pour le modifier, choisissez Présentation › Mode › Par défaut.",
+  menuToggleReadOnly: "Mode lecture",
+  readOnlyLock: "Mode lecture : cliquez pour autoriser les modifications",
   closeOtherTabs: "Fermer les autres",
   closeTabsToLeft: "Fermer les onglets à gauche",
   closeTabsToRight: "Fermer les onglets à droite",

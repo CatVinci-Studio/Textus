@@ -1,3 +1,4 @@
+import { getUiState, setUiState } from "../storage/ui-state";
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
@@ -106,9 +107,38 @@ export function registerSidebarTab(tab: SidebarTabDef): () => void {
   };
 }
 
-/** The tabs, in the header's order. */
+/** The tabs, in the header's order: as the user dragged them, a tab new
+ *  since then where it comes. */
 export function sidebarTabs(): SidebarTabDef[] {
-  return [...BUILT_IN, ...added];
+  const kept = getUiState("sidebarTabOrder");
+  return orderTabs([...BUILT_IN, ...added], Array.isArray(kept) ? kept : []);
+}
+
+/** `tabs` in `order`, those it doesn't name kept after the one before them. */
+export function orderTabs<T extends { id: string }>(
+  tabs: readonly T[],
+  order: readonly string[],
+): T[] {
+  const out = order
+    .map((id) => tabs.find((tab) => tab.id === id))
+    .filter((tab): tab is T => !!tab);
+  tabs.forEach((tab, i) => {
+    if (out.includes(tab)) return;
+    const before = i > 0 ? out.indexOf(tabs[i - 1]) : -1;
+    out.splice(before + 1, 0, tab);
+  });
+  return out;
+}
+
+/** The tabs' order after `id` is dropped on `target`'s place. */
+export function moveSidebarTab(id: string, target: string): void {
+  const ids = sidebarTabs().map((tab) => tab.id);
+  const from = ids.indexOf(id);
+  const to = ids.indexOf(target);
+  if (from < 0 || to < 0 || from === to) return;
+  ids.splice(from, 1);
+  ids.splice(to, 0, id);
+  setUiState("sidebarTabOrder", ids);
 }
 
 /** The tab with this id, or Files for one no longer there. */

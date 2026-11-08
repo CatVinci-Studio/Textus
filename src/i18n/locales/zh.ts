@@ -992,9 +992,10 @@ export default {
   menuExportOpml: "OPML…",
   menuCloseTab: "关闭标签页",
   menuReopenClosedTab: "重新打开关闭的标签页",
-  readOnlyRefused: "这篇文档是只读的。要修改，请先在“视图 › 只读”中关闭。",
-  menuToggleReadOnly: "只读",
-  readOnlyLock: "只读：点击允许修改",
+  readOnlyRefused:
+    "这篇文档处于阅读模式。要修改，请在“视图 › 模式”中选“默认”。",
+  menuToggleReadOnly: "阅读模式",
+  readOnlyLock: "阅读模式：点击允许修改",
   closeOtherTabs: "关闭其他标签页",
   closeTabsToLeft: "关闭左侧标签页",
   closeTabsToRight: "关闭右侧标签页",

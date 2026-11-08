@@ -1112,9 +1112,9 @@ para usar una.
   menuCloseTab: "Cerrar pestaña",
   menuReopenClosedTab: "Reabrir pestaña cerrada",
   readOnlyRefused:
-    "Este documento es de solo lectura. Desactiva Visualización › Solo lectura para cambiarlo.",
-  menuToggleReadOnly: "Solo lectura",
-  readOnlyLock: "Solo lectura: haz clic para permitir cambios",
+    "Este documento está en modo lectura. Para cambiarlo, elige Visualización › Modo › Predeterminado.",
+  menuToggleReadOnly: "Modo lectura",
+  readOnlyLock: "Modo lectura: haz clic para permitir cambios",
   closeOtherTabs: "Cerrar las demás",
   closeTabsToLeft: "Cerrar pestañas a la izquierda",
   closeTabsToRight: "Cerrar pestañas a la derecha",

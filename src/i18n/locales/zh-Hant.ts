@@ -994,9 +994,10 @@ export default {
   menuExportOpml: "OPML…",
   menuCloseTab: "關閉分頁",
   menuReopenClosedTab: "重新開啟已關閉的分頁",
-  readOnlyRefused: "這份文件是唯讀的。要修改，請先在「檢視 › 唯讀」中關閉。",
-  menuToggleReadOnly: "唯讀",
-  readOnlyLock: "唯讀：點擊允許修改",
+  readOnlyRefused:
+    "這份文件處於閱讀模式。要修改，請在「檢視 › 模式」中選「預設」。",
+  menuToggleReadOnly: "閱讀模式",
+  readOnlyLock: "閱讀模式：點擊允許修改",
   closeOtherTabs: "關閉其他分頁",
   closeTabsToLeft: "關閉左側分頁",
   closeTabsToRight: "關閉右側分頁",

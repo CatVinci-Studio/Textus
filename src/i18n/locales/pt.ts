@@ -1093,9 +1093,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuCloseTab: "Fechar Aba",
   menuReopenClosedTab: "Reabrir Aba Fechada",
   readOnlyRefused:
-    "Este documento é só de leitura. Desative Visualizar › Só leitura para alterá-lo.",
-  menuToggleReadOnly: "Só leitura",
-  readOnlyLock: "Só leitura: clique para permitir alterações",
+    "Este documento está no modo leitura. Para alterá-lo, escolha Visualizar › Modo › Padrão.",
+  menuToggleReadOnly: "Modo leitura",
+  readOnlyLock: "Modo leitura: clique para permitir alterações",
   closeOtherTabs: "Fechar as outras",
   closeTabsToLeft: "Fechar abas à esquerda",
   closeTabsToRight: "Fechar abas à direita",

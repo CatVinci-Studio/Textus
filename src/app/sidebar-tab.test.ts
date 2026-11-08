@@ -30,3 +30,25 @@ describe("the remembered sidebar tab", () => {
     expect(storedSidebarTab()).toBe("tree");
   });
 });
+
+describe("the sidebar's tabs in the user's order", () => {
+  it("keeps the order dragged, and puts a tab new since then after the one before it", async () => {
+    const { orderTabs } = await import("./sidebar-tabs");
+    const tabs = ["tree", "outline", "pages", "tasks"].map((id) => ({ id }));
+    expect(
+      orderTabs(tabs, ["pages", "tree", "outline"]).map((t) => t.id),
+    ).toEqual(["pages", "tasks", "tree", "outline"]);
+    expect(orderTabs(tabs, ["tasks", "tree"]).map((t) => t.id)).toEqual([
+      "tasks",
+      "tree",
+      "outline",
+      "pages",
+    ]);
+    expect(orderTabs(tabs, ["gone", "outline"]).map((t) => t.id)).toEqual([
+      "tree",
+      "outline",
+      "pages",
+      "tasks",
+    ]);
+  });
+});

@@ -6,6 +6,9 @@ import { MoreIcon } from "../ui/icons";
 import type { Strings } from "../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 
+/** A tab being dragged to another place in the bar. */
+const TAB_DRAG = "application/x-textus-sidebar-tab";
+
 /** The narrowest a tab's button gets before the rest go under "More". */
 export const TAB_MIN_PX = 30;
 
@@ -29,11 +32,14 @@ export function SidebarTabBar({
   tabs,
   shownId,
   onSelect,
+  onMove,
   t,
 }: {
   tabs: SidebarTabDef[];
   shownId: string;
   onSelect: (id: string) => void;
+  /** A tab dragged onto another's place. */
+  onMove: (id: string, target: string) => void;
   t: Strings;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -62,6 +68,17 @@ export function SidebarTabBar({
             className={`sidebar-tab ${shownId === id ? "sidebar-tab-active" : ""}`}
             onClick={() => onSelect(id)}
             aria-label={label(t)}
+            draggable
+            onDragStart={(e) => e.dataTransfer.setData(TAB_DRAG, id)}
+            onDragOver={(e) => {
+              if (e.dataTransfer.types.includes(TAB_DRAG)) e.preventDefault();
+            }}
+            onDrop={(e) => {
+              const dragged = e.dataTransfer.getData(TAB_DRAG);
+              if (!dragged) return;
+              e.preventDefault();
+              onMove(dragged, id);
+            }}
           >
             <Icon />
           </button>

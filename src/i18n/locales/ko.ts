@@ -1040,9 +1040,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuCloseTab: "탭 닫기",
   menuReopenClosedTab: "닫은 탭 다시 열기",
   readOnlyRefused:
-    "이 문서는 읽기 전용입니다. 바꾸려면 보기 › 읽기 전용을 끄세요.",
-  menuToggleReadOnly: "읽기 전용",
-  readOnlyLock: "읽기 전용: 클릭하면 편집 허용",
+    "이 문서는 읽기 모드입니다. 편집하려면 보기 › 모드 › 기본을 고르세요.",
+  menuToggleReadOnly: "읽기 모드",
+  readOnlyLock: "읽기 모드: 클릭하면 편집 허용",
   closeOtherTabs: "다른 탭 닫기",
   closeTabsToLeft: "왼쪽 탭 닫기",
   closeTabsToRight: "오른쪽 탭 닫기",

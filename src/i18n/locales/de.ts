@@ -1099,9 +1099,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuCloseTab: "Tab schließen",
   menuReopenClosedTab: "Geschlossenen Tab wieder öffnen",
   readOnlyRefused:
-    "Dieses Dokument ist schreibgeschützt. Schalte Ansicht › Schreibgeschützt aus, um es zu ändern.",
-  menuToggleReadOnly: "Schreibgeschützt",
-  readOnlyLock: "Schreibgeschützt: klicken, um Änderungen zu erlauben",
+    "Dieses Dokument ist im Lesemodus. Zum Ändern Ansicht › Modus › Standard wählen.",
+  menuToggleReadOnly: "Lesemodus",
+  readOnlyLock: "Lesemodus: klicken, um Änderungen zu erlauben",
   closeOtherTabs: "Andere schließen",
   closeTabsToLeft: "Tabs links schließen",
   closeTabsToRight: "Tabs rechts schließen",

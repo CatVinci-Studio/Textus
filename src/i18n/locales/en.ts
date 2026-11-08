@@ -1072,9 +1072,9 @@ type /name in a conversation to use one.
   menuCloseTab: "Close Tab",
   menuReopenClosedTab: "Reopen Closed Tab",
   readOnlyRefused:
-    "This document is read-only. Turn off View › Read Only to change it.",
-  menuToggleReadOnly: "Read Only",
-  readOnlyLock: "Read-only: click to allow changes",
+    "This document is in reading mode. To change it, choose View › Mode › Default.",
+  menuToggleReadOnly: "Reading Mode",
+  readOnlyLock: "Reading mode: click to allow changes",
   closeOtherTabs: "Close Others",
   closeTabsToLeft: "Close Tabs to the Left",
   closeTabsToRight: "Close Tabs to the Right",

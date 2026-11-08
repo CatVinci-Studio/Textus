@@ -1052,9 +1052,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuCloseTab: "タブを閉じる",
   menuReopenClosedTab: "閉じたタブを再度開く",
   readOnlyRefused:
-    "この書類は読み取り専用です。変更するには「表示 › 読み取り専用」をオフにしてください。",
-  menuToggleReadOnly: "読み取り専用",
-  readOnlyLock: "読み取り専用：クリックで編集を許可",
+    "この書類は閲覧モードです。編集するには「表示 › モード › 標準」を選んでください。",
+  menuToggleReadOnly: "閲覧モード",
+  readOnlyLock: "閲覧モード：クリックで編集を許可",
   closeOtherTabs: "他のタブを閉じる",
   closeTabsToLeft: "左側のタブを閉じる",
   closeTabsToRight: "右側のタブを閉じる",

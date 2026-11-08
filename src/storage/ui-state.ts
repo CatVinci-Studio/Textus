@@ -18,6 +18,8 @@ export interface UiState {
   sidebarOpen: boolean;
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
+  /** The sidebar's tabs as the user dragged them, by id. */
+  sidebarTabOrder: string[];
   /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout. */
@@ -135,6 +137,11 @@ const LOCAL: {
     key: "textus-sidebar-tab",
     decode: (raw) => raw,
     encode: (value) => value,
+  },
+  sidebarTabOrder: {
+    key: "textus-sidebar-tab-order",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
   },
   iosRecentDocuments: {
     key: "textus-ios-recent-documents",
