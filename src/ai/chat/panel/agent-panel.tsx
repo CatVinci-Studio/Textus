@@ -72,13 +72,16 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
     scale,
   );
   const [tab, setTab] = useState<AgentPanelTab>("chat");
-  const setOpen = useCallback((next: boolean) => {
-    setOpenState(next);
-    setUiState("agentPanelOpen", next);
-    // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
-    // "ask about this note" - wants the conversation.
-    if (next) setTab("chat");
-  }, [setTab]);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setOpenState(next);
+      setUiState("agentPanelOpen", next);
+      // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
+      // "ask about this note" - wants the conversation.
+      if (next) setTab("chat");
+    },
+    [setTab],
+  );
   // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback(
     (next: number, persist = true) => {

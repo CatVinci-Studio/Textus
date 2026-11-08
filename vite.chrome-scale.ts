@@ -21,7 +21,8 @@ const DOCUMENT = [
   /\/playground\//,
 ];
 
-/** A length worth scaling: 3px and up; hairlines stay crisp. */
+/** A length worth scaling: 3px and up; hairlines stay crisp. Plugin pages
+ *  are scaled by src/ui/scale-lengths.ts: keep the two in step. */
 const LENGTH = /(^|[\s(,/+*])(-?\d*\.?\d+)px\b/g;
 const SCALED = /--(chrome-scale|ui-text-scale|window-scale)\b/;
 

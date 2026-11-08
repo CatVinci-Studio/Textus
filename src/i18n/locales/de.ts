@@ -1299,7 +1299,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closeLastWindow: "Fenster schließen",
   closeLastStartPage: "Startseite zeigen",
   startPageRecentProjects: "Letzte Projekte",
-  startPagePickDocument: "Wähle in der Seitenleiste ein Dokument aus {folder}, um zu beginnen.",
+  startPagePickDocument:
+    "Wähle in der Seitenleiste ein Dokument aus {folder}, um zu beginnen.",
   startPageRecentFiles: "Letzte Dateien",
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",

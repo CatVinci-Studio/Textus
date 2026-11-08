@@ -1294,7 +1294,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closeLastWindow: "Fechar a janela",
   closeLastStartPage: "Mostrar a página inicial",
   startPageRecentProjects: "Projetos recentes",
-  startPagePickDocument: "Escolha um documento de {folder} na barra lateral para começar.",
+  startPagePickDocument:
+    "Escolha um documento de {folder} na barra lateral para começar.",
   startPageRecentFiles: "Arquivos recentes",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",

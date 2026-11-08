@@ -11,3 +11,5 @@
 
 - Opening a recent project from the start page brings back the tabs you left it with; a project you haven't worked in opens its last document or its README, and otherwise shows its files and asks you to pick one, instead of looking untouched.
 - In source mode, an undo pressed right after an edit (a pasted picture, say) is no longer undone again a moment later.
+- In a small window the AI panel narrows so the document keeps its room, and can still be dragged; its edge now starts under the title bar instead of cutting through the word count and window buttons.
+- Plugin pages' own styles grow with the interface too, without any change to the plugins.

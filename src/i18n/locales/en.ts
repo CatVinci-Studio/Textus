@@ -1272,7 +1272,8 @@ type /name in a conversation to use one.
   closeLastWindow: "Close the window",
   closeLastStartPage: "Show the start page",
   startPageRecentProjects: "Recent Projects",
-  startPagePickDocument: "Pick a document in {folder} from the sidebar to start.",
+  startPagePickDocument:
+    "Pick a document in {folder} from the sidebar to start.",
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",

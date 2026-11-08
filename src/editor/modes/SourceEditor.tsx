@@ -35,6 +35,8 @@ import "./source-editor.css";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
+/** The texts each editor's edits reported, not yet seen coming back. */
+const sentBy = new WeakMap<EditorView, string[]>();
 
 /** What a copy or cut takes: the selected ranges, a line apart. */
 function tellSelection(view: EditorView, cut: boolean) {
@@ -84,8 +86,6 @@ export function SourceEditor({
   const viewRef = useRef<EditorView | null>(null);
   const readOnlyRef = useRef<Compartment | null>(null);
   const latest = useRef({ value, onChange, typewriter, readOnly, onScroll });
-  /** The texts the user's edits reported, not yet seen coming back. */
-  const sent = useRef<string[]>([]);
   latest.current = { value, onChange, typewriter, readOnly, onScroll };
   // The extension is built once; it reads the current handler through here.
   const pasteRef = useRef(onPaste);
@@ -129,7 +129,10 @@ export function SourceEditor({
             if (update.docChanged) {
               const text = update.state.doc.toString();
               if (!update.transactions.some((tr) => tr.annotation(outside)))
-                sent.current.push(text);
+                sentBy.set(update.view, [
+                  ...(sentBy.get(update.view) ?? []),
+                  text,
+                ]);
               latest.current.onChange(text);
             }
             if (
@@ -175,12 +178,10 @@ export function SourceEditor({
     if (!view) return;
     // Our own text coming back: once it is, older ones can't. One that
     // arrives after a newer edit (an undo right after a paste) is stale.
-    const ours = sent.current.indexOf(value);
-    if (ours >= 0) {
-      sent.current = sent.current.slice(ours + 1);
-      return;
-    }
-    sent.current = [];
+    const sent = sentBy.get(view) ?? [];
+    const ours = sent.indexOf(value);
+    sentBy.set(view, ours >= 0 ? sent.slice(ours + 1) : []);
+    if (ours >= 0) return;
     const current = view.state.doc.toString();
     if (current === value) return;
     // Only the span that changed, so the caret and scroll keep their place;

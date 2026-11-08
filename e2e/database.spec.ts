@@ -357,8 +357,13 @@ test("a dragged column's copy stays under the point it was taken by, zoomed or n
 }) => {
   const db = await open(page);
   const head = db.locator('thead th[data-key="status"]');
+  const zoom = () =>
+    db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom);
   for (const zoomIn of [0, 3]) {
     for (let i = 0; i < zoomIn; i++) await emit(page, "menu-zoom-in");
+    // The page takes the zoom, then draws again: drag what is there then.
+    if (zoomIn) await expect.poll(zoom).toBe("1.331");
+    await expect(head).toBeVisible();
     const at = await grabOffset(page, head, db.locator("body"));
     // A padded head cell once threw it off by tens of pixels.
     expect(Math.abs(at.x - at.taken.x)).toBeLessThan(0.08);
