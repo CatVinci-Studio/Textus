@@ -31,8 +31,8 @@ pub(crate) fn abbreviate_home(path: &str) -> String {
 /// Refill the Open Recent submenu, folders then files, most recent first. Menus
 /// may only change on the main thread, hence the hop.
 pub(crate) fn rebuild_recent_menu(app: &tauri::AppHandle) {
-    let folders = commands::recents::read_recent_folders(app);
-    let list = commands::recents::read_recent_files(app);
+    let folders = commands::recents::still_there(commands::recents::read_recent_folders(app));
+    let list = commands::recents::still_there(commands::recents::read_recent_files(app));
     let app = app.clone();
     let _ = app.clone().run_on_main_thread(move || {
         let Some(state) = app.try_state::<RecentMenu>() else {

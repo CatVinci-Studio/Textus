@@ -17,6 +17,8 @@ export type NewDocumentMode = "window" | "tab";
  *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";
 export type ImageAlign = "center" | "left";
+/** How an ![[embed]] of a note shows: its content, or a card to open it by. */
+export type EmbedDisplay = "expand" | "card";
 /** How every document shows: the rich editor, its Markdown source, or the
  *  source beside a preview. One for all windows. */
 export type ViewMode = "rich" | "source" | "split";
@@ -331,6 +333,8 @@ export interface Settings {
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// ![[note]] embeds drawn in full, or folded to a card each until opened.
+  embedDisplay: EmbedDisplay;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
   /// a complete "**text**" still turns into bold.
   autoCloseMarks: boolean;
@@ -476,6 +480,7 @@ export const DEFAULT_SETTINGS: Settings = {
   contentWidth: "auto",
   imageAlign: "center",
   menuBarShown: false,
+  embedDisplay: "expand",
   autoCloseMarks: true,
   autoCloseBrackets: true,
   plainTextMenu: false,

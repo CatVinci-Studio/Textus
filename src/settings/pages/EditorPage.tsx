@@ -2,6 +2,7 @@ import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import {
   type ContentWidth,
+  type EmbedDisplay,
   type ImageAlign,
   UI_TEXT_SCALES,
   type UiTextScale,
@@ -170,6 +171,19 @@ export function EditorPage({
           checked={settings.plainTextMenu}
           onChange={(v) => setSettings({ plainTextMenu: v })}
         />
+        <SettingRow label={t.embedDisplayLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.embedDisplayLabel}
+            value={settings.embedDisplay}
+            onChange={(e) =>
+              setSettings({ embedDisplay: e.target.value as EmbedDisplay })
+            }
+          >
+            <option value="expand">{t.embedDisplayExpand}</option>
+            <option value="card">{t.embedDisplayCard}</option>
+          </Select>
+        </SettingRow>
       </SettingsGroup>
       <SettingsGroup title={t.imageStorageGroupLabel}>
         <SettingRow label={t.imageAlignLabel}>

@@ -30,6 +30,8 @@ import type { CodeBlockSeen } from "../../plugins/manager";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
 import { webviewPicture } from "../../plugins/views/webviews";
 import { setDrawnBlocks } from "../../export/drawn-blocks";
+import { setEmbeddedBlocks } from "../../editor/embeds/embed-plugin-blocks";
+import { drawPluginBlocksIn } from "./embedded-plugin-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
 
@@ -62,6 +64,7 @@ interface Drawn {
  */
 export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
   setDrawnBlocks(DRAWN_BLOCKS);
+  setEmbeddedBlocks(drawPluginBlocksIn);
   return $prose((ctx) => {
     const drawn = new Map<string, Drawn>();
 

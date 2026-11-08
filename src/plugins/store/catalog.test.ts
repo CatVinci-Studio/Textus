@@ -25,6 +25,7 @@ const {
   installFromCatalog,
   loadCatalog,
   neededTextus,
+  offeredItems,
   searchCatalog,
   sortCatalog,
   updateFor,
@@ -125,5 +126,14 @@ describe("the catalog list", () => {
       "catvinci.graph",
       "catvinci.kanban",
     ]);
+  });
+});
+
+describe("the market's list", () => {
+  it("leaves out what is installed and what is unlisted, still updated where installed", () => {
+    const of = (id: string, unlisted?: boolean) =>
+      ({ id, unlisted }) as Parameters<typeof offeredItems>[0][number];
+    const items = [of("a"), of("pages", true), of("b")];
+    expect(offeredItems(items, new Set(["b"])).map((i) => i.id)).toEqual(["a"]);
   });
 });

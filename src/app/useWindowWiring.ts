@@ -162,13 +162,18 @@ export function useWindowWiring({
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: panels.toggleSidebar,
+    showSidebarTab: (id: string) => {
+      panels.setPanelMode(id);
+      panels.setPanelOpen(true);
+    },
     onToggleAgentPanel: panels.toggleAgentPanel,
     onOpenAgentPanel: () => {
       if (!panels.agentPanel.open) panels.toggleAgentPanel();
     },
     onToggleTextusAi: textusAi.toggle,
     onToggleSplitView: docs.toggleSplitView,
-    onToggleReadOnly: () => docs.toggleReadOnly(),
+    onToggleReadOnly: () => docs.chooseViewMode("read-only"),
+    onViewModeDefault: () => docs.chooseViewMode("default"),
     onToggleZenMode: docs.toggleZenMode,
     addBlankTab: tabState.addBlankTab,
     openFileDialog: docs.openFileDialog,

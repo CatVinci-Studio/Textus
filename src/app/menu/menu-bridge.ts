@@ -7,6 +7,7 @@ import {
 import {
   OPEN_AGENT_PANEL_EVENT,
   TRACK_CHANGES_EVENT,
+  SHOW_SIDEBAR_TAB_EVENT,
 } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
 import { editInFocus } from "../../ui/edit-in-focus";
@@ -51,12 +52,16 @@ export interface MenuBridgeHandlers {
   onOpenPluginSettings: () => void;
   onToggleTypewriter: () => void;
   onToggleSidebar: () => void;
+  /** Opens the sidebar on the tab with this id. */
+  showSidebarTab: (id: string) => void;
   onToggleAgentPanel: () => void;
   /** Opens Textus AI's panel; left open if it is. */
   onOpenAgentPanel: () => void;
   onToggleTextusAi: () => void;
   onToggleSplitView: () => void;
   onToggleReadOnly: () => void;
+  /** View › Mode › Default: the rendered editor, the document writable. */
+  onViewModeDefault: () => void;
   onToggleZenMode: () => void;
   addBlankTab: () => void;
   openFileDialog: () => Promise<void>;
@@ -190,6 +195,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         h().onToggleSplitView(),
       ),
       listenToThisWindow("menu-toggle-read-only", () => h().onToggleReadOnly()),
+      listenToThisWindow("menu-view-mode-default", () =>
+        h().onViewModeDefault(),
+      ),
       listenToThisWindow("menu-toggle-zen-mode", () => h().onToggleZenMode()),
       listenToThisWindow(
         "menu-command-palette",
@@ -247,6 +255,16 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           h().openHelpTab(event.payload);
       }),
     );
+  }, []);
+
+  // A plugin's layout.showSidebarTab.
+  useEffect(() => {
+    const show = (e: Event) => {
+      const id = (e as CustomEvent<unknown>).detail;
+      if (typeof id === "string") latest.current.showSidebarTab(id);
+    };
+    window.addEventListener(SHOW_SIDEBAR_TAB_EVENT, show);
+    return () => window.removeEventListener(SHOW_SIDEBAR_TAB_EVENT, show);
   }, []);
 
   // The native macOS menu bar is built in English; it takes the UI's

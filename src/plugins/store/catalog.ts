@@ -43,6 +43,8 @@ export interface CatalogItem {
   installs30?: number;
   /** Its latest version's date, YYYY-MM-DD. */
   updated?: string;
+  /** Not offered to install any more (merged into another); updated still. */
+  unlisted?: boolean;
 }
 
 export type { SkillEntry };
@@ -72,6 +74,14 @@ export function subscribeCatalog(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
+/** What the market offers to install: not installed, not unlisted. */
+export function offeredItems(
+  items: readonly CatalogItem[],
+  installed: ReadonlySet<string>,
+): CatalogItem[] {
+  return items.filter((item) => !installed.has(item.id) && !item.unlisted);
+}
+
 export function catalogSnapshot(): CatalogState {
   return state;
 }
@@ -91,6 +101,7 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
       installs: entry.installs ?? undefined,
       installs30: entry.installs30 ?? undefined,
       updated: entry.updated ?? undefined,
+      unlisted: entry.unlisted || undefined,
     };
   } catch {
     return null;

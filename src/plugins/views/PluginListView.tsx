@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type DragEvent,
   type KeyboardEvent,
   type ReactNode,
 } from "react";
@@ -30,7 +31,7 @@ import {
   listViewsVersion,
   subscribeListViews,
 } from "../contributions/list-views";
-import { windowInfo } from "../store/plugin-records";
+import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
 
@@ -97,6 +98,9 @@ function defaultSelect(item: PluginListItem) {
  * A plugin's list, drawn by Textus in a sidebar tab or a tab of its own: the
  * plugin gives the items, Textus the look, keys, filter and folding.
  */
+/** A row being dragged onto another in a plugin's list. */
+const LIST_DRAG = "application/x-textus-list-row";
+
 export const PluginListPane = memo(function PluginListPane({
   plugin,
   view,
@@ -136,6 +140,33 @@ export const PluginListPane = memo(function PluginListPane({
       checked: !item.checkbox,
     }).catch(() => {});
   };
+
+  // A row dragged onto another: the plugin moves it there (onMove).
+  const dragHandlers = (item: PluginListItem, key: string) => ({
+    draggable: true,
+    onDragStart: (e: DragEvent<HTMLDivElement>) =>
+      e.dataTransfer.setData(LIST_DRAG, key),
+    onDragOver: (e: DragEvent<HTMLDivElement>) => {
+      if (!e.dataTransfer.types.includes(LIST_DRAG)) return;
+      e.preventDefault();
+      e.currentTarget.classList.add("is-drop");
+    },
+    onDragLeave: (e: DragEvent<HTMLDivElement>) =>
+      e.currentTarget.classList.remove("is-drop"),
+    onDrop: (e: DragEvent<HTMLDivElement>) => {
+      e.currentTarget.classList.remove("is-drop");
+      const from = rows.find(
+        (r) => r.key === e.dataTransfer.getData(LIST_DRAG),
+      );
+      if (!from || from.key === key) return;
+      e.preventDefault();
+      void askPlugin(plugin, "$listMove", {
+        view,
+        item: from.item,
+        target: item,
+      }).catch(() => {});
+    },
+  });
 
   // The rows as shown: filtered, open items' children under them.
   const rows = useMemo(() => {
@@ -178,7 +209,8 @@ export const PluginListPane = memo(function PluginListPane({
     }
   };
 
-  const name = pluginRecord(plugin)?.manifest?.name ?? plugin;
+  const record = pluginRecord(plugin);
+  const name = record ? pluginName(record) : plugin;
   let lastGroup: string | undefined;
   return (
     <div className={`plugin-list ${className ?? ""}`}>
@@ -233,6 +265,7 @@ export const PluginListPane = memo(function PluginListPane({
                 style={{ paddingInlineStart: `${8 + depth * 14}px` }}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => select(item)}
+                {...(info?.move ? dragHandlers(item, key) : {})}
                 onContextMenu={(e) => {
                   if (!item.actions?.length) return;
                   e.preventDefault();

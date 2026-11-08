@@ -2,7 +2,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { menuIpc } from "../../platform/ipc";
 import { hasNativeMenuBar, isDesktopApp } from "../../platform/capabilities";
 import { runCommand } from "../../app/commands";
-import type { PluginMenuEntry } from "../../app/menu/app-menu-model";
+import type { PluginMenuEntry } from "../../app/menu/plugin-menu";
 import { pluginsSnapshot, subscribePlugins } from "../manager";
 import { pluginMenuEntries } from "../store/plugin-lookup";
 

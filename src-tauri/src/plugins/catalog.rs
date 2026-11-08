@@ -65,6 +65,10 @@ pub struct CatalogEntry {
     pub published: Option<String>,
     #[serde(default)]
     pub updated: Option<String>,
+    /// Kept for those who have it (its updates still come) but no longer
+    /// offered to install: a plugin merged into another.
+    #[serde(default)]
+    pub unlisted: bool,
 }
 
 /// One skill in the catalog, listed beside the plugins in the market.

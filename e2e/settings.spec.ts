@@ -726,13 +726,13 @@ test.describe("phone", () => {
   });
 });
 
-test("Settings' This Document switches match the View menu's: Track My Changes and Read Only", async ({
+test("Settings' This Document switches match the View menu's: Track My Changes and Reading Mode", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   const panel = await openSettings(page);
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
-  const readOnly = panel.getByRole("checkbox", { name: "Read Only" });
+  const readOnly = panel.getByRole("checkbox", { name: "Reading Mode" });
   const tracking = panel.getByRole("checkbox", { name: "Track My Changes" });
   await expect(readOnly).not.toBeChecked();
   await expect(tracking).not.toBeChecked();

@@ -47,7 +47,8 @@
         1.5rem
     )
   );
-  padding: 3rem var(--source-gutter) 6rem;
+  /* Room below, as the rendered view has, so the last line can come up to the middle. */
+  padding: 3rem var(--source-gutter) 42vh;
   overflow-y: auto;
   font-family: inherit;
   font-size: inherit;

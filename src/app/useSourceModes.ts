@@ -14,7 +14,8 @@ import {
 } from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import { useSettings } from "../prefs/SettingsContext";
-import type { ViewMode } from "../prefs/settings-types";
+/** View › Mode's four. */
+export type ViewModeChoice = "default" | "source" | "split" | "read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** The rich editor, plain source mode and split view, one for every tab of
@@ -57,20 +58,32 @@ export function useSourceModes(tabState: TabState) {
     }
   }, [mode, tabs, activeTabId, liveTabs, updateTab]);
 
-  const switchTo = useCallback(
-    (next: ViewMode) => setSettings({ viewMode: next }),
-    [setSettings],
+  // View › Mode: one of four. The rendered editor, source mode and split
+  // view are every window's; read-only is the document's, in the rendered
+  // editor. Choosing the one in force goes back to the default.
+  const chooseViewMode = useCallback(
+    (kind: ViewModeChoice) => {
+      const tab = liveTabs().find((tb) => tb.id === activeTabId);
+      const readOnly = !!tab && !tab.view && tabReadOnly(tab);
+      const now: ViewModeChoice = readOnly
+        ? "read-only"
+        : mode === "rich"
+          ? "default"
+          : mode;
+      const next = kind === now ? "default" : kind;
+      const keep = next === "read-only";
+      if (tab && !tab.view && readOnly !== keep) {
+        if (tab.path) keepReadOnly(tab.path, keep);
+        updateTab(tab.id, { readOnly: keep });
+      }
+      setSettings({
+        viewMode: next === "source" || next === "split" ? next : "rich",
+      });
+    },
+    [activeTabId, liveTabs, mode, setSettings, updateTab],
   );
-  // Source mode from the rich editor or split view (whose preview goes);
-  // back to the rich editor from source mode.
-  const toggleSourceMode = useCallback(
-    () => switchTo(mode === "source" ? "rich" : "source"),
-    [mode, switchTo],
-  );
-  const toggleSplitView = useCallback(
-    () => switchTo(mode === "split" ? "rich" : "split"),
-    [mode, switchTo],
-  );
+  const toggleSourceMode = () => chooseViewMode("source");
+  const toggleSplitView = () => chooseViewMode("split");
 
   // View › Read Only, or a tab's own menu: kept by the file's path.
   const toggleReadOnly = useCallback(
@@ -105,5 +118,5 @@ export function useSourceModes(tabState: TabState) {
     return () => cancelAnimationFrame(frame);
   }, [activeSourceMode, activeTabId]);
 
-  return { toggleSourceMode, toggleSplitView, toggleReadOnly };
+  return { toggleSourceMode, toggleSplitView, toggleReadOnly, chooseViewMode };
 }

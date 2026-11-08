@@ -42,12 +42,12 @@ test("a read-only document takes no change, and its padlock turns it off", async
   await openApp(page, { settings: { language: "en" } });
   await openNote(page);
   await emit(page, "menu-toggle-read-only");
-  const lock = page.getByRole("button", { name: /Read-only/ });
+  const lock = page.getByRole("button", { name: /Reading mode/ });
   await expect(lock).toBeVisible();
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
   // Typing is refused, and the writer hears why.
-  await expect(page.locator(".notice")).toContainText("read-only");
+  await expect(page.locator(".notice")).toContainText("reading mode");
   await paste(page, " pasted");
   await expect(page.locator(editor)).toHaveText("Kept as it is.");
   // Selecting and copying still work.
@@ -69,11 +69,15 @@ test("a file left read-only is read-only when opened again", async ({
   await openApp(page, { settings: { language: "en" } });
   await openNote(page);
   await emit(page, "menu-toggle-read-only");
-  await expect(page.getByRole("button", { name: /Read-only/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Reading mode/ }),
+  ).toBeVisible();
   await page.reload();
   await page.waitForSelector(editor);
   await openNote(page);
-  await expect(page.getByRole("button", { name: /Read-only/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Reading mode/ }),
+  ).toBeVisible();
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
   await expect(page.locator(editor)).toHaveText("Kept as it is.");

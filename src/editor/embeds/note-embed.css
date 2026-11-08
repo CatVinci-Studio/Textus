@@ -79,3 +79,28 @@
 .note-embed-chip:not(.wikilink-missing) {
   color: var(--doc-accent);
 }
+
+/* A plugin's block in an embedded note: a line to open it by. */
+.note-embed-block {
+  display: block;
+  margin: var(--space-2) 0;
+}
+.note-embed-block-open {
+  appearance: none;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: transparent;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-footnote);
+  padding: var(--space-1) var(--space-3);
+  cursor: pointer;
+  user-select: none;
+}
+.note-embed-block-open:hover {
+  color: var(--ui-text);
+  background: var(--ui-hover);
+}
+.note-embed-block-page {
+  display: block;
+}

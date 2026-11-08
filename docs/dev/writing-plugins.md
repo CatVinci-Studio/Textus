@@ -278,7 +278,9 @@ legend: "true" }`. See [Code blocks in an export](#code-blocks-in-an-export).
 
 `open(path or location, { where })` opens a file - `where: "beside"` in
 the pane beside the one in front, splitting the window if it isn't -
-`openView(id)`, `openWebPage(url)`, `openUntitled(text)` and
+`openView(id)`, `showSidebarTab(id)` (opens the sidebar on a tab: a
+plugin's sidebar tab id, `tree` or `outline`; from 1.3.10),
+`openWebPage(url)`, `openUntitled(text)` and
 `openExternal(url)`. `tabs()`, `activeTab()` and `split()` say what is
 open; `onDidChangeActiveTab` and `onDidChangeLayout` follow it.
 

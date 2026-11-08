@@ -108,7 +108,8 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
       event.preventDefault();
       toggleFold(fold);
     });
-    // The body puts the caret on the source; a title or a held link is a click.
+    // The body puts the caret on the source; a title, a plugin's block or a
+    // held link is a click.
     caretToSourceOnClick(
       el,
       view,
@@ -117,7 +118,9 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         (event as MouseEvent).button !== 0 ||
         (event as MouseEvent).metaKey ||
         (event as MouseEvent).ctrlKey ||
-        !!(event.target as Element).closest?.(".note-embed-title"),
+        !!(event.target as Element).closest?.(
+          ".note-embed-title, .note-embed-block",
+        ),
     );
     return el;
   };

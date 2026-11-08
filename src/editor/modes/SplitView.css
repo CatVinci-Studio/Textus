@@ -15,7 +15,7 @@
 }
 
 .split-view .split-source .cm-scroller {
-  padding: 2.5rem 1.5rem 6rem;
+  padding: 2.5rem 1.5rem 42vh;
 }
 
 .split-preview {
@@ -29,7 +29,7 @@
   zoom: var(--content-zoom, 1);
   max-width: var(--content-width);
   margin: 0 auto;
-  padding: 2.5rem 1.75rem 6rem;
+  padding: 2.5rem 1.75rem 42vh;
 }
 
 /* Narrow windows stack the panes instead of squeezing both. */

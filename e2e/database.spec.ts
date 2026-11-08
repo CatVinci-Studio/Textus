@@ -13,9 +13,31 @@ test.skip(!hasPlugin(ID), `${ID} is not in this checkout`);
 const week = (start: string, end: string, focus: string[], more = "") =>
   `---\nstart: ${start}\nend: ${end}\nfocus: [${focus.join(", ")}]\n${more}---\n\n# Week\n`;
 
+// A folder unit's database, as Workspace makes one: its rows the notes beside it.
+const BASE = [
+  "filters:",
+  "  and:",
+  "    - file.inFolder(this.file.folder)",
+  "    - file.path != this.file.path",
+  "views:",
+  "  - type: table",
+  "    name: Table",
+  "    sort:",
+  "      - property: start",
+  "        direction: ASC",
+  "  - type: kanban",
+  "    name: Board",
+  "    groupBy:",
+  "      property: status",
+  "  - type: calendar",
+  "    name: Calendar",
+  "    date: start",
+  "    end: end",
+].join("\n");
+
 const FOLDER = {
-  "/work/2026 Calendar.md":
-    "# 2026 Calendar\n\n```database\nfrom: 2026 Calendar\nview: table\nsort: start\n```\n",
+  "/work/2026 Calendar/2026 Calendar.md":
+    "# 2026 Calendar\n\n```base\n" + BASE + "\n```\n",
   "/work/2026 Calendar/Week1.md": week(
     "2026-01-01",
     "2026-01-04",
@@ -49,7 +71,7 @@ async function open(page: Page, more: Record<string, string> = {}) {
     },
     folder: { ...FOLDER, ...more },
   });
-  await openPath(page, "/work/2026 Calendar.md");
+  await openPath(page, "/work/2026 Calendar/2026 Calendar.md");
   return page
     .frameLocator('[data-active-tab="true"] .plugin-code-block iframe')
     .first();
@@ -113,7 +135,9 @@ test("a column's menu sorts it; Filter keeps only the pages that match", async (
   const db = await open(page);
   await db.locator("thead th", { hasText: "rate" }).click();
   await pick(page, "Descending");
-  await expect.poll(() => docText(page)).toContain("sort: -rate");
+  await expect
+    .poll(() => docText(page))
+    .toContain("- property: rate\n        direction: DESC");
   await expect(db.locator(rows).first()).toContainText("Week2");
 
   // A filter by menus: the property, how it compares, one of its options.
@@ -122,7 +146,7 @@ test("a column's menu sorts it; Filter keeps only the pages that match", async (
   await pick(page, "is");
   await pick(page, "Done");
   await expect(db.locator(rows)).toHaveCount(1);
-  await expect.poll(() => docText(page)).toContain("filter: status = Done");
+  await expect.poll(() => docText(page)).toContain('- status == "Done"');
   const chip = db.locator("#rules .tx-chip", { hasText: "status is Done" });
   await chip.click();
   await pick(page, "Remove");
@@ -155,7 +179,8 @@ test("properties are added, renamed across the pages, and pages made in the tabl
   await pick(page, "Select");
   await page.locator(".app-dialog-input").fill("owner");
   await page.locator(".app-dialog-input").press("Enter");
-  await expect.poll(() => docText(page)).toContain("types: owner=select");
+  // No Obsidian vault here: a select's kind is kept in the base.
+  await expect.poll(() => docText(page)).toContain("owner:\n    kind: select");
   await expect(db.locator("thead th", { hasText: "owner" })).toBeVisible();
 
   await db.locator("thead th", { hasText: "focus" }).click();
@@ -177,15 +202,21 @@ test("properties are added, renamed across the pages, and pages made in the tabl
     .toContain("# Week4");
 });
 
-test("the board groups pages by a select, as Notion's by status; the view is kept in the block", async ({
+test("the board groups pages by a select, its lists put in order by dragging", async ({
   page,
 }) => {
   const db = await open(page);
   await db.getByRole("tab", { name: "Board" }).click();
   await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Doing", "Done"]);
   await expect(db.locator('.lane[data-value="Doing"] .record')).toHaveCount(2);
-  // In the document, as an edit of its block: saved with it.
-  await expect.poll(() => docText(page)).toContain("view: board");
+  // A list's head dragged before another: the order kept in the view.
+  await db
+    .locator('.lane[data-value="Done"] .lane-head')
+    .dragTo(db.locator('.lane[data-value="Doing"]'));
+  await expect
+    .poll(() => docText(page))
+    .toContain("groupOrder:\n      - Done\n      - Doing");
+  await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Done", "Doing"]);
   await db
     .locator('.lane[data-value="Doing"] .record', { hasText: "Week1" })
     .dragTo(db.locator('.lane[data-value="Done"]'));
@@ -237,4 +268,37 @@ test("zoomed, the block's page draws at the zoom across the column's width, and 
   await page.mouse.wheel(0, 200);
   await page.keyboard.up("Control");
   await expect.poll(zoom).not.toBe(before);
+});
+
+test("a long view shows its first rows and more on asking; folded, only its bar", async ({
+  page,
+}) => {
+  const db = await open(page, {
+    "/work/2026 Calendar/2026 Calendar.md":
+      "# 2026 Calendar\n\n```base\n" +
+      BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
+      "\n```\n",
+  });
+  await expect(db.locator(rows)).toHaveCount(2);
+  await db.getByRole("button", { name: "Show 1 more" }).click();
+  await expect(db.locator(rows)).toHaveCount(3);
+  await db.locator("#fold").click();
+  await expect(db.locator("#body")).toBeHidden();
+  await expect(db.locator("#count")).toHaveText("3 pages");
+});
+
+test("zoomed, a column's menu opens under its header", async ({ page }) => {
+  const db = await open(page);
+  for (let i = 0; i < 3; i++) await emit(page, "menu-zoom-in");
+  const th = db.locator("thead th", { hasText: "status" });
+  await expect
+    .poll(() =>
+      db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom),
+    )
+    .toBe("1.331");
+  await th.click();
+  const head = (await th.boundingBox())!;
+  const box = (await menu(page).boundingBox())!;
+  expect(Math.abs(box.x - head.x)).toBeLessThan(4);
+  expect(Math.abs(box.y - (head.y + head.height))).toBeLessThan(8);
 });

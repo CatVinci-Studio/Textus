@@ -1,7 +1,8 @@
-import { useDeferredValue, useRef } from "react";
+import { useDeferredValue, useEffect, useRef } from "react";
 import { SplitPreview, type PreviewExtras } from "./SplitPreview";
 import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
+import { elasticOverscroll } from "../../ui/elastic-overscroll";
 import "./SplitView.css";
 
 /**
@@ -33,6 +34,13 @@ export function SplitView({
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
   const breaks = useVaultLineBreaks(filePath);
+  // The preview gives at either end as the source beside it does, on a Mac.
+  useEffect(() => {
+    const preview = previewRef.current;
+    const content = preview?.firstElementChild;
+    if (!preview || !(content instanceof HTMLElement)) return;
+    return elasticOverscroll(preview, content);
+  }, []);
 
   // The scrollTop each side was last moved to by the other. Its scroll event
   // can arrive frames later (WebKitGTK), so it is matched by position, not a

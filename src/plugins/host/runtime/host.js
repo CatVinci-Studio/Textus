@@ -567,6 +567,9 @@
           state: options && plain(options.state),
         });
       },
+      showSidebarTab: function (id) {
+        return call("layout.showSidebarTab", { id: String(id) });
+      },
       openWebPage: function (url, options) {
         return call("layout.openWebPage", {
           url: String(url),
@@ -618,6 +621,7 @@
             view: key,
             select: typeof provider.onSelect === "function",
             check: typeof provider.onCheck === "function",
+            move: typeof provider.onMove === "function",
             filterPlaceholder: provider.filterPlaceholder,
             emptyText: provider.emptyText,
           }),
@@ -1105,6 +1109,11 @@
       var provider = lists.get(params.view);
       if (provider && provider.onCheck)
         return provider.onCheck(params.item, !!params.checked);
+    },
+    $listMove: function (params) {
+      var provider = lists.get(params.view);
+      if (provider && provider.onMove)
+        return provider.onMove(params.item, params.target || null);
     },
     $resolveWebview: function (params) {
       var provider = webviewProviders.get(params.view);

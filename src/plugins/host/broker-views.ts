@@ -80,12 +80,14 @@ export function viewHandlers(p: PluginScope) {
       view,
       select,
       check,
+      move,
       filterPlaceholder,
       emptyText,
     }: Params) => {
       registerListView(p.id, listOf(view), {
         select: select === true,
         check: check === true,
+        move: move === true,
         filterPlaceholder: optionalStr(filterPlaceholder),
         emptyText: optionalStr(emptyText),
       });
