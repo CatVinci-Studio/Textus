@@ -18,11 +18,9 @@ import { APP_NAME } from "../../../i18n/names";
 import { ChevronIcon, FolderIcon } from "../../../ui/icons";
 import { ActionSheet, type ActionSheetItem } from "../../../ui/ActionSheet";
 import { usePhoneLayout } from "../../../ui/usePhoneLayout";
-import {
-  libraryEntryId,
-  MemorySections,
-  RememberedSection,
-} from "./MemoryView";
+import { MemorySections } from "./MemoryView";
+import { RememberedSection } from "./RememberedSection";
+import { libraryEntryId } from "./memory-text";
 import { showConfirm } from "../../../ui/app-dialog";
 import type {
   LibraryEntry,

@@ -27,7 +27,6 @@ const LINES_NOW = {
   "src/ai/chat/ChatBody.tsx": 530,
   "src/ai/chat/ChatComposer.tsx": 541,
   "src/ai/chat/ChatMessages.tsx": 571,
-  "src/ai/chat/panel/MemoryView.tsx": 567,
   "src/ai/chat/panel/ProjectBar.tsx": 512,
   "src/ai/chat/useAgentConversation.ts": 527,
   "src/ai/revision/pending-actions.ts": 516,
