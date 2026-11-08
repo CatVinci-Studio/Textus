@@ -55,6 +55,15 @@ pub struct Daily {
     pub template: Option<String>,
 }
 
+/// How a template's {{date}} and {{time}} are written, in moment.js tokens.
+#[derive(Serialize, Clone, Debug, PartialEq)]
+#[cfg_attr(test, derive(specta::Type))]
+#[serde(rename_all = "camelCase")]
+pub struct TemplateFormats {
+    pub date: Option<String>,
+    pub time: Option<String>,
+}
+
 /// A folder's conventions; a field no app sets is left to Textus's settings.
 #[derive(Serialize, Clone, Debug, Default, PartialEq)]
 #[cfg_attr(test, derive(specta::Type))]
@@ -78,7 +87,11 @@ pub struct Conventions {
     pub soft_breaks: Option<Setting<bool>>,
     /// The templates folder, a full path.
     pub templates: Option<Setting<String>>,
+    pub template_formats: Option<Setting<TemplateFormats>>,
     pub daily: Option<Setting<Daily>>,
+    /// Weekly and monthly notes (Periodic Notes), only where turned on.
+    pub weekly: Option<Setting<Daily>>,
+    pub monthly: Option<Setting<Daily>>,
     /// Where new notes go, as `attachments` names a folder.
     pub new_notes: Option<Setting<String>>,
     /// Paths the app hides (Obsidian's excluded files).
@@ -108,7 +121,10 @@ impl Conventions {
             attachments,
             soft_breaks,
             templates,
+            template_formats,
             daily,
+            weekly,
+            monthly,
             new_notes
         );
         if self.ignore.is_empty() {

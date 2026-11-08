@@ -63,6 +63,7 @@ const labels: ReplyPluginLabels = {
     dom: "Draws on the page.",
     permission: "Uses {permission}.",
     unregistered: "Declares {id}.",
+    when: "Reads {key}.",
     runError: "Stopped: {error}",
     fix: "Fix with AI",
     fixRequest: "{name} has:\n{problems}",

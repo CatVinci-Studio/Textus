@@ -372,6 +372,8 @@ export default {
     "Он рисует прямо на странице, а плагин так не может: ничего не появится.",
   chatPluginCheckPermission:
     "Он использует {permission}, не запросив это разрешение.",
+  chatPluginCheckWhen:
+    "Условие пункта меню читает {key}, которого в Textus нет: пункт никогда не появится.",
   chatPluginCheckUnregistered: "Он объявляет {id}, но нигде не регистрирует.",
   chatPluginRunError: "Остановился с ошибкой: {error}",
   chatPluginFix: "Исправить с ИИ",

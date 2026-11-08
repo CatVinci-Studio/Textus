@@ -226,7 +226,11 @@ export type Conventions_Deserialize = {
 	softBreaks?: Setting<boolean> | null,
 	/**  The templates folder, a full path. */
 	templates?: Setting<string> | null,
+	templateFormats?: Setting<TemplateFormats_Deserialize> | null,
 	daily?: Setting<Daily_Deserialize> | null,
+	/**  Weekly and monthly notes (Periodic Notes), only where turned on. */
+	weekly?: Setting<Daily_Deserialize> | null,
+	monthly?: Setting<Daily_Deserialize> | null,
 	/**  Where new notes go, as `attachments` names a folder. */
 	newNotes?: Setting<string> | null,
 	/**  Paths the app hides (Obsidian's excluded files). */
@@ -261,7 +265,11 @@ export type Conventions_Serialize = {
 	softBreaks: Setting<boolean> | null,
 	/**  The templates folder, a full path. */
 	templates: Setting<string> | null,
+	templateFormats: Setting<TemplateFormats_Serialize> | null,
 	daily: Setting<Daily_Serialize> | null,
+	/**  Weekly and monthly notes (Periodic Notes), only where turned on. */
+	weekly: Setting<Daily_Serialize> | null,
+	monthly: Setting<Daily_Serialize> | null,
 	/**  Where new notes go, as `attachments` names a folder. */
 	newNotes: Setting<string> | null,
 	/**  Paths the app hides (Obsidian's excluded files). */
@@ -473,6 +481,21 @@ export type Snapshot = {
 export type Source = {
 	app: string,
 	root: string,
+};
+
+/**  How a template's {{date}} and {{time}} are written, in moment.js tokens. */
+export type TemplateFormats = TemplateFormats_Serialize | TemplateFormats_Deserialize;
+
+/**  How a template's {{date}} and {{time}} are written, in moment.js tokens. */
+export type TemplateFormats_Deserialize = {
+	date?: string | null,
+	time?: string | null,
+};
+
+/**  How a template's {{date}} and {{time}} are written, in moment.js tokens. */
+export type TemplateFormats_Serialize = {
+	date: string | null,
+	time: string | null,
 };
 
 export type UploadedImage = {

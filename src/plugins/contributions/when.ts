@@ -5,6 +5,35 @@
  */
 export type WhenContext = Record<string, string | boolean | undefined>;
 
+/** Every key Textus sets for a `when` (plugin-contributions.ts whenContext). */
+export const WHEN_KEYS: readonly string[] = [
+  "documentOpen",
+  "editorHasSelection",
+  "folderOpen",
+  "fileExtension",
+  "resourceFilename",
+  "resourcePath",
+  "isMac",
+  "view",
+];
+
+/** The keys a clause reads: its words but the values compared with. */
+export function whenKeys(source: string): string[] {
+  const list = tokens(source);
+  return list
+    .filter(
+      (tok, i) =>
+        tok.kind === "word" &&
+        !(
+          i > 0 &&
+          list[i - 1].kind === "op" &&
+          /^[=!]=$/.test(list[i - 1].text)
+        ) &&
+        !/^(true|false)$/.test(tok.text),
+    )
+    .map((tok) => tok.text);
+}
+
 type Token = { kind: "op" | "word"; text: string };
 
 function tokens(source: string): Token[] {

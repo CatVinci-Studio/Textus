@@ -318,6 +318,8 @@ export default {
   chatPluginCantInstall: "這個外掛無法安裝：{reason}",
   chatPluginCheckDom: "它直接改動頁面，外掛做不到：它畫的東西不會顯示。",
   chatPluginCheckPermission: "它用到了「{permission}」，卻沒有申請這項權限。",
+  chatPluginCheckWhen:
+    "選單項目的顯示條件用了 {key}，Textus 沒有這個條件：這一項永遠不會顯示。",
   chatPluginCheckUnregistered: "它宣告了 {id}，程式碼裡卻沒有註冊。",
   chatPluginRunError: "執行時出錯：{error}",
   chatPluginFix: "讓 AI 修復",

@@ -47,6 +47,8 @@ export interface ReplyPluginLabels {
     permission: string;
     /** "{id}". */
     unregistered: string;
+    /** "{key}". */
+    when: string;
     /** "{error}". */
     runError: string;
     fix: string;
@@ -229,5 +231,7 @@ function checkText(check: PluginCheck, labels: ReplyPluginLabels): string {
       );
     case "unregistered":
       return t.unregistered.replace("{id}", check.id);
+    case "when":
+      return t.when.replace("{key}", check.key);
   }
 }

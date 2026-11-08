@@ -61,7 +61,7 @@ of its own. Each worktree still keeps about 2.4 GB of finished binaries.
 
 ```sh
 npm run check:quick                  # against origin/main
-node scripts/check-quick.mjs --base origin/stable
+node scripts/check-quick.mjs --base HEAD~3   # against another commit
 ```
 
 Runs the whole typecheck, then ESLint, Prettier and the unit tests for only

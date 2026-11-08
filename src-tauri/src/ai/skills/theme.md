@@ -14,7 +14,7 @@ metadata:
   textus-index: "Use when asked to make, design or change a theme, colour scheme or look for the editor."
   textus-category: "create"
   textus-modes: "create"
-  textus-packs: "contract"
+  textus-packs: ""
   textus-sources: "Our own text. The theme format is the app's own (Typora-compatible #write selectors); contrast ratios from WCAG 2.2 (W3C), summarised."
   textus-aliases-en: "theme-css, stylesheet"
   textus-aliases-zh: "设计主题, 主题, 编辑器主题"
