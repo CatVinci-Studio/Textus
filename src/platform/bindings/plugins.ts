@@ -194,6 +194,11 @@ export type CatalogEntry_Deserialize = {
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published?: string | null,
 	updated?: string | null,
+	/**
+	 *  Kept for those who have it (its updates still come) but no longer
+	 *  offered to install: a plugin merged into another.
+	 */
+	unlisted?: boolean,
 };
 
 /**  One plugin in the catalog. */
@@ -227,6 +232,11 @@ export type CatalogEntry_Serialize = {
 	/**  When its first and latest versions came out (YYYY-MM-DD). */
 	published: string | null,
 	updated: string | null,
+	/**
+	 *  Kept for those who have it (its updates still come) but no longer
+	 *  offered to install: a plugin merged into another.
+	 */
+	unlisted: boolean,
 };
 
 /**  One installed plugin, as Settings › Plugins lists it. */

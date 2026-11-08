@@ -10,6 +10,7 @@ import {
   type CatalogItem,
   type CatalogSort,
   type CatalogState,
+  offeredItems,
 } from "../../plugins/store/catalog";
 import { Select } from "../../ui/Select";
 import { AvailableSection } from "./AvailableSection";
@@ -43,8 +44,9 @@ export function AvailablePlugins({
   };
   const ready = catalog.status === "ready";
   const shown = ready
-    ? sortCatalog(searchCatalog(catalog.items, query), sort).filter(
-        (item) => !installed.has(item.id),
+    ? offeredItems(
+        sortCatalog(searchCatalog(catalog.items, query), sort),
+        installed,
       )
     : [];
   const message =
