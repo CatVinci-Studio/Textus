@@ -52,8 +52,16 @@ export function webviewPage(record: WebviewRecord, html: string) {
   };
 }
 
-/** The tallest a code block's frame grows; past it, it scrolls. */
+/** The tallest a code block's frame grows: at most 70% of the window, so a
+ *  long table or board scrolls inside and the note around it stays in
+ *  view. */
 const MAX_CODE_BLOCK_HEIGHT = 1200;
+const CODE_BLOCK_SHARE = 0.7;
+const codeBlockMax = () =>
+  Math.min(
+    MAX_CODE_BLOCK_HEIGHT,
+    Math.round(window.innerHeight * CODE_BLOCK_SHARE),
+  );
 
 /**
  * Where a plugin's webview is drawn: a sandboxed frame rebuilt on new HTML,
@@ -66,8 +74,9 @@ export function PluginWebview({
 }: {
   id: string;
   className?: string;
-  /** The frame as tall as its page, up to this many pixels. */
-  fitHeight?: number;
+  /** The frame as tall as its page, up to this many pixels (asked as it
+   *  changes, when a function). */
+  fitHeight?: number | (() => number);
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
@@ -122,7 +131,10 @@ export function PluginWebview({
           passZoomGesture(frame, params),
         height: ({ height }: { height: unknown }) => {
           if (fitHeight && typeof height === "number")
-            frame.style.height = `${Math.min(Math.max(height, 24), fitHeight)}px`;
+            frame.style.height = `${Math.min(
+              Math.max(height, 24),
+              typeof fitHeight === "function" ? fitHeight() : fitHeight,
+            )}px`;
         },
       },
       () => ({
@@ -398,7 +410,7 @@ export function PluginCodeBlock({
     <PluginWebview
       id={record.id}
       className="plugin-code-block-frame"
-      fitHeight={MAX_CODE_BLOCK_HEIGHT}
+      fitHeight={codeBlockMax}
     />
   );
 }
