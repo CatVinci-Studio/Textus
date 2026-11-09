@@ -1,19 +1,22 @@
 import { expect, test, type Page } from "@playwright/test";
 import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
-// Every column's top row ends on one line - the sidebar's, the tab bar's and
-// the AI panel's - at any window width; the AI panel starts under the window
-// bar, whose right end (word count, window buttons) is the page's; and a
-// small window keeps the document its room and the panels draggable.
+// With two documents the tabs take the window bar's row, ending on its line,
+// clear of its controls at both ends (design-language.md 5.7); the AI panel
+// starts under the window bar, whose right end (word count, window buttons)
+// is the page's; and a small window keeps the document its room and the
+// panels draggable.
 
 async function layout(page: Page) {
   return page.evaluate(() => {
     const rect = (selector: string) =>
       document.querySelector(selector)!.getBoundingClientRect();
     return {
-      sidebar: rect(".sidebar-header").bottom,
       tabs: rect(".tab-bar").bottom,
-      ai: rect(".agent-panel-header").bottom,
+      firstTab: rect(".tab-bar .tab-pill").left,
+      toggle: rect(".window-bar-sidebar-toggle").right,
+      lastTab: rect(".tab-bar .tab-bar-add").right,
+      status: rect(".window-bar-status").left,
       // Where the panel's edge starts: its ::before line.
       aiEdgeTop:
         rect(".agent-panel").top +
@@ -45,8 +48,9 @@ for (const width of [820, 1280, 1920])
   test(`header lines meet at ${width}px`, async ({ page }) => {
     await open(page, width);
     const at = await layout(page);
-    expect(Math.abs(at.sidebar - at.tabs)).toBeLessThanOrEqual(1);
-    expect(Math.abs(at.ai - at.tabs)).toBeLessThanOrEqual(1);
+    expect(Math.abs(at.tabs - at.bar)).toBeLessThanOrEqual(1);
+    expect(at.firstTab).toBeGreaterThan(at.toggle);
+    expect(at.lastTab).toBeLessThanOrEqual(at.status);
     expect(at.aiEdgeTop).toBeGreaterThanOrEqual(at.bar - 1);
     // The document keeps at least 360 (times the scale, 1 here and up).
     expect(at.document).toBeGreaterThanOrEqual(359);

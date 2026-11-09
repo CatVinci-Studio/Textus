@@ -133,6 +133,8 @@ export function TabBar({
     <div
       className={inner ? "tab-bar tab-bar-inner" : "tab-bar"}
       style={style}
+      // In the window bar's row, its empty stretch still moves the window.
+      data-tauri-drag-region={inner ? undefined : true}
       data-pane-id={paneId}
       ref={barRef}
       role="tablist"

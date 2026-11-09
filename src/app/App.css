@@ -6,6 +6,7 @@
 @import "./activity-rail.css";
 @import "./window-bar.css";
 @import "./tabs/TabBar.css";
+@import "./tabs/tabs-in-bar.css";
 @import "./editor-column.css";
 @import "./notices.css";
 @import "../ui/app-dialog.css";

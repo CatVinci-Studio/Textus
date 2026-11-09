@@ -84,3 +84,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* The sidebar is the frame: under its title, no line of its own. */
+.app-shell:has(> .activity-rail) .sidebar-header {
+  border-bottom: 0;
+}

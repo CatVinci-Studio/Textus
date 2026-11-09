@@ -1,7 +1,13 @@
 import { useKeptLoaded } from "../utils/kept-loaded";
 import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
-import { Suspense, type ComponentProps, type CSSProperties } from "react";
+import {
+  Suspense,
+  useRef,
+  type ComponentProps,
+  type CSSProperties,
+} from "react";
+import { useTabsInBar } from "./tabs/useTabsInBar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
 import {
@@ -141,6 +147,8 @@ export function MainPane({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   t: Strings;
 }) {
+  const mainRef = useRef<HTMLElement>(null);
+  useTabsInBar(mainRef);
   const split = useSplitPanes(
     tabs.map((tab) => tab.id),
     activeTabId,
@@ -270,6 +278,7 @@ export function MainPane({
 
   return (
     <main
+      ref={mainRef}
       className={split ? "main-pane main-pane-split" : "main-pane"}
       data-split={split?.root.direction}
       style={grid?.column}

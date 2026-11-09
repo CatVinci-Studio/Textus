@@ -1,0 +1,85 @@
+/* Two or more documents: the tabs take the window bar's row (design-
+   language.md 5.7). The bar turns solid in the frame's colour; the open tab
+   is the page's own surface, joined to it with no line, its lower corners
+   curving out into the bar. Not on the phone, and not beside the menu bar,
+   whose titles fill the row. A pane below another keeps its own row. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar))
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner) {
+  z-index: 46;
+  height: var(--window-bar-height);
+  padding: 0 var(--tabs-inset-end, 8px) 0 var(--tabs-inset-start, 8px);
+  align-items: flex-end;
+  gap: 2px;
+  border-bottom: 0;
+  /* The line under the row, which the open tab covers. */
+  box-shadow: inset 0 -1px 0 var(--ui-border);
+  overflow-y: hidden;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  ) {
+  .window-bar {
+    background: var(--ui-frame);
+  }
+  .window-bar-glass {
+    display: none;
+  }
+  .window-bar-title {
+    visibility: hidden;
+  }
+  .main-pane > .tab-bar:not(.tab-bar-inner) {
+    > .tab-pill {
+      position: relative;
+      align-self: stretch;
+      margin-top: 4px;
+      padding: 0 8px;
+      border-radius: var(--shape-s) var(--shape-s) 0 0;
+      background: transparent;
+    }
+    > .tab-pill:hover:not(.tab-pill-active) {
+      background: var(--ui-hover);
+    }
+    > .tab-pill-active {
+      overflow: visible;
+      z-index: 1;
+      background: var(--ui-bg);
+      color: var(--ui-text);
+      box-shadow:
+        0 -1px 0 color-mix(in srgb, var(--ui-border) 70%, transparent),
+        0 -4px 10px color-mix(in srgb, var(--ui-text) 6%, transparent);
+    }
+    /* Its lower corners curve out into the bar. */
+    > .tab-pill-active::before,
+    > .tab-pill-active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      width: var(--shape-s);
+      height: var(--shape-s);
+      pointer-events: none;
+    }
+    > .tab-pill-active::before {
+      right: 100%;
+      background: radial-gradient(
+        circle at 0 0,
+        transparent calc(var(--shape-s) - 0.5px),
+        var(--ui-bg) var(--shape-s)
+      );
+    }
+    > .tab-pill-active::after {
+      left: 100%;
+      background: radial-gradient(
+        circle at 100% 0,
+        transparent calc(var(--shape-s) - 0.5px),
+        var(--ui-bg) var(--shape-s)
+      );
+    }
+    > .tab-bar-add {
+      align-self: center;
+    }
+  }
+}
