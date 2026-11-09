@@ -261,6 +261,15 @@ test("the arrow keys stop on a fold's source lines instead of skipping them", as
   // "</details>" (hidden until the caret is on it).
   await page.keyboard.press("ArrowUp");
   await expect(editor).toContainText("</details>", { useInnerText: true });
+  // Straight to the top from there: the source closing behind the caret
+  // doesn't put it back.
+  await page.keyboard.press("ControlOrMeta+Home");
+  await expect
+    .poll(() =>
+      page.evaluate(() => getSelection()?.anchorNode?.textContent ?? ""),
+    )
+    .toContain("Notes");
+  await expect(editor).not.toContainText("</details>", { useInnerText: true });
 
   // From the paragraph above, down stops on the head's source. Each key
   // waits for the editor to have read the last one's caret.

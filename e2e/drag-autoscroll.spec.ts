@@ -69,10 +69,6 @@ for (const [what, markdown, target, into] of [
   ["a heading", "# A heading line with words", "h1", 0.15],
 ] as const)
   test(`a drag that starts on ${what} selects from there`, async ({ page }) => {
-    // Known: a quick drag from inside a heading's words out of it ends as a
-    // caret (with a pause between moves it selects). Fixed in 1.3.13 before
-    // its rc; until then the heading case is expected to fail.
-    test.fail(what === "a heading", "quick drag out of a heading");
     await openApp(page, { settings: { language: "en" } });
     await pasteMarkdown(
       page,
