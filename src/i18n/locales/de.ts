@@ -201,7 +201,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesPicked: "{n} ausgewählt",
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
-  agentTabProject: "Ordner",
+  agentTabProject: "Gedächtnis",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",
   memoryInstructions: "Schreibanweisungen",
@@ -253,7 +253,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryChipForgot: "Vergessen: {text} ({scope})",
   memoryChipRestored: "Rückgängig gemacht. Wieder gemerkt.",
   memoryActionFailed:
-    "Das hat nicht geklappt. Versuch es im Tab Ordner noch einmal.",
+    "Das hat nicht geklappt. Versuch es im Tab Gedächtnis noch einmal.",
   learnSuggestion: "Du hast {what} mehrmals abgelehnt. Merken? {rule}",
   learnQuoted: "„{text}“",
   learnSwap: "das Ändern von {from} in {to}",
@@ -290,7 +290,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   learnNotNow: "Jetzt nicht",
   learnNever: "Nicht mehr fragen",
   learnSaved:
-    "Gemerkt. Unter Ordner im KI-Bereich kannst du es ansehen oder löschen.",
+    "Gemerkt. Unter Gedächtnis im KI-Bereich kannst du es ansehen oder löschen.",
   learnLabel: "Aus deinen Überarbeitungen gelernt",
   suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
   suggestNextMessageHint:
@@ -304,7 +304,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   researchCheckClaimsHint:
     "Bevor die Recherche ihren Entwurf überarbeitet, wird jeder Satz mit Quelle mit den Notizen zu dieser Quelle verglichen, und einer, der mehr sagt als sie, wird neu geschrieben. Sorgfältiger, mit einem Modellaufruf mehr pro Abschnitt.",
   rememberAutomaticallyLabel: "Automatisch merken",
-  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Ordner im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
+  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Gedächtnis im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
@@ -1137,6 +1137,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Tab schließen",
+  menuAllTabs: "Alle Tabs",
   menuReopenClosedTab: "Geschlossenen Tab wieder öffnen",
   readOnlyRefused:
     "Dieses Dokument ist im Lesemodus. Zum Ändern Ansicht › Modus › Standard wählen.",
@@ -1430,7 +1431,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody:
     "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Ordner nach.`,
+  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Gedächtnis nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",

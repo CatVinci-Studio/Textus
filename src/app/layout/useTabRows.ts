@@ -62,27 +62,41 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         // The last of the bar's leading controls (the menu, then the
-        // sidebar's toggle).
+        // sidebar's toggle; the traffic lights' room in the chat window).
         const leadEnd = Math.max(
-          0,
           ...[
             ...document.querySelectorAll(
-              ".window-bar-sidebar-toggle, .window-menu-button",
+              ".window-bar-sidebar-toggle, .window-menu-button, .window-bar-lead",
             ),
-          ].map((el) => el.getBoundingClientRect().right),
+          ]
+            .map((el) => el.getBoundingClientRect())
+            .filter((box) => box.width > 0)
+            .map((box) => box.right),
         );
-        const status = document.querySelector(".window-bar-status");
-        const statusStart = status?.firstElementChild
-          ? status.getBoundingClientRect().left
-          : window.innerWidth;
+        // What ends the bar: its status (beside the AI island while that
+        // is open), then the window's buttons.
+        const ends = [
+          ...document.querySelectorAll(
+            ".window-bar-status, .window-bar .window-caption",
+          ),
+        ]
+          .filter((el) => el.firstElementChild)
+          .map((el) => el.getBoundingClientRect())
+          .filter((box) => box.width > 0);
         // The layout's radii (layout-tokens.css), as the page lays them out
         // (they scale with the chrome): past the corner's curve, and the
         // tab's own curve in beside it.
+        // Measured beside the area, not in it: a child coming and going
+        // there would set this off again.
+        const shell = main.parentElement ?? document.body;
         const corner =
-          lengthOf(main, "--island-radius") + lengthOf(main, "--tab-radius");
+          lengthOf(shell, "--island-radius") + lengthOf(shell, "--tab-radius");
         const air = scaledPx(AIR);
         const rows = [
           ...main.querySelectorAll<HTMLElement>(":scope > .tab-bar"),
+          ...document.querySelectorAll<HTMLElement>(
+            ".agent-tabs-row > .tab-bar",
+          ),
         ];
         tabs.disconnect();
         for (const row of rows) {
@@ -92,26 +106,42 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             attributes: true,
             attributeFilter: ["class"],
           });
+          // A split's grid resized moves its rows; the area's own style
+          // changes too often to watch.
+          resized.observe(row);
+          // The AI island's row is its holder's, its buttons at the end
+          // (AgentTabs); its island the one under it.
+          const ai = row.parentElement?.classList.contains("agent-tabs-row");
+          const holder = ai ? row.parentElement! : row;
           // A lower pane's row has no bar controls to clear.
           const inBar = !row.classList.contains("tab-bar-inner");
+          const box = holder.getBoundingClientRect();
+          // The first of them over this row.
+          const statusStart = Math.min(
+            ...ends.filter((end) => end.left >= box.left).map((e) => e.left),
+          );
           const insets = rowInsets(
-            row.getBoundingClientRect(),
+            box,
             inBar ? leadEnd : -Infinity,
             inBar ? statusStart : Infinity,
             air,
             Math.max(air, corner),
           );
-          row.style.setProperty("--tabs-inset-start", `${insets.start}px`);
-          row.style.setProperty("--tabs-inset-end", `${insets.end}px`);
+          holder.style.setProperty("--tabs-inset-start", `${insets.start}px`);
+          holder.style.setProperty("--tabs-inset-end", `${insets.end}px`);
           row.toggleAttribute("data-at-corner", insets.atCorner);
           // Its island: the pane's frame (IslandFrame), one alone or each
           // of a split's by its pane.
           const id = row.dataset.paneId;
-          const island = main.querySelector(
-            id
-              ? `:scope > .island-frame[data-pane-id="${CSS.escape(id)}"]`
-              : ":scope > .island-frame:not([data-pane-id])",
-          );
+          const island = ai
+            ? holder
+                .closest(".agent-panel, .chat-window")
+                ?.querySelector("[data-island]")
+            : main.querySelector(
+                id
+                  ? `:scope > .island-frame[data-pane-id="${CSS.escape(id)}"]`
+                  : ":scope > .island-frame:not([data-pane-id])",
+              );
           island?.toggleAttribute(
             "data-corner-joined",
             insets.atCorner &&
@@ -131,7 +161,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
     rows.observe(main, {
       childList: true,
       attributes: true,
-      attributeFilter: ["class", "style"],
+      attributeFilter: ["class"],
     });
     window.addEventListener("resize", measure);
     // The pane slides with the sidebar and the AI panel.

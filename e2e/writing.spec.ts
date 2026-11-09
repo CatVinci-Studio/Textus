@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   emit,
+  expectNear,
   HOME,
   mockInvoke,
   openApp,
@@ -334,12 +335,16 @@ test("the adaptive column takes 62% of a pane past about 1100px, between 680 and
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "0", "textus-sidebar-open": "0" },
   });
-  // A laptop window: wider than Standard. The pane is the window beside
-  // the activity rail.
-  const rail = await page
-    .locator(".activity-rail")
-    .evaluate((el) => el.getBoundingClientRect().width);
-  expect(await width()).toBe(Math.round((1280 - rail) * 0.62));
+  // A laptop window: wider than Standard. The pane is the page's island.
+  const pane = await column.evaluate((el) => {
+    const box = getComputedStyle(el.parentElement!);
+    return (
+      el.parentElement!.clientWidth -
+      parseFloat(box.paddingLeft) -
+      parseFloat(box.paddingRight)
+    );
+  });
+  expectNear(await width(), pane * 0.62);
   await page.setViewportSize({ width: 1000, height: 800 });
   expect(await width()).toBe(680);
   await page.setViewportSize({ width: 1920, height: 800 });

@@ -6,6 +6,7 @@ import {
   openApp,
   pasteMarkdown,
   SAMPLE_DOC,
+  openAgentMemory,
 } from "./helpers";
 import { streamRevise } from "./revise-mock";
 
@@ -153,11 +154,8 @@ for (const colorScheme of ["light", "dark"] as const) {
       await open(page, colorScheme, true);
       await expect(page.locator(".agent-panel-view")).toBeVisible();
       await scan(page, `ai chat ${colorScheme}`);
-      const project = page
-        .locator(".agent-panel-view")
-        .getByRole("button", { name: "Folder", exact: true });
-      await project.click();
-      await expect(project).toHaveAttribute("aria-pressed", "true");
+      await openAgentMemory(page);
+      await expect(page.locator(".agent-panel-memory")).toBeVisible();
       await scan(page, `ai memory ${colorScheme}`);
     });
 

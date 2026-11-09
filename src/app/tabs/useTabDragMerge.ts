@@ -21,6 +21,7 @@ import { windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
+import { dropTargetAt, showDropHint, splitForDrop } from "../split/split-drop";
 
 // Moving tabs between windows, as drag source (handed to Rust's floating
 // drag) and as merge target. Within-bar reordering lives in the tab bar.
@@ -49,6 +50,13 @@ export interface DragHoverPreview {
   x: number;
 }
 
+/** What Rust sends while a floating tab is over this window: over its tab
+ *  row (`row`), or over its documents, where it would open split. */
+interface DragHover extends DragHoverPreview {
+  y: number;
+  row: boolean;
+}
+
 export function useTabDragMerge(opts: {
   tabsRef: MutableRefObject<DocTab[]>;
   /** A handed-off document must carry the edit the editor's debounce still
@@ -64,9 +72,9 @@ export function useTabDragMerge(opts: {
   // A floating tab hovering this window's tab row; x is window-local.
   const [dragHoverPreview, setDragHoverPreview] =
     useState<DragHoverPreview | null>(null);
-  // This window's left edge in global logical points, cached for one hover:
-  // the window can't move while something is dragged over it.
-  const previewWinLeftRef = useRef<number | null>(null);
+  // This window's top-left corner in global logical points, cached for one
+  // hover: the window can't move while something is dragged over it.
+  const previewWinRef = useRef<{ left: number; top: number } | null>(null);
 
   const hitTestWindow = useCallback(
     async (screenX: number, screenY: number): Promise<string | null> => {
@@ -175,62 +183,84 @@ export function useTabDragMerge(opts: {
     return unlistenAll(unlistenTick, unlistenMoved);
   }, [latest, tabsRef]);
 
-  // A dropped tab lands at the slot it was hovering. No hover-off comes
-  // first: the preview pill turns into the real tab in one render.
+  // Where in this window a global point is, from the corner one hover
+  // cached.
+  const local = async (x: number, y: number) => {
+    if (previewWinRef.current === null) {
+      const win = thisWindow();
+      const [pos, scale] = await Promise.all([
+        win.outerPosition(),
+        win.scaleFactor(),
+      ]);
+      previewWinRef.current = { left: pos.x / scale, top: pos.y / scale };
+    }
+    return {
+      x: x - previewWinRef.current.left,
+      y: y - previewWinRef.current.top,
+    };
+  };
+
+  // A tab dropped on the row lands at the slot it was hovering (no hover-off
+  // comes first: the preview pill turns into the real tab in one render);
+  // one let go over the documents opens split there, as a tab dragged
+  // within the window does.
   useEffect(() => {
-    const unlisten = listenToThisWindow<DetachedTabDoc & { x: number }>(
-      "receive-detached-tab",
-      (event) => {
-        const { x, ...doc } = event.payload;
-        const newTab = { ...makeBlankTab(), ...doc };
-        const winLeft = previewWinLeftRef.current;
-        let index = tabsRef.current.length;
-        if (winLeft !== null) {
-          const localX = x - winLeft;
-          index = tabsRef.current.filter((tab) => {
-            const node = document.querySelector<HTMLElement>(
-              `[data-flip-id="${CSS.escape(tab.id)}"]`,
-            );
-            if (!node) return false;
-            const rect = node.getBoundingClientRect();
-            return rect.left + rect.width / 2 < localX;
-          }).length;
-        }
-        previewWinLeftRef.current = null;
-        setDragHoverPreview(null);
-        setTabs((prev) => {
-          const next = [...prev];
-          next.splice(index, 0, newTab);
-          return next;
-        });
-        setActiveTabId(newTab.id);
-      },
-    );
+    const unlisten = listenToThisWindow<
+      DetachedTabDoc & { x: number; y: number; row: boolean }
+    >("receive-detached-tab", (event) => {
+      const { x, y, row, ...doc } = event.payload;
+      const newTab = { ...makeBlankTab(), ...doc };
+      const corner = previewWinRef.current;
+      const at = corner && { x: x - corner.left, y: y - corner.top };
+      const split = !row && at ? dropTargetAt(at.x, at.y) : null;
+      let index = tabsRef.current.length;
+      if (row && at) {
+        index = tabsRef.current.filter((tab) => {
+          const node = document.querySelector<HTMLElement>(
+            `[data-flip-id="${CSS.escape(tab.id)}"]`,
+          );
+          if (!node) return false;
+          const rect = node.getBoundingClientRect();
+          return rect.left + rect.width / 2 < at.x;
+        }).length;
+      }
+      previewWinRef.current = null;
+      setDragHoverPreview(null);
+      showDropHint(null);
+      const ids = [...tabsRef.current.map((tab) => tab.id), newTab.id];
+      setTabs((prev) => {
+        const next = [...prev];
+        next.splice(index, 0, newTab);
+        return next;
+      });
+      setActiveTabId(newTab.id);
+      // Once it is in front, the next frame: the split takes it from there.
+      if (split)
+        requestAnimationFrame(() => splitForDrop(newTab.id, split, ids));
+    });
     return unlistenAll(unlisten);
   }, [setActiveTabId, setTabs, tabsRef]);
 
-  // Rust sends the global cursor x every tick; made window-local here.
+  // Rust sends the global cursor every tick; made window-local here.
   useEffect(() => {
-    const unlisten = listenToThisWindow<DragHoverPreview | null>(
+    const unlisten = listenToThisWindow<DragHover | null>(
       "drag-hover",
       async (event) => {
         if (!event.payload) {
-          previewWinLeftRef.current = null;
+          previewWinRef.current = null;
           setDragHoverPreview(null);
+          showDropHint(null);
           return;
         }
-        if (previewWinLeftRef.current === null) {
-          const win = thisWindow();
-          const [pos, scale] = await Promise.all([
-            win.outerPosition(),
-            win.scaleFactor(),
-          ]);
-          previewWinLeftRef.current = pos.x / scale;
+        const { y, row, ...preview } = event.payload;
+        const at = await local(preview.x, y);
+        if (row) {
+          showDropHint(null);
+          setDragHoverPreview({ ...preview, x: at.x });
+        } else {
+          setDragHoverPreview(null);
+          showDropHint(dropTargetAt(at.x, at.y));
         }
-        setDragHoverPreview({
-          ...event.payload,
-          x: event.payload.x - previewWinLeftRef.current,
-        });
       },
     );
     return unlistenAll(unlisten);

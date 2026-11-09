@@ -187,7 +187,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reviewNotesPicked: "{n}개 선택됨",
   reviewNotesAskPrefix: "이 메모들에 대해:\n{notes}\n",
   reviewNoteAskPrefix: "이 댓글 “{comment}”에 대해: ",
-  agentTabProject: "폴더",
+  agentTabProject: "기억",
   memoryStyle: "문체",
   memoryLibrary: "라이브러리",
   memoryInstructions: "글쓰기 지침",
@@ -236,7 +236,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   memoryChipUndone: "취소했습니다. 더 이상 기억하지 않습니다.",
   memoryChipForgot: "잊었습니다: {text} ({scope})",
   memoryChipRestored: "취소했습니다. 다시 기억합니다.",
-  memoryActionFailed: "실패했습니다. ‘폴더’ 탭에서 다시 시도하세요.",
+  memoryActionFailed: "실패했습니다. ‘기억’ 탭에서 다시 시도하세요.",
   learnSuggestion: "{what}을 여러 번 거절하셨습니다. 이것을 기억할까요? {rule}",
   learnQuoted: "‘{text}’",
   learnSwap: "{from}을(를) {to}(으)로 바꾸는 수정",
@@ -267,7 +267,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   learnRemember: "기억하기",
   learnNotNow: "나중에",
   learnNever: "다시 묻지 않기",
-  learnSaved: "기억했습니다. AI 패널의 ‘폴더’에서 보거나 삭제할 수 있습니다.",
+  learnSaved: "기억했습니다. AI 패널의 ‘기억’에서 보거나 삭제할 수 있습니다.",
   learnLabel: "수정 선택에서 배운 것",
   suggestNextMessageLabel: "다음 메시지 예측",
   suggestNextMessageHint:
@@ -281,7 +281,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   researchCheckClaimsHint:
     "리서치가 초안을 고치기 전에 출처를 인용한 문장마다 그 출처의 메모와 비교해, 메모보다 지나친 문장을 다시 씁니다. 더 꼼꼼하지만 섹션마다 모델 호출이 한 번 늘어납니다.",
   rememberAutomaticallyLabel: "자동으로 기억",
-  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘폴더’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
+  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘기억’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",
@@ -1078,6 +1078,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "탭 닫기",
+  menuAllTabs: "모든 탭",
   menuReopenClosedTab: "닫은 탭 다시 열기",
   readOnlyRefused:
     "이 문서는 읽기 모드입니다. 편집하려면 보기 › 모드 › 기본을 고르세요.",
@@ -1356,7 +1357,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialDoneTitle: "완료",
   tutorialDoneBody:
     "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 온라인 튜토리얼에 있습니다.",
-  tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘폴더’에서 확인할 수 있습니다.`,
+  tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘기억’에서 확인할 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",
   closePromptDiscard: "저장 안 함",

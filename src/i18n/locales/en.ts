@@ -199,7 +199,7 @@ type /name in a conversation to use one.
   reviewNotesPicked: "{n} selected",
   reviewNotesAskPrefix: "About these notes of yours:\n{notes}\n",
   reviewNoteAskPrefix: "About your note “{comment}”: ",
-  agentTabProject: "Folder",
+  agentTabProject: "Memory",
   memoryStyle: "Writing style",
   memoryLibrary: "Library",
   memoryInstructions: "Writing instructions",
@@ -249,7 +249,7 @@ type /name in a conversation to use one.
   memoryChipUndone: "Undone. No longer remembered.",
   memoryChipForgot: "Forgot: {text} ({scope})",
   memoryChipRestored: "Undone. Remembered again.",
-  memoryActionFailed: "That didn't work. Try again in the Folder tab.",
+  memoryActionFailed: "That didn't work. Try again in the Memory tab.",
   learnSuggestion:
     "You turned down {what} several times. Remember this? {rule}",
   learnQuoted: "“{text}”",
@@ -286,7 +286,7 @@ type /name in a conversation to use one.
   learnRemember: "Remember",
   learnNotNow: "Not now",
   learnNever: "Never ask for this",
-  learnSaved: "Remembered. See or delete it under Folder in the AI panel.",
+  learnSaved: "Remembered. See or delete it under Memory in the AI panel.",
   learnLabel: "Learned from your revision choices",
   suggestNextMessageLabel: "Suggest your next message",
   suggestNextMessageHint:
@@ -300,7 +300,7 @@ type /name in a conversation to use one.
   researchCheckClaimsHint:
     "Before Research revises its draft, every sentence that cites a source is compared with the notes on that source, and one that says more than they do is rewritten. More careful, with one more model call per section.",
   rememberAutomaticallyLabel: "Remember automatically",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Folder in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Memory in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
@@ -1111,6 +1111,7 @@ type /name in a conversation to use one.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Close Tab",
+  menuAllTabs: "All Tabs",
   menuReopenClosedTab: "Reopen Closed Tab",
   readOnlyRefused:
     "This document is in reading mode. To change it, choose View › Mode › Default.",
@@ -1397,7 +1398,7 @@ type /name in a conversation to use one.
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
     "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Folder in the AI panel.`,
+  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",

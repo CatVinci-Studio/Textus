@@ -331,6 +331,7 @@ export function MainPane({
         close: t.menuCloseTab,
         add: t.menuNewTab,
         unsaved: t.unsavedIndicator,
+        all: t.menuAllTabs,
       }}
     />
   );

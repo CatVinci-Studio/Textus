@@ -256,11 +256,14 @@ export function useSaveTabs(opts: {
           if (!overwrite) return "conflict";
         }
       }
-      const content = await beforeSave(
+      // Changed by a plugin, what the editor now holds, as it writes files.
+      const content = (await beforeSave(
         tab.path,
         tab.content,
         auto ? "auto" : "manual",
-      );
+      ))
+        ? (liveTabs().find((tb) => tb.id === tabId)?.content ?? tab.content)
+        : tab.content;
       if (!(await writeOrReport(tab.path, content))) return "failed";
       await commitSaved(tabId, tab.path, content, auto);
       return "saved";
@@ -396,18 +399,17 @@ export function useSaveTabs(opts: {
 }
 
 /**
- * The text to save once onWillSave plugins have changed it, put into the
- * editor first as one undo step so what is saved is what shows.
+ * Lets onWillSave plugins change the text to save, put into the editor first
+ * as one undo step so what is saved is what shows. True when it changed.
  */
 async function beforeSave(
   path: string,
   text: string,
   trigger: "manual" | "auto",
-): Promise<string> {
-  if (!hasWillSave()) return text;
+): Promise<boolean> {
+  if (!hasWillSave()) return false;
   const changed = await runWillSave(path, text, trigger);
-  if (changed === text) return text;
+  if (changed === text) return false;
   const doc = openDocumentAt(path);
-  if (!doc?.replaceText(changed, doc.revision())) return text;
-  return doc.text();
+  return !!doc?.replaceText(changed, doc.revision());
 }

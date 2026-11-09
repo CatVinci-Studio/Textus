@@ -47,7 +47,13 @@ test("F6 and Shift+F6 go round the regions and back to the caret", async ({
   await openFolder(page);
   await page.locator(editor).click();
   await page.keyboard.type("Hello");
-  const order = [".agent-panel", ".window-bar", ".sidebar", editor];
+  const order = [
+    ".agent-panel",
+    ".window-bar",
+    ".sidebar",
+    ".main-pane > .tab-bar",
+    editor,
+  ];
   for (const region of order) {
     await page.keyboard.press("F6");
     expect(await focusedIn(page, region), region).toBe(true);
@@ -149,7 +155,8 @@ test("the tab strip is a tab list the arrow keys walk", async ({ page }) => {
   await expect(page.locator(`${editor} p`)).toHaveText("First tab.");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Delete");
-  await expect(tabs).toHaveCount(0);
+  // With the activity rail the row stays, for the one left.
+  await expect(tabs.getByRole("tab")).toHaveCount(1);
 });
 
 test("the context menu opens from the keyboard, walks and gives the focus back", async ({

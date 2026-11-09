@@ -1,4 +1,6 @@
 import { useMemo } from "react";
+import { conversationScope } from "../conversation-scope";
+import type { ChatTabs } from "./ChatWindowHeader";
 import { useSettings } from "../../../prefs/SettingsContext";
 import type { EditProposal } from "../../types";
 import { ChatBody } from "../ChatBody";
@@ -22,7 +24,7 @@ import "./chat-window.css";
  * active document and selection. One per scope, so two never fight over an
  * editor. Edits are forwarded to the editor window, the one place they apply.
  */
-export function ChatWindowApp() {
+export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   const { t, settings, setSettings } = useSettings();
   const handoff = useChatWindowHandoff(settings);
   const { context, lost, claimed, conversation } = handoff;
@@ -39,6 +41,11 @@ export function ChatWindowApp() {
   const header = (
     <ChatWindowHeader
       context={context}
+      scope={conversationScope(
+        context?.docPath ?? null,
+        settings.agentWorkspaceRoot || null,
+      )}
+      tabs={tabs}
       busy={conversation.busy}
       pinned={pinned}
       reopenTarget={bridge.reopenTarget}
@@ -58,33 +65,51 @@ export function ChatWindowApp() {
   // note, and comes back as it was once Textus AI is on again.
   if (!settings.textusAi)
     return (
-      <div className="chat-window">
+      <div
+        className="chat-window"
+        data-layout={settings.layout}
+        data-islands=""
+      >
         {header}
-        <TextusAiOffNote className="chat-window-ai-off" />
+        <div className="chat-window-ai-off" data-island="">
+          <TextusAiOffNote />
+        </div>
         {dialogs}
       </div>
     );
   if (lost)
     return (
-      <div className="chat-window">
+      <div
+        className="chat-window"
+        data-layout={settings.layout}
+        data-islands=""
+      >
         {header}
-        <div className="chat-window-lost">{t.chatWindowLost}</div>
+        <div className="chat-window-lost" data-island="">
+          {t.chatWindowLost}
+        </div>
         {dialogs}
       </div>
     );
   if (!claimed || !context)
     return (
-      <div className="chat-window">
+      <div
+        className="chat-window"
+        data-layout={settings.layout}
+        data-islands=""
+      >
         {header}
-        <div className="chat-window-loading">{t.agentThinking}</div>
+        <div className="chat-window-loading" data-island="">
+          {t.agentThinking}
+        </div>
         {dialogs}
       </div>
     );
 
   return (
-    <div className="chat-window">
+    <div className="chat-window" data-layout={settings.layout} data-islands="">
       {header}
-      <div className="chat-window-body">
+      <div className="chat-window-body" data-island="">
         <ChatBody
           document={context.document}
           selectedText={context.selectedText}

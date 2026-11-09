@@ -180,7 +180,7 @@ export default {
   reviewNotesPicked: "已选 {n} 条",
   reviewNotesAskPrefix: "关于你的这几条批注：\n{notes}\n",
   reviewNoteAskPrefix: "关于这条批注“{comment}”：",
-  agentTabProject: "文件夹",
+  agentTabProject: "记忆",
   memoryStyle: "写作风格",
   memoryLibrary: "资料库",
   memoryInstructions: "写作要求",
@@ -228,7 +228,7 @@ export default {
   memoryChipUndone: "已撤销，不再记住。",
   memoryChipForgot: "已忘记：{text}（{scope}）",
   memoryChipRestored: "已撤销，重新记住。",
-  memoryActionFailed: "没有成功，可以在“文件夹”里再试一次。",
+  memoryActionFailed: "没有成功，可以在“记忆”里再试一次。",
   learnSuggestion: "你多次拒绝了{what}的修改。要记住吗：{rule}",
   learnQuoted: "“{text}”",
   learnSwap: "把{from}改成{to}",
@@ -256,7 +256,7 @@ export default {
   learnRemember: "记住",
   learnNotNow: "暂不",
   learnNever: "不再询问",
-  learnSaved: "已记住。可以在 AI 面板的“文件夹”里查看或删除。",
+  learnSaved: "已记住。可以在 AI 面板的“记忆”里查看或删除。",
   learnLabel: "从修订取舍中学到的",
   suggestNextMessageLabel: "预测下一句",
   suggestNextMessageHint:
@@ -270,7 +270,7 @@ export default {
   researchCheckClaimsHint:
     "研究模式修改草稿前，把每个带引用的句子和该来源的笔记对一遍，说过头的会改写。更严谨，每节多一次模型调用。",
   rememberAutomaticallyLabel: "自动记住",
-  rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在 AI 面板的“文件夹”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
+  rememberAutomaticallyHint: `${AI_NAME} 会记下你的要求和写作习惯，供以后的对话使用；可以在 AI 面板的“记忆”里查看、修改或撤销。每次回复后，会再向同一个模型发一次简短请求，决定记下什么。`,
   toolRemember: "记下来",
   agentGeneratingImage: "正在生成图片…",
   toolGenerateImage: "正在生成图片",
@@ -1032,6 +1032,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "关闭标签页",
+  menuAllTabs: "所有标签页",
   menuReopenClosedTab: "重新打开关闭的标签页",
   readOnlyRefused:
     "这篇文档处于阅读模式。要修改，请在“视图 › 模式”中选“默认”。",
@@ -1302,7 +1303,7 @@ export default {
   tutorialDoneTitle: "完成",
   tutorialDoneBody:
     "开始写你自己的吧，表格、公式、主题、审阅这些都在在线教程里。",
-  tutorialDoneMemory: `${AI_NAME} 会慢慢记住你的要求和风格，可以在 AI 面板的“文件夹”里查看。`,
+  tutorialDoneMemory: `${AI_NAME} 会慢慢记住你的要求和风格，可以在 AI 面板的“记忆”里查看。`,
   closePromptMessage: "文档有未保存的更改。",
   closePromptSave: "保存",
   closePromptDiscard: "不保存",

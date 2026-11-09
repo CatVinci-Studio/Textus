@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { mockInvoke, openApp, pasteMarkdown, openAgentMemory } from "./helpers";
 
 // Learning from revision choices: the same kind of change turned down
 // repeatedly leads to one suggestion, and Remember saves it as a memory.
@@ -107,10 +107,10 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
 
   await learn.getByRole("button", { name: "Remember", exact: true }).click();
   await expect(learn).toHaveText(
-    "Remembered. See or delete it under Folder in the AI panel.",
+    "Remembered. See or delete it under Memory in the AI panel.",
   );
   await expect(page.locator('[role="status"][aria-live]')).toContainText(
-    "Remembered. See or delete it under Folder in the AI panel.",
+    "Remembered. See or delete it under Memory in the AI panel.",
   );
   expect(await calls(page, "memory_remember")).toEqual([
     expect.objectContaining({
@@ -141,10 +141,7 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
       },
     ]),
   });
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  await openAgentMemory(page);
   await expect(page.locator(".memory-remembered")).toContainText(RULE);
 
   // Answered: the same kind is never offered again.

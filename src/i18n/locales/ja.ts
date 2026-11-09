@@ -189,7 +189,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reviewNotesPicked: "{n} 件を選択",
   reviewNotesAskPrefix: "これらのコメントについて：\n{notes}\n",
   reviewNoteAskPrefix: "このコメント「{comment}」について：",
-  agentTabProject: "フォルダー",
+  agentTabProject: "記憶",
   memoryStyle: "文体",
   memoryLibrary: "ライブラリ",
   memoryInstructions: "執筆の指示",
@@ -240,7 +240,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryChipForgot: "忘れました：{text}（{scope}）",
   memoryChipRestored: "元に戻しました。もう一度覚えています。",
   memoryActionFailed:
-    "うまくいきませんでした。「フォルダー」タブでもう一度お試しください。",
+    "うまくいきませんでした。「記憶」タブでもう一度お試しください。",
   learnSuggestion:
     "{what}という修正を何度も却下しました。覚えておきますか：{rule}",
   learnQuoted: "「{text}」",
@@ -273,7 +273,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   learnRemember: "覚えておく",
   learnNotNow: "今はしない",
   learnNever: "今後たずねない",
-  learnSaved: "覚えました。AIパネルの「フォルダー」で確認・削除できます。",
+  learnSaved: "覚えました。AIパネルの「記憶」で確認・削除できます。",
   learnLabel: "修正の採否から学んだこと",
   suggestNextMessageLabel: "次のメッセージを予測",
   suggestNextMessageHint:
@@ -287,7 +287,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   researchCheckClaimsHint:
     "リサーチが草稿を直す前に、出典を引く文をその出典のメモと照らし合わせ、言い過ぎている文を書き直します。より慎重になりますが、セクションごとにモデル呼び出しが1回増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
-  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「フォルダー」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
+  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「記憶」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
   agentGeneratingImage: "画像を生成しています…",
   toolGenerateImage: "画像を生成しています",
@@ -1090,6 +1090,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "タブを閉じる",
+  menuAllTabs: "すべてのタブ",
   menuReopenClosedTab: "閉じたタブを再度開く",
   readOnlyRefused:
     "この書類は閲覧モードです。編集するには「表示 › モード › 標準」を選んでください。",
@@ -1369,7 +1370,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialDoneTitle: "完了",
   tutorialDoneBody:
     "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
-  tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「フォルダー」で確かめられます。`,
+  tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「記憶」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",
   closePromptDiscard: "保存しない",

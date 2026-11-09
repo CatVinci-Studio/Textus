@@ -58,8 +58,8 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   await fromMenu(page, "b.md", "Close Tabs to the Left");
   await expect(page.locator(titles)).toHaveText(["b.md", "c.md"]);
   await fromMenu(page, "c.md", "Close Others");
-  // One tab left: the bar steps aside.
-  await expect(page.locator(titles)).toHaveCount(0);
+  // One tab left, with the activity rail: its row stays.
+  await expect(page.locator(titles)).toHaveText(["c.md"]);
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toContainText("/notes/c.md");

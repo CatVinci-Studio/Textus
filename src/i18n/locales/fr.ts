@@ -211,7 +211,7 @@ utiliser une.
   reviewNotesPicked: "{n} sélectionnées",
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
-  agentTabProject: "Dossier",
+  agentTabProject: "Mémoire",
   memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
   memoryInstructions: "Instructions d'écriture",
@@ -262,7 +262,7 @@ utiliser une.
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
   memoryChipForgot: "Oublié : {text} ({scope})",
   memoryChipRestored: "Annulé. De nouveau mémorisé.",
-  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Dossier.",
+  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Mémoire.",
   learnSuggestion:
     "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",
   learnQuoted: "«\u00a0{text}\u00a0»",
@@ -301,7 +301,7 @@ utiliser une.
   learnNotNow: "Pas maintenant",
   learnNever: "Ne plus demander",
   learnSaved:
-    "Retenu. Vous pouvez le voir ou le supprimer sous Dossier, dans le panneau IA.",
+    "Retenu. Vous pouvez le voir ou le supprimer sous Mémoire, dans le panneau IA.",
   learnLabel: "Appris de vos choix de révision",
   suggestNextMessageLabel: "Suggérer le message suivant",
   suggestNextMessageHint:
@@ -316,7 +316,7 @@ utiliser une.
   researchCheckClaimsHint:
     "Avant de réviser le brouillon, chaque phrase qui cite une source est comparée aux notes sur cette source, et celle qui en dit plus est réécrite. Plus rigoureux, avec un appel au modèle de plus par section.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
-  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Dossier, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
+  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Mémoire, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
@@ -1161,6 +1161,7 @@ utiliser une.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fermer l'onglet",
+  menuAllTabs: "Tous les onglets",
   menuReopenClosedTab: "Rouvrir l'onglet fermé",
   readOnlyRefused:
     "Ce document est en mode lecture. Pour le modifier, choisissez Présentation › Mode › Par défaut.",
@@ -1455,7 +1456,7 @@ utiliser une.
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody:
     "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
-  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Dossier, dans le panneau IA.`,
+  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Mémoire, dans le panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

@@ -164,7 +164,8 @@ function PointerMenu({
   const { openGroup, setOpenGroup, rowRefs, aim } = useSubmenu(ref);
   const group = openGroup ? items[openGroup.index] : undefined;
 
-  return (
+  // On the page itself: an ancestor's clip (a tab row's) would cut it.
+  return createPortal(
     <div
       {...presence}
       className="context-menu floating-surface"
@@ -226,7 +227,8 @@ function PointerMenu({
           onEnter={aim.hold}
         />
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

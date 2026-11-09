@@ -29,7 +29,7 @@ async function closeStory(page: Page) {
   // Its ✕ shows on hover.
   await pill.hover();
   await pill.locator(".tab-pill-close").click();
-  await expect(page.locator(".tab-pill-title")).toHaveCount(0);
+  await expect(pill).toHaveCount(0);
   await expect(page.locator(editor)).toContainText("Another document.");
 }
 

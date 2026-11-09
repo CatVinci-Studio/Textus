@@ -589,3 +589,50 @@ test.describe("on Linux", () => {
     expect(sent).toHaveLength(1);
   });
 });
+
+test.fixme("a tab dragged in from another window opens split where it is let go over the documents, and joins the row over it", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {},
+    folder: { "/notes/one.md": "# One\n\nThe first.\n" },
+  });
+  await openPath(page, "/notes/one.md");
+  await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
+    "One",
+  );
+  const view = page.viewportSize()!;
+  // Over the documents' right side: where it would open shows.
+  const right = { x: view.width - 120, y: view.height / 2 };
+  await emit(page, "drag-hover", {
+    title: "two.md",
+    dirty: false,
+    ...right,
+    row: false,
+  });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  // Let go there: it opens beside the first, split.
+  await emit(page, "receive-detached-tab", {
+    path: null,
+    content: "# Two\n\nThe second.\n",
+    savedContent: "",
+    diskMtime: null,
+    ...right,
+    row: false,
+  });
+  await expect(page.locator(".split-pane")).toHaveCount(2);
+  await expect(page.locator(".split-pane").last()).toContainText("Two");
+  await expect(page.locator(".split-drop-hint")).toBeHidden();
+  // Over a row it joins the row instead.
+  await emit(page, "receive-detached-tab", {
+    path: null,
+    content: "# Three\n",
+    savedContent: "",
+    diskMtime: null,
+    x: 200,
+    y: 10,
+    row: true,
+  });
+  await expect(page.locator(".split-pane")).toHaveCount(2);
+  await expect(page.locator(".tab-pill")).toHaveCount(3);
+});

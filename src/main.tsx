@@ -49,8 +49,8 @@ const view = new URLSearchParams(window.location.search).get("view");
 
 // The detached chat's own view, loaded only in that window.
 const ChatWindowApp = lazyComponent(
-  lazyModule("chat-window", () => import("./ai/chat/window/ChatWindowApp")),
-  (m) => m.ChatWindowApp,
+  lazyModule("chat-window", () => import("./app/ChatWindowRoot")),
+  (m) => m.ChatWindowRoot,
 );
 
 // A plugin's floating view over the desktop, in a window of its own.

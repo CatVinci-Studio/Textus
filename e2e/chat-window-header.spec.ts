@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "./helpers";
 
-// The AI panel popped out into its own window draws its header buttons like
-// the docked panel's, not squeezed by the browser's button padding.
+// The AI panel popped out into its own window draws its row of conversations
+// and buttons like the docked island's, not squeezed by the browser's button
+// padding.
 
 type Box = { width: number; height: number; opacity: string };
 
@@ -29,7 +30,7 @@ test("the detached chat window's header buttons are the docked panel's size", as
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  const docked = await headerButtons(page, ".agent-panel-header");
+  const docked = await headerButtons(page, ".agent-island-tools");
 
   const chat = await page.context().newPage();
   await chat.addInitScript(() => {
@@ -60,10 +61,12 @@ test("the detached chat window's header buttons are the docked panel's size", as
   expect(detached).toEqual(docked);
   // The icon keeps its own square, not a sliver of it.
   expect(detached.icon.width).toBe(detached.icon.height);
-  for (const name of ["New conversation", "Keep on top"])
-    expect(
-      await chat
-        .locator(`.chat-window-header button[aria-label="${name}"]`)
-        .evaluate((el) => el.getBoundingClientRect().width),
-    ).toBe(docked.button.width);
+  expect(
+    await chat
+      .locator('.chat-window-header button[aria-label="Keep on top"]')
+      .evaluate((el) => el.getBoundingClientRect().width),
+  ).toBe(docked.button.width);
+  // Its conversations are a row of tabs over the island, as docked.
+  await expect(chat.locator(".chat-window-header .tab-pill")).toHaveCount(1);
+  await expect(chat.locator(".chat-window-header .tab-bar-add")).toBeVisible();
 });

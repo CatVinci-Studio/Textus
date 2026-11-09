@@ -1,0 +1,73 @@
+/* The AI island's conversations (AgentTabs) take the window bar's row over
+   the island, as the documents' do (layout.css): the tabs from its edge,
+   all clear of the bar's
+   status and the window's buttons (useTabRows). In the chat window the row
+   is that window's bar. Inside the island only its history. */
+.agent-tabs-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: var(--window-bar-height);
+  padding-right: var(--tabs-inset-end, 8px);
+  pointer-events: none;
+}
+
+/* Docked, over the panel's top. */
+:root:not([data-window-chrome="mobile"]) .agent-panel > .agent-tabs-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 46;
+}
+
+.agent-tabs-row > * {
+  pointer-events: auto;
+}
+
+/* The row's end inset is the holder's, its buttons inside it. */
+.agent-tabs-row > .tab-bar {
+  --tabs-inset-end: 0px;
+  flex: 1;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.agent-tabs-row > .tab-bar > * {
+  pointer-events: auto;
+}
+
+.agent-tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Its own header gives way to the row. */
+.agent-panel[data-tabbed] .agent-panel-header {
+  display: none;
+}
+
+/* ---- Inside the island --------------------------------------------- */
+
+.agent-island {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.agent-island > .agent-panel-mount {
+  flex: 1;
+}
+
+/* Its history, at the top right, over the conversation's top air. */
+.agent-island-tools {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+}

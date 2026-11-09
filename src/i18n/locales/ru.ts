@@ -206,7 +206,7 @@ export default {
   reviewNotesPicked: "Выбрано: {n}",
   reviewNotesAskPrefix: "Об этих заметках:\n{notes}\n",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
-  agentTabProject: "Папка",
+  agentTabProject: "Память",
   memoryStyle: "Стиль письма",
   memoryLibrary: "Картотека",
   memoryInstructions: "Инструкции",
@@ -255,7 +255,7 @@ export default {
   memoryChipUndone: "Отменено. Больше не запомнено.",
   memoryChipForgot: "Забыто: {text} ({scope})",
   memoryChipRestored: "Отменено. Снова запомнено.",
-  memoryActionFailed: "Не получилось. Попробуйте ещё раз во вкладке «Папка».",
+  memoryActionFailed: "Не получилось. Попробуйте ещё раз во вкладке «Память».",
   learnSuggestion: "Вы несколько раз отклонили {what}. Запомнить? {rule}",
   learnQuoted: "«{text}»",
   learnSwap: "замену {from} на {to}",
@@ -292,7 +292,7 @@ export default {
   learnNotNow: "Не сейчас",
   learnNever: "Больше не спрашивать",
   learnSaved:
-    "Запомнено. Посмотреть или удалить можно в разделе «Папка» панели ИИ.",
+    "Запомнено. Посмотреть или удалить можно в разделе «Память» панели ИИ.",
   learnLabel: "Выводы из ваших решений по правкам",
   suggestNextMessageLabel: "Предлагать следующее сообщение",
   suggestNextMessageHint:
@@ -307,7 +307,7 @@ export default {
   researchCheckClaimsHint:
     "Перед правкой черновика каждое предложение со ссылкой сравнивается с заметками об этом источнике, и то, что говорит больше них, переписывается. Тщательнее, но на раздел уходит ещё один вызов модели.",
   rememberAutomaticallyLabel: "Запоминать автоматически",
-  rememberAutomaticallyHint: `${AI_NAME} запоминает ваши требования и манеру письма для следующих разговоров. Посмотреть, изменить или отменить это можно в разделе «Папка» панели ИИ. После каждого ответа он ещё раз коротко спрашивает ту же модель, что запомнить.`,
+  rememberAutomaticallyHint: `${AI_NAME} запоминает ваши требования и манеру письма для следующих разговоров. Посмотреть, изменить или отменить это можно в разделе «Память» панели ИИ. После каждого ответа он ещё раз коротко спрашивает ту же модель, что запомнить.`,
   toolRemember: "Запоминаю",
   agentGeneratingImage: "Создаю изображение…",
   toolGenerateImage: "Создаю изображение",
@@ -1147,6 +1147,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Закрыть вкладку",
+  menuAllTabs: "Все вкладки",
   menuReopenClosedTab: "Открыть закрытую вкладку",
   readOnlyRefused:
     "Документ в режиме чтения. Чтобы изменить его, выберите «Вид › Режим › Обычный».",
@@ -1434,7 +1435,7 @@ export default {
   tutorialDoneTitle: "Готово",
   tutorialDoneBody:
     "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Онлайн-уроках.",
-  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Папка» в панели ИИ.`,
+  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Память» в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",

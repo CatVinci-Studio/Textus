@@ -7,6 +7,7 @@ import {
   saveConversation,
 } from "./chat-history";
 import {
+  conversationScope,
   liveConversation,
   onLiveConversation,
   setLiveConversation,
@@ -156,7 +157,7 @@ export function useAgentConversation(
   // The conversation belongs to the folder, or to a file opened on its own:
   // every tab and window there shows the same one. A draft keeps its own
   // until it is saved.
-  const scope = persist && docPath ? (workspaceRoot ?? docPath) : null;
+  const scope = persist ? conversationScope(docPath, workspaceRoot) : null;
   const idNow = useLatest(conversationId);
   const busyNow = useLatest(busy);
   // Turns taken over from another tab or window: shown, not saved again

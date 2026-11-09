@@ -30,9 +30,10 @@
   align-items: center;
   gap: 8px;
   /* Sized by content up to max-width; when tabs stop fitting they shrink
-     together to min-width, then the bar scrolls. */
+     together to min-width, as Chrome's do, then the bar scrolls and lists
+     them all (TabList). */
   flex-shrink: 1;
-  min-width: 90px;
+  min-width: calc(56px * var(--chrome-scale));
   max-width: 200px;
   padding: 4px 8px;
   /* The bar's text grows with a wide window, as its icons do. */
@@ -136,6 +137,61 @@
 
 .tab-bar-add:hover {
   background: var(--ui-hover);
+}
+
+/* Too narrow for a name and an ×: only the open tab keeps its ×. */
+.tab-bar[data-narrow] .tab-pill:not(.tab-pill-active) .tab-pill-close {
+  display: none;
+}
+
+/* And room for some of its name. */
+.tab-bar[data-narrow] .tab-pill-active {
+  min-width: calc(96px * var(--chrome-scale));
+}
+
+/* Overflowing, the + stays beside the list at the row's end as the tabs
+   scroll under them. */
+.tab-bar[data-overflow] .tab-bar-add {
+  position: sticky;
+  right: calc(24px * var(--chrome-scale));
+  z-index: 2;
+  background: var(--ui-frame-fill, var(--ui-bg));
+}
+
+/* Every tab, listed: held at the row's end as the tabs scroll under it. */
+.tab-bar-list {
+  position: sticky;
+  right: 0;
+  flex-shrink: 0;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  width: calc(24px * var(--chrome-scale));
+  height: calc(22px * var(--chrome-scale));
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-frame-fill, var(--ui-bg));
+  box-shadow: -8px 0 8px var(--ui-frame-fill, var(--ui-bg));
+  color: var(--ui-muted);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.tab-bar-list:hover {
+  background: color-mix(
+    in srgb,
+    var(--ui-text) 8%,
+    var(--ui-frame-fill, var(--ui-bg))
+  );
+  color: var(--ui-text);
+}
+
+.tab-bar-list svg {
+  rotate: 90deg;
 }
 
 .word-count {

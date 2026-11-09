@@ -111,3 +111,47 @@
   min-height: 0;
   background: var(--ui-surface);
 }
+
+/* With its row of conversations (ChatWindowRoot) the window is the editor's
+   AI island alone: the frame, the row over the island, the island inset in
+   it (layout.css). */
+.chat-window[data-layout] {
+  --ui-frame: var(--ui-frame-sunk);
+  --ui-frame-fill: var(--ui-frame);
+  background: var(--ui-frame-fill);
+}
+
+.chat-window-tabs {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 0 4px 0 var(--island-inset);
+}
+
+.chat-window-tabs > .agent-tabs-row {
+  flex: 1;
+  min-width: 0;
+  align-self: stretch;
+}
+
+/* Clear of the traffic lights, which float over the top-left corner. */
+.chat-window-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+}
+
+:root[data-window-chrome="native"]:not([data-window-fullscreen])
+  .chat-window-lights {
+  width: 70px;
+}
+
+.chat-window[data-layout] > [data-island] {
+  margin: 0 var(--island-inset) var(--island-inset);
+  overflow: hidden;
+}
+
+.chat-window[data-layout] .chat-window-body {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}

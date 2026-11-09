@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, openAgentMemory } from "./helpers";
 
 // The project menu's "Import references…": the picked files go into the
 // project's references/ folder, and the panel says how many.
@@ -29,10 +29,7 @@ test("Import references… imports the picked files and says how many were left 
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "1" },
   });
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  await openAgentMemory(page);
   await page.locator(".project-bar-folder").click();
   await page.getByRole("menuitem", { name: "Import references…" }).click();
   await expect(page.locator(".project-bar")).toContainText(

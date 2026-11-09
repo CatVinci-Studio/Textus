@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp } from "./helpers";
+import { mockInvoke, openApp, openAgentMemory } from "./helpers";
 
 /**
  * The AI panel's Memory tab and the project files it opens (.textus/):
@@ -21,10 +21,7 @@ const workspace = (library: unknown[]) => ({
 });
 
 async function createEntry(page: Page, name: string) {
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  await openAgentMemory(page);
   await page
     .locator(".memory-section", { hasText: "Library" })
     .getByRole("button", { name: "New" })
@@ -50,13 +47,8 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
   });
   await createEntry(page, "Lin");
   // The entry opened in a tab of its own...
-  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await expect(page.locator(".main-pane .tab-pill")).toHaveCount(2);
   // ...and the panel, now drawn by that tab's editor, is still on Memory.
-  await expect(
-    page
-      .locator(".agent-panel-view")
-      .getByRole("button", { name: "Folder", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".agent-panel-memory")).toBeVisible();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await expect(editor.locator(".raw-html-comment")).toHaveText(note);
@@ -178,10 +170,8 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
   await expect(remembered).toBeVisible();
   await expect(remembered).toHaveClass(/motion-mark/);
   await expect(remembered).toContainText(REMEMBERED.text);
-  page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  // Back to the conversation: its tab.
+  await page.locator(".agent-tabs-row .tab-pill").first().click();
 
   await chip.getByRole("button", { name: "Undo" }).click();
   await expect(chip).toHaveText("Undone. No longer remembered.");
@@ -213,10 +203,7 @@ test("with Remember automatically off, nothing is asked after the reply, and the
   expect(await calls(page, "memory_pass")).toEqual([]);
   await expect(page.locator(".agent-memory-chip")).toHaveCount(0);
   // And the Memory tab says so.
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  await openAgentMemory(page);
   await expect(page.locator(".memory-remembered")).toContainText(
     "Remember automatically is off",
   );
@@ -235,10 +222,7 @@ test("the Memory tab lists what was remembered, and moves and deletes it", async
     memory_move: "personal/memory/Use-British-spelling",
     memory_delete: null,
   });
-  await page
-    .locator(".agent-panel-view")
-    .getByRole("button", { name: "Folder", exact: true })
-    .click();
+  await openAgentMemory(page);
   const remembered = page.locator(".memory-remembered");
   await expect(remembered).toContainText("This folder");
   await expect(remembered).toContainText(REMEMBERED.text);

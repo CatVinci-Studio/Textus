@@ -7,13 +7,13 @@ import {
   type RefObject,
   type CSSProperties,
 } from "react";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
-import { animate, scrollBehavior } from "../../ui/motion";
+import { animate } from "../../ui/motion";
 import { ListMotion, measure, type PendingFlip } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
+import { revealActive, TabListButton, useTabOverflow } from "./TabList";
 import { roomFor, SLIDE } from "../../ui/pointer-drag";
 
 interface TabBarProps {
@@ -35,7 +35,14 @@ interface TabBarProps {
   /** A tab's right-click menu (Open to the Side, Close). */
   menuFor?: (id: string) => (ContextMenuItem | "separator")[];
   /** What the icon-only buttons' tooltips and a screen reader say. */
-  labels: { tabs: string; close: string; add: string; unsaved: string };
+  labels: {
+    tabs: string;
+    close: string;
+    add: string;
+    unsaved: string;
+    /** The list of every tab, once they overflow the row. */
+    all: string;
+  };
   /** Where it sits in a split's grid. */
   style?: CSSProperties;
   /** The split pane it is the bar of: a pulled tab is let go onto it. */
@@ -67,25 +74,10 @@ export function TabBar({
     items: (ContextMenuItem | "separator")[];
   } | null>(null);
 
-  // A phone shows two or three pills; scroll the bar alone (never the page)
-  // to bring the active tab into view.
-  const phone = usePhoneLayout();
+  // The open tab in view, as it changes (and as the row narrows: TabList).
   useEffect(() => {
-    if (!phone) return;
-    const bar = barRef.current;
-    const pill = bar?.querySelector<HTMLElement>(
-      `[data-flip-id="${CSS.escape(activeTabId)}"]`,
-    );
-    if (!bar || !pill) return;
-    const barBox = bar.getBoundingClientRect();
-    const pillBox = pill.getBoundingClientRect();
-    const margin = 12;
-    const behavior = scrollBehavior();
-    if (pillBox.left < barBox.left + margin)
-      bar.scrollBy({ left: pillBox.left - barBox.left - margin, behavior });
-    else if (pillBox.right > barBox.right - margin)
-      bar.scrollBy({ left: pillBox.right - barBox.right + margin, behavior });
-  }, [phone, activeTabId, tabs.length]);
+    if (barRef.current) revealActive(barRef.current, true);
+  }, [activeTabId, tabs.length]);
 
   // FLIP: capture every pill's on-screen place, mid-shift transforms
   // included, before a gesture changes the bar.
@@ -104,6 +96,7 @@ export function TabBar({
   );
 
   const previewRef = useIncomingTabPreview(barRef, previewTab, tabs);
+  const overflow = useTabOverflow(barRef, tabs.length);
 
   // Tab-list keys: arrows/Home/End move, Enter/Space shows, Delete closes.
   // Only the front tab is in the tab order.
@@ -138,6 +131,8 @@ export function TabBar({
       data-pane-id={paneId}
       ref={barRef}
       role="tablist"
+      // An island's row (layout.css): drawn as one where islands are.
+      data-island-row=""
       aria-label={labels.tabs}
       onKeyDown={onKeyDown}
     >
@@ -197,6 +192,14 @@ export function TabBar({
           +
         </button>
       </Tooltip>
+      {overflow && (
+        <TabListButton
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onActivate={onActivate}
+          label={labels.all}
+        />
+      )}
     </div>
   );
 }

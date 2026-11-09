@@ -201,7 +201,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reviewNotesPicked: "{n} selecionadas",
   reviewNotesAskPrefix: "Sobre estas notas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre a sua nota “{comment}”: ",
-  agentTabProject: "Pasta",
+  agentTabProject: "Memória",
   memoryStyle: "Estilo de escrita",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instruções de escrita",
@@ -252,7 +252,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryChipUndone: "Desfeito. Não é mais lembrado.",
   memoryChipForgot: "Esquecido: {text} ({scope})",
   memoryChipRestored: "Desfeito. Lembrado de novo.",
-  memoryActionFailed: "Não deu certo. Tente de novo na aba Pasta.",
+  memoryActionFailed: "Não deu certo. Tente de novo na aba Memória.",
   learnSuggestion: "Você recusou várias vezes {what}. Lembrar disto? {rule}",
   learnQuoted: "“{text}”",
   learnSwap: "trocar {from} por {to}",
@@ -288,7 +288,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   learnRemember: "Lembrar",
   learnNotNow: "Agora não",
   learnNever: "Não perguntar mais",
-  learnSaved: "Lembrado. Veja ou apague em Pasta, no painel de IA.",
+  learnSaved: "Lembrado. Veja ou apague em Memória, no painel de IA.",
   learnLabel: "Aprendido com as suas escolhas de revisão",
   suggestNextMessageLabel: "Sugerir a próxima mensagem",
   suggestNextMessageHint:
@@ -303,7 +303,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   researchCheckClaimsHint:
     "Antes de revisar o rascunho, cada frase que cita uma fonte é comparada com as notas dessa fonte, e a que diz mais do que elas é reescrita. Mais cuidadoso, com uma chamada ao modelo a mais por seção.",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
-  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Pasta, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
+  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Memória, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
@@ -1133,6 +1133,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Fechar Aba",
+  menuAllTabs: "Todas as Abas",
   menuReopenClosedTab: "Reabrir Aba Fechada",
   readOnlyRefused:
     "Este documento está no modo leitura. Para alterá-lo, escolha Visualizar › Modo › Padrão.",
@@ -1422,7 +1423,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody:
     "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
-  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Pasta, no painel de IA.`,
+  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Memória, no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",

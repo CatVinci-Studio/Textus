@@ -37,8 +37,8 @@ test("closed tabs reopen, the latest first", async ({ page }) => {
   await emit(page, "menu-close-tab");
   await page.locator(tabs, { hasText: "one.md" }).click();
   await emit(page, "menu-close-tab");
-  // One tab left: the bar steps aside.
-  await expect(page.locator(tabs)).toHaveCount(0);
+  // One tab left, with the activity rail: its row stays.
+  await expect(page.locator(tabs)).toHaveCount(1);
 
   await emit(page, "menu-reopen-closed-tab");
   await expect(page.locator(tabs)).toHaveCount(2);

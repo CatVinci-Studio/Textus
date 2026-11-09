@@ -1,3 +1,4 @@
+import { conversationScope } from "../ai/chat/conversation-scope";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../ui/CornerToast";
@@ -95,6 +96,15 @@ function App() {
     zen: zenMode,
   });
 
+  // Where the tabs are: the window bar's row, a row of their own under the
+  // menu bar, or none (a clean sheet; the phone's own bar).
+  const tabRow =
+    !tabsInBar || isIOSApp
+      ? undefined
+      : appDrawsWindowFrame && settings.menuBarShown
+        ? "row"
+        : "bar";
+
   return (
     <AgentPanelProvider
       // The conversation stays in the panel while it plays its exit.
@@ -120,13 +130,9 @@ function App() {
         // window bar's row, in a row of their own under the menu bar, or
         // none.
         data-layout={settings.layout}
-        data-tabs={
-          !tabsInBar || isIOSApp
-            ? undefined
-            : appDrawsWindowFrame && settings.menuBarShown
-              ? "row"
-              : "bar"
-        }
+        data-tabs={tabRow}
+        // Where the islands are drawn (layout.css): the window, with its tabs.
+        data-islands={tabRow === "bar" || undefined}
         style={
           {
             // The sidebar's dragged width; an iPad's sidebar has no handle.
@@ -231,6 +237,16 @@ function App() {
             sourceMode={!!activeTab.sourceMode}
             onToggleSourceMode={toggleSourceMode}
             aiOn={textusAi.on}
+            // Its row of conversations, on the desktop: those of the
+            // document's folder.
+            conversations={
+              isIOSApp
+                ? undefined
+                : conversationScope(
+                    activeTab.path,
+                    settings.agentWorkspaceRoot || null,
+                  )
+            }
             t={t}
           />
         )}

@@ -413,3 +413,12 @@ export async function dragWithMouse(
   });
   await page.mouse.up();
 }
+
+/** Opens what Textus AI keeps for the folder: Memory, on a conversation
+ *  tab's menu. */
+export async function openAgentMemory(page: Page) {
+  await page.locator(".agent-tabs-row .tab-pill").first().click({
+    button: "right",
+  });
+  await page.getByRole("menuitem", { name: "Memory", exact: true }).click();
+}

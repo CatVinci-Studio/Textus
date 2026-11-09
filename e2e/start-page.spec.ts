@@ -50,7 +50,7 @@ test("closing the last document shows the start page; a new document or an opene
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toBeVisible();
-  await expect(page.locator('[role="tab"]')).toHaveCount(0);
+  await expect(page.locator('[role="tab"]')).toHaveCount(1);
   // Closed again, a file opened from the start page opens in its place.
   await emit(page, "menu-close-tab");
   await expect(startPage(page)).toBeVisible();
@@ -59,7 +59,7 @@ test("closing the last document shows the start page; a new document or an opene
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toContainText("Two");
   await expect(startPage(page)).toHaveCount(0);
-  await expect(page.locator('[role="tab"]')).toHaveCount(0);
+  await expect(page.locator('[role="tab"]')).toHaveCount(1);
 });
 
 test("with the default, closing the last document doesn't show the start page", async ({

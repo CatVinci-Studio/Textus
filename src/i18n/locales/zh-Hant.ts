@@ -180,7 +180,7 @@ export default {
   reviewNotesPicked: "已選 {n} 則",
   reviewNotesAskPrefix: "關於你的這幾則批註：\n{notes}\n",
   reviewNoteAskPrefix: "關於這則批註「{comment}」：",
-  agentTabProject: "資料夾",
+  agentTabProject: "記憶",
   memoryStyle: "寫作風格",
   memoryLibrary: "資料庫",
   memoryInstructions: "寫作指示",
@@ -228,7 +228,7 @@ export default {
   memoryChipUndone: "已復原，不再記住。",
   memoryChipForgot: "已忘記：{text}（{scope}）",
   memoryChipRestored: "已復原，重新記住。",
-  memoryActionFailed: "沒有成功，可以在「資料夾」裡再試一次。",
+  memoryActionFailed: "沒有成功，可以在「記憶」裡再試一次。",
   learnSuggestion: "你多次拒絕了{what}的修改。要記住嗎：{rule}",
   learnQuoted: "「{text}」",
   learnSwap: "把{from}改成{to}",
@@ -256,7 +256,7 @@ export default {
   learnRemember: "記住",
   learnNotNow: "暫不",
   learnNever: "不再詢問",
-  learnSaved: "已記住。可以在 AI 面板的「資料夾」裡查看或刪除。",
+  learnSaved: "已記住。可以在 AI 面板的「記憶」裡查看或刪除。",
   learnLabel: "從修訂取捨中學到的",
   suggestNextMessageLabel: "預測下一句",
   suggestNextMessageHint:
@@ -270,7 +270,7 @@ export default {
   researchCheckClaimsHint:
     "研究模式修改草稿前，把每個帶引用的句子和該來源的筆記對一遍，說過頭的會改寫。更嚴謹，每節多一次模型呼叫。",
   rememberAutomaticallyLabel: "自動記住",
-  rememberAutomaticallyHint: `${AI_NAME} 會記下你的要求和寫作習慣，供以後的對話使用；可以在 AI 面板的「資料夾」裡查看、修改或復原。每次回覆後，會再向同一個模型發一次簡短請求，決定記下什麼。`,
+  rememberAutomaticallyHint: `${AI_NAME} 會記下你的要求和寫作習慣，供以後的對話使用；可以在 AI 面板的「記憶」裡查看、修改或復原。每次回覆後，會再向同一個模型發一次簡短請求，決定記下什麼。`,
   toolRemember: "記下來",
   agentGeneratingImage: "正在產生圖片…",
   toolGenerateImage: "正在產生圖片",
@@ -1034,6 +1034,7 @@ export default {
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "關閉分頁",
+  menuAllTabs: "所有分頁",
   menuReopenClosedTab: "重新開啟已關閉的分頁",
   readOnlyRefused:
     "這份文件處於閱讀模式。要修改，請在「檢視 › 模式」中選「預設」。",
@@ -1304,7 +1305,7 @@ export default {
   tutorialDoneTitle: "完成",
   tutorialDoneBody:
     "開始寫你自己的吧，表格、公式、主題、審閱這些都在線上教學裡。",
-  tutorialDoneMemory: `${AI_NAME} 會慢慢記住你的要求和風格，可以在 AI 面板的「資料夾」裡查看。`,
+  tutorialDoneMemory: `${AI_NAME} 會慢慢記住你的要求和風格，可以在 AI 面板的「記憶」裡查看。`,
   closePromptMessage: "這份文件有未儲存的變更。",
   closePromptSave: "儲存",
   closePromptDiscard: "不儲存",

@@ -12,10 +12,10 @@ async function layout(page: Page) {
     const rect = (selector: string) =>
       document.querySelector(selector)!.getBoundingClientRect();
     return {
-      tabs: rect(".tab-bar").bottom,
-      firstTab: rect(".tab-bar .tab-pill").left,
+      tabs: rect(".main-pane > .tab-bar").bottom,
+      firstTab: rect(".main-pane > .tab-bar .tab-pill").left,
       toggle: rect(".window-bar-sidebar-toggle").right,
-      lastTab: rect(".tab-bar .tab-bar-add").right,
+      lastTab: rect(".main-pane > .tab-bar .tab-bar-add").right,
       status: rect(".window-bar-status").left,
       // Where the panel's edge starts: its ::before line.
       aiEdgeTop:
@@ -26,7 +26,7 @@ async function layout(page: Page) {
         ),
       bar: rect(".window-bar").bottom,
       panel: rect(".agent-panel").width,
-      document: rect(".tab-bar").width,
+      document: rect(".main-pane > .tab-bar").width,
     };
   });
 }
@@ -40,8 +40,8 @@ async function open(page: Page, width: number) {
   await pasteMarkdown(page, SAMPLE_DOC);
   // A second tab, for the tab bar.
   await emit(page, "menu-open-help", "markdown");
-  await expect(page.locator(".tab-bar")).toBeVisible();
-  await expect(page.locator(".agent-panel-header")).toBeVisible();
+  await expect(page.locator(".main-pane > .tab-bar")).toBeVisible();
+  await expect(page.locator(".agent-tabs-row")).toBeVisible();
 }
 
 // From 960: narrower, the rail and both panels at their narrowest leave the

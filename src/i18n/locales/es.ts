@@ -210,7 +210,7 @@ para usar una.
   reviewNotesPicked: "{n} seleccionadas",
   reviewNotesAskPrefix: "Sobre estas notas tuyas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre tu nota «{comment}»: ",
-  agentTabProject: "Carpeta",
+  agentTabProject: "Memoria",
   memoryStyle: "Estilo de escritura",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instrucciones de escritura",
@@ -262,7 +262,7 @@ para usar una.
   memoryChipForgot: "Olvidado: {text} ({scope})",
   memoryChipRestored: "Deshecho. Se vuelve a recordar.",
   memoryActionFailed:
-    "No ha funcionado. Vuelve a intentarlo en la pestaña Carpeta.",
+    "No ha funcionado. Vuelve a intentarlo en la pestaña Memoria.",
   learnSuggestion: "Has rechazado varias veces {what}. ¿Recordar esto? {rule}",
   learnQuoted: "«{text}»",
   learnSwap: "cambiar {from} por {to}",
@@ -300,7 +300,7 @@ para usar una.
   learnNotNow: "Ahora no",
   learnNever: "No volver a preguntar",
   learnSaved:
-    "Recordado. Puedes verlo o eliminarlo en Carpeta, en el panel de IA.",
+    "Recordado. Puedes verlo o eliminarlo en Memoria, en el panel de IA.",
   learnLabel: "Aprendido de tus decisiones de revisión",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
@@ -314,7 +314,7 @@ para usar una.
   researchCheckClaimsHint:
     "Antes de revisar el borrador, cada frase que cita una fuente se compara con las notas de esa fuente, y la que dice más que ellas se reescribe. Más cuidadoso, con una llamada al modelo más por sección.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
-  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Carpeta, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Memoria, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
@@ -1148,6 +1148,7 @@ para usar una.
   menuExportTextile: "Textile…",
   menuExportOpml: "OPML…",
   menuCloseTab: "Cerrar pestaña",
+  menuAllTabs: "Todas las pestañas",
   menuReopenClosedTab: "Reabrir pestaña cerrada",
   readOnlyRefused:
     "Este documento está en modo lectura. Para cambiarlo, elige Visualización › Modo › Predeterminado.",
@@ -1437,7 +1438,7 @@ para usar una.
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
     "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
-  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Carpeta, en el panel de IA.`,
+  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Memoria, en el panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",
