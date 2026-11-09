@@ -125,6 +125,19 @@ export function PluginWebview({
             });
           }),
         menuClose: () => closeMenuRef.current?.(),
+        // Told on as a right-click on the frame, for the menu around it.
+        contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {
+          const at = frame.getBoundingClientRect();
+          frame.dispatchEvent(
+            new MouseEvent("contextmenu", {
+              bubbles: true,
+              cancelable: true,
+              button: 2,
+              clientX: at.left + (typeof x === "number" ? x : 0),
+              clientY: at.top + (typeof y === "number" ? y : 0),
+            }),
+          );
+        },
         zoomWheel: (params: Parameters<typeof passZoomWheel>[1]) =>
           passZoomWheel(frame, params),
         zoomGesture: (params: Parameters<typeof passZoomGesture>[1]) =>

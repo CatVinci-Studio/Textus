@@ -84,3 +84,27 @@
   padding: 0.8em 1em;
   color: var(--text-muted);
 }
+
+/* An opened source's way back: over its top corner, taking no line. */
+.plugin-code-done-row {
+  position: relative;
+  height: 0;
+}
+
+.plugin-code-done {
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 6px;
+  z-index: 1;
+  padding: 2px 8px;
+  border: 1px solid var(--doc-border);
+  border-radius: var(--doc-radius-sm);
+  background: var(--doc-bg);
+  color: var(--text-muted);
+  font-size: var(--text-caption);
+  cursor: pointer;
+}
+
+.plugin-code-done:hover {
+  color: var(--doc-text);
+}

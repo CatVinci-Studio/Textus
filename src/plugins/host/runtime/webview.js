@@ -66,6 +66,8 @@
     { passive: false },
   );
   // No engine menu on a page, as in the window: text fields keep theirs.
+  // A right-click the page itself didn't answer goes to the window, whose
+  // menu has what it can do to the page there (a block's: delete it).
   window.addEventListener("contextmenu", function (event) {
     var target = event.target;
     if (
@@ -74,6 +76,8 @@
       target.closest("input, textarea, [contenteditable]")
     )
       return;
+    if (!event.defaultPrevented)
+      send("contextMenu", { x: event.clientX, y: event.clientY });
     event.preventDefault();
   });
   ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {

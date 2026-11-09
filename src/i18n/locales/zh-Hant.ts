@@ -114,6 +114,8 @@ export default {
   editorLabel: "文件",
   diagramZoom: "放大圖表",
   codeBlockEditSource: "編輯原始碼",
+  codeBlockDone: "完成編輯",
+  codeBlockDelete: "刪除此區塊",
   diagramViewerLabel: "圖表",
   pictureZoom: "放大圖片",
   pictureViewerLabel: "圖片",

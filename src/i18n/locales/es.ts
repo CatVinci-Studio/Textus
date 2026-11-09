@@ -129,6 +129,8 @@ para usar una.
   editorLabel: "Documento",
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar el código",
+  codeBlockDone: "Terminar de editar",
+  codeBlockDelete: "Eliminar el bloque",
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagen",
   pictureViewerLabel: "Imagen",

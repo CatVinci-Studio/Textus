@@ -121,6 +121,8 @@ type /name in a conversation to use one.
   editorLabel: "Document",
   diagramZoom: "Enlarge diagram",
   codeBlockEditSource: "Edit Source",
+  codeBlockDone: "Done Editing",
+  codeBlockDelete: "Delete Block",
   diagramViewerLabel: "Diagram",
   pictureZoom: "Enlarge picture",
   pictureViewerLabel: "Picture",

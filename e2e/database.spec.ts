@@ -382,3 +382,61 @@ test("any view's menu opens on a right click, and a view is deleted from it", as
   await expect(db.getByRole("tab")).toHaveText([/Table/, /Board/]);
   await expect.poll(() => docText(page)).not.toContain("type: calendar");
 });
+
+test("a view's tab dragged before another, kept in the base", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await dragWithMouse(
+    page,
+    db.getByRole("tab", { name: "Calendar" }),
+    db.getByRole("tab", { name: "Table" }),
+    -10,
+  );
+  await expect(db.getByRole("tab")).toHaveText([/Calendar/, /Table/, /Board/]);
+  await expect
+    .poll(() => docText(page))
+    .toMatch(/type: calendar[\s\S]*type: table[\s\S]*type: kanban/);
+});
+
+test("a row's right-click menu opens or deletes its page, asked first", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await expect(db.locator(rows)).toHaveCount(3);
+  await db
+    .locator(rows)
+    .first()
+    .locator('td[data-key="status"]')
+    .click({ button: "right" });
+  await pick(page, "Delete row");
+  await page.getByRole("button", { name: "Delete page" }).click();
+  await expect(db.locator(rows)).toHaveCount(2);
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
+    .toBeUndefined();
+});
+
+test("a date is typed, or picked from the month under its field", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const week1 = db.locator(rows).filter({ hasText: "Week1" });
+  const cell = week1.locator('td[data-key="start"]');
+  await cell.click();
+  const pop = db.locator(".date-pop");
+  await expect(pop).toBeVisible();
+  await expect(pop.locator(".date-pop-day.chosen")).toHaveText("1");
+  await pop.locator(".date-pop-day:not(.other)", { hasText: /^15$/ }).click();
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
+    .toContain("start: 2026-01-15");
+  await expect(pop).toHaveCount(0);
+  // Typed, as before.
+  await cell.click();
+  await week1.locator("input").fill("2026-01-02");
+  await week1.locator("input").press("Enter");
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
+    .toContain("start: 2026-01-02");
+});

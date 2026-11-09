@@ -35,6 +35,7 @@ import { drawPluginBlocksIn } from "./embedded-plugin-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
 import { addBlockFold } from "../../editor/fold/block-fold";
+import { setDrawnBlockActions } from "../../editor/drawn-block-actions";
 import {
   pluginName,
   pluginsSnapshot,
@@ -97,6 +98,14 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
+        // The opened source's way back to the drawing, at its corner.
+        if (pos === open)
+          out.push(
+            Decoration.widget(pos, (view) => doneButton(view), {
+              side: -1,
+              key: `done:${pos}`,
+            }),
+          );
         out.push(
           Decoration.node(pos, end, {
             class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
@@ -139,6 +148,10 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
+      setDrawnBlockActions(el, {
+        editSource: () => openSource(view, getPos),
+        remove: () => removeBlock(view, getPos),
+      });
       const holder = document.createElement("div");
       holder.className = "plugin-code-holder";
       el.append(holder);
@@ -216,7 +229,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
           open: null,
         }),
         apply(tr, prev, _old, state) {
-          const meta = tr.getMeta(key) as { open?: number } | true | undefined;
+          const meta = tr.getMeta(key) as
+            { open?: number | null } | true | undefined;
           let open =
             meta && meta !== true && meta.open !== undefined
               ? meta.open
@@ -232,6 +246,12 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       },
       props: {
         decorations: (state) => key.getState(state)?.deco,
+        handleKeyDown: (view, event) => {
+          if (event.key !== "Escape") return false;
+          if ((key.getState(view.state)?.open ?? null) === null) return false;
+          closeSource(view);
+          return true;
+        },
       },
       // The caret never rests in a drawn block's hidden source: it steps
       // over it, the way it came. Only </> opens the source.
@@ -321,19 +341,71 @@ function editButton(
   button.addEventListener("mousedown", (event) => event.preventDefault());
   button.addEventListener("click", (event) => {
     event.preventDefault();
-    const end = getPos();
-    const node =
-      end === undefined ? null : view.state.doc.resolve(end).nodeBefore;
-    if (end === undefined || node?.type.name !== "code_block") return;
-    const start = end - node.nodeSize;
-    view.dispatch(
-      view.state.tr
-        .setSelection(TextSelection.create(view.state.doc, start + 1))
-        .setMeta(key, { open: start }),
-    );
-    view.focus();
+    openSource(view, getPos);
   });
   return button;
+}
+
+/** The code block a drawing (its widget at `getPos`) is drawn from. */
+function blockBefore(
+  view: EditorView,
+  getPos: () => number | undefined,
+): { start: number; end: number } | null {
+  const end = getPos();
+  const node =
+    end === undefined ? null : view.state.doc.resolve(end).nodeBefore;
+  if (end === undefined || node?.type.name !== "code_block") return null;
+  return { start: end - node.nodeSize, end };
+}
+
+/** The caret into the drawing's source, which shows until it leaves. */
+function openSource(view: EditorView, getPos: () => number | undefined) {
+  const block = blockBefore(view, getPos);
+  if (!block) return;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(view.state.doc, block.start + 1))
+      .setMeta(key, { open: block.start }),
+  );
+  view.focus();
+}
+
+/** The opened source hidden again, the caret just after its drawing. */
+function closeSource(view: EditorView) {
+  const open = key.getState(view.state)?.open ?? null;
+  const node = open === null ? null : view.state.doc.nodeAt(open);
+  if (open === null || !node) return;
+  const after = view.state.doc.resolve(open + node.nodeSize);
+  view.dispatch(
+    view.state.tr
+      .setSelection(Selection.near(after, 1))
+      .setMeta(key, { open: null }),
+  );
+  view.focus();
+}
+
+/** The whole block - source and drawing - out of the document. */
+function removeBlock(view: EditorView, getPos: () => number | undefined) {
+  const block = blockBefore(view, getPos);
+  if (block) view.dispatch(view.state.tr.delete(block.start, block.end));
+}
+
+/** The opened source's button back to its drawing (Esc does the same). */
+function doneButton(view: EditorView): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "plugin-code-done-row";
+  row.contentEditable = "false";
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "plugin-code-done";
+  button.textContent = currentStrings().codeBlockDone;
+  button.addEventListener("mousedown", (event) => event.preventDefault());
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    closeSource(view);
+  });
+  row.append(button);
+  return row;
 }
 
 /** An export's way to the drawings' pictures: each asks its plugin's page. */

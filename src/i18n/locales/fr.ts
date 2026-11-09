@@ -129,6 +129,8 @@ utiliser une.
   editorLabel: "Document",
   diagramZoom: "Agrandir le diagramme",
   codeBlockEditSource: "Modifier la source",
+  codeBlockDone: "Terminer la modification",
+  codeBlockDelete: "Supprimer le bloc",
   diagramViewerLabel: "Diagramme",
   pictureZoom: "Agrandir l'image",
   pictureViewerLabel: "Image",

@@ -122,6 +122,8 @@ export default {
   editorLabel: "Документ",
   diagramZoom: "Увеличить диаграмму",
   codeBlockEditSource: "Изменить исходный код",
+  codeBlockDone: "Завершить правку",
+  codeBlockDelete: "Удалить блок",
   diagramViewerLabel: "Диаграмма",
   pictureZoom: "Увеличить изображение",
   pictureViewerLabel: "Изображение",

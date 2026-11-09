@@ -145,6 +145,43 @@ test("a drawn block's source shows only from Edit Source, not wherever the caret
   await expect(pre).toBeHidden();
 });
 
+test("an opened source closes from Done Editing or Esc, and a right-click on the page deletes the block", async ({
+  page,
+}) => {
+  await open(page);
+  const frame = page
+    .frameLocator(`${editor} .plugin-code-block iframe`)
+    .first();
+  await expect(frame.locator("#out")).toHaveText("HELLO!");
+  const pre = page.locator(`${editor} pre`);
+  const block = page.locator(`${editor} .plugin-code-block`);
+  const done = page.getByRole("button", { name: "Done Editing" });
+  await expect(done).toHaveCount(0);
+
+  await block.hover();
+  await page.getByRole("button", { name: "Edit Source" }).click();
+  await expect(pre).toBeVisible();
+  await done.click();
+  await expect(pre).toBeHidden();
+  await expect(block).toBeVisible();
+  await expect(done).toHaveCount(0);
+
+  await block.hover();
+  await page.getByRole("button", { name: "Edit Source" }).click();
+  await expect(pre).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(pre).toBeHidden();
+
+  // The page doesn't answer a right-click: the editor's menu does, for it.
+  await frame.locator("#out").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete Block" }).click();
+  await expect(block).toHaveCount(0);
+  await expect(pre).toHaveCount(0);
+  await expect(
+    page.locator(`${editor} p`, { hasText: "After." }),
+  ).toBeVisible();
+});
+
 test("a block's frame fits its page as the page grows, up to 70% of the window, and shrinks", async ({
   page,
 }) => {
