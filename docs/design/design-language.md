@@ -226,11 +226,28 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 
 **Reusing it.** The pieces live together and are the only way in: `src/ui/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/ui/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
 
+### 5.7 The window frame - Planned (Textus 1.3.13)
+
+The desktop window is a **frame** around the document. The work is tracked in R2 `software/plans/refactor-1.3.13-2026-11-09.md`; until it lands, 5.4 and 5.6 describe the window.
+
+- **One frame colour.** The title bar, the activity rail and the sidebar are one surface in `--ui-frame` (by default `--ui-subtle`, the sidebar's colour today); the document is `--ui-bg`. Opening or closing the sidebar never changes a colour: the frame only grows or shrinks.
+- **The title bar is one row across the window**: the window's controls, the sidebar button (⌘\\), the title or the tabs, then the status (plugin items, word count, Textus AI). Settings has no button here: it is in the app menu (⌘,).
+- **Frosted by default.** With one document the bar is frosted `--ui-frame`, and the document scrolls under it. The switch moves to Settings › Advanced; a user who turned it off keeps it off.
+- **Tabs live in the title bar.** One document: no tabs, the title centred over the document column. Two or more: the tabs take the bar's row, which turns solid `--ui-frame`; the open tab is the document's own surface (`--ui-bg`), joined to the page below with no line, its lower corners curving into the bar and a soft shadow on its sides. The tabs start at the document column's left edge (after the sidebar button when the sidebar is closed). In a side-by-side split each pane's tabs sit over its own column; in a top-and-bottom split the lower pane keeps a tab row of its own.
+- **Activity rail.** A column of icons on the left: Files, Outline, Search, then plugins' sidebar pages (`sidebarTabs`), in an order the user drags. Clicking the open one closes the sidebar. Nothing sits at its foot. It shows by default; its right-click menu hides it (Settings › Appearance brings it back) and picks which icons it shows. Rail and sidebar open and close together or alone.
+- **The document panel.** In a busy window - the sidebar open, two or more tabs, a split, the AI panel open - the document is a rounded panel (`--shape-m`, a `--ui-border` hairline, 8 of frame around it). Writing alone (one document, sidebar closed) it is flush with the frame. The panel appears and goes by fading its edge, not by animating its margins (10).
+- **Lines.** One horizontal line at most: the bar's lower edge where it meets a solid tab row, broken under the open tab. Frosted, the bar ends without a line. Vertical lines only where the frame meets the document.
+- **Motion stays as it is** (10): the sidebar, rail and AI panel slide on transforms, entering on `--dur-slow` and the spring, leaving on `--dur-base` and `--ease-in`; tabs open, close and slide on `--dur-base`.
+- **Start page.** Two columns, centred as one block: on the left the mark, "Textus", and three text rows - New Document, Open File…, Open Folder… - each with its icon and its shortcut, no frame; on the right Recent Folders and Recent Files, five each, a row's × removing it. The two columns share their top and bottom edges; a narrow window stacks them. With nothing recent only the left column shows.
+- **Format bar.** Built in, under the title bar, off by default (View › Format Bar, and Settings). It holds only what Markdown keeps: heading level, bold, italic, strikethrough, highlight, inline code, link, lists, task, quote, insert. Frosted with the bar for one document, solid with tabs.
+- **"Folder", not "project".** The interface says "Open Folder…" everywhere a folder is opened.
+
 ## 6. Shape - In force
 
 - **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
 - **Nesting** is concentric: a box inside another takes the outer radius less the padding between them (r = R − p). Boxes on one level share one radius. A large container keeps its radius and keeps its capsules at least one padding from its edge.
 - **Controls** are capsules (`--shape-pill`): buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips, tags and switches. A button with only an icon is a circle.
+- _Planned (Textus 1.3.13)_: every text field - one-line, search and multi-line, in the app and in plugin pages - becomes a rounded rectangle (`--shape-s`); capsules stay for buttons, selects, chips, tags, segments and switches. A check fails on a field drawn as a capsule.
 - **Character-level marks are square**: the caret, Vim's block cursor, the selection, find and flash highlights - radius 0–2 px.
 - Where the engine supports it (Chromium 139+, so WebView2), container corners are continuous (`corner-shape: superellipse(1.25)`); capsules and circles stay `round`.
 - Radii are lengths like any other: they grow with `--chrome-scale` (5.6), so the concentric rule holds at every size.
@@ -244,13 +261,14 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 | Overlay | `--ui-surface` + its one shadow (`--shadow-popover`, `--shadow-dialog`, `--shadow-sheet`) | Menus, popovers, dialogs, sheets              |
 
 - Shadows MUST appear only on overlays, each paired with its surface.
-- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it. The title bar's opt-in frosted option is the exception: the user may turn it on wherever the engine can blur, because they asked for that surface to be one.
+- Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it. The title bar's opt-in frosted option is the exception: the user may turn it on wherever the engine can blur, because they asked for that surface to be one. _Planned (Textus 1.3.13)_: the title bar is frosted by default wherever the engine can blur (5.7); its switch moves to Settings › Advanced.
 
 ## 8. Icons - In force
 
 - One set (`src/ui/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
 - File types (`src/ui/file-icons.tsx`): Markdown, pictures and other files are ours; the rest are Lucide's (ISC), stroked thinner to match. A new kind of file takes a Lucide icon before one of our own.
 - Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
+- _Planned (Textus 1.3.13)_: icons in the rail, the title bar, the AI panel and plugins' icons go up one step, set by one icon-size token; hit areas follow.
 - A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
 - Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.
 - Emoji are content, not icons; the interface MUST NOT use emoji as icons.
@@ -266,7 +284,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 
 - Durations, curves, offsets and scales come only from `src/ui/motion.css`. `src/ui/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
 - Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `ui/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`ui/usePresence.ts`) keeping an element mounted while it exits.
-- Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms, `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
+- Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms (_Planned, 1.3.13_: folded into 200 or 320), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
 - Curves: `--ease-standard` (in place), `--ease-out` (entry), `--ease-in` (exit), `--ease-in-out` (movement), `--ease-spring-bouncy` (about 3% overshoot) only for a finger release.
 - Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
@@ -280,7 +298,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 | Component                | Rule                                                                                                                                                                                                                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Buttons                  | Solid **primary** (ink, one per group), **secondary** (light border), **text** button for the next level down. One action appears as one button in one place. Size, radius and states are defined once in `design-system.css`; a component sets only layout and text colour                                              |
-| Icon button              | A 24 circle, no border in headers, toolbars and inline; named with `aria-label`, hinted with `ui/Tooltip.tsx`, never `title`                                                                                                                                                                                             |
+| Icon button              | A 24 circle, no border in headers, toolbars and inline; named with `aria-label`, hinted with `ui/Tooltip.tsx`, never `title`. _Planned (Textus 1.3.13)_: a tooltip is a callout beside what it names, with a small arrow pointing at it, its shortcut after the name                                                     |
 | Fields                   | One-line fields and search boxes are capsules; multi-line fields are `--shape-s` boxes. The focus ring is inside                                                                                                                                                                                                         |
 | Select                   | `ui/Select.tsx` with the drawn arrow, in the two control heights. Native dropdowns MUST NOT be used                                                                                                                                                                                                                      |
 | Checkbox                 | `.ui-check`: 15 px, `--shape-xs`, accent fill when checked                                                                                                                                                                                                                                                               |
