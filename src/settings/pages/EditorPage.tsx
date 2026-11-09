@@ -9,7 +9,7 @@ import {
   type ColorSwatchMode,
   type DiagramEngine,
 } from "../../prefs/SettingsContext";
-import type { ViewMode } from "../../prefs/settings-types";
+import type { ViewMode } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { useSyncExternalStore } from "react";
 import {

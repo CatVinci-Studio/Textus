@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import type { Creation } from "../../prefs/settings-types";
+import type { Creation } from "../../prefs/settings-values";
 import { storedCreations } from "../../prefs/settings-normalise";
 import { madeByAi, withCreation, withoutCreation } from "./creations";
 

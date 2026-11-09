@@ -1,7 +1,8 @@
 import type { AiRecords } from "../platform/bindings/files";
 import type { McpServer } from "./mcp";
 import { normaliseSettings } from "./settings-normalise";
-import type { Settings, UserThemeMeta } from "./settings-types";
+import type { Settings } from "./settings-types";
+import type { UserThemeMeta } from "./settings-values";
 
 /**
  * Settings as a file, to back them up or carry them to another computer;

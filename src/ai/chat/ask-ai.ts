@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { AgentMode } from "../../prefs/settings-values";
 import { requestCreate } from "./create-request";
 
 /**

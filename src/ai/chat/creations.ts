@@ -1,4 +1,4 @@
-import type { Creation, CreationKind } from "../../prefs/settings-types";
+import type { Creation, CreationKind } from "../../prefs/settings-values";
 
 /**
  * What Create made, across the three stores it installs into: plugins,
