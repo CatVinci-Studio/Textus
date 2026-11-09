@@ -2,7 +2,9 @@ import { MATCH, similarity } from "./sentence-similarity";
 import { splitSentences } from "./sentence-pairs";
 import { formKey } from "./markdown-forms";
 
-/** Sentences paired before and after, regrouped by paragraph: short ones merged, rewrites aligned, so a proposal reads as the paragraphs it changes. */
+/** Sentences paired before and after, regrouped by paragraph - short ones
+ *  merged, rewrites aligned - so a proposal reads as the paragraphs it
+ *  changes. */
 
 /** A hunk with both sides kept: a "same" sentence may differ in the
  *  paragraph break it carries (two paragraphs joined into one). */
