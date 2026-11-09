@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { scaledPx } from "../ui/chrome-scale";
 
 /** Room kept between the title and what sits beside it. */
 const GAP = 12;
@@ -29,7 +30,7 @@ export function useTitleRoom() {
         const right =
           (status.firstElementChild
             ? status.getBoundingClientRect().left
-            : window.innerWidth) - GAP;
+            : window.innerWidth) - scaledPx(GAP);
         const half = right - centre;
         if (half >= MIN_HALF) {
           title.style.setProperty("--window-bar-title-room", `${2 * half}px`);
@@ -44,7 +45,10 @@ export function useTitleRoom() {
           el;
           el = el.previousElementSibling
         )
-          left = Math.max(left, el.getBoundingClientRect().right + GAP);
+          left = Math.max(
+            left,
+            el.getBoundingClientRect().right + scaledPx(GAP),
+          );
         const span = Math.max(0, right - left);
         title.style.setProperty("--window-bar-title-room", `${span}px`);
         title.style.marginLeft = `${left + span / 2 - centre}px`;
