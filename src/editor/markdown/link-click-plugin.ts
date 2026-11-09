@@ -69,6 +69,18 @@ async function follow(
   );
 }
 
+/** Follows `href` as a Ctrl/Cmd+click on it does, from the document at
+ *  `docPath` (the right-click menu's Open Link). */
+export function openLinkHref(
+  view: EditorView,
+  href: string,
+  docPath: string | null,
+): void {
+  const local = docPath && !isScopedUrl(docPath) ? docPath : null;
+  const target = linkTarget(href, local);
+  if (target) void follow(view, href, target, local).catch(() => {});
+}
+
 /** The URL of the link under a mouse event: a link's own, read from its
  *  source, or a raw HTML anchor's. */
 function hrefAt(view: EditorView, event: MouseEvent): string | null {

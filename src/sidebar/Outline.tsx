@@ -9,6 +9,7 @@ import { ContextMenu } from "../ui/ContextMenu";
 import { Presence } from "../ui/usePresence";
 import { noteJump } from "../utils/nav-history";
 import { setTabJump } from "../editor/tab-jump";
+import { headingSlug } from "../editor/markdown/link-target";
 import "./FileTree.css";
 
 interface OutlineProps {
@@ -74,11 +75,37 @@ export function Outline({ content, tabId }: OutlineProps) {
       };
     });
   }, [content]);
+  // A heading row's own: a link to it, and its section selected.
+  const headingItems = (text: string, index: number) => {
+    const label = headingLabel(text);
+    return [
+      {
+        label: t.outlineCopyLink,
+        onSelect: () =>
+          void navigator.clipboard
+            .writeText(`[${label}](#${headingSlug(label)})`)
+            .catch(() => {}),
+      },
+      {
+        label: t.outlineSelectSection,
+        onSelect: () => {
+          noteJump();
+          setTabJump(tabId, { kind: "outline", index, select: true }, true);
+        },
+      },
+      "separator" as const,
+    ];
+  };
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
   const current = useCurrentHeading(content);
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  /** Where the menu is open, and the heading row it is on, if any. */
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    heading?: (typeof headings)[number];
+  } | null>(null);
 
   const visible = useMemo(() => {
     const rows: typeof headings = [];
@@ -132,6 +159,11 @@ export function Outline({ content, tabId }: OutlineProps) {
             aria-current={h.index === current ? "location" : undefined}
             style={{ paddingLeft: (h.level - 1) * 14 }}
             onClick={() => goTo(h.index)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setMenu({ x: e.clientX, y: e.clientY, heading: h });
+            }}
           >
             {h.hasChildren ? (
               <Tooltip text={isCollapsed ? t.outlineExpand : t.outlineCollapse}>
@@ -168,6 +200,9 @@ export function Outline({ content, tabId }: OutlineProps) {
             x={menu.x}
             y={menu.y}
             items={[
+              ...(menu.heading
+                ? headingItems(menu.heading.text, menu.heading.index)
+                : []),
               { label: t.outlineExpandAll, onSelect: () => foldAll(false) },
               { label: t.outlineCollapseAll, onSelect: () => foldAll(true) },
             ]}

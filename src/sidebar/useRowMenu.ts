@@ -12,7 +12,7 @@ import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
-import { copyPathItem } from "../clipboard/copy-path";
+import { pathItems } from "../clipboard/copy-path";
 import type { FileOpenHow } from "./tree-shared";
 
 /** A row's right-click menu, while it is open. */
@@ -97,7 +97,7 @@ export function useRowMenu(
           onSelect: () => setDraft({ dir, kind: "folder" }),
         },
       );
-      items.push("separator", copyPathItem(t, path));
+      items.push("separator", ...pathItems(t, path, root));
       if (path !== root)
         items.push(
           { label: t.treeRenameItem, onSelect: () => void rename(path) },

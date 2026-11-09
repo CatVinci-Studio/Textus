@@ -511,7 +511,7 @@ test("a file dragged across the document selects none of its text", async ({
   await page.mouse.up();
 });
 
-test("Copy Path in the tree's and a tab's right-click menus and in File copies the full path", async ({
+test("Copy Path in the tree's and a tab's right-click menus and in File copies the full path, Copy Relative Path the one from the folder", async ({
   page,
 }) => {
   // What is written, read back the same in WebKit, which has no clipboard
@@ -530,6 +530,10 @@ test("Copy Path in the tree's and a tab's right-click menus and in File copies t
   await row(page, "b.md").click({ button: "right" });
   await page.getByRole("menuitem", { name: "Copy Path" }).click();
   await expect.poll(clipboard).toBe("/work/notes/b.md");
+  // And from the open folder.
+  await row(page, "b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Copy Relative Path" }).click();
+  await expect.poll(clipboard).toBe("b.md");
 
   // A second tab, so the tab bar shows.
   await row(page, "b.md").click();

@@ -130,7 +130,7 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight}`,
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
     ]);
   });
 
@@ -163,7 +163,10 @@ describe("the editor menu", () => {
       t.paste,
       `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
       "-",
-      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.toolbarHighlight} | - | ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.insertBlockquote} | ${t.insertCodeBlock} | ${t.insertTable}`,
+      // Obsidian's three: inline styles, the block, and what goes in.
+      `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
+      `${t.menuParagraph} › ${[1, 2, 3].map((n) => t.menuHeadingTemplate.replace("{n}", String(n))).join(" | ")} | - | ${t.insertBulletList} | ${t.insertOrderedList} | ${t.menuTaskList} | ${t.insertBlockquote}`,
+      `${t.menuInsertGroup} › ${t.menuTable} | ${t.insertCodeBlock} | ${t.menuMathBlock} | ${t.menuDivider}`,
       `${t.menuTextusAi} › Ask | Continue`,
     ]);
   });

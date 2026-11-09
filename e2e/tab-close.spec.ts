@@ -65,7 +65,7 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   ).toContainText("/notes/c.md");
 });
 
-test("Close Others leaves a tab with unsaved changes open", async ({
+test("Close Others and Close Saved leave a tab with unsaved changes open", async ({
   page,
 }) => {
   await openApp(page, {
@@ -79,4 +79,10 @@ test("Close Others leaves a tab with unsaved changes open", async ({
   await expect(tab(page, "a.md").locator(".tab-pill-dirty-dot")).toHaveCount(1);
   await fromMenu(page, "c.md", "Close Others");
   await expect(page.locator(titles)).toHaveText(["a.md", "c.md"]);
+  // Close Saved: every saved tab, the unsaved one kept.
+  await openFiles(page, ["d.md"]);
+  await fromMenu(page, "d.md", "Close Saved");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("changed");
 });

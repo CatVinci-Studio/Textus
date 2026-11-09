@@ -1,4 +1,8 @@
 import { useCallback, useEffect } from "react";
+import {
+  openToText,
+  parseMarkdownSource,
+} from "../editor/markdown/parse-markdown-source";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
   wrapInBlockquoteCommand,
@@ -52,6 +56,7 @@ import {
   CLOSE_FIND_REPLACE_EVENT,
   RESTORE_CHAT_EVENT,
   INSERT_BLOCK_EVENT,
+  INSERT_MARKDOWN_EVENT,
   TOGGLE_BLOCK_EVENT,
   TOGGLE_MARK_EVENT,
   SHOW_REPLACE_EVENT,
@@ -231,6 +236,21 @@ export function useEditorWindowEvents({
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
       toggle(view);
+      view.focus();
+    });
+  });
+  useWindowEvent(INSERT_MARKDOWN_EVENT, (e) => {
+    if (!isOnScreen()) return;
+    const markdown = (e as CustomEvent<string>).detail;
+    run((ctx) => {
+      const parsed = parseMarkdownSource(ctx, markdown);
+      if (!parsed || typeof parsed === "string") return;
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(
+        view.state.tr
+          .replaceSelection(openToText(parsed.content))
+          .scrollIntoView(),
+      );
       view.focus();
     });
   });

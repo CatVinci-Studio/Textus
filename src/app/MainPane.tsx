@@ -47,7 +47,10 @@ import {
 import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
-import { copyPathItem } from "../clipboard/copy-path";
+import { pathItems } from "../clipboard/copy-path";
+import { windowFolder } from "../platform/window-folder";
+import { isWithin } from "../sidebar/tree-root";
+import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
 import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -171,10 +174,42 @@ export function MainPane({
   // The saved tabs close; one with unsaved changes stays, its dot showing,
   // rather than a prompt for each.
   const closeSaved = (list: DocTab[]) => {
-    for (const tab of list) if (!tabIsDirty(tab)) onClose(tab.id);
+    const closing = list.filter((tab) => !tabIsDirty(tab));
+    // The tab in front closing too: one that stays comes forward first, as
+    // each close would otherwise pick a neighbour that is closing as well.
+    if (closing.some((tab) => tab.id === activeTabId)) {
+      const stays = tabs.find((tab) => !closing.includes(tab));
+      if (stays) onActivate(stays.id);
+    }
+    for (const tab of closing) onClose(tab.id);
   };
-  const pathItem = (path: string | null | undefined) =>
-    path ? [copyPathItem(t, path)] : [];
+  // Its path three ways, and the file found in the tree when the open
+  // folder holds it.
+  const pathItem = (id: string, path: string | null | undefined) => {
+    if (!path) return [];
+    const folder = windowFolder();
+    const inTree = folder !== null && isWithin(path, folder);
+    return [
+      ...pathItems(t, path, folder),
+      ...(inTree
+        ? [{ label: t.menuRevealInTree, onSelect: () => revealInTree(id) }]
+        : []),
+    ];
+  };
+  const revealInTree = (id: string) => {
+    onActivate(id);
+    window.dispatchEvent(
+      new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "tree" }),
+    );
+    // Once the tree has opened down to it.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        document
+          .querySelector('.sidebar .tree-row[aria-selected="true"]')
+          ?.scrollIntoView({ block: "nearest" }),
+      ),
+    );
+  };
   const readOnlyItem = (id: string) => {
     const tab = byId.get(id);
     if (!tab || tab.view) return [];
@@ -193,12 +228,20 @@ export function MainPane({
       [t.closeTabsToLeft, list.slice(0, at)],
       [t.closeTabsToRight, list.slice(at + 1)],
     ];
-    return groups
-      .filter(([, closing]) => closing.length > 0)
-      .map(([label, closing]) => ({
-        label,
-        onSelect: () => closeSaved(closing),
-      }));
+    return [
+      ...groups
+        .filter(([, closing]) => closing.length > 0)
+        .map(([label, closing]) => ({
+          label,
+          onSelect: () => closeSaved(closing),
+        })),
+      { label: t.menuCloseSaved, onSelect: () => closeSaved(list) },
+      // Each asks, as its own close does, when it has unsaved changes.
+      {
+        label: t.menuCloseAll,
+        onSelect: () => list.forEach((tab) => onClose(tab.id)),
+      },
+    ];
   };
   const tabBar = (
     list: DocTab[],
@@ -264,7 +307,7 @@ export function MainPane({
               },
             ]
           : []),
-        ...pathItem(byId.get(id)?.path),
+        ...pathItem(id, byId.get(id)?.path),
         ...readOnlyItem(id),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },

@@ -9,6 +9,9 @@ export const SHOW_REPLACE_EVENT = "textus:show-replace";
 export const FIND_NEXT_EVENT = "textus:find-next";
 /** Format › Link: a link around the selection. */
 export const INSERT_LINK_EVENT = "textus:insert-link";
+/// detail: Markdown put in at the caret of the document on screen (an AI
+/// reply's Insert at Cursor).
+export const INSERT_MARKDOWN_EVENT = "textus:insert-markdown";
 /// detail: a sidebar tab's id - a plugin asked for it to be shown
 /// (layout.showSidebarTab); the sidebar opens on it.
 export const SHOW_SIDEBAR_TAB_EVENT = "textus:show-sidebar-tab";

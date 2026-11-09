@@ -45,10 +45,10 @@ export function useEditorCarets({
 }
 
 /** Portals' text fields keep the native Cut/Copy/Paste menu, whose Paste
- *  would otherwise go into the document. */
+ *  would otherwise go into the document; the AI panel has its own. */
 const ownsMenu = (target: EventTarget | null) =>
   !(target as HTMLElement | null)?.closest?.(
-    ".inline-chat, .find-replace-bar, input, textarea, .cm-content",
+    ".inline-chat, .agent-panel, .find-replace-bar, input, textarea, .cm-content",
   );
 
 /**

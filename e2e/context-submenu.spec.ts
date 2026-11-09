@@ -60,3 +60,26 @@ test("a pointer that stops on another row opens that row's own submenu", async (
   await expect(item(page, "Delete Row")).toHaveCount(0, { timeout: 500 });
   await expect(item(page, "Delete Column")).toBeVisible();
 });
+
+test("a link's own items come first: Copy Link copies its address, Remove Link keeps its words", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, "See [the site](https://example.com) here.");
+  const link = page.locator(`${editor} a[data-type="link"]`);
+  await link.click({ button: "right" });
+  const rows = page.locator(
+    ".context-menu:not(.context-submenu) .context-menu-item",
+  );
+  await expect(rows.nth(0)).toHaveText("Open Link");
+  await expect(rows.nth(3)).toHaveText("Remove Link");
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
+  await item(page, "Copy Link").click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "https://example.com",
+  );
+  await link.click({ button: "right" });
+  await item(page, "Remove Link").click();
+  await expect(link).toHaveCount(0);
+  await expect(page.locator(editor)).toHaveText("See the site here.");
+});

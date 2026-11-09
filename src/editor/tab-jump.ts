@@ -9,8 +9,9 @@ import type { DocumentPlace } from "../plugins/app-bridge";
 export type TabJump =
   /** A followed `./other.md#heading` link: scroll to that heading. */
   | { kind: "heading"; anchor: string }
-  /** The outline's row: the document's `index`-th top-level heading. */
-  | { kind: "outline"; index: number }
+  /** The outline's row: the document's `index`-th top-level heading, or
+   *  with `select` its whole section selected (the outline's menu). */
+  | { kind: "outline"; index: number; select?: boolean }
   /** A document reopened: the caret where it was left. */
   | { kind: "caret"; at: CaretPlace }
   /** A plugin opened it at a place: a block, a line, some words, a heading. */

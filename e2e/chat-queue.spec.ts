@@ -100,3 +100,27 @@ test("Stop stops the reply and gives the queue back to the box", async ({
   await expect.poll(() => sent(page)).toHaveLength(2);
   expect((await sent(page))[1]).toContain("Something else");
 });
+
+test("a reply's menu copies it or puts it in the document at the caret", async ({
+  page,
+}) => {
+  await open(page);
+  await send(page, "Say something");
+  await release(page, "ai_agent_message");
+  const reply = page.locator(".agent-message-assistant", { hasText: "Done." });
+  await expect(reply).toBeVisible();
+  // The caret at the note's end, then the reply's own menu.
+  await page.locator('[data-active-tab="true"] .ProseMirror p').click();
+  await page.keyboard.press("End");
+  await reply.click({ button: "right" });
+  const items = page.locator(".context-menu-item");
+  await expect(items).toHaveText([
+    "Copy",
+    "Copy as Markdown",
+    "Insert at cursor",
+  ]);
+  await items.filter({ hasText: "Insert at cursor" }).click();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("A short note.Done.");
+});

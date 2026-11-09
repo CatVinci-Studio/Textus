@@ -48,6 +48,9 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     selectedChars: (n) => plural(t.chatSelectedChars, n, lang),
     selectedPicture: t.chatSelectedPicture,
     selectionChip: (n) => plural(t.chatSelectionChip, n, lang),
+    messageCopy: t.copy,
+    messageCopyMarkdown: t.menuCopyAsMarkdown,
+    messageInsert: t.agentActionInsertAtCursor,
     proposalTitle: t.agentProposalTitle,
     proposalStatus: {
       streaming: t.proposalStatusStreaming,

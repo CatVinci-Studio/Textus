@@ -113,6 +113,17 @@ test("the outline folds and jumps from the keyboard", async ({ page }) => {
   await expect(
     outline.getByRole("treeitem", { name: "Part two" }),
   ).toHaveAttribute("aria-current", "location");
+  // A heading's own menu: Select Section takes the heading and what is
+  // under it, up to the next heading at its level.
+  await outline
+    .getByRole("treeitem", { name: "Part two" })
+    .click({ button: "right" });
+  await page
+    .locator(".context-menu-item", { hasText: "Select Section" })
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => getSelection()?.toString() ?? ""))
+    .toMatch(/^Part two/);
 });
 
 test("the tab strip is a tab list the arrow keys walk", async ({ page }) => {
