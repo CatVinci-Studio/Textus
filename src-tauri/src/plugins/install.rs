@@ -420,8 +420,8 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     super::files::forget_secrets(&app, &id)
 }
 
-/// The picker for Install from file… (a `.textusplugin`) or, with
-/// `folder`, Load a plugin folder….
+/// The picker for Install from file… (`.textusplugin`s or zips, several at
+/// once) or, with `folder`, Load a plugin folder….
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -429,17 +429,17 @@ pub async fn plugin_pick_package(
     window: tauri::WebviewWindow,
     folder: bool,
     filter_name: String,
-) -> Option<String> {
+) -> Option<Vec<String>> {
     use crate::commands::fs::window_file_dialog;
     tauri::async_runtime::spawn_blocking(move || {
         let dialog = window_file_dialog(&window);
         if folder {
-            dialog.blocking_pick_folder().map(|p| p.to_string())
+            dialog.blocking_pick_folder().map(|p| vec![p.to_string()])
         } else {
             dialog
                 .add_filter(&filter_name, &["textusplugin", "zip"])
-                .blocking_pick_file()
-                .map(|p| p.to_string())
+                .blocking_pick_files()
+                .map(|ps| ps.iter().map(|p| p.to_string()).collect())
         }
     })
     .await

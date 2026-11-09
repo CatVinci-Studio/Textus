@@ -59,11 +59,20 @@ export function PluginsPage({ t }: SettingsPageProps) {
 
   const installFile = (folder: boolean) =>
     attempt(async () => {
-      const path = await pluginsIpc.pickPackage(folder, t.pluginPackageFilter);
-      if (!path) return;
-      if (folder) return setOpen(await loadDevPlugin(path));
-      // Installed, its page, with its README.
-      setOpen(await installPlugin(path));
+      const paths =
+        (await pluginsIpc.pickPackage(folder, t.pluginPackageFilter)) ?? [];
+      if (!paths.length) return;
+      if (folder) return setOpen(await loadDevPlugin(paths[0]));
+      // Several installed one after another; one alone opens its page,
+      // with its README.
+      if (paths.length === 1) return setOpen(await installPlugin(paths[0]));
+      // One that fails doesn't stop the others: each failure is told after.
+      const failed: string[] = [];
+      for (const path of paths)
+        await installPlugin(path).catch((e: unknown) =>
+          failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
+        );
+      if (failed.length) throw new Error(failed.join("\n"));
     });
 
   // A catalog plugin installed from its page goes on as the installed

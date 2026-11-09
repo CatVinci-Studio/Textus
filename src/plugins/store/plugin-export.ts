@@ -21,7 +21,8 @@ export async function exportPluginForPublishing(id: string): Promise<void> {
   )?.trim();
   if (!publisher) return;
   lastPublisher = publisher;
-  const folder = await pluginsIpc.pickPackage(true, "").catch(() => null);
+  const [folder] =
+    (await pluginsIpc.pickPackage(true, "").catch(() => null)) ?? [];
   if (!folder) return;
   try {
     const path = await pluginsIpc.exportPlugin(id, publisher, folder);
