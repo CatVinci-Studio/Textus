@@ -552,3 +552,39 @@ test("Insert References List lists the works the document cites", async ({
     "Darwin, Charles (1859). On the Origin of Species. John Murray.",
   );
 });
+
+test("with Finished tasks last on, a box ticked in the document moves its task after the open ones", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.tasks": [
+        "files.read",
+        "files.write",
+        "editor.read",
+        "editor.write",
+      ],
+    },
+    settings: { "catvinci.tasks": { doneLast: true } },
+    folder: {
+      "/notes/plan.md": "# Plan\n\n- [ ] Write\n- [ ] Read\n- [ ] Walk\n",
+    },
+  });
+  await openPath(page, "/notes/plan.md");
+  const task = page.locator(
+    '[data-active-tab="true"] li[data-item-type="task"]',
+  );
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+  // Started once a document is open, when the window is idle.
+  await expect(page.locator('iframe[title="catvinci.tasks"]')).toHaveCount(1);
+  await page.waitForTimeout(300);
+  const box = (await task.first().boundingBox())!;
+  await page.mouse.click(box.x + 8, box.y + box.height / 2);
+  await expect(task).toHaveText(["Read", "Walk", "Write"]);
+  await expect(task.last()).toHaveAttribute("data-checked", "true");
+  // Undone, the move goes back first, and isn't made again.
+  await emit(page, "menu-undo");
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+  await page.waitForTimeout(800);
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+});
