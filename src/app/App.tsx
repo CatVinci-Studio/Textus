@@ -116,9 +116,11 @@ function App() {
       />
       <div
         className="app-shell"
-        // The layout's one switch for the styles (tabs-in-bar.css): the
-        // tabs in the window bar's row, or in a row of their own under the
-        // menu bar, or none.
+        // The layout's switches for the styles (tabs-in-bar.css and the
+        // layout-*.css): floating islands or classic, and the tabs in the
+        // window bar's row, in a row of their own under the menu bar, or
+        // none.
+        data-layout={settings.layout}
         data-tabs={
           !tabsInBar
             ? undefined

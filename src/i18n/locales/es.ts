@@ -1110,6 +1110,9 @@ para usar una.
   appMenu: "Menú",
   activityRail: "Barra de actividad",
   activityRailHide: "Ocultar la barra de actividad",
+  layoutLabel: "Diseño",
+  layoutIslands: "Islas flotantes",
+  layoutClassic: "Clásico",
   activityRailLabel: "Mostrar la barra de actividad",
   activityRailHelp:
     "Los iconos del borde izquierdo de la ventana que abren Archivos, Esquema y las páginas de los plugins. Desactivada, la barra lateral los muestra arriba.",

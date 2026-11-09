@@ -1099,6 +1099,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   appMenu: "Menü",
   activityRail: "Aktivitätsleiste",
   activityRailHide: "Aktivitätsleiste ausblenden",
+  layoutLabel: "Layout",
+  layoutIslands: "Schwebende Inseln",
+  layoutClassic: "Klassisch",
   activityRailLabel: "Aktivitätsleiste anzeigen",
   activityRailHelp:
     "Die Symbole am linken Fensterrand, die Dateien, Gliederung und die Seiten von Plugins öffnen. Aus, zeigt die Seitenleiste sie oben an.",

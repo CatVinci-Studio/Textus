@@ -55,7 +55,7 @@ export function AgentPanelDock({
         onReset={() => onResize(AGENT_PANEL_DEFAULT_WIDTH, true)}
         label={t.agentPanelResize}
       />
-      <div className="agent-panel-mount" ref={mountRef} />
+      <div className="agent-panel-mount" data-island="" ref={mountRef} />
       {/* Source mode, split view and AI off have no conversation, so say so
         instead of an empty column. */}
       {!aiOn && <TextusAiOffNote className="agent-panel-placeholder" />}

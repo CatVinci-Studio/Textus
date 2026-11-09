@@ -1,9 +1,10 @@
-/* Several documents, or one beside the activity rail (useWindowDocuments):
-   the tabs take the window bar's row (design-language.md 5.7). The bar turns solid in the frame's colour; the open tab
-   is the page's own surface, joined to it with no line: its top corners
-   round, its sides curving in to the sheet's edge, or carrying the sheet's
-   side straight up where it starts at it. Not on the phone, and not beside the menu bar,
-   whose titles fill the row. A pane below another keeps its own row. */
+/* Tabs in the window bar's row: several documents, or one beside the
+   activity rail (useWindowDocuments; App's data-tabs="bar"). This is what
+   both layouts share - the row, its clicks, the bar's solid frame, the open
+   tab in the page's colour; layout-islands.css and layout-classic.css draw
+   the page and the tabs' shapes. Not on the phone, and not beside the menu
+   bar, whose titles fill the row (data-tabs="row"). A pane below another
+   keeps its own row. */
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"]
   .main-pane
@@ -28,21 +29,25 @@
   pointer-events: auto;
 }
 
-/* With tabs the frame sinks a step and stays solid (no glass), and the
-   page is a sheet floating on it, its corners rounded, the open tab joined
-   to its top. Without them one document goes back to the frosted frame with the
-   page flush (design-language.md 5.7). */
+/* Every pane is one block: a row of tabs as tall as the window bar, its
+   page under it. The top panes' row is the window bar's own; a split's
+   lower panes keep one of their own, on the frame, the same height, its
+   tabs standing on their page's top edge in the same way. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"]
+  .main-pane-split
+  > .tab-bar.tab-bar-inner {
+  height: var(--window-bar-height);
+  align-items: flex-end;
+  padding: 0 var(--tabs-inset-end, 8px) 0 var(--tabs-inset-start, 8px);
+  border-bottom: 0;
+  background: transparent;
+}
+
+/* With tabs the frame sinks a step and stays solid (no glass). */
 :root:not([data-window-chrome="mobile"]) .app-shell[data-tabs="bar"] {
   --ui-frame: var(--ui-frame-sunk);
   --ui-frame-fill: var(--ui-frame);
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  :is(.activity-rail, .sidebar) {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border-right-color: transparent;
 }
 
 :root:not([data-window-chrome="mobile"])
@@ -63,41 +68,6 @@
   visibility: hidden;
 }
 
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane {
-  /* Frame on every side but where the activity rail already is. */
-  --sheet-start: max(0px, var(--space-2) - var(--rail-width, 0px));
-  padding: 0 var(--space-2) var(--space-2) var(--sheet-start);
-  /* The frame behind the sheet, so its rounded corners cut into the frame's
-     colour, not the page's. */
-  background: var(--ui-frame-fill);
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane::before {
-  content: "";
-  position: absolute;
-  inset: var(--window-bar-height) var(--space-2) var(--space-2)
-    var(--sheet-start);
-  border-radius: var(--shape-m);
-  background: var(--ui-bg);
-  box-shadow:
-    0 0 0 1px var(--ui-frame-edge),
-    0 2px 10px color-mix(in srgb, var(--ui-text) 7%, transparent);
-  pointer-events: none;
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane
-  [data-active-tab]
-  > :is(.editor-scroll, .source-view) {
-  position: relative;
-  background: transparent;
-}
-
 /* Under the tab row the page needn't clear a bar over it: its text starts
    with ordinary air, not the room a floating bar takes. */
 :root:not([data-window-chrome="mobile"])
@@ -110,20 +80,23 @@
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"]
   .main-pane
-  > .tab-bar:not(.tab-bar-inner)
+  > .tab-bar
   > .tab-pill {
   position: relative;
   align-self: stretch;
+  /* Its top 4px down from the row's, its foot 4px into the sheet's join:
+     its words, its x and the + sit on the row's middle line, level with the
+     window bar's own controls. */
   margin-top: 4px;
-  padding: 0 8px;
-  border-radius: var(--shape-s) var(--shape-s) 0 0;
+  padding: 0 8px 4px;
+  border-radius: var(--tab-radius) var(--tab-radius) 0 0;
   background: transparent;
 }
 
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"]
   .main-pane
-  > .tab-bar:not(.tab-bar-inner)
+  > .tab-bar
   > .tab-pill:hover:not(.tab-pill-active) {
   background: var(--ui-hover);
 }
@@ -131,7 +104,7 @@
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"]
   .main-pane
-  > .tab-bar:not(.tab-bar-inner)
+  > .tab-bar
   > .tab-pill-active {
   overflow: visible;
   z-index: 1;
@@ -139,85 +112,12 @@
   color: var(--ui-text);
 }
 
-/* The first tab starting at the sheet's own edge (useTabsInBar), open: the
-   corner goes square, so the sheet's side runs straight up into the tab, as
-   a folder's tab grows from its edge. Elsewhere the corner is round. */
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane[data-tabs-at-corner]:has(
-    > .tab-bar:not(.tab-bar-inner) > .tab-pill-active:first-child
-  )::before {
-  border-top-left-radius: 0;
-}
-
-/* Where it meets the sheet's top edge, each side curves in to it. */
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"]
   .main-pane
-  > .tab-bar:not(.tab-bar-inner)
-  > .tab-pill-active::before,
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane
-  > .tab-bar:not(.tab-bar-inner)
-  > .tab-pill-active::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  width: var(--shape-s);
-  height: var(--shape-s);
-  pointer-events: none;
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane
-  > .tab-bar:not(.tab-bar-inner)
-  > .tab-pill-active::before {
-  right: 100%;
-  background: radial-gradient(
-    circle at 0 0,
-    transparent calc(var(--shape-s) - 0.5px),
-    var(--ui-bg) var(--shape-s)
-  );
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane
-  > .tab-bar:not(.tab-bar-inner)
-  > .tab-pill-active::after {
-  left: 100%;
-  background: radial-gradient(
-    circle at 100% 0,
-    transparent calc(var(--shape-s) - 0.5px),
-    var(--ui-bg) var(--shape-s)
-  );
-}
-
-/* At the sheet's own edge (data-tabs-at-corner) its side is the sheet's,
-   straight up: no curve there. */
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane[data-tabs-at-corner]
-  > .tab-bar:not(.tab-bar-inner)
-  > .tab-pill-active:first-child::before {
-  display: none;
-}
-
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .main-pane
-  > .tab-bar:not(.tab-bar-inner)
+  > .tab-bar
   > .tab-bar-add {
   align-self: center;
-}
-
-/* The sheet's own edge parts it from the AI panel: no second line there. */
-:root:not([data-window-chrome="mobile"])
-  .app-shell[data-tabs="bar"]
-  .agent-panel::before {
-  display: none;
 }
 
 /* One document and no activity rail: no tabs in the row, and the bar is

@@ -338,6 +338,9 @@ export function MainPane({
     <main
       ref={mainRef}
       className={split ? "main-pane main-pane-split" : "main-pane"}
+      // One island (layout-islands.css): the pane's sheet, drawn behind
+      // its tabs' row; a split's panes are islands each.
+      data-island={split ? undefined : ""}
       data-split={split?.root.direction}
       style={grid?.column}
     >
@@ -369,6 +372,7 @@ export function MainPane({
             data-pane={pane?.name}
             data-pane-id={pane?.id}
             className={pane ? "split-pane" : undefined}
+            data-island={pane ? "" : undefined}
             style={
               pane && grid
                 ? grid.bodies.get(pane.id)

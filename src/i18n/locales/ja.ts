@@ -1052,6 +1052,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   appMenu: "メニュー",
   activityRail: "アクティビティバー",
   activityRailHide: "アクティビティバーを隠す",
+  layoutLabel: "レイアウト",
+  layoutIslands: "フローティング",
+  layoutClassic: "クラシック",
   activityRailLabel: "アクティビティバーを表示",
   activityRailHelp:
     "ウインドウ左端のアイコン列で、ファイル、アウトライン、プラグインのページを開きます。オフにすると、サイドバーの上部に並びます。",

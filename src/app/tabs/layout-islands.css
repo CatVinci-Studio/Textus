@@ -1,0 +1,182 @@
+/* The floating islands layout (Settings: Layout, the default): with tabs
+   the page is a sheet floating on the frame, an even gap round it, its
+   corners rounded; the open tab joined to its top. Radii are concentric
+   (design-language.md): the sheet's --island-radius, its tabs' and the
+   things in it --tab-radius. */
+.app-shell[data-layout="islands"] {
+  --island-gap: var(--space-2);
+  --island-radius: var(--shape-m);
+  --tab-radius: var(--shape-s);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  :is(.activity-rail, .sidebar) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-right-color: transparent;
+}
+
+/* The frame round the sheets, the activity rail counted as frame. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane {
+  padding: 0 var(--island-gap) var(--island-gap);
+  /* The frame behind the sheets, so their rounded corners cut into the
+     frame's colour, not the page's. */
+  background: var(--ui-frame-fill);
+}
+
+/* An island (data-island), the one building block of this layout: a
+   rounded sheet on the frame, the gap round it. The pane's sheet is drawn
+   behind its tabs' row; a split's panes and the AI panel are islands as
+   they are. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane[data-island]::before,
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  [data-island]:not(.main-pane) {
+  border-radius: var(--island-radius);
+  background: var(--ui-bg);
+  box-shadow:
+    0 0 0 1px var(--ui-frame-edge),
+    0 2px 10px color-mix(in srgb, var(--ui-text) 7%, transparent);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane[data-island]::before {
+  content: "";
+  position: absolute;
+  inset: var(--window-bar-height) var(--island-gap) var(--island-gap);
+  pointer-events: none;
+}
+
+/* A split: each pane its own sheet under its own tab row, the gap between
+   them as round them; the dividers stay as handles, unseen, in the gap. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane-split {
+  padding: 0 calc(var(--island-gap) / 2);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane-split
+  > :is(.split-pane, .tab-bar) {
+  margin-inline: calc(var(--island-gap) / 2);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane-split
+  > .split-pane {
+  margin-bottom: var(--island-gap);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane-split
+  > .split-divider {
+  background: transparent;
+}
+
+/* The AI panel: an island beside the page, its header inside it; its
+   cards on the paper take a tint again. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .agent-panel-mount {
+  margin: 0 var(--island-gap) var(--island-gap) 0;
+  overflow: hidden;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .agent-panel
+  .agent-panel-view {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  [data-active-tab]
+  > :is(.editor-scroll, .source-view) {
+  position: relative;
+  background: transparent;
+}
+
+/* An island whose first tab stands at its edge, open (useTabsInBar): the
+   corner goes square, so the island's side runs straight up into the tab,
+   as a folder's tab grows from its edge. Elsewhere the corner is round. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane[data-island][data-corner-joined]::before,
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .split-pane[data-island][data-corner-joined] {
+  border-top-left-radius: 0;
+}
+
+/* Where it meets the sheet's top edge, each side curves in to it. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  > .tab-bar
+  > .tab-pill-active::before,
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  > .tab-bar
+  > .tab-pill-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--tab-radius);
+  height: var(--tab-radius);
+  pointer-events: none;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  > .tab-bar
+  > .tab-pill-active::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at 0 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  > .tab-bar
+  > .tab-pill-active::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+/* At the sheet's own edge (data-at-corner) its side is the sheet's,
+   straight up: no curve there. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .main-pane
+  > .tab-bar[data-at-corner]
+  > .tab-pill-active:first-child::before {
+  display: none;
+}
+
+/* The sheet's own edge parts it from the AI panel: no second line there. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="islands"]
+  .agent-panel::before {
+  display: none;
+}

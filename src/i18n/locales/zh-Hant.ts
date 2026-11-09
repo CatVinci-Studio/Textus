@@ -996,6 +996,9 @@ export default {
   appMenu: "選單",
   activityRail: "圖示列",
   activityRailHide: "隱藏圖示列",
+  layoutLabel: "版面",
+  layoutIslands: "浮動島",
+  layoutClassic: "經典",
   activityRailLabel: "顯示左側圖示列",
   activityRailHelp:
     "視窗左邊一列圖示，用來開啟檔案、大綱和外掛頁面。關閉後，這些圖示回到側欄頂端。",

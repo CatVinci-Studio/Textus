@@ -1072,6 +1072,9 @@ type /name in a conversation to use one.
   appMenu: "Menu",
   activityRail: "Activity bar",
   activityRailHide: "Hide the Activity Bar",
+  layoutLabel: "Layout",
+  layoutIslands: "Floating islands",
+  layoutClassic: "Classic",
   activityRailLabel: "Show the activity bar",
   activityRailHelp:
     "The icons along the window's left edge that open Files, Outline and plugins' pages. Off, the sidebar shows them along its top.",

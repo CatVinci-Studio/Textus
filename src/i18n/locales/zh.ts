@@ -994,6 +994,9 @@ export default {
   appMenu: "菜单",
   activityRail: "图标栏",
   activityRailHide: "隐藏图标栏",
+  layoutLabel: "布局",
+  layoutIslands: "浮动岛",
+  layoutClassic: "经典",
   activityRailLabel: "显示左侧图标栏",
   activityRailHelp:
     "窗口左边一列图标，用来打开文件、大纲和插件页面。关掉后，这些图标回到侧栏顶部。",

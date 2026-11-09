@@ -1095,6 +1095,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   appMenu: "Menu",
   activityRail: "Barra de atividade",
   activityRailHide: "Ocultar a barra de atividade",
+  layoutLabel: "Layout",
+  layoutIslands: "Ilhas flutuantes",
+  layoutClassic: "Clássico",
   activityRailLabel: "Mostrar a barra de atividade",
   activityRailHelp:
     "Os ícones na borda esquerda da janela que abrem Arquivos, Estrutura e as páginas dos plugins. Desativada, a barra lateral os mostra no topo.",

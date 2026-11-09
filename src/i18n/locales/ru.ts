@@ -1109,6 +1109,9 @@ export default {
   appMenu: "Меню",
   activityRail: "Панель действий",
   activityRailHide: "Скрыть панель действий",
+  layoutLabel: "Макет",
+  layoutIslands: "Плавающие острова",
+  layoutClassic: "Классический",
   activityRailLabel: "Показывать панель действий",
   activityRailHelp:
     "Значки у левого края окна, открывающие «Файлы», «Структуру» и страницы плагинов. Если выключить, они вернутся наверх боковой панели.",

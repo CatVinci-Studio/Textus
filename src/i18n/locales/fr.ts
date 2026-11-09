@@ -1123,6 +1123,9 @@ utiliser une.
   appMenu: "Menu",
   activityRail: "Barre d'activité",
   activityRailHide: "Masquer la barre d'activité",
+  layoutLabel: "Disposition",
+  layoutIslands: "Îlots flottants",
+  layoutClassic: "Classique",
   activityRailLabel: "Afficher la barre d'activité",
   activityRailHelp:
     "Les icônes du bord gauche de la fenêtre qui ouvrent Fichiers, Plan et les pages des plugins. Désactivée, la barre latérale les affiche en haut.",

@@ -174,6 +174,9 @@ export interface Settings {
   /// The column of icons at the window's left edge (Files, Outline, plugins'
   /// pages). Off, the sidebar shows its tabs along its own top again.
   activityRail: boolean;
+  /// Floating islands (the page and panels as rounded sheets on the frame)
+  /// or classic (flush, square, hairlines).
+  layout: "islands" | "classic";
   /// Sidebar tabs the user took off the rail, by id.
   activityRailHidden: string[];
   /// ![[note]] embeds drawn in full, or folded to a card each until opened.
@@ -327,6 +330,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imageAlign: "center",
   menuBarShown: false,
   activityRail: true,
+  layout: "islands",
   activityRailHidden: [],
   embedDisplay: "expand",
   autoCloseMarks: true,

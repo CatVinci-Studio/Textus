@@ -1040,6 +1040,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   appMenu: "메뉴",
   activityRail: "활동 막대",
   activityRailHide: "활동 막대 숨기기",
+  layoutLabel: "레이아웃",
+  layoutIslands: "떠 있는 섬",
+  layoutClassic: "클래식",
   activityRailLabel: "활동 막대 표시",
   activityRailHelp:
     "창 왼쪽 가장자리의 아이콘 열로, 파일, 개요, 플러그인 페이지를 엽니다. 끄면 사이드바 위쪽에 표시됩니다.",

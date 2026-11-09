@@ -8,6 +8,7 @@ import {
   type UiTextScale,
   type ColorSwatchMode,
   type DiagramEngine,
+  type Settings,
 } from "../../prefs/SettingsContext";
 import type { ViewMode } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
@@ -92,6 +93,23 @@ export function EditorPage({
                   {percent.format(scale)}
                 </option>
               ))}
+            </Select>
+          </SettingRow>
+        )}
+        {!phone && (
+          <SettingRow label={t.layoutLabel}>
+            <Select
+              className="settings-select"
+              aria-label={t.layoutLabel}
+              value={settings.layout}
+              onChange={(e) =>
+                setSettings({
+                  layout: e.target.value as Settings["layout"],
+                })
+              }
+            >
+              <option value="islands">{t.layoutIslands}</option>
+              <option value="classic">{t.layoutClassic}</option>
             </Select>
           </SettingRow>
         )}
