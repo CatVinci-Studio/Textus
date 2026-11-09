@@ -172,6 +172,9 @@ pub(crate) fn user_guidance(workspace: &AgentWorkspace, memories: bool) -> Vec<S
             format!("---user instructions for this folder (where they conflict with the ones above, follow these)---\n{project}")
         });
     }
+    if let Some(agents) = &workspace.agents_md {
+        sections.push(format!("---the folder's AGENTS.md (its instructions for AI agents working in it; where they conflict with the user instructions above, follow those)---\n{agents}"));
+    }
     if memories {
         sections.extend(crate::ai::memory::memory_sections(&workspace.memories));
     }

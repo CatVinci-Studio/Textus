@@ -163,6 +163,13 @@ pub struct AgentWorkspace {
     pub root: Option<String>,
     /// `.textus/style.md` - the author's style profile.
     pub style: Option<String>,
+    /// The folder's AGENTS.md: its instructions for AI agents.
+    #[serde(skip)]
+    pub agents_md: Option<String>,
+    /// The text files beside the document and in a templates folder, from
+    /// the folder (ai::project::nearby_files).
+    #[serde(skip)]
+    pub nearby: Vec<String>,
     /// `.textus/library/*.md` - the project's people, places and terms.
     pub library: Vec<crate::ai::project::LibraryEntry>,
     /// Where `root` came from, or why there is none, so the agent can tell the

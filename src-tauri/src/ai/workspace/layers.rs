@@ -123,6 +123,8 @@ pub(crate) fn load_layers(
         ws.style = crate::ai::project::read_style(root);
         ws.conventions = crate::ai::project::style_conventions(ws.style.as_deref());
         ws.library = crate::ai::project::read_library(root);
+        ws.agents_md = crate::ai::project::read_agents_md(root);
+        ws.nearby = crate::ai::project::nearby_files(root, doc_path.map(Path::new));
         let (instructions, skills) = read_layer(&project_dir(root), SkillSource::Project);
         ws.project_instructions = instructions;
         // Project skills shadow same-named global and built-in ones.

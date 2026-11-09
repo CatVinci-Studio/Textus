@@ -458,6 +458,28 @@ fn workspace_cases() -> Vec<AgentCase> {
     let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
     c.push(AgentCase::new("workspace/zh/search-chapters", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "前面的章节里，林晚的猫叫什么名字？", no_edit().reply(&["年糕"]).check("looked in the folder", used_file_tools), "The other chapters sit in the document's folder: expect search_files/read_file to find that the cat is called 年糕 (an orange cat, chapter one), answered in Chinese without editing.").mode(AgentMode::Review).disk(ws));
 
+    // A template beside the document's folder: named in the request, read
+    // and followed.
+    let dir = scratch("follow-template");
+    put(
+        &dir,
+        "模板/周报.md",
+        "# 周报\n\n## 本周完成\n\n## 下周计划\n\n## 风险与求助\n",
+    );
+    // The folder open in the sidebar, as a writer keeping reports has it.
+    let ws = DiskWorkspace {
+        root_override: Some(dir.clone()),
+        ..doc_folder(&dir, "周报/11-09.md", "# 周报 11-09\n")
+    };
+    let shaped = |o: &TurnOutcome| {
+        let t = proposed_text(o);
+        ["本周完成", "下周计划", "风险"]
+            .iter()
+            .find(|h| !t.contains(*h))
+            .map_or(Ok(()), |h| Err(format!("no {h} section: {t}")))
+    };
+    c.push(AgentCase::new("workspace/zh/follow-template", Lang::ZhHans, Lang::ZhHans, "# 周报 11-09\n", "按模板写这周的周报：完成了登录页，下周做支付。", edit_anywhere().check("template's sections", shaped).check("read the template", used_file_tools), "The folder's 模板/周报.md is named beside the document: expect read_file on it, then a proposal laying the week out in its three sections (本周完成, 下周计划, 风险与求助), in Chinese, inventing no risks.").disk(ws));
+
     // General mode changes the folder's other files itself.
     let dir = scratch("rename-across");
     let first = put(

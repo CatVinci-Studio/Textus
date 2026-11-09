@@ -153,6 +153,10 @@ pub(super) fn request_context_and_library<'a>(
         crate::ai::project::writing_context_section(workspace.style.as_deref(), &pick.included)
             .into_iter()
             .collect();
+    // Only where the model can read them.
+    if with_tools && workspace.root.is_some() {
+        parts.extend(crate::ai::project::nearby_section(&workspace.nearby));
+    }
     parts.push(document_text);
     (parts.join("\n\n"), pick)
 }

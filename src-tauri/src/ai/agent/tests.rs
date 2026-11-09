@@ -831,15 +831,20 @@ fn the_cached_prefix_survives_a_new_memory() {
 fn project_writing_instructions_follow_and_override_the_global_ones() {
     let global = "Always reply in English.";
     let project = "Reply in Chinese.";
+    let agents = "Keep British spelling.";
     let both = AgentWorkspace {
         instructions: vec![global.into()],
         project_instructions: Some(project.into()),
+        agents_md: Some(agents.into()),
         ..AgentWorkspace::default()
     };
     let prompt = build_instructions(&both, &md("draft"), true, AgentMode::Write, "", "en");
     let global_at = prompt.find(global).unwrap();
     let project_at = prompt.find(project).unwrap();
     assert!(global_at < project_at, "global first, project after");
+    // The folder's AGENTS.md after both, which win over it.
+    assert!(prompt.find(agents).unwrap() > project_at);
+    assert!(prompt.contains("---the folder's AGENTS.md"));
     assert!(prompt.contains(
         "---user instructions for this folder (where they conflict with the ones above, follow these)---\nReply in Chinese."
     ));
