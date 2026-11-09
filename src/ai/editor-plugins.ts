@@ -8,6 +8,7 @@ import {
 } from "./revision/pending-edit-plugin";
 import { chatSelectionPlugin } from "./chat/quick-ask/chat-selection-plugin";
 import { blockReader } from "./revision/block-reader";
+import { createAiFileChangesPlugin } from "./revision/file-changes-plugin";
 import { streamFollowPlugin } from "./revision/stream-follow-plugin";
 import { createQuickAskWidgetPlugin } from "./chat/quick-ask/quick-ask-widget-plugin";
 import {
@@ -65,6 +66,7 @@ export function withAiPlugins(
   return (
     editor
       .use(blockReader)
+      .use(createAiFileChangesPlugin(() => docPath.current))
       .use(
         createGhostTextPlugin({
           enabled: () =>

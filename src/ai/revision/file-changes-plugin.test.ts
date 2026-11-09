@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockHunks } from "./ai-file-changes-plugin";
+import { blockHunks } from "./file-changes-plugin";
 
 describe("blockHunks", () => {
   it("finds the blocks changed, added and removed, the rest kept", () => {

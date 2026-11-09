@@ -7,15 +7,15 @@ import {
   type EditorView,
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { serializeBlocks, type MarkdownBlock } from "../ai/doc-markdown";
+import { serializeBlocks, type MarkdownBlock } from "../doc-markdown";
 import {
   changesSettled,
   onChangedFiles,
   textBeforeChanges,
-} from "../ai/chat/file-changes";
-import { currentStrings } from "../i18n/current";
-import { parseMarkdownSource } from "./markdown/parse-markdown-source";
-import "./ai-file-changes.css";
+} from "../chat/file-changes";
+import { currentStrings } from "../../i18n/current";
+import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
+import "./file-changes.css";
 
 /**
  * A file Textus AI changed from General mode opens showing where: each
