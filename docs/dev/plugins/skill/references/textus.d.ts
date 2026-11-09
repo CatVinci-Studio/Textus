@@ -1423,6 +1423,12 @@ declare global {
         items: (MenuItem | "separator")[],
         at?: Element | { x: number; y: number },
       ): Promise<unknown>;
+      /** A text field's menu items (undo, redo, cut, copy, paste, select
+       *  all) in Textus's language, for a page's own right-click menu; each
+       *  value is the action `editText` takes (1.3.12). */
+      textItems(field: Element): Promise<(MenuItem | "separator")[]>;
+      /** One of those actions in `field`, the clipboard through Textus. */
+      editText(field: Element, action: string): Promise<void>;
       /** How the page looks as a picture, asked when the document is
        *  exported (a code block's page): an SVG's markup or an image's
        *  `data:` URL, for a page of `theme`. Without it, or answering

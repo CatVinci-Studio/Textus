@@ -143,6 +143,8 @@ export function PluginWebview({
             x,
             y,
           ),
+        textItems: ({ selected }: { selected: unknown }) =>
+          textFieldItems(windowInfo().strings(), selected === true),
         clipboardWrite: ({ text }: { text: unknown }) =>
           navigator.clipboard.writeText(String(text ?? "")).then(() => true),
         clipboardRead: () => clipboardText(),

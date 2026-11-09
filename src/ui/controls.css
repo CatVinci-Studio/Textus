@@ -284,6 +284,10 @@ input[type="range"].tx-slider {
   min-width: 0;
   padding: 0;
   border: none;
+  /* Text in place, not a control: a capsule's corner, with no padding,
+     cut the caret and the selection at the field's start into an arc. */
+  border-radius: 0;
+  corner-shape: initial;
   background: transparent;
   color: inherit;
   font: inherit;

@@ -497,6 +497,10 @@ test("a field in the page takes Textus's own menu for its text, not the system's
   const field = first.locator("input");
   await field.fill("Week1x");
   await field.click({ button: "right" });
+  // Its text's items, then the row's and column's, as a table's in the editor.
+  await expect(
+    menu(page).getByRole("menuitem", { name: "Insert Row Below" }),
+  ).toBeVisible();
   await pick(page, "Select All");
   await expect
     .poll(() =>

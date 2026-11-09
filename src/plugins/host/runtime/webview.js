@@ -105,25 +105,33 @@
         menuOpen = false;
         field.focus();
         field.removeAttribute("data-menu-open");
-        if (!action) return;
-        if (action === "copy" || action === "cut") {
-          var text = selectedText(field);
-          return call("clipboardWrite", { text: text }).then(function () {
-            if (action === "cut") document.execCommand("delete");
-          });
-        }
-        if (action === "paste")
-          return call("clipboardRead", {}).then(function (text) {
-            if (text) document.execCommand("insertText", false, String(text));
-          });
-        if (action === "selectAll") {
-          if (field.select) field.select();
-          else document.execCommand("selectAll");
-          return;
-        }
-        document.execCommand(action);
+        return editText(field, action);
       },
     );
+  }
+  /** Undo, redo, cut, copy, paste or select all in `field`, the clipboard
+   *  through the window (a page can't read it). */
+  function editText(field, action) {
+    if (!action) return Promise.resolve();
+    field.focus();
+    return Promise.resolve().then(function () {
+      if (action === "copy" || action === "cut") {
+        var text = selectedText(field);
+        return call("clipboardWrite", { text: text }).then(function () {
+          if (action === "cut") document.execCommand("delete");
+        });
+      }
+      if (action === "paste")
+        return call("clipboardRead", {}).then(function (text) {
+          if (text) document.execCommand("insertText", false, String(text));
+        });
+      if (action === "selectAll") {
+        if (field.select) field.select();
+        else document.execCommand("selectAll");
+        return;
+      }
+      document.execCommand(action);
+    });
   }
   ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
     window.addEventListener(type, function (event) {
@@ -230,6 +238,15 @@
     // right-click or a dropdown. Items: { label, value, checked, danger,
     // disabled }, "separator", or { label, items } for a submenu. Gives
     // the chosen item's value (its label without one), or null.
+    // A text field's actions, for a page that puts them in a menu of its
+    // own: textItems(field) gives them labelled in Textus's language (as
+    // menu items, value the action), editText(field, action) does one.
+    textItems: function (field) {
+      return call("textItems", { selected: selectedIn(field) });
+    },
+    editText: function (field, action) {
+      return editText(field, action);
+    },
     menu: function (items, at) {
       var point = anchor(at);
       menuOpen = true;
