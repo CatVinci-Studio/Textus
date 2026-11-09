@@ -73,12 +73,15 @@ export function PluginWebview({
   id,
   className,
   fitHeight,
+  zoom = 1,
 }: {
   id: string;
   className?: string;
   /** The frame as tall as its page, up to this many pixels (asked as it
    *  changes, when a function). */
   fitHeight?: number | (() => number);
+  /** A page in the document: its own size, times the document's zoom. */
+  zoom?: number;
 }) {
   useSyncExternalStore(subscribeWebviews, webviewsVersion);
   const record = webview(id);
@@ -93,6 +96,11 @@ export function PluginWebview({
     close: () => void;
   } | null>(null);
 
+  // The size the page draws at: its own times the document's.
+  const ownZoom = useRef(zoom);
+  ownZoom.current = zoom;
+  const tellZoom = useRef<(() => void) | null>(null);
+  useEffect(() => tellZoom.current?.(), [zoom]);
   useEffect(() => {
     const box = boxRef.current;
     const current = webview(id);
@@ -185,12 +193,17 @@ export function PluginWebview({
       (connected) => {
         endpoint = connected;
         webviewConnected(id, connected);
-        if (inDocument) connected?.notify("zoom", { zoom: contentZoom() });
+        if (inDocument)
+          connected?.notify("zoom", { zoom: contentZoom() * ownZoom.current });
       },
     );
     // A page in the document draws at the document's zoom itself.
+    tellZoom.current = inDocument
+      ? () =>
+          endpoint?.notify("zoom", { zoom: contentZoom() * ownZoom.current })
+      : null;
     const stopZoom = inDocument
-      ? watchContentZoom((zoom) => endpoint?.notify("zoom", { zoom }))
+      ? watchContentZoom(() => tellZoom.current?.())
       : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {
@@ -410,12 +423,15 @@ export function PluginCodeBlock({
   widget,
   seen,
   setSource,
+  zoom = 1,
 }: {
   plugin: string;
   /** The editor's widget it is drawn in: the same one while it lives. */
   widget: string;
   seen: CodeBlockSeen;
   setSource: (source: string) => boolean;
+  /** The block's own size (its fence's `zoom=`), times the document's. */
+  zoom?: number;
 }) {
   const { record, error } = useResolvedWebview(plugin, "codeBlock", widget, {
     codeBlock: seen,
@@ -452,6 +468,7 @@ export function PluginCodeBlock({
       id={record.id}
       className="plugin-code-block-frame"
       fitHeight={codeBlockMax}
+      zoom={zoom}
     />
   );
 }

@@ -37,6 +37,13 @@ import { markChangeSource } from "../../editor/change-source";
 import { addBlockFold } from "../../editor/fold/block-fold";
 import { setDrawnBlockActions } from "../../editor/drawn-block-actions";
 import {
+  BLOCK_ZOOMS,
+  followPaneWidth,
+  layoutOf,
+  setBlockLayout,
+  type BlockLayout,
+} from "./block-layout";
+import {
   pluginName,
   pluginsSnapshot,
 } from "../../plugins/store/plugin-records";
@@ -142,9 +149,30 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
+      // Its width and size, as its fence says; kept up as the fence changes.
+      let layout = layoutOf({});
+      let stopWide = () => {};
+      const lay = (next: BlockLayout) => {
+        if (next.wide !== layout.wide) {
+          stopWide();
+          stopWide = next.wide ? followPaneWidth(el, view.dom) : () => {};
+          el.toggleAttribute("data-wide", next.wide);
+        }
+        layout = next;
+      };
+      const initial = blockAt(ctx, view, getPos, language);
+      if (initial) lay(layoutOf(initial.meta));
       setDrawnBlockActions(el, {
         editSource: () => openSource(view, getPos),
         remove: () => removeBlock(view, getPos),
+        get layout() {
+          return {
+            ...layout,
+            zooms: BLOCK_ZOOMS,
+            set: (patch: Partial<BlockLayout>) =>
+              setBlockLayout(view, getPos, patch, layout),
+          };
+        },
       });
       const holder = document.createElement("div");
       holder.className = "plugin-code-holder";
@@ -167,11 +195,13 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
           const render = () => {
             const seen = blockAt(ctx, view, getPos, language);
             if (!seen) return;
+            lay(layoutOf(seen.meta));
             root.render(
               createElement(PluginCodeBlock, {
                 plugin,
                 widget,
                 seen,
+                zoom: layout.zoom,
                 setSource: (source: string) => setSource(view, getPos, source),
               }),
             );

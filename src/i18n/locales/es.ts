@@ -131,6 +131,8 @@ para usar una.
   codeBlockEditSource: "Editar el código",
   codeBlockDone: "Terminar de editar",
   codeBlockDelete: "Eliminar el bloque",
+  menuBlockWide: "Vista ancha",
+  menuBlockZoom: "Tamaño",
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagen",
   pictureViewerLabel: "Imagen",

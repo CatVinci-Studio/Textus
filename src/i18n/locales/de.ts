@@ -125,6 +125,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   codeBlockEditSource: "Quelltext bearbeiten",
   codeBlockDone: "Bearbeitung beenden",
   codeBlockDelete: "Block löschen",
+  menuBlockWide: "Breit anzeigen",
+  menuBlockZoom: "Größe",
   diagramViewerLabel: "Diagramm",
   pictureZoom: "Bild vergrößern",
   pictureViewerLabel: "Bild",

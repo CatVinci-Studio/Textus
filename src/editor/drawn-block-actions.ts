@@ -6,6 +6,14 @@
 export interface DrawnBlockActions {
   editSource(): void;
   remove(): void;
+  /** Where its width and size can change: the pane's width, and the size
+   *  its page draws at. */
+  layout?: {
+    wide: boolean;
+    zoom: number;
+    zooms: readonly number[];
+    set(patch: { wide?: boolean; zoom?: number }): void;
+  };
 }
 
 const actions = new WeakMap<Element, DrawnBlockActions>();

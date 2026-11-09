@@ -123,6 +123,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   codeBlockEditSource: "Editar o código",
   codeBlockDone: "Concluir edição",
   codeBlockDelete: "Excluir o bloco",
+  menuBlockWide: "Exibição larga",
+  menuBlockZoom: "Tamanho",
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagem",
   pictureViewerLabel: "Imagem",

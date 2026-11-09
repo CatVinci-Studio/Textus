@@ -299,6 +299,61 @@ test("zoomed, the block's page draws at the zoom across the column's width, and 
   await expect.poll(zoom).not.toBe(before);
 });
 
+test("from its right-click menu the block is shown wide, across the pane, and drawn smaller, both kept in its fence", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1500, height: 900 });
+  const db = await open(page);
+  await expect(db.locator(rows)).toHaveCount(3);
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  const column = page.locator('[data-active-tab="true"] .ProseMirror');
+  const width = async () => (await block.boundingBox())!.width;
+  const narrow = await width();
+  // Away from the rows, the page leaves a right-click to the editor's menu.
+  const menu = () => db.locator("thead th").first().click({ button: "right" });
+  await menu();
+  await page.getByRole("menuitemradio", { name: "Wide" }).click();
+  await expect.poll(width).toBeGreaterThan(narrow + 200);
+  const pane = (await column.boundingBox())!;
+  expect((await block.boundingBox())!.x).toBeLessThan(pane.x);
+  await menu();
+  await page.getByRole("menuitem", { name: "Size" }).hover();
+  await page.getByRole("menuitemradio", { name: "80%" }).click();
+  await expect
+    .poll(() =>
+      db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom),
+    )
+    .toBe("0.8");
+  // Kept in the fence, for the next time the file opens.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const view = (
+          window as unknown as {
+            __pmView: {
+              state: {
+                doc: {
+                  descendants: (
+                    f: (n: {
+                      type: { name: string };
+                      attrs: { meta?: string };
+                    }) => void,
+                  ) => void;
+                };
+              };
+            };
+          }
+        ).__pmView;
+        let meta = "";
+        view.state.doc.descendants((n) => {
+          if (n.type.name === "code_block") meta = n.attrs.meta ?? "";
+        });
+        return meta;
+      }),
+    )
+    .toBe("wide zoom=80");
+});
+
 test("a long view loads more rows once its end is in sight; folded by Textus, one line", async ({
   page,
 }) => {

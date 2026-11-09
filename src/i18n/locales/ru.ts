@@ -124,6 +124,8 @@ export default {
   codeBlockEditSource: "Изменить исходный код",
   codeBlockDone: "Завершить правку",
   codeBlockDelete: "Удалить блок",
+  menuBlockWide: "Во всю ширину",
+  menuBlockZoom: "Масштаб",
   diagramViewerLabel: "Диаграмма",
   pictureZoom: "Увеличить изображение",
   pictureViewerLabel: "Изображение",

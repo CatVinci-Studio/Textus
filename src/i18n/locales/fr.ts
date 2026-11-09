@@ -131,6 +131,8 @@ utiliser une.
   codeBlockEditSource: "Modifier la source",
   codeBlockDone: "Terminer la modification",
   codeBlockDelete: "Supprimer le bloc",
+  menuBlockWide: "Affichage large",
+  menuBlockZoom: "Taille",
   diagramViewerLabel: "Diagramme",
   pictureZoom: "Agrandir l'image",
   pictureViewerLabel: "Image",

@@ -122,6 +122,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   codeBlockEditSource: "ソースを編集",
   codeBlockDone: "編集を終了",
   codeBlockDelete: "ブロックを削除",
+  menuBlockWide: "ワイド表示",
+  menuBlockZoom: "表示サイズ",
   diagramViewerLabel: "図",
   pictureZoom: "画像を拡大",
   pictureViewerLabel: "画像",

@@ -271,8 +271,26 @@ function drawnBlockItems(
   block: DrawnBlockActions | null,
 ): MenuEntry[] {
   if (!block) return [];
+  const layout = block.layout;
   return [
     { label: t.codeBlockEditSource, onSelect: block.editSource },
+    ...(layout
+      ? [
+          {
+            label: t.menuBlockWide,
+            checked: layout.wide,
+            onSelect: () => layout.set({ wide: !layout.wide }),
+          },
+          {
+            label: t.menuBlockZoom,
+            items: layout.zooms.map((zoom) => ({
+              label: `${Math.round(zoom * 100)}%`,
+              checked: zoom === layout.zoom,
+              onSelect: () => layout.set({ zoom }),
+            })),
+          },
+        ]
+      : []),
     { label: t.codeBlockDelete, onSelect: block.remove },
   ];
 }

@@ -121,6 +121,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   codeBlockEditSource: "소스 편집",
   codeBlockDone: "편집 완료",
   codeBlockDelete: "블록 삭제",
+  menuBlockWide: "넓게 보기",
+  menuBlockZoom: "크기",
   diagramViewerLabel: "다이어그램",
   pictureZoom: "이미지 확대",
   pictureViewerLabel: "이미지",

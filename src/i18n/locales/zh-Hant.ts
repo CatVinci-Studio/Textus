@@ -116,6 +116,8 @@ export default {
   codeBlockEditSource: "編輯原始碼",
   codeBlockDone: "完成編輯",
   codeBlockDelete: "刪除此區塊",
+  menuBlockWide: "寬螢幕顯示",
+  menuBlockZoom: "縮放",
   diagramViewerLabel: "圖表",
   pictureZoom: "放大圖片",
   pictureViewerLabel: "圖片",
