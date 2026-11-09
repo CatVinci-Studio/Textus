@@ -201,6 +201,8 @@ declare global {
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
+       *  "textus.showFolder" with a folder's path inside the open one shows
+       *  it in the sidebar, as double-clicking it does (1.3.12).
        *  "textus.offerPlugin" with { id } suggests an official plugin from
        *  the market: a card at the bottom right with its name. It never
        *  blocks editing and stays until the user acts; its permissions are

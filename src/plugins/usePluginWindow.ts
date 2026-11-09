@@ -35,7 +35,11 @@ import { openBeside } from "../app/split/split-layout";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
-import { INSERT_BLOCK_EVENT, INSERT_BLOCK_KINDS } from "../utils/events";
+import {
+  INSERT_BLOCK_EVENT,
+  SHOW_FOLDER_EVENT,
+  INSERT_BLOCK_KINDS,
+} from "../utils/events";
 import { useSettings } from "../prefs/SettingsContext";
 import { setWindowFolderSource } from "../platform/window-folder";
 
@@ -223,10 +227,23 @@ export function usePluginWindow({
           );
       },
     });
+    // A folder inside the open one shown in the sidebar (an import's).
+    const showFolder = registerCommand({
+      id: "textus.showFolder",
+      title: (t) => t.menuOpenFolder,
+      palette: false,
+      run: (path) => {
+        if (typeof path === "string")
+          window.dispatchEvent(
+            new CustomEvent(SHOW_FOLDER_EVENT, { detail: path }),
+          );
+      },
+    });
     return () => {
       save();
       close();
       insertBlock();
+      showFolder();
     };
   }, [saveRef, closeRef]);
 
