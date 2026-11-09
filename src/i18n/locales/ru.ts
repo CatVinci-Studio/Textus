@@ -1722,7 +1722,10 @@ export default {
   pluginCardsRestore: "Показать снова",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
-  pluginsNone: "Пока нет.",
+  pluginsInstalledNone:
+    "Плагины ещё не установлены. Выберите один в разделе «{section}» ниже.",
+  skillsInstalledNone:
+    "Навыки ещё не добавлены. Выберите один в разделе «{section}» ниже или создайте свой.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",
   pluginStatusDesktopOnly:
     "Работает только на компьютере, не на iPhone и iPad.",

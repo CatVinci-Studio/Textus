@@ -1574,7 +1574,9 @@ export default {
   pluginCardsRestore: "重新顯示",
   pluginScreenshot: "{name} 使用截圖",
   pluginsMine: "我做的外掛",
-  pluginsNone: "尚無。",
+  pluginsInstalledNone: "還沒有安裝外掛程式。可以在下方「{section}」裡挑一個。",
+  skillsInstalledNone:
+    "還沒有加入 Skill。可以在下方「{section}」裡挑一個，或自己做一個。",
   pluginStatusBroken: "無法讀取：{reason}",
   pluginStatusDesktopOnly: "只能在電腦上使用，不支援 iPhone 和 iPad。",
   pluginStatusIncompatible: "為其他版本的 Textus 製作（{range}）。",

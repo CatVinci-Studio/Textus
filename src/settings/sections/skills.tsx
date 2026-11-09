@@ -156,7 +156,14 @@ export function OwnSkillsList({
     }
   }
 
-  if (own.length === 0) return null;
+  if (own.length === 0)
+    return (
+      <p className="plugin-empty">
+        {query.trim()
+          ? t.skillPickerNoMatch.replace("{query}", query.trim())
+          : t.skillsInstalledNone.replace("{section}", t.extensionsAvailable)}
+      </p>
+    );
   return (
     <div className="settings-skill-list">
       {error && (

@@ -43,7 +43,11 @@ test("nothing comes installed, and the catalog offers the official plugins, eigh
   await expect(cards).toHaveCount(20);
   await showAll(page);
   const installed = page.getByRole("region", { name: "Installed" });
-  await expect(installed).toContainText("None yet.");
+  // Not an empty box: a line that points to the catalog below.
+  await expect(installed.locator(".settings-group-body")).toHaveText(
+    "No plugins installed yet. Pick one under Available below.",
+  );
+  await expect(installed.locator(".plugin-card")).toHaveCount(0);
   // The catalog follows, on the same page.
   const graph = page.locator('.plugin-card[data-catalog="catvinci.graph"]');
   await expect(graph).toContainText("Graph View");

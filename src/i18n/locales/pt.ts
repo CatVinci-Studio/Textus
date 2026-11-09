@@ -1707,7 +1707,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginCardsRestore: "Mostrar de novo",
   pluginScreenshot: "{name} em uso",
   pluginsMine: "Feitos por você",
-  pluginsNone: "Nenhum ainda.",
+  pluginsInstalledNone:
+    "Nenhum plugin instalado ainda. Escolha um em {section}, mais abaixo.",
+  skillsInstalledNone:
+    "Nenhuma habilidade adicionada ainda. Escolha uma em {section}, mais abaixo, ou crie a sua.",
   pluginStatusBroken: "Não foi possível ler: {reason}",
   pluginStatusDesktopOnly:
     "Funciona só no computador, não no iPhone nem no iPad.",

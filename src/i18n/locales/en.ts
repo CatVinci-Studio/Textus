@@ -1684,7 +1684,10 @@ type /name in a conversation to use one.
   pluginCardsRestore: "Show again",
   pluginScreenshot: "{name} at work",
   pluginsMine: "Made by you",
-  pluginsNone: "None yet.",
+  pluginsInstalledNone:
+    "No plugins installed yet. Pick one under {section} below.",
+  skillsInstalledNone:
+    "No skills added yet. Pick one under {section} below, or make your own.",
   pluginStatusBroken: "Can’t be read: {reason}",
   pluginStatusDesktopOnly: "Works on the computer only, not on iPhone or iPad.",
   pluginStatusIncompatible: "Made for another version of Textus ({range}).",

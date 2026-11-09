@@ -1640,7 +1640,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginCardsRestore: "다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
-  pluginsNone: "아직 없습니다.",
+  pluginsInstalledNone:
+    "아직 설치한 플러그인이 없습니다. 아래 ‘{section}’에서 고를 수 있습니다.",
+  skillsInstalledNone:
+    "아직 추가한 스킬이 없습니다. 아래 ‘{section}’에서 고르거나 직접 만들 수 있습니다.",
   pluginStatusBroken: "읽을 수 없음: {reason}",
   pluginStatusDesktopOnly:
     "컴퓨터에서만 사용할 수 있으며 iPhone과 iPad에서는 사용할 수 없습니다.",
