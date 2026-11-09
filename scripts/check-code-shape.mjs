@@ -12,9 +12,6 @@ const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
 const LINES_NOW = {
-  "src-tauri/src/ai/web/mod.rs": 596,
-  "src-tauri/src/lib.rs": 585,
-  "src-tauri/src/plugins/catalog.rs": 566,
 };
 
 /** Over the hook limit today: the roots that wire a window together. */
