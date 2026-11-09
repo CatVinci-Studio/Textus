@@ -112,7 +112,14 @@ export function DirNode({
           onClick={() => {
             if (!tree.takeDragClick()) setOpen(!open);
           }}
-          onDoubleClick={() => onEnter(path)}
+          // Two quick clicks on the arrow fold and unfold it: only a double
+          // click past the arrow goes into the folder.
+          onDoubleClick={(e) => {
+            const arrow = e.currentTarget.querySelector(".chevron");
+            if (arrow && e.clientX <= arrow.getBoundingClientRect().right + 2)
+              return;
+            onEnter(path);
+          }}
           onContextMenu={
             tree.onRowMenu ? (e) => tree.onRowMenu!(e, path, true) : undefined
           }

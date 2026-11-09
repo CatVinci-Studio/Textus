@@ -8,10 +8,10 @@ import {
 import { isRecord, type Raw } from "./settings-sync";
 import { storedImageFolder } from "./image-folder";
 import { storedShortcuts } from "./shortcut-defaults";
+import { DEFAULT_SETTINGS, type Settings } from "./settings-types";
 import {
   COLOR_SWATCH_MODES,
   type ColorSwatchMode,
-  DEFAULT_SETTINGS,
   DIAGRAM_ENGINES,
   type DiagramEngine,
   IMAGE_HOSTS,
@@ -21,7 +21,6 @@ import {
   type Creation,
   CREATION_KINDS,
   type CreationKind,
-  type Settings,
   THEME_MODES,
   type ThemeMode,
   UI_TEXT_SCALES,
@@ -35,7 +34,7 @@ import {
   LETTER_SPACING_BY,
   PANDOC_ARGS_FORMATS,
   storedAgentMode,
-} from "./settings-types";
+} from "./settings-values";
 
 /** Saved settings read back whole: a missing, ill-typed or unknown value
  *  takes its default, and fields this version doesn't know are kept. */

@@ -6,8 +6,8 @@ import { registerEditorFlush } from "../editor/editor-flush";
 import {
   readSourceBlocks,
   writePreservingSource,
-  type SourceBlocks,
 } from "../editor/markdown/source-preserving";
+import type { SourceBlocks } from "../editor/markdown/source-parts";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import { useLatest } from "../utils/hooks/useLatest";
 

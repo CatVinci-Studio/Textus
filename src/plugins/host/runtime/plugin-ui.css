@@ -27,9 +27,10 @@ body {
   line-height: 1.5;
 }
 
-/* A floating view has no page behind it: only what the plugin draws. */
-:root[data-floating],
-:root[data-floating] body {
+/* A floating view has no page behind it: only what the plugin draws. A
+   sidebar tab's page lies on the sidebar, in its colour. */
+:root:is([data-floating], [data-sidebar]),
+:root:is([data-floating], [data-sidebar]) body {
   background: transparent;
 }
 

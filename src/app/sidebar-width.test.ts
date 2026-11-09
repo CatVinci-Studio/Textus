@@ -49,7 +49,7 @@ describe("the remembered sidebar width", () => {
 
   it("starts from the stored width", () => {
     localStorage.setItem(KEY, "320");
-    const { result } = renderHook(() => useSidebarWidth(1400));
+    const { result } = renderHook(() => useSidebarWidth(1200));
     expect(result.current.width).toBe(320);
   });
 
@@ -61,12 +61,12 @@ describe("the remembered sidebar width", () => {
     );
     expect(result.current.width).toBe(360);
     expect(result.current.max).toBe(360);
-    rerender({ windowWidth: 1400 });
+    rerender({ windowWidth: 1200 });
     expect(result.current.width).toBe(460);
   });
 
   it("remembers a drag only once it lets go", () => {
-    const { result } = renderHook(() => useSidebarWidth(1400));
+    const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.setWidth(300, false));
     expect(result.current.width).toBe(300);
     expect(localStorage.getItem(KEY)).toBeNull();
@@ -75,15 +75,24 @@ describe("the remembered sidebar width", () => {
   });
 
   it("stores the clamped width", () => {
-    const { result } = renderHook(() => useSidebarWidth(1400));
+    const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.setWidth(5000));
     expect(result.current.width).toBe(480);
     expect(localStorage.getItem(KEY)).toBe("480");
   });
 
+  it("grows with a wide window, in the interface's size units", () => {
+    localStorage.setItem(KEY, "240");
+    // 2320 wide: the interface is 1.35 times its size.
+    const { result } = renderHook(() => useSidebarWidth(2320));
+    expect(result.current.width).toBe(324);
+    act(() => result.current.setWidth(405));
+    expect(localStorage.getItem(KEY)).toBe("300");
+  });
+
   it("resets to the default", () => {
     localStorage.setItem(KEY, "400");
-    const { result } = renderHook(() => useSidebarWidth(1400));
+    const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.resetWidth());
     expect(result.current.width).toBe(SIDEBAR_DEFAULT_WIDTH);
     expect(localStorage.getItem(KEY)).toBe(String(SIDEBAR_DEFAULT_WIDTH));

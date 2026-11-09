@@ -121,6 +121,8 @@ type /name in a conversation to use one.
   editorLabel: "Document",
   diagramZoom: "Enlarge diagram",
   codeBlockEditSource: "Edit Source",
+  codeBlockDone: "Done Editing",
+  codeBlockDelete: "Delete Block",
   diagramViewerLabel: "Diagram",
   pictureZoom: "Enlarge picture",
   pictureViewerLabel: "Picture",
@@ -1272,6 +1274,8 @@ type /name in a conversation to use one.
   closeLastWindow: "Close the window",
   closeLastStartPage: "Show the start page",
   startPageRecentProjects: "Recent Projects",
+  startPagePickDocument:
+    "Pick a document in {folder} from the sidebar to start.",
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   autosaveLabel: "Save automatically",
@@ -1657,6 +1661,8 @@ type /name in a conversation to use one.
   pluginsInstallHelp:
     "A plugin package (.textusplugin) is copied into Textus. A plugin folder is loaded where it is, for trying out one you are writing; it reloads from there.",
   pluginsInstallFile: "Install from file…",
+  pluginFormPrevMonth: "Previous month",
+  pluginFormNextMonth: "Next month",
   pluginsLoadFolder: "Load a plugin folder…",
   pluginsOpenScripts: "Open Scripts Folder",
   pluginPackageFilter: "Textus plugin",
@@ -1678,7 +1684,10 @@ type /name in a conversation to use one.
   pluginCardsRestore: "Show again",
   pluginScreenshot: "{name} at work",
   pluginsMine: "Made by you",
-  pluginsNone: "None yet.",
+  pluginsInstalledNone:
+    "No plugins installed yet. Pick one under {section} below.",
+  skillsInstalledNone:
+    "No skills added yet. Pick one under {section} below, or make your own.",
   pluginStatusBroken: "Can’t be read: {reason}",
   pluginStatusDesktopOnly: "Works on the computer only, not on iPhone or iPad.",
   pluginStatusIncompatible: "Made for another version of Textus ({range}).",
@@ -1745,6 +1754,8 @@ type /name in a conversation to use one.
   pluginPermNetworkAny: "Connect to any website",
   menuPlugins: "Plugins",
   menuManagePlugins: "Manage Plugins…",
+  menuPluginSettings: "Settings…",
+  menuPluginSettingsOf: "{name} Settings…",
   menuNoPluginCommands: "No plugin commands",
   webPageAddress: "Web address",
   webPageReload: "Reload",

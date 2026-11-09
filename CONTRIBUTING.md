@@ -242,10 +242,17 @@ component doing several things: each concern becomes a hook of its own,
 named for it (`useFloatingList`, `useComposerInput`, `useRowDrag`), in the
 component's file or beside it.
 
-**600 lines a file at most.** Split by concern, not by line count: each part
-is something you can name in its first comment. Tests, the dev shim
-(`src/dev/`), the live AI evaluation (`live_eval/`), the translation tables
-and the icon table are not held to it. Rust tests sit inline in a
+**500 lines a file at most.** A file that grows past it is doing more than
+one job, so split it along its jobs, never by line count: interpreting data
+apart from drawing it, state apart from the actions on it, a toolbar apart
+from what it controls. Moving types or a bundle of unrelated hooks out only to
+get under the limit doesn't count. A component or hook that does everything
+(it reads the data, decides, draws, and takes a long list of props and
+labels) is redesigned: a pure function for the data, a small component per
+kind of item, hooks by purpose, labels from context. Each part is something
+you can name in its first comment. Tests, the dev shim (`src/dev/`), the live
+AI evaluation (`live_eval/`), the translation tables, the icon table and the
+generated bindings are not held to it. Rust tests sit inline in a
 `#[cfg(test)] mod tests` or, once they would push a module past the limit,
 in a `tests.rs` beside it (`foo.rs` and `foo/tests.rs`): inline tests count
 towards the module's lines.

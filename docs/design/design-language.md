@@ -163,7 +163,7 @@ Two heights: `--control-height` 28 (36) for forms, dialogs and a Settings row's 
 
 ### 5.4 Layout
 
-**Window** (desktop): sidebar (resizable, 240–360) | document column | AI panel (resizable, 320–480). The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
+**Window** (desktop): sidebar (resizable, 180–480, 240 to start) | document column | AI panel (resizable, 300–720, 380 to start). Widths are kept in base units and drawn times `--chrome-scale` (5.6); each panel takes at most 45% of the window and leaves the document at least 360 × scale, the AI panel counting an open sidebar. The document column centres the text at the theme's measure; the margin for review notes takes 280 on the right when shown. A tab's toolbar is 36 high.
 
 **Surface templates.** A new surface - in the app or a plugin - MUST use one of these:
 
@@ -199,6 +199,33 @@ Every surface that appears in the window is one of these. Each row says where it
 
 **Lists you type into** (the `/` panel, the command palette, the file search, the chat's `/` and `@`) filter with `utils/list-filter.ts`: a label starting with the query first, then a word starting with it, inside it, every word, then pinyin. The option the keys are on is selected (9).
 
+### 5.6 Sizes and scale - In force (Textus 1.3.12)
+
+Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
+
+**The scale.** `--chrome-scale` = Interface Text Size × the window's step (1 up to 1200 px wide, then a straight line to 1.35 at 2320 px). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+
+**Where a size is written, and how it scales:**
+
+| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                         |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                 |
+| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                         |
+| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/ui/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
+| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                      |
+| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/ui/scale-lengths.ts`), the same rule as the build's                                              |
+| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                 |
+
+**Layout rules that follow from it:**
+
+- **Side panels** (sidebar, AI panel): each keeps its own width in interface px; in a small window it is drawn narrower. A panel takes at most 45% of the window; the document keeps at least 360 × scale beside both panels; a squeezed panel can go down to 200 × scale and keeps 100 × scale of room to be dragged in. The handle's range (keys, readers) is the range in force, not the panel's ideal one.
+- **One header line.** The sidebar's header, every tab bar and the AI panel's header end on `--header-height` (the window bar + 36 × scale). The sidebar's fill and edge run up to the window's top (only the window's controls sit there); the AI panel's start under the window bar, whose right end - the word count, the window's buttons - is the page's. `e2e/panel-alignment.spec.ts` checks this at 820, 1280 and 1920.
+- **Popups** keep `EDGE` (8) from the window's edge and `GAP` (6) from what opened them, both scaled; a menu is at most 280 × scale tall.
+- **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
+- **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.
+
+**Reusing it.** The pieces live together and are the only way in: `src/ui/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/ui/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
+
 ## 6. Shape - In force
 
 - **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
@@ -206,6 +233,7 @@ Every surface that appears in the window is one of these. Each row says where it
 - **Controls** are capsules (`--shape-pill`): buttons, selects, one-line fields and search boxes, segmented controls (track and thumb), tabs, chips, tags and switches. A button with only an icon is a circle.
 - **Character-level marks are square**: the caret, Vim's block cursor, the selection, find and flash highlights - radius 0–2 px.
 - Where the engine supports it (Chromium 139+, so WebView2), container corners are continuous (`corner-shape: superellipse(1.25)`); capsules and circles stay `round`.
+- Radii are lengths like any other: they grow with `--chrome-scale` (5.6), so the concentric rule holds at every size.
 
 ## 7. Elevation and materials - In force
 
@@ -243,6 +271,7 @@ Every surface that appears in the window is one of these. Each row says where it
 - Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
 - Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
+- **Dragging** looks the same everywhere: the copy under the pointer is lifted - `scale: 1.06`, `--ui-surface`, `--shadow-popover` (`.tx-drag-ghost`, `.tree-drag-ghost`, `.tab-pull-ghost`, `.tab-pill-lifted`, `.is-drag-lifted`) - and the place it left, where it stays, is a dashed outline (`.tx-drag-source`). The copy stays exactly under the point it was taken by, zoomed or not.
 - Nothing moves while the user types: input, the caret, the selection, completions, typewriter scrolling, find highlights and counts change instantly.
 - Under reduced motion, offsets and scales become 0, springs become the standard curve, slow motion becomes a 150 ms fade, loops stop and smooth scrolling is instant (`ui/motion.ts`: `prefersReducedMotion()`, `motionAllowed()`).
 
@@ -345,28 +374,22 @@ Every plugin page (a sidebar tab, a tab view, a code block, a settings page) get
 
 A plugin MUST NOT ship its own copy of any of these, and MUST NOT restyle a `tx-` class.
 
-### 15.4 The components, and how to write them - In force (Textus 1.3.2)
+### 15.4 The components, and how to write them - In force (Textus 1.3.12)
 
-Class names are public API (2.1). Write them exactly as below; combine only the modifiers listed.
+The list of controls a plugin page may use, with their markup, is
+[docs/dev/plugins/ui.md](../dev/plugins/ui.md) › Controls - one list, for
+the app and plugins alike; the styles are `src/ui/components.css` and
+`src/ui/controls.css`. Class names are public API (2.1): write them exactly
+as there; combine only the modifiers listed. Icons (`<span class="tx-icon"
+data-icon="…">`): `text`, `number`, `select`, `multi`, `date`, `checkbox`,
+`url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`,
+`calendar`, `gallery`, `open`, `chevron`, `left`, `right`, `search`,
+`close`, `check`, `eye-off`, `trash`, `rename`, `sliders`, `refresh`,
+`minus`, `rotate`.
 
-| Component                         | Markup                                                                                                                                      | Notes                                                                                                                                                                                                                                                                                            |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Button                            | `<button class="tx-button">Cancel</button>`                                                                                                 | Secondary: light border. Add `small` in bars and cards (24 high).                                                                                                                                                                                                                                |
-| Primary button                    | `<button class="tx-button primary">Save</button>`                                                                                           | Ink. At most one per group, last in its row.                                                                                                                                                                                                                                                     |
-| Icon button                       | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`                              | A 24 circle. `aria-label` is required.                                                                                                                                                                                                                                                           |
-| Icon                              | `<span class="tx-icon" data-icon="calendar"></span>`                                                                                        | Names: `text`, `number`, `select`, `multi`, `date`, `checkbox`, `url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`, `calendar`, `gallery`, `open`, `chevron`, `left`, `right`, `search`, `close`, `check`, `eye-off`, `trash`, `rename`, `sliders`, `refresh`, `minus`, `rotate`. |
-| Field                             | `<input class="tx-input" placeholder="Search">`                                                                                             | A capsule. `<textarea class="tx-input">` is an 8-radius box.                                                                                                                                                                                                                                     |
-| Checkbox                          | `<input type="checkbox" class="ui-check">`                                                                                                  | The app's own checkbox.                                                                                                                                                                                                                                                                          |
-| Segmented control (view switcher) | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>`                 | The chosen segment raised. Use for 2–5 views or modes.                                                                                                                                                                                                                                           |
-| Bar                               | `<div class="tx-bar">…<span class="tx-spacer"></span>…</div>`                                                                               | 32 high: navigation and view switching first, actions last, the primary button last of all.                                                                                                                                                                                                      |
-| Chip (a rule in force)            | `<button class="tx-chip">Status is Done <span class="tx-icon" data-icon="chevron"></span></button>`                                         | Opens the rule it shows.                                                                                                                                                                                                                                                                         |
-| Tag                               | `<span class="tx-tag" data-tone="green">Done</span>`; with `class="tx-tag status"` a dot before it                                          | Tones in their order (3.4): `blue`, `green`, `orange`, `purple`, `red`, `teal`, `yellow`, `pink`, `gray`; none for neutral.                                                                                                                                                                      |
-| Table                             | `<div class="tx-table-frame"><table class="tx-table">…</table></div>`                                                                       | The document's table look. `<th>` may start with a `tx-icon`.                                                                                                                                                                                                                                    |
-| Card                              | `<div class="tx-card">…</div>`                                                                                                              | Hairline, no shadow; pad it 12.                                                                                                                                                                                                                                                                  |
-| Settings group and row            | `<div class="tx-group-title">General</div><div class="tx-group"><div class="tx-row"><span>Label</span><input class="tx-input"></div></div>` | Exactly Settings' look. Prefer declared settings (15.1).                                                                                                                                                                                                                                         |
-| Empty state                       | `<div class="tx-empty">No tasks yet.<button class="tx-button">New task</button></div>`                                                      | One sentence, at most one button.                                                                                                                                                                                                                                                                |
-
-Layout around the components uses the spacing tokens (`gap: var(--space-2)`), never fixed pixels. Nothing in a page draws a shadow except through Textus's popups.
+Layout around the controls uses the spacing and layout tokens (5.6), never
+fixed pixels. Nothing in a page draws a shadow except a lifted, dragged
+item and Textus's popups.
 
 ### 15.5 Menus - In force (Textus 1.3.2)
 

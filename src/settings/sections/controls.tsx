@@ -107,8 +107,8 @@ export function LinkRow({
   );
 }
 
-/** A switch row; the whole row toggles it. The switch is named by the label
- *  alone, since the "?" sits inside the <label>. */
+/** A switch row. Only the switch toggles it - a click on the row's words
+ *  or its "?" must not change a setting; the switch is named by the label. */
 export function ToggleRow({
   label,
   help,
@@ -125,7 +125,7 @@ export function ToggleRow({
 }) {
   const id = useId();
   return (
-    <label className="settings-row settings-toggle-row" htmlFor={id}>
+    <div className="settings-row settings-toggle-row">
       <div className="settings-row-text">
         <div className="settings-row-label">
           <span id={`${id}-label`}>{label}</span>
@@ -140,7 +140,7 @@ export function ToggleRow({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-    </label>
+    </div>
   );
 }
 

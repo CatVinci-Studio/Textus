@@ -14,7 +14,7 @@ import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../ui/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
-import { SLIDE } from "../../ui/pointer-drag";
+import { roomFor, SLIDE } from "../../ui/pointer-drag";
 
 interface TabBarProps {
   tabs: TabInfo[];
@@ -274,12 +274,12 @@ function useIncomingTabPreview(
 
       const slot =
         rect.width + (parseFloat(getComputedStyle(bar).columnGap) || 0);
+      const room = roomFor(geom.centers, x, slot);
       for (const node of slidables) {
         const id = node.dataset.flipId!;
-        const center = geom.centers.get(id);
-        if (center === undefined) continue;
+        if (!room.has(id)) continue;
         const shifted = appliedShift.current.get(id) ?? 0;
-        const shift = center > x ? slot : 0;
+        const shift = room.get(id)!;
         if (shift !== shifted) {
           node.style.transition = SLIDE;
           node.style.transform = shift ? `translateX(${shift}px)` : "";

@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { memo } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
 import { CARD_WIDTH } from "./margin-room";
@@ -6,7 +7,8 @@ import {
   type MarginItem,
   type ReviewMarginLabels,
 } from "./margin-layout";
-import { NoteCard, RevisionCard } from "./MarginCards";
+import { RevisionCard } from "./MarginCards";
+import { NoteCard } from "./NoteCards";
 import "./ReviewMargin.css";
 
 /** A group's line: how many notes and changes it holds. */
@@ -77,8 +79,8 @@ export const MarginGroup = memo(function MarginGroup({
       style={{
         top,
         left,
-        width: CARD_WIDTH,
-        height: open ? undefined : CHIP_HEIGHT,
+        width: scaledPx(CARD_WIDTH),
+        height: open ? undefined : scaledPx(CHIP_HEIGHT),
       }}
     >
       <button

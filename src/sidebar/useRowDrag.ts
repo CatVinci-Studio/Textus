@@ -12,7 +12,9 @@ import { showMessage } from "../ui/app-dialog";
 import { documentDrop, setDragging } from "../ui/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
-import { canMoveInto, DRAG_START_PX, failureText } from "./tree-shared";
+import { canMoveInto, failureText } from "./tree-shared";
+import { DRAG_START_PX } from "../ui/pointer-drag";
+import { dragGhost, type DragGhost } from "../ui/drag-ghost";
 
 /** A row being dragged, and the folder under the pointer. */
 export interface Drag {
@@ -65,10 +67,19 @@ export function useRowDrag(
         : null;
     };
     let current: Drag | null = null;
+    let ghost: DragGhost | null = null;
     const show = (next: Drag | null) => {
       if (!current !== !next) setDragging(!!next);
       current = next;
       setDrag(next);
+      // The copy under the pointer, as every drag elsewhere has it.
+      if (next && !ghost)
+        ghost = dragGhost(next.name, "tree-drag-ghost floating-surface");
+      if (next) ghost?.move(next.x, next.y);
+      else {
+        ghost?.remove();
+        ghost = null;
+      }
     };
     const onMove = (e: PointerEvent) => {
       const start = pressed.current;
@@ -119,11 +130,18 @@ export function useRowDrag(
         await showMessage(failureText(t, err, basename(from)));
       }
     };
+    // No text selected while a row is held: dragged over the documents, the
+    // press would otherwise select everything it passes.
+    const onSelectStart = (e: Event) => {
+      if (pressed.current) e.preventDefault();
+    };
+    window.addEventListener("selectstart", onSelectStart);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
     window.addEventListener("keydown", onKey);
     return () => {
+      window.removeEventListener("selectstart", onSelectStart);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);

@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import {
   useCallback,
   useEffect,
@@ -35,7 +36,10 @@ function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
   const y = w.y / w.scaleFactor;
   const width = w.width / w.scaleFactor;
   return (
-    lx >= x && lx <= x + width && ly >= y && ly <= y + TAB_ROW_HEIGHT_LOGICAL
+    lx >= x &&
+    lx <= x + width &&
+    ly >= y &&
+    ly <= y + scaledPx(TAB_ROW_HEIGHT_LOGICAL)
   );
 }
 

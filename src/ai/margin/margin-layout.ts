@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -141,6 +142,9 @@ export function stackCards(
 ): void {
   placed.sort((a, b) => a.top - b.top);
   const want = placed.map((p) => p.top);
+  // Drawn at the interface's size, as the cards' stylesheet is.
+  const gap = scaledPx(STACK_GAP);
+  const chip = scaledPx(CHIP_HEIGHT);
   let floor = -Infinity;
   // One run from `start` of cards that push each other; `end` keeps the same
   // cards when cut, so a crowded paragraph doesn't end on one whole card.
@@ -153,13 +157,12 @@ export function stackCards(
       p.drift = p.top - want[i];
       const whole = heightOf(p.item.key);
       const next = end === undefined || i + 1 >= end ? Infinity : want[i + 1];
-      const room = next - p.top - STACK_GAP;
-      const height =
-        room >= whole ? whole : room < MIN_CUT ? CHIP_HEIGHT : room;
+      const room = next - p.top - gap;
+      const height = room >= whole ? whole : room < MIN_CUT ? chip : room;
       p.cut = height < whole ? height : null;
-      p.chip = p.cut === CHIP_HEIGHT;
+      p.chip = p.cut === chip;
       p.group = null;
-      below = p.top + height + STACK_GAP;
+      below = p.top + height + gap;
       i++;
     } while (
       i < placed.length &&
@@ -184,11 +187,11 @@ export function stackCards(
           Object.assign(placed[i], {
             top,
             drift: Math.max(0, top - want[i]),
-            cut: CHIP_HEIGHT,
+            cut: chip,
             chip: true,
             group: key,
           });
-        below = top + CHIP_HEIGHT + STACK_GAP;
+        below = top + chip + gap;
         from = to;
       }
       run = { end: run.end, below };

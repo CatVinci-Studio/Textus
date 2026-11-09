@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { dropPaths, openApp } from "./helpers";
+import { dropPaths, openApp, END } from "./helpers";
 
 // A reloaded page (an error screen's Reload, a refresh) is handed none of
 // the launch-time documents again: the window brings back its own tabs.
@@ -24,7 +24,7 @@ test("a reload brings back every tab, an unsaved draft and unsaved edits", async
   const names = await tabs.allTextContents();
   await page.locator(".tab-pill-title", { hasText: "b.md" }).click();
   await page.locator(editor).getByText("Also on disk.").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" And edited.");
 
   await page.reload();

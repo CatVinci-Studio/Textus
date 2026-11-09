@@ -123,6 +123,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   editorLabel: "Dokument",
   diagramZoom: "Diagramm vergrößern",
   codeBlockEditSource: "Quelltext bearbeiten",
+  codeBlockDone: "Bearbeitung beenden",
+  codeBlockDelete: "Block löschen",
   diagramViewerLabel: "Diagramm",
   pictureZoom: "Bild vergrößern",
   pictureViewerLabel: "Bild",
@@ -1299,6 +1301,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closeLastWindow: "Fenster schließen",
   closeLastStartPage: "Startseite zeigen",
   startPageRecentProjects: "Letzte Projekte",
+  startPagePickDocument:
+    "Wähle in der Seitenleiste ein Dokument aus {folder}, um zu beginnen.",
   startPageRecentFiles: "Letzte Dateien",
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
@@ -1697,6 +1701,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsInstallHelp:
     "Ein Plugin-Paket (.textusplugin) wird in Textus kopiert. Ein Plugin-Ordner wird an Ort und Stelle geladen, um ein Plugin auszuprobieren, an dem du schreibst; es wird von dort neu geladen.",
   pluginsInstallFile: "Aus Datei installieren…",
+  pluginFormPrevMonth: "Vorheriger Monat",
+  pluginFormNextMonth: "Nächster Monat",
   pluginsLoadFolder: "Plugin-Ordner laden…",
   pluginsOpenScripts: "Skriptordner öffnen",
   pluginPackageFilter: "Textus-Plugin",
@@ -1718,7 +1724,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginCardsRestore: "Wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
   pluginsMine: "Von dir erstellt",
-  pluginsNone: "Noch keine.",
+  pluginsInstalledNone:
+    "Noch keine Plugins installiert. Wähle eines unter {section} weiter unten.",
+  skillsInstalledNone:
+    "Noch keine Skills hinzugefügt. Wähle einen unter {section} weiter unten oder erstelle deinen eigenen.",
   pluginStatusBroken: "Nicht lesbar: {reason}",
   pluginStatusDesktopOnly:
     "Nur am Computer nutzbar, nicht auf iPhone oder iPad.",
@@ -1787,6 +1796,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNetworkAny: "Mit beliebigen Websites verbinden",
   menuPlugins: "Plugins",
   menuManagePlugins: "Plugins verwalten…",
+  menuPluginSettings: "Einstellungen…",
+  menuPluginSettingsOf: "{name}-Einstellungen…",
   menuNoPluginCommands: "Keine Plugin-Befehle",
   webPageAddress: "Webadresse",
   webPageReload: "Neu laden",

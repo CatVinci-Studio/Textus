@@ -1318,7 +1318,9 @@ export function installDevTauriShim(): void {
       // A picker's answer (`window.__devPickPluginFolder`), and Export for
       // Publishing's requests in `window.__devPluginExports`.
       case "plugin_pick_package":
-        return Promise.resolve(w.__devPickPluginFolder ?? null);
+        return Promise.resolve(
+          w.__devPickPluginFolder ? [w.__devPickPluginFolder] : null,
+        );
       case "plugin_export": {
         const asked = { id, publisher: args.publisher, folder: args.folder };
         ((w.__devPluginExports ??= []) as unknown[]).push(asked);

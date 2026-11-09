@@ -1,6 +1,7 @@
 /* Application UI contract. Content themes remain scoped to the document. */
 @import "./motion.css";
 @import "./components.css";
+@import "./controls.css";
 
 :root {
   /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
@@ -15,6 +16,20 @@
   /* Control heights: in bars, cards and segments; in forms and dialogs. */
   --control-height-sm: 24px;
   --control-height: 28px;
+  /* Layout sizes the shared controls and plugin pages take (5.6): a tab
+     view's bar, the room a document block leaves its source button, a
+     board's list, a find field, a slider, a progress ring, a bubble. */
+  --bar-height: 36px;
+  --block-source-room: 40px;
+  --board-lane-width: 260px;
+  --find-field-width: 180px;
+  --slider-width: 104px;
+  --progress-ring-size: 32px;
+  --bubble-width: 240px;
+  /* Surfaces that are what they show, whatever the theme: a sheet of
+     paper (a PDF's page), a stage (slides shown full screen). */
+  --paper-bg: #fff;
+  --stage-bg: #000;
   /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
      the interface text and, in a straight line, with the window's width
      (--window-scale). */
@@ -22,26 +37,27 @@
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
-     styles) under :root[data-window-chrome="mobile"] below; both times
-     --ui-text-scale (Interface Text Size), as any other UI size should be.
+     styles) under :root[data-window-chrome="mobile"] below. The desktop's
+     grow with --chrome-scale, as every other interface length does
+     (vite.chrome-scale.ts); the phone's with --ui-text-scale.
      The document's own text is the theme's, in em. */
   /* A badge, a count, a key on a keycap. */
-  --text-caption: calc(11px * var(--ui-text-scale, 1));
+  --text-caption: calc(11px * var(--chrome-scale, 1));
   /* What explains: a hint, a note, a group's title, an empty state. */
-  --text-footnote: calc(12px * var(--ui-text-scale, 1));
+  --text-footnote: calc(12px * var(--chrome-scale, 1));
   /* What sits beside or under the main text in a dense surface: a card's
      text, a list's entries, a field in a bar. */
-  --text-secondary: calc(12px * var(--ui-text-scale, 1));
+  --text-secondary: calc(12px * var(--chrome-scale, 1));
   /* A control's label: buttons, segments, selects. */
-  --text-control: calc(13px * var(--ui-text-scale, 1));
+  --text-control: calc(13px * var(--chrome-scale, 1));
   /* The main text of a panel, a menu, a list or a field. */
-  --text-body: calc(13px * var(--ui-text-scale, 1));
+  --text-body: calc(13px * var(--chrome-scale, 1));
   /* The main text where there is room: Settings' rows, a dialog's. */
-  --text-body-large: calc(14px * var(--ui-text-scale, 1));
+  --text-body-large: calc(14px * var(--chrome-scale, 1));
   /* A sheet's, a panel's or a navigation bar's title. */
-  --text-title: calc(17px * var(--ui-text-scale, 1));
+  --text-title: calc(17px * var(--chrome-scale, 1));
   /* A page's own title, a welcome. */
-  --text-large-title: calc(22px * var(--ui-text-scale, 1));
+  --text-large-title: calc(22px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
   --text-sm: var(--text-footnote);
@@ -522,6 +538,8 @@
     .icon-button,
     .tx-icon-button,
     .inline-chat-header-button,
+    .inline-chat-attach,
+    .inline-chat-toggle,
     .tab-bar-add,
     .sidebar-tab,
     .window-caption-button,
@@ -574,9 +592,10 @@
   height: calc(30px * var(--chrome-scale));
 }
 
+/* They grow with the window as the chrome's other icons do. */
 :is(.inline-chat-attach, .inline-chat-toggle) {
-  width: var(--control-height-sm);
-  height: var(--control-height-sm);
+  width: calc(var(--control-height-sm) * var(--chrome-scale));
+  height: calc(var(--control-height-sm) * var(--chrome-scale));
   border: 1px solid var(--ui-border);
 }
 

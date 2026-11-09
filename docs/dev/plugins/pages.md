@@ -98,10 +98,10 @@ dropping files, so the cursor shows a copy sign and nothing lands. Drag
 with pointer events instead - `pointerdown`, then `pointermove` and
 `pointerup` on `window` - and swallow the click the release sends.
 Textus's own official plugins share one small helper for this
-(`shared/drag.js` in textus-plugins: `drag.sortable` moves an item through
-lists while the others make way). Its styles are Textus's:
-`tx-drag-ghost` for the copy under the pointer and `tx-drag-source` for
-the place it will land.
+(`shared/drag.js` in textus-plugins): `drag.reorder` slides an item along
+its own row (tabs, columns) while the others make way, and `drag.sortable`
+moves it between lists with a lifted copy under the pointer
+(`tx-drag-ghost`; `tx-drag-source` marks where it will land).
 
 ## Floating views
 

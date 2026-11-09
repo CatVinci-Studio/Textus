@@ -1,3 +1,5 @@
+import { currentStrings } from "../../i18n/current";
+import { PLUGIN_SETTINGS } from "../../app/menu/plugin-menu";
 import { basename } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
 import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";
@@ -86,7 +88,7 @@ export function pluginMenuEntries(
     if (record.status !== "on" || !manifest) return [];
     // Each command under its plugin's name, for a submenu of its own.
     const group = localize(manifest, manifest.name, language);
-    return (manifest.contributes.menus[menu] ?? []).map((item) => {
+    const commands = (manifest.contributes.menus[menu] ?? []).map((item) => {
       const command = manifest.contributes.commands.find(
         (c) => c.command === item.command,
       );
@@ -96,5 +98,23 @@ export function pluginMenuEntries(
         group,
       };
     });
+    // Its settings, last in its submenu; alone, named for it.
+    const settled =
+      menu === "app/plugins" &&
+      (manifest.contributes.settings.length > 0 ||
+        !!manifest.contributes.settingsPage);
+    const t = currentStrings();
+    return settled
+      ? [
+          ...commands,
+          {
+            command: PLUGIN_SETTINGS + record.id,
+            label: commands.length
+              ? t.menuPluginSettings
+              : t.menuPluginSettingsOf.replace("{name}", group),
+            group,
+          },
+        ]
+      : commands;
   });
 }

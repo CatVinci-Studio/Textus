@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { sourceValue } from "./helpers";
+import { sourceValue, END } from "./helpers";
 
 // The browser playground: the editor alone, with no dev shim and nothing
 // native behind it.
@@ -58,7 +58,7 @@ async function typeAtEnd(page: Page, text: string) {
     timeout: 15_000,
   });
   await page.locator(`${editor} h1`).click();
-  await page.keyboard.press("Control+End");
+  await page.keyboard.press("ControlOrMeta+End");
   // The caret move reaches the editor's state on selectionchange, a task
   // later; an Enter sent at once still went to the heading.
   await page.waitForTimeout(100);
@@ -120,7 +120,7 @@ test("an edit the debounce still holds is kept on leaving", async ({
     return { x: box.right - 1, y: box.top + box.height / 2 };
   });
   await page.mouse.click(end.x, end.y);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type("!");
   // Straight away, before the listener reports it.
   await page.reload();
@@ -184,7 +184,7 @@ test("Save writes back into the file it was opened from", async ({ page }) => {
   await page.getByRole("button", { name: "Open…" }).click();
   await expect(page.locator(`${editor} h1`)).toContainText("From disk");
   await page.locator(`${editor} h1`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" again");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByRole("status")).toHaveText("Saved to notes.md.");
@@ -246,7 +246,7 @@ test("source mode shows the Markdown and takes edits back", async ({
 }) => {
   await openPlayground(page);
   await page.locator(editor).click();
-  await page.keyboard.press("Control+/");
+  await page.keyboard.press("ControlOrMeta+/");
   const source = page.locator(".source-view .cm-content");
   await expect(source).toBeVisible();
   expect(await sourceValue(page, "body")).toMatch(/^# Welcome to Textus\n/);

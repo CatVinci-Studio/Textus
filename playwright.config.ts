@@ -50,11 +50,15 @@ export default defineConfig({
   // the machine's load: they run with `npm run test:perf`, never in CI.
   grepInvert: process.env.TEXTUS_PERF ? undefined : /@perf/,
   grep: process.env.TEXTUS_PERF ? /@perf/ : undefined,
+  // Screenshot baselines are Linux's alone: on a Mac fonts differ, so run
+  // `npm run test:visual` in the Linux container (docs/dev/testing.md).
+  ignoreSnapshots: process.platform === "darwin",
   timeout: 30_000,
   // Tests share nothing, so tests rather than files spread over workers and
   // shards, which keeps the shards even.
   fullyParallel: true,
-  workers: process.env.CI ? 2 : 1,
+  // Four locally: the whole run in minutes; CI's runners take two.
+  workers: process.env.CI ? 2 : 4,
   // On CI a flake is reported without blocking a merge; locally a failure
   // is a failure.
   retries: process.env.CI ? 1 : 0,

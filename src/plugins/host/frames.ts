@@ -1,8 +1,10 @@
 import webviewRuntime from "./runtime/webview.js?raw";
-import componentsCss from "../../ui/components.css?raw";
-import designSystemCss from "../../ui/design-system.css?raw";
-import motionCss from "../../ui/motion.css?raw";
-import pluginUiCss from "./runtime/plugin-ui.css?raw";
+import componentsCss from "../../ui/components.css?inline";
+import controlsCss from "../../ui/controls.css?inline";
+import designSystemCss from "../../ui/design-system.css?inline";
+import motionCss from "../../ui/motion.css?inline";
+// Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).
+import pluginUiCss from "./runtime/plugin-ui.css?inline";
 
 /** The window's own stylesheets, as one: a plugin page's controls are the
  *  app's, from the same rules. Their @imports are inlined here. */
@@ -10,6 +12,7 @@ const SHARED_CSS = [
   motionCss,
   designSystemCss.replace(/^@import [^;]+;$/gm, ""),
   componentsCss,
+  controlsCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
 
@@ -70,6 +73,8 @@ export function webviewDocument(
     /** A floating view's page: no background of its own, so what the
      *  plugin draws floats on its own. */
     floating?: boolean;
+    /** A sidebar tab's page: the sidebar's own colour behind it. */
+    sidebar?: boolean;
   },
 ): string {
   const locale = JSON.stringify({
@@ -101,6 +106,7 @@ export function webviewDocument(
     windowChrome ? ` data-window-chrome="${windowChrome}"` : "",
     platform ? ` data-platform="${platform}"` : "",
     options.floating ? " data-floating" : "",
+    options.sidebar ? " data-sidebar" : "",
   ].join("");
   return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
     tag.replace(

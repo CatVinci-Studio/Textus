@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { selectionRead, END } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -62,7 +62,7 @@ test("[[ lists notes, headings and blocks, and a block picked gets an id", async
   await expect(page.locator(editor)).toContainText("Start");
   await page.locator(`${editor} p`).first().click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
 
   await page.keyboard.type(" [[Ide");
   await expect(
@@ -108,7 +108,8 @@ test("an embed shows its note read-only and follows its changes", async ({
     "/notes/Doc.md",
   );
   const embed = page.locator(`${editor} .note-embed`);
-  await expect(embed.locator(".note-embed-title")).toHaveText("Ideas › Plan");
+  // Its content alone; its name is for when it is folded.
+  await expect(embed.locator(".block-folded-name")).toHaveText("Ideas › Plan");
   await expect(embed.locator(".note-embed-body")).toContainText("First point.");
   await expect(embed).toHaveAttribute("contenteditable", "false");
   await expect(page.locator(`${editor} .obsidian-embed-source`)).toBeHidden();
@@ -136,7 +137,7 @@ test("an embed shows its note read-only and follows its changes", async ({
   await expect(embed).toHaveCount(0);
 });
 
-test("an embed folds under its title and stays folded when drawn again", async ({
+test("an embed folds to a line with its name and stays folded when drawn again", async ({
   page,
 }) => {
   await open(
@@ -154,7 +155,8 @@ test("an embed folds under its title and stays folded when drawn again", async (
   await expect(body).toBeHidden();
   // Folding opens nothing and leaves the source hidden.
   await expect(page.locator(`${editor} .obsidian-embed-source`)).toBeHidden();
-  await expect(embed.locator(".note-embed-title")).toHaveText("Ideas › Plan");
+  await expect(embed.locator(".block-folded-line")).toBeVisible();
+  await expect(embed.locator(".block-folded-line")).toHaveText("Ideas › Plan");
 
   // Its note changes and it is drawn again: still folded.
   await page.evaluate(() => {
@@ -197,7 +199,7 @@ test("[[ writes a standard link where the folder says nothing", async ({
   await expect(page.locator(editor)).toContainText("Start");
   await page.locator(`${editor} p`).first().click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" [[My Ide");
   await expect(
     page.locator(panel).locator(".completion-item").first(),

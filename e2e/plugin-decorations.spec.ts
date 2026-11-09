@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, END } from "./helpers";
 
 /**
  * Marks a plugin puts on the text (textus.editor.registerDecorations),
@@ -64,7 +64,7 @@ test("a plugin's marks are drawn on its words and follow the text", async ({
 
   // A new TODO is marked once typing rests.
   await editor.locator("p").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await page.keyboard.type("Another TODO here.");
   await expect(mark).toHaveCount(2);

@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useEffect, useRef } from "react";
 
 /** How near the bottom still counts as at it, for a wheel's last step. */
@@ -22,7 +23,7 @@ export function useFollowBottom(content: unknown) {
       const el = ref.current;
       if (el)
         following.current =
-          el.scrollHeight - el.scrollTop - el.clientHeight < NEAR;
+          el.scrollHeight - el.scrollTop - el.clientHeight < scaledPx(NEAR);
     },
     /** Follow again from here (a new message sent). */
     stick() {

@@ -304,6 +304,16 @@
   animation: motion-probe 1s paused;
 }
 
+/* Work of unknown length: a bar's fill sweeping across it. */
+@keyframes motion-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
 @keyframes motion-probe {
   to {
     opacity: 1;

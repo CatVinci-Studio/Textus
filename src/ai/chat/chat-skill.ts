@@ -1,5 +1,5 @@
-import type { AgentMode } from "../../prefs/settings-types";
-import { storedAgentMode } from "../../prefs/settings-types";
+import type { AgentMode } from "../../prefs/settings-values";
+import { storedAgentMode } from "../../prefs/settings-values";
 import { replyFiles } from "./reply-files";
 
 /**

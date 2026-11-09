@@ -7,10 +7,9 @@ import {
 import {
   keyHolder,
   releaseKeys,
-  runEditorOp,
   setKeyCapture,
-  type EditorOp,
 } from "../contributions/editor-input";
+import { runEditorOp, type EditorOp } from "../contributions/editor-ops";
 import { outlineOf } from "../contributions/status-items";
 import { getActiveDocument, type ActiveDocumentAccess } from "../app-bridge";
 import {

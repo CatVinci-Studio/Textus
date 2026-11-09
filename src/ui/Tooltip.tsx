@@ -1,3 +1,4 @@
+import { scaledPx } from "./chrome-scale";
 import {
   cloneElement,
   useCallback,
@@ -199,8 +200,9 @@ function TooltipBubble({
     if (!box || !el) return;
     const width = el.offsetWidth;
     const height = el.offsetHeight;
-    const aboveY = box.top - GAP - height;
-    const belowY = box.bottom + GAP;
+    const gap = scaledPx(GAP);
+    const aboveY = box.top - gap - height;
+    const belowY = box.bottom + gap;
     const fitsAbove = aboveY >= 8;
     const fitsBelow = belowY + height <= window.innerHeight - 8;
     const above =

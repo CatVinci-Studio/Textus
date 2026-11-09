@@ -119,6 +119,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   editorLabel: "문서",
   diagramZoom: "다이어그램 크게 보기",
   codeBlockEditSource: "소스 편집",
+  codeBlockDone: "편집 완료",
+  codeBlockDelete: "블록 삭제",
   diagramViewerLabel: "다이어그램",
   pictureZoom: "이미지 확대",
   pictureViewerLabel: "이미지",
@@ -1237,6 +1239,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closeLastWindow: "창 닫기",
   closeLastStartPage: "시작 페이지 표시",
   startPageRecentProjects: "최근 프로젝트",
+  startPagePickDocument: "사이드바에서 {folder}의 문서를 골라 시작하세요.",
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   autosaveLabel: "자동 저장",
@@ -1615,6 +1618,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsInstallHelp:
     "플러그인 패키지(.textusplugin)는 Textus에 복사됩니다. 플러그인 폴더는 그 자리에서 불러오므로 작성 중인 플러그인을 시험해 볼 수 있으며, 다시 불러올 때도 그 자리에서 불러옵니다.",
   pluginsInstallFile: "파일에서 설치…",
+  pluginFormPrevMonth: "이전 달",
+  pluginFormNextMonth: "다음 달",
   pluginsLoadFolder: "플러그인 폴더 불러오기…",
   pluginsOpenScripts: "스크립트 폴더 열기",
   pluginPackageFilter: "Textus 플러그인",
@@ -1635,7 +1640,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginCardsRestore: "다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
-  pluginsNone: "아직 없습니다.",
+  pluginsInstalledNone:
+    "아직 설치한 플러그인이 없습니다. 아래 ‘{section}’에서 고를 수 있습니다.",
+  skillsInstalledNone:
+    "아직 추가한 스킬이 없습니다. 아래 ‘{section}’에서 고르거나 직접 만들 수 있습니다.",
   pluginStatusBroken: "읽을 수 없음: {reason}",
   pluginStatusDesktopOnly:
     "컴퓨터에서만 사용할 수 있으며 iPhone과 iPad에서는 사용할 수 없습니다.",
@@ -1701,6 +1709,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNetworkAny: "모든 웹사이트에 연결",
   menuPlugins: "플러그인",
   menuManagePlugins: "플러그인 관리…",
+  menuPluginSettings: "설정…",
+  menuPluginSettingsOf: "{name} 설정…",
   menuNoPluginCommands: "플러그인 명령 없음",
   webPageAddress: "웹 주소",
   webPageReload: "새로고침",

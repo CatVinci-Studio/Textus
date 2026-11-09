@@ -11,7 +11,6 @@ const SRC = fileURLToPath(new URL("..", import.meta.url));
 /** Keyframes of their own, and why the shared moves don't cover them. */
 const OWN_KEYFRAMES: Record<string, string> = {
   // "Working" loops.
-  "ui/notices.css notice-indeterminate": "progress sweep",
   "ai/chat/inline-chat.css agent-thinking-pulse": "thinking dots",
   "ai/chat/inline-chat.css agent-caret-pulse": "caret while writing",
   "editor/milkdown-theme.css ghost-caret-blink": "caret before a suggestion",

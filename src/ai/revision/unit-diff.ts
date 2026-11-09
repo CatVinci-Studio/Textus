@@ -1,11 +1,8 @@
 import { textParagraphs } from "../doc-blocks";
 import { formKey, wholeBlockKind } from "./markdown-forms";
-import {
-  diffSentenceLists,
-  ENDS_PARAGRAPH,
-  splitSentences,
-  type SentenceHunk,
-} from "./sentence-diff";
+import { diffSentenceLists, type SentenceHunk } from "./sentence-diff";
+import { ENDS_PARAGRAPH } from "./paragraph-align";
+import { splitSentences } from "./sentence-pairs";
 
 /** A rewrite diffed as the document is built: blocks first, then sentences,
  *  the same for a finished rewrite and a streaming one. */

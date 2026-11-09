@@ -80,6 +80,24 @@ describe("SourceEditor", () => {
     expect(view.state.doc.toString()).toBe("one 2 three");
   });
 
+  it("keeps an undo made before its own earlier text comes back", () => {
+    const onChange = vi.fn();
+    const at = (value: string) => (
+      <SourceEditor value={value} onChange={onChange} typewriter={false} />
+    );
+    const { container, rerender } = render(at("Before after."));
+    const { view, edit } = sourceViewAt(container)!;
+    view.dispatch({ changes: { from: 7, insert: "![](a.png)" } });
+    edit("undo");
+    expect(view.state.doc.toString()).toBe("Before after.");
+    // The paste's text reaches the tab only now, then the undo's.
+    rerender(at("Before ![](a.png)after."));
+    expect(view.state.doc.toString()).toBe("Before after.");
+    rerender(at("Before after."));
+    rerender(at("Before outside."));
+    expect(view.state.doc.toString()).toBe("Before outside.");
+  });
+
   it("does the Edit menu's Undo, Redo and Select All itself", () => {
     const { container } = render(
       <SourceEditor value={"abc"} onChange={vi.fn()} typewriter={false} />,

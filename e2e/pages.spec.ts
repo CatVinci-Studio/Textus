@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dragWithMouse, selectionRead, swallowHtmlDrop } from "./helpers";
+import {
+  dragWithMouse,
+  emit,
+  selectionRead,
+  swallowHtmlDrop,
+  END,
+} from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -71,7 +77,7 @@ test("/page makes a sub-page beside its page, links it, and opens it", async ({
   await expect(editor).toContainText("Plans for the year.");
   await editor.getByText("Plans for the year.").click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await page.keyboard.type("/page");
   await page
@@ -110,4 +116,105 @@ test("a page dragged onto another becomes its sub-page", async ({ page }) => {
     .poll(() => fileText(page, "/notes/Life/Inbox.md"))
     .toBe("# Inbox\n");
   await expect(rows).toHaveText(["☀️ Life"]);
+});
+
+test("a row is lit while the pointer is on it, not after it leaves", async ({
+  page,
+}) => {
+  await open(page);
+  await openPath(page, "/notes/Inbox.md");
+  const pages = await openSidebarList(page, "Pages");
+  const life = pages.locator(".plugin-list-row").filter({ hasText: "Life" });
+  const lit = () => life.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const plain = await lit();
+  await life.hover();
+  await expect.poll(lit).not.toBe(plain);
+  await page.mouse.move(600, 400);
+  await expect.poll(lit).toBe(plain);
+});
+
+test("a page made a folder for its first sub-page keeps its unsaved words, its tab following it", async ({
+  page,
+}) => {
+  await open(page);
+  await openPath(page, "/notes/Inbox.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.getByText("Inbox").click();
+  await selectionRead(page);
+  await page.keyboard.press(END);
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Not saved yet.");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("/page");
+  await page
+    .locator(".completion-list")
+    .getByText("New Sub-page…", { exact: true })
+    .click();
+  const dialog = page.locator(".app-dialog");
+  await dialog.getByRole("textbox").fill("Idea");
+  await dialog.getByRole("textbox").press("Enter");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Idea.md"))
+    .toBe("# Idea\n");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toContain("Not saved yet.");
+  expect(await fileText(page, "/notes/Inbox.md")).toBeUndefined();
+  // Its tab is the moved page's: what is typed there next is saved there.
+  await page.getByRole("tab", { name: "Inbox.md" }).click();
+  await expect(editor).toContainText("Not saved yet.");
+  // The link to the sub-page from where the page is now.
+  await expect(
+    editor.locator("a, .wikilink").filter({ hasText: "Idea" }),
+  ).toHaveCount(1);
+  await emit(page, "menu-save-file");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toMatch(/\[Idea\]\(Idea\.md\)|\[\[Idea\]\]/);
+  await editor.getByText("Not saved yet.").click();
+  await page.keyboard.press(END);
+  await page.keyboard.type(" Now it is.");
+  await emit(page, "menu-save-file");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toContain("Now it is.");
+  expect(await fileText(page, "/notes/Inbox.md")).toBeUndefined();
+});
+
+test("a long title and the pages above it are cut short, not drawn over each other", async ({
+  page,
+}) => {
+  const long =
+    "TimeDP Learning to Generate Multi-Domain Time Series with Domain Prompts";
+  await openWithPlugins(page, {
+    plugins: {
+      [ID]: [
+        "files.read",
+        "files.write",
+        "editor.read",
+        "editor.write",
+        "ai.tools",
+      ],
+    },
+    folder: {
+      "/notes/Papers.md": "# Papers\n",
+      "/notes/Papers/03 2026.md": "# 03 2026\n",
+      [`/notes/Papers/03 2026/${long}.md`]: `# ${long}\n`,
+    },
+  });
+  await openPath(page, "/notes/Papers.md");
+  const pages = await openSidebarList(page, "Pages");
+  await pages.getByRole("button", { name: "Papers" }).click();
+  await pages.getByRole("button", { name: "03 2026" }).click();
+  await pages.locator(".plugin-list-row").filter({ hasText: "TimeDP" }).click();
+  const crumb = page.locator(".window-bar .plugin-status-item");
+  await expect(crumb).toContainText("Papers");
+  // Once the title has slid over the column, it ends before the path.
+  await expect
+    .poll(async () => {
+      const title = (await page.locator(".window-bar-title").boundingBox())!;
+      const status = (await crumb.boundingBox())!;
+      return status.x - (title.x + title.width);
+    })
+    .toBeGreaterThanOrEqual(0);
 });

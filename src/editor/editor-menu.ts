@@ -17,6 +17,10 @@ export {
 } from "./editor-menu-items";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
+import {
+  drawnBlockActionsAt,
+  type DrawnBlockActions,
+} from "./drawn-block-actions";
 import type { EditorRunner } from "./useEditorRunner";
 import { convertList } from "./keys/block-toggles";
 import { toggleSpan } from "./marks/span-commands";
@@ -79,6 +83,8 @@ export interface ContextMenuTarget {
   imagePos: number | null;
   /** Where the picture's file is, for Show in folder and Copy image path. */
   imageLocation: ImageLocation | null;
+  /** The plugin's drawing right-clicked (a database, a chart), if any. */
+  drawnBlock?: DrawnBlockActions | null;
 }
 
 /**
@@ -91,6 +97,8 @@ export function contextMenuTarget(
   e: { target: EventTarget | null; clientX?: number; clientY?: number },
   docPath: string | null,
 ): ContextMenuTarget {
+  const drawnBlock = drawnBlockActionsAt(e.target);
+  if (drawnBlock) return { imagePos: null, imageLocation: null, drawnBlock };
   const none = { imagePos: null, imageLocation: null };
   return (
     run((ctx): ContextMenuTarget => {
@@ -147,6 +155,8 @@ export interface ContextMenuOptions {
   /** From contextMenuTarget: the image right-clicked, if any. */
   imagePos: number | null;
   imageLocation?: ImageLocation | null;
+  /** From contextMenuTarget: the plugin's drawing right-clicked, if any. */
+  drawnBlock?: DrawnBlockActions | null;
   /** Already filtered down to the AI features that are switched on. */
   aiItems: ContextMenuItem[];
   /** Textus AI's items for the image right-clicked. */
@@ -221,7 +231,11 @@ export function buildContextMenuItems(
   // What was clicked on comes first; the rest waits in submenus.
   const first = inTable(run)
     ? tableMenuItems(run, t)
-    : joinGroups(htmlTableItems(run, t), imageItems);
+    : joinGroups(
+        htmlTableItems(run, t),
+        imageItems,
+        drawnBlockItems(t, options.drawnBlock ?? null),
+      );
   const format: MenuEntry[] = [
     { label: t.menuFormat, items: formatItems(run, options, !inTable(run)) },
   ];
@@ -236,6 +250,18 @@ export function buildContextMenuItems(
       2,
     ),
   );
+}
+
+/** A plugin's drawing: its source opened, or the whole block deleted. */
+function drawnBlockItems(
+  t: Strings,
+  block: DrawnBlockActions | null,
+): MenuEntry[] {
+  if (!block) return [];
+  return [
+    { label: t.codeBlockEditSource, onSelect: block.editSource },
+    { label: t.codeBlockDelete, onSelect: block.remove },
+  ];
 }
 
 /** Items as one submenu once there are more than `max`. */

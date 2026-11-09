@@ -207,6 +207,8 @@ function App() {
             presence={agentPresence}
             closing={agentClosing}
             width={agentPanel.width}
+            min={agentPanel.min}
+            max={agentPanel.max}
             onResize={agentPanel.setWidth}
             mountRef={setAgentPanelEl}
             sourceMode={!!activeTab.sourceMode}

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown, END } from "./helpers";
 
 // A colour code gets a swatch before it, per Settings: off (the default), in
 // code only, or everywhere. The text, the caret's moves, find and what is
@@ -282,7 +282,7 @@ test("swatches never reach the saved file", async ({ page }) => {
   );
   await expect(page.locator(textSwatch)).toHaveCount(8);
   await page.locator(`${editor} h1`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" and #00ff00");
   await expect(page.locator(textSwatch)).toHaveCount(9);
   await expect

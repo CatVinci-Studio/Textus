@@ -6,6 +6,7 @@ import {
   postToWebview,
   setWebviewHtml,
   setWebviewTitle,
+  webview,
 } from "../views/webviews";
 import {
   listRefreshed,
@@ -49,7 +50,10 @@ export function viewHandlers(p: PluginScope) {
         await withResources(str(html, "html"), p.id, p.readOwnFile),
       );
     },
+    // A message to a view the user closed meanwhile is no failure of the
+    // plugin's: false, as VS Code answers.
     "webview.postMessage": ({ webview: id, message }: Params) => {
+      if (!webview(str(id, "webview"))) return false;
       const record = p.ownWebview(str(id, "webview"));
       postToWebview(record.id, message);
       return true;

@@ -4,6 +4,7 @@
 //! outline, the research budget - and how they are kept on disk. Its shapes
 //! are generated into src/platform/bindings/ai-paper.ts (`npm run bindings`).
 
+mod brief;
 mod budget;
 mod checks;
 mod choose;

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp, settled } from "./helpers";
+import { openApp, settled, END } from "./helpers";
 
 // Editing across a large document, where off-screen formulas draw as they
 // come near: select and copy all, find at its end, an outline jump that
@@ -69,7 +69,7 @@ test("typing and Enter in the middle work as anywhere", async ({ page }) => {
   // caret.
   await p.click();
   await p.click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await page.keyboard.type("A new line.");
   await expect(

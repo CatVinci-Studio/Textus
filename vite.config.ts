@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { katexWoff2Only } from "./vite.katex-fonts";
 import { colorMixFallback } from "./vite.color-mix-fallback";
+import { chromeScale } from "./vite.chrome-scale";
 import { devPlugins } from "./vite.dev-plugins";
 import { startupBudget } from "./vite.startup-budget";
 import { devServerCsp } from "./vite.csp";
@@ -11,7 +12,7 @@ const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
   plugins: [react(), katexWoff2Only(), devPlugins(), startupBudget()],
-  css: { postcss: { plugins: [colorMixFallback()] } },
+  css: { postcss: { plugins: [chromeScale(), colorMixFallback()] } },
   // The oldest engines Textus runs in. Newer syntax is lowered; APIs and
   // CSS aren't.
   build: { target: ["chrome105", "safari16"] },

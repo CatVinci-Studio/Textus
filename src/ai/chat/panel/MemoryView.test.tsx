@@ -15,7 +15,8 @@ import type {
   LibraryEntry,
   Memory,
 } from "../../../platform/ipc";
-import { libraryEntryId, MemorySections } from "./MemoryView";
+import { MemorySections } from "./MemoryView";
+import { libraryEntryId } from "./memory-text";
 
 const t = resolveStrings("en");
 

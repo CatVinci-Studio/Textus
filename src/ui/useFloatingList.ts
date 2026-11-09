@@ -1,3 +1,4 @@
+import { scaledPx } from "./chrome-scale";
 import {
   useEffect,
   useLayoutEffect,
@@ -17,7 +18,7 @@ export function useFloatingList(
   active: number,
   dismiss: () => void,
   /** How tall the list may grow; a longer one scrolls. */
-  maxHeight = MENU_MAX_HEIGHT,
+  maxHeight = scaledPx(MENU_MAX_HEIGHT),
 ) {
   const [place, setPlace] = useState<CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);

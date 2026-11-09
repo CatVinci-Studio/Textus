@@ -34,6 +34,18 @@ import { setEmbeddedBlocks } from "../../editor/embeds/embed-plugin-blocks";
 import { drawPluginBlocksIn } from "./embedded-plugin-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
+import { addBlockFold } from "../../editor/fold/block-fold";
+import { setDrawnBlockActions } from "../../editor/drawn-block-actions";
+import {
+  pluginName,
+  pluginsSnapshot,
+} from "../../plugins/store/plugin-records";
+
+/** What a folded block says it is: its plugin's name. */
+function blockName(plugin: string): string {
+  const record = pluginsSnapshot().records.find((r) => r.id === plugin);
+  return record ? pluginName(record) : plugin;
+}
 
 /** The drawings, and the block whose source </> opened (its start), if any:
  *  only that one shows its source, until the caret leaves it. */
@@ -45,8 +57,13 @@ interface BlocksState {
 const key = new PluginKey<BlocksState>("plugin-code-blocks");
 const BLOCK_CLASS = "plugin-code-block";
 const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
+/** The block whose source shows: its drawing waits, hidden, as a diagram's
+ *  does - one of the two at a time. */
+const OPEN_SOURCE_CLASS = "plugin-code-source-open";
 /** How long an export waits for a drawing just made to have its page. */
 const PAGE_WAIT_MS = 5000;
+/** Narrower than this, a plugin's block (a database's table) is crowded. */
+const NARROW_COLUMN = 480;
 /** How long typing pauses before a drawn block is told its new source. */
 const TELL_MS = 300;
 
@@ -83,8 +100,11 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
-        if (pos !== open)
-          out.push(Decoration.node(pos, end, { class: HIDDEN_SOURCE_CLASS }));
+        out.push(
+          Decoration.node(pos, end, {
+            class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
+          }),
+        );
         const widget = `${plugin}:${language}:${n}`;
         out.push(
           Decoration.widget(
@@ -122,8 +142,21 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       el.dataset.language = language;
       el.contentEditable = "false";
       el.append(editButton(view, getPos));
+      setDrawnBlockActions(el, {
+        editSource: () => openSource(view, getPos),
+        remove: () => removeBlock(view, getPos),
+      });
       const holder = document.createElement("div");
+      holder.className = "plugin-code-holder";
       el.append(holder);
+      // Folded as Textus folds drawn blocks: by the document and its place.
+      // In a column too narrow for it, it starts folded to its line.
+      addBlockFold(
+        el,
+        blockName(plugin),
+        `${docPath.current ?? ""}\n${widget}`,
+        view.dom.clientWidth > 0 && view.dom.clientWidth < NARROW_COLUMN,
+      );
       // A plugin's frame is heavy: drawn near the screen, let go far from
       // it (its state kept through setWebviewState).
       drawWhileNear(
@@ -192,7 +225,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
           open: null,
         }),
         apply(tr, prev, _old, state) {
-          const meta = tr.getMeta(key) as { open?: number } | true | undefined;
+          const meta = tr.getMeta(key) as
+            { open?: number | null } | true | undefined;
           let open =
             meta && meta !== true && meta.open !== undefined
               ? meta.open
@@ -208,6 +242,12 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       },
       props: {
         decorations: (state) => key.getState(state)?.deco,
+        handleKeyDown: (view, event) => {
+          if (event.key !== "Escape") return false;
+          if ((key.getState(view.state)?.open ?? null) === null) return false;
+          closeSource(view);
+          return true;
+        },
       },
       // The caret never rests in a drawn block's hidden source: it steps
       // over it, the way it came. Only </> opens the source.
@@ -238,6 +278,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         return {
           update(_view, prevState) {
             if (drawn.size && !prevState.doc.eq(view.state.doc)) tell();
+            placeDone(view);
           },
           destroy() {
             stop();
@@ -297,17 +338,80 @@ function editButton(
   button.addEventListener("mousedown", (event) => event.preventDefault());
   button.addEventListener("click", (event) => {
     event.preventDefault();
-    const end = getPos();
-    const node =
-      end === undefined ? null : view.state.doc.resolve(end).nodeBefore;
-    if (end === undefined || node?.type.name !== "code_block") return;
-    const start = end - node.nodeSize;
-    view.dispatch(
-      view.state.tr
-        .setSelection(TextSelection.create(view.state.doc, start + 1))
-        .setMeta(key, { open: start }),
-    );
-    view.focus();
+    openSource(view, getPos);
+  });
+  return button;
+}
+
+/** The code block a drawing (its widget at `getPos`) is drawn from. */
+function blockBefore(
+  view: EditorView,
+  getPos: () => number | undefined,
+): { start: number; end: number } | null {
+  const end = getPos();
+  const node =
+    end === undefined ? null : view.state.doc.resolve(end).nodeBefore;
+  if (end === undefined || node?.type.name !== "code_block") return null;
+  return { start: end - node.nodeSize, end };
+}
+
+/** The caret into the drawing's source, which shows until it leaves. */
+function openSource(view: EditorView, getPos: () => number | undefined) {
+  const block = blockBefore(view, getPos);
+  if (!block) return;
+  view.dispatch(
+    view.state.tr
+      .setSelection(TextSelection.create(view.state.doc, block.start + 1))
+      .setMeta(key, { open: block.start }),
+  );
+  view.focus();
+}
+
+/** The opened source hidden again, the caret just after its drawing. */
+function closeSource(view: EditorView) {
+  const open = key.getState(view.state)?.open ?? null;
+  const node = open === null ? null : view.state.doc.nodeAt(open);
+  if (open === null || !node) return;
+  const after = view.state.doc.resolve(open + node.nodeSize);
+  view.dispatch(
+    view.state.tr
+      .setSelection(Selection.near(after, 1))
+      .setMeta(key, { open: null }),
+  );
+  view.focus();
+}
+
+/** The whole block - source and drawing - out of the document. */
+function removeBlock(view: EditorView, getPos: () => number | undefined) {
+  const block = blockBefore(view, getPos);
+  if (block) view.dispatch(view.state.tr.delete(block.start, block.end));
+}
+
+/** The opened source's way back to its drawing (Esc does the same): last
+ *  of the code block's own tools, at their right. */
+function placeDone(view: EditorView) {
+  for (const actions of view.dom.querySelectorAll<HTMLElement>(
+    ".code-block-actions",
+  )) {
+    const open = !!actions.closest(`.${OPEN_SOURCE_CLASS}`);
+    const button = actions.querySelector(".plugin-code-done");
+    if (open && !button) actions.append(doneButton(view));
+    else if (!open && button) button.remove();
+  }
+}
+
+function doneButton(view: EditorView): HTMLElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "plugin-code-done";
+  button.textContent = currentStrings().codeBlockDone;
+  button.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    closeSource(view);
   });
   return button;
 }

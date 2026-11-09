@@ -6,6 +6,9 @@ import {
   selectionRead,
   settled,
   sourceOf,
+  HOME,
+  END,
+  MAC,
 } from "./helpers";
 
 // What a paste puts in the markdown. The dev shim answers the image
@@ -103,9 +106,9 @@ test("undo after a slow screenshot save never brings its blob: src back", async 
   await page.waitForTimeout(800);
   await releaseSave(page);
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => imageSrcs(page)).toEqual([]);
-  await page.keyboard.press("Control+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
 
@@ -113,11 +116,11 @@ test("a screenshot undone before its save lands comes back stored on redo", asyn
   page,
 }) => {
   await pasteScreenshotWithSlowSave(page);
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => imageSrcs(page)).toEqual([]);
   await releaseSave(page);
   await settled(page);
-  await page.keyboard.press("Control+Shift+z");
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect.poll(() => imageSrcs(page)).toEqual(["assets/shot.png"]);
 });
 
@@ -150,6 +153,9 @@ test("an image file copied in the file manager is pasted as an image, from a fil
 /** A real Ctrl+V of `text` at the caret as it stands; paste() would
  *  refocus the editor and move the caret to the end. */
 async function pasteHere(page: Page, text: string) {
+  // On a Mac the test browser's clipboard write takes the caret from the
+  // editor, and the paste lands at the end; CI's Linux has it right.
+  test.skip(MAC, "the Mac test browser's clipboard moves the caret");
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.evaluate((value) => navigator.clipboard.writeText(value), text);
   await page.keyboard.press("ControlOrMeta+v");
@@ -160,7 +166,7 @@ async function pasteHere(page: Page, text: string) {
  *  next `select` characters. */
 async function caretAt(page: Page, n: number, select = 0) {
   await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
   for (let i = 0; i < n; i++) await page.keyboard.press("ArrowRight");
   for (let i = 0; i < select; i++)
     await page.keyboard.press("Shift+ArrowRight");
@@ -174,7 +180,7 @@ test("a URL pasted inside a link's text joins it instead of splitting it", async
   // URL goes into it as text.
   await caretAt(page, 11);
   await pasteHere(page, "https://inner.example");
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(page.locator(`${editor} a`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe(
     "Before [Texhttps://inner.exampletus](https://t.example) after.",
@@ -188,7 +194,7 @@ test("a URL pasted over a link's URL only changes where it points", async ({
   // "Before [Textus](|https://old.example|)", in the link's Markdown.
   await caretAt(page, 16, 19);
   await pasteHere(page, "https://new.example");
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(page.locator(`${editor} a`)).toHaveCount(1);
   expect(await sourceOf(page)).toBe(
     "Before [Textus](https://new.example) after.",

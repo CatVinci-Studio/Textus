@@ -6,7 +6,8 @@ import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { useSettings } from "../prefs/SettingsContext";
 import { showMessage } from "../ui/app-dialog";
-import { dirname } from "../utils/path";
+import { dirname, isInside } from "../utils/path";
+import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {
   agentRootOnClose,
   agentRootOnOpen,
@@ -90,6 +91,18 @@ export function useOpenFolder({
     (root: string) => setTree((prev) => ({ ...prev, root })),
     [],
   );
+  // A plugin's textus.showFolder: a folder inside the open one, only.
+  useEffect(() => {
+    const show = (event: Event) => {
+      const path = (event as CustomEvent<unknown>).detail;
+      // Inside the project, or inside what the tree shows without one.
+      const top = folder ?? treeRoot;
+      if (typeof path === "string" && top && isInside(path, top))
+        setTreeRoot(path);
+    };
+    window.addEventListener(SHOW_FOLDER_EVENT, show);
+    return () => window.removeEventListener(SHOW_FOLDER_EVENT, show);
+  }, [folder, treeRoot, setTreeRoot]);
 
   // Read when a folder opens or closes, not captured: the menu bridge and
   // the pending-folder drain call these from long-lived handlers.

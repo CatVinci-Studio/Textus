@@ -2,7 +2,10 @@ import { Suspense, useEffect, useState } from "react";
 import { OPEN_CREATE_EVENT } from "../ai/chat/create-request";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
-import { openExtensionsTab } from "../settings/pages/extensions-tab";
+import {
+  openExtensionsTab,
+  openPluginPage,
+} from "../settings/pages/extensions-tab";
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
 import { Presence } from "../ui/usePresence";
 
@@ -42,8 +45,9 @@ export function useSettingsOpening() {
     request: state.request,
     openSettings: () => request("general"),
     openUpdates: () => request("updates"),
-    openPluginSettings: () => {
-      openExtensionsTab("plugins");
+    openPluginSettings: (id?: string) => {
+      if (id) openPluginPage(id);
+      else openExtensionsTab("plugins");
       request("extensions");
     },
     close: () => request(null),

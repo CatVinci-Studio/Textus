@@ -124,4 +124,24 @@ test("a plugin's settings page is as tall as its page, not a box to scroll", asy
     parseFloat(getComputedStyle(el).borderTopLeftRadius),
   );
   expect(radius).toBeLessThan(20);
+
+  // Its text is the interface's, not the document's, after a theme change
+  // too: Settings isn't in the document.
+  await page.evaluate(() =>
+    document.documentElement.setAttribute("data-theme", "dark"),
+  );
+  const pageText = page
+    .frameLocator(".plugin-settings-page .plugin-webview-frame")
+    .locator("body");
+  const appText = await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.fontSize = "var(--text-body)";
+    document.body.append(probe);
+    const size = getComputedStyle(probe).fontSize;
+    probe.remove();
+    return size;
+  });
+  await expect
+    .poll(() => pageText.evaluate((el) => getComputedStyle(el).fontSize))
+    .toBe(appText);
 });

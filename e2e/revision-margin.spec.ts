@@ -66,7 +66,7 @@ async function propose(page: Page, anchor: string, text: string) {
   await expect(page.locator(".review-bar-accept")).toBeEnabled();
   // A narrow window has room for the margin once the AI panel is closed.
   if (page.viewportSize()!.width < 1300)
-    await page.keyboard.press("Control+Shift+L");
+    await page.keyboard.press("ControlOrMeta+Shift+L");
 }
 
 /** The blocks of the document that take up room, as they stand: top

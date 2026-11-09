@@ -1,0 +1,5 @@
+/* A text field's menu may open over a dialog (Settings, a prompt): above
+   every layer, as the system's own did. */
+.text-field-menu .context-menu {
+  z-index: var(--z-select);
+}

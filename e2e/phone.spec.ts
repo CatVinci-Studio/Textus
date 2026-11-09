@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openPhone, pasteMarkdown, PHONE, settled } from "./helpers";
+import { openPhone, pasteMarkdown, PHONE, settled, HOME, END } from "./helpers";
 
 // The iPhone layout, checked in Chromium with touch and a phone-sized
 // viewport.
@@ -196,7 +196,7 @@ test("the keyboard toolbar formats without leaving the document, and leaves copy
   await expect(toolbar.getByRole("button", { name: "Copy" })).toHaveCount(0);
   await expect(toolbar.getByRole("button", { name: "Paste" })).toHaveCount(0);
   // A selection inside the paragraph, as the iPhone's handles make one.
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
   await page.keyboard.press("Shift+End");
   await toolbar.getByRole("button", { name: "Bold" }).tap();
   await expect(para.locator("strong")).toHaveText("plain words");
@@ -213,7 +213,7 @@ test("a tap on the suggestion accepts it", async ({ page }) => {
   await openPhone(page);
   await pasteMarkdown(page, "The plan");
   await page.locator(".milkdown p").first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" works");
   const ghost = page.locator(".ghost-text");
   await expect(ghost).toHaveAttribute(

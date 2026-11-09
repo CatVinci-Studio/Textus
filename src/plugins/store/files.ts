@@ -1,5 +1,6 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { pluginFilesBase } from "../../platform/file-src";
+import { scaleStylesheet } from "../../ui/scale-lengths";
 
 /**
  * A plugin's own files, and how a webview gets them: each
@@ -88,6 +89,7 @@ export async function withResources(
   id: string,
   read: (rel: string) => Promise<Uint8Array>,
 ): Promise<string> {
+  html = await withScaledStyles(html, read);
   const base = pluginFilesBase();
   if (base)
     return html.replace(
@@ -103,4 +105,49 @@ export async function withResources(
     }),
   );
   return html.replace(RESOURCE, (_, rel: string) => urls.get(rel) ?? "");
+}
+
+const STYLE = /(<style\b[^>]*>)([\s\S]*?)(<\/style>)/gi;
+const SHEET =
+  /<link\b(?=[^>]*\brel=["']?stylesheet\b)[^>]*\bhref=["']?textus-resource:([A-Za-z0-9._~\-/]+)["']?[^>]*>/gi;
+/** A url() in a stylesheet, unless it names a scheme, the root or data. */
+const RELATIVE_URL =
+  /url\(\s*(["']?)(?![a-z][a-z0-9+.-]*:|\/|#)([^"')]+)\1\s*\)/gi;
+
+/** `html` with its stylesheets' lengths in interface pixels, as the app's
+ *  own are (design-language.md 5.6): its `<style>`s, and its own sheets
+ *  brought in as `<style>`s, their url()s still pointing at its files. */
+async function withScaledStyles(
+  html: string,
+  read: (rel: string) => Promise<Uint8Array>,
+): Promise<string> {
+  const sheets = [...new Set([...html.matchAll(SHEET)].map((m) => m[1]))];
+  const texts = new Map<string, string>();
+  await Promise.all(
+    sheets.map(async (rel) => {
+      const dir = rel.includes("/")
+        ? rel.slice(0, rel.lastIndexOf("/") + 1)
+        : "";
+      const css = new TextDecoder().decode(await read(pluginPath(rel)));
+      texts.set(
+        rel,
+        css.replace(
+          RELATIVE_URL,
+          (_, quote: string, path: string) =>
+            `url(${quote}textus-resource:${dir}${path.replace(/^\.\//, "")}${quote})`,
+        ),
+      );
+    }),
+  );
+  return html
+    .replace(
+      STYLE,
+      (_, open: string, css: string, close: string) =>
+        open + scaleStylesheet(css) + close,
+    )
+    .replace(
+      SHEET,
+      (_, rel: string) =>
+        `<style>${scaleStylesheet(texts.get(rel) ?? "")}</style>`,
+    );
 }

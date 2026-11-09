@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { selectionRead, END } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 // The WakaTime plugin: the user's typing in a window in front goes to
@@ -67,7 +67,7 @@ test("typing in front is sent when the window steps back; the background sends n
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.getByText("It begins.").click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" Then it rained.");
   await page.clock.fastForward(1500);
   await setState(page, "inactive");

@@ -22,6 +22,8 @@ import { stateWithLiveSelection } from "../live-selection";
 import { labelParts, type LabelPart } from "./link-label";
 import { LINK } from "./link-source";
 import {
+  destRange,
+  encodedRuns,
   hiddenLinkParts,
   inlinedReference,
   isDanglingReference,
@@ -127,6 +129,30 @@ function labelDecorations(
   });
 }
 
+/** Each percent-escape run in `range` of a link's source drawn as what it
+ *  stands for; the file keeps the escapes. */
+function decodedRuns(
+  text: string,
+  range: [number, number],
+  at: number,
+): Decoration[] {
+  return encodedRuns(text, ...range).flatMap((run) => [
+    Decoration.inline(at + run.from, at + run.to, {
+      class: "link-source-hidden",
+    }),
+    Decoration.widget(
+      at + run.from,
+      () => {
+        const span = document.createElement("span");
+        span.className = "link-source-decoded";
+        span.textContent = run.text;
+        return span;
+      },
+      { key: `decoded:${run.text}`, side: 1 },
+    ),
+  ]);
+}
+
 function linkReveal(
   label: (text: string) => LabelPart[],
   docPath: () => string | null,
@@ -161,6 +187,10 @@ function linkReveal(
           }),
         );
       const link = parseLink(text)!;
+      // A destination on screen reads `%20` as a space.
+      const dest = destRange(text);
+      if (dest && (shown || link.label[0] === link.label[1]))
+        out.push(...decodedRuns(text, dest, pos + 1));
       if (!shown && parts.length === 2 && parts[0][1] === link.label[0])
         out.push(
           ...labelDecorations(
@@ -264,6 +294,28 @@ export function arrowPastLinkEdge(
 }
 
 const PLAIN_ARROWS: Record<string, 1 | -1> = { ArrowLeft: -1, ArrowRight: 1 };
+const DELETES: Record<string, 1 | -1> = { Backspace: -1, Delete: 1 };
+
+/** The escape run (`%20`, shown as a space) the caret steps or deletes
+ *  over toward `dir`, as document positions; null where there is none. */
+export function escapeRunAt(
+  state: EditorState,
+  dir: 1 | -1,
+): { from: number; to: number } | null {
+  const { selection } = state;
+  const { $from } = selection;
+  if (!selection.empty || !isLink($from.parent)) return null;
+  const text = $from.parent.textContent;
+  const dest = destRange(text);
+  if (!dest) return null;
+  const at = $from.parentOffset;
+  const run = encodedRuns(text, ...dest).find((r) =>
+    dir === 1 ? r.from <= at && at < r.to : r.from < at && at <= r.to,
+  );
+  if (!run) return null;
+  const start = $from.start();
+  return { from: start + run.from, to: start + run.to };
+}
 
 /** Enter in a link: at either end, the line breaks beside it; inside, the
  *  source is split as the text it is. */
@@ -321,15 +373,26 @@ export function createLinkRevealPlugin(docPath: () => string | null) {
             enterInLink(view);
             return false;
           }
+          const modified =
+            event.shiftKey || event.altKey || event.ctrlKey || event.metaKey;
           const dir = PLAIN_ARROWS[event.key];
-          if (
-            !dir ||
-            event.shiftKey ||
-            event.altKey ||
-            event.ctrlKey ||
-            event.metaKey
-          )
-            return false;
+          // `%20` reads as one space, so it is passed or deleted as one.
+          const step = dir ?? DELETES[event.key];
+          const run = step && !modified ? escapeRunAt(view.state, step) : null;
+          if (run) {
+            event.preventDefault();
+            const tr = dir
+              ? view.state.tr.setSelection(
+                  TextSelection.create(
+                    view.state.doc,
+                    dir === 1 ? run.to : run.from,
+                  ),
+                )
+              : view.state.tr.delete(run.from, run.to);
+            view.dispatch(tr);
+            return true;
+          }
+          if (!dir || modified) return false;
           // Arrows pressed fast run ahead of the state's selection.
           const to = arrowPastLinkEdge(stateWithLiveSelection(view), dir);
           if (to === null) return false;

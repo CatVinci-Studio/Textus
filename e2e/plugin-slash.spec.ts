@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, END } from "./helpers";
 
 /**
  * The `/` menu offers a plugin's `menus["editor/slash"]` commands; taking
@@ -52,7 +52,7 @@ test("a plugin's / command is offered as a word starts with /, and runs", async 
   await emit(page, "menu-open-recent", "/work/a.md");
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
   await editor.locator("p").click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   const list = page.locator(".completion-list");
 
   // Not inside a word.

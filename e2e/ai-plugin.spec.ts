@@ -90,20 +90,24 @@ test("Install this plugin installs the reply's plugin and turns it on", async ({
   const next = page.locator(".agent-plugin-chip").last();
   await next.getByRole("button", { name: "Update the plugin" }).click();
   await expect(next.getByRole("button", { name: "Installed" })).toBeDisabled();
+  // The update restarts the plugin's host; until then the old one may
+  // answer. Each try clears the answers shown, so the newest is in front.
+  const ok = page.getByRole("button", { name: "OK" });
   await expect
-    .poll(async () => {
-      await count(page);
-      const shown = await page
-        .getByText("Counted from 1.0.1")
-        .isVisible()
-        .catch(() => false);
-      if (!shown)
-        await page
-          .getByRole("button", { name: "OK" })
-          .click({ timeout: 500 })
-          .catch(() => {});
-      return shown;
-    })
+    .poll(
+      async () => {
+        while (await ok.isVisible().catch(() => false)) await ok.click();
+        await count(page);
+        return page
+          .getByText("Counted from 1.0.1")
+          .waitFor({ timeout: 1000 })
+          .then(
+            () => true,
+            () => false,
+          );
+      },
+      { timeout: 20_000 },
+    )
     .toBe(true);
   await page.getByRole("button", { name: "OK" }).click();
 

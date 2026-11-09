@@ -1,7 +1,9 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
 import { renderMarkdownHtml } from "../markdown/render-html";
+import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
 import { duration } from "../../ui/motion";
 
@@ -62,12 +64,14 @@ function build(card: HoverCard): HTMLElement {
   const el = document.createElement("div");
   el.className = "hover-card floating-surface";
   el.setAttribute("role", "dialog");
-  el.setAttribute("aria-label", card.title ?? t.hoverCard);
+  // A title made from a link's path reads `%20` as a space.
+  const named = card.title ? readEscapes(card.title) : null;
+  el.setAttribute("aria-label", named ?? t.hoverCard);
   const head = document.createElement("div");
   head.className = "hover-card-head";
   const title = document.createElement("span");
   title.className = "hover-card-title";
-  title.textContent = card.title ?? "";
+  title.textContent = named ?? "";
   const pin = document.createElement("button");
   pin.type = "button";
   pin.className = "hover-card-button";
@@ -111,10 +115,12 @@ function build(card: HoverCard): HTMLElement {
 /** Below the link, or above it when there is no room; inside the window. */
 function place(el: HTMLElement, rect: DOMRect) {
   const box = el.getBoundingClientRect();
-  const top = opensBelow(rect, box.height, GAP)
-    ? Math.min(rect.bottom + GAP, window.innerHeight - EDGE - box.height)
-    : rect.top - GAP - box.height;
-  el.style.top = `${Math.max(EDGE, top)}px`;
+  const gap = scaledPx(GAP);
+  const edge = scaledPx(EDGE);
+  const top = opensBelow(rect, box.height, gap)
+    ? Math.min(rect.bottom + gap, window.innerHeight - edge - box.height)
+    : rect.top - gap - box.height;
+  el.style.top = `${Math.max(edge, top)}px`;
   el.style.left = `${clampLeft(rect.left, box.width)}px`;
 }
 

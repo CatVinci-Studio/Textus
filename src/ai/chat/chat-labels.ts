@@ -6,7 +6,7 @@ import { permissionLabel } from "../../plugins/store/permissions";
 import { aiErrorTexts } from "../error-messages";
 import { toolActivityLabels } from "./tool-activity";
 import { MODES } from "../modes";
-import type { PanelMode } from "../../prefs/settings-types";
+import type { PanelMode } from "../../prefs/settings-values";
 
 /**
  * The chat's user-facing strings, built once for every chat surface so no

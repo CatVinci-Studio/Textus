@@ -15,8 +15,8 @@ import {
   revokePermission,
   uninstallPlugin,
   type PluginRecord,
-  runsHere,
 } from "../../plugins/manager";
+import { runsHere } from "../../plugins/plugin-platform";
 import {
   requirementLabel,
   requirementMet,
@@ -127,7 +127,9 @@ export function PluginPage({
         ‹ {t.pluginBackToList}
       </button>
       <div className="settings-group-body plugin-page-head">
-        <label className="settings-row plugin-page-title-row">
+        {/* Only the switch turns the plugin on or off: its name, its
+            description and its links are for reading and clicking. */}
+        <div className="settings-row plugin-page-title-row">
           <PluginIcon
             id={record.id}
             manifest={manifest}
@@ -158,7 +160,7 @@ export function PluginPage({
             checked={on}
             onChange={(e) => onEnable(e.target.checked)}
           />
-        </label>
+        </div>
         <div className="settings-row plugin-guide-row">
           {manifest && (
             <button

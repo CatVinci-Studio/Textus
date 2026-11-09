@@ -1,3 +1,4 @@
+import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   registerNoteCompletion,
@@ -67,6 +68,11 @@ export function useWindowDocuments({
   }, [showFiles, hasTree]);
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
+  useProjectTabs(
+    openFolder.folder,
+    tabs.map((tab) => tab.path),
+    activeTab.path,
+  );
   useSplitRestore(tabs, setActiveTabId);
 
   const dialogFilters = useMemo(

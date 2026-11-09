@@ -3,7 +3,12 @@ import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { basename, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { fromBase64, toBase64 } from "../store/files";
-import { emitPluginEvent, getWindowAccess, notePathMoved } from "../app-bridge";
+import {
+  beforePluginMove,
+  emitPluginEvent,
+  getWindowAccess,
+  pluginMovedPath,
+} from "../app-bridge";
 import { globToRegExp, isDocumentPath } from "../workspace/glob";
 import {
   parseFrontmatter,
@@ -176,17 +181,18 @@ export function fileHandlers(p: PluginScope) {
       const root = write();
       const source = str(from, "from");
       const target = str(to, "to");
-      await pluginsIpc.fsRename(p.id, root, source, target);
-      window.dispatchEvent(
-        new CustomEvent(FILE_WRITTEN_EVENT, { detail: source }),
-      );
-      await notePathMoved(source, target);
-      if (updateLinks !== true) return;
       // A plugin may name the files from the folder.
       const abs = (path: string) =>
         /^([\\/]|[A-Za-z]:)/.test(path)
           ? path
           : `${root.replace(/[\\/]+$/, "")}/${path}`;
+      await beforePluginMove(abs(source));
+      await pluginsIpc.fsRename(p.id, root, source, target);
+      window.dispatchEvent(
+        new CustomEvent(FILE_WRITTEN_EVENT, { detail: source }),
+      );
+      await pluginMovedPath(abs(source), abs(target));
+      if (updateLinks !== true) return;
       const [{ documents }, { files }, conventions, linkRoot] =
         await Promise.all([
           pluginsIpc.fsDocuments(p.id, root),

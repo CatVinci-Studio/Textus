@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown, END } from "./helpers";
 
 /**
  * The window without a mouse: F6 through the regions and back to the
@@ -80,7 +80,7 @@ test("the file tree walks with the arrow keys, opens folders and files", async (
   await expect(novel).toBeFocused();
   await page.keyboard.press("ArrowLeft");
   await expect(novel).toHaveAttribute("aria-expanded", "false");
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(tree.getByRole("treeitem", { name: "b.md" })).toBeFocused();
   await page.keyboard.press("ArrowUp");
   await page.keyboard.press("Enter");
@@ -156,7 +156,7 @@ test("the context menu opens from the keyboard, walks and gives the focus back",
   await expect(offered.first()).toHaveText("Paste");
   await page.keyboard.press("ArrowDown");
   await expect(offered.nth(1)).toBeFocused();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(offered.last()).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toHaveCount(0);

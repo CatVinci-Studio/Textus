@@ -20,7 +20,7 @@ pub mod uri;
 pub mod workspace;
 
 /// The app's invoke handler with every plugin command in front of the commands
-/// lib.rs lists.
+/// invoke_handler.rs lists.
 #[macro_export]
 macro_rules! with_plugin_commands {
     ($($rest:tt)*) => {

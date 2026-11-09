@@ -43,7 +43,11 @@ test("nothing comes installed, and the catalog offers the official plugins, eigh
   await expect(cards).toHaveCount(20);
   await showAll(page);
   const installed = page.getByRole("region", { name: "Installed" });
-  await expect(installed).toContainText("None yet.");
+  // Not an empty box: a line that points to the catalog below.
+  await expect(installed.locator(".settings-group-body")).toHaveText(
+    "No plugins installed yet. Pick one under Available below.",
+  );
+  await expect(installed.locator(".plugin-card")).toHaveCount(0);
   // The catalog follows, on the same page.
   const graph = page.locator('.plugin-card[data-catalog="catvinci.graph"]');
   await expect(graph).toContainText("Graph View");
@@ -393,4 +397,26 @@ test("with updates for two or more installed plugins, Update All updates them al
   await expect(page.getByRole("button", { name: /^Update to / })).toHaveCount(
     0,
   );
+});
+
+test("the Plugins menu's Settings… opens the plugin's page, where only its switch turns it off", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.daily-notes": ["files.read", "files.write", "editor.read"],
+    },
+  });
+  await emit(
+    page,
+    "menu-plugin-command",
+    "plugin-settings:catvinci.daily-notes",
+  );
+  const own = page.locator('[data-plugin-page="catvinci.daily-notes"]');
+  await expect(own.locator(".plugin-page-title")).toBeVisible();
+  // A click on its name or description is not a click on its switch.
+  await own.locator(".plugin-page-title").click();
+  await own.locator(".plugin-page-title-row .settings-row-hint").click();
+  const enabled = own.getByRole("checkbox", { name: /Calendar & Daily Notes/ });
+  await expect(enabled).toBeChecked();
 });

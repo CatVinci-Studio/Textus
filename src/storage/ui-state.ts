@@ -53,6 +53,12 @@ export interface UiState {
   /** The note embeds folded, by the document they are in and what they
    *  show, oldest first. */
   foldedEmbeds: string[];
+  /** The drawn blocks folded (editor/fold/block-fold.ts), by document and
+   *  place, oldest first. */
+  foldedBlocks: string[];
+  /** The drawn blocks opened by hand, so one folded in a narrow column
+   *  stays open. */
+  openedBlocks: string[];
   /** With embeds shown as cards, the ones opened, the same way. */
   openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
@@ -78,6 +84,9 @@ export interface UiState {
   /** The folder a document was last saved into with Save As, where the
    *  next untitled one is offered to go when no folder is open. */
   lastSaveFolder: string;
+  /** Each project's tabs as it was left, by folder, the one in front last
+   *  (app/start-project.ts). */
+  projectTabs: Record<string, string[]>;
 }
 
 export interface ThemeChromeCache {
@@ -103,6 +112,11 @@ const LOCAL: {
     encode: (value: UiState[K]) => string;
   };
 } = {
+  projectTabs: {
+    key: "textus-project-tabs",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
   lastSaveFolder: {
     key: "textus-last-save-folder",
     decode: (raw) => raw,
@@ -195,6 +209,16 @@ const LOCAL: {
   },
   readOnlyPaths: {
     key: "textus-read-only-paths",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  foldedBlocks: {
+    key: "textus-folded-blocks",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  openedBlocks: {
+    key: "textus-opened-blocks",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

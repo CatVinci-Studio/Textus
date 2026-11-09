@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { windowIpc } from "../../platform/ipc";
+import { useChromeScale } from "../../ui/useChromeScale";
 import {
   emitToWindow,
   listenToThisWindow,
@@ -82,6 +83,7 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
   const html = record ? (webview(record.id)?.html ?? null) : null;
   const id = record?.id ?? null;
   const label = useFloatingWindow(view);
+  const chrome = useChromeScale();
 
   useEffect(() => {
     if (!label || !id || html === null) return;
@@ -97,7 +99,11 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
         ...page,
         icon: view.icon,
         menu: floatingMenuItems(view).map((item) => item.label),
-        size: { width: view.width, height: view.height, scale: view.scale },
+        size: {
+          width: view.width * chrome,
+          height: view.height * chrome,
+          scale: view.scale,
+        },
         init: {
           state: webviewState(current.key) ?? null,
           language: windowInfo().language(),
@@ -144,9 +150,10 @@ export function DesktopFloating({ view }: { view: FloatingView }) {
  *  to it there, and closes it when the view closes. Answers its label. */
 function useFloatingWindow(view: FloatingView): string | null {
   const label = useWindowLabel(view);
+  const chrome = useChromeScale();
   const [width, height] = view.folded
-    ? [DOT_SIZE, DOT_SIZE]
-    : floatingSize(view);
+    ? [DOT_SIZE * chrome, DOT_SIZE * chrome]
+    : floatingSize(view, chrome);
   useEffect(() => {
     if (!label) return;
     void windowIpc.resizeFloatingWindow(view.view, width, height);
@@ -189,12 +196,13 @@ function useFloatingWindow(view: FloatingView): string | null {
 
 function useWindowLabel(view: FloatingView): string | null {
   const [label, setLabel] = useState<string | null>(null);
+  const chrome = useChromeScale();
   useEffect(() => {
     let live = true;
     const at =
       view.x === null || view.y === null ? null : { x: view.x, y: view.y };
     windowIpc
-      .openFloatingWindow(view.view, at, ...floatingSize(view))
+      .openFloatingWindow(view.view, at, ...floatingSize(view, chrome))
       .then((opened) => live && setLabel(opened))
       .catch(() => live && moveFloating(view.view, { place: "window" }));
     return () => {

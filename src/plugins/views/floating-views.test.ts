@@ -54,6 +54,13 @@ describe("floating views", () => {
     expect(floatingSize(showFloating(pet, false))).toEqual([224, 224]);
   });
 
+  it("grow with the interface, on top of the user's size", () => {
+    const view = showFloating(pet, false);
+    expect(floatingSize(view, 1.35)).toEqual(
+      floatingSize(view).map((n) => Math.round(n * 1.35)),
+    );
+  });
+
   it("tell their plugin which half they sit in", () => {
     const heard = vi.fn();
     const stop = onPluginEvent("floating", heard);

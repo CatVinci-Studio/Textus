@@ -153,7 +153,7 @@ export const PluginListPane = memo(function PluginListPane({
         over?.classList.add("is-drop");
       };
       trackDrag(e, {
-        start: () => row.classList.add("is-dragging"),
+        start: () => row.classList.add("is-drag-lifted"),
         move: (x, y) =>
           hover(
             document
@@ -162,7 +162,7 @@ export const PluginListPane = memo(function PluginListPane({
           ),
         end: (_x, _y, dropped) => {
           const target = rows.find((r) => r.key === over?.dataset.listKey);
-          row.classList.remove("is-dragging");
+          row.classList.remove("is-drag-lifted");
           hover(null);
           if (!dropped || !target || !list.contains(row)) return;
           void askPlugin(plugin, "$listMove", {
@@ -425,16 +425,22 @@ function usePluginListItems(plugin: string, view: string) {
         if (!live) return;
         setItems(got);
         setError(null);
+        // An open item's children are asked again too, the item looked up
+        // in the list just come. One not found (gone) is left: asked
+        // without a parent, the plugin gives the top level, which would be
+        // drawn again under it.
+        const now = state.current;
+        for (const id of now.open) {
+          const parent = findItem(got, now.children, id);
+          if (!parent) continue;
+          void ask(parent)
+            .then(
+              (kids) => live && setChildren((m) => new Map(m).set(id, kids)),
+            )
+            .catch(() => {});
+        }
       })
       .catch((err) => live && setError(String((err as Error)?.message ?? err)));
-    // An open item's children are asked again too.
-    const now = state.current;
-    for (const id of now.open) {
-      const parent = findItem(now.items ?? [], now.children, id);
-      void ask(parent ?? undefined)
-        .then((got) => live && setChildren((m) => new Map(m).set(id, got)))
-        .catch(() => {});
-    }
     return () => {
       live = false;
     };

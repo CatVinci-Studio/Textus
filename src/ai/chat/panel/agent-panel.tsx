@@ -1,3 +1,4 @@
+import { chromeScaleAt } from "../../../ui/chrome-scale";
 import {
   createContext,
   useCallback,
@@ -7,6 +8,11 @@ import {
   type ReactNode,
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
+import {
+  clampSidePanel,
+  sidePanelMax,
+  sidePanelMin,
+} from "../../../ui/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";
@@ -41,40 +47,58 @@ export const AGENT_PANEL_MIN_WIDTH = 300;
 export const AGENT_PANEL_MAX_WIDTH = 720;
 export const AGENT_PANEL_DEFAULT_WIDTH = 380;
 
-function clampWidth(width: number): number {
-  return Math.min(
-    AGENT_PANEL_MAX_WIDTH,
-    Math.max(AGENT_PANEL_MIN_WIDTH, width),
-  );
-}
+const LIMITS = { min: AGENT_PANEL_MIN_WIDTH, max: AGENT_PANEL_MAX_WIDTH };
 
-/** The panel's open state and width, remembered across launches. */
-export function useAgentPanelState() {
+/** The panel's open state and width, remembered across launches. Shown
+ *  narrower in a window too small for it, as the sidebar is
+ *  (side-panel-width): `beside` is the open sidebar's width. */
+export function useAgentPanelState(windowWidth: number, beside: number) {
   const [open, setOpenState] = useState(
     () => getUiState("agentPanelOpen") === true,
   );
-  const [width, setWidthState] = useState(() => {
+  const [chosen, setChosen] = useState(() => {
     const stored = getUiState("agentPanelWidth");
     return typeof stored === "number" && Number.isFinite(stored) && stored > 0
-      ? clampWidth(stored)
+      ? stored
       : AGENT_PANEL_DEFAULT_WIDTH;
   });
+  // Kept in the interface's size units, shown at its size now.
+  const scale = chromeScaleAt(windowWidth);
+  const width = clampSidePanel(
+    chosen * scale,
+    windowWidth,
+    LIMITS,
+    beside,
+    scale,
+  );
   const [tab, setTab] = useState<AgentPanelTab>("chat");
-  const setOpen = useCallback((next: boolean) => {
-    setOpenState(next);
-    setUiState("agentPanelOpen", next);
-    // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
-    // "ask about this note" - wants the conversation.
-    if (next) setTab("chat");
-  }, []);
+  const setOpen = useCallback(
+    (next: boolean) => {
+      setOpenState(next);
+      setUiState("agentPanelOpen", next);
+      // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
+      // "ask about this note" - wants the conversation.
+      if (next) setTab("chat");
+    },
+    [setTab],
+  );
   // Remembered once a drag lets go, not on every frame of it.
-  const setWidth = useCallback((next: number, persist = true) => {
-    const clamped = clampWidth(next);
-    setWidthState(clamped);
-    if (persist) setUiState("agentPanelWidth", Math.round(clamped));
-  }, []);
+  const setWidth = useCallback(
+    (next: number, persist = true) => {
+      const step = chromeScaleAt(windowWidth);
+      const base = Math.round(
+        clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
+      );
+      setChosen(base);
+      if (persist) setUiState("agentPanelWidth", base);
+    },
+    [windowWidth, beside],
+  );
   const toggle = useCallback(() => setOpen(!open), [open, setOpen]);
-  return { open, setOpen, toggle, width, setWidth, tab, setTab };
+  // How far it may be dragged here, for its handle's keys and readers.
+  const min = Math.round(sidePanelMin(windowWidth, LIMITS, beside, scale));
+  const max = Math.round(sidePanelMax(windowWidth, LIMITS, beside, scale));
+  return { open, setOpen, toggle, width, min, max, setWidth, tab, setTab };
 }
 
 export function AgentPanelProvider({

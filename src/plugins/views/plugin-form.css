@@ -26,3 +26,33 @@
   gap: 8px;
   color: var(--ui-text);
 }
+
+/* A date: its month, then the field to type it in. A colour: the tones,
+   then the field. */
+.plugin-form-date,
+.plugin-form-color {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.plugin-form-date > .tx-pager {
+  justify-content: space-between;
+}
+.plugin-form-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.plugin-form-swatch {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: 50%;
+  corner-shape: round;
+  cursor: pointer;
+}
+.plugin-form-swatch[aria-checked="true"] {
+  outline: 2px solid var(--ui-accent);
+  outline-offset: 2px;
+}

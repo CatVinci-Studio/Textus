@@ -109,7 +109,7 @@ for (const order of ["schema", "reason-first"])
         },
         { raw },
       );
-      await page.keyboard.press("Control+Shift+L");
+      await page.keyboard.press("ControlOrMeta+Shift+L");
       const composer = page.locator(".agent-panel-view textarea");
       await composer.fill("Tighten it");
       await composer.press("Enter");

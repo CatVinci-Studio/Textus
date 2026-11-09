@@ -14,9 +14,6 @@ import { explainError } from "../utils/error-explain";
 /** The tree's order: by name, folders first, or newest first. */
 export type TreeSort = "name" | "modified";
 
-/** How far the pointer moves before a press on a row becomes a drag. */
-export const DRAG_START_PX = 5;
-
 /** What every row of the tree reads: the order and the filter, which
  *  folders to read again, and the desktop's right-click menu and drag. */
 export interface TreeShared {

@@ -78,6 +78,21 @@ version, the branch the tag is on, and the notes.
 
 ### A test build (`vX.Y.Z-rc.N`)
 
+Before either kind, in the release's pull request:
+
+- **Plugins.** If the official plugins changed, merge their pull request
+  first, then point CI at it: `node scripts/pin-plugins.mjs` (textus-plugins'
+  `main`; `--check` prints the pin). The e2e flows test the plugins at that
+  commit.
+- **What CI doesn't block on.** Look at the latest `main` run's WebKit job
+  and at any test reported flaky (testing.md › Flaky tests); fix or file
+  each.
+- **Screenshots.** Run `npm run test:visual -- e2e/visual.spec.ts` on Linux
+  (testing.md › Which tests run when); look at each changed image, and
+  update the baseline only for a change you meant.
+- **Speed.** When the release touches the editor, large documents or plugin
+  loading, run the benchmarks on the same machine as last time and compare.
+
 1. In the release's pull request to `main`, set the version to
    `X.Y.Z-rc.N` in `package.json`, `src-tauri/Cargo.toml` and
    `src-tauri/tauri.conf.json`, then run `npm install --package-lock-only`

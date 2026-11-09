@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { HOME, selectionRead } from "./helpers";
+import { HOME, selectionRead, END } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 // The Quick Insert plugin: blocks from the / menu, Turn into…, and emoji
@@ -19,7 +19,7 @@ async function open(page: Page, doc: string) {
   await expect(editor).toContainText(doc.trim().split("\n").pop()!);
   await editor.locator("p").last().click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   return editor;
 }
 

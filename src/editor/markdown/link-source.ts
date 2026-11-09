@@ -17,7 +17,13 @@ import {
   labelNodes,
   labelText,
 } from "./link-label";
-import { inlineLink, linkHref, linkSource, parseLink } from "./link-syntax";
+import {
+  encodeDestSpaces,
+  inlineLink,
+  linkHref,
+  linkSource,
+  parseLink,
+} from "./link-syntax";
 
 /**
  * A link is a node holding its Markdown as text, `[text](url "title")`,
@@ -201,8 +207,13 @@ export const linkSchema = $nodeSchema(LINK, () => ({
   toMarkdown: {
     match: (node) => node.type.name === LINK,
     runner: (state, node) => {
+      // A space typed into a destination is saved as `%20`.
       if (node.textContent)
-        state.addNode("linkSource", undefined, node.textContent);
+        state.addNode(
+          "linkSource",
+          undefined,
+          encodeDestSpaces(node.textContent),
+        );
     },
   },
 }));

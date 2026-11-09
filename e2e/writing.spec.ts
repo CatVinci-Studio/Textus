@@ -9,6 +9,8 @@ import {
   PHONE,
   settled,
   sourceValue,
+  END,
+  MAC,
 } from "./helpers";
 
 /** The active document's Markdown, read from source mode (and back). */
@@ -246,7 +248,7 @@ test("an undone edit's card still counts what it removes", async ({ page }) => {
   // Undone, the edit is on offer again; the caret then moves on and
   // nothing is selected any more.
   await page.locator(".milkdown .ProseMirror").focus();
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect(page.locator(".agent-proposal-status-accepted")).toHaveCount(0);
   await page.locator(".milkdown p").last().click();
   await expect(page.locator(".agent-proposal-actions")).toBeVisible();
@@ -379,7 +381,7 @@ test("the math preview follows its formula when the column moves", async ({
   await pasteMarkdown(page, "Some text with $x^2 + y^2$ in it.");
   // Into the formula from the end of the line.
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   for (let i = 0; i < 9; i++) await page.keyboard.press("ArrowLeft");
   const preview = page.locator(".math-float-preview");
   await expect(preview).toBeVisible();
@@ -435,7 +437,7 @@ const PREVIEW_DOC = [
 async function expectPreviewsClear(page: Page) {
   const preview = page.locator(".math-float-preview");
   await page.locator('[data-active-tab="true"] .math-block-rendered').click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await expect(preview).toBeVisible();
   await settled(page);
   expect(await previewCoversText(page), "block preview covers text").toBe(
@@ -526,7 +528,7 @@ test("clicking a diagram opens its own source after text is added above", async 
   // Lengthen the paragraph above: the diagrams' widgets are kept, their
   // blocks move.
   await page.locator(".ProseMirror p", { hasText: "Top." }).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" More words above both diagrams.");
   await previews.nth(1).click();
   const hidden = page.locator(".ProseMirror .mermaid-source-hidden");
@@ -560,6 +562,8 @@ test("a table's menu stays open while it scrolls on a short window", async ({
 test("the wheel over a table scrolls the page, not the table", async ({
   page,
 }) => {
+  // The Mac test browser scrolls a wheel's lines by its own rule.
+  test.skip(MAC, "the Mac test browser's wheel scrolls differently");
   await openApp(page, { settings: { language: "en" } });
   const filler = Array.from(
     { length: 20 },
@@ -572,8 +576,8 @@ test("the wheel over a table scrolls the page, not the table", async ({
   const cell = page.locator(".ProseMirror td", { hasText: "the plan" });
   await cell.evaluate((el) => el.scrollIntoView({ block: "center" }));
   await cell.click();
-  await page.keyboard.press("End");
-  await page.keyboard.press("Control+Shift+Space");
+  await page.keyboard.press(END);
+  await page.keyboard.press("ControlOrMeta+Shift+Space");
   await expect(page.locator(".ghost-text")).toHaveCount(1);
   // The table's box a little shorter than the table, as a fractional cell
   // height can leave it. A stylesheet, since ProseMirror redraws a node view
@@ -836,7 +840,7 @@ test("Escape that closes the context menu keeps the grey suggestion", async ({
   await openApp(page);
   await pasteMarkdown(page, "The plan");
   await page.locator(".milkdown p").first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" works");
   const ghost = page.locator(".ghost-text");
   await expect(ghost).toHaveCount(1);

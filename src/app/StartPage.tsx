@@ -14,6 +14,7 @@ import {
 import { Tooltip } from "../ui/Tooltip";
 import type { Strings } from "../i18n/strings";
 import mark from "../../src-tauri/icons/128x128.png";
+import { openingDocuments } from "./start-project";
 import "./start-page.css";
 
 /** Recent projects and files each list this many at most. */
@@ -54,12 +55,15 @@ function RecentList({
   paths,
   event,
   icon,
+  then,
 }: {
   title: string;
   paths: string[];
   /** The menu event that opens one, here. */
   event: string;
   icon: ReactNode;
+  /** What else opening one does. */
+  then?: (path: string) => void;
 }) {
   if (paths.length === 0) return null;
   return (
@@ -70,7 +74,10 @@ function RecentList({
           <button
             type="button"
             className="start-page-row"
-            onClick={() => emitToThisWindow(event, path)}
+            onClick={() => {
+              emitToThisWindow(event, path);
+              then?.(path);
+            }}
           >
             <span className="start-page-row-icon" aria-hidden="true">
               {icon}
@@ -93,6 +100,7 @@ function RecentList({
  */
 export function StartPage({ t }: { t: Strings }) {
   const recents = useRecents();
+  const [empty, setEmpty] = useState<string | null>(null);
   // Run here as the menu items' events, not through the native menu: in a
   // window-per-document setup that would open another window.
   const actions = [
@@ -115,6 +123,18 @@ export function StartPage({ t }: { t: Strings }) {
     },
   ];
   const anyRecent = recents.folders.length > 0 || recents.files.length > 0;
+  // A project with nothing to open: its files are in the sidebar.
+  if (empty)
+    return (
+      <div className="start-page" role="region" aria-label={t.startPageTab}>
+        <div className="tx-empty">
+          {t.startPagePickDocument.replace(
+            "{folder}",
+            basename(empty.replace(/[\\/]+$/, "")),
+          )}
+        </div>
+      </div>
+    );
   return (
     <div className="start-page" role="region" aria-label={t.startPageTab}>
       <div className="start-page-body">
@@ -149,6 +169,15 @@ export function StartPage({ t }: { t: Strings }) {
               paths={recents.folders}
               event="menu-open-recent-folder"
               icon={<FolderIcon />}
+              // A project shows a document of its own too: the sidebar
+              // alone changing left the start page looking untouched.
+              then={(folder) =>
+                void openingDocuments(folder, recents.files).then((docs) =>
+                  docs.length
+                    ? emitToThisWindow("open-project-documents", docs)
+                    : setEmpty(folder),
+                )
+              }
             />
             <RecentList
               title={t.startPageRecentFiles}
