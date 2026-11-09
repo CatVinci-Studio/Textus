@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { dragWithMouse, selectionRead, swallowHtmlDrop, END } from "./helpers";
+import {
+  dragWithMouse,
+  emit,
+  selectionRead,
+  swallowHtmlDrop,
+  END,
+} from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -125,4 +131,52 @@ test("a row is lit while the pointer is on it, not after it leaves", async ({
   await expect.poll(lit).not.toBe(plain);
   await page.mouse.move(600, 400);
   await expect.poll(lit).toBe(plain);
+});
+
+test("a page made a folder for its first sub-page keeps its unsaved words, its tab following it", async ({
+  page,
+}) => {
+  await open(page);
+  await openPath(page, "/notes/Inbox.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.getByText("Inbox").click();
+  await selectionRead(page);
+  await page.keyboard.press(END);
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("Not saved yet.");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("/page");
+  await page
+    .locator(".completion-list")
+    .getByText("New Sub-page…", { exact: true })
+    .click();
+  const dialog = page.locator(".app-dialog");
+  await dialog.getByRole("textbox").fill("Idea");
+  await dialog.getByRole("textbox").press("Enter");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Idea.md"))
+    .toBe("# Idea\n");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toContain("Not saved yet.");
+  expect(await fileText(page, "/notes/Inbox.md")).toBeUndefined();
+  // Its tab is the moved page's: what is typed there next is saved there.
+  await page.getByRole("tab", { name: "Inbox.md" }).click();
+  await expect(editor).toContainText("Not saved yet.");
+  // The link to the sub-page from where the page is now.
+  await expect(
+    editor.locator("a, .wikilink").filter({ hasText: "Idea" }),
+  ).toHaveCount(1);
+  await emit(page, "menu-save-file");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toMatch(/\[Idea\]\(Idea\.md\)|\[\[Idea\]\]/);
+  await editor.getByText("Not saved yet.").click();
+  await page.keyboard.press(END);
+  await page.keyboard.type(" Now it is.");
+  await emit(page, "menu-save-file");
+  await expect
+    .poll(() => fileText(page, "/notes/Inbox/Inbox.md"))
+    .toContain("Now it is.");
+  expect(await fileText(page, "/notes/Inbox.md")).toBeUndefined();
 });

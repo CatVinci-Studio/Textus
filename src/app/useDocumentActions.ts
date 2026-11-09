@@ -1,11 +1,11 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { iosFiles } from "../platform/ios-files";
 import { forgetIOSDocument } from "../document/ios-recents";
 import { moveConversations } from "../ai/chat/chat-history";
-import { makeBlankTab, tabIsDirty } from "../document/doc-tabs";
+import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
 import { isInside } from "../utils/path";
-import { notePathMoved } from "../plugins/app-bridge";
+import { notePathMoved, setPathMoveHooks } from "../plugins/app-bridge";
 
 /**
  * What happens to open tabs when the app itself renames, moves or deletes
@@ -63,6 +63,43 @@ export function useDocumentActions(opts: {
     },
     [tabsRef, setTabs],
   );
+  // A plugin moving a page (the page tree making it a folder for its
+  // sub-pages): its tab saved first, then following it.
+  useEffect(() => {
+    setPathMoveHooks({
+      async before(from) {
+        // Read through the editors: the last words typed may not have
+        // reached the tab yet.
+        for (const tab of liveTabs())
+          if (
+            tab.path &&
+            (tab.path === from || isInside(tab.path, from)) &&
+            tabIsDirty(tab)
+          )
+            await saveTab(tab.id);
+      },
+      after(from, to) {
+        entryMoved(from, to);
+        // Read again where it is now, so its next save isn't taken for a
+        // change made on disk behind its back.
+        for (const tab of tabsRef.current) {
+          const at =
+            tab.path === from
+              ? to
+              : tab.path && isInside(tab.path, from)
+                ? to + tab.path.slice(from.length)
+                : null;
+          if (!at) continue;
+          void statMtime(at).then((diskMtime) =>
+            setTabs((prev) =>
+              prev.map((t) => (t.path === at ? { ...t, diskMtime } : t)),
+            ),
+          );
+        }
+      },
+    });
+    return () => setPathMoveHooks(null);
+  }, [tabsRef, liveTabs, setTabs, saveTab, entryMoved]);
   const documentDeleted = useCallback(
     (path: string) => {
       setTabs((prev) =>
