@@ -100,10 +100,11 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
-        // The opened source's way back to the drawing, at its corner.
+        // The opened source's way back to the drawing, at its bottom corner
+        // (the code block's own tools are at the top).
         if (pos === open)
           out.push(
-            Decoration.widget(pos, (view) => doneButton(view), {
+            Decoration.widget(end, (view) => doneButton(view), {
               side: -1,
               key: `done:${pos}`,
             }),

@@ -8,7 +8,8 @@
 
 /* Folded to nothing rather than taken out: out of the page, a drawing is
    let go (drawWhileNear) and would start over. */
-.plugin-code-source-open + .plugin-code-block {
+.plugin-code-source-open + .plugin-code-block,
+.plugin-code-source-open + .plugin-code-done-row + .plugin-code-block {
   height: 0;
   margin: 0;
   border: 0;
@@ -85,7 +86,7 @@
   color: var(--text-muted);
 }
 
-/* An opened source's way back: over its top corner, taking no line. */
+/* An opened source's way back: over its bottom corner, taking no line. */
 .plugin-code-done-row {
   position: relative;
   height: 0;
@@ -93,7 +94,7 @@
 
 .plugin-code-done {
   position: absolute;
-  top: 6px;
+  bottom: 6px;
   inset-inline-end: 6px;
   z-index: 1;
   padding: 2px 8px;

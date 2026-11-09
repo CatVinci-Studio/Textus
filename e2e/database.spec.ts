@@ -198,8 +198,8 @@ test("properties are added, renamed across the pages, and pages made in the tabl
   );
 
   await db.locator(".new-row .new").click();
-  await db.locator(".new-title input").fill("Week4");
-  await db.locator(".new-title input").press("Enter");
+  await db.locator(".draft-row td.title input").fill("Week4");
+  await db.locator(".draft-row td.title input").press("Enter");
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week4.md"))
     .toContain("# Week4");
@@ -432,13 +432,14 @@ test("a date is typed, or picked from the month under its field", async ({
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("start: 2026-01-15");
   await expect(pop).toHaveCount(0);
-  // Typed, as before.
-  await cell.click();
-  await week1.locator("input").fill("2026-01-02");
-  await week1.locator("input").press("Enter");
+  // Typed, as before (another row: Week1 has just moved down the table).
+  const week2 = db.locator(rows).filter({ hasText: "Week2" });
+  await week2.locator('td[data-key="start"]').click();
+  await week2.locator("input").fill("2026-01-06");
+  await week2.locator("input").press("Enter");
   await expect
-    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
-    .toContain("start: 2026-01-02");
+    .poll(() => fileText(page, "/work/2026 Calendar/Week2.md"))
+    .toContain("start: 2026-01-06");
 });
 
 test("in a narrow column the block starts folded to its line, and stays open once opened", async ({
@@ -456,4 +457,25 @@ test("in a narrow column the block starts folded to its line, and stays open onc
       page.evaluate(() => localStorage.getItem("textus-opened-blocks")),
     )
     .toContain("2026 Calendar.md");
+});
+
+test("zoomed, a date's month opens under its field", async ({ page }) => {
+  const db = await open(page);
+  for (let i = 0; i < 3; i++) await emit(page, "menu-zoom-in");
+  await expect
+    .poll(() =>
+      db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom),
+    )
+    .toBe("1.331");
+  const cell = db
+    .locator(rows)
+    .filter({ hasText: "Week2" })
+    .locator('td[data-key="start"]');
+  await cell.click();
+  const field = (await cell.locator("input").boundingBox())!;
+  const month = (await db.locator(".date-pop").boundingBox())!;
+  expect(Math.abs(month.x - field.x)).toBeLessThan(8);
+  expect(Math.abs(month.y - (field.y + field.height))).toBeLessThan(16);
+  await page.keyboard.press("Escape");
+  await expect(db.locator(".date-pop")).toHaveCount(0);
 });
