@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../../ui/Tooltip";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
+import type { LibraryUse } from "../../../platform/ipc";
 import {
   canPickFolder,
   canRevealInFileManager,
   isDesktopApp,
 } from "../../../platform/capabilities";
 import { useSettings } from "../../../prefs/SettingsContext";
-import { useActiveProvider } from "../../provider-catalog";
 import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
 import { Presence, PresenceDiv } from "../../../ui/usePresence";
-import { errorText } from "../../../utils/error-text";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../../utils/events";
 import { basename } from "../../../utils/path";
 import { knownDocumentsDir } from "../../../platform/documents-path";
 import { APP_NAME } from "../../../i18n/names";
@@ -20,37 +18,8 @@ import { ActionSheet, type ActionSheetItem } from "../../../ui/ActionSheet";
 import { usePhoneLayout } from "../../../ui/usePhoneLayout";
 import { MemorySections } from "./MemoryView";
 import { RememberedSection } from "./RememberedSection";
-import { libraryEntryId } from "./memory-text";
-import { showConfirm } from "../../../ui/app-dialog";
-import type {
-  LibraryEntry,
-  LibraryUse,
-  Memory,
-  MemoryScope,
-} from "../../../platform/ipc";
+import { useProjectActions } from "./project-actions";
 
-function openInTab(path: string) {
-  window.dispatchEvent(
-    new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
-  );
-}
-
-/** A library entry's file name: the name as typed, minus characters no
- *  file system accepts. Kept readable (CJK and all) - it is what the user
- *  sees in the folder. */
-export function libraryFileName(name: string): string {
-  const cleaned = name
-    .trim()
-    .replace(/[\\/:*?"<>|]+/g, "-")
-    .replace(/\s+/g, " ")
-    .slice(0, 80);
-  return `${cleaned || "entry"}.md`;
-}
-
-/**
- * The project the conversation works in, under the AI panel's header: the
- * folder Textus AI may read, and the files kept in its .textus/ folder.
- */
 /** The folder row's menu. Not closed by an outside click on a phone: a tap
  *  on the portalled action sheet would count as outside. */
 function useProjectMenu() {
@@ -127,6 +96,10 @@ function useEntryNaming() {
   return { naming, setNaming, entryName, setEntryName, nameInput };
 }
 
+/**
+ * The project the conversation works in, under the AI panel's header: the
+ * folder Textus AI may read, and the files kept in its .textus/ folder.
+ */
 export function ProjectBar({
   docPath,
   memory = false,
@@ -140,7 +113,6 @@ export function ProjectBar({
   documentText?: string;
 }) {
   const { t, settings, setSettings } = useSettings();
-  const provider = useActiveProvider();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
   const { menuOpen, setMenuOpen, closeMenu, menuRef, phone } = useProjectMenu();
   const { info, reload } = useProjectWorkspace(docPath, workspaceRoot);
@@ -153,156 +125,31 @@ export function ProjectBar({
   );
   const { naming, setNaming, entryName, setEntryName, nameInput } =
     useEntryNaming();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-
   const root = info?.root ?? null;
-
-  /** `label`: what to show while it runs; null for something instant. */
-  async function run(label: string | null, work: () => Promise<void>) {
-    setMenuOpen(false);
-    setBusy(label);
-    setMessage(null);
-    try {
-      await work();
-    } catch (err) {
-      const text = errorText(err);
-      setMessage(
-        text === "TOO_BROAD"
-          ? t.projectTooBroad
-          : text === "NO_SAMPLES"
-            ? t.projectNoSamples
-            : text === "NO_PROJECT"
-              ? t.projectNeedsSave
-              : text,
-      );
-    } finally {
-      setBusy(null);
-      reload();
-    }
-  }
-
-  const pickFolder = () =>
-    run(t.projectPicking, async () => {
-      const picked = await ai.pickWorkspaceRoot();
-      if (picked) setSettings({ agentWorkspaceRoot: picked });
-    });
-
-  const learnStyle = () =>
-    run(t.projectLearningStyle, async () => {
-      const files = await ai.pickTextFiles();
-      if (!files || files.length === 0) return;
-      const path = await ai.learnStyle({
-        provider: settings.aiProvider,
-        model:
-          settings.agentModels[settings.aiProvider] ||
-          provider?.agentDefaultModel ||
-          null,
-        docPath,
-        workspaceRoot,
-        files,
-      });
-      openInTab(path);
-      setMessage(t.projectStyleLearned);
-    });
-
-  const importReferences = (folder: boolean) =>
-    run(t.projectImportingReferences, async () => {
-      const done = await ai.importReferences(docPath, workspaceRoot, folder);
-      if (!done) return;
-      setMessage(
-        (done.skipped > 0
-          ? t.projectReferencesImportedSkipped
-          : t.projectReferencesImported
-        )
-          .replace("{n}", String(done.imported))
-          .replace("{skipped}", String(done.skipped)),
-      );
-    });
-
-  const openStyle = () =>
-    run(t.projectOpening, async () => {
-      openInTab(
-        await ai.ensureProjectFile(
-          docPath,
-          workspaceRoot,
-          "style.md",
-          t.projectStyleTemplate,
-        ),
-      );
-    });
-
-  const openInstructions = () =>
-    run(t.projectOpening, async () => {
-      openInTab(
-        await ai.ensureProjectFile(
-          docPath,
-          workspaceRoot,
-          "agent.md",
-          t.projectInstructionsTemplate,
-        ),
-      );
-    });
-
-  const createEntry = (name: string) =>
-    run(t.projectOpening, async () => {
+  const {
+    busy,
+    message,
+    pickFolder,
+    learnStyle,
+    importReferences,
+    openStyle,
+    openInstructions,
+    createEntry,
+    openGlobalInstructions,
+    memoryActions,
+  } = useProjectActions({
+    docPath,
+    root,
+    reload,
+    closeMenu,
+    endNaming: () => {
       setNaming(false);
       setEntryName("");
-      const template = t.projectLibraryTemplate
-        .split("{name}")
-        .join(name.trim());
-      openInTab(
-        await ai.ensureProjectFile(
-          docPath,
-          workspaceRoot,
-          `library/${libraryFileName(name)}`,
-          template,
-        ),
-      );
-    });
+    },
+  });
 
   // Still loading: say nothing, or "too broad" flashes on a slow device each
   // time the panel opens.
-  const openGlobalInstructions = () =>
-    run(t.projectOpening, async () => {
-      openInTab(await ai.ensureGlobalAgentMd(t.agentInstructionsTemplate));
-    });
-
-  /** Deletes a memory or library entry once the user confirms. */
-  const remove = async (id: string, question: string) => {
-    const ok = await showConfirm(question, {
-      okLabel: t.memoryDelete,
-      cancelLabel: t.cancel,
-      danger: true,
-    });
-    if (ok) await run(null, () => ai.memoryDelete(docPath, workspaceRoot, id));
-  };
-
-  /** What the Memory tab does with memories and library entries. */
-  const memoryActions = {
-    onOpenFile: openInTab,
-    onRevealFile: (path: string) => void exportDoc.revealInDir(path),
-    onOpenEntry: (entry: LibraryEntry) =>
-      root &&
-      openInTab(
-        `${root.replace(/[\\/]+$/, "")}/${entry.file.replace(/^[\\/]+/, "")}`,
-      ),
-    onDeleteMemory: (m: Memory) => void remove(m.id, t.memoryDeleteConfirm),
-    onDeleteEntry: (entry: LibraryEntry) =>
-      void remove(
-        libraryEntryId(entry),
-        t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
-      ),
-    onRestoreForgotten: (id: string) =>
-      void run(null, async () => {
-        await ai.memoryRestore(docPath, workspaceRoot, id);
-      }),
-    onMoveMemory: (m: Memory, scope: MemoryScope) =>
-      void run(null, async () => {
-        await ai.memoryMove(docPath, workspaceRoot, m.id, scope);
-      }),
-  };
-
   if (info === undefined) return null;
   // No folder open simply means no project yet: nothing to say up front. A
   // folder too broad to read is worth saying, once.

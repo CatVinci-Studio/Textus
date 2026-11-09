@@ -24,7 +24,6 @@ const LINES_NOW = {
   "src-tauri/src/plugins/install.rs": 557,
   "src-tauri/src/plugins/metadata.rs": 528,
   "src-tauri/src/tab_drag.rs": 523,
-  "src/ai/chat/panel/ProjectBar.tsx": 512,
   "src/ai/chat/useAgentConversation.ts": 527,
   "src/ai/revision/pending-actions.ts": 516,
   "src/settings/sections/agent.tsx": 524,
