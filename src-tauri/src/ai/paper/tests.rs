@@ -1568,7 +1568,7 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
     assert!(!draft::all_soft(&problems(147)));
     assert!(found(57).starts_with("It is 60 long"), "{}", found(57));
     assert!(found(37).starts_with("Far too short"), "{}", found(37));
-    assert_eq!(draft::most(900), 1080);
+    assert_eq!(super::checks::most(900), 1080);
 }
 
 #[tokio::test]
