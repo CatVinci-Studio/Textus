@@ -138,11 +138,27 @@ describe("percent-escapes in a destination", () => {
     ]);
   });
 
+  it("read as a link before the save writes them", () => {
+    const text = "[W](Week49 (NeurIPS Week).md)";
+    expect(hiddenLinkParts(text)).toEqual([
+      [0, 1],
+      [2, text.length],
+    ]);
+    expect(linkHref(text)).toBe("Week49%20(NeurIPS%20Week).md");
+  });
+
   it("are written for a space typed into a destination", () => {
     expect(encodeDestSpaces("[Nov 8](Life/Nov 8.md)")).toBe(
       "[Nov 8](Life/Nov%208.md)",
     );
     expect(encodeDestSpaces('[a](b c.md "T")')).toBe('[a](b%20c.md "T")');
     expect(encodeDestSpaces("[a](b.md)")).toBe("[a](b.md)");
+    // Spaces beside parentheses in the name.
+    expect(encodeDestSpaces("[W](Week49 (NeurIPS Week).md)")).toBe(
+      "[W](Week49%20(NeurIPS%20Week).md)",
+    );
+    expect(encodeDestSpaces("[W](Week49(NeurIPS Week).md)")).toBe(
+      "[W](Week49(NeurIPS%20Week).md)",
+    );
   });
 });

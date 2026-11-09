@@ -173,7 +173,17 @@ export function trimUrl(url: string): string {
  */
 export function hiddenLinkParts(text: string): [number, number][] | null {
   const parts = parseLink(text);
-  if (!parts) return null;
+  if (!parts) {
+    // Typed with spaces in its destination: a link all the same, as the
+    // save will write it (`%20`); its label sits where it did.
+    const typed = typedLink(text);
+    return typed
+      ? [
+          [0, typed.label[0]],
+          [typed.label[1], text.length],
+        ]
+      : null;
+  }
   const [from, to] = parts.label;
   if (parts.kind === "bare") return [];
   if (from < to)
@@ -232,7 +242,7 @@ export function linkHref(
   text: string,
   definitions: () => string[] = () => [],
 ): string | null {
-  const parts = parseLink(text);
+  const parts = parseLink(text) ?? typedLink(text);
   if (!parts) return null;
   if (parts.kind === "bare")
     return /^www\./i.test(parts.dest)
@@ -382,11 +392,23 @@ export function destRange(text: string): [number, number] | null {
   return at < 0 ? null : [at, at + parts.dest.length];
 }
 
+/** A link typed with spaces in its destination, read as its save writes
+ *  it; only one with a label, which keeps its place. */
+function typedLink(text: string): ReturnType<typeof parseLink> {
+  const encoded = encodeDestSpaces(text);
+  const parts = encoded === text ? null : parseLink(encoded);
+  return parts && parts.label[0] < parts.label[1] ? parts : null;
+}
+
 /** An inline link typed with spaces in its destination, which Markdown
  *  doesn't read as a link: the spaces written as `%20`. Else `text`. */
 export function encodeDestSpaces(text: string): string {
   if (parseLink(text)) return text;
-  const match = /^(\[[^\n]*\]\()([^()<>"\n]*?)(\s+"[^"\n]*")?\)$/.exec(text);
+  // The destination may hold balanced parentheses: "Week49 (NeurIPS).md".
+  const match =
+    /^(\[[^\n]*\]\()((?:[^()<>"\n]|\([^()<>"\n]*\))*?)(\s+"[^"\n]*")?\)$/.exec(
+      text,
+    );
   if (!match || !/\S\s+\S/.test(match[2].trim())) return text;
   const fixed = `${match[1]}${match[2].trim().replace(/\s/g, "%20")}${match[3] ?? ""})`;
   return parseLink(fixed) ? fixed : text;
