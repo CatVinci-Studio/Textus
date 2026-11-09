@@ -116,13 +116,12 @@ function App() {
       />
       <div
         className="app-shell"
-        // The layout's switches for the styles (tabs-in-bar.css and the
-        // layout-*.css): floating islands or classic, and the tabs in the
+        // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
         // window bar's row, in a row of their own under the menu bar, or
         // none.
         data-layout={settings.layout}
         data-tabs={
-          !tabsInBar
+          !tabsInBar || isIOSApp
             ? undefined
             : appDrawsWindowFrame && settings.menuBarShown
               ? "row"

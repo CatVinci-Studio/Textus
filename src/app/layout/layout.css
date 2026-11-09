@@ -1,0 +1,263 @@
+/* The window's layout (design-language.md 5.7): the base - the frame and
+   the window bar's row - the docks on it (activity rail, sidebar), and
+   the islands: each pane of documents, and the AI panel, a block of a row
+   of tabs over a sheet. One structure for both layouts; layout-tokens.css
+   holds what tells them apart. App marks the shell: data-layout, and
+   data-tabs ("bar": the tabs take the window bar's row; on the desktop
+   only). Without tabs, one document is a clean sheet under its title. */
+
+/* ---- Base ---------------------------------------------------------- */
+
+/* With tabs the frame sinks a step and stays solid (no glass). */
+.app-shell[data-tabs="bar"] {
+  --ui-frame: var(--ui-frame-sunk);
+  --ui-frame-fill: var(--ui-frame);
+}
+
+.app-shell[data-tabs="bar"] .window-bar {
+  background: var(--ui-frame-fill);
+}
+
+.app-shell[data-tabs="bar"] .window-bar-glass {
+  display: none;
+}
+
+/* The tabs name the documents; the title gives way to them. */
+.app-shell[data-tabs="bar"] .window-bar-title {
+  visibility: hidden;
+}
+
+/* A clean sheet: the bar is the page's own top, in its paper (glass of
+   it, when frosted), so the window reads as one sheet. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not([data-tabs])
+  .window-bar {
+  background: var(--doc-bg);
+}
+
+@supports (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"])
+    .app-shell:not([data-tabs])
+    .window-bar {
+    background: color-mix(in srgb, var(--doc-bg) 74%, transparent);
+  }
+}
+
+/* The AI panel on a clean sheet is the sheet's too: paper, the hairline
+   at its edge parting it from the document, its cards tinted. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not([data-tabs])
+  .agent-panel {
+  background: linear-gradient(
+    transparent var(--window-bar-height),
+    var(--doc-bg) var(--window-bar-height)
+  );
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not([data-tabs])
+  .agent-panel
+  .agent-panel-view {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}
+
+/* ---- Docks --------------------------------------------------------- */
+
+/* On the frame, solid, their edge against the islands the layout's. */
+.app-shell[data-tabs="bar"] :is(.activity-rail, .sidebar) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-right-color: var(--dock-edge);
+}
+
+/* ---- Islands ------------------------------------------------------- */
+
+/* The documents' area: the frame, the islands inset in it. */
+.app-shell[data-tabs="bar"] .main-pane {
+  padding: 0 var(--island-inset) var(--island-inset);
+  background: var(--ui-frame-fill);
+}
+
+/* The island: one rule for every one (data-island) - each pane's frame,
+   and the AI panel. */
+.app-shell[data-tabs="bar"] [data-island] {
+  border-radius: var(--island-radius);
+  background: var(--ui-bg);
+  box-shadow: var(--island-edge);
+}
+
+/* Its first tab rising from its edge, open (useTabRows): the corner goes
+   square, the island's side running straight up into the tab. */
+.app-shell[data-tabs="bar"] [data-island][data-corner-joined] {
+  border-top-left-radius: 0;
+}
+
+.island-frame {
+  pointer-events: none;
+}
+
+/* Only where the tabs are: a clean sheet is the page itself. */
+.app-shell:not([data-tabs="bar"]) .island-frame {
+  display: none;
+}
+
+/* One pane: its island fills the area under the window bar's row. */
+.main-pane:not(.main-pane-split) > .island-frame {
+  position: absolute;
+  inset: var(--window-bar-height) var(--island-inset) var(--island-inset);
+}
+
+/* A split: each pane's island on its cell, the gap between panes. Side by
+   side the grid's own; one under another, above the lower pane's row - a
+   pane's row and its island stay one block. The dividers stay as handles,
+   unseen, in the gap. */
+.app-shell[data-tabs="bar"] .main-pane-split {
+  column-gap: var(--island-gap);
+  row-gap: 0;
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .tab-bar.tab-bar-inner {
+  margin-top: var(--island-gap);
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider {
+  background: transparent;
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider-row {
+  margin-left: calc(var(--island-gap) / -2 - 0.5px);
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider-column {
+  margin-top: calc(var(--island-gap) / 2 - 0.5px);
+}
+
+/* The documents show on their island, not over it. */
+.app-shell[data-tabs="bar"]
+  .main-pane
+  [data-active-tab]
+  > :is(.editor-scroll, .source-view) {
+  position: relative;
+  background: transparent;
+}
+
+/* Under a row of tabs the page needn't clear a bar over it. */
+.app-shell[data-tabs="bar"] .main-pane .editor-content {
+  padding-top: 1.5rem;
+}
+
+/* The AI panel: an island beside the documents, its header inside it; its
+   cards on the paper take a tint. */
+.app-shell[data-tabs="bar"] .agent-panel-mount {
+  margin: 0 var(--island-inset) var(--island-inset) 0;
+  overflow: hidden;
+}
+
+.app-shell[data-tabs="bar"] .agent-panel::before {
+  display: none;
+}
+
+.app-shell[data-tabs="bar"] .agent-panel .agent-panel-view {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}
+
+/* ---- Rows of tabs -------------------------------------------------- */
+
+/* Every pane's row is as tall as the window bar, its tabs standing on its
+   island's top edge, from --tabs-inset-start to --tabs-inset-end
+   (useTabRows). The top panes' row is the window bar's own: only its tabs
+   and + take a click there, the rest goes to the bar beneath. */
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar {
+  height: var(--window-bar-height);
+  padding: 0 var(--tabs-inset-end, 8px) 0 var(--tabs-inset-start, 8px);
+  align-items: flex-end;
+  gap: var(--tab-gap);
+  border-bottom: 0;
+  background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
+    bottom / 100% 1px no-repeat;
+  overflow-y: hidden;
+}
+
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar:not(.tab-bar-inner) {
+  z-index: 46;
+  pointer-events: none;
+  /* Its line from its first tab on, clear of the bar's controls. */
+  background-size: calc(100% - var(--tabs-inset-start, 0px)) 1px;
+}
+
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar:not(.tab-bar-inner) > * {
+  pointer-events: auto;
+}
+
+/* A tab: its words, its x and the + on the row's middle line, level with
+   the bar's own controls; the line between tabs the layout's. */
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill {
+  position: relative;
+  align-self: stretch;
+  margin-top: var(--tab-lift);
+  padding: 0 8px var(--tab-lift);
+  border-inline-end: 1px solid var(--tab-line);
+  border-radius: var(--tab-radius) var(--tab-radius) 0 0;
+  background: transparent;
+}
+
+.app-shell[data-tabs="bar"]
+  .main-pane
+  > .tab-bar
+  > .tab-pill:hover:not(.tab-pill-active) {
+  background: var(--ui-hover);
+}
+
+/* Open, it is its island's own top: the page's colour, over the row's
+   line. */
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill-active {
+  overflow: visible;
+  z-index: 1;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+/* Where it meets its island's top edge, each side curves in to it (a
+   radius of 0 draws none). */
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill-active::before,
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--tab-radius);
+  height: var(--tab-radius);
+  pointer-events: none;
+}
+
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill-active::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at 0 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-pill-active::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+/* At its island's edge (data-at-corner) the first tab's side is the
+   island's, straight up: no curve there. */
+.app-shell[data-tabs="bar"]
+  .main-pane
+  > .tab-bar[data-at-corner]
+  > .tab-pill-active:first-child::before {
+  display: none;
+}
+
+.app-shell[data-tabs="bar"] .main-pane > .tab-bar > .tab-bar-add {
+  align-self: center;
+}

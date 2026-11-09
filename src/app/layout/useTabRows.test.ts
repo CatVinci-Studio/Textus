@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rowInsets } from "./useTabsInBar";
+import { rowInsets } from "./useTabRows";
 
 describe("rowInsets", () => {
   const row = { left: 100, right: 700 };

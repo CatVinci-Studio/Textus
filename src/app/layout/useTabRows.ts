@@ -13,7 +13,7 @@ export interface RowInsets {
 }
 
 /**
- * Each tab row sits over its sheet, the same width (layout-islands.css).
+ * Each tab row sits over its sheet, the same width (layout.css).
  * Its tabs keep clear of the window bar's controls - the window's buttons
  * and the sidebar's at the bar's start, the status at its end - and of the
  * sheet's rounded corner and the tab's own curve in (`corner`). Where the
@@ -50,10 +50,10 @@ function lengthOf(within: HTMLElement, name: string): number {
  * The tabs take the window bar's row (design-language.md 5.7); each of the
  * pane's tab rows - one, or a split's panes' - is measured as rowInsets
  * says and given --tabs-inset-start/-end and data-at-corner. Its island
- * (the pane's sheet, or the split pane under it) is told when its first
- * tab stands at its edge, open: data-corner-joined squares that corner.
+ * (IslandFrame) is told when its first tab stands at its edge, open:
+ * data-corner-joined squares that corner.
  */
-export function useTabsInBar(pane: RefObject<HTMLElement | null>) {
+export function useTabRows(pane: RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
     const main = pane.current;
     if (!main) return;
@@ -75,7 +75,7 @@ export function useTabsInBar(pane: RefObject<HTMLElement | null>) {
         const statusStart = status?.firstElementChild
           ? status.getBoundingClientRect().left
           : window.innerWidth;
-        // The layout's radii (layout-*.css), as the page lays them out
+        // The layout's radii (layout-tokens.css), as the page lays them out
         // (they scale with the chrome): past the corner's curve, and the
         // tab's own curve in beside it.
         const corner =
@@ -104,12 +104,14 @@ export function useTabsInBar(pane: RefObject<HTMLElement | null>) {
           row.style.setProperty("--tabs-inset-start", `${insets.start}px`);
           row.style.setProperty("--tabs-inset-end", `${insets.end}px`);
           row.toggleAttribute("data-at-corner", insets.atCorner);
+          // Its island: the pane's frame (IslandFrame), one alone or each
+          // of a split's by its pane.
           const id = row.dataset.paneId;
-          const island = id
-            ? main.querySelector(
-                `.split-pane[data-pane-id="${CSS.escape(id)}"]`,
-              )
-            : main;
+          const island = main.querySelector(
+            id
+              ? `:scope > .island-frame[data-pane-id="${CSS.escape(id)}"]`
+              : ":scope > .island-frame:not([data-pane-id])",
+          );
           island?.toggleAttribute(
             "data-corner-joined",
             insets.atCorner &&

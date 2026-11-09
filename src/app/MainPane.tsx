@@ -1,3 +1,4 @@
+import { IslandFrame } from "./layout/IslandFrame";
 import { useKeptLoaded } from "../utils/kept-loaded";
 import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
@@ -8,7 +9,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
-import { useTabsInBar } from "./tabs/useTabsInBar";
+import { useTabRows } from "./layout/useTabRows";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
 import {
@@ -150,7 +151,7 @@ export function MainPane({
   onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
   /** Told, before paint, whether the top row has tabs: the window bar's
-   *  then (App's data-tabs-in-bar). */
+   *  then (App's data-tabs). */
   onTabsInBar: (shown: boolean) => void;
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
@@ -162,7 +163,7 @@ export function MainPane({
   t: Strings;
 }) {
   const mainRef = useRef<HTMLElement>(null);
-  useTabsInBar(mainRef);
+  useTabRows(mainRef);
   const split = useSplitPanes(
     tabs.map((tab) => tab.id),
     activeTabId,
@@ -338,12 +339,21 @@ export function MainPane({
     <main
       ref={mainRef}
       className={split ? "main-pane main-pane-split" : "main-pane"}
-      // One island (layout-islands.css): the pane's sheet, drawn behind
-      // its tabs' row; a split's panes are islands each.
-      data-island={split ? undefined : ""}
       data-split={split?.root.direction}
       style={grid?.column}
     >
+      {/* Each pane's island, under its documents (layout.css). */}
+      {split && grid ? (
+        panes.map((p) => (
+          <IslandFrame
+            key={`island:${p.id}`}
+            paneId={p.id}
+            style={grid.bodies.get(p.id)}
+          />
+        ))
+      ) : (
+        <IslandFrame paneId={null} />
+      )}
       {split && grid
         ? panes.map((p) =>
             tabBar(
@@ -372,7 +382,6 @@ export function MainPane({
             data-pane={pane?.name}
             data-pane-id={pane?.id}
             className={pane ? "split-pane" : undefined}
-            data-island={pane ? "" : undefined}
             style={
               pane && grid
                 ? grid.bodies.get(pane.id)
