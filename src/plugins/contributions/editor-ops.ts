@@ -43,7 +43,7 @@ export type EditorOp =
       till?: boolean;
     }
   | { op: "selectLines"; count?: number }
-  | { op: "held.visualStart" }
+  | { op: "visualStart" }
   | { op: "delete"; copy?: boolean }
   | { op: "deleteLines"; count?: number }
   | { op: "copy" }
@@ -169,7 +169,7 @@ export function runEditorOp(plugin: string, action: EditorOp): EditorOpResult {
       dispatch(state.tr.setSelection(sel));
       break;
     }
-    case "held.visualStart": {
+    case "visualStart": {
       const at = state.selection.head;
       held.visual = { anchor: at, head: at };
       dispatch(state.tr.setSelection(visualSelection(state, at, at)));
