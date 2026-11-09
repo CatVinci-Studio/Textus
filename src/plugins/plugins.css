@@ -925,7 +925,8 @@ button.mcp-homepage:hover {
   -webkit-user-select: none;
   user-select: none;
 }
-.floating-view .plugin-webview-frame {
+.floating-view .plugin-webview-frame,
+.sidebar .plugin-webview-frame {
   background: transparent;
 }
 .floating-view-handle {

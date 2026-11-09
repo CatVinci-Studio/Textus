@@ -48,6 +48,7 @@ export function webviewPage(record: WebviewRecord, html: string) {
       language: windowInfo().language(),
       l10n: plugin?.manifest?.l10n ?? {},
       floating: record.kind === "floating",
+      sidebar: record.kind === "sidebar",
     }),
     title: plugin ? pluginName(plugin) : record.plugin,
   };

@@ -226,9 +226,10 @@ input[type="checkbox"].tx-switch:active::after,
 .tx-select:hover {
   background: var(--ui-hover);
 }
+/* The chevron already points down. */
 .tx-select > .tx-icon[data-icon="chevron"] {
   color: var(--ui-muted);
-  transform: rotate(90deg) scale(0.75);
+  transform: scale(0.75);
 }
 
 /* A slider: <input type="range" class="tx-slider">, in the accent. */

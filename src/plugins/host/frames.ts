@@ -73,6 +73,8 @@ export function webviewDocument(
     /** A floating view's page: no background of its own, so what the
      *  plugin draws floats on its own. */
     floating?: boolean;
+    /** A sidebar tab's page: the sidebar's own colour behind it. */
+    sidebar?: boolean;
   },
 ): string {
   const locale = JSON.stringify({
@@ -104,6 +106,7 @@ export function webviewDocument(
     windowChrome ? ` data-window-chrome="${windowChrome}"` : "",
     platform ? ` data-platform="${platform}"` : "",
     options.floating ? " data-floating" : "",
+    options.sidebar ? " data-sidebar" : "",
   ].join("");
   return page.replace(/<html(\s[^>]*)?>/i, (tag) =>
     tag.replace(
