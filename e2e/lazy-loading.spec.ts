@@ -29,12 +29,15 @@ test("a window opens in its language with only that language's strings", async (
   expect(now).not.toContain("katex");
 });
 
-test("Settings and source mode are warmed while the window is idle; Settings opens at once", async ({
+test("Settings, source mode and the start page are warmed while the window is idle; Settings opens at once", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
   await expect.poll(() => loaded(page)).toContain("settings");
   await expect.poll(() => loaded(page)).toContain("doc-source-editor");
+  // Not suspended when the last document closes: React holds a page that
+  // suspended back for 300ms.
+  await expect.poll(() => loaded(page)).toContain("start-page");
   await emit(page, "menu-open-settings");
   await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
 });

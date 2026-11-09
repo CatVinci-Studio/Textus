@@ -58,7 +58,9 @@ type TabBarProps = ComponentProps<typeof TabBar>;
 // Its Markdown renderer loads when a tab first shows it, not with the window.
 // Shown only when the user chose it, so kept out of the startup chunk.
 const StartPage = lazyComponent(
-  lazyModule("start-page", () => import("./StartPage")),
+  // Loaded while the window is idle: on first use React holds a suspended
+  // page back for 300ms, a pause between closing a document and the page.
+  lazyModule("start-page", () => import("./StartPage"), { warm: true }),
   (m) => m.StartPage,
 );
 const SplitView = lazyComponent(
