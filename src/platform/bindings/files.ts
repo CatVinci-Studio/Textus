@@ -120,6 +120,8 @@ export const commands = {
 	cancel_session_quit: () => __TAURI_INVOKE<void>("cancel_session_quit"),
 	add_recent_file: (path: string) => __TAURI_INVOKE<void>("add_recent_file", { path }),
 	add_recent_folder: (path: string) => __TAURI_INVOKE<void>("add_recent_folder", { path }),
+	/**  One entry taken off both lists: the start page's × beside it. */
+	remove_recent: (path: string) => __TAURI_INVOKE<void>("remove_recent", { path }),
 	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
 	/**
 	 *  Takes every pending draft, removing its file, so at most one window claims

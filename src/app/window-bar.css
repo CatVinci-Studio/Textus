@@ -14,7 +14,7 @@
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
   padding: 0 12px 0 76px;
-  background: var(--ui-frame);
+  background: var(--ui-frame-fill);
 }
 
 /* Opted in, the bar is glass, as a macOS toolbar is: what scrolls beneath
@@ -28,11 +28,15 @@
 @supports (
   (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
 ) {
-  :root:root[data-frosted-title-bar] .window-bar {
-    background: linear-gradient(
-      color-mix(in srgb, var(--ui-frame) 80%, transparent),
-      color-mix(in srgb, var(--ui-frame) 66%, transparent)
-    );
+  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"]) {
+    --ui-frame-fill: color-mix(in srgb, var(--ui-frame) 74%, transparent);
+  }
+  /* The rail and the sidebar are glass with the bar: what slides or
+     scrolls beneath shows through, blurred, in the one fill. */
+  :root:root[data-frosted-title-bar]:not([data-window-chrome="mobile"])
+    :is(.activity-rail, .sidebar) {
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
   }
   :root:root[data-frosted-title-bar][data-window-chrome="mobile"] .window-bar {
     background: color-mix(in srgb, var(--ui-bg) 72%, transparent);

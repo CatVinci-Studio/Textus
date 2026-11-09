@@ -1331,6 +1331,7 @@ utiliser une.
   closeLastLabel: "À la fermeture du dernier document",
   closeLastWindow: "Fermer la fenêtre",
   closeLastStartPage: "Afficher la page d'accueil",
+  startPageRemoveRecent: "Retirer des récents",
   startPageRecentProjects: "Projets récents",
   startPagePickDocument:
     "Choisissez un document de {folder} dans la barre latérale pour commencer.",

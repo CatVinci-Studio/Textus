@@ -97,11 +97,9 @@ export function Sidebar({
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
-              {/* With the rail holding the tabs, the header names the one
-                  open; without it, the tabs are here again. */}
-              {rail ? (
-                <h2 className="sidebar-title">{shown.label(t)}</h2>
-              ) : (
+              {/* With the rail holding the tabs, the window bar names the
+                  one open; without it, the tabs are here again. */}
+              {!rail && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}
                   shownId={shown.id}

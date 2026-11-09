@@ -338,8 +338,8 @@ test("the title bar, the activity rail and the sidebar are one frame; the sideba
 
   // Its contents stay below the bar rather than riding up into it.
   const box = (await page.locator(".window-bar").boundingBox())!;
-  const title = (await page.locator(".sidebar-title").boundingBox())!;
-  expect(title.y).toBeGreaterThanOrEqual(box.y + box.height);
+  const body = (await page.locator(".sidebar-body").boundingBox())!;
+  expect(body.y).toBeGreaterThanOrEqual(box.y + box.height);
 
   // Closed, the sidebar slides under the rail: nothing of it shows past
   // the rail's edge, and the rail keeps its line against the page.
@@ -360,7 +360,7 @@ test("the activity rail opens a tab, closes the sidebar on the open one, and hid
   const outline = rail.getByRole("button", { name: "Outline" });
   await outline.click();
   await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-  await expect(page.locator(".sidebar-title")).toHaveText("Outline");
+  await expect(page.locator(".window-bar-sidebar-title")).toHaveText("Outline");
   await expect(outline).toHaveAttribute("aria-pressed", "true");
   await outline.click();
   await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);

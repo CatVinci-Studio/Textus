@@ -1315,6 +1315,7 @@ export default {
   closeLastLabel: "Когда закрыт последний документ",
   closeLastWindow: "Закрыть окно",
   closeLastStartPage: "Показать начальную страницу",
+  startPageRemoveRecent: "Убрать из недавних",
   startPageRecentProjects: "Недавние проекты",
   startPagePickDocument:
     "Выберите документ из {folder} на боковой панели, чтобы начать.",

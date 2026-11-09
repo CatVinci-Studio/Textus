@@ -40,6 +40,7 @@ export function WindowBar({
   largeDoc,
   words,
   sidebarOpen,
+  sidebarTitle,
   sidebarShortcut,
   onToggleSidebar,
   showAgentToggle,
@@ -54,6 +55,9 @@ export function WindowBar({
   largeDoc: boolean;
   words: number;
   sidebarOpen: boolean;
+  /** The open sidebar tab's name, shown in the bar over the sidebar when the
+   *  activity rail holds the tabs; null otherwise. */
+  sidebarTitle: string | null;
   /** The sidebar's shortcut, as shown in the button's tooltip. */
   sidebarShortcut: string;
   onToggleSidebar: () => void;
@@ -120,6 +124,9 @@ export function WindowBar({
               <SidebarToggleIcon />
             </button>
           </Tooltip>
+        )}
+        {sidebarOpen && sidebarTitle && (
+          <span className="window-bar-sidebar-title">{sidebarTitle}</span>
         )}
         {/* The unsaved dot leads the title, as a native edited title does. */}
         <span className="window-bar-title" ref={titleRef}>

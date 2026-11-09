@@ -23,7 +23,7 @@
     .main-pane > .tab-bar:not(.tab-bar-inner)
   ) {
   .window-bar {
-    background: var(--ui-frame);
+    background: var(--ui-frame-fill);
   }
   .window-bar-glass {
     display: none;

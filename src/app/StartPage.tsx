@@ -2,9 +2,11 @@ import { useEffect, useState, type ReactNode } from "react";
 import { emitToThisWindow } from "../platform/menu-events";
 import { NO_RECENTS, type RecentLists } from "./menu/app-menu-model";
 import { readRecents } from "./menu/recents";
+import { menuIpc } from "../platform/ipc-app";
 import { basename, dirname } from "../utils/path";
 import { formatCombo } from "../utils/shortcuts";
 import {
+  CloseIcon,
   FolderIcon,
   GenericFileIcon,
   OpenFolderIcon,
@@ -17,11 +19,11 @@ import mark from "../../src-tauri/icons/128x128.png";
 import { openingDocuments } from "./start-project";
 import "./start-page.css";
 
-/** Recent projects and files each list this many at most. */
-const RECENT_SHOWN = 6;
+/** Recent folders and files each list this many at most. */
+const RECENT_SHOWN = 5;
 
 /** The recent projects and files, read once as the page opens. */
-function useRecents(): RecentLists {
+function useRecents(): [RecentLists, (path: string) => void] {
   const [recents, setRecents] = useState(NO_RECENTS);
   useEffect(() => {
     let alive = true;
@@ -34,7 +36,15 @@ function useRecents(): RecentLists {
       alive = false;
     };
   }, []);
-  return recents;
+  // Taken off the list here at once, and off the stored lists and the menu.
+  const remove = (path: string) => {
+    setRecents((now) => ({
+      files: now.files.filter((p) => p !== path),
+      folders: now.folders.filter((p) => p !== path),
+    }));
+    void menuIpc.removeRecent(path).catch(() => {});
+  };
+  return [recents, remove];
 }
 
 /** Where a recent item is, short: the home folder as ~ and only the last
@@ -56,6 +66,8 @@ function RecentList({
   event,
   icon,
   then,
+  onRemove,
+  removeLabel,
 }: {
   title: string;
   paths: string[];
@@ -64,31 +76,45 @@ function RecentList({
   icon: ReactNode;
   /** What else opening one does. */
   then?: (path: string) => void;
+  onRemove: (path: string) => void;
+  removeLabel: string;
 }) {
   if (paths.length === 0) return null;
   return (
     <section className="start-page-recent" aria-label={title}>
       <h2 className="start-page-heading">{title}</h2>
-      {paths.slice(0, RECENT_SHOWN).map((path) => (
-        <Tooltip key={path} text={path} description={null}>
-          <button
-            type="button"
-            className="start-page-row"
-            onClick={() => {
-              emitToThisWindow(event, path);
-              then?.(path);
-            }}
-          >
-            <span className="start-page-row-icon" aria-hidden="true">
-              {icon}
-            </span>
-            <span className="start-page-name">
-              {basename(path.replace(/[\\/]+$/, "")) || path}
-            </span>
-            <span className="start-page-where">{shortPlace(path)}</span>
-          </button>
-        </Tooltip>
-      ))}
+      <ul>
+        {paths.slice(0, RECENT_SHOWN).map((path) => (
+          <li key={path} className="start-page-row">
+            <Tooltip text={path} description={null}>
+              <button
+                type="button"
+                className="start-page-open"
+                onClick={() => {
+                  emitToThisWindow(event, path);
+                  then?.(path);
+                }}
+              >
+                <span className="start-page-row-icon" aria-hidden="true">
+                  {icon}
+                </span>
+                <span className="start-page-name">
+                  {basename(path.replace(/[\\/]+$/, "")) || path}
+                </span>
+                <span className="start-page-where">{shortPlace(path)}</span>
+              </button>
+            </Tooltip>
+            <button
+              type="button"
+              className="start-page-remove"
+              aria-label={`${removeLabel}: ${basename(path)}`}
+              onClick={() => onRemove(path)}
+            >
+              <CloseIcon />
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -99,7 +125,7 @@ function RecentList({
  * its place.
  */
 export function StartPage({ t }: { t: Strings }) {
-  const recents = useRecents();
+  const [recents, removeRecent] = useRecents();
   const [empty, setEmpty] = useState<string | null>(null);
   // Run here as the menu items' events, not through the native menu: in a
   // window-per-document setup that would open another window.
@@ -138,29 +164,36 @@ export function StartPage({ t }: { t: Strings }) {
   return (
     <div className="start-page" role="region" aria-label={t.startPageTab}>
       <div className="start-page-body">
-        <h1 className="start-page-title">
-          <img src={mark} alt="" width={64} height={64} />
-          Textus
-        </h1>
-        <div className="start-page-actions">
-          {actions.map((a) => (
-            <button
-              key={a.event}
-              type="button"
-              className="start-page-action"
-              onClick={() => emitToThisWindow(a.event)}
-            >
-              <span className="start-page-action-icon" aria-hidden="true">
-                {a.icon}
-              </span>
-              <span className="start-page-action-label">{a.label}</span>
-              {a.combo && (
-                <kbd className="start-page-action-keys">
-                  {formatCombo(a.combo)}
-                </kbd>
-              )}
-            </button>
-          ))}
+        <div className="start-page-side">
+          <img
+            className="start-page-mark"
+            src={mark}
+            alt=""
+            width={128}
+            height={128}
+          />
+          <h1 className="start-page-title">Textus</h1>
+          <ul className="start-page-actions">
+            {actions.map((a) => (
+              <li key={a.event}>
+                <button
+                  type="button"
+                  className="start-page-action"
+                  onClick={() => emitToThisWindow(a.event)}
+                >
+                  <span className="start-page-action-icon" aria-hidden="true">
+                    {a.icon}
+                  </span>
+                  <span className="start-page-action-label">{a.label}</span>
+                  {a.combo && (
+                    <kbd className="start-page-action-keys">
+                      {formatCombo(a.combo)}
+                    </kbd>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
         {anyRecent && (
           <div className="start-page-recents">
@@ -169,7 +202,9 @@ export function StartPage({ t }: { t: Strings }) {
               paths={recents.folders}
               event="menu-open-recent-folder"
               icon={<FolderIcon />}
-              // A project shows a document of its own too: the sidebar
+              onRemove={removeRecent}
+              removeLabel={t.startPageRemoveRecent}
+              // A folder shows a document of its own too: the sidebar
               // alone changing left the start page looking untouched.
               then={(folder) =>
                 void openingDocuments(folder, recents.files).then((docs) =>
@@ -184,6 +219,8 @@ export function StartPage({ t }: { t: Strings }) {
               paths={recents.files}
               event="menu-open-recent"
               icon={<GenericFileIcon />}
+              onRemove={removeRecent}
+              removeLabel={t.startPageRemoveRecent}
             />
           </div>
         )}

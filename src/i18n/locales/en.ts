@@ -1278,6 +1278,7 @@ type /name in a conversation to use one.
   closeLastLabel: "When the last document closes",
   closeLastWindow: "Close the window",
   closeLastStartPage: "Show the start page",
+  startPageRemoveRecent: "Remove from Recent",
   startPageRecentProjects: "Recent Projects",
   startPagePickDocument:
     "Pick a document in {folder} from the sidebar to start.",

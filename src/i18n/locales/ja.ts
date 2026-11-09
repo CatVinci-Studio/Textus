@@ -1254,6 +1254,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   closeLastLabel: "最後の書類を閉じたとき",
   closeLastWindow: "ウインドウを閉じる",
   closeLastStartPage: "スタートページを表示",
+  startPageRemoveRecent: "最近の項目から削除",
   startPageRecentProjects: "最近のプロジェクト",
   startPagePickDocument: "サイドバーから {folder} の文書を選んで始めましょう。",
   startPageRecentFiles: "最近のファイル",

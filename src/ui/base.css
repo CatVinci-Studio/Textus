@@ -108,6 +108,10 @@
   /* The window's frame - the title bar, the activity rail, the sidebar -
      one surface around the document (design-language.md 5.7). */
   --ui-frame: var(--ui-subtle);
+  /* What the frame is filled with: the frame's colour, or frosted - the same
+     colour a little clear, over the page - when the title bar is. One fill
+     for the bar, the rail and the sidebar, so they never differ. */
+  --ui-frame-fill: var(--ui-frame);
   --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
   --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --ui-selected-text: var(--ui-text);

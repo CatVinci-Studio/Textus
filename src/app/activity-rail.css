@@ -24,7 +24,7 @@
   align-items: center;
   gap: 4px;
   padding-top: 6px;
-  background: var(--ui-frame);
+  background: var(--ui-frame-fill);
   /* Where the frame meets the document; the open sidebar carries on the
      frame instead. */
   border-right: 1px solid var(--ui-border);
@@ -72,20 +72,43 @@
   height: 20px;
 }
 
-/* With the rail holding the tabs, the sidebar's header names the open one. */
-.sidebar-title {
-  margin: 0;
-  padding: 0 8px;
-  font-size: var(--text-secondary);
-  font-weight: 600;
-  color: var(--ui-muted);
-  line-height: 32px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* With the rail holding the tabs, the sidebar's name is in the window bar
+   over it, and its header is only the bar's room: one line, the bar's own
+   lower edge, runs across the rail and the open sidebar and on along the
+   tab row. */
+.app-shell:has(> .activity-rail) .sidebar-header {
+  height: var(--window-bar-height);
+  padding: 0;
+  border-bottom: 0;
 }
 
-/* The sidebar is the frame: under its title, no line of its own. */
-.app-shell:has(> .activity-rail) .sidebar-header {
-  border-bottom: 0;
+.window-bar-sidebar-title {
+  margin-left: var(--space-2);
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: calc(var(--text-secondary) * var(--window-scale, 1));
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  /* Never past the sidebar's edge. */
+  max-width: calc(var(--rail-width) + var(--sidebar-width, 240px) - 120px);
+}
+
+.app-shell:has(> .activity-rail) .window-bar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: calc(var(--rail-width) + var(--sidebar-width, 240px));
+  height: 1px;
+  background: var(--ui-border);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-in);
+}
+
+.app-shell:has(> .activity-rail):has(> .sidebar:not(.sidebar-collapsed))
+  .window-bar::after {
+  opacity: 1;
+  transition: opacity var(--dur-slow) var(--ease-out);
 }

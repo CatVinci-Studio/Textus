@@ -597,6 +597,12 @@ export function installDevTauriShim(): void {
       case "add_recent_folder":
         pushRecent(recents.folders, String(args.path));
         return Promise.resolve(null);
+      case "remove_recent":
+        for (const list of [recents.files, recents.folders]) {
+          const at = list.indexOf(String(args.path));
+          if (at >= 0) list.splice(at, 1);
+        }
+        return Promise.resolve(null);
       // `window.__devSystem` stands in for the system a report names.
       case "system_info":
         return Promise.resolve(

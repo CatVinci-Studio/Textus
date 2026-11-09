@@ -1305,6 +1305,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closeLastLabel: "Wenn das letzte Dokument geschlossen wird",
   closeLastWindow: "Fenster schließen",
   closeLastStartPage: "Startseite zeigen",
+  startPageRemoveRecent: "Aus „Zuletzt verwendet“ entfernen",
   startPageRecentProjects: "Letzte Projekte",
   startPagePickDocument:
     "Wähle in der Seitenleiste ein Dokument aus {folder}, um zu beginnen.",

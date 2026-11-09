@@ -12,7 +12,7 @@
   /* Over the editor while it slides away across it. */
   z-index: 1;
   width: var(--sidebar-width, 240px);
-  background: var(--ui-frame);
+  background: var(--ui-frame-fill);
   border-right: 1px solid var(--ui-border);
   display: flex;
   flex-direction: column;

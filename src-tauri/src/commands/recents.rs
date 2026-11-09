@@ -82,6 +82,19 @@ pub fn add_recent_folder(app: tauri::AppHandle, path: String) {
     crate::menu::rebuild_recent_menu(&app);
 }
 
+/// One entry taken off both lists: the start page's × beside it.
+#[cfg(desktop)]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn remove_recent(app: tauri::AppHandle, path: String) {
+    for name in [FILES_LIST, FOLDERS_LIST] {
+        let mut list = read_list(&app, name);
+        list.retain(|p| p != &path);
+        write_list(&app, name, &list);
+    }
+    crate::menu::rebuild_recent_menu(&app);
+}
+
 /// Clear Menu empties both lists: it is one submenu to the user.
 #[cfg(desktop)]
 pub fn clear_recent_files(app: &tauri::AppHandle) {

@@ -131,7 +131,7 @@ test("the start page lists recent files and opens one, and asks for a project", 
   await drop(page, "/notes/deep/one.md", "# One");
   await emit(page, "menu-close-tab");
   const recent = startPage(page).getByRole("region", { name: "Recent Files" });
-  await expect(recent.getByRole("button", { name: /one\.md/ })).toBeVisible();
+  await expect(recent.getByRole("button", { name: /^one\.md/ })).toBeVisible();
   await expect(recent).toContainText("/notes/deep");
 
   const asked: string[] = [];
@@ -154,7 +154,7 @@ test("the start page lists recent files and opens one, and asks for a project", 
     .click();
   await expect.poll(() => asked.length).toBeGreaterThan(0);
 
-  await recent.getByRole("button", { name: /one\.md/ }).click();
+  await recent.getByRole("button", { name: /^one\.md/ }).click();
   await expect(startPage(page)).toHaveCount(0);
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),

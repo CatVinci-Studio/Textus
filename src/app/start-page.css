@@ -1,7 +1,7 @@
-/* The start page: the window's empty state, in the interface's own type
-   and the theme's colours. The logo and name over three actions, the
-   recent projects and files beside each other below; the whole block in
-   the middle of the window. */
+/* The start page (design-language.md 5.7): two columns centred as one
+   block. On the left the mark, the name and three text rows to begin with;
+   on the right the recent folders and files. The columns share their top
+   and bottom edges; a narrow window stacks them. */
 .start-page {
   display: flex;
   align-items: center;
@@ -10,47 +10,70 @@
   overflow-y: auto;
   background: var(--ui-bg);
   color: var(--ui-text);
+  container-type: inline-size;
 }
 
 .start-page-body {
-  width: min(720px, 100% - 32px);
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: stretch;
+  gap: var(--space-8);
+  width: min(760px, 100% - 2 * var(--space-6));
   padding: var(--space-8) 0;
 }
 
-.start-page-title {
+/* Nothing recent: the left column alone, in the middle. */
+.start-page-body:not(:has(.start-page-recents)) {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(320px, 100% - 2 * var(--space-6));
+}
+
+.start-page-side {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-8);
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.start-page-mark {
+  /* Grows with the window, within a mark's sizes. */
+  width: clamp(72px, 14cqi, 112px);
+  height: auto;
+  margin: 0 0 var(--space-3) calc(-1 * var(--space-2));
+}
+
+.start-page-title {
+  margin: 0 0 auto;
   font-size: var(--text-large-title);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
 
-.start-page-title img {
-  width: 64px;
-  height: 64px;
-}
-
-/* Three cards in a row: a hairline, no shadow, the hover tint. */
-.start-page-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-  margin-bottom: var(--space-8);
-}
-
-.start-page-action {
+.start-page :is(.start-page-actions, .start-page-recent ul) {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.start-page-actions {
+  align-self: stretch;
+  margin-top: var(--space-6);
+}
+
+/* A row to begin with: an icon, its name, its keys - no frame. */
+.start-page-action {
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
-  min-height: 112px;
-  padding: var(--space-4);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-surface);
+  width: calc(100% + 2 * var(--space-2));
+  min-height: var(--control-height);
+  margin: 0 calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
   color: var(--ui-text);
   font: inherit;
   font-size: var(--text-body);
@@ -62,48 +85,36 @@
 
 .start-page-action:hover {
   background: var(--ui-hover);
+  transition-duration: var(--dur-instant);
 }
 
 .start-page-action-icon {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--shape-s);
-  background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
-  font-size: var(--text-title);
+  flex-shrink: 0;
+  color: var(--ui-muted);
 }
 
 .start-page-action-label {
-  margin-top: var(--space-1);
-  font-weight: 600;
+  flex: 1;
+  min-width: 0;
 }
 
 .start-page-action-keys {
-  margin-top: auto;
+  flex-shrink: 0;
   color: var(--ui-muted);
   font-family: inherit;
   font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
 }
 
-/* The recent projects and files side by side; one over the other where
-   the window is narrow. */
+/* The recent folders over the recent files; the last row ends where the
+   left column's does. */
 .start-page-recents {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-3);
-}
-
-.start-page-recent {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-6);
   min-width: 0;
-  padding: var(--space-3) var(--space-4) var(--space-2);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  background: var(--ui-surface);
 }
 
 .start-page-heading {
@@ -116,13 +127,24 @@
 .start-page-row {
   display: flex;
   align-items: center;
+  min-width: 0;
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: var(--shape-s);
+}
+
+.start-page-row:hover {
+  background: var(--ui-hover);
+}
+
+.start-page-open {
+  display: flex;
+  flex: 1;
+  align-items: center;
   gap: var(--space-2);
   min-width: 0;
-  min-height: 28px;
-  padding: var(--space-1) var(--space-2);
-  margin: 0 calc(-1 * var(--space-2));
+  min-height: var(--control-height);
+  padding: 0 var(--space-2);
   border: none;
-  border-radius: var(--shape-s);
   background: none;
   color: var(--ui-text);
   font: inherit;
@@ -130,10 +152,6 @@
   text-align: start;
   cursor: pointer;
   user-select: none;
-}
-
-.start-page-row:hover {
-  background: var(--ui-hover);
 }
 
 .start-page-row-icon {
@@ -159,21 +177,37 @@
   white-space: nowrap;
 }
 
-/* A phone-narrow window: the actions stack too. */
-@media (max-width: 520px) {
-  .start-page-actions {
-    grid-template-columns: 1fr;
+/* Off the list: shown on the row under the pointer or the keys. */
+.start-page-remove {
+  display: inline-flex;
+  flex-shrink: 0;
+  margin-right: var(--space-1);
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--shape-pill);
+  background: none;
+  color: var(--ui-muted);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.start-page-row:is(:hover, :focus-within) .start-page-remove {
+  opacity: 1;
+}
+
+.start-page-remove:hover {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+}
+
+/* A narrow window: one column, the recent lists under the actions. */
+@container (max-width: 640px) {
+  .start-page-body {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(440px, 100% - 2 * var(--space-6));
   }
 
-  .start-page-action {
-    min-height: 0;
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .start-page-action-label,
-  .start-page-action-keys {
-    margin-top: 0;
-    margin-left: auto;
+  .start-page-title {
+    margin-bottom: 0;
   }
 }

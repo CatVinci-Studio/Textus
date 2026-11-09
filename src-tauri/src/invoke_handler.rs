@@ -209,6 +209,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::recents::add_recent_folder,
         #[cfg(desktop)]
+        commands::recents::remove_recent,
+        #[cfg(desktop)]
         menu::list_recent_folders,
         #[cfg(desktop)]
         open_paths,

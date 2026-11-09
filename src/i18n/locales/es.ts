@@ -1319,6 +1319,7 @@ para usar una.
   closeLastLabel: "Al cerrar el último documento",
   closeLastWindow: "Cerrar la ventana",
   closeLastStartPage: "Mostrar la página de inicio",
+  startPageRemoveRecent: "Quitar de recientes",
   startPageRecentProjects: "Proyectos recientes",
   startPagePickDocument:
     "Elige un documento de {folder} en la barra lateral para empezar.",
