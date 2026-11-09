@@ -100,15 +100,6 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         const n = (seen.get(language) ?? 0) + 1;
         seen.set(language, n);
         const end = pos + node.nodeSize;
-        // The opened source's way back to the drawing, at its bottom corner
-        // (the code block's own tools are at the top).
-        if (pos === open)
-          out.push(
-            Decoration.widget(end, (view) => doneButton(view), {
-              side: -1,
-              key: `done:${pos}`,
-            }),
-          );
         out.push(
           Decoration.node(pos, end, {
             class: pos === open ? OPEN_SOURCE_CLASS : HIDDEN_SOURCE_CLASS,
@@ -287,6 +278,7 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         return {
           update(_view, prevState) {
             if (drawn.size && !prevState.doc.eq(view.state.doc)) tell();
+            placeDone(view);
           },
           destroy() {
             stop();
@@ -395,22 +387,33 @@ function removeBlock(view: EditorView, getPos: () => number | undefined) {
   if (block) view.dispatch(view.state.tr.delete(block.start, block.end));
 }
 
-/** The opened source's button back to its drawing (Esc does the same). */
+/** The opened source's way back to its drawing (Esc does the same): last
+ *  of the code block's own tools, at their right. */
+function placeDone(view: EditorView) {
+  for (const actions of view.dom.querySelectorAll<HTMLElement>(
+    ".code-block-actions",
+  )) {
+    const open = !!actions.closest(`.${OPEN_SOURCE_CLASS}`);
+    const button = actions.querySelector(".plugin-code-done");
+    if (open && !button) actions.append(doneButton(view));
+    else if (!open && button) button.remove();
+  }
+}
+
 function doneButton(view: EditorView): HTMLElement {
-  const row = document.createElement("div");
-  row.className = "plugin-code-done-row";
-  row.contentEditable = "false";
   const button = document.createElement("button");
   button.type = "button";
   button.className = "plugin-code-done";
   button.textContent = currentStrings().codeBlockDone;
-  button.addEventListener("mousedown", (event) => event.preventDefault());
+  button.addEventListener("mousedown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
   button.addEventListener("click", (event) => {
     event.preventDefault();
     closeSource(view);
   });
-  row.append(button);
-  return row;
+  return button;
 }
 
 /** An export's way to the drawings' pictures: each asks its plugin's page. */

@@ -8,8 +8,7 @@
 
 /* Folded to nothing rather than taken out: out of the page, a drawing is
    let go (drawWhileNear) and would start over. */
-.plugin-code-source-open + .plugin-code-block,
-.plugin-code-source-open + .plugin-code-done-row + .plugin-code-block {
+.plugin-code-source-open + .plugin-code-block {
   height: 0;
   margin: 0;
   border: 0;
@@ -86,26 +85,12 @@
   color: var(--text-muted);
 }
 
-/* An opened source's way back: over its bottom corner, taking no line. */
-.plugin-code-done-row {
-  position: relative;
-  height: 0;
+/* An opened source's tools stay in sight: Done Editing is its way back,
+   beside Copy and Select All, in their look but in the text's colour. */
+.plugin-code-source-open .code-block-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
-
-.plugin-code-done {
-  position: absolute;
-  bottom: 6px;
-  inset-inline-end: 6px;
-  z-index: 1;
-  padding: 2px 8px;
-  border: 1px solid var(--doc-border);
-  border-radius: var(--doc-radius-sm);
-  background: var(--doc-bg);
-  color: var(--text-muted);
-  font-size: var(--text-caption);
-  cursor: pointer;
-}
-
-.plugin-code-done:hover {
+.code-block-actions .plugin-code-done {
   color: var(--doc-text);
 }
