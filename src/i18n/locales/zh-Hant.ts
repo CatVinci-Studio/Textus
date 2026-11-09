@@ -506,6 +506,7 @@ export default {
   menuCopyAsMarkdown: "拷貝為 Markdown",
   outlineCopyLink: "拷貝標題連結",
   outlineSelectSection: "選取整節",
+  treeShowOnlyFolder: "只顯示這個資料夾",
   menuCopyPath: "複製路徑",
   folderTooBroad:
     "這個資料夾的範圍太大（你的個人資料夾或整個磁碟），無法開啟。改選範圍更小的資料夾。",

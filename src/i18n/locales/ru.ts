@@ -568,6 +568,7 @@ export default {
   menuCopyAsMarkdown: "Копировать как Markdown",
   outlineCopyLink: "Копировать ссылку на заголовок",
   outlineSelectSection: "Выделить раздел",
+  treeShowOnlyFolder: "Показать только эту папку",
   menuCopyPath: "Копировать путь",
   folderTooBroad:
     "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",

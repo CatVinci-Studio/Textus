@@ -92,6 +92,7 @@ export function FileTree({
     onFileSelect,
     onEntryMoved,
     setDraft,
+    onRootChange,
   );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
     treeRef,

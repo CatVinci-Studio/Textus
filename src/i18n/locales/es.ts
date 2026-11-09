@@ -573,6 +573,7 @@ para usar una.
   menuCopyAsMarkdown: "Copiar como Markdown",
   outlineCopyLink: "Copiar enlace al encabezado",
   outlineSelectSection: "Seleccionar sección",
+  treeShowOnlyFolder: "Mostrar solo esta carpeta",
   menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",

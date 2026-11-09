@@ -556,6 +556,7 @@ type /name in a conversation to use one.
   menuCopyAsMarkdown: "Copy as Markdown",
   outlineCopyLink: "Copy Link to Heading",
   outlineSelectSection: "Select Section",
+  treeShowOnlyFolder: "Show Only This Folder",
   menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",

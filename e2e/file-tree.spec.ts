@@ -173,7 +173,8 @@ test("an empty folder offers a button for its first document", async ({
   page,
 }) => {
   await open(page, { "/work/notes/empty/.keep": "" });
-  await row(page, "empty").dblclick();
+  await row(page, "empty").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Show Only This Folder" }).click();
   const make = page.locator(".sidebar .tree-empty").getByRole("button", {
     name: "New Document",
   });
@@ -605,13 +606,16 @@ test("a preview tab is clicked back to and closed like any other", async ({
   await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
 });
 
-test("two quick clicks on a folder's arrow fold and unfold it; a double click past it goes in", async ({
+test("a double click on a folder unfolds it once; Show Only This Folder in its menu goes in", async ({
   page,
 }) => {
   await open(page);
-  const arrow = row(page, "drafts").locator(".chevron");
-  await arrow.dblclick();
+  const drafts = row(page, "drafts");
+  await expect(drafts).toHaveAttribute("aria-expanded", "false");
+  await drafts.locator(".tree-label").dblclick();
+  await expect(drafts).toHaveAttribute("aria-expanded", "true");
   await expect(page.locator(".sidebar .tree-root-label")).toHaveText("notes");
-  await row(page, "drafts").locator(".tree-label").dblclick();
+  await drafts.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Show Only This Folder" }).click();
   await expect(page.locator(".sidebar .tree-root-label")).toHaveText("drafts");
 });

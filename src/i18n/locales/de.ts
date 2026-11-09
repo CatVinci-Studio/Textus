@@ -565,6 +565,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuCopyAsMarkdown: "Als Markdown kopieren",
   outlineCopyLink: "Link zur Überschrift kopieren",
   outlineSelectSection: "Abschnitt auswählen",
+  treeShowOnlyFolder: "Nur diesen Ordner zeigen",
   menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",

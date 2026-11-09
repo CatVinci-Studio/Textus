@@ -532,6 +532,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuCopyAsMarkdown: "Markdown으로 복사",
   outlineCopyLink: "제목 링크 복사",
   outlineSelectSection: "섹션 선택",
+  treeShowOnlyFolder: "이 폴더만 보기",
   menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",

@@ -32,6 +32,8 @@ export function useRowMenu(
   onFileSelect: (path: string, how?: FileOpenHow) => void,
   onEntryMoved: (from: string, to: string) => void,
   setDraft: (draft: TreeDraft) => void,
+  /** The tree narrowed to a folder inside it. */
+  onEnter: (path: string) => void,
 ) {
   const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
@@ -87,6 +89,11 @@ export function useRowMenu(
           { label: t.openBeside, onSelect: () => onFileSelect(path, "beside") },
           "separator",
         );
+      if (path !== root && isDir)
+        items.push(
+          { label: t.treeShowOnlyFolder, onSelect: () => onEnter(path) },
+          "separator",
+        );
       items.push(
         {
           label: t.treeNewDocument,
@@ -111,7 +118,7 @@ export function useRowMenu(
       if (added.length) items.push("separator", ...added);
       setMenu({ x: e.clientX, y: e.clientY, items });
     },
-    [root, t, setDraft, rename, trash, onFileSelect],
+    [root, t, setDraft, rename, trash, onFileSelect, onEnter],
   );
   return { menu, setMenu, onRowMenu };
 }

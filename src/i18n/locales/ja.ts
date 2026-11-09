@@ -541,6 +541,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuCopyAsMarkdown: "Markdown としてコピー",
   outlineCopyLink: "見出しへのリンクをコピー",
   outlineSelectSection: "セクションを選択",
+  treeShowOnlyFolder: "このフォルダーだけを表示",
   menuCopyPath: "パスをコピー",
   folderTooBroad:
     "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",

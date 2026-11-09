@@ -43,7 +43,7 @@ export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
 /// "math-block", "rule" or "table".
 export const INSERT_BLOCK_EVENT = "textus:insert-block";
 /** A folder inside the open one to show in the sidebar (detail: its path),
- *  as a double click on it does: a plugin's import going into what it made. */
+ *  as its Show Only This Folder does: a plugin's import going into what it made. */
 export const SHOW_FOLDER_EVENT = "textus:show-folder";
 export const INSERT_BLOCK_KINDS: readonly string[] = [
   ...["h1", "h2", "h3", "h4", "h5", "h6", "paragraph"],

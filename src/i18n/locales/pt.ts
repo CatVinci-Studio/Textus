@@ -563,6 +563,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuCopyAsMarkdown: "Copiar como Markdown",
   outlineCopyLink: "Copiar link do título",
   outlineSelectSection: "Selecionar seção",
+  treeShowOnlyFolder: "Mostrar só esta pasta",
   menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",

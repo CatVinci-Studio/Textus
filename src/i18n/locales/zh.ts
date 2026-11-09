@@ -506,6 +506,7 @@ export default {
   menuCopyAsMarkdown: "复制为 Markdown",
   outlineCopyLink: "复制标题链接",
   outlineSelectSection: "选中整节",
+  treeShowOnlyFolder: "只显示这个文件夹",
   menuCopyPath: "复制路径",
   folderTooBroad:
     "这个文件夹范围太大（主目录或整个磁盘），不能打开，请选择更具体的文件夹。",

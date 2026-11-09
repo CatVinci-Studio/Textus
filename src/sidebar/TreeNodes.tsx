@@ -109,16 +109,11 @@ export function DirNode({
           aria-expanded={open}
           data-drop-dir={path}
           style={{ paddingLeft: depth * 14 }}
-          onClick={() => {
-            if (!tree.takeDragClick()) setOpen(!open);
-          }}
-          // Two quick clicks on the arrow fold and unfold it: only a double
-          // click past the arrow goes into the folder.
-          onDoubleClick={(e) => {
-            const arrow = e.currentTarget.querySelector(".chevron");
-            if (arrow && e.clientX <= arrow.getBoundingClientRect().right + 2)
-              return;
-            onEnter(path);
+          // A double click folds or unfolds it once, as a click does; going
+          // into it is the row's menu's Show Only This Folder.
+          onClick={(e) => {
+            if (e.detail > 1 || tree.takeDragClick()) return;
+            setOpen(!open);
           }}
           onContextMenu={
             tree.onRowMenu ? (e) => tree.onRowMenu!(e, path, true) : undefined

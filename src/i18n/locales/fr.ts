@@ -576,6 +576,7 @@ utiliser une.
   menuCopyAsMarkdown: "Copier en Markdown",
   outlineCopyLink: "Copier le lien vers le titre",
   outlineSelectSection: "Sélectionner la section",
+  treeShowOnlyFolder: "Afficher seulement ce dossier",
   menuCopyPath: "Copier le chemin",
   folderTooBroad:
     "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
