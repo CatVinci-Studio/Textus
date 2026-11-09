@@ -219,7 +219,9 @@ export function PluginsPage({ t }: SettingsPageProps) {
             )}
           </>
         ) : (
-          <p className="plugin-empty">{t.pluginsNone}</p>
+          <p className="plugin-empty">
+            {t.pluginsInstalledNone.replace("{section}", t.extensionsAvailable)}
+          </p>
         )
       }
       available={

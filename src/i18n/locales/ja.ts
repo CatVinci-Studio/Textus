@@ -1657,7 +1657,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginCardsRestore: "再び表示",
   pluginScreenshot: "{name} の画面",
   pluginsMine: "自分で作ったもの",
-  pluginsNone: "まだありません。",
+  pluginsInstalledNone:
+    "インストールしたプラグインはまだありません。下の「{section}」から選べます。",
+  skillsInstalledNone:
+    "追加したスキルはまだありません。下の「{section}」から選ぶか、自分で作れます。",
   pluginStatusBroken: "読み込めません：{reason}",
   pluginStatusDesktopOnly: "パソコン専用です。iPhone と iPad では使えません。",
   pluginStatusIncompatible: "別のバージョンの Textus 用です（{range}）。",

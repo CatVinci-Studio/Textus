@@ -1730,7 +1730,10 @@ para usar una.
   pluginCardsRestore: "Mostrar de nuevo",
   pluginScreenshot: "{name} en uso",
   pluginsMine: "Hechos por ti",
-  pluginsNone: "Ninguno todavía.",
+  pluginsInstalledNone:
+    "Aún no has instalado plugins. Elige uno en {section}, más abajo.",
+  skillsInstalledNone:
+    "Aún no has añadido habilidades. Elige una en {section}, más abajo, o crea la tuya.",
   pluginStatusBroken: "No se puede leer: {reason}",
   pluginStatusDesktopOnly:
     "Solo funciona en el ordenador, no en iPhone ni iPad.",

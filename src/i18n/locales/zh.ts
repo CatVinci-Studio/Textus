@@ -1568,7 +1568,9 @@ export default {
   pluginCardsRestore: "重新显示",
   pluginScreenshot: "{name} 使用截图",
   pluginsMine: "我做的插件",
-  pluginsNone: "还没有。",
+  pluginsInstalledNone: "还没有安装插件。可以在下方“{section}”里挑一个。",
+  skillsInstalledNone:
+    "还没有添加 Skill。可以在下方“{section}”里挑一个，或自己做一个。",
   pluginStatusBroken: "无法读取：{reason}",
   pluginStatusDesktopOnly: "只能在电脑上使用，不支持 iPhone 和 iPad。",
   pluginStatusIncompatible: "为其他版本的 Textus 制作（{range}）。",

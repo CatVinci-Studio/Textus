@@ -1724,7 +1724,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginCardsRestore: "Wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
   pluginsMine: "Von dir erstellt",
-  pluginsNone: "Noch keine.",
+  pluginsInstalledNone:
+    "Noch keine Plugins installiert. Wähle eines unter {section} weiter unten.",
+  skillsInstalledNone:
+    "Noch keine Skills hinzugefügt. Wähle einen unter {section} weiter unten oder erstelle deinen eigenen.",
   pluginStatusBroken: "Nicht lesbar: {reason}",
   pluginStatusDesktopOnly:
     "Nur am Computer nutzbar, nicht auf iPhone oder iPad.",

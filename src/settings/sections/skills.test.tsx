@@ -85,4 +85,18 @@ describe("the user's skills", () => {
     await waitFor(() => expect(showConfirm).toHaveBeenCalled());
     expect(ai.deleteGlobalSkill).not.toHaveBeenCalled();
   });
+
+  it("with none added, says so and points to Available instead of an empty box", async () => {
+    vi.mocked(ai.listSkills).mockResolvedValue([
+      skill("proofread", "builtin"),
+    ] as never);
+    render(<OwnSkillsList t={t} />);
+    await waitFor(() => expect(ai.listSkills).toHaveBeenCalled());
+    expect(
+      await screen.findByText(
+        "No skills added yet. Pick one under Available below, or make your own.",
+      ),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".settings-skill-list")).toBeNull();
+  });
 });

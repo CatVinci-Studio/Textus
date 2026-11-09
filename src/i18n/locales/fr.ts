@@ -1753,7 +1753,10 @@ utiliser une.
   pluginCardsRestore: "Afficher à nouveau",
   pluginScreenshot: "{name} en action",
   pluginsMine: "Créées par vous",
-  pluginsNone: "Aucune pour l’instant.",
+  pluginsInstalledNone:
+    "Aucun plugin installé pour l’instant. Choisissez-en un dans {section}, plus bas.",
+  skillsInstalledNone:
+    "Aucune compétence ajoutée pour l’instant. Choisissez-en une dans {section}, plus bas, ou créez la vôtre.",
   pluginStatusBroken: "Illisible : {reason}",
   pluginStatusDesktopOnly:
     "Fonctionne uniquement sur ordinateur, pas sur iPhone ni iPad.",
