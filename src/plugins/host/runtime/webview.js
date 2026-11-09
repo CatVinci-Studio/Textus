@@ -333,8 +333,19 @@
     requestAnimationFrame(function () {
       pending = false;
       tellHeight();
+      contain();
     });
   }
+  // A page taller than its frame scrolls in it, and its scrolling stops at
+  // its ends instead of carrying on into the document around it. One that
+  // fits passes the wheel on, as the rest of the document does.
+  function contain() {
+    var root = document.documentElement;
+    // By where the content ends: the page is never shorter than its frame.
+    var scrolls = contentHeight() > window.innerHeight + 1;
+    root.style.overscrollBehaviorY = scrolls ? "contain" : "";
+  }
+  window.addEventListener("resize", soon);
   if (typeof ResizeObserver === "function")
     window.addEventListener("DOMContentLoaded", function () {
       new ResizeObserver(soon).observe(document.documentElement);

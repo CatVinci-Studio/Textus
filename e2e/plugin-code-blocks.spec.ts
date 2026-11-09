@@ -192,6 +192,14 @@ test("a block's frame fits its page as the page grows, up to 70% of the window, 
   const cap = Math.round(page.viewportSize()!.height * 0.7);
   await expect.poll(height).toBeGreaterThan(cap - 2);
   expect(await height()).toBeLessThanOrEqual(cap + 1);
+  // Scrolling in it stops at its ends, not carrying on into the document.
+  const contained = () =>
+    page
+      .frameLocator(`${editor} .plugin-code-block iframe`)
+      .first()
+      .locator("html")
+      .evaluate((el) => (el as HTMLElement).style.overscrollBehaviorY);
+  await expect.poll(contained).toBe("contain");
   // The page sets a short source: the frame comes back down with it.
   await page
     .frameLocator(`${editor} .plugin-code-block iframe`)
@@ -199,6 +207,8 @@ test("a block's frame fits its page as the page grows, up to 70% of the window, 
     .locator("#set")
     .click();
   await expect.poll(height).toBeLessThan(150);
+  // Short again: the wheel goes on to the document.
+  await expect.poll(contained).toBe("");
 });
 
 /** Exports the document as HTML; the file's text, once it is written. */
