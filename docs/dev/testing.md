@@ -231,28 +231,32 @@ device is a manual step on a Mac.
 
 ## How CI is laid out
 
-`.github/workflows/ci.yml` runs these jobs on a pull request and on every
-push to `main` and `stable`. The required checks are `check`, `e2e`,
-`native` and `ci-config`; `e2e` and `native` are one-line jobs that pass
-when every job they stand for passed, or when all of them were skipped.
+`.github/workflows/ci.yml` runs at two depths. A pull request into `main`
+and a push to `main` run the quick suite: `check`, and `native` on Linux
+when the change reaches Rust. The full suite - every job below on every
+platform, whatever changed - runs on the tagged commit before a release is
+built (`release.yml` calls `ci.yml`), on a pull request into `stable`, and
+by hand (Run workflow). Run the e2e flows locally before a pull request
+that reaches the browser. The required checks are `check`, `e2e`, `native`
+and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
+job they stand for passed, or when all of them were skipped.
 
-| Job                                 | Runs                                                                      | When                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                    |
-| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise    |
-| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                    |
-| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the change reaches the browser                            |
-| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | a push after a merge, when the change reaches the browser |
-| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                   |
-| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                          |
-| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code                 |
-| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                          |
-| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code                 |
+| Job                                 | Runs                                                                      | When                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `changes`                           | `scripts/ci-changes.mjs`: which of the jobs below to run                  | always                                                 |
+| `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration | a pull request from a fork; skipped (passed) otherwise |
+| `check`                             | `npm run check`, then `vite build` of the app and of the playground       | always                                                 |
+| `e2e (1/4)` to `e2e (4/4)`          | `npm run test:e2e -- --shard=N/4`, with a pinned textus-plugins checkout  | the full suite                                         |
+| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                         | the full suite                                         |
+| `native (ubuntu-22.04)`             | `npm run check:native`                                                    | the change reaches Rust                                |
+| `native (macos-26)`                 | `npm test`, then `npm run check:native` when the change reaches Rust      | the change reaches platform code                       |
+| `native (windows-2025)`             | `npm run check:native`                                                    | the change reaches Rust and platform code              |
+| `native (windows-2025, unit tests)` | `npm test`                                                                | the change reaches platform code                       |
+| `ios`                               | the unsigned iOS simulator build, started in the simulator (not required) | the change reaches Rust and platform code              |
 
-On a pull request, macOS, Windows and iOS run only when the change reaches
-code that differs between platforms; otherwise `native` is the Linux job
-alone. A push to `main` or `stable` runs everything, and a release waits
-for that run ([releasing.md](releasing.md#what-the-workflow-does)).
+macOS, Windows and iOS run only in the full suite; in the quick one
+`native` is the Linux job alone. A release builds only once the full suite
+passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. Some choices that keep a pull request's checks short:
