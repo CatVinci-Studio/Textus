@@ -142,9 +142,8 @@ test("the footer holds its row in a wider font too", async ({ page }) => {
 test("the detached chat window's footer stays one row at its narrowest", async ({
   page,
 }) => {
-  // 320px, Russian, 125%: a few pixels from fitting, so the runner's
-  // fonts decide it. Run locally, where the fonts are the ones we check.
-  test.skip(!!process.env.CI, "font widths on the CI runner");
+  // 320px, German and Russian, up to 125%: Send gives up its name for its
+  // arrow, so no font decides it.
   await page.setViewportSize({ width: 320, height: 560 });
   await page.addInitScript((passage) => {
     localStorage.setItem(
