@@ -100,8 +100,9 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  /* Gives way first: the folder the tree shows matters more. */
-  flex-shrink: 8;
+  /* Gives way as the folder's name does, never to a letter or two: a
+     short parent ("work") stays whole. */
+  flex-shrink: 1;
   min-width: 0;
   max-width: 45%;
   padding: 2px 4px;
@@ -126,7 +127,7 @@
 }
 
 .tree-crumb-name {
-  min-width: 0;
+  min-width: min(4em, 100%);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
