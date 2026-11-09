@@ -29,8 +29,7 @@
   flex: 1;
   padding: 8px 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--ui-text);
   font: inherit;

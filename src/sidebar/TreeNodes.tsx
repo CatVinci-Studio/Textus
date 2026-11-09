@@ -150,19 +150,16 @@ export function DirNode({
           {depth === 0 &&
             sorted.length === 0 &&
             !drafting &&
-            tree.draftHint && (
-              // Empty: what can be made here, and a button that makes it.
+            tree.newDocument && (
+              // Empty: a button that makes the first document.
               <div className="tx-empty tree-empty">
-                <span className="tree-empty-hint">{tree.draftHint}</span>
-                {tree.newDocument && (
-                  <button
-                    type="button"
-                    className="tx-button"
-                    onClick={tree.newDocument.start}
-                  >
-                    {tree.newDocument.label}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="tx-button"
+                  onClick={tree.newDocument.start}
+                >
+                  {tree.newDocument.label}
+                </button>
               </div>
             )}
           {sorted.map((entry) =>

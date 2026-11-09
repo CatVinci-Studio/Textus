@@ -53,6 +53,7 @@ export interface MenuBridgeHandlers {
   /** Settings › Extensions › Plugins, at plugin `id`'s page if given. */
   onOpenPluginSettings: (id?: string) => void;
   onToggleTypewriter: () => void;
+  onToggleFormatBar: () => void;
   onToggleSidebar: () => void;
   /** Opens the sidebar on the tab with this id. */
   showSidebarTab: (id: string) => void;
@@ -188,6 +189,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       }),
       listenToThisWindow("menu-toggle-source-mode", () =>
         h().toggleSourceMode(),
+      ),
+      listenToThisWindow("menu-toggle-format-bar", () =>
+        h().onToggleFormatBar(),
       ),
       listenToThisWindow("menu-toggle-typewriter-mode", () =>
         h().onToggleTypewriter(),

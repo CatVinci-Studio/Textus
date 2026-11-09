@@ -33,6 +33,7 @@ import {
   WebPagePane,
 } from "../plugins/views/plugin-views";
 import { TabBar } from "./tabs/TabBar";
+import { FormatBar } from "./FormatBar";
 import { useSplitPanes } from "./split/useSplitPanes";
 import { SplitDivider } from "./split/SplitDivider";
 import { panesOf, splitGrid } from "./split/split-tree";
@@ -123,6 +124,7 @@ export function MainPane({
   previewTab,
   onChange,
   typewriter,
+  formatBar,
   tour,
   t,
 }: {
@@ -142,6 +144,8 @@ export function MainPane({
   previewTab: TabBarProps["previewTab"];
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
+  /** View › Format Bar is on. */
+  formatBar: boolean;
   /** The tour's practice tab, its AI and the AI panel mode its lesson
    *  needs, while the tour runs; else null. */
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
@@ -294,6 +298,9 @@ export function MainPane({
             ),
           )
         : showTabBar && tabBar(tabs, activeTabId, null)}
+      {formatBar && !split && !phone && formatsShown(byId.get(activeTabId)) && (
+        <FormatBar t={t} />
+      )}
 
       {/* A tab's editor stays mounted while hidden, so switching keeps its
         state; one out of sight a long while is let go (EditorKept). */}
@@ -405,4 +412,9 @@ export function MainPane({
         ))}
     </main>
   );
+}
+
+/** A document in the rendered editor: what the format bar formats. */
+function formatsShown(tab: DocTab | undefined): boolean {
+  return !!tab && !tab.view && !tab.sourceMode && !showsStartPage(tab);
 }

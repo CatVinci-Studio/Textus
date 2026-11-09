@@ -46,22 +46,21 @@ const en = {
   noticeGrammarChanged: "The paragraph changed while checking - try again.",
   noticeGrammarNoIssues: "No issues found.",
   projectTooBroad:
-    "This folder is too broad to be a project folder (your home folder or a whole drive). Choose a more specific folder.",
+    "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
   projectNoSamples: "None of the picked files could be read as text.",
-  projectNeedsSave:
-    "Save this document first - its folder becomes the project folder.",
+  projectNeedsSave: "Save this document first - the AI works in its folder.",
   projectPicking: "Choosing a folder…",
   projectLearningStyle: "Learning your style from the samples…",
   projectStyleLearned:
     "Style profile saved - review and edit it in the new tab.",
   projectOpening: "Opening…",
-  projectStyleTemplate: `# Style profile\n\n<!-- ${AI_NAME} and completion follow this profile in every document of this project. Describe how you write - voice, sentence rhythm, word choice, punctuation, things you never do - in concrete points ("short sentences, rarely over 15 words") rather than adjectives. “Learn my style from samples…” in the project menu drafts it from your own writing. Comments like this one are never sent. -->\n\n## Voice and tone\n\n- \n\n## Sentences and rhythm\n\n- \n\n## Word choice\n\n- \n\n## Never\n\n- \n`,
+  projectStyleTemplate: `# Style profile\n\n<!-- ${AI_NAME} and completion follow this profile in every document of this folder. Describe how you write - voice, sentence rhythm, word choice, punctuation, things you never do - in concrete points ("short sentences, rarely over 15 words") rather than adjectives. “Learn my style from samples…” in the folder menu drafts it from your own writing. Comments like this one are never sent. -->\n\n## Voice and tone\n\n- \n\n## Sentences and rhythm\n\n- \n\n## Word choice\n\n- \n\n## Never\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Facts ${AI_NAME} should keep consistent whenever {name} or an alias comes up. include: detected (when mentioned, the default) | always | never. Comments like this one are never sent. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Writing instructions for this project.
+Writing instructions for this folder.
 
 Everything outside comments like this one is sent to ${AI_NAME} with
-every conversation about a document in this project, after your
+every conversation about a document in this folder, after your
 global writing instructions (Settings > ${AI_NAME}). Where the two
 disagree, this file wins. Comments are never sent.
 
@@ -89,9 +88,9 @@ Worth writing here, for example:
   Terms        Write "e-mail", never "email".
   Background   I write long-form science journalism for a general audience.
 
-Instructions for one project only go in that project's .textus/agent.md
-(the AI panel's project menu > Edit project writing instructions).
-Both are sent; where they disagree, the project's win.
+Instructions for one folder only go in that folder's .textus/agent.md
+(the AI panel's folder menu > Edit the folder's writing instructions).
+Both are sent; where they disagree, the folder's win.
 
 Skills go in the skills/ folder next to this file, one .md file each;
 type /name in a conversation to use one.
@@ -100,8 +99,8 @@ type /name in a conversation to use one.
   projectOpenStyle: "Open style profile",
   projectStyleChip: "Style",
   projectLibraryChip: "Library {n}",
-  projectPickFolder: "Choose project folder…",
-  projectNoFolder: "Use no project folder",
+  projectPickFolder: "Choose folder…",
+  projectNoFolder: "Use no folder",
   projectReveal: "Show in file manager",
   projectLearnStyle: "Learn my style from samples…",
   projectImportReferences: "Import references…",
@@ -111,8 +110,8 @@ type /name in a conversation to use one.
   projectReferencesImportedSkipped: `{n} files added to references/ for ${AI_NAME} to search; {skipped} left out (not text or documents, or too large).`,
   projectCreateStyle: "Create style profile",
   projectNewEntry: "New library entry…",
-  projectEditInstructions: "Edit project writing instructions",
-  projectFolderTitle: "Project folder: {path}",
+  projectEditInstructions: "Edit the folder's writing instructions",
+  projectFolderTitle: "Folder: {path}",
   projectEntryPlaceholder: "Name of a character, place or term",
   projectEntryCreate: "Create",
   chatHistoryUnsaved: "Unsaved documents",
@@ -198,26 +197,22 @@ type /name in a conversation to use one.
   reviewNotesPicked: "{n} selected",
   reviewNotesAskPrefix: "About these notes of yours:\n{notes}\n",
   reviewNoteAskPrefix: "About your note “{comment}”: ",
-  agentTabProject: "Project",
+  agentTabProject: "Folder",
   memoryStyle: "Writing style",
   memoryLibrary: "Library",
   memoryInstructions: "Writing instructions",
-  memoryStyleHint: "How you write: the AI writes the same way.",
-  memoryInstructionsHint: "Rules the AI follows every time.",
-  memoryLibraryHint: "People, places and terms, looked up when they come up.",
-  memoryRememberedHint: "What the AI noted from your conversations.",
   memoryEdit: "Edit",
   memoryNew: "New",
   memoryInThisDocument: "In this document",
-  memoryAllProjects: "All projects",
-  memoryEditGlobal: "Edit the instructions for all projects",
+  memoryAllProjects: "All folders",
+  memoryEditGlobal: "Edit the instructions for all folders",
   memoryStyleEmpty: `No style profile yet. Give ${AI_NAME} a few things you wrote and it learns how you write.`,
   memoryLibraryEmpty: `People, places, terms: add them to the library and ${AI_NAME} remembers them.`,
   memoryInstructionsEmpty: `No writing instructions yet. Write down the rules ${AI_NAME} should always follow.`,
-  memoryNeedsSave: `Open a folder, or choose a project folder, and ${AI_NAME} keeps your style, library and instructions for it.`,
+  memoryNeedsSave: `Open or choose a folder, and ${AI_NAME} keeps your style, library and instructions for it.`,
   memoryRemembered: "Memory",
-  memoryRememberedPersonal: "For all projects",
-  memoryRememberedProject: "This project",
+  memoryRememberedPersonal: "For all folders",
+  memoryRememberedProject: "This folder",
   memoryRememberedEmpty: `Nothing yet. Tell ${AI_NAME} what you always want, and it remembers it for next time.`,
   memoryRememberOff: `Remember automatically is off (Settings › ${AI_NAME}): ${AI_NAME} keeps nothing new.`,
   memoryKindRequirement: "Requirement",
@@ -244,15 +239,15 @@ type /name in a conversation to use one.
   memoryLibraryLeftOut:
     "Mentioned but not sent, past the library's limit of {cap} characters: {names}.",
   memoryChipSaved: "Remembered: {text} ({scope})",
-  memoryScopeProject: "project",
+  memoryScopeProject: "folder",
   memoryScopePersonal: "global",
   memoryChipUndo: "Undo",
   memoryMakePersonal: "Make global",
-  memoryMakeProject: "Make project",
+  memoryMakeProject: "Only for this folder",
   memoryChipUndone: "Undone. No longer remembered.",
   memoryChipForgot: "Forgot: {text} ({scope})",
   memoryChipRestored: "Undone. Remembered again.",
-  memoryActionFailed: "That didn't work. Try again in the Project tab.",
+  memoryActionFailed: "That didn't work. Try again in the Folder tab.",
   learnSuggestion:
     "You turned down {what} several times. Remember this? {rule}",
   learnQuoted: "“{text}”",
@@ -289,7 +284,7 @@ type /name in a conversation to use one.
   learnRemember: "Remember",
   learnNotNow: "Not now",
   learnNever: "Never ask for this",
-  learnSaved: "Remembered. See or delete it under Project in the AI panel.",
+  learnSaved: "Remembered. See or delete it under Folder in the AI panel.",
   learnLabel: "Learned from your revision choices",
   suggestNextMessageLabel: "Suggest your next message",
   suggestNextMessageHint:
@@ -303,7 +298,7 @@ type /name in a conversation to use one.
   researchCheckClaimsHint:
     "Before Research revises its draft, every sentence that cites a source is compared with the notes on that source, and one that says more than they do is rewritten. More careful, with one more model call per section.",
   rememberAutomaticallyLabel: "Remember automatically",
-  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Project in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
+  rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Folder in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",
   toolGenerateImage: "Generating an image",
@@ -377,9 +372,9 @@ type /name in a conversation to use one.
   toolSearchDocument: "Searching the document for “{arg}”",
   toolReadDocument: "Reading “{arg}”",
   toolReadWholeDocument: "Reading the document",
-  toolSearchFiles: "Searching the project for “{arg}”",
+  toolSearchFiles: "Searching the folder for “{arg}”",
   toolFindFiles: "Finding files named “{arg}”",
-  toolListFiles: "Looking at the project's files",
+  toolListFiles: "Looking at the folder's files",
   toolReadFile: "Reading {arg}",
   toolUseSkill: "Using the skill {arg}",
   toolAddComment: "Adding a comment",
@@ -540,11 +535,10 @@ type /name in a conversation to use one.
   treeTab: "Files",
   outlineTab: "Outline",
   treeParentFolder: "Parent folder",
-  treeEmptyDraft: "Save this document and its folder shows up here.",
-  outlineEmpty: "No headings yet - lines starting with # appear here.",
+  outlineEmpty: "No headings yet",
   treeRefresh: "Refresh",
-  menuOpenFolder: "Open Project…",
-  menuCloseFolder: "Close Project",
+  menuOpenFolder: "Open Folder…",
+  menuCloseFolder: "Close Folder",
   menuCopyPath: "Copy Path",
   folderTooBroad:
     "This folder is too broad to open (your home folder or a whole drive). Choose a more specific folder.",
@@ -554,14 +548,13 @@ type /name in a conversation to use one.
   treeSearchCapped:
     "Searched the first {n} files only. Open a smaller folder to search all of it.",
   treeSearchTooBroad:
-    "This folder is too broad to search. Open a more specific one with File › Open Project…",
+    "This folder is too broad to search. Open a more specific one with File › Open Folder…",
   treeSearchFailed: "This folder can't be read.",
   treeSearchScope: "Show",
   treeSearchScopeAll: "All files",
   treeSearchScopeDocuments: "Documents only",
   treeNewDocument: "New Document",
   treeNewFolder: "New Folder",
-  treeEmptyHint: "Double-click here for a new document.",
   treeNewDocumentPrompt: "Name of the new document",
   treeNewFolderPrompt: "Name of the new folder",
   treeNewDocumentDefault: "Untitled",
@@ -579,7 +572,7 @@ type /name in a conversation to use one.
   treeKeepLinks: "Don't Update",
   treeUpdateLinksFailed: "These documents' links couldn't be updated: {names}",
   treeDocumentFolder: "Current document's folder",
-  treeOpenAsFolder: "Open as Project",
+  treeOpenAsFolder: "Open This Folder",
   treeTrashItem: "Move to Trash",
   treeTrash: "Move to Trash",
   treeTrashConfirm:
@@ -711,7 +704,7 @@ type /name in a conversation to use one.
   editAnimationLabel: "Animate edit previews",
   agentWorkspaceLabel: "Global config folder",
   agentWorkspaceOpenButton: "Show",
-  agentWorkspaceRootLabel: "Project Folder",
+  agentWorkspaceRootLabel: "Folder",
   agentWorkspaceRootDefault: "None - the folder open in the sidebar, if any",
   agentWorkspaceRootPick: "Choose…",
   agentSystemPromptLabel: "Writing Instructions (agent.md)",
@@ -719,7 +712,7 @@ type /name in a conversation to use one.
   agentSkillsLabel: "Skills",
   agentSkillsImport: "Import Skill…",
   skillGroupRecent: "Recent",
-  skillGroupProject: "This project",
+  skillGroupProject: "This folder",
   skillGroupYours: "Your skills",
   skillCategoryWrite: "Write",
   skillCategoryRevise: "Revise",
@@ -731,10 +724,10 @@ type /name in a conversation to use one.
     "Type / to run a skill: a ready-made instruction such as Proofread or Summarize.",
   skillPickerNoMatch: "No skill matches “{query}”.",
   skillPickerHowTo: "Add more skills, or import your own, in Settings.",
-  mentionPickerAbout: "Type @ to attach a file from the project folder.",
+  mentionPickerAbout: "Type @ to attach a file from the folder.",
   mentionPickerNoProject:
-    "Save the document or choose a project folder, and its files appear here.",
-  mentionPickerNoFiles: "The project folder has no text files yet.",
+    "Save the document or choose a folder, and its files appear here.",
+  mentionPickerNoFiles: "The folder has no text files yet.",
   mentionPickerNoMatch: "No file matches “{query}”.",
   agentSkillsBuiltin: "Built-in skills",
   agentSkillsCustomize: "Customize…",
@@ -894,7 +887,7 @@ type /name in a conversation to use one.
   skillOffer: "Keep this as a skill, {name}?",
   skillOfferSaved: "Kept as {name}: type it in the message box to do it again.",
   skillOfferSave: "Save for every document",
-  skillOfferSaveProject: "For this project only",
+  skillOfferSaveProject: "For this folder only",
   chatHistorySearch: "Search conversations",
   chatHistorySearchNone: "No conversation has these words.",
   chatHistoryByYou: "You",
@@ -1107,6 +1100,7 @@ type /name in a conversation to use one.
   menuCodeBlock: "Code Block",
   menuTable: "Table",
   menuToggleSourceMode: "Source Mode",
+  menuFormatBar: "Format Bar",
   menuToggleTypewriterMode: "Typewriter Mode",
   menuToggleSidebar: "Sidebar",
   menuZoomIn: "Zoom In",
@@ -1259,6 +1253,7 @@ type /name in a conversation to use one.
   docLineSpacingStandard: "Standard",
   docLineSpacingRelaxed: "Relaxed",
   docFontLabel: "Text font",
+  docFontMore: "More fonts",
   docFontAuto: "Theme's",
   docLetterSpacingLabel: "Character spacing",
   docLetterSpacingAuto: "Theme's",
@@ -1279,7 +1274,7 @@ type /name in a conversation to use one.
   closeLastWindow: "Close the window",
   closeLastStartPage: "Show the start page",
   startPageRemoveRecent: "Remove from Recent",
-  startPageRecentProjects: "Recent Projects",
+  startPageRecentProjects: "Recent Folders",
   startPagePickDocument:
     "Pick a document in {folder} from the sidebar to start.",
   startPageRecentFiles: "Recent Files",
@@ -1363,7 +1358,7 @@ type /name in a conversation to use one.
   tutorialDoneTitle: "All done",
   tutorialDoneBody:
     "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Project, the folder button in the AI panel.`,
+  tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Folder in the AI panel.`,
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",
@@ -1421,7 +1416,7 @@ type /name in a conversation to use one.
   imageFolderSameFolder: "Same folder as the document",
   imageFolderNameLabel: "Subfolder name",
   imageFolderProjectNote:
-    "This project keeps pictures in {folder} (set in {source}).",
+    "This folder keeps pictures in {folder} (set in {source}).",
   imageFolderInvalid: "Use a folder inside the document's folder, such as img.",
   imageHostLabel: "Image host",
   imageHostCustom: "Custom",
@@ -1639,8 +1634,8 @@ type /name in a conversation to use one.
   pluginBackToList: "All plugins",
   pluginSettingsScope: "Applies to",
   pluginSettingsScopeGlobal: "Every document",
-  pluginSettingsScopeProject: "This project ({name})",
-  pluginSettingProjectOwn: "This project has its own value.",
+  pluginSettingsScopeProject: "This folder ({name})",
+  pluginSettingProjectOwn: "This folder has its own value.",
   pluginSettingUseGeneral: "Use the general value",
   pluginSettingsGroup: "Settings",
   pluginSettingsOff: "Turn {name} on to change its settings.",
@@ -1653,7 +1648,7 @@ type /name in a conversation to use one.
   pluginAboutGroup: "About",
   pluginDataLabel: "Its data",
   pluginDataGlobal: "{global} for every document",
-  pluginDataProject: "{project} in this project",
+  pluginDataProject: "{project} in this folder",
   pluginDataClear: "Clear",
   pluginDataClearAsk: "Clear what {name} keeps? It can't be brought back.",
   pluginVersionLabel: "Version {version}",
@@ -1680,7 +1675,7 @@ type /name in a conversation to use one.
   conventionsCardLine:
     "This folder's {app} settings store pictures in {folder}",
   conventionsCardDetails:
-    "Current setting: {current}. Adopting saves it in this folder's .textus/settings.json, so it stays with the project.",
+    "Current setting: {current}. Adopting saves it in this folder's .textus/settings.json, so it stays with the folder.",
   conventionsFolderRoot: "the folder itself",
   conventionsFollow: "Adopt",
   conventionsDecline: "Keep Current",

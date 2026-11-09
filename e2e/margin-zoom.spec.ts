@@ -9,8 +9,8 @@ import { emit, openApp, settled } from "./helpers";
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 
-async function trackedChange(page: Page) {
-  await page.setViewportSize({ width: 1600, height: 800 });
+async function trackedChange(page: Page, width = 1600) {
+  await page.setViewportSize({ width, height: 800 });
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
     w.__devFiles = { "/n/a.md": "# Notes\n\nA paragraph to change.\n" };
@@ -38,7 +38,8 @@ const zoom = (page: Page, factor: number) =>
 test("a zoomed page with no room beside its text reviews from the bar, no card over the text", async ({
   page,
 }) => {
-  await trackedChange(page);
+  // A window where even the column's narrowing leaves no card's width.
+  await trackedChange(page, 1000);
   await zoom(page, 1.8);
   await expect(page.locator(".revision-note")).toHaveCount(0);
   await expect(page.getByRole("toolbar", { name: "Revision" })).toBeVisible();

@@ -8,8 +8,8 @@
 # each of these lines as "<the English name> = <the name in that UI>" - or
 # nothing, until that UI is translated, and the AI then names everything in
 # English. Only the user's UI language is sent with a request.
-project folder
-project menu
+folder
+folder menu
 writing instructions
 global config folder
 skills
@@ -17,16 +17,16 @@ library
 style profile
 Learn my style
 completion
-Choose project folder…
-Use no project folder
+Choose folder…
+Use no folder
 Learn my style from samples…
 Create style profile
 Open style profile
 Style (the chip)
 New library entry…
-Edit project writing instructions
+Edit the folder's writing instructions
 Settings
-Project Folder (Settings row)
+Folder (Settings row)
 Writing Instructions (agent.md)
 Edit agent.md
 Skills (Settings row)

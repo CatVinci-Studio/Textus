@@ -6,6 +6,7 @@ import {
   openPhone,
   pasteMarkdown,
   PHONE,
+  chromeScale,
 } from "./helpers";
 import { STORY, STORY_CLASSICAL } from "./revise-mock";
 
@@ -279,7 +280,9 @@ test("the find bar keeps clear of the docked AI panel", async ({ page }) => {
   await settled(bar);
   const panelBox = (await panel.boundingBox())!;
   const barBox = (await bar.boundingBox())!;
-  expect(Math.round(panelBox.x - (barBox.x + barBox.width))).toBe(24);
+  expect(Math.round(panelBox.x - (barBox.x + barBox.width))).toBe(
+    Math.round(24 * (await chromeScale(page))),
+  );
   // Told to the bar itself: on the app's shell, the whole window would inherit
   // it and restyle every element whenever it changed.
   expect(

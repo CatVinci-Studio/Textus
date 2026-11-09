@@ -82,7 +82,7 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    expect(screen.getByTitle("已记住：引号用「」。（项目）")).toBeVisible();
+    expect(screen.getByTitle("已记住：引号用「」。（文件夹）")).toBeVisible();
     expect(screen.getByRole("button", { name: "撤销" })).toBeVisible();
     expect(screen.getByRole("button", { name: "改为全局" })).toBeVisible();
   });
@@ -135,7 +135,7 @@ describe("MemoryChip", () => {
         labels={labels}
       />,
     );
-    expect(screen.getByTitle("已忘记：引号用「」。（项目）")).toBeVisible();
+    expect(screen.getByTitle("已忘记：引号用「」。（文件夹）")).toBeVisible();
     // Nowhere to move what is no longer kept.
     expect(screen.queryByRole("button", { name: "改为全局" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "撤销" }));

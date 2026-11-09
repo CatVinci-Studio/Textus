@@ -5,7 +5,12 @@
  * to read like ours at the tree's size.
  */
 import type { ReactNode } from "react";
-import { GenericFileIcon, ImageFileIcon, MarkdownFileIcon } from "./icons";
+import {
+  GenericFileIcon,
+  iconSize,
+  ImageFileIcon,
+  MarkdownFileIcon,
+} from "./icons";
 
 type IconProps = { className?: string };
 
@@ -206,13 +211,15 @@ const KIND_OF = new Map(
   Object.entries(KINDS).flatMap(([kind, exts]) => exts.map((e) => [e, kind])),
 );
 
-function lucide(shape: ReactNode) {
-  return function LucideFileIcon({ className }: IconProps) {
+/** A Lucide shape drawn as one of ours: `size` px, thinned stroke. */
+export function lucideIcon(shape: ReactNode, size = 15) {
+  return function LucideIcon({ className }: IconProps) {
     return (
       <svg
         className={className}
-        width="15"
-        height="15"
+        width={size}
+        height={size}
+        style={iconSize(size, size)}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -229,7 +236,9 @@ function lucide(shape: ReactNode) {
 const ICONS: Record<string, (props: IconProps) => ReactNode> = {
   markdown: MarkdownFileIcon,
   image: ImageFileIcon,
-  ...Object.fromEntries(Object.entries(SHAPES).map(([k, s]) => [k, lucide(s)])),
+  ...Object.fromEntries(
+    Object.entries(SHAPES).map(([k, s]) => [k, lucideIcon(s)]),
+  ),
 };
 
 /** The kind of file a name is, by its extension; null for one we don't

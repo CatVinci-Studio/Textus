@@ -24,7 +24,7 @@
   .app-shell:not(:has(.window-menu-bar)):has(
     .main-pane > .tab-bar:not(.tab-bar-inner)
   ) {
-  --ui-frame: color-mix(in srgb, var(--ui-text) 4%, var(--ui-subtle));
+  --ui-frame: var(--ui-frame-sunk);
   --ui-frame-fill: var(--ui-frame);
 }
 

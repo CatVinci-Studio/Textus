@@ -1313,9 +1313,9 @@ test("a shift-click in the page's margin extends the selection there", async ({
   await page.keyboard.down("Shift");
   await page.mouse.click(scroller.x + 12, third.y + third.height / 2);
   await page.keyboard.up("Shift");
-  expect(
-    await page.evaluate(() => window.getSelection()?.toString() ?? ""),
-  ).toContain("Second line.");
+  await expect
+    .poll(() => page.evaluate(() => window.getSelection()?.toString() ?? ""))
+    .toContain("Second line.");
 });
 
 test("source mode edits as plain text with colours: Enter continues a list, nothing else is added", async ({

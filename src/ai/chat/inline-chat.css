@@ -543,6 +543,31 @@
   margin-left: auto;
 }
 
+/* Send says its name; in a field too narrow for the row (the detached
+   window at its narrowest, a large interface size) only its arrow. */
+.inline-chat-send-icon {
+  display: none;
+}
+
+:is(.agent-panel-body, .chat-window-body) .inline-chat-field {
+  container-type: inline-size;
+}
+
+:root[data-early-containers]
+  :is(.agent-panel-body, .chat-window-body)
+  .inline-chat-field {
+  container-type: normal;
+}
+
+@container (max-width: 22em) {
+  .inline-chat-send-icon {
+    display: block;
+  }
+  .inline-chat-send-label {
+    display: none;
+  }
+}
+
 .inline-chat-messages {
   padding: 8px 8px;
   max-height: 280px;

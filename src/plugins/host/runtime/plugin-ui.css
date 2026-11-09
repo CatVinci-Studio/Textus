@@ -96,7 +96,9 @@ textarea {
   corner-shape: round;
   padding: var(--space-1) var(--space-2);
 }
-/* Text in lines is a container, not a control. */
+/* A field one types into - a line or several - is a rounded rectangle,
+   not a capsule (design-language.md 6): capsules are for controls. */
+input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"]),
 textarea {
   border-radius: var(--shape-s);
   corner-shape: superellipse(1.25);
@@ -197,7 +199,7 @@ pre {
 /* Each child of .motion-cascade arrives a --dur-stagger after the one before.
    The first twenty are spaced; any after come with the twentieth. */
 .motion-cascade > * {
-  animation: motion-enter var(--dur-medium) var(--ease-out) backwards;
+  animation: motion-enter var(--dur-base) var(--ease-out) backwards;
 }
 .motion-cascade > :nth-child(2) {
   animation-delay: calc(var(--dur-stagger) * 1);

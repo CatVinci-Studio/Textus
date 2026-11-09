@@ -28,6 +28,7 @@ import {
 } from "../utils/events";
 import { pressKeepingFocus } from "../ui/tap";
 import { keyboardUp } from "./keyboard";
+import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import "./KeyboardToolbar.css";
 
 /**
@@ -37,50 +38,6 @@ import "./KeyboardToolbar.css";
  */
 const send = (event: string, detail?: string) =>
   window.dispatchEvent(new CustomEvent(event, { detail }));
-
-/** What the caret sits in, read off the editor's DOM. */
-interface CaretBlock {
-  heading: number;
-  bulletList: boolean;
-  orderedList: boolean;
-  quote: boolean;
-  table: boolean;
-  /** A tapped image and its CSS width; null for auto. */
-  image: { width: string | null } | null;
-}
-const NO_BLOCK: CaretBlock = {
-  heading: 0,
-  bulletList: false,
-  orderedList: false,
-  quote: false,
-  table: false,
-  image: null,
-};
-
-function caretBlock(): CaretBlock {
-  const editor = document.activeElement?.closest(".milkdown .ProseMirror");
-  // ProseMirror marks the node view of a node selection; the DOM selection
-  // only brackets it.
-  const image = editor?.querySelector<HTMLElement>(
-    ".image-view.ProseMirror-selectednode",
-  );
-  if (image) {
-    return { ...NO_BLOCK, image: { width: image.style.width || null } };
-  }
-  const node = document.getSelection()?.anchorNode;
-  const el = node instanceof Element ? node : node?.parentElement;
-  if (!el?.closest(".milkdown .ProseMirror")) return NO_BLOCK;
-  const heading = el.closest("h1, h2, h3, h4, h5, h6");
-  const list = el.closest("ul, ol");
-  return {
-    heading: heading ? Number(heading.tagName.slice(1)) : 0,
-    bulletList: list?.tagName === "UL",
-    orderedList: list?.tagName === "OL",
-    quote: !!el.closest("blockquote"),
-    table: !!el.closest("table"),
-    image: null,
-  };
-}
 
 const IMAGE_WIDTHS = [30, 50, 70, 100] as const;
 

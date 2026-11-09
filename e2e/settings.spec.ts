@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, openPhone, PHONE } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  openPhone,
+  PHONE,
+  chromeScale,
+} from "./helpers";
 
 // The Settings panel.
 
@@ -280,11 +287,17 @@ test.describe("desktop", () => {
     await expect(bar).toHaveCSS("backdrop-filter", "none");
     const layers = page.locator(".window-bar-glass > i");
     await expect(layers).toHaveCount(3);
+    const scale = await chromeScale(page);
     expect(
       await layers.evaluateAll((all) =>
         all.map((el) => getComputedStyle(el).backdropFilter),
       ),
-    ).toEqual(["blur(4px)", "blur(10px)", "saturate(1.8) blur(20px)"]);
+    ).toEqual(
+      [4, 10, 20].map((px, i) => {
+        const blur = `blur(${+(px * scale).toFixed(3)}px)`;
+        return i === 2 ? `saturate(1.8) ${blur}` : blur;
+      }),
+    );
     await expect(page.locator(".window-bar-glass")).toHaveCSS(
       "pointer-events",
       "none",

@@ -140,6 +140,7 @@ export function useWindowWiring({
     sourceMode: !!activeTab.sourceMode && !activeTab.splitView,
     splitView: !!activeTab.sourceMode && !!activeTab.splitView,
     typewriter: settings.typewriterMode,
+    formatBar: settings.formatBar,
     zen: docs.zenMode,
     readOnly: tabReadOnly(activeTab),
     folderOpen: openFolder.folder !== null,
@@ -159,6 +160,7 @@ export function useWindowWiring({
     onOpenSettings: shell.settingsOpening.openSettings,
     onCheckUpdates: shell.settingsOpening.openUpdates,
     onOpenPluginSettings: shell.settingsOpening.openPluginSettings,
+    onToggleFormatBar: () => setSettings({ formatBar: !settings.formatBar }),
     onToggleTypewriter: () =>
       setSettings({ typewriterMode: !settings.typewriterMode }),
     onToggleSidebar: panels.toggleSidebar,

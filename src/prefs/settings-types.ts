@@ -152,6 +152,8 @@ export interface Settings {
   proxyHost: string;
   proxyPort: string;
   typewriterMode: boolean;
+  /** The formatting row under the title bar. */
+  formatBar: boolean;
   /** The view every document is in, in every window. */
   viewMode: ViewMode;
   /** Zen mode in every window. */
@@ -310,6 +312,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyHost: "",
   proxyPort: "",
   typewriterMode: false,
+  formatBar: false,
   viewMode: "rich",
   zenMode: false,
   contentWidth: "auto",

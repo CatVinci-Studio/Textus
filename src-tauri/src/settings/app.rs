@@ -203,8 +203,8 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color> {
     match settings.get("theme").and_then(Value::as_str) {
-        Some("dark") => Some(tauri::window::Color(0x1b, 0x1e, 0x24, 0xff)),
-        Some("light") => Some(tauri::window::Color(0xff, 0xff, 0xff, 0xff)),
+        Some("dark") => Some(tauri::window::Color(0x1f, 0x1e, 0x1c, 0xff)),
+        Some("light") => Some(tauri::window::Color(0xfb, 0xf9, 0xf4, 0xff)),
         _ => None,
     }
 }

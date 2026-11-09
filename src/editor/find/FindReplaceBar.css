@@ -60,8 +60,7 @@
   min-width: 0;
   padding: 2px 4px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
 }
 
 .find-replace-input {
@@ -69,8 +68,7 @@
   min-width: 0;
   padding: 4px 2px;
   border: none;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--ui-text);
   font: inherit;

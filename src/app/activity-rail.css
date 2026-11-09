@@ -10,6 +10,15 @@
   --rail-width: 44px;
 }
 
+/* On a whole pixel, so the document beside it starts on one too: WebKitGTK
+   blurs a focused text field's layer at x.5 (source-editor.css). */
+@supports (width: round(down, 1px, 1px)) {
+  :root:not(.zen, [data-window-chrome="mobile"])
+    .app-shell:has(> .activity-rail) {
+    --rail-width: round(44px, 1px);
+  }
+}
+
 .activity-rail {
   position: absolute;
   top: var(--window-bar-height);
@@ -65,11 +74,6 @@
 .activity-rail-item[aria-pressed="true"] {
   background: var(--ui-selected);
   color: var(--ui-accent);
-}
-
-.activity-rail-item svg {
-  width: 20px;
-  height: 20px;
 }
 
 /* With the rail holding the tabs, the sidebar's header is only the bar's

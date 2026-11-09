@@ -7,11 +7,11 @@
   --dur-instant: 80ms;
   /* Colour changes, chevrons, small fades, every exit of a small popover. */
   --dur-fast: 120ms;
-  /* Menus, selects, popovers, toasts, dialogs in, cards arriving. */
+  /* Menus, selects, popovers, toasts, dialogs in, cards arriving; small
+     springs - a switch's thumb, a segmented control, a tab settling. */
   --dur-base: 200ms;
-  /* Small springs - a switch's thumb, a segmented control, the phone's
-     menu and alert - and a phone sheet on its way back down. */
-  --dur-medium: 250ms;
+  /* An older step, now the base one: kept for plugins that name it. */
+  --dur-medium: var(--dur-base);
   /* Panels (AI panel, sidebar), Settings in, zen chrome. */
   --dur-slow: 320ms;
   /* Phone sheets and full-screen pages on a spring; slow fades. */
@@ -364,7 +364,6 @@
     --motion-travel-fade: 0;
     --ease-spring: var(--ease-standard);
     --ease-spring-bouncy: var(--ease-standard);
-    --dur-medium: 150ms;
     --dur-slow: 150ms;
     --dur-sheet: 150ms;
   }

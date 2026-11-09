@@ -1,6 +1,6 @@
 # Guide des fonctions IA de Textus
 
-Textus intègre une IA conçue pour l'écriture, Textus AI : complétion, vérification grammaticale et conversations qui lisent et révisent votre document. Ce guide explique comment connecter un service, présente les fonctions IA et montre comment faire de Textus AI votre propre assistant d'écriture grâce au dossier du projet, au profil de style, à la bibliothèque, aux instructions d'écriture et aux compétences.
+Textus intègre une IA conçue pour l'écriture, Textus AI : complétion, vérification grammaticale et conversations qui lisent et révisent votre document. Ce guide explique comment connecter un service, présente les fonctions IA et montre comment faire de Textus AI votre propre assistant d'écriture grâce au dossier, au profil de style, à la bibliothèque, aux instructions d'écriture et aux compétences.
 
 ## Connecter un service
 
@@ -25,7 +25,7 @@ Pendant que vous tapez, une suite grisée apparaît au curseur : appuyez sur <k
 
 Pour en demander une explicitement, utilisez <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> ou le menu contextuel (le curseur doit se trouver à la fin d'un paragraphe) : vous obtenez une suite plus longue, avec jusqu'à trois variantes, que <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> font défiler.
 
-Sous **Réglages > Textus AI > Aide à l'écriture**, vous pouvez régler le **Ton de la complétion** (Adapté au document / Soutenu / Décontracté / Académique / Concis). Lorsque le document appartient à un projet doté d'un profil de style ou d'une bibliothèque (voir **Personnaliser Textus AI** plus bas), la complétion en tient compte aussi.
+Sous **Réglages > Textus AI > Aide à l'écriture**, vous pouvez régler le **Ton de la complétion** (Adapté au document / Soutenu / Décontracté / Académique / Concis). Lorsque le document appartient à un dossier doté d'un profil de style ou d'une bibliothèque (voir **Personnaliser Textus AI** plus bas), la complétion en tient compte aussi.
 
 ### 2. Vérification grammaticale
 
@@ -37,7 +37,7 @@ La conversation complète se trouve dans un panneau à droite de l'éditeur. Ouv
 
 - **Une conversation par document** : chaque onglet a sa propre conversation, et changer d'onglet change aussi celle du panneau. **Nouvelle conversation**, dans l'en-tête du panneau, repart de zéro (s'il reste des modifications en attente, une confirmation est d'abord demandée).
 - **Modes** : la zone de saisie en propose deux. **Écrire** travaille sur le document : il rédige du texte nouveau (une suite, un paragraphe ou une section) et modifie le texte existant (réécrire, traduire, couper). Avec du texte sélectionné, un changement de ce texte le remplace, et du texte nouveau va après lui. **Relire** répond, discute et laisse des commentaires sans rien modifier. Chaque changement d'Écrire est une proposition que vous acceptez ou refusez. Le panneau s'ouvre dans le mode choisi sous **Réglages > Textus AI > Discussion avec Textus AI > Mode par défaut**.
-- **Mentions @** : tapez `@` dans la zone de saisie pour choisir un fichier texte du dossier du projet ; il est joint au message.
+- **Mentions @** : tapez `@` dans la zone de saisie pour choisir un fichier texte du dossier ; il est joint au message.
 - **Pièces jointes** : le bouton **+**, à gauche de la zone de saisie, joint au message un ou plusieurs fichiers : un PDF, un document Word, une présentation PowerPoint, une feuille de calcul, un livre EPUB, un fichier RTF ou HTML, n'importe quel fichier texte ou de code, une archive zip ou une image (PNG, JPEG, GIF, WebP, BMP, TIFF et, sur Mac, HEIC et AVIF). Chaque fichier est copié dans le dossier temporaire propre à la conversation, jamais dans vos dossiers, où Textus AI peut le relire en entier. Les documents sont convertis en texte sur votre appareil et voyagent dans le message ; un long document n'est envoyé qu'en partie, sa pastille affiche « (tronqué) » et Textus AI lit le reste quand il en a besoin. Une archive zip y est décompressée et ses fichiers sont listés. Les images sont converties dans un format que tout service sait lire, réduites quand elles sont très grandes, puis envoyées telles quelles aux fournisseurs capables de les voir (les autres le signalent d'emblée au lieu de les ignorer en silence).
 - **Modèle** : le bouton parmi les commandes de la zone de saisie indique le modèle qui recevra votre prochain message ; cliquez dessus pour passer à un autre modèle de n'importe quel service configuré dans **Réglages > Textus AI**. Avec un seul modèle configuré, il affiche simplement son nom.
 - **Recherche web** : le bouton loupe à côté du champ de saisie permet à Textus AI de chercher sur le web quand une demande l'exige ; voir **7. Recherche web** plus bas.
@@ -91,24 +91,24 @@ Textus AI apprend à vous connaître, vous et votre travail, à partir de quelqu
 
 | Concept | Ce que c'est | Où il se trouve |
 | --- | --- | --- |
-| **Dossier du projet** | Le dossier où Textus AI travaille et qu'il peut lire | Le dossier que vous ouvrez dans la barre latérale, ou un dossier que vous choisissez |
+| **Dossier** | Le dossier où Textus AI travaille et qu'il peut lire | Le dossier que vous ouvrez dans la barre latérale, ou un dossier que vous choisissez |
 | **Profil de style** | Votre façon d'écrire | `.textus/style.md` |
 | **Bibliothèque** | Les faits sur les personnes, les lieux et les termes | `.textus/library/` |
-| **Instructions d'écriture** | Des règles permanentes pour chaque conversation | `agent.md`, global et par projet |
-| **Mémoire** | Ce que Textus AI retient de vos conversations | `memory/` dans le dossier de configuration globale, et à côté `projects/<projet>/memory/` pour chaque projet |
-| **Compétences** | Des instructions réutilisables, appelées avec `/nom` | `skills/`, global et par projet |
+| **Instructions d'écriture** | Des règles permanentes pour chaque conversation | `agent.md`, global et par dossier |
+| **Mémoire** | Ce que Textus AI retient de vos conversations | `memory/` dans le dossier de configuration globale, et à côté `projects/<dossier>/memory/` pour chaque dossier |
+| **Compétences** | Des instructions réutilisables, appelées avec `/nom` | `skills/`, global et par dossier |
 | **Dossier de configuration globale** | Ce qui s'applique à tous les documents | Le dossier des réglages de l'application |
 
-Ci-dessous, « conversations » désigne le panneau IA et Question rapide. Voici un projet complet en un coup d'œil :
+Ci-dessous, « conversations » désigne le panneau IA et Question rapide. Voici un dossier complet en un coup d'œil :
 
 ```
-mon-roman/               ← le dossier du projet
+mon-roman/               ← le dossier
 ├── chapitre-1.md        ← le document que vous modifiez
 ├── notes/
 │   └── chronologie.md   ← documentation que Textus AI peut lire
-└── .textus/              ← les réglages propres au projet
+└── .textus/              ← les réglages propres au dossier
     ├── style.md         ← le profil de style
-    ├── agent.md         ← les instructions d'écriture de ce projet
+    ├── agent.md         ← les instructions d'écriture de ce dossier
     ├── library/
     │   ├── lin-wan.md   ← une fiche par personnage, lieu ou terme
     │   └── harbour-city.md
@@ -116,28 +116,28 @@ mon-roman/               ← le dossier du projet
         └── peaufiner.md ← une compétence par fichier
 ```
 
-Le menu du projet crée `.textus/` et ses fichiers pour vous la première fois que vous les demandez ; seules les compétences du projet s'ajoutent à la main. Dans tous ces fichiers, le texte placé dans des commentaires `<!-- -->` est une note pour vous-même et n'est jamais envoyé.
+Le menu du dossier crée `.textus/` et ses fichiers pour vous la première fois que vous les demandez ; seules les compétences du dossier s'ajoutent à la main. Dans tous ces fichiers, le texte placé dans des commentaires `<!-- -->` est une note pour vous-même et n'est jamais envoyé.
 
-### Le dossier du projet
+### Le dossier
 
-**Le dossier du projet est le dossier dans lequel Textus AI travaille.** C'est le dossier que vous ouvrez dans la barre latérale (**Fichier > Ouvrir un projet…**), ou un dossier que vous choisissez ; à défaut, le dossier le plus proche au-dessus du document qui contient un dossier `.textus/`, si bien qu'un chapitre dans `novel/part-1/` appartient à `novel/`. Un document que vous ouvrez seul n'a pas de dossier du projet : Textus AI ne lit alors que le document et les fichiers que vous joignez, si bien qu'un fichier dans Téléchargements ou sur le Bureau ne lui ouvre jamais tout ce dossier.
+**Le dossier est celui dans lequel Textus AI travaille.** C'est le dossier que vous ouvrez dans la barre latérale (**Fichier > Ouvrir un dossier…**), ou un dossier que vous choisissez ; à défaut, le dossier le plus proche au-dessus du document qui contient un dossier `.textus/`, si bien qu'un chapitre dans `novel/part-1/` appartient à `novel/`. Un document que vous ouvrez seul n'a pas de dossier : Textus AI ne lit alors que le document et les fichiers que vous joignez, si bien qu'un fichier dans Téléchargements ou sur le Bureau ne lui ouvre jamais tout ce dossier.
 
 - Textus AI peut lister, trouver par leur nom, lire et fouiller les fichiers qu'il contient pour retrouver les scènes précédentes d'un personnage, un terme ou vos notes : les fichiers texte (Markdown, texte brut et formats similaires) jusqu'à 16 Mo, qu'il lit par parties quand ils sont longs, et le texte des fichiers PDF, Word, PowerPoint, EPUB, RTF et des feuilles de calcul. Avec un fournisseur capable de voir les images, il regarde aussi les images PNG, JPEG, GIF et WebP du dossier, jusqu'à 6 Mo chacune. Les fichiers et dossiers cachés, ce qu'un fichier `.gitignore` ou `.ignore` exclut (comme dans la recherche de fichiers de la barre latérale), les dossiers de compilation et de dépendances (comme `node_modules`) et les PDF numérisés sans couche de texte sont ignorés.
 - Taper `@` dans la zone de saisie de la discussion joint l'un de ses fichiers à votre message.
-- Son dossier `.textus/` contient le profil de style, la bibliothèque, les instructions d'écriture et les compétences du projet.
+- Son dossier `.textus/` contient le profil de style, la bibliothèque, les instructions d'écriture et les compétences du dossier.
 
-La barre située sous l'en-tête du panneau IA affiche le nom du dossier du projet ; cliquez dessus pour ouvrir le **menu du projet**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier du projet…** dans ce menu (ou **Réglages > Textus AI > Dossier du projet**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **N'utiliser aucun dossier de projet**.
+La barre située sous l'en-tête du panneau IA affiche le nom du dossier ; cliquez dessus pour ouvrir le **menu du dossier**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier…** dans ce menu (ou **Réglages > Textus AI > Dossier**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **N'utiliser aucun dossier**.
 
 > [!TIP]
-> Votre brouillon est dans `thèse/brouillons/` et vos notes d'entretien dans `thèse/recherche/` ? Choisissez `thèse/` comme dossier du projet : Textus AI pourra lire `recherche/entretiens.md` pendant que vous travaillez sur `brouillons/chapitre-2.md`.
+> Votre brouillon est dans `thèse/brouillons/` et vos notes d'entretien dans `thèse/recherche/` ? Choisissez `thèse/` comme dossier : Textus AI pourra lire `recherche/entretiens.md` pendant que vous travaillez sur `brouillons/chapitre-2.md`.
 
-Tout ce que Textus AI lit doit se trouver dans le dossier du projet : `..`, les chemins absolus et les liens qui pointent vers l'extérieur sont refusés. Sans dossier ouvert ou choisi, il n'y a pas de dossier du projet, et un dossier trop vaste (votre dossier personnel ou un disque entier) est refusé. Ce que Textus AI produit en travaillant (notes de recherche, brouillons en cours) va dans les dossiers propres à Textus ou dans le dossier temporaire du système, pas dans le vôtre.
+Tout ce que Textus AI lit doit se trouver dans le dossier : `..`, les chemins absolus et les liens qui pointent vers l'extérieur sont refusés. Sans dossier ouvert ou choisi, il n'y a pas de dossier de travail, et un dossier trop vaste (votre dossier personnel ou un disque entier) est refusé. Ce que Textus AI produit en travaillant (notes de recherche, brouillons en cours) va dans les dossiers propres à Textus ou dans le dossier temporaire du système, pas dans le vôtre.
 
 ### Le profil de style — « Apprendre mon style »
 
-**Le profil de style décrit votre façon d'écrire**, pour que les suites et les modifications vous ressemblent : voix et ton, rythme des phrases, choix des mots, ponctuation, ce que vous ne faites jamais. Textus AI le suit dans les conversations, et la complétion le suit pendant que vous tapez, dans tous les documents du projet. C'est le fichier `.textus/style.md`.
+**Le profil de style décrit votre façon d'écrire**, pour que les suites et les modifications vous ressemblent : voix et ton, rythme des phrases, choix des mots, ponctuation, ce que vous ne faites jamais. Textus AI le suit dans les conversations, et la complétion le suit pendant que vous tapez, dans tous les documents du dossier. C'est le fichier `.textus/style.md`.
 
-Il y a deux façons d'en créer un, toutes deux dans le menu du projet :
+Il y a deux façons d'en créer un, toutes deux dans le menu du dossier :
 
 - **Apprendre mon style à partir d'exemples…** : choisissez quelques fichiers que vous avez écrits (jusqu'à huit). Textus AI les étudie et rédige un profil (voix et ton, phrases et rythme, choix des mots, ponctuation, structure, ce que vous ne faites jamais, et quelques courtes citations en guise d'exemples), puis l'ouvre dans un nouvel onglet. Lisez-le, corrigez-le, complétez-le : il vous appartient. Un nouvel apprentissage conserve le profil précédent sous le nom `style.previous.md`.
 - **Créer un profil de style** : partez d'un plan vide et rédigez-le vous-même.
@@ -159,7 +159,7 @@ Des points concrets et vérifiables fonctionnent mieux que des adjectifs : « 
 
 ### La bibliothèque
 
-**La bibliothèque contient les faits qui doivent rester cohérents** : un fichier Markdown par personnage, lieu ou terme, dans `.textus/library/`. **Nouvelle fiche de bibliothèque…**, dans le menu du projet, demande un nom et ouvre la nouvelle fiche ; la pastille **Bibliothèque** indique combien il y en a.
+**La bibliothèque contient les faits qui doivent rester cohérents** : un fichier Markdown par personnage, lieu ou terme, dans `.textus/library/`. **Nouvelle fiche de bibliothèque…**, dans le menu du dossier, demande un nom et ouvre la nouvelle fiche ; la pastille **Bibliothèque** indique combien il y en a.
 
 ```markdown
 ---
@@ -172,16 +172,16 @@ Protagoniste, 32 ans, professeure de chinois dans un collège de Harbour City.
 Gauchère. Ne parle jamais de son frère.
 ```
 
-Vous n'avez pas à joindre les fiches vous-même. Une fiche avec `include: detected` (la valeur par défaut) est transmise à Textus AI dès que son nom ou l'un de ses alias apparaît : dans votre message ou dans le document pendant une conversation, dans le texte autour du curseur pendant la complétion. `always` l'envoie avec chaque requête ; `never` l'écarte. Les fiches qui ne sont pas mentionnées ne coûtent rien : la bibliothèque peut grandir autant que votre projet l'exige.
+Vous n'avez pas à joindre les fiches vous-même. Une fiche avec `include: detected` (la valeur par défaut) est transmise à Textus AI dès que son nom ou l'un de ses alias apparaît : dans votre message ou dans le document pendant une conversation, dans le texte autour du curseur pendant la complétion. `always` l'envoie avec chaque requête ; `never` l'écarte. Les fiches qui ne sont pas mentionnées ne coûtent rien : la bibliothèque peut grandir autant que votre dossier l'exige.
 
 ### Instructions d'écriture (agent.md)
 
-**Les instructions d'écriture sont des règles permanentes envoyées avec chaque conversation** : ce qu'est le projet, dans quelle langue répondre, l'orthographe et les termes, ce que Textus AI doit toujours faire ou ne jamais faire. Elles se trouvent dans des fichiers nommés `agent.md`, à deux niveaux :
+**Les instructions d'écriture sont des règles permanentes envoyées avec chaque conversation** : ce qu'est le dossier, dans quelle langue répondre, l'orthographe et les termes, ce que Textus AI doit toujours faire ou ne jamais faire. Elles se trouvent dans des fichiers nommés `agent.md`, à deux niveaux :
 
 - **Global**, pour tous les documents : **Réglages > Textus AI > Instructions d'écriture (agent.md) > Modifier agent.md**.
-- **Projet**, pour les documents d'un projet : `.textus/agent.md`, que l'on ouvre avec **Modifier les instructions d'écriture du projet** dans le menu du projet.
+- **Dossier**, pour les documents d'un dossier : `.textus/agent.md`, que l'on ouvre avec **Modifier les instructions d'écriture du dossier** dans le menu du dossier.
 
-Les deux s'ouvrent dans un onglet et commencent par un court mode d'emploi en commentaires. Quand les deux existent, Textus AI reçoit les deux (d'abord les instructions globales, puis celles du projet) et, en cas de contradiction, celles du projet l'emportent.
+Les deux s'ouvrent dans un onglet et commencent par un court mode d'emploi en commentaires. Quand les deux existent, Textus AI reçoit les deux (d'abord les instructions globales, puis celles du dossier) et, en cas de contradiction, celles du dossier l'emportent.
 
 ```markdown
 Le livre est un roman policier situé dans le Shanghai des années 1930, raconté par Lin Wan à la première personne.
@@ -193,12 +193,12 @@ Les instructions d'écriture ne s'appliquent qu'aux conversations. La complétio
 
 ### Ce que Textus AI retient
 
-**Textus AI retient ce que vous lui demandez et votre façon d'écrire**, sans que vous ayez à écrire de fichier. Quand vous lui dites une chose qui doit valoir au-delà d'une seule demande (« toujours l'orthographe rectifiée », « pas de tiret cadratin », une correction que vous avez dû faire deux fois) ou un fait sur votre œuvre, comme l'identité d'un personnage, il la retient et la suit dans les conversations suivantes. À chaque fois, une ligne sous sa réponse indique ce qu'il a retenu et où : **Annuler** le retire, et **Rendre global** ou **Passer au projet** le déplace.
+**Textus AI retient ce que vous lui demandez et votre façon d'écrire**, sans que vous ayez à écrire de fichier. Quand vous lui dites une chose qui doit valoir au-delà d'une seule demande (« toujours l'orthographe rectifiée », « pas de tiret cadratin », une correction que vous avez dû faire deux fois) ou un fait sur votre œuvre, comme l'identité d'un personnage, il la retient et la suit dans les conversations suivantes. À chaque fois, une ligne sous sa réponse indique ce qu'il a retenu et où : **Annuler** le retire, et **Rendre global** ou **Pour ce dossier seulement** le déplace.
 
-- **Ce projet** : ce qui concerne cette œuvre, dans `projects/<projet>/memory/` du dossier de configuration globale (Textus le garde là, pas dans votre dossier) ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
-- **Pour tous les projets** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier du projet, tout va ici.
+- **Ce dossier** : ce qui concerne cette œuvre, dans `projects/<dossier>/memory/` du dossier de configuration globale (Textus le garde là, pas dans votre dossier) ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
+- **Pour tous les dossiers** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier, tout va ici.
 
-L'onglet **Projet** du panneau IA liste le tout sous **Mémoire**, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. De temps en temps, Textus AI range sa mémoire : il fusionne les souvenirs qui disent la même chose et abandonne une règle qu'une plus récente a rendue caduque ; ce qu'il a abandonné se trouve sous **Oublié récemment**, d'où vous pouvez le récupérer. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et l'onglet Projet le signale. **Réglages > Textus AI > Retenir automatiquement** désactive cette fonction.
+L'onglet **Dossier** du panneau IA liste le tout sous **Mémoire**, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. De temps en temps, Textus AI range sa mémoire : il fusionne les souvenirs qui disent la même chose et abandonne une règle qu'une plus récente a rendue caduque ; ce qu'il a abandonné se trouve sous **Oublié récemment**, d'où vous pouvez le récupérer. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et l'onglet Dossier le signale. **Réglages > Textus AI > Retenir automatiquement** désactive cette fonction.
 
 **Il apprend aussi de vos choix de révision.** Quand vous refusez plusieurs fois le même genre de modification — des 「」 changés en “”, un mot remplacé par un autre, des phrases coupées, une virgule d'Oxford ajoutée —, Textus AI propose, une fois la relecture terminée, de le retenir comme exigence : **Retenir** l'enregistre sous **Mémoire**, **Pas maintenant** attend d'en voir davantage et **Ne plus demander** cesse de poser la question pour ce genre. Il ne demande qu'une fois par jour au plus, et rien n'est enregistré sans votre clic, y compris quand Retenir automatiquement est désactivé. Ce qu'il compte n'est qu'une courte note des genres de modification acceptés ou refusés, gardée sur cet ordinateur à côté de vos souvenirs et jamais envoyée.
 
@@ -222,9 +222,9 @@ Il y a deux façons d'utiliser une compétence :
 1. **L'appeler** : tapez `/` dans la zone de saisie de la discussion et choisissez-la dans le menu, ou tapez son nom suivi de votre demande, par exemple `/peaufiner reprends ce passage`.
 2. **Demander simplement** (fournisseurs compatibles avec les appels d'outils uniquement) : Textus AI connaît le nom et la description de chaque compétence ; quand votre demande correspond à l'une d'elles, il charge ses instructions complètes et les suit de lui-même.
 
-Quand ce que vous avez demandé était une démarche à vous, des étapes que vous voudrez refaire, Textus AI propose sous sa réponse de la garder comme compétence, pour tous les documents ou pour ce projet seulement. Rien n'est enregistré si vous ne le choisissez pas.
+Quand ce que vous avez demandé était une démarche à vous, des étapes que vous voudrez refaire, Textus AI propose sous sa réponse de la garder comme compétence, pour tous les documents ou pour ce dossier seulement. Rien n'est enregistré si vous ne le choisissez pas.
 
-Les compétences existent aux deux mêmes niveaux que les instructions d'écriture : les compétences globales dans le dossier `skills/` du dossier de configuration globale (**Réglages > Extensions > Compétences > … > Importer une compétence…** y copie un fichier de compétence), les compétences du projet dans `.textus/skills/` (un dossier caché : dans le Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> l'affiche). Une compétence du projet qui porte le même nom qu'une compétence globale la remplace.
+Les compétences existent aux deux mêmes niveaux que les instructions d'écriture : les compétences globales dans le dossier `skills/` du dossier de configuration globale (**Réglages > Extensions > Compétences > … > Importer une compétence…** y copie un fichier de compétence), les compétences du dossier dans `.textus/skills/` (un dossier caché : dans le Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> l'affiche). Une compétence du dossier qui porte le même nom qu'une compétence globale la remplace.
 
 ### Compétences intégrées
 
@@ -236,7 +236,7 @@ Les compétences intégrées sont dans **Réglages > Textus AI > Compétences in
 
 **Réglages > Textus AI > Aide à l'écriture > Conventions d'écriture** détermine les règles de ponctuation, d'espacement et d'écriture des nombres que suivent Textus AI et la vérification grammaticale. **Automatique** applique la norme nationale quand la langue en a une (GB/T pour le chinois simplifié, JTF pour le japonais, par exemple) ; sinon, il suit l'usage le plus fréquent dans votre document et ne signale que les incohérences. Choisissez un profil, par exemple **France** ou **Canada** pour le français, et les documents dans cette langue s'y conforment.
 
-Un projet peut choisir le sien : ajoutez une ligne `conventions:` entre les deux lignes `---` en tête de son profil de style (`.textus/style.md`). Pour les documents de ce projet, elle l'emporte sur le réglage.
+Un dossier peut choisir le sien : ajoutez une ligne `conventions:` entre les deux lignes `---` en tête de son profil de style (`.textus/style.md`). Pour les documents de ce dossier, elle l'emporte sur le réglage.
 
 ```markdown
 ---
@@ -246,7 +246,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Le dossier de configuration globale
 
-**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un projet ; **Réglages > Textus AI > Dossier de configuration globale > Afficher** l'affiche.
+**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un dossier de travail ; **Réglages > Textus AI > Dossier de configuration globale > Afficher** l'affiche.
 
 ```
 agent/                ← le dossier de configuration globale
@@ -255,13 +255,13 @@ agent/                ← le dossier de configuration globale
     └── plan.md       ← une compétence globale
 ```
 
-Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ensemble de textes précis, et appartiennent donc à un projet.
+Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ensemble de textes précis, et appartiennent donc à un dossier.
 
 ### Ce qui s'applique, et quand
 
 | | Conversations | Complétion | Vérification grammaticale |
 | --- | :---: | :---: | :---: |
-| Fichiers du projet (lecture, recherche, `@`) | ✓ | | |
+| Fichiers du dossier (lecture, recherche, `@`) | ✓ | | |
 | Profil de style | ✓ | ✓ | |
 | Fiches de la bibliothèque mentionnées | ✓ | ✓ | |
 | Instructions d'écriture | ✓ | | |
@@ -269,8 +269,8 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 | Compétences | ✓ | | |
 | Ton de la complétion (réglages) | | ✓ | |
 
-- **D'abord le global, puis le projet.** Les instructions d'écriture des deux niveaux sont envoyées, celles du projet en dernier, et celles du projet l'emportent en cas de conflit. Une compétence du projet remplace une compétence globale du même nom.
-- **Un seul dossier du projet à la fois.** Seul son `.textus/` compte : si vous avez choisi un dossier du projet, un `.textus/` situé à côté du document n'est pas lu.
+- **D'abord le global, puis le dossier.** Les instructions d'écriture des deux niveaux sont envoyées, celles du dossier en dernier, et celles du dossier l'emportent en cas de conflit. Une compétence du dossier remplace une compétence globale du même nom.
+- **Un seul dossier à la fois.** Seul son `.textus/` compte : si vous avez choisi un dossier, un `.textus/` situé à côté du document n'est pas lu.
 - **Aucun redémarrage nécessaire.** Modifiez l'un de ces fichiers et la requête suivante utilise la nouvelle version (en une dizaine de secondes pour la complétion).
 
 ### Quel fichier pour quoi ?
@@ -279,7 +279,7 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ens
 - Qui est qui, et ce que désigne chaque terme → la **bibliothèque**.
 - Ce que Textus AI doit savoir ou toujours faire dans une conversation → les **instructions d'écriture**.
 - Une tâche que vous demandez encore et encore → une **compétence**.
-- Notes, recherches, chapitres précédents → des fichiers ordinaires dans le **dossier du projet** ; Textus AI les lit quand une demande le nécessite.
+- Notes, recherches, chapitres précédents → des fichiers ordinaires dans le **dossier** ; Textus AI les lit quand une demande le nécessite.
 
 ## Désactiver Textus AI
 
@@ -289,4 +289,4 @@ Tant qu'elle est désactivée, rien n'est envoyé à aucun service d'IA, dès l'
 
 ## À propos de la confidentialité
 
-Votre document, les fichiers joints ou mentionnés avec @, vos instructions d'écriture, le profil de style, les fiches de la bibliothèque mentionnées et les fichiers du projet que Textus AI lit sont envoyés au fournisseur choisi avec chaque requête ; **Apprendre mon style** envoie les exemples que vous choisissez. Avec la recherche web activée, les recherches partent vers votre fournisseur ou vers le service de recherche affiché dans les réglages, et les pages que lit Textus AI sont téléchargées depuis cet ordinateur. Désactivez une fonction dans les réglages si vous ne voulez pas de cet envoi.
+Votre document, les fichiers joints ou mentionnés avec @, vos instructions d'écriture, le profil de style, les fiches de la bibliothèque mentionnées et les fichiers du dossier que Textus AI lit sont envoyés au fournisseur choisi avec chaque requête ; **Apprendre mon style** envoie les exemples que vous choisissez. Avec la recherche web activée, les recherches partent vers votre fournisseur ou vers le service de recherche affiché dans les réglages, et les pages que lit Textus AI sont téléchargées depuis cet ordinateur. Désactivez une fonction dans les réglages si vous ne voulez pas de cet envoi.

@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { blockIds, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  blockIds,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  chromeScale,
+} from "./helpers";
 
 /**
  * A generate_image call shows its frame, in place and in shape, as soon as
@@ -225,5 +231,5 @@ test("while a picture is made, its frame on the chat's card has its shape", asyn
   await expect(card).toHaveCount(1);
   const small = (await card.boundingBox())!;
   expect(small.width / small.height).toBeCloseTo(16 / 9, 1);
-  expect(small.height).toBeCloseTo(120, 0);
+  expect(small.height).toBeCloseTo(120 * (await chromeScale(page)), 0);
 });

@@ -46,21 +46,21 @@ export default {
     "O parágrafo mudou durante a verificação. Tente de novo.",
   noticeGrammarNoIssues: "Nenhum problema encontrado.",
   projectTooBroad:
-    "Esta pasta é ampla demais para ser uma pasta de projeto (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
+    "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
   projectNoSamples: "Nenhum dos arquivos escolhidos pôde ser lido como texto.",
   projectNeedsSave:
-    "Salve este documento primeiro: a pasta dele se torna a pasta do projeto.",
+    "Salve este documento primeiro: a IA trabalha na pasta dele.",
   projectPicking: "Escolhendo uma pasta…",
   projectLearningStyle: "Aprendendo seu estilo com as amostras…",
   projectStyleLearned: "Perfil de estilo salvo. Revise e edite-o na nova aba.",
   projectOpening: "Abrindo…",
-  projectStyleTemplate: `# Perfil de estilo\n\n<!-- A ${AI_NAME} e o autocompletar seguem este perfil em todos os documentos deste projeto. Descreva como você escreve (voz, ritmo das frases, escolha de palavras, pontuação, o que você nunca faz) em pontos concretos (“frases curtas, raramente com mais de 15 palavras”) em vez de adjetivos. “Aprender meu estilo com amostras…”, no menu do projeto, faz um rascunho a partir dos seus próprios textos. Comentários como este nunca são enviados. -->\n\n## Voz e tom\n\n- \n\n## Frases e ritmo\n\n- \n\n## Escolha de palavras\n\n- \n\n## Nunca\n\n- \n`,
+  projectStyleTemplate: `# Perfil de estilo\n\n<!-- A ${AI_NAME} e o autocompletar seguem este perfil em todos os documentos desta pasta. Descreva como você escreve (voz, ritmo das frases, escolha de palavras, pontuação, o que você nunca faz) em pontos concretos (“frases curtas, raramente com mais de 15 palavras”) em vez de adjetivos. “Aprender meu estilo com amostras…”, no menu da pasta, faz um rascunho a partir dos seus próprios textos. Comentários como este nunca são enviados. -->\n\n## Voz e tom\n\n- \n\n## Frases e ritmo\n\n- \n\n## Escolha de palavras\n\n- \n\n## Nunca\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Fatos que a ${AI_NAME} deve manter coerentes sempre que {name} ou um nome alternativo aparecer. include: detected (quando mencionado; o padrão) | always (sempre) | never (nunca). Comentários como este nunca são enviados. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Instruções de escrita para este projeto.
+Instruções de escrita para esta pasta.
 
 Tudo o que estiver fora de comentários como este é enviado à
-${AI_NAME} em toda conversa sobre um documento deste projeto,
+${AI_NAME} em toda conversa sobre um documento desta pasta,
 depois das suas instruções de escrita globais (Ajustes > ${AI_NAME}).
 Quando houver divergência, vale este arquivo. Comentários nunca são
 enviados.
@@ -89,9 +89,9 @@ Vale a pena escrever aqui, por exemplo:
   Termos       Escreva “e-mail”, nunca “email”.
   Contexto     Escrevo reportagens longas de divulgação científica para o público geral.
 
-Instruções para um só projeto ficam no .textus/agent.md desse projeto
-(menu do projeto no painel de IA > Editar instruções de escrita do projeto).
-Os dois são enviados; quando divergem, vale o do projeto.
+Instruções para uma só pasta ficam no .textus/agent.md dessa pasta
+(menu da pasta no painel de IA > Editar instruções de escrita da pasta).
+Os dois são enviados; quando divergem, vale o da pasta.
 
 Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
 .md para cada; digite /nome em uma conversa para usar uma.
@@ -100,8 +100,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   projectOpenStyle: "Abrir perfil de estilo",
   projectStyleChip: "Estilo",
   projectLibraryChip: "Biblioteca {n}",
-  projectPickFolder: "Escolher pasta do projeto…",
-  projectNoFolder: "Não usar pasta de projeto",
+  projectPickFolder: "Escolher pasta…",
+  projectNoFolder: "Não usar nenhuma pasta",
   projectReveal: "Mostrar no gerenciador de arquivos",
   projectLearnStyle: "Aprender meu estilo com amostras…",
   projectImportReferences: "Importar referências…",
@@ -111,8 +111,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   projectReferencesImportedSkipped: `{n} arquivos adicionados a references/ para o ${AI_NAME} pesquisar; {skipped} deixados de fora (não são texto nem documentos, ou são grandes demais).`,
   projectCreateStyle: "Criar perfil de estilo",
   projectNewEntry: "Nova entrada na biblioteca…",
-  projectEditInstructions: "Editar instruções de escrita do projeto",
-  projectFolderTitle: "Pasta do projeto: {path}",
+  projectEditInstructions: "Editar instruções de escrita da pasta",
+  projectFolderTitle: "Pasta: {path}",
   projectEntryPlaceholder: "Nome de um personagem, lugar ou termo",
   projectEntryCreate: "Criar",
   chatHistoryUnsaved: "Documentos não salvos",
@@ -199,26 +199,22 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reviewNotesPicked: "{n} selecionadas",
   reviewNotesAskPrefix: "Sobre estas notas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre a sua nota “{comment}”: ",
-  agentTabProject: "Projeto",
+  agentTabProject: "Pasta",
   memoryStyle: "Estilo de escrita",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instruções de escrita",
-  memoryStyleHint: "Como você escreve: a IA escreve igual.",
-  memoryInstructionsHint: "As regras que a IA segue sempre.",
-  memoryLibraryHint: "Pessoas, lugares e termos, consultados quando aparecem.",
-  memoryRememberedHint: "O que a IA anotou das suas conversas.",
   memoryEdit: "Editar",
   memoryNew: "Nova",
   memoryInThisDocument: "Neste documento",
-  memoryAllProjects: "Todos os projetos",
-  memoryEditGlobal: "Editar as instruções de todos os projetos",
+  memoryAllProjects: "Todas as pastas",
+  memoryEditGlobal: "Editar as instruções de todas as pastas",
   memoryStyleEmpty: `Ainda não há perfil de estilo. Dê à ${AI_NAME} alguns textos seus e ela aprende como você escreve.`,
   memoryLibraryEmpty: `Pessoas, lugares, termos: adicione-os à biblioteca e a ${AI_NAME} vai lembrar.`,
   memoryInstructionsEmpty: `Ainda não há instruções. Escreva as regras que a ${AI_NAME} deve sempre seguir.`,
-  memoryNeedsSave: `Abra uma pasta ou escolha uma pasta de projeto e o ${AI_NAME} guarda o seu estilo, a sua biblioteca e as suas instruções para ela.`,
+  memoryNeedsSave: `Abra ou escolha uma pasta e o ${AI_NAME} guarda o seu estilo, a sua biblioteca e as suas instruções para ela.`,
   memoryRemembered: "Memória",
-  memoryRememberedPersonal: "Para todos os projetos",
-  memoryRememberedProject: "Este projeto",
+  memoryRememberedPersonal: "Para todas as pastas",
+  memoryRememberedProject: "Esta pasta",
   memoryRememberedEmpty: `Nada ainda. Diga à ${AI_NAME} o que você sempre quer, e ela lembra na próxima vez.`,
   memoryRememberOff: `Lembrar automaticamente está desligado (Ajustes › ${AI_NAME}): a ${AI_NAME} não guarda nada novo.`,
   memoryKindRequirement: "Requisito",
@@ -246,15 +242,15 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   memoryLibraryLeftOut:
     "Mencionados, mas não enviados, por passar do limite da biblioteca de {cap} caracteres: {names}.",
   memoryChipSaved: "Lembrado: {text} ({scope})",
-  memoryScopeProject: "projeto",
+  memoryScopeProject: "pasta",
   memoryScopePersonal: "global",
   memoryChipUndo: "Desfazer",
   memoryMakePersonal: "Tornar global",
-  memoryMakeProject: "Passar para o projeto",
+  memoryMakeProject: "Só para esta pasta",
   memoryChipUndone: "Desfeito. Não é mais lembrado.",
   memoryChipForgot: "Esquecido: {text} ({scope})",
   memoryChipRestored: "Desfeito. Lembrado de novo.",
-  memoryActionFailed: "Não deu certo. Tente de novo na aba Projeto.",
+  memoryActionFailed: "Não deu certo. Tente de novo na aba Pasta.",
   learnSuggestion: "Você recusou várias vezes {what}. Lembrar disto? {rule}",
   learnQuoted: "“{text}”",
   learnSwap: "trocar {from} por {to}",
@@ -290,7 +286,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   learnRemember: "Lembrar",
   learnNotNow: "Agora não",
   learnNever: "Não perguntar mais",
-  learnSaved: "Lembrado. Veja ou apague em Projeto, no painel de IA.",
+  learnSaved: "Lembrado. Veja ou apague em Pasta, no painel de IA.",
   learnLabel: "Aprendido com as suas escolhas de revisão",
   suggestNextMessageLabel: "Sugerir a próxima mensagem",
   suggestNextMessageHint:
@@ -305,7 +301,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   researchCheckClaimsHint:
     "Antes de revisar o rascunho, cada frase que cita uma fonte é comparada com as notas dessa fonte, e a que diz mais do que elas é reescrita. Mais cuidadoso, com uma chamada ao modelo a mais por seção.",
   rememberAutomaticallyLabel: "Lembrar automaticamente",
-  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Projeto, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
+  rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Pasta, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",
   toolGenerateImage: "Gerando uma imagem",
@@ -380,9 +376,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   toolSearchDocument: "Buscando “{arg}” no documento",
   toolReadDocument: "Lendo “{arg}”",
   toolReadWholeDocument: "Lendo o documento",
-  toolSearchFiles: "Buscando “{arg}” no projeto",
+  toolSearchFiles: "Buscando “{arg}” na pasta",
   toolFindFiles: "Buscando arquivos chamados “{arg}”",
-  toolListFiles: "Consultando os arquivos do projeto",
+  toolListFiles: "Consultando os arquivos da pasta",
   toolReadFile: "Lendo {arg}",
   toolUseSkill: "Usando a habilidade {arg}",
   toolAddComment: "Adicionando um comentário",
@@ -546,11 +542,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeTab: "Arquivos",
   outlineTab: "Estrutura",
   treeParentFolder: "Pasta superior",
-  treeEmptyDraft: "Salve este documento para ver a pasta dele aqui.",
-  outlineEmpty: "Ainda não há títulos. Linhas que começam com # aparecem aqui.",
+  outlineEmpty: "Ainda não há títulos",
   treeRefresh: "Atualizar",
-  menuOpenFolder: "Abrir Projeto…",
-  menuCloseFolder: "Fechar Projeto",
+  menuOpenFolder: "Abrir Pasta…",
+  menuCloseFolder: "Fechar Pasta",
   menuCopyPath: "Copiar caminho",
   folderTooBroad:
     "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
@@ -560,14 +555,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSearchCapped:
     "A busca percorreu só os primeiros {n} arquivos. Abra uma pasta menor para buscar em tudo.",
   treeSearchTooBroad:
-    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Projeto…",
+    "Esta pasta é ampla demais para a busca. Abra uma mais específica em Arquivo › Abrir Pasta…",
   treeSearchFailed: "Não foi possível ler esta pasta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos os arquivos",
   treeSearchScopeDocuments: "Só documentos",
   treeNewDocument: "Novo documento",
   treeNewFolder: "Nova pasta",
-  treeEmptyHint: "Clique duas vezes aqui para um documento novo.",
   treeNewDocumentPrompt: "Nome do novo documento",
   treeNewFolderPrompt: "Nome da nova pasta",
   treeNewDocumentDefault: "Sem título",
@@ -586,7 +580,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeUpdateLinksFailed:
     "Não foi possível atualizar os links destes documentos: {names}",
   treeDocumentFolder: "Pasta do documento atual",
-  treeOpenAsFolder: "Abrir como projeto",
+  treeOpenAsFolder: "Abrir esta pasta",
   treeTrashItem: "Mover para a lixeira",
   treeTrash: "Mover para a lixeira",
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
@@ -721,7 +715,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   editAnimationLabel: "Animar prévias de edição",
   agentWorkspaceLabel: "Pasta de configuração global",
   agentWorkspaceOpenButton: "Mostrar",
-  agentWorkspaceRootLabel: "Pasta do projeto",
+  agentWorkspaceRootLabel: "Pasta",
   agentWorkspaceRootDefault:
     "Nenhuma: a pasta aberta na barra lateral, se houver",
   agentWorkspaceRootPick: "Escolher…",
@@ -730,7 +724,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSkillsLabel: "Habilidades",
   agentSkillsImport: "Importar Habilidade…",
   skillGroupRecent: "Recentes",
-  skillGroupProject: "Este projeto",
+  skillGroupProject: "Esta pasta",
   skillGroupYours: "Suas habilidades",
   skillCategoryWrite: "Escrever",
   skillCategoryRevise: "Reescrever",
@@ -742,10 +736,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Digite / para usar uma habilidade: uma instrução pronta, como Revisar ou Resumir.",
   skillPickerNoMatch: "Nenhuma habilidade corresponde a “{query}”.",
   skillPickerHowTo: "Adicione mais habilidades ou importe as suas em Ajustes.",
-  mentionPickerAbout: "Digite @ para anexar um arquivo da pasta do projeto.",
+  mentionPickerAbout: "Digite @ para anexar um arquivo da pasta.",
   mentionPickerNoProject:
-    "Salve o documento ou escolha uma pasta de projeto, e os arquivos dela aparecerão aqui.",
-  mentionPickerNoFiles: "A pasta do projeto ainda não tem arquivos de texto.",
+    "Salve o documento ou escolha uma pasta, e os arquivos dela aparecerão aqui.",
+  mentionPickerNoFiles: "A pasta ainda não tem arquivos de texto.",
   mentionPickerNoMatch: "Nenhum arquivo corresponde a “{query}”.",
   agentSkillsBuiltin: "Habilidades integradas",
   agentSkillsCustomize: "Personalizar…",
@@ -912,7 +906,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   skillOfferSaved:
     "Guardada como {name}: digite-a na caixa de mensagem para fazer de novo.",
   skillOfferSave: "Para todos os documentos",
-  skillOfferSaveProject: "Só para este projeto",
+  skillOfferSaveProject: "Só para esta pasta",
   chatHistorySearch: "Pesquisar conversas",
   chatHistorySearchNone: "Nenhuma conversa tem estas palavras.",
   chatHistoryByYou: "Você",
@@ -1128,6 +1122,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuCodeBlock: "Bloco de Código",
   menuTable: "Tabela",
   menuToggleSourceMode: "Modo Código-Fonte",
+  menuFormatBar: "Barra de formatação",
   menuToggleTypewriterMode: "Modo Máquina de Escrever",
   menuToggleSidebar: "Barra Lateral",
   menuZoomIn: "Ampliar",
@@ -1281,6 +1276,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   docLineSpacingStandard: "Padrão",
   docLineSpacingRelaxed: "Amplo",
   docFontLabel: "Fonte do texto",
+  docFontMore: "Mais fontes",
   docFontAuto: "A do tema",
   docLetterSpacingLabel: "Espaçamento entre caracteres",
   docLetterSpacingAuto: "O do tema",
@@ -1301,7 +1297,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closeLastWindow: "Fechar a janela",
   closeLastStartPage: "Mostrar a página inicial",
   startPageRemoveRecent: "Remover dos recentes",
-  startPageRecentProjects: "Projetos recentes",
+  startPageRecentProjects: "Pastas recentes",
   startPagePickDocument:
     "Escolha um documento de {folder} na barra lateral para começar.",
   startPageRecentFiles: "Arquivos recentes",
@@ -1387,7 +1383,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialDoneTitle: "Pronto",
   tutorialDoneBody:
     "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
-  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Projeto, o botão de pasta no painel de IA.`,
+  tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Pasta, no painel de IA.`,
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",
@@ -1444,7 +1440,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageFolderSameFolder: "A mesma pasta do documento",
   imageFolderNameLabel: "Nome da subpasta",
   imageFolderProjectNote:
-    "Este projeto guarda as imagens em {folder} (definido em {source}).",
+    "Esta pasta guarda as imagens em {folder} (definido em {source}).",
   imageFolderInvalid: "Use uma pasta dentro da pasta do documento, como img.",
   imageHostLabel: "Hospedagem de imagens",
   imageHostCustom: "Personalizado",
@@ -1662,8 +1658,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginBackToList: "Todos os plugins",
   pluginSettingsScope: "Aplica-se a",
   pluginSettingsScopeGlobal: "Todos os documentos",
-  pluginSettingsScopeProject: "Este projeto ({name})",
-  pluginSettingProjectOwn: "Este projeto tem um valor próprio.",
+  pluginSettingsScopeProject: "Esta pasta ({name})",
+  pluginSettingProjectOwn: "Esta pasta tem um valor próprio.",
   pluginSettingUseGeneral: "Usar o valor geral",
   pluginSettingsGroup: "Ajustes",
   pluginSettingsOff: "Ative {name} para mudar seus ajustes.",
@@ -1676,7 +1672,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginAboutGroup: "Sobre",
   pluginDataLabel: "Seus dados",
   pluginDataGlobal: "{global} para todos os documentos",
-  pluginDataProject: "{project} neste projeto",
+  pluginDataProject: "{project} nesta pasta",
   pluginDataClear: "Limpar",
   pluginDataClearAsk: "Limpar o que {name} guarda? Não dá para desfazer.",
   pluginVersionLabel: "Versão {version}",
@@ -1703,7 +1699,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   conventionsCardLine:
     "As configurações do {app} desta pasta guardam as imagens em {folder}",
   conventionsCardDetails:
-    "Configuração atual: {current}. Ao adotar, ela é salva em .textus/settings.json desta pasta e fica com o projeto.",
+    "Configuração atual: {current}. Ao adotar, ela é salva em .textus/settings.json desta pasta e fica com a pasta.",
   conventionsFolderRoot: "a própria pasta",
   conventionsFollow: "Adotar",
   conventionsDecline: "Manter a atual",

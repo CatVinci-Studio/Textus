@@ -227,7 +227,7 @@ export class ListMotion extends Component<{
     play(snapshot.rects, {
       timingFor: (el) =>
         el instanceof HTMLElement && el.dataset.flipId === snapshot.dropped
-          ? { duration: "--dur-medium", easing: "--ease-spring-bouncy" }
+          ? { duration: "--dur-base", easing: "--ease-spring-bouncy" }
           : undefined,
     });
     for (const ghost of snapshot.ghosts)

@@ -1,6 +1,6 @@
 # Anleitung zu den KI-Funktionen von Textus
 
-Textus bringt eine eingebaute KI fürs Schreiben mit, Textus AI: Vervollständigung, Grammatikprüfung und Unterhaltungen, die dein Dokument lesen und überarbeiten. Diese Anleitung erklärt, wie du einen Dienst verbindest, was die KI-Funktionen können und wie du Textus AI mit Projektordner, Stilprofil, Lexikon, Schreibanweisungen und Skills zu deinem eigenen Schreibassistenten machst.
+Textus bringt eine eingebaute KI fürs Schreiben mit, Textus AI: Vervollständigung, Grammatikprüfung und Unterhaltungen, die dein Dokument lesen und überarbeiten. Diese Anleitung erklärt, wie du einen Dienst verbindest, was die KI-Funktionen können und wie du Textus AI mit Ordner, Stilprofil, Lexikon, Schreibanweisungen und Skills zu deinem eigenen Schreibassistenten machst.
 
 ## Einen Dienst verbinden
 
@@ -25,7 +25,7 @@ Während du tippst, erscheint am Cursor eine graue Fortsetzung – mit <kbd>Tab<
 
 Gezielt anfordern kannst du eine mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> oder über das Kontextmenü (der Cursor muss am Ende eines Absatzes stehen): Dann bekommst du eine längere Fortsetzung mit bis zu drei Alternativen – mit <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> blätterst du durch sie.
 
-Unter **Einstellungen > Textus AI > Schreibassistenz** kannst du den **Tonfall der Vervollständigung** wählen (Passend zum Dokument / Förmlich / Locker / Wissenschaftlich / Knapp). Gehört das Dokument zu einem Projekt mit Stilprofil oder Lexikon (siehe **Textus AI an dich anpassen** weiter unten), richtet sich die Vervollständigung auch danach.
+Unter **Einstellungen > Textus AI > Schreibassistenz** kannst du den **Tonfall der Vervollständigung** wählen (Passend zum Dokument / Förmlich / Locker / Wissenschaftlich / Knapp). Gehört das Dokument zu einem Ordner mit Stilprofil oder Lexikon (siehe **Textus AI an dich anpassen** weiter unten), richtet sich die Vervollständigung auch danach.
 
 ### 2. Grammatikprüfung
 
@@ -37,7 +37,7 @@ Die vollständige Unterhaltung findet in einem Bereich rechts neben dem Editor s
 
 - **Eine Unterhaltung pro Dokument**: Jeder Tab hat seine eigene Unterhaltung, und wenn du den Tab wechselst, wechselt der Bereich mit. **Neue Unterhaltung** im Kopf des Bereichs fängt von vorn an (sind noch Änderungen offen, wird vorher nachgefragt).
 - **Modi**: Das Eingabefeld bietet zwei. **Schreiben** arbeitet am Dokument: Es entwirft neuen Text (eine Fortsetzung, einen neuen Absatz oder Abschnitt) und ändert den vorhandenen (umschreiben, übersetzen, kürzen). Ist Text ausgewählt, ersetzt eine Änderung daran die Auswahl, und neuer Text kommt dahinter. **Prüfen** beantwortet Fragen, bespricht und kommentiert, ohne etwas zu ändern. Jede Änderung aus Schreiben ist ein Vorschlag, den du annimmst oder ablehnst. Der Bereich startet in dem Modus, der unter **Einstellungen > Textus AI > Chat mit Textus AI > Standardmodus** eingestellt ist.
-- **@-Erwähnungen**: Tippe `@` ins Eingabefeld, um eine Textdatei aus dem Projektordner auszuwählen; sie wird an die Nachricht angehängt.
+- **@-Erwähnungen**: Tippe `@` ins Eingabefeld, um eine Textdatei aus dem Ordner auszuwählen; sie wird an die Nachricht angehängt.
 - **Dateien anhängen**: Die Schaltfläche **+** links neben dem Eingabefeld hängt eine oder mehrere Dateien an die Nachricht an: ein PDF, ein Word-Dokument, eine PowerPoint-Präsentation, eine Tabelle, ein EPUB-E-Book, eine RTF- oder HTML-Datei, eine beliebige Text- oder Code-Datei, ein Zip-Archiv oder ein Bild (PNG, JPEG, GIF, WebP, BMP, TIFF und auf dem Mac HEIC und AVIF). Jede Datei wird in den eigenen temporären Ordner der Unterhaltung kopiert, nie in deine Ordner, und Textus AI kann sie dort noch einmal vollständig lesen. Dokumente werden lokal in Text umgewandelt und mit der Nachricht verschickt; von einem langen wird nur ein Teil gesendet, der Chip zeigt „(gekürzt)“, und den Rest liest Textus AI, wenn es ihn braucht. Ein Zip-Archiv wird dort entpackt und seine Dateien werden aufgelistet. Bilder werden in ein Format umgewandelt, das jeder Dienst liest, bei sehr großen verkleinert und als echte Bilder an Anbieter gesendet, die sie lesen können (die anderen sagen das vorher, statt sie stillschweigend wegzulassen).
 - **Modell**: Die Schaltfläche bei den Bedienelementen des Eingabefelds nennt das Modell, an das deine nächste Nachricht geht; klick darauf, um zu einem anderen Modell eines beliebigen Dienstes zu wechseln, den du unter **Einstellungen > Textus AI** eingerichtet hast. Ist nur ein Modell eingerichtet, zeigt sie einfach dessen Namen.
 - **Websuche**: Mit der Lupe neben dem Eingabefeld sucht Textus AI im Web, wenn eine Anfrage es braucht – siehe **7. Websuche** weiter unten.
@@ -91,24 +91,24 @@ Was Textus AI über dich und deine Arbeit weiß, steht in ein paar einfachen Mar
 
 | Konzept | Was es ist | Wo es liegt |
 | --- | --- | --- |
-| **Projektordner** | Der Ordner, in dem Textus AI arbeitet und lesen darf | Der Ordner, den du in der Seitenleiste öffnest, oder einer, den du wählst |
+| **Ordner** | Der Ordner, in dem Textus AI arbeitet und lesen darf | Der Ordner, den du in der Seitenleiste öffnest, oder einer, den du wählst |
 | **Stilprofil** | Wie du schreibst | `.textus/style.md` |
 | **Lexikon** | Fakten zu Personen, Orten und Begriffen | `.textus/library/` |
-| **Schreibanweisungen** | Feste Regeln für jede Unterhaltung | `agent.md` – global und pro Projekt |
-| **Gedächtnis** | Was sich Textus AI aus deinen Unterhaltungen merkt | `memory/` im globalen Konfigurationsordner und daneben `projects/<Projekt>/memory/` für jedes Projekt |
-| **Skills** | Wiederverwendbare Anweisungen, die du mit `/name` aufrufst | `skills/` – global und pro Projekt |
+| **Schreibanweisungen** | Feste Regeln für jede Unterhaltung | `agent.md` – global und pro Ordner |
+| **Gedächtnis** | Was sich Textus AI aus deinen Unterhaltungen merkt | `memory/` im globalen Konfigurationsordner und daneben `projects/<Ordner>/memory/` für jeden Ordner |
+| **Skills** | Wiederverwendbare Anweisungen, die du mit `/name` aufrufst | `skills/` – global und pro Ordner |
 | **Globaler Konfigurationsordner** | Was für jedes Dokument gilt | Der Einstellungsordner der App |
 
-„Unterhaltungen“ meint im Folgenden den KI-Bereich und die Schnellfrage. So sieht ein ganzes Projekt auf einen Blick aus:
+„Unterhaltungen“ meint im Folgenden den KI-Bereich und die Schnellfrage. So sieht ein ganzer Ordner auf einen Blick aus:
 
 ```
-mein-roman/              ← der Projektordner
+mein-roman/              ← der Ordner
 ├── kapitel-1.md         ← das Dokument, das du bearbeitest
 ├── notizen/
 │   └── zeitleiste.md    ← Material, das Textus AI lesen kann
-└── .textus/              ← die eigenen Einstellungen des Projekts
+└── .textus/              ← die eigenen Einstellungen des Ordners
     ├── style.md         ← Stilprofil
-    ├── agent.md         ← Schreibanweisungen für dieses Projekt
+    ├── agent.md         ← Schreibanweisungen für diesen Ordner
     ├── library/
     │   ├── lin-wan.md   ← ein Eintrag pro Figur, Ort oder Begriff
     │   └── harbour-city.md
@@ -116,28 +116,28 @@ mein-roman/              ← der Projektordner
         └── straffen.md  ← ein Skill pro Datei
 ```
 
-Das Projektmenü legt `.textus/` und die Dateien darin an, sobald du sie zum ersten Mal brauchst; nur Projekt-Skills fügst du von Hand hinzu. Text in `<!-- -->`-Kommentaren ist in all diesen Dateien eine Notiz für dich selbst und wird nie gesendet.
+Das Ordnermenü legt `.textus/` und die Dateien darin an, sobald du sie zum ersten Mal brauchst; nur Ordner-Skills fügst du von Hand hinzu. Text in `<!-- -->`-Kommentaren ist in all diesen Dateien eine Notiz für dich selbst und wird nie gesendet.
 
-### Der Projektordner
+### Der Ordner
 
-**Der Projektordner ist der Ordner, in dem Textus AI arbeitet.** Es ist der Ordner, den du in der Seitenleiste öffnest (**Datei > Projekt öffnen…**), oder einer, den du wählst – sonst der nächste Ordner über dem Dokument, der einen `.textus/`-Ordner enthält, sodass ein Kapitel in `novel/part-1/` zu `novel/` gehört. Ein Dokument, das du einzeln öffnest, hat keinen Projektordner: Textus AI liest dann nur das Dokument und die Dateien, die du anhängst, sodass eine Datei in Downloads oder auf dem Schreibtisch ihm nie den ganzen Ordner öffnet.
+**Der Ordner ist der Ort, an dem Textus AI arbeitet.** Es ist der Ordner, den du in der Seitenleiste öffnest (**Datei > Ordner öffnen…**), oder einer, den du wählst – sonst der nächste Ordner über dem Dokument, der einen `.textus/`-Ordner enthält, sodass ein Kapitel in `novel/part-1/` zu `novel/` gehört. Ein Dokument, das du einzeln öffnest, hat keinen Ordner: Textus AI liest dann nur das Dokument und die Dateien, die du anhängst, sodass eine Datei in Downloads oder auf dem Schreibtisch ihm nie den ganzen Ordner öffnet.
 
 - Textus AI kann die Dateien darin auflisten, nach Namen finden, lesen und durchsuchen, um frühere Szenen einer Figur, einen Begriff oder deine Notizen zu finden: Textdateien (Markdown, reiner Text und ähnliche Formate) bis 16 MB, die es abschnittsweise liest, wenn sie lang sind, und den Text von PDF-, Word-, PowerPoint-, Tabellen-, EPUB- und RTF-Dateien. Mit einem Anbieter, der Bilder sehen kann, sieht es sich auch die PNG-, JPEG-, GIF- und WebP-Bilder darin an, bis 6 MB pro Bild. Versteckte Dateien und Ordner, was eine `.gitignore`- oder `.ignore`-Datei ausschließt (wie bei der Dateisuche in der Seitenleiste), Build- und Abhängigkeitsordner (etwa `node_modules`) und gescannte PDFs ohne Textebene bleiben außen vor.
 - Tippst du `@` ins Eingabefeld des Chats, hängst du eine seiner Dateien an deine Nachricht an.
-- Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Projekts.
+- Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Ordners.
 
-Die Leiste unter dem Kopf des KI-Bereichs zeigt den Namen des Projektordners; ein Klick darauf öffnet das **Projektmenü**. Liegt dein Material nicht neben dem Entwurf, klicke dort auf **Projektordner wählen…** (oder **Einstellungen > Textus AI > Projektordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Keinen Projektordner verwenden** wählst.
+Die Leiste unter dem Kopf des KI-Bereichs zeigt den Namen des Ordners; ein Klick darauf öffnet das **Ordnermenü**. Liegt dein Material nicht neben dem Entwurf, klicke dort auf **Ordner wählen…** (oder **Einstellungen > Textus AI > Ordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Keinen Ordner verwenden** wählst.
 
 > [!TIP]
-> Dein Entwurf liegt in `masterarbeit/entwürfe/` und deine Interviewnotizen in `masterarbeit/recherche/`? Wähle `masterarbeit/` als Projektordner, dann kann Textus AI `recherche/interviews.md` lesen, während du an `entwürfe/kapitel-2.md` arbeitest.
+> Dein Entwurf liegt in `masterarbeit/entwürfe/` und deine Interviewnotizen in `masterarbeit/recherche/`? Wähle `masterarbeit/` als Ordner, dann kann Textus AI `recherche/interviews.md` lesen, während du an `entwürfe/kapitel-2.md` arbeitest.
 
-Alles, was Textus AI liest, muss im Projektordner liegen: `..`, absolute Pfade und Links nach außen werden abgewiesen. Ohne geöffneten oder gewählten Ordner gibt es keinen Projektordner, und ein zu weit gefasster Ordner – dein Benutzerordner oder ein ganzes Laufwerk – wird abgewiesen. Was Textus AI bei der Arbeit erzeugt (Recherchenotizen, Entwürfe in Arbeit), landet in Textus' eigenen Ordnern oder im temporären Ordner des Systems, nicht in deinem.
+Alles, was Textus AI liest, muss im Ordner liegen: `..`, absolute Pfade und Links nach außen werden abgewiesen. Ohne geöffneten oder gewählten Ordner liest Textus AI keine weiteren Dateien, und ein zu weit gefasster Ordner – dein Benutzerordner oder ein ganzes Laufwerk – wird abgewiesen. Was Textus AI bei der Arbeit erzeugt (Recherchenotizen, Entwürfe in Arbeit), landet in Textus' eigenen Ordnern oder im temporären Ordner des Systems, nicht in deinem.
 
 ### Das Stilprofil – „Meinen Stil lernen“
 
-**Das Stilprofil beschreibt, wie du schreibst**, damit Fortsetzungen und Änderungen nach dir klingen: Stimme und Ton, Satzrhythmus, Wortwahl, Zeichensetzung, was du nie tust. Textus AI richtet sich in Unterhaltungen danach, die Vervollständigung beim Tippen, und zwar in jedem Dokument des Projekts. Es ist die Datei `.textus/style.md`.
+**Das Stilprofil beschreibt, wie du schreibst**, damit Fortsetzungen und Änderungen nach dir klingen: Stimme und Ton, Satzrhythmus, Wortwahl, Zeichensetzung, was du nie tust. Textus AI richtet sich in Unterhaltungen danach, die Vervollständigung beim Tippen, und zwar in jedem Dokument des Ordners. Es ist die Datei `.textus/style.md`.
 
-Es gibt zwei Wege, eines anzulegen, beide im Projektmenü:
+Es gibt zwei Wege, eines anzulegen, beide im Ordnermenü:
 
 - **Meinen Stil aus Textproben lernen…** – wähle ein paar Dateien mit eigenen Texten (bis zu acht). Textus AI analysiert sie und entwirft ein Profil – Stimme und Ton, Sätze und Rhythmus, Wortwahl, Zeichensetzung und Formatierung, Aufbau, Tabus und einige kurze Zitate als Beispiele – und öffnet es in einem neuen Tab. Lies es, korrigiere es, ergänze es: Es gehört dir. Lernt Textus AI erneut, bleibt das bisherige Profil als `style.previous.md` erhalten.
 - **Stilprofil erstellen** – beginne mit einer leeren Gliederung und schreib es selbst.
@@ -159,7 +159,7 @@ Konkrete, überprüfbare Punkte funktionieren besser als Adjektive: „kurze Sä
 
 ### Das Lexikon
 
-**Das Lexikon enthält Fakten, die einheitlich bleiben müssen**: eine Markdown-Datei pro Figur, Ort oder Begriff, in `.textus/library/`. **Neuer Lexikoneintrag…** im Projektmenü fragt nach einem Namen und öffnet den neuen Eintrag; der Chip **Lexikon** zeigt, wie viele es gibt.
+**Das Lexikon enthält Fakten, die einheitlich bleiben müssen**: eine Markdown-Datei pro Figur, Ort oder Begriff, in `.textus/library/`. **Neuer Lexikoneintrag…** im Ordnermenü fragt nach einem Namen und öffnet den neuen Eintrag; der Chip **Lexikon** zeigt, wie viele es gibt.
 
 ```markdown
 ---
@@ -172,16 +172,16 @@ Protagonistin, 32, unterrichtet Chinesisch an einem Gymnasium in Harbour City.
 Linkshänderin. Spricht nie über ihren Bruder.
 ```
 
-Einträge hängst du nicht selbst an. Ein Eintrag mit `include: detected` (der Standard) geht an Textus AI, sobald sein Name oder einer seiner Aliasse vorkommt: in einer Unterhaltung in deiner Nachricht oder im Dokument, bei der Vervollständigung im Text rund um den Cursor. `always` sendet ihn mit jeder Anfrage, `never` hält ihn heraus. Einträge, die nicht erwähnt werden, kosten nichts – das Lexikon kann also so groß werden, wie dein Projekt es braucht.
+Einträge hängst du nicht selbst an. Ein Eintrag mit `include: detected` (der Standard) geht an Textus AI, sobald sein Name oder einer seiner Aliasse vorkommt: in einer Unterhaltung in deiner Nachricht oder im Dokument, bei der Vervollständigung im Text rund um den Cursor. `always` sendet ihn mit jeder Anfrage, `never` hält ihn heraus. Einträge, die nicht erwähnt werden, kosten nichts – das Lexikon kann also so groß werden, wie dein Ordner es braucht.
 
 ### Schreibanweisungen (agent.md)
 
-**Schreibanweisungen sind feste Regeln, die mit jeder Unterhaltung gesendet werden**: worum es im Projekt geht, in welcher Sprache geantwortet wird, Schreibweisen und Begriffe, was Textus AI immer oder nie tun soll. Sie stehen in Dateien namens `agent.md`, auf zwei Ebenen:
+**Schreibanweisungen sind feste Regeln, die mit jeder Unterhaltung gesendet werden**: worum es im Ordner geht, in welcher Sprache geantwortet wird, Schreibweisen und Begriffe, was Textus AI immer oder nie tun soll. Sie stehen in Dateien namens `agent.md`, auf zwei Ebenen:
 
 - **Global**, für jedes Dokument: **Einstellungen > Textus AI > Schreibanweisungen (agent.md) > agent.md bearbeiten**.
-- **Projekt**, für die Dokumente eines Projekts: `.textus/agent.md`, zu öffnen mit **Projekt-Schreibanweisungen bearbeiten** im Projektmenü.
+- **Ordner**, für die Dokumente eines Ordners: `.textus/agent.md`, zu öffnen mit **Schreibanweisungen des Ordners bearbeiten** im Ordnermenü.
 
-Beide öffnen sich in einem Tab und beginnen mit einer kurzen Anleitung in Kommentaren. Gibt es beide, bekommt Textus AI beide – zuerst die globalen Anweisungen, dann die des Projekts –, und wo sie sich widersprechen, gelten die des Projekts.
+Beide öffnen sich in einem Tab und beginnen mit einer kurzen Anleitung in Kommentaren. Gibt es beide, bekommt Textus AI beide – zuerst die globalen Anweisungen, dann die des Ordners –, und wo sie sich widersprechen, gelten die des Ordners.
 
 ```markdown
 Das Buch ist ein Kriminalroman im Shanghai der 1930er-Jahre, erzählt von Lin Wan in der Ich-Form.
@@ -193,12 +193,12 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 
 ### Was sich Textus AI merkt
 
-**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Global machen** oder **Ins Projekt** verschiebt es.
+**Textus AI merkt sich, worum du bittest und wie du schreibst**, ohne dass du eine Datei schreiben musst. Wenn du etwas sagst, das über eine einzelne Anfrage hinaus gelten soll – „immer Schweizer Rechtschreibung“, „keine Gedankenstriche“, eine Korrektur, die du zweimal machen musstest – oder einen Fakt über dein Werk nennst, etwa wer eine Figur ist, merkt sich Textus AI das und hält sich in späteren Unterhaltungen daran. Jedes Mal zeigt eine Zeile unter der Antwort, was gemerkt wurde und wo: **Rückgängig** nimmt es zurück, **Global machen** oder **Nur für diesen Ordner** verschiebt es.
 
-- **Dieses Projekt**: was dieses Werk betrifft, in `projects/<Projekt>/memory/` im globalen Konfigurationsordner (Textus verwahrt es dort, nicht in deinem Ordner); Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
-- **Für alle Projekte**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Projektordner landet alles hier.
+- **Dieser Ordner**: was dieses Werk betrifft, in `projects/<Ordner>/memory/` im globalen Konfigurationsordner (Textus verwahrt es dort, nicht in deinem Ordner); Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
+- **Für alle Ordner**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Ordner landet alles hier.
 
-Der Tab **Projekt** im KI-Bereich listet alles unter **Gedächtnis** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Ab und zu räumt Textus AI sein Gedächtnis auf, führt Erinnerungen zusammen, die dasselbe sagen, und verwirft eine Regel, die eine neuere aufgehoben hat; was es verworfen hat, steht unter **Kürzlich vergessen** und lässt sich zurückholen. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Projekt weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.
+Der Tab **Ordner** im KI-Bereich listet alles unter **Gedächtnis** auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Ab und zu räumt Textus AI sein Gedächtnis auf, führt Erinnerungen zusammen, die dasselbe sagen, und verwirft eine Regel, die eine neuere aufgehoben hat; was es verworfen hat, steht unter **Kürzlich vergessen** und lässt sich zurückholen. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und der Tab Ordner weist darauf hin. **Einstellungen > Textus AI > Automatisch merken** schaltet die Funktion aus.
 
 **Es lernt auch aus deinen Überarbeitungsentscheidungen.** Wenn du dieselbe Art von Änderung mehrmals ablehnst – 「」 zu “” gemacht, ein Wort gegen ein anderes getauscht, Sätze geteilt, ein Oxford-Komma eingefügt –, bietet Textus AI nach der Durchsicht an, sie als Vorgabe zu merken: **Merken** speichert sie unter **Gedächtnis**, **Jetzt nicht** wartet auf mehr, und **Nicht mehr fragen** fragt nach dieser Art nicht mehr. Es fragt höchstens einmal am Tag, und gespeichert wird nur auf deinen Klick, auch wenn Automatisch merken aus ist. Gezählt wird nur eine kurze Notiz, welche Arten von Änderungen du angenommen oder abgelehnt hast – auf diesem Computer neben deinen Erinnerungen gespeichert und nie gesendet.
 
@@ -222,9 +222,9 @@ Einen Skill kannst du auf zwei Arten verwenden:
 1. **Aufrufen**: Tippe `/` ins Eingabefeld des Chats und wähle ihn aus dem Menü, oder tippe seinen Namen und danach deine Bitte: `/straffen sieh dir das noch einmal an`.
 2. **Einfach fragen** (nur bei Anbietern mit Tool Calling): Textus AI kennt Namen und Beschreibung jedes Skills; passt deine Anfrage zu einem, lädt Textus AI von selbst die vollständigen Anweisungen und befolgt sie.
 
-War deine Bitte ein eigenes Vorgehen – Schritte, die du wieder brauchen wirst –, bietet Textus AI unter seiner Antwort an, es als Skill zu behalten, für jedes Dokument oder nur für dieses Projekt. Gespeichert wird nur, wenn du es auswählst.
+War deine Bitte ein eigenes Vorgehen – Schritte, die du wieder brauchen wirst –, bietet Textus AI unter seiner Antwort an, es als Skill zu behalten, für jedes Dokument oder nur für diesen Ordner. Gespeichert wird nur, wenn du es auswählst.
 
-Skills gibt es auf denselben zwei Ebenen wie Schreibanweisungen: globale Skills im Ordner `skills/` des globalen Konfigurationsordners (**Einstellungen > Erweiterungen > Skills > … > Skill importieren…** kopiert eine Skill-Datei dorthin), Projekt-Skills in `.textus/skills/` (ein versteckter Ordner – im Finder von macOS blendet <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> ihn ein). Ein Projekt-Skill mit demselben Namen wie ein globaler ersetzt diesen.
+Skills gibt es auf denselben zwei Ebenen wie Schreibanweisungen: globale Skills im Ordner `skills/` des globalen Konfigurationsordners (**Einstellungen > Erweiterungen > Skills > … > Skill importieren…** kopiert eine Skill-Datei dorthin), Ordner-Skills in `.textus/skills/` (ein versteckter Ordner – im Finder von macOS blendet <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> ihn ein). Ein Ordner-Skill mit demselben Namen wie ein globaler ersetzt diesen.
 
 ### Integrierte Skills
 
@@ -236,7 +236,7 @@ Die integrierten Skills stehen unter **Einstellungen > Textus AI > Integrierte S
 
 **Einstellungen > Textus AI > Schreibassistenz > Schreibkonventionen** legt fest, welchen Regeln für Zeichensetzung, Leerzeichen und Zahlen Textus AI und die Grammatikprüfung folgen. **Automatisch** wendet die nationale Norm an, wo eine Sprache eine hat (etwa GB/T für vereinfachtes Chinesisch oder JTF für Japanisch); sonst folgt es dem, was dein Dokument schon überwiegend tut, und weist nur auf Uneinheitliches hin. Wählst du ein Profil, zum Beispiel **Deutschland · DIN 5008** oder **Schweiz**, werden Dokumente in dieser Sprache danach geprüft.
 
-Ein Projekt kann ein eigenes festlegen: Füg im Stilprofil (`.textus/style.md`) zwischen den beiden `---`-Zeilen am Anfang eine Zeile `conventions:` ein. Für die Dokumente dieses Projekts hat sie Vorrang vor der Einstellung.
+Ein Ordner kann ein eigenes festlegen: Füg im Stilprofil (`.textus/style.md`) zwischen den beiden `---`-Zeilen am Anfang eine Zeile `conventions:` ein. Für die Dokumente dieses Ordners hat sie Vorrang vor der Einstellung.
 
 ```markdown
 ---
@@ -246,7 +246,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Der globale Konfigurationsordner
 
-**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Projekt; **Einstellungen > Textus AI > Globaler Konfigurationsordner > Anzeigen** zeigt ihn.
+**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Ordner; **Einstellungen > Textus AI > Globaler Konfigurationsordner > Anzeigen** zeigt ihn.
 
 ```
 agent/                ← der globale Konfigurationsordner
@@ -255,13 +255,13 @@ agent/                ← der globale Konfigurationsordner
     └── gliedern.md   ← ein globaler Skill
 ```
 
-Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestimmtes Werk und gehören deshalb zu einem Projekt.
+Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestimmtes Werk und gehören deshalb zu einem Ordner.
 
 ### Was wann gilt
 
 | | Unterhaltungen | Vervollständigung | Grammatikprüfung |
 | --- | :---: | :---: | :---: |
-| Projektdateien (lesen, suchen, `@`) | ✓ | | |
+| Dateien des Ordners (lesen, suchen, `@`) | ✓ | | |
 | Stilprofil | ✓ | ✓ | |
 | Lexikoneinträge, die vorkommen | ✓ | ✓ | |
 | Schreibanweisungen | ✓ | | |
@@ -269,8 +269,8 @@ Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestim
 | Skills | ✓ | | |
 | Tonfall der Vervollständigung (Einstellungen) | | ✓ | |
 
-- **Erst global, dann Projekt.** Schreibanweisungen beider Ebenen werden gesendet, die des Projekts zuletzt, und bei einem Widerspruch gelten die des Projekts. Ein Projekt-Skill ersetzt einen globalen Skill gleichen Namens.
-- **Immer nur ein Projektordner.** Nur dessen `.textus/` zählt: Hast du einen Projektordner gewählt, wird ein `.textus/` neben dem Dokument nicht gelesen.
+- **Erst global, dann Ordner.** Schreibanweisungen beider Ebenen werden gesendet, die des Ordners zuletzt, und bei einem Widerspruch gelten die des Ordners. Ein Ordner-Skill ersetzt einen globalen Skill gleichen Namens.
+- **Immer nur ein Ordner.** Nur dessen `.textus/` zählt: Hast du einen Ordner gewählt, wird ein `.textus/` neben dem Dokument nicht gelesen.
 - **Kein Neustart nötig.** Bearbeite eine dieser Dateien, und die nächste Anfrage verwendet die neue Fassung (die Vervollständigung nach etwa zehn Sekunden).
 
 ### Welche Datei wofür?
@@ -279,7 +279,7 @@ Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestim
 - Wer ist wer, was ist was → das **Lexikon**.
 - Was Textus AI in einer Unterhaltung wissen oder immer tun soll → die **Schreibanweisungen**.
 - Eine Aufgabe, um die du immer wieder bittest → ein **Skill**.
-- Notizen, Recherche, frühere Kapitel → normale Dateien im **Projektordner**; Textus AI liest sie, wenn eine Anfrage sie braucht.
+- Notizen, Recherche, frühere Kapitel → normale Dateien im **Ordner**; Textus AI liest sie, wenn eine Anfrage sie braucht.
 
 ## Textus AI ausschalten
 
@@ -289,4 +289,4 @@ Solange sie aus ist, wird ab dem Start von Textus nichts an einen KI-Dienst gese
 
 ## Ein Hinweis zum Datenschutz
 
-Dein Dokument, angehängte und per `@` erwähnte Dateien, deine Schreibanweisungen, das Stilprofil, die vorkommenden Lexikoneinträge und alle Projektdateien, die Textus AI liest, werden mit jeder Anfrage an den gewählten Anbieter gesendet; **Meinen Stil lernen** sendet die Textproben, die du auswählst. Bei eingeschalteter Websuche gehen Suchanfragen an deinen Anbieter oder an den Suchdienst, den die Einstellungen anzeigen, und die Seiten, die Textus AI liest, werden von diesem Computer abgerufen. Schalte in den Einstellungen jede Funktion aus, bei der du das nicht möchtest.
+Dein Dokument, angehängte und per `@` erwähnte Dateien, deine Schreibanweisungen, das Stilprofil, die vorkommenden Lexikoneinträge und alle Dateien im Ordner, die Textus AI liest, werden mit jeder Anfrage an den gewählten Anbieter gesendet; **Meinen Stil lernen** sendet die Textproben, die du auswählst. Bei eingeschalteter Websuche gehen Suchanfragen an deinen Anbieter oder an den Suchdienst, den die Einstellungen anzeigen, und die Seiten, die Textus AI liest, werden von diesem Computer abgerufen. Schalte in den Einstellungen jede Funktion aus, bei der du das nicht möchtest.

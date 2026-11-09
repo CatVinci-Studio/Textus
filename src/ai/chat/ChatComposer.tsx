@@ -13,10 +13,12 @@ import {
 import { basename } from "../../utils/path";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import {
+  ArrowUpIcon,
   CloseIcon,
   GenericFileIcon,
   ImageFileIcon,
   PlusIcon,
+  StopIcon,
 } from "../../ui/icons";
 import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
@@ -468,11 +470,19 @@ export function ChatComposer({
             )}
             <button
               className="inline-chat-send"
+              aria-label={busy ? labels.stop : labels.send}
               {...holdFocus}
               onClick={busy ? onStop : () => submit()}
               disabled={!busy && !input.trim()}
             >
-              {busy ? labels.stop : labels.send}
+              {busy ? (
+                <StopIcon className="inline-chat-send-icon" />
+              ) : (
+                <ArrowUpIcon className="inline-chat-send-icon" />
+              )}
+              <span className="inline-chat-send-label">
+                {busy ? labels.stop : labels.send}
+              </span>
             </button>
           </div>
         </div>

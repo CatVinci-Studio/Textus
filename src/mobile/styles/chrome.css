@@ -47,7 +47,7 @@
     border: none;
     border-radius: var(--shape-l);
     text-align: center;
-    animation: motion-alert-in var(--dur-medium) var(--ease-out);
+    animation: motion-alert-in var(--dur-base) var(--ease-out);
   }
 
   /* Dismissed, it only fades - with the dimming behind it. */

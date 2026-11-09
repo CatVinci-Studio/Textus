@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { dragWithMouse, openApp, swallowHtmlDrop } from "./helpers";
+import {
+  dragWithMouse,
+  openApp,
+  swallowHtmlDrop,
+  chromeScale,
+} from "./helpers";
 
 /** Plugin tabs that don't fit the sidebar's width go under More: the
  *  sidebar's own tab row, with the activity rail off. */
@@ -40,7 +45,9 @@ test("tabs past the sidebar's width go under More, the one shown keeps its butto
   const width = await page
     .locator(".sidebar-tabs")
     .evaluate((el) => el.clientWidth);
-  expect(await tabs.count()).toBe(Math.floor(width / 30));
+  expect(await tabs.count()).toBe(
+    Math.floor(width / (30 * (await chromeScale(page)))),
+  );
 
   await more.click();
   await page.getByRole("menuitem", { name: "Example 6" }).click();

@@ -108,7 +108,7 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     if (!doc || !view) return null;
     doc.documentElement.dataset.theme = dark ? "dark" : "light";
     const base = doc.createElement("style");
-    base.textContent = `body { background: var(--bg-color, var(--ui-surface, var(--ui-bg, ${dark ? "#1b1e24" : "#fff"}))); color: var(--text-color, var(--ui-text, ${dark ? "#e4e7ed" : "#24272e"})); } a { color: var(--primary-color, var(--ui-accent, #315ed1)); }`;
+    base.textContent = `body { background: var(--bg-color, var(--ui-surface, var(--ui-bg, ${dark ? "#1f1e1c" : "#fff"}))); color: var(--text-color, var(--ui-text, ${dark ? "#e6e2da" : "#24272e"})); } a { color: var(--primary-color, var(--ui-accent, #315ed1)); }`;
     const theme = doc.createElement("style");
     theme.textContent = css;
     doc.head.append(base, theme);

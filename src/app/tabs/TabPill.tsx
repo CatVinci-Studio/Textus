@@ -258,7 +258,7 @@ export function TabPill({
       play(rects, {
         timingFor: (el) =>
           el === elRef.current
-            ? { duration: "--dur-medium", easing: "--ease-spring-bouncy" }
+            ? { duration: "--dur-base", easing: "--ease-spring-bouncy" }
             : undefined,
       });
     } else {

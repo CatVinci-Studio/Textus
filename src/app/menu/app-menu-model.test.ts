@@ -109,8 +109,9 @@ describe("the View menu's on/off items", () => {
         view === undefined || view === "separator" ? [] : (view.submenu ?? []),
       );
       const onOff = items.filter((item) => item.checked !== undefined);
-      // Sidebar, AI panel, the four modes and their three additions.
-      expect(onOff).toHaveLength(10);
+      // Sidebar, AI panel, format bar, the four modes and their three
+      // additions.
+      expect(onOff).toHaveLength(11);
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);

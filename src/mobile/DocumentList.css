@@ -116,7 +116,7 @@
   corner-shape: round;
   background: var(--ui-bg);
   box-shadow: var(--shadow-raised);
-  transition: transform var(--dur-medium) var(--ease-spring);
+  transition: transform var(--dur-base) var(--ease-spring);
 }
 
 .document-list-views[data-view="grid"]::before {

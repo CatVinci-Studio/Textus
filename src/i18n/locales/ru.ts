@@ -46,23 +46,23 @@ export default {
     "Абзац изменился во время проверки — повторите попытку.",
   noticeGrammarNoIssues: "Замечаний нет.",
   projectTooBroad:
-    "Эта папка слишком общая для проекта (домашняя папка или целый диск). Выберите более конкретную папку.",
+    "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
   projectNoSamples:
     "Ни один из выбранных файлов не удалось прочитать как текст.",
   projectNeedsSave:
-    "Сначала сохраните документ — его папка станет папкой проекта.",
+    "Сначала сохраните документ — ИИ будет работать в его папке.",
   projectPicking: "Выбор папки…",
   projectLearningStyle: "Изучение вашего стиля по образцам…",
   projectStyleLearned:
     "Профиль стиля сохранён — проверьте и отредактируйте его в новой вкладке.",
   projectOpening: "Открытие…",
-  projectStyleTemplate: `# Профиль стиля\n\n<!-- ${AI_NAME} и автодополнение следуют этому профилю во всех документах проекта. Опишите свою манеру письма: тон, ритм предложений, лексику, пунктуацию, то, чего вы никогда не делаете. Пишите конкретными пунктами («короткие предложения, редко длиннее 15 слов»), а не прилагательными. Пункт «Изучить мой стиль по образцам…» в меню проекта составит черновик по вашим собственным текстам. Комментарии вроде этого никогда не отправляются. -->\n\n## Тон и манера\n\n- \n\n## Предложения и ритм\n\n- \n\n## Лексика\n\n- \n\n## Никогда\n\n- \n`,
+  projectStyleTemplate: `# Профиль стиля\n\n<!-- ${AI_NAME} и автодополнение следуют этому профилю во всех документах этой папки. Опишите свою манеру письма: тон, ритм предложений, лексику, пунктуацию, то, чего вы никогда не делаете. Пишите конкретными пунктами («короткие предложения, редко длиннее 15 слов»), а не прилагательными. Пункт «Изучить мой стиль по образцам…» в меню папки составит черновик по вашим собственным текстам. Комментарии вроде этого никогда не отправляются. -->\n\n## Тон и манера\n\n- \n\n## Предложения и ритм\n\n- \n\n## Лексика\n\n- \n\n## Никогда\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Факты, которые ${AI_NAME} будет учитывать всякий раз, когда упоминается {name} или один из псевдонимов. include: detected (при упоминании, по умолчанию) | always (всегда) | never (никогда). Комментарии вроде этого никогда не отправляются. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Инструкции для этого проекта.
+Инструкции для этой папки.
 
 Всё, что написано вне комментариев вроде этого, отправляется ${AI_NAME}
-с каждым диалогом о документе этого проекта, после ваших глобальных
+с каждым диалогом о документе этой папки, после ваших глобальных
 инструкций (Настройки > ${AI_NAME}). При расхождении приоритет у этого
 файла. Комментарии никогда не отправляются.
 
@@ -90,9 +90,9 @@ export default {
   Термины       Пиши «интернет» со строчной буквы.
   Контекст      Я пишу научно-популярные лонгриды для широкой публики.
 
-Инструкции только для одного проекта пишутся в его файле .textus/agent.md
-(меню проекта на панели ИИ > Изменить инструкции проекта).
-Отправляются и те и другие; при расхождении приоритет у проектных.
+Инструкции только для одной папки пишутся в её файле .textus/agent.md
+(меню папки на панели ИИ > Изменить инструкции папки).
+Отправляются и те и другие; при расхождении приоритет у инструкций папки.
 
 Навыки хранятся в папке skills/ рядом с этим файлом, по одному файлу .md
 на навык; чтобы применить навык, введите /имя в диалоге.
@@ -101,8 +101,8 @@ export default {
   projectOpenStyle: "Открыть профиль стиля",
   projectStyleChip: "Стиль",
   projectLibraryChip: "Картотека {n}",
-  projectPickFolder: "Другая папка проекта…",
-  projectNoFolder: "Не использовать папку проекта",
+  projectPickFolder: "Другая рабочая папка…",
+  projectNoFolder: "Не использовать папку",
   projectReveal: "Показать в файловом менеджере",
   projectLearnStyle: "Изучить мой стиль по образцам…",
   projectImportReferences: "Импортировать источники…",
@@ -112,8 +112,8 @@ export default {
   projectReferencesImportedSkipped: `В references/ добавлено файлов: {n}. ${AI_NAME} может искать по ним; пропущено: {skipped} (не текст и не документ или слишком большой файл).`,
   projectCreateStyle: "Создать профиль стиля",
   projectNewEntry: "Новая карточка…",
-  projectEditInstructions: "Изменить инструкции проекта",
-  projectFolderTitle: "Папка проекта: {path}",
+  projectEditInstructions: "Изменить инструкции папки",
+  projectFolderTitle: "Папка: {path}",
   projectEntryPlaceholder: "Имя персонажа, название места или термин",
   projectEntryCreate: "Создать",
   chatHistoryUnsaved: "Несохранённые документы",
@@ -204,27 +204,22 @@ export default {
   reviewNotesPicked: "Выбрано: {n}",
   reviewNotesAskPrefix: "Об этих заметках:\n{notes}\n",
   reviewNoteAskPrefix: "По поводу заметки «{comment}»: ",
-  agentTabProject: "Проект",
+  agentTabProject: "Папка",
   memoryStyle: "Стиль письма",
   memoryLibrary: "Картотека",
   memoryInstructions: "Инструкции",
-  memoryStyleHint: "Как вы пишете: ИИ пишет так же.",
-  memoryInstructionsHint: "Правила, которым ИИ следует всегда.",
-  memoryLibraryHint:
-    "Люди, места и термины — ИИ сверяется, когда они встречаются.",
-  memoryRememberedHint: "Что ИИ сам запомнил из ваших разговоров.",
   memoryEdit: "Изменить",
   memoryNew: "Новая",
   memoryInThisDocument: "В этом документе",
-  memoryAllProjects: "Все проекты",
-  memoryEditGlobal: "Изменить инструкции для всех проектов",
+  memoryAllProjects: "Все папки",
+  memoryEditGlobal: "Изменить инструкции для всех папок",
   memoryStyleEmpty: `Профиля стиля пока нет. Дайте ${AI_NAME} несколько своих текстов — он научится писать, как вы.`,
   memoryLibraryEmpty: `Люди, места, термины: добавьте их в картотеку, и ${AI_NAME} их запомнит.`,
   memoryInstructionsEmpty: `Инструкций пока нет. Запишите правила, которым ${AI_NAME} должен следовать всегда.`,
-  memoryNeedsSave: `Откройте папку или выберите папку проекта, и ${AI_NAME} запомнит для неё ваш стиль, библиотеку и указания.`,
+  memoryNeedsSave: `Откройте или выберите папку, и ${AI_NAME} запомнит для неё ваш стиль, библиотеку и указания.`,
   memoryRemembered: "Память",
-  memoryRememberedPersonal: "Для всех проектов",
-  memoryRememberedProject: "Этот проект",
+  memoryRememberedPersonal: "Для всех папок",
+  memoryRememberedProject: "Эта папка",
   memoryRememberedEmpty: `Пока ничего. Скажите ${AI_NAME}, чего вы хотите всегда, и он запомнит это на будущее.`,
   memoryRememberOff: `«Запоминать автоматически» выключено (Настройки › ${AI_NAME}): ${AI_NAME} не запоминает ничего нового.`,
   memoryKindRequirement: "Требование",
@@ -250,15 +245,15 @@ export default {
   memoryLibraryLeftOut:
     "Упомянуты, но не отправлены: превышен лимит картотеки в {cap} символов: {names}.",
   memoryChipSaved: "Запомнено: {text} ({scope})",
-  memoryScopeProject: "проект",
+  memoryScopeProject: "папка",
   memoryScopePersonal: "общее",
   memoryChipUndo: "Отменить",
   memoryMakePersonal: "Сделать общим",
-  memoryMakeProject: "Перенести в проект",
+  memoryMakeProject: "Только для этой папки",
   memoryChipUndone: "Отменено. Больше не запомнено.",
   memoryChipForgot: "Забыто: {text} ({scope})",
   memoryChipRestored: "Отменено. Снова запомнено.",
-  memoryActionFailed: "Не получилось. Попробуйте ещё раз во вкладке «Проект».",
+  memoryActionFailed: "Не получилось. Попробуйте ещё раз во вкладке «Папка».",
   learnSuggestion: "Вы несколько раз отклонили {what}. Запомнить? {rule}",
   learnQuoted: "«{text}»",
   learnSwap: "замену {from} на {to}",
@@ -295,7 +290,7 @@ export default {
   learnNotNow: "Не сейчас",
   learnNever: "Больше не спрашивать",
   learnSaved:
-    "Запомнено. Посмотреть или удалить можно в разделе «Проект» панели ИИ.",
+    "Запомнено. Посмотреть или удалить можно в разделе «Папка» панели ИИ.",
   learnLabel: "Выводы из ваших решений по правкам",
   suggestNextMessageLabel: "Предлагать следующее сообщение",
   suggestNextMessageHint:
@@ -310,7 +305,7 @@ export default {
   researchCheckClaimsHint:
     "Перед правкой черновика каждое предложение со ссылкой сравнивается с заметками об этом источнике, и то, что говорит больше них, переписывается. Тщательнее, но на раздел уходит ещё один вызов модели.",
   rememberAutomaticallyLabel: "Запоминать автоматически",
-  rememberAutomaticallyHint: `${AI_NAME} запоминает ваши требования и манеру письма для следующих разговоров. Посмотреть, изменить или отменить это можно в разделе «Проект» панели ИИ. После каждого ответа он ещё раз коротко спрашивает ту же модель, что запомнить.`,
+  rememberAutomaticallyHint: `${AI_NAME} запоминает ваши требования и манеру письма для следующих разговоров. Посмотреть, изменить или отменить это можно в разделе «Папка» панели ИИ. После каждого ответа он ещё раз коротко спрашивает ту же модель, что запомнить.`,
   toolRemember: "Запоминаю",
   agentGeneratingImage: "Создаю изображение…",
   toolGenerateImage: "Создаю изображение",
@@ -384,9 +379,9 @@ export default {
   toolSearchDocument: "Поиск в документе: «{arg}»",
   toolReadDocument: "Чтение: «{arg}»",
   toolReadWholeDocument: "Чтение документа",
-  toolSearchFiles: "Поиск в проекте: «{arg}»",
+  toolSearchFiles: "Поиск в папке: «{arg}»",
   toolFindFiles: "Поиск файлов по имени: «{arg}»",
-  toolListFiles: "Просмотр файлов проекта",
+  toolListFiles: "Просмотр файлов папки",
   toolReadFile: "Чтение файла {arg}",
   toolUseSkill: "Применение навыка {arg}",
   toolAddComment: "Добавление комментария",
@@ -552,12 +547,10 @@ export default {
   treeTab: "Файлы",
   outlineTab: "Оглавление",
   treeParentFolder: "Родительская папка",
-  treeEmptyDraft: "Сохраните документ, и здесь появится его папка.",
-  outlineEmpty:
-    "Заголовков пока нет — здесь появятся строки, начинающиеся с #.",
+  outlineEmpty: "Заголовков пока нет",
   treeRefresh: "Обновить",
-  menuOpenFolder: "Открыть проект…",
-  menuCloseFolder: "Закрыть проект",
+  menuOpenFolder: "Открыть папку…",
+  menuCloseFolder: "Закрыть папку",
   menuCopyPath: "Копировать путь",
   folderTooBroad:
     "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
@@ -567,14 +560,13 @@ export default {
   treeSearchCapped:
     "Поиск только по первым {n} файлам. Откройте папку поменьше, чтобы искать по всей.",
   treeSearchTooBroad:
-    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть проект…",
+    "Эта папка слишком общая для поиска. Откройте более конкретную через Файл › Открыть папку…",
   treeSearchFailed: "Не удаётся прочитать эту папку.",
   treeSearchScope: "Показывать",
   treeSearchScopeAll: "Все файлы",
   treeSearchScopeDocuments: "Только документы",
   treeNewDocument: "Новый документ",
   treeNewFolder: "Новая папка",
-  treeEmptyHint: "Дважды щёлкните здесь, чтобы создать документ.",
   treeNewDocumentPrompt: "Название нового документа",
   treeNewFolderPrompt: "Название новой папки",
   treeNewDocumentDefault: "Без названия",
@@ -593,7 +585,7 @@ export default {
   treeUpdateLinksFailed:
     "Не удалось обновить ссылки в этих документах: {names}",
   treeDocumentFolder: "Папка текущего документа",
-  treeOpenAsFolder: "Открыть как проект",
+  treeOpenAsFolder: "Открыть эту папку",
   treeTrashItem: "Переместить в корзину",
   treeTrash: "Переместить в корзину",
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",
@@ -729,7 +721,7 @@ export default {
   editAnimationLabel: "Анимировать предпросмотр правок",
   agentWorkspaceLabel: "Папка глобальных настроек",
   agentWorkspaceOpenButton: "Показать",
-  agentWorkspaceRootLabel: "Папка проекта",
+  agentWorkspaceRootLabel: "Рабочая папка",
   agentWorkspaceRootDefault:
     "Нет — папка, открытая на боковой панели, если она есть",
   agentWorkspaceRootPick: "Выбрать…",
@@ -738,7 +730,7 @@ export default {
   agentSkillsLabel: "Навыки",
   agentSkillsImport: "Импортировать навык…",
   skillGroupRecent: "Недавние",
-  skillGroupProject: "Этот проект",
+  skillGroupProject: "Эта папка",
   skillGroupYours: "Мои навыки",
   skillCategoryWrite: "Написать",
   skillCategoryRevise: "Переработать",
@@ -751,10 +743,10 @@ export default {
   skillPickerNoMatch: "Нет навыков по запросу «{query}».",
   skillPickerHowTo:
     "Добавить навыки или импортировать свои можно в «Настройках».",
-  mentionPickerAbout: "Введите @, чтобы приложить файл из папки проекта.",
+  mentionPickerAbout: "Введите @, чтобы приложить файл из папки.",
   mentionPickerNoProject:
-    "Сохраните документ или выберите папку проекта — и её файлы появятся здесь.",
-  mentionPickerNoFiles: "В папке проекта пока нет текстовых файлов.",
+    "Сохраните документ или выберите папку — и её файлы появятся здесь.",
+  mentionPickerNoFiles: "В папке пока нет текстовых файлов.",
   mentionPickerNoMatch: "Нет файлов по запросу «{query}».",
   agentSkillsBuiltin: "Встроенные навыки",
   agentSkillsCustomize: "Настроить…",
@@ -926,7 +918,7 @@ export default {
   skillOfferSaved:
     "Сохранено как {name}: введите его в поле сообщения, чтобы сделать снова.",
   skillOfferSave: "Для всех документов",
-  skillOfferSaveProject: "Только для этого проекта",
+  skillOfferSaveProject: "Только для этой папки",
   chatHistorySearch: "Поиск по разговорам",
   chatHistorySearchNone: "Ни в одном разговоре нет этих слов.",
   chatHistoryByYou: "Вы",
@@ -1144,6 +1136,7 @@ export default {
   menuCodeBlock: "Блок кода",
   menuTable: "Таблица",
   menuToggleSourceMode: "Режим исходного кода",
+  menuFormatBar: "Панель форматирования",
   menuToggleTypewriterMode: "Режим пишущей машинки",
   menuToggleSidebar: "Боковая панель",
   menuZoomIn: "Увеличить",
@@ -1296,6 +1289,7 @@ export default {
   docLineSpacingStandard: "Обычный",
   docLineSpacingRelaxed: "Свободный",
   docFontLabel: "Шрифт текста",
+  docFontMore: "Другие шрифты",
   docFontAuto: "Как в теме",
   docLetterSpacingLabel: "Межзнаковый интервал",
   docLetterSpacingAuto: "Как в теме",
@@ -1316,7 +1310,7 @@ export default {
   closeLastWindow: "Закрыть окно",
   closeLastStartPage: "Показать начальную страницу",
   startPageRemoveRecent: "Убрать из недавних",
-  startPageRecentProjects: "Недавние проекты",
+  startPageRecentProjects: "Недавние папки",
   startPagePickDocument:
     "Выберите документ из {folder} на боковой панели, чтобы начать.",
   startPageRecentFiles: "Недавние файлы",
@@ -1401,7 +1395,7 @@ export default {
   tutorialDoneTitle: "Готово",
   tutorialDoneBody:
     "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Онлайн-уроках.",
-  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Проект» — кнопку с папкой в панели ИИ.`,
+  tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Папка» в панели ИИ.`,
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",
@@ -1459,7 +1453,7 @@ export default {
   imageFolderSameFolder: "Та же папка, что и документ",
   imageFolderNameLabel: "Имя вложенной папки",
   imageFolderProjectNote:
-    "Этот проект хранит картинки в {folder} (задано в {source}).",
+    "Эта папка хранит картинки в {folder} (задано в {source}).",
   imageFolderInvalid: "Укажите папку внутри папки документа, например img.",
   imageHostLabel: "Хостинг изображений",
   imageHostCustom: "Свой сервер",
@@ -1677,8 +1671,8 @@ export default {
   pluginBackToList: "Все плагины",
   pluginSettingsScope: "Применяется к",
   pluginSettingsScopeGlobal: "Все документы",
-  pluginSettingsScopeProject: "Этот проект ({name})",
-  pluginSettingProjectOwn: "У этого проекта своё значение.",
+  pluginSettingsScopeProject: "Эта папка ({name})",
+  pluginSettingProjectOwn: "У этой папки своё значение.",
   pluginSettingUseGeneral: "Использовать общее значение",
   pluginSettingsGroup: "Настройки",
   pluginSettingsOff: "Включите {name}, чтобы изменить его настройки.",
@@ -1691,7 +1685,7 @@ export default {
   pluginAboutGroup: "О плагине",
   pluginDataLabel: "Его данные",
   pluginDataGlobal: "{global} для всех документов",
-  pluginDataProject: "{project} в этом проекте",
+  pluginDataProject: "{project} в этой папке",
   pluginDataClear: "Очистить",
   pluginDataClearAsk: "Очистить то, что хранит {name}? Это нельзя отменить.",
   pluginVersionLabel: "Версия {version}",
@@ -1718,7 +1712,7 @@ export default {
   conventionsCardLine:
     "Настройки {app} этой папки сохраняют изображения в {folder}",
   conventionsCardDetails:
-    "Текущая настройка: {current}. При применении она сохраняется в .textus/settings.json этой папки и остаётся с проектом.",
+    "Текущая настройка: {current}. При применении она сохраняется в .textus/settings.json этой папки и остаётся с папкой.",
   conventionsFolderRoot: "саму папку",
   conventionsFollow: "Применить",
   conventionsDecline: "Оставить текущую",

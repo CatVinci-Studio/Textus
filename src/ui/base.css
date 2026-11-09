@@ -111,6 +111,9 @@
   /* The window's frame - the title bar, the activity rail, the sidebar -
      one surface around the document (design-language.md 5.7). */
   --ui-frame: var(--ui-subtle);
+  /* The frame a step further back, under a floating page (several
+     documents). */
+  --ui-frame-sunk: color-mix(in srgb, var(--ui-text) 4%, var(--ui-subtle));
   /* What the frame is filled with: the frame's colour, or frosted - the same
      colour a little clear, over the page - when the title bar is. One fill
      for the bar, the rail and the sidebar, so they never differ. */
@@ -206,28 +209,36 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --ui-danger: #f18b99;
-    --doc-bg: #1b1e24;
-    --doc-text: #e4e7ed;
-    --doc-muted: #989da6;
-    --doc-accent: #96b5ff;
-    --doc-border: #333230;
-    --doc-quote-border: #3a3936;
-    --doc-code-bg: #2a2a28;
-    --doc-highlight-bg: #4a3f1f;
+    --doc-bg: #1f1e1c;
+    --doc-text: #e6e2da;
+    --doc-muted: #a09a8f;
+    --doc-accent: #9fb8e3;
+    --doc-border: #37342f;
+    --doc-quote-border: #4d4639;
+    --doc-code-bg: #2a2825;
+    --doc-highlight-bg: #5a4a1f;
+    /* Dark frames recede by darkening: a lighter frame would read as
+       raised above the page. */
+    --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
+    --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ui-danger: #f18b99;
-  --doc-bg: #1b1e24;
-  --doc-text: #e4e7ed;
-  --doc-muted: #989da6;
-  --doc-accent: #96b5ff;
-  --doc-border: #333230;
-  --doc-quote-border: #3a3936;
-  --doc-code-bg: #2a2a28;
-  --doc-highlight-bg: #4a3f1f;
+  --doc-bg: #1f1e1c;
+  --doc-text: #e6e2da;
+  --doc-muted: #a09a8f;
+  --doc-accent: #9fb8e3;
+  --doc-border: #37342f;
+  --doc-quote-border: #4d4639;
+  --doc-code-bg: #2a2825;
+  --doc-highlight-bg: #5a4a1f;
+  /* Dark frames recede by darkening: a lighter frame would read as
+     raised above the page. */
+  --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
+  --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
 }
 
 * {

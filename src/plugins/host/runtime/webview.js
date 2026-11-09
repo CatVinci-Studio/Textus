@@ -363,20 +363,25 @@
     root.style.overscrollBehaviorY = scrolls ? "contain" : "";
   }
   window.addEventListener("resize", soon);
-  if (typeof ResizeObserver === "function")
-    window.addEventListener("DOMContentLoaded", function () {
-      new ResizeObserver(soon).observe(document.documentElement);
-      if (document.body) {
-        new ResizeObserver(soon).observe(document.body);
-        // Content that shrinks leaves the body, held to the frame, as tall.
-        new MutationObserver(soon).observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true,
-          characterData: true,
-        });
-      }
+  // Watched from when the page is parsed - at once if it already is - and
+  // told once then, as nothing may change after.
+  function watchSize() {
+    soon();
+    if (typeof ResizeObserver !== "function") return;
+    new ResizeObserver(soon).observe(document.documentElement);
+    if (!document.body) return;
+    new ResizeObserver(soon).observe(document.body);
+    // Content that shrinks leaves the body, held to the frame, as tall.
+    new MutationObserver(soon).observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
     });
+  }
+  if (document.readyState === "loading")
+    window.addEventListener("DOMContentLoaded", watchSize);
+  else watchSize();
 
   window.textus = api;
   window.acquireTextusApi = function () {

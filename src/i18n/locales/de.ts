@@ -47,23 +47,23 @@ export default {
     "Der Absatz hat sich während der Prüfung geändert. Versuch es noch einmal.",
   noticeGrammarNoIssues: "Keine Probleme gefunden.",
   projectTooBroad:
-    "Dieser Ordner ist als Projektordner zu weit gefasst (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
+    "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
   projectNoSamples:
     "Keine der ausgewählten Dateien konnte als Text gelesen werden.",
   projectNeedsSave:
-    "Speichere dieses Dokument zuerst – sein Ordner wird zum Projektordner.",
+    "Speichere dieses Dokument zuerst – die KI arbeitet in seinem Ordner.",
   projectPicking: "Ordner wird ausgewählt…",
   projectLearningStyle: "Dein Stil wird aus den Textproben gelernt…",
   projectStyleLearned:
     "Stilprofil gespeichert – prüfe und bearbeite es im neuen Tab.",
   projectOpening: "Wird geöffnet…",
-  projectStyleTemplate: `# Stilprofil\n\n<!-- ${AI_NAME} und die Vervollständigung richten sich in jedem Dokument dieses Projekts nach diesem Profil. Beschreibe, wie du schreibst – Stimme, Satzrhythmus, Wortwahl, Zeichensetzung, was du nie tust –, in konkreten Punkten („kurze Sätze, selten über 15 Wörter“) statt mit Adjektiven. „Meinen Stil aus Textproben lernen…“ im Projektmenü entwirft es aus deinen eigenen Texten. Kommentare wie dieser werden nie gesendet. -->\n\n## Stimme und Ton\n\n- \n\n## Sätze und Rhythmus\n\n- \n\n## Wortwahl\n\n- \n\n## Tabus\n\n- \n`,
+  projectStyleTemplate: `# Stilprofil\n\n<!-- ${AI_NAME} und die Vervollständigung richten sich in jedem Dokument dieses Ordners nach diesem Profil. Beschreibe, wie du schreibst – Stimme, Satzrhythmus, Wortwahl, Zeichensetzung, was du nie tust –, in konkreten Punkten („kurze Sätze, selten über 15 Wörter“) statt mit Adjektiven. „Meinen Stil aus Textproben lernen…“ im Ordnermenü entwirft es aus deinen eigenen Texten. Kommentare wie dieser werden nie gesendet. -->\n\n## Stimme und Ton\n\n- \n\n## Sätze und Rhythmus\n\n- \n\n## Wortwahl\n\n- \n\n## Tabus\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Fakten, die ${AI_NAME} einheitlich halten soll, sobald {name} oder ein Alias vorkommt. include: detected (bei Erwähnung, Standard) | always (immer) | never (nie). Kommentare wie dieser werden nie gesendet. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Schreibanweisungen für dieses Projekt.
+Schreibanweisungen für diesen Ordner.
 
 Alles außerhalb von Kommentaren wie diesem wird bei jeder Unterhaltung
-über ein Dokument dieses Projekts an ${AI_NAME} gesendet, nach deinen
+über ein Dokument dieses Ordners an ${AI_NAME} gesendet, nach deinen
 globalen Schreibanweisungen (Einstellungen > ${AI_NAME}). Wo sich beide
 widersprechen, gilt diese Datei. Kommentare werden nie gesendet.
 
@@ -91,9 +91,9 @@ Was hier zum Beispiel hingehört:
   Begriffe     Schreib „E-Mail“, nie „Email“.
   Hintergrund  Ich schreibe lange Wissenschaftsreportagen für ein breites Publikum.
 
-Anweisungen, die nur für ein Projekt gelten, gehören in dessen
-.textus/agent.md (Projektmenü im KI-Bereich > Projekt-Schreibanweisungen bearbeiten).
-Beide werden gesendet; wo sie sich widersprechen, gelten die des Projekts.
+Anweisungen, die nur für einen Ordner gelten, gehören in dessen
+.textus/agent.md (Ordnermenü im KI-Bereich > Schreibanweisungen des Ordners bearbeiten).
+Beide werden gesendet; wo sie sich widersprechen, gelten die des Ordners.
 
 Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
 .md-Datei; tippe in einer Unterhaltung /name, um einen zu verwenden.
@@ -102,8 +102,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   projectOpenStyle: "Stilprofil öffnen",
   projectStyleChip: "Stil",
   projectLibraryChip: "Lexikon {n}",
-  projectPickFolder: "Projektordner wählen…",
-  projectNoFolder: "Keinen Projektordner verwenden",
+  projectPickFolder: "Ordner wählen…",
+  projectNoFolder: "Keinen Ordner verwenden",
   projectReveal: "Im Dateimanager anzeigen",
   projectLearnStyle: "Meinen Stil aus Textproben lernen…",
   projectImportReferences: "Quellen importieren…",
@@ -113,8 +113,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   projectReferencesImportedSkipped: `{n} Dateien zu references/ hinzugefügt – ${AI_NAME} kann sie durchsuchen; {skipped} ausgelassen (kein Text oder Dokument, oder zu groß).`,
   projectCreateStyle: "Stilprofil erstellen",
   projectNewEntry: "Neuer Lexikoneintrag…",
-  projectEditInstructions: "Projekt-Schreibanweisungen bearbeiten",
-  projectFolderTitle: "Projektordner: {path}",
+  projectEditInstructions: "Schreibanweisungen des Ordners bearbeiten",
+  projectFolderTitle: "Ordner: {path}",
   projectEntryPlaceholder: "Name einer Figur, eines Orts oder Begriffs",
   projectEntryCreate: "Erstellen",
   chatHistoryUnsaved: "Nicht gespeicherte Dokumente",
@@ -199,27 +199,22 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reviewNotesPicked: "{n} ausgewählt",
   reviewNotesAskPrefix: "Zu diesen Notizen:\n{notes}\n",
   reviewNoteAskPrefix: "Zu deiner Anmerkung „{comment}“: ",
-  agentTabProject: "Projekt",
+  agentTabProject: "Ordner",
   memoryStyle: "Schreibstil",
   memoryLibrary: "Lexikon",
   memoryInstructions: "Schreibanweisungen",
-  memoryStyleHint: "Wie du schreibst: die KI schreibt genauso.",
-  memoryInstructionsHint: "Regeln, an die sich die KI jedes Mal hält.",
-  memoryLibraryHint:
-    "Personen, Orte und Begriffe, nachgeschlagen, wenn sie vorkommen.",
-  memoryRememberedHint: "Was sich die KI aus euren Gesprächen gemerkt hat.",
   memoryEdit: "Bearbeiten",
   memoryNew: "Neu",
   memoryInThisDocument: "In diesem Dokument",
-  memoryAllProjects: "Alle Projekte",
-  memoryEditGlobal: "Schreibanweisungen für alle Projekte bearbeiten",
+  memoryAllProjects: "Alle Ordner",
+  memoryEditGlobal: "Schreibanweisungen für alle Ordner bearbeiten",
   memoryStyleEmpty: `Noch kein Stilprofil. Gib ${AI_NAME} ein paar deiner Texte, und es lernt, wie du schreibst.`,
   memoryLibraryEmpty: `Personen, Orte, Begriffe: Trag sie ins Lexikon ein, und ${AI_NAME} merkt sie sich.`,
   memoryInstructionsEmpty: `Noch keine Schreibanweisungen. Schreib die Regeln auf, die ${AI_NAME} immer befolgen soll.`,
-  memoryNeedsSave: `Öffne einen Ordner oder wähle einen Projektordner, dann merkt sich ${AI_NAME} deinen Stil, deine Bibliothek und deine Anweisungen dafür.`,
+  memoryNeedsSave: `Öffne oder wähle einen Ordner, dann merkt sich ${AI_NAME} deinen Stil, deine Bibliothek und deine Anweisungen dafür.`,
   memoryRemembered: "Gedächtnis",
-  memoryRememberedPersonal: "Für alle Projekte",
-  memoryRememberedProject: "Dieses Projekt",
+  memoryRememberedPersonal: "Für alle Ordner",
+  memoryRememberedProject: "Dieser Ordner",
   memoryRememberedEmpty: `Noch nichts. Sag ${AI_NAME}, was du immer willst, dann merkt es sich das fürs nächste Mal.`,
   memoryRememberOff: `„Automatisch merken“ ist aus (Einstellungen › ${AI_NAME}): ${AI_NAME} merkt sich nichts Neues.`,
   memoryKindRequirement: "Vorgabe",
@@ -247,16 +242,16 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   memoryLibraryLeftOut:
     "Erwähnt, aber nicht gesendet, weil über der Grenze des Lexikons von {cap} Zeichen: {names}.",
   memoryChipSaved: "Gemerkt: {text} ({scope})",
-  memoryScopeProject: "Projekt",
+  memoryScopeProject: "Ordner",
   memoryScopePersonal: "global",
   memoryChipUndo: "Rückgängig",
   memoryMakePersonal: "Global machen",
-  memoryMakeProject: "Ins Projekt",
+  memoryMakeProject: "Nur für diesen Ordner",
   memoryChipUndone: "Rückgängig gemacht. Nicht mehr gemerkt.",
   memoryChipForgot: "Vergessen: {text} ({scope})",
   memoryChipRestored: "Rückgängig gemacht. Wieder gemerkt.",
   memoryActionFailed:
-    "Das hat nicht geklappt. Versuch es im Tab Projekt noch einmal.",
+    "Das hat nicht geklappt. Versuch es im Tab Ordner noch einmal.",
   learnSuggestion: "Du hast {what} mehrmals abgelehnt. Merken? {rule}",
   learnQuoted: "„{text}“",
   learnSwap: "das Ändern von {from} in {to}",
@@ -293,7 +288,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   learnNotNow: "Jetzt nicht",
   learnNever: "Nicht mehr fragen",
   learnSaved:
-    "Gemerkt. Unter Projekt im KI-Bereich kannst du es ansehen oder löschen.",
+    "Gemerkt. Unter Ordner im KI-Bereich kannst du es ansehen oder löschen.",
   learnLabel: "Aus deinen Überarbeitungen gelernt",
   suggestNextMessageLabel: "Nächste Nachricht vorschlagen",
   suggestNextMessageHint:
@@ -307,7 +302,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   researchCheckClaimsHint:
     "Bevor die Recherche ihren Entwurf überarbeitet, wird jeder Satz mit Quelle mit den Notizen zu dieser Quelle verglichen, und einer, der mehr sagt als sie, wird neu geschrieben. Sorgfältiger, mit einem Modellaufruf mehr pro Abschnitt.",
   rememberAutomaticallyLabel: "Automatisch merken",
-  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Projekt im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
+  rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Ordner im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",
   toolGenerateImage: "Bild wird erstellt",
@@ -384,9 +379,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   toolSearchDocument: "Durchsucht das Dokument nach „{arg}“",
   toolReadDocument: "Liest „{arg}“",
   toolReadWholeDocument: "Liest das Dokument",
-  toolSearchFiles: "Durchsucht das Projekt nach „{arg}“",
+  toolSearchFiles: "Durchsucht den Ordner nach „{arg}“",
   toolFindFiles: "Sucht Dateien namens „{arg}“",
-  toolListFiles: "Sieht sich die Projektdateien an",
+  toolListFiles: "Sieht sich die Dateien des Ordners an",
   toolReadFile: "Liest {arg}",
   toolUseSkill: "Verwendet den Skill {arg}",
   toolAddComment: "Fügt einen Kommentar hinzu",
@@ -549,12 +544,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeTab: "Dateien",
   outlineTab: "Gliederung",
   treeParentFolder: "Übergeordneter Ordner",
-  treeEmptyDraft: "Speichere dieses Dokument, dann erscheint hier sein Ordner.",
-  outlineEmpty:
-    "Noch keine Überschriften – Zeilen, die mit # beginnen, erscheinen hier.",
+  outlineEmpty: "Noch keine Überschriften",
   treeRefresh: "Aktualisieren",
-  menuOpenFolder: "Projekt öffnen…",
-  menuCloseFolder: "Projekt schließen",
+  menuOpenFolder: "Ordner öffnen…",
+  menuCloseFolder: "Ordner schließen",
   menuCopyPath: "Pfad kopieren",
   folderTooBroad:
     "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
@@ -564,14 +557,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeSearchCapped:
     "Nur die ersten {n} Dateien wurden durchsucht. Öffne einen kleineren Ordner, um alles zu durchsuchen.",
   treeSearchTooBroad:
-    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Projekt öffnen… einen spezifischeren.",
+    "Dieser Ordner ist zu weit gefasst, um ihn zu durchsuchen. Öffne mit Datei › Ordner öffnen… einen spezifischeren.",
   treeSearchFailed: "Dieser Ordner kann nicht gelesen werden.",
   treeSearchScope: "Anzeigen",
   treeSearchScopeAll: "Alle Dateien",
   treeSearchScopeDocuments: "Nur Dokumente",
   treeNewDocument: "Neues Dokument",
   treeNewFolder: "Neuer Ordner",
-  treeEmptyHint: "Hier doppelklicken für ein neues Dokument.",
   treeNewDocumentPrompt: "Name des neuen Dokuments",
   treeNewFolderPrompt: "Name des neuen Ordners",
   treeNewDocumentDefault: "Unbenannt",
@@ -590,7 +582,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeUpdateLinksFailed:
     "Die Links dieser Dokumente konnten nicht aktualisiert werden: {names}",
   treeDocumentFolder: "Ordner des aktuellen Dokuments",
-  treeOpenAsFolder: "Als Projekt öffnen",
+  treeOpenAsFolder: "Diesen Ordner öffnen",
   treeTrashItem: "In den Papierkorb",
   treeTrash: "In den Papierkorb",
   treeTrashConfirm:
@@ -726,7 +718,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   editAnimationLabel: "Änderungsvorschau animieren",
   agentWorkspaceLabel: "Globaler Konfigurationsordner",
   agentWorkspaceOpenButton: "Anzeigen",
-  agentWorkspaceRootLabel: "Projektordner",
+  agentWorkspaceRootLabel: "Ordner",
   agentWorkspaceRootDefault:
     "Keiner – der in der Seitenleiste geöffnete Ordner, falls vorhanden",
   agentWorkspaceRootPick: "Auswählen…",
@@ -735,7 +727,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSkillsLabel: "Skills",
   agentSkillsImport: "Skill importieren…",
   skillGroupRecent: "Zuletzt verwendet",
-  skillGroupProject: "Dieses Projekt",
+  skillGroupProject: "Dieser Ordner",
   skillGroupYours: "Eigene Skills",
   skillCategoryWrite: "Schreiben",
   skillCategoryRevise: "Überarbeiten",
@@ -748,10 +740,10 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   skillPickerNoMatch: "Kein Skill passt zu „{query}“.",
   skillPickerHowTo:
     "Unter Einstellungen kannst du weitere Skills hinzufügen oder eigene importieren.",
-  mentionPickerAbout: "Mit @ hängst du eine Datei aus dem Projektordner an.",
+  mentionPickerAbout: "Mit @ hängst du eine Datei aus dem Ordner an.",
   mentionPickerNoProject:
-    "Speichere das Dokument oder wähle einen Projektordner, dann erscheinen seine Dateien hier.",
-  mentionPickerNoFiles: "Der Projektordner enthält noch keine Textdateien.",
+    "Speichere das Dokument oder wähle einen Ordner, dann erscheinen seine Dateien hier.",
+  mentionPickerNoFiles: "Der Ordner enthält noch keine Textdateien.",
   mentionPickerNoMatch: "Keine Datei passt zu „{query}“.",
   agentSkillsBuiltin: "Integrierte Skills",
   agentSkillsCustomize: "Anpassen…",
@@ -916,7 +908,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   skillOfferSaved:
     "Als {name} behalten: Tippen Sie es ins Eingabefeld, um es wieder zu tun.",
   skillOfferSave: "Für alle Dokumente speichern",
-  skillOfferSaveProject: "Nur für dieses Projekt",
+  skillOfferSaveProject: "Nur für diesen Ordner",
   chatHistorySearch: "Unterhaltungen durchsuchen",
   chatHistorySearchNone: "Keine Unterhaltung enthält diese Wörter.",
   chatHistoryByYou: "Sie",
@@ -1134,6 +1126,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuCodeBlock: "Codeblock",
   menuTable: "Tabelle",
   menuToggleSourceMode: "Quellcodemodus",
+  menuFormatBar: "Formatleiste",
   menuToggleTypewriterMode: "Schreibmaschinenmodus",
   menuToggleSidebar: "Seitenleiste",
   menuZoomIn: "Vergrößern",
@@ -1286,6 +1279,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   docLineSpacingStandard: "Standard",
   docLineSpacingRelaxed: "Weit",
   docFontLabel: "Schriftart",
+  docFontMore: "Weitere Schriften",
   docFontAuto: "Wie im Design",
   docLetterSpacingLabel: "Zeichenabstand",
   docLetterSpacingAuto: "Wie im Design",
@@ -1306,7 +1300,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closeLastWindow: "Fenster schließen",
   closeLastStartPage: "Startseite zeigen",
   startPageRemoveRecent: "Aus „Zuletzt verwendet“ entfernen",
-  startPageRecentProjects: "Letzte Projekte",
+  startPageRecentProjects: "Letzte Ordner",
   startPagePickDocument:
     "Wähle in der Seitenleiste ein Dokument aus {folder}, um zu beginnen.",
   startPageRecentFiles: "Letzte Dateien",
@@ -1397,7 +1391,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialDoneTitle: "Fertig",
   tutorialDoneBody:
     "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
-  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Projekt nach.`,
+  tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Ordner nach.`,
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",
@@ -1458,7 +1452,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageFolderSameFolder: "Derselbe Ordner wie das Dokument",
   imageFolderNameLabel: "Name des Unterordners",
   imageFolderProjectNote:
-    "Dieses Projekt legt Bilder in {folder} ab (festgelegt in {source}).",
+    "Dieser Ordner legt Bilder in {folder} ab (festgelegt in {source}).",
   imageFolderInvalid: "Gib einen Ordner im Ordner des Dokuments an, etwa img.",
   imageHostLabel: "Bild-Hoster",
   imageHostCustom: "Eigener Server",
@@ -1677,8 +1671,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginBackToList: "Alle Plugins",
   pluginSettingsScope: "Gilt für",
   pluginSettingsScopeGlobal: "Alle Dokumente",
-  pluginSettingsScopeProject: "Dieses Projekt ({name})",
-  pluginSettingProjectOwn: "Dieses Projekt hat einen eigenen Wert.",
+  pluginSettingsScopeProject: "Dieser Ordner ({name})",
+  pluginSettingProjectOwn: "Dieser Ordner hat einen eigenen Wert.",
   pluginSettingUseGeneral: "Allgemeinen Wert verwenden",
   pluginSettingsGroup: "Einstellungen",
   pluginSettingsOff: "Schalte {name} ein, um seine Einstellungen zu ändern.",
@@ -1691,7 +1685,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginAboutGroup: "Info",
   pluginDataLabel: "Seine Daten",
   pluginDataGlobal: "{global} für alle Dokumente",
-  pluginDataProject: "{project} in diesem Projekt",
+  pluginDataProject: "{project} in diesem Ordner",
   pluginDataClear: "Leeren",
   pluginDataClearAsk:
     "Was {name} speichert, leeren? Das lässt sich nicht rückgängig machen.",
@@ -1720,7 +1714,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   conventionsCardLine:
     "Die {app}-Einstellungen dieses Ordners legen Bilder in {folder} ab",
   conventionsCardDetails:
-    "Aktuelle Einstellung: {current}. Beim Übernehmen wird sie in der .textus/settings.json dieses Ordners gespeichert und bleibt beim Projekt.",
+    "Aktuelle Einstellung: {current}. Beim Übernehmen wird sie in der .textus/settings.json dieses Ordners gespeichert und bleibt beim Ordner.",
   conventionsFolderRoot: "dem Ordner selbst",
   conventionsFollow: "Übernehmen",
   conventionsDecline: "Aktuelle behalten",

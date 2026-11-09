@@ -44,21 +44,21 @@ export default {
   noticeGrammarChanged: "검사하는 동안 문단이 바뀌었습니다. 다시 시도하세요.",
   noticeGrammarNoIssues: "발견된 문제가 없습니다.",
   projectTooBroad:
-    "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 프로젝트 폴더로 쓸 수 없습니다. 더 구체적인 폴더를 선택하세요.",
+    "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
   projectNoSamples: "선택한 파일 중 텍스트로 읽을 수 있는 파일이 없습니다.",
   projectNeedsSave:
-    "먼저 이 문서를 저장하세요. 문서가 있는 폴더가 프로젝트 폴더가 됩니다.",
+    "먼저 이 문서를 저장하세요. AI는 문서가 있는 폴더에서 작업합니다.",
   projectPicking: "폴더 선택 중…",
   projectLearningStyle: "샘플에서 문체를 학습하는 중…",
   projectStyleLearned:
     "문체 프로필을 저장했습니다. 새 탭에서 검토하고 편집하세요.",
   projectOpening: "여는 중…",
-  projectStyleTemplate: `# 문체 프로필\n\n<!-- 이 프로젝트의 모든 문서에서 ${AI_NAME}와 이어 쓰기가 이 프로필을 따릅니다. 어조, 문장 리듬, 어휘, 문장 부호, 절대 하지 않는 것 등 글 쓰는 방식을 형용사가 아니라 구체적인 항목으로 적으세요(‘문장은 짧게, 40자를 넘는 일은 드물게’). 프로젝트 메뉴의 ‘샘플로 내 문체 학습…’을 쓰면 직접 쓴 글로 초안을 만들 수 있습니다. 이런 주석은 전송되지 않습니다. -->\n\n## 어조\n\n- \n\n## 문장과 리듬\n\n- \n\n## 어휘\n\n- \n\n## 금지 사항\n\n- \n`,
+  projectStyleTemplate: `# 문체 프로필\n\n<!-- 이 폴더의 모든 문서에서 ${AI_NAME}와 이어 쓰기가 이 프로필을 따릅니다. 어조, 문장 리듬, 어휘, 문장 부호, 절대 하지 않는 것 등 글 쓰는 방식을 형용사가 아니라 구체적인 항목으로 적으세요(‘문장은 짧게, 40자를 넘는 일은 드물게’). 폴더 메뉴의 ‘샘플로 내 문체 학습…’을 쓰면 직접 쓴 글로 초안을 만들 수 있습니다. 이런 주석은 전송되지 않습니다. -->\n\n## 어조\n\n- \n\n## 문장과 리듬\n\n- \n\n## 어휘\n\n- \n\n## 금지 사항\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- {name} 또는 그 별칭이 나올 때마다 ${AI_NAME}가 일관되게 지켜야 할 사실을 적으세요. include: detected(언급될 때만, 기본값) | always(항상) | never(보내지 않음). 이런 주석은 전송되지 않습니다. -->\n\n`,
   projectInstructionsTemplate: `<!--
-이 프로젝트의 글쓰기 지침입니다.
+이 폴더의 글쓰기 지침입니다.
 
-이런 주석 밖에 적은 내용은 이 프로젝트 문서에 관한 모든 대화에서
+이런 주석 밖에 적은 내용은 이 폴더 문서에 관한 모든 대화에서
 전역 글쓰기 지침(설정 > ${AI_NAME}) 다음에 ${AI_NAME}에게
 전송됩니다. 두 지침이 서로 다르면 이 파일이 우선합니다. 주석은
 전송되지 않습니다.
@@ -87,9 +87,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   용어    ‘컨텐츠’가 아니라 ‘콘텐츠’로 쓴다.
   배경    일반 독자를 위한 긴 과학 기사를 쓴다.
 
-한 프로젝트에만 해당하는 지침은 그 프로젝트의 .textus/agent.md에
-적습니다(AI 패널의 프로젝트 메뉴 > 프로젝트 글쓰기 지침 편집).
-두 지침이 모두 전송되며, 서로 다르면 프로젝트 지침이 우선합니다.
+한 폴더에만 해당하는 지침은 그 폴더의 .textus/agent.md에
+적습니다(AI 패널의 폴더 메뉴 > 폴더 글쓰기 지침 편집).
+두 지침이 모두 전송되며, 서로 다르면 폴더 지침이 우선합니다.
 
 스킬은 이 파일 옆의 skills/ 폴더에 스킬 하나당 .md 파일 하나로
 둡니다. 대화에서 /이름을 입력하면 사용할 수 있습니다.
@@ -98,8 +98,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   projectOpenStyle: "문체 프로필 열기",
   projectStyleChip: "문체",
   projectLibraryChip: "라이브러리 {n}",
-  projectPickFolder: "프로젝트 폴더 선택…",
-  projectNoFolder: "프로젝트 폴더 사용 안 함",
+  projectPickFolder: "폴더 선택…",
+  projectNoFolder: "폴더 사용 안 함",
   projectReveal: "파일 관리자에서 보기",
   projectLearnStyle: "샘플로 내 문체 학습…",
   projectImportReferences: "참고 자료 가져오기…",
@@ -109,8 +109,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   projectReferencesImportedSkipped: `파일 {n}개를 references/에 추가했습니다. ${AI_NAME}가 검색할 수 있습니다. {skipped}개는 제외했습니다(텍스트나 문서가 아니거나 너무 큼).`,
   projectCreateStyle: "문체 프로필 만들기",
   projectNewEntry: "새 라이브러리 항목…",
-  projectEditInstructions: "프로젝트 글쓰기 지침 편집",
-  projectFolderTitle: "프로젝트 폴더: {path}",
+  projectEditInstructions: "폴더 글쓰기 지침 편집",
+  projectFolderTitle: "폴더: {path}",
   projectEntryPlaceholder: "인물, 장소 또는 용어의 이름",
   projectEntryCreate: "만들기",
   chatHistoryUnsaved: "저장하지 않은 문서",
@@ -185,26 +185,22 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reviewNotesPicked: "{n}개 선택됨",
   reviewNotesAskPrefix: "이 메모들에 대해:\n{notes}\n",
   reviewNoteAskPrefix: "이 댓글 “{comment}”에 대해: ",
-  agentTabProject: "프로젝트",
+  agentTabProject: "폴더",
   memoryStyle: "문체",
   memoryLibrary: "라이브러리",
   memoryInstructions: "글쓰기 지침",
-  memoryStyleHint: "당신의 글쓰기 방식. AI도 그렇게 씁니다.",
-  memoryInstructionsHint: "AI가 매번 지키는 규칙.",
-  memoryLibraryHint: "인물·장소·용어. 언급되면 AI가 찾아봅니다.",
-  memoryRememberedHint: "AI가 대화하며 스스로 기억한 것.",
   memoryEdit: "편집",
   memoryNew: "새로 만들기",
   memoryInThisDocument: "이 문서에서 사용",
-  memoryAllProjects: "모든 프로젝트",
-  memoryEditGlobal: "모든 프로젝트 공통 글쓰기 지침 편집",
+  memoryAllProjects: "모든 폴더",
+  memoryEditGlobal: "모든 폴더 공통 글쓰기 지침 편집",
   memoryStyleEmpty: `아직 문체 프로필이 없습니다. 직접 쓴 글을 몇 편 주면 ${AI_NAME}가 문체를 배웁니다.`,
   memoryLibraryEmpty: `인물, 장소, 용어를 라이브러리에 적어 두면 ${AI_NAME}가 기억합니다.`,
   memoryInstructionsEmpty: `아직 글쓰기 지침이 없습니다. ${AI_NAME}가 항상 지켜야 할 규칙을 적어 두세요.`,
-  memoryNeedsSave: `폴더를 열거나 프로젝트 폴더를 선택하면 ${AI_NAME}가 그 폴더에 맞게 문체, 자료, 지침을 기억합니다.`,
+  memoryNeedsSave: `폴더를 열거나 선택하면 ${AI_NAME}가 그 폴더에 맞게 문체, 자료, 지침을 기억합니다.`,
   memoryRemembered: "기억",
-  memoryRememberedPersonal: "모든 프로젝트",
-  memoryRememberedProject: "이 프로젝트",
+  memoryRememberedPersonal: "모든 폴더",
+  memoryRememberedProject: "이 폴더",
   memoryRememberedEmpty: `아직 없습니다. 늘 원하는 것을 ${AI_NAME}에게 말하면 다음을 위해 기억합니다.`,
   memoryRememberOff: `‘자동으로 기억’이 꺼져 있습니다(설정 › ${AI_NAME}). ${AI_NAME}가 새로 기억하지 않습니다.`,
   memoryKindRequirement: "요구",
@@ -230,15 +226,15 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   memoryLibraryLeftOut:
     "언급되었지만 라이브러리 한도 {cap}자를 넘어 전송되지 않았습니다: {names}.",
   memoryChipSaved: "기억함: {text} ({scope})",
-  memoryScopeProject: "프로젝트",
+  memoryScopeProject: "폴더",
   memoryScopePersonal: "전역",
   memoryChipUndo: "실행 취소",
   memoryMakePersonal: "전역으로 옮기기",
-  memoryMakeProject: "프로젝트로 옮기기",
+  memoryMakeProject: "이 폴더 전용으로",
   memoryChipUndone: "취소했습니다. 더 이상 기억하지 않습니다.",
   memoryChipForgot: "잊었습니다: {text} ({scope})",
   memoryChipRestored: "취소했습니다. 다시 기억합니다.",
-  memoryActionFailed: "실패했습니다. ‘프로젝트’ 탭에서 다시 시도하세요.",
+  memoryActionFailed: "실패했습니다. ‘폴더’ 탭에서 다시 시도하세요.",
   learnSuggestion: "{what}을 여러 번 거절하셨습니다. 이것을 기억할까요? {rule}",
   learnQuoted: "‘{text}’",
   learnSwap: "{from}을(를) {to}(으)로 바꾸는 수정",
@@ -269,8 +265,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   learnRemember: "기억하기",
   learnNotNow: "나중에",
   learnNever: "다시 묻지 않기",
-  learnSaved:
-    "기억했습니다. AI 패널의 ‘프로젝트’에서 보거나 삭제할 수 있습니다.",
+  learnSaved: "기억했습니다. AI 패널의 ‘폴더’에서 보거나 삭제할 수 있습니다.",
   learnLabel: "수정 선택에서 배운 것",
   suggestNextMessageLabel: "다음 메시지 예측",
   suggestNextMessageHint:
@@ -284,7 +279,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   researchCheckClaimsHint:
     "리서치가 초안을 고치기 전에 출처를 인용한 문장마다 그 출처의 메모와 비교해, 메모보다 지나친 문장을 다시 씁니다. 더 꼼꼼하지만 섹션마다 모델 호출이 한 번 늘어납니다.",
   rememberAutomaticallyLabel: "자동으로 기억",
-  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘프로젝트’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
+  rememberAutomaticallyHint: `${AI_NAME}가 요청 사항과 글쓰기 방식을 이후 대화를 위해 기억합니다. AI 패널의 ‘폴더’에서 확인, 수정, 취소할 수 있습니다. 답변마다 같은 모델에 짧은 요청을 한 번 더 보내 무엇을 기억할지 정합니다.`,
   toolRemember: "기억하는 중",
   agentGeneratingImage: "이미지를 생성하는 중…",
   toolGenerateImage: "이미지를 생성하는 중",
@@ -359,9 +354,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolSearchDocument: "문서에서 “{arg}” 검색 중",
   toolReadDocument: "“{arg}” 읽는 중",
   toolReadWholeDocument: "문서 전체 읽는 중",
-  toolSearchFiles: "프로젝트에서 “{arg}” 검색 중",
+  toolSearchFiles: "폴더에서 “{arg}” 검색 중",
   toolFindFiles: "이름에 “{arg}”이(가) 들어간 파일 찾는 중",
-  toolListFiles: "프로젝트 파일 살펴보는 중",
+  toolListFiles: "폴더 파일 살펴보는 중",
   toolReadFile: "{arg} 읽는 중",
   toolUseSkill: "{arg} 스킬 사용 중",
   toolAddComment: "댓글 추가 중",
@@ -516,12 +511,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeTab: "파일",
   outlineTab: "개요",
   treeParentFolder: "상위 폴더",
-  treeEmptyDraft: "문서를 저장하면 그 폴더가 여기에 표시됩니다.",
-  outlineEmpty:
-    "아직 제목이 없습니다. # 기호로 시작하는 줄이 여기에 표시됩니다.",
+  outlineEmpty: "아직 제목이 없습니다",
   treeRefresh: "새로 고침",
-  menuOpenFolder: "프로젝트 열기…",
-  menuCloseFolder: "프로젝트 닫기",
+  menuOpenFolder: "폴더 열기…",
+  menuCloseFolder: "폴더 닫기",
   menuCopyPath: "경로 복사",
   folderTooBroad:
     "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
@@ -531,14 +524,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSearchCapped:
     "처음 {n}개 파일만 검색했습니다. 전체를 검색하려면 더 작은 폴더를 여세요.",
   treeSearchTooBroad:
-    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 프로젝트 열기…로 더 구체적인 폴더를 여세요.",
+    "이 폴더는 범위가 너무 넓어 검색할 수 없습니다. 파일 › 폴더 열기…로 더 구체적인 폴더를 여세요.",
   treeSearchFailed: "이 폴더를 읽을 수 없습니다.",
   treeSearchScope: "표시",
   treeSearchScopeAll: "모든 파일",
   treeSearchScopeDocuments: "문서만",
   treeNewDocument: "새 문서",
   treeNewFolder: "새 폴더",
-  treeEmptyHint: "여기를 두 번 클릭하면 새 문서를 만듭니다.",
   treeNewDocumentPrompt: "새 문서 이름",
   treeNewFolderPrompt: "새 폴더 이름",
   treeNewDocumentDefault: "제목 없음",
@@ -556,7 +548,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeKeepLinks: "업데이트 안 함",
   treeUpdateLinksFailed: "다음 문서의 링크를 업데이트하지 못했습니다: {names}",
   treeDocumentFolder: "현재 문서가 있는 폴더",
-  treeOpenAsFolder: "프로젝트로 열기",
+  treeOpenAsFolder: "이 폴더 열기",
   treeTrashItem: "휴지통으로 옮기기",
   treeTrash: "휴지통으로 옮기기",
   treeTrashConfirm:
@@ -688,7 +680,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   editAnimationLabel: "수정 미리 보기 애니메이션",
   agentWorkspaceLabel: "전역 설정 폴더",
   agentWorkspaceOpenButton: "보기",
-  agentWorkspaceRootLabel: "프로젝트 폴더",
+  agentWorkspaceRootLabel: "폴더",
   agentWorkspaceRootDefault: "없음 (사이드바에 연 폴더가 있으면 그 폴더)",
   agentWorkspaceRootPick: "선택…",
   agentSystemPromptLabel: "글쓰기 지침(agent.md)",
@@ -696,7 +688,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentSkillsLabel: "스킬",
   agentSkillsImport: "스킬 가져오기…",
   skillGroupRecent: "최근 사용",
-  skillGroupProject: "이 프로젝트",
+  skillGroupProject: "이 폴더",
   skillGroupYours: "내 스킬",
   skillCategoryWrite: "쓰기",
   skillCategoryRevise: "고치기",
@@ -709,10 +701,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   skillPickerNoMatch: "‘{query}’에 맞는 스킬이 없습니다.",
   skillPickerHowTo:
     "설정에서 스킬을 더 추가하거나 내 스킬을 가져올 수 있습니다.",
-  mentionPickerAbout: "@를 입력하면 프로젝트 폴더의 파일을 첨부할 수 있습니다.",
+  mentionPickerAbout: "@를 입력하면 폴더의 파일을 첨부할 수 있습니다.",
   mentionPickerNoProject:
-    "문서를 저장하거나 프로젝트 폴더를 선택하면 그 안의 파일이 여기에 나타납니다.",
-  mentionPickerNoFiles: "프로젝트 폴더에 아직 텍스트 파일이 없습니다.",
+    "문서를 저장하거나 폴더를 선택하면 그 안의 파일이 여기에 나타납니다.",
+  mentionPickerNoFiles: "폴더에 아직 텍스트 파일이 없습니다.",
   mentionPickerNoMatch: "‘{query}’에 맞는 파일이 없습니다.",
   agentSkillsBuiltin: "내장 스킬",
   agentSkillsCustomize: "사용자 지정…",
@@ -863,7 +855,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   skillOfferSaved:
     "{name}(으)로 저장했습니다. 입력창에 입력하면 다시 할 수 있습니다.",
   skillOfferSave: "모든 문서에서 쓰기",
-  skillOfferSaveProject: "이 프로젝트에서만",
+  skillOfferSaveProject: "이 폴더에서만",
   chatHistorySearch: "대화 검색",
   chatHistorySearchNone: "이 단어가 들어간 대화가 없습니다.",
   chatHistoryByYou: "나",
@@ -1075,6 +1067,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuCodeBlock: "코드 블록",
   menuTable: "표",
   menuToggleSourceMode: "소스 모드",
+  menuFormatBar: "서식 막대",
   menuToggleTypewriterMode: "타자기 모드",
   menuToggleSidebar: "사이드바",
   menuZoomIn: "확대",
@@ -1224,6 +1217,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   docLineSpacingStandard: "보통",
   docLineSpacingRelaxed: "넓게",
   docFontLabel: "본문 글꼴",
+  docFontMore: "다른 글꼴",
   docFontAuto: "테마 기본값",
   docLetterSpacingLabel: "문자 간격",
   docLetterSpacingAuto: "테마 기본값",
@@ -1244,7 +1238,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closeLastWindow: "창 닫기",
   closeLastStartPage: "시작 페이지 표시",
   startPageRemoveRecent: "최근 항목에서 제거",
-  startPageRecentProjects: "최근 프로젝트",
+  startPageRecentProjects: "최근 폴더",
   startPagePickDocument: "사이드바에서 {folder}의 문서를 골라 시작하세요.",
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
@@ -1323,7 +1317,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialDoneTitle: "완료",
   tutorialDoneBody:
     "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 온라인 튜토리얼에 있습니다.",
-  tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘프로젝트’에서 확인할 수 있습니다.`,
+  tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘폴더’에서 확인할 수 있습니다.`,
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",
   closePromptDiscard: "저장 안 함",
@@ -1381,7 +1375,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageFolderSameFolder: "문서와 같은 폴더",
   imageFolderNameLabel: "하위 폴더 이름",
   imageFolderProjectNote:
-    "이 프로젝트는 그림을 {folder}에 저장합니다({source}에서 지정).",
+    "이 폴더는 그림을 {folder}에 저장합니다({source}에서 지정).",
   imageFolderInvalid: "문서 폴더 안의 폴더로 입력하세요(예: img).",
   imageHostLabel: "이미지 호스팅",
   imageHostCustom: "사용자 지정",
@@ -1595,8 +1589,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginBackToList: "모든 플러그인",
   pluginSettingsScope: "적용 대상",
   pluginSettingsScopeGlobal: "모든 문서",
-  pluginSettingsScopeProject: "이 프로젝트({name})",
-  pluginSettingProjectOwn: "이 프로젝트에는 자체 값이 있습니다.",
+  pluginSettingsScopeProject: "이 폴더({name})",
+  pluginSettingProjectOwn: "이 폴더에는 자체 값이 있습니다.",
   pluginSettingUseGeneral: "공통 값 사용",
   pluginSettingsGroup: "설정",
   pluginSettingsOff: "{name}을(를) 켜면 설정을 바꿀 수 있습니다.",
@@ -1609,7 +1603,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginAboutGroup: "정보",
   pluginDataLabel: "저장한 데이터",
   pluginDataGlobal: "모든 문서 공용 {global}",
-  pluginDataProject: "이 프로젝트에 {project}",
+  pluginDataProject: "이 폴더에 {project}",
   pluginDataClear: "지우기",
   pluginDataClearAsk:
     "{name}이(가) 저장한 데이터를 지울까요? 되돌릴 수 없습니다.",
@@ -1636,7 +1630,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginCardMovedLine: "{name}은(는) 이제 플러그인입니다",
   conventionsCardLine: "이 폴더의 {app} 설정은 그림을 {folder}에 저장합니다",
   conventionsCardDetails:
-    "현재 설정: {current}. 적용하면 이 폴더의 .textus/settings.json에 저장되어 프로젝트와 함께 유지됩니다.",
+    "현재 설정: {current}. 적용하면 이 폴더의 .textus/settings.json에 저장되어 폴더와 함께 유지됩니다.",
   conventionsFolderRoot: "폴더 최상위",
   conventionsFollow: "적용",
   conventionsDecline: "현재 설정 유지",

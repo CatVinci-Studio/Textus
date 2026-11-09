@@ -127,6 +127,11 @@ export function EditorPage({
           </Select>
         </SettingRow>
         <ToggleRow
+          label={t.menuFormatBar}
+          checked={settings.formatBar}
+          onChange={(on) => setSettings({ formatBar: on })}
+        />
+        <ToggleRow
           label={t.menuViewTypewriter}
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}

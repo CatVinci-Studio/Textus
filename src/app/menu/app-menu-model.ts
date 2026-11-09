@@ -43,6 +43,7 @@ export type NativeMenuId =
   | "track-changes"
   | "toggle-sidebar"
   | "toggle-agent-panel"
+  | "toggle-format-bar"
   | "toggle-textus-ai"
   | "toggle-split-view"
   | "toggle-read-only"
@@ -97,6 +98,7 @@ export interface MenuEntry {
 export interface MenuChecks {
   sidebar?: boolean;
   agentPanel?: boolean;
+  formatBar?: boolean;
   /** Textus AI's master switch; unset counts as on. */
   textusAi?: boolean;
   sourceMode?: boolean;
@@ -127,6 +129,7 @@ export function nativeMenuChecks(checks: MenuChecks): Record<string, boolean> {
   return {
     "toggle-sidebar": !!checks.sidebar,
     "toggle-agent-panel": !!checks.agentPanel,
+    "toggle-format-bar": !!checks.formatBar,
     "view-mode-default": mode.default,
     "toggle-source-mode": mode.source,
     "toggle-split-view": mode.split,
@@ -272,6 +275,11 @@ export function buildAppMenu(
           action: { native: "toggle-agent-panel" },
           checked: !!checks.agentPanel,
           disabled: checks.textusAi === false,
+        },
+        {
+          label: t.menuFormatBar,
+          action: { native: "toggle-format-bar" },
+          checked: !!checks.formatBar,
         },
         "separator",
         {

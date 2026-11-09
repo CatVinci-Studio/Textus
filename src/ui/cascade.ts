@@ -32,7 +32,7 @@ export class Cascade {
   play(root: Element, { together = false }: { together?: boolean } = {}): void {
     if (!motionAllowed()) return;
     const now = performance.now();
-    const fade = duration("--dur-medium");
+    const fade = duration("--dur-base");
     const step = duration("--dur-stagger");
     const budget = duration("--dur-cascade");
     const words = textWords(root);

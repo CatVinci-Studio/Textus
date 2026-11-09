@@ -332,7 +332,7 @@ test("a plugin's setting can be the project's own, over the general one", async 
       await own.getByRole("combobox", { name: "Applies to" }).click();
       await page
         .getByRole("option", {
-          name: value === "global" ? "Every document" : /This project/,
+          name: value === "global" ? "Every document" : /This folder/,
         })
         .click();
     },
@@ -354,7 +354,7 @@ test("a plugin's setting can be the project's own, over the general one", async 
   // For every document it is still Daily.
   await scope.selectOption("global");
   await expect(folder()).toHaveValue("Daily");
-  await expect(own).toContainText("This project has its own value.");
+  await expect(own).toContainText("This folder has its own value.");
   // Back to the general value for the project.
   await scope.selectOption("project");
   await expect(folder()).toHaveValue("Journal");

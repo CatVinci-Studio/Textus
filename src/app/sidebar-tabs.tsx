@@ -54,11 +54,10 @@ function FilesPanel({
   onSearchFocusHandled,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
-    // No folder: says what will be here, and the start page's three ways to
-    // begin, so a window with nothing open is never a dead end.
+    // No folder: the start page's three ways to begin, so a window with
+    // nothing open is never a dead end.
     return (
       <div className="sidebar-start">
-        <p className="sidebar-start-note">{t.treeEmptyDraft}</p>
         <StartActions t={t} />
       </div>
     );

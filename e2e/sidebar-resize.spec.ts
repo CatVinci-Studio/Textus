@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, chromeScale } from "./helpers";
 
 // The sidebar's width follows the handle, stays within its bounds, is
 // remembered for the next window, and the keyboard can do the same.
@@ -33,22 +33,26 @@ test("dragging the sidebar's edge resizes it; it comes back as it was left: open
   await openApp(page);
   await openSidebar(page);
   const handle = page.getByRole("separator", { name: "调整侧边栏宽度" });
-  await expect(handle).toHaveAttribute("aria-valuenow", "240");
-  expect(await sidebarWidth(page)).toBe(240);
+  // Its default, at the interface's size; then 80px wider, kept in design px.
+  const scale = await chromeScale(page);
+  const start = Math.round(240 * scale);
+  const wide = start + 80;
+  await expect(handle).toHaveAttribute("aria-valuenow", String(start));
+  expect(await sidebarWidth(page)).toBe(start);
 
   await dragHandle(page, 80);
-  await expect(handle).toHaveAttribute("aria-valuenow", "320");
-  expect(await sidebarWidth(page)).toBe(320);
+  await expect(handle).toHaveAttribute("aria-valuenow", String(wide));
+  expect(await sidebarWidth(page)).toBe(wide);
   // The page makes room for it, beside the activity rail.
   const rail = await page
     .locator(".activity-rail")
     .evaluate((el) => el.getBoundingClientRect().width);
-  expect(await mainPaneLeft(page)).toBe(rail + 320);
+  expect(await mainPaneLeft(page)).toBe(rail + wide);
   await expect
     .poll(() =>
       page.evaluate(() => localStorage.getItem("textus-sidebar-width")),
     )
-    .toBe("320");
+    .toBe(String(Math.round(wide / scale)));
 
   // On another tab than the files, chosen on the activity rail.
   const tabs = page.locator(".activity-rail");
@@ -65,8 +69,8 @@ test("dragging the sidebar's edge resizes it; it comes back as it was left: open
   await reload();
   // Left open, it comes back open, at that width, on that tab.
   await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
-  expect(await sidebarWidth(page)).toBe(320);
-  expect(await mainPaneLeft(page)).toBe(rail + 320);
+  expect(await sidebarWidth(page)).toBe(wide);
+  expect(await mainPaneLeft(page)).toBe(rail + wide);
   await expect(outlineTab).toHaveAttribute("aria-pressed", "true");
   await expect(filesTab).toHaveAttribute("aria-pressed", "false");
 

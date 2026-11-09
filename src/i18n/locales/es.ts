@@ -46,24 +46,24 @@ export default {
     "El párrafo cambió durante la revisión. Vuelve a intentarlo.",
   noticeGrammarNoIssues: "No se encontraron problemas.",
   projectTooBroad:
-    "Esta carpeta es demasiado amplia para ser la carpeta del proyecto (es tu carpeta personal o una unidad entera). Elige una más concreta.",
+    "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
   projectNoSamples:
     "No se pudo leer como texto ninguno de los archivos elegidos.",
   projectNeedsSave:
-    "Primero guarda este documento: su carpeta será la carpeta del proyecto.",
+    "Primero guarda este documento: la IA trabaja en su carpeta.",
   projectPicking: "Eligiendo una carpeta…",
   projectLearningStyle: "Aprendiendo tu estilo a partir de las muestras…",
   projectStyleLearned:
     "Perfil de estilo guardado. Revísalo y edítalo en la pestaña nueva.",
   projectOpening: "Abriendo…",
-  projectStyleTemplate: `# Perfil de estilo\n\n<!-- ${AI_NAME} y el autocompletado siguen este perfil en todos los documentos de este proyecto. Describe cómo escribes (voz, ritmo de las frases, vocabulario, puntuación, lo que nunca haces) con puntos concretos («frases cortas, rara vez de más de 15 palabras») en lugar de adjetivos. «Aprender mi estilo a partir de muestras…», en el menú del proyecto, redacta un borrador basado en tus propios textos. Los comentarios como este nunca se envían. -->\n\n## Voz y tono\n\n- \n\n## Frases y ritmo\n\n- \n\n## Vocabulario\n\n- \n\n## Nunca\n\n- \n`,
+  projectStyleTemplate: `# Perfil de estilo\n\n<!-- ${AI_NAME} y el autocompletado siguen este perfil en todos los documentos de esta carpeta. Describe cómo escribes (voz, ritmo de las frases, vocabulario, puntuación, lo que nunca haces) con puntos concretos («frases cortas, rara vez de más de 15 palabras») en lugar de adjetivos. «Aprender mi estilo a partir de muestras…», en el menú de la carpeta, redacta un borrador basado en tus propios textos. Los comentarios como este nunca se envían. -->\n\n## Voz y tono\n\n- \n\n## Frases y ritmo\n\n- \n\n## Vocabulario\n\n- \n\n## Nunca\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Datos que ${AI_NAME} debe mantener coherentes cada vez que aparezca {name} o uno de sus alias. include: detected (cuando se menciona; es el valor predeterminado) | always (siempre) | never (nunca). Los comentarios como este nunca se envían. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Instrucciones de escritura para este proyecto.
+Instrucciones de escritura para esta carpeta.
 
 Todo lo que quede fuera de comentarios como este se envía a
-${AI_NAME} en cada conversación sobre un documento de este
-proyecto, después de tus instrucciones de escritura globales
+${AI_NAME} en cada conversación sobre un documento de esta
+carpeta, después de tus instrucciones de escritura globales
 (Ajustes > ${AI_NAME}). Si se contradicen, prevalece este archivo.
 Los comentarios nunca se envían.
 
@@ -95,10 +95,10 @@ Ejemplos de lo que conviene escribir aquí:
   Contexto     Escribo reportajes científicos extensos para el
                público general.
 
-Las instrucciones para un solo proyecto van en el .textus/agent.md de
-ese proyecto (en el panel de IA, menú del proyecto >
-Editar instrucciones de escritura del proyecto). Se envían ambas; si
-se contradicen, prevalecen las del proyecto.
+Las instrucciones para una sola carpeta van en el .textus/agent.md de
+esa carpeta (en el panel de IA, menú de la carpeta >
+Editar instrucciones de escritura de la carpeta). Se envían ambas; si
+se contradicen, prevalecen las de la carpeta.
 
 Las habilidades van en la carpeta skills/, junto a este archivo, cada
 una en su propio archivo .md; escribe /nombre en una conversación
@@ -108,8 +108,8 @@ para usar una.
   projectOpenStyle: "Abrir perfil de estilo",
   projectStyleChip: "Estilo",
   projectLibraryChip: "Biblioteca {n}",
-  projectPickFolder: "Elegir carpeta del proyecto…",
-  projectNoFolder: "No usar carpeta de proyecto",
+  projectPickFolder: "Elegir carpeta…",
+  projectNoFolder: "No usar ninguna carpeta",
   projectReveal: "Mostrar en el gestor de archivos",
   projectLearnStyle: "Aprender mi estilo a partir de muestras…",
   projectImportReferences: "Importar referencias…",
@@ -119,8 +119,8 @@ para usar una.
   projectReferencesImportedSkipped: `{n} archivos añadidos a references/ para que ${AI_NAME} los consulte; {skipped} omitidos (no son texto ni documentos, o son demasiado grandes).`,
   projectCreateStyle: "Crear perfil de estilo",
   projectNewEntry: "Nueva entrada de biblioteca…",
-  projectEditInstructions: "Editar instrucciones de escritura del proyecto",
-  projectFolderTitle: "Carpeta del proyecto: {path}",
+  projectEditInstructions: "Editar instrucciones de escritura de la carpeta",
+  projectFolderTitle: "Carpeta: {path}",
   projectEntryPlaceholder: "Nombre de un personaje, lugar o término",
   projectEntryCreate: "Crear",
   chatHistoryUnsaved: "Documentos sin guardar",
@@ -208,27 +208,22 @@ para usar una.
   reviewNotesPicked: "{n} seleccionadas",
   reviewNotesAskPrefix: "Sobre estas notas tuyas:\n{notes}\n",
   reviewNoteAskPrefix: "Sobre tu nota «{comment}»: ",
-  agentTabProject: "Proyecto",
+  agentTabProject: "Carpeta",
   memoryStyle: "Estilo de escritura",
   memoryLibrary: "Biblioteca",
   memoryInstructions: "Instrucciones de escritura",
-  memoryStyleHint: "Cómo escribes: la IA escribe igual.",
-  memoryInstructionsHint: "Las reglas que la IA sigue siempre.",
-  memoryLibraryHint:
-    "Personas, lugares y términos, consultados cuando aparecen.",
-  memoryRememberedHint: "Lo que la IA anotó de tus conversaciones.",
   memoryEdit: "Editar",
   memoryNew: "Nueva",
   memoryInThisDocument: "En este documento",
-  memoryAllProjects: "Todos los proyectos",
-  memoryEditGlobal: "Editar las instrucciones de todos los proyectos",
+  memoryAllProjects: "Todas las carpetas",
+  memoryEditGlobal: "Editar las instrucciones de todas las carpetas",
   memoryStyleEmpty: `Aún no hay perfil de estilo. Dale a ${AI_NAME} algunos textos tuyos y aprenderá cómo escribes.`,
   memoryLibraryEmpty: `Personas, lugares, términos: añádelos a la biblioteca y ${AI_NAME} los recordará.`,
   memoryInstructionsEmpty: `Aún no hay instrucciones. Escribe las reglas que ${AI_NAME} debe seguir siempre.`,
-  memoryNeedsSave: `Abre una carpeta o elige una carpeta de proyecto y ${AI_NAME} guardará tu estilo, tu biblioteca y tus instrucciones para ella.`,
+  memoryNeedsSave: `Abre o elige una carpeta y ${AI_NAME} guardará tu estilo, tu biblioteca y tus instrucciones para ella.`,
   memoryRemembered: "Memoria",
-  memoryRememberedPersonal: "Para todos los proyectos",
-  memoryRememberedProject: "Este proyecto",
+  memoryRememberedPersonal: "Para todas las carpetas",
+  memoryRememberedProject: "Esta carpeta",
   memoryRememberedEmpty: `Nada todavía. Dile a ${AI_NAME} lo que siempre quieres y lo recordará para la próxima vez.`,
   memoryRememberOff: `Recordar automáticamente está desactivado (Ajustes › ${AI_NAME}): ${AI_NAME} no guarda nada nuevo.`,
   memoryKindRequirement: "Requisito",
@@ -256,16 +251,16 @@ para usar una.
   memoryLibraryLeftOut:
     "Mencionados pero no enviados, por superar el límite de la biblioteca de {cap} caracteres: {names}.",
   memoryChipSaved: "Recordado: {text} ({scope})",
-  memoryScopeProject: "proyecto",
+  memoryScopeProject: "carpeta",
   memoryScopePersonal: "global",
   memoryChipUndo: "Deshacer",
   memoryMakePersonal: "Hacer global",
-  memoryMakeProject: "Pasar al proyecto",
+  memoryMakeProject: "Solo para esta carpeta",
   memoryChipUndone: "Deshecho. Ya no se recuerda.",
   memoryChipForgot: "Olvidado: {text} ({scope})",
   memoryChipRestored: "Deshecho. Se vuelve a recordar.",
   memoryActionFailed:
-    "No ha funcionado. Vuelve a intentarlo en la pestaña Proyecto.",
+    "No ha funcionado. Vuelve a intentarlo en la pestaña Carpeta.",
   learnSuggestion: "Has rechazado varias veces {what}. ¿Recordar esto? {rule}",
   learnQuoted: "«{text}»",
   learnSwap: "cambiar {from} por {to}",
@@ -303,7 +298,7 @@ para usar una.
   learnNotNow: "Ahora no",
   learnNever: "No volver a preguntar",
   learnSaved:
-    "Recordado. Puedes verlo o eliminarlo en Proyecto, en el panel de IA.",
+    "Recordado. Puedes verlo o eliminarlo en Carpeta, en el panel de IA.",
   learnLabel: "Aprendido de tus decisiones de revisión",
   suggestNextMessageLabel: "Sugerir el siguiente mensaje",
   suggestNextMessageHint:
@@ -317,7 +312,7 @@ para usar una.
   researchCheckClaimsHint:
     "Antes de revisar el borrador, cada frase que cita una fuente se compara con las notas de esa fuente, y la que dice más que ellas se reescribe. Más cuidadoso, con una llamada al modelo más por sección.",
   rememberAutomaticallyLabel: "Recordar automáticamente",
-  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Proyecto, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
+  rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Carpeta, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",
   toolGenerateImage: "Generando una imagen",
@@ -391,9 +386,9 @@ para usar una.
   toolSearchDocument: "Buscando «{arg}» en el documento",
   toolReadDocument: "Leyendo «{arg}»",
   toolReadWholeDocument: "Leyendo el documento",
-  toolSearchFiles: "Buscando «{arg}» en el proyecto",
+  toolSearchFiles: "Buscando «{arg}» en la carpeta",
   toolFindFiles: "Buscando archivos llamados «{arg}»",
-  toolListFiles: "Revisando los archivos del proyecto",
+  toolListFiles: "Revisando los archivos de la carpeta",
   toolReadFile: "Leyendo {arg}",
   toolUseSkill: "Usando la habilidad {arg}",
   toolAddComment: "Añadiendo un comentario",
@@ -557,12 +552,10 @@ para usar una.
   treeTab: "Archivos",
   outlineTab: "Esquema",
   treeParentFolder: "Carpeta superior",
-  treeEmptyDraft: "Guarda este documento y su carpeta aparecerá aquí.",
-  outlineEmpty:
-    "Aún no hay encabezados. Las líneas que empiezan con # aparecen aquí.",
+  outlineEmpty: "Aún no hay encabezados",
   treeRefresh: "Actualizar",
-  menuOpenFolder: "Abrir proyecto…",
-  menuCloseFolder: "Cerrar proyecto",
+  menuOpenFolder: "Abrir carpeta…",
+  menuCloseFolder: "Cerrar carpeta",
   menuCopyPath: "Copiar ruta",
   folderTooBroad:
     "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
@@ -572,14 +565,13 @@ para usar una.
   treeSearchCapped:
     "Solo se buscó en los primeros {n} archivos. Abre una carpeta más pequeña para buscar en toda.",
   treeSearchTooBroad:
-    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir proyecto…",
+    "Esta carpeta es demasiado amplia para buscar en ella. Abre una más concreta con Archivo › Abrir carpeta…",
   treeSearchFailed: "No se puede leer esta carpeta.",
   treeSearchScope: "Mostrar",
   treeSearchScopeAll: "Todos los archivos",
   treeSearchScopeDocuments: "Solo documentos",
   treeNewDocument: "Nuevo documento",
   treeNewFolder: "Nueva carpeta",
-  treeEmptyHint: "Haz doble clic aquí para un documento nuevo.",
   treeNewDocumentPrompt: "Nombre del nuevo documento",
   treeNewFolderPrompt: "Nombre de la nueva carpeta",
   treeNewDocumentDefault: "Sin título",
@@ -598,7 +590,7 @@ para usar una.
   treeUpdateLinksFailed:
     "No se pudieron actualizar los enlaces de estos documentos: {names}",
   treeDocumentFolder: "Carpeta del documento actual",
-  treeOpenAsFolder: "Abrir como proyecto",
+  treeOpenAsFolder: "Abrir esta carpeta",
   treeTrashItem: "Mover a la papelera",
   treeTrash: "Mover a la papelera",
   treeTrashConfirm:
@@ -735,7 +727,7 @@ para usar una.
   editAnimationLabel: "Animar la vista previa de los cambios",
   agentWorkspaceLabel: "Carpeta de configuración global",
   agentWorkspaceOpenButton: "Mostrar",
-  agentWorkspaceRootLabel: "Carpeta del proyecto",
+  agentWorkspaceRootLabel: "Carpeta",
   agentWorkspaceRootDefault:
     "Ninguna: la carpeta abierta en la barra lateral, si la hay",
   agentWorkspaceRootPick: "Elegir…",
@@ -744,7 +736,7 @@ para usar una.
   agentSkillsLabel: "Habilidades",
   agentSkillsImport: "Importar habilidad…",
   skillGroupRecent: "Recientes",
-  skillGroupProject: "Este proyecto",
+  skillGroupProject: "Esta carpeta",
   skillGroupYours: "Tus habilidades",
   skillCategoryWrite: "Escribir",
   skillCategoryRevise: "Reescribir",
@@ -756,12 +748,10 @@ para usar una.
     "Escribe / para usar una habilidad: una instrucción ya preparada, como Corregir o Resumir.",
   skillPickerNoMatch: "Ninguna habilidad coincide con «{query}».",
   skillPickerHowTo: "Añade más habilidades o importa las tuyas en Ajustes.",
-  mentionPickerAbout:
-    "Escribe @ para adjuntar un archivo de la carpeta del proyecto.",
+  mentionPickerAbout: "Escribe @ para adjuntar un archivo de la carpeta.",
   mentionPickerNoProject:
-    "Guarda el documento o elige una carpeta de proyecto y sus archivos aparecerán aquí.",
-  mentionPickerNoFiles:
-    "La carpeta del proyecto aún no tiene archivos de texto.",
+    "Guarda el documento o elige una carpeta y sus archivos aparecerán aquí.",
+  mentionPickerNoFiles: "La carpeta aún no tiene archivos de texto.",
   mentionPickerNoMatch: "Ningún archivo coincide con «{query}».",
   agentSkillsBuiltin: "Habilidades integradas",
   agentSkillsCustomize: "Personalizar…",
@@ -929,7 +919,7 @@ para usar una.
   skillOfferSaved:
     "Guardada como {name}: escríbela en el cuadro de mensaje para repetirlo.",
   skillOfferSave: "Para todos los documentos",
-  skillOfferSaveProject: "Solo para este proyecto",
+  skillOfferSaveProject: "Solo para esta carpeta",
   chatHistorySearch: "Buscar en las conversaciones",
   chatHistorySearchNone: "Ninguna conversación tiene estas palabras.",
   chatHistoryByYou: "Tú",
@@ -1147,6 +1137,7 @@ para usar una.
   menuCodeBlock: "Bloque de código",
   menuTable: "Tabla",
   menuToggleSourceMode: "Modo código fuente",
+  menuFormatBar: "Barra de formato",
   menuToggleTypewriterMode: "Modo máquina de escribir",
   menuToggleSidebar: "Barra lateral",
   menuZoomIn: "Ampliar",
@@ -1300,6 +1291,7 @@ para usar una.
   docLineSpacingStandard: "Estándar",
   docLineSpacingRelaxed: "Amplio",
   docFontLabel: "Fuente del texto",
+  docFontMore: "Más fuentes",
   docFontAuto: "La del tema",
   docLetterSpacingLabel: "Espaciado entre caracteres",
   docLetterSpacingAuto: "El del tema",
@@ -1320,7 +1312,7 @@ para usar una.
   closeLastWindow: "Cerrar la ventana",
   closeLastStartPage: "Mostrar la página de inicio",
   startPageRemoveRecent: "Quitar de recientes",
-  startPageRecentProjects: "Proyectos recientes",
+  startPageRecentProjects: "Carpetas recientes",
   startPagePickDocument:
     "Elige un documento de {folder} en la barra lateral para empezar.",
   startPageRecentFiles: "Archivos recientes",
@@ -1406,7 +1398,7 @@ para usar una.
   tutorialDoneTitle: "¡Listo!",
   tutorialDoneBody:
     "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
-  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Proyecto, el botón de carpeta del panel de IA.`,
+  tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Carpeta, en el panel de IA.`,
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",
@@ -1464,7 +1456,7 @@ para usar una.
   imageFolderSameFolder: "La misma carpeta que el documento",
   imageFolderNameLabel: "Nombre de la subcarpeta",
   imageFolderProjectNote:
-    "Este proyecto guarda las imágenes en {folder} (lo indica {source}).",
+    "Esta carpeta guarda las imágenes en {folder} (lo indica {source}).",
   imageFolderInvalid: "Usa una carpeta dentro de la del documento, como img.",
   imageHostLabel: "Alojamiento de imágenes",
   imageHostCustom: "Personalizado",
@@ -1685,8 +1677,8 @@ para usar una.
   pluginBackToList: "Todos los complementos",
   pluginSettingsScope: "Se aplica a",
   pluginSettingsScopeGlobal: "Todos los documentos",
-  pluginSettingsScopeProject: "Este proyecto ({name})",
-  pluginSettingProjectOwn: "Este proyecto tiene su propio valor.",
+  pluginSettingsScopeProject: "Esta carpeta ({name})",
+  pluginSettingProjectOwn: "Esta carpeta tiene su propio valor.",
   pluginSettingUseGeneral: "Usar el valor general",
   pluginSettingsGroup: "Ajustes",
   pluginSettingsOff: "Activa {name} para cambiar sus ajustes.",
@@ -1699,7 +1691,7 @@ para usar una.
   pluginAboutGroup: "Acerca de",
   pluginDataLabel: "Sus datos",
   pluginDataGlobal: "{global} para todos los documentos",
-  pluginDataProject: "{project} en este proyecto",
+  pluginDataProject: "{project} en esta carpeta",
   pluginDataClear: "Borrar",
   pluginDataClearAsk: "¿Borrar lo que guarda {name}? No se puede recuperar.",
   pluginVersionLabel: "Versión {version}",
@@ -1726,7 +1718,7 @@ para usar una.
   conventionsCardLine:
     "Los ajustes de {app} de esta carpeta guardan las imágenes en {folder}",
   conventionsCardDetails:
-    "Ajuste actual: {current}. Al adoptarlo se guarda en .textus/settings.json de esta carpeta y se conserva con el proyecto.",
+    "Ajuste actual: {current}. Al adoptarlo se guarda en .textus/settings.json de esta carpeta y se conserva con la carpeta.",
   conventionsFolderRoot: "la carpeta misma",
   conventionsFollow: "Adoptar",
   conventionsDecline: "Mantener el actual",

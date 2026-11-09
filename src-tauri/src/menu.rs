@@ -55,6 +55,8 @@ const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
 const TRACK_CHANGES_ID: &str = "track-changes";
 const TOGGLE_SIDEBAR_ID: &str = "toggle-sidebar";
 const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
+/// View > Format Bar: the formatting row under the title bar.
+const TOGGLE_FORMAT_BAR_ID: &str = "toggle-format-bar";
 /// Textus AI's master switch, flipped by the focused window, which owns the
 /// setting. Not in the View menu, but the iPhone's app-drawn menu runs it.
 const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
@@ -388,6 +390,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         emit_to_focused(app_handle, "menu-toggle-textus-ai");
     } else if id == TOGGLE_SPLIT_VIEW_ID {
         emit_to_focused(app_handle, "menu-toggle-split-view");
+    } else if id == TOGGLE_FORMAT_BAR_ID {
+        emit_to_focused(app_handle, "menu-toggle-format-bar");
     } else if id == TOGGLE_ZEN_MODE_ID {
         emit_to_focused(app_handle, "menu-toggle-zen-mode");
     } else if id == TOGGLE_READ_ONLY_ID {

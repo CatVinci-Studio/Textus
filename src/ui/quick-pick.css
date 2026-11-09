@@ -19,8 +19,7 @@
   color: var(--ui-text);
   background: var(--ui-bg);
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
 }
 .quick-pick-input:focus {
   outline: 2px solid var(--ui-accent);

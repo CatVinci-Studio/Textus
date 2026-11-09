@@ -2,20 +2,19 @@ import {
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
-  type CSSProperties,
   type ReactNode,
   type RefObject,
 } from "react";
-import { createPortal } from "react-dom";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
-import { useViewportClamp } from "../utils/hooks/useViewportClamp";
-import { Presence, usePresenceProps } from "./usePresence";
+import { Bubble } from "./Bubble";
+import { Presence } from "./usePresence";
 import "./InfoTip.css";
 import { useTipTimer } from "./useTipTimer";
 
+/** Between the "?" and the card's tail. */
+const GAP = 8;
 /** How long the pointer may be off both the button and the card before a
  *  hover-opened card closes: long enough to cross the gap between them. */
 const HOVER_CLOSE_MS = 160;
@@ -159,24 +158,14 @@ function InfoTipCard({
   onPointerEnter: () => void;
   onPointerLeave: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [at, setAt] = useState({ x: 0, y: 0 });
-  useLayoutEffect(() => {
-    const box = anchor.current?.getBoundingClientRect();
-    if (box) setAt({ x: box.left, y: box.bottom + 6 });
-  }, [anchor]);
-  const pos = useViewportClamp(ref, at.x, at.y);
-  const presence = usePresenceProps(ref);
-  const origin = {
-    "--transform-origin": `${Math.max(0, at.x - pos.left)}px 0`,
-  } as CSSProperties;
-  return createPortal(
-    <div
-      {...presence}
+  return (
+    <Bubble
       id={id}
       role="tooltip"
       className="info-tip-card floating-surface"
-      style={{ ...pos, ...origin }}
+      anchor={anchor}
+      align="start"
+      gap={GAP}
       data-floating-tip=""
       onPointerEnter={(e) => {
         if (e.pointerType === "mouse") onPointerEnter();
@@ -186,7 +175,6 @@ function InfoTipCard({
       }}
     >
       {children}
-    </div>,
-    document.body,
+    </Bubble>
   );
 }

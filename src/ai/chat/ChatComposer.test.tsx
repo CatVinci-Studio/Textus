@@ -755,9 +755,9 @@ describe("ChatComposer pickers", () => {
       type(`看看 ${key}`);
       const empty = await screen.findByRole("status");
       await waitFor(() =>
-        expect(empty).toHaveTextContent("保存文档或选择项目文件夹"),
+        expect(empty).toHaveTextContent("保存文档或选择文件夹"),
       );
-      expect(empty).toHaveTextContent("输入 @ 引用项目文件夹中的文件");
+      expect(empty).toHaveTextContent("输入 @ 引用文件夹中的文件");
     },
   );
 

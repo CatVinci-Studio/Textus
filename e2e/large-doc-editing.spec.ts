@@ -83,10 +83,12 @@ test("a tab back in front shows the same place, at the same heights", async ({
   const p = page.locator(`${editor} p`, { hasText: "Paragraph 900 keeps" });
   await p.evaluate((el) => el.scrollIntoView({ block: "start" }));
   await settled(page);
-  // From the top of the scroller: the tab bar comes with the second tab.
+  // From where the page's text starts in the scroller: the tab bar comes
+  // with the second tab, and the page's top air changes with it.
   const fromTop = (el: Element) =>
     el.getBoundingClientRect().top -
-    el.closest(".editor-scroll")!.getBoundingClientRect().top;
+    el.closest(".editor-scroll")!.getBoundingClientRect().top -
+    parseFloat(getComputedStyle(el.closest(".editor-content")!).paddingTop);
   const before = await p.evaluate(fromTop);
   await page.evaluate(() => {
     const w = window as unknown as Record<string, unknown> & {

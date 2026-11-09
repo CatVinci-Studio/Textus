@@ -75,7 +75,7 @@ test("Settings says where the project puts pictures", async ({ page }) => {
   const panel = page.getByRole("dialog", { name: "Settings" });
   await panel.getByRole("button", { name: "Editor & Appearance" }).click();
   await expect(panel).toContainText(
-    "This project keeps pictures in pics/ (set in .textus/settings.json).",
+    "This folder keeps pictures in pics/ (set in .textus/settings.json).",
   );
   // Nothing to choose there: the project decides.
   await expect(panel.getByRole("combobox", { name: "Folder" })).toHaveCount(0);

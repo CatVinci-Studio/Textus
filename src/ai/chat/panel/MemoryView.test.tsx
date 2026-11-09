@@ -107,13 +107,6 @@ describe("the Project tab", () => {
       t.memoryLibrary,
       t.memoryRemembered,
     ]);
-    for (const hint of [
-      t.memoryStyleHint,
-      t.memoryInstructionsHint,
-      t.memoryLibraryHint,
-      t.memoryRememberedHint,
-    ])
-      expect(screen.getByText(hint)).toBeInTheDocument();
   });
 
   it("leaves the skills to the slash menu", () => {

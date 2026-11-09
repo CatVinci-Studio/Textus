@@ -7,6 +7,7 @@ export const WEBVIEW_THEME_VARS = [
   // The interface's size step, which the page's lengths grow with.
   "--ui-text-scale",
   "--window-scale",
+  "--icon-scale",
   "--ui-bg",
   "--ui-surface",
   "--ui-subtle",

@@ -186,7 +186,7 @@ export function queueRelayout(anim: InsertAnimation) {
         callId: anim.callId,
       }),
     );
-    play(before, { duration: "--dur-medium", easing: "--ease-out" });
+    play(before, { duration: "--dur-base", easing: "--ease-out" });
   });
 }
 

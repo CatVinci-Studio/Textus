@@ -44,7 +44,7 @@ export function marginRoom(
 
 /** The share of its own width the column keeps when it narrows for cards:
  *  its own width already follows the window, the theme and the zoom. */
-export const NARROWEST_SHARE = 0.85;
+export const NARROWEST_SHARE = 0.8;
 
 /** The widest the column may be for a margin to fit beside it in
  *  `scrollWidth`, its text inset by `padding`: wider, the column would have

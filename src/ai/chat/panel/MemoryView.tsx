@@ -106,7 +106,6 @@ export function MemorySections({
             </button>
           )}
         </h4>
-        <p className="memory-hint">{t.memoryStyleHint}</p>
         {styleLines.length > 0 ? (
           <ul className="memory-card memory-lines">
             {styleLines.map((line, i) => (
@@ -141,7 +140,6 @@ export function MemorySections({
             {t.memoryEdit}
           </button>
         </h4>
-        <p className="memory-hint">{t.memoryInstructionsHint}</p>
         {projectRules.length > 0 || globalRules.length > 0 ? (
           <ul className="memory-card memory-lines">
             {projectRules.map((line, i) => (
@@ -178,7 +176,6 @@ export function MemorySections({
             {t.memoryNew}
           </button>
         </h4>
-        <p className="memory-hint">{t.memoryLibraryHint}</p>
         {info.library.length > 0 && library.length === 0 ? (
           <div className="memory-empty">
             <p>{t.memoryNoMatch}</p>

@@ -59,8 +59,7 @@
   min-width: 0;
   padding: 4px 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: var(--ui-bg);
   color: var(--ui-text);
   font-size: var(--text-body);
@@ -131,8 +130,8 @@ textarea.tx-input {
 .tx-icon {
   display: inline-block;
   flex: none;
-  width: 16px;
-  height: 16px;
+  width: calc(16px * var(--icon-scale, 1));
+  height: calc(16px * var(--icon-scale, 1));
   background: currentColor;
   -webkit-mask: var(--icon) center / contain no-repeat;
   mask: var(--icon) center / contain no-repeat;

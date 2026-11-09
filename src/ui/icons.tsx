@@ -1,3 +1,14 @@
+import type { CSSProperties } from "react";
+
+/** An icon's drawn size: its design size (the svg's own width and height)
+ *  times one step up (--icon-scale) and the interface's scale, so every
+ *  icon grows with the interface as its text does. */
+export function iconSize(width: number, height: number): CSSProperties {
+  const at = (n: number) =>
+    `calc(${n}px * var(--icon-scale, 1) * var(--chrome-scale, 1))`;
+  return { width: at(width), height: at(height), flexShrink: 0 };
+}
+
 /**
  * The app's icon set: stroked line art on a 16-unit grid, coloured with
  * `currentColor` so an icon takes its surroundings' colour, unlike emoji.
@@ -13,6 +24,7 @@ export function ChevronIcon({ className }: IconProps) {
       className={className}
       width="10"
       height="10"
+      style={iconSize(10, 10)}
       viewBox="0 0 10 10"
       fill="none"
     >
@@ -37,6 +49,7 @@ export function FolderIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -51,6 +64,7 @@ export function FolderOpenIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -75,6 +89,7 @@ export function ProjectIcon({ className }: IconProps) {
       className={className}
       width="14"
       height="14"
+      style={iconSize(14, 14)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -100,6 +115,7 @@ export function NewFolderIcon({ className }: IconProps) {
       className={className}
       width="14"
       height="14"
+      style={iconSize(14, 14)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -126,6 +142,7 @@ export function NewDocumentIcon({ className }: IconProps) {
       className={className}
       width="14"
       height="14"
+      style={iconSize(14, 14)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -151,6 +168,7 @@ export function MarkdownFileIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -159,6 +177,7 @@ export function MarkdownFileIcon({ className }: IconProps) {
         y="2"
         width="13"
         height="12"
+        style={iconSize(13, 12)}
         rx="1.5"
         stroke="currentColor"
         strokeWidth="1.1"
@@ -189,6 +208,7 @@ export function ImageFileIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -197,6 +217,7 @@ export function ImageFileIcon({ className }: IconProps) {
         y="2"
         width="13"
         height="12"
+        style={iconSize(13, 12)}
         rx="1.5"
         stroke="currentColor"
         strokeWidth="1.1"
@@ -227,6 +248,7 @@ export function GenericFileIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -252,6 +274,7 @@ export function TreeTabIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -271,6 +294,7 @@ export function OutlineTabIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -306,6 +330,7 @@ export function SidebarToggleIcon({ className }: IconProps) {
       className={className}
       width="15"
       height="15"
+      style={iconSize(15, 15)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -330,6 +355,7 @@ export function LockIcon({ className }: IconProps) {
       className={className}
       width="12"
       height="12"
+      style={iconSize(12, 12)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -364,6 +390,7 @@ export function AssistantIcon({
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -411,6 +438,7 @@ export function HistoryIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -432,6 +460,7 @@ export function MoreIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="currentColor"
     >
@@ -449,6 +478,7 @@ export function CloseIcon({ className }: IconProps) {
       className={className}
       width="12"
       height="12"
+      style={iconSize(12, 12)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -469,6 +499,7 @@ export function DetachIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -497,6 +528,7 @@ export function PinIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -519,6 +551,7 @@ export function PlusIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -548,6 +581,7 @@ export function SearchIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -569,6 +603,7 @@ export function LightbulbIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -595,6 +630,7 @@ export function PaperclipIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -616,6 +652,7 @@ export function CheckIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -638,6 +675,7 @@ export function ArrowUpIcon({ className }: IconProps) {
       className={className}
       width="12"
       height="12"
+      style={iconSize(12, 12)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -652,6 +690,22 @@ export function ArrowUpIcon({ className }: IconProps) {
   );
 }
 
+/** Stop: what Send turns into while a reply is coming. */
+export function StopIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="12"
+      height="12"
+      style={iconSize(12, 12)}
+      viewBox="0 0 16 16"
+      fill="none"
+    >
+      <rect x="4" y="4" width="8" height="8" rx="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
 /** The file tree's sort: three lines, shorter each. */
 export function SortIcon({ className }: IconProps) {
   return (
@@ -659,6 +713,7 @@ export function SortIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -678,6 +733,7 @@ export function RefreshIcon({ className }: IconProps) {
       className={className}
       width="12"
       height="12"
+      style={iconSize(12, 12)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -703,6 +759,7 @@ export function HamburgerIcon({ className }: IconProps) {
       className={className}
       width="12"
       height="12"
+      style={iconSize(12, 12)}
       viewBox="0 0 12 12"
       fill="none"
     >
@@ -722,6 +779,7 @@ export function WindowMinimizeIcon({ className }: IconProps) {
       className={className}
       width="10"
       height="10"
+      style={iconSize(10, 10)}
       viewBox="0 0 10 10"
       fill="none"
     >
@@ -736,6 +794,7 @@ export function WindowMaximizeIcon({ className }: IconProps) {
       className={className}
       width="10"
       height="10"
+      style={iconSize(10, 10)}
       viewBox="0 0 10 10"
       fill="none"
     >
@@ -744,6 +803,7 @@ export function WindowMaximizeIcon({ className }: IconProps) {
         y="1.5"
         width="7"
         height="7"
+        style={iconSize(7, 7)}
         stroke="currentColor"
         strokeWidth="1"
       />
@@ -758,6 +818,7 @@ export function WindowRestoreIcon({ className }: IconProps) {
       className={className}
       width="10"
       height="10"
+      style={iconSize(10, 10)}
       viewBox="0 0 10 10"
       fill="none"
     >
@@ -785,6 +846,7 @@ export function WindowCloseIcon({ className }: IconProps) {
       className={className}
       width="10"
       height="10"
+      style={iconSize(10, 10)}
       viewBox="0 0 10 10"
       fill="none"
     >
@@ -804,6 +866,7 @@ export function UndoIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -831,6 +894,7 @@ export function BulletListIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -854,6 +918,7 @@ export function NumberedListIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -913,6 +978,7 @@ export function TableEditIcon({
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -943,6 +1009,7 @@ export function TrashIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -964,6 +1031,7 @@ export function GridViewIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
@@ -984,6 +1052,7 @@ export function ListViewIcon({ className }: IconProps) {
       className={className}
       width="16"
       height="16"
+      style={iconSize(16, 16)}
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
@@ -1004,6 +1073,7 @@ export function WriteModeIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -1031,6 +1101,7 @@ export function CreateModeIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -1051,6 +1122,7 @@ export function ReviewModeIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >
@@ -1077,6 +1149,7 @@ export function ResearchModeIcon({ className }: IconProps) {
       className={className}
       width="13"
       height="13"
+      style={iconSize(13, 13)}
       viewBox="0 0 16 16"
       fill="none"
     >

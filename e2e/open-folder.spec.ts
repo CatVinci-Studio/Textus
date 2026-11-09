@@ -75,7 +75,7 @@ test("opening a file in a subfolder keeps the tree where it was", async ({
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
 });
 
-test("Open Folder pins the tree's root and lists the folder as recent; Close Project lets it follow the document again", async ({
+test("Open Folder pins the tree's root and lists the folder as recent; Close Folder lets it follow the document again", async ({
   page,
 }) => {
   await open(page);
@@ -99,10 +99,10 @@ test("Open Folder pins the tree's root and lists the folder as recent; Close Pro
           .__devRecents.folders,
     ),
   ).toEqual(["/work/notes"]);
-  // Close Project goes back to following the document.
-  await page.getByRole("button", { name: "Close Project" }).click();
+  // Close Folder goes back to following the document.
+  await page.getByRole("button", { name: "Close Folder" }).click();
   await expect(page.locator(rootLabel)).toHaveText("elsewhere");
-  await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
+  await expect(page.getByRole("button", { name: "Close Folder" })).toHaveCount(
     0,
   );
   expect(
@@ -115,7 +115,7 @@ test("a recent folder opens from File > Open Recent", async ({ page }) => {
   await emit(page, "menu-open-recent-folder", "/work/notes");
   await expect(page.locator(rootLabel)).toHaveText("notes");
   await expect(
-    page.getByRole("button", { name: "Close Project" }),
+    page.getByRole("button", { name: "Close Folder" }),
   ).toBeVisible();
 });
 
@@ -128,7 +128,7 @@ test("the folder comes back with the session", async ({ page }) => {
   });
   await expect(page.locator(rootLabel)).toHaveText("notes");
   await expect(
-    page.getByRole("button", { name: "Close Project" }),
+    page.getByRole("button", { name: "Close Folder" }),
   ).toBeVisible();
 });
 
@@ -140,14 +140,11 @@ test("the home folder is refused with a reason", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("an empty window's Files tab explains itself and offers the start page's three ways to begin", async ({
+test("an empty window's Files tab offers the start page's three ways to begin", async ({
   page,
 }) => {
   await open(page);
   await emit(page, "menu-toggle-sidebar");
-  await expect(page.locator(".sidebar-body")).toContainText(
-    "Save this document and its folder shows up here.",
-  );
   await expect(page.locator(".sidebar-body .start-page-action")).toHaveCount(3);
 });
 

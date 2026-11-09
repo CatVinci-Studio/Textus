@@ -1,4 +1,5 @@
 import { scaledPx } from "../../ui/chrome-scale";
+import { watchContentZoom } from "../../plugins/views/frame-zoom";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -145,6 +146,10 @@ export function stackCards(
   // Drawn at the interface's size, as the cards' stylesheet is.
   const gap = scaledPx(STACK_GAP);
   const chip = scaledPx(CHIP_HEIGHT);
+  const minCut = scaledPx(MIN_CUT);
+  const crowded = scaledPx(CROWDED_DRIFT);
+  const grouped = scaledPx(GROUP_DRIFT);
+  const tight = scaledPx(2);
   let floor = -Infinity;
   // One run from `start` of cards that push each other; `end` keeps the same
   // cards when cut, so a crowded paragraph doesn't end on one whole card.
@@ -158,11 +163,16 @@ export function stackCards(
       const whole = heightOf(p.item.key);
       const next = end === undefined || i + 1 >= end ? Infinity : want[i + 1];
       const room = next - p.top - gap;
-      const height = room >= whole ? whole : room < MIN_CUT ? chip : room;
+      const height = room >= whole ? whole : room < minCut ? chip : room;
       p.cut = height < whole ? height : null;
       p.chip = p.cut === chip;
       p.group = null;
-      below = p.top + height + gap;
+      // A chip closes up to keep pace with passages set closer than a chip
+      // and its gap, never tighter than the least air; chips for one line
+      // keep the gap and drift, so they become a group.
+      const spare = next - p.top - chip;
+      const after = p.chip && spare >= tight && spare < gap ? spare : gap;
+      below = p.top + height + after;
       i++;
     } while (
       i < placed.length &&
@@ -175,8 +185,8 @@ export function stackCards(
     let run = lay(start);
     const most = () =>
       Math.max(...placed.slice(start, run.end).map((p) => p.drift));
-    if (most() > CROWDED_DRIFT) run = lay(start, run.end);
-    if (most() > GROUP_DRIFT) {
+    if (most() > crowded) run = lay(start, run.end);
+    if (most() > grouped) {
       let below = floor;
       for (let from = start; from < run.end;) {
         let to = from + 1;
@@ -287,7 +297,13 @@ export function useMarginRoom(
     ro.observe(scrollEl);
     ro.observe(contentEl);
     ro.observe(view.dom);
-    return () => ro.disconnect();
+    // A column held to a width for cards keeps its size through a zoom, so
+    // no resize says the zoom changed.
+    const stopZoom = watchContentZoom(check);
+    return () => {
+      ro.disconnect();
+      stopZoom();
+    };
   }, [view, scrollEl, contentEl, onNoMarginRef, cards]);
   return noMargin;
 }

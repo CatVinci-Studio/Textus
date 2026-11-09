@@ -341,7 +341,7 @@
   font: 700 10.5px/1 var(--font-ui, sans-serif);
   cursor: pointer;
   box-shadow: 0 0 0 3px var(--review-anchor-bg);
-  animation: pending-pick-in var(--dur-medium) var(--ease-spring-bouncy) both;
+  animation: pending-pick-in var(--dur-base) var(--ease-spring-bouncy) both;
 }
 
 [data-platform="ios"] .review-badge {

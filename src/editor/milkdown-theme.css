@@ -1014,7 +1014,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
    `rotate` and `translate` rather than `transform`: only the turn
    animates; the re-centring of a quarter-turned picture applies at once. */
 .milkdown .image-view img {
-  transition: rotate var(--dur-medium) var(--ease-spring);
+  transition: rotate var(--dur-base) var(--ease-spring);
 }
 
 .milkdown .image-view[data-rotate="180"] img {
@@ -1436,8 +1436,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   box-sizing: border-box;
   padding: 4px 8px;
   border: 1px solid var(--doc-border, var(--ui-border));
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: var(--doc-bg, var(--ui-bg));
   color: var(--doc-text);
   font: inherit;

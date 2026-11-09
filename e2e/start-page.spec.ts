@@ -150,7 +150,7 @@ test("the start page lists recent files and opens one, and asks for a project", 
     };
   });
   await startPage(page)
-    .getByRole("button", { name: /Open Project/ })
+    .getByRole("button", { name: /Open Folder/ })
     .click();
   await expect.poll(() => asked.length).toBeGreaterThan(0);
 

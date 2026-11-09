@@ -190,6 +190,7 @@ function App() {
           previewTab={dragHoverPreview}
           onChange={handleChange}
           typewriter={settings.typewriterMode}
+          formatBar={settings.formatBar}
           tour={
             tutorial.active && tutorial.tabId
               ? {

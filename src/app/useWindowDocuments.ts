@@ -179,7 +179,7 @@ export function useWindowDocuments({
     t,
   });
 
-  // Close Project also closes the project's saved documents; with none left,
+  // Close Folder also closes the folder's saved documents; with none left,
   // the start page.
   const { folder, closeFolder: forgetFolder } = openFolder;
   const { addStartTab } = tabState;

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { openApp, chromeScale } from "./helpers";
 
 /**
  * A plugin's floating view: opened by the plugin, a transparent page of its
@@ -90,12 +90,16 @@ test("a floating view opens over the window, moves, folds and closes", async ({
 
   const view = page.getByRole("dialog", { name: "Pet" });
   await expect(view).toBeVisible();
-  await expect(view).toHaveCSS("width", "120px");
+  await expect(view).toHaveCSS(
+    "width",
+    `${+(120 * (await chromeScale(page))).toFixed(3)}px`,
+  );
   // It starts in the corner, as far from the right edge as the bottom.
   const start = (await view.boundingBox())!;
   const viewport = page.viewportSize()!;
-  expect(viewport.width - start.x - start.width).toBe(
+  expect(viewport.width - start.x - start.width).toBeCloseTo(
     viewport.height - start.y - start.height,
+    0,
   );
   // The page is transparent: only what the plugin draws floats.
   const pet = view.frameLocator("iframe").locator("#pet");
@@ -115,7 +119,7 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   expect(after.x).toBeLessThan(before.x - 150);
   expect(after.y).toBeLessThan(before.y - 50);
   // Let go near the edge, it settles the same distance in as the corner.
-  expect(after.x).toBe(viewport.width - start.x - start.width);
+  expect(after.x).toBeCloseTo(viewport.width - start.x - start.width, 0);
   // Now in the left half: a character there turns to face the middle.
   await expect(page.getByText("on the left")).toBeVisible();
   // Resized from its top corner toward the middle: in proportion, never
@@ -129,9 +133,12 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   await page.mouse.move(corner.x + 300, corner.y - 300, { steps: 6 });
   await page.mouse.up();
   const big = (await view.boundingBox())!;
-  expect([big.width, big.height]).toEqual([168, 168]);
-  expect(big.x).toBe(after.x);
-  expect(big.y + big.height).toBe(after.y + after.height);
+  // 1.4x its 120px, at the interface's size.
+  const most = 168 * (await chromeScale(page));
+  expect(big.width).toBeCloseTo(most, 0);
+  expect(big.height).toBeCloseTo(most, 0);
+  expect(big.x).toBeCloseTo(after.x, 0);
+  expect(big.y + big.height).toBeCloseTo(after.y + after.height, 0);
   // Petting her with quick clicks never selects her like text.
   await view.dblclick();
   expect(
@@ -154,7 +161,7 @@ test("a floating view opens over the window, moves, folds and closes", async ({
   await page.reload();
   await expect(view).toBeVisible();
   expect((await view.boundingBox())!.x).toBeCloseTo(after.x, -1);
-  await expect(view).toHaveCSS("width", "168px");
+  expect((await view.boundingBox())!.width).toBeCloseTo(most, 0);
 
   // Folded to a dot and back; the plugin hears it go out of sight.
   await view.click({ button: "right" });

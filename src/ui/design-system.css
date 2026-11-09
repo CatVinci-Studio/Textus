@@ -36,6 +36,8 @@
   /* The desktop's base: what 100% Interface Text Size means, one step up
      from the first design (chrome-scale.ts keeps the same number). */
   --chrome-base: 1.1;
+  /* Icons one step larger than their design size (icons.tsx iconSize). */
+  --icon-scale: 1.15;
   --chrome-scale: calc(
     var(--chrome-base) * var(--ui-text-scale, 1) * var(--window-scale, 1)
   );
@@ -154,6 +156,7 @@
 /* iOS's text styles at their default size, and its control sizes. Hit
    areas reach 44 on their own (mobile/styles). */
 :root[data-window-chrome="mobile"] {
+  --icon-scale: 1;
   --control-height-sm: 32px;
   --control-height: 36px;
   --chrome-scale: 1;
@@ -532,8 +535,9 @@
   background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
 }
 
-/* Icons are drawn at fixed pixel sizes: each grows as a picture, without
-   moving what is around it; the buttons' own sizes are scaled below. */
+/* Icons drawn at fixed pixel sizes grow as a picture, without moving what
+   is around it; the app's set sizes itself (icons.tsx iconSize) and is left
+   out. The buttons' own sizes are scaled below. */
 :root:not([data-window-chrome="mobile"])
   :is(
     .window-bar-toggle,
@@ -551,7 +555,7 @@
     .window-bar-lock,
     .tree-row
   )
-  > svg {
+  > svg:not([style*="--icon-scale"]) {
   scale: var(--chrome-scale);
 }
 

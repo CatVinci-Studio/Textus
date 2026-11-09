@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import {
+  emit,
+  openApp,
+  pasteMarkdown,
+  SAMPLE_DOC,
+  chromeScale,
+} from "./helpers";
 
 // Interface Text Size scales the app's own text and leaves the document's
 // alone, which has its own zoom.
@@ -121,8 +127,8 @@ test("the detached chat window follows Interface Text Size too", async ({
   await page.goto("/?view=chat");
   const textarea = page.locator(".chat-window-body textarea");
   await expect(textarea).toBeVisible();
-  // --text-body, 13px, at 125%.
+  // --text-body, 13px, at the interface's size: 125% of its base.
   expect(
     await textarea.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),
-  ).toBeCloseTo(16.25, 1);
+  ).toBeCloseTo(13 * (await chromeScale(page)), 1);
 });

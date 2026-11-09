@@ -78,8 +78,7 @@
 
 .paper-outline input {
   min-height: var(--control-height-sm);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
 }
 
 .paper-outline textarea {
@@ -424,11 +423,11 @@
 }
 
 .paper-card-enter {
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-thinking {
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-thesis,
@@ -467,7 +466,7 @@
   font-size: var(--text-footnote);
   line-height: 1.5;
   mask-image: linear-gradient(to bottom, transparent, black 45%);
-  animation: motion-rise-in var(--dur-medium) var(--ease-out) both;
+  animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 
 .paper-card-preview p {

@@ -107,10 +107,10 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
 
   await learn.getByRole("button", { name: "Remember", exact: true }).click();
   await expect(learn).toHaveText(
-    "Remembered. See or delete it under Project in the AI panel.",
+    "Remembered. See or delete it under Folder in the AI panel.",
   );
   await expect(page.locator('[role="status"][aria-live]')).toContainText(
-    "Remembered. See or delete it under Project in the AI panel.",
+    "Remembered. See or delete it under Folder in the AI panel.",
   );
   expect(await calls(page, "memory_remember")).toEqual([
     expect.objectContaining({
@@ -143,7 +143,7 @@ test("rejecting 「」 made “” three times offers to remember it, and Rememb
   });
   await page
     .locator(".agent-panel-view")
-    .getByRole("button", { name: "Project", exact: true })
+    .getByRole("button", { name: "Folder", exact: true })
     .click();
   await expect(page.locator(".memory-remembered")).toContainText(RULE);
 

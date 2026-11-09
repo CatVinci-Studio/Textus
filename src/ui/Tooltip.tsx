@@ -1,10 +1,8 @@
-import { scaledPx } from "./chrome-scale";
 import {
   cloneElement,
   useCallback,
   useEffect,
   useId,
-  useLayoutEffect,
   useRef,
   useState,
   type FocusEvent,
@@ -14,8 +12,8 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { useViewportClamp } from "../utils/hooks/useViewportClamp";
-import { Presence, usePresenceProps } from "./usePresence";
+import { Bubble } from "./Bubble";
+import { Presence } from "./usePresence";
 import "./Tooltip.css";
 import { useTipTimer } from "./useTipTimer";
 
@@ -25,8 +23,8 @@ export const TOOLTIP_OPEN_MS = 400;
 /** After one tooltip hides, moving straight to the next button shows its
  *  tooltip at once: the user is reading the toolbar, not passing it. */
 const WARM_MS = 500;
-/** The gap between the button and its tooltip. */
-const GAP = 6;
+/** The gap between the button and its tooltip's tail. */
+const GAP = 8;
 
 let lastHiddenAt = -Infinity;
 const markHidden = () => (lastHiddenAt = performance.now());
@@ -190,40 +188,16 @@ function TooltipBubble({
   side: "above" | "below";
   children: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [at, setAt] = useState({ x: 0, y: 0 });
-  // The bubble's size is known only once in the DOM, so it is placed in a
-  // layout effect, before the first paint.
-  useLayoutEffect(() => {
-    const box = anchor.current?.getBoundingClientRect();
-    const el = ref.current;
-    if (!box || !el) return;
-    const width = el.offsetWidth;
-    const height = el.offsetHeight;
-    const gap = scaledPx(GAP);
-    const aboveY = box.top - gap - height;
-    const belowY = box.bottom + gap;
-    const fitsAbove = aboveY >= 8;
-    const fitsBelow = belowY + height <= window.innerHeight - 8;
-    const above =
-      side === "above" ? fitsAbove || !fitsBelow : !fitsBelow && fitsAbove;
-    setAt({
-      x: box.left + box.width / 2 - width / 2,
-      y: above ? aboveY : belowY,
-    });
-  }, [anchor, side, children]);
-  const pos = useViewportClamp(ref, at.x, at.y);
-  const presence = usePresenceProps(ref);
-  return createPortal(
-    <div
-      {...presence}
+  return (
+    <Bubble
       id={id}
       role="tooltip"
       className="tooltip floating-surface"
-      style={pos}
+      anchor={anchor}
+      side={side}
+      gap={GAP}
     >
       {children}
-    </div>,
-    document.body,
+    </Bubble>
   );
 }

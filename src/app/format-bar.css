@@ -1,0 +1,69 @@
+/* The format bar (design-language.md 5.7). With one document it is part of
+   the frame: under the window bar, in the frame's fill (glass when the bar
+   is), the hairline where the frame meets the page below it, the page
+   scrolling beneath. With several it sits at the top of the floating sheet,
+   on the page's own surface. */
+.main-pane {
+  --format-bar-height: calc(32px * var(--chrome-scale));
+}
+
+.format-bar {
+  position: absolute;
+  top: var(--window-bar-height);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--format-bar-height);
+  padding: 0 var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--ui-frame-edge);
+  background: var(--ui-frame-fill);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.format-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.format-bar-group {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+
+/* A hairline between the text styles and the blocks. */
+.format-bar-group + .format-bar-group {
+  padding-left: var(--space-2);
+  border-left: 1px solid var(--ui-frame-edge);
+}
+
+.format-bar .tx-icon-button[aria-pressed="true"] {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+}
+
+/* The page's text starts below the bar, not under it. */
+.main-pane:has(> .format-bar) .editor-content:not(.typewriter-active) {
+  padding-top: calc(3rem + var(--format-bar-height));
+}
+
+/* Several documents: in the column's flow at the top of the sheet. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .format-bar {
+  position: relative;
+  top: 0;
+  flex: none;
+  border-bottom-color: var(--ui-border);
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

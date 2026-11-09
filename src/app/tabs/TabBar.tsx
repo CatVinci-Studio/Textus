@@ -309,7 +309,7 @@ function useIncomingTabPreview(
             animate(
               arrived,
               [{ transform: `translateX(${delta}px)` }, { transform: "none" }],
-              { duration: "--dur-medium", easing: "--ease-spring-bouncy" },
+              { duration: "--dur-base", easing: "--ease-spring-bouncy" },
             );
         }
       } else {

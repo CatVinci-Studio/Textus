@@ -44,21 +44,21 @@ export default {
     "チェック中に段落が変更されました。もう一度お試しください。",
   noticeGrammarNoIssues: "問題は見つかりませんでした。",
   projectTooBroad:
-    "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、プロジェクトフォルダーにできません。もっと具体的なフォルダーを選んでください。",
+    "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
   projectNoSamples: "選んだファイルをテキストとして読み込めませんでした。",
   projectNeedsSave:
-    "先に文書を保存してください。そのフォルダーがプロジェクトフォルダーになります。",
+    "先に文書を保存してください。AIはそのフォルダーで作業します。",
   projectPicking: "フォルダーを選択中…",
   projectLearningStyle: "サンプルから文体を学習中…",
   projectStyleLearned:
     "文体プロファイルを保存しました。新しいタブで確認・編集できます。",
   projectOpening: "開いています…",
-  projectStyleTemplate: `# 文体プロファイル\n\n<!-- このプロジェクトのすべての文書で、${AI_NAME}と補完がこのプロファイルに従います。語調、文のリズム、語彙、句読点、使わない書き方などを、形容詞ではなく具体的な項目（「一文は短く、40字を超えることはまれ」）で書いてください。プロジェクトメニューの「サンプルから文体を学習…」で、自分の文章から下書きを作れます。このようなコメントは送信されません。 -->\n\n## 語調\n\n- \n\n## 文とリズム\n\n- \n\n## 語彙\n\n- \n\n## 使わない\n\n- \n`,
+  projectStyleTemplate: `# 文体プロファイル\n\n<!-- このフォルダーのすべての文書で、${AI_NAME}と補完がこのプロファイルに従います。語調、文のリズム、語彙、句読点、使わない書き方などを、形容詞ではなく具体的な項目（「一文は短く、40字を超えることはまれ」）で書いてください。フォルダーメニューの「サンプルから文体を学習…」で、自分の文章から下書きを作れます。このようなコメントは送信されません。 -->\n\n## 語調\n\n- \n\n## 文とリズム\n\n- \n\n## 語彙\n\n- \n\n## 使わない\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- {name}（または別名）が出てくるたびに${AI_NAME}が守るべき設定をここに書きます。include: detected（言及されたとき、既定）| always（常に）| never（送らない）。このようなコメントは送信されません。 -->\n\n`,
   projectInstructionsTemplate: `<!--
-このプロジェクトの執筆の指示です。
+このフォルダーの執筆の指示です。
 
-このようなコメントの外に書いた内容は、このプロジェクトの文書に
+このようなコメントの外に書いた内容は、このフォルダーの文書に
 ついての毎回の会話で、グローバルな執筆の指示（設定 > ${AI_NAME}）
 の後に${AI_NAME}へ送られます。食い違う点はこのファイルが優先され
 ます。コメントは送信されません。
@@ -87,10 +87,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   用語    「ユーザー」と書き、「ユーザ」とは書かない。
   背景    一般読者向けの科学記事を書いている。
 
-特定のプロジェクトだけの指示は、そのプロジェクトの .textus/agent.md
-に書きます。AIパネルのプロジェクトメニューにある
-「このプロジェクトの執筆の指示を編集」で開けます。両方が送られ、
-食い違う点はプロジェクトの指示が優先されます。
+特定のフォルダーだけの指示は、そのフォルダーの .textus/agent.md
+に書きます。AIパネルのフォルダーメニューにある
+「このフォルダーの執筆の指示を編集」で開けます。両方が送られ、
+食い違う点はフォルダーの指示が優先されます。
 
 スキルはこのファイルの隣の skills/ フォルダーに、1つにつき1つの
 .md ファイルとして置きます。会話で /名前 と入力すると使えます。
@@ -99,8 +99,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   projectOpenStyle: "文体プロファイルを開く",
   projectStyleChip: "文体",
   projectLibraryChip: "ライブラリ {n}",
-  projectPickFolder: "プロジェクトフォルダーを選択…",
-  projectNoFolder: "プロジェクトフォルダーを使わない",
+  projectPickFolder: "フォルダーを選択…",
+  projectNoFolder: "フォルダーを使わない",
   projectReveal: "ファイルマネージャーで表示",
   projectLearnStyle: "サンプルから文体を学習…",
   projectImportReferences: "参考資料を読み込む…",
@@ -110,8 +110,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   projectReferencesImportedSkipped: `{n} 件のファイルを references/ に追加しました。${AI_NAME} が検索できます。{skipped} 件は対象外です（テキストや文書でない、または大きすぎる）。`,
   projectCreateStyle: "文体プロファイルを作成",
   projectNewEntry: "ライブラリに項目を追加…",
-  projectEditInstructions: "このプロジェクトの執筆の指示を編集",
-  projectFolderTitle: "プロジェクトフォルダー：{path}",
+  projectEditInstructions: "このフォルダーの執筆の指示を編集",
+  projectFolderTitle: "フォルダー：{path}",
   projectEntryPlaceholder: "人物・場所・用語の名前",
   projectEntryCreate: "作成",
   chatHistoryUnsaved: "未保存の文書",
@@ -187,26 +187,22 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reviewNotesPicked: "{n} 件を選択",
   reviewNotesAskPrefix: "これらのコメントについて：\n{notes}\n",
   reviewNoteAskPrefix: "このコメント「{comment}」について：",
-  agentTabProject: "プロジェクト",
+  agentTabProject: "フォルダー",
   memoryStyle: "文体",
   memoryLibrary: "ライブラリ",
   memoryInstructions: "執筆の指示",
-  memoryStyleHint: "あなたの書き方。AIも同じように書きます。",
-  memoryInstructionsHint: "AIが毎回守るルール。",
-  memoryLibraryHint: "人物・場所・用語。話に出たらAIが参照します。",
-  memoryRememberedHint: "AIが会話の中で自分で覚えたこと。",
   memoryEdit: "編集",
   memoryNew: "新規",
   memoryInThisDocument: "この文書で使用",
-  memoryAllProjects: "すべてのプロジェクト",
-  memoryEditGlobal: "すべてのプロジェクト共通の執筆の指示を編集",
+  memoryAllProjects: "すべてのフォルダー",
+  memoryEditGlobal: "すべてのフォルダー共通の執筆の指示を編集",
   memoryStyleEmpty: `文体プロファイルはまだありません。自分の文章をいくつか渡すと、${AI_NAME} が書き方を覚えます。`,
   memoryLibraryEmpty: `人物、場所、用語をライブラリに書いておけば、${AI_NAME} が覚えます。`,
   memoryInstructionsEmpty: `執筆の指示はまだありません。${AI_NAME} に常に守ってほしいルールを書いておけます。`,
-  memoryNeedsSave: `フォルダを開くかプロジェクトフォルダを選ぶと、${AI_NAME} がそのフォルダ用に文体・資料・指示を覚えます。`,
+  memoryNeedsSave: `フォルダーを開くか選ぶと、${AI_NAME} がそのフォルダ用に文体・資料・指示を覚えます。`,
   memoryRemembered: "記憶",
-  memoryRememberedPersonal: "すべてのプロジェクト",
-  memoryRememberedProject: "このプロジェクト",
+  memoryRememberedPersonal: "すべてのフォルダー",
+  memoryRememberedProject: "このフォルダー",
   memoryRememberedEmpty: `まだありません。いつも守ってほしいことを${AI_NAME}に伝えると、次回のために覚えます。`,
   memoryRememberOff: `「自動で覚える」はオフです（設定 › ${AI_NAME}）。${AI_NAME}は新しいことを覚えません。`,
   memoryKindRequirement: "指示",
@@ -233,16 +229,16 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   memoryLibraryLeftOut:
     "言及されましたが、ライブラリの上限 {cap} 文字を超えたため送信されていません：{names}。",
   memoryChipSaved: "覚えました：{text}（{scope}）",
-  memoryScopeProject: "プロジェクト",
+  memoryScopeProject: "フォルダー",
   memoryScopePersonal: "全体",
   memoryChipUndo: "元に戻す",
   memoryMakePersonal: "全体に移す",
-  memoryMakeProject: "プロジェクトに移す",
+  memoryMakeProject: "このフォルダー専用にする",
   memoryChipUndone: "元に戻しました。もう覚えていません。",
   memoryChipForgot: "忘れました：{text}（{scope}）",
   memoryChipRestored: "元に戻しました。もう一度覚えています。",
   memoryActionFailed:
-    "うまくいきませんでした。「プロジェクト」タブでもう一度お試しください。",
+    "うまくいきませんでした。「フォルダー」タブでもう一度お試しください。",
   learnSuggestion:
     "{what}という修正を何度も却下しました。覚えておきますか：{rule}",
   learnQuoted: "「{text}」",
@@ -275,7 +271,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   learnRemember: "覚えておく",
   learnNotNow: "今はしない",
   learnNever: "今後たずねない",
-  learnSaved: "覚えました。AIパネルの「プロジェクト」で確認・削除できます。",
+  learnSaved: "覚えました。AIパネルの「フォルダー」で確認・削除できます。",
   learnLabel: "修正の採否から学んだこと",
   suggestNextMessageLabel: "次のメッセージを予測",
   suggestNextMessageHint:
@@ -289,7 +285,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   researchCheckClaimsHint:
     "リサーチが草稿を直す前に、出典を引く文をその出典のメモと照らし合わせ、言い過ぎている文を書き直します。より慎重になりますが、セクションごとにモデル呼び出しが1回増えます。",
   rememberAutomaticallyLabel: "自動で覚える",
-  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「プロジェクト」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
+  rememberAutomaticallyHint: `${AI_NAME}が、あなたの指示や書き方を今後の会話のために覚えます。AIパネルの「フォルダー」で確認・編集・取り消しができます。返答のたびに、同じモデルへ短い依頼をもう一度送り、何を記録するか決めます。`,
   toolRemember: "覚えています",
   agentGeneratingImage: "画像を生成しています…",
   toolGenerateImage: "画像を生成しています",
@@ -365,9 +361,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   toolSearchDocument: "文書内を「{arg}」で検索",
   toolReadDocument: "「{arg}」を読む",
   toolReadWholeDocument: "文書全体を読む",
-  toolSearchFiles: "プロジェクト内を「{arg}」で検索",
+  toolSearchFiles: "フォルダー内を「{arg}」で検索",
   toolFindFiles: "名前に「{arg}」を含むファイルを検索",
-  toolListFiles: "プロジェクトのファイルを確認",
+  toolListFiles: "フォルダーのファイルを確認",
   toolReadFile: "{arg} を読む",
   toolUseSkill: "スキル {arg} を使用",
   toolAddComment: "コメントを追加",
@@ -524,11 +520,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeTab: "ファイル",
   outlineTab: "アウトライン",
   treeParentFolder: "親フォルダー",
-  treeEmptyDraft: "文書を保存すると、そのフォルダーがここに表示されます。",
-  outlineEmpty: "まだ見出しがありません。# で始まる行がここに表示されます。",
+  outlineEmpty: "見出しはまだありません",
   treeRefresh: "更新",
-  menuOpenFolder: "プロジェクトを開く…",
-  menuCloseFolder: "プロジェクトを閉じる",
+  menuOpenFolder: "フォルダーを開く…",
+  menuCloseFolder: "フォルダーを閉じる",
   menuCopyPath: "パスをコピー",
   folderTooBroad:
     "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
@@ -538,14 +533,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeSearchCapped:
     "最初の {n} 件のファイルだけを検索しました。すべて検索するには、もっと小さいフォルダーを開いてください。",
   treeSearchTooBroad:
-    "このフォルダーは範囲が広すぎるため検索できません。「ファイル › プロジェクトを開く…」でもっと具体的なフォルダーを開いてください。",
+    "このフォルダーは範囲が広すぎるため検索できません。「ファイル › フォルダーを開く…」でもっと具体的なフォルダーを開いてください。",
   treeSearchFailed: "このフォルダーを読み込めません。",
   treeSearchScope: "表示",
   treeSearchScopeAll: "すべてのファイル",
   treeSearchScopeDocuments: "文書のみ",
   treeNewDocument: "新規ドキュメント",
   treeNewFolder: "新規フォルダ",
-  treeEmptyHint: "ここをダブルクリックすると新しい文書を作れます。",
   treeNewDocumentPrompt: "新しいドキュメントの名前",
   treeNewFolderPrompt: "新しいフォルダの名前",
   treeNewDocumentDefault: "名称未設定",
@@ -563,7 +557,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeKeepLinks: "更新しない",
   treeUpdateLinksFailed: "次の書類のリンクを更新できませんでした: {names}",
   treeDocumentFolder: "現在の書類のフォルダー",
-  treeOpenAsFolder: "プロジェクトとして開く",
+  treeOpenAsFolder: "このフォルダーを開く",
   treeTrashItem: "ゴミ箱に入れる",
   treeTrash: "ゴミ箱に入れる",
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
@@ -696,7 +690,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   editAnimationLabel: "編集プレビューのアニメーション",
   agentWorkspaceLabel: "グローバル設定フォルダー",
   agentWorkspaceOpenButton: "表示",
-  agentWorkspaceRootLabel: "プロジェクトフォルダー",
+  agentWorkspaceRootLabel: "フォルダー",
   agentWorkspaceRootDefault: "なし（サイドバーで開いたフォルダがあればそれ）",
   agentWorkspaceRootPick: "選択…",
   agentSystemPromptLabel: "執筆の指示（agent.md）",
@@ -704,7 +698,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSkillsLabel: "スキル",
   agentSkillsImport: "スキルをインポート…",
   skillGroupRecent: "最近使ったもの",
-  skillGroupProject: "このプロジェクト",
+  skillGroupProject: "このフォルダー",
   skillGroupYours: "自分のスキル",
   skillCategoryWrite: "書く",
   skillCategoryRevise: "直す",
@@ -717,12 +711,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   skillPickerNoMatch: "「{query}」に一致するスキルはありません。",
   skillPickerHowTo:
     "スキルの追加や自分のスキルのインポートは「設定」でできます。",
-  mentionPickerAbout:
-    "@ を入力すると、プロジェクトフォルダーのファイルを添付できます。",
+  mentionPickerAbout: "@ を入力すると、フォルダーのファイルを添付できます。",
   mentionPickerNoProject:
-    "文書を保存するかプロジェクトフォルダーを選ぶと、そのファイルがここに表示されます。",
-  mentionPickerNoFiles:
-    "プロジェクトフォルダーにテキストファイルがまだありません。",
+    "文書を保存するかフォルダーを選ぶと、そのファイルがここに表示されます。",
+  mentionPickerNoFiles: "フォルダーにテキストファイルがまだありません。",
   mentionPickerNoMatch: "「{query}」に一致するファイルはありません。",
   agentSkillsBuiltin: "組み込みスキル",
   agentSkillsCustomize: "カスタマイズ…",
@@ -875,7 +867,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   skillOfferSaved:
     "{name} として保存しました。入力欄に入力すると同じことができます。",
   skillOfferSave: "すべての文書で使う",
-  skillOfferSaveProject: "このプロジェクトだけ",
+  skillOfferSaveProject: "このフォルダーだけ",
   chatHistorySearch: "会話を検索",
   chatHistorySearchNone: "この言葉を含む会話はありません。",
   chatHistoryByYou: "あなた",
@@ -1087,6 +1079,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuCodeBlock: "コードブロック",
   menuTable: "表",
   menuToggleSourceMode: "ソースモード",
+  menuFormatBar: "書式バー",
   menuToggleTypewriterMode: "タイプライターモード",
   menuToggleSidebar: "サイドバー",
   menuZoomIn: "拡大",
@@ -1235,6 +1228,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   docLineSpacingStandard: "標準",
   docLineSpacingRelaxed: "広め",
   docFontLabel: "本文フォント",
+  docFontMore: "その他のフォント",
   docFontAuto: "テーマに合わせる",
   docLetterSpacingLabel: "文字間隔",
   docLetterSpacingAuto: "テーマに合わせる",
@@ -1255,7 +1249,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   closeLastWindow: "ウインドウを閉じる",
   closeLastStartPage: "スタートページを表示",
   startPageRemoveRecent: "最近の項目から削除",
-  startPageRecentProjects: "最近のプロジェクト",
+  startPageRecentProjects: "最近のフォルダー",
   startPagePickDocument: "サイドバーから {folder} の文書を選んで始めましょう。",
   startPageRecentFiles: "最近のファイル",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
@@ -1336,7 +1330,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialDoneTitle: "完了",
   tutorialDoneBody:
     "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
-  tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「プロジェクト」で確かめられます。`,
+  tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「フォルダー」で確かめられます。`,
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",
   closePromptDiscard: "保存しない",
@@ -1394,7 +1388,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageFolderSameFolder: "ドキュメントと同じフォルダー",
   imageFolderNameLabel: "サブフォルダー名",
   imageFolderProjectNote:
-    "このプロジェクトは画像を {folder} に保存します（{source} で指定）。",
+    "このフォルダーは画像を {folder} に保存します（{source} で指定）。",
   imageFolderInvalid:
     "ドキュメントのフォルダー内のフォルダーを指定します（例：img）。",
   imageHostLabel: "画像ホスティング",
@@ -1612,8 +1606,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginBackToList: "すべてのプラグイン",
   pluginSettingsScope: "適用先",
   pluginSettingsScopeGlobal: "すべての文書",
-  pluginSettingsScopeProject: "このプロジェクト（{name}）",
-  pluginSettingProjectOwn: "このプロジェクトには独自の値があります。",
+  pluginSettingsScopeProject: "このフォルダー（{name}）",
+  pluginSettingProjectOwn: "このフォルダーには独自の値があります。",
   pluginSettingUseGeneral: "共通の値を使う",
   pluginSettingsGroup: "設定",
   pluginSettingsOff: "{name} をオンにすると設定を変更できます。",
@@ -1626,7 +1620,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginAboutGroup: "情報",
   pluginDataLabel: "保存しているデータ",
   pluginDataGlobal: "すべての文書で {global}",
-  pluginDataProject: "このプロジェクトで {project}",
+  pluginDataProject: "このフォルダーで {project}",
   pluginDataClear: "消去",
   pluginDataClearAsk: "{name} が保存したデータを消去しますか？元に戻せません。",
   pluginVersionLabel: "バージョン {version}",
@@ -1653,7 +1647,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   conventionsCardLine:
     "このフォルダの {app} 設定では、画像を {folder} に保存します",
   conventionsCardDetails:
-    "現在の設定：{current}。採用すると、このフォルダの .textus/settings.json に保存され、プロジェクトと共に保持されます。",
+    "現在の設定：{current}。採用すると、このフォルダの .textus/settings.json に保存され、フォルダーと共に保持されます。",
   conventionsFolderRoot: "フォルダの最上位",
   conventionsFollow: "採用",
   conventionsDecline: "現在の設定を維持",

@@ -46,7 +46,7 @@ function ink(dark: boolean) {
     text: v("text", "#24272e", "#e4e7ed"),
     muted: v("muted", "#6b6b6b", "#989da6"),
     grid: v("border", "#e1e4ea", "#333230"),
-    surface: v("bg", "#ffffff", "#1b1e24"),
+    surface: v("bg", "#ffffff", "#1f1e1c"),
   };
 }
 

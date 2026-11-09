@@ -117,7 +117,7 @@ test("its page says what a plugin keeps, and Clear empties it", async ({
     .click();
   const own = page.locator('[data-plugin-page="test.keep"]');
   await expect(own).toContainText("for every document");
-  await expect(own).toContainText("in this project");
+  await expect(own).toContainText("in this folder");
   await own.getByRole("button", { name: "Clear", exact: true }).click();
   await page
     .locator(".app-dialog")

@@ -48,8 +48,7 @@
   margin: 0 0 16px;
   padding: 4px 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: var(--ui-bg);
   color: var(--ui-text);
   font: inherit;

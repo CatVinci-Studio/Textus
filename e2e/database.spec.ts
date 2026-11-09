@@ -321,6 +321,8 @@ test("a column's head dragged along the others, and its edge to a width, kept in
   page,
 }) => {
   const db = await open(page);
+  // The last column may run past the block's width: the table scrolls.
+  await db.locator('thead th[data-key="status"]').scrollIntoViewIfNeeded();
   await dragWithMouse(
     page,
     db.locator('thead th[data-key="status"]'),

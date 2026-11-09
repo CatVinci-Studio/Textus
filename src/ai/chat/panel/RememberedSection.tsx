@@ -79,7 +79,6 @@ export function RememberedSection({
         {t.memoryRemembered}
         {all.length > 0 && <span className="memory-count">{all.length}</span>}
       </h4>
-      <p className="memory-hint">{t.memoryRememberedHint}</p>
       {all.length === 0 ? (
         <div className="memory-empty">
           <p>{info.remember ? t.memoryRememberedEmpty : t.memoryRememberOff}</p>

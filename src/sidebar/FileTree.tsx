@@ -115,7 +115,6 @@ export function FileTree({
       takeDragClick,
       draft,
       finishDraft,
-      draftHint: desktop ? t.treeEmptyHint : null,
       newDocument: desktop
         ? {
             label: t.treeNewDocument,

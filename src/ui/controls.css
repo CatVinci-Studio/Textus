@@ -185,7 +185,7 @@ input[type="checkbox"].tx-switch::after,
   background: var(--ui-on-fill);
   box-shadow: var(--shadow-thumb);
   transform-origin: left center;
-  transition: transform calc(var(--dur-medium) * var(--motion-travel))
+  transition: transform calc(var(--dur-base) * var(--motion-travel))
     var(--ease-spring-bouncy);
 }
 /* On: the theme's ink, like a primary button - its thumb in the page's
@@ -404,6 +404,69 @@ input[type="range"].tx-slider {
   color: var(--ui-text);
   font-size: var(--text-secondary);
   box-shadow: var(--shadow-popover);
+}
+
+/* A bubble's tail (Bubble.tsx, or any surface, a plugin's too):
+   data-bubble-tail names the edge it leaves from, the one facing what it
+   points at; --tail-at moves it along that edge, the middle by default. A
+   turned square in the bubble's own fill and edge: its outer half, and a
+   sliver inside that covers the bubble's edge under it. The bubble grows
+   out of it. */
+[data-bubble-tail] {
+  --tail-size: 10px;
+}
+[data-bubble-tail="top"] {
+  transform-origin: var(--tail-at, 50%) 0;
+}
+[data-bubble-tail="bottom"] {
+  transform-origin: var(--tail-at, 50%) 100%;
+}
+[data-bubble-tail]::after {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  width: var(--tail-size);
+  height: var(--tail-size);
+  border: 0 solid var(--ui-border);
+  background: inherit;
+  -webkit-backdrop-filter: inherit;
+  backdrop-filter: inherit;
+  rotate: 45deg;
+  pointer-events: none;
+}
+:is([data-bubble-tail="top"], [data-bubble-tail="bottom"])::after {
+  left: var(--tail-at, 50%);
+  translate: -50% 0;
+}
+:is([data-bubble-tail="left"], [data-bubble-tail="right"])::after {
+  top: var(--tail-at, 50%);
+  translate: 0 -50%;
+}
+[data-bubble-tail="top"]::after {
+  top: calc(var(--tail-size) / -2 - 1px);
+  border-width: 1px 0 0 1px;
+  clip-path: polygon(0 0, 100% 0, 100% 3px, 3px 100%, 0 100%);
+}
+[data-bubble-tail="bottom"]::after {
+  bottom: calc(var(--tail-size) / -2 - 1px);
+  border-width: 0 1px 1px 0;
+  clip-path: polygon(
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 calc(100% - 3px),
+    calc(100% - 3px) 0
+  );
+}
+[data-bubble-tail="left"]::after {
+  left: calc(var(--tail-size) / -2 - 1px);
+  border-width: 0 0 1px 1px;
+  clip-path: polygon(0 0, 0 100%, 100% 100%, 100% calc(100% - 3px), 3px 0);
+}
+[data-bubble-tail="right"]::after {
+  right: calc(var(--tail-size) / -2 - 1px);
+  border-width: 1px 1px 0 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 3px) 100%, 0 3px);
 }
 
 /* Square corners for a control that sits in a grid or a table, where a

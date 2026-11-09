@@ -67,7 +67,7 @@ export function enter(
       { opacity: 1, transform: "none" },
     ],
     {
-      duration: options.duration ?? "--dur-medium",
+      duration: options.duration ?? "--dur-base",
       easing: "--ease-out",
       delay: options.delay,
       fill: "backwards",
@@ -168,7 +168,7 @@ export function enterOnBeat(
   const total =
     typeof options.duration === "number"
       ? options.duration
-      : duration(options.duration ?? "--dur-medium");
+      : duration(options.duration ?? "--dur-base");
   if (into >= total + (options.delay ?? 0)) return null;
   return enter(el, { ...options, delay: (options.delay ?? 0) - into });
 }
@@ -339,6 +339,6 @@ export function glideAfter(el: Element, by: number, root: Element) {
     animate(
       next,
       [{ transform: `translateY(${-by}px)` }, { transform: "none" }],
-      { duration: "--dur-medium", easing: "--ease-out" },
+      { duration: "--dur-base", easing: "--ease-out" },
     );
 }

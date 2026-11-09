@@ -83,8 +83,7 @@
   height: var(--control-height-sm);
   padding: 0 8px;
   border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: var(--ui-bg);
   color: var(--ui-muted);
 }
@@ -105,8 +104,7 @@
   width: 100%;
   padding: 0;
   border: none;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
+  border-radius: var(--shape-s);
   background: transparent;
   color: var(--ui-text);
   font: inherit;

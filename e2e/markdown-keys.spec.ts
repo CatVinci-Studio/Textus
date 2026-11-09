@@ -213,3 +213,32 @@ test("the split view's preview draws what the editor draws", async ({
   await expect(preview.getByText("secret")).toBeHidden();
   await expect(preview.locator(".md-block-id")).toHaveText("^abc123");
 });
+
+test("the format bar formats the selection and lights what is on at the caret", async ({
+  page,
+}) => {
+  await open(page, "plain word here\n\n**bold** text");
+  const bar = page.getByRole("toolbar", { name: "Formatting" });
+  await expect(bar).toHaveCount(0);
+  await emit(page, "menu-toggle-format-bar");
+  await expect(bar).toBeVisible();
+  const bold = bar.getByRole("button", { name: "Bold", exact: true });
+
+  await page.locator(`${editor} strong`).click();
+  await expect(bold).toHaveAttribute("aria-pressed", "true");
+  await page.locator(`${editor} p`).first().click();
+  await page.keyboard.press(HOME);
+  for (let i = 0; i < 5; i++) await page.keyboard.press("Shift+ArrowRight");
+  await expect(bold).toHaveAttribute("aria-pressed", "false");
+  // The press keeps the selection in the document.
+  await bar.getByRole("button", { name: "Italic", exact: true }).click();
+  await bar.getByRole("button", { name: "Bullet List" }).click();
+  await expect(page.locator(editor)).toBeFocused();
+  expect(await sourceOf(page)).toMatch(
+    /^[-*] \*plain\* word here\n\n\*\*bold\*\* text$/,
+  );
+
+  // Not over a page with nothing to format.
+  await emit(page, "menu-toggle-source-mode");
+  await expect(bar).toHaveCount(0);
+});

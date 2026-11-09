@@ -557,7 +557,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     assert_eq!(chosen.root_source, RootSource::Chosen);
     let text = workspace_section(&chosen, "en");
     assert!(text.contains("chosen by the user") && text.contains("click the folder name"));
-    assert!(text.contains("Use no project folder"));
+    assert!(text.contains("Use no folder"));
     // Attached files are named wherever there are some.
     let with_files = AgentWorkspace {
         attached: true,
@@ -574,7 +574,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     // the user's UI language - only that one.
     assert!(text.contains("Learn my style") && !text.contains("English |"));
     let chinese = workspace_section(&too_broad, "zh");
-    assert!(chinese.contains("English | 中文\nproject folder | 项目文件夹\n"));
+    assert!(chinese.contains("English | 中文\nfolder | 文件夹\n"));
     assert!(chinese.contains("not \"style profile (文风档案)\", not \"资料库 (library)\""));
     assert!(!chinese.contains("日本語"));
     // A language whose names aren't translated yet gets the English
@@ -682,13 +682,13 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", "en");
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
-        "Choose project folder…",
-        "Use no project folder",
+        "Choose folder…",
+        "Use no folder",
         "Learn my style from samples…",
         "Create style profile",
         "Open style profile",
         "New library entry…",
-        "Edit project writing instructions",
+        "Edit the folder's writing instructions",
         "Writing Instructions (agent.md)",
         "Edit agent.md",
         "Import Skill…",
@@ -707,12 +707,9 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         (&en_ts, "projectStyleChip: \"Style\""),
         (&zh_ts, "projectStyleChip: \"文风\""),
         (&ja_ts, "projectStyleChip: \"文体\""),
-        (&en_ts, "agentWorkspaceRootLabel: \"Project Folder\""),
-        (&zh_ts, "agentWorkspaceRootLabel: \"项目文件夹\""),
-        (
-            &ja_ts,
-            "agentWorkspaceRootLabel: \"プロジェクトフォルダー\"",
-        ),
+        (&en_ts, "agentWorkspaceRootLabel: \"Folder\""),
+        (&zh_ts, "agentWorkspaceRootLabel: \"文件夹\""),
+        (&ja_ts, "agentWorkspaceRootLabel: \"フォルダー\""),
         (&zh_ts, "agentSkillsLabel: \"技能\""),
         (&ja_ts, "agentSkillsLabel: \"スキル\""),
         (&zh_ts, "settingsTitle: \"设置\""),
@@ -726,7 +723,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     ] {
         assert!(strings.contains(entry), "the UI has no {entry}");
     }
-    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Project Folder")));
+    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Folder")));
     // The backend's own pointer to Settings names the same page.
     assert!(crate::ai::route::NOT_CONFIGURED.contains(&format!("Settings > {AI_NAME}.")));
 }
@@ -840,7 +837,7 @@ fn project_writing_instructions_follow_and_override_the_global_ones() {
     let project_at = prompt.find(project).unwrap();
     assert!(global_at < project_at, "global first, project after");
     assert!(prompt.contains(
-        "---user instructions for this project (where they conflict with the ones above, follow these)---\nReply in Chinese."
+        "---user instructions for this folder (where they conflict with the ones above, follow these)---\nReply in Chinese."
     ));
 
     // One layer alone keeps the plain header, whichever layer it is.

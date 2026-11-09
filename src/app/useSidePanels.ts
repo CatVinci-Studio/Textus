@@ -59,7 +59,7 @@ export function useSidePanels(aiOn: boolean) {
   const { settings } = useSettings();
   const rail =
     settings.activityRail && !isIOSApp
-      ? RAIL_WIDTH * chromeScaleAt(windowWidth)
+      ? Math.round(RAIL_WIDTH * chromeScaleAt(windowWidth))
       : 0;
   // With the AI panel open the sidebar leaves it its narrowest, so a small
   // window still keeps the document its room (the panel's open state, one

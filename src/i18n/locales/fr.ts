@@ -49,22 +49,22 @@ export default {
     "Le paragraphe a changé pendant la vérification. Réessayez.",
   noticeGrammarNoIssues: "Aucun problème détecté.",
   projectTooBroad:
-    "Ce dossier est trop vaste pour servir de dossier du projet (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
+    "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
   projectNoSamples: "Aucun des fichiers choisis n'a pu être lu comme du texte.",
   projectNeedsSave:
-    "Enregistrez d'abord ce document\u00a0: son dossier devient le dossier du projet.",
+    "Enregistrez d'abord ce document\u00a0: l'IA travaille dans son dossier.",
   projectPicking: "Choix du dossier…",
   projectLearningStyle: "Apprentissage de votre style à partir des exemples…",
   projectStyleLearned:
     "Profil de style enregistré. Relisez-le et modifiez-le dans le nouvel onglet.",
   projectOpening: "Ouverture…",
-  projectStyleTemplate: `# Profil de style\n\n<!-- ${AI_NAME} et la complétion suivent ce profil dans tous les documents de ce projet. Décrivez votre façon d'écrire (voix, rythme des phrases, choix des mots, ponctuation, ce que vous ne faites jamais) par des points concrets («\u00a0phrases courtes, rarement plus de 15 mots\u00a0») plutôt que par des adjectifs. «\u00a0Apprendre mon style à partir d'exemples…\u00a0», dans le menu du projet, en rédige une première version à partir de vos propres textes. Les commentaires comme celui-ci ne sont jamais envoyés. -->\n\n## Voix et ton\n\n- \n\n## Phrases et rythme\n\n- \n\n## Choix des mots\n\n- \n\n## À proscrire\n\n- \n`,
+  projectStyleTemplate: `# Profil de style\n\n<!-- ${AI_NAME} et la complétion suivent ce profil dans tous les documents de ce dossier. Décrivez votre façon d'écrire (voix, rythme des phrases, choix des mots, ponctuation, ce que vous ne faites jamais) par des points concrets («\u00a0phrases courtes, rarement plus de 15 mots\u00a0») plutôt que par des adjectifs. «\u00a0Apprendre mon style à partir d'exemples…\u00a0», dans le menu du dossier, en rédige une première version à partir de vos propres textes. Les commentaires comme celui-ci ne sont jamais envoyés. -->\n\n## Voix et ton\n\n- \n\n## Phrases et rythme\n\n- \n\n## Choix des mots\n\n- \n\n## À proscrire\n\n- \n`,
   projectLibraryTemplate: `---\nname: {name}\naliases: []\ninclude: detected\n---\n\n<!-- Les faits que ${AI_NAME} doit respecter chaque fois que {name} ou l'un de ses alias apparaît. include: detected (quand il est mentionné, par défaut) | always (toujours) | never (jamais). Les commentaires comme celui-ci ne sont jamais envoyés. -->\n\n`,
   projectInstructionsTemplate: `<!--
-Instructions d'écriture pour ce projet.
+Instructions d'écriture pour ce dossier.
 
 Tout ce qui se trouve hors des commentaires comme celui-ci est envoyé
-à ${AI_NAME} avec chaque conversation sur un document de ce projet,
+à ${AI_NAME} avec chaque conversation sur un document de ce dossier,
 après vos instructions d'écriture globales (Réglages > ${AI_NAME}).
 En cas de contradiction, ce fichier l'emporte. Les commentaires ne
 sont jamais envoyés.
@@ -95,10 +95,10 @@ Ce qu'il est utile d'écrire ici, par exemple\u00a0:
   Contexte      J'écris de longs articles de vulgarisation scientifique
                 pour le grand public.
 
-Les instructions propres à un seul projet vont dans le fichier
-.textus/agent.md de ce projet (dans le panneau IA, menu du projet >
-Modifier les instructions d'écriture du projet). Les deux sont
-envoyées\u202f; en cas de contradiction, celles du projet l'emportent.
+Les instructions propres à un seul dossier vont dans le fichier
+.textus/agent.md de ce dossier (dans le panneau IA, menu du dossier >
+Modifier les instructions d'écriture du dossier). Les deux sont
+envoyées\u202f; en cas de contradiction, celles du dossier l'emportent.
 
 Les compétences vont dans le dossier skills/ à côté de ce fichier, un
 fichier .md par compétence\u202f; tapez /nom dans une conversation pour en
@@ -108,8 +108,8 @@ utiliser une.
   projectOpenStyle: "Ouvrir le profil de style",
   projectStyleChip: "Style",
   projectLibraryChip: "Bibliothèque {n}",
-  projectPickFolder: "Choisir le dossier du projet…",
-  projectNoFolder: "N'utiliser aucun dossier de projet",
+  projectPickFolder: "Choisir le dossier…",
+  projectNoFolder: "N'utiliser aucun dossier",
   projectReveal: "Afficher dans le gestionnaire de fichiers",
   projectLearnStyle: "Apprendre mon style à partir d'exemples…",
   projectImportReferences: "Importer des références…",
@@ -119,8 +119,8 @@ utiliser une.
   projectReferencesImportedSkipped: `{n} fichiers ajoutés à references/ pour que ${AI_NAME} puisse les consulter ; {skipped} ignorés (ni texte ni document, ou trop volumineux).`,
   projectCreateStyle: "Créer un profil de style",
   projectNewEntry: "Nouvelle fiche de bibliothèque…",
-  projectEditInstructions: "Modifier les instructions d'écriture du projet",
-  projectFolderTitle: "Dossier du projet\u00a0: {path}",
+  projectEditInstructions: "Modifier les instructions d'écriture du dossier",
+  projectFolderTitle: "Dossier\u00a0: {path}",
   projectEntryPlaceholder: "Nom d'un personnage, d'un lieu ou d'un terme",
   projectEntryCreate: "Créer",
   chatHistoryUnsaved: "Documents non enregistrés",
@@ -209,27 +209,22 @@ utiliser une.
   reviewNotesPicked: "{n} sélectionnées",
   reviewNotesAskPrefix: "À propos de ces notes :\n{notes}\n",
   reviewNoteAskPrefix: "À propos de votre note «\u00a0{comment}\u00a0»\u00a0: ",
-  agentTabProject: "Projet",
+  agentTabProject: "Dossier",
   memoryStyle: "Style d'écriture",
   memoryLibrary: "Bibliothèque",
   memoryInstructions: "Instructions d'écriture",
-  memoryStyleHint: "Votre façon d'écrire : l'IA écrit de même.",
-  memoryInstructionsHint: "Les règles que l'IA suit à chaque fois.",
-  memoryLibraryHint:
-    "Personnes, lieux et termes, consultés quand ils reviennent.",
-  memoryRememberedHint: "Ce que l'IA a noté de vos conversations.",
   memoryEdit: "Modifier",
   memoryNew: "Nouvelle",
   memoryInThisDocument: "Dans ce document",
-  memoryAllProjects: "Tous les projets",
-  memoryEditGlobal: "Modifier les instructions communes à tous les projets",
+  memoryAllProjects: "Tous les dossiers",
+  memoryEditGlobal: "Modifier les instructions communes à tous les dossiers",
   memoryStyleEmpty: `Pas encore de profil de style. Donnez à ${AI_NAME} quelques-uns de vos textes et il apprendra votre manière d'écrire.`,
   memoryLibraryEmpty: `Personnages, lieux, termes\u00a0: ajoutez-les à la bibliothèque et ${AI_NAME} s'en souviendra.`,
   memoryInstructionsEmpty: `Pas encore d'instructions. Écrivez les règles que ${AI_NAME} doit toujours suivre.`,
-  memoryNeedsSave: `Ouvrez un dossier ou choisissez un dossier de projet, et ${AI_NAME} y gardera votre style, votre bibliothèque et vos consignes.`,
+  memoryNeedsSave: `Ouvrez ou choisissez un dossier, et ${AI_NAME} y gardera votre style, votre bibliothèque et vos consignes.`,
   memoryRemembered: "Mémoire",
-  memoryRememberedPersonal: "Pour tous les projets",
-  memoryRememberedProject: "Ce projet",
+  memoryRememberedPersonal: "Pour tous les dossiers",
+  memoryRememberedProject: "Ce dossier",
   memoryRememberedEmpty: `Rien pour l'instant. Dites à ${AI_NAME} ce que vous voulez toujours, et il s'en souviendra la prochaine fois.`,
   memoryRememberOff: `Retenir automatiquement est désactivé (Réglages › ${AI_NAME})\u00a0: ${AI_NAME} ne retient rien de nouveau.`,
   memoryKindRequirement: "Exigence",
@@ -257,15 +252,15 @@ utiliser une.
   memoryLibraryLeftOut:
     "Mentionnés mais non envoyés, au-delà de la limite de la bibliothèque de {cap} caractères\u00a0: {names}.",
   memoryChipSaved: "Retenu\u00a0: {text} ({scope})",
-  memoryScopeProject: "projet",
+  memoryScopeProject: "dossier",
   memoryScopePersonal: "global",
   memoryChipUndo: "Annuler",
   memoryMakePersonal: "Rendre global",
-  memoryMakeProject: "Passer au projet",
+  memoryMakeProject: "Pour ce dossier seulement",
   memoryChipUndone: "Annulé. Ce n'est plus retenu.",
   memoryChipForgot: "Oublié : {text} ({scope})",
   memoryChipRestored: "Annulé. De nouveau mémorisé.",
-  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Projet.",
+  memoryActionFailed: "Cela n'a pas marché. Réessayez dans l'onglet Dossier.",
   learnSuggestion:
     "Vous avez refusé plusieurs fois {what}. Retenir ceci\u00a0? {rule}",
   learnQuoted: "«\u00a0{text}\u00a0»",
@@ -304,7 +299,7 @@ utiliser une.
   learnNotNow: "Pas maintenant",
   learnNever: "Ne plus demander",
   learnSaved:
-    "Retenu. Vous pouvez le voir ou le supprimer sous Projet, dans le panneau IA.",
+    "Retenu. Vous pouvez le voir ou le supprimer sous Dossier, dans le panneau IA.",
   learnLabel: "Appris de vos choix de révision",
   suggestNextMessageLabel: "Suggérer le message suivant",
   suggestNextMessageHint:
@@ -319,7 +314,7 @@ utiliser une.
   researchCheckClaimsHint:
     "Avant de réviser le brouillon, chaque phrase qui cite une source est comparée aux notes sur cette source, et celle qui en dit plus est réécrite. Plus rigoureux, avec un appel au modèle de plus par section.",
   rememberAutomaticallyLabel: "Retenir automatiquement",
-  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Projet, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
+  rememberAutomaticallyHint: `${AI_NAME} retient ce que vous demandez et votre façon d'écrire pour les conversations suivantes. Consultez-le, modifiez-le ou annulez-le sous Dossier, dans le panneau IA. Après chaque réponse, il demande brièvement au même modèle ce qu'il faut garder.`,
   toolRemember: "Mémorisation",
   agentGeneratingImage: "Création d'une image…",
   toolGenerateImage: "Création d'une image",
@@ -395,9 +390,9 @@ utiliser une.
   toolSearchDocument: "Recherche de «\u00a0{arg}\u00a0» dans le document",
   toolReadDocument: "Lecture de «\u00a0{arg}\u00a0»",
   toolReadWholeDocument: "Lecture du document",
-  toolSearchFiles: "Recherche de «\u00a0{arg}\u00a0» dans le projet",
+  toolSearchFiles: "Recherche de «\u00a0{arg}\u00a0» dans le dossier",
   toolFindFiles: "Recherche des fichiers nommés «\u00a0{arg}\u00a0»",
-  toolListFiles: "Consultation des fichiers du projet",
+  toolListFiles: "Consultation des fichiers du dossier",
   toolReadFile: "Lecture de {arg}",
   toolUseSkill: "Utilisation de la compétence {arg}",
   toolAddComment: "Ajout d'un commentaire",
@@ -560,12 +555,10 @@ utiliser une.
   treeTab: "Fichiers",
   outlineTab: "Plan",
   treeParentFolder: "Dossier parent",
-  treeEmptyDraft: "Enregistrez ce document pour voir son dossier ici.",
-  outlineEmpty:
-    "Aucun titre pour l'instant. Les lignes commençant par # apparaîtront ici.",
+  outlineEmpty: "Pas encore de titres",
   treeRefresh: "Actualiser",
-  menuOpenFolder: "Ouvrir un projet…",
-  menuCloseFolder: "Fermer le projet",
+  menuOpenFolder: "Ouvrir un dossier…",
+  menuCloseFolder: "Fermer le dossier",
   menuCopyPath: "Copier le chemin",
   folderTooBroad:
     "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
@@ -575,14 +568,13 @@ utiliser une.
   treeSearchCapped:
     "Seuls les {n} premiers fichiers ont été parcourus. Ouvrez un dossier plus petit pour tout rechercher.",
   treeSearchTooBroad:
-    "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un projet…",
+    "Ce dossier est trop vaste pour y rechercher. Ouvrez-en un plus précis avec Fichier › Ouvrir un dossier…",
   treeSearchFailed: "Impossible de lire ce dossier.",
   treeSearchScope: "Afficher",
   treeSearchScopeAll: "Tous les fichiers",
   treeSearchScopeDocuments: "Documents seulement",
   treeNewDocument: "Nouveau document",
   treeNewFolder: "Nouveau dossier",
-  treeEmptyHint: "Double-cliquez ici pour un nouveau document.",
   treeNewDocumentPrompt: "Nom du nouveau document",
   treeNewFolderPrompt: "Nom du nouveau dossier",
   treeNewDocumentDefault: "Sans titre",
@@ -601,7 +593,7 @@ utiliser une.
   treeUpdateLinksFailed:
     "Les liens de ces documents n’ont pas pu être mis à jour : {names}",
   treeDocumentFolder: "Dossier du document actuel",
-  treeOpenAsFolder: "Ouvrir comme projet",
+  treeOpenAsFolder: "Ouvrir ce dossier",
   treeTrashItem: "Mettre à la corbeille",
   treeTrash: "Mettre à la corbeille",
   treeTrashConfirm:
@@ -742,7 +734,7 @@ utiliser une.
   editAnimationLabel: "Animer l'aperçu des modifications",
   agentWorkspaceLabel: "Dossier de configuration globale",
   agentWorkspaceOpenButton: "Afficher",
-  agentWorkspaceRootLabel: "Dossier du projet",
+  agentWorkspaceRootLabel: "Dossier",
   agentWorkspaceRootDefault:
     "Aucun : le dossier ouvert dans la barre latérale, s'il y en a un",
   agentWorkspaceRootPick: "Choisir…",
@@ -751,7 +743,7 @@ utiliser une.
   agentSkillsLabel: "Compétences",
   agentSkillsImport: "Importer une compétence…",
   skillGroupRecent: "Récentes",
-  skillGroupProject: "Ce projet",
+  skillGroupProject: "Ce dossier",
   skillGroupYours: "Vos compétences",
   skillCategoryWrite: "Écrire",
   skillCategoryRevise: "Retravailler",
@@ -765,11 +757,10 @@ utiliser une.
     "Aucune compétence ne correspond à «\u00a0{query}\u00a0».",
   skillPickerHowTo:
     "Ajoutez d’autres compétences ou importez les vôtres dans Réglages.",
-  mentionPickerAbout: "Tapez @ pour joindre un fichier du dossier du projet.",
+  mentionPickerAbout: "Tapez @ pour joindre un fichier du dossier.",
   mentionPickerNoProject:
-    "Enregistrez le document ou choisissez un dossier de projet, et ses fichiers apparaîtront ici.",
-  mentionPickerNoFiles:
-    "Le dossier du projet ne contient encore aucun fichier texte.",
+    "Enregistrez le document ou choisissez un dossier, et ses fichiers apparaîtront ici.",
+  mentionPickerNoFiles: "Le dossier ne contient encore aucun fichier texte.",
   mentionPickerNoMatch: "Aucun fichier ne correspond à «\u00a0{query}\u00a0».",
   agentSkillsBuiltin: "Compétences intégrées",
   agentSkillsCustomize: "Personnaliser…",
@@ -939,7 +930,7 @@ utiliser une.
   skillOfferSaved:
     "Gardée sous {name} : tapez-la dans la zone de message pour recommencer.",
   skillOfferSave: "Pour tous les documents",
-  skillOfferSaveProject: "Pour ce projet seulement",
+  skillOfferSaveProject: "Pour ce dossier seulement",
   chatHistorySearch: "Rechercher dans les conversations",
   chatHistorySearchNone: "Aucune conversation ne contient ces mots.",
   chatHistoryByYou: "Vous",
@@ -1159,6 +1150,7 @@ utiliser une.
   menuCodeBlock: "Bloc de code",
   menuTable: "Tableau",
   menuToggleSourceMode: "Mode source",
+  menuFormatBar: "Barre de mise en forme",
   menuToggleTypewriterMode: "Mode machine à écrire",
   menuToggleSidebar: "Barre latérale",
   menuZoomIn: "Zoom avant",
@@ -1312,6 +1304,7 @@ utiliser une.
   docLineSpacingStandard: "Standard",
   docLineSpacingRelaxed: "Aéré",
   docFontLabel: "Police du texte",
+  docFontMore: "Autres polices",
   docFontAuto: "Celle du thème",
   docLetterSpacingLabel: "Espacement des caractères",
   docLetterSpacingAuto: "Celui du thème",
@@ -1332,7 +1325,7 @@ utiliser une.
   closeLastWindow: "Fermer la fenêtre",
   closeLastStartPage: "Afficher la page d'accueil",
   startPageRemoveRecent: "Retirer des récents",
-  startPageRecentProjects: "Projets récents",
+  startPageRecentProjects: "Dossiers récents",
   startPagePickDocument:
     "Choisissez un document de {folder} dans la barre latérale pour commencer.",
   startPageRecentFiles: "Fichiers récents",
@@ -1423,7 +1416,7 @@ utiliser une.
   tutorialDoneTitle: "Terminé",
   tutorialDoneBody:
     "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
-  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Projet, le bouton dossier du panneau IA.`,
+  tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Dossier, dans le panneau IA.`,
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",
@@ -1483,7 +1476,7 @@ utiliser une.
   imageFolderSameFolder: "Même dossier que le document",
   imageFolderNameLabel: "Nom du sous-dossier",
   imageFolderProjectNote:
-    "Ce projet range les images dans {folder} (défini dans {source}).",
+    "Ce dossier range les images dans {folder} (défini dans {source}).",
   imageFolderInvalid:
     "Indiquez un dossier situé dans celui du document, comme img.",
   imageHostLabel: "Hébergeur d'images",
@@ -1707,8 +1700,8 @@ utiliser une.
   pluginBackToList: "Toutes les extensions",
   pluginSettingsScope: "S'applique à",
   pluginSettingsScopeGlobal: "Tous les documents",
-  pluginSettingsScopeProject: "Ce projet ({name})",
-  pluginSettingProjectOwn: "Ce projet a sa propre valeur.",
+  pluginSettingsScopeProject: "Ce dossier ({name})",
+  pluginSettingProjectOwn: "Ce dossier a sa propre valeur.",
   pluginSettingUseGeneral: "Utiliser la valeur générale",
   pluginSettingsGroup: "Réglages",
   pluginSettingsOff: "Activez {name} pour modifier ses réglages.",
@@ -1721,7 +1714,7 @@ utiliser une.
   pluginAboutGroup: "À propos",
   pluginDataLabel: "Ses données",
   pluginDataGlobal: "{global} pour tous les documents",
-  pluginDataProject: "{project} dans ce projet",
+  pluginDataProject: "{project} dans ce dossier",
   pluginDataClear: "Effacer",
   pluginDataClearAsk: "Effacer ce que {name} garde ? C'est définitif.",
   pluginVersionLabel: "Version {version}",
@@ -1749,7 +1742,7 @@ utiliser une.
   conventionsCardLine:
     "Les réglages {app} de ce dossier placent les images dans {folder}",
   conventionsCardDetails:
-    "Réglage actuel : {current}. L’adopter l’enregistre dans le .textus/settings.json de ce dossier, avec le projet.",
+    "Réglage actuel : {current}. L’adopter l’enregistre dans le .textus/settings.json de ce dossier, avec le dossier.",
   conventionsFolderRoot: "le dossier lui-même",
   conventionsFollow: "Adopter",
   conventionsDecline: "Garder l’actuel",

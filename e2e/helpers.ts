@@ -276,6 +276,20 @@ export function changeSettings(page: Page, patch: Record<string, unknown>) {
   }, patch);
 }
 
+/** The interface's size factor (--chrome-scale) in this window: what a
+ *  design px of the app's chrome measures on screen. */
+export function chromeScale(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.cssText =
+      "position:fixed;visibility:hidden;width:calc(1000px * var(--chrome-scale, 1))";
+    document.body.append(probe);
+    const width = probe.getBoundingClientRect().width;
+    probe.remove();
+    return width / 1000;
+  });
+}
+
 /** Waits until nothing moves: no animation running and every scroll
  *  position the same for a few frames (at most 3 s). In place of a fixed
  *  pause before checking where things came to rest. */

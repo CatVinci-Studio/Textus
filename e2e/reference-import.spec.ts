@@ -31,7 +31,7 @@ test("Import references… imports the picked files and says how many were left 
   });
   await page
     .locator(".agent-panel-view")
-    .getByRole("button", { name: "Project", exact: true })
+    .getByRole("button", { name: "Folder", exact: true })
     .click();
   await page.locator(".project-bar-folder").click();
   await page.getByRole("menuitem", { name: "Import references…" }).click();

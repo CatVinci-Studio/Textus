@@ -1,6 +1,6 @@
 # Textus AI Features Guide
 
-Textus has a built-in AI made for writing, Textus AI: completion, grammar checking, and conversations that read and revise your document. This guide covers connecting a service, the AI features, and how to shape Textus AI into your own writing assistant with a project folder, a style profile, a library, writing instructions and skills.
+Textus has a built-in AI made for writing, Textus AI: completion, grammar checking, and conversations that read and revise your document. This guide covers connecting a service, the AI features, and how to shape Textus AI into your own writing assistant with a folder, a style profile, a library, writing instructions and skills.
 
 ## Connecting a service
 
@@ -25,7 +25,7 @@ As you type, a gray continuation appears at the cursor — press <kbd>Tab</kbd> 
 
 Ask for one explicitly with <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> or the context menu (the cursor must be at the end of a paragraph): you get a longer continuation with up to three alternatives — <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> cycle through them.
 
-Under **Settings > Textus AI > Writing Assistance** you can pick a **completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a project with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
+Under **Settings > Textus AI > Writing Assistance** you can pick a **completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a folder with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
 
 ### 2. Grammar check
 
@@ -37,7 +37,7 @@ The full conversation lives in a panel on the right side of the editor. Open or 
 
 - **One conversation per document**: each tab has its own conversation, and switching tabs switches the panel with it. **New conversation** in the panel's header starts over (with edits still undecided, it asks first).
 - **Modes**: the composer has two. **Write** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. Every change Write makes is a proposal you accept or reject. The panel starts in the mode set under **Settings > Textus AI > Textus AI Chat > Default mode**.
-- **@-mentions**: type `@` in the input to pick a text file from the project folder; it is attached to the message.
+- **@-mentions**: type `@` in the input to pick a text file from the folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches one or more files to that message: a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, any text or code file, a zip archive, or a picture (PNG, JPEG, GIF, WebP, BMP, TIFF, and on a Mac HEIC and AVIF). Each file is copied into the conversation's own temporary folder, never into your folders, where Textus AI can read it again whole. Documents are extracted to text locally and travel inside the message; a long one is sent only in part, the chip says "(shortened)", and Textus AI reads the rest when it needs it. A zip archive is unpacked there and its files listed. Pictures are converted to a format every service reads, made smaller when they are very large, and sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently).
 - **Model**: the button among the input's controls names the model your next message goes to; click it to switch to another model of any service you have set up in **Settings > Textus AI**. With only one model set up, it just shows its name.
 - **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
@@ -93,24 +93,24 @@ Textus AI learns about you and your work from a few plain Markdown files, not fr
 
 | Concept | What it is | Where it lives |
 | --- | --- | --- |
-| **Project folder** | The folder Textus AI works in and may read | The folder you open in the sidebar, or one you choose |
+| **Folder** | The folder Textus AI works in and may read | The folder you open in the sidebar, or one you choose |
 | **Style profile** | How you write | `.textus/style.md` |
 | **Library** | Facts about people, places and terms | `.textus/library/` |
-| **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per project |
-| **Memory** | What Textus AI keeps from your conversations | `memory/` in the global config folder, and `projects/<project>/memory/` beside it for each project |
-| **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per project |
+| **Writing instructions** | Standing rules for every conversation | `agent.md` — global, and per folder |
+| **Memory** | What Textus AI keeps from your conversations | `memory/` in the global config folder, and `projects/<folder>/memory/` beside it for each folder |
+| **Skills** | Reusable instructions you call with `/name` | `skills/` — global, and per folder |
 | **Global config folder** | What applies to every document | The app's settings folder |
 
-"Conversations" below means the AI panel and Quick Ask. Here is a whole project at a glance:
+"Conversations" below means the AI panel and Quick Ask. Here is a whole folder at a glance:
 
 ```
-my-novel/                ← the project folder
+my-novel/                ← the folder
 ├── chapter-1.md         ← the document you are editing
 ├── notes/
 │   └── timeline.md      ← reference material Textus AI can read
-└── .textus/              ← the project's own settings
+└── .textus/              ← the folder's own settings
     ├── style.md         ← style profile
-    ├── agent.md         ← writing instructions for this project
+    ├── agent.md         ← writing instructions for this folder
     ├── library/
     │   ├── lin-wan.md   ← one entry per character, place or term
     │   └── harbour-city.md
@@ -118,28 +118,28 @@ my-novel/                ← the project folder
         └── polish.md    ← one skill per file
 ```
 
-The project menu creates `.textus/` and its files for you the first time you ask for them; project skills are the only thing you add by hand. Text inside `<!-- -->` comments in any of these files is a note to yourself and is never sent.
+The folder menu creates `.textus/` and its files for you the first time you ask for them; folder skills are the only thing you add by hand. Text inside `<!-- -->` comments in any of these files is a note to yourself and is never sent.
 
-### The project folder
+### The folder
 
-**The project folder is the folder Textus AI works in.** It is the folder you open in the sidebar (**File > Open Project…**), or one you choose — or else the nearest folder above the document that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`. A document you open on its own has no project folder: Textus AI then reads only the document and the files you attach, so a file in Downloads or on the Desktop never opens that whole folder to it.
+**The folder is the folder Textus AI works in.** It is the folder you open in the sidebar (**File > Open Folder…**), or one you choose — or else the nearest folder above the document that has a `.textus/` folder, so a chapter in `novel/part-1/` belongs to `novel/`. A document you open on its own has no folder: Textus AI then reads only the document and the files you attach, so a file in Downloads or on the Desktop never opens that whole folder to it.
 
 - Textus AI can list, find by name, read and search the files in it to find a character's earlier scenes, a term, or your notes: text files (Markdown, plain text and similar formats) up to 16 MB — a long one it reads a part at a time — and the text of PDF, Word, PowerPoint, spreadsheet, EPUB and RTF files. With a provider that can see images, it can also look at the PNG, JPEG, GIF and WebP images in it, up to 6 MB each. Hidden files and folders, what a `.gitignore` or `.ignore` file leaves out (as in the sidebar's file search), build and dependency folders (such as `node_modules`) and scanned PDFs without a text layer are left out.
 - Typing `@` in the chat input attaches one of its files to your message.
-- Its `.textus/` folder holds the project's style profile, library, writing instructions and skills.
+- Its `.textus/` folder holds the folder's style profile, library, writing instructions and skills.
 
-The bar under the AI panel's header shows the project folder's name; click it for the **project menu**. When your reference material doesn't live next to the draft, use **Choose project folder…** there (or **Settings > Textus AI > Project Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use no project folder**.
+The bar under the AI panel's header shows the folder's name; click it for the **folder menu**. When your reference material doesn't live next to the draft, use **Choose folder…** there (or **Settings > Textus AI > Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use no folder**.
 
 > [!TIP]
-> Your draft is in `thesis/drafts/` and your interview notes in `thesis/research/`? Choose `thesis/` as the project folder, and Textus AI can read `research/interviews.md` while you work on `drafts/chapter-2.md`.
+> Your draft is in `thesis/drafts/` and your interview notes in `thesis/research/`? Choose `thesis/` as the folder, and Textus AI can read `research/interviews.md` while you work on `drafts/chapter-2.md`.
 
-Everything Textus AI reads must be inside the project folder: `..`, absolute paths and links pointing outside are refused. Without a folder open or chosen there is no project folder, and a folder that is too broad — your home folder or a whole drive — is refused. What Textus AI makes while it works (research notes, drafts in progress) goes to Textus's own folders or the system's temporary folder, not into yours.
+Everything Textus AI reads must be inside the folder: `..`, absolute paths and links pointing outside are refused. Without a folder open or chosen there is no folder, and a folder that is too broad — your home folder or a whole drive — is refused. What Textus AI makes while it works (research notes, drafts in progress) goes to Textus's own folders or the system's temporary folder, not into yours.
 
 ### The style profile — "Learn my style"
 
-**The style profile describes how you write**, so that continuations and edits sound like you: voice and tone, sentence rhythm, word choice, punctuation, things you never do. Textus AI follows it in conversations, and completion follows it as you type, in every document of the project. It is the file `.textus/style.md`.
+**The style profile describes how you write**, so that continuations and edits sound like you: voice and tone, sentence rhythm, word choice, punctuation, things you never do. Textus AI follows it in conversations, and completion follows it as you type, in every document of the folder. It is the file `.textus/style.md`.
 
-There are two ways to make one, both in the project menu:
+There are two ways to make one, both in the folder menu:
 
 - **Learn my style from samples…** — pick a few files of your own writing (up to eight). Textus AI studies them and drafts a profile — voice and tone, sentences and rhythm, word choice, punctuation, structure, what you never do, and a few short quotes as examples — then opens it in a new tab. Read it, correct it, add to it: it is yours. Learning again keeps the previous profile as `style.previous.md`.
 - **Create style profile** — start from an empty outline and write it yourself.
@@ -161,7 +161,7 @@ Concrete, checkable points work better than adjectives: "short sentences, rarely
 
 ### The library
 
-**The library holds facts that must stay consistent**: one Markdown file per character, place or term, in `.textus/library/`. **New library entry…** in the project menu asks for a name and opens the new entry; the **Library** chip shows how many there are.
+**The library holds facts that must stay consistent**: one Markdown file per character, place or term, in `.textus/library/`. **New library entry…** in the folder menu asks for a name and opens the new entry; the **Library** chip shows how many there are.
 
 ```markdown
 ---
@@ -178,12 +178,12 @@ You don't attach entries yourself. An entry with `include: detected` (the defaul
 
 ### Writing instructions (agent.md)
 
-**Writing instructions are standing rules sent with every conversation**: what the project is, which language to reply in, spellings and terms, things Textus AI should always or never do. They live in files called `agent.md`, at two levels:
+**Writing instructions are standing rules sent with every conversation**: what the folder is, which language to reply in, spellings and terms, things Textus AI should always or never do. They live in files called `agent.md`, at two levels:
 
 - **Global**, for every document: **Settings > Textus AI > Writing Instructions (agent.md) > Edit agent.md**.
-- **Project**, for the documents of one project: `.textus/agent.md`, opened with **Edit project writing instructions** in the project menu.
+- **Folder**, for the documents of one folder: `.textus/agent.md`, opened with **Edit the folder's writing instructions** in the folder menu.
 
-Both open in a tab and start with a short how-to in comments. When both exist, Textus AI gets both — the global instructions first, then the project's — and where they disagree, the project's win.
+Both open in a tab and start with a short how-to in comments. When both exist, Textus AI gets both — the global instructions first, then the folder's — and where they disagree, the folder's win.
 
 ```markdown
 The book is a mystery set in 1930s Shanghai, told by Lin Wan in the first person.
@@ -195,12 +195,12 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 
 ### What Textus AI remembers
 
-**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make global** or **Make project** moves it.
+**Textus AI remembers what you ask for and how you write**, without you writing a file. When you tell it something that should hold beyond one request — "always use British spelling", "no em dashes", a correction you had to make twice — or a fact about your work, such as who a character is, it keeps it and follows it in later conversations. Each time, a line under its reply says what it remembered and where: **Undo** takes it back, and **Make global** or **Only for this folder** moves it.
 
-- **This project**: what is about this work, in `projects/<project>/memory/` in the global config folder (Textus keeps it there, not in your folder); facts about people, places and terms go into the library.
-- **For all projects**: your general habits, in `memory/` in the global config folder. Without a project folder, everything goes here.
+- **This folder**: what is about this work, in `projects/<folder>/memory/` in the global config folder (Textus keeps it there, not in your folder); facts about people, places and terms go into the library.
+- **For all folders**: your general habits, in `memory/` in the global config folder. Without a folder, everything goes here.
 
-The AI panel's **Project** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Project tab says so. **Settings > Textus AI > Remember automatically** turns it off.
+The AI panel's **Folder** tab lists it all under **Memory**, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and the Folder tab says so. **Settings > Textus AI > Remember automatically** turns it off.
 
 **It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with Remember automatically off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
@@ -224,9 +224,9 @@ Use a skill in either of two ways:
 1. **Call it**: type `/` in the chat input and pick it from the menu, or type its name followed by your request: `/polish take another look at this`.
 2. **Just ask** (tool-calling providers only): Textus AI knows every skill's name and description, and when your request matches one, it loads the full instructions and follows them by itself.
 
-When what you asked for was a procedure of your own - steps you'll want again - Textus AI offers under its reply to keep it as a skill, for every document or for this project only. Nothing is saved unless you choose to.
+When what you asked for was a procedure of your own - steps you'll want again - Textus AI offers under its reply to keep it as a skill, for every document or for this folder only. Nothing is saved unless you choose to.
 
-Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Settings > Extensions > Skills > … > Import Skill…** copies a skill file there), project skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A project skill with the same name as a global one replaces it.
+Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Settings > Extensions > Skills > … > Import Skill…** copies a skill file there), folder skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A folder skill with the same name as a global one replaces it.
 
 ### Built-in skills
 
@@ -238,7 +238,7 @@ The built-in skills are under **Settings > Textus AI > Built-in skills**, always
 
 **Settings > Textus AI > Writing Assistance > Writing conventions** decides which punctuation, spacing and number rules Textus AI and the grammar check follow. **Automatic** uses the national standard where a language has one (GB/T for Simplified Chinese, JTF for Japanese, for example); elsewhere it follows what your document already does most and points out only inconsistencies. Pick a profile, such as Simplified Chinese **Fiction** or English **UK · GOV.UK**, and documents in that language are held to it.
 
-A project can choose its own: add a `conventions:` line between the two `---` lines at the top of its style profile (`.textus/style.md`). For that project's documents it wins over the setting.
+A folder can choose its own: add a `conventions:` line between the two `---` lines at the top of its style profile (`.textus/style.md`). For that folder's documents it wins over the setting.
 
 ```markdown
 ---
@@ -248,7 +248,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### The global config folder
 
-**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any project; **Settings > Textus AI > Global config folder > Show** shows it.
+**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any folder; **Settings > Textus AI > Global config folder > Show** shows it.
 
 ```
 agent/                ← the global config folder
@@ -257,13 +257,13 @@ agent/                ← the global config folder
     └── outline.md    ← a global skill
 ```
 
-There is no global style profile or library: those describe one body of work, so they belong to a project.
+There is no global style profile or library: those describe one body of work, so they belong to a folder.
 
 ### Which applies when
 
 | | Conversations | Completion | Grammar check |
 | --- | :---: | :---: | :---: |
-| Project files (read, search, `@`) | ✓ | | |
+| Files in the folder (read, search, `@`) | ✓ | | |
 | Style profile | ✓ | ✓ | |
 | Library entries that come up | ✓ | ✓ | |
 | Writing instructions | ✓ | | |
@@ -271,8 +271,8 @@ There is no global style profile or library: those describe one body of work, so
 | Skills | ✓ | | |
 | Completion tone (Settings) | | ✓ | |
 
-- **Global, then project.** Writing instructions from both levels are sent, the project's last, and the project's win a conflict. A project skill replaces a global skill of the same name.
-- **One project folder at a time.** Only its `.textus/` counts: when you have chosen a project folder, a `.textus/` next to the document is not read.
+- **Global, then folder.** Writing instructions from both levels are sent, the folder's last, and the folder's win a conflict. A folder skill replaces a global skill of the same name.
+- **One folder at a time.** Only its `.textus/` counts: when you have chosen a folder, a `.textus/` next to the document is not read.
 - **No restart needed.** Edit any of these files and the next request uses the new version (completion within about ten seconds).
 
 ### Which file for what?
@@ -281,7 +281,7 @@ There is no global style profile or library: those describe one body of work, so
 - Who is who, what is what → the **library**.
 - What Textus AI should know or always do in a conversation → **writing instructions**.
 - A task you ask for again and again → a **skill**.
-- Notes, research, earlier chapters → ordinary files in the **project folder**; Textus AI reads them when a request needs them.
+- Notes, research, earlier chapters → ordinary files in the **folder**; Textus AI reads them when a request needs them.
 
 ## Turning Textus AI off
 
@@ -291,4 +291,4 @@ While it is off, nothing is sent to any AI service, from the moment Textus opens
 
 ## A note on privacy
 
-Your document, attached and @-mentioned files, your writing instructions, the style profile, the library entries that come up, and any project files Textus AI reads are sent to the provider you selected as part of each request; **Learn my style** sends the samples you pick. With web search on, searches go to your provider, or to the search service shown in Settings, and the pages Textus AI reads are fetched from this computer. Turn any feature off in Settings when you don't want that.
+Your document, attached and @-mentioned files, your writing instructions, the style profile, the library entries that come up, and any files in the folder Textus AI reads are sent to the provider you selected as part of each request; **Learn my style** sends the samples you pick. With web search on, searches go to your provider, or to the search service shown in Settings, and the pages Textus AI reads are fetched from this computer. Turn any feature off in Settings when you don't want that.

@@ -53,7 +53,6 @@
   line-height: 1.5;
   white-space: normal;
   overflow-wrap: anywhere;
-  transform-origin: var(--transform-origin, top left);
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
 

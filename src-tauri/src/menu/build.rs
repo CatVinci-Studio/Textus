@@ -294,6 +294,7 @@ pub(crate) fn build(
     let toggle_typewriter_mode_item = check(TOGGLE_TYPEWRITER_MODE_ID, "Typewriter Mode")?;
     let toggle_sidebar_item = check(TOGGLE_SIDEBAR_ID, "Sidebar")?;
     let toggle_agent_panel_item = check(TOGGLE_AGENT_PANEL_ID, "AI Panel")?;
+    let toggle_format_bar_item = check(TOGGLE_FORMAT_BAR_ID, "Format Bar")?;
     let toggle_split_view_item = check(TOGGLE_SPLIT_VIEW_ID, "Split View")?;
     let toggle_zen_mode_item = check(TOGGLE_ZEN_MODE_ID, "Zen Mode")?;
     // On for the document on screen, as the frontend sends.
@@ -327,6 +328,7 @@ pub(crate) fn build(
             // Panels, then ways of viewing the text, then size.
             .item(&toggle_sidebar_item)
             .item(&toggle_agent_panel_item)
+            .item(&toggle_format_bar_item)
             .separator()
             .item(&mode_menu)
             .item(&track_changes_item)
@@ -418,6 +420,7 @@ pub(crate) fn build(
         view_mode_default_item,
         toggle_sidebar_item,
         toggle_agent_panel_item,
+        toggle_format_bar_item,
         toggle_source_mode_item,
         toggle_split_view_item,
         toggle_typewriter_mode_item,
