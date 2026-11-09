@@ -13,6 +13,9 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
 /// Multiplicative step for the menu/keyboard Zoom In/Out items.
 const MENU_STEP = 1.1;
+/// Wheel events this close together are one gesture: a scroll's own carry
+/// on as a scroll, whatever key goes down meanwhile.
+const SCROLL_GESTURE_MS = 250;
 /// Trailing delay before persisting, so only the resting value is saved.
 const PERSIST_DELAY_MS = 400;
 
@@ -274,9 +277,16 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
     };
 
     // mod+wheel zoom. Exponential, so steps are proportional to the current
-    // level. Chromium reports trackpad pinch as ctrl+wheel too.
+    // level. Chromium reports trackpad pinch as ctrl+wheel too. As in VS
+    // Code, a gesture that began as a scroll stays one: Cmd pressed while
+    // the page still moves (a trackpad's glide) doesn't turn it into a zoom.
+    let lastScroll = -Infinity;
     const onWheel = (e: WheelEvent) => {
-      if (!e.metaKey && !e.ctrlKey) return;
+      const modified = e.metaKey || e.ctrlKey;
+      if (!modified || e.timeStamp - lastScroll < SCROLL_GESTURE_MS) {
+        lastScroll = e.timeStamp;
+        return;
+      }
       e.preventDefault();
       setZoom(zoomRef.current * Math.exp(-e.deltaY * 0.0015), true, e);
     };

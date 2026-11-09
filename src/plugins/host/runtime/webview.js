@@ -49,11 +49,17 @@
   window.addEventListener("keydown", closeMenu, true);
 
   // A pinch or a mod+wheel over the page zooms the document around it, as
-  // it does anywhere else in the window: passed on, not kept here.
+  // it does anywhere else in the window: passed on, not kept here. A scroll
+  // still moving when the key goes down stays a scroll (useZoom.ts).
+  var lastScroll = -Infinity;
   window.addEventListener(
     "wheel",
     function (event) {
-      if (!event.ctrlKey && !event.metaKey) return;
+      var modified = event.ctrlKey || event.metaKey;
+      if (!modified || event.timeStamp - lastScroll < 250) {
+        lastScroll = event.timeStamp;
+        return;
+      }
       event.preventDefault();
       send("zoomWheel", {
         deltaY: event.deltaY,

@@ -929,6 +929,26 @@ const shortLines = Array.from({ length: 200 }, (_, i) => `Line ${i}`).join(
   "\n\n",
 );
 
+test("a scroll still moving when the modifier goes down stays a scroll; a fresh mod+wheel zooms", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await pasteMarkdown(page, shortLines);
+  const before = await contentZoom(page);
+  const box = (await page
+    .locator('[data-active-tab="true"] .editor-scroll')
+    .boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  // The page gliding, then the key down mid-glide.
+  await page.mouse.wheel(0, 100);
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, 100);
+  await page.keyboard.up("Control");
+  expect(await contentZoom(page)).toBe(before);
+  await page.waitForTimeout(400);
+  await wheelZoom(page, box.x + box.width / 2, box.y + box.height / 2, 2);
+});
+
 test("mod+wheel in source mode keeps the line under the pointer", async ({
   page,
 }) => {
