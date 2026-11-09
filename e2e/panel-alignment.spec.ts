@@ -2,10 +2,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
 
 // With two documents the tabs take the window bar's row, ending on its line,
-// clear of its controls at both ends (design-language.md 5.7); the AI panel
-// starts under the window bar, whose right end (word count, window buttons)
-// is the page's; and a small window keeps the document its room and the
-// panels draggable.
+// clear of its controls at both ends (design-language.md 5.7), the open one
+// meeting its island with nothing between; the AI island starts under the
+// window bar; and a small window keeps the document its room and the
+// islands draggable.
 
 async function layout(page: Page) {
   return page.evaluate(() => {
@@ -17,15 +17,13 @@ async function layout(page: Page) {
       toggle: rect(".window-bar-sidebar-toggle").right,
       lastTab: rect(".main-pane > .tab-bar .tab-bar-add").right,
       status: rect(".window-bar-status").left,
-      // Where the panel's edge starts: its ::before line.
-      aiEdgeTop:
-        rect(".agent-panel").top +
-        parseFloat(
-          getComputedStyle(document.querySelector(".agent-panel")!, "::before")
-            .top,
-        ),
+      // The open tab's foot and its island's top.
+      seam:
+        rect(".main-pane > .tab-bar .tab-pill-active").bottom -
+        rect(".island-frame").top,
+      aiEdgeTop: rect(".agent-island").top,
       bar: rect(".window-bar").bottom,
-      panel: rect(".agent-panel").width,
+      panel: rect(".ai-island").width,
       document: rect(".main-pane > .tab-bar").width,
     };
   });
@@ -54,6 +52,7 @@ for (const width of [960, 1280, 1920])
     expect(at.firstTab).toBeGreaterThan(at.toggle);
     expect(at.lastTab).toBeLessThanOrEqual(at.status);
     expect(at.aiEdgeTop).toBeGreaterThanOrEqual(at.bar - 1);
+    expect(Math.abs(at.seam)).toBeLessThan(0.5);
     // The document keeps at least 360 (times the scale, 1 here and up).
     expect(at.document).toBeGreaterThanOrEqual(359);
   });
@@ -63,7 +62,8 @@ test("a squeezed AI panel can still be dragged narrower", async ({ page }) => {
   // leave it exactly that.
   await open(page, 1060);
   const before = (await layout(page)).panel;
-  const edge = page.getByRole("separator", { name: /AI panel/i });
+  // The divider before the AI island, the last.
+  const edge = page.getByRole("separator", { name: /Divider/ }).last();
   const box = (await edge.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();

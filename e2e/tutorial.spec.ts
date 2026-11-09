@@ -64,8 +64,7 @@ const lesson = (page: Page, title: string) =>
 const editor = (page: Page) =>
   page.locator('[data-active-tab="true"] .ProseMirror');
 
-const composer = (page: Page) =>
-  page.locator(".agent-panel .inline-chat-input");
+const composer = (page: Page) => page.locator(".ai-island .inline-chat-input");
 
 /** The ticked lines of a lesson's card. */
 const ticked = (card: ReturnType<typeof lesson>) =>
@@ -249,7 +248,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
   });
 
   const mode = page
-    .locator(".agent-panel")
+    .locator(".ai-island")
     .getByRole("combobox", { name: "Mode" });
   const aiLessons: [string, string, string | null, string][] = [
     [t.tutorialWriteTitle, "ai-panel", "General", "Continue my notes"],
@@ -269,7 +268,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
     if (clip === "ai-panel") {
       // The panel itself still opens, connected or not.
       await page.keyboard.press("ControlOrMeta+Shift+L");
-      await expect(page.locator(".agent-panel")).toBeVisible();
+      await expect(page.locator(".ai-island")).toBeVisible();
     }
     // Each lesson puts the panel in the mode it needs.
     if (modeName)
@@ -335,7 +334,7 @@ test.describe("connected", () => {
       const next = (card: ReturnType<typeof lesson>) =>
         card.getByRole("button", { name: t.tutorialNext });
       const mode = page
-        .locator(".agent-panel")
+        .locator(".ai-island")
         .getByRole("combobox", { name: run.mode.label });
 
       await page.setViewportSize({ width: 1440, height: 900 });
@@ -416,7 +415,7 @@ test.describe("connected", () => {
     await page.keyboard.press("ControlOrMeta+Shift+L");
     await composer(page).fill("Continue my notes");
     await composer(page).press("Enter");
-    await expect(page.locator(".agent-panel")).toContainText(
+    await expect(page.locator(".ai-island")).toContainText(
       "The provider is unavailable.",
     );
     const write = lesson(page, "AI writing");

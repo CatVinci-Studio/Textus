@@ -353,7 +353,7 @@ test("the adaptive column takes 62% of a pane past about 1100px, between 680 and
   // rather than crowding it.
   await page.setViewportSize({ width: 1341, height: 800 });
   await emit(page, "menu-toggle-agent-panel");
-  await expect(page.locator(".agent-panel")).toBeVisible();
+  await expect(page.locator(".ai-island")).toBeVisible();
   await expect.poll(width).toBe(680);
   await page.evaluate(() => {
     document.documentElement.setAttribute("data-content-width", "standard");
@@ -397,7 +397,7 @@ test("the math preview follows its formula when the column moves", async ({
   const before = (await preview.boundingBox())!;
   // The AI panel takes its room; the column (and the formula) moves left.
   await emit(page, "menu-toggle-agent-panel");
-  await expect(page.locator(".agent-panel")).toBeVisible();
+  await expect(page.locator(".ai-island")).toBeVisible();
   await expect
     .poll(async () => (await preview.boundingBox())!.x)
     .not.toBe(before.x);

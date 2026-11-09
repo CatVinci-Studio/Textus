@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -12,7 +11,6 @@ import { usePresence } from "../ui/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../utils/events";
 import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../storage/ui-state";
-import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScaleAt } from "../ui/chrome-scale";
@@ -118,9 +116,6 @@ export function useSidePanels(aiOn: boolean) {
   const sidebarClosing = sidebarPresence.state === "closing";
   const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
   const agentClosing = agentPresence.state === "closing";
-  // What the find bar and the tutorial card keep clear of on the right.
-  const dockedWidth = agentPresence.mounted && !isIOSApp ? agentPanel.width : 0;
-  useLayoutEffect(() => setDockedPanelWidth(dockedWidth), [dockedWidth]);
   // Remembered on the desktop like the open state; on iOS it starts on
   // Files.
   const [panelMode, setPanelMode] = useState<PanelMode>(() =>

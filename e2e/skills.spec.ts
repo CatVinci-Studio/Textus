@@ -23,7 +23,7 @@ async function openWithPanel(
     settings: { language, agentDefaultMode: mode },
     storage: { "textus-agent-panel-open": "1" },
   });
-  const input = page.locator(".agent-panel .inline-chat-input");
+  const input = page.locator(".ai-island .inline-chat-input");
   await expect(input).toBeVisible();
   return input;
 }
@@ -47,8 +47,8 @@ test.describe("the @ picker", () => {
       read_project_file: "The plan.",
       ai_agent_message: [{ kind: "Assistant", text: "Done." }],
     });
-    const chips = page.locator(".agent-panel .inline-chat-mention");
-    const above = page.locator(".agent-panel .inline-chat-attachment");
+    const chips = page.locator(".ai-island .inline-chat-mention");
+    const above = page.locator(".ai-island .inline-chat-attachment");
     await input.fill("Compare @pl");
     await expect(page.locator(".composer-picker")).toContainText("plan.md");
     await input.press("Enter");

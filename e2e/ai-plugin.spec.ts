@@ -159,5 +159,5 @@ test("a plugin's page asks the AI to change it, in Extensions' Create tab", asyn
     settings.locator(".create-studio .inline-chat-input"),
   ).toHaveValue("Change the Word Count plugin (local.word-count): ");
   // The document's panel is left as it was.
-  await expect(page.locator(".agent-panel")).toHaveCount(0);
+  await expect(page.locator(".ai-island")).toHaveCount(0);
 });

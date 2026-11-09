@@ -133,10 +133,15 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
           // Its island: the pane's frame (IslandFrame), one alone or each
           // of a split's by its pane.
           const id = row.dataset.paneId;
+          const aiPane = holder.dataset.paneId;
           const island = ai
-            ? holder
-                .closest(".agent-panel, .chat-window")
-                ?.querySelector("[data-island]")
+            ? aiPane
+              ? main.querySelector(
+                  `.agent-island[data-pane-id="${CSS.escape(aiPane)}"]`,
+                )
+              : holder
+                  .closest(".ai-island, .chat-window")
+                  ?.querySelector("[data-island]")
             : main.querySelector(
                 id
                   ? `:scope > .island-frame[data-pane-id="${CSS.escape(id)}"]`

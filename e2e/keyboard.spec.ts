@@ -48,7 +48,7 @@ test("F6 and Shift+F6 go round the regions and back to the caret", async ({
   await page.locator(editor).click();
   await page.keyboard.type("Hello");
   const order = [
-    ".agent-panel",
+    ".ai-island",
     ".window-bar",
     ".sidebar",
     ".main-pane > .tab-bar",

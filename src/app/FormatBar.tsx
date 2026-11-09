@@ -1,4 +1,9 @@
-import { useEffect, useState, type ComponentType } from "react";
+import {
+  useEffect,
+  useState,
+  type ComponentType,
+  type CSSProperties,
+} from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../ui/IconButton";
@@ -160,11 +165,19 @@ function useCaretBlock(): CaretBlock {
   return block;
 }
 
-export function FormatBar({ t }: { t: Strings }) {
+export function FormatBar({
+  t,
+  style,
+}: {
+  t: Strings;
+  /** Its place in a split's grid. */
+  style?: CSSProperties;
+}) {
   const block = useCaretBlock();
   return (
     <div
       className="format-bar"
+      style={style}
       role="toolbar"
       aria-label={t.toolbarLabel}
       // A press leaves the caret where it was, in the document.

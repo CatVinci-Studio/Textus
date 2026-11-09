@@ -144,11 +144,6 @@
   display: none;
 }
 
-/* And room for some of its name. */
-.tab-bar[data-narrow] .tab-pill-active {
-  min-width: calc(96px * var(--chrome-scale));
-}
-
 /* Overflowing, the + stays beside the list at the row's end as the tabs
    scroll under them. */
 .tab-bar[data-overflow] .tab-bar-add {

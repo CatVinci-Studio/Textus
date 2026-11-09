@@ -138,7 +138,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
         await openApp(page, { animations: true });
         const toggle = page.locator(".window-bar-toggle");
         await toggle.click();
-        const panel = page.locator(".agent-panel");
+        const panel = page.locator(".ai-island");
         await expect(page.locator(".agent-panel-view")).toBeVisible();
         await settled(panel);
         await toggle.click();
@@ -175,7 +175,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
 
         const pages = page.locator(".page-switch button");
         await pages.nth(1).tap();
-        const panel = page.locator(".agent-panel");
+        const panel = page.locator(".ai-island");
         await expect(panel).toBeVisible();
         await settled(panel);
         const box = (await panel.boundingBox())!;
@@ -273,7 +273,7 @@ test(
 test("the find bar keeps clear of the docked AI panel", async ({ page }) => {
   await openApp(page, { animations: true });
   await page.locator(".window-bar-toggle").click();
-  const panel = page.locator(".agent-panel");
+  const panel = page.locator(".ai-island");
   await settled(panel);
   await emit(page, "menu-find-replace");
   const bar = page.locator(".find-replace-bar");
@@ -318,7 +318,7 @@ test.describe("reduced motion", () => {
       await page.keyboard.press("Escape");
 
       // The AI panel arrives in place rather than sliding in.
-      const panelSampling = sampleTransforms(page, ".agent-panel");
+      const panelSampling = sampleTransforms(page, ".ai-island");
       await page.locator(".window-bar-toggle").click();
       const panelFrames = await panelSampling;
       expect(panelFrames.length).toBeGreaterThan(0);

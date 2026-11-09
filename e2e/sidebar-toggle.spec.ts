@@ -102,12 +102,13 @@ test("with the activity rail, the window shows its tabs, one or many, + beside t
     await centre(page, ".window-bar-title"),
     await centre(page, ".main-pane"),
   );
-  // The AI panel takes its width from the other side of the column.
+  // The AI island takes its width from the other side of the column...
   await page.locator(".window-bar-toggle").click();
-  await expect(page.locator(".agent-panel")).toBeVisible();
+  await expect(page.locator(".ai-island")).toBeVisible();
+  // ...over the document's column beside the AI island, not the whole area.
   expectNear(
     await centre(page, ".window-bar-title"),
-    await centre(page, ".main-pane"),
+    await centre(page, '[data-active-tab="true"]'),
   );
 });
 

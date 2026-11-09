@@ -1,4 +1,5 @@
 import {
+  aiPane,
   islandOf,
   keepsItself,
   mapPanes,
@@ -165,4 +166,33 @@ export function focusOn(layout: SplitLayout, id: string): SplitLayout {
   return layout.focus === id || !takesDocuments(layout.root, id)
     ? layout
     : { ...layout, focus: id };
+}
+
+/** The AI island open: at the right of everything, `share` of the width,
+ *  if it isn't there already. `base` is the layout of documents (null: one
+ *  pane of `tabIds`, `active` in front). */
+export function withAi(
+  base: SplitLayout | null,
+  tabIds: readonly string[],
+  active: string,
+  share: number,
+): SplitLayout {
+  if (base && panesOf(base.root).some((p) => islandOf(p) === "ai")) return base;
+  const docs: LayoutNode = base?.root ?? pane([...tabIds], active);
+  const root = splitWhole(docs, "right", aiPane());
+  const at = root.sizes.length - 1;
+  const rest = 1 - root.sizes[at];
+  const sizes = root.sizes.map((size, i) =>
+    i === at ? share : (size / rest) * (1 - share),
+  );
+  return {
+    root: { ...root, sizes },
+    focus: base?.focus ?? panesOf(docs)[0].id,
+  };
+}
+
+/** The AI island closed: the documents take its room. */
+export function withoutAi(layout: SplitLayout): SplitLayout | null {
+  const rest = tidy(layout.root, (p) => islandOf(p) !== "ai" && keepsItself(p));
+  return rest ? settled(rest, layout.focus) : null;
 }

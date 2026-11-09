@@ -35,10 +35,17 @@ import {
   WebPagePane,
 } from "../plugins/views/plugin-views";
 import { TabBar } from "./tabs/TabBar";
+import { tabMenuItems } from "./tabs/tab-menu-items";
 import { FormatBar } from "./FormatBar";
 import { useSplitPanes } from "./split/useSplitPanes";
 import { SplitDivider } from "./split/SplitDivider";
-import { panesOf, splitGrid } from "./split/split-tree";
+import {
+  islandOf,
+  panesOf,
+  splitGrid,
+  type SplitGrid,
+} from "./split/split-tree";
+import type { AiIslandPlace } from "./layout/AiIsland";
 import "./split/split-panes.css";
 import {
   focusPane,
@@ -49,10 +56,6 @@ import {
 import { pullTab } from "./split/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
-import { pathItems } from "../clipboard/copy-path";
-import { windowFolder } from "../platform/window-folder";
-import { isWithin } from "../sidebar/tree-root";
-import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
 import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
@@ -134,6 +137,7 @@ export function MainPane({
   typewriter,
   formatBar,
   tour,
+  aiIsland,
   t,
 }: {
   tabs: DocTab[];
@@ -160,6 +164,8 @@ export function MainPane({
   /** The tour's practice tab, its AI and the AI panel mode its lesson
    *  needs, while the tour runs; else null. */
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
+  /** Draws the AI island at its place in the grid (AiIsland). */
+  aiIsland?: (place: AiIslandPlace) => ReactNode;
   t: Strings;
 }) {
   const mainRef = useRef<HTMLElement>(null);
@@ -171,7 +177,11 @@ export function MainPane({
   );
   const phone = usePhoneLayout();
   const grid = split && splitGrid(split.root);
-  const panes = split ? panesOf(split.root) : [];
+  const all = split ? panesOf(split.root) : [];
+  const panes = all.filter((p) => islandOf(p) === "documents");
+  const ai = all.find((p) => islandOf(p) === "ai");
+  // Documents split, not only beside the AI island.
+  const docsSplit = panes.length > 1;
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
     panes.flatMap((p, i) =>
@@ -180,80 +190,19 @@ export function MainPane({
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
   // A split's top panes always have their tabs; one pane, when shown.
-  const tabsInBar = !!split || showTabBar;
+  const tabsInBar = docsSplit || showTabBar;
+  // The one pane's sheet, without its row, reaches up into the bar's.
+  const body = (id: string) =>
+    tabsInBar || !grid ? grid?.bodies.get(id) : withBarRow(grid, id);
   useLayoutEffect(() => onTabsInBar(tabsInBar), [tabsInBar, onTabsInBar]);
-  // The saved tabs close; one with unsaved changes stays, its dot showing,
-  // rather than a prompt for each.
-  const closeSaved = (list: DocTab[]) => {
-    const closing = list.filter((tab) => !tabIsDirty(tab));
-    // The tab in front closing too: one that stays comes forward first, as
-    // each close would otherwise pick a neighbour that is closing as well.
-    if (closing.some((tab) => tab.id === activeTabId)) {
-      const stays = tabs.find((tab) => !closing.includes(tab));
-      if (stays) onActivate(stays.id);
-    }
-    for (const tab of closing) onClose(tab.id);
-  };
-  // Its path three ways, and the file found in the tree when the open
-  // folder holds it.
-  const pathItem = (id: string, path: string | null | undefined) => {
-    if (!path) return [];
-    const folder = windowFolder();
-    const inTree = folder !== null && isWithin(path, folder);
-    return [
-      ...pathItems(t, path, folder),
-      ...(inTree
-        ? [{ label: t.menuRevealInTree, onSelect: () => revealInTree(id) }]
-        : []),
-    ];
-  };
-  const revealInTree = (id: string) => {
-    onActivate(id);
-    window.dispatchEvent(
-      new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "tree" }),
-    );
-    // Once the tree has opened down to it.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() =>
-        document
-          .querySelector('.sidebar .tree-row[aria-selected="true"]')
-          ?.scrollIntoView({ block: "nearest" }),
-      ),
-    );
-  };
-  const readOnlyItem = (id: string) => {
-    const tab = byId.get(id);
-    if (!tab || tab.view) return [];
-    return [
-      {
-        label: t.menuToggleReadOnly,
-        checked: tabReadOnly(tab),
-        onSelect: () => onToggleReadOnly(id),
-      },
-    ];
-  };
-  const closeManyItems = (list: DocTab[], id: string) => {
-    const at = list.findIndex((tab) => tab.id === id);
-    const groups: [string, DocTab[]][] = [
-      [t.closeOtherTabs, list.filter((tab) => tab.id !== id)],
-      [t.closeTabsToLeft, list.slice(0, at)],
-      [t.closeTabsToRight, list.slice(at + 1)],
-    ];
-    return [
-      ...groups
-        .filter(([, closing]) => closing.length > 0)
-        .map(([label, closing]) => ({
-          label,
-          onSelect: () => closeSaved(closing),
-        })),
-      { label: t.menuCloseSaved, onSelect: () => closeSaved(list) },
-      // Each asks, as its own close does, when it has unsaved changes.
-      {
-        label: t.menuCloseAll,
-        onSelect: () => list.forEach((tab) => onClose(tab.id)),
-      },
-    ];
-  };
+  const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems({
+    tabs,
+    activeTabId,
+    onActivate,
+    onClose,
+    onToggleReadOnly,
+    t,
+  });
   const tabBar = (
     list: DocTab[],
     active: string,
@@ -307,7 +256,7 @@ export function MainPane({
           // The tab in front splits with its neighbour; another one
           // opens beside it.
           onSelect: () =>
-            id === activeTabId && !split
+            id === activeTabId && !docsSplit
               ? splitEditor(phone ? "column" : "row")
               : openBeside(id, activeTabId, phone ? "bottom" : "right"),
         },
@@ -349,26 +298,43 @@ export function MainPane({
           <IslandFrame
             key={`island:${p.id}`}
             paneId={p.id}
-            style={grid.bodies.get(p.id)}
+            style={body(p.id)}
           />
         ))
       ) : (
         <IslandFrame paneId={null} />
       )}
       {split && grid
-        ? panes.map((p) =>
-            tabBar(
-              p.tabs.flatMap((id) => byId.get(id) ?? []),
-              p.front ?? "",
-              p.id,
-              grid.bars.get(p.id),
-              !grid.top.has(p.id),
-            ),
+        ? panes.map(
+            (p) =>
+              tabsInBar &&
+              tabBar(
+                p.tabs.flatMap((id) => byId.get(id) ?? []),
+                p.front ?? "",
+                p.id,
+                grid.bars.get(p.id),
+                !grid.top.has(p.id),
+              ),
           )
         : showTabBar && tabBar(tabs, activeTabId, null)}
-      {formatBar && !split && !phone && formatsShown(byId.get(activeTabId)) && (
-        <FormatBar t={t} />
-      )}
+      {ai &&
+        grid &&
+        aiIsland?.({
+          paneId: ai.id,
+          bar: grid.bars.get(ai.id),
+          body: grid.bodies.get(ai.id),
+          inner: !grid.top.has(ai.id),
+        })}
+      {formatBar &&
+        !docsSplit &&
+        !phone &&
+        formatsShown(byId.get(activeTabId)) && (
+          <FormatBar
+            t={t}
+            // Beside the AI island, over the documents' sheet alone.
+            style={split && panes[0] ? body(panes[0].id) : undefined}
+          />
+        )}
 
       {/* A tab's editor stays mounted while hidden, so switching keeps its
         state; one out of sight a long while is let go (EditorKept). */}
@@ -385,7 +351,7 @@ export function MainPane({
             className={pane ? "split-pane" : undefined}
             style={
               pane && grid
-                ? grid.bodies.get(pane.id)
+                ? body(pane.id)
                 : { display: tab.id === activeTabId ? "contents" : "none" }
             }
             onPointerDownCapture={
@@ -480,6 +446,14 @@ export function MainPane({
         ))}
     </main>
   );
+}
+
+/** Pane `id`'s sheet in the grid, taking in its row above as well. */
+function withBarRow(grid: SplitGrid, id: string): CSSProperties | undefined {
+  const sheet = grid.bodies.get(id);
+  const row = String(grid.bars.get(id)?.gridRow ?? "").split(" / ")[0];
+  const end = String(sheet?.gridRow ?? "").split(" / ")[1];
+  return sheet && row && end ? { ...sheet, gridRow: `${row} / ${end}` } : sheet;
 }
 
 /** A document in the rendered editor: what the format bar formats. */

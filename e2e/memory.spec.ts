@@ -47,7 +47,7 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
   });
   await createEntry(page, "Lin");
   // The entry opened in a tab of its own...
-  await expect(page.locator(".main-pane .tab-pill")).toHaveCount(2);
+  await expect(page.locator(".main-pane > .tab-bar .tab-pill")).toHaveCount(2);
   // ...and the panel, now drawn by that tab's editor, is still on Memory.
   await expect(page.locator(".agent-panel-memory")).toBeVisible();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');

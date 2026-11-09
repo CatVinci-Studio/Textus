@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type CSSProperties,
   type ReactNode,
 } from "react";
 import { TabBar } from "./tabs/TabBar";
@@ -59,12 +60,20 @@ export function AgentTabs({
   onNew = () => ask("new"),
   popOut = true,
   end,
+  paneId,
+  style,
+  inner,
   t,
 }: {
   scope: string | null;
   onNew?: () => void;
   popOut?: boolean;
   end?: ReactNode;
+  /** Its island's pane, its cell in the split's grid, and whether it is
+   *  a row below another pane (not the window bar's). */
+  paneId?: string;
+  style?: CSSProperties;
+  inner?: boolean;
   t: Strings;
 }) {
   const open = useOpen(scope);
@@ -81,8 +90,16 @@ export function AgentTabs({
   const memory = panel.tab === "memory";
   const islandMenu = agentIslandMenu(t, panel.setTab, onNew);
   return (
-    <div className="agent-tabs-row">
+    <div
+      className="agent-tabs-row"
+      // An island's row wherever it is, a clean sheet's side too.
+      data-islands=""
+      data-pane-id={paneId}
+      data-inner={inner || undefined}
+      style={style}
+    >
       <TabBar
+        inner={inner}
         tabs={ids.map((id) => ({ id, title: title(id), dirty: false }))}
         activeTabId={memory ? "" : (live ?? DRAFT)}
         onActivate={(id) => (id === DRAFT ? panel.setTab("chat") : show(id))}

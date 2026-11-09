@@ -12,13 +12,14 @@
   pointer-events: none;
 }
 
-/* Docked, over the panel's top. */
-:root:not([data-window-chrome="mobile"]) .agent-panel > .agent-tabs-row {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+/* The top one is the window bar's row: above it, its tabs alone taking a
+   click (layout.css). A lower one keeps the gap above, as documents' do. */
+.main-pane > .agent-tabs-row:not([data-inner]) {
   z-index: 46;
+}
+
+.app-shell[data-tabs="bar"] .main-pane-split > .agent-tabs-row[data-inner] {
+  margin-top: var(--island-gap);
 }
 
 .agent-tabs-row > * {
@@ -45,11 +46,68 @@
 }
 
 /* Its own header gives way to the row. */
-.agent-panel[data-tabbed] .agent-panel-header {
+:is(.agent-panel[data-tabbed], .ai-island) .agent-panel-header {
   display: none;
 }
 
-/* ---- Inside the island --------------------------------------------- */
+/* ---- The island ---------------------------------------------------- */
+
+/* Its cell in the documents' grid; it slides in as Textus AI's button
+   opens it and out as it closes, the documents taking the room after. */
+.ai-island {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  color: var(--ui-text);
+  animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
+}
+
+.ai-island[data-state="closing"] {
+  animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
+}
+
+/* Its cards on the paper take a tint. */
+.ai-island .agent-panel-view {
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
+}
+
+/* Beside a clean sheet, and in Zen, it is no island but the sheet's own
+   side: the same paper, a hairline between, its tabs plain words. */
+:is(.app-shell:not([data-tabs]), .zen .app-shell) .ai-island {
+  border-left: 1px solid var(--ui-frame-edge);
+  background: var(--doc-bg);
+}
+
+:is(.app-shell:not([data-tabs]), .zen .app-shell) .ai-island [data-island] {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+:is(.app-shell:not([data-tabs]), .zen .app-shell)
+  .agent-tabs-row
+  .tab-pill-active {
+  background: transparent;
+}
+
+:is(.app-shell:not([data-tabs]), .zen .app-shell)
+  .agent-tabs-row
+  .tab-pill-active::before,
+:is(.app-shell:not([data-tabs]), .zen .app-shell)
+  .agent-tabs-row
+  .tab-pill-active::after {
+  display: none;
+}
+
+/* Zen hides the documents' tabs; the AI's stay, in place. */
+.zen .agent-tabs-row .tab-bar {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+  background: none;
+}
 
 .agent-island {
   position: relative;

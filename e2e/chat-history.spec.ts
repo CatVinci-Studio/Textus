@@ -89,7 +89,7 @@ async function bootWithRust(page: Page, saved: unknown[]) {
   );
 }
 
-const panel = (page: Page) => page.locator(".agent-panel");
+const panel = (page: Page) => page.locator(".ai-island");
 
 /** Opens the AI panel, if it isn't, and its history list. */
 async function openHistory(page: Page) {

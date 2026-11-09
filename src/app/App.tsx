@@ -1,4 +1,6 @@
 import { conversationScope } from "../ai/chat/conversation-scope";
+import { AiIsland } from "./layout/AiIsland";
+import { useAiIsland } from "./layout/useAiIsland";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../ui/CornerToast";
@@ -96,6 +98,19 @@ function App() {
     zen: zenMode,
   });
 
+  // The AI island, in the documents' grid on the desktop; its
+  // conversations the document's folder's.
+  const conversations = conversationScope(
+    activeTab.path,
+    settings.agentWorkspaceRoot || null,
+  );
+  const aiIsland = useAiIsland(
+    !isIOSApp && agentPresence.mounted,
+    tabs.map((tab) => tab.id),
+    activeTabId,
+    agentPanel.width,
+  );
+
   // Where the tabs are: the window bar's row, a row of their own under the
   // menu bar, or none (a clean sheet; the phone's own bar).
   const tabRow =
@@ -149,7 +164,11 @@ function App() {
               panelOpen ? sidebarWidth.width / 2 : 0
             }px`,
             "--window-bar-title-shift": `${
-              agentPresence.mounted ? -(agentPanel.width / 2) : 0
+              isIOSApp
+                ? agentPresence.mounted
+                  ? -(agentPanel.width / 2)
+                  : 0
+                : -(aiIsland.drawnWidth / 2)
             }px`,
           } as React.CSSProperties
         }
@@ -213,6 +232,23 @@ function App() {
           onChange={handleChange}
           typewriter={settings.typewriterMode}
           formatBar={settings.formatBar}
+          aiIsland={
+            isIOSApp
+              ? undefined
+              : (place) => (
+                  <AiIsland
+                    place={place}
+                    state={agentPresence.state}
+                    mountRef={setAgentPanelEl}
+                    conversations={conversations}
+                    aiOn={textusAi.on}
+                    sourceMode={!!activeTab.sourceMode}
+                    onToggleSourceMode={toggleSourceMode}
+                    onWidth={aiIsland.setDrawnWidth}
+                    t={t}
+                  />
+                )
+          }
           tour={
             tutorial.active && tutorial.tabId
               ? {
@@ -225,7 +261,9 @@ function App() {
           t={t}
         />
 
-        {agentPresence.mounted && (
+        {/* On the desktop the AI island is one in the documents' grid; an
+            iPhone or iPad keeps its own page. */}
+        {isIOSApp && agentPresence.mounted && (
           <AgentPanelDock
             presence={agentPresence}
             closing={agentClosing}
@@ -237,16 +275,6 @@ function App() {
             sourceMode={!!activeTab.sourceMode}
             onToggleSourceMode={toggleSourceMode}
             aiOn={textusAi.on}
-            // Its row of conversations, on the desktop: those of the
-            // document's folder.
-            conversations={
-              isIOSApp
-                ? undefined
-                : conversationScope(
-                    activeTab.path,
-                    settings.agentWorkspaceRoot || null,
-                  )
-            }
             t={t}
           />
         )}

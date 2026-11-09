@@ -138,26 +138,6 @@
   );
 }
 
-/* The AI panel: an island like any other, on the frame beside the
-   documents - a clean sheet's too; its cards on the paper take a tint. */
-.agent-panel[data-islands] {
-  --ui-frame: var(--ui-frame-sunk);
-  --ui-frame-fill: var(--ui-frame);
-}
-
-.agent-panel[data-islands] .agent-island {
-  margin: 0 var(--island-inset) var(--island-inset) 0;
-  overflow: hidden;
-}
-
-.agent-panel[data-islands]::before {
-  display: none;
-}
-
-.agent-panel[data-islands] .agent-panel-view {
-  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
-}
-
 /* ---- Rows of tabs -------------------------------------------------- */
 
 /* Every pane's row is as tall as the window bar, its tabs standing on its
@@ -174,6 +154,12 @@
     -1px var(--tabs-inset-end, 8px) 0
       calc(var(--tabs-inset-start, 8px) - var(--tab-radius))
   );
+  align-items: flex-end;
+  gap: var(--tab-gap);
+  border-bottom: 0;
+  background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
+    bottom / 100% 1px no-repeat;
+  overflow-y: hidden;
 }
 
 /* Scrolled, no sliver of a tab shows before its start. */
@@ -181,12 +167,6 @@
   clip-path: inset(
     -1px var(--tabs-inset-end, 8px) 0 var(--tabs-inset-start, 8px)
   );
-  align-items: flex-end;
-  gap: var(--tab-gap);
-  border-bottom: 0;
-  background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
-    bottom / 100% 1px no-repeat;
-  overflow-y: hidden;
 }
 
 .app-shell[data-tabs="bar"] .main-pane > .tab-bar:not(.tab-bar-inner) {
