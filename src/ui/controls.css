@@ -405,3 +405,13 @@ input[type="range"].tx-slider {
   font-size: var(--text-secondary);
   box-shadow: var(--shadow-popover);
 }
+
+/* Square corners for a control that sits in a grid or a table, where a
+   capsule reads wrong: add tx-square to a button, field or select. */
+.tx-square,
+.tx-square.tx-input,
+.tx-square.tx-select,
+.tx-square.tx-button {
+  border-radius: var(--shape-xs);
+  corner-shape: initial;
+}
