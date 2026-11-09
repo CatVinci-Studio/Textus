@@ -230,7 +230,7 @@ mod imp {
         let key = CURRENT_USER.create(ENV_KEY).map_err(|e| e.to_string())?;
         let ty = old
             .as_ref()
-            .map(|(_, ty)| ty.clone())
+            .map(|(_, ty)| *ty)
             .unwrap_or(Type::ExpandString);
         let write = |text: &str| match ty {
             Type::String => key.set_string("Path", text),
