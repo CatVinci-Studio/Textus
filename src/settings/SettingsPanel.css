@@ -171,7 +171,9 @@
 }
 
 .settings-nav-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   text-align: left;
   padding: 8px 12px;
@@ -197,9 +199,13 @@
 
 /* An invisible bold copy of the label holds each item at its active width,
    so the nav doesn't grow when a label turns bold. */
-.settings-nav-item::after {
+.settings-nav-label {
+  display: inline-grid;
+  min-width: 0;
+}
+
+.settings-nav-item .settings-nav-label::after {
   content: attr(data-label);
-  display: block;
   height: 0;
   overflow: hidden;
   visibility: hidden;
@@ -1283,4 +1289,36 @@ button.settings-skill-action:focus-visible {
 .settings-letter-spacing-by .settings-text-input {
   width: 4.5em;
   text-align: right;
+}
+
+/* On the desktop, the frame's way (design-language.md 5.7): the sections
+   run the panel's full height in the frame's colour with the search at
+   their top, the page beside them; of the header only Close stays, over
+   the page's top right. The phone keeps its bar (mobile/styles). */
+:root:not([data-window-chrome="mobile"]) .settings-panel {
+  position: relative;
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-header {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 2;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-header > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+:root:not([data-window-chrome="mobile"]) .settings-sidebar {
+  padding-top: var(--space-3);
+  border-right: 1px solid var(--ui-frame-edge);
+  background: var(--ui-frame);
 }

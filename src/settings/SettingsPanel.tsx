@@ -297,7 +297,9 @@ export function SettingsPanel({
                         nav.open(c.id);
                       }}
                     >
-                      {c.label}
+                      <span className="settings-nav-label" data-label={c.label}>
+                        {c.label}
+                      </span>
                       {phone && (
                         <ChevronIcon className="settings-nav-chevron" />
                       )}
