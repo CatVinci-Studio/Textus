@@ -87,13 +87,14 @@
 
   color-scheme: light;
   /* The document's colours: what a theme sets. */
-  --doc-bg: #ffffff;
+  /* A milk white, not a yellow: warm by a hair. */
+  --doc-bg: #fdfcfa;
   --doc-text: #24272e;
   --doc-muted: #6b6b6b;
   --doc-accent: #315ed1;
-  --doc-border: #e1e4ea;
-  --doc-quote-border: #d8d4cc;
-  --doc-code-bg: #f1efe9;
+  --doc-border: #e3e4e8;
+  --doc-quote-border: #d9d8d4;
+  --doc-code-bg: #f3f3f1;
   --doc-highlight-bg: #fbe89a;
   /* The interface's, from the document's, so any theme recolours the whole
      window; an imported theme's are derived and contrast-checked in
@@ -112,6 +113,9 @@
      colour a little clear, over the page - when the title bar is. One fill
      for the bar, the rail and the sidebar, so they never differ. */
   --ui-frame-fill: var(--ui-frame);
+  /* The one line the frame draws: where it meets the page, a hairline
+     softer than a card's border. Inside the frame, nothing. */
+  --ui-frame-edge: color-mix(in srgb, var(--ui-border) 60%, transparent);
   --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
   --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --ui-selected-text: var(--ui-text);

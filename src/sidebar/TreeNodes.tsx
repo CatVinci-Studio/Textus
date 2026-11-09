@@ -151,7 +151,19 @@ export function DirNode({
             sorted.length === 0 &&
             !drafting &&
             tree.draftHint && (
-              <p className="tree-empty-hint">{tree.draftHint}</p>
+              // Empty: what can be made here, and a button that makes it.
+              <div className="tx-empty tree-empty">
+                <span className="tree-empty-hint">{tree.draftHint}</span>
+                {tree.newDocument && (
+                  <button
+                    type="button"
+                    className="tx-button"
+                    onClick={tree.newDocument.start}
+                  >
+                    {tree.newDocument.label}
+                  </button>
+                )}
+              </div>
             )}
           {sorted.map((entry) =>
             entry.is_dir ? (

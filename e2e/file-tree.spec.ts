@@ -169,7 +169,7 @@ test("New Document and New Folder are named in place: right-click, the toolbar, 
   ).toBeVisible();
 });
 
-test("an empty folder says a double-click makes a document", async ({
+test("an empty folder says a double-click makes a document, and offers a button for it", async ({
   page,
 }) => {
   await open(page, { "/work/notes/empty/.keep": "" });
@@ -177,6 +177,11 @@ test("an empty folder says a double-click makes a document", async ({
   await expect(page.locator(".sidebar .tree-empty-hint")).toHaveText(
     "Double-click here for a new document.",
   );
+  await expect(
+    page.locator(".sidebar .tree-empty").getByRole("button", {
+      name: "New Document",
+    }),
+  ).toBeVisible();
   await page.locator(".sidebar .tree-empty-hint").dblclick();
   await page.locator(".sidebar .tree-draft-input").press("Enter");
   await expect(row(page, "Untitled.md")).toBeVisible();
@@ -326,17 +331,23 @@ test("in a vault whose settings the project took, the split preview breaks the l
   expect(two).toBeGreaterThan(one);
 });
 
-test("a tree that follows the document says so, and Close Project closes the project's documents", async ({
+test("a tree that follows the document offers its folder, and Close Project closes the project's documents", async ({
   page,
 }) => {
   await open(page);
-  const following = page.locator(".sidebar .tree-following");
-  await expect(following).toContainText("Current document's folder");
+  // Following the document, the toolbar has one button to open its
+  // folder as the folder, its tip naming whose folder it is.
+  const openAs = page
+    .locator(".sidebar")
+    .getByRole("button", { name: "Open as Project" });
+  await expect(openAs).toHaveAccessibleDescription(
+    "Current document's folder",
+  );
   await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
     0,
   );
-  await following.getByRole("button", { name: "Open as Project" }).click();
-  await expect(following).toHaveCount(0);
+  await openAs.click();
+  await expect(openAs).toHaveCount(0);
   await page.getByRole("button", { name: "Close Project" }).click();
   // a.md was saved and inside the project: it closes, the window stays on
   // the start page.

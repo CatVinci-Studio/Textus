@@ -360,7 +360,11 @@ test("the activity rail opens a tab, closes the sidebar on the open one, and hid
   const outline = rail.getByRole("button", { name: "Outline" });
   await outline.click();
   await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-  await expect(page.locator(".window-bar-sidebar-title")).toHaveText("Outline");
+  await expect(
+    page
+      .locator(".sidebar .outline, .sidebar .outline-empty, .sidebar-body")
+      .first(),
+  ).toBeVisible();
   await expect(outline).toHaveAttribute("aria-pressed", "true");
   await outline.click();
   await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);

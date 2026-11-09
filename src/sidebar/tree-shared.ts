@@ -52,6 +52,9 @@ export interface TreeShared {
   finishDraft: (name: string | null) => void;
   /** What an empty folder says where new things can be made. */
   draftHint: string | null;
+  /** An empty folder's one button: a new document named in place there,
+   *  with its label. Null where documents aren't made here. */
+  newDocument: { label: string; start: () => void } | null;
 }
 
 export interface TreeDraft {

@@ -13,8 +13,8 @@
   align-items: flex-end;
   gap: 2px;
   border-bottom: 0;
-  /* The line under the row, which the open tab covers. */
-  box-shadow: inset 0 -1px 0 var(--ui-border);
+  /* The frame's edge along the page, which the open tab covers. */
+  box-shadow: inset 0 -1px 0 var(--ui-frame-edge);
   overflow-y: hidden;
 }
 
@@ -30,6 +30,11 @@
   }
   .window-bar-title {
     visibility: hidden;
+  }
+  /* Under the tab row the page needn't clear a bar over it: its text
+     starts with ordinary air, not the room a floating bar takes. */
+  .main-pane .editor-content {
+    padding-top: 1.5rem;
   }
   .main-pane > .tab-bar:not(.tab-bar-inner) {
     > .tab-pill {

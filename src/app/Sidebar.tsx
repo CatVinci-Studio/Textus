@@ -97,8 +97,10 @@ export function Sidebar({
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
-              {/* With the rail holding the tabs, the window bar names the
-                  one open; without it, the tabs are here again. */}
+              {/* With the rail holding the tabs (its pressed icon says which
+                  is open), the header is only the bar's room, and the panel's
+                  own tools start under the line; without it, the tabs are
+                  here again. */}
               {!rail && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}

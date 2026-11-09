@@ -36,7 +36,6 @@ import { FloatingViewsHost } from "../plugins/views/floating-views-host";
 import { NoticeHost } from "../ui/notices";
 import "../plugins/plugins.css";
 import "./App.css";
-import { sidebarTab } from "./sidebar-tabs";
 import { ReportProblemHost } from "./report/report-open";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
@@ -141,11 +140,6 @@ function App() {
           largeDoc={featuresPaused}
           words={wordCount.words}
           sidebarOpen={panelOpen}
-          sidebarTitle={
-            settings.activityRail && !isIOSApp
-              ? sidebarTab(panelMode).label(t)
-              : null
-          }
           sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
           onToggleSidebar={toggleSidebar}
           showAgentToggle={aiFeatures(settings, tutorial.active).chat}

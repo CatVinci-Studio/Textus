@@ -13,7 +13,7 @@
   z-index: 1;
   width: var(--sidebar-width, 240px);
   background: var(--ui-frame-fill);
-  border-right: 1px solid var(--ui-border);
+  border-right: 1px solid var(--ui-frame-edge);
   display: flex;
   flex-direction: column;
   /* Its labels and notes are the app's, not text to copy: a drag across

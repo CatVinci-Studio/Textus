@@ -1,4 +1,5 @@
 import { getUiState, setUiState } from "../storage/ui-state";
+import { emitToThisWindow } from "../platform/menu-events";
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
@@ -52,8 +53,22 @@ function FilesPanel({
   onSearchFocusHandled,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
-    // An unsaved draft has no folder; an empty panel read as broken.
-    return <div className="clipboard-empty">{t.treeEmptyDraft}</div>;
+    // No folder: says what will be here, and opens one in a click, as the
+    // start page does.
+    return (
+      <div className="tx-empty">
+        {t.treeEmptyDraft}
+        {canOpenFolder && (
+          <button
+            type="button"
+            className="tx-button"
+            onClick={() => emitToThisWindow("menu-open-folder")}
+          >
+            {t.menuOpenFolder}
+          </button>
+        )}
+      </div>
+    );
   return (
     <FileTree
       root={openFolder.treeRoot}

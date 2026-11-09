@@ -4,6 +4,7 @@ import {
   CloseIcon,
   NewDocumentIcon,
   NewFolderIcon,
+  ProjectIcon,
   RefreshIcon,
   SortIcon,
 } from "../ui/icons";
@@ -24,8 +25,8 @@ import { setUiState } from "../storage/ui-state";
 import { TreeContext, type TreeShared, type TreeSort } from "./tree-shared";
 import { useRowDrag } from "./useRowDrag";
 import { DirNode } from "./TreeNodes";
-import { TreeFollowing } from "./TreeFollowing";
 import "./FileTree.css";
+import { isWithin } from "./tree-root";
 import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";
@@ -115,6 +116,12 @@ export function FileTree({
       draft,
       finishDraft,
       draftHint: desktop ? t.treeEmptyHint : null,
+      newDocument: desktop
+        ? {
+            label: t.treeNewDocument,
+            start: () => setDraft({ dir: root, kind: "document" }),
+          }
+        : null,
     }),
     [
       sort,
@@ -130,6 +137,8 @@ export function FileTree({
       takeDragClick,
       draft,
       finishDraft,
+      setDraft,
+      root,
       t,
     ],
   );
@@ -242,6 +251,27 @@ export function FileTree({
                 </Tooltip>
               </>
             )}
+            {/* The tree following the document's folder: one button opens
+                it as the folder, its tip saying whose folder it is. */}
+            {!folder && onOpenAsFolder && (
+              <Tooltip
+                text={t.treeOpenAsFolder}
+                description={
+                  activePath && isWithin(activePath, root)
+                    ? t.treeDocumentFolder
+                    : null
+                }
+              >
+                <button
+                  type="button"
+                  className="tree-tool"
+                  aria-label={t.treeOpenAsFolder}
+                  onClick={() => onOpenAsFolder(root)}
+                >
+                  <ProjectIcon />
+                </button>
+              </Tooltip>
+            )}
             <Tooltip text={t.treeSort}>
               <button
                 type="button"
@@ -276,14 +306,6 @@ export function FileTree({
               </button>
             </Tooltip>
           </div>
-          {!folder && onOpenAsFolder && (
-            <TreeFollowing
-              t={t}
-              root={root}
-              activePath={activePath}
-              onOpenAsFolder={onOpenAsFolder}
-            />
-          )}
           <div
             ref={treeRef}
             role="tree"
