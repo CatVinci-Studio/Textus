@@ -60,18 +60,27 @@ test("the arrows choose another command, and Esc puts the list away", async ({
   await open(page);
   await page.keyboard.type(" \\in");
   const items = list(page).locator(".completion-item");
-  // Those starting so, in the plugin's order: \int, then \in.
-  await expect(items.nth(0)).toContainText("\\int");
-  await expect(items.nth(1)).toContainText("\\in");
-  await expect(items.nth(1)).toContainText("∈");
+  // \in, typed out whole, first; then those starting so: \int.
+  await expect(items.nth(0)).toContainText("\\in");
+  await expect(items.nth(0)).toContainText("∈");
+  await expect(items.nth(1)).toContainText("\\int");
   await page.keyboard.press("ArrowDown");
   await expect(items.nth(1)).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("ArrowUp");
   await page.keyboard.press("Enter");
-  await page.keyboard.type(" y \\al");
+  // Written with a space after it, it is done: the list doesn't open
+  // again on it.
+  await expect(list(page)).toHaveCount(0);
+  await page.keyboard.type("y \\al");
+  await expect(items.first()).toContainText("\\alpha");
+  // Typed out whole, there is nothing left to complete.
+  await page.keyboard.type("pha");
+  await expect(list(page)).toHaveCount(0);
+  await page.keyboard.type(" \\al");
   await expect(items.first()).toContainText("\\alpha");
   await page.keyboard.press("Escape");
   await expect(list(page)).toHaveCount(0);
-  await expect(formula(page)).toContainText("x \\in y \\al");
+  await expect(formula(page)).toContainText("x \\in y \\alpha \\al");
 });
 
 test("outside a formula nothing is listed", async ({ page }) => {
