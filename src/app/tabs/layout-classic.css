@@ -18,6 +18,17 @@
   box-shadow: inset 0 -1px 0 var(--ui-frame-edge);
 }
 
+/* The top row lies over the window bar, already the frame: no fill of its
+   own over the bar's controls, and its hairline from its first tab on. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="classic"]
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner) {
+  background: linear-gradient(var(--ui-frame-edge), var(--ui-frame-edge)) right
+    bottom / calc(100% - var(--tabs-inset-start, 0px)) 1px no-repeat;
+  box-shadow: none;
+}
+
 :root:not([data-window-chrome="mobile"])
   .app-shell[data-tabs="bar"][data-layout="classic"]
   .main-pane
@@ -35,6 +46,17 @@
   > .tab-bar
   > .tab-pill:first-child {
   border-inline-start: 1px solid var(--ui-frame-edge);
+}
+
+/* At the page's own edge the first tab has no line of its own: the edge
+   beside it (the sidebar's, the window's) runs up as its side, so the tab
+   and the page start on one line. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell[data-tabs="bar"][data-layout="classic"]
+  .main-pane
+  > .tab-bar[data-at-corner]
+  > .tab-pill:first-child {
+  border-inline-start: 0;
 }
 
 /* The AI panel on the page's paper, flush, the hairline at its edge

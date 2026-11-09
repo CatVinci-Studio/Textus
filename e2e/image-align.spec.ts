@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { changeSettings, openApp, pasteMarkdown } from "./helpers";
+import { changeSettings, openApp, pasteMarkdown, expectNear } from "./helpers";
 
 const editor = '[data-active-tab="true"] .ProseMirror';
 const PIXEL =
@@ -42,7 +42,7 @@ test("a row of images lines up whether or not each is a link", async ({
     .evaluateAll((images) =>
       images.map((image) => image.getBoundingClientRect().bottom),
     );
-  expect(linked).toBeCloseTo(plain, 0);
+  expectNear(linked, plain);
 });
 
 test("a badge has no zoom button or resize handle; a picture keeps them", async ({

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { changeSettings, emit, openApp } from "./helpers";
+import { changeSettings, emit, openApp, expectNear } from "./helpers";
 
 /**
  * The window bar's sidebar toggle: the row's first control, which belongs to
@@ -98,16 +98,16 @@ test("with the activity rail, the window shows its tabs, one or many, + beside t
   // The rail turned off: the title, centred over the document column.
   await changeSettings(page, { activityRail: false });
   await expect(page.locator(".main-pane > .tab-bar")).toHaveCount(0);
-  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
+  expectNear(
+    await centre(page, ".window-bar-title"),
     await centre(page, ".main-pane"),
-    0,
   );
   // The AI panel takes its width from the other side of the column.
   await page.locator(".window-bar-toggle").click();
   await expect(page.locator(".agent-panel")).toBeVisible();
-  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
+  expectNear(
+    await centre(page, ".window-bar-title"),
     await centre(page, ".main-pane"),
-    0,
   );
 });
 

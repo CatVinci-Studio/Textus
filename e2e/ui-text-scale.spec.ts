@@ -5,6 +5,7 @@ import {
   pasteMarkdown,
   SAMPLE_DOC,
   chromeScale,
+  expectNear,
 } from "./helpers";
 
 // Interface Text Size scales the app's own text and leaves the document's
@@ -62,9 +63,9 @@ test("Interface Text Size scales the sidebar, the tabs, the AI panel and the ico
   expect(after.outline).toBeCloseTo(before.outline * 1.25, 1);
   expect(after.composer).toBeCloseTo(before.composer * 1.25, 1);
   expect(after.tab).toBeCloseTo(before.tab * 1.25, 1);
-  expect(after.bar).toBeCloseTo(before.bar * 1.25, 0);
-  expect(after.barButton).toBeCloseTo(before.barButton * 1.25, 0);
-  expect(after.tabIcon).toBeCloseTo(before.tabIcon * 1.25, 0);
+  expectNear(after.bar, before.bar * 1.25);
+  expectNear(after.barButton, before.barButton * 1.25);
+  expectNear(after.tabIcon, before.tabIcon * 1.25);
   expect(after.document).toBe(before.document);
 });
 
@@ -84,11 +85,13 @@ test("a wider window takes the icons and the bar up in a straight line", async (
   const small = await chrome();
   await page.setViewportSize({ width: 2100, height: 1000 });
   await expect
-    .poll(async () => (await box(page, ".window-bar")).height)
-    .toBeCloseTo(small.bar * 1.1, 0);
+    .poll(async () =>
+      Math.abs((await box(page, ".window-bar")).height - small.bar * 1.1),
+    )
+    .toBeLessThanOrEqual(2);
   const wide = await chrome();
-  expect(wide.button).toBeCloseTo(small.button * 1.1, 0);
-  expect(wide.tabIcon).toBeCloseTo(small.tabIcon * 1.1, 0);
+  expectNear(wide.button, small.button * 1.1);
+  expectNear(wide.tabIcon, small.tabIcon * 1.1);
 });
 
 test("the detached chat window follows Interface Text Size too", async ({

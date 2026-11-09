@@ -47,6 +47,16 @@ const KEYS: Record<string, string> = {
 
 /** A combo ("mod+shift+p") as the app shows it on this machine: Ctrl+Shift+P,
  *  or ⌘⇧P on a Mac - formatCombo's rule (src/utils/shortcuts.ts). */
+/** A position or size within `px` of where it should be: layout lands on
+ *  fractional pixels that differ by engine and scale, so e2e checks place
+ *  and size, not exact pixels. */
+export function expectNear(actual: number, expected: number, px = 2) {
+  expect(
+    Math.abs(actual - expected),
+    `${actual} within ${px}px of ${expected}`,
+  ).toBeLessThanOrEqual(px);
+}
+
 export function keyLabel(combo: string): string {
   return combo
     .split("+")

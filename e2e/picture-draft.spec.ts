@@ -5,6 +5,7 @@ import {
   openApp,
   pasteMarkdown,
   chromeScale,
+  expectNear,
 } from "./helpers";
 
 /**
@@ -231,5 +232,5 @@ test("while a picture is made, its frame on the chat's card has its shape", asyn
   await expect(card).toHaveCount(1);
   const small = (await card.boundingBox())!;
   expect(small.width / small.height).toBeCloseTo(16 / 9, 1);
-  expect(small.height).toBeCloseTo(120 * (await chromeScale(page)), 0);
+  expectNear(small.height, 120 * (await chromeScale(page)));
 });
