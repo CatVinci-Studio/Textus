@@ -82,13 +82,13 @@ test("a wider window takes the icons and the bar up in a straight line", async (
     tabIcon: (await box(page, ".activity-rail-item svg")).width,
   });
   const small = await chrome();
-  await page.setViewportSize({ width: 1840, height: 1000 });
+  await page.setViewportSize({ width: 2100, height: 1000 });
   await expect
     .poll(async () => (await box(page, ".window-bar")).height)
-    .toBeCloseTo(small.bar * 1.2, 0);
+    .toBeCloseTo(small.bar * 1.1, 0);
   const wide = await chrome();
-  expect(wide.button).toBeCloseTo(small.button * 1.2, 0);
-  expect(wide.tabIcon).toBeCloseTo(small.tabIcon * 1.2, 0);
+  expect(wide.button).toBeCloseTo(small.button * 1.1, 0);
+  expect(wide.tabIcon).toBeCloseTo(small.tabIcon * 1.1, 0);
 });
 
 test("the detached chat window follows Interface Text Size too", async ({

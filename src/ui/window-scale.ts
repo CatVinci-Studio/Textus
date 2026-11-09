@@ -1,10 +1,15 @@
+/** The most a wide window adds: on top of the desktop's one step up, a
+ *  full-screen window on a large display stays near 1.25x its design. */
+const MOST = 1.15;
+
 /**
  * The chrome's size step for the window's width: 1 up to 1200px, then a
- * straight line up to 1.35 (reached at 2320px), so icons and the title bar
- * grow with a large or full-screen window. Read by `--chrome-scale`.
+ * gentle line up to MOST (reached about 2550px), so icons and the title bar
+ * keep pace with a large or full-screen window without outgrowing it. Read
+ * by `--chrome-scale`.
  */
 export function windowScale(width: number): number {
-  return Math.min(1.35, Math.max(1, 1 + (width - 1200) / 3200));
+  return Math.min(MOST, Math.max(1, 1 + (width - 1200) / 9000));
 }
 
 /** Keeps `--window-scale` on <html> in step with the window's width. */

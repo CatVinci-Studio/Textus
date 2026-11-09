@@ -203,7 +203,7 @@ Every surface that appears in the window is one of these. Each row says where it
 
 Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
 
-**The scale.** `--chrome-scale` = Interface Text Size × the window's step (1 up to 1200 px wide, then a straight line to 1.35 at 2320 px). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+**The scale.** `--chrome-scale` = the desktop's base (1.1, one step up from the first design) × Interface Text Size × the window's step (1 up to 1200 px wide, then a gentle line to at most 1.15, about 2550 px), the same on every desktop platform. Icons take one step more (`--icon-scale`, 1.15). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
 
 **Where a size is written, and how it scales:**
 
