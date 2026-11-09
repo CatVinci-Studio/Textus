@@ -264,9 +264,7 @@ test("the arrow keys stop on a fold's source lines instead of skipping them", as
 
   // From the paragraph above, down stops on the head's source. Each key
   // waits for the editor to have read the last one's caret.
-  await page.keyboard.press("ControlOrMeta+Home");
-  await selectionRead(page);
-  await page.keyboard.press("ArrowDown");
+  await editor.getByText("Intro paragraph.").click();
   await selectionRead(page);
   await page.keyboard.press(END);
   await selectionRead(page);
