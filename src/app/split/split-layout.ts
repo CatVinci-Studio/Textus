@@ -1,21 +1,19 @@
 import {
-  mapPanes,
   pane,
   paneBeside,
-  paneById,
-  panesOf,
   paneWithTab,
-  resizeAt,
-  splitPane,
-  splitWhole,
-  swapAt,
-  tidy,
-  turnAt,
-  type Branch,
   type Path,
   type Side,
   type SplitDirection,
 } from "./split-tree";
+import {
+  arrange,
+  focusOn,
+  moveTab,
+  reorderTab,
+  splitOff,
+  type SplitLayout,
+} from "./layout-ops";
 
 /**
  * The window's editor layout: one document, or panes split in rows and
@@ -25,12 +23,7 @@ import {
 
 export type { SplitDirection } from "./split-tree";
 
-export interface SplitLayout {
-  /** Always a branch: one pane is no split. */
-  root: Branch;
-  /** The pane in use, by id: a tab opened now joins it. */
-  focus: string;
-}
+export type { SplitLayout } from "./layout-ops";
 
 /** A split asked for, resolved against the window's tabs: the pane in use
  *  split this way. */
@@ -97,93 +90,39 @@ export function splitEditor(direction: SplitDirection): void {
   publish();
 }
 
-/** The layout changed through `change`, tidied: a pane left without tabs
- *  goes, and one pane left ends the split. */
-function rearrange(change: (root: Branch) => Branch["children"][number]) {
-  if (!layout) return;
-  const root = tidy(change(layout.root));
-  if (!root || root.kind === "pane") {
-    closeSplit();
-    return;
-  }
-  const focus = paneById(root, layout.focus)
-    ? layout.focus
-    : panesOf(root)[0].id;
-  setSplitLayout({ root, focus });
+/** A layout an operation (layout-ops.ts) gave back: null, one pane left,
+ *  ends the split. */
+function commit(next: SplitLayout | null) {
+  if (next) setSplitLayout(next);
+  else closeSplit();
 }
 
 /** Moves `tabId` into pane `id`, in front there. */
 export function moveToPane(tabId: string, id: string): void {
-  rearrange(
-    (root) =>
-      mapPanes(root, (p) => {
-        const tabs = p.tabs.filter((t) => t !== tabId);
-        if (p.id === id) return { ...p, tabs: [...tabs, tabId], front: tabId };
-        return {
-          ...p,
-          tabs,
-          front: p.front === tabId ? (tabs[0] ?? null) : p.front,
-        };
-      }) as Branch,
-  );
-  if (layout && paneById(layout.root, id)) focusPane(id);
+  if (layout) commit(moveTab(layout, tabId, id));
 }
 
 /** A pane's tab bar reordered: `tabId` to `index` among its tabs. */
 export function reorderInPane(id: string, tabId: string, index: number): void {
-  rearrange(
-    (root) =>
-      mapPanes(root, (p) => {
-        if (p.id !== id) return p;
-        const tabs = p.tabs.filter((t) => t !== tabId);
-        tabs.splice(index, 0, tabId);
-        return { ...p, tabs };
-      }) as Branch,
-  );
+  if (layout) commit(reorderTab(layout, id, tabId, index));
 }
 
-/** `tabId` taken from its pane into a new one on `side` of pane `id`. */
-export function splitBeside(
-  tabId: string,
-  id: string,
-  side: "left" | "right" | "top" | "bottom",
-): void {
-  if (!layout) return;
-  const added = pane([tabId]);
-  const without = mapPanes(layout.root, (p) => {
-    const tabs = p.tabs.filter((t) => t !== tabId);
-    return {
-      ...p,
-      tabs,
-      front: p.front === tabId ? (tabs[0] ?? null) : p.front,
-    };
-  });
-  const root = tidy(splitPane(without, id, side, added));
-  if (!root || root.kind === "pane") return;
-  setSplitLayout({ root, focus: added.id });
+/** `tabId` taken from its pane into a new one on `side` of pane `id`; a
+ *  pane's only tab stays where it is. */
+export function splitBeside(tabId: string, id: string, side: Side): void {
+  const next = layout && splitOff(layout, tabId, id, side);
+  if (next) setSplitLayout(next);
 }
 
 /** `tabId` in a new pane beside the whole layout on `side`. */
 export function splitAtEdge(tabId: string, side: Side): void {
-  if (!layout) return;
-  const added = pane([tabId]);
-  const without = mapPanes(layout.root, (p) => {
-    const tabs = p.tabs.filter((t) => t !== tabId);
-    return {
-      ...p,
-      tabs,
-      front: p.front === tabId ? (tabs[0] ?? null) : p.front,
-    };
-  });
-  const root = tidy(splitWhole(without, side, added));
-  if (!root || root.kind === "pane") return;
-  setSplitLayout({ root, focus: added.id });
+  const next = layout && splitOff(layout, tabId, null, side);
+  if (next) setSplitLayout(next);
 }
 
 /** The pane a tab opened next joins. */
 export function focusPane(id: string): void {
-  if (layout && layout.focus !== id && paneById(layout.root, id))
-    setSplitLayout({ ...layout, focus: id });
+  if (layout) setSplitLayout(focusOn(layout, id));
 }
 
 /**
@@ -216,14 +155,7 @@ export function arrangeBranch(
   path: Path,
   change: "turn" | { swap: number } | { index: number; share: number },
 ): void {
-  rearrange(
-    (root) =>
-      (change === "turn"
-        ? turnAt(root, path)
-        : "swap" in change
-          ? swapAt(root, path, change.swap)
-          : resizeAt(root, path, change.index, change.share)) as Branch,
-  );
+  if (layout) commit(arrange(layout, path, change));
 }
 
 /** Back to one document: the one in front. */

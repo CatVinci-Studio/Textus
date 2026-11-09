@@ -17,6 +17,8 @@ import {
   paneWithTab,
   splitPane,
   tidy,
+  islandOf,
+  keepsItself,
   type Branch,
 } from "./split-tree";
 
@@ -80,15 +82,18 @@ function settle(
   }));
   const known = new Set(panesOf(root).flatMap((p) => p.tabs));
   const fresh = tabIds.filter((id) => !known.has(id));
-  const focus = paneById(root, layout.focus)
-    ? layout.focus
-    : panesOf(root)[0].id;
+  // Opened tabs join the pane in use, or the first of documents.
+  const inUse = paneById(root, layout.focus);
+  const focus =
+    inUse && islandOf(inUse) === "documents"
+      ? layout.focus
+      : (panesOf(root).find((p) => islandOf(p) === "documents") ?? inUse)!.id;
   if (fresh.length)
     root = mapPanes(root, (p) =>
       p.id === focus ? { ...p, tabs: [...p.tabs, ...fresh] } : p,
     );
   // A pane waiting for its blank tab stays.
-  const left = tidy(root, (p) => p.tabs.length > 0 || p.front === null);
+  const left = tidy(root, (p) => keepsItself(p) || p.front === null);
   if (!left || left.kind === "pane") return null;
   const home = paneWithTab(left, active);
   const fronted = mapPanes(left, (p) => {
@@ -135,5 +140,7 @@ export function useSplitPanes(
     } else setSplitLayout(resolved);
   }, [resolved, layout, request, addBlankTab]);
   if (!resolved || "blank" in resolved) return null;
-  return panesOf(resolved.root).every((p) => p.front) ? resolved : null;
+  return panesOf(resolved.root).every((p) => p.front || islandOf(p) === "ai")
+    ? resolved
+    : null;
 }

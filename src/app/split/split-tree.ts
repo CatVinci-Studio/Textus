@@ -1,16 +1,24 @@
 import type { CSSProperties } from "react";
 
 /**
- * A split window's panes as a tree: a branch lays its children out in a row
- * or a column, each with its share; a pane holds tabs, one of them in
- * front. Pure functions; the store is split-layout.ts.
+ * A split window's panes - its islands - as a tree: a branch lays its
+ * children out in a row or a column, each with its share; a pane holds
+ * tabs, one of them in front. Pure functions; the operations on a whole
+ * layout are layout-ops.ts, the store split-layout.ts.
  */
 
 export type SplitDirection = "row" | "column";
 
+/** What an island holds: documents (files, plugin views, web pages), or
+ *  Textus AI's conversations - the folder's (conversation-scope), so its
+ *  pane keeps no tabs of its own. */
+export type IslandKind = "documents" | "ai";
+
 export interface Pane {
   kind: "pane";
   id: string;
+  /** Absent: documents. */
+  island?: IslandKind;
   /** Its tab bar's tabs, in order. */
   tabs: string[];
   /** The tab it shows; null while a blank tab opens into it. */
@@ -42,6 +50,24 @@ export function pane(tabs: string[], front: string | null = tabs[0] ?? null) {
   made += 1;
   return { kind: "pane", id: `pane-${made}`, tabs, front } satisfies Pane;
 }
+
+/** The AI island. */
+export function aiPane(): Pane {
+  made += 1;
+  return {
+    kind: "pane",
+    id: `pane-${made}`,
+    island: "ai",
+    tabs: [],
+    front: null,
+  };
+}
+
+export const islandOf = (p: Pane): IslandKind => p.island ?? "documents";
+
+/** An island stays while it has tabs; the AI island, while it is open. */
+export const keepsItself = (p: Pane) =>
+  p.tabs.length > 0 || islandOf(p) === "ai";
 
 /** The panes, in reading order: left to right, top to bottom. */
 export function panesOf(node: LayoutNode): Pane[] {
@@ -87,13 +113,13 @@ export function mapBranch(
 
 /**
  * The tree without the panes `keep` lets go (by default, those without
- * tabs); a branch left one child gives it its place, and a branch inside
+ * tabs but the AI's); a branch left one child gives it its place, and a branch inside
  * one of the same direction joins it, the shares carried over. Null when
  * nothing is left.
  */
 export function tidy(
   node: LayoutNode,
-  keep: (pane: Pane) => boolean = (p) => p.tabs.length > 0,
+  keep: (pane: Pane) => boolean = keepsItself,
 ): LayoutNode | null {
   if (node.kind === "pane") return keep(node) ? node : null;
   const children: LayoutNode[] = [];
