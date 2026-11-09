@@ -588,3 +588,27 @@ test("with Finished tasks last on, a box ticked in the document moves its task a
   await page.waitForTimeout(800);
   await expect(task).toHaveText(["Write", "Read", "Walk"]);
 });
+
+test("a click on the Pomodoro timer starts it, and another pauses it", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pomodoro": [] },
+    folder: { "/notes/plan.md": "# Plan\n" },
+  });
+  await openPath(page, "/notes/plan.md");
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("Pomodoro Timer");
+  await page.keyboard.press("Enter");
+  const view = page.locator('[data-floating-view="catvinci.pomodoro.timer"]');
+  await expect(view).toBeVisible();
+  const timer = view
+    .frameLocator("iframe")
+    .getByRole("button", { name: /Focus/ });
+  await expect(timer).toHaveAttribute("aria-label", /click to start/);
+  // The page is under the view's drag layer: a click comes as a poke.
+  await view.click();
+  await expect(timer).toHaveAttribute("aria-label", /click to pause/);
+  await view.click();
+  await expect(timer).toHaveAttribute("aria-label", /click to start/);
+});
