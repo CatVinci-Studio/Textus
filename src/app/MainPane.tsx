@@ -2,10 +2,11 @@ import { useKeptLoaded } from "../utils/kept-loaded";
 import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
 import {
-  Suspense,
-  useRef,
   type ComponentProps,
   type CSSProperties,
+  Suspense,
+  useLayoutEffect,
+  useRef,
 } from "react";
 import { useTabsInBar } from "./tabs/useTabsInBar";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
@@ -127,6 +128,7 @@ export function MainPane({
   onReorder,
   onKeep,
   previewTab,
+  onTabsInBar,
   onChange,
   typewriter,
   formatBar,
@@ -147,6 +149,9 @@ export function MainPane({
   /** A preview tab kept. */
   onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
+  /** Told, before paint, whether the top row has tabs: the window bar's
+   *  then (App's data-tabs-in-bar). */
+  onTabsInBar: (shown: boolean) => void;
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
   /** View › Format Bar is on. */
@@ -173,6 +178,9 @@ export function MainPane({
     ),
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  // A split's top panes always have their tabs; one pane, when shown.
+  const tabsInBar = !!split || showTabBar;
+  useLayoutEffect(() => onTabsInBar(tabsInBar), [tabsInBar, onTabsInBar]);
   // The saved tabs close; one with unsaved changes stays, its dot showing,
   // rather than a prompt for each.
   const closeSaved = (list: DocTab[]) => {

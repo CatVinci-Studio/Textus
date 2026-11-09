@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { changeSettings, emit, openApp } from "./helpers";
 
 /**
  * The window bar's sidebar toggle: the row's first control, which belongs to
@@ -87,24 +87,21 @@ test(
   },
 );
 
-test("the title is centred over the document column, not the window", async ({
+test("with the activity rail, the window shows its tabs, one or many, + beside them; without it, one document is a clean sheet with its title centred over the column", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
+  await expect(page.locator(".main-pane > .tab-bar .tab-pill")).toHaveCount(1);
+  await expect(
+    page.locator(".main-pane > .tab-bar .tab-bar-add"),
+  ).toBeVisible();
+  // The rail turned off: the title, centred over the document column.
+  await changeSettings(page, { activityRail: false });
+  await expect(page.locator(".main-pane > .tab-bar")).toHaveCount(0);
   expect(await centre(page, ".window-bar-title")).toBeCloseTo(
     await centre(page, ".main-pane"),
     0,
   );
-
-  // The sidebar takes its width from the column, so the title moves with it
-  // rather than staying at the window's centre.
-  await page.locator(toggle).click();
-  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-  expect(await centre(page, ".window-bar-title")).toBeCloseTo(
-    await centre(page, ".main-pane"),
-    0,
-  );
-
   // The AI panel takes its width from the other side of the column.
   await page.locator(".window-bar-toggle").click();
   await expect(page.locator(".agent-panel")).toBeVisible();
@@ -342,11 +339,12 @@ test("the title bar, the activity rail and the sidebar are one frame; the sideba
   expect(body.y).toBeGreaterThanOrEqual(box.y + box.height);
 
   // Closed, the sidebar slides under the rail: nothing of it shows past
-  // the rail's edge, and the rail keeps its line against the page.
+  // the rail's edge, and the page floats beside the rail as a sheet, its
+  // own edge the line between them.
   await page.locator(toggle).click();
   await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);
   await expect(page.locator(sidebar)).toBeHidden();
-  await expect(page.locator(".activity-rail")).not.toHaveCSS(
+  await expect(page.locator(".activity-rail")).toHaveCSS(
     "border-right-color",
     "rgba(0, 0, 0, 0)",
   );

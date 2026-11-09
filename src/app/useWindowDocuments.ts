@@ -1,3 +1,4 @@
+import { railShown } from "./useSidePanels";
 import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -203,9 +204,12 @@ export function useWindowDocuments({
       setActiveTabId,
     });
 
-  // The bar shows only with several tabs, or when an incoming tab's preview
-  // needs somewhere to land.
-  const showTabBar = tabs.length > 1 || dragHoverPreview !== null;
+  // The tabs show with several documents, where an incoming tab's preview
+  // lands, and always beside the activity rail: the window is then a
+  // workspace, + beside its one tab. Without the rail (turned off, or Zen)
+  // one document is a clean sheet under its title.
+  const workspace = railShown(settings) && !zen.zenMode;
+  const showTabBar = workspace || tabs.length > 1 || dragHoverPreview !== null;
 
   return {
     ...active,

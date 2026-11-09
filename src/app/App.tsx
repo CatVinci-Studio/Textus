@@ -1,10 +1,11 @@
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../ui/CornerToast";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./WindowBar";
 import { isIOSApp } from "../platform/capabilities";
+import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { SettingsLayer } from "./SettingsLayer";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
@@ -55,6 +56,9 @@ const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
+  // Whether the main pane's top row has tabs (MainPane says, as it knows
+  // its split).
+  const [tabsInBar, setTabsInBar] = useState(false);
   const shell = useWindowShell({ settings, setSettings });
   const docs = useWindowDocuments({ shell, settings, t });
   const wiring = useWindowWiring({ shell, docs, settings, setSettings, t });
@@ -112,6 +116,16 @@ function App() {
       />
       <div
         className="app-shell"
+        // The layout's one switch for the styles (tabs-in-bar.css): the
+        // tabs in the window bar's row, or in a row of their own under the
+        // menu bar, or none.
+        data-tabs={
+          !tabsInBar
+            ? undefined
+            : appDrawsWindowFrame && settings.menuBarShown
+              ? "row"
+              : "bar"
+        }
         style={
           {
             // The sidebar's dragged width; an iPad's sidebar has no handle.
@@ -188,6 +202,7 @@ function App() {
           onReorder={reorderTab}
           onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
           previewTab={dragHoverPreview}
+          onTabsInBar={setTabsInBar}
           onChange={handleChange}
           typewriter={settings.typewriterMode}
           formatBar={settings.formatBar}

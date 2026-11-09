@@ -576,7 +576,10 @@ test.describe("on Linux", () => {
     await page.mouse.move(box.x + box.width / 2, box.y + 200, { steps: 5 });
     await page.mouse.move(box.x + box.width / 2, -40, { steps: 5 });
     await page.mouse.up();
-    await expect(page.locator('.tab-bar [role="tab"]')).toHaveCount(0);
+    // The one left keeps its tab, beside the activity rail.
+    await expect(page.locator('.tab-bar [role="tab"]')).toHaveText([
+      "Untitled",
+    ]);
     const sent = await page.evaluate(() =>
       (
         (window as unknown as { __devInvokeCalls?: { cmd: string }[] })

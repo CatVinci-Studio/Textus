@@ -16,7 +16,7 @@ import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScaleAt } from "../ui/chrome-scale";
-import { useSettings } from "../prefs/SettingsContext";
+import { useSettings, type Settings } from "../prefs/SettingsContext";
 import { PANEL_FLOOR } from "../ui/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
@@ -32,6 +32,12 @@ function subscribeWindowResize(onChange: () => void) {
  * Layout state of the sidebar and the docked Agent panel. `aiOn` is Textus
  * AI's switch: off, the AI panel closes and its toggles do nothing.
  */
+/** Whether the window has the activity rail: on in Settings, and not on an
+ *  iPad, whose sidebar is its own. */
+export function railShown(settings: Pick<Settings, "activityRail">): boolean {
+  return settings.activityRail && !isIOSApp;
+}
+
 export function useSidePanels(aiOn: boolean) {
   // Remembered on the desktop; on iOS it is a drawer and starts closed.
   const [panelOpen, setPanelOpen] = useState(
@@ -57,10 +63,9 @@ export function useSidePanels(aiOn: boolean) {
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
   const { settings } = useSettings();
-  const rail =
-    settings.activityRail && !isIOSApp
-      ? Math.round(RAIL_WIDTH * chromeScaleAt(windowWidth))
-      : 0;
+  const rail = railShown(settings)
+    ? Math.round(RAIL_WIDTH * chromeScaleAt(windowWidth))
+    : 0;
   // With the AI panel open the sidebar leaves it its narrowest, so a small
   // window still keeps the document its room (the panel's open state, one
   // render late, is enough: it only bounds the sidebar).

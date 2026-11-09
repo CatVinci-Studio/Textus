@@ -9,7 +9,11 @@ const AIR = 8;
  * (design-language.md 5.7). The bar's controls stay where they are - the
  * window's buttons and the sidebar's at its start, the status at its end -
  * so the tabs keep clear of them: how far each end of the pane's tab row
- * is overlapped is set on the pane as --tabs-inset-start/-end.
+ * is overlapped is set on the pane as --tabs-inset-start/-end. The first
+ * tab starts at the sheet's edge where the controls leave it room
+ * (data-tabs-at-corner: the sheet squares that corner and the tab's side
+ * runs straight up from it), else past both the controls and the sheet's
+ * rounded corner and the tab's own curve in, so the two curves never meet.
  */
 export function useTabsInBar(pane: RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
@@ -20,19 +24,33 @@ export function useTabsInBar(pane: RefObject<HTMLElement | null>) {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const box = main.getBoundingClientRect();
-        const lead = document.querySelector(
-          ".window-bar-sidebar-toggle, .window-menu-button",
+        // The last of the bar's leading controls (the menu, then the
+        // sidebar's toggle).
+        const leadEnd = Math.max(
+          0,
+          ...[
+            ...document.querySelectorAll(
+              ".window-bar-sidebar-toggle, .window-menu-button",
+            ),
+          ].map((el) => el.getBoundingClientRect().right),
         );
         const status = document.querySelector(".window-bar-status");
         const air = scaledPx(AIR);
-        const leadEnd = lead ? lead.getBoundingClientRect().right : 0;
         const statusStart = status?.firstElementChild
           ? status.getBoundingClientRect().left
           : window.innerWidth;
-        main.style.setProperty(
-          "--tabs-inset-start",
-          `${Math.max(air, leadEnd + air - box.left)}px`,
-        );
+        const style = getComputedStyle(main);
+        // The sheet's edge, and its corner's radius, in the pane.
+        const sheet = parseFloat(style.paddingLeft) || 0;
+        // Past the corner's curve, and the tab's own curve in beside it.
+        const corner =
+          (parseFloat(style.getPropertyValue("--shape-m")) || 0) +
+          (parseFloat(style.getPropertyValue("--shape-s")) || 0);
+        const clear = leadEnd + air - box.left;
+        const flush = clear <= sheet;
+        const start = flush ? sheet : Math.max(clear, sheet + corner);
+        main.style.setProperty("--tabs-inset-start", `${start}px`);
+        main.toggleAttribute("data-tabs-at-corner", flush);
         main.style.setProperty(
           "--tabs-inset-end",
           `${Math.max(air, box.right - statusStart + air)}px`,
