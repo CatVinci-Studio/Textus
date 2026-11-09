@@ -74,14 +74,14 @@ test.describe("Settings › Extensions › Skills", () => {
     // once, and the last can't be unticked.
     const own = tab.locator('.settings-skill-item[data-skill="house-style"]');
     const modes = own.getByRole("button", { name: /Modes it works in/ });
-    await expect(modes).toHaveText("Write");
+    await expect(modes).toHaveText("General");
     await modes.click();
     const menu = own.getByRole("menu");
     await expect(
-      menu.getByRole("menuitemcheckbox", { name: "Write" }),
+      menu.getByRole("menuitemcheckbox", { name: "General" }),
     ).toBeDisabled();
     await menu.getByRole("menuitemcheckbox", { name: "Review" }).click();
-    await expect(modes).toHaveText("Write · Review");
+    await expect(modes).toHaveText("General · Review");
     expect(
       await page.evaluate(
         () =>
@@ -253,7 +253,7 @@ test("a skill of the user's turns off for now and back on, its modes kept", asyn
   await expect(own).toHaveAttribute("data-off", "");
   // Its modes stay as they were, but can't be changed while it is off.
   const modes = own.getByRole("button", { name: /Modes it works in/ });
-  await expect(modes).toHaveText("Write");
+  await expect(modes).toHaveText("General");
   await expect(modes).toBeDisabled();
   await page.getByRole("button", { name: "Close" }).first().click();
   // Off: the / menu doesn't offer it.

@@ -795,7 +795,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   providerMiniMaxIntl: "MiniMax (글로벌)",
   agentModelLabel: "채팅 모델",
   agentDefaultModeLabel: "기본 모드",
-  agentModeWrite: "쓰기",
+  agentModeWrite: "일반",
   agentModeReview: "검토",
   agentModeCreate: "만들기",
   chatModeLabel: "모드",
@@ -1304,7 +1304,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialConnected: "연결되었습니다.",
   tutorialWriteTitle: "AI 쓰기",
   tutorialWriteBody:
-    "쓰기 모드의 AI는 글을 더하고 고치며, 수락하기 전까지 초록색으로 보입니다.",
+    "일반 모드의 AI는 글을 더하고 고치며, 수락하기 전까지 초록색으로 보입니다.",
   tutorialWriteOpen: "오른쪽 위 깃펜 아이콘({shortcut})으로 AI 패널 열기",
   tutorialWriteOpenPhone: "위쪽 깃펜 아이콘을 탭해 AI 패널 열기",
   tutorialWriteSend: "`내 노트를 한 문단 더 이어 써 줘`를 보내고 ‘수락’ 클릭",

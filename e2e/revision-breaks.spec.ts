@@ -26,7 +26,7 @@ async function propose(page: Page, args: object[]) {
     .locator(".agent-panel-view")
     .getByRole("combobox", { name: "Mode" })
     .click();
-  await page.getByRole("option", { name: "Write" }).click();
+  await page.getByRole("option", { name: "General" }).click();
   const composer = page.locator(".agent-panel-view textarea");
   await composer.fill("go");
   await composer.press("Enter");

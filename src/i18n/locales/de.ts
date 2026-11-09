@@ -838,7 +838,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat-Modell",
   agentDefaultModeLabel: "Standardmodus",
-  agentModeWrite: "Schreiben",
+  agentModeWrite: "Allgemein",
   agentModeReview: "Prüfen",
   agentModeCreate: "Erstellen",
   chatModeLabel: "Modus",
@@ -1374,7 +1374,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialConnectSkip: "Später",
   tutorialConnected: "Verbunden.",
   tutorialWriteTitle: "Mit KI schreiben",
-  tutorialWriteBody: `Im Modus Schreiben fügt ${AI_NAME} Text hinzu und ändert ihn, grün, bis du ihn annimmst.`,
+  tutorialWriteBody: `Im Modus Allgemein fügt ${AI_NAME} Text hinzu und ändert ihn, grün, bis du ihn annimmst.`,
   tutorialWriteOpen:
     "Öffne den KI-Bereich: das Federsymbol oben rechts ({shortcut})",
   tutorialWriteOpenPhone:

@@ -9,6 +9,7 @@ import { openApp } from "./helpers";
 const editor = '[data-active-tab="true"] .ProseMirror';
 const CHAPTER = "/novel/chapter-one.md";
 const GONE = "/novel/deleted.md";
+const CHAPTER_TWO = "/novel/chapter-two.md";
 
 const conversation = (
   id: string,
@@ -39,12 +40,17 @@ async function installDisk(page: Page) {
     };
     const original = w.__TAURI_INTERNALS__.invoke;
     w.__TAURI_INTERNALS__.invoke = (cmd, args = {}) => {
+      const text: Record<string, string> = {
+        [path]: "Chapter one begins here.",
+        "/novel/chapter-two.md": "Chapter two goes on.",
+      };
+      const at = String(args.path);
       if (cmd === "read_text_file")
-        return args.path === path
-          ? Promise.resolve("Chapter one begins here.")
+        return at in text
+          ? Promise.resolve(text[at])
           : Promise.reject("No such file or directory");
       if (cmd === "file_mtime_ms")
-        return Promise.resolve(args.path === path ? 1 : null);
+        return Promise.resolve(at in text ? 1 : null);
       return original(cmd, args);
     };
   }, CHAPTER);
@@ -97,9 +103,11 @@ async function openHistory(page: Page) {
 const entry = (page: Page, title: string) =>
   page.locator(".chat-history-entry", { hasText: title });
 
-test("a past conversation reopens with its own document", async ({ page }) => {
+test("a past conversation reopens with its own document, and stays the folder's in its other documents", async ({
+  page,
+}) => {
   await openApp(page, {
-    settings: { language: "en" },
+    settings: { language: "en", agentWorkspaceRoot: "/novel" },
     storage: { "textus-chat-history": JSON.stringify(SAVED) },
   });
   await installDisk(page);
@@ -118,6 +126,21 @@ test("a past conversation reopens with its own document", async ({ page }) => {
       }[],
   );
   expect(stored.find((c) => c.id === "c1")?.docPath).toBe(CHAPTER);
+
+  // Another document of the folder, in a tab of its own: the same
+  // conversation, not a new one.
+  await page.evaluate((path) => {
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string, payload: unknown) => void;
+      }
+    ).__devEmitTauriEvent("tauri://drag-drop", {
+      paths: [path],
+      position: { x: 0, y: 0 },
+    });
+  }, CHAPTER_TWO);
+  await expect(page.locator(editor)).toContainText("Chapter two goes on.");
+  await expect(panel(page)).toContainText("Tighten the opening paragraph");
 });
 
 test("with Rust, the list is the index and older conversations are noted as archived", async ({

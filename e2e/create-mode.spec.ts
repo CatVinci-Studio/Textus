@@ -75,7 +75,7 @@ test("Create makes a skill, saved in the modes picked", async ({ page }) => {
   const chip = panel.locator('.skill-offer-chip[data-skill="weekly-report"]');
   await expect(chip).toContainText("Weekly report");
   const modes = chip.getByRole("button", { name: /Modes it works in/ });
-  await expect(modes).toHaveText("Write");
+  await expect(modes).toHaveText("General");
   // The chip's actions are links, not the browser's bare buttons.
   const save = chip.getByRole("button", { name: "Save this skill" });
   await expect(save).toHaveCSS("border-top-style", "none");
@@ -123,7 +123,7 @@ test("a written skill that asks for Create starts without it, and saves there on
   const chip = panel.locator('.skill-offer-chip[data-skill="weekly-report"]');
   const modes = chip.getByRole("button", { name: /Modes it works in/ });
   // What it asked for is said, and Create left unticked.
-  await expect(modes).toHaveText("Write");
+  await expect(modes).toHaveText("General");
   await expect(chip).toContainText("It asked for Create mode");
   await modes.click();
   await chip.getByRole("menuitemcheckbox", { name: "Create" }).click();

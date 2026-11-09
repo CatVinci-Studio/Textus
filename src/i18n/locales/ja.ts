@@ -807,7 +807,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   providerMiniMaxIntl: "MiniMax（グローバル版）",
   agentModelLabel: "チャットモデル",
   agentDefaultModeLabel: "デフォルトモード",
-  agentModeWrite: "執筆",
+  agentModeWrite: "汎用",
   agentModeReview: "レビュー",
   agentModeCreate: "作成",
   chatModeLabel: "モード",
@@ -1317,7 +1317,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialConnected: "接続しました。",
   tutorialWriteTitle: "AI で執筆",
   tutorialWriteBody:
-    "執筆モードの AI は文章を足したり書き直したりし、適用するまで緑色で表示されます。",
+    "汎用モードの AI は文章を足したり書き直したりし、適用するまで緑色で表示されます。",
   tutorialWriteOpen: "右上の羽ペンのアイコン（{shortcut}）で AIパネルを開く",
   tutorialWriteOpenPhone: "上部の羽ペンのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",

@@ -833,7 +833,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo do chat",
   agentDefaultModeLabel: "Modo padrão",
-  agentModeWrite: "Escrever",
+  agentModeWrite: "Geral",
   agentModeReview: "Revisar",
   agentModeCreate: "Criar",
   chatModeLabel: "Modo",
@@ -1368,7 +1368,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialConnectSkip: "Pular por agora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Escrever com IA",
-  tutorialWriteBody: `No modo Escrever, o ${AI_NAME} acrescenta e altera texto, em verde até você aceitar.`,
+  tutorialWriteBody: `No modo Geral, o ${AI_NAME} acrescenta e altera texto, em verde até você aceitar.`,
   tutorialWriteOpen:
     "Abra o painel de IA: o ícone da pena no canto superior direito ({shortcut})",
   tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone da pena no topo",

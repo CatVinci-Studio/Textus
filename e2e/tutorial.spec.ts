@@ -252,7 +252,7 @@ test("the whole tour, typed, with the AI lessons watched", async ({ page }) => {
     .locator(".agent-panel")
     .getByRole("combobox", { name: "Mode" });
   const aiLessons: [string, string, string | null, string][] = [
-    [t.tutorialWriteTitle, "ai-panel", "Write", "Continue my notes"],
+    [t.tutorialWriteTitle, "ai-panel", "General", "Continue my notes"],
     [t.tutorialContinuationTitle, "continuation", null, "What really stops"],
   ];
   for (const [title, clip, modeName, says] of aiLessons) {
@@ -304,7 +304,7 @@ interface LiveRun {
 const LIVE: LiveRun[] = [
   {
     lang: "en",
-    mode: { label: "Mode", write: "Write", review: "Review" },
+    mode: { label: "Mode", write: "General", review: "Review" },
     write: {
       prompt: "Continue my notes with one more paragraph",
       text: "Hamlet thinks where others would act; the question itself becomes his way of waiting.",
@@ -316,7 +316,7 @@ const LIVE: LiveRun[] = [
   },
   {
     lang: "zh",
-    mode: { label: "模式", write: "写作", review: "审阅" },
+    mode: { label: "模式", write: "通用", review: "审阅" },
     write: {
       prompt: "接着我的笔记再写一段",
       text: "黛玉觉得眼熟，宝玉说曾见过，两人一见如故，正是木石前盟在今生的回响。",

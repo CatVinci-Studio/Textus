@@ -1,7 +1,16 @@
 import { errorText } from "../../utils/error-text";
 import { useEffect, useRef, useState } from "react";
 import { keepCancelledTurns } from "./cancelled-turns";
-import { conversationTitle, saveConversation } from "./chat-history";
+import {
+  conversationTitle,
+  loadConversationTurns,
+  saveConversation,
+} from "./chat-history";
+import {
+  liveConversation,
+  onLiveConversation,
+  setLiveConversation,
+} from "./conversation-scope";
 import { annotateProposalStatuses } from "../revision/proposal-status";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../types";
 import { thinkingDone, type Thought } from "./thought";
@@ -135,10 +144,47 @@ export function useAgentConversation(
     settings.suggestNextMessage && settings.textusAi,
   );
 
+  // The conversation belongs to the folder, or to a file opened on its own:
+  // every tab and window there shows the same one. A draft keeps its own
+  // until it is saved.
+  const scope = persist && docPath ? (workspaceRoot ?? docPath) : null;
+  const idNow = useLatest(conversationId);
+  const busyNow = useLatest(busy);
+  // Turns taken over from another tab or window: shown, not saved again
+  // under this document.
+  const adopted = useRef<AgentTurn[] | null>(null);
+  const loadNow = useLatest(load);
+  useEffect(() => {
+    if (!scope) return;
+    let live = true;
+    const adopt = (id: string) => {
+      if (id === idNow.current || busyNow.current) return;
+      void loadConversationTurns(id)
+        .catch(() => null)
+        .then((turns) => {
+          if (!live || id === idNow.current || busyNow.current) return;
+          adopted.current = turns ?? [];
+          loadNow.current(id, adopted.current);
+        });
+    };
+    const current = liveConversation(scope);
+    if (current) adopt(current);
+    const stopListening = onLiveConversation((changed, id) => {
+      if (changed === scope) adopt(id);
+    });
+    return () => {
+      live = false;
+      stopListening();
+    };
+  }, [scope, idNow, busyNow, loadNow]);
+  const publish = (id: string) => {
+    if (scope) setLiveConversation(scope, id);
+  };
+
   // Every exchange updates the conversation's saved copy, so past chats can
   // be reopened from the History list even across restarts.
   useEffect(() => {
-    if (!persist || history.length === 0) return;
+    if (!persist || history.length === 0 || history === adopted.current) return;
     saveConversation({
       id: conversationId,
       docPath,
@@ -162,6 +208,8 @@ export function useAgentConversation(
     const trimmed = message.trim();
     if (!trimmed || busy || !settings.textusAi) return undefined;
     lastOptionsRef.current = options;
+    // What is said here is the folder's conversation from now on.
+    publish(conversationId);
     next.clear();
     setBusy(true);
     setError(null);
@@ -358,15 +406,18 @@ export function useAgentConversation(
     next.clear();
   }
 
-  // A new, empty conversation.
+  // A new, empty conversation, for the whole folder.
   function reset() {
-    load(crypto.randomUUID(), []);
+    const id = crypto.randomUUID();
+    load(id, []);
+    publish(id);
   }
 
   /** Restores a saved (or handed-over) conversation as the live one. Takes
    *  id/turns, not an entry: the window hops that call it have no entry. */
   function restore(id: string, turns: AgentTurn[]) {
     load(id, turns);
+    publish(id);
   }
 
   return {

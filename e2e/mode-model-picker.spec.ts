@@ -22,11 +22,11 @@ test("one control names the mode and the model, and its list switches either", a
   await expect(list).toBeVisible();
   // The modes first, each saying what it does; then the models.
   await expect(list.locator(".mode-picker-mode-name")).toHaveText([
-    "Write",
+    "General",
     "Review",
     "Research",
   ]);
-  await expect(list.getByRole("option", { name: "Write" })).toContainText(
+  await expect(list.getByRole("option", { name: "General" })).toContainText(
     "Everyday writing and edits, right away",
   );
   await expect(
@@ -39,8 +39,8 @@ test("one control names the mode and the model, and its list switches either", a
 
   // The mode from the same list, the model kept.
   await picker.click();
-  await list.getByRole("option", { name: "Write", exact: true }).click();
-  await expect(picker.locator(".mode-picker-value")).toHaveText("Write");
+  await list.getByRole("option", { name: "General", exact: true }).click();
+  await expect(picker.locator(".mode-picker-value")).toHaveText("General");
   await expect(picker.locator(".mode-picker-model")).toHaveText("gpt-6-luna");
 
   // By keys: down to the next mode, Enter picks it; Escape closes.

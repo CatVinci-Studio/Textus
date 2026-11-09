@@ -855,7 +855,7 @@ utiliser une.
   providerMiniMaxIntl: "MiniMax (international)",
   agentModelLabel: "Modèle de discussion",
   agentDefaultModeLabel: "Mode par défaut",
-  agentModeWrite: "Écrire",
+  agentModeWrite: "Général",
   agentModeReview: "Relire",
   agentModeCreate: "Créer",
   chatModeLabel: "Mode",
@@ -1400,7 +1400,7 @@ utiliser une.
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
   tutorialWriteTitle: "Écrire avec l'IA",
-  tutorialWriteBody: `En mode Écrire, ${AI_NAME} ajoute et modifie du texte, en vert tant que vous ne l'avez pas accepté.`,
+  tutorialWriteBody: `En mode Général, ${AI_NAME} ajoute et modifie du texte, en vert tant que vous ne l'avez pas accepté.`,
   tutorialWriteOpen:
     "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:

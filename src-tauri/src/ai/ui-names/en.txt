@@ -38,7 +38,7 @@ Writing conventions (Settings row)
 Writing Assistance (Settings section)
 Enable AI completion
 Completion tone
-Write
+General
 Review
 Create
 Accept

@@ -306,7 +306,7 @@ test("Quick Ask opens on a selection in Write mode", async ({ page }) => {
   await page.keyboard.press("ControlOrMeta+Shift+K");
   await expect(page.locator(".inline-chat")).toBeVisible();
   await expect(page.locator(".inline-chat .inline-chat-mode")).toHaveText(
-    "写作",
+    "通用",
   );
   await expect(page).toHaveScreenshot("quick-ask.png");
 });

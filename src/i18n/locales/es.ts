@@ -846,7 +846,7 @@ para usar una.
   providerMiniMaxIntl: "MiniMax (global)",
   agentModelLabel: "Modelo de chat",
   agentDefaultModeLabel: "Modo predeterminado",
-  agentModeWrite: "Escribir",
+  agentModeWrite: "General",
   agentModeReview: "Revisar",
   agentModeCreate: "Crear",
   chatModeLabel: "Modo",
@@ -1382,7 +1382,7 @@ para usar una.
   tutorialConnectSkip: "Omitir por ahora",
   tutorialConnected: "Conectado.",
   tutorialWriteTitle: "Escribir con IA",
-  tutorialWriteBody: `En el modo Escribir, ${AI_NAME} añade y cambia texto, en verde hasta que lo aceptes.`,
+  tutorialWriteBody: `En el modo General, ${AI_NAME} añade y cambia texto, en verde hasta que lo aceptes.`,
   tutorialWriteOpen:
     "Abre el panel de IA: el icono de la pluma, arriba a la derecha ({shortcut})",
   tutorialWriteOpenPhone:

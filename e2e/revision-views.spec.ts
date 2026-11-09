@@ -69,7 +69,7 @@ async function write(page: Page) {
   await mockInvoke(page, {
     ai_agent_message: proposals("w", [{ action: "append", text: STORY }]),
   });
-  await pickMode(page, "Write");
+  await pickMode(page, "General");
   await send(page, "Start a story");
   await expect(page.locator(".milkdown .pending-insert")).toHaveCount(1);
 }
@@ -86,7 +86,7 @@ async function revise(page: Page) {
       },
     ]),
   });
-  await pickMode(page, "Write");
+  await pickMode(page, "General");
   await send(page, "Tighten it");
   await expect(page.locator(".review-bar")).toBeVisible();
 }

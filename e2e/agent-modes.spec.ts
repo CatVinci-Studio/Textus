@@ -97,10 +97,10 @@ test("Quick Ask starts on Write, even after Review was picked in the panel", asy
   const picker = page
     .locator(".inline-chat")
     .getByRole("combobox", { name: "模式" });
-  await expect(picker.locator(".mode-picker-value")).toHaveText("写作");
+  await expect(picker.locator(".mode-picker-value")).toHaveText("通用");
   await picker.click();
   await expect(page.locator(".mode-picker-mode-name")).toHaveText([
-    "写作",
+    "通用",
     "审阅",
   ]);
 });
@@ -113,7 +113,7 @@ const MODE_LINES: Record<
   en: [
     {
       mode: "write",
-      name: "Write",
+      name: "General",
       line: "Start writing",
     },
     {
@@ -130,7 +130,7 @@ const MODE_LINES: Record<
   zh: [
     {
       mode: "write",
-      name: "写作",
+      name: "通用",
       line: "开始你的写作",
     },
     {
@@ -140,7 +140,7 @@ const MODE_LINES: Record<
     },
     {
       mode: "research",
-      name: "研究",
+      name: "专业写作",
       line: "研究一个主题并写出来：深度报道、文章、推文串、快讯或论文",
     },
   ],
@@ -187,7 +187,7 @@ test("Write proposes and Accept writes: into an empty document, over text, after
       text: "The lighthouse keeper woke before dawn.",
     }),
   });
-  await pickMode(page, "Write");
+  await pickMode(page, "General");
   await send(page, "Start a story about a lighthouse");
 
   const insert = page.locator(".milkdown .pending-insert");

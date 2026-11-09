@@ -821,7 +821,7 @@ type /name in a conversation to use one.
   providerMiniMaxIntl: "MiniMax (Global)",
   agentModelLabel: "Chat model",
   agentDefaultModeLabel: "Default mode",
-  agentModeWrite: "Write",
+  agentModeWrite: "General",
   agentModeReview: "Review",
   agentModeCreate: "Create",
   chatModeLabel: "Mode",
@@ -1343,7 +1343,7 @@ type /name in a conversation to use one.
   tutorialConnectSkip: "Skip for now",
   tutorialConnected: "Connected.",
   tutorialWriteTitle: "AI writing",
-  tutorialWriteBody: `In Write mode, ${AI_NAME} adds and changes text, shown in green until you accept it.`,
+  tutorialWriteBody: `In General mode, ${AI_NAME} adds and changes text, shown in green until you accept it.`,
   tutorialWriteOpen:
     "Open the AI panel: the quill icon at the top right ({shortcut})",
   tutorialWriteOpenPhone: "Open the AI panel: tap the quill icon at the top",

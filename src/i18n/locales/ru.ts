@@ -842,7 +842,7 @@ export default {
   providerMiniMaxIntl: "MiniMax (глобальная)",
   agentModelLabel: "Модель чата",
   agentDefaultModeLabel: "Режим по умолчанию",
-  agentModeWrite: "Написание",
+  agentModeWrite: "Общий",
   agentModeReview: "Разбор",
   agentModeCreate: "Создание",
   chatModeLabel: "Режим",
@@ -1380,7 +1380,7 @@ export default {
   tutorialConnectSkip: "Пропустить пока",
   tutorialConnected: "Подключено.",
   tutorialWriteTitle: "Написание с ИИ",
-  tutorialWriteBody: `В режиме «Написание» ${AI_NAME} добавляет и правит текст, зелёным, пока вы его не примете.`,
+  tutorialWriteBody: `В режиме «Общий» ${AI_NAME} добавляет и правит текст, зелёным, пока вы его не примете.`,
   tutorialWriteOpen:
     "Откройте панель ИИ: значок пера справа вверху ({shortcut})",
   tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",

@@ -584,11 +584,11 @@ fn the_workspace_section_says_which_folder_and_why() {
     let prompt = build_instructions(&with_files, &md("draft"), false, AgentMode::Write, "", "en");
     assert!(!prompt.contains("---project---"));
     let review = request_preamble(&chosen, AgentMode::Review, "en");
-    assert!(review.contains("Review mode:") && review.contains("Write mode you"));
+    assert!(review.contains("Review mode:") && review.contains("General mode you"));
     let review = request_preamble(&chosen, AgentMode::Review, "ja");
     assert!(
         review.contains("Review mode (レビュー in their Japanese UI)")
-            && review.contains("Write mode (執筆)")
+            && review.contains("General mode (汎用)")
     );
 }
 
@@ -748,7 +748,7 @@ fn create_mode_is_told_its_tools_and_turns_document_changes_away() {
         "Make a skill for 500-word posts.",
     );
     assert!(message.contains("interaction mode: create"));
-    assert!(message.contains("switch to Write mode"), "{message}");
+    assert!(message.contains("switch to General mode"), "{message}");
     // The length note points at propose_edit, which only Write has.
     assert!(!message.contains(LENGTH_TARGET_NOTE));
     assert!(

@@ -80,10 +80,10 @@ test("the mode picker is a compact button on the toolbar's row on a phone", asyn
   const picker = dock.getByRole("combobox", { name: "Mode" });
   await dock.locator("textarea").tap();
   // Quick Ask: Write (on) and Review.
-  await expect(picker.locator(".mode-picker-value")).toHaveText("Write");
+  await expect(picker.locator(".mode-picker-value")).toHaveText("General");
   await picker.tap();
   await expect(page.locator(".mode-picker-mode-name")).toHaveText([
-    "Write",
+    "General",
     "Review",
   ]);
   await page.locator(".mode-picker-mode-name", { hasText: "Review" }).tap();
@@ -97,7 +97,7 @@ test("the mode picker is a compact button on the toolbar's row on a phone", asyn
   const sheet = page.locator(".agent-panel");
   await sheet.getByRole("combobox", { name: "Mode" }).tap();
   await expect(page.locator(".mode-picker-mode-name")).toHaveText([
-    "Write",
+    "General",
     "Review",
     "Research",
   ]);

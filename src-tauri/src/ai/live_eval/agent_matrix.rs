@@ -218,7 +218,7 @@ impl AgentCase {
         self
     }
     /// Quick Ask opened on `selected`: every message goes out with the selection
-    /// as it reads at send time, in Write mode.
+    /// as it reads at send time, in General mode.
     pub fn quick(mut self, selected: &str) -> Self {
         let start = self.doc.find(selected).expect("selection in document");
         self.script[0].caret = Caret {

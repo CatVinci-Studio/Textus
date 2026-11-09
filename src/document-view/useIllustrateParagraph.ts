@@ -13,7 +13,7 @@ import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
 import type { Strings } from "../i18n/strings";
 
 /**
- * "Illustrate this paragraph": asks Textus AI in Write mode for one picture
+ * "Illustrate this paragraph": asks Textus AI in General mode for one picture
  * for the selection, else the right-clicked paragraph, else the caret's.
  * Offered only while an image model is set.
  */
