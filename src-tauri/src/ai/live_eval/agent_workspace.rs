@@ -6,7 +6,7 @@
 use super::agent_everyday::{in_selection, no_new_numbers};
 use super::agent_matrix::{
     edit_anywhere, edit_in, either, inserted, no_edit, proposed_text, AgentCase, DiskWorkspace,
-    LearnStyle, ProfileCheck,
+    Expect, LearnStyle, ProfileCheck,
 };
 use super::checks::{self, Lang, StructureExpect};
 use super::completion_matrix::CompletionCase;
@@ -457,6 +457,31 @@ fn workspace_cases() -> Vec<AgentCase> {
     );
     let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
     c.push(AgentCase::new("workspace/zh/search-chapters", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "前面的章节里，林晚的猫叫什么名字？", no_edit().reply(&["年糕"]).check("looked in the folder", used_file_tools), "The other chapters sit in the document's folder: expect search_files/read_file to find that the cat is called 年糕 (an orange cat, chapter one), answered in Chinese without editing.").mode(AgentMode::Review).disk(ws));
+
+    // General mode changes the folder's other files itself.
+    let dir = scratch("rename-across");
+    let first = put(
+        &dir,
+        "第一章.md",
+        "# 第一章\n\n林晚搬进书店楼上的那天，带着一只橘猫。\n",
+    );
+    let second = put(
+        &dir,
+        "第二章.md",
+        "# 第二章\n\n秋天，林晚一本一本地擦旧书。\n",
+    );
+    let ws = doc_folder(&dir, "第三章.md", NOVEL_ZH);
+    let renamed = move |_: &TurnOutcome| {
+        for file in [&first, &second] {
+            let text = std::fs::read_to_string(file).unwrap_or_default();
+            if text.contains("林晚") || !text.contains("林晓") {
+                return Err(format!("{} still reads: {text}", file.display()));
+            }
+        }
+        Ok(())
+    };
+    let e = Expect::default().check("other chapters renamed on disk", renamed);
+    c.push(AgentCase::new("workspace/zh/rename-across-files", Lang::ZhHans, Lang::ZhHans, NOVEL_ZH, "把整个文件夹里的“林晚”都改成“林晓”，其他章节也要改。", e, "General mode in a folder of chapters: expect edit_file (or write_file) on 第一章.md and 第二章.md renaming 林晚 to 林晓, propose_edit for the open 第三章 where it names her, a short plan first, and a Chinese reply.").disk(ws));
 
     // A file named in the request, deep in a folder of many: find_files
     // finds it by name, where listing every file costs a long answer.

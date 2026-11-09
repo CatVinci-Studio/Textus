@@ -769,7 +769,8 @@ fn behaviour_cases() -> Vec<AgentCase> {
     // Review of a selection: notes only there, and a concrete fix carried as
     // the note's suggestion.
     let doc = "# Notes\n\nThe first paragraph is fine and stays as it is.\n\nOur team have finished there work on the the new library hours, wich start next week.\n\nThe last paragraph has an eror too, but nobody selected it.\n";
-    let selected = "Our team have finished there work on the the new library hours, wich start next week.";
+    let selected =
+        "Our team have finished there work on the the new library hours, wich start next week.";
     let (msg, caret) = with_selection(doc, selected, "Check this for mistakes.");
     let mut e = Expect {
         edit: EditExpect::Forbidden,
@@ -779,7 +780,11 @@ fn behaviour_cases() -> Vec<AgentCase> {
     e.reply_any = vec![];
     let e = e
         .check("notes only on the selection", move |o| {
-            match o.comments.iter().find(|(anchor, _)| !selected.contains(anchor.as_str())) {
+            match o
+                .comments
+                .iter()
+                .find(|(anchor, _)| !selected.contains(anchor.as_str()))
+            {
                 Some((anchor, _)) => Err(format!("a note outside the selection: {anchor:?}")),
                 None => Ok(()),
             }
@@ -788,7 +793,11 @@ fn behaviour_cases() -> Vec<AgentCase> {
             let suggested = o.calls.iter().any(|c| {
                 c["name"] == "add_comment" && c["args"].to_string().contains("suggestion")
             });
-            if suggested { Ok(()) } else { Err("no note carried a suggestion".into()) }
+            if suggested {
+                Ok(())
+            } else {
+                Err("no note carried a suggestion".into())
+            }
         });
     cases.push(AgentCase::new("review/en/selection-suggestions", Lang::En, Lang::En, doc, &msg, e, "Review mode on the selected middle paragraph (there/their, a doubled 'the', 'wich'): expect add_comment notes only on that paragraph, at least one carrying a concrete `suggestion` rewrite, nothing on the unselected last paragraph's 'eror', no edits.").mode(AgentMode::Review).caret(caret));
 

@@ -174,7 +174,10 @@ impl FileEdits {
         }
         let real = existing.canonicalize().map_err(|e| e.to_string())?;
         if !real.starts_with(&self.root) {
-            return Err("That path leads outside the folder - only files inside it are changed.".to_string());
+            return Err(
+                "That path leads outside the folder - only files inside it are changed."
+                    .to_string(),
+            );
         }
         let real_file = file.canonicalize().unwrap_or_else(|_| file.clone());
         if self.open_document.as_deref() == Some(real_file.as_path()) {
@@ -187,7 +190,14 @@ impl FileEdits {
     /// the disk; None for a file not there yet.
     fn current(&self, file: &Path) -> Result<Option<String>, String> {
         let name = file.to_string_lossy();
-        if let Some(last) = self.made.lock().unwrap().iter().rev().find(|c| c.file == name) {
+        if let Some(last) = self
+            .made
+            .lock()
+            .unwrap()
+            .iter()
+            .rev()
+            .find(|c| c.file == name)
+        {
             return Ok(Some(last.after.clone()));
         }
         if !file.exists() {
@@ -255,8 +265,13 @@ fn edit_file(args: &serde_json::Value, now: Option<&str>) -> Result<String, Stri
     }
     match now.matches(old).count() {
         1 => Ok(now.replacen(old, new, 1)),
-        0 => Err("`old` isn't in the file as written - read_file it and copy the text exactly.".to_string()),
-        n => Err(format!("`old` appears {n} times; include more of the text around it so it is unique.")),
+        0 => Err(
+            "`old` isn't in the file as written - read_file it and copy the text exactly."
+                .to_string(),
+        ),
+        n => Err(format!(
+            "`old` appears {n} times; include more of the text around it so it is unique."
+        )),
     }
 }
 
@@ -306,9 +321,16 @@ fn set(record: &Path, change: &mut FileChange, on: bool) -> Result<(), String> {
     }
     let file = Path::new(&change.file);
     let now = std::fs::read_to_string(file).ok();
-    let expected = if on { change.before.clone() } else { Some(change.after.clone()) };
+    let expected = if on {
+        change.before.clone()
+    } else {
+        Some(change.after.clone())
+    };
     if now != expected {
-        return Err(format!("`{}` was changed since, so it is left as it is.", change.path));
+        return Err(format!(
+            "`{}` was changed since, so it is left as it is.",
+            change.path
+        ));
     }
     match (on, &change.before) {
         (true, _) => write(file, &change.after)?,
