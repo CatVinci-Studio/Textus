@@ -1,0 +1,33 @@
+/* Where Textus AI changed a file from General mode: a bar in the margin by
+   each block it changed or added, a line where it removed some, and on
+   hover the button that puts the place back. */
+.ProseMirror > .ai-changed-block {
+  box-shadow: -12px 0 0 -9px var(--ui-accent);
+}
+
+.ai-change-mark {
+  position: relative;
+  height: 0;
+}
+
+.ai-change-mark.ai-change-removed {
+  height: 0;
+  border-top: 2px dashed color-mix(in srgb, var(--ui-accent) 60%, transparent);
+  margin: 4px 0;
+}
+
+.ai-change-mark > button {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.ai-change-mark:hover > button,
+.ai-change-mark > button:focus-visible,
+.ai-change-mark:has(+ .ai-changed-block:hover) > button,
+.ai-change-removed:hover > button {
+  opacity: 1;
+}

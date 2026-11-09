@@ -353,6 +353,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   filesNew: "novo",
   filesUndo: "Desfazer",
   filesApply: "Aplicar",
+  aiChangeRevert: "Desfazer esta alteração",
   commentNotFound: "Esse trecho não está mais no documento.",
   toolResult: "Resultado",
   chatUseTheme: "Usar este tema",

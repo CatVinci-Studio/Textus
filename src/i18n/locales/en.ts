@@ -349,6 +349,7 @@ type /name in a conversation to use one.
   filesNew: "new",
   filesUndo: "Undo",
   filesApply: "Apply",
+  aiChangeRevert: "Undo this change",
   commentNotFound: "That passage is no longer in the document.",
   toolResult: "Result",
   chatUseTheme: "Use this theme",

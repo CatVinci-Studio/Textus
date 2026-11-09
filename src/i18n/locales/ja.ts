@@ -336,6 +336,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   filesNew: "新規",
   filesUndo: "元に戻す",
   filesApply: "適用",
+  aiChangeRevert: "この変更を元に戻す",
   commentNotFound: "その箇所は文書内に見つかりません。",
   toolResult: "結果",
   chatUseTheme: "このテーマを使う",

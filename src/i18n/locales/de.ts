@@ -354,6 +354,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   filesNew: "neu",
   filesUndo: "Rückgängig",
   filesApply: "Anwenden",
+  aiChangeRevert: "Diese Änderung zurücknehmen",
   commentNotFound: "Diese Stelle steht nicht mehr im Dokument.",
   toolResult: "Ergebnis",
   chatUseTheme: "Dieses Design verwenden",

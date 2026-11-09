@@ -348,7 +348,7 @@ test("General mode's changes to other files show as one card that undoes and app
 }) => {
   await pluginsAtStart(page, {
     plugins: {},
-    folder: { "/notes/a.md": "A.", "/notes/b.md": "B." },
+    folder: { "/notes/a.md": "A.", "/notes/b.md": "B.\n\nKept." },
   });
   await openApp(page, {
     settings: { language: "en", agentAskBeforeFileChanges: true },
@@ -363,8 +363,8 @@ test("General mode's changes to other files show as one card that undoes and app
     id: "c1",
     path: "b.md",
     file: "/notes/b.md",
-    before: "B.",
-    after: "B, changed.",
+    before: "B.\n\nKept.",
+    after: "B, changed.\n\nKept.",
     applied,
   });
   await mockInvoke(page, {
@@ -387,6 +387,11 @@ test("General mode's changes to other files show as one card that undoes and app
     ai_file_changes: [change(true)],
     ai_set_file_changes: [[change(false)], []],
   });
+  // As the backend writes it.
+  await page.evaluate(() => {
+    const w = window as unknown as { __devFs: Record<string, string> };
+    w.__devFs["/notes/b.md"] = "B, changed.\n\nKept.";
+  });
   await send(page, "change b");
   const card = page.locator(".agent-panel-view .agent-file-changes");
   await expect(card).toContainText("Files changed");
@@ -398,7 +403,19 @@ test("General mode's changes to other files show as one card that undoes and app
   await expect(
     page.locator(".tree-row[data-ai-changed]", { hasText: "b.md" }),
   ).toBeVisible();
-  // Undo takes the reply's changes off, and the mark with them.
+  // Opened, the file shows where it changed, and that place goes back.
+  await page.locator(".tree-row", { hasText: "b.md" }).dblclick();
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(doc).toContainText("B, changed.");
+  await expect(doc.locator(".ai-changed-block")).toHaveText(["B, changed."]);
+  await doc.locator(".ai-changed-block").hover();
+  await doc.getByRole("button", { name: "Undo this change" }).click();
+  await expect(doc).toHaveText(/^B\.\s*Kept\.$/);
+  await expect(doc.locator(".ai-changed-block")).toHaveCount(0);
+  await expect(page.locator(".tree-row[data-ai-changed]")).toHaveCount(0);
+  // Back on a.md, whose conversation it was: Undo takes the reply's
+  // changes off.
+  await page.locator(".tree-row", { hasText: "a.md" }).dblclick();
   await card.getByRole("button", { name: "Undo" }).click();
   const [undo] = await invokeCalls(page, "ai_set_file_changes");
   expect(undo).toMatchObject({
@@ -407,5 +424,4 @@ test("General mode's changes to other files show as one card that undoes and app
     on: false,
   });
   await expect(card.getByRole("button", { name: "Apply" })).toBeVisible();
-  await expect(page.locator(".tree-row[data-ai-changed]")).toHaveCount(0);
 });

@@ -317,6 +317,7 @@ export default {
   filesNew: "新建",
   filesUndo: "復原",
   filesApply: "套用",
+  aiChangeRevert: "撤回這處",
   commentNotFound: "文件中已經找不到這段文字。",
   toolResult: "結果",
   chatUseTheme: "使用此主題",

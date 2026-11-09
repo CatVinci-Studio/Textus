@@ -366,6 +366,7 @@ utiliser une.
   filesNew: "nouveau",
   filesUndo: "Annuler",
   filesApply: "Appliquer",
+  aiChangeRevert: "Annuler cette modification",
   commentNotFound: "Ce passage ne figure plus dans le document.",
   toolResult: "Résultat",
   chatUseTheme: "Utiliser ce thème",

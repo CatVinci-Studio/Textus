@@ -329,6 +329,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   filesNew: "새 파일",
   filesUndo: "실행 취소",
   filesApply: "적용",
+  aiChangeRevert: "이 변경 되돌리기",
   commentNotFound: "해당 부분이 더 이상 문서에 없습니다.",
   toolResult: "결과",
   chatUseTheme: "이 테마 사용",

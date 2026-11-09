@@ -60,32 +60,48 @@ export function fileRunsOf(
   return runs;
 }
 
-const marked = new Set<string>();
+/** Each file Textus AI changed this session, and its text before the
+ *  first change (null for a file it made). */
+const bases = new Map<string, string | null>();
 const listeners = new Set<() => void>();
 let snapshot: ReadonlySet<string> = new Set();
 
 function publish() {
-  snapshot = new Set(marked);
+  snapshot = new Set(bases.keys());
   for (const listener of listeners) listener();
+}
+
+/** Calls `listener` when the files changed, or their texts before, do. */
+export function onChangedFiles(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+/** `file`'s text before Textus AI first changed it, or undefined where it
+ *  hasn't (or the change was undone). */
+export function textBeforeChanges(file: string): string | null | undefined {
+  return bases.get(file);
+}
+
+/** The file reads as before again: no change of Textus AI's left to show. */
+export function changesSettled(file: string) {
+  if (bases.delete(file)) publish();
 }
 
 /** The files Textus AI changed this session, until undone. */
 export function useChangedFiles(): ReadonlySet<string> {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    () => snapshot,
-  );
+  return useSyncExternalStore(onChangedFiles, () => snapshot);
 }
 
 /** Files written or put back: open tabs of them read the disk again, and
  *  those now changed are marked. */
-export function filesChanged(files: { file: string; applied: boolean }[]) {
-  for (const { file, applied } of files) {
-    if (applied) marked.add(file);
-    else marked.delete(file);
+export function filesChanged(
+  files: { file: string; applied: boolean; before: string | null }[],
+) {
+  for (const { file, applied, before } of files) {
+    // The earliest text before: a reply's later changes build on it.
+    if (applied && !bases.has(file)) bases.set(file, before);
+    if (!applied) bases.delete(file);
     window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: file }));
   }
   publish();

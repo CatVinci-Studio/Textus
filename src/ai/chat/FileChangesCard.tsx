@@ -56,7 +56,7 @@ export function FileChangesCard({
     const [now, refused] = await ai.setFileChanges(conversation, ids, !on);
     setChanges(now);
     setProblems(refused);
-    filesChanged(now.map(({ file, applied }) => ({ file, applied })));
+    filesChanged(now);
   }
 
   return (

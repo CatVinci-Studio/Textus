@@ -355,6 +355,7 @@ export default {
   filesNew: "новый",
   filesUndo: "Отменить",
   filesApply: "Применить",
+  aiChangeRevert: "Отменить это изменение",
   commentNotFound: "Этого фрагмента больше нет в документе.",
   toolResult: "Результат",
   chatUseTheme: "Использовать эту тему",

@@ -363,6 +363,7 @@ para usar una.
   filesNew: "nuevo",
   filesUndo: "Deshacer",
   filesApply: "Aplicar",
+  aiChangeRevert: "Deshacer este cambio",
   commentNotFound: "Ese fragmento ya no está en el documento.",
   toolResult: "Resultado",
   chatUseTheme: "Usar este tema",

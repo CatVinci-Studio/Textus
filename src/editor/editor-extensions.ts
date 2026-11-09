@@ -1,3 +1,4 @@
+import { createAiFileChangesPlugin } from "./ai-file-changes-plugin";
 import {
   type Editor,
   defaultValueCtx,
@@ -286,6 +287,7 @@ export function withEditorCore(
       .use(wikilinkInputRule)
       .use(wikilinkRevealPlugin)
       .use(createMissingLinksPlugin(() => docPath.current))
+      .use(createAiFileChangesPlugin(() => docPath.current))
       .use(
         createObsidianEmbedPreviewPlugin({
           docPath: () => docPath.current,
