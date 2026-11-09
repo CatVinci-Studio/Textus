@@ -492,6 +492,21 @@ test("a file dragged onto the lower half of the document opens below it, over a 
   expect(await files(page)).toContain("/work/notes/b.md");
 });
 
+test("a file dragged across the document selects none of its text", async ({
+  page,
+}) => {
+  await open(page);
+  const from = (await row(page, "b.md").boundingBox())!;
+  const text = (await page.locator(".ProseMirror h1").boundingBox())!;
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(text.x + text.width, text.y + 200, { steps: 12 });
+  await expect(page.locator(".split-drop-hint")).toBeVisible();
+  expect(await page.evaluate(() => String(window.getSelection()))).toBe("");
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+});
+
 test("Copy Path in the tree's and a tab's right-click menus and in File copies the full path", async ({
   page,
 }) => {

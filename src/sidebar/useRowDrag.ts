@@ -130,11 +130,18 @@ export function useRowDrag(
         await showMessage(failureText(t, err, basename(from)));
       }
     };
+    // No text selected while a row is held: dragged over the documents, the
+    // press would otherwise select everything it passes.
+    const onSelectStart = (e: Event) => {
+      if (pressed.current) e.preventDefault();
+    };
+    window.addEventListener("selectstart", onSelectStart);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
     window.addEventListener("keydown", onKey);
     return () => {
+      window.removeEventListener("selectstart", onSelectStart);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
