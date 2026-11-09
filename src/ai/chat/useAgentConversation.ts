@@ -4,7 +4,8 @@ import { keepCancelledTurns } from "./cancelled-turns";
 import { conversationTitle, saveConversation } from "./chat-history";
 import { annotateProposalStatuses } from "../revision/proposal-status";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../types";
-import { thinkingDone, thinkingEvent, type Thought } from "./thought";
+import { thinkingDone, type Thought } from "./thought";
+import { streamStep, type StreamingState } from "./stream-step";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import {
   ai,
@@ -16,8 +17,6 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { announce } from "../../ui/announce";
 import { useSettings, type AgentMode } from "../../prefs/SettingsContext";
 import { imageModelOf } from "../image-models";
-import { parsePartialToolArgs } from "./partial-tool-args";
-import { resolveBlockTarget } from "../doc-blocks";
 import type { DocumentSnapshot } from "../doc-markdown";
 import {
   insertTurns,
@@ -34,22 +33,6 @@ export interface AgentRequestOptions {
   /** Left out: the provider's default (Auto). */
   thinking?: ThinkingLevel;
   focusHeading?: string | null;
-}
-
-/** What has streamed in so far for the in-flight exchange: landed turns plus
- *  the prose being generated. Display only; the resolved turns enter
- *  `history`. */
-export interface StreamingState {
-  turns: AgentTurn[];
-  text: string;
-  /** The exchange's thinking so far, once the model has thought. */
-  thought: Thought | null;
-  /** A tool whose call is coming in, for the row under the reply in place
-   *  of "Thinking…". */
-  tool?: string;
-  /** add_comment calls whose passage and note have streamed in, before their
-   *  ToolCall lands, so the margin shows each as it is written. */
-  comments?: AgentTurn[];
 }
 
 /** The (document, message) pair behind the last failed send, for a retry
@@ -229,113 +212,16 @@ export function useAgentConversation(
         onEvent: (event) => {
           if (generation !== generationRef.current) return;
           onStreamEventRef.current?.(event);
-          const prev = streamingRef.current;
-          if (event.type === "thinking") {
-            setStreaming(
-              {
-                turns: prev?.turns ?? [],
-                text: prev?.text ?? "",
-                thought: thinkingEvent(
-                  prev?.thought ?? null,
-                  event.text,
-                  Date.now(),
-                ),
-              },
-              { textOnly: true },
-            );
-            return;
-          }
-          // Anything else means the model has stopped thinking for now.
-          const thought = thinkingDone(prev?.thought ?? null, Date.now());
-          if (event.type === "delta") {
-            reportAiState("writing", provider, model || null);
-            setStreaming(
-              {
-                turns: prev?.turns ?? [],
-                text: (prev?.text ?? "") + event.text,
-                thought,
-              },
-              { textOnly: true },
-            );
-          } else if (event.type === "retry") {
-            // The attempt that streamed this prose came back garbled and
-            // is being sent again; the new attempt streams in its place.
-            setStreaming({ turns: prev?.turns ?? [], text: "", thought });
-          } else if (
-            event.type === "toolStart" &&
-            event.name === "generate_image"
-          ) {
-            setStreaming({
-              turns: prev?.turns ?? [],
-              text: "",
-              thought,
-              tool: event.name,
-            });
-          } else if (
-            event.type === "toolStart" &&
-            (event.name === "propose_edit" || event.name === "add_comment")
-          ) {
-            reportAiState("proposing", provider, model || null);
-            // The reply stays; the row under it says an edit (or a note)
-            // is coming.
-            if (event.name === "add_comment") commentArgs.set(event.callId, "");
-            setStreaming({
-              turns: prev?.turns ?? [],
-              text: prev?.text ?? "",
-              thought,
-              tool: event.name,
-              comments: prev?.comments,
-            });
-          } else if (
-            event.type === "toolArgsDelta" &&
-            commentArgs.has(event.callId)
-          ) {
-            const args = (commentArgs.get(event.callId) ?? "") + event.delta;
-            commentArgs.set(event.callId, args);
-            const { anchor, block, comment } = parsePartialToolArgs(args);
-            const shown = prev?.comments?.some(
-              (c) => c.kind === "ToolCall" && c.call_id === event.callId,
-            );
-            // Once: the passage and the whole note are in. The passage is
-            // the block it names, and the words in it it quotes.
-            if (!prev || shown || !comment?.complete) return;
-            if (block && !block.complete) return;
-            const target = resolveBlockTarget(document.blocks, {
-              block: block?.value,
-              anchor: anchor?.complete ? anchor.value : undefined,
-            });
-            if (!target) return;
-            const call: AgentTurn = {
-              kind: "ToolCall",
-              call_id: event.callId,
-              name: "add_comment",
-              arguments: JSON.stringify({
-                block: target.block,
-                anchor: target.anchor,
-                comment: comment.value,
-              }),
-            };
-            setStreaming({
-              ...prev,
-              thought,
-              comments: [...(prev.comments ?? []), call],
-            });
-          } else if (event.type === "turn") {
-            // Interim prose that streamed before a tool call is dropped, as
-            // the backend prefers tool calls over accompanying text.
-            const landed =
-              event.turn.kind === "ToolCall" ? event.turn.call_id : null;
-            setStreaming({
-              turns: [...(prev?.turns ?? []), event.turn],
-              text: "",
-              thought,
-              comments: prev?.comments?.filter(
-                (c) => c.kind !== "ToolCall" || c.call_id !== landed,
-              ),
-            });
-          } else if (thought !== prev?.thought && prev) {
-            setStreaming({ ...prev, thought });
-          }
+          const step = streamStep(
+            streamingRef.current,
+            event,
+            document.blocks,
+            commentArgs,
+            Date.now(),
+          );
+          if (!step) return;
+          if (step.phase) reportAiState(step.phase, provider, model || null);
+          setStreaming(step.next, { textOnly: step.textOnly });
         },
       });
       if (generation !== generationRef.current) return undefined;

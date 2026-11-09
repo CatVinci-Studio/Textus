@@ -2,7 +2,7 @@ import type { BlockNames } from "../revision/markdown-forms";
 import { type AgentTurnLabels } from "./AgentTurnView";
 import type { AgentTurn, EditAction, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
-import type { StreamingState } from "./useAgentConversation";
+import type { StreamingState } from "./stream-step";
 import type { Thought } from "./thought";
 import { type ThoughtRowLabels } from "./ThoughtRow";
 import type { AiErrorKind } from "../error-messages";
