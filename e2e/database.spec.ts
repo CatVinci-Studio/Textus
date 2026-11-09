@@ -409,7 +409,15 @@ test("a row's right-click menu opens or deletes its page, asked first", async ({
     .first()
     .locator('td[data-key="status"]')
     .click({ button: "right" });
-  await pick(page, "Delete row");
+  // Laid out as a Markdown table's menu: the row's own under Row.
+  await expect(
+    menu(page).getByRole("menuitem", { name: "Insert Row Below" }),
+  ).toBeVisible();
+  await menu(page).getByRole("menuitem", { name: "Row", exact: true }).hover();
+  await page
+    .locator(".context-menu")
+    .getByRole("menuitem", { name: "Delete Row" })
+    .click();
   await page.getByRole("button", { name: "Delete page" }).click();
   await expect(db.locator(rows)).toHaveCount(2);
   await expect
