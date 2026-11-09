@@ -236,11 +236,11 @@
   min-width: 26px;
 }
 
-/* The last resort: the mode's name ellipsizes, its chevron and a few
-   letters stay. */
+/* The last resort: the mode's name ellipsizes down to its chevron and a
+   letter, so Send keeps its words in a narrow window at a large size. */
 .inline-chat-toolbar > .inline-chat-mode {
   flex-shrink: 1;
-  min-width: 52px;
+  min-width: 40px;
 }
 
 .inline-chat-selection-chip:hover {

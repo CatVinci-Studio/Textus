@@ -359,11 +359,13 @@ test("a dragged column rides under the pointer, zoomed or not, and the next one 
     await page.mouse.move(at.x, at.y);
     await page.mouse.down();
     await page.mouse.move(at.x + 20, at.y, { steps: 3 });
-    await page.mouse.move(at.x + beside.width, at.y, { steps: 3 });
+    // Past the point where their centres meet, whatever their widths.
+    const by = (box.width + beside.width) / 2 + 6;
+    await page.mouse.move(at.x + by, at.y, { steps: 3 });
     // No copy of it: the column itself moves, as far as the pointer did.
     await expect(db.locator(".tx-drag-ghost")).toHaveCount(0);
     const moved = (await head.boundingBox())!;
-    expect(Math.abs(moved.x - box.x - beside.width)).toBeLessThan(3);
+    expect(Math.abs(moved.x - box.x - by)).toBeLessThan(3);
     // The one passed slides into the room it left.
     await expect
       .poll(async () => (await next.boundingBox())!.x)

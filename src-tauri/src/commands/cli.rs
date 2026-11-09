@@ -129,9 +129,8 @@ fn path_with(path: &str, dir: &str) -> String {
 }
 
 /// The PATH to write: `old` (None when the user has none) with `dir` added
-/// at its end, or None when it can't be shown to keep every entry of `old`
-/// - the one check between a read and a write that could lose the user's
-/// PATH.
+/// at its end, or None when it can't be shown to keep every entry of `old`:
+/// the one check between a read and a write that could lose the user's PATH.
 #[cfg(any(windows, test))]
 fn next_path(old: Option<&str>, dir: &str) -> Option<String> {
     let old = old.unwrap_or("");
