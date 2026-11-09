@@ -92,10 +92,10 @@ describe("the remembered sidebar width", () => {
 
   it("grows with a wide window, in the interface's size units", () => {
     localStorage.setItem(KEY, "240");
-    // 2320 wide: the interface is 1.35 times its size.
-    const { result } = renderHook(() => useSidebarWidth(2320));
-    expect(result.current.width).toBe(324);
-    act(() => result.current.setWidth(405));
+    // 2560 wide: the interface is 1.15 times its size.
+    const { result } = renderHook(() => useSidebarWidth(2560));
+    expect(result.current.width).toBe(276);
+    act(() => result.current.setWidth(345));
     expect(localStorage.getItem(KEY)).toBe("300");
   });
 
