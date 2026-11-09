@@ -254,6 +254,14 @@ test("a pulled tab whose release the page never heard is let go at the next move
     steps: 8,
   });
   await expect(page.locator(".tab-pull-ghost")).toHaveCount(1);
+  // Under the pointer, as the pill between windows is: no jump on leaving.
+  const ghost = (await page.locator(".tab-pull-ghost").boundingBox())!;
+  expect(
+    Math.abs(ghost.x + ghost.width / 2 - (to.x + to.width - 30)),
+  ).toBeLessThan(4);
+  expect(
+    Math.abs(ghost.y + ghost.height / 2 - (to.y + to.height / 2)),
+  ).toBeLessThan(4);
   // The release lost on its way, as WebView2 can lose it.
   await page.evaluate(() =>
     document.addEventListener("pointerup", (e) => e.stopPropagation(), {

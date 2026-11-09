@@ -277,7 +277,11 @@ export function pullTab(
       opts.detach(tabId);
       return;
     }
-    ghost.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 8}px)`;
+    // Centred under the pointer, as the pill between windows is
+    // (tab_drag/pill.rs), so leaving the window doesn't make it jump. By
+    // `translate`, not `transform`: the lifted look's `scale` would scale a
+    // transform's offset too, and the pill drift off the pointer.
+    ghost.style.translate = `${e.clientX - ghost.offsetWidth / 2}px ${e.clientY - ghost.offsetHeight / 2}px`;
     const bar = barDropAt(e.clientX, e.clientY, tabId);
     showDropHint(
       bar

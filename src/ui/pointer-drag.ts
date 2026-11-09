@@ -130,6 +130,7 @@ export function reorderDrag(
     ...container.querySelectorAll<HTMLElement>("[data-reorder-id]"),
   ];
   const translate = axis === "x" ? "translateX" : "translateY";
+  const at = (px: number) => (axis === "x" ? `${px}px 0` : `0 ${px}px`);
   let slots: Slot[] = [];
   let gap = 0;
   const start = axis === "x" ? down.clientX : down.clientY;
@@ -137,6 +138,7 @@ export function reorderDrag(
     for (const n of nodes()) {
       n.style.transition = "";
       n.style.transform = "";
+      n.style.translate = "";
       n.style.zIndex = "";
       n.classList.remove("is-drag-lifted");
     }
@@ -164,7 +166,9 @@ export function reorderDrag(
         const nid = n.dataset.reorderId ?? "";
         if (nid === id) {
           n.style.transition = "none";
-          n.style.transform = `${translate}(${offset}px)`;
+          // The `translate` property: the lifted look's `scale` would scale
+          // a transform's offset too, and the item drift off the pointer.
+          n.style.translate = at(offset);
           n.style.zIndex = "10";
           n.classList.add("is-drag-lifted");
         } else {
