@@ -6,6 +6,14 @@ takes seconds, and can fail because a machine was busy.
 
 ## Which layer a test belongs in
 
+**Extend before you add.** Before writing a new test, look for one that
+already sets up the same surface or flow (search `e2e/` and `*.test.ts` for
+the component, its class names and the flow) and add your step or check to
+it. A new test is for a case no existing one can carry without becoming
+unclear; then split by behaviour, not by bug. Say in the commit which test
+you extended. Fewer, broader tests keep CI fast. Checks are about behaviour
+(stays on one row, wraps, nothing hidden), not exact pixels.
+
 | Layer                 | Where                                         | Catches                                                                                    |
 | --------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | 1. Unit               | `src/**/*.test.ts`, next to the code          | Pure logic: a function's answer for its inputs                                             |
