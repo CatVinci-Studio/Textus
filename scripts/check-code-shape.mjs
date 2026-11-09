@@ -18,13 +18,8 @@ const LINES_NOW = {
   "src-tauri/src/ai/web/mod.rs": 596,
   "src-tauri/src/extract/docx.rs": 571,
   "src-tauri/src/lib.rs": 585,
-  "src-tauri/src/mcp/mod.rs": 503,
-  "src-tauri/src/plugins/access.rs": 528,
   "src-tauri/src/plugins/catalog.rs": 566,
-  "src-tauri/src/plugins/install.rs": 557,
-  "src-tauri/src/plugins/metadata.rs": 528,
   "src-tauri/src/tab_drag.rs": 523,
-  "src/settings/sections/agent.tsx": 524,
 };
 
 /** Over the hook limit today: the roots that wire a window together. */
