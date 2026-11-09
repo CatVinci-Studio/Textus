@@ -108,6 +108,8 @@ export interface WindowAccess {
   /** A document open with unsaved changes, by its path: files.process edits it
    *  in the editor so nothing typed is lost. A saved one is changed on disk. */
   documentAt(path: string): OpenDocumentAccess | null;
+  /** Saves the tab of `path`, if one is open; whether it was saved. */
+  saveAt(path: string): Promise<boolean>;
   /** The window's tabs, and the one in front. */
   tabs(): PluginTabInfo[];
   activeTab(): PluginTabInfo | null;

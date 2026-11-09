@@ -11,6 +11,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import type { ChatMessagesProps } from "./chat-messages-types";
 import { itemOf, readTranscript } from "./chat-transcript";
 import { ChatItem, ChatItems, type ChatItemsContext } from "./ChatItem";
+import { AgentPermission } from "../agents/AgentPermission";
 
 /** The statuses a card reaches by being decided, which collapse it. */
 const DECIDED: ReadonlySet<PendingStatus> = new Set([
@@ -164,26 +165,34 @@ export function ChatMessages({
           />
         </div>
       )}
+      {streaming?.permission && (
+        <AgentPermission
+          pending={streaming.permission}
+          label={labels.agentPermission}
+        />
+      )}
       {/* Shown at the bottom once a step's rows push the thinking row out of
           sight, and under a reply once it has paused, so the panel never
           looks stuck. Re-keyed by each delta, it waits again. */}
-      {busy && (streaming?.thought?.since == null || thoughtAbove) && (
-        <ThinkingIndicator
-          key={step ?? streaming?.text.length ?? 0}
-          after={!!streaming?.text && !step}
-          soon={!streaming?.text && !step && !streaming?.thought}
-          waitedFor={labels.waitedFor}
-          label={
-            step === "generate_image"
-              ? labels.generatingImage
-              : step === "propose_edit"
-                ? labels.writingEdit
-                : step === "add_comment"
-                  ? labels.writingNotes
-                  : labels.thinking
-          }
-        />
-      )}
+      {busy &&
+        !streaming?.permission &&
+        (streaming?.thought?.since == null || thoughtAbove) && (
+          <ThinkingIndicator
+            key={step ?? streaming?.text.length ?? 0}
+            after={!!streaming?.text && !step}
+            soon={!streaming?.text && !step && !streaming?.thought}
+            waitedFor={labels.waitedFor}
+            label={
+              step === "generate_image"
+                ? labels.generatingImage
+                : step === "propose_edit"
+                  ? labels.writingEdit
+                  : step === "add_comment"
+                    ? labels.writingNotes
+                    : labels.thinking
+            }
+          />
+        )}
       {error && (
         <ErrorRow
           error={error}

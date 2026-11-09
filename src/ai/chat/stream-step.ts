@@ -1,3 +1,4 @@
+import type { PendingPermission } from "../agents/agent-exchange";
 import type { AgentTurn } from "../types";
 import type { StreamEvent } from "../../platform/ipc";
 import { thinkingDone, thinkingEvent, type Thought } from "./thought";
@@ -19,6 +20,8 @@ export interface StreamingState {
   /** add_comment calls whose passage and note have streamed in, before their
    *  ToolCall lands, so the margin shows each as it is written. */
   comments?: AgentTurn[];
+  /** A step an external agent asks the user to allow. */
+  permission?: PendingPermission | null;
 }
 
 export interface StreamStep {

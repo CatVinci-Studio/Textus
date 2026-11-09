@@ -891,6 +891,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
+  agentNeedsFolder:
+    "Abra primeiro uma pasta ou salve o documento: o agente trabalha numa pasta.",
+  agentStopped: "{agent} parou.",
+  agentSignIn: "Inicie sessão primeiro no {agent}.",
+  chatAgentsGroup: "Agentes",
+  chatAgentPermission: "O agente pede para continuar",
   pictureRedraw: "Redesenhar…",
   pictureRedrawTitle: "Redesenhar a imagem",
   pictureRedrawPrompt:
@@ -1790,6 +1796,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Guardar os próprios dados na pasta aberta, em .textus/plugins",
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",
   pluginPermNotifications: "Mostrar notificações do sistema",
+  pluginPermAgents:
+    "Executar um agente de IA instalado neste computador (ele pode ler e alterar arquivos)",
   pluginPermBackground:
     "Executar código num horário, mesmo com todas as janelas fechadas",
   pluginScheduleNotice:

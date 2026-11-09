@@ -3,6 +3,7 @@
  * browser. Commands resolve to null; `window.__devEmitTauriEvent(name,
  * payload)` fires tracked listeners.
  */
+import { agentShim } from "./agent-shim";
 import type {
   DirEntryInfo_Serialize,
   FolderIndex,
@@ -621,15 +622,19 @@ export function installDevTauriShim(): void {
     // `__devFiles`) lists as empty, as the native side never answers null.
     if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
     const path = String(args.path ?? args.root ?? "");
+    const times = (w.__devFsTimes ??= {}) as Record<string, number>;
     switch (cmd) {
       case "read_text_file":
         return path in files ? Promise.resolve(files[path]) : null;
       // A save into the folder lands in it, so a test reads it back there.
+      // Each write moves the file's time on, as a disk's does, so an open
+      // tab of it sees the change.
       case "write_text_file":
         files[path] = String(args.contents);
+        times[path] = (times[path] ?? 1) + 1;
         return Promise.resolve(null);
       case "file_mtime_ms":
-        return Promise.resolve(path in files ? 1 : null);
+        return Promise.resolve(path in files ? (times[path] ?? 1) : null);
       case "list_dir": {
         const entries = new Map<string, boolean>();
         for (const file of Object.keys(files)) {
@@ -1520,6 +1525,8 @@ export function installDevTauriShim(): void {
             : [],
         );
       }
+      if (cmd.startsWith("agent_"))
+        return Promise.resolve(agentShim(cmd, args ?? {}));
       // Null here crashes the tree when the reply is spread into turns. The reply
       // is drip-fed through `onEvent` (the live Channel here) to exercise streaming.
       if (cmd === "ai_agent_message") {

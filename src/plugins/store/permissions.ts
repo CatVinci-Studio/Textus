@@ -17,6 +17,7 @@ const LABELS: Record<
   "ai.tools": "pluginPermAiTools",
   notifications: "pluginPermNotifications",
   background: "pluginPermBackground",
+  agents: "pluginPermAgents",
 };
 
 /** A permission in plain words, as the install dialog and a plugin's page

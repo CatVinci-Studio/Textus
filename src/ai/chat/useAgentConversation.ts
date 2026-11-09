@@ -35,6 +35,14 @@ import {
 } from "./memory-pass";
 import { useNextMessage } from "./next-message";
 import { reportAiState } from "../../plugins/ai-state";
+import { externalAgent } from "../../plugins/contributions/agents";
+import { withoutAgentSteps } from "../agents/agent-view";
+import {
+  AGENT_REQUEST,
+  agentFolder,
+  agentRequest,
+} from "../agents/agent-request";
+import { cancelAgentExchange, endAgentSession } from "../agents/agent-exchange";
 
 export interface AgentRequestOptions {
   mode: AgentMode;
@@ -230,7 +238,14 @@ export function useAgentConversation(
       );
       if (thought) setThoughts((prev) => ({ ...prev, [at]: thought }));
     };
-    const requestId = crypto.randomUUID();
+    // An external agent answers the chat, not a model; never in Create or
+    // Quick Ask.
+    const agent =
+      persist && options.mode !== "create"
+        ? externalAgent(settings.chatAgent)
+        : undefined;
+    const folder = agent ? agentFolder(workspaceRoot, docPath) : null;
+    const requestId = (agent ? AGENT_REQUEST : "") + crypto.randomUUID();
     const generation = generationRef.current;
     reportAiState("thinking", provider, model || null);
     let ended: "done" | "failed" | "stopped" = "stopped";
@@ -238,46 +253,67 @@ export function useAgentConversation(
     // add_comment arguments streaming in, by call id.
     const commentArgs = new Map<string, string>();
     try {
-      const newTurns = await ai.agentMessage({
-        provider,
-        blocks: document.blocks,
-        docPath,
-        workspaceRoot,
-        conversation: conversationId,
-        history: annotateProposalStatuses(history, proposalStatuses ?? {}),
-        message: trimmed,
-        images,
-        webSearch: options.webSearch,
-        thinking: options.thinking,
-        searchService: search.current.service,
-        searxngUrl: search.current.searxngUrl,
-        mode: options.mode,
-        focusHeading: options.focusHeading ?? null,
-        uiLanguage: uiLanguage.current,
-        model: model || null,
-        imageModel: imageModel.current,
-        requestId,
-        onEvent: (event) => {
-          if (generation !== generationRef.current) return;
-          onStreamEventRef.current?.(event);
-          const step = streamStep(
-            streamingRef.current,
-            event,
-            document.blocks,
-            commentArgs,
-            Date.now(),
-          );
-          if (!step) return;
-          if (step.phase) reportAiState(step.phase, provider, model || null);
-          setStreaming(step.next, { textOnly: step.textOnly });
-        },
-      });
+      if (agent && !folder) throw new Error(t.agentNeedsFolder);
+      const newTurns = agent
+        ? await agentRequest({
+            agent,
+            conversation: conversationId,
+            folder: folder!,
+            docPath,
+            message: trimmed,
+            get: () => streamingRef.current,
+            set: (value, opts) => {
+              if (generation === generationRef.current)
+                setStreaming(value, opts);
+            },
+          })
+        : await ai.agentMessage({
+            provider,
+            blocks: document.blocks,
+            docPath,
+            workspaceRoot,
+            conversation: conversationId,
+            history: annotateProposalStatuses(
+              withoutAgentSteps(history),
+              proposalStatuses ?? {},
+            ),
+            message: trimmed,
+            images,
+            webSearch: options.webSearch,
+            thinking: options.thinking,
+            searchService: search.current.service,
+            searxngUrl: search.current.searxngUrl,
+            mode: options.mode,
+            focusHeading: options.focusHeading ?? null,
+            uiLanguage: uiLanguage.current,
+            model: model || null,
+            imageModel: imageModel.current,
+            requestId,
+            onEvent: (event) => {
+              if (generation !== generationRef.current) return;
+              onStreamEventRef.current?.(event);
+              const step = streamStep(
+                streamingRef.current,
+                event,
+                document.blocks,
+                commentArgs,
+                Date.now(),
+              );
+              if (!step) return;
+              if (step.phase)
+                reportAiState(step.phase, provider, model || null);
+              setStreaming(step.next, { textOnly: step.textOnly });
+            },
+          });
       if (generation !== generationRef.current) return undefined;
       keepThought();
       setHistory((prev) => [...prev, ...newTurns]);
-      void rememberAfter([...history, ...newTurns], at + newTurns.length);
-      void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
-      next.suggestAfter([...history, ...newTurns]);
+      // What follows asks Textus AI's model, which an agent's chat doesn't use.
+      if (!agent) {
+        void rememberAfter([...history, ...newTurns], at + newTurns.length);
+        void offerSkillAfter([...history, ...newTurns], at + newTurns.length);
+        next.suggestAfter([...history, ...newTurns]);
+      }
       ended = "done";
       return newTurns;
     } catch (err) {
@@ -356,26 +392,34 @@ export function useAgentConversation(
 
   /** Cancels the in-flight request, if any - a no-op otherwise. */
   function stop() {
-    if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
+    if (requestIdRef.current?.startsWith(AGENT_REQUEST))
+      cancelAgentExchange(conversationId);
+    else if (requestIdRef.current)
+      void ai.cancelAgentMessage(requestIdRef.current);
   }
 
   // Textus AI was turned off - here, in Settings or in another window: a
   // request still running stops, as Stop would stop it, keeping what has
   // streamed so far.
   const aiOn = settings.textusAi;
+  const conversationRef = useLatest(conversationId);
   useEffect(() => {
-    if (!aiOn && requestIdRef.current)
-      void ai.cancelAgentMessage(requestIdRef.current);
-  }, [aiOn]);
+    const running = requestIdRef.current;
+    if (aiOn || !running) return;
+    if (running.startsWith(AGENT_REQUEST))
+      cancelAgentExchange(conversationRef.current);
+    else void ai.cancelAgentMessage(running);
+  }, [aiOn, conversationRef]);
 
   // The editor that owns this conversation went away (tab closed, source
   // mode): nobody is left to show the reply, so stop paying for it.
   useEffect(
     () => () => {
+      endAgentSession(conversationRef.current);
       if (requestIdRef.current)
         void ai.cancelAgentMessage(requestIdRef.current);
     },
-    [],
+    [conversationRef],
   );
 
   /** Resends the last failed message unchanged. */
@@ -394,6 +438,7 @@ export function useAgentConversation(
    *  `reset` and `restore` so neither misses a step. */
   function load(id: string, turns: AgentTurn[]) {
     generationRef.current += 1;
+    endAgentSession(conversationId);
     if (requestIdRef.current) void ai.cancelAgentMessage(requestIdRef.current);
     requestIdRef.current = null;
     setConversationId(id);

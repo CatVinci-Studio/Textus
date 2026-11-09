@@ -198,6 +198,9 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::mcp::mcp_status,
                 crate::mcp::mcp_restart,
                 crate::mcp::mcp_try,
+                crate::agents::agent_start,
+                crate::agents::agent_send,
+                crate::agents::agent_stop,
             ]),
         ),
         (

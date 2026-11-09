@@ -10,6 +10,8 @@ mod background;
 #[cfg(desktop)]
 pub mod cli;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
+#[cfg(desktop)]
+mod agents;
 #[cfg(all(test, desktop))]
 mod bindings;
 mod commands;
@@ -69,6 +71,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(background::BackgroundStatus::default())
         .manage(background::tray::TrayPlugins::default())
         .manage(mcp::McpHub::default())
+        .manage(agents::Agents::default())
         .manage(cli::app::CliBridge::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
@@ -219,6 +222,8 @@ pub fn run() {
             // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
                 settings::flush_all(app_handle);
+                #[cfg(desktop)]
+                agents::stop_all(app_handle);
             }
             // Closing the last window leaves the app running on macOS, and elsewhere in
             // background mode. Tauri's codeless request after the last window is turned

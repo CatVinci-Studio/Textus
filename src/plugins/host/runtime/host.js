@@ -10,7 +10,7 @@
 /* global createEndpoint, __textusText */
 (function () {
   "use strict";
-  var API_VERSION = "1.4";
+  var API_VERSION = "1.5";
   var app = null;
   var waiting = [];
   var module = { exports: {} };

@@ -195,6 +195,12 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         plugins::scripts::plugin_open_scripts_dir,
         #[cfg(desktop)]
+        crate::agents::agent_start,
+        #[cfg(desktop)]
+        crate::agents::agent_send,
+        #[cfg(desktop)]
+        crate::agents::agent_stop,
+        #[cfg(desktop)]
         menu::set_plugin_menu,
         #[cfg(desktop)]
         commands::tree_ops::tree_create_document,

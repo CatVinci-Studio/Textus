@@ -107,6 +107,7 @@ export function useWindowDocuments({
     openFile: opening.openFile,
     // Defined below; read when a plugin asks.
     saveActiveTab: () => saving.saveTab(activeTab.id),
+    saveTab: (id) => saving.saveTab(id),
     closeActiveTab: () => requestCloseTab(activeTab.id),
   });
 

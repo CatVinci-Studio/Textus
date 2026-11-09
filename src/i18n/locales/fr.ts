@@ -915,6 +915,12 @@ utiliser une.
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
+  agentNeedsFolder:
+    "Ouvrez d’abord un dossier ou enregistrez le document : l’agent travaille dans un dossier.",
+  agentStopped: "{agent} s’est arrêté.",
+  agentSignIn: "Connectez-vous d’abord à {agent}.",
+  chatAgentsGroup: "Agents",
+  chatAgentPermission: "L’agent demande à continuer",
   pictureRedraw: "Redessiner…",
   pictureRedrawTitle: "Redessiner l’image",
   pictureRedrawPrompt:
@@ -1834,6 +1840,8 @@ utiliser une.
     "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermAiTools: "Donner à Textus AI ses propres outils",
   pluginPermNotifications: "Afficher des notifications système",
+  pluginPermAgents:
+    "Lancer un agent IA installé sur cet ordinateur (il peut lire et modifier des fichiers)",
   pluginPermBackground:
     "Exécuter du code selon un horaire, même toutes fenêtres fermées",
   pluginScheduleNotice:

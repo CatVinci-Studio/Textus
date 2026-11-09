@@ -865,6 +865,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentSend: "送信",
   agentStop: "停止",
   agentRetry: "再試行",
+  agentNeedsFolder:
+    "先にフォルダを開くか、書類を保存してください。エージェントはフォルダの中で作業します。",
+  agentStopped: "{agent} が停止しました。",
+  agentSignIn: "先に {agent} にサインインしてください。",
+  chatAgentsGroup: "エージェント",
+  chatAgentPermission: "エージェントが続行の許可を求めています",
   pictureRedraw: "描き直す…",
   pictureRedrawTitle: "画像を描き直す",
   pictureRedrawPrompt: "画像の説明 - 書き換えると Textus が描き直します：",
@@ -1737,6 +1743,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
   pluginPermAiTools: "Textus AI に独自のツールを提供する",
   pluginPermNotifications: "システム通知を表示する",
+  pluginPermAgents:
+    "このコンピュータにインストールされた AI エージェントを実行する（ファイルの読み取りと変更ができます）",
   pluginPermBackground:
     "スケジュールに従ってコードを実行する（すべてのウインドウを閉じていても）",
   pluginScheduleNotice:

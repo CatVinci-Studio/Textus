@@ -899,6 +899,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentSend: "Senden",
   agentStop: "Stoppen",
   agentRetry: "Erneut versuchen",
+  agentNeedsFolder:
+    "Öffne zuerst einen Ordner oder speichere das Dokument: Der Agent arbeitet in einem Ordner.",
+  agentStopped: "{agent} wurde beendet.",
+  agentSignIn: "Melde dich zuerst bei {agent} an.",
+  chatAgentsGroup: "Agenten",
+  chatAgentPermission: "Der Agent bittet, weiterzumachen",
   pictureRedraw: "Neu zeichnen…",
   pictureRedrawTitle: "Bild neu zeichnen",
   pictureRedrawPrompt:
@@ -1805,6 +1811,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
   pluginPermNotifications: "Systemmitteilungen anzeigen",
+  pluginPermAgents:
+    "Einen auf diesem Computer installierten KI-Agenten ausführen (er kann Dateien lesen und ändern)",
   pluginPermBackground:
     "Code nach Zeitplan ausführen, auch wenn alle Fenster geschlossen sind",
   pluginScheduleNotice:

@@ -35,6 +35,8 @@ export interface ChatMessagesLabels
   diffShow: string;
   actionNames: Record<EditAction, string>;
   retry: string;
+  /** An external agent's step that has no title of its own. */
+  agentPermission: string;
   /** The Accept button while some sentences are kept as written: "{k}" of
    *  "{n}". */
   proposalAcceptSome: string;

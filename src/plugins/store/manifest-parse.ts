@@ -446,6 +446,26 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       targets: known(targets, EMBED_KINDS),
     };
   });
+  const agents = list(c.agents, "contributes.agents").map((x, i) => {
+    const at = `contributes.agents[${i}]`;
+    const o = object(x, at);
+    const env = o.env === undefined ? {} : object(o.env, `${at}.env`);
+    return {
+      id: ownId(o.id, id, `${at}.id`),
+      name: text(o.name, `${at}.name`),
+      command: text(o.command, `${at}.command`),
+      args: list(o.args, `${at}.args`).map((a, j) =>
+        text(a, `${at}.args[${j}]`, true),
+      ),
+      env: Object.fromEntries(
+        Object.entries(env).map(([k, v]) => [
+          k,
+          text(v, `${at}.env.${k}`, true),
+        ]),
+      ),
+      setup: text(o.setup, `${at}.setup`, true) || undefined,
+    };
+  });
   const hovers = known(
     list(c.hovers, "contributes.hovers").map((x, i) =>
       text(x, `contributes.hovers[${i}]`),
@@ -460,6 +480,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     links,
     codeBlocks,
     floatingViews,
+    agents,
     commands,
     keybindings,
     menus,

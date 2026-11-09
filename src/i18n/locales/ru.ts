@@ -900,6 +900,12 @@ export default {
   agentSend: "Отправить",
   agentStop: "Остановить",
   agentRetry: "Повторить",
+  agentNeedsFolder:
+    "Сначала откройте папку или сохраните документ: агент работает в папке.",
+  agentStopped: "{agent} остановился.",
+  agentSignIn: "Сначала войдите в {agent}.",
+  chatAgentsGroup: "Агенты",
+  chatAgentPermission: "Агент просит разрешения продолжить",
   pictureRedraw: "Перерисовать…",
   pictureRedrawTitle: "Перерисовать картинку",
   pictureRedrawPrompt:
@@ -1804,6 +1810,8 @@ export default {
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",
   pluginPermNotifications: "Показывать системные уведомления",
+  pluginPermAgents:
+    "Запускать ИИ-агента, установленного на этом компьютере (он может читать и менять файлы)",
   pluginPermBackground:
     "Запускать код по расписанию, даже когда все окна закрыты",
   pluginScheduleNotice:
