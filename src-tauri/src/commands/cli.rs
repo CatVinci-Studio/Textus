@@ -8,7 +8,8 @@
 //!   otherwise (the AppImage) `~/.local/bin/textus`.
 //!
 //! Startup installs it quietly where no password is needed; Settings ›
-//! General retries.
+//! General retries. On Windows startup only writes the script: the user's
+//! PATH is changed only from Settings, and never unless it was read whole.
 
 use serde::Serialize;
 
@@ -127,6 +128,20 @@ fn path_with(path: &str, dir: &str) -> String {
     }
 }
 
+/// The PATH to write: `old` (None when the user has none) with `dir` added
+/// at its end, or None when it can't be shown to keep every entry of `old`:
+/// the one check between a read and a write that could lose the user's PATH.
+#[cfg(any(windows, test))]
+fn next_path(old: Option<&str>, dir: &str) -> Option<String> {
+    let old = old.unwrap_or("");
+    if dir.trim().is_empty() || dir.contains(';') {
+        return None;
+    }
+    let next = path_with(old, dir);
+    let kept = old.trim_end_matches(';');
+    (next.starts_with(kept) && next.len() > kept.len()).then_some(next)
+}
+
 #[cfg(windows)]
 mod imp {
     use super::CliStatus;
@@ -147,27 +162,49 @@ mod imp {
         Ok((name, bin))
     }
 
-    fn user_path() -> (String, Type) {
-        let Ok(key) = CURRENT_USER.open(ENV_KEY) else {
-            return (String::new(), Type::ExpandString);
+    /// The user's PATH as it is stored: None when there is none; an error
+    /// when it can't be read whole, and then nothing writes it.
+    fn user_path() -> Result<Option<(String, Type)>, String> {
+        // HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND): no key, or no value.
+        const NOT_FOUND: u32 = 0x8007_0002;
+        let key = match CURRENT_USER.open(ENV_KEY) {
+            Ok(key) => key,
+            Err(e) if e.code().0 as u32 == NOT_FOUND => return Ok(None),
+            Err(e) => return Err(e.to_string()),
         };
-        let ty = key.get_type("Path").unwrap_or(Type::ExpandString);
-        (key.get_string("Path").unwrap_or_default(), ty)
+        let value = match key.get_value("Path") {
+            Ok(value) => value,
+            Err(e) if e.code().0 as u32 == NOT_FOUND => return Ok(None),
+            Err(e) => return Err(e.to_string()),
+        };
+        let ty = value.ty();
+        if !matches!(ty, Type::String | Type::ExpandString) {
+            return Err("PATH is not text.".into());
+        }
+        let text = String::try_from(value).map_err(|e| e.to_string())?;
+        Ok(Some((text, ty)))
     }
 
     pub fn status() -> CliStatus {
         let Ok((name, bin)) = paths() else {
             return CliStatus::Missing;
         };
+        let on_path = |p: &str| match user_path() {
+            Ok(Some((path, _))) => super::path_has(&path, p),
+            _ => false,
+        };
         CliStatus::of(std::fs::read_to_string(bin.join("textus.cmd")).ok(), |s| {
-            s == super::windows_script(&name)
-                && super::path_has(&user_path().0, &bin.to_string_lossy())
+            s == super::windows_script(&name) && on_path(&bin.to_string_lossy())
         })
     }
 
+    /// At startup: the script only, kept current. The PATH is the user's
+    /// own; it is changed only when they ask (Settings › General).
     pub fn try_silent_install() {
-        if status() != CliStatus::Installed {
-            let _ = install();
+        if let Ok((name, bin)) = paths() {
+            if bin.join("textus.cmd").exists() {
+                let _ = std::fs::write(bin.join("textus.cmd"), super::windows_script(&name));
+            }
         }
     }
 
@@ -176,18 +213,37 @@ mod imp {
         std::fs::create_dir_all(&bin).map_err(|e| e.to_string())?;
         std::fs::write(bin.join("textus.cmd"), super::windows_script(&name))
             .map_err(|e| e.to_string())?;
-        let dir = bin.to_string_lossy();
-        let (path, ty) = user_path();
-        if super::path_has(&path, &dir) {
-            return Ok(());
+        let dir = bin.to_string_lossy().into_owned();
+        // Not read whole: left as it is.
+        let old = user_path()?;
+        if let Some((path, _)) = &old {
+            if super::path_has(path, &dir) {
+                return Ok(());
+            }
+        }
+        let next = super::next_path(old.as_ref().map(|(p, _)| p.as_str()), &dir)
+            .ok_or("PATH left unchanged.")?;
+        // What it was, beside the script, before anything is written.
+        if let Some((path, _)) = &old {
+            std::fs::write(bin.join("PATH-before-textus.txt"), path).map_err(|e| e.to_string())?;
         }
         let key = CURRENT_USER.create(ENV_KEY).map_err(|e| e.to_string())?;
-        let next = super::path_with(&path, &dir);
-        match ty {
-            Type::String => key.set_string("Path", &next),
-            _ => key.set_expand_string("Path", &next),
+        let ty = old
+            .as_ref()
+            .map(|(_, ty)| *ty)
+            .unwrap_or(Type::ExpandString);
+        let write = |text: &str| match ty {
+            Type::String => key.set_string("Path", text),
+            _ => key.set_expand_string("Path", text),
+        };
+        write(&next).map_err(|e| e.to_string())?;
+        // Read back: anything but what was meant, and the old one goes back.
+        if !matches!(user_path(), Ok(Some((ref now, _))) if *now == next) {
+            if let Some((path, _)) = &old {
+                let _ = write(path);
+            }
+            return Err("PATH could not be checked; put back as it was.".into());
         }
-        .map_err(|e| e.to_string())?;
         // New terminals opened from Explorer read PATH again on this; a
         // window that doesn't answer could hold it for seconds.
         std::thread::spawn(announce_environment);
@@ -345,6 +401,20 @@ mod tests {
         assert!(!path_has(r"C:\x;C:\Users\a\AppData\Local\Textus", dir));
         assert_eq!(path_with("", dir), dir);
         assert_eq!(path_with(r"C:\x;", dir), format!(r"C:\x;{dir}"));
+    }
+
+    #[test]
+    fn windows_path_keeps_every_entry_or_is_not_written() {
+        let dir = r"C:\Users\a\AppData\Local\Textus\bin";
+        let old = r"C:\Python;%USERPROFILE%\go\bin;";
+        let next = next_path(Some(old), dir).unwrap();
+        assert!(next.starts_with(r"C:\Python;%USERPROFILE%\go\bin"));
+        assert!(next.ends_with(dir));
+        // No PATH yet: only ours.
+        assert_eq!(next_path(None, dir).as_deref(), Some(dir));
+        // Nothing that could cut the user's PATH.
+        assert_eq!(next_path(Some(old), ""), None);
+        assert_eq!(next_path(Some(old), "a;b"), None);
     }
 
     #[test]

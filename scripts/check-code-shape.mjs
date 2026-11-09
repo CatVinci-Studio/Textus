@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Checks the code shape rules: at most 600 lines per source file, at most 8
+// Checks the code shape rules: at most 500 lines per source file, at most 8
 // hooks per component, and no provider id compared outside its adapter.
 // Files listed over a limit may shrink, not grow.
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const MAX_LINES = 600;
+const MAX_LINES = 500;
 const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
@@ -17,7 +17,12 @@ const LINES_NOW = {};
 const HOOKS_NOW = {};
 
 /** Not held to the line limit: tables, not logic. */
-const TABLES = [/^src\/i18n\/locales\//, /^src\/ui\/icons\.tsx$/];
+const TABLES = [
+  /^src\/i18n\/locales\//,
+  /^src\/ui\/icons\.tsx$/,
+  // Written by src-tauri/src/bindings.rs.
+  /^src\/platform\/bindings\//,
+];
 
 function walk(dir, out = []) {
   for (const name of readdirSync(join(root, dir))) {

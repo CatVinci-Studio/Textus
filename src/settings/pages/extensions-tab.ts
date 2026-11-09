@@ -32,6 +32,22 @@ export function openExtensionsTab(tab: ExtensionsTab): void {
   lastTab = tab;
 }
 
+/** The plugin whose page Plugins opens on next, once. */
+let startPlugin: string | null = null;
+
+/** Makes the next Extensions page open on plugin `id`'s page (its settings
+ *  are there), from the Plugins menu. */
+export function openPluginPage(id: string): void {
+  lastTab = "plugins";
+  startPlugin = id;
+}
+
+export function takeStartPlugin(): string | null {
+  const id = startPlugin;
+  startPlugin = null;
+  return id;
+}
+
 export function extensionsStartTab(): ExtensionsTab {
   const tabs = extensionsTabs();
   return tabs.includes(lastTab) ? lastTab : tabs[0];

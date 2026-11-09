@@ -1,3 +1,4 @@
+import { scaledPx } from "../ui/chrome-scale";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
@@ -51,7 +52,10 @@ export function SidebarTabBar({
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const measure = () =>
-      setFit(Math.max(1, Math.floor(el.clientWidth / TAB_MIN_PX)) || Infinity);
+      setFit(
+        Math.max(1, Math.floor(el.clientWidth / scaledPx(TAB_MIN_PX))) ||
+          Infinity,
+      );
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);

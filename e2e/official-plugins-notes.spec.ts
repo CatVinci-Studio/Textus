@@ -5,6 +5,7 @@ import {
   mockInvoke,
   pasteMarkdown,
   swallowHtmlDrop,
+  END,
 } from "./helpers";
 import {
   openPath,
@@ -72,7 +73,8 @@ test("a deleted quick note comes back with Undo, and an empty one goes by itself
     .getByRole("menuitem", { name: "Delete" })
     .click();
   await expect(panel.locator("textarea")).toHaveCount(0);
-  await panel.getByRole("button", { name: "Undo" }).click();
+  // Undo is on Textus's own note at the foot of the window.
+  await page.locator(".notice").getByRole("button", { name: "Undo" }).click();
   await expect(panel.locator("textarea")).toHaveValue("Keep me");
   // A new note left empty doesn't stay.
   await panel.getByRole("button", { name: "New" }).click();
@@ -93,7 +95,7 @@ test("a day in the calendar opens its note, made the first time", async ({
   await openPath(page, "/notes/ideas.md");
   await expect(page.locator(editor)).toContainText("Ideas");
   const calendar = await openSidebarTab(page, "Calendar");
-  await calendar.locator(`.day[data-date="${today()}"]`).click();
+  await calendar.locator(`.tx-calendar-day[data-date="${today()}"]`).click();
   await expect(page.locator(editor)).toContainText(today());
   const written = await page.evaluate(
     (date) =>
@@ -103,9 +105,9 @@ test("a day in the calendar opens its note, made the first time", async ({
     today(),
   );
   expect(written).toBe(`# ${today()}\n\n`);
-  await expect(calendar.locator(`.day[data-date="${today()}"]`)).toHaveClass(
-    /has-note/,
-  );
+  await expect(
+    calendar.locator(`.tx-calendar-day[data-date="${today()}"]`),
+  ).toHaveClass(/is-marked/);
 });
 
 test("the folder's tasks are listed, and ticking one writes its line", async ({
@@ -273,15 +275,17 @@ test("saves close together are one version, listed under Today", async ({
   const history = await openSidebarTab(page, "History");
   for (const words of [" one", " two", " three"]) {
     await page.locator(editor).click();
-    await page.keyboard.press("End");
+    await page.keyboard.press(END);
     await page.keyboard.type(words);
     await save();
     await page.waitForTimeout(300);
   }
-  await expect(history.locator(".day-head")).toHaveText("Today");
+  await expect(history.locator(".tx-list-heading")).toHaveText("Today");
   // Within 15 minutes (the default): one version, the latest text.
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(1);
-  await history.locator("#versions > li:not(.day-head)").click();
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(1);
+  await history.locator("#versions > li:not(.tx-list-heading)").click();
   await expect(history.locator(".diff")).toContainText("three");
 });
 
@@ -303,18 +307,22 @@ test("each save is a version, shown against the text now and restorable", async 
   await openPath(page, "/notes/essay.md");
   const save = () => emit(page, "menu-save-file");
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" and more");
   await save();
   const history = await openSidebarTab(page, "History");
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(1);
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(1);
   await page.clock.fastForward("16:00");
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" again");
   await save();
-  await expect(history.locator("#versions > li:not(.day-head)")).toHaveCount(2);
-  await history.locator("#versions > li:not(.day-head)").nth(1).click();
+  await expect(
+    history.locator("#versions > li:not(.tx-list-heading)"),
+  ).toHaveCount(2);
+  await history.locator("#versions > li:not(.tx-list-heading)").nth(1).click();
   await expect(history.locator(".diff .added")).toContainText("again");
   await history.getByRole("button", { name: "Restore This Version" }).click();
   // The version now as a proposal over the text: the old line offered,
@@ -412,7 +420,7 @@ test("a citation searched in Zotero goes in where the caret is", async ({
     },
   });
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await runCommand(page, "catvinci.zotero.cite");
   await page.locator(".app-dialog-input").fill("darwin");
   await page.keyboard.press("Enter");
@@ -543,4 +551,64 @@ test("Insert References List lists the works the document cites", async ({
   await expect(page.locator(editor)).toContainText(
     "Darwin, Charles (1859). On the Origin of Species. John Murray.",
   );
+});
+
+test("with Finished tasks last on, a box ticked in the document moves its task after the open ones", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.tasks": [
+        "files.read",
+        "files.write",
+        "editor.read",
+        "editor.write",
+      ],
+    },
+    settings: { "catvinci.tasks": { doneLast: true } },
+    folder: {
+      "/notes/plan.md": "# Plan\n\n- [ ] Write\n- [ ] Read\n- [ ] Walk\n",
+    },
+  });
+  await openPath(page, "/notes/plan.md");
+  const task = page.locator(
+    '[data-active-tab="true"] li[data-item-type="task"]',
+  );
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+  // Started once a document is open, when the window is idle.
+  await expect(page.locator('iframe[title="catvinci.tasks"]')).toHaveCount(1);
+  await page.waitForTimeout(300);
+  const box = (await task.first().boundingBox())!;
+  await page.mouse.click(box.x + 8, box.y + box.height / 2);
+  await expect(task).toHaveText(["Read", "Walk", "Write"]);
+  await expect(task.last()).toHaveAttribute("data-checked", "true");
+  // Undone, the move goes back first, and isn't made again.
+  await emit(page, "menu-undo");
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+  await page.waitForTimeout(800);
+  await expect(task).toHaveText(["Write", "Read", "Walk"]);
+});
+
+test("a click on the Pomodoro timer starts it, and another pauses it", async ({
+  page,
+}) => {
+  await openWithPlugins(page, {
+    plugins: { "catvinci.pomodoro": [] },
+    folder: { "/notes/plan.md": "# Plan\n" },
+  });
+  await openPath(page, "/notes/plan.md");
+  await page.keyboard.press("ControlOrMeta+Shift+P");
+  await page.keyboard.type("Pomodoro Timer");
+  await page.keyboard.press("Enter");
+  const view = page.locator('[data-floating-view="catvinci.pomodoro.timer"]');
+  await expect(view).toBeVisible();
+  const timer = view
+    .frameLocator("iframe")
+    .getByRole("button", { name: /Focus/ });
+  await expect(timer).toHaveAttribute("aria-label", /click to start/);
+  // The page is under the view's drag layer: a click comes as a poke.
+  await view.click();
+  await expect(timer).toHaveAttribute("aria-label", /click to pause/);
+  await view.click();
+  await expect(timer).toHaveAttribute("aria-label", /click to start/);
 });

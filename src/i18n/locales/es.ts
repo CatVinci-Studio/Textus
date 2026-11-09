@@ -129,6 +129,8 @@ para usar una.
   editorLabel: "Documento",
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar el código",
+  codeBlockDone: "Terminar de editar",
+  codeBlockDelete: "Eliminar el bloque",
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagen",
   pictureViewerLabel: "Imagen",
@@ -1313,6 +1315,8 @@ para usar una.
   closeLastWindow: "Cerrar la ventana",
   closeLastStartPage: "Mostrar la página de inicio",
   startPageRecentProjects: "Proyectos recientes",
+  startPagePickDocument:
+    "Elige un documento de {folder} en la barra lateral para empezar.",
   startPageRecentFiles: "Archivos recientes",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   autosaveLabel: "Guardar automáticamente",
@@ -1703,6 +1707,8 @@ para usar una.
   pluginsInstallHelp:
     "Un paquete de complemento (.textusplugin) se copia en Textus. Una carpeta de complemento se carga donde está, para probar uno que estés escribiendo; se recarga desde allí.",
   pluginsInstallFile: "Instalar desde archivo…",
+  pluginFormPrevMonth: "Mes anterior",
+  pluginFormNextMonth: "Mes siguiente",
   pluginsLoadFolder: "Cargar carpeta de complemento…",
   pluginsOpenScripts: "Abrir la carpeta de scripts",
   pluginPackageFilter: "Complemento de Textus",
@@ -1724,7 +1730,10 @@ para usar una.
   pluginCardsRestore: "Mostrar de nuevo",
   pluginScreenshot: "{name} en uso",
   pluginsMine: "Hechos por ti",
-  pluginsNone: "Ninguno todavía.",
+  pluginsInstalledNone:
+    "Aún no has instalado plugins. Elige uno en {section}, más abajo.",
+  skillsInstalledNone:
+    "Aún no has añadido habilidades. Elige una en {section}, más abajo, o crea la tuya.",
   pluginStatusBroken: "No se puede leer: {reason}",
   pluginStatusDesktopOnly:
     "Solo funciona en el ordenador, no en iPhone ni iPad.",
@@ -1793,6 +1802,8 @@ para usar una.
   pluginPermNetworkAny: "Conectarse a cualquier sitio web",
   menuPlugins: "Complementos",
   menuManagePlugins: "Gestionar complementos…",
+  menuPluginSettings: "Ajustes…",
+  menuPluginSettingsOf: "Ajustes de {name}…",
   menuNoPluginCommands: "No hay comandos de complementos",
   webPageAddress: "Dirección web",
   webPageReload: "Recargar",

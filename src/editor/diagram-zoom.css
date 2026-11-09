@@ -93,7 +93,7 @@
   bottom: 0.9rem;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.8rem;
+  font-size: var(--text-footnote);
   color: var(--text-muted, var(--text));
   background: var(--ui-bg);
   padding: 0.2rem 0.6rem;

@@ -8,8 +8,8 @@ import { toEditorText } from "../document/file-format";
 import {
   readSourceBlocks,
   writePreservingSource,
-  type SourceBlocks,
 } from "../editor/markdown/source-preserving";
+import type { SourceBlocks } from "../editor/markdown/source-parts";
 import {
   EDIT_KINDS,
   type EditKind,

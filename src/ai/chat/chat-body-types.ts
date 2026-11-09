@@ -4,7 +4,10 @@ import type { AgentConversation } from "./useAgentConversation";
 import type { AgentMode, PanelMode } from "../../prefs/SettingsContext";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import type { AgentTurn, EditProposal } from "../types";
-import type { ChatMessagesLabels, ChatMessagesProps } from "./ChatMessages";
+import type {
+  ChatMessagesLabels,
+  ChatMessagesProps,
+} from "./chat-messages-types";
 import type { ChatComposerLabels, SelectionChipHandlers } from "./ChatComposer";
 import type { ChatComposerHandle, ChatComposerProps } from "./composer-types";
 import type { QuickAskPendingBarLabels } from "./quick-ask/QuickAskPendingBar";

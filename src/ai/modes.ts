@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import type { TextKey } from "../i18n/strings";
-import type { PanelMode } from "../prefs/settings-types";
+import type { PanelMode } from "../prefs/settings-values";
 import {
   CreateModeIcon,
   ResearchModeIcon,

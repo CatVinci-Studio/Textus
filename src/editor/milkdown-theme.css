@@ -651,6 +651,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
   color: var(--doc-muted);
 }
 
+/* `%20` in a link's destination, drawn as the space it stands for. */
+.link-source .link-source-decoded {
+  color: var(--doc-muted);
+}
+
 /* An image in a link's text, drawn while its source is hidden. */
 .link-image {
   max-width: 100%;
@@ -1376,6 +1381,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .code-block-copy,
 .code-block-select-all,
+.code-block-actions .plugin-code-done,
 .code-block-language-select {
   font: inherit;
   font-size: 0.72em;
@@ -1402,6 +1408,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .code-block-copy:focus-visible,
 .code-block-select-all:hover,
 .code-block-select-all:focus-visible,
+.code-block-actions .plugin-code-done:hover,
 .code-block-language-select:hover,
 .code-block-language-select:focus-visible,
 .code-block-language-select[aria-expanded="true"] {

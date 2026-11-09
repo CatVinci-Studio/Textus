@@ -17,6 +17,25 @@
   animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
 }
 
+/* On the desktop the window bar's right end (word count, window buttons)
+   belongs to the page: the panel's fill and edge start under it. */
+:root:not([data-window-chrome="mobile"]) .agent-panel {
+  border-left: none;
+  background: linear-gradient(
+    transparent var(--window-bar-height),
+    var(--ui-surface) var(--window-bar-height)
+  );
+}
+:root:not([data-window-chrome="mobile"]) .agent-panel::before {
+  content: "";
+  position: absolute;
+  top: var(--window-bar-height);
+  bottom: 0;
+  left: 0;
+  border-left: 1px solid var(--ui-border);
+  pointer-events: none;
+}
+
 /* It leaves the way it came; the editor takes the room back once it has
    gone. */
 .agent-panel[data-state="closing"] {

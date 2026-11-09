@@ -13,11 +13,11 @@ import { version as APP_VERSION } from "../../../package.json";
 import { currentStrings } from "../../i18n/current";
 import {
   loadPlugins,
-  runsHere,
   pluginName,
   pluginRecord,
   setPluginEnabled,
 } from "../manager";
+import { runsHere } from "../plugin-platform";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
 import { compareNames } from "../../utils/name-order";

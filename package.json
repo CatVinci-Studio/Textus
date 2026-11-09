@@ -1,7 +1,7 @@
 {
   "name": "textus",
   "private": true,
-  "version": "1.3.11",
+  "version": "1.3.12",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -26,7 +26,7 @@
     "bench:large-doc": "playwright test -c playwright.perf.config.ts large-doc.perf.ts",
     "bench:plugins": "playwright test -c playwright.perf.config.ts plugins.perf.ts",
     "setup:e2e": "playwright install chromium",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && node scripts/check-readmes.mjs && node scripts/check-code-shape.mjs && node scripts/check-cycles.mjs && node scripts/check-duplicates.mjs && knip --no-progress && node scripts/check-versions.mjs && node scripts/check-nsis-template.mjs && node scripts/updater-manifest.mjs check",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run format:check && node scripts/check-readmes.mjs && node scripts/check-code-shape.mjs && node scripts/check-sizes.mjs && node scripts/check-text-sizes.mjs && node scripts/check-cycles.mjs && node scripts/check-duplicates.mjs && knip --no-progress && node scripts/check-versions.mjs && node scripts/check-nsis-template.mjs && node scripts/updater-manifest.mjs check",
     "check:quick": "node scripts/check-quick.mjs",
     "check:native": "node scripts/check-native.mjs",
     "check:all": "node scripts/check-all.mjs",

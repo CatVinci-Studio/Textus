@@ -1,3 +1,4 @@
+import { foldButtonKey, showBlockFold } from "../fold/block-fold";
 import { onMemoryIdle } from "../../utils/memory-idle";
 import { slashed } from "../../utils/path";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -12,7 +13,6 @@ import {
   embedKind,
   fillEmbed,
   noteEmbedOf,
-  setFolded,
 } from "./note-embed-render";
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
@@ -43,13 +43,10 @@ interface EmbedView {
   asks: AbortController;
 }
 
-/** Folds the embed under its title, or shows it again; remembered here. */
-function toggleFold(fold: HTMLElement): void {
-  const embed = fold.closest<HTMLElement>(".note-embed");
-  const key = fold.dataset.key;
-  if (!embed || !key) return;
-  const folded = embed.dataset.folded === undefined;
-  setFolded(embed, folded);
+/** Folds the embed to its line, or shows it again; remembered here. */
+function toggleFold(embed: HTMLElement, key: string): void {
+  const folded = !embed.hasAttribute("data-folded");
+  showBlockFold(embed, folded);
   setEmbedFolded(key, folded);
 }
 
@@ -74,9 +71,9 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
     if (remembered) {
       el.innerHTML = remembered;
       // Folded before: folded again at once, not after a flash of it all.
-      const key =
-        el.querySelector<HTMLElement>(".note-embed-fold")?.dataset.key;
-      if (key) setFolded(el, embedFolded(key));
+      const key = el.querySelector<HTMLElement>(":scope > .block-fold")?.dataset
+        .key;
+      if (key) showBlockFold(el, embedFolded(key));
     }
     const link = noteEmbedOf(source)!;
     void fillEmbed(el, link, {
@@ -96,20 +93,14 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
     });
     el.addEventListener("click", (event) => {
       const target = event.target as Element;
-      const fold = target.closest?.(".note-embed-fold");
-      if (fold instanceof HTMLElement) return toggleFold(fold);
-      const title = target.closest?.(".note-embed-title");
-      if (title instanceof HTMLElement) openSource(title);
+      const key = foldButtonKey(target);
+      const embed = target.closest?.(".block-foldable");
+      if (key && embed instanceof HTMLElement) return toggleFold(embed, key);
+      const open = target.closest?.(".note-embed-open");
+      if (open instanceof HTMLElement) openSource(open);
     });
-    el.addEventListener("keydown", (event) => {
-      const fold = (event.target as Element).closest?.(".note-embed-fold");
-      if (!(fold instanceof HTMLElement)) return;
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      toggleFold(fold);
-    });
-    // The body puts the caret on the source; a title, a plugin's block or a
-    // held link is a click.
+    // The body puts the caret on the source; its buttons, a plugin's block
+    // or a held link is a click.
     caretToSourceOnClick(
       el,
       view,
@@ -119,7 +110,7 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         (event as MouseEvent).metaKey ||
         (event as MouseEvent).ctrlKey ||
         !!(event.target as Element).closest?.(
-          ".note-embed-title, .note-embed-block",
+          ".block-fold, .block-folded-line, .note-embed-open, .note-embed-block",
         ),
     );
     return el;

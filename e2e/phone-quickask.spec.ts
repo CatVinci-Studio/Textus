@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openPhone, pasteMarkdown, PHONE } from "./helpers";
+import { mockInvoke, openPhone, pasteMarkdown, PHONE, HOME } from "./helpers";
 
 // Quick Ask and the AI composer in Chromium's phone viewport.
 test.use(PHONE);
@@ -11,7 +11,7 @@ const PARAGRAPH = "The survey covered three districts over two months.";
 async function openQuickAsk(page: Page) {
   await pasteMarkdown(page, `# Notes\n\n${PARAGRAPH}\n`);
   await page.locator('[data-active-tab="true"] .milkdown p').first().click();
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
   await page.keyboard.press("Shift+End");
   await page
     .getByRole("toolbar", { name: "Formatting" })

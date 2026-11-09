@@ -1,0 +1,65 @@
+/* A drawn block's fold (block-fold.ts): its caret in the margin on its
+   left, shown on hover or while folded; folded, one line with its name in
+   place of the block. In the document: its colours and sizes. */
+
+.block-foldable {
+  position: relative;
+}
+
+.block-fold {
+  position: absolute;
+  top: 0;
+  left: -1.75em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  padding: 0;
+  border: none;
+  border-radius: var(--shape-xs);
+  background: none;
+  color: var(--doc-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.block-foldable:hover > .block-fold,
+.block-fold:focus-visible {
+  opacity: 1;
+}
+
+.block-fold:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.block-fold[aria-expanded="true"] > .disclosure-caret {
+  transform: rotate(90deg);
+}
+
+/* Folded: the line instead of the block; the caret is on the line. */
+.block-folded-line {
+  display: none;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.2em 0;
+  border: none;
+  background: none;
+  color: var(--doc-muted);
+  font: inherit;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.block-folded-line:hover {
+  color: var(--doc-accent);
+}
+
+.block-foldable[data-folded] > .block-folded-line {
+  display: inline-flex;
+}
+
+.block-foldable[data-folded] > :not(.block-folded-line) {
+  display: none;
+}

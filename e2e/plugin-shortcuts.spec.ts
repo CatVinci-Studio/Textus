@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, keyLabel } from "./helpers";
 
 /**
  * A plugin command's key in Settings › Shortcuts: rebindable, and refused
@@ -50,24 +50,32 @@ test("a plugin command's key is listed, set again, and refused where an app acti
   }, ENTRY);
   await openApp(page, { settings: { language: "en" } });
   const notice = page.locator("[role=status]").first();
-  await page.keyboard.press("Control+Alt+Y");
+  await page.keyboard.press("ControlOrMeta+Alt+Y");
   await expect(notice).toContainText("Ping 1");
 
   await emit(page, "menu-open-settings");
   await page.locator(".settings-nav-item", { hasText: "Shortcuts" }).click();
   const plugins = page.locator(".settings-group", { hasText: "Plugins" });
   const key = plugins.getByRole("button", { name: /^Ping: / });
-  await expect(key).toHaveAccessibleName(/Ctrl\+Alt\+Y/);
+  await expect(key).toHaveAccessibleName(
+    new RegExp(escape(keyLabel("mod+alt+y"))),
+  );
 
   // The command palette's key is the app's.
   await key.click();
-  await page.keyboard.press("Control+Shift+P");
+  await page.keyboard.press("ControlOrMeta+Shift+P");
   await expect(plugins.getByRole("alert")).toContainText("Command Palette");
 
   await key.click();
-  await page.keyboard.press("Control+Alt+U");
-  await expect(key).toHaveAccessibleName(/Ctrl\+Alt\+U/);
+  await page.keyboard.press("ControlOrMeta+Alt+U");
+  await expect(key).toHaveAccessibleName(
+    new RegExp(escape(keyLabel("mod+alt+u"))),
+  );
   await page.keyboard.press("Escape");
-  await page.locator("body").press("Control+Alt+U");
+  await page.locator("body").press("ControlOrMeta+Alt+U");
   await expect(notice).toContainText("Ping 2");
 });
+
+function escape(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

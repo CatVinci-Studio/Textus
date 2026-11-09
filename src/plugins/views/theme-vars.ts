@@ -4,6 +4,9 @@
  * variables doesn't change what a plugin sees.
  */
 export const WEBVIEW_THEME_VARS = [
+  // The interface's size step, which the page's lengths grow with.
+  "--ui-text-scale",
+  "--window-scale",
   "--ui-bg",
   "--ui-surface",
   "--ui-subtle",
@@ -108,8 +111,22 @@ export function windowIsDark(): boolean {
   return getComputedStyle(document.documentElement).colorScheme === "dark";
 }
 
-/** A `:root {…}` rule giving each variable its value in the window now. */
-export function webviewThemeCss(): string {
+/** A `:root {…}` rule giving each variable its value in the window now. A
+ *  page drawn in the document grows with the document's zoom, not with
+ *  the window. */
+/** The interface's text at body size (--text-body's 13px at scale 1). */
+const UI_BODY_PX = 13;
+
+/** A page in the document reads as the document does: its text at the
+ *  body's size, its controls in step, the window's own growth left out. */
+function inDocumentScale(editor: Element | null): string[] {
+  const text = editor?.querySelector(".ProseMirror") ?? editor;
+  const px = text ? parseFloat(getComputedStyle(text).fontSize) : NaN;
+  const scale = Number.isFinite(px) && px > 0 ? px / UI_BODY_PX : 1;
+  return ["  --window-scale: 1;", `  --ui-text-scale: ${scale.toFixed(3)};`];
+}
+
+export function webviewThemeCss(inDocument = false): string {
   const style = getComputedStyle(document.documentElement);
   // The alert colours are the document's, set on the editor.
   const editor = document.querySelector(".milkdown");
@@ -120,6 +137,7 @@ export function webviewThemeCss(): string {
     return value ? `  ${name}: ${value};` : "";
   })
     .filter(Boolean)
+    .concat(inDocument ? inDocumentScale(editor) : [])
     .join("\n");
   return `:root {\n${body}\n}`;
 }

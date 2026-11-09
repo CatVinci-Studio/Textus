@@ -2,7 +2,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { composeSentences, splitSentences, trimBreaks } from "./sentence-diff";
+import { composeSentences, trimBreaks } from "./sentence-diff";
+import { splitSentences } from "./sentence-pairs";
 import { diffSentences, splitUnits } from "./unit-diff";
 
 // Blocks are read by the editor's parser, which an editor registers as it

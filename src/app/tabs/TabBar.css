@@ -53,10 +53,6 @@
 }
 
 .tab-pill-lifted {
-  scale: 1.06;
-  background: var(--ui-surface);
-  color: var(--ui-text);
-  box-shadow: var(--shadow-popover);
   transition:
     scale var(--dur-fast) var(--ease-spring-bouncy),
     background-color var(--dur-fast) var(--ease-standard);

@@ -341,10 +341,6 @@ button.settings-danger-button {
   max-width: 100%;
 }
 
-.settings-toggle-row {
-  cursor: pointer;
-}
-
 .settings-row-label {
   color: var(--ui-text);
   font-size: var(--text-body-large);
@@ -377,67 +373,7 @@ button.settings-danger-button {
   -webkit-user-select: text;
 }
 
-/* Toggles render as switches, not native checkboxes, sized by the row's
-   text: half again its height, so the switch sits with the label instead of
-   outweighing it, on every platform and at every Interface Text Size. */
-:is(.settings-row, .settings-skill-item) input[type="checkbox"] {
-  --switch-inset: 2px;
-  --switch-thumb: calc(1.5em - 2 * var(--switch-inset));
-  --switch-travel: 1em;
-  appearance: none;
-  -webkit-appearance: none;
-  flex-shrink: 0;
-  width: 2.5em;
-  height: 1.5em;
-  margin: 0;
-  position: relative;
-  border: none;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-muted) 38%, var(--ui-bg));
-  font-size: var(--text-body-large);
-  cursor: pointer;
-  transition: background-color var(--dur-base) var(--ease-standard);
-}
-
-/* The thumb lands with UISwitch's slight overshoot; reduced motion jumps
-   it, and only the track's colour fades. */
-:is(.settings-row, .settings-skill-item) input[type="checkbox"]::after {
-  content: "";
-  position: absolute;
-  top: var(--switch-inset);
-  left: var(--switch-inset);
-  width: var(--switch-thumb);
-  height: var(--switch-thumb);
-  border-radius: 50%;
-  corner-shape: round;
-  background: var(--ui-on-fill);
-  box-shadow: var(--shadow-thumb);
-  transform-origin: left center;
-  transition: transform calc(var(--dur-medium) * var(--motion-travel))
-    var(--ease-spring-bouncy);
-}
-
-/* On: the theme's ink, like a primary button - its thumb in the page's
-   colour, so a dark theme's light track still shows it. */
-:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked {
-  background: var(--ui-primary);
-}
-
-:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked::after {
-  background: var(--ui-on-primary);
-}
-
-:is(.settings-row, .settings-skill-item) input[type="checkbox"]:checked::after {
-  transform: translateX(var(--switch-travel));
-}
-
-/* Held down, the thumb stretches toward the side it would go to, as
-   UISwitch's does, and springs back when let go. */
-:is(.settings-row, .settings-skill-item) input[type="checkbox"]:active::after {
-  transform: scaleX(1.2);
-  transition-duration: calc(var(--dur-fast) * var(--motion-travel));
-}
+/* Toggles render as switches (src/ui/controls.css, .tx-switch). */
 
 :is(.settings-row, .settings-skill-item)
   input[type="checkbox"]:checked:active::after {
@@ -1197,13 +1133,13 @@ button.settings-skill-action:focus-visible {
 }
 
 .settings-about-name {
-  font-size: calc(1.35rem * var(--ui-text-scale, 1));
+  font-size: var(--text-large-title);
   font-weight: 600;
   color: var(--ui-text);
 }
 
 .settings-about-version {
-  font-size: calc(0.85rem * var(--ui-text-scale, 1));
+  font-size: var(--text-body);
   color: var(--ui-muted);
   cursor: default;
   user-select: none;
@@ -1235,7 +1171,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-credit {
   margin-top: 4px;
-  font-size: calc(0.8rem * var(--ui-text-scale, 1));
+  font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
 
@@ -1330,7 +1266,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-status {
   flex-basis: 100%;
-  font-size: calc(0.8rem * var(--ui-text-scale, 1));
+  font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
 

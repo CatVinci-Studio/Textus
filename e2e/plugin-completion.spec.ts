@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { selectionRead } from "./helpers";
+import { selectionRead, HOME, END } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 /**
@@ -28,7 +28,7 @@ async function open(page: Page, granted = ["editor.read"]) {
     .locator('[data-active-tab="true"] .ProseMirror p', { hasText: "Area" })
     .click({ position: { x: 2, y: 8 } });
   await selectionRead(page);
-  await page.keyboard.press("Home");
+  await page.keyboard.press(HOME);
   for (let i = 0; i < "Area x".length + 1; i++) {
     await selectionRead(page);
     await page.keyboard.press("ArrowRight");
@@ -79,7 +79,7 @@ test("outside a formula nothing is listed", async ({ page }) => {
   await page
     .locator('[data-active-tab="true"] .ProseMirror p', { hasText: "Plain" })
     .click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type(" \\fr");
   await page.waitForTimeout(300);
   await expect(list(page)).toHaveCount(0);

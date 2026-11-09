@@ -1,3 +1,4 @@
+use super::download::*;
 use super::*;
 
 #[test]

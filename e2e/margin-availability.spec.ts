@@ -110,7 +110,7 @@ test("with no room for the margin, its views can't be picked and the chosen one 
   await expect(settings).toHaveCount(0);
 
   // Closing the AI panel makes room: the chosen view comes back by itself.
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   await expect(page.locator(".revision-note")).toHaveCount(2);
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(0);
   await expect(page.locator(".review-bar-view-name")).toHaveCount(0);
@@ -171,7 +171,7 @@ test("the line being read stays put as revisions move between the text and the m
     (_, i) => `Paragraph ${i} keeps the page long enough to scroll.`,
   ).join("\n\n");
   await proposeRevision(page, `${DOC}\n${filler}\n`);
-  await page.keyboard.press("Control+Shift+L");
+  await page.keyboard.press("ControlOrMeta+Shift+L");
   await expect(page.locator(".revision-note")).toHaveCount(2);
 
   const line = page.locator(".milkdown p", { hasText: "The second paragraph" });

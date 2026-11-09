@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import { skillsInReply, type ReplySkill } from "./chat-skill";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { AgentMode } from "../../prefs/settings-values";
 import { ModeChoice } from "./ModeChoice";
 import { explainError } from "../../utils/error-explain";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";

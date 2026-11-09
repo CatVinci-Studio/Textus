@@ -1,5 +1,6 @@
 /**
- * Turns off the engine's own right-click menu (text fields keep it) and the
+ * Turns off the engine's own right-click menu (text fields take Textus's own,
+ * text-field-menu.tsx) and the
  * F5 / Ctrl+R reload, which would discard unsaved edits. Release builds only.
  * Bubble phase, so a user's own Ctrl+R binding still runs.
  */

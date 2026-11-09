@@ -1,5 +1,5 @@
 import { errorText } from "../../utils/error-text";
-import type { AgentMode } from "../../prefs/settings-types";
+import type { AgentMode } from "../../prefs/settings-values";
 import type { Strings, TextKey } from "../../i18n/strings";
 
 /** What saving a skill the model wrote fails with, then `:` and its

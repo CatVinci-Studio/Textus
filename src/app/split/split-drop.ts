@@ -1,3 +1,5 @@
+import { dragGhost } from "../../ui/drag-ghost";
+import { scaledPx } from "../../ui/chrome-scale";
 import {
   moveToPane,
   pairLayout,
@@ -43,8 +45,9 @@ function outerEdge(
   x: number,
   y: number,
 ): "left" | "right" | "top" | "bottom" | null {
-  const across = Math.min(OUTER, area.width * OUTER_SHARE);
-  const down = Math.min(OUTER, area.height * OUTER_SHARE);
+  const outer = scaledPx(OUTER);
+  const across = Math.min(outer, area.width * OUTER_SHARE);
+  const down = Math.min(outer, area.height * OUTER_SHARE);
   const sides = [
     ["top", (y - area.top) / down],
     ["bottom", (area.bottom - y) / down],
@@ -253,11 +256,7 @@ export function pullTab(
     releaseOutside?: (id: string) => void;
   },
 ): void {
-  const ghost = document.createElement("div");
-  ghost.className = "tab-pull-ghost";
-  ghost.textContent = title;
-  ghost.setAttribute("aria-hidden", "true");
-  document.body.append(ghost);
+  const ghost = dragGhost(title, "tab-pull-ghost");
   setDragging(true);
   const outside = (e: PointerEvent) =>
     e.clientX < 0 ||
@@ -275,7 +274,7 @@ export function pullTab(
       opts.detach(tabId);
       return;
     }
-    ghost.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 8}px)`;
+    ghost.move(e.clientX, e.clientY);
     const bar = barDropAt(e.clientX, e.clientY, tabId);
     showDropHint(
       bar

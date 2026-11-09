@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, selectionRead } from "./helpers";
+import { emit, selectionRead, END } from "./helpers";
 import {
   hasPlugin,
   openPath,
@@ -106,7 +106,7 @@ test("Templates inserts one at the caret, its title filled in", async ({
     "# Doc\n\nEnd.\n",
   );
   await page.locator(`${editor} p`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Enter");
   await run(page, "catvinci.templates.insert");
   const pick = page.getByRole("dialog", { name: "Choose a template" });
@@ -147,7 +147,7 @@ test("Bookmarks keeps the words selected, listed in the sidebar", async ({
     "# Doc\n\nA remarkable sentence here.\n",
   );
   await page.locator(`${editor} p`).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.press("Shift+Home");
   // The command reads the editor's selection: once the editor has it.
   await expect

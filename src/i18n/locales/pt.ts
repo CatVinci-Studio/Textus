@@ -121,6 +121,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   editorLabel: "Documento",
   diagramZoom: "Ampliar diagrama",
   codeBlockEditSource: "Editar o código",
+  codeBlockDone: "Concluir edição",
+  codeBlockDelete: "Excluir o bloco",
   diagramViewerLabel: "Diagrama",
   pictureZoom: "Ampliar imagem",
   pictureViewerLabel: "Imagem",
@@ -1294,6 +1296,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closeLastWindow: "Fechar a janela",
   closeLastStartPage: "Mostrar a página inicial",
   startPageRecentProjects: "Projetos recentes",
+  startPagePickDocument:
+    "Escolha um documento de {folder} na barra lateral para começar.",
   startPageRecentFiles: "Arquivos recentes",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   autosaveLabel: "Salvar automaticamente",
@@ -1680,6 +1684,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsInstallHelp:
     "Um pacote de plugin (.textusplugin) é copiado para o Textus. Uma pasta de plugin é carregada onde está, para testar um que você esteja escrevendo; ele é recarregado de lá.",
   pluginsInstallFile: "Instalar de um arquivo…",
+  pluginFormPrevMonth: "Mês anterior",
+  pluginFormNextMonth: "Próximo mês",
   pluginsLoadFolder: "Carregar pasta de plugin…",
   pluginsOpenScripts: "Abrir pasta de scripts",
   pluginPackageFilter: "Plugin do Textus",
@@ -1701,7 +1707,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginCardsRestore: "Mostrar de novo",
   pluginScreenshot: "{name} em uso",
   pluginsMine: "Feitos por você",
-  pluginsNone: "Nenhum ainda.",
+  pluginsInstalledNone:
+    "Nenhum plugin instalado ainda. Escolha um em {section}, mais abaixo.",
+  skillsInstalledNone:
+    "Nenhuma habilidade adicionada ainda. Escolha uma em {section}, mais abaixo, ou crie a sua.",
   pluginStatusBroken: "Não foi possível ler: {reason}",
   pluginStatusDesktopOnly:
     "Funciona só no computador, não no iPhone nem no iPad.",
@@ -1770,6 +1779,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNetworkAny: "Conectar-se a qualquer site",
   menuPlugins: "Plugins",
   menuManagePlugins: "Gerenciar plugins…",
+  menuPluginSettings: "Configurações…",
+  menuPluginSettingsOf: "Configurações de {name}…",
   menuNoPluginCommands: "Nenhum comando de plugin",
   webPageAddress: "Endereço web",
   webPageReload: "Recarregar",

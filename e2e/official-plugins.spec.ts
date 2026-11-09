@@ -143,11 +143,11 @@ test("a PDF opens in the PDF Viewer, its words there to select; Find tints them 
   await find.fill("hello");
   await find.press("Enter");
   await expect(frame.locator("#find-count")).toHaveText("1/1");
-  await expect(frame.locator(".textLayer span.hit")).not.toHaveCount(0);
+  await expect(frame.locator(".textLayer span.tx-hit")).not.toHaveCount(0);
   await find.fill("nowhere");
   await find.press("Enter");
   await expect(frame.locator("#find-count")).toHaveText("Not found");
-  await expect(frame.locator(".textLayer span.hit")).toHaveCount(0);
+  await expect(frame.locator(".textLayer span.tx-hit")).toHaveCount(0);
   // A zoom chosen is where the PDF opens next time.
   await frame.getByRole("button", { name: "Zoom in" }).click();
   const zoom = (await frame.locator("#zoom").textContent()) ?? "";
@@ -260,12 +260,12 @@ test("the Word Reader lays a document out, finds words, zooms, says which page, 
   await expect(frame.locator("#page")).toHaveText("Page 1 of 1");
   await frame.getByRole("button", { name: "Find" }).click();
   await frame.locator("#find-input").fill("dear");
-  await expect(frame.locator("mark.hit")).toHaveCount(2);
+  await expect(frame.locator("mark.tx-hit")).toHaveCount(2);
   await expect(frame.locator("#find-count")).toHaveText("1 of 2");
   await frame.locator("#find-input").press("Enter");
   await expect(frame.locator("#find-count")).toHaveText("2 of 2");
   await frame.locator("#find-input").press("Escape");
-  await expect(frame.locator("mark.hit")).toHaveCount(0);
+  await expect(frame.locator("mark.tx-hit")).toHaveCount(0);
   await frame.getByRole("button", { name: "Zoom in" }).click();
   await expect(frame.locator("#zoom")).toHaveText("110%");
   // Edit as Markdown converts it.

@@ -5,7 +5,7 @@ import type { Strings } from "../../i18n/strings";
 import { skillText } from "../../ai/skills/texts";
 import { BUILTIN_SKILLS } from "../../ai/skills/builtin";
 import { listFromWorkspace } from "../../ai/chat/skill-picker";
-import { AGENT_MODES, type AgentMode } from "../../prefs/settings-types";
+import { AGENT_MODES, type AgentMode } from "../../prefs/settings-values";
 import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
@@ -156,7 +156,14 @@ export function OwnSkillsList({
     }
   }
 
-  if (own.length === 0) return null;
+  if (own.length === 0)
+    return (
+      <p className="plugin-empty">
+        {query.trim()
+          ? t.skillPickerNoMatch.replace("{query}", query.trim())
+          : t.skillsInstalledNone.replace("{section}", t.extensionsAvailable)}
+      </p>
+    );
   return (
     <div className="settings-skill-list">
       {error && (

@@ -1,21 +1,13 @@
 // What plugins add to the editor registers before any editor is made.
 import "./contributions/editor-extensions";
 import { logPluginError } from "./store/plugin-log";
-import {
-  forgetPluginSettings,
-  loadProjectPluginSettings,
-  pluginValue,
-  setPluginValue,
-  type SettingScope,
-} from "./store/plugin-settings";
+import { forgetPluginSettings } from "./store/plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import type { PluginFile } from "../platform/ipc";
-import { isIOSApp } from "../platform/capabilities";
-import { isMacPlatform, isWindowsPlatform } from "../platform/os";
 import { registerCommand, runCommand } from "../app/commands";
 import { pickWithCommands } from "../app/command-palette-entry";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showMessage } from "../ui/app-dialog";
 import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";
@@ -24,9 +16,7 @@ import {
   engineSatisfied,
   parseManifest,
   type Permission,
-  type PluginManifest,
 } from "./store/manifest";
-import { permissionLabel } from "./store/permissions";
 import {
   addContribution,
   applyContributions,
@@ -70,21 +60,10 @@ export {
   type PluginsSnapshot,
 } from "./store/plugin-records";
 import { compareNames } from "../utils/name-order";
-
-const hosts = new Map<string, PluginHost>();
-
-/** The system as a plugin is told it (textus.env.platform). */
-export function pluginPlatform(): string {
-  if (isIOSApp) return "ios";
-  if (isMacPlatform()) return "macos";
-  if (isWindowsPlatform()) return "windows";
-  return "linux";
-}
-
-/** Whether a plugin runs on this system (its manifest's platforms). */
-export function runsHere(manifest: PluginManifest): boolean {
-  return manifest.platforms.includes(isIOSApp ? "ios" : "desktop");
-}
+import { pluginPlatform, runsHere } from "./plugin-platform";
+import { hosts, stopHost } from "./running-hosts";
+import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
+import { askPermissions } from "./store/ask-permissions";
 
 // ---------------------------------------------------------------------------
 // Loading
@@ -261,11 +240,6 @@ function removeDynamicCommand(command: string) {
   dynamicCommands.delete(command);
 }
 
-function stopHost(id: string) {
-  hosts.get(id)?.stop();
-  hosts.delete(id);
-}
-
 async function pluginFailed(id: string, reason: string) {
   logPluginError(id, reason);
   const record = pluginRecord(id);
@@ -429,73 +403,8 @@ function withdraw(id: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Settings
-// ---------------------------------------------------------------------------
-
-/** A plugin's setting: the project's value, else the one for every
- *  document, else its manifest's default. */
-export function pluginSetting(id: string, key: string): unknown {
-  const { value, from } = pluginValue(id, key);
-  if (from) return value;
-  return (
-    pluginRecord(id)?.manifest?.contributes.settings.find((s) => s.key === key)
-      ?.default ?? null
-  );
-}
-
-/** Sets a plugin's setting for every document, or for the open project. */
-export async function setPluginSetting(
-  id: string,
-  key: string,
-  value: unknown,
-  scope: SettingScope = "global",
-): Promise<void> {
-  await setPluginValue(id, key, value, scope);
-  update(id, {});
-  hosts.get(id)?.event("settings", { key, value: pluginSetting(id, key) });
-}
-
-/** A project opened or closed: its plugins hear the settings it changes. */
-export async function setPluginProject(root: string | null): Promise<void> {
-  const before = new Map<string, unknown>();
-  const running = pluginsSnapshot().records.filter((r) => hosts.has(r.id));
-  for (const r of running)
-    for (const s of r.manifest?.contributes.settings ?? [])
-      before.set(`${r.id}\u0000${s.key}`, pluginSetting(r.id, s.key));
-  await loadProjectPluginSettings(root);
-  for (const r of running)
-    for (const s of r.manifest?.contributes.settings ?? []) {
-      const value = pluginSetting(r.id, s.key);
-      if (before.get(`${r.id}\u0000${s.key}`) !== value)
-        hosts.get(r.id)?.event("settings", { key: s.key, value });
-    }
-  for (const r of running) update(r.id, {});
-}
-
-// ---------------------------------------------------------------------------
 // Switching on and off, installing
 // ---------------------------------------------------------------------------
-
-/** Asks the user for what the plugin asks that it hasn't been granted;
- *  the full list when granted, null when refused. */
-async function askPermissions(
-  record: PluginRecord,
-): Promise<Permission[] | null> {
-  const wanted = record.manifest?.permissions ?? [];
-  const missing = wanted.filter((p) => !record.granted.includes(p));
-  if (!missing.length) return wanted;
-  const t = windowInfo().strings();
-  const list = missing.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
-  const ok = await showConfirm(
-    `${t.pluginPermissionsAsk.replace("{name}", pluginName(record))}\n\n${list}`,
-    {
-      title: t.pluginsTitle,
-      okLabel: t.pluginAllow,
-      cancelLabel: t.pluginCancel,
-    },
-  );
-  return ok ? wanted : null;
-}
 
 /** Settings' switch for one plugin. Turning it on asks for its
  *  permissions first; refused, it stays off. */

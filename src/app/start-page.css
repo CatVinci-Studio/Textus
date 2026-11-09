@@ -73,7 +73,7 @@
   border-radius: var(--shape-s);
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
   color: var(--ui-accent);
-  font-size: calc(18px * var(--ui-text-scale, 1));
+  font-size: var(--text-title);
 }
 
 .start-page-action-label {

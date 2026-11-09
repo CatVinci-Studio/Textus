@@ -121,7 +121,9 @@ test("a table of the folder's pages, a cell edited into its page's front matter"
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("rate: 3");
-  await expect(db.locator(rows).first().locator(".stars")).toHaveText("★★★☆☆");
+  await expect(db.locator(rows).first().locator(".tx-rating")).toHaveText(
+    "★★★☆☆",
+  );
 });
 
 /** Textus's own menu, which the page opens over itself. */
@@ -196,8 +198,8 @@ test("properties are added, renamed across the pages, and pages made in the tabl
   );
 
   await db.locator(".new-row .new").click();
-  await db.locator(".new-title input").fill("Week4");
-  await db.locator(".new-title input").press("Enter");
+  await db.locator(".draft-row td.title input").fill("Week4");
+  await db.locator(".draft-row td.title input").press("Enter");
   await expect
     .poll(() => fileText(page, "/work/2026 Calendar/Week4.md"))
     .toContain("# Week4");
@@ -276,7 +278,7 @@ test("zoomed, the block's page draws at the zoom across the column's width, and 
   await expect.poll(zoom).not.toBe(before);
 });
 
-test("a long view shows its first rows and more on asking; folded, only its bar", async ({
+test("a long view loads more rows once its end is in sight; folded by Textus, one line", async ({
   page,
 }) => {
   const db = await open(page, {
@@ -285,11 +287,17 @@ test("a long view shows its first rows and more on asking; folded, only its bar"
       BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
       "\n```\n",
   });
-  await expect(db.locator(rows)).toHaveCount(2);
-  await db.getByRole("button", { name: "Show 1 more" }).click();
+  // Two rows to start; the short block's end is in sight, so the third comes.
   await expect(db.locator(rows)).toHaveCount(3);
-  await db.locator("#fold").click();
-  await expect(db.locator("#body")).toBeHidden();
+  await expect(db.getByRole("button", { name: /more/i })).toHaveCount(0);
+  await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
+  // Folded as every drawn block is: the caret on its left, its name left.
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await block.hover();
+  await block.locator(".block-fold").click();
+  await expect(block.locator("iframe")).toBeHidden();
+  await expect(block.locator(".block-folded-line")).toHaveText("Wiki");
+  await block.locator(".block-folded-line").click();
   await expect(db.locator("#count")).toHaveText("3 pages");
 });
 
@@ -331,6 +339,42 @@ test("a column's head dragged along the others, and its edge to a width, kept in
   await expect.poll(() => docText(page)).toMatch(/columnSize:\n\s+end: \d+/);
 });
 
+test("a dragged column rides under the pointer, zoomed or not, and the next one slides aside", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const head = db.locator('thead th[data-key="status"]');
+  // The column after it, whichever that is.
+  const next = head.locator("xpath=following-sibling::th[@data-key][1]");
+  const zoom = () =>
+    db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom);
+  for (const zoomIn of [0, 3]) {
+    for (let i = 0; i < zoomIn; i++) await emit(page, "menu-zoom-in");
+    // The page takes the zoom, then draws again: drag what is there then.
+    if (zoomIn) await expect.poll(zoom).toBe("1.331");
+    await expect(head).toBeVisible();
+    const box = (await head.boundingBox())!;
+    const beside = (await next.boundingBox())!;
+    const at = { x: box.x + 12, y: box.y + box.height / 2 };
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 20, at.y, { steps: 3 });
+    // Past the point where their centres meet, whatever their widths.
+    const by = (box.width + beside.width) / 2 + 6;
+    await page.mouse.move(at.x + by, at.y, { steps: 3 });
+    // No copy of it: the column itself moves, as far as the pointer did.
+    await expect(db.locator(".tx-drag-ghost")).toHaveCount(0);
+    const moved = (await head.boundingBox())!;
+    expect(Math.abs(moved.x - box.x - by)).toBeLessThan(3);
+    // The one passed slides into the room it left.
+    await expect
+      .poll(async () => (await next.boundingBox())!.x)
+      .toBeLessThan(beside.x - 10);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+  }
+});
+
 test("any view's menu opens on a right click, and a view is deleted from it", async ({
   page,
 }) => {
@@ -341,13 +385,132 @@ test("any view's menu opens on a right click, and a view is deleted from it", as
   await expect.poll(() => docText(page)).not.toContain("type: calendar");
 });
 
-test("Show more comes before New at a table's end", async ({ page }) => {
-  const db = await open(page, {
-    "/work/2026 Calendar/2026 Calendar.md":
-      "# 2026 Calendar\n\n```base\n" +
-      BASE.replace("    name: Table\n", "    name: Table\n    limit: 2\n") +
-      "\n```\n",
-  });
-  await expect(db.locator("#body tbody tr").nth(-2)).toHaveClass(/more-row/);
-  await expect(db.locator("#body tbody tr").last()).toHaveClass(/new-row/);
+test("a view's tab dragged before another, kept in the base", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await dragWithMouse(
+    page,
+    db.getByRole("tab", { name: "Calendar" }),
+    db.getByRole("tab", { name: "Table" }),
+    -10,
+  );
+  await expect(db.getByRole("tab")).toHaveText([/Calendar/, /Table/, /Board/]);
+  await expect
+    .poll(() => docText(page))
+    .toMatch(/type: calendar[\s\S]*type: table[\s\S]*type: kanban/);
+});
+
+test("a row's right-click menu opens or deletes its page, asked first", async ({
+  page,
+}) => {
+  const db = await open(page);
+  await expect(db.locator(rows)).toHaveCount(3);
+  await db
+    .locator(rows)
+    .first()
+    .locator('td[data-key="status"]')
+    .click({ button: "right" });
+  // Laid out as a Markdown table's menu: the row's own under Row.
+  await expect(
+    menu(page).getByRole("menuitem", { name: "Insert Row Below" }),
+  ).toBeVisible();
+  await menu(page).getByRole("menuitem", { name: "Row", exact: true }).hover();
+  await page
+    .locator(".context-menu")
+    .getByRole("menuitem", { name: "Delete Row" })
+    .click();
+  await page.getByRole("button", { name: "Delete page" }).click();
+  await expect(db.locator(rows)).toHaveCount(2);
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
+    .toBeUndefined();
+});
+
+test("a date is typed, or picked from the month under its field", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const week1 = db.locator(rows).filter({ hasText: "Week1" });
+  const cell = week1.locator('td[data-key="start"]');
+  await cell.click();
+  const pop = db.locator(".date-pop");
+  await expect(pop).toBeVisible();
+  await expect(pop.locator(".date-pop-day.chosen")).toHaveText("1");
+  await pop.locator(".date-pop-day:not(.other)", { hasText: /^15$/ }).click();
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
+    .toContain("start: 2026-01-15");
+  await expect(pop).toHaveCount(0);
+  // Typed, as before (another row: Week1 has just moved down the table).
+  const week2 = db.locator(rows).filter({ hasText: "Week2" });
+  await week2.locator('td[data-key="start"]').click();
+  await week2.locator("input").fill("2026-01-06");
+  await week2.locator("input").press("Enter");
+  await expect
+    .poll(() => fileText(page, "/work/2026 Calendar/Week2.md"))
+    .toContain("start: 2026-01-06");
+});
+
+test("in a narrow column the block starts folded to its line, and stays open once opened", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 460, height: 800 });
+  await open(page);
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await expect(block).toHaveAttribute("data-folded", "");
+  await expect(block.locator(".block-folded-line")).toHaveText("Wiki");
+  await block.locator(".block-folded-line").click();
+  await expect(block).not.toHaveAttribute("data-folded");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-opened-blocks")),
+    )
+    .toContain("2026 Calendar.md");
+});
+
+test("zoomed, a date's month opens under its field", async ({ page }) => {
+  const db = await open(page);
+  for (let i = 0; i < 3; i++) await emit(page, "menu-zoom-in");
+  await expect
+    .poll(() =>
+      db.locator("html").evaluate((el) => (el as HTMLElement).style.zoom),
+    )
+    .toBe("1.331");
+  const cell = db
+    .locator(rows)
+    .filter({ hasText: "Week2" })
+    .locator('td[data-key="start"]');
+  await cell.click();
+  const field = (await cell.locator("input").boundingBox())!;
+  const month = (await db.locator(".date-pop").boundingBox())!;
+  expect(Math.abs(month.x - field.x)).toBeLessThan(8);
+  expect(Math.abs(month.y - (field.y + field.height))).toBeLessThan(16);
+  await page.keyboard.press("Escape");
+  await expect(db.locator(".date-pop")).toHaveCount(0);
+});
+
+test("a field in the page takes Textus's own menu for its text, not the system's", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const first = db.locator(rows).first();
+  await first.locator("td.title").click();
+  const field = first.locator("input");
+  await field.fill("Week1x");
+  await field.click({ button: "right" });
+  // Its text's items, then the row's and column's, as a table's in the editor.
+  await expect(
+    menu(page).getByRole("menuitem", { name: "Insert Row Below" }),
+  ).toBeVisible();
+  await pick(page, "Select All");
+  await expect
+    .poll(() =>
+      field.evaluate(
+        (el) =>
+          (el as HTMLInputElement).selectionEnd! -
+          (el as HTMLInputElement).selectionStart!,
+      ),
+    )
+    .toBe(6);
 });

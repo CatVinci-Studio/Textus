@@ -9,26 +9,6 @@
   outline-offset: -2px;
 }
 
-/* The pulled tab's title, riding the pointer. */
-.tab-pull-ghost {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 51;
-  max-width: 220px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-surface);
-  box-shadow: var(--shadow-popover);
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-
 body.document-dragging,
 body.document-dragging * {
   cursor: grabbing !important;

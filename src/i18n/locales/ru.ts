@@ -122,6 +122,8 @@ export default {
   editorLabel: "Документ",
   diagramZoom: "Увеличить диаграмму",
   codeBlockEditSource: "Изменить исходный код",
+  codeBlockDone: "Завершить правку",
+  codeBlockDelete: "Удалить блок",
   diagramViewerLabel: "Диаграмма",
   pictureZoom: "Увеличить изображение",
   pictureViewerLabel: "Изображение",
@@ -1309,6 +1311,8 @@ export default {
   closeLastWindow: "Закрыть окно",
   closeLastStartPage: "Показать начальную страницу",
   startPageRecentProjects: "Недавние проекты",
+  startPagePickDocument:
+    "Выберите документ из {folder} на боковой панели, чтобы начать.",
   startPageRecentFiles: "Недавние файлы",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   autosaveLabel: "Сохранять автоматически",
@@ -1695,6 +1699,8 @@ export default {
   pluginsInstallHelp:
     "Пакет плагина (.textusplugin) копируется в Textus. Папка плагина загружается на месте — чтобы попробовать плагин, который вы пишете; перезагружается оттуда же.",
   pluginsInstallFile: "Установить из файла…",
+  pluginFormPrevMonth: "Предыдущий месяц",
+  pluginFormNextMonth: "Следующий месяц",
   pluginsLoadFolder: "Загрузить папку плагина…",
   pluginsOpenScripts: "Открыть папку скриптов",
   pluginPackageFilter: "Плагин Textus",
@@ -1716,7 +1722,10 @@ export default {
   pluginCardsRestore: "Показать снова",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
-  pluginsNone: "Пока нет.",
+  pluginsInstalledNone:
+    "Плагины ещё не установлены. Выберите один в разделе «{section}» ниже.",
+  skillsInstalledNone:
+    "Навыки ещё не добавлены. Выберите один в разделе «{section}» ниже или создайте свой.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",
   pluginStatusDesktopOnly:
     "Работает только на компьютере, не на iPhone и iPad.",
@@ -1786,6 +1795,8 @@ export default {
   pluginPermNetworkAny: "Подключаться к любым сайтам",
   menuPlugins: "Плагины",
   menuManagePlugins: "Управление плагинами…",
+  menuPluginSettings: "Настройки…",
+  menuPluginSettingsOf: "Настройки {name}…",
   menuNoPluginCommands: "Нет команд плагинов",
   webPageAddress: "Адрес",
   webPageReload: "Обновить",

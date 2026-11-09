@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, selectionRead } from "./helpers";
+import { emit, openApp, selectionRead, END } from "./helpers";
 
 /**
  * The / panel in a real browser, against its budget: in a folder of 10,000
@@ -30,7 +30,7 @@ async function open(page: Page) {
   await expect(page.locator(editor)).toContainText("Start");
   await page.locator(`${editor} p`).first().click();
   await selectionRead(page);
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
 }
 
 /** Records, for each key pressed, how long until the panel's rows changed. */

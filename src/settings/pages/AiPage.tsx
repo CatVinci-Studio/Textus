@@ -24,13 +24,13 @@ import { ProviderListPanel } from "../sections/providers";
 import { ImageModelSection } from "../sections/image-model";
 import {
   AgentModelSection,
-  SearchServiceSection,
   ModelListRow,
   WritingModelSection,
   AgentWorkspaceRootSection,
   AgentWorkspaceSection,
   AgentSystemPromptSection,
 } from "../sections/agent";
+import { SearchServiceSection } from "../sections/search-service";
 import {
   BuiltinSkillsSection,
   WritingConventionsRow,

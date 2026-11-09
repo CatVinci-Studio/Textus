@@ -3,7 +3,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import {
   PANDOC_ARGS_FORMATS,
   type PandocArgsFormat,
-} from "../../prefs/settings-types";
+} from "../../prefs/settings-values";
 import { joinCommandLine, splitCommandLine } from "../../prefs/mcp";
 import { exportDoc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";

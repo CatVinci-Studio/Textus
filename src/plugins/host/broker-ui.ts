@@ -44,9 +44,19 @@ export function uiHandlers(p: PluginScope) {
         return p.deps.offerPlugin({ id: p.id, name: p.name() }, list[0]);
       return p.deps.runCommand(id, list);
     },
-    "ui.notice": ({ text, tone: kind }: Params) => {
-      showNotice(str(text, "text"), { tone: tone(kind), source: p.name() });
-    },
+    // With an action ("Undo"), true when it was clicked before the note
+    // went, false when it went by itself.
+    "ui.notice": ({ text, tone: kind, action }: Params) =>
+      new Promise<boolean>((resolve) =>
+        showNotice(str(text, "text"), {
+          tone: tone(kind),
+          source: p.name(),
+          action: optionalStr(action)
+            ? { label: optionalStr(action)!, run: () => resolve(true) }
+            : undefined,
+          onGone: () => resolve(false),
+        }),
+      ),
     "ui.message": ({ text, tone: kind }: Params) =>
       showMessage(str(text, "text"), { title: p.name(), tone: tone(kind) }),
     "ui.confirm": ({ text, okLabel, danger }: Params) =>
@@ -94,6 +104,11 @@ export function uiHandlers(p: PluginScope) {
         cancelLabel: p.t().pluginCancel,
         fields: (Array.isArray(fields) ? fields : []) as PluginFormField[],
       }),
+    // One field of the form's, its value or null.
+    "ui.pickDate": ({ title, value }: Params) =>
+      pickOne(p, "date", title, value),
+    "ui.pickColor": ({ title, value }: Params) =>
+      pickOne(p, "color", title, value),
     "ui.progressStart": ({ title }: Params) => {
       const id = startProgress(str(title, "title"), {
         source: p.name(),
@@ -124,6 +139,20 @@ export function uiHandlers(p: PluginScope) {
       removeStatusItem(p.id, str(id, "id"));
     },
   };
+}
+
+function pickOne(
+  p: PluginScope,
+  type: "date" | "color",
+  title: unknown,
+  value: unknown,
+): Promise<string | null> {
+  return showPluginForm({
+    title: optionalStr(title) ?? p.name(),
+    okLabel: p.t().pluginOk,
+    cancelLabel: p.t().pluginCancel,
+    fields: [{ key: "value", type, label: "", value: optionalStr(value) }],
+  }).then((values) => (values ? String(values.value) : null));
 }
 
 /** The progress bars each plugin has showing. */

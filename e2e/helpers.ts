@@ -28,6 +28,34 @@ console.log("a fairly long first line of code to see whether the language label 
 
 /** A line's start and end: on a Mac Home and End scroll, and Cmd+Left and
  *  Cmd+Right move the caret. */
+/** Whether the page runs on a Mac: Mod is ⌘ there, and keys read so. */
+export const MAC = process.platform === "darwin";
+
+const MODS: Record<string, [mac: string, other: string]> = {
+  mod: ["⌘", "Ctrl"],
+  ctrl: ["⌃", "Ctrl"],
+  meta: ["⌘", "Win"],
+  alt: ["⌥", "Alt"],
+  shift: ["⇧", "Shift"],
+};
+const KEYS: Record<string, string> = {
+  tab: "Tab",
+  enter: "Enter",
+  space: "Space",
+  escape: "Esc",
+};
+
+/** A combo ("mod+shift+p") as the app shows it on this machine: Ctrl+Shift+P,
+ *  or ⌘⇧P on a Mac - formatCombo's rule (src/utils/shortcuts.ts). */
+export function keyLabel(combo: string): string {
+  return combo
+    .split("+")
+    .map(
+      (part) => MODS[part]?.[MAC ? 0 : 1] ?? KEYS[part] ?? part.toUpperCase(),
+    )
+    .join(MAC ? "" : "+");
+}
+
 export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
 export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
 

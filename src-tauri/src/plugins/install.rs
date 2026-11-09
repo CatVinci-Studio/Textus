@@ -420,8 +420,8 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     super::files::forget_secrets(&app, &id)
 }
 
-/// The picker for Install from file… (a `.textusplugin`) or, with
-/// `folder`, Load a plugin folder….
+/// The picker for Install from file… (`.textusplugin`s or zips, several at
+/// once) or, with `folder`, Load a plugin folder….
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -429,17 +429,17 @@ pub async fn plugin_pick_package(
     window: tauri::WebviewWindow,
     folder: bool,
     filter_name: String,
-) -> Option<String> {
+) -> Option<Vec<String>> {
     use crate::commands::fs::window_file_dialog;
     tauri::async_runtime::spawn_blocking(move || {
         let dialog = window_file_dialog(&window);
         if folder {
-            dialog.blocking_pick_folder().map(|p| p.to_string())
+            dialog.blocking_pick_folder().map(|p| vec![p.to_string()])
         } else {
             dialog
                 .add_filter(&filter_name, &["textusplugin", "zip"])
-                .blocking_pick_file()
-                .map(|p| p.to_string())
+                .blocking_pick_files()
+                .map(|ps| ps.iter().map(|p| p.to_string()).collect())
         }
     })
     .await
@@ -448,110 +448,4 @@ pub async fn plugin_pick_package(
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn a_written_plugin_is_the_users_own() {
-        assert_eq!(
-            written_id(r#"{"id":"local.word-count"}"#).unwrap(),
-            "local.word-count"
-        );
-        assert!(written_id(r#"{"id":"catvinci.tasks"}"#)
-            .unwrap_err()
-            .contains("someone else's"));
-        assert!(written_id("{}").is_err());
-    }
-
-    #[test]
-    fn a_written_plugin_file_stays_inside_the_plugin() {
-        assert!(super::plain_relative("host.js"));
-        assert!(super::plain_relative("lib/view.js"));
-        assert!(!super::plain_relative("../host.js"));
-        assert!(!super::plain_relative("/etc/passwd"));
-        assert!(!super::plain_relative(".hidden"));
-        assert!(!super::plain_relative(""));
-        assert!(!super::plain_relative("a\\b.js"));
-    }
-
-    use super::*;
-    use std::io::Write;
-
-    fn manifest(dir: &Path, id: &str) {
-        std::fs::create_dir_all(dir).unwrap();
-        std::fs::write(
-            dir.join(MANIFEST),
-            format!(r#"{{"id":"{id}","version":"1.0.0","name":"X"}}"#),
-        )
-        .unwrap();
-    }
-
-    #[test]
-    fn a_manifest_needs_a_good_id_and_a_version() {
-        let tmp = tempfile::tempdir().unwrap();
-        manifest(tmp.path(), "a.b");
-        assert_eq!(read_manifest(tmp.path()).unwrap().0.id, "a.b");
-        manifest(tmp.path(), "../evil");
-        assert!(read_manifest(tmp.path()).is_err());
-        std::fs::write(tmp.path().join(MANIFEST), r#"{"id":"a.b","version":" "}"#).unwrap();
-        assert!(read_manifest(tmp.path()).is_err());
-    }
-
-    #[test]
-    fn installing_checks_the_whole_manifest() {
-        let tmp = tempfile::tempdir().unwrap();
-        let good = r#"{"id":"a.b","version":"1.0.0","name":"X","publisher":"a",
-            "engines":{"textus":"^1.3.0"},"permissions":["files.read"]}"#;
-        std::fs::write(tmp.path().join(MANIFEST), good).unwrap();
-        assert!(read_checked_manifest(tmp.path()).is_ok());
-        let bad = good.replace("files.read", "shell");
-        std::fs::write(tmp.path().join(MANIFEST), bad).unwrap();
-        // Listed, so Settings can say what is wrong, but never installed.
-        assert!(read_manifest(tmp.path()).is_ok());
-        assert!(read_checked_manifest(tmp.path()).is_err_and(|e| e.contains("No permission")));
-    }
-
-    #[test]
-    fn a_package_may_hold_the_plugin_or_its_folder() {
-        let tmp = tempfile::tempdir().unwrap();
-        manifest(tmp.path(), "a.b");
-        assert_eq!(plugin_dir_in(tmp.path()).unwrap(), tmp.path());
-        let outer = tempfile::tempdir().unwrap();
-        manifest(&outer.path().join("inner"), "a.b");
-        assert_eq!(
-            plugin_dir_in(outer.path()).unwrap(),
-            outer.path().join("inner")
-        );
-        let empty = tempfile::tempdir().unwrap();
-        assert!(plugin_dir_in(empty.path()).is_err());
-    }
-
-    #[test]
-    fn a_zip_naming_a_file_outside_itself_is_refused() {
-        let tmp = tempfile::tempdir().unwrap();
-        let file = tmp.path().join("bad.textusplugin");
-        let mut zip = zip::ZipWriter::new(std::fs::File::create(&file).unwrap());
-        zip.start_file("../escape.txt", zip::write::SimpleFileOptions::default())
-            .unwrap();
-        zip.write_all(b"x").unwrap();
-        zip.finish().unwrap();
-        let out = tmp.path().join("out");
-        assert!(unzip(&file, &out).is_err());
-        assert!(!tmp.path().join("escape.txt").exists());
-    }
-
-    #[test]
-    fn a_zip_unpacks_its_files() {
-        let tmp = tempfile::tempdir().unwrap();
-        let file = tmp.path().join("ok.textusplugin");
-        let mut zip = zip::ZipWriter::new(std::fs::File::create(&file).unwrap());
-        let options = zip::write::SimpleFileOptions::default();
-        zip.start_file(MANIFEST, options).unwrap();
-        zip.write_all(br#"{"id":"a.b","version":"1.0.0"}"#).unwrap();
-        zip.start_file("dist/host.js", options).unwrap();
-        zip.write_all(b"1").unwrap();
-        zip.finish().unwrap();
-        let out = tmp.path().join("out");
-        unzip(&file, &out).unwrap();
-        assert!(out.join("dist/host.js").is_file());
-        assert_eq!(plugin_dir_in(&out).unwrap(), out);
-    }
-}
+mod tests;

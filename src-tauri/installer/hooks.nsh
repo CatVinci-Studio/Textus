@@ -65,7 +65,15 @@
     IntOp $R1 $R1 + 1
     ${If} $R1 < ${NSIS_MAX_STRLEN}
       ${WordAdd} $R0 ";" "-$INSTDIR\bin" $R2
+      ; Written back only when exactly our folder (and a ";") is gone:
+      ; anything shorter would lose the user's own entries.
+      StrLen $R3 $R2
+      StrLen $R4 "$INSTDIR\bin"
+      IntOp $R3 $R3 + $R4
+      IntOp $R3 $R3 + 1
+      StrLen $R4 $R0
       ${If} $R2 != $R0
+      ${AndIf} $R3 >= $R4
         WriteRegExpandStr HKCU "Environment" "Path" $R2
         SendMessage ${HWND_BROADCAST} ${WM_SETTINGCHANGE} 0 "STR:Environment" /TIMEOUT=5000
       ${EndIf}

@@ -46,10 +46,10 @@ export const commands = {
 	 */
 	plugin_uninstall: (id: string) => __TAURI_INVOKE<null>("plugin_uninstall", { id }),
 	/**
-	 *  The picker for Install from file… (a `.textusplugin`) or, with
-	 *  `folder`, Load a plugin folder….
+	 *  The picker for Install from file… (`.textusplugin`s or zips, several at
+	 *  once) or, with `folder`, Load a plugin folder….
 	 */
-	plugin_pick_package: (folder: boolean, filterName: string) => __TAURI_INVOKE<string | null>("plugin_pick_package", { folder, filterName }),
+	plugin_pick_package: (folder: boolean, filterName: string) => __TAURI_INVOKE<string[] | null>("plugin_pick_package", { folder, filterName }),
 	/**  Settings › Plugins › Open Scripts Folder: made if it isn't there. */
 	plugin_open_scripts_dir: () => __TAURI_INVOKE<null>("plugin_open_scripts_dir"),
 	/**  The catalog, fetched now and kept for next time. */

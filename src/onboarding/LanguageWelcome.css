@@ -47,7 +47,7 @@
 
 .language-welcome h1 {
   margin: 4px 0 8px;
-  font-size: 26px;
+  font-size: var(--text-large-title);
   font-weight: 650;
 }
 

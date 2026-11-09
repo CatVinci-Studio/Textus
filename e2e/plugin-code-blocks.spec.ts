@@ -88,9 +88,14 @@ test("a plugin draws its code block, follows its source and can change it", asyn
   await page.locator(`${editor} .plugin-code-block`).hover();
   await page.getByRole("button", { name: "Edit Source" }).click();
   await expect(page.locator(`${editor} pre`)).toBeVisible();
+  // The source or the drawing, as a diagram shows them: not both.
+  await expect(page.locator(`${editor} .plugin-code-block`)).toBeHidden();
   await page.keyboard.press(END);
   await page.keyboard.type(" there");
   await expect(frame.locator("#out")).toHaveText("HELLO THERE!");
+  // Left, the drawing is back - the same page, told the new source.
+  await page.locator(`${editor} p`).last().click();
+  await expect(page.locator(`${editor} .plugin-code-block`)).toBeVisible();
 
   // The page sets the source: one undo step in the document.
   await frame.locator("#set").click();
@@ -140,13 +145,61 @@ test("a drawn block's source shows only from Edit Source, not wherever the caret
   await expect(pre).toBeHidden();
 });
 
-test("a block's frame fits its page as the page grows and shrinks", async ({
+test("an opened source closes from Done Editing or Esc, and a right-click on the page deletes the block", async ({
+  page,
+}) => {
+  await open(page);
+  const frame = page
+    .frameLocator(`${editor} .plugin-code-block iframe`)
+    .first();
+  await expect(frame.locator("#out")).toHaveText("HELLO!");
+  const pre = page.locator(`${editor} pre`);
+  const block = page.locator(`${editor} .plugin-code-block`);
+  const done = page.getByRole("button", { name: "Done Editing" });
+  await expect(done).toHaveCount(0);
+
+  await block.hover();
+  await page.getByRole("button", { name: "Edit Source" }).click();
+  await expect(pre).toBeVisible();
+  await done.click();
+  await expect(pre).toBeHidden();
+  await expect(block).toBeVisible();
+  await expect(done).toHaveCount(0);
+
+  await block.hover();
+  await page.getByRole("button", { name: "Edit Source" }).click();
+  await expect(pre).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(pre).toBeHidden();
+
+  // The page doesn't answer a right-click: the editor's menu does, for it.
+  await frame.locator("#out").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete Block" }).click();
+  await expect(block).toHaveCount(0);
+  await expect(pre).toHaveCount(0);
+  await expect(
+    page.locator(`${editor} p`, { hasText: "After." }),
+  ).toBeVisible();
+});
+
+test("a block's frame fits its page as the page grows, up to 70% of the window, and shrinks", async ({
   page,
 }) => {
   await open(page, "tall");
   const block = page.locator(`${editor} .plugin-code-block iframe`).first();
   const height = async () => (await block.boundingBox())?.height ?? 0;
-  await expect.poll(height).toBeGreaterThan(600);
+  // A tall page grows the frame up to 70% of the window, then scrolls.
+  const cap = Math.round(page.viewportSize()!.height * 0.7);
+  await expect.poll(height).toBeGreaterThan(cap - 2);
+  expect(await height()).toBeLessThanOrEqual(cap + 1);
+  // Scrolling in it stops at its ends, not carrying on into the document.
+  const contained = () =>
+    page
+      .frameLocator(`${editor} .plugin-code-block iframe`)
+      .first()
+      .locator("html")
+      .evaluate((el) => (el as HTMLElement).style.overscrollBehaviorY);
+  await expect.poll(contained).toBe("contain");
   // The page sets a short source: the frame comes back down with it.
   await page
     .frameLocator(`${editor} .plugin-code-block iframe`)
@@ -154,6 +207,8 @@ test("a block's frame fits its page as the page grows and shrinks", async ({
     .locator("#set")
     .click();
   await expect.poll(height).toBeLessThan(150);
+  // Short again: the wheel goes on to the document.
+  await expect.poll(contained).toBe("");
 });
 
 /** Exports the document as HTML; the file's text, once it is written. */

@@ -1,3 +1,4 @@
+import { scaledPx } from "../../../ui/chrome-scale";
 import { useEffect, type RefObject } from "react";
 
 /** Breathing room kept between the panel's edge and the viewport edge. */
@@ -11,7 +12,7 @@ const MARGIN = 12;
 export function revealOffset(
   panel: { top: number; bottom: number },
   view: { top: number; bottom: number },
-  margin = MARGIN,
+  margin = scaledPx(MARGIN),
 ): number {
   const below = panel.bottom + margin - view.bottom;
   if (below > 0) return below;

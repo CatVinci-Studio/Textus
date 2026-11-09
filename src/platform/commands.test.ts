@@ -33,7 +33,7 @@ describe("the backend's commands", () => {
       readFileSync(`src-tauri/src/${file}`, "utf8");
     const bound = names(lists(rust("bindings.rs"), "collect_commands"));
     const handled = names(
-      lists(rust("lib.rs"), "with_plugin_commands") +
+      lists(rust("invoke_handler.rs"), "with_plugin_commands") +
         lists(rust("plugins/mod.rs"), "generate_handler"),
     );
     expect(bound.size).toBeGreaterThan(150);

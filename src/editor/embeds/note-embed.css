@@ -1,5 +1,6 @@
-/* A note, section or block embedded read-only: a quiet box, like a quote,
-   its title opening the source. */
+/* A note, section or block embedded read-only: its content beside a quiet
+   rule, like a quote; folded by the margin's caret, opened from its top
+   right. */
 .milkdown .note-embed {
   display: block;
   margin: 0;
@@ -21,43 +22,36 @@
   display: none !important;
 }
 
-.note-embed-title {
-  display: block;
+/* Where it comes from, opened from its top right, on hover. */
+.note-embed-open {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 0.35em;
+  border: none;
+  border-radius: var(--shape-xs);
+  background: var(--doc-bg);
   color: var(--doc-muted);
+  font: inherit;
   font-size: 0.85em;
   cursor: pointer;
-  user-select: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-standard);
 }
 
-.note-embed-title:hover {
+.note-embed:hover > .note-embed-open,
+.note-embed-open:focus-visible {
+  opacity: 1;
+}
+
+.note-embed-open:hover {
   color: var(--doc-accent);
 }
 
-/* The fold toggle before the title: the app's disclosure caret. */
-.note-embed-fold {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.2em;
-  height: 1.2em;
-  margin-right: 2px;
-  vertical-align: middle;
-  border-radius: var(--shape-xs);
-  cursor: pointer;
-}
-
-.note-embed-fold:hover {
-  background: color-mix(in srgb, currentColor 12%, transparent);
-}
-
-.note-embed-fold:focus-visible {
-  outline: 2px solid var(--doc-accent);
-  outline-offset: -2px;
-}
-
-/* Folded: its title alone. */
-.note-embed[data-folded] > .note-embed-body {
-  display: none;
+/* Folded (block-fold.css): its line alone, no rule beside it. */
+.milkdown .note-embed[data-folded] {
+  padding-left: 0;
+  border-left-color: transparent;
 }
 
 /* The editor keeps white space as typed; rendered HTML's newlines between

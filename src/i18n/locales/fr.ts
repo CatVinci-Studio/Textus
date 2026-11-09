@@ -129,6 +129,8 @@ utiliser une.
   editorLabel: "Document",
   diagramZoom: "Agrandir le diagramme",
   codeBlockEditSource: "Modifier la source",
+  codeBlockDone: "Terminer la modification",
+  codeBlockDelete: "Supprimer le bloc",
   diagramViewerLabel: "Diagramme",
   pictureZoom: "Agrandir l'image",
   pictureViewerLabel: "Image",
@@ -1325,6 +1327,8 @@ utiliser une.
   closeLastWindow: "Fermer la fenêtre",
   closeLastStartPage: "Afficher la page d'accueil",
   startPageRecentProjects: "Projets récents",
+  startPagePickDocument:
+    "Choisissez un document de {folder} dans la barre latérale pour commencer.",
   startPageRecentFiles: "Fichiers récents",
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
@@ -1726,6 +1730,8 @@ utiliser une.
   pluginsInstallHelp:
     "Un paquet d’extension (.textusplugin) est copié dans Textus. Un dossier d’extension est chargé là où il se trouve, pour essayer celle que vous écrivez ; il est rechargé depuis cet endroit.",
   pluginsInstallFile: "Installer depuis un fichier…",
+  pluginFormPrevMonth: "Mois précédent",
+  pluginFormNextMonth: "Mois suivant",
   pluginsLoadFolder: "Charger un dossier d’extension…",
   pluginsOpenScripts: "Ouvrir le dossier des scripts",
   pluginPackageFilter: "Extension Textus",
@@ -1747,7 +1753,10 @@ utiliser une.
   pluginCardsRestore: "Afficher à nouveau",
   pluginScreenshot: "{name} en action",
   pluginsMine: "Créées par vous",
-  pluginsNone: "Aucune pour l’instant.",
+  pluginsInstalledNone:
+    "Aucun plugin installé pour l’instant. Choisissez-en un dans {section}, plus bas.",
+  skillsInstalledNone:
+    "Aucune compétence ajoutée pour l’instant. Choisissez-en une dans {section}, plus bas, ou créez la vôtre.",
   pluginStatusBroken: "Illisible : {reason}",
   pluginStatusDesktopOnly:
     "Fonctionne uniquement sur ordinateur, pas sur iPhone ni iPad.",
@@ -1817,6 +1826,8 @@ utiliser une.
   pluginPermNetworkAny: "Se connecter à n’importe quel site web",
   menuPlugins: "Extensions",
   menuManagePlugins: "Gérer les extensions…",
+  menuPluginSettings: "Réglages…",
+  menuPluginSettingsOf: "Réglages de {name}…",
   menuNoPluginCommands: "Aucune commande d’extension",
   webPageAddress: "Adresse web",
   webPageReload: "Recharger",

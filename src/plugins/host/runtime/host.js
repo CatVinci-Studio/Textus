@@ -526,6 +526,7 @@
         return call("ui.notice", {
           text: String(message),
           tone: (options && options.tone) || "info",
+          action: options && options.action,
         });
       },
       message: function (message, options) {
@@ -555,6 +556,12 @@
       },
       form: function (options) {
         return call("ui.form", plain(options));
+      },
+      pickDate: function (options) {
+        return call("ui.pickDate", plain(options || {}));
+      },
+      pickColor: function (options) {
+        return call("ui.pickColor", plain(options || {}));
       },
       withProgress: function (title, task) {
         var controller = new AbortController();

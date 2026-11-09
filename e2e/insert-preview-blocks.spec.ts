@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp, pasteMarkdown } from "./helpers";
+import { openApp, pasteMarkdown, END } from "./helpers";
 
 /**
  * Text Textus AI writes after the document's last block is shown as the
@@ -108,7 +108,7 @@ test("text written at the caret inside a paragraph lands as whole blocks: a head
   });
   await pasteMarkdown(page, "Prior work found this.");
   await page.locator(`${editor} p`).first().click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await streamAppend(
     page,
     "And then the tide turned at last.\n\n## The harbour\n\nThe boats came in at dusk. The nets were wet.\n\n- nets\n- ropes\n\nNobody spoke.",

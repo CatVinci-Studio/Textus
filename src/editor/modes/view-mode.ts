@@ -1,4 +1,4 @@
-import type { ViewMode } from "../../prefs/settings-types";
+import type { ViewMode } from "../../prefs/settings-values";
 
 /** A tab's view: the rich editor, source mode, or split view (source mode
  *  with a preview). */

@@ -109,6 +109,19 @@ export function makeRoom(
   return shifts;
 }
 
+/** Room made for something arriving from elsewhere (a tab dragged in from
+ *  another window) at `at`: what lies past it moves on by `size`. The same
+ *  slide as for an item moved within the row (makeRoom). */
+export function roomFor(
+  centers: ReadonlyMap<string, number>,
+  at: number,
+  size: number,
+): Map<string, number> {
+  const shifts = new Map<string, number>();
+  for (const [id, center] of centers) shifts.set(id, center > at ? size : 0);
+  return shifts;
+}
+
 /** Items in `container` marked `data-reorder-id`, dragged along one axis:
  *  the others slide aside as it passes them, and `onDrop` hears the place
  *  it was let go at (its index among them). */
@@ -130,6 +143,7 @@ export function reorderDrag(
     ...container.querySelectorAll<HTMLElement>("[data-reorder-id]"),
   ];
   const translate = axis === "x" ? "translateX" : "translateY";
+  const at = (px: number) => (axis === "x" ? `${px}px 0` : `0 ${px}px`);
   let slots: Slot[] = [];
   let gap = 0;
   const start = axis === "x" ? down.clientX : down.clientY;
@@ -137,7 +151,9 @@ export function reorderDrag(
     for (const n of nodes()) {
       n.style.transition = "";
       n.style.transform = "";
+      n.style.translate = "";
       n.style.zIndex = "";
+      n.classList.remove("is-drag-lifted");
     }
     container.classList.remove("is-reordering");
   };
@@ -163,8 +179,11 @@ export function reorderDrag(
         const nid = n.dataset.reorderId ?? "";
         if (nid === id) {
           n.style.transition = "none";
-          n.style.transform = `${translate}(${offset}px)`;
+          // The `translate` property: the lifted look's `scale` would scale
+          // a transform's offset too, and the item drift off the pointer.
+          n.style.translate = at(offset);
           n.style.zIndex = "10";
+          n.classList.add("is-drag-lifted");
         } else {
           const shift = shifts.get(nid) ?? 0;
           n.style.transition = SLIDE;

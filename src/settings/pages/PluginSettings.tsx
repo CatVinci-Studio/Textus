@@ -3,12 +3,14 @@ import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
 import { Select } from "../../ui/Select";
 import type { Strings } from "../../i18n/strings";
 import {
-  pluginSetting,
   pluginText,
   runPluginCommand,
-  setPluginSetting,
   type PluginRecord,
 } from "../../plugins/manager";
+import {
+  pluginSetting,
+  setPluginSetting,
+} from "../../plugins/plugin-setting-values";
 import {
   globalPluginValue,
   onPluginSettingsChange,

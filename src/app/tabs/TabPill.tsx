@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useEffect, useRef } from "react";
 import { CloseIcon } from "../../ui/icons";
 import { measure, play } from "../../ui/flip";
@@ -99,6 +100,7 @@ export function TabPill({
       if (!node) continue;
       node.style.transition = "";
       node.style.transform = "";
+      node.style.translate = "";
       node.style.zIndex = "";
     }
   }
@@ -172,7 +174,7 @@ export function TabPill({
       return;
     }
 
-    if (onPullOut && Math.abs(e.clientY - g.startY) > PULL_OUT_PX) {
+    if (onPullOut && Math.abs(e.clientY - g.startY) > scaledPx(PULL_OUT_PX)) {
       // Pulled out of the bar: neighbours slide home, and the drag is the
       // caller's from here.
       gesture.current = null;
@@ -216,7 +218,9 @@ export function TabPill({
     const mine = g.rects.find((r) => r.id === tab.id);
     if (!el || !mine) return;
     el.style.transition = "none";
-    el.style.transform = `translateX(${dx}px)`;
+    // `translate`, not `transform`: the lifted `scale` would scale the
+    // offset too, and the pill drift off the pointer.
+    el.style.translate = `${dx}px 0`;
     el.style.zIndex = "10";
 
     const shifts = makeRoom(slotsOf(g.rects), tab.id, dx, g.gap);

@@ -201,6 +201,8 @@ declare global {
        *  "textus.insertBlock" with a Format menu block at the caret - "h1"
        *  to "h6", "paragraph", "bullet-list", "ordered-list", "task-list",
        *  "blockquote", "code-block", "math-block", "rule" or "table".
+       *  "textus.showFolder" with a folder's path inside the open one shows
+       *  it in the sidebar, as double-clicking it does (1.3.12).
        *  "textus.offerPlugin" with { id } suggests an official plugin from
        *  the market: a card at the bottom right with its name. It never
        *  blocks editing and stays until the user acts; its permissions are
@@ -220,8 +222,13 @@ declare global {
     // ---------------------------------------------------------------
 
     interface Ui {
-      /** A short note at the bottom of the window that goes by itself. */
-      notice(text: string, options?: { tone?: Tone }): Promise<void>;
+      /** A short note at the bottom of the window that goes by itself.
+       *  With `action` ("Undo"), a button on it: resolves true when it was
+       *  clicked before the note went, false otherwise (Textus 1.3.12). */
+      notice(
+        text: string,
+        options?: { tone?: Tone; action?: string },
+      ): Promise<boolean>;
       /** A box with one button; resolves when it is closed. */
       message(text: string, options?: { tone?: Tone }): Promise<void>;
       confirm(
@@ -248,6 +255,19 @@ declare global {
           commands?: boolean;
         },
       ): Promise<unknown>;
+      /** A date picked on Textus's month calendar, as `YYYY-MM-DD`, or
+       *  null when cancelled; `value` is the one picked to start with
+       *  (Textus 1.3.12). */
+      pickDate(options?: {
+        title?: string;
+        value?: string;
+      }): Promise<string | null>;
+      /** A colour picked from the tones or typed, as `#rrggbb`, or null
+       *  when cancelled (Textus 1.3.12). */
+      pickColor(options?: {
+        title?: string;
+        value?: string;
+      }): Promise<string | null>;
       /** A small form: the values by key, or null when cancelled. */
       form(options: {
         title?: string;
@@ -288,6 +308,10 @@ declare global {
         }
       | { key: string; type: "number"; label: string; value?: number }
       | { key: string; type: "boolean"; label: string; value?: boolean }
+      /** `YYYY-MM-DD`, picked on a month calendar (Textus 1.3.12). */
+      | { key: string; type: "date"; label: string; value?: string }
+      /** `#rrggbb`, from the tones or typed (Textus 1.3.12). */
+      | { key: string; type: "color"; label: string; value?: string }
       | {
           key: string;
           type: "choice";
@@ -1399,6 +1423,12 @@ declare global {
         items: (MenuItem | "separator")[],
         at?: Element | { x: number; y: number },
       ): Promise<unknown>;
+      /** A text field's menu items (undo, redo, cut, copy, paste, select
+       *  all) in Textus's language, for a page's own right-click menu; each
+       *  value is the action `editText` takes (1.3.12). */
+      textItems(field: Element): Promise<(MenuItem | "separator")[]>;
+      /** One of those actions in `field`, the clipboard through Textus. */
+      editText(field: Element, action: string): Promise<void>;
       /** How the page looks as a picture, asked when the document is
        *  exported (a code block's page): an SVG's markup or an image's
        *  `data:` URL, for a page of `theme`. Without it, or answering

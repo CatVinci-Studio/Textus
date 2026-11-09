@@ -4,7 +4,7 @@ import {
   reachedPrefix,
   type StreamLayout,
 } from "./sentence-stream";
-import { splitSentences } from "./sentence-diff";
+import { splitSentences } from "./sentence-pairs";
 import { diffSentences } from "./unit-diff";
 
 const EN =

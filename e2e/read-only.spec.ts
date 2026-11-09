@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown, END } from "./helpers";
 
 // View › Read Only: nothing changes the document, a padlock beside the
 // title turns it off, and the file is still read-only when opened again.
@@ -58,7 +58,7 @@ test("a read-only document takes no change, and its padlock turns it off", async
   await lock.click();
   await expect(lock).toHaveCount(0);
   await page.locator(editor).click();
-  await page.keyboard.press("End");
+  await page.keyboard.press(END);
   await page.keyboard.type("!", { delay: 20 });
   await expect(page.locator(editor)).toContainText("!");
 });

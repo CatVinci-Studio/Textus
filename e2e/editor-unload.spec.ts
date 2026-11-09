@@ -4,7 +4,7 @@ import { END, openApp } from "./helpers";
 // A document's editor out of sight ten minutes is let go, to give back its
 // memory; shown again it opens at its text, its undo history kept.
 
-const UNDO = process.platform === "darwin" ? "Meta+z" : "Control+z";
+const UNDO = process.platform === "darwin" ? "Meta+z" : "ControlOrMeta+z";
 
 async function openFile(page: Page, name: string, text: string) {
   await page.evaluate(

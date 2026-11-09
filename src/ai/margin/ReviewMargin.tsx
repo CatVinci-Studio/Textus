@@ -1,3 +1,4 @@
+import { scaledPx } from "../../ui/chrome-scale";
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -19,11 +20,12 @@ import {
   useCardActions,
   useMarginRoom,
 } from "./margin-layout";
-import { NoteCard, RevisionCard } from "./MarginCards";
+import { RevisionCard } from "./MarginCards";
+import { NoteCard } from "./NoteCards";
 import { MarginGroup } from "./MarginGroup";
 import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
-export { NotePopover } from "./MarginCards";
+export { NotePopover } from "./NoteCards";
 
 /** The page's margin: review notes and a pending rewrite's changes, each card
  *  level with its passage and linked to it. The text column moves left to
@@ -95,7 +97,7 @@ export function ReviewMargin({
       );
       scrollEl.classList.add("review-notes-on");
       placeColumn(contentEl, shift > 0 ? `${natural - shift}px` : "");
-      const left = textRight - shift + GAP;
+      const left = textRight - shift + scaledPx(GAP);
       const box = scrollEl.getBoundingClientRect();
       const top0 = box.top - scrollEl.scrollTop;
       // Horizontal positions are taken from the column, wherever its glide
@@ -232,8 +234,8 @@ export function ReviewMargin({
           // Far below its passage, a card's line is fainter, not gone.
           const far = p.drift > LINE_DRIFT;
           const x2 = layout.left;
-          const y2 = p.top + (p.chip ? CHIP_HEIGHT / 2 : 16);
-          const dx = Math.max(16, (x2 - p.ax) / 2);
+          const y2 = p.top + scaledPx(p.chip ? CHIP_HEIGHT / 2 : 16);
+          const dx = Math.max(scaledPx(16), (x2 - p.ax) / 2);
           return (
             <path
               key={p.item.key}

@@ -45,12 +45,16 @@ export function useSidePanels(aiOn: boolean) {
   }, [panelOpen]);
   // The docked Agent panel: App owns the frame, the active tab's editor
   // renders its conversation into it.
-  const agentPanel = useAgentPanelState();
-  // The docked panel stays beside the page whatever the sidebar does.
+  // Both panels narrow with a small window, by one rule; the AI panel also
+  // leaves the document room beside an open sidebar.
   const windowWidth = useSyncExternalStore(subscribeWindowResize, () =>
     typeof window === "undefined" ? 0 : window.innerWidth,
   );
   const sidebarWidth = useSidebarWidth(windowWidth);
+  const agentPanel = useAgentPanelState(
+    windowWidth,
+    panelOpen ? sidebarWidth.width : 0,
+  );
   const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
   // On a phone, the document gives up focus here and the AI page's input
   // doesn't take it, so the keyboard goes away in one movement. With the

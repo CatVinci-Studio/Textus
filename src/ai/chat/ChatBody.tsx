@@ -16,7 +16,7 @@ import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
-import { toolActivityText } from "./tool-activity";
+import { quickSummary } from "./quick-summary";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
@@ -24,13 +24,8 @@ import {
   attachedFileBlock,
   selectedTextBlock,
   cursorBlock,
-  userMessageBody,
 } from "./user-message";
-import {
-  type ChatBodyProps,
-  lastExchange,
-  proposalsFromTurns,
-} from "./chat-body-types";
+import { type ChatBodyProps, proposalsFromTurns } from "./chat-body-types";
 import {
   useMessageQueue,
   useQuickExpanded,
@@ -275,52 +270,13 @@ export function ChatBody({
 
   const showMessages = history.length > 0 || busy || !!error || !!fillHeight;
 
-  // The quick variant's one-line reply: the streamed prose while it arrives,
-  // else the last assistant reply (so a restored conversation shows it).
-  let summaryText: string | null = null;
-  // The question the summary answers, echoed above it: once sent, the
-  // composer is empty.
-  let promptText: string | null = null;
-  // Whether the exchange holds more than its one-line summary - tool
-  // steps, or a reply the summary clamps - and so earns "show all".
-  let quickHasMore = false;
-  // What the agent is doing right now (its latest tool call) - shown in
-  // place of a bare "Thinking…" while a multi-step request works.
-  let quickActivity: string | null = null;
-  if (variant === "quick" && busy && streaming) {
-    for (let i = streaming.turns.length - 1; i >= 0; i--) {
-      const turn = streaming.turns[i];
-      if (turn.kind === "ToolCall") {
-        quickActivity = `${toolActivityText(turn.name, turn.arguments, labels)}…`;
-        break;
-      }
-    }
-  }
-  if (variant === "quick") {
-    // The exchange in progress counts as the newest one: its user turn only
-    // reaches `history` when the reply completes.
-    const exchange = lastExchange(
-      busy && streaming ? [...history, ...streaming.turns] : history,
-    );
-    promptText = exchange.prompt
-      ? userMessageBody(exchange.prompt).trim() || null
-      : null;
-    summaryText = streaming?.text || null;
-    quickHasMore = exchange.turns.some(
-      (turn) =>
-        turn.kind === "ToolCall" ||
-        (turn.kind === "Assistant" && turn.text.length > 160),
-    );
-    if (!summaryText && !busy) {
-      for (let i = exchange.turns.length - 1; i >= 0; i--) {
-        const turn = exchange.turns[i];
-        if (turn.kind === "Assistant" && turn.text.trim()) {
-          summaryText = turn.text;
-          break;
-        }
-      }
-    }
-  }
+  // Quick Ask's one line: its reply, its question, what it is doing.
+  const quick =
+    variant === "quick" ? quickSummary(history, streaming, busy, labels) : null;
+  const summaryText = quick?.summaryText ?? null;
+  const promptText = quick?.promptText ?? null;
+  const quickHasMore = quick?.hasMore ?? false;
+  const quickActivity = quick?.activity ?? null;
 
   return (
     <>

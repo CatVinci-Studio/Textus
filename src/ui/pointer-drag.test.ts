@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
-import { expect, it, vi } from "vitest";
-import { dropIndex, makeRoom, trackDrag, type Slot } from "./pointer-drag";
+import { describe, expect, it, vi } from "vitest";
+import {
+  dropIndex,
+  makeRoom,
+  roomFor,
+  trackDrag,
+  type Slot,
+} from "./pointer-drag";
 
 const slots: Slot[] = ["a", "b", "c", "d"].map((id, i) => ({
   id,
@@ -54,4 +60,19 @@ it("swallows the click a drag's release sends", () => {
   document.body.click();
   expect(clicked).not.toHaveBeenCalled();
   document.body.removeEventListener("click", clicked);
+});
+
+describe("roomFor", () => {
+  it("moves on what lies past the place something arrives at", () => {
+    const centers = new Map([
+      ["a", 50],
+      ["b", 150],
+      ["c", 250],
+    ]);
+    expect([...roomFor(centers, 120, 100)]).toEqual([
+      ["a", 0],
+      ["b", 100],
+      ["c", 100],
+    ]);
+  });
 });

@@ -214,6 +214,30 @@ export function emitPluginEvent<K extends keyof PluginEventMap>(
 
 /** A document or folder was renamed or moved: plugins hear it, and what they
  *  and the editor (its undo history) keep for its documents moves with it. */
+/** What the window does around a file a plugin moves: its open tabs
+ *  saved first (a move may rewrite their links on disk), then following it. */
+interface PathMoveHooks {
+  before(from: string): Promise<void>;
+  after(from: string, to: string): void;
+}
+let moveHooks: PathMoveHooks | null = null;
+
+export function setPathMoveHooks(hooks: PathMoveHooks | null): void {
+  moveHooks = hooks;
+}
+
+/** Before a plugin moves `from`: the open tabs in it saved. */
+export async function beforePluginMove(from: string): Promise<void> {
+  await moveHooks?.before(from);
+}
+
+/** A plugin moved `from` to `to`: the open tabs follow, as for a move in
+ *  the tree (which tells plugins and the rest itself). */
+export async function pluginMovedPath(from: string, to: string): Promise<void> {
+  if (moveHooks) moveHooks.after(from, to);
+  else await notePathMoved(from, to);
+}
+
 export async function notePathMoved(from: string, to: string): Promise<void> {
   emitPluginEvent("fileRename", { from, to });
   void undoFiles.move(from, to).catch(() => {});

@@ -1,6 +1,10 @@
 import type { MenuEntry } from "./app-menu-model";
 import { compareNames } from "../../utils/name-order";
 
+/** A Plugins menu item that opens a plugin's settings, not a command:
+ *  "plugin-settings:<plugin id>". */
+export const PLUGIN_SETTINGS = "plugin-settings:";
+
 /** A command a plugin put in the Plugins menu. */
 export interface PluginMenuEntry {
   command: string;
