@@ -109,6 +109,19 @@ export function makeRoom(
   return shifts;
 }
 
+/** Room made for something arriving from elsewhere (a tab dragged in from
+ *  another window) at `at`: what lies past it moves on by `size`. The same
+ *  slide as for an item moved within the row (makeRoom). */
+export function roomFor(
+  centers: ReadonlyMap<string, number>,
+  at: number,
+  size: number,
+): Map<string, number> {
+  const shifts = new Map<string, number>();
+  for (const [id, center] of centers) shifts.set(id, center > at ? size : 0);
+  return shifts;
+}
+
 /** Items in `container` marked `data-reorder-id`, dragged along one axis:
  *  the others slide aside as it passes them, and `onDrop` hears the place
  *  it was let go at (its index among them). */

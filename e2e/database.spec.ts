@@ -296,7 +296,7 @@ test("a long view loads more rows once its end is in sight; folded by Textus, on
   await block.hover();
   await block.locator(".block-fold").click();
   await expect(block.locator("iframe")).toBeHidden();
-  await expect(block.locator(".block-folded-line")).toHaveText("Workspace");
+  await expect(block.locator(".block-folded-line")).toHaveText("Wiki");
   await block.locator(".block-folded-line").click();
   await expect(db.locator("#count")).toHaveText("3 pages");
 });
@@ -457,7 +457,7 @@ test("in a narrow column the block starts folded to its line, and stays open onc
   await open(page);
   const block = page.locator('[data-active-tab="true"] .plugin-code-block');
   await expect(block).toHaveAttribute("data-folded", "");
-  await expect(block.locator(".block-folded-line")).toHaveText("Workspace");
+  await expect(block.locator(".block-folded-line")).toHaveText("Wiki");
   await block.locator(".block-folded-line").click();
   await expect(block).not.toHaveAttribute("data-folded");
   await expect
