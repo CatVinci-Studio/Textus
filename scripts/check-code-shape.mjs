@@ -11,8 +11,7 @@ const MAX_LINES = 500;
 const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
-const LINES_NOW = {
-};
+const LINES_NOW = {};
 
 /** Over the hook limit today: the roots that wire a window together. */
 const HOOKS_NOW = {};
