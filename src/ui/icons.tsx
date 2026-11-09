@@ -177,7 +177,6 @@ export function MarkdownFileIcon({ className }: IconProps) {
         y="2"
         width="13"
         height="12"
-        style={iconSize(13, 12)}
         rx="1.5"
         stroke="currentColor"
         strokeWidth="1.1"
@@ -217,7 +216,6 @@ export function ImageFileIcon({ className }: IconProps) {
         y="2"
         width="13"
         height="12"
-        style={iconSize(13, 12)}
         rx="1.5"
         stroke="currentColor"
         strokeWidth="1.1"
@@ -803,7 +801,6 @@ export function WindowMaximizeIcon({ className }: IconProps) {
         y="1.5"
         width="7"
         height="7"
-        style={iconSize(7, 7)}
         stroke="currentColor"
         strokeWidth="1"
       />

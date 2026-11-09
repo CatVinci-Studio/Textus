@@ -5,7 +5,7 @@
 /* The chat surfaces' own two tones, set where they are drawn (the editor
    palette can be redefined below :root). */
 :is(.agent-panel-view, .chat-window, .inline-chat) {
-  --chat-card-bg: color-mix(in srgb, var(--ui-text) 3%, var(--ui-surface));
+  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
   --chat-hairline: color-mix(in srgb, var(--ui-border) 80%, transparent);
 }
 
@@ -692,7 +692,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 8px 12px 12px;
-  border: 1px solid var(--chat-hairline, var(--ui-border));
+  /* No frame: a card is a quiet fill under the reply; only a decided one
+     colours its edge. */
+  border: 1px solid transparent;
   border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
   font-size: var(--text-secondary);
@@ -1425,7 +1427,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
    behind the accent's rule. */
 .agent-comment {
   padding: 8px 12px 12px;
-  border: 1px solid var(--chat-hairline, var(--ui-border));
+  border: 1px solid transparent;
   border-radius: var(--shape-m);
   background: var(--chat-card-bg, transparent);
 }

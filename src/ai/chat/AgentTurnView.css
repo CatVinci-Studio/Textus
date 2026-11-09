@@ -12,7 +12,11 @@
 /* Sent from the trailing edge: the corner nearest the composer stays tight,
    as a message bubble's does. */
 .agent-message-user {
+  /* Its own width, at the trailing edge, whether its row is a flex column
+     or a block (an arriving turn's wrapper). */
   align-self: flex-end;
+  width: fit-content;
+  margin-inline-start: auto;
   max-width: 86%;
   padding: 8px 12px;
   border-bottom-right-radius: var(--shape-xs);

@@ -16,3 +16,14 @@ it("gives an unknown kind the plain file icon, a known one its own", () => {
   expect(fileIconFor("x.base")).not.toBe(GenericFileIcon);
   expect(fileIconFor("x.base")).not.toBe(fileIconFor("x.pdf"));
 });
+
+it("sizes each icon as a whole, never a shape inside it", async () => {
+  // A size on a shape is in the icon's own units: scaled, it runs past the
+  // edge and is cut off (a Markdown file's frame drawn as one corner).
+  const { readFileSync } = await import("node:fs");
+  const source = readFileSync(new URL("./icons.tsx", import.meta.url), "utf8");
+  const inner = [...source.matchAll(/<(\w+)[^<>]*?style=\{iconSize/gs)]
+    .map((m) => m[1])
+    .filter((tag) => tag !== "svg");
+  expect(inner).toEqual([]);
+});
