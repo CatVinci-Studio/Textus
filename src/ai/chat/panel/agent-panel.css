@@ -18,13 +18,19 @@
 }
 
 /* On the desktop the window bar's right end (word count, window buttons)
-   belongs to the page: the panel's fill and edge start under it. */
+   belongs to the page: the panel's fill and edge start under it. The fill
+   is the frame's, as the sidebar's across the page: the page between the
+   two, the panel's cards and composer on paper over it. */
 :root:not([data-window-chrome="mobile"]) .agent-panel {
   border-left: none;
   background: linear-gradient(
     transparent var(--window-bar-height),
-    var(--ui-surface) var(--window-bar-height)
+    var(--ui-frame-fill) var(--window-bar-height)
   );
+}
+
+:root:not([data-window-chrome="mobile"]) .agent-panel .agent-panel-view {
+  --chat-card-bg: var(--ui-surface);
 }
 :root:not([data-window-chrome="mobile"]) .agent-panel::before {
   content: "";
@@ -32,7 +38,7 @@
   top: var(--window-bar-height);
   bottom: 0;
   left: 0;
-  border-left: 1px solid var(--ui-border);
+  border-left: 1px solid var(--ui-frame-edge);
   pointer-events: none;
 }
 
