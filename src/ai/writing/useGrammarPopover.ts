@@ -1,3 +1,5 @@
+import { focusInPlace } from "../../editor/focus-in-place";
+import { TextSelection } from "@milkdown/kit/prose/state";
 import { useCallback, useRef, useState, type MouseEvent } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Decoration } from "@milkdown/kit/prose/view";
@@ -238,13 +240,14 @@ export function useGrammarPopover(
       ) {
         return;
       }
-      view.dispatch(
-        markChangeSource(
-          state.tr.insertText(suggestion, range.from, range.to),
-          "ai",
-        ),
+      // The caret after the fixed words, where the reader is, and the page
+      // kept still as the editor takes the focus back.
+      const tr = state.tr.insertText(suggestion, range.from, range.to);
+      tr.setSelection(
+        TextSelection.create(tr.doc, range.from + suggestion.length),
       );
-      view.focus();
+      view.dispatch(markChangeSource(tr, "ai"));
+      focusInPlace(view);
       applied = true;
     });
     if (applied) {

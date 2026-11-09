@@ -25,6 +25,8 @@ const WEBKIT_SPECS = [
   // on its own.
   "diagram-fit.spec.ts",
   "drag-autoscroll.spec.ts",
+  // WebKit scrolls to a selection set as the editor takes the focus.
+  "grammar-apply.spec.ts",
   "api-key-field.spec.ts",
   "sidebar-toggle.spec.ts",
   "tab-scroll.spec.ts",
