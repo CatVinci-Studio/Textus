@@ -114,8 +114,10 @@
   margin-left: 2px;
 }
 
-/* Modal backdrops stop at the window bar, or the window can't be moved or
-   closed while one is open. `:root` beats each component's `inset: 0`. */
+/* A modal dims the whole window, its bar too, but stops short of taking the
+   bar: the window still moves and closes while one is open. The bar's own
+   buttons and tabs rest meanwhile, so nothing dimmed answers a click.
+   `:root` beats each component's `inset: 0`. */
 :root
   :is(
     .settings-backdrop,
@@ -126,6 +128,31 @@
     .close-prompt-overlay
   ) {
   top: var(--window-bar-height);
+}
+
+:root
+  :is(
+    .settings-backdrop,
+    .language-welcome-backdrop,
+    .tutorial-backdrop,
+    .insert-table-overlay,
+    .image-name-overlay,
+    .close-prompt-overlay
+  )::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: var(--window-bar-height);
+  background: inherit;
+  pointer-events: none;
+}
+
+:root[data-modal-open]
+  :is(.window-bar, .main-pane > .tab-bar)
+  *:not(.window-caption, .window-caption *) {
+  pointer-events: none;
 }
 
 /* Centered on the window, where a native title sits, hence absolute. */

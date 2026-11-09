@@ -12,6 +12,15 @@ const FOCUSABLE =
  *  target belongs to. */
 const openDialogs: HTMLElement[] = [];
 
+/** Marks the root while a dialog is open, for the window bar to rest
+ *  (window-bar.css). */
+function markOpen() {
+  document.documentElement.toggleAttribute(
+    "data-modal-open",
+    openDialogs.length > 0,
+  );
+}
+
 /** Shared focus lifecycle for modal dialogs; callers provide role and label.
  *  `refocusEditorOnPhone: false` leaves the phone keyboard down on close.
  *  Inside a Presence, focus goes back as the exit starts. */
@@ -69,6 +78,7 @@ export function useModalDialog(
     // A key arriving there belongs to the innermost open dialog, which takes the
     // focus back.
     openDialogs.push(dialog);
+    markOpen();
     const strayKey = (event: globalThis.KeyboardEvent) => {
       if (openDialogs[openDialogs.length - 1] !== dialog) return;
       const focused = document.activeElement;
@@ -85,6 +95,7 @@ export function useModalDialog(
     return () => {
       window.removeEventListener("keydown", strayKey, { capture: true });
       openDialogs.splice(openDialogs.indexOf(dialog), 1);
+      markOpen();
       window.removeEventListener("keydown", speak, { capture: true });
       target.removeEventListener("blur", speak);
       speak();

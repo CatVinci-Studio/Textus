@@ -554,7 +554,7 @@ test.describe("desktop", () => {
     ]);
   });
 
-  test("in a short window Settings fits under the window bar and its page scrolls to the last setting (#260)", async ({
+  test("in a short window Settings fits under the window bar, which dims and rests with the rest, and its page scrolls to the last setting (#260)", async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1000, height: 460 });
@@ -587,6 +587,27 @@ test.describe("desktop", () => {
     await expect(
       panel.getByRole("button", { name: t.windowClose }),
     ).toBeInViewport({ ratio: 1 });
+
+    // The bar is dimmed with the rest, and its buttons rest: a press on
+    // the sidebar toggle lands on the bar itself, which only moves the
+    // window.
+    const dim = await page.evaluate(
+      () =>
+        getComputedStyle(
+          document.querySelector(".settings-backdrop")!,
+          "::before",
+        ).backgroundColor,
+    );
+    expect(dim).not.toBe("rgba(0, 0, 0, 0)");
+    const toggle = (await page
+      .locator(".window-bar-sidebar-toggle")
+      .boundingBox())!;
+    expect(
+      await page.evaluate(
+        ([x, y]) => document.elementFromPoint(x, y)?.className,
+        [toggle.x + toggle.width / 2, toggle.y + toggle.height / 2],
+      ),
+    ).toBe("window-bar");
 
     await page.keyboard.press("Escape");
     await expect(panel).toHaveCount(0);
