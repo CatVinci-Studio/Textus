@@ -440,3 +440,20 @@ test("a date is typed, or picked from the month under its field", async ({
     .poll(() => fileText(page, "/work/2026 Calendar/Week1.md"))
     .toContain("start: 2026-01-02");
 });
+
+test("in a narrow column the block starts folded to its line, and stays open once opened", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 460, height: 800 });
+  await open(page);
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await expect(block).toHaveAttribute("data-folded", "");
+  await expect(block.locator(".block-folded-line")).toHaveText("Workspace");
+  await block.locator(".block-folded-line").click();
+  await expect(block).not.toHaveAttribute("data-folded");
+  await expect
+    .poll(() =>
+      page.evaluate(() => localStorage.getItem("textus-opened-blocks")),
+    )
+    .toContain("2026 Calendar.md");
+});

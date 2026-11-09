@@ -56,6 +56,9 @@ export interface UiState {
   /** The drawn blocks folded (editor/fold/block-fold.ts), by document and
    *  place, oldest first. */
   foldedBlocks: string[];
+  /** The drawn blocks opened by hand, so one folded in a narrow column
+   *  stays open. */
+  openedBlocks: string[];
   /** With embeds shown as cards, the ones opened, the same way. */
   openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
@@ -211,6 +214,11 @@ const LOCAL: {
   },
   foldedBlocks: {
     key: "textus-folded-blocks",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  openedBlocks: {
+    key: "textus-opened-blocks",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

@@ -62,6 +62,8 @@ const HIDDEN_SOURCE_CLASS = "plugin-code-source-hidden";
 const OPEN_SOURCE_CLASS = "plugin-code-source-open";
 /** How long an export waits for a drawing just made to have its page. */
 const PAGE_WAIT_MS = 5000;
+/** Narrower than this, a plugin's block (a database's table) is crowded. */
+const NARROW_COLUMN = 480;
 /** How long typing pauses before a drawn block is told its new source. */
 const TELL_MS = 300;
 
@@ -156,10 +158,12 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       holder.className = "plugin-code-holder";
       el.append(holder);
       // Folded as Textus folds drawn blocks: by the document and its place.
+      // In a column too narrow for it, it starts folded to its line.
       addBlockFold(
         el,
         blockName(plugin),
         `${docPath.current ?? ""}\n${widget}`,
+        view.dom.clientWidth > 0 && view.dom.clientWidth < NARROW_COLUMN,
       );
       // A plugin's frame is heavy: drawn near the screen, let go far from
       // it (its state kept through setWebviewState).

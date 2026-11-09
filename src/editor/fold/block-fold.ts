@@ -12,20 +12,31 @@ import "./block-fold.css";
 /** Folds remembered at most; the oldest goes first. */
 const KEPT = 300;
 
-function folded(): string[] {
-  const list = getUiState("foldedBlocks");
+function kept(name: "foldedBlocks" | "openedBlocks"): string[] {
+  const list = getUiState(name);
   return Array.isArray(list)
     ? list.filter((k): k is string => typeof k === "string")
     : [];
 }
 
-export function blockFolded(key: string): boolean {
-  return folded().includes(key);
+function keep(
+  name: "foldedBlocks" | "openedBlocks",
+  key: string,
+  on: boolean,
+): void {
+  const rest = kept(name).filter((k) => k !== key);
+  setUiState(name, on ? [...rest, key].slice(-KEPT) : rest);
 }
 
+export function blockFolded(key: string): boolean {
+  return kept("foldedBlocks").includes(key);
+}
+
+/** Folded or opened by the user, kept; an opened one is remembered too, so
+ *  a block that starts folded in a narrow column stays open once opened. */
 export function setBlockFolded(key: string, on: boolean): void {
-  const rest = folded().filter((k) => k !== key);
-  setUiState("foldedBlocks", on ? [...rest, key].slice(-KEPT) : rest);
+  keep("foldedBlocks", key, on);
+  keep("openedBlocks", key, !on);
 }
 
 const caretSpan = () =>
@@ -91,7 +102,13 @@ export function foldButtonKey(target: EventTarget | null): string | null {
 
 /** Gives `el` its fold, kept by `key` (blockFolded), and wires its buttons:
  *  for blocks drawn fresh each time, not restored from HTML. */
-export function addBlockFold(el: HTMLElement, name: string, key: string): void {
+export function addBlockFold(
+  el: HTMLElement,
+  name: string,
+  key: string,
+  /** Starts folded unless the user opened it: a wide block in a narrow column. */
+  foldUnlessOpened = false,
+): void {
   addBlockFoldMarkup(el, name, key);
   const toggle = (event: Event) => {
     // Not a click in the document: the caret stays where it was.
@@ -107,5 +124,9 @@ export function addBlockFold(el: HTMLElement, name: string, key: string): void {
     button.addEventListener("mousedown", (e) => e.preventDefault());
     button.addEventListener("click", toggle);
   }
-  showBlockFold(el, blockFolded(key));
+  showBlockFold(
+    el,
+    blockFolded(key) ||
+      (foldUnlessOpened && !kept("openedBlocks").includes(key)),
+  );
 }
