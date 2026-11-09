@@ -766,6 +766,31 @@ fn behaviour_cases() -> Vec<AgentCase> {
     };
     e.reply_any = vec![];
     cases.push(AgentCase::new("review/review-mode-zh", Lang::ZhHans, Lang::ZhHans, zh, "帮我看看这篇文章哪里写得不好，指出具体的段落。", e, "Review mode: expect comments pinned to specific passages in Chinese and a short Chinese summary, no edits.").mode(AgentMode::Review));
+    // Review of a selection: notes only there, and a concrete fix carried as
+    // the note's suggestion.
+    let doc = "# Notes\n\nThe first paragraph is fine and stays as it is.\n\nOur team have finished there work on the the new library hours, wich start next week.\n\nThe last paragraph has an eror too, but nobody selected it.\n";
+    let selected = "Our team have finished there work on the the new library hours, wich start next week.";
+    let (msg, caret) = with_selection(doc, selected, "Check this for mistakes.");
+    let mut e = Expect {
+        edit: EditExpect::Forbidden,
+        comments: Some(true),
+        ..Expect::default()
+    };
+    e.reply_any = vec![];
+    let e = e
+        .check("notes only on the selection", move |o| {
+            match o.comments.iter().find(|(anchor, _)| !selected.contains(anchor.as_str())) {
+                Some((anchor, _)) => Err(format!("a note outside the selection: {anchor:?}")),
+                None => Ok(()),
+            }
+        })
+        .check("a fix as a suggestion", |o| {
+            let suggested = o.calls.iter().any(|c| {
+                c["name"] == "add_comment" && c["args"].to_string().contains("suggestion")
+            });
+            if suggested { Ok(()) } else { Err("no note carried a suggestion".into()) }
+        });
+    cases.push(AgentCase::new("review/en/selection-suggestions", Lang::En, Lang::En, doc, &msg, e, "Review mode on the selected middle paragraph (there/their, a doubled 'the', 'wich'): expect add_comment notes only on that paragraph, at least one carrying a concrete `suggestion` rewrite, nothing on the unselected last paragraph's 'eror', no edits.").mode(AgentMode::Review).caret(caret));
 
     let mut q = no_edit();
     q.reply_any = vec![];

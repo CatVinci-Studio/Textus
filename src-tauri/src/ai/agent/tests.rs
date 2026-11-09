@@ -763,6 +763,10 @@ fn interaction_mode_is_explicit_in_every_message() {
     let message = |mode| request_message(&workspace, mode, "en", "---document---\ndraft", "Go.");
     let review = message(AgentMode::Review);
     assert!(review.contains("interaction mode: review"));
+    // Review covers the selection when there is one, and a concrete fix
+    // goes with its note as a suggestion.
+    assert!(review.contains("the <selected-text> block when there is one"));
+    assert!(review.contains("`suggestion`"));
     assert!(
         build_instructions(&workspace, &md("draft"), true, AgentMode::Review, "", "en")
             .contains("No document edit tool is available")
