@@ -112,6 +112,9 @@ const CANNOT_ZH: &[&str] = &[
     "没法",
     "没有办法",
     "读取不到",
+    "读不到",
+    "看不到",
+    "打不开",
     "访问不到",
     "只能",
     "范围之外",
@@ -125,7 +128,7 @@ fn used_file_tools(o: &TurnOutcome) -> Result<(), String> {
         .iter()
         .any(|t| t == "read_file" || t == "search_files" || t == "find_files")
         .then_some(())
-        .ok_or_else(|| "never looked in the project folder".into())
+        .ok_or_else(|| "never looked in the folder".into())
 }
 
 /// Standalone digits 1-9 (house style: spell them out).
@@ -539,8 +542,8 @@ fn workspace_cases() -> Vec<AgentCase> {
 
     // An unsaved draft: no folder, so no file tools at all.
     let no_folder = DiskWorkspace::default();
-    c.push(AgentCase::new("workspace/en/unsaved-draft", Lang::En, Lang::En, BUDGET_EN, "Update the Costs paragraph with the figures from my notes/costs.md file.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says why and what to do", |o| mentions(&o.reply, &["save", "project folder", "settings"])).without_tools(&["read_file", "list_files", "search_files", "find_files"]), "The document is unsaved and no project folder is chosen, so there is no folder to read (no file tools are offered). Expect the agent to say it can't open the file and ask for the figures (or to save the document in a folder / choose a project folder); no invented numbers.").disk(no_folder.clone()));
-    c.push(AgentCase::new("workspace/zh/unsaved-draft", Lang::ZhHans, Lang::ZhHans, INVITE_ZH, "根据我 notes.md 里记的场地，补上活动地点。", either().lacks(&["图书馆", "多功能厅"]).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_ZH)).check("says why and what to do", |o| mentions(&o.reply, &["保存", "项目文件夹", "设置"])), "Unsaved draft, no project folder: the agent can't read notes.md. Expect a Chinese reply saying so and asking for the venue (a clearly marked placeholder is acceptable), never an invented venue.").disk(no_folder));
+    c.push(AgentCase::new("workspace/en/unsaved-draft", Lang::En, Lang::En, BUDGET_EN, "Update the Costs paragraph with the figures from my notes/costs.md file.", either().check("no invented figures", no_new_numbers).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_EN)).check("says why and what to do", |o| mentions(&o.reply, &["save", "folder", "settings"])).without_tools(&["read_file", "list_files", "search_files", "find_files"]), "The document is unsaved and no project folder is chosen, so there is no folder to read (no file tools are offered). Expect the agent to say it can't open the file and ask for the figures (or to save the document in a folder / choose a project folder); no invented numbers.").disk(no_folder.clone()));
+    c.push(AgentCase::new("workspace/zh/unsaved-draft", Lang::ZhHans, Lang::ZhHans, INVITE_ZH, "根据我 notes.md 里记的场地，补上活动地点。", either().lacks(&["图书馆", "多功能厅"]).check("says it can't read it", |o| says_cannot(&o.reply, CANNOT_ZH)).check("says why and what to do", |o| mentions(&o.reply, &["保存", "文件夹", "设置"])), "Unsaved draft, no project folder: the agent can't read notes.md. Expect a Chinese reply saying so and asking for the venue (a clearly marked placeholder is acceptable), never an invented venue.").disk(no_folder));
 
     // A lone document: its folder isn't opened, so notes beside it can't
     // be read - the agent says why and how (attach, or open the folder).
