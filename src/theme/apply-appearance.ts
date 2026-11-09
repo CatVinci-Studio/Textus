@@ -104,10 +104,9 @@ export function useApplyAppearance(
 
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.frostedTitleBar)
-      root.setAttribute("data-frosted-title-bar", "");
-    else root.removeAttribute("data-frosted-title-bar");
-  }, [settings.frostedTitleBar]);
+    if (settings.solidTitleBar) root.removeAttribute("data-frosted-title-bar");
+    else root.setAttribute("data-frosted-title-bar", "");
+  }, [settings.solidTitleBar]);
 
   useEffect(() => {
     const root = document.documentElement;

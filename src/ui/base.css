@@ -105,6 +105,9 @@
   --ui-accent: var(--doc-accent);
   --ui-border: color-mix(in srgb, var(--ui-text) 16%, var(--ui-bg));
   --ui-subtle: color-mix(in srgb, var(--ui-text) 4%, var(--ui-bg));
+  /* The window's frame - the title bar, the activity rail, the sidebar -
+     one surface around the document (design-language.md 5.7). */
+  --ui-frame: var(--ui-subtle);
   --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
   --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --ui-selected-text: var(--ui-text);

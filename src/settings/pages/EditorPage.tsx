@@ -238,9 +238,15 @@ export function EditorPage({
           )}
         </SettingsGroup>
       )}
-      {/* Rarely changed: how diagrams are drawn, colour swatches, and the
-       ** and ` pairs. */}
+      {/* Rarely changed: the frosted title bar, how diagrams are drawn,
+      colour swatches, and the ** and ` pairs. */}
       <AdvancedFold t={t}>
+        <ToggleRow
+          label={t.frostedTitleBarLabel}
+          help={t.frostedTitleBarHelp}
+          checked={!settings.solidTitleBar}
+          onChange={(on) => setSettings({ solidTitleBar: !on })}
+        />
         {settings.enableMermaid && (
           <SettingRow label={t.diagramEngineLabel} help={t.diagramEngineHint}>
             <Select

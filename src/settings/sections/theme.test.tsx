@@ -15,7 +15,6 @@ const mock = vi.hoisted(() => ({
   setSettings: vi.fn(),
   settings: {
     theme: "system",
-    frostedTitleBar: false,
     themeId: "user-test",
     userThemes: [{ id: "user-test", name: "Test", hasDark: false }],
     creations: [{ kind: "theme", id: "user-test", name: "Test", at: 1 }],
@@ -49,15 +48,6 @@ describe("theme settings", () => {
     expect(screen.getByRole("radio", { name: "Follow system" })).toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: "Dark" }));
     expect(mock.setSettings).toHaveBeenCalledWith({ theme: "dark" });
-  });
-  it("offers a frosted title bar, off until chosen", () => {
-    render(<ThemeSection t={resolveStrings("en")} onMore={() => {}} />);
-    const toggle = screen.getByRole("checkbox", {
-      name: resolveStrings("en").frostedTitleBarLabel,
-    });
-    expect(toggle).not.toBeChecked();
-    fireEvent.click(toggle);
-    expect(mock.setSettings).toHaveBeenCalledWith({ frostedTitleBar: true });
   });
   it("leaves getting and editing themes to Extensions", () => {
     const t = resolveStrings("en");

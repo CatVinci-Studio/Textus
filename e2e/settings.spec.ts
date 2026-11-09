@@ -270,21 +270,11 @@ test.describe("desktop", () => {
       .toBe(true);
   });
 
-  test("the title bar can frost what scrolls under it, and turn opaque again", async ({
+  test("the title bar frosts what scrolls under it by default, and Advanced turns it opaque", async ({
     page,
   }) => {
     await openApp(page, { settings: { language: "en" } });
-    const panel = await openSettings(page);
-    await panel.getByRole("button", { name: t.navEditor }).click();
-    const toggle = panel.getByRole("checkbox", {
-      name: t.frostedTitleBarLabel,
-    });
     const bar = page.locator(".window-bar");
-    await expect(toggle).not.toBeChecked();
-    await expect(bar).toHaveCSS("backdrop-filter", "none");
-
-    await toggle.click();
-    await expect(toggle).toBeChecked();
     // Glass in three layers behind the bar, blurring more toward the top;
     // the bar itself only tints, so they see the page.
     await expect(bar).toHaveCSS("backdrop-filter", "none");
@@ -300,7 +290,15 @@ test.describe("desktop", () => {
       "none",
     );
 
+    const panel = await openSettings(page);
+    await panel.getByRole("button", { name: t.navEditor }).click();
+    await panel.locator(".settings-advanced > summary").click();
+    const toggle = panel.getByRole("checkbox", {
+      name: t.frostedTitleBarLabel,
+    });
+    await expect(toggle).toBeChecked();
     await toggle.click();
+    await expect(toggle).not.toBeChecked();
     await expect(page.locator(".window-bar-glass")).toBeHidden();
   });
 
