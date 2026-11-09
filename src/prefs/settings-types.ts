@@ -163,6 +163,11 @@ export interface Settings {
   /// Windows and Linux: the menus along the app-drawn window bar instead of
   /// behind ☰. On, the bar has no sidebar button.
   menuBarShown: boolean;
+  /// The column of icons at the window's left edge (Files, Outline, plugins'
+  /// pages). Off, the sidebar shows its tabs along its own top again.
+  activityRail: boolean;
+  /// Sidebar tabs the user took off the rail, by id.
+  activityRailHidden: string[];
   /// ![[note]] embeds drawn in full, or folded to a card each until opened.
   embedDisplay: EmbedDisplay;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
@@ -310,6 +315,8 @@ export const DEFAULT_SETTINGS: Settings = {
   contentWidth: "auto",
   imageAlign: "center",
   menuBarShown: false,
+  activityRail: true,
+  activityRailHidden: [],
   embedDisplay: "expand",
   autoCloseMarks: true,
   autoCloseBrackets: true,

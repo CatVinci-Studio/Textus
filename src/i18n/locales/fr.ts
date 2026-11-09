@@ -1094,6 +1094,11 @@ utiliser une.
   chatCollapseInline: "Replier la réponse",
   chatNewConversation: "Nouvelle conversation",
   appMenu: "Menu",
+  activityRail: "Barre d'activité",
+  activityRailHide: "Masquer la barre d'activité",
+  activityRailLabel: "Afficher la barre d'activité",
+  activityRailHelp:
+    "Les icônes du bord gauche de la fenêtre qui ouvrent Fichiers, Plan et les pages des plugins. Désactivée, la barre latérale les affiche en haut.",
   menuBarLabel: "Afficher la barre de menus",
   menuBarHelp:
     "Fichier, Édition, Présentation et les autres menus directement dans la barre de titre, au lieu de derrière ☰. Le bouton du panneau latéral leur laisse la place : le panneau s’ouvre depuis Présentation ou avec son raccourci.",

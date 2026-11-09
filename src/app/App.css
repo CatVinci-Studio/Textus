@@ -3,6 +3,7 @@
 @import "../ui/base.css";
 @import "./app-shell.css";
 @import "./sidebar-frame.css";
+@import "./activity-rail.css";
 @import "./window-bar.css";
 @import "./tabs/TabBar.css";
 @import "./editor-column.css";

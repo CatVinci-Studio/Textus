@@ -965,6 +965,11 @@ export default {
   chatCollapseInline: "收合回答",
   chatNewConversation: "新對話",
   appMenu: "選單",
+  activityRail: "圖示列",
+  activityRailHide: "隱藏圖示列",
+  activityRailLabel: "顯示左側圖示列",
+  activityRailHelp:
+    "視窗左邊一列圖示，用來開啟檔案、大綱和外掛頁面。關閉後，這些圖示回到側欄頂端。",
   menuBarLabel: "顯示選單列",
   menuBarHelp:
     "把「檔案」「編輯」「檢視」等選單直接排在標題列上，不再收在 ☰ 裡。側邊欄按鈕會讓出位置：側邊欄可以從「檢視」選單或快捷鍵打開。",

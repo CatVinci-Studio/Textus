@@ -19,7 +19,7 @@ export interface PanelLimits {
 
 /** The narrowest a panel gets, however small the window (or its own
  *  minimum, if smaller). */
-const PANEL_FLOOR = 200;
+export const PANEL_FLOOR = 200;
 const floor = (limits: PanelLimits) => Math.min(limits.min, PANEL_FLOOR);
 /** Room a squeezed panel keeps to be dragged in. */
 const DRAG_ROOM = 100;

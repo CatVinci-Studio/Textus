@@ -39,21 +39,24 @@ test("dragging the sidebar's edge resizes it; it comes back as it was left: open
   await dragHandle(page, 80);
   await expect(handle).toHaveAttribute("aria-valuenow", "320");
   expect(await sidebarWidth(page)).toBe(320);
-  // The page makes room for it.
-  expect(await mainPaneLeft(page)).toBe(320);
+  // The page makes room for it, beside the activity rail.
+  const rail = await page
+    .locator(".activity-rail")
+    .evaluate((el) => el.getBoundingClientRect().width);
+  expect(await mainPaneLeft(page)).toBe(rail + 320);
   await expect
     .poll(() =>
       page.evaluate(() => localStorage.getItem("textus-sidebar-width")),
     )
     .toBe("320");
 
-  // On another tab than the files.
-  const tabs = page.locator(".sidebar-tabs");
+  // On another tab than the files, chosen on the activity rail.
+  const tabs = page.locator(".activity-rail");
   const outlineTab = tabs.getByRole("button", { name: "大纲" });
   const filesTab = tabs.getByRole("button", { name: "文件树" });
-  await expect(filesTab).toHaveClass(/sidebar-tab-active/);
+  await expect(filesTab).toHaveAttribute("aria-pressed", "true");
   await outlineTab.click();
-  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
+  await expect(outlineTab).toHaveAttribute("aria-pressed", "true");
 
   const reload = async () => {
     await page.reload();
@@ -63,9 +66,9 @@ test("dragging the sidebar's edge resizes it; it comes back as it was left: open
   // Left open, it comes back open, at that width, on that tab.
   await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar-collapsed/);
   expect(await sidebarWidth(page)).toBe(320);
-  expect(await mainPaneLeft(page)).toBe(320);
-  await expect(outlineTab).toHaveClass(/sidebar-tab-active/);
-  await expect(filesTab).not.toHaveClass(/sidebar-tab-active/);
+  expect(await mainPaneLeft(page)).toBe(rail + 320);
+  await expect(outlineTab).toHaveAttribute("aria-pressed", "true");
+  await expect(filesTab).toHaveAttribute("aria-pressed", "false");
 
   // Closed again, it comes back closed.
   await emit(page, "menu-toggle-sidebar");

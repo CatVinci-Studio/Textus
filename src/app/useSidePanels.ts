@@ -14,6 +14,10 @@ import { useAgentPanelState } from "../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { setDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useSidebarWidth } from "./sidebar-width";
+import { RAIL_WIDTH } from "./ActivityRail";
+import { chromeScaleAt } from "../ui/chrome-scale";
+import { useSettings } from "../prefs/SettingsContext";
+import { PANEL_FLOOR } from "../ui/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 /** A sidebar tab's id. */
@@ -50,11 +54,29 @@ export function useSidePanels(aiOn: boolean) {
   const windowWidth = useSyncExternalStore(subscribeWindowResize, () =>
     typeof window === "undefined" ? 0 : window.innerWidth,
   );
-  const sidebarWidth = useSidebarWidth(windowWidth);
+  // The activity rail is beside both panels, as each is beside the other:
+  // the document keeps its room after all of them.
+  const { settings } = useSettings();
+  const rail =
+    settings.activityRail && !isIOSApp
+      ? RAIL_WIDTH * chromeScaleAt(windowWidth)
+      : 0;
+  // With the AI panel open the sidebar leaves it its narrowest, so a small
+  // window still keeps the document its room (the panel's open state, one
+  // render late, is enough: it only bounds the sidebar).
+  const [agentShown, setAgentShown] = useState(
+    () => getUiState("agentPanelOpen") === true,
+  );
+  const scale = chromeScaleAt(windowWidth);
+  const sidebarWidth = useSidebarWidth(
+    windowWidth,
+    rail + (agentShown ? PANEL_FLOOR * scale : 0),
+  );
   const agentPanel = useAgentPanelState(
     windowWidth,
-    panelOpen ? sidebarWidth.width : 0,
+    rail + (panelOpen ? sidebarWidth.width : 0),
   );
+  useEffect(() => setAgentShown(agentPanel.open), [agentPanel.open]);
   const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
   // On a phone, the document gives up focus here and the AI page's input
   // doesn't take it, so the keyboard goes away in one movement. With the

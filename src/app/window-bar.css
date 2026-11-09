@@ -182,7 +182,9 @@
 :root:not([data-window-chrome="mobile"], .zen)
   .window-bar:not(:has(> .window-menu-bar))
   .window-bar-title {
-  translate: var(--window-bar-title-slide, 0px);
+  translate: calc(
+    var(--window-bar-title-slide, 0px) + var(--rail-width, 0px) / 2
+  );
   transform: translateX(calc(-50% + var(--window-bar-title-shift, 0px)));
   transition:
     translate var(--window-bar-title-dur, var(--dur-base))

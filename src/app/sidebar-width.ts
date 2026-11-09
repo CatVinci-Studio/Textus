@@ -35,21 +35,27 @@ export function storedSidebarWidth(): number {
  * The sidebar's width, remembered across launches and windows. A window too
  * small for it shows it narrower, and a drag remembers only where it let go.
  */
-export function useSidebarWidth(windowWidth: number) {
+export function useSidebarWidth(windowWidth: number, beside = 0) {
   // Kept in the interface's size units, shown at its size now.
   const [chosen, setChosen] = useState(storedSidebarWidth);
   const scale = chromeScaleAt(windowWidth);
-  const width = clampSidePanel(chosen * scale, windowWidth, LIMITS, 0, scale);
+  const width = clampSidePanel(
+    chosen * scale,
+    windowWidth,
+    LIMITS,
+    beside,
+    scale,
+  );
   const setWidth = useCallback(
     (next: number, persist = true) => {
       const step = chromeScaleAt(windowWidth);
       const base = Math.round(
-        clampSidePanel(next, windowWidth, LIMITS, 0, step) / step,
+        clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
       );
       setChosen(base);
       if (persist) setUiState("sidebarWidth", base);
     },
-    [windowWidth],
+    [windowWidth, beside],
   );
   const resetWidth = useCallback(() => {
     setChosen(SIDEBAR_DEFAULT_WIDTH);
@@ -57,8 +63,8 @@ export function useSidebarWidth(windowWidth: number) {
   }, []);
   return {
     width,
-    min: Math.round(sidePanelMin(windowWidth, LIMITS, 0, scale)),
-    max: sidePanelMax(windowWidth, LIMITS, 0, scale),
+    min: Math.round(sidePanelMin(windowWidth, LIMITS, beside, scale)),
+    max: sidePanelMax(windowWidth, LIMITS, beside, scale),
     setWidth,
     resetWidth,
   };

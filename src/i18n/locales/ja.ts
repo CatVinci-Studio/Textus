@@ -1022,6 +1022,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatCollapseInline: "回答を折りたたむ",
   chatNewConversation: "新しい会話",
   appMenu: "メニュー",
+  activityRail: "アクティビティバー",
+  activityRailHide: "アクティビティバーを隠す",
+  activityRailLabel: "アクティビティバーを表示",
+  activityRailHelp:
+    "ウインドウ左端のアイコン列で、ファイル、アウトライン、プラグインのページを開きます。オフにすると、サイドバーの上部に並びます。",
   menuBarLabel: "メニューバーを表示",
   menuBarHelp:
     "「ファイル」「編集」「表示」などを ☰ にしまわず、タイトルバーに並べます。サイドバーのボタンはその分なくなります。サイドバーは「表示」メニューかショートカットで開けます。",

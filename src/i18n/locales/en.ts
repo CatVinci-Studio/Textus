@@ -1041,6 +1041,11 @@ type /name in a conversation to use one.
   chatCollapseInline: "Collapse answer",
   chatNewConversation: "New conversation",
   appMenu: "Menu",
+  activityRail: "Activity bar",
+  activityRailHide: "Hide the Activity Bar",
+  activityRailLabel: "Show the activity bar",
+  activityRailHelp:
+    "The icons along the window's left edge that open Files, Outline and plugins' pages. Off, the sidebar shows them along its top.",
   menuBarLabel: "Show the menu bar",
   menuBarHelp:
     "File, Edit, View and the rest along the title bar, instead of behind ☰. The sidebar button makes room for them: the sidebar is in View, and has its shortcut.",

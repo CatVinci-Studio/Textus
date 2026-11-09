@@ -7,6 +7,8 @@ import type { PanelMode } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "./useOpenFolder";
 import { SidebarTabBar } from "./SidebarTabBar";
+import { ActivityRail } from "./ActivityRail";
+import { useSettings } from "../prefs/SettingsContext";
 import { moveSidebarTab, sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../plugins/views/plugin-views";
 import type { FileOpenHow } from "../sidebar/tree-shared";
@@ -56,8 +58,29 @@ export function Sidebar({
   const shown = sidebarTab(mode);
   // A tab dragged: drawn again in its new order.
   const [, moved] = useReducer((n: number) => n + 1, 0);
+  const { settings } = useSettings();
+  // The phone opens the sidebar from its own bar; there is no rail there.
+  const rail = settings.activityRail && !isIOSApp;
+  const move = (id: string, target: string) => {
+    moveSidebarTab(id, target);
+    moved();
+  };
   return (
     <>
+      {rail && (
+        <ActivityRail
+          tabs={sidebarTabs()}
+          shownId={shown.id}
+          sidebarOpen={open}
+          onSelect={(id) => {
+            onModeChange(id);
+            if (!open) onToggle();
+          }}
+          onCloseSidebar={onToggle}
+          onMove={move}
+          t={t}
+        />
+      )}
       {/* iPhone: a tap beside the drawer closes it. */}
       <Presence show={isIOSApp && open} exitMs={250}>
         {isIOSApp && open && (
@@ -74,16 +97,19 @@ export function Sidebar({
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
-              <SidebarTabBar
-                tabs={sidebarTabs()}
-                shownId={shown.id}
-                onSelect={onModeChange}
-                onMove={(id, target) => {
-                  moveSidebarTab(id, target);
-                  moved();
-                }}
-                t={t}
-              />
+              {/* With the rail holding the tabs, the header names the one
+                  open; without it, the tabs are here again. */}
+              {rail ? (
+                <h2 className="sidebar-title">{shown.label(t)}</h2>
+              ) : (
+                <SidebarTabBar
+                  tabs={sidebarTabs()}
+                  shownId={shown.id}
+                  onSelect={onModeChange}
+                  onMove={move}
+                  t={t}
+                />
+              )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
               <ViewTitleActions view={shown.id} />

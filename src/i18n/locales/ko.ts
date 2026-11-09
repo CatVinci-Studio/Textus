@@ -1010,6 +1010,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatCollapseInline: "답변 접기",
   chatNewConversation: "새 대화",
   appMenu: "메뉴",
+  activityRail: "활동 막대",
+  activityRailHide: "활동 막대 숨기기",
+  activityRailLabel: "활동 막대 표시",
+  activityRailHelp:
+    "창 왼쪽 가장자리의 아이콘 열로, 파일, 개요, 플러그인 페이지를 엽니다. 끄면 사이드바 위쪽에 표시됩니다.",
   menuBarLabel: "메뉴 막대 표시",
   menuBarHelp:
     "파일, 편집, 보기 등의 메뉴를 ☰ 안에 넣지 않고 제목 표시줄에 바로 늘어놓습니다. 사이드바 버튼은 그 자리를 내줍니다. 사이드바는 보기 메뉴나 단축키로 열 수 있습니다.",

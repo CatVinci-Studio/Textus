@@ -1063,6 +1063,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatCollapseInline: "Recolher resposta",
   chatNewConversation: "Nova conversa",
   appMenu: "Menu",
+  activityRail: "Barra de atividade",
+  activityRailHide: "Ocultar a barra de atividade",
+  activityRailLabel: "Mostrar a barra de atividade",
+  activityRailHelp:
+    "Os ícones na borda esquerda da janela que abrem Arquivos, Estrutura e as páginas dos plugins. Desativada, a barra lateral os mostra no topo.",
   menuBarLabel: "Mostrar a barra de menus",
   menuBarHelp:
     "Arquivo, Editar, Visualizar e os outros menus direto na barra de título, em vez de atrás do ☰. O botão da barra lateral dá lugar a eles: a barra lateral fica em Visualizar e tem seu atalho.",

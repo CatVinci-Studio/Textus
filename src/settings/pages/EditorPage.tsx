@@ -95,6 +95,12 @@ export function EditorPage({
             </Select>
           </SettingRow>
         )}
+        <ToggleRow
+          label={t.activityRailLabel}
+          help={t.activityRailHelp}
+          checked={settings.activityRail}
+          onChange={(on) => setSettings({ activityRail: on })}
+        />
         {appDrawsWindowFrame && (
           <ToggleRow
             label={t.menuBarLabel}

@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { dragWithMouse, openApp, swallowHtmlDrop } from "./helpers";
 
-/** Plugin tabs that don't fit the sidebar's width go under More. */
+/** Plugin tabs that don't fit the sidebar's width go under More: the
+ *  sidebar's own tab row, with the activity rail off. */
 
 type Api = {
   sidebarTabs: {
@@ -17,7 +18,7 @@ type Api = {
 test("tabs past the sidebar's width go under More, the one shown keeps its button", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
+  await openApp(page, { settings: { language: "en", activityRail: false } });
   await page.waitForFunction(
     () => !!(window as unknown as { __textusPlugins?: Api }).__textusPlugins,
   );
@@ -52,7 +53,7 @@ test("a tab dragged along the bar takes the place it is let go at", async ({
   page,
 }) => {
   await swallowHtmlDrop(page);
-  await openApp(page, { settings: { language: "en" } });
+  await openApp(page, { settings: { language: "en", activityRail: false } });
   await page.waitForFunction(
     () => !!(window as unknown as { __textusPlugins?: Api }).__textusPlugins,
   );

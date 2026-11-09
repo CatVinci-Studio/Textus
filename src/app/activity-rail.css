@@ -1,0 +1,86 @@
+/* The activity rail (design-language.md 5.7): a column of icons in the
+   frame's colour under the title bar, at the window's left edge. The sidebar
+   slides out from under it; the document clears both. */
+.app-shell {
+  --rail-width: 0px;
+}
+
+:root:not(.zen, [data-window-chrome="mobile"])
+  .app-shell:has(> .activity-rail) {
+  --rail-width: 44px;
+}
+
+.activity-rail {
+  position: absolute;
+  top: var(--window-bar-height);
+  bottom: 0;
+  left: 0;
+  /* Over the sidebar while it slides in and out beneath. */
+  z-index: 2;
+  width: var(--rail-width);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 6px;
+  background: var(--ui-frame);
+  /* Where the frame meets the document; the open sidebar carries on the
+     frame instead. */
+  border-right: 1px solid var(--ui-border);
+  transition: border-color var(--dur-base) var(--ease-standard);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.app-shell:has(> .sidebar:not(.sidebar-collapsed)) .activity-rail {
+  border-right-color: transparent;
+}
+
+:root:is(.zen, [data-window-chrome="mobile"]) .activity-rail {
+  display: none;
+}
+
+.activity-rail-item {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--shape-s);
+  background: transparent;
+  color: var(--ui-muted);
+  display: grid;
+  place-items: center;
+  cursor: default;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard);
+}
+
+.activity-rail-item:hover {
+  background: var(--ui-hover);
+  color: var(--ui-text);
+  transition-duration: var(--dur-instant);
+}
+
+.activity-rail-item[aria-pressed="true"] {
+  background: var(--ui-selected);
+  color: var(--ui-accent);
+}
+
+.activity-rail-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* With the rail holding the tabs, the sidebar's header names the open one. */
+.sidebar-title {
+  margin: 0;
+  padding: 0 8px;
+  font-size: var(--text-secondary);
+  font-weight: 600;
+  color: var(--ui-muted);
+  line-height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

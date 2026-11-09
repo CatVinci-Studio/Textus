@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openApp } from "./helpers";
+import { emit, openApp } from "./helpers";
 
 /**
  * The window bar's sidebar toggle: the row's first control, which belongs to
@@ -310,8 +310,9 @@ test(
 test("the sidebar's tabs are capsules like the document's", async ({
   page,
 }) => {
+  // Its own tabs: the activity rail off, so they are along its top.
   await openApp(page, {
-    settings: { language: "en", newDocumentMode: "tab" },
+    settings: { language: "en", newDocumentMode: "tab", activityRail: false },
     animations: true,
   });
   await page.locator(toggle).click();
@@ -342,103 +343,75 @@ test("the sidebar's tabs are capsules like the document's", async ({
   );
 });
 
-/** The bar's strip for the sidebar's surface (window-bar.css): its fill, its
- *  edge, and where the box sits once its slide out of the way is counted. */
-async function strip(page: Page) {
-  return page.evaluate(() => {
-    const bar = document.querySelector(".window-bar")!;
-    const s = getComputedStyle(bar, "::before");
-    const left =
-      s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
-    return {
-      background: s.backgroundColor,
-      border: s.borderRightWidth,
-      borderColor: s.borderRightColor,
-      left,
-      visibility: s.visibility,
-    };
-  });
+/** The fill of the window's frame pieces: the title bar, the activity
+ *  rail and the sidebar (design-language.md 5.7). */
+async function frame(page: Page) {
+  return page.evaluate(() =>
+    [".window-bar", ".activity-rail", ".sidebar"].map(
+      (selector) =>
+        getComputedStyle(document.querySelector(selector)!).backgroundColor,
+    ),
+  );
 }
 
-test("the sidebar's surface reaches the window's top, its own layout does not", async ({
+test("the title bar, the activity rail and the sidebar are one frame; the sidebar's contents stay below the bar", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
+  // Opaque, so the bar's colour is the frame's own.
+  await openApp(page, { settings: { language: "en", solidTitleBar: true } });
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.locator(toggle).click();
   await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-
-  // The strip carries the sidebar's fill and edge, so the two read as one
-  // surface from the window's top to its bottom.
-  const side = await page.locator(sidebar).evaluate((el) => {
-    const s = getComputedStyle(el);
-    return {
-      background: s.backgroundColor,
-      border: s.borderRightWidth,
-      borderColor: s.borderRightColor,
-    };
-  });
-  expect(await strip(page)).toEqual({
-    ...side,
-    left: 0,
-    visibility: "visible",
-  });
+  const [bar, rail, side] = await frame(page);
+  expect(rail).toBe(bar);
+  expect(side).toBe(bar);
+  // The frame is not the page.
+  const page_ = await page
+    .locator(".editor-scroll")
+    .first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(page_).not.toBe(bar);
 
   // Its contents stay below the bar rather than riding up into it.
-  const bar = (await page.locator(".window-bar").boundingBox())!;
-  const tabs = (await page.locator(".sidebar-tabs").boundingBox())!;
-  expect(tabs.y).toBeGreaterThanOrEqual(bar.y + bar.height);
+  const box = (await page.locator(".window-bar").boundingBox())!;
+  const title = (await page.locator(".sidebar-title").boundingBox())!;
+  expect(title.y).toBeGreaterThanOrEqual(box.y + box.height);
 
-  // Closed, the surface goes with the sidebar: its right edge lands on the
-  // window's left edge, with no sliver left behind.
-  const width = (await page.locator(sidebar).boundingBox())!.width;
+  // Closed, the sidebar slides under the rail: nothing of it shows past
+  // the rail's edge, and the rail keeps its line against the page.
   await page.locator(toggle).click();
   await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);
-  const hidden = await strip(page);
-  expect(hidden.visibility).toBe("hidden");
-  expect(Math.round(hidden.left)).toBe(-Math.round(width));
+  await expect(page.locator(sidebar)).toBeHidden();
+  await expect(page.locator(".activity-rail")).not.toHaveCSS(
+    "border-right-color",
+    "rgba(0, 0, 0, 0)",
+  );
 });
 
-test(
-  "the surface slides with the sidebar, frame for frame",
-  { tag: "@perf" },
-  async ({ page }) => {
-    await openApp(page, { settings: { language: "en" }, animations: true });
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await page.locator(toggle).click();
-    await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
-    // Its opening slide over first: one turned back at its start lasts as
-    // little as it had run.
-    await page.waitForFunction(
-      () => document.querySelector(".sidebar")!.getAnimations().length === 0,
-    );
+test("the activity rail opens a tab, closes the sidebar on the open one, and hides from its right-click menu until Settings brings it back", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  const rail = page.locator(".activity-rail");
+  const outline = rail.getByRole("button", { name: "Outline" });
+  await outline.click();
+  await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
+  await expect(page.locator(".sidebar-title")).toHaveText("Outline");
+  await expect(outline).toHaveAttribute("aria-pressed", "true");
+  await outline.click();
+  await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);
 
-    const slide = await page.evaluate(async () => {
-      const bar = document.querySelector(".window-bar")!;
-      const side = document.querySelector(".sidebar")!;
-      document
-        .querySelector<HTMLElement>(".window-bar-sidebar-toggle")!
-        .click();
-      const drift: number[] = [];
-      const lefts: number[] = [];
-      const until = performance.now() + 500;
-      while (performance.now() < until) {
-        await new Promise(requestAnimationFrame);
-        const s = getComputedStyle(bar, "::before");
-        const left =
-          s.transform === "none" ? 0 : new DOMMatrixReadOnly(s.transform).m41;
-        const sideLeft = side.getBoundingClientRect().left;
-        drift.push(Math.abs(left - sideLeft));
-        lefts.push(sideLeft);
-      }
-      return {
-        worst: Math.max(...drift),
-        travelled: Math.max(...lefts) - Math.min(...lefts),
-      };
-    });
-    const { worst, travelled } = slide;
-    // Seen across the slide, not at either end of it.
-    expect(travelled).toBeGreaterThan(50);
-    expect(worst).toBeLessThan(1);
-  },
-);
+  await rail.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Hide the Activity Bar" }).click();
+  await expect(rail).toHaveCount(0);
+  // The sidebar's tabs are along its top again.
+  await page.locator(toggle).click();
+  await expect(page.locator(".sidebar-tabs")).toBeVisible();
+
+  await emit(page, "menu-open-settings");
+  const panel = page.getByRole("dialog", { name: "Settings" });
+  await panel.getByRole("button", { name: "Editor & Appearance" }).click();
+  await panel.getByRole("checkbox", { name: "Show the activity bar" }).click();
+  await page.keyboard.press("Escape");
+  await expect(rail).toBeVisible();
+});

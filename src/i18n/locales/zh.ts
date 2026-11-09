@@ -963,6 +963,11 @@ export default {
   chatCollapseInline: "收起回答",
   chatNewConversation: "新对话",
   appMenu: "菜单",
+  activityRail: "图标栏",
+  activityRailHide: "隐藏图标栏",
+  activityRailLabel: "显示左侧图标栏",
+  activityRailHelp:
+    "窗口左边一列图标，用来打开文件、大纲和插件页面。关掉后，这些图标回到侧栏顶部。",
   menuBarLabel: "显示菜单栏",
   menuBarHelp:
     "把“文件”“编辑”“视图”等菜单直接排在标题栏上，不再收在 ☰ 里。侧边栏按钮会让出位置：侧边栏可以从“视图”菜单或快捷键打开。",

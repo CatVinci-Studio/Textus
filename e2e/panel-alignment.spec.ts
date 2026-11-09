@@ -53,7 +53,9 @@ for (const width of [820, 1280, 1920])
   });
 
 test("a squeezed AI panel can still be dragged narrower", async ({ page }) => {
-  await open(page, 820);
+  // Squeezed but above its narrowest: at 820 the rail and the sidebar leave
+  // it exactly that.
+  await open(page, 900);
   const before = (await layout(page)).panel;
   const edge = page.getByRole("separator", { name: /AI panel/i });
   const box = (await edge.boundingBox())!;

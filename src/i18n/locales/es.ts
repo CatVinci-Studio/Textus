@@ -1082,6 +1082,11 @@ para usar una.
   chatCollapseInline: "Contraer respuesta",
   chatNewConversation: "Nueva conversación",
   appMenu: "Menú",
+  activityRail: "Barra de actividad",
+  activityRailHide: "Ocultar la barra de actividad",
+  activityRailLabel: "Mostrar la barra de actividad",
+  activityRailHelp:
+    "Los iconos del borde izquierdo de la ventana que abren Archivos, Esquema y las páginas de los plugins. Desactivada, la barra lateral los muestra arriba.",
   menuBarLabel: "Mostrar la barra de menús",
   menuBarHelp:
     "Archivo, Edición, Visualización y los demás menús directamente en la barra de título, en lugar de tras ☰. El botón de la barra lateral les deja sitio: la barra lateral está en Visualización y tiene su atajo.",
