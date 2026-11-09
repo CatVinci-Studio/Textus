@@ -366,6 +366,29 @@
     requestAnimationFrame(run);
     setTimeout(run, 100);
   }
+  // A scroller marked tx-scroll-fade (a board's lists, a wide table) fades
+  // at an edge with more past it (controls.css), so it reads as going on.
+  function edges() {
+    var all = document.querySelectorAll(".tx-scroll-fade");
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      el.toggleAttribute("data-more-left", el.scrollLeft > 1);
+      el.toggleAttribute(
+        "data-more-right",
+        el.scrollWidth - el.clientWidth - el.scrollLeft > 1,
+      );
+    }
+  }
+  document.addEventListener("scroll", edges, { capture: true, passive: true });
+  window.addEventListener("resize", edges);
+  window.addEventListener("DOMContentLoaded", function () {
+    edges();
+    new MutationObserver(edges).observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+  });
+
   // A page taller than its frame scrolls in it, and its scrolling stops at
   // its ends instead of carrying on into the document around it. One that
   // fits passes the wheel on, as the rest of the document does.

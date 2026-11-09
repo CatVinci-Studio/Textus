@@ -79,13 +79,14 @@ and its colours from the theme, so it follows light, dark and every theme.
 
 ### Records and progress
 
-| Control  | Markup                                                                                                                                                           | Notes                                 |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| Calendar | `<div class="tx-calendar"><span class="tx-calendar-weekday">M</span>…<button class="tx-calendar-day is-today is-marked" aria-selected="false">8</button>…</div>` | `is-other` for days outside the month |
-| Board    | `<div class="tx-board"><div class="tx-lane"><div class="tx-lane-head">…</div>…cards…</div></div>`                                                                | lanes `var(--board-lane-width)` wide  |
-| Rating   | `<span class="tx-rating">★★★☆☆</span>`, or `★ <span class="tx-value">7.5</span>` past five                                                                       | one look down a whole column          |
-| Progress | `<div class="tx-progress" role="progressbar" style="--value: 0.4"></div>`; `is-indeterminate`; `ring` for a circle `var(--progress-ring-size)` across            |                                       |
-| Bubble   | `<div class="tx-bubble">…</div>`                                                                                                                                 | a floating view's line, beside it     |
+| Control   | Markup                                                                                                                                                           | Notes                                 |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Calendar  | `<div class="tx-calendar"><span class="tx-calendar-weekday">M</span>…<button class="tx-calendar-day is-today is-marked" aria-selected="false">8</button>…</div>` | `is-other` for days outside the month |
+| Board     | `<div class="tx-board"><div class="tx-lane"><div class="tx-lane-head">…</div>…cards…</div></div>`                                                                | lanes `var(--board-lane-width)` wide  |
+| Rating    | `<span class="tx-rating">★★★☆☆</span>`, or `★ <span class="tx-value">7.5</span>` past five                                                                       | one look down a whole column          |
+| Progress  | `<div class="tx-progress" role="progressbar" style="--value: 0.4"></div>`; `is-indeterminate`; `ring` for a circle `var(--progress-ring-size)` across            |                                       |
+| Bubble    | `<div class="tx-bubble" data-bubble-tail="bottom">…</div>`; the tail `top`, `bottom`, `left` or `right`, placed along it by `style="--tail-at: 30%"`             | a floating view's line, beside it     |
+| Edge fade | `<div class="tx-scroll-fade">…</div>` on a scroller                                                                                                              | its edges fade where there is more    |
 
 ### Dragging
 

@@ -469,6 +469,45 @@ input[type="range"].tx-slider {
   clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 3px) 100%, 0 3px);
 }
 
+/* A scroller with more past an edge (the page runtime marks which):
+   that edge fades out, so the board or table reads as going on. */
+.tx-scroll-fade[data-more-right] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+}
+.tx-scroll-fade[data-more-left] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--space-6)
+  );
+  mask-image: linear-gradient(to right, transparent, #000 var(--space-6));
+}
+.tx-scroll-fade[data-more-left][data-more-right] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--space-6),
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--space-6),
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+}
+
 /* Square corners for a control that sits in a grid or a table, where a
    capsule reads wrong: add tx-square to a button, field or select. */
 .tx-square,
