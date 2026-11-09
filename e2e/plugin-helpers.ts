@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import JSZip from "jszip";
 import { pluginsCheckout } from "../vite.dev-plugins";
 import { openApp } from "./helpers";
@@ -130,6 +130,37 @@ export async function openSidebarList(page: Page, name: string) {
 /** The frame of the plugin's tab in front. */
 export const tabFrame = (page: Page) =>
   page.frameLocator('[data-active-tab="true"] .plugin-webview-frame');
+
+/** A trackpad pinch over `target` in a plugin's page, to `scale`, as
+ *  WebKit sends it: gesture events only, in small steps, each with the
+ *  scale since the start. */
+export async function pinch(target: Locator, scale: number) {
+  const scales = Array.from(
+    { length: 20 },
+    (_, i) => 1 + ((scale - 1) * (i + 1)) / 20,
+  );
+  await target.evaluate((el, scales) => {
+    const box = el.getBoundingClientRect();
+    const send = (type: string, scale: number) => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.assign(event, {
+        scale,
+        clientX: box.left + box.width / 2,
+        clientY: box.top + box.height / 2,
+      });
+      window.dispatchEvent(event);
+    };
+    send("gesturestart", 1);
+    for (const scale of scales) send("gesturechange", scale);
+    send("gestureend", scales[scales.length - 1]);
+  }, scales);
+}
+
+/** The document's zoom, "" at 100%. */
+export const documentZoom = (page: Page) =>
+  page.evaluate(() =>
+    document.documentElement.style.getPropertyValue("--content-zoom"),
+  );
 
 /** A one-page PDF saying `text`, base64 - built by hand, with its
  *  cross-reference table, so a test needs no fixture file. */

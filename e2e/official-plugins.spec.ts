@@ -4,8 +4,10 @@ import { emit, mockInvoke, pasteMarkdown } from "./helpers";
 import {
   minimalDocx,
   minimalPdf,
+  documentZoom,
   openPath,
   openWithPlugins,
+  pinch,
   PNG,
   tabFrame,
 } from "./plugin-helpers";
@@ -46,6 +48,11 @@ test("a picture opens in the Image Viewer's tab, which zooms, turns it and answe
   await expect(frame.locator("#zoom")).toHaveText("125%");
   await page.keyboard.press("f");
   await expect(frame.locator("#stage")).toHaveClass(/fit/);
+  // A trackpad pinch zooms the picture, not the document.
+  await page.keyboard.press("0");
+  await pinch(frame.locator("#stage"), 2);
+  await expect(frame.locator("#zoom")).toHaveText("200%");
+  expect(await documentZoom(page)).toBe("");
 });
 
 test("a file that isn't a picture says it can't be opened", async ({
@@ -78,7 +85,7 @@ test("an SVG shows as a picture, its source a click away", async ({ page }) => {
   await expect(frame.locator("#source")).toHaveText("图片");
 });
 
-test("a pinch zooms the PDF in place: the page never goes blank, then is drawn sharp", async ({
+test("a pinch zooms the PDF in place, not the documents: the page never goes blank, then is drawn sharp", async ({
   page,
 }) => {
   await openWithPlugins(page, {
@@ -110,6 +117,13 @@ test("a pinch zooms the PDF in place: the page never goes blank, then is drawn s
   for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -10);
   await page.keyboard.up("Control");
   expect(await width()).toBeGreaterThan(before * 1.3);
+  // A WebKit pinch, gesture events alone, zooms it too. The PDF takes
+  // both; the documents beside it keep their zoom.
+  const wheeled = await width();
+  await pinch(frame.locator(".page"), 0.6);
+  expect(await width()).toBeLessThan(wheeled * 0.7);
+  await page.waitForTimeout(100);
+  expect(await documentZoom(page)).toBe("");
   await expect
     .poll(() =>
       frame.locator("#viewer").evaluate(() => {

@@ -49,12 +49,25 @@
   window.addEventListener("keydown", closeMenu, true);
 
   // A pinch or a mod+wheel over the page zooms the document around it, as
-  // it does anywhere else in the window: passed on, not kept here. A scroll
-  // still moving when the key goes down stays a scroll (useZoom.ts).
+  // it does anywhere else in the window: passed on, not kept here, unless
+  // the page zoomed itself (a PDF). A scroll still moving when the key goes
+  // down stays a scroll (useZoom.ts).
   var lastScroll = -Infinity;
+  var synthetic = false;
+  var pinch = null;
   window.addEventListener(
     "wheel",
     function (event) {
+      if (synthetic) return;
+      // A pinch's own ctrl+wheel twin, where the engine sends one: the
+      // page takes it or the pinch's gesture events zoom the document.
+      if (pinch && event.ctrlKey) {
+        pinch.twins = true;
+        if (event.defaultPrevented) pinch.owner = pinch.owner || "page";
+        else event.preventDefault();
+        return;
+      }
+      if (event.defaultPrevented) return;
       var modified = event.ctrlKey || event.metaKey;
       if (!modified || event.timeStamp - lastScroll < 250) {
         lastScroll = event.timeStamp;
@@ -139,16 +152,62 @@
       document.execCommand(action);
     });
   }
-  ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
-    window.addEventListener(type, function (event) {
-      event.preventDefault();
-      send("zoomGesture", {
-        type: type,
-        scale: event.scale,
-        x: event.clientX,
-        y: event.clientY,
-      });
+  // A trackpad pinch in WebKit comes as gesture events, which pages rarely
+  // know: each step is offered to the page as the ctrl+wheel Chromium sends
+  // for a pinch. A page that zooms itself (a PDF, a canvas) keeps the whole
+  // pinch; else it zooms the document.
+  function gesture(type, event, scale) {
+    send("zoomGesture", {
+      type: type,
+      scale: scale,
+      x: event.clientX,
+      y: event.clientY,
     });
+  }
+  function offerToPage(event, ratio) {
+    var target = document.elementFromPoint(event.clientX, event.clientY);
+    if (!target) return false;
+    var step = new WheelEvent("wheel", {
+      deltaY: -100 * Math.log(ratio),
+      ctrlKey: true,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      bubbles: true,
+      cancelable: true,
+    });
+    synthetic = true;
+    try {
+      return !target.dispatchEvent(step);
+    } finally {
+      synthetic = false;
+    }
+  }
+  window.addEventListener("gesturestart", function (event) {
+    if (event.defaultPrevented) return;
+    event.preventDefault();
+    pinch = { last: 1, owner: null };
+  });
+  window.addEventListener("gesturechange", function (event) {
+    if (event.defaultPrevented || !pinch || !(event.scale > 0)) return;
+    event.preventDefault();
+    var ratio = event.scale / pinch.last;
+    pinch.last = event.scale;
+    if (!pinch.twins && pinch.owner !== "window" && offerToPage(event, ratio)) {
+      pinch.owner = "page";
+      return;
+    }
+    if (pinch.owner === "page") return;
+    if (!pinch.owner) {
+      pinch.owner = "window";
+      gesture("gesturestart", event, 1);
+    }
+    gesture("gesturechange", event, event.scale);
+  });
+  window.addEventListener("gestureend", function (event) {
+    if (event.defaultPrevented || !pinch) return;
+    event.preventDefault();
+    if (pinch.owner === "window") gesture("gestureend", event, event.scale);
+    pinch = null;
   });
 
   // Where a menu opens: under an element, or at a point of the page.

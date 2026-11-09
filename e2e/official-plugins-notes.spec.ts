@@ -8,7 +8,9 @@ import {
   END,
 } from "./helpers";
 import {
+  documentZoom,
   openPath,
+  pinch,
   openSidebarList,
   openSidebarTab,
   openWithPlugins,
@@ -464,6 +466,12 @@ test("the graph draws the folder's notes and links, and the sidebar the ones aro
   const full = tabFrame(page);
   await expect(full.locator("#stats")).toHaveText("4 notes · 3 links");
   await expect(full.locator("canvas")).toBeVisible();
+  // A pinch over the drawing zooms the graph; over its words, which don't
+  // zoom, the document.
+  await pinch(full.locator("canvas"), 1.5);
+  expect(await documentZoom(page)).toBe("");
+  await pinch(full.locator("#stats"), 1.5);
+  await expect.poll(() => documentZoom(page)).not.toBe("");
   // The settings panel's filters: no unwritten notes, no notes alone.
   await full.getByRole("button", { name: "Graph settings" }).click();
   await full.getByLabel("Existing files only").check();
