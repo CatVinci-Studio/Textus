@@ -12,7 +12,6 @@ const MAX_HOOKS = 8;
 
 /** Over the line limit today: at most this many lines. */
 const LINES_NOW = {
-  "src-tauri/src/ai/memory.rs": 548,
   "src-tauri/src/ai/paper/draft.rs": 562,
   "src-tauri/src/ai/rules/document.rs": 535,
   "src-tauri/src/ai/web/mod.rs": 596,
