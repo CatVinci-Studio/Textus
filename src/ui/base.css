@@ -87,15 +87,17 @@
 
   color-scheme: light;
   /* The document's colours: what a theme sets. */
-  /* A milk white, not a yellow: warm by a hair. */
-  --doc-bg: #fdfcfa;
-  --doc-text: #24272e;
-  --doc-muted: #6b6b6b;
-  --doc-accent: #315ed1;
-  --doc-border: #e3e4e8;
-  --doc-quote-border: #d9d8d4;
-  --doc-code-bg: #f3f3f1;
-  --doc-highlight-bg: #fbe89a;
+  /* Milk white with a touch of Textus's own warm yellow (the mark's paper):
+     soft on the eyes over a long session, never a cream yellow. Ink not
+     black, links a deep ink blue, a highlight in the mark's gold. */
+  --doc-bg: #fbf9f4;
+  --doc-text: #2a2b30;
+  --doc-muted: #6f6b63;
+  --doc-accent: #2d5383;
+  --doc-border: #e6e2d8;
+  --doc-quote-border: #d6cdb8;
+  --doc-code-bg: #f2efe7;
+  --doc-highlight-bg: #f5e3a6;
   /* The interface's, from the document's, so any theme recolours the whole
      window; an imported theme's are derived and contrast-checked in
      theme/theme-chrome.ts, and a theme may set any of them itself. */

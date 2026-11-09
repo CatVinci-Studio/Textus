@@ -4,20 +4,13 @@ import { NO_RECENTS, type RecentLists } from "./menu/app-menu-model";
 import { readRecents } from "./menu/recents";
 import { menuIpc } from "../platform/ipc-app";
 import { basename, dirname } from "../utils/path";
-import { formatCombo } from "../utils/shortcuts";
-import {
-  CloseIcon,
-  FolderIcon,
-  GenericFileIcon,
-  OpenFolderIcon,
-  PlusIcon,
-  ProjectIcon,
-} from "../ui/icons";
+import { CloseIcon, FolderIcon, GenericFileIcon } from "../ui/icons";
 import { Tooltip } from "../ui/Tooltip";
 import type { Strings } from "../i18n/strings";
 import mark from "../../src-tauri/icons/128x128.png";
 import { openingDocuments } from "./start-project";
 import "./start-page.css";
+import { StartActions } from "./StartActions";
 
 /** Recent folders and files each list this many at most. */
 const RECENT_SHOWN = 5;
@@ -129,25 +122,6 @@ export function StartPage({ t }: { t: Strings }) {
   const [empty, setEmpty] = useState<string | null>(null);
   // Run here as the menu items' events, not through the native menu: in a
   // window-per-document setup that would open another window.
-  const actions = [
-    {
-      label: t.menuNewFile,
-      event: "menu-new-file",
-      combo: "mod+n",
-      icon: <PlusIcon />,
-    },
-    {
-      label: t.menuOpenFile,
-      event: "menu-open-file",
-      combo: "mod+o",
-      icon: <OpenFolderIcon />,
-    },
-    {
-      label: t.menuOpenFolder,
-      event: "menu-open-folder",
-      icon: <ProjectIcon />,
-    },
-  ];
   const anyRecent = recents.folders.length > 0 || recents.files.length > 0;
   // A project with nothing to open: its files are in the sidebar.
   if (empty)
@@ -173,27 +147,7 @@ export function StartPage({ t }: { t: Strings }) {
             height={128}
           />
           <h1 className="start-page-title">Textus</h1>
-          <ul className="start-page-actions">
-            {actions.map((a) => (
-              <li key={a.event}>
-                <button
-                  type="button"
-                  className="start-page-action"
-                  onClick={() => emitToThisWindow(a.event)}
-                >
-                  <span className="start-page-action-icon" aria-hidden="true">
-                    {a.icon}
-                  </span>
-                  <span className="start-page-action-label">{a.label}</span>
-                  {a.combo && (
-                    <kbd className="start-page-action-keys">
-                      {formatCombo(a.combo)}
-                    </kbd>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <StartActions t={t} />
         </div>
         {anyRecent && (
           <div className="start-page-recents">

@@ -11,12 +11,21 @@ import {
   storedSidebarWidth,
   useSidebarWidth,
 } from "./sidebar-width";
+import { CHROME_BASE } from "../ui/chrome-scale";
 
 // No boot snapshot here: ui-state keeps the width in localStorage.
 const KEY = "textus-sidebar-width";
 
 beforeAll(installTestLocalStorage);
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  // Widths here are at an interface scale of 1: Interface Text Size set to
+  // undo the desktop's base step.
+  document.documentElement.style.setProperty(
+    "--ui-text-scale",
+    String(1 / CHROME_BASE),
+  );
+});
 
 describe("the sidebar's width bounds", () => {
   it("allows up to 480px on a wide window", () => {

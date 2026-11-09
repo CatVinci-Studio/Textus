@@ -44,7 +44,9 @@ async function open(page: Page, width: number) {
   await expect(page.locator(".agent-panel-header")).toBeVisible();
 }
 
-for (const width of [820, 1280, 1920])
+// From 960: narrower, the rail and both panels at their narrowest leave the
+// page less than its room at the desktop's interface size.
+for (const width of [960, 1280, 1920])
   test(`header lines meet at ${width}px`, async ({ page }) => {
     await open(page, width);
     const at = await layout(page);
@@ -57,9 +59,9 @@ for (const width of [820, 1280, 1920])
   });
 
 test("a squeezed AI panel can still be dragged narrower", async ({ page }) => {
-  // Squeezed but above its narrowest: at 820 the rail and the sidebar leave
-  // it exactly that.
-  await open(page, 900);
+  // Squeezed but above its narrowest: narrower, the rail and the sidebar
+  // leave it exactly that.
+  await open(page, 1060);
   const before = (await layout(page)).panel;
   const edge = page.getByRole("separator", { name: /AI panel/i });
   const box = (await edge.boundingBox())!;

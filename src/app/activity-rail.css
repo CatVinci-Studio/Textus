@@ -23,7 +23,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding-top: 6px;
+  padding-top: 8px;
   background: var(--ui-frame-fill);
   /* Where the frame meets the document; the open sidebar carries on the
      frame instead. */

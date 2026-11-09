@@ -33,7 +33,12 @@
   /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
      the interface text and, in a straight line, with the window's width
      (--window-scale). */
-  --chrome-scale: calc(var(--ui-text-scale, 1) * var(--window-scale, 1));
+  /* The desktop's base: what 100% Interface Text Size means, one step up
+     from the first design (chrome-scale.ts keeps the same number). */
+  --chrome-base: 1.1;
+  --chrome-scale: calc(
+    var(--chrome-base) * var(--ui-text-scale, 1) * var(--window-scale, 1)
+  );
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text

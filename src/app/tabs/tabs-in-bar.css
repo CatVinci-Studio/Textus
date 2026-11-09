@@ -13,78 +13,201 @@
   align-items: flex-end;
   gap: 2px;
   border-bottom: 0;
-  /* The frame's edge along the page, which the open tab covers. */
-  box-shadow: inset 0 -1px 0 var(--ui-frame-edge);
   overflow-y: hidden;
+}
+
+/* Several documents: the frame sinks a step and stays solid (no glass),
+   and the page is a sheet floating on it, its corners rounded, the open tab
+   joined to its top. One document goes back to the frosted frame with the
+   page flush (design-language.md 5.7). */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  ) {
+  --ui-frame: color-mix(in srgb, var(--ui-text) 4%, var(--ui-subtle));
+  --ui-frame-fill: var(--ui-frame);
 }
 
 :root:not([data-window-chrome="mobile"])
   .app-shell:not(:has(.window-menu-bar)):has(
     .main-pane > .tab-bar:not(.tab-bar-inner)
-  ) {
+  )
+  :is(.activity-rail, .sidebar) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-right-color: transparent;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
   .window-bar {
-    background: var(--ui-frame-fill);
-  }
+  background: var(--ui-frame-fill);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
   .window-bar-glass {
-    display: none;
-  }
+  display: none;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
   .window-bar-title {
-    visibility: hidden;
-  }
-  /* Under the tab row the page needn't clear a bar over it: its text
-     starts with ordinary air, not the room a floating bar takes. */
-  .main-pane .editor-content {
-    padding-top: 1.5rem;
-  }
-  .main-pane > .tab-bar:not(.tab-bar-inner) {
-    > .tab-pill {
-      position: relative;
-      align-self: stretch;
-      margin-top: 4px;
-      padding: 0 8px;
-      border-radius: var(--shape-s) var(--shape-s) 0 0;
-      background: transparent;
-    }
-    > .tab-pill:hover:not(.tab-pill-active) {
-      background: var(--ui-hover);
-    }
-    > .tab-pill-active {
-      overflow: visible;
-      z-index: 1;
-      background: var(--ui-bg);
-      color: var(--ui-text);
-      box-shadow:
-        0 -1px 0 color-mix(in srgb, var(--ui-border) 70%, transparent),
-        0 -4px 10px color-mix(in srgb, var(--ui-text) 6%, transparent);
-    }
-    /* Its lower corners curve out into the bar. */
-    > .tab-pill-active::before,
-    > .tab-pill-active::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      width: var(--shape-s);
-      height: var(--shape-s);
-      pointer-events: none;
-    }
-    > .tab-pill-active::before {
-      right: 100%;
-      background: radial-gradient(
-        circle at 0 0,
-        transparent calc(var(--shape-s) - 0.5px),
-        var(--ui-bg) var(--shape-s)
-      );
-    }
-    > .tab-pill-active::after {
-      left: 100%;
-      background: radial-gradient(
-        circle at 100% 0,
-        transparent calc(var(--shape-s) - 0.5px),
-        var(--ui-bg) var(--shape-s)
-      );
-    }
-    > .tab-bar-add {
-      align-self: center;
-    }
-  }
+  visibility: hidden;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane {
+  padding: 0 var(--space-2) var(--space-2) 0;
+  /* The frame behind the sheet, so its rounded corners cut into the frame's
+     colour, not the page's. */
+  background: var(--ui-frame-fill);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane::before {
+  content: "";
+  position: absolute;
+  inset: var(--window-bar-height) var(--space-2) var(--space-2) 0;
+  border-radius: var(--shape-m);
+  background: var(--ui-bg);
+  box-shadow:
+    0 0 0 1px var(--ui-frame-edge),
+    0 2px 10px color-mix(in srgb, var(--ui-text) 7%, transparent);
+  pointer-events: none;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  [data-active-tab]
+  > :is(.editor-scroll, .source-view) {
+  position: relative;
+  background: transparent;
+}
+
+/* Under the tab row the page needn't clear a bar over it: its text starts
+   with ordinary air, not the room a floating bar takes. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  .editor-content {
+  padding-top: 1.5rem;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill {
+  position: relative;
+  align-self: stretch;
+  margin-top: 4px;
+  padding: 0 8px;
+  border-radius: var(--shape-s) var(--shape-s) 0 0;
+  background: transparent;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill:hover:not(.tab-pill-active) {
+  background: var(--ui-hover);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill-active {
+  overflow: visible;
+  z-index: 1;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+/* Its lower corners curve out into the bar. */
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill-active::before,
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--shape-s);
+  height: var(--shape-s);
+  pointer-events: none;
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill-active::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at 0 0,
+    transparent calc(var(--shape-s) - 0.5px),
+    var(--ui-bg) var(--shape-s)
+  );
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-pill-active::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent calc(var(--shape-s) - 0.5px),
+    var(--ui-bg) var(--shape-s)
+  );
+}
+
+:root:not([data-window-chrome="mobile"])
+  .app-shell:not(:has(.window-menu-bar)):has(
+    .main-pane > .tab-bar:not(.tab-bar-inner)
+  )
+  .main-pane
+  > .tab-bar:not(.tab-bar-inner)
+  > .tab-bar-add {
+  align-self: center;
 }

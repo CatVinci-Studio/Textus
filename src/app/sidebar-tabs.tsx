@@ -1,5 +1,6 @@
 import { getUiState, setUiState } from "../storage/ui-state";
-import { emitToThisWindow } from "../platform/menu-events";
+import { StartActions } from "./StartActions";
+import "./start-page.css";
 import type { ComponentType } from "react";
 import { FileTree } from "../sidebar/FileTree";
 import { Outline } from "../sidebar/Outline";
@@ -53,20 +54,12 @@ function FilesPanel({
   onSearchFocusHandled,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
-    // No folder: says what will be here, and opens one in a click, as the
-    // start page does.
+    // No folder: says what will be here, and the start page's three ways to
+    // begin, so a window with nothing open is never a dead end.
     return (
-      <div className="tx-empty">
-        {t.treeEmptyDraft}
-        {canOpenFolder && (
-          <button
-            type="button"
-            className="tx-button"
-            onClick={() => emitToThisWindow("menu-open-folder")}
-          >
-            {t.menuOpenFolder}
-          </button>
-        )}
+      <div className="sidebar-start">
+        <p className="sidebar-start-note">{t.treeEmptyDraft}</p>
+        <StartActions t={t} />
       </div>
     );
   return (

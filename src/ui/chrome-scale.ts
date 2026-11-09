@@ -1,5 +1,10 @@
 import { windowScale } from "./window-scale";
 
+/** What 100% Interface Text Size draws at on the desktop: one step up from
+ *  the first design, every step growing with it (design-system.css
+ *  --chrome-base). */
+export const CHROME_BASE = 1.1;
+
 /** The interface's size step now, as `--chrome-scale` has it: Interface
  *  Text Size times the window's width step. A panel's widths are in this
  *  step's units, so it grows with what it holds. */
@@ -16,7 +21,7 @@ export function chromeScaleAt(windowWidth: number): number {
       : Number.parseFloat(
           document.documentElement.style.getPropertyValue("--ui-text-scale"),
         ) || 1;
-  return text * windowScale(windowWidth);
+  return CHROME_BASE * text * windowScale(windowWidth);
 }
 
 /** `n` interface pixels as drawn now: a size set from script grows with

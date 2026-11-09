@@ -340,9 +340,7 @@ test("a tree that follows the document offers its folder, and Close Project clos
   const openAs = page
     .locator(".sidebar")
     .getByRole("button", { name: "Open as Project" });
-  await expect(openAs).toHaveAccessibleDescription(
-    "Current document's folder",
-  );
+  await expect(openAs).toHaveAccessibleDescription("Current document's folder");
   await expect(page.getByRole("button", { name: "Close Project" })).toHaveCount(
     0,
   );

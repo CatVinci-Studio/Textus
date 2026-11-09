@@ -140,7 +140,7 @@ test("the home folder is refused with a reason", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("an empty window's Files tab explains itself, without a button", async ({
+test("an empty window's Files tab explains itself and offers the start page's three ways to begin", async ({
   page,
 }) => {
   await open(page);
@@ -148,7 +148,7 @@ test("an empty window's Files tab explains itself, without a button", async ({
   await expect(page.locator(".sidebar-body")).toContainText(
     "Save this document and its folder shows up here.",
   );
-  await expect(page.locator(".sidebar-body button")).toHaveCount(0);
+  await expect(page.locator(".sidebar-body .start-page-action")).toHaveCount(3);
 });
 
 test.describe("file name search", () => {
