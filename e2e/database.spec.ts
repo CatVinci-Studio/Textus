@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type FrameLocator, type Page } from "@playwright/test";
 import { dragWithMouse, emit, swallowHtmlDrop } from "./helpers";
 import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
@@ -132,7 +132,15 @@ const pick = async (page: Page, name: string) => {
   await menu(page).getByRole("menuitem", { name, exact: true }).click();
 };
 
-test("a column's menu sorts it; Filter keeps only the pages that match", async ({
+/** A view shown: its tab, or in a bar folded to one line its picker. */
+async function showView(page: Page, db: FrameLocator, name: string) {
+  const tab = db.getByRole("tab", { name });
+  if (await tab.isVisible()) return tab.click();
+  await db.locator("#view-pick").click();
+  await pick(page, name);
+}
+
+test("a column's menu sorts it; Filter ticks the options to keep, as Notion does", async ({
   page,
 }) => {
   const db = await open(page);
@@ -143,17 +151,30 @@ test("a column's menu sorts it; Filter keeps only the pages that match", async (
     .toContain("- property: rate\n        direction: DESC");
   await expect(db.locator(rows).first()).toContainText("Week2");
 
-  // A filter by menus: the property, how it compares, one of its options.
+  // A filter as Notion has it: the property, then its options to tick,
+  // each applied at once; the chip says which.
   await db.locator("#filter").click();
   await pick(page, "status");
-  await pick(page, "is");
-  await pick(page, "Done");
+  const box = (value: string) =>
+    db
+      .locator(".filter-popover .filter-box", { hasText: value })
+      .locator("input");
+  await box("Done").check();
   await expect(db.locator(rows)).toHaveCount(1);
   await expect.poll(() => docText(page)).toContain('- status == "Done"');
-  const chip = db.locator("#rules .tx-chip", { hasText: "status is Done" });
-  await chip.click();
-  await pick(page, "Remove");
+  await box("Doing").check();
   await expect(db.locator(rows)).toHaveCount(3);
+  await expect
+    .poll(() => docText(page))
+    .toContain('- (status == "Done" || status == "Doing")');
+  const chip = db.locator("#rules .tx-chip", { hasText: "status:" });
+  await expect(chip).toHaveText(/status: Done, Doing/);
+  // Clear selection takes the filter off.
+  await db
+    .locator(".filter-popover button", { hasText: "Clear selection" })
+    .click();
+  await expect(chip).toHaveCount(0);
+  await expect(db.locator(".filter-popover")).toHaveCount(0);
 });
 
 test("a select's options are picked or made from its cell", async ({
@@ -209,7 +230,7 @@ test("the board groups pages by a select, its lists put in order by dragging", a
   page,
 }) => {
   const db = await open(page);
-  await db.getByRole("tab", { name: "Board" }).click();
+  await showView(page, db, "Board");
   await expect(db.locator(".lane-head .tx-tag")).toHaveText(["Doing", "Done"]);
   await expect(db.locator('.lane[data-value="Doing"] .record')).toHaveCount(2);
   // A list's head dragged before another: the order kept in the view.
@@ -235,7 +256,7 @@ test("the board groups pages by a select, its lists put in order by dragging", a
 
 test("the calendar puts each week on its days", async ({ page }) => {
   const db = await open(page);
-  await db.getByRole("tab", { name: "Calendar" }).click();
+  await showView(page, db, "Calendar");
   await expect(db.locator(".month-bar strong")).toContainText("2026");
   // Week1 runs from the 1st to the 4th: its name, then three days more.
   await expect(db.locator(".chip", { hasText: "Week1" })).toHaveCount(4);
@@ -380,6 +401,8 @@ test("a dragged column rides under the pointer, zoomed or not, and the next one 
 test("any view's menu opens on a right click, and a view is deleted from it", async ({
   page,
 }) => {
+  // Wide enough for the tabs beside the sort.
+  await page.setViewportSize({ width: 1800, height: 900 });
   const db = await open(page);
   await db.getByRole("tab", { name: "Calendar" }).click({ button: "right" });
   await page.getByRole("menuitem", { name: /Delete view/i }).click();
@@ -390,6 +413,8 @@ test("any view's menu opens on a right click, and a view is deleted from it", as
 test("a view's tab dragged before another, kept in the base", async ({
   page,
 }) => {
+  // Wide enough for the tabs beside the sort.
+  await page.setViewportSize({ width: 1800, height: 900 });
   const db = await open(page);
   await dragWithMouse(
     page,

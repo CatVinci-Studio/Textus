@@ -349,15 +349,22 @@
     told = height;
     send("height", { height: height });
   }
+  // Once a frame: or after a moment, as a frame not yet on screen may hold
+  // its animation frames back, and every later change would wait on it.
   var pending = false;
   function soon() {
     if (pending) return;
     pending = true;
-    requestAnimationFrame(function () {
+    var done = false;
+    var run = function () {
+      if (done) return;
+      done = true;
       pending = false;
       tellHeight();
       contain();
-    });
+    };
+    requestAnimationFrame(run);
+    setTimeout(run, 100);
   }
   // A page taller than its frame scrolls in it, and its scrolling stops at
   // its ends instead of carrying on into the document around it. One that
