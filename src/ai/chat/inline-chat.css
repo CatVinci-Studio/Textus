@@ -539,8 +539,15 @@
 }
 
 .inline-chat-send {
-  flex-shrink: 0;
+  /* Gives way only once the chip and the mode are at their narrowest: a
+     font wider than ours (a language's long word) cuts its word short
+     rather than pushing it out of the row. */
+  flex-shrink: 0.001;
+  min-width: 0;
   margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inline-chat-messages {
