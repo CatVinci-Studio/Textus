@@ -98,6 +98,9 @@ export function PluginWebview({
     const current = webview(id);
     if (!box || html === null || !current) return;
     const page = webviewPage(current, html);
+    // A code block's page is drawn in the document, at its text size and
+    // zoom; a settings page is only as tall as its page, still interface.
+    const inDocument = current.kind === "codeBlock";
     const frame = sandboxedFrame(page.srcdoc, page.title);
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
@@ -182,16 +185,16 @@ export function PluginWebview({
       (connected) => {
         endpoint = connected;
         webviewConnected(id, connected);
-        if (fitHeight) connected?.notify("zoom", { zoom: contentZoom() });
+        if (inDocument) connected?.notify("zoom", { zoom: contentZoom() });
       },
     );
     // A page in the document draws at the document's zoom itself.
-    const stopZoom = fitHeight
+    const stopZoom = inDocument
       ? watchContentZoom((zoom) => endpoint?.notify("zoom", { zoom }))
       : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {
-        css: webviewThemeCss(!!fitHeight),
+        css: webviewThemeCss(inDocument),
         dark: windowIsDark(),
       }),
     );

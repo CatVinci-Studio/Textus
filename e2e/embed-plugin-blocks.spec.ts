@@ -6,7 +6,7 @@ import { hasPlugin, openPath, openWithPlugins } from "./plugin-helpers";
 
 test.skip(
   !hasPlugin("catvinci.database") || !hasPlugin("catvinci.backlinks"),
-  "Workspace and Two-way Links are not in this checkout",
+  "Wiki and Two-way Links are not in this checkout",
 );
 
 const BASE =
@@ -34,7 +34,7 @@ test("a database in an embedded note is a line until clicked", async ({
   });
   await openPath(page, "/work/Home.md");
   const card = page.locator(".note-embed-block-open");
-  await expect(card).toHaveText("Workspace · click to show");
+  await expect(card).toHaveText("Wiki · click to show");
   await card.click();
   const frame = page.locator(".note-embed-block-page iframe");
   await expect(frame).toBeVisible();
