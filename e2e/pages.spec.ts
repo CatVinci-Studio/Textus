@@ -111,3 +111,18 @@ test("a page dragged onto another becomes its sub-page", async ({ page }) => {
     .toBe("# Inbox\n");
   await expect(rows).toHaveText(["☀️ Life"]);
 });
+
+test("a row is lit while the pointer is on it, not after it leaves", async ({
+  page,
+}) => {
+  await open(page);
+  await openPath(page, "/notes/Inbox.md");
+  const pages = await openSidebarList(page, "Pages");
+  const life = pages.locator(".plugin-list-row").filter({ hasText: "Life" });
+  const lit = () => life.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const plain = await lit();
+  await life.hover();
+  await expect.poll(lit).not.toBe(plain);
+  await page.mouse.move(600, 400);
+  await expect.poll(lit).toBe(plain);
+});

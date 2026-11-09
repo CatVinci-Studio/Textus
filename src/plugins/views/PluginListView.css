@@ -59,7 +59,12 @@
   -webkit-user-select: none;
 }
 
-.plugin-list-row.is-active {
+/* Under the pointer; the keyboard's row only while the keys move it (the
+   list or its filter focused from the keyboard), so the row the pointer
+   left last doesn't stay lit. */
+.plugin-list-row:hover,
+.plugin-list-rows:focus-visible .plugin-list-row.is-active,
+.plugin-list:has(.plugin-list-filter:focus-visible) .plugin-list-row.is-active {
   background: var(--ui-hover);
 }
 
