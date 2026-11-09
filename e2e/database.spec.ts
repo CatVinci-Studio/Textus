@@ -314,8 +314,11 @@ test("from its right-click menu the block is shown wide, across the pane, and dr
   await menu();
   await page.getByRole("menuitemradio", { name: "Wide" }).click();
   await expect.poll(width).toBeGreaterThan(narrow + 200);
-  const pane = (await column.boundingBox())!;
-  expect((await block.boundingBox())!.x).toBeLessThan(pane.x);
+  // Its leading edge stays on the text's; it runs on to the pane's edge.
+  const text = (await column.boundingBox())!;
+  const wide = (await block.boundingBox())!;
+  expect(Math.abs(wide.x - text.x)).toBeLessThan(2);
+  expect(wide.x + wide.width).toBeGreaterThan(text.x + text.width + 100);
   await menu();
   await page.getByRole("menuitem", { name: "Size" }).hover();
   await page.getByRole("menuitemradio", { name: "80%" }).click();

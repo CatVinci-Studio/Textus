@@ -95,11 +95,11 @@
   color: var(--doc-text);
 }
 
-/* Wide (the fence's `wide`): out of the column to the pane's width, the
-   gutter either side (block-layout.ts), centred on the column. Lengths here
-   are in the document's zoom, so the pane's width is unzoomed. */
+/* Wide (the fence's `wide`): its leading edge kept on the text's, it runs
+   on to the pane's far edge less the gutter (block-layout.ts) - the column
+   is centred in the pane, so that is half the difference past it. Lengths
+   here are in the document's zoom, so the pane's width is unzoomed. */
 .plugin-code-block[data-wide] {
   --wide: calc(var(--wide-width, 100%) / var(--content-zoom, 1));
-  width: max(100%, var(--wide));
-  margin-inline-start: min(0px, calc((100% - var(--wide)) / 2));
+  width: max(100%, calc((100% + var(--wide)) / 2));
 }
