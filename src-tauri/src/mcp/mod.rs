@@ -4,6 +4,7 @@
 
 mod client;
 pub(crate) mod path;
+pub(crate) mod process;
 
 pub use client::{Connection, Endpoint, McpTool};
 

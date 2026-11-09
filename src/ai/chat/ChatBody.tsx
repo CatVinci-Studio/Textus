@@ -22,11 +22,7 @@ import { quickSummary } from "./quick-summary";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../ui/usePresence";
 import { scrollBehavior } from "../../ui/motion";
-import {
-  attachedFileBlock,
-  selectedTextBlock,
-  cursorBlock,
-} from "./user-message";
+import { composeMessage } from "./user-message";
 import { type ChatBodyProps, proposalsFromTurns } from "./chat-body-types";
 import {
   useMessageQueue,
@@ -215,46 +211,6 @@ export function ChatBody({
     setQueue([]);
     setQueuePaused(false);
     stop();
-  }
-
-  function composeMessage(
-    {
-      selectionMarkdown: selection,
-      cursor,
-    }: {
-      selectionMarkdown: string | null;
-      cursor?: { before: string; after: string } | null;
-    },
-    message: string,
-    attachments: ChatAttachment[],
-    includeSelection: boolean,
-  ): { message: string; images?: ImageAttachment[] } {
-    // The tag carries the selection's markdown so formatting survives the
-    // trip; with nothing selected, the caret's surroundings say where "here" is.
-    const tagged =
-      selection && includeSelection
-        ? `${selectedTextBlock(selection)}\n\n${message}`
-        : cursor
-          ? `${cursorBlock(cursor.before, cursor.after)}\n\n${message}`
-          : message;
-    // Text attachments were extracted in Rust and ride inside the prompt;
-    // images go as provider image parts.
-    const attachmentBlocks = attachments
-      .filter((f) => f.kind === "text")
-      .map((f) => attachedFileBlock(f.name, f.content, f.path))
-      .join("\n\n");
-    return {
-      message: attachmentBlocks ? `${attachmentBlocks}\n\n${tagged}` : tagged,
-      // Not filtered on vision here: the composer and the backend both refuse
-      // an image the provider can't read; dropping it would be a third policy.
-      images: attachments
-        .filter((f) => f.kind === "image")
-        .map((f) => ({
-          name: f.name,
-          mime: f.mime,
-          dataBase64: f.dataBase64,
-        })),
-    };
   }
 
   /** An anchor that no longer resolves: ask the model to re-issue the edit

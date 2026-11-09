@@ -16,6 +16,7 @@ import {
 import { currentStrings } from "../../i18n/current";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import "./file-changes.css";
+import { metaDecorations } from "../../editor/meta-decorations";
 
 /**
  * A file Textus AI changed from General mode opens showing where: each
@@ -157,12 +158,7 @@ export function createAiFileChangesPlugin(docPath: () => string | null) {
     (ctx) =>
       new Plugin<DecorationSet>({
         key,
-        state: {
-          init: () => DecorationSet.empty,
-          apply: (tr, set) =>
-            (tr.getMeta(key) as DecorationSet | undefined) ??
-            set.map(tr.mapping, tr.doc),
-        },
+        state: metaDecorations(key),
         props: { decorations: (state) => key.getState(state) },
         view(view) {
           let frame = 0;

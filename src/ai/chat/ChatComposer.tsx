@@ -1,18 +1,15 @@
-import { MentionLayer, useMentions } from "./composer-mentions";
+import { MentionLayer, useMentionPicker } from "./composer-mentions";
 import { AttachmentChips } from "./AttachmentChips";
-import { prepareList, rankList } from "../../utils/list-filter";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import { ComposerPicker } from "./ComposerPicker";
 import {
   MENTION_TOKEN,
-  MENTION_TRIGGER,
   SKILL_COMMAND,
   rememberSkill,
   resolveSkillName,
   type PickerSkill,
 } from "./skill-picker";
-import { basename } from "../../utils/path";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import { ArrowUpIcon, CloseIcon, PlusIcon, StopIcon } from "../../ui/icons";
 import { ComposerToggles, KindChip } from "./ComposerTools";
@@ -26,15 +23,10 @@ import {
   useAttachments,
   useComposerInput,
   useComposerMode,
-  useProjectFiles,
   useRequestOptions,
   useSelectionChip,
 } from "./useComposerState";
-import {
-  defaultPickerLabels,
-  FILE_LIMIT,
-  type ChatComposerProps,
-} from "./composer-types";
+import { defaultPickerLabels, type ChatComposerProps } from "./composer-types";
 import { isImeKeydown } from "../../utils/ime";
 import { pickerContent } from "./composer-picker-content";
 
@@ -57,15 +49,6 @@ import { explainError } from "../../utils/error-explain";
  * The input row: textarea, attachments, selection chip, send button and the
  * `/` and `@` pickers. Owns its input state; the caller hears only onSend.
  */
-/** The project's files `query` finds by the shared list filter: by name
- *  first, then anywhere in the path. */
-function matchFiles(paths: string[], query: string): string[] {
-  const list = prepareList(
-    paths.map((path) => ({ label: basename(path), keywords: path, path })),
-  );
-  return rankList(list, query, Infinity).map((entry) => entry.path);
-}
-
 export function ChatComposer({
   docPath,
   workspaceRoot,
@@ -103,7 +86,6 @@ export function ChatComposer({
   const { dismissedInput, setDismissedInput } = typing;
   const staged = useAttachments(labels.attachmentNoVision, conversation);
   const { attachments, setAttachments, attachError, setAttachError } = staged;
-  const mentions = useMentions(input, setInput, setAttachments, inputRef);
   // Research is the panel's, where its paper is followed. Create is made in
   // Settings › Extensions, so it is offered only where it is the one mode.
   const modeValues: readonly PanelMode[] = onlyMode
@@ -140,15 +122,19 @@ export function ChatComposer({
     mode: mode === "research" ? null : mode,
   });
 
-  // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
-  // file attaches it, its "@query" turned into the file's chip. Fetched on
-  // the first "@".
-  const mentionQuery = skillTrigger ? null : MENTION_TRIGGER.exec(input);
-  const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
-  const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
-  const matchingFiles = mentionQuery
-    ? matchFiles(projectFiles ?? [], mentionQuery[1]).slice(0, FILE_LIMIT)
-    : [];
+  const mentionPicker = useMentionPicker({
+    input,
+    setInput,
+    setAttachments,
+    textarea: inputRef,
+    skillTyped: !!skillTrigger,
+    dismissedInput,
+    docPath,
+    workspaceRoot,
+  });
+  const { mentions, projectFiles, matching: matchingFiles } = mentionPicker;
+  const mentionQuery = mentionPicker.query;
+  const mentionMenuOpen = mentionPicker.open;
 
   async function pickFile(path: string) {
     mentions.add(path, MENTION_TOKEN);

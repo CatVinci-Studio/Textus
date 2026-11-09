@@ -10,6 +10,7 @@ import { isScopedUrl } from "../../platform/ios-files";
 import { windowFolder } from "../../platform/window-folder";
 import { FILE_WRITTEN_EVENT, OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import { parseNoteLink } from "../../utils/note-link";
+import { metaDecorations } from "../meta-decorations";
 
 /**
  * Wikilinks to notes that don't exist yet, dimmed as Obsidian dims them; a
@@ -65,12 +66,7 @@ export function createMissingLinksPlugin(docPath: () => string | null) {
     () =>
       new Plugin<DecorationSet>({
         key,
-        state: {
-          init: () => DecorationSet.empty,
-          apply: (tr, set) =>
-            (tr.getMeta(key) as DecorationSet | undefined) ??
-            set.map(tr.mapping, tr.doc),
-        },
+        state: metaDecorations(key),
         props: { decorations: (state) => key.getState(state) },
         view(view) {
           let timer: ReturnType<typeof setTimeout> | null = null;

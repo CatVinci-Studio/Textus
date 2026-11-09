@@ -4,7 +4,6 @@
 //! granted `agents` starts one, and only the command its manifest names;
 //! the window never passes a command.
 
-use crate::mcp::path::{find_program, login_path};
 use crate::plugins::access::plugin_home;
 use crate::plugins::state;
 use serde_json::Value;
@@ -15,8 +14,6 @@ use tauri::ipc::Channel;
 use tauri::Manager;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-/// The most of an agent's stderr kept, to say why it stopped.
-const STDERR_KEEP: usize = 4_000;
 
 /// What an agent's process says, in order.
 #[derive(Clone, serde::Serialize)]
@@ -107,33 +104,12 @@ pub async fn agent_start(
     )
     .map_err(|e| e.to_string())?;
     let launch = launch(&manifest, &agent, &home.to_string_lossy())?;
-    let path = login_path();
-    let program = find_program(&launch.command, &path).ok_or_else(|| {
-        format!(
-            "`{}` isn't installed, or isn't on the PATH Textus sees.",
-            launch.command
-        )
-    })?;
-    let mut command = tokio::process::Command::new(program);
-    command
-        .args(&launch.args)
-        .env("PATH", &path)
-        .envs(launch.env.iter().map(|(k, v)| (k.as_str(), v.as_str())))
-        .stdin(std::process::Stdio::piped())
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .kill_on_drop(true);
-    if let Some(cwd) = cwd.filter(|c| std::path::Path::new(c).is_dir()) {
-        command.current_dir(cwd);
-    }
-    #[cfg(windows)]
-    command.creation_flags(0x0800_0000);
-    let mut child = command
-        .spawn()
-        .map_err(|e| format!("couldn't start `{}`: {e}", launch.command))?;
-    let stdin = child.stdin.take().ok_or("no stdin")?;
-    let stdout = child.stdout.take().ok_or("no stdout")?;
-    let stderr = child.stderr.take().ok_or("no stderr")?;
+    let crate::mcp::process::Piped {
+        child,
+        stdin,
+        stdout,
+        stderr: kept,
+    } = crate::mcp::process::start(&launch.command, &launch.args, &launch.env, cwd.as_deref())?;
     let agents = app.state::<Agents>();
     let handle = agents.next.fetch_add(1, Ordering::Relaxed) + 1;
     let child = Arc::new(Mutex::new(child));
@@ -148,22 +124,6 @@ pub async fn agent_start(
                 child: child.clone(),
             },
         );
-    let kept: Arc<Mutex<String>> = Arc::default();
-    let kept_err = kept.clone();
-    tauri::async_runtime::spawn(async move {
-        let mut lines = BufReader::new(stderr).lines();
-        while let Ok(Some(line)) = lines.next_line().await {
-            let mut kept = kept_err.lock().unwrap_or_else(|e| e.into_inner());
-            kept.push_str(&line);
-            kept.push('\n');
-            if kept.len() > STDERR_KEEP {
-                let cut = (kept.len() - STDERR_KEEP..kept.len())
-                    .find(|i| kept.is_char_boundary(*i))
-                    .unwrap_or(0);
-                kept.replace_range(..cut, "");
-            }
-        }
-    });
     tauri::async_runtime::spawn(async move {
         let mut lines = BufReader::new(stdout).lines();
         while let Ok(Some(line)) = lines.next_line().await {

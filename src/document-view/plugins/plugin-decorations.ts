@@ -14,6 +14,7 @@ import {
   type PluginDecoration,
 } from "../../plugins/contributions/decorations";
 import "./plugin-decorations.css";
+import { metaDecorations } from "../../editor/meta-decorations";
 
 const key = new PluginKey<DecorationSet>("plugin-decorations");
 /** How long the document (or its scrolling) rests before plugins are
@@ -31,13 +32,7 @@ const AROUND = 10;
 export const pluginDecorations = $prose((ctx) => {
   return new Plugin<DecorationSet>({
     key,
-    state: {
-      init: () => DecorationSet.empty,
-      apply(tr, prev) {
-        const next = tr.getMeta(key) as DecorationSet | undefined;
-        return next ?? prev.map(tr.mapping, tr.doc);
-      },
-    },
+    state: metaDecorations(key),
     props: {
       decorations: (state) => key.getState(state),
     },

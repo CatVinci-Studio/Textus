@@ -38,7 +38,6 @@ const COPIES_NOW = {
   "ai/web/search.rs | ai/web/search.rs": 1,
   "ai/workspace.rs | ai/workspace.rs": 1,
   "app/WindowEdges.tsx | ui/WindowCaptionButtons.tsx": 1,
-  "app/split/split-layout.ts | app/split/split-layout.ts": 1,
   "auth/claude.rs | auth/openai_codex.rs": 2,
   "document/save-default-name.ts | document/save-default-name.ts": 1,
   "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,

@@ -1,3 +1,4 @@
+import { scaledPx } from "./chrome-scale";
 import {
   cloneElement,
   useCallback,
@@ -195,7 +196,7 @@ function TooltipBubble({
       className="tooltip floating-surface"
       anchor={anchor}
       side={side}
-      gap={GAP}
+      gap={scaledPx(GAP)}
     >
       {children}
     </Bubble>

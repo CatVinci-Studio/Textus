@@ -10,6 +10,10 @@ import {
 } from "react";
 import type { ChatAttachment } from "../types";
 import { basename } from "../../utils/path";
+import { prepareList, rankList } from "../../utils/list-filter";
+import { MENTION_TRIGGER } from "./skill-picker";
+import { useProjectFiles } from "./useComposerState";
+import { FILE_LIMIT } from "./composer-types";
 
 /**
  * A file picked from the @ menu stays in the message as "@name", drawn as a
@@ -155,4 +159,49 @@ export function useMentions(
   }
 
   return { paths, add, onKeyDown };
+}
+
+/** The project's files `query` finds by the shared list filter: by name
+ *  first, then anywhere in the path. */
+function matchFiles(paths: string[], query: string): string[] {
+  const list = prepareList(
+    paths.map((path) => ({ label: basename(path), keywords: path, path })),
+  );
+  return rankList(list, query, Infinity).map((entry) => entry.path);
+}
+
+/**
+ * The @-mention picker ("@", or the "＠" a CJK IME types): its query, the
+ * project's files it matches (fetched on the first "@"), and the mentions
+ * already in the text. Closed while a skill's "/" is being typed, or once
+ * dismissed for this input.
+ */
+export function useMentionPicker(options: {
+  input: string;
+  setInput: Dispatch<SetStateAction<string>>;
+  setAttachments: Dispatch<SetStateAction<ChatAttachment[]>>;
+  textarea: RefObject<HTMLTextAreaElement | null>;
+  skillTyped: boolean;
+  dismissedInput: string | null;
+  docPath: string | null;
+  workspaceRoot: string | null;
+}) {
+  const { input, skillTyped, dismissedInput } = options;
+  const mentions = useMentions(
+    input,
+    options.setInput,
+    options.setAttachments,
+    options.textarea,
+  );
+  const query = skillTyped ? null : MENTION_TRIGGER.exec(input);
+  const open = !!query && dismissedInput !== input;
+  const projectFiles = useProjectFiles(
+    open,
+    options.docPath,
+    options.workspaceRoot,
+  );
+  const matching = query
+    ? matchFiles(projectFiles ?? [], query[1]).slice(0, FILE_LIMIT)
+    : [];
+  return { mentions, query, open, projectFiles, matching };
 }

@@ -35,6 +35,7 @@ import {
   skillOfferTurns,
 } from "./memory-pass";
 import { useNextMessage } from "./next-message";
+import { useStopWhenGone } from "./useStopWhenGone";
 import { reportAiState } from "../../plugins/ai-state";
 import { externalAgent } from "../../plugins/contributions/agents";
 import { withoutAgentSteps } from "../agents/agent-view";
@@ -399,29 +400,7 @@ export function useAgentConversation(
       void ai.cancelAgentMessage(requestIdRef.current);
   }
 
-  // Textus AI was turned off - here, in Settings or in another window: a
-  // request still running stops, as Stop would stop it, keeping what has
-  // streamed so far.
-  const aiOn = settings.textusAi;
-  const conversationRef = useLatest(conversationId);
-  useEffect(() => {
-    const running = requestIdRef.current;
-    if (aiOn || !running) return;
-    if (running.startsWith(AGENT_REQUEST))
-      cancelAgentExchange(conversationRef.current);
-    else void ai.cancelAgentMessage(running);
-  }, [aiOn, conversationRef]);
-
-  // The editor that owns this conversation went away (tab closed, source
-  // mode): nobody is left to show the reply, so stop paying for it.
-  useEffect(
-    () => () => {
-      endAgentSession(conversationRef.current);
-      if (requestIdRef.current)
-        void ai.cancelAgentMessage(requestIdRef.current);
-    },
-    [conversationRef],
-  );
+  useStopWhenGone(settings.textusAi, conversationId, requestIdRef);
 
   /** Resends the last failed message unchanged. */
   function retry(): Promise<AgentTurn[] | undefined> {

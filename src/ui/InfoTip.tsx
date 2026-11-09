@@ -1,3 +1,4 @@
+import { scaledPx } from "./chrome-scale";
 import {
   useCallback,
   useEffect,
@@ -165,7 +166,7 @@ function InfoTipCard({
       className="info-tip-card floating-surface"
       anchor={anchor}
       align="start"
-      gap={GAP}
+      gap={scaledPx(GAP)}
       data-floating-tip=""
       onPointerEnter={(e) => {
         if (e.pointerType === "mouse") onPointerEnter();

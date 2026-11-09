@@ -414,38 +414,6 @@ pub(crate) async fn installed_tools<'a>(app: &AppHandle, window: &str) -> Vec<to
     installed
 }
 
-/// A turn as the frontend keeps it: a tool result without the images it
-/// showed the model, which would grow the saved history by megabytes.
-fn for_history(turn: AgentTurn) -> AgentTurn {
-    match turn {
-        // The step's reasoning was for this exchange's own requests: no
-        // provider wants it back in a later one, and it never shows.
-        AgentTurn::ToolCall {
-            call_id,
-            name,
-            arguments,
-            reasoning: Some(_),
-        } => AgentTurn::ToolCall {
-            call_id,
-            name,
-            arguments,
-            reasoning: None,
-        },
-        AgentTurn::ToolResult {
-            call_id,
-            output,
-            images,
-        } if !images.is_empty() => AgentTurn::ToolResult {
-            call_id,
-            output: format!(
-                "{output}\n[The image was shown for that request only - call read_file again to look at it.]"
-            ),
-            images: Vec::new(),
-        },
-        turn => turn,
-    }
-}
-
 /// Providers without tool calling get the conversation flattened into one
 /// plain-text turn and a single completion.
 async fn flattened_chat_turn(
