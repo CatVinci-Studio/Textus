@@ -150,7 +150,7 @@
 .tutorial-title {
   margin: 2px 0 0;
   color: var(--ui-text);
-  font-size: 20px;
+  font-size: var(--text-title);
   font-weight: 600;
   letter-spacing: -0.02em;
   overflow-wrap: anywhere;

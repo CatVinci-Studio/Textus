@@ -1338,7 +1338,7 @@
   corner-shape: round;
   background: var(--ui-success);
   color: var(--ui-on-fill);
-  font-size: calc(10.5px * var(--ui-text-scale, 1));
+  font-size: 10.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   transition: background var(--dur-fast) var(--ease-standard);

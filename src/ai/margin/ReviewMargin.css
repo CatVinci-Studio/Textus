@@ -115,7 +115,7 @@
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
   color: var(--ui-accent);
-  font-size: calc(8.5px * var(--ui-text-scale, 1));
+  font-size: 8.5px;
   font-weight: 700;
 }
 
@@ -182,7 +182,7 @@
 .review-note-chip .review-note-by {
   height: 12px;
   margin: 0;
-  font-size: 10.5px;
+  font-size: var(--text-caption);
   line-height: 12px;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .review-note-chip-text {
-  font-size: 13px;
+  font-size: var(--text-body);
   line-height: 16px;
 }
 
@@ -416,7 +416,7 @@
   corner-shape: round;
   background: var(--ui-success);
   color: var(--ui-on-fill);
-  font-size: calc(9.5px * var(--ui-text-scale, 1));
+  font-size: 9.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

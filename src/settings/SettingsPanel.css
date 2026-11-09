@@ -1133,13 +1133,13 @@ button.settings-skill-action:focus-visible {
 }
 
 .settings-about-name {
-  font-size: calc(1.35rem * var(--ui-text-scale, 1));
+  font-size: var(--text-large-title);
   font-weight: 600;
   color: var(--ui-text);
 }
 
 .settings-about-version {
-  font-size: calc(0.85rem * var(--ui-text-scale, 1));
+  font-size: var(--text-body);
   color: var(--ui-muted);
   cursor: default;
   user-select: none;
@@ -1171,7 +1171,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-credit {
   margin-top: 4px;
-  font-size: calc(0.8rem * var(--ui-text-scale, 1));
+  font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
 
@@ -1266,7 +1266,7 @@ button.settings-skill-action:focus-visible {
 
 .settings-about-status {
   flex-basis: 100%;
-  font-size: calc(0.8rem * var(--ui-text-scale, 1));
+  font-size: var(--text-footnote);
   color: var(--ui-muted);
 }
 
