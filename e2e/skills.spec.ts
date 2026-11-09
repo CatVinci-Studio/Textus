@@ -1,5 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import { emit, openApp, PHONE, settled } from "./helpers";
+import {
+  emit,
+  invokeCalls,
+  mockInvoke,
+  openApp,
+  PHONE,
+  settled,
+} from "./helpers";
 
 // The composer's `/` and `@` pickers and Settings' skills, against the dev
 // shim's 9 built-ins and one user skill in Write.
@@ -30,7 +37,40 @@ async function openSettings(page: Page) {
 
 test.describe("the / picker", () => {});
 
-test.describe("the @ picker", () => {});
+test.describe("the @ picker", () => {
+  test("a picked file stays in the text as a chip, goes with the message, and Backspace takes it whole", async ({
+    page,
+  }) => {
+    const input = await openWithPanel(page, "en", "write");
+    await mockInvoke(page, {
+      list_project_files: ["notes/plan.md", "a.md"],
+      read_project_file: "The plan.",
+      ai_agent_message: [{ kind: "Assistant", text: "Done." }],
+    });
+    const chips = page.locator(".agent-panel .inline-chat-mention");
+    const above = page.locator(".agent-panel .inline-chat-attachment");
+    await input.fill("Compare @pl");
+    await expect(page.locator(".composer-picker")).toContainText("plan.md");
+    await input.press("Enter");
+    await expect(input).toHaveValue("Compare @plan.md ");
+    await expect(chips).toHaveText(["@plan.md"]);
+    await expect(above).toHaveCount(0);
+    // Backspace after it takes the chip, and its file.
+    await input.press("Backspace");
+    await expect(input).toHaveValue("Compare ");
+    await expect(chips).toHaveCount(0);
+    // Picked again, it goes with the message.
+    await input.pressSequentially("@pl");
+    await input.press("Enter");
+    await expect(chips).toHaveText(["@plan.md"]);
+    await input.pressSequentially("with the draft");
+    await input.press("Enter");
+    await expect(page.locator(".agent-panel-view")).toContainText("Done.");
+    const [call] = await invokeCalls(page, "ai_agent_message");
+    expect(call.message).toContain("Compare @plan.md with the draft");
+    expect(call.message).toContain('<attached-file name="notes/plan.md">');
+  });
+});
 
 /** Settings › Extensions › Skills, where the user's own skills are. */
 async function openSkillsTab(panel: Locator) {

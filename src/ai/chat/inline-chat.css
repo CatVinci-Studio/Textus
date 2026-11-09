@@ -159,7 +159,8 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 
-:is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-input {
+:is(.agent-panel-body, .chat-window-body, .create-studio)
+  :is(.inline-chat-input, .inline-chat-mentions) {
   padding: 2px 2px 0;
 }
 
@@ -512,6 +513,38 @@
 
 /* The hint in the empty field, in the theme's muted ink: left to the
    engine's own grey, WebKitGTK drew it nearly as dark as typed text. */
+/* The mentions' chips, drawn under the textarea's own text: the same text,
+   set the same way, only the chips showing. */
+.inline-chat-input-wrap {
+  position: relative;
+}
+
+.inline-chat-input-wrap > .inline-chat-input {
+  position: relative;
+}
+
+.inline-chat-mentions {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: transparent;
+  font: inherit;
+  font-size: var(--text-body);
+  line-height: calc(20px * var(--ui-text-scale, 1));
+  padding: 4px 4px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* Boxed by a shadow, not padding, so the text keeps its place. */
+.inline-chat-mention {
+  color: transparent;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  border-radius: var(--shape-xs);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+
 .inline-chat-input::placeholder {
   color: var(--ui-muted);
   opacity: 1;

@@ -1,3 +1,5 @@
+import { MentionLayer, useMentions } from "./composer-mentions";
+import { AttachmentChips } from "./AttachmentChips";
 import { prepareList, rankList } from "../../utils/list-filter";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
@@ -12,14 +14,7 @@ import {
 } from "./skill-picker";
 import { basename } from "../../utils/path";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import {
-  ArrowUpIcon,
-  CloseIcon,
-  GenericFileIcon,
-  ImageFileIcon,
-  PlusIcon,
-  StopIcon,
-} from "../../ui/icons";
+import { ArrowUpIcon, CloseIcon, PlusIcon, StopIcon } from "../../ui/icons";
 import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
 import { Tooltip } from "../../ui/Tooltip";
@@ -108,6 +103,7 @@ export function ChatComposer({
   const { dismissedInput, setDismissedInput } = typing;
   const staged = useAttachments(labels.attachmentNoVision, conversation);
   const { attachments, setAttachments, attachError, setAttachError } = staged;
+  const mentions = useMentions(input, setInput, setAttachments, inputRef);
   // Research is the panel's, where its paper is followed. Create is made in
   // Settings › Extensions, so it is offered only where it is the one mode.
   const modeValues: readonly PanelMode[] = onlyMode
@@ -145,7 +141,8 @@ export function ChatComposer({
   });
 
   // @-mention picker ("@", or the "＠" a CJK IME types): picking a project
-  // file attaches it and drops the "@query". Fetched on the first "@".
+  // file attaches it, its "@query" turned into the file's chip. Fetched on
+  // the first "@".
   const mentionQuery = skillTrigger ? null : MENTION_TRIGGER.exec(input);
   const mentionMenuOpen = !!mentionQuery && dismissedInput !== input;
   const projectFiles = useProjectFiles(mentionMenuOpen, docPath, workspaceRoot);
@@ -154,7 +151,7 @@ export function ChatComposer({
     : [];
 
   async function pickFile(path: string) {
-    setInput((prev) => prev.replace(MENTION_TOKEN, "$1"));
+    mentions.add(path, MENTION_TOKEN);
     setPickerIndex(0);
     setAttachError(null);
     try {
@@ -248,11 +245,12 @@ export function ChatComposer({
     if (selectionPerMessage && selectedText) setDroppedSelection(selectedText);
   }
 
-  function onKeyDown(e: React.KeyboardEvent) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     // Keys during an IME composition belong to the IME. WebKit can fire the
     // confirming keydown after compositionend with isComposing false but
     // keyCode still 229, so check both.
     if (isImeKeydown(e)) return;
+    if (mentions.onKeyDown(e)) return;
     // While a picker is open, the navigation keys, Enter and Escape drive it
     // instead of the chat.
     if (pickerOpen) {
@@ -371,56 +369,38 @@ export function ChatComposer({
         )}
         {/* The field: what is attached, the text and its controls, one box. */}
         <div className="inline-chat-field">
-          {attachments.length > 0 && (
-            <div className="inline-chat-attachments">
-              {attachments.map((file, i) => (
-                <span key={i} className="inline-chat-attachment">
-                  {/* Extracted text and a native image part reach the model
-                    differently, so the chip says which this is. */}
-                  {file.kind === "image" ? (
-                    <ImageFileIcon className="inline-chat-attachment-kind" />
-                  ) : (
-                    <GenericFileIcon className="inline-chat-attachment-kind" />
-                  )}
-                  {file.name}
-                  {/* A file cut at the extraction cap says so, or a partial
-                    answer looks like the model misread the document. */}
-                  {file.kind === "text" && file.truncated && (
-                    <span className="inline-chat-attachment-note">
-                      {labels.attachmentTruncated}
-                    </span>
-                  )}
-                  <button
-                    className="inline-chat-attachment-remove"
-                    onClick={() =>
-                      setAttachments((prev) => prev.filter((_, j) => j !== i))
-                    }
-                  >
-                    <CloseIcon />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <textarea
-            ref={inputRef}
-            className={`inline-chat-input${offered ? " inline-chat-input-suggested" : ""}`}
-            rows={1}
-            placeholder={
-              offered
-                ? `${offered}  (${labels.suggestionTab})`
-                : mode === "research"
-                  ? labels.researchPlaceholder
-                  : labels.placeholder
-            }
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setPickerIndex(0);
-            }}
-            onKeyDown={onKeyDown}
-            autoFocus={focusOnOpen}
+          <AttachmentChips
+            attachments={attachments}
+            mentioned={mentions.paths}
+            setAttachments={setAttachments}
+            truncatedLabel={labels.attachmentTruncated}
           />
+          <div className="inline-chat-input-wrap">
+            <MentionLayer
+              input={input}
+              paths={mentions.paths}
+              textarea={inputRef}
+            />
+            <textarea
+              ref={inputRef}
+              className={`inline-chat-input${offered ? " inline-chat-input-suggested" : ""}`}
+              rows={1}
+              placeholder={
+                offered
+                  ? `${offered}  (${labels.suggestionTab})`
+                  : mode === "research"
+                    ? labels.researchPlaceholder
+                    : labels.placeholder
+              }
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setPickerIndex(0);
+              }}
+              onKeyDown={onKeyDown}
+              autoFocus={focusOnOpen}
+            />
+          </div>
           <div className="inline-chat-toolbar">
             {switchModels && !mobileChrome() ? (
               <ModeAndModelPicker {...pickerProps} />
