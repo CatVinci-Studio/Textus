@@ -124,7 +124,12 @@ export function CommentCard({
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
       </div>
-      <SuggestedFix id={id} comment={comment} labels={labels} onApply={onApplySuggestion} />
+      <SuggestedFix
+        id={id}
+        comment={comment}
+        labels={labels}
+        onApply={onApplySuggestion}
+      />
     </div>
   );
 }

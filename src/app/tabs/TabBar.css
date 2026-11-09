@@ -147,3 +147,8 @@
   /* Counts change in place without their digits shifting. */
   font-variant-numeric: tabular-nums;
 }
+
+/* A file Textus AI changed: its name in the accent, as in the file tree. */
+.tab-pill[data-ai-changed] .tab-pill-title {
+  color: var(--ui-accent);
+}

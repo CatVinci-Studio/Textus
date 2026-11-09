@@ -11,6 +11,8 @@ import { isIOSApp } from "../../platform/capabilities";
 // brings it to the front, a drag along the bar reorders, one down out of it
 // is the caller's pull. A finger holds it still first to lift it.
 
+import { useChangedFiles } from "../../ai/chat/file-changes";
+
 export interface TabInfo {
   id: string;
   // Display name: filename, "Untitled", or a Help document's title.
@@ -18,6 +20,8 @@ export interface TabInfo {
   dirty: boolean;
   /** Opened to look (DocTab.preview): its title in italics. */
   preview?: boolean;
+  /** The file, for Textus AI's mark on one it changed. */
+  path?: string | null;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -75,6 +79,7 @@ export function TabPill({
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
   onMenu?: (x: number, y: number) => void;
 }) {
+  const changed = useChangedFiles();
   const elRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
     startX: number;
@@ -273,6 +278,7 @@ export function TabPill({
       ref={elRef}
       data-flip-id={tab.id}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
+      data-ai-changed={(tab.path && changed.has(tab.path)) || undefined}
       onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
       role="tab"
       aria-selected={isActive}

@@ -35,6 +35,14 @@ export const commands = {
 	 *  the agent's read_file.
 	 */
 	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
+	/**  The changes `ids` of `conversation`, as kept. */
+	ai_file_changes: (conversation: string, ids: string[]) => __TAURI_INVOKE<FileChange_Serialize[]>("ai_file_changes", { conversation, ids }),
+	/**
+	 *  Puts the changes `ids` on disk (`on`: apply, redo) or takes them off
+	 *  (undo), the later first when undoing. Each that can't be is left, and
+	 *  the answer says why; the changes come back as they now are.
+	 */
+	ai_set_file_changes: (conversation: string, ids: string[], on: boolean) => __TAURI_INVOKE<[FileChange_Serialize[], string[]]>("ai_set_file_changes", { conversation, ids, on }),
 	/**
 	 *  Creates `.textus/<rel>` with `template` unless it already exists, and
 	 *  returns its absolute path.
@@ -308,6 +316,37 @@ export type AgentWorkspace_Serialize = {
 	memories: Memories_Serialize,
 	/**  Whether Textus AI may remember things by itself. */
 	remember: boolean,
+};
+
+/**  One change to one file. */
+export type FileChange = FileChange_Serialize | FileChange_Deserialize;
+
+/**  One change to one file. */
+export type FileChange_Deserialize = {
+	id: string,
+	/**  The file, from the folder. */
+	path: string,
+	/**  The file's whole path. */
+	file: string,
+	/**  The file as it was; None where the change made it. */
+	before?: string | null,
+	after: string,
+	/**  On disk now: false while waiting to be applied, or once undone. */
+	applied: boolean,
+};
+
+/**  One change to one file. */
+export type FileChange_Serialize = {
+	id: string,
+	/**  The file, from the folder. */
+	path: string,
+	/**  The file's whole path. */
+	file: string,
+	/**  The file as it was; None where the change made it. */
+	before: string | null,
+	after: string,
+	/**  On disk now: false while waiting to be applied, or once undone. */
+	applied: boolean,
 };
 
 /**  One forgotten memory or library entry, for the Memory tab. */

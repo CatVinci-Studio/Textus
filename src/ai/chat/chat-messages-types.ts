@@ -56,6 +56,12 @@ export interface ChatMessagesLabels
   commentTitle: string;
   commentLocate: string;
   commentApplySuggestion: string;
+  /** A reply's changes to the folder's files. */
+  filesChangedTitle: string;
+  filesKeptTitle: string;
+  filesNew: string;
+  filesUndo: string;
+  filesApply: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
   commentCount: string;
   commentGroupMore: string;
@@ -112,6 +118,8 @@ export interface ChatMessagesProps {
   /** Turns a note's suggested fix into a pending edit; absent where edits
    *  can't be proposed. */
   onApplySuggestion?: ApplySuggestion;
+  /** The conversation, whose file changes the cards undo and apply. */
+  conversation?: string;
   /** The number on an add_comment note's badge in the text, for its card
    *  to show the same; null while the note has none (a margin has room
    *  for it, or it was never placed). */

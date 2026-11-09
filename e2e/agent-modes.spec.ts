@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import {
+  emit,
+  invokeCalls,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+} from "./helpers";
+import { openPath, pluginsAtStart } from "./plugin-helpers";
 
 /**
  * The AI panel's modes, and the chip's selection staying highlighted while
@@ -334,4 +341,71 @@ test.describe("the selection the chip refers to", () => {
     ).toHaveCount(0);
     await expect(layer(page).locator(".chat-selection")).toHaveCount(0);
   });
+});
+
+test("General mode's changes to other files show as one card that undoes and applies them, the files marked in the tree", async ({
+  page,
+}) => {
+  await pluginsAtStart(page, {
+    plugins: {},
+    folder: { "/notes/a.md": "A.", "/notes/b.md": "B." },
+  });
+  await openApp(page, {
+    settings: { language: "en", agentAskBeforeFileChanges: true },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  await openPath(page, "/notes/a.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("A.");
+  await emit(page, "menu-toggle-sidebar");
+  const change = (applied: boolean) => ({
+    id: "c1",
+    path: "b.md",
+    file: "/notes/b.md",
+    before: "B.",
+    after: "B, changed.",
+    applied,
+  });
+  await mockInvoke(page, {
+    ai_agent_message: [
+      { kind: "User", text: "change b" },
+      {
+        kind: "ToolCall",
+        call_id: "w1",
+        name: "edit_file",
+        arguments: JSON.stringify({
+          path: "b.md",
+          old: "B.",
+          new: "B, changed.",
+          change: "c1",
+        }),
+      },
+      { kind: "ToolResult", call_id: "w1", output: "Changed `b.md`." },
+      { kind: "Assistant", text: "Done." },
+    ],
+    ai_file_changes: [change(true)],
+    ai_set_file_changes: [[change(false)], []],
+  });
+  await send(page, "change b");
+  const card = page.locator(".agent-panel-view .agent-file-changes");
+  await expect(card).toContainText("Files changed");
+  await expect(card).toContainText("b.md");
+  // The setting went with the request.
+  const [call] = await invokeCalls(page, "ai_agent_message");
+  expect(call.askBeforeFileChanges).toBe(true);
+  // The file changed is marked in the tree.
+  await expect(
+    page.locator(".tree-row[data-ai-changed]", { hasText: "b.md" }),
+  ).toBeVisible();
+  // Undo takes the reply's changes off, and the mark with them.
+  await card.getByRole("button", { name: "Undo" }).click();
+  const [undo] = await invokeCalls(page, "ai_set_file_changes");
+  expect(undo).toMatchObject({
+    conversation: expect.any(String),
+    ids: ["c1"],
+    on: false,
+  });
+  await expect(card.getByRole("button", { name: "Apply" })).toBeVisible();
+  await expect(page.locator(".tree-row[data-ai-changed]")).toHaveCount(0);
 });

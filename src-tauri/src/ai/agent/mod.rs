@@ -87,6 +87,9 @@ pub async fn ai_agent_message(
     ui_language: Option<String>,
     // The image model; None for none, and from an older frontend.
     image_model: Option<crate::ai::images::ImageModel>,
+    // General mode's file changes wait to be applied. None (an older
+    // frontend) writes them.
+    ask_before_file_changes: Option<bool>,
     on_event: Channel<StreamEvent>,
 ) -> Result<Vec<AgentTurn>, String> {
     // What every request names, as Research's requests carry it too.
@@ -100,6 +103,7 @@ pub async fn ai_agent_message(
         searxng_url,
         request_id,
         image_model,
+        ask_before_file_changes: ask_before_file_changes.unwrap_or(false),
     };
     let web_service = web_search.then(|| request.search_service(&app)).flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
@@ -238,6 +242,12 @@ async fn ai_agent_message_inner(
             let helper_tools = ToolRegistry::builtin(false, false, mode, entry.supports_vision)
                 .only(tools::PROPOSE_EDIT_TOOL_NAME);
             let helpers = HelperTurns::default();
+            let file_edits = crate::ai::file_changes::FileEdits::new(
+                workspace.root.as_deref().map(Path::new),
+                request.conversation.as_deref(),
+                doc_path.map(Path::new),
+                request.ask_before_file_changes,
+            );
             let chapter_run = ChapterRun {
                 agent: &agent,
                 workspace: &workspace,
@@ -256,6 +266,10 @@ async fn ai_agent_message_inner(
                 mode,
                 entry.supports_vision,
             );
+            // The folder's other files, in General mode.
+            if let Some(edits) = &file_edits {
+                tools.extend(edits.tools());
+            }
             if helper_tools.edits() && offers_chapters(&document) {
                 let run = &chapter_run;
                 tools.add(tools::Tool {

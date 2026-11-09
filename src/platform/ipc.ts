@@ -284,6 +284,11 @@ export const ai = {
     workspaceRoot: string | null,
     path: string,
   ) => command("read_project_file", docPath, workspaceRoot, path),
+  /** General mode's kept file changes, and putting them on disk or back. */
+  fileChanges: (conversation: string, ids: string[]) =>
+    command("ai_file_changes", conversation, ids),
+  setFileChanges: (conversation: string, ids: string[], on: boolean) =>
+    command("ai_set_file_changes", conversation, ids, on),
   /** Creates `.textus/<rel>` from `template` if missing; returns its path. */
   ensureProjectFile: (
     docPath: string | null,

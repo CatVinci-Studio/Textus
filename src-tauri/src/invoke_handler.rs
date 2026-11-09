@@ -126,6 +126,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::builtin::builtin_skills_attribution,
         crate::ai::project::list_project_files,
         crate::ai::project::read_project_file,
+        crate::ai::file_changes::ai_file_changes,
+        crate::ai::file_changes::ai_set_file_changes,
         crate::ai::project::ensure_project_file,
         crate::ai::project::pick_text_files,
         crate::ai::project::import_references_picked,

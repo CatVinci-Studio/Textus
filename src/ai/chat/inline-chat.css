@@ -1678,3 +1678,54 @@ button.chat-queue-action:hover {
 .agent-proposal-group-fold:hover {
   color: var(--ui-text);
 }
+
+/* A reply's changes to the folder's files: one row a file, which opens it. */
+.agent-file-changes-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.agent-file-changes-rows > li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.agent-file-changes-path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-body);
+  text-align: start;
+  cursor: pointer;
+}
+
+.agent-file-changes-path:hover:not(:disabled) {
+  color: var(--ui-accent);
+}
+
+.agent-file-changes-path:disabled {
+  color: var(--ui-muted);
+  cursor: default;
+}
+
+.agent-file-changes-problem {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+.agent-file-changes-actions {
+  display: flex;
+  justify-content: flex-end;
+}

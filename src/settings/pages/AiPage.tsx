@@ -192,6 +192,14 @@ export function AiPage({
                 />
                 <SearchServiceSection t={t} />
                 <ToggleRow
+                  label={t.askBeforeFileChangesLabel}
+                  help={t.askBeforeFileChangesHint}
+                  checked={settings.agentAskBeforeFileChanges}
+                  onChange={(v) =>
+                    setSettings({ agentAskBeforeFileChanges: v })
+                  }
+                />
+                <ToggleRow
                   label={t.researchSubHelpersLabel}
                   help={t.researchSubHelpersHint}
                   checked={settings.researchSubHelpers}

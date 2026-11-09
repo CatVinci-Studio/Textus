@@ -49,6 +49,7 @@ export function ChatMessages({
   onRetry,
   onContinue,
   docPath = null,
+  conversation = "",
 }: ChatMessagesProps) {
   const revealFrom = useRef(0);
   const wasBusy = useRef(busy);
@@ -103,6 +104,7 @@ export function ChatMessages({
     proposalActions,
     docPath,
     transcript,
+    conversation,
   };
 
   // A decided card shrinks to its status line and what is under it slides

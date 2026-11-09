@@ -123,9 +123,10 @@ export function useAgentConversation(
   const uiLanguage = useLatest(settings.language);
   // generate_image is offered only with an image model.
   const imageModel = useLatest(imageModelOf(settings));
-  const search = useLatest({
-    service: settings.searchService,
+  const prefs = useLatest({
+    searchService: settings.searchService,
     searxngUrl: settings.searxngUrl,
+    askBeforeFileChanges: settings.agentAskBeforeFileChanges,
   });
   const [error, setError] = useState<string | null>(null);
   // A screen reader hears that Textus AI started and finished, or why it
@@ -281,8 +282,7 @@ export function useAgentConversation(
             images,
             webSearch: options.webSearch,
             thinking: options.thinking,
-            searchService: search.current.service,
-            searxngUrl: search.current.searxngUrl,
+            ...prefs.current,
             mode: options.mode,
             focusHeading: options.focusHeading ?? null,
             uiLanguage: uiLanguage.current,

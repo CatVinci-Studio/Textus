@@ -107,6 +107,8 @@ export interface Settings {
   /// The composer's Web search button starts on. The provider's own
   /// search where it has one, else Textus's web_search on `searchService`.
   enableWebSearch: boolean;
+  /// General mode's changes to the folder's files wait for Apply.
+  agentAskBeforeFileChanges: boolean;
   /// The image service ("" for none, the default: a picture costs money), its
   /// model ("" for its default) and, for an OpenAI-compatible endpoint, its address.
   imageModelProvider: string;
@@ -296,6 +298,7 @@ export const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
+  agentAskBeforeFileChanges: false,
   imageModelProvider: "chat",
   imageModel: "",
   imagesPerRequest: 2,

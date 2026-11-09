@@ -35,6 +35,10 @@ pub struct AgentRequest {
     /// The image model; None for none.
     #[serde(default)]
     pub image_model: Option<ImageModel>,
+    /// General mode's changes to the folder's files wait for the user to
+    /// apply them.
+    #[serde(default)]
+    pub ask_before_file_changes: bool,
 }
 
 impl AgentRequest {

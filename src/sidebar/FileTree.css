@@ -309,3 +309,8 @@
 .tree-empty {
   padding-block: var(--space-4);
 }
+
+/* A file Textus AI changed: its name in the accent, as on its tab. */
+.tree-row[data-ai-changed] .tree-label {
+  color: var(--ui-accent);
+}

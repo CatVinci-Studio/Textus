@@ -262,6 +262,7 @@ export function MainPane({
         title: tabTitle(tab, t),
         dirty: tabIsDirty(tab),
         preview: tab.preview,
+        path: tab.path,
       }))}
       onKeep={onKeep}
       activeTabId={active}

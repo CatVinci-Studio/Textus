@@ -1,6 +1,7 @@
 // The file tree's rows: a folder, which reads and lists its entries, and
 // a file.
 
+import { useChangedFiles } from "../ai/chat/file-changes";
 import { useEffect, useMemo, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import { ChevronIcon, FolderIcon, FolderOpenIcon } from "../ui/icons";
@@ -199,6 +200,7 @@ function FileNode({
   const tree = useTree();
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
+  const changed = useChangedFiles().has(entry.path);
   return (
     <>
       <div
@@ -206,6 +208,7 @@ function FileNode({
         role="treeitem"
         aria-level={depth}
         aria-selected={active}
+        data-ai-changed={changed || undefined}
         // Dropped on a file, a drag goes into that file's folder.
         data-drop-dir={parentDir(entry.path) ?? undefined}
         style={{ paddingLeft: depth * 14 + 12 }}

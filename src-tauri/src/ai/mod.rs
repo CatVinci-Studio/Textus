@@ -6,6 +6,7 @@ pub mod client;
 pub mod conventions;
 pub mod doc_blocks;
 pub mod doc_title;
+pub mod file_changes;
 pub mod images;
 pub(crate) mod json_reply;
 pub mod kept_proposals;
