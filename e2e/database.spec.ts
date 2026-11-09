@@ -479,3 +479,24 @@ test("zoomed, a date's month opens under its field", async ({ page }) => {
   await page.keyboard.press("Escape");
   await expect(db.locator(".date-pop")).toHaveCount(0);
 });
+
+test("a field in the page takes Textus's own menu for its text, not the system's", async ({
+  page,
+}) => {
+  const db = await open(page);
+  const first = db.locator(rows).first();
+  await first.locator("td.title").click();
+  const field = first.locator("input");
+  await field.fill("Week1x");
+  await field.click({ button: "right" });
+  await pick(page, "Select All");
+  await expect
+    .poll(() =>
+      field.evaluate(
+        (el) =>
+          (el as HTMLInputElement).selectionEnd! -
+          (el as HTMLInputElement).selectionStart!,
+      ),
+    )
+    .toBe(6);
+});

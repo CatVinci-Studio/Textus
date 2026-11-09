@@ -89,6 +89,28 @@ async function openSettings(page: Page) {
 }
 
 test.describe("desktop", () => {
+  test("a text field takes Textus's own menu, and its Select All selects the text", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const panel = await openSettings(page);
+    const field = panel.locator(".settings-search input");
+    await field.fill("theme");
+    await field.click({ button: "right" });
+    const menu = page.locator(".context-menu").last();
+    await expect(menu.getByRole("menuitem", { name: "Paste" })).toBeVisible();
+    await menu.getByRole("menuitem", { name: "Select All" }).click();
+    await expect
+      .poll(() =>
+        field.evaluate(
+          (el) =>
+            (el as HTMLInputElement).selectionEnd! -
+            (el as HTMLInputElement).selectionStart!,
+        ),
+      )
+      .toBe(5);
+  });
+
   test("the AI page connects first, then lists each feature with its model; the chat off hides the two groups below it", async ({
     page,
   }) => {

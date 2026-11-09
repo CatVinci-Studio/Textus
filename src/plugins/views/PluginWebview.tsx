@@ -15,6 +15,7 @@ import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
+import { clipboardText, textFieldItems } from "../../ui/text-field-menu";
 import {
   contentZoom,
   passZoomGesture,
@@ -99,6 +100,25 @@ export function PluginWebview({
     const frame = sandboxedFrame(page.srcdoc, page.title);
     frame.className = "plugin-webview-frame";
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
+    // A menu the page asks for, at its point in the page: the value picked.
+    const askMenu = (items: unknown, x: unknown, y: unknown) =>
+      new Promise<unknown>((resolve) => {
+        let done = false;
+        const finish = (value: unknown) => {
+          if (done) return;
+          done = true;
+          setMenu(null);
+          resolve(value);
+        };
+        const box = frame.getBoundingClientRect();
+        closeMenuRef.current = () => finish(null);
+        setMenu({
+          x: box.left + (typeof x === "number" ? x : 0),
+          y: box.top + (typeof y === "number" ? y : 0),
+          items: pageMenuEntries(items, finish),
+          close: () => finish(null),
+        });
+      });
     const disconnect = connectFrame(
       frame,
       {
@@ -107,23 +127,25 @@ export function PluginWebview({
         state: ({ state }: { state: unknown }) =>
           setWebviewState(current.key, state),
         menu: ({ items, x, y }: { items: unknown; x: unknown; y: unknown }) =>
-          new Promise<unknown>((resolve) => {
-            let done = false;
-            const finish = (value: unknown) => {
-              if (done) return;
-              done = true;
-              setMenu(null);
-              resolve(value);
-            };
-            const box = frame.getBoundingClientRect();
-            closeMenuRef.current = () => finish(null);
-            setMenu({
-              x: box.left + (typeof x === "number" ? x : 0),
-              y: box.top + (typeof y === "number" ? y : 0),
-              items: pageMenuEntries(items, finish),
-              close: () => finish(null),
-            });
-          }),
+          askMenu(items, x, y),
+        // A text field's menu in the page, the window's own (text-field-menu.tsx).
+        textMenu: ({
+          x,
+          y,
+          selected,
+        }: {
+          x: unknown;
+          y: unknown;
+          selected: unknown;
+        }) =>
+          askMenu(
+            textFieldItems(windowInfo().strings(), selected === true),
+            x,
+            y,
+          ),
+        clipboardWrite: ({ text }: { text: unknown }) =>
+          navigator.clipboard.writeText(String(text ?? "")).then(() => true),
+        clipboardRead: () => clipboardText(),
         menuClose: () => closeMenuRef.current?.(),
         // Told on as a right-click on the frame, for the menu around it.
         contextMenu: ({ x, y }: { x: unknown; y: unknown }) => {

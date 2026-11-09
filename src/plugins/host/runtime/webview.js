@@ -65,21 +65,66 @@
     },
     { passive: false },
   );
-  // No engine menu on a page, as in the window: text fields keep theirs.
-  // A right-click the page itself didn't answer goes to the window, whose
-  // menu has what it can do to the page there (a block's: delete it).
+  // No engine menu on a page, as in the window. A text field gets Textus's
+  // own (undo, cut, copy, paste, select all), drawn by the window and done
+  // here; a right-click the page itself didn't answer goes to the window,
+  // whose menu has what it can do to the page there (a block's: delete it).
   window.addEventListener("contextmenu", function (event) {
     var target = event.target;
-    if (
-      target &&
-      target.closest &&
-      target.closest("input, textarea, [contenteditable]")
-    )
+    var field =
+      target && target.closest
+        ? target.closest("input, textarea, [contenteditable='true']")
+        : null;
+    if (field && !event.defaultPrevented) {
+      event.preventDefault();
+      textMenu(field, event.clientX, event.clientY);
       return;
-    if (!event.defaultPrevented)
+    }
+    if (!event.defaultPrevented && !field)
       send("contextMenu", { x: event.clientX, y: event.clientY });
     event.preventDefault();
   });
+  function selectedIn(field) {
+    if ("selectionStart" in field && field.selectionStart !== null)
+      return field.selectionStart !== field.selectionEnd;
+    var selection = window.getSelection();
+    return !!selection && !selection.isCollapsed;
+  }
+  function selectedText(field) {
+    if ("selectionStart" in field && field.selectionStart !== null)
+      return field.value.slice(field.selectionStart, field.selectionEnd);
+    return String(window.getSelection() || "");
+  }
+  // While the menu is open the field is marked (data-menu-open): its blur
+  // then isn't the end of an edit.
+  function textMenu(field, x, y) {
+    menuOpen = true;
+    field.setAttribute("data-menu-open", "");
+    call("textMenu", { x: x, y: y, selected: selectedIn(field) }).then(
+      function (action) {
+        menuOpen = false;
+        field.focus();
+        field.removeAttribute("data-menu-open");
+        if (!action) return;
+        if (action === "copy" || action === "cut") {
+          var text = selectedText(field);
+          return call("clipboardWrite", { text: text }).then(function () {
+            if (action === "cut") document.execCommand("delete");
+          });
+        }
+        if (action === "paste")
+          return call("clipboardRead", {}).then(function (text) {
+            if (text) document.execCommand("insertText", false, String(text));
+          });
+        if (action === "selectAll") {
+          if (field.select) field.select();
+          else document.execCommand("selectAll");
+          return;
+        }
+        document.execCommand(action);
+      },
+    );
+  }
   ["gesturestart", "gesturechange", "gestureend"].forEach(function (type) {
     window.addEventListener(type, function (event) {
       event.preventDefault();
