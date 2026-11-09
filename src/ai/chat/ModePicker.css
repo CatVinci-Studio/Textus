@@ -22,11 +22,11 @@
   padding: 0 0.4em;
 }
 
-/* Beside the composer's tools, it is what gives way, down to its chevron
-   and a letter: Send keeps its word in a narrow window at a large size. */
+/* Beside the composer's tools, it is what gives way, down to its chevron:
+   Send keeps its word in a narrow window at a large size. */
 .inline-chat-toolbar > .mode-picker {
   flex: 0 1 auto;
-  min-width: 40px;
+  min-width: 28px;
 }
 
 /* The list: the modes, each with a line on what it does, then the models
