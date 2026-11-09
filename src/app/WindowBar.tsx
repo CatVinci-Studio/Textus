@@ -10,6 +10,7 @@ import { TextusAiButton } from "../ai/TextusAiSwitch";
 import { isIOSApp } from "../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../ui/icons";
 import { useFullscreenMark } from "./useFullscreenMark";
+import { useTitleRoom } from "./useTitleRoom";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { PageSwitch } from "../mobile/PageSwitch";
 import { usePageSwipe } from "../mobile/usePageSwipe";
@@ -83,6 +84,7 @@ export function WindowBar({
     agentOpen,
     onToggleAgent,
   );
+  const { titleRef, statusRef } = useTitleRoom();
   return (
     <>
       {/* The frosted bar's glass, layered under it: see window-bar.css. */}
@@ -120,7 +122,7 @@ export function WindowBar({
           </Tooltip>
         )}
         {/* The unsaved dot leads the title, as a native edited title does. */}
-        <span className="window-bar-title">
+        <span className="window-bar-title" ref={titleRef}>
           {dirty && (
             <Tooltip text={t.unsavedIndicator}>
               <span
@@ -144,7 +146,7 @@ export function WindowBar({
             </Tooltip>
           )}
         </span>
-        <div className="window-bar-status">
+        <div className="window-bar-status" ref={statusRef}>
           {hasStatus && (
             <Suspense fallback={null}>
               <PluginStatusItems />

@@ -180,3 +180,41 @@ test("a page made a folder for its first sub-page keeps its unsaved words, its t
     .toContain("Now it is.");
   expect(await fileText(page, "/notes/Inbox.md")).toBeUndefined();
 });
+
+test("a long title and the pages above it are cut short, not drawn over each other", async ({
+  page,
+}) => {
+  const long =
+    "TimeDP Learning to Generate Multi-Domain Time Series with Domain Prompts";
+  await openWithPlugins(page, {
+    plugins: {
+      [ID]: [
+        "files.read",
+        "files.write",
+        "editor.read",
+        "editor.write",
+        "ai.tools",
+      ],
+    },
+    folder: {
+      "/notes/Papers.md": "# Papers\n",
+      "/notes/Papers/03 2026.md": "# 03 2026\n",
+      [`/notes/Papers/03 2026/${long}.md`]: `# ${long}\n`,
+    },
+  });
+  await openPath(page, "/notes/Papers.md");
+  const pages = await openSidebarList(page, "Pages");
+  await pages.getByRole("button", { name: "Papers" }).click();
+  await pages.getByRole("button", { name: "03 2026" }).click();
+  await pages.locator(".plugin-list-row").filter({ hasText: "TimeDP" }).click();
+  const crumb = page.locator(".window-bar .plugin-status-item");
+  await expect(crumb).toContainText("Papers");
+  // Once the title has slid over the column, it ends before the path.
+  await expect
+    .poll(async () => {
+      const title = (await page.locator(".window-bar-title").boundingBox())!;
+      const status = (await crumb.boundingBox())!;
+      return status.x - (title.x + title.width);
+    })
+    .toBeGreaterThanOrEqual(0);
+});

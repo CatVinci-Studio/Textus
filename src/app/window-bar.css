@@ -129,7 +129,8 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  max-width: 45%;
+  /* Never under the status on its right (useTitleRoom.ts). */
+  max-width: min(45%, var(--window-bar-title-room, 45%));
   display: flex;
   align-items: center;
   gap: 8px;
@@ -164,7 +165,10 @@
 
 /* Bounded so it never slides under the app-drawn caption buttons. */
 :root[data-window-chrome="app"] .window-bar-title {
-  max-width: max(0px, calc(100% - 300px));
+  max-width: min(
+    max(0px, calc(100% - 300px)),
+    var(--window-bar-title-room, 100%)
+  );
 }
 
 /* Centred in the document column rather than the window: with the sidebar
