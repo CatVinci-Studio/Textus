@@ -59,7 +59,7 @@ async function send(page: Page, message: string) {
   await composer.press("Enter");
 }
 
-test("an agent reads the document, asks to edit it, and changes it in the editor once allowed", async ({
+test("an agent reads the document, asks to edit it, and changes it in the editor once allowed, the change marked and put back from there", async ({
   page,
 }) => {
   await openWithAgent(page);
@@ -75,6 +75,16 @@ test("an agent reads the document, asks to edit it, and changes it in the editor
   await expect(ask).toBeHidden();
   await expect(panel).toContainText("Done.");
   await expect(page.locator(".milkdown")).toContainText("Added by the agent.");
+  // Marked as Textus AI's own changes are: the place it added barred, and
+  // put back from there.
+  const added = page.locator(".milkdown .ai-changed-block");
+  await expect(added).toHaveText(["Added by the agent."]);
+  await added.hover();
+  await page.getByRole("button", { name: "Undo this change" }).click();
+  await expect(page.locator(".milkdown")).not.toContainText(
+    "Added by the agent.",
+  );
+  await expect(added).toHaveCount(0);
   const calls = await page.evaluate(
     () =>
       (window as unknown as { __devAgentCalls: { cmd: string }[] })

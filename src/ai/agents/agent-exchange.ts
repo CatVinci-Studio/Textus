@@ -1,10 +1,10 @@
+import { filesChanged } from "../chat/file-changes";
 import { agentsIpc } from "../../platform/ipc-plugins";
 import { fs } from "../../platform/ipc-files";
 import { appVersion } from "../../platform/app-info";
 import { currentStrings } from "../../i18n/current";
 import { getWindowAccess, openDocumentAt } from "../../plugins/app-bridge";
 import type { ExternalAgent } from "../../plugins/contributions/agents";
-import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import type { AgentTurn } from "../types";
 import {
   AcpConnection,
@@ -110,19 +110,21 @@ async function start(
       },
       // An open document is changed in its editor, one undo step, and
       // saved: read again from disk, it would start over and lose the
-      // conversation beside it.
+      // conversation beside it. Either way the file is marked as Textus
+      // AI's own changes are, each place in it put back from the editor.
       writeTextFile: async ({ path, content }) => {
         const doc = openDocumentAt(path);
         if (doc) {
+          const before = doc.text();
           if (!doc.replaceText(content, doc.revision()))
             throw new Error(`${path} changed while it was being written.`);
           await getWindowAccess()?.saveAt(path);
+          filesChanged([{ file: path, applied: true, before }]);
           return null;
         }
+        const before = await fs.readTextFile(path).catch(() => null);
         await fs.writeTextFile(path, content);
-        window.dispatchEvent(
-          new CustomEvent(FILE_WRITTEN_EVENT, { detail: path }),
-        );
+        filesChanged([{ file: path, applied: true, before }]);
         return null;
       },
     },
