@@ -581,3 +581,14 @@ test("a preview tab is clicked back to and closed like any other", async ({
   await expect(look).toHaveCount(0);
   await expect(page.locator(".window-bar-title-text")).toHaveText("a.md");
 });
+
+test("two quick clicks on a folder's arrow fold and unfold it; a double click past it goes in", async ({
+  page,
+}) => {
+  await open(page);
+  const arrow = row(page, "drafts").locator(".chevron");
+  await arrow.dblclick();
+  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("notes");
+  await row(page, "drafts").locator(".tree-label").dblclick();
+  await expect(page.locator(".sidebar .tree-root-label")).toHaveText("drafts");
+});
