@@ -387,12 +387,30 @@ textarea.tx-input {
   background: var(--ui-surface);
 }
 
+/* The copy that follows the pointer (drag-ghost.ts): one shape for a tab
+   pulled out and a file dragged in the tree. */
+.drag-ghost {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-popover);
+  max-width: 220px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  font-size: var(--text-footnote);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
 /* Anything dragged looks lifted the same way: a little larger, on the
    popover's surface and shadow. A plugin's copy grows only once its
    lib/drag.js has measured it (.is-lifted): an older one measures after. */
 .tx-drag-ghost,
-.tree-drag-ghost,
-.tab-pull-ghost,
+.drag-ghost,
 .tab-pill-lifted,
 .is-drag-lifted {
   scale: 1.06;

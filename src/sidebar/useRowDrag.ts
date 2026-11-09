@@ -14,6 +14,7 @@ import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";
 import { DRAG_START_PX } from "../ui/pointer-drag";
+import { dragGhost, type DragGhost } from "../ui/drag-ghost";
 
 /** A row being dragged, and the folder under the pointer. */
 export interface Drag {
@@ -66,10 +67,19 @@ export function useRowDrag(
         : null;
     };
     let current: Drag | null = null;
+    let ghost: DragGhost | null = null;
     const show = (next: Drag | null) => {
       if (!current !== !next) setDragging(!!next);
       current = next;
       setDrag(next);
+      // The copy under the pointer, as every drag elsewhere has it.
+      if (next && !ghost)
+        ghost = dragGhost(next.name, "tree-drag-ghost floating-surface");
+      if (next) ghost?.move(next.x, next.y);
+      else {
+        ghost?.remove();
+        ghost = null;
+      }
     };
     const onMove = (e: PointerEvent) => {
       const start = pressed.current;

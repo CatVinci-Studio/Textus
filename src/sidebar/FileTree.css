@@ -155,15 +155,6 @@
   box-shadow: inset 0 0 0 1px var(--ui-accent);
 }
 
-.tree-drag-ghost {
-  position: fixed;
-  z-index: var(--z-popover);
-  padding: 4px 8px;
-  font-size: var(--text-footnote);
-  pointer-events: none;
-  white-space: nowrap;
-}
-
 /* The file-name search at the top of the Files tab. */
 .file-search-bar {
   display: flex;

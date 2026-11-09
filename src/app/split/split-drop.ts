@@ -1,3 +1,4 @@
+import { dragGhost } from "../../ui/drag-ghost";
 import { scaledPx } from "../../ui/chrome-scale";
 import {
   moveToPane,
@@ -255,11 +256,7 @@ export function pullTab(
     releaseOutside?: (id: string) => void;
   },
 ): void {
-  const ghost = document.createElement("div");
-  ghost.className = "tab-pull-ghost";
-  ghost.textContent = title;
-  ghost.setAttribute("aria-hidden", "true");
-  document.body.append(ghost);
+  const ghost = dragGhost(title, "tab-pull-ghost");
   setDragging(true);
   const outside = (e: PointerEvent) =>
     e.clientX < 0 ||
@@ -277,11 +274,7 @@ export function pullTab(
       opts.detach(tabId);
       return;
     }
-    // Centred under the pointer, as the pill between windows is
-    // (tab_drag/pill.rs), so leaving the window doesn't make it jump. By
-    // `translate`, not `transform`: the lifted look's `scale` would scale a
-    // transform's offset too, and the pill drift off the pointer.
-    ghost.style.translate = `${e.clientX - ghost.offsetWidth / 2}px ${e.clientY - ghost.offsetHeight / 2}px`;
+    ghost.move(e.clientX, e.clientY);
     const bar = barDropAt(e.clientX, e.clientY, tabId);
     showDropHint(
       bar

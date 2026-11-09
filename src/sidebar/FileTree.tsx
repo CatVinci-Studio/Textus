@@ -1,5 +1,4 @@
 import { useMemo, useRef, type MouseEvent as ReactMouseEvent } from "react";
-import { createPortal } from "react-dom";
 import {
   ChevronIcon,
   CloseIcon,
@@ -325,16 +324,6 @@ export function FileTree({
             />
           )}
         </Presence>
-        {drag &&
-          createPortal(
-            <div
-              className="tree-drag-ghost floating-surface"
-              style={{ left: drag.x + 12, top: drag.y + 8 }}
-            >
-              {drag.name}
-            </div>,
-            document.body,
-          )}
       </div>
     </TreeContext.Provider>
   );
