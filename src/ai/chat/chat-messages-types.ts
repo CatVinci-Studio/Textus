@@ -1,3 +1,4 @@
+import type { ApplySuggestion } from "./CommentCard";
 import type { BlockNames } from "../revision/markdown-forms";
 import { type AgentTurnLabels } from "./AgentTurnView";
 import type { AgentTurn, EditAction, EditProposal } from "../types";
@@ -54,6 +55,7 @@ export interface ChatMessagesLabels
   /** An add_comment card's title and jump-to-passage link. */
   commentTitle: string;
   commentLocate: string;
+  commentApplySuggestion: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
   commentCount: string;
   commentGroupMore: string;
@@ -107,6 +109,9 @@ export interface ChatMessagesProps {
   /** Jumps to an add_comment card's passage in the document; absent where
    *  the document isn't reachable (the detached window). */
   onLocateText?: (anchor: string, block?: string) => void;
+  /** Turns a note's suggested fix into a pending edit; absent where edits
+   *  can't be proposed. */
+  onApplySuggestion?: ApplySuggestion;
   /** The number on an add_comment note's badge in the text, for its card
    *  to show the same; null while the note has none (a margin has room
    *  for it, or it was never placed). */

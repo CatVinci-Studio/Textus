@@ -344,6 +344,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Ilustre este parágrafo: crie uma imagem para ele e coloque-a logo depois.",
   agentActionInsertAtCursor: "Inserir no cursor",
   commentLocate: "Mostrar no documento",
+  commentApplySuggestion: "Aplicar sugestão",
   commentNotFound: "Esse trecho não está mais no documento.",
   toolResult: "Resultado",
   chatUseTheme: "Usar este tema",

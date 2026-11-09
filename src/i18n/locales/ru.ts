@@ -346,6 +346,7 @@ export default {
     "Проиллюстрируй этот абзац: создай для него одно изображение и поставь сразу после него.",
   agentActionInsertAtCursor: "Вставка у курсора",
   commentLocate: "Показать в документе",
+  commentApplySuggestion: "Применить предложение",
   commentNotFound: "Этого фрагмента больше нет в документе.",
   toolResult: "Результат",
   chatUseTheme: "Использовать эту тему",

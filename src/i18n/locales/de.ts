@@ -345,6 +345,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Bebildere diesen Absatz: Erstelle ein Bild dazu und setze es direkt dahinter.",
   agentActionInsertAtCursor: "Am Cursor einfügen",
   commentLocate: "Im Dokument anzeigen",
+  commentApplySuggestion: "Vorschlag übernehmen",
   commentNotFound: "Diese Stelle steht nicht mehr im Dokument.",
   toolResult: "Ergebnis",
   chatUseTheme: "Dieses Design verwenden",

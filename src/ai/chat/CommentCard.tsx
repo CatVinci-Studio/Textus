@@ -8,7 +8,13 @@ export interface Comment {
   anchor: string;
   comment: string;
   block?: string;
+  /** The passage (`anchor`, or the whole block) as it would read fixed:
+   *  one click makes it a proposal. */
+  suggestion?: string;
 }
+
+/** What a comment's suggested fix calls back with. */
+export type ApplySuggestion = (callId: string, comment: Comment) => void;
 
 /** An add_comment call's arguments: one of a reply's comments, each a call
  *  of its own. */
@@ -21,29 +27,70 @@ export function parseComment(argumentsJson: string): Comment | null {
       anchor: parsed.anchor,
       comment: parsed.comment,
       block: typeof parsed.block === "string" ? parsed.block : undefined,
+      suggestion:
+        typeof parsed.suggestion === "string" && parsed.suggestion.trim()
+          ? parsed.suggestion
+          : undefined,
     };
   } catch {
     return null;
   }
 }
 
+/** A note's suggested fix, and the button that proposes it. */
+function SuggestedFix({
+  id,
+  comment,
+  labels,
+  onApply,
+}: {
+  id: string;
+  comment: Comment;
+  labels: { commentApplySuggestion: string };
+  onApply?: ApplySuggestion;
+}) {
+  if (!comment.suggestion) return null;
+  return (
+    <div className="agent-comment-suggestion">
+      <InlineMarkdownText text={comment.suggestion} />
+      {onApply && (
+        <button
+          type="button"
+          className="tx-button small"
+          onClick={() => onApply(id, comment)}
+        >
+          {labels.commentApplySuggestion}
+        </button>
+      )}
+    </div>
+  );
+}
+
 /** A review note in the conversation: the passage it is about, the note,
  *  and the way to it in the document. */
 export function CommentCard({
+  id,
   comment,
   num,
   reveal,
   style,
   labels,
   onLocateText,
+  onApplySuggestion,
 }: {
+  id: string;
   comment: Comment;
   /** Its badge's number where the text shows notes as badges. */
   num: number | null;
   reveal: boolean;
   style: CSSProperties | undefined;
-  labels: { commentTitle: string; commentLocate: string };
+  labels: {
+    commentTitle: string;
+    commentLocate: string;
+    commentApplySuggestion: string;
+  };
   onLocateText?: (anchor: string, block?: string) => void;
+  onApplySuggestion?: ApplySuggestion;
 }) {
   return (
     <div
@@ -77,6 +124,7 @@ export function CommentCard({
       <div className="agent-comment-text">
         <InlineMarkdownText text={comment.comment} />
       </div>
+      <SuggestedFix id={id} comment={comment} labels={labels} onApply={onApplySuggestion} />
     </div>
   );
 }
@@ -102,6 +150,7 @@ export function CommentGroup({
   style,
   labels,
   onLocateText,
+  onApplySuggestion,
 }: {
   items: { id: string; comment: Comment; num: number | null }[];
   reveal: boolean;
@@ -112,8 +161,10 @@ export function CommentGroup({
     commentCount: string;
     commentGroupMore: string;
     proposalGroupLess: string;
+    commentApplySuggestion: string;
   };
   onLocateText?: (anchor: string, block?: string) => void;
+  onApplySuggestion?: ApplySuggestion;
 }) {
   const [unfolded, setUnfolded] = useState(false);
   // A note arriving, or the card opening, slides what is below it to its
@@ -166,6 +217,12 @@ export function CommentGroup({
             <div className="agent-comment-text">
               <InlineMarkdownText text={comment.comment} />
             </div>
+            <SuggestedFix
+              id={id}
+              comment={comment}
+              labels={labels}
+              onApply={onApplySuggestion}
+            />
           </li>
         ))}
       </ol>

@@ -340,6 +340,7 @@ type /name in a conversation to use one.
     "Illustrate this paragraph: make one picture for it and put it right after it.",
   agentActionInsertAtCursor: "Insert at cursor",
   commentLocate: "Show in document",
+  commentApplySuggestion: "Apply suggestion",
   commentNotFound: "That passage is no longer in the document.",
   toolResult: "Result",
   chatUseTheme: "Use this theme",

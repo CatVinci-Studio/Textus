@@ -308,6 +308,7 @@ export default {
   illustrateParagraphRequest: "为这段配图：为它生成一张图片，放在这段后面。",
   agentActionInsertAtCursor: "在光标处插入",
   commentLocate: "在文档中定位",
+  commentApplySuggestion: "采用建议",
   commentNotFound: "文档里已经找不到这段文字。",
   toolResult: "结果",
   chatUseTheme: "使用此主题",

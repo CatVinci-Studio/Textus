@@ -354,6 +354,7 @@ para usar una.
     "Ilustra este párrafo: crea una imagen para él y ponla justo después.",
   agentActionInsertAtCursor: "Insertar en el cursor",
   commentLocate: "Mostrar en el documento",
+  commentApplySuggestion: "Aplicar sugerencia",
   commentNotFound: "Ese fragmento ya no está en el documento.",
   toolResult: "Resultado",
   chatUseTheme: "Usar este tema",

@@ -151,6 +151,10 @@ pub(super) fn document_tools<'a>() -> Vec<Tool<'a>> {
                                 "comment": {
                                     "type": "string",
                                     "description": "The feedback, in the user's language - specific and actionable"
+                                },
+                                "suggestion": {
+                                    "type": "string",
+                                    "description": "Only when the fix is a concrete rewrite: the anchor (or, without one, the whole block) as it should read, in markdown. The user can apply it in one click; leave it out for points that need the writer's own judgment."
                                 }
                             },
                             "required": ["block", "comment"]

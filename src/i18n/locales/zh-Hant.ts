@@ -308,6 +308,7 @@ export default {
   illustrateParagraphRequest: "為這段配圖：為它產生一張圖片，放在這段後面。",
   agentActionInsertAtCursor: "在游標處插入",
   commentLocate: "在文件中顯示",
+  commentApplySuggestion: "採用建議",
   commentNotFound: "文件中已經找不到這段文字。",
   toolResult: "結果",
   chatUseTheme: "使用此主題",

@@ -357,6 +357,7 @@ utiliser une.
     "Illustre ce paragraphe : crée une image pour lui et place-la juste après.",
   agentActionInsertAtCursor: "Insérer au curseur",
   commentLocate: "Afficher dans le document",
+  commentApplySuggestion: "Appliquer la suggestion",
   commentNotFound: "Ce passage ne figure plus dans le document.",
   toolResult: "Résultat",
   chatUseTheme: "Utiliser ce thème",

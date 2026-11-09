@@ -126,7 +126,7 @@ test("each note of a reply shows in the margin as soon as it is written, and the
   await expect(card).toContainText("2 notes");
 });
 
-test("a reply's many notes fold in the chat to their first three", async ({
+test("a reply's many notes fold in the chat to their first three, and a suggested fix applies in one click", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1800, height: 900 });
@@ -148,6 +148,7 @@ test("a reply's many notes fold in the chat to their first three", async ({
         arguments: JSON.stringify({
           anchor: `Line ${i + 1} here.`,
           comment: `Note ${i + 1}`,
+          ...(i === 0 ? { suggestion: "Line one, fixed." } : {}),
         }),
       })),
       ...Array.from({ length: 6 }, (_, i) => ({
@@ -172,4 +173,12 @@ test("a reply's many notes fold in the chat to their first three", async ({
     page.locator(`${editor} .review-anchor`, { hasText: "Line 5 here." }),
   ).toBeVisible();
   await expect(page.locator(".review-note:not(.revision-note)")).toHaveCount(6);
+  // A note's suggested fix becomes a pending edit in one click.
+  await card.getByRole("button", { name: "Apply suggestion" }).click();
+  await expect(page.locator(`${editor} .pending-insert`)).toContainText(
+    "Line one, fixed.",
+  );
+  await expect(page.locator(`${editor} .pending-delete`)).toContainText(
+    "Line 1 here.",
+  );
 });

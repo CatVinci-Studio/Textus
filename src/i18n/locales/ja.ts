@@ -327,6 +327,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "この段落に挿絵を付けて：画像を1枚生成し、段落のすぐ後に置いてください。",
   agentActionInsertAtCursor: "カーソル位置に挿入",
   commentLocate: "文書内で表示",
+  commentApplySuggestion: "提案を適用",
   commentNotFound: "その箇所は文書内に見つかりません。",
   toolResult: "結果",
   chatUseTheme: "このテーマを使う",

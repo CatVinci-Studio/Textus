@@ -1463,6 +1463,19 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   line-height: 1.55;
 }
 
+/* A note's fix as it would read, set off like a quote, its button after. */
+.agent-comment-suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-accent);
+  font-size: var(--text-body);
+  line-height: 1.55;
+}
+
 /* A reply's notes as one card: a row each, the words it is about, then the
    note, set off by hairlines. */
 .agent-comment-rows {

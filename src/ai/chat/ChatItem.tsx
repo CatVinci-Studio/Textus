@@ -32,6 +32,7 @@ export interface ChatItemsContext extends Pick<
   | "onDecideSentence"
   | "onRevealProposal"
   | "onLocateText"
+  | "onApplySuggestion"
   | "onContinue"
 > {
   proposalActions: boolean;
@@ -135,12 +136,14 @@ export function ChatItem({
     case "notes":
       return item.run.length === 1 ? (
         <CommentCard
+          id={item.run[0].id}
           comment={item.run[0].comment}
           num={item.run[0].num}
           reveal={reveal}
           style={style}
           labels={labels}
           onLocateText={c.onLocateText}
+          onApplySuggestion={c.onApplySuggestion}
         />
       ) : (
         <CommentGroup
@@ -149,6 +152,7 @@ export function ChatItem({
           style={style}
           labels={labels}
           onLocateText={c.onLocateText}
+          onApplySuggestion={c.onApplySuggestion}
         />
       );
     case "skillOffer":

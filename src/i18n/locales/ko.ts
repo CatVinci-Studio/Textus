@@ -320,6 +320,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "이 단락에 삽화를 넣어 줘: 그림을 한 장 만들어 단락 바로 뒤에 넣어 줘.",
   agentActionInsertAtCursor: "커서 위치에 삽입",
   commentLocate: "문서에서 보기",
+  commentApplySuggestion: "제안 적용",
   commentNotFound: "해당 부분이 더 이상 문서에 없습니다.",
   toolResult: "결과",
   chatUseTheme: "이 테마 사용",

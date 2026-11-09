@@ -11,6 +11,7 @@ import type {
   ImageAttachment,
 } from "../types";
 import { ChatMessages } from "./ChatMessages";
+import type { ApplySuggestion } from "./CommentCard";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
@@ -111,6 +112,19 @@ export function ChatBody({
   );
 
   useStreamedProposals(streaming, onProposals);
+  const applySuggestion: ApplySuggestion = (id, note) =>
+    onProposals([
+      {
+        callId: `${id}:suggestion`,
+        proposal: {
+          action: "replace",
+          block: note.block,
+          anchor: note.anchor || undefined,
+          text: note.suggestion,
+          reason: note.comment,
+        },
+      },
+    ]);
 
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
@@ -332,6 +346,7 @@ export function ChatBody({
                     onDecideSentence={onDecideSentence}
                     onRevealProposal={onRevealProposal}
                     onLocateText={onLocateText}
+                    onApplySuggestion={applySuggestion}
                     noteNumber={noteNumber}
                     onRejectProposal={onRejectProposal}
                     onRelocateProposal={handleRelocate}
@@ -374,6 +389,7 @@ export function ChatBody({
                 onDecideSentence={onDecideSentence}
                 onRevealProposal={onRevealProposal}
                 onLocateText={onLocateText}
+                onApplySuggestion={applySuggestion}
                 noteNumber={noteNumber}
                 onRejectProposal={onRejectProposal}
                 onRelocateProposal={handleRelocate}
