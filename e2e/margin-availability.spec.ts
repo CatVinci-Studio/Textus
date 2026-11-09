@@ -152,8 +152,9 @@ test("the adaptive column leaves room for the margin views beside the AI panel a
 test("the line being read stays put as revisions move between the text and the margin", async ({
   page,
 }) => {
-  // A fixed text width, so only the revisions reflow the page.
-  await page.setViewportSize({ width: 1100, height: 500 });
+  // A fixed text width, so only the revisions reflow the page. Widths
+  // beside the activity rail.
+  await page.setViewportSize({ width: 1144, height: 500 });
   await openApp(page, {
     settings: {
       language: "en",
@@ -180,10 +181,10 @@ test("the line being read stays put as revisions move between the text and the m
     .locator('[data-active-tab="true"] .editor-scroll')
     .evaluate((s, by) => (s.scrollTop += by), (await at()) - 60);
   const before = await at();
-  await page.setViewportSize({ width: 990, height: 500 });
+  await page.setViewportSize({ width: 1034, height: 500 });
   await expect(page.locator(".milkdown .pending-pick:visible")).toHaveCount(2);
   expect(Math.abs((await at()) - before)).toBeLessThan(2);
-  await page.setViewportSize({ width: 1100, height: 500 });
+  await page.setViewportSize({ width: 1144, height: 500 });
   await expect(page.locator(".revision-note")).toHaveCount(2);
   expect(Math.abs((await at()) - before)).toBeLessThan(2);
 });

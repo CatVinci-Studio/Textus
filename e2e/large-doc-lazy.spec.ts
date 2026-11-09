@@ -158,7 +158,7 @@ test("pasted past the threshold, the outline jumps to a heading out of sight, wh
     COUNT - 200,
   );
   await emit(page, "menu-toggle-sidebar");
-  await page.locator(".sidebar-tab").nth(1).click();
+  await page.locator(".activity-rail-item").nth(1).click();
   await page
     .locator(".outline-row .tree-label", { hasText: "Section 23" })
     .click();

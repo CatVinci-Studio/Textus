@@ -72,7 +72,7 @@ test("a plugin page's controls are the app's, and its menu is the app's menu", a
   await openApp(page, { settings: { language: "en" } });
   await emit(page, "menu-toggle-sidebar");
   await page
-    .locator(".sidebar-tabs")
+    .locator(".activity-rail")
     .getByRole("button", { name: "UI" })
     .click();
   const panel = page.frameLocator(".plugin-webview-frame");

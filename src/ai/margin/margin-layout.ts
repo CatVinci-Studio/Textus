@@ -5,7 +5,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { flip } from "../../ui/flip";
-import { marginRoom } from "./margin-room";
+import { columnForMargin, marginRoom, NARROWEST_SHARE } from "./margin-room";
 import "./ReviewMargin.css";
 import { zoomedRectScale } from "../../ui/zoomed-rects";
 import { noteAnchorClass } from "./review-notes-plugin";
@@ -239,6 +239,8 @@ export function useMarginRoom(
   scrollEl: HTMLElement,
   contentEl: HTMLElement,
   onNoMargin: (noMargin: boolean) => void,
+  /** There are cards: the column may narrow to keep them beside it. */
+  cards: boolean,
 ) {
   const [noMargin, setNoMargin] = useState(false);
   const onNoMarginRef = useLatest(onNoMargin);
@@ -249,7 +251,32 @@ export function useMarginRoom(
     if (!view) return;
     let last: boolean | null = null;
     const check = () => {
-      const next = !measureRoom(scrollEl, contentEl, view).available;
+      // Cards that don't fit beside the column at its own width get room
+      // from it, down to a readable line; none, it keeps its width. Each
+      // check starts from its own width: the window or the zoom changed.
+      contentEl.style.maxWidth = "";
+      let room = measureRoom(scrollEl, contentEl, view);
+      // Only the adaptive width gives way; one the user set stays as set.
+      const adaptive =
+        !document.documentElement.hasAttribute("data-content-width");
+      if (cards && adaptive && !room.available) {
+        const pm = view.dom as HTMLElement;
+        const padding =
+          contentEl.getBoundingClientRect().width -
+          pm.getBoundingClientRect().width * zoomedRectScale(pm);
+        // It keeps most of its own width, which already follows the window,
+        // the theme and the zoom.
+        const widest = columnForMargin(
+          scrollEl.clientWidth,
+          padding,
+          contentEl.getBoundingClientRect().width * NARROWEST_SHARE,
+        );
+        if (widest !== null) {
+          contentEl.style.maxWidth = `${widest}px`;
+          room = measureRoom(scrollEl, contentEl, view);
+        }
+      }
+      const next = !room.available;
       if (next === last) return;
       last = next;
       setNoMargin(next);
@@ -261,7 +288,7 @@ export function useMarginRoom(
     ro.observe(contentEl);
     ro.observe(view.dom);
     return () => ro.disconnect();
-  }, [view, scrollEl, contentEl, onNoMarginRef]);
+  }, [view, scrollEl, contentEl, onNoMarginRef, cards]);
   return noMargin;
 }
 

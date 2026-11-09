@@ -77,7 +77,13 @@ export function ReviewMargin({
   const [layout, setLayout] = useState<Layout | null>(null);
   const heights = useRef(new Map<string, number>());
   const [tick, setTick] = useState(0);
-  const noMargin = useMarginRoom(view, scrollEl, contentEl, onNoMargin);
+  const noMargin = useMarginRoom(
+    view,
+    scrollEl,
+    contentEl,
+    onNoMargin,
+    items.length > 0,
+  );
 
   // Measure: where the text ends, where each item's passage is - then
   // stack the cards.

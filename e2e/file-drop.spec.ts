@@ -111,7 +111,7 @@ test("the sidebar opens beside a document dropped in with no folder open", async
   await drop(page, ["/notes/dropped.md"]);
   await expect(page.locator(editor)).toContainText("It opens.");
   await emit(page, "menu-toggle-sidebar");
-  await expect(page.locator(".sidebar-tab").first()).toBeVisible();
+  await expect(page.locator(".sidebar-title")).toBeVisible();
   await expect(page.getByText("Something went wrong")).toHaveCount(0);
   expect(errors).toEqual([]);
 });

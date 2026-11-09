@@ -142,7 +142,7 @@ async function turnOn(page: Page) {
 async function openPanel(page: Page) {
   await emit(page, "menu-toggle-sidebar");
   await page
-    .locator(".sidebar-tabs")
+    .locator(".activity-rail")
     .getByRole("button", { name: "Hello" })
     .click();
   return page.frameLocator(".plugin-webview-frame");
@@ -209,7 +209,7 @@ test("refusing its permissions leaves a plugin off", async ({ page }) => {
   await page.keyboard.press("Escape");
   await emit(page, "menu-toggle-sidebar");
   await expect(
-    page.locator(".sidebar-tabs").getByRole("button", { name: "Hello" }),
+    page.locator(".activity-rail").getByRole("button", { name: "Hello" }),
   ).toHaveCount(0);
 });
 
@@ -218,7 +218,7 @@ test("turning every plugin off takes its tab away", async ({ page }) => {
   await turnOn(page);
   await emit(page, "menu-toggle-sidebar");
   const tab = page
-    .locator(".sidebar-tabs")
+    .locator(".activity-rail")
     .getByRole("button", { name: "Hello" });
   await expect(tab).toHaveCount(1);
   await openPluginsPage(page);
@@ -320,7 +320,7 @@ for (const { name, l10n, language, texts } of LANGUAGE_CASES)
     await openApp(page, { settings: { language } });
     await emit(page, "menu-toggle-sidebar");
     await page
-      .locator(".sidebar-tabs")
+      .locator(".activity-rail")
       .getByRole("button", { name: tab })
       .click();
     const panel = page.frameLocator(".plugin-webview-frame");

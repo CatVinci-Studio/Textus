@@ -41,7 +41,7 @@ test("a quick note is kept, and Insert writes it into the document", async ({
   await panel.locator("textarea").fill("Call the printer");
   // Kept after the panel is closed and opened again.
   await page.waitForTimeout(500);
-  await page.locator(".sidebar-tabs").getByRole("button").first().click();
+  await page.locator(".activity-rail").getByRole("button").first().click();
   const again = await openSidebarTab(page, "Quick Notes");
   await expect(again.locator("textarea")).toHaveValue("Call the printer");
   // A note's actions are Textus's own menu.

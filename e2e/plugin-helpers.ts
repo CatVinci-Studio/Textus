@@ -104,28 +104,26 @@ export async function openPath(page: Page, path: string) {
   );
 }
 
+/** The sidebar open on the tab called `name`, from the activity rail: a
+ *  click on the tab already open would close it. */
+async function showSidebarTab(page: Page, name: string) {
+  const button = page.locator(".activity-rail").getByRole("button", { name });
+  const open = !(await page.locator(".sidebar.sidebar-collapsed").count());
+  if (!open || (await button.getAttribute("aria-pressed")) !== "true")
+    await button.click();
+  await page.locator(".sidebar:not(.sidebar-collapsed)").waitFor();
+}
+
 /** Opens the sidebar on the tab called `name`; its plugin's frame. */
 export async function openSidebarTab(page: Page, name: string) {
-  if (await page.locator(".sidebar.sidebar-collapsed").count())
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-toggle-sidebar"),
-    );
-  await page.locator(".sidebar-tabs").getByRole("button", { name }).click();
+  await showSidebarTab(page, name);
   return page.frameLocator(".sidebar .plugin-webview-frame");
 }
 
 /** A plugin's list in the sidebar (views.registerList): drawn by Textus
  *  in the page itself, not in a frame. */
 export async function openSidebarList(page: Page, name: string) {
-  if (await page.locator(".sidebar.sidebar-collapsed").count())
-    await page.evaluate(() =>
-      (
-        window as unknown as { __devEmitTauriEvent: (n: string) => void }
-      ).__devEmitTauriEvent("menu-toggle-sidebar"),
-    );
-  await page.locator(".sidebar-tabs").getByRole("button", { name }).click();
+  await showSidebarTab(page, name);
   return page.locator(".sidebar .plugin-list");
 }
 

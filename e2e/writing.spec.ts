@@ -104,7 +104,7 @@ test("an outline jump lands the heading below the window bar", async ({
     longDoc([{ at: 60, text: "## The `far` heading" }]),
   );
   await emit(page, "menu-toggle-sidebar");
-  await page.locator(".sidebar-tab").nth(1).click();
+  await page.locator(".activity-rail-item").nth(1).click();
   // Inline code shows as its text, not with backticks.
   const row = page.locator(".outline-row .tree-label", {
     hasText: "The far heading",
@@ -304,7 +304,7 @@ test("the outline marks the section being read", async ({ page }) => {
     ]),
   );
   await emit(page, "menu-toggle-sidebar");
-  await page.locator(".sidebar-tab").nth(1).click();
+  await page.locator(".activity-rail-item").nth(1).click();
   await page
     .locator(".outline-row .tree-label", { hasText: "Late section" })
     .click();
@@ -334,8 +334,12 @@ test("the adaptive column takes 62% of a pane past about 1100px, between 680 and
     settings: { language: "en" },
     storage: { "textus-agent-panel-open": "0", "textus-sidebar-open": "0" },
   });
-  // A laptop window: wider than Standard.
-  expect(await width()).toBe(Math.round(1280 * 0.62));
+  // A laptop window: wider than Standard. The pane is the window beside
+  // the activity rail.
+  const rail = await page
+    .locator(".activity-rail")
+    .evaluate((el) => el.getBoundingClientRect().width);
+  expect(await width()).toBe(Math.round((1280 - rail) * 0.62));
   await page.setViewportSize({ width: 1000, height: 800 });
   expect(await width()).toBe(680);
   await page.setViewportSize({ width: 1920, height: 800 });
@@ -1207,7 +1211,7 @@ test("the outline folds and unfolds every heading from its menu, or with Option-
     "# One\n\n## One a\n\n### One a i\n\n# Two\n\n## Two a",
   );
   await emit(page, "menu-toggle-sidebar");
-  await page.locator(".sidebar-tab").nth(1).click();
+  await page.locator(".activity-rail-item").nth(1).click();
   const rows = page.locator(".outline-row .tree-label");
   await expect(rows).toHaveCount(5);
   const outline = page.getByRole("tree", { name: "Outline" });
