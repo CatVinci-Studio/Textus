@@ -1,3 +1,4 @@
+import { MessageSquare } from "lucide-react";
 import { useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { FlipOnChange } from "../../engine/motion/flip";
@@ -104,9 +105,7 @@ export function CommentCard({
           <span className="agent-comment-num">{num}</span>
         ) : (
           <span className="agent-comment-icon" aria-hidden="true">
-            <svg viewBox="0 0 16 16">
-              <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-            </svg>
+            <MessageSquare aria-hidden />
           </span>
         )}
         <span className="agent-proposal-title">{labels.commentTitle}</span>
@@ -189,9 +188,7 @@ export function CommentGroup({
       />
       <div className="agent-proposal-head">
         <span className="agent-comment-icon" aria-hidden="true">
-          <svg viewBox="0 0 16 16">
-            <path d="M3 3.5h10v7H7l-3 2.5v-2.5H3z" />
-          </svg>
+          <MessageSquare aria-hidden />
         </span>
         <span className="agent-proposal-title">
           {labels.commentTitle}

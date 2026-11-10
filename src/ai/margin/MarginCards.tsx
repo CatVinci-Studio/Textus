@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import { changeGlimpse } from "./change-glimpse";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
@@ -36,14 +37,10 @@ export function revisionText(
  *  instead. */
 
 export const CHECK = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M3.5 8.5l3 3 6-7" />
-  </svg>
+  <Check aria-hidden />
 );
 export const CROSS = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4 4l8 8M12 4l-8 8" />
-  </svg>
+  <X aria-hidden />
 );
 
 /** What a card is told by the margin: where it sits, and the margin's

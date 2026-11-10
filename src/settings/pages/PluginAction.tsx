@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import { useSyncExternalStore } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -147,9 +148,7 @@ export function PluginAction({
           disabled={installing}
           {...more.button}
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M4 6l4 4 4-4" />
-          </svg>
+          <ChevronDown aria-hidden />
         </button>
       )}
       {more.menu}

@@ -90,10 +90,11 @@ export function textWidget(
   );
 }
 
+/** Lucide's check and x, as markup (icons.tsx draws the same). */
 export const CHECK_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 export const CROSS_SVG =
-  '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
 export interface SentencePickLabels {
   take: string;

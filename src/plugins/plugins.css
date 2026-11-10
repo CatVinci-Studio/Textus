@@ -187,7 +187,7 @@ button.plugin-card-open:hover .plugin-card-name {
   height: 12px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 2.4;
 }
 /* Turned off: its words and icon quieter. */
 .plugin-card.is-off .plugin-card-open {

@@ -731,7 +731,7 @@
   height: 11px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.2;
+  stroke-width: 3.3;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -1068,7 +1068,7 @@
   height: 12px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.4;
+  stroke-width: 2.1;
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: transform var(--dur-fast) var(--ease-standard);
@@ -1454,7 +1454,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   height: 11px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 2.7;
   stroke-linejoin: round;
 }
 

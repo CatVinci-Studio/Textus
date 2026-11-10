@@ -1,3 +1,4 @@
+import { Eye } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import {
@@ -120,10 +121,7 @@ export function ReviewBar({
           }
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <svg viewBox="0 0 16 16" aria-hidden="true">
-            <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8s-2.4 4.5-6.5 4.5S1.5 8 1.5 8z" />
-            <circle cx="8" cy="8" r="2" />
-          </svg>
+          <Eye aria-hidden />
           {/* The chosen view waits for room: what shows meanwhile. */}
           {waiting && (
             <span className="review-bar-view-name">{displayName(shown)}</span>

@@ -1,3 +1,4 @@
+import { Check, X } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -26,14 +27,10 @@ import { blockSummary, type BlockNames } from "../revision/markdown-forms";
 import { inlineSentence } from "../revision/sentence-diff";
 
 export const CHECK = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M3.5 8.5l3 3 6-7" />
-  </svg>
+  <Check aria-hidden />
 );
 export const CROSS = (
-  <svg viewBox="0 0 16 16" aria-hidden="true">
-    <path d="M4 4l8 8M12 4l-8 8" />
-  </svg>
+  <X aria-hidden />
 );
 
 /** What the user is told of a generate_image call that made no picture.
