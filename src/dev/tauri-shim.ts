@@ -1376,6 +1376,11 @@ export function installDevTauriShim(): void {
       args?: { event?: string; handler?: number; target?: { kind?: string } },
     ) => {
       log(cmd);
+      // The window's place on screen: the page's own (a native drag's
+      // pointer comes in screen points), at a scale of 1.
+      if (cmd === "plugin:window|outer_position")
+        return Promise.resolve({ x: window.screenX, y: window.screenY });
+      if (cmd === "plugin:window|scale_factor") return Promise.resolve(1);
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
