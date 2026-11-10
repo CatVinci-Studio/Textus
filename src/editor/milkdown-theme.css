@@ -1239,8 +1239,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 /* GitHub-style alerts: a border and badge in the kind's colour, each kind a
    colour of the palette (engine/tokens/base.css), so a theme's own colours
-   reach them. */
-.milkdown {
+   reach them; on the root, so plugin pages get them too. */
+:root {
   --doc-alert-note: var(--doc-accent);
   --doc-alert-tip: var(--tone-green);
   --doc-alert-important: var(--tone-purple);

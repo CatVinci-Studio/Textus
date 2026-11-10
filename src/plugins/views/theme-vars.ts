@@ -14,6 +14,7 @@ export const WEBVIEW_THEME_VARS = [
   "--ui-text",
   "--ui-muted",
   "--ui-accent",
+  "--ui-accent-text",
   "--ui-accent-fill",
   "--ui-primary",
   "--ui-on-primary",
@@ -28,6 +29,9 @@ export const WEBVIEW_THEME_VARS = [
   "--doc-bg",
   "--doc-text",
   "--doc-accent",
+  "--doc-accent-text",
+  // The palette's mark: highlights, "look here".
+  "--doc-mark",
   "--doc-code-bg",
   "--doc-border",
   "--doc-radius",

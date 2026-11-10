@@ -41,9 +41,9 @@ textus.views.registerWebview("jane.board.view", {
   and dark mode, the same ones Textus draws with
   ([design-language.md](../../design/design-language.md)): the interface's
   colours `--ui-bg`, `--ui-surface`, `--ui-subtle`, `--ui-text`,
-  `--ui-muted`, `--ui-accent`, `--ui-border`, `--ui-hover`,
+  `--ui-muted`, `--ui-accent` (`--ui-accent-text` for words), `--ui-border`, `--ui-hover`,
   `--ui-selected`, `--ui-danger`; the document's `--doc-bg`, `--doc-text`,
-  `--doc-accent`, `--doc-code-bg`; text by role, `--text-caption` to
+  `--doc-accent`, `--doc-accent-text`, `--doc-mark`, `--doc-code-bg`; text by role, `--text-caption` to
   `--text-title`; shapes, `--shape-m` for a panel or card, `--shape-s`
   for a box or row inside one, `--shape-pill` for a button or chip;
   `--control-height(-sm)`, `--space-1` to `--space-6` and `--font-sans` /

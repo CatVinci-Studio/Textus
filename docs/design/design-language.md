@@ -74,7 +74,9 @@ Each interface colour has exactly one job. A new surface MUST pick its colours f
 | `--ui-selected`, `--ui-selected-text`         | A chosen row, tab or chip                                          |
 | `--ui-border`                                 | Hairlines                                                          |
 | `--ui-text` / `--ui-muted`                    | Text / secondary text                                              |
-| `--ui-accent`                                 | The focus ring, links, the chosen item, a rule in force            |
+| `--ui-accent`                                 | The focus ring, the chosen item, a rule in force (as a mark)       |
+| `--ui-accent-text`, `--doc-accent-text`       | The accent as words: links, a chosen label (a step towards text)   |
+| `--doc-mark`                                  | "Here" and "now": highlights, find matches, review notes           |
 | `--ui-accent-fill`, `--ui-on-fill`            | The accent as a fill (a checked box) and the label on it           |
 | `--ui-primary`, `--ui-on-primary`             | The primary button: ink (text colour as fill, background as label) |
 | `--ui-danger`, `--ui-warning`, `--ui-success` | Status only, never decoration                                      |
@@ -82,6 +84,10 @@ Each interface colour has exactly one job. A new surface MUST pick its colours f
 
 - The accent MUST NOT be used as a large fill or as the primary button. A primary button is ink (`--ui-primary`), so any theme recolours it and a dark theme gets a light button.
 - Status colours MUST appear with an icon or text that says the same thing.
+
+### 3.2a One palette
+
+The default theme is Apple's system palette (Textus 1.3.13). A theme gives base colours - paper, ink, muted, line, accent, mark and the tones - and everything else is derived from them at fixed ratios: frames, selections, highlights (mark over paper), alerts (note = accent, tip = green, important = purple, warning = mark, caution = red), syntax tokens, find matches, review notes. A colour used as words steps towards the text so a bright base colour still reads. No surface MAY keep a palette of its own.
 
 ### 3.3 Contrast
 
@@ -207,14 +213,14 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 
 **Where a size is written, and how it scales:**
 
-| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                         |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                 |
-| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                         |
+| Written in                                                       | Write                                                                            | Scaled by                                                                                                                                                                    |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                            |
+| The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                                    |
 | Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/engine/tokens/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
-| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                      |
+| A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                                 |
 | A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/engine/tokens/scale-lengths.ts`), the same rule as the build's                                              |
-| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                 |
+| A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                            |
 
 **Layout rules that follow from it:**
 
