@@ -36,6 +36,10 @@ const EXCEPTIONS: Record<string, string> = {
   // A focus ring may change its shadow.
   "ai/chat/inline-chat.css :is(.agent-panel-body, .chat-window-body, .create-studio) .inline-chat-field box-shadow":
     "focus ring",
+  // The sidebar opening or closing: one value the whole window follows, so
+  // the islands and the list move as one (a transform moved them apart).
+  'app/frame/app-shell.css :root:not([data-window-chrome="mobile"]) .app-shell grid-template-columns':
+    "sidebar open/close",
   // A hairline in an SVG of its own: repaints that line only.
   "ai/margin/ReviewMargin.css .review-links path stroke-width":
     "connector under the pointer",

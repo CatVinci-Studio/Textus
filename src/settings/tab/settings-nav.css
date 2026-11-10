@@ -45,8 +45,3 @@
 .tx-list-item[aria-expanded="true"] .settings-nav-chevron {
   rotate: 90deg;
 }
-
-/* The way out to the plugins panel: set apart from the pages. */
-.settings-nav-away {
-  margin-top: var(--space-3);
-}

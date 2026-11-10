@@ -74,6 +74,26 @@ export function SettingsNavPanel() {
       render: () => <Page {...indexProps} indexing />,
     };
   });
+  // Plugins' own settings are in their panel: the way there, before
+  // Shortcuts.
+  const pluginsItem = PLUGINS_SHOWN && isDesktopApp && (
+    <button
+      type="button"
+      key="plugins"
+      className="tx-list-item settings-nav-away"
+      onClick={() =>
+        window.dispatchEvent(
+          new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, {
+            detail: "plugins",
+          }),
+        )
+      }
+    >
+      <PluginsTabIcon className="settings-nav-icon" />
+      <span className="settings-nav-group-name">{t.extensionsTabPlugins}</span>
+      <GoToIcon className="settings-nav-chevron" />
+    </button>
+  );
   return (
     <div className="settings-nav-panel">
       <div className="tx-pane-row">
@@ -133,7 +153,8 @@ export function SettingsNavPanel() {
                 {p.label(t)}
               </button>
             );
-            if (!p.group) return item;
+            if (!p.group)
+              return p.id === "shortcuts" ? [pluginsItem, item] : item;
             const first = pages[i - 1]?.group !== p.group;
             // A group is folded until opened; the page shown keeps its own
             // open.
@@ -161,26 +182,6 @@ export function SettingsNavPanel() {
               </Fragment>
             );
           })}
-          {/* Plugins' own settings are in their panel: the way there. */}
-          {PLUGINS_SHOWN && isDesktopApp && (
-            <button
-              type="button"
-              className="tx-list-item settings-nav-away"
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, {
-                    detail: "plugins",
-                  }),
-                )
-              }
-            >
-              <PluginsTabIcon className="settings-nav-icon" />
-              <span className="settings-nav-group-name">
-                {t.extensionsTabPlugins}
-              </span>
-              <GoToIcon className="settings-nav-chevron" />
-            </button>
-          )}
         </nav>
       )}
     </div>
