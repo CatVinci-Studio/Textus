@@ -90,8 +90,8 @@ export function useRowMenu(
       const items: (ContextMenuItem | "separator")[] = [];
       if (path !== root && !isDir)
         items.push(
+          // Beside another document: drag it there.
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
-          { label: t.openBeside, onSelect: () => onFileSelect(path, "beside") },
           "separator",
         );
       if (path !== root && isDir && onEnter)

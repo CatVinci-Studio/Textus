@@ -59,8 +59,4 @@
   cursor: row-resize;
 }
 
-.split-divider:hover::before,
-.split-divider:focus-visible::before,
-.split-divider-active::before {
-  background: color-mix(in srgb, var(--ui-accent) 35%, transparent);
-}
+/* Its grip shows on it (tx-grip, resize-handle.css). */

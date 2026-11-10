@@ -199,14 +199,40 @@ pub(crate) fn build_window(
     label: &str,
     position: Option<(f64, f64)>,
 ) -> tauri::Result<()> {
+    build_editor_window(app, label, position, false)
+}
+
+/// A small window, as VS Code's for an editor moved out: its documents and
+/// a slim bar, no activity rail or sidebar until asked for, smaller.
+#[cfg(desktop)]
+pub(crate) fn build_small_window(
+    app: &tauri::AppHandle,
+    label: &str,
+    position: Option<(f64, f64)>,
+) -> tauri::Result<()> {
+    build_editor_window(app, label, position, true)
+}
+
+/// A small window's size: room for a page of text, not a workspace.
+#[cfg(desktop)]
+const SMALL_WINDOW_SIZE: (f64, f64) = (640.0, 720.0);
+
+#[cfg(desktop)]
+fn build_editor_window(
+    app: &tauri::AppHandle,
+    label: &str,
+    position: Option<(f64, f64)>,
+    small: bool,
+) -> tauri::Result<()> {
     // Another window opens where the system puts it, no bigger than the main screen.
-    let (_, (width, height)) = window_frame::place(
-        None,
-        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0)),
-        &screens(app),
-        EDITOR_MIN_SIZE,
-    );
-    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+    let wanted = if small {
+        SMALL_WINDOW_SIZE
+    } else {
+        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0))
+    };
+    let (_, (width, height)) = window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
+    let url = if small { "index.html?window=small" } else { "index.html" };
+    let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
         .title(app_identity::APP_NAME)
         .inner_size(width, height)
         .min_inner_size(EDITOR_MIN_SIZE.0, EDITOR_MIN_SIZE.1);

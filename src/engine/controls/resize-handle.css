@@ -11,9 +11,57 @@
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
 
-.resize-handle:hover,
-.resize-handle:focus-visible,
-.resize-handle-active {
-  background: color-mix(in srgb, var(--ui-accent) 35%, transparent);
+.resize-handle:focus-visible {
   outline: none;
+}
+
+/* A grip on a seam (a side panel's edge, the gap between islands): the
+   seam is all one sees until the pointer finds it - then a small handle
+   of three dots at its middle; dragged, a line in the accent fills the
+   seam end to end. The element's centre is the seam's. */
+.tx-grip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 15px;
+  translate: -50% -50%;
+  border-radius: var(--shape-pill);
+  background: radial-gradient(circle, var(--ui-muted) 1.1px, transparent 1.4px)
+    center top / 3px 5px repeat-y;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+.tx-grip[aria-orientation="horizontal"]::after {
+  width: 15px;
+  height: 3px;
+  background-size: 5px 3px;
+  background-repeat: repeat-x;
+  background-position: left center;
+}
+
+.tx-grip:is(:hover, :focus-visible)::after {
+  opacity: 1;
+}
+
+/* Dragged: the seam filled - its own width (--grip-line), or a hairline
+   where the seam has none. */
+.tx-grip[data-gripped]::after {
+  top: 0;
+  width: var(--grip-line, 3px);
+  height: 100%;
+  background: var(--ui-accent);
+  opacity: 1;
+  translate: -50% 0;
+}
+
+.tx-grip[aria-orientation="horizontal"][data-gripped]::after {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: var(--grip-line, 3px);
+  translate: 0 -50%;
 }

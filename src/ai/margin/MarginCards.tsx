@@ -36,12 +36,8 @@ export function revisionText(
 /** The margin's cards: revisions, notes, and the note popover a phone shows
  *  instead. */
 
-export const CHECK = (
-  <Check aria-hidden />
-);
-export const CROSS = (
-  <X aria-hidden />
-);
+export const CHECK = <Check aria-hidden />;
+export const CROSS = <X aria-hidden />;
 
 /** What a card is told by the margin: where it sits, and the margin's
  *  callbacks, which keep their identity across renders. */

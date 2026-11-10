@@ -3,7 +3,6 @@ import {
   islandOf,
   keepsItself,
   shareOf,
-  sizeAt,
   mapPanes,
   pane,
   paneById,
@@ -206,13 +205,4 @@ export function withAi(
 export function withoutAi(layout: SplitLayout): SplitLayout | null {
   const rest = tidy(layout.root, (p) => islandOf(p) !== "ai" && keepsItself(p));
   return rest ? settled(rest, layout.focus) : null;
-}
-
-/** Pane `id` at `share` of its row or column (sizeAt). */
-export function sizePane(
-  layout: SplitLayout,
-  id: string,
-  share: number,
-): SplitLayout {
-  return { ...layout, root: sizeAt(layout.root, id, share) as Branch };
 }

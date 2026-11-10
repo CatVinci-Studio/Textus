@@ -9,8 +9,6 @@ import {
   type SplitLayout,
   type SplitRequest,
   splitPreview,
-  zoomedIsland,
-  fillIsland,
 } from "./store";
 import {
   mapPanes,
@@ -23,7 +21,6 @@ import {
   islandOf,
   keepsItself,
   type Branch,
-  type Pane,
 } from "./tree";
 
 /** A split asked for that needs a blank tab: the layout waiting for it,
@@ -123,15 +120,6 @@ function same(a: SplitLayout, b: SplitLayout): boolean {
   );
 }
 
-/** The pane filling the area, if `zoom` names one of `layout`'s. */
-function zoomedPane(
-  layout: ReturnType<typeof resolveSplit>,
-  zoom: string | null,
-): Pane | null {
-  if (!zoom || !layout || "blank" in layout) return null;
-  return paneById(layout.root, zoom) ?? null;
-}
-
 /** The window's split as its tabs stand, kept in step with them; null
  *  while one document shows, or a new pane waits for its tab. */
 export function useSplitPanes(
@@ -142,7 +130,6 @@ export function useSplitPanes(
   const layout = useSyncExternalStore(subscribeSplit, splitLayout);
   const request = useSyncExternalStore(subscribeSplit, splitRequest);
   const preview = useSyncExternalStore(subscribeSplit, splitPreview);
-  const zoom = useSyncExternalStore(subscribeSplit, zoomedIsland);
   const resolved = resolveSplit(layout, request, tabIds, active);
   useEffect(() => {
     if (resolved && "blank" in resolved) {
@@ -154,31 +141,9 @@ export function useSplitPanes(
       if (layout || request) closeSplit();
     } else setSplitLayout(resolved);
   }, [resolved, layout, request, addBlankTab]);
-  const filling = zoomedPane(resolved, zoom);
-  // A filled island lasts while its pane is there and the document in use
-  // is in it (or it is the AI's): another one brought forward ends it.
-  useEffect(() => {
-    if (zoom && !filling) fillIsland(null);
-    else if (
-      filling &&
-      islandOf(filling) !== "ai" &&
-      !filling.tabs.includes(active)
-    )
-      fillIsland(null);
-  }, [zoom, filling, active]);
   // A drag's preview stands in for the layout while it lasts.
   if (preview) return preview;
   if (!resolved || "blank" in resolved) return null;
-  if (filling)
-    return {
-      root: {
-        kind: "split",
-        direction: "row",
-        children: [filling],
-        sizes: [1],
-      },
-      focus: filling.id,
-    };
   return panesOf(resolved.root).every((p) => p.front || islandOf(p) === "ai")
     ? resolved
     : null;

@@ -15,7 +15,6 @@ import {
   focusOn,
   moveTab,
   reorderTab,
-  sizePane,
   splitOff,
   type SplitLayout,
 } from "./ops";
@@ -138,31 +137,6 @@ export function splitBeside(tabId: string, id: string, side: Side): void {
 export function splitAtEdge(tabId: string, side: Side): void {
   const next = layout && splitOff(layout, tabId, null, side);
   if (next) setSplitLayout(next);
-}
-
-/** Island `id` at `share` of its row or column (1/3, 1/2, 2/3). */
-export function sizeIsland(id: string, share: number): void {
-  if (layout) setSplitLayout(sizePane(layout, id, share));
-}
-
-let zoomed: string | null = null;
-
-/** The island filling the documents' area, the others put away for now
- *  (useSplitPanes); null for none. */
-export function zoomedIsland(): string | null {
-  return zoomed;
-}
-
-/** Island `id` fills the area, or, filled already, the others come back. */
-export function fillIsland(id: string | null): void {
-  const next = id === zoomed ? null : id;
-  if (next === zoomed) return;
-  zoomed = next;
-  publish();
-}
-
-export function islandFilled(id: string): boolean {
-  return zoomed === id;
 }
 
 /** The AI island shown or not, as Textus AI's button has it; opened, it

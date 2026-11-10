@@ -1,5 +1,3 @@
-import { FillNote } from "./FillNote";
-import { islandSizeMenu } from "./island-size-menu";
 import { Island } from "../../engine/layout/Island";
 import {
   IslandArea,
@@ -36,12 +34,7 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useSplitPanes } from "../../engine/layout/useSplitPanes";
 import { islandOf, panesOf, type Pane } from "../../engine/layout/tree";
-import {
-  focusPane,
-  openBeside,
-  reorderInPane,
-  splitEditor,
-} from "../../engine/layout/store";
+import { focusPane, reorderInPane } from "../../engine/layout/store";
 import { pullTab } from "./split-drop";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../engine/controls/context-menu-items";
@@ -204,29 +197,10 @@ export function DocumentIslands({
           : (id, index) => reorderInPane(pane, id, index)
       }
       previewTab={pane === null || pane === panes[0]?.id ? previewTab : null}
+      // Open beside and Move to New Window are drags (pullTab).
       menuFor={(id) => [
-        {
-          // A phone's column only stacks.
-          label: phone ? t.menuSplitDown : t.openBeside,
-          // The tab in front splits with its neighbour; another one
-          // opens beside it.
-          onSelect: () =>
-            id === activeTabId && !docsSplit
-              ? splitEditor(phone ? "column" : "row")
-              : openBeside(id, activeTabId, phone ? "bottom" : "right"),
-        },
-        ...(canUseWindows
-          ? [
-              {
-                label: t.moveToNewWindow,
-                onSelect: () => onMoveToNewWindow(id),
-              },
-            ]
-          : []),
         ...pathItem(id, byId.get(id)?.path),
         ...readOnlyItem(id),
-        // In a split, the island's size.
-        ...(pane !== null ? [islandSizeMenu(t, pane)] : []),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },
         ...closeManyItems(list, id),
@@ -278,17 +252,12 @@ export function DocumentIslands({
                     key={`island:${pane.id}`}
                     kind="documents"
                     paneId={pane.id}
-                    row={
-                      <>
-                        {tabBar(
-                          listOf(pane),
-                          pane.front ?? "",
-                          pane.id,
-                          place.inner,
-                        )}
-                        <FillNote paneId={pane.id} t={t} />
-                      </>
-                    }
+                    row={tabBar(
+                      listOf(pane),
+                      pane.front ?? "",
+                      pane.id,
+                      place.inner,
+                    )}
                     rowStyle={place.row}
                     inner={place.inner}
                     sheetStyle={body(pane.id)}

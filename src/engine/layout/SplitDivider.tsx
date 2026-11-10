@@ -1,3 +1,4 @@
+import "../controls/resize-handle.css";
 import { useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
@@ -57,7 +58,8 @@ export function SplitDivider({
   return (
     <>
       <div
-        className={`split-divider split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
+        className={`split-divider tx-grip split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
+        data-gripped={dragging || undefined}
         style={style}
         role="separator"
         aria-orientation={row ? "vertical" : "horizontal"}
@@ -86,7 +88,6 @@ export function SplitDivider({
         onPointerUp={end}
         onPointerCancel={end}
         onLostPointerCapture={end}
-        onDoubleClick={() => share(0.5)}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
@@ -105,19 +106,8 @@ export function SplitDivider({
           <ContextMenu
             x={menu.x}
             y={menu.y}
-            items={[
-              {
-                label: t.splitTurn,
-                onSelect: () => arrangeBranch(line.path, "turn"),
-              },
-              {
-                label: t.splitSwap,
-                onSelect: () => arrangeBranch(line.path, { swap: line.index }),
-              },
-              { label: t.splitEven, onSelect: () => share(0.5) },
-              "separator",
-              { label: t.menuCloseSplit, onSelect: closeSplit },
-            ]}
+            // Turning, swapping and sizing are drags: only this is not.
+            items={[{ label: t.menuCloseSplit, onSelect: closeSplit }]}
             onClose={() => setMenu(null)}
           />
         )}

@@ -39,7 +39,8 @@ export function ResizeHandle({
   };
   return (
     <div
-      className={`resize-handle ${className}${dragging ? " resize-handle-active" : ""}`}
+      className={`resize-handle tx-grip ${className}${dragging ? " resize-handle-active" : ""}`}
+      data-gripped={dragging || undefined}
       role="separator"
       aria-orientation="vertical"
       aria-label={label}
