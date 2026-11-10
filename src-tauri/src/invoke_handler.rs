@@ -16,7 +16,8 @@ use commands::attachment::pick_attachment_files;
 #[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 use commands::drafts::{
-    clear_all_drafts, clear_draft_snapshot, save_draft_snapshot, take_draft_snapshots,
+    clear_all_drafts, clear_draft_snapshot, finish_draft_restore, save_draft_snapshot,
+    take_draft_snapshots,
 };
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
@@ -155,6 +156,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         export_save_dialog,
         save_draft_snapshot,
         take_draft_snapshots,
+        finish_draft_restore,
         clear_draft_snapshot,
         clear_all_drafts,
         commands::undo_files::undo_file_save,

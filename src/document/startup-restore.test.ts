@@ -25,7 +25,11 @@ vi.mock("../platform/ipc", () => ({
     takePendingShowHelp: ipc.takePendingShowHelp,
     takePendingWindowPaths: ipc.takePendingWindowPaths,
   },
-  drafts: { takeDraftSnapshots: ipc.takeDraftSnapshots },
+  drafts: {
+    takeDraftSnapshots: ipc.takeDraftSnapshots,
+    saveDraftSnapshot: () => Promise.resolve(),
+    finishDraftRestore: () => Promise.resolve(),
+  },
 }));
 // Desktop unless a test says otherwise.
 const platform = vi.hoisted(() => ({

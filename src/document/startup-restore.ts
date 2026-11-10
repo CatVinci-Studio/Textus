@@ -178,6 +178,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           opts.setTabs((prev) => [...prev, ...restored]);
           opts.setDraftsRestoredCount(restored.length);
         }
+        // Kept again under their new tabs before the taken copies go: a
+        // crash in between brings them back next time.
+        void Promise.all(
+          restored.map((tab) =>
+            drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
+          ),
+        )
+          .then(() => drafts.finishDraftRestore())
+          .catch(() => undefined);
       }
       // A Help doc clicked with no window open: this window was spawned to
       // show it in the blank tab. "welcome" starts the tutorial there.

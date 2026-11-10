@@ -129,10 +129,18 @@ export const commands = {
 	remove_recent: (path: string) => __TAURI_INVOKE<void>("remove_recent", { path }),
 	save_draft_snapshot: (tabId: string, path: string | null, content: string) => __TAURI_INVOKE<null>("save_draft_snapshot", { tabId, path, content }),
 	/**
-	 *  Takes every pending draft, removing its file, so at most one window claims
-	 *  each. Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
+	 *  Takes every pending draft, so at most one window claims each: each is
+	 *  moved aside into `restoring/` (kept until the window says they are
+	 *  back, finish_draft_restore), and one a crash left there last time comes
+	 *  back too. One that can't be read goes to `unreadable/`, never deleted.
+	 *  Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
 	 */
 	take_draft_snapshots: () => __TAURI_INVOKE<DraftSnapshot_Serialize[]>("take_draft_snapshots"),
+	/**
+	 *  The taken drafts are back in their window, each kept again under its
+	 *  new tab: the copies set aside go.
+	 */
+	finish_draft_restore: () => __TAURI_INVOKE<null>("finish_draft_restore"),
 	clear_draft_snapshot: (tabId: string) => __TAURI_INVOKE<null>("clear_draft_snapshot", { tabId }),
 	clear_all_drafts: () => __TAURI_INVOKE<null>("clear_all_drafts"),
 	/**  Keeps `history` for the document at `path` whose text hashes to `hash`. */

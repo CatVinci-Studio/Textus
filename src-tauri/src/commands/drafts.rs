@@ -58,8 +58,11 @@ pub async fn save_draft_snapshot(
 /// tab, and a new window would duplicate it.
 static DRAFTS_CLAIMED: AtomicBool = AtomicBool::new(false);
 
-/// Takes every pending draft, removing its file, so at most one window claims
-/// each. Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
+/// Takes every pending draft, so at most one window claims each: each is
+/// moved aside into `restoring/` (kept until the window says they are
+/// back, finish_draft_restore), and one a crash left there last time comes
+/// back too. One that can't be read goes to `unreadable/`, never deleted.
+/// Only the `main` window's first call gets anything (see DRAFTS_CLAIMED).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn take_draft_snapshots(
@@ -70,26 +73,63 @@ pub async fn take_draft_snapshots(
         return Ok(Vec::new());
     }
     let dir = drafts_dir(&app)?;
-    let mut reader = match fs::read_dir(&dir).await {
-        Ok(r) => r,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(e) => return Err(e.to_string()),
-    };
+    let restoring = dir.join(RESTORING);
     let mut snapshots = Vec::new();
-    while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
-        let path = entry.path();
-        if path.extension().and_then(|e| e.to_str()) != Some("json") {
-            continue;
-        }
-        // A snapshot that fails to parse (cut off by a crash) is dropped.
-        if let Ok(raw) = fs::read_to_string(&path).await {
-            if let Ok(snapshot) = serde_json::from_str::<DraftSnapshot>(&raw) {
-                snapshots.push(snapshot);
+    for (from, aside) in [(restoring.clone(), false), (dir.clone(), true)] {
+        let mut reader = match fs::read_dir(&from).await {
+            Ok(r) => r,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(e) => return Err(e.to_string()),
+        };
+        while let Some(entry) = reader.next_entry().await.map_err(|e| e.to_string())? {
+            let path = entry.path();
+            if path.extension().and_then(|e| e.to_str()) != Some("json") {
+                continue;
+            }
+            let parsed = fs::read_to_string(&path)
+                .await
+                .ok()
+                .and_then(|raw| serde_json::from_str::<DraftSnapshot>(&raw).ok());
+            let Some(name) = path.file_name() else {
+                continue;
+            };
+            match parsed {
+                Some(snapshot) => {
+                    snapshots.push(snapshot);
+                    if aside {
+                        fs::create_dir_all(&restoring)
+                            .await
+                            .map_err(|e| e.to_string())?;
+                        let _ = fs::rename(&path, restoring.join(name)).await;
+                    }
+                }
+                // Cut off by a crash, or another version's: kept apart.
+                None => {
+                    let unreadable = dir.join("unreadable");
+                    fs::create_dir_all(&unreadable)
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    let _ = fs::rename(&path, unreadable.join(name)).await;
+                }
             }
         }
-        let _ = fs::remove_file(&path).await;
     }
     Ok(snapshots)
+}
+
+/// Where taken drafts wait until their window has them again.
+const RESTORING: &str = "restoring";
+
+/// The taken drafts are back in their window, each kept again under its
+/// new tab: the copies set aside go.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn finish_draft_restore(app: AppHandle) -> Result<(), String> {
+    match fs::remove_dir_all(drafts_dir(&app)?.join(RESTORING)).await {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[tauri::command]

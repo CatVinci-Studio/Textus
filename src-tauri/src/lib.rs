@@ -204,6 +204,13 @@ pub fn run() {
         .setup(|app| {
             // Before any window: every window's boot script is made from it.
             settings::init(app.handle());
+            // Where the AI's file changes and revisions are kept, known at once.
+            crate::ai::kept_proposals::know_app_data(app.handle());
+            if let Some(data) = crate::ai::kept_proposals::app_data_dir() {
+                tauri::async_runtime::spawn_blocking(move || {
+                    crate::ai::file_changes::forget_old_records(&data)
+                });
+            }
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));

@@ -52,6 +52,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::commands::recents::remove_recent,
                 crate::commands::drafts::save_draft_snapshot,
                 crate::commands::drafts::take_draft_snapshots,
+                crate::commands::drafts::finish_draft_restore,
                 crate::commands::drafts::clear_draft_snapshot,
                 crate::commands::drafts::clear_all_drafts,
                 crate::commands::undo_files::undo_file_save,

@@ -236,6 +236,8 @@ export const drafts = {
   saveDraftSnapshot: (tabId: string, path: string | null, content: string) =>
     command("save_draft_snapshot", tabId, path, content),
   takeDraftSnapshots: () => command("take_draft_snapshots"),
+  /** The taken drafts are back, kept again under their new tabs. */
+  finishDraftRestore: () => command("finish_draft_restore"),
   clearDraftSnapshot: (tabId: string) => command("clear_draft_snapshot", tabId),
   clearAllDrafts: () => command("clear_all_drafts"),
 };

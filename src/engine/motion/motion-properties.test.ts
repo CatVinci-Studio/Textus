@@ -143,8 +143,6 @@ describe("motion animates only opacity and transform", () => {
         );
       }),
     );
-    expect(Object.keys(EXCEPTIONS).filter((key) => !used.has(key))).toEqual(
-      [],
-    );
+    expect(Object.keys(EXCEPTIONS).filter((key) => !used.has(key))).toEqual([]);
   });
 });

@@ -128,6 +128,11 @@ fn app_data(app: &tauri::AppHandle) -> Result<PathBuf, String> {
 /// the agent's tools look for what waits in a file.
 static KNOWN_APP_DATA: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
 
+/// The app's data folder, once known.
+pub(crate) fn app_data_dir() -> Option<PathBuf> {
+    KNOWN_APP_DATA.get().cloned()
+}
+
 /// Remembers the app's data folder for the agent's tools.
 pub(crate) fn know_app_data(app: &tauri::AppHandle) {
     let _ = app_data(app);
