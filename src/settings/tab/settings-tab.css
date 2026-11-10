@@ -98,8 +98,10 @@
     flex-wrap: wrap;
     row-gap: var(--space-2);
   }
+  /* The name keeps a readable width; its control goes under it only when
+     the two don't fit side by side. */
   .settings-row > :first-child:not(:only-child) {
-    flex: 1 1 100%;
+    flex: 1 1 12em;
   }
   .settings-row > :last-child:not(:first-child) {
     max-width: none;

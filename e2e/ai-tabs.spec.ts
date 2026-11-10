@@ -152,6 +152,12 @@ test("with only Settings open, the AI settles in at a panel's width and can be u
   );
   expect(playing).toBe("motion-settle-in");
   await expect(page.locator(".ai-tab textarea").first()).toBeVisible();
+  // Its composer drawn as a hosted one's: a framed box.
+  const frame = await page
+    .locator(".ai-tab .inline-chat-field")
+    .first()
+    .evaluate((el) => getComputedStyle(el).borderTopWidth);
+  expect(frame).toBe("1px");
   const w = (await sheet.boundingBox())!.width;
   expect(w).toBeLessThan(600);
 });

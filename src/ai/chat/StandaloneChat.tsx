@@ -28,39 +28,41 @@ export function StandaloneChat() {
   const empty = conversation.history.length === 0 && !conversation.busy;
   return (
     <div className="agent-panel-view">
-      {empty && (
-        <div className="agent-panel-empty">
-          <span className="agent-panel-empty-mark" aria-hidden="true">
-            <ModeIcon key={mode} mode={mode} />
-          </span>
-          <p className="agent-panel-empty-text" key={mode}>
-            {t[MODES[mode].empty]}
-          </p>
-        </div>
-      )}
-      <ChatBody
-        document={NO_DOCUMENT}
-        selectedText={null}
-        selectionMarkdown={null}
-        docPath={null}
-        workspaceRoot={settings.agentWorkspaceRoot || null}
-        conversation={conversation}
-        defaultMode={settings.agentDefaultMode}
-        defaultWebSearch={settings.enableWebSearch}
-        labels={chatLabels(t, settings.language)}
-        proposalStatus={() => "expired"}
-        pendingCount={0}
-        onModeChange={setMode}
-        fillHeight
-        pendingBar={false}
-        // No document to propose into: its changes go to files, marked
-        // as Textus AI's are.
-        onProposals={() => {}}
-        onAcceptProposal={() => {}}
-        onRejectProposal={() => {}}
-        onAcceptAll={() => {}}
-        onRejectAll={() => {}}
-      />
+      <div className="agent-panel-body">
+        {empty && (
+          <div className="agent-panel-empty">
+            <span className="agent-panel-empty-mark" aria-hidden="true">
+              <ModeIcon key={mode} mode={mode} />
+            </span>
+            <p className="agent-panel-empty-text" key={mode}>
+              {t[MODES[mode].empty]}
+            </p>
+          </div>
+        )}
+        <ChatBody
+          document={NO_DOCUMENT}
+          selectedText={null}
+          selectionMarkdown={null}
+          docPath={null}
+          workspaceRoot={settings.agentWorkspaceRoot || null}
+          conversation={conversation}
+          defaultMode={settings.agentDefaultMode}
+          defaultWebSearch={settings.enableWebSearch}
+          labels={chatLabels(t, settings.language)}
+          proposalStatus={() => "expired"}
+          pendingCount={0}
+          onModeChange={setMode}
+          fillHeight
+          pendingBar={false}
+          // No document to propose into: its changes go to files, marked
+          // as Textus AI's are.
+          onProposals={() => {}}
+          onAcceptProposal={() => {}}
+          onRejectProposal={() => {}}
+          onAcceptAll={() => {}}
+          onRejectAll={() => {}}
+        />
+      </div>
     </div>
   );
 }
