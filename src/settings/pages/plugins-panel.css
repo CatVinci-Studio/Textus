@@ -8,31 +8,21 @@
   padding: 0 2px;
 }
 
-/* The search, then "update all" (while there are updates) and "⋯". */
-.plugins-panel-top {
+/* A group's heading, and what acts on the group at its end. */
+.plugins-panel-group-row {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-bottom: 4px;
+  gap: 4px;
+}
+
+.plugins-panel-group-row > .plugins-panel-group {
+  flex: 1;
+  min-width: 0;
 }
 
 .plugins-panel-update-all {
-  position: relative;
-}
-
-.plugins-panel-badge {
-  position: absolute;
-  top: -2px;
-  right: -3px;
-  min-width: 1.4em;
-  height: 1.4em;
-  padding: 0 0.3em;
-  border-radius: var(--shape-pill);
-  background: var(--ui-accent);
-  color: var(--ui-on-accent, #fff);
+  flex: none;
   font-size: var(--text-caption);
-  line-height: 1.4em;
-  text-align: center;
 }
 
 .plugins-panel-search {

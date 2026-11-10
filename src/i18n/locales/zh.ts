@@ -1524,6 +1524,7 @@ export default {
   pluginsCatalogLoading: "正在读取列表…",
   pluginsCatalogFailed: "没能读取列表：{reason}",
   pluginsCatalogRetry: "重试",
+  pluginOnLabel: "启用",
   navLookBasic: "基本设置",
   navThemeStore: "主题商城",
   navEditText: "正文",

@@ -1531,6 +1531,7 @@ export default {
   pluginsCatalogLoading: "正在讀取清單…",
   pluginsCatalogFailed: "無法讀取清單：{reason}",
   pluginsCatalogRetry: "重試",
+  pluginOnLabel: "On",
   navLookBasic: "Basics",
   navThemeStore: "Theme store",
   navEditText: "Text",

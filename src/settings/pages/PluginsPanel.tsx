@@ -8,7 +8,6 @@ import { SearchField } from "../../engine/controls/SearchField";
 import {
   ChevronIcon,
   MoreIcon,
-  RefreshIcon,
 } from "../../engine/controls/icons";
 import { IconButton } from "../../engine/controls/IconButton";
 import {
@@ -19,7 +18,6 @@ import { Presence } from "../../engine/motion/usePresence";
 import { requestCreate } from "../../ai/chat/create-request";
 import { isDesktopApp } from "../../platform/capabilities";
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import { setAllPlugins } from "../../plugins/manager";
 import { installPluginFiles } from "./PluginsPage";
 import { emitToThisWindow } from "../../platform/menu-events";
 import {
@@ -53,8 +51,8 @@ const openPage = (id: string) =>
  * The sidebar's Plugins page: one box over what is installed and what the
  * market offers, a row each - icon, name, its line, who made it - and the
  * one thing to do beside it (install, update). A row opens its plugin's
- * page in a tab. Beside the search: "update all" while there are
- * updates, and "⋯" to add one or turn them all off.
+ * page in a tab. Beside the search, "⋯" adds one; "update all" sits on
+ * the installed group's heading while two or more have updates.
  */
 export function PluginsPanel({
   t,
@@ -100,7 +98,7 @@ export function PluginsPanel({
       : [];
   return (
     <div className="plugins-panel">
-      <div className="plugins-panel-top">
+      <div className="tx-pane-row">
         <SearchField
           className="plugins-panel-search"
           value={query}
@@ -108,20 +106,6 @@ export function PluginsPanel({
           aria-label={t.pluginsSearch}
           onChange={(e) => setQuery(e.target.value)}
         />
-        {updates.length > 0 && (
-          <IconButton
-            label={t.pluginsUpdateAll.replace(
-              "{count}",
-              String(updates.length),
-            )}
-            className="tree-tool plugins-panel-update-all"
-            disabled={installing !== null}
-            onClick={() => void updateAll(updates)}
-          >
-            <RefreshIcon />
-            <span className="plugins-panel-badge">{updates.length}</span>
-          </IconButton>
-        )}
         <IconButton
           label={t.pluginsMore}
           className="tree-tool plugins-panel-more"
@@ -140,7 +124,7 @@ export function PluginsPanel({
           <ContextMenu
             x={menu.x}
             y={menu.y}
-            items={moreMenu(t, plugins.allOn, attempt)}
+            items={moreMenu(t, attempt)}
             onClose={() => setMenu(null)}
           />
         )}
@@ -151,6 +135,19 @@ export function PluginsPanel({
           count={installed.length}
           open={!folded.has("installed")}
           onToggle={() => fold("installed")}
+          // Two or more to update: all of them at once (one has its own).
+          action={
+            updates.length > 1 && (
+              <button
+                type="button"
+                className="text-button plugins-panel-update-all"
+                disabled={installing !== null}
+                onClick={() => void updateAll(updates)}
+              >
+                {t.pluginsUpdateAll.replace("{count}", String(updates.length))}
+              </button>
+            )
+          }
         />
         {!folded.has("installed") &&
           installed.map((record) => (
@@ -302,33 +299,38 @@ function GroupHeading({
   count,
   open,
   onToggle,
+  action,
 }: {
   label: string;
   count?: number;
   open: boolean;
   onToggle: () => void;
+  /** What acts on the whole group, at its end. */
+  action?: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      className="tx-list-heading plugins-panel-group"
-      aria-expanded={open}
-      onClick={onToggle}
-    >
-      <ChevronIcon className="plugins-panel-chevron" />
-      {label}
-      {count !== undefined && (
-        <span className="plugins-panel-count">{count}</span>
-      )}
-    </button>
+    <div className="plugins-panel-group-row">
+      <button
+        type="button"
+        className="tx-list-heading plugins-panel-group"
+        aria-expanded={open}
+        onClick={onToggle}
+      >
+        <ChevronIcon className="plugins-panel-chevron" />
+        {label}
+        {count !== undefined && (
+          <span className="plugins-panel-count">{count}</span>
+        )}
+      </button>
+      {action}
+    </div>
   );
 }
 
 /** The list's "⋯": add a plugin - from a file, by making one, or as a
- *  script - and turn every plugin off (or back on) at once. */
+ *  script. */
 function moreMenu(
   t: Strings,
-  allOn: boolean,
   attempt: (run: () => Promise<unknown>) => Promise<unknown>,
 ): ContextMenuEntry[] {
   const fromFile = () =>
@@ -349,10 +351,5 @@ function moreMenu(
           },
         ]
       : []),
-    "separator",
-    {
-      label: allOn ? t.pluginsDisableAll : t.pluginsEnableAll,
-      onSelect: () => void attempt(() => setAllPlugins(!allOn)),
-    },
   ];
 }

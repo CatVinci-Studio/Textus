@@ -1593,6 +1593,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsCatalogLoading: "목록을 불러오는 중…",
   pluginsCatalogFailed: "목록을 불러오지 못했습니다: {reason}",
   pluginsCatalogRetry: "다시 시도",
+  pluginOnLabel: "사용",
   navLookBasic: "기본",
   navThemeStore: "테마 스토어",
   navEditText: "본문",

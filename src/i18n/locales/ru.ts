@@ -1675,6 +1675,7 @@ export default {
   pluginsCatalogLoading: "Загрузка списка…",
   pluginsCatalogFailed: "Не удалось загрузить список: {reason}",
   pluginsCatalogRetry: "Повторить",
+  pluginOnLabel: "Включён",
   navLookBasic: "Основное",
   navThemeStore: "Магазин тем",
   navEditText: "Текст",

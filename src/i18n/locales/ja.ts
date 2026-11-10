@@ -1610,6 +1610,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogLoading: "一覧を読み込み中…",
   pluginsCatalogFailed: "一覧を読み込めませんでした: {reason}",
   pluginsCatalogRetry: "再試行",
+  pluginOnLabel: "有効",
   navLookBasic: "基本",
   navThemeStore: "テーマストア",
   navEditText: "本文",

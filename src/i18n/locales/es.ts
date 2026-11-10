@@ -1681,6 +1681,7 @@ para usar una.
   pluginsCatalogLoading: "Cargando la lista…",
   pluginsCatalogFailed: "No se pudo cargar la lista: {reason}",
   pluginsCatalogRetry: "Reintentar",
+  pluginOnLabel: "Activado",
   navLookBasic: "Básico",
   navThemeStore: "Tienda de temas",
   navEditText: "Texto",

@@ -1703,6 +1703,7 @@ utiliser une.
   pluginsCatalogLoading: "Chargement de la liste…",
   pluginsCatalogFailed: "Impossible de charger la liste : {reason}",
   pluginsCatalogRetry: "Réessayer",
+  pluginOnLabel: "Activé",
   navLookBasic: "Général",
   navThemeStore: "Boutique de thèmes",
   navEditText: "Texte",

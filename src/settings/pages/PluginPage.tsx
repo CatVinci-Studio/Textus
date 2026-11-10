@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SettingsGroup } from "./SettingsGroup";
-import { SettingRow } from "../sections/controls";
+import { SettingRow, LinkRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
 import { PluginData } from "./PluginData";
@@ -24,7 +24,7 @@ import {
 } from "../../plugins/store/requirements";
 import { permissionLabel } from "../../plugins/store/permissions";
 import { canSwitch } from "../../plugins/store/lifecycle";
-import { PluginIcon, PluginReadme } from "./PluginArt";
+import { PluginReadme } from "./PluginArt";
 import { PluginSettingsWebview } from "../../plugins/views/plugin-views";
 import type { PluginManifest } from "../../plugins/store/manifest";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
@@ -129,33 +129,10 @@ export function PluginPage({
           ‹ {t.pluginBackToList}
         </button>
       )}
-      <div className="settings-group-body plugin-page-head">
-        {/* Only the switch turns the plugin on or off: its name, its
-            description and its links are for reading and clicking. */}
-        <div className="settings-row plugin-page-title-row">
-          <PluginIcon
-            id={record.id}
-            manifest={manifest}
-            origin={record.origin}
-            large
-          />
-          <div className="settings-row-text">
-            <h2 className="plugin-page-title">{name}</h2>
-            {manifest?.description && (
-              <div className="settings-row-hint">
-                {pluginText(record, manifest.description)}
-              </div>
-            )}
-            {manifest && (
-              <Byline
-                manifest={manifest}
-                official={record.official}
-                dev={record.origin === "dev"}
-                t={t}
-              />
-            )}
-            {status && <div className="settings-error">{status}</div>}
-          </div>
+      {/* Its name is on its tab: the page starts with what to do. Only
+          the switch turns it on or off. */}
+      <SettingsGroup>
+        <SettingRow label={t.pluginOnLabel}>
           <input
             type="checkbox"
             aria-label={t.pluginEnableLabel.replace("{name}", name)}
@@ -163,19 +140,38 @@ export function PluginPage({
             checked={on}
             onChange={(e) => onEnable(e.target.checked)}
           />
-        </div>
-        <div className="settings-row plugin-guide-row">
-          {manifest && (
-            <button
-              type="button"
-              className="text-button settings-inline-button"
-              onClick={onEditWithAi}
-            >
-              {t.pluginEditWithAi}
-            </button>
-          )}
-        </div>
-      </div>
+        </SettingRow>
+        {status && <div className="settings-error">{status}</div>}
+        {manifest && (
+          <SettingRow
+            label={t.pluginVersionLabel.replace("{version}", manifest.version)}
+            hint={
+              <Byline
+                manifest={manifest}
+                official={record.official}
+                dev={record.origin === "dev"}
+                t={t}
+              />
+            }
+          >
+            {update && (
+              <button
+                type="button"
+                className="text-button settings-inline-button"
+                disabled={installing}
+                onClick={onUpdate}
+              >
+                {installing
+                  ? t.pluginInstalling
+                  : t.pluginUpdate.replace("{version}", update)}
+              </button>
+            )}
+          </SettingRow>
+        )}
+        {manifest && (
+          <LinkRow label={t.pluginEditWithAi} onOpen={onEditWithAi} />
+        )}
+      </SettingsGroup>
       {manifest && manifest.requires.length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>
           {manifest.requires.map((need) => {
@@ -235,18 +231,6 @@ export function PluginPage({
       <PluginErrors id={record.id} t={t} />
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
       <div className="plugin-detail-actions">
-        {update && (
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            disabled={installing}
-            onClick={onUpdate}
-          >
-            {installing
-              ? t.pluginInstalling
-              : t.pluginUpdate.replace("{version}", update)}
-          </button>
-        )}
         {manifest?.repository && (
           <button
             type="button"

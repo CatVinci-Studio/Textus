@@ -1675,6 +1675,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogLoading: "Liste wird geladen …",
   pluginsCatalogFailed: "Die Liste konnte nicht geladen werden: {reason}",
   pluginsCatalogRetry: "Erneut versuchen",
+  pluginOnLabel: "Aktiv",
   navLookBasic: "Grundlagen",
   navThemeStore: "Design-Store",
   navEditText: "Text",

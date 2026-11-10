@@ -1638,6 +1638,7 @@ type /name in a conversation to use one.
   pluginsCatalogLoading: "Loading the list…",
   pluginsCatalogFailed: "Couldn’t load the list: {reason}",
   pluginsCatalogRetry: "Try again",
+  pluginOnLabel: "On",
   navLookBasic: "Basics",
   navThemeStore: "Theme store",
   navEditText: "Text",
