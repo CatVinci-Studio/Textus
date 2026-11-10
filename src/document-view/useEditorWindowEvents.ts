@@ -42,7 +42,7 @@ import {
 } from "../editor/keys/block-toggles";
 import type { FindReplace } from "../editor/find/useFindReplace";
 import type { EditorMenuState } from "./EditorContextMenu";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
 import { claimChatRestore } from "../ai/chat/chat-restore";
 import { useLatest } from "../utils/hooks/useLatest";

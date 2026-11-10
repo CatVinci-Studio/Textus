@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEdits } from "./useEditorProposals";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";

@@ -5,7 +5,7 @@ import type { DocTab } from "../../document/doc-tabs";
  * The window's document in front: the active tab when it is a document,
  * else the document last in front - with an AI conversation, Settings or a
  * plugin's page in front, that document is still the one the AI reads and
- * writes, and its editor still draws the conversation.
+ * writes.
  */
 export function useDocumentInFront(
   tabs: readonly DocTab[],

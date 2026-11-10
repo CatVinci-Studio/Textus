@@ -1,5 +1,6 @@
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import {
+  DRAFT,
   closeConversation,
   liveConversation,
   onLiveConversation,
@@ -14,20 +15,11 @@ import { panesOf, paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import {
-  AI_PRESS_EVENT,
-  DRAFT,
-  aiMount,
-  aiMountsVersion,
-  onAiMounts,
-} from "./ai-tabs";
+import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
 
 const NONE: string[] = [];
 
-/** The conversation an AI tab shows. */
-const conversationOf = (tab: DocTab) =>
-  (tab.view?.state as { conversation?: string } | undefined)?.conversation ??
-  DRAFT;
+const conversationOf = (tab: DocTab) => conversationIn(tab.view?.state);
 
 const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
 
@@ -44,8 +36,8 @@ function aiShare(): number {
  * per conversation open in the folder (a draft's while none is), first in
  * an island of their own on the right, then wherever they are dragged.
  * Closing one closes its conversation; closing the last hides the AI. The
- * tab brought to the front makes its conversation the live one; the live
- * one's tab is where the document in front draws it (the returned element).
+ * tab brought to the front makes its conversation the live one; each tab
+ * draws its own (AiTab).
  * The AI button, pressed while shown, brings that tab to the front - or,
  * already there in an island of AI tabs only, hides the AI.
  */
@@ -59,7 +51,7 @@ export function useAiTabs({
   scope: string | null;
   shown: boolean;
   setShown: (shown: boolean) => void;
-}): HTMLElement | null {
+}): void {
   const open = useSyncExternalStore(onOpenConversations, () =>
     scope ? openConversations(scope) : NONE,
   );
@@ -68,7 +60,6 @@ export function useAiTabs({
     () => (scope ? liveConversation(scope) : null),
   );
   const history = useChatHistory();
-  useSyncExternalStore(onAiMounts, aiMountsVersion);
   const had = useRef<ReadonlySet<string>>(new Set());
   // The window's first tabs: shown as it opens, the document stays in use.
   const opening = useRef(true);
@@ -196,10 +187,4 @@ export function useAiTabs({
     window.addEventListener(AI_PRESS_EVENT, press);
     return () => window.removeEventListener(AI_PRESS_EVENT, press);
   }, [tabs, tabsRef, live, activeTabId, setShown]);
-
-  const host =
-    tabsRef.current.find(
-      (tab) => isAiTab(tab) && conversationOf(tab) === (live ?? DRAFT),
-    ) ?? tabsRef.current.find(isAiTab);
-  return host ? aiMount(host.id) : null;
 }

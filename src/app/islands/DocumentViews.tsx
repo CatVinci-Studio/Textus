@@ -59,8 +59,8 @@ export function DocumentViews({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   t: Strings;
 }) {
-  // The document in front draws the conversation and the margin, even
-  // with an AI tab or a page tab active.
+  // The document in front is the AI's and draws the margin, even with an
+  // AI tab or a page tab active.
   const inFront = useDocumentInFront(tabs, activeTabId);
   return (
     <>

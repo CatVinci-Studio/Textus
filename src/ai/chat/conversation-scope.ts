@@ -7,6 +7,9 @@
  */
 const PREFIX = "textus-ai-live:";
 
+/** The conversation not yet sent: no id of its own until it is. */
+export const DRAFT = "draft";
+
 type Listener = (scope: string, id: string) => void;
 const listeners = new Set<Listener>();
 

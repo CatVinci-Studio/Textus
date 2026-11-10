@@ -126,6 +126,7 @@ export function MilkdownEditor({
         chat={chat}
         review={review}
         filePath={filePath}
+        isActive={isActive}
         phone={phone}
         tourMode={tourMode ?? askedMode}
         settings={settings}

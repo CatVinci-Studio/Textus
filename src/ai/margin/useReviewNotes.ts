@@ -13,7 +13,7 @@ import {
 import type { MarginItem } from "./ReviewMargin";
 import { setMarginAvailable } from "./margin-room";
 import { blockAt, holdBlock } from "../../engine/controls/hold-line";
-import type { AgentConversation } from "../chat/useAgentConversation";
+import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import {
   locateTarget,

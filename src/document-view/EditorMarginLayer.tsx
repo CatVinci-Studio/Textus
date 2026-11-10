@@ -40,7 +40,7 @@ export function EditorMarginLayer({
     isActive &&
     !reviewBarShown &&
     !quickAskVisible &&
-    !(phone && chat.panelContainer) &&
+    !(phone && chat.panelShown) &&
     changes.length > 0
       ? {
           stops: changes.length,
@@ -112,7 +112,7 @@ export function EditorMarginLayer({
         !own &&
         pendingEdits.reviewed.length === 0 &&
         !quickAskVisible &&
-        !(phone && chat.panelContainer) &&
+        !(phone && chat.panelShown) &&
         createPortal(
           <RevisionLearningBar
             learning={chat.learning}

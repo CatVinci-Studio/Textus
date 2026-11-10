@@ -42,7 +42,7 @@ export function useEditorReview({
     isActive,
     phone,
     quickAskVisible: inlineChat.visible,
-    panelContainer: chat.panelContainer,
+    panelShown: chat.panelShown,
     agentPanel,
   });
 

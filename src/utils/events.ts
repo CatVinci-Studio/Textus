@@ -112,8 +112,8 @@ export const FILE_WRITTEN_EVENT = "textus:file-written";
 /** A tab took its file's new text from disk (detail: its path). */
 export const FILE_RELOADED_EVENT = "textus:file-reloaded";
 
-/** What the AI island's row of conversations asks of the editor on
- *  screen, whose conversation it is (detail: "new" or "pop-out"). */
+/** What the AI island's row of conversations asks of the document in
+ *  front, whose edits a new one waits for (detail: "new" or "pop-out"). */
 export const AGENT_TABS_EVENT = "textus:agent-tabs";
 
 /** Asks an editor window to open Textus AI's panel (a floating view's

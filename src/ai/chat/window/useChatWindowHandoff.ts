@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useAgentConversation } from "../useAgentConversation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLiveConversation } from "../conversation/useConversation";
+import { useAttachDocument } from "../conversation/useAttachDocument";
+import type { DocumentPort } from "../conversation/document-port";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import {
   CHAT_ADOPT_HANDOFF,
@@ -27,16 +29,21 @@ export function useChatWindowHandoff(settings: Settings) {
   // documents.
   const editorLabel = useRef<string | null>(null);
 
-  const agentModel = settings.agentModels[settings.aiProvider] || undefined;
-  const conversation = useAgentConversation(
-    context?.docPath ?? null,
-    settings.agentWorkspaceRoot || null,
-    settings.aiProvider,
-    settings.enableWebSearch,
-    agentModel,
-    undefined,
-    statuses,
+  const docPath = context?.docPath ?? null;
+  const workspaceRoot = settings.agentWorkspaceRoot || null;
+  const conversation = useLiveConversation(docPath, workspaceRoot, true);
+  // The editor's document, as far as this window knows it: its proposals
+  // stream in the editor's window.
+  const statusesNow = useLatest(statuses);
+  const port = useMemo(
+    (): DocumentPort => ({
+      docPath,
+      onStreamEvent: () => {},
+      proposalStatuses: () => statusesNow.current,
+    }),
+    [docPath, statusesNow],
   );
+  useAttachDocument(true, port);
   const restored = useRef(false);
 
   // Whether any handoff has been claimed. The ref is what the async mount
@@ -57,8 +64,12 @@ export function useChatWindowHandoff(settings: Settings) {
     editorLabel.current = handoff.editorLabel;
     setContext(handoff.state.context);
     setStatuses(handoff.state.statuses);
+    // At the handed-over document: this render still has the last one's.
     if (handoff.state.turns.length > 0)
-      conversation.restore(handoff.state.conversationId, handoff.state.turns);
+      conversation.restore(handoff.state.conversationId, handoff.state.turns, {
+        docPath: handoff.state.context.docPath,
+        workspaceRoot,
+      });
     return true;
   });
 

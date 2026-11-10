@@ -9,7 +9,7 @@ import { ChatBody } from "../../ai/chat/ChatBody";
 import type { ChatComposerHandle } from "../../ai/chat/ChatComposer";
 import { chatLabels } from "../../ai/chat/chat-labels";
 import { ModeIcon } from "../../ai/chat/mode-icons";
-import { useAgentConversation } from "../../ai/chat/useAgentConversation";
+import { useOwnConversation } from "../../ai/chat/conversation/useConversation";
 import {
   onCreateRequest,
   takeCreateRequest,
@@ -40,13 +40,12 @@ const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
  */
 export function CreateChat({ t }: { t: Strings }) {
   const { settings } = useSettings();
-  const conversation = useAgentConversation(
-    null,
-    null,
-    settings.aiProvider,
-    false,
-    settings.agentModels[settings.aiProvider] || undefined,
-  );
+  const conversation = useOwnConversation(() => ({
+    docPath: null,
+    workspaceRoot: null,
+    settings,
+    port: null,
+  }));
   // What to make, picked with / or a starting point; null for the model's
   // choice. A message sent with one calls its skill.
   const [kind, setKind] = useState<CreateKind | null>(null);
