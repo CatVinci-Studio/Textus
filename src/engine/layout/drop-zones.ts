@@ -23,9 +23,17 @@ export interface DropTarget {
   whole?: boolean;
 }
 
-/** How near an island's edge (a share of its width or height) a tab must
- *  be to open a new island there; inside that, it joins the island. */
-const EDGE = 0.1;
+/** How near an island's side (a share of its width) a tab must be to open
+ *  a new island beside it; its top or bottom (of its height) to stack one,
+ *  a narrower band, as stacking is the rarer wish. Inside that, it joins
+ *  the island. */
+const EDGE: Record<DropZone, number> = {
+  left: 0.1,
+  right: 0.1,
+  top: 0.05,
+  bottom: 0.05,
+  center: 0,
+};
 /** The place already aimed at holds a little past its line, so a pointer
  *  resting on it doesn't flicker between two. */
 const HOLD = 1.25;
@@ -175,7 +183,7 @@ export function dropTargetAt(
   ];
   const kept = held && !held.whole && held.tabId === tabId ? held.zone : null;
   const band = (side: DropZone) =>
-    EDGE * (kept === side ? HOLD : kept === "center" ? 1 / HOLD : 1);
+    EDGE[side] * (kept === side ? HOLD : kept === "center" ? 1 / HOLD : 1);
   const [side, near] = sides
     .map(([side, near]) => [side, near / band(side)] as const)
     .reduce((a, b) => (b[1] < a[1] ? b : a));

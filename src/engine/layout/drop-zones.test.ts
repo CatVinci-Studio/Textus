@@ -16,12 +16,12 @@ const at = (x: number, y: number, held?: ReturnType<typeof dropTargetAt>) =>
   dropTargetAt(x, y, geometry, false, held)?.zone;
 
 describe("dropTargetAt", () => {
-  it("an island's outer tenth opens beside it, the rest joins it", () => {
+  it("an island's outer tenth opens beside it, its top or bottom twentieth stacks one, the rest joins it", () => {
     expect(at(400 + 35, 300)).toBe("left");
     expect(at(400 + 45, 300)).toBe("center");
-    expect(at(400 + 200, 70)).toBe("center");
-    expect(at(400 + 200, 50)).toBe("top");
-    expect(at(400 + 200, 560)).toBe("bottom");
+    expect(at(400 + 200, 40)).toBe("center");
+    expect(at(400 + 200, 25)).toBe("top");
+    expect(at(400 + 200, 580)).toBe("bottom");
   });
 
   it("the place aimed at holds a little past its line", () => {
