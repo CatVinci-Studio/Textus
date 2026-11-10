@@ -89,12 +89,17 @@
   margin-top: calc(var(--island-gap) / 2 - 0.5px);
 }
 
-/* The documents show on their island, not over it. */
+/* Every tab's view shows on its island, not under it: the editor, the
+   source, the start page, a plugin's or a web page. The page's own views
+   are the island's paper. */
+.app-shell[data-tabs="bar"] .main-pane [data-active-tab] > * {
+  position: relative;
+}
+
 .app-shell[data-tabs="bar"]
   .main-pane
   [data-active-tab]
-  > :is(.editor-scroll, .source-view) {
-  position: relative;
+  > :is(.editor-scroll, .source-view, .start-page) {
   background: transparent;
 }
 
