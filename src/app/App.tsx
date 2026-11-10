@@ -251,6 +251,7 @@ function App() {
                 }
               : null
           }
+          zen={zenMode}
           lang={settings.language}
           t={t}
         />

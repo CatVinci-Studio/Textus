@@ -5,7 +5,7 @@
  * sits in it at the rail's icons' size, and the rail's icons open the
  * sidebar, so the bar has no sidebar button; without it, the button comes
  * back. The menu bar spelled out has a row of its own, the islands and the
- * rail under it.
+ * rail under it - but in Zen, with no documents' tabs, it keeps to one.
  */
 
 export type BarPlatform = "macos" | "windows" | "linux" | "ios";
@@ -47,6 +47,9 @@ export function barLayout({
       lead: [...(fullscreen ? [] : (["lights"] as BarItem[])), ...toggle],
       menuInRail: false,
     };
-  if (menuBar) return { rows: 2, lead: ["menu-bar"], menuInRail: false };
+  // In Zen no documents' tabs need a row under the menu bar: it shares
+  // the bar's row with the AI island's.
+  if (menuBar)
+    return { rows: zen ? 1 : 2, lead: ["menu-bar"], menuInRail: false };
   return { rows: 1, lead: ["menu", ...toggle], menuInRail: railShown };
 }

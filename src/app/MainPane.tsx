@@ -135,6 +135,7 @@ export function MainPane({
   formatBar,
   tour,
   aiIsland,
+  zen,
   lang,
   t,
 }: {
@@ -164,6 +165,9 @@ export function MainPane({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   /** Draws the AI island at its place in the grid (AiIsland). */
   aiIsland?: (place: AiIslandPlace) => ReactNode;
+  /** Zen: no tabs, the documents plain paper (the AI island's beside them
+   *  too). */
+  zen: boolean;
   /** The interface's language: how a document's length is counted. */
   lang: Lang;
   t: Strings;
@@ -191,8 +195,9 @@ export function MainPane({
     ),
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
-  // A split's top panes always have their tabs; one pane, when shown.
-  const tabsInBar = docsSplit || showTabBar;
+  // A split's top panes always have their tabs; one pane, when shown;
+  // none in Zen, its documents plain paper.
+  const tabsInBar = !zen && (docsSplit || showTabBar);
   // The one pane's sheet, without its row, reaches up into the bar's.
   const body = (id: string) =>
     tabsInBar || !grid ? grid?.bodies.get(id) : withBarRow(grid, id);

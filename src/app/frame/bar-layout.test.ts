@@ -55,6 +55,8 @@ describe("the window bar's start", () => {
       menuInRail: false,
     });
     expect(at("linux", { menuBar: true, rail: false }).rows).toBe(2);
+    // Zen shows no documents' tabs: one row.
+    expect(at("windows", { menuBar: true, zen: true }).rows).toBe(1);
     expect(at("macos", { menuBar: true }).rows).toBe(1);
   });
 });
