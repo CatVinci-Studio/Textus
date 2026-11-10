@@ -10,8 +10,8 @@
   margin-left: var(--island-gap, 0px);
 }
 
-/* A pane's own tab bar, over its document; one below another pane keeps
-   no room for the window bar. */
+/* A phone's split (no islands): a pane's own tab bar, over its document;
+   one below another pane keeps no room for the window bar. */
 .main-pane-split > .tab-bar {
   min-width: 0;
 }
@@ -20,10 +20,9 @@
   padding-top: 4px;
 }
 
-/* A pane holds its tab's editor as the column did: a column of its own,
-   the editor's scroller filling it. */
+/* A tab's view on its island's sheet, placed by the clock (absolute): a
+   column of its own, the editor's scroller filling it. */
 .split-pane {
-  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;

@@ -1,7 +1,7 @@
 /* padding-top clears the floating window bar, or its drag region would
    swallow clicks meant for the tabs. */
 .tab-bar {
-  /* The offset parent a closed tab's last look is left in. */
+  /* What its strip and its + are laid out in. */
   position: relative;
   display: flex;
   align-items: center;
