@@ -7,9 +7,7 @@ import { emit, openApp } from "./helpers";
 const PAGES = [
   "general",
   "look-basic",
-  "store",
   "edit-text",
-  "edit-md",
   "edit-img",
   "edit-export",
   "providers",
@@ -69,10 +67,10 @@ test("groups fold, and open on the page shown", async ({ page }) => {
   await open(page);
   await emit(page, "menu-open-settings");
   const nav = page.locator(".sidebar");
-  await expect(nav.getByText("Markdown", { exact: true })).toHaveCount(0);
+  await expect(nav.getByText("图片", { exact: true })).toHaveCount(0);
   await nav.getByText("编辑", { exact: true }).click();
-  await nav.getByText("Markdown", { exact: true }).click();
-  await expect(nav.getByText("Markdown", { exact: true })).toBeVisible();
+  await nav.getByText("图片", { exact: true }).click();
+  await expect(nav.getByText("图片", { exact: true })).toBeVisible();
 });
 
 test("Check for Updates opens About; a plugin's settings open its page's tab", async ({
@@ -99,7 +97,7 @@ test("installed themes show as the store's do", async ({ page }) => {
   await page.evaluate(() =>
     window.dispatchEvent(
       new CustomEvent("textus:open-settings-page", {
-        detail: { page: "store" },
+        detail: { page: "look-basic" },
       }),
     ),
   );

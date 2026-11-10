@@ -6,9 +6,12 @@
  * by it. Which one this engine does is read off `inside` itself.
  */
 export function zoomedRectScale(inside: HTMLElement): number {
+  // Its tab's zoom; the window's for an element not in the page.
   const zoom =
-    parseFloat(getComputedStyle(inside).getPropertyValue("--content-zoom")) ||
-    1;
+    parseFloat(
+      getComputedStyle(inside).getPropertyValue("--content-zoom") ||
+        document.documentElement.style.getPropertyValue("--content-zoom"),
+    ) || 1;
   if (Math.abs(zoom - 1) < 0.01) return 1;
   const drawn = inside.getBoundingClientRect().width;
   const laid = inside.offsetWidth;
