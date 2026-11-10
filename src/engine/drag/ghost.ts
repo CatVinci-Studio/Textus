@@ -36,16 +36,20 @@ export function dragGhost(text: string, className: string): DragGhost {
   ghost.textContent = text;
   ghost.setAttribute("aria-hidden", "true");
   document.body.append(ghost);
+  // By `translate`, not `transform`: the lifted look's `scale` would
+  // scale a transform's offset too, and the copy drift off the pointer.
+  const move = (x: number, y: number) => {
+    ghost.style.translate = `${x - ghost.offsetWidth / 2}px ${y - ghost.offsetHeight / 2}px`;
+  };
   return {
-    // By `translate`, not `transform`: the lifted look's `scale` would
-    // scale a transform's offset too, and the copy drift off the pointer.
-    move(x, y) {
-      ghost.style.translate = `${x - ghost.offsetWidth / 2}px ${y - ghost.offsetHeight / 2}px`;
-    },
+    move,
     hide(hidden) {
       ghost.style.visibility = hidden ? "hidden" : "";
     },
     gather(from) {
+      // Where the tab was, before the first move: measured from the
+      // window's corner, the tuck flew in from far off.
+      move(from.left + from.width / 2, from.top + from.height / 2);
       animate(ghost, [toward(ghost, from), { transform: "none" }], {
         duration: "--dur-tuck",
         easing: "--ease-tuck",

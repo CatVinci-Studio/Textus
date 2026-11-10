@@ -193,3 +193,45 @@ test("let go in the middle of the document's island, it joins it; near its edge,
     page.locator(".island-row").first().locator(".tab-pill"),
   ).toHaveText(["新对话"]);
 });
+
+test("a pulled tab's copy gathers from where the tab was, never from far off", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false },
+    animations: true,
+  });
+  await emit(page, "menu-open-settings");
+  const pill = (await tabs(page).last().boundingBox())!;
+  await page.evaluate(() => {
+    const w = window as unknown as { __far: number; __at: [number, number] };
+    w.__far = 0;
+    w.__at = [0, 0];
+    addEventListener("pointermove", (e) => (w.__at = [e.clientX, e.clientY]));
+    const tick = () => {
+      const ghost = document.querySelector(".drag-ghost");
+      if (ghost) {
+        const r = ghost.getBoundingClientRect();
+        const far = Math.hypot(
+          r.left + r.width / 2 - w.__at[0],
+          r.top + r.height / 2 - w.__at[1],
+        );
+        w.__far = Math.max(w.__far, far);
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+  await page.mouse.move(pill.x + pill.width / 2, pill.y + pill.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(pill.x + pill.width / 2, pill.y + 200, { steps: 12 });
+  await page.waitForTimeout(400);
+  const far = await page.evaluate(
+    () => (window as unknown as { __far: number }).__far,
+  );
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  // At most the way from the tab down to the pointer, never more.
+  expect(far).toBeLessThan(220);
+});
