@@ -29,7 +29,7 @@
   pointer-events: none;
 }
 
-/* Its first tab rising from its edge, open (useTabRows): the corner goes
+/* Its first tab rising from its edge, open (row-insets.ts): the corner goes
    square, the island's side running straight up into the tab. */
 [data-island][data-corner-joined] {
   border-top-left-radius: 0;
@@ -134,7 +134,11 @@
   color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame-fill));
 }
 
-:root .island-row > .tab-bar > .tab-strip > .tab-pill:hover:not(.tab-pill-active) {
+:root
+  .island-row
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill:hover:not(.tab-pill-active) {
   background: var(--ui-hover);
 }
 
@@ -209,8 +213,8 @@
 
 /* At its island's edge (data-at-corner) the first tab's side is the
    island's, straight up: no curve there. */
-.island-row
-  > .tab-bar[data-at-corner]
+.island-row[data-at-corner]
+  > .tab-bar
   > .tab-strip
   > .tab-pill-active:first-child::before {
   display: none;
@@ -226,8 +230,16 @@
   box-shadow: none;
 }
 
-:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active::before,
-:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active::after {
+:root
+  .island-row[data-plain]
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill-active::before,
+:root
+  .island-row[data-plain]
+  > .tab-bar
+  > .tab-strip
+  > .tab-pill-active::after {
   display: none;
 }
 

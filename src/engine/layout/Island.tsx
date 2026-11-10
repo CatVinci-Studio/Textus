@@ -4,6 +4,7 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
+import { useRowInsets } from "./row-insets";
 import "./island.css";
 
 interface IslandPlace {
@@ -22,7 +23,7 @@ interface IslandPlace {
 /**
  * An island's row of tabs (island.css): as tall as the window bar, its
  * tabs standing on its sheet's top edge between --tabs-inset-start and
- * --tabs-inset-end (useTabRows). `inner`: under another island, not in the
+ * --tabs-inset-end (row-insets.ts). `inner`: under another island, not in the
  * window bar's row, so it has no bar controls to clear.
  */
 export function IslandRow({
@@ -38,15 +39,25 @@ export function IslandRow({
   style?: CSSProperties;
   children: ReactNode;
 }) {
+  const insets = useRowInsets(frame);
   return (
     <div
       className="island-row"
+      data-at-corner={insets?.atCorner || undefined}
       data-frame={frame && `row:${frame}`}
       data-island-row={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-inner={inner || undefined}
       data-plain={plain || undefined}
-      style={style}
+      style={
+        insets
+          ? ({
+              ...style,
+              "--tabs-inset-start": `${insets.start}px`,
+              "--tabs-inset-end": `${insets.end}px`,
+            } as CSSProperties)
+          : style
+      }
     >
       {children}
     </div>
@@ -74,6 +85,8 @@ export function IslandSheet({
     sheetRef?: Ref<HTMLElement>;
     children?: ReactNode;
   }) {
+  // Its first tab at its edge and open: the corner joins it, square.
+  const joined = useRowInsets(frame)?.joined;
   return (
     <section
       {...rest}
@@ -83,6 +96,7 @@ export function IslandSheet({
       data-island={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-plain={plain || undefined}
+      data-corner-joined={joined || undefined}
       aria-hidden={children ? rest["aria-hidden"] : true}
     >
       {children}

@@ -184,7 +184,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
       );
       return {
         joins:
-          !!bar?.hasAttribute("data-at-corner") &&
+          row.hasAttribute("data-at-corner") &&
           !!first?.classList.contains("tab-pill-active"),
         joined: !!sheet?.hasAttribute("data-corner-joined"),
       };

@@ -4,7 +4,6 @@ import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandNumbers } from "./IslandNumbers";
 import { SplitDivider } from "./SplitDivider";
-import { settleTabRows, useTabRows } from "./useTabRows";
 import type { Strings } from "../../i18n/strings";
 import { rectStyle, type Rect } from "../frame/rect";
 import { leastWidth, solveIslands, type IslandsLayout } from "../frame/solve";
@@ -73,7 +72,6 @@ export function IslandArea({
   const ref = useRef<HTMLElement>(null);
   const probe = useRef<HTMLDivElement>(null);
   const keyed = useRef(new Map<string, string>());
-  useTabRows(ref);
   const panel = usePanelWidth();
   const room = useIslandRoom(ref, probe, `${!!layout} ${rows} ${plain}`);
   const all = layout ? panesOf(layout.root) : [];
@@ -116,7 +114,7 @@ export function IslandArea({
         ]
       : [];
   });
-  useIslandFrame(ref, room, area, solved, placed, settleTabRows);
+  useIslandFrame(ref, room, area, solved, placed);
   // What the docks beside the area leave room for (useNarrowSidebar).
   const need =
     room &&

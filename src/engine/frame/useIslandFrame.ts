@@ -21,7 +21,6 @@ export function useIslandFrame(
   box: Rect | null,
   solved: IslandsLayout | null,
   islands: readonly PlacedIsland[],
-  after: () => void,
 ): void {
   const last = useRef<{ shell: IslandRoom["shell"]; sign: string } | null>(
     null,
@@ -50,6 +49,7 @@ export function useIslandFrame(
     for (const key of attached.current)
       if (!found.has(key)) frameClock.attach(key, null);
     attached.current = found;
+    publish(room, box, solved, islands);
     const sign = [...parts]
       .map(([k, p]) => `${k}:${p.rect.x},${p.rect.y},${p.rect.w},${p.rect.h}`)
       .join(" ");
@@ -60,8 +60,6 @@ export function useIslandFrame(
     const animate = !!was && !resized && !document.querySelector(GRIPPED);
     last.current = { shell: room.shell, sign };
     frameClock.set("islands", parts, room.origin, animate);
-    publish(room, box, solved, islands);
-    after();
   });
 }
 
