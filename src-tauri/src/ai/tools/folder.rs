@@ -170,8 +170,8 @@ pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
     };
     let text = crate::ai::project::read_part(root, path, range).unwrap_or_else(|err| err);
     // What it left waiting there: its revisions, a change that met edits.
-    let file = root.join(path.trim_start_matches(['@', '/']));
-    let file = file.canonicalize().unwrap_or(file);
+    // Named from the folder as the editor names it, as file changes are.
+    let file = root.join(path.trim_start_matches('@'));
     match crate::ai::kept_proposals::waiting_note(&file) {
         Some(note) => format!("{text}\n\n{note}").into(),
         None => text.into(),

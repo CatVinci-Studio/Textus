@@ -201,10 +201,14 @@ async fn ai_agent_message_inner(
         focus_heading.as_deref(),
     );
     crate::ai::project::record_library_use(doc_path, &sent_library);
-    let user_turn = AgentTurn::User {
-        text: request_message(&workspace, mode, &ui_language, &context, &message),
-        images,
+    let text = request_message(&workspace, mode, &ui_language, &context, &message);
+    // Written straight in: said before all else in the request.
+    let text = if request.ask_before_file_changes || mode != AgentMode::Write {
+        text
+    } else {
+        format!("{}\n\n{text}", prompt::CHANGES_WRITTEN_IN)
     };
+    let user_turn = AgentTurn::User { text, images };
     let plain_message = message.clone();
     // generate_image, while an image model is set.
     let image_run = session.pictures(request.image_model.as_ref());

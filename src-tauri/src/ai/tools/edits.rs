@@ -36,7 +36,7 @@ pub(super) fn needs_text(action: &str) -> bool {
 
 /// Changes nothing itself: the document only changes when the user accepts.
 /// Validates the proposal by the frontend's rules, so the model gets feedback
-/// instead of the user getting a dead Apply button.
+/// instead of the user getting a revision that can't land.
 pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     let parsed: serde_json::Value = match serde_json::from_str(arguments) {
         Ok(v) => v,
@@ -198,7 +198,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     } else {
         ""
     };
-    format!("{EDIT_PROPOSED} - the user now sees it with an Apply button.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.{pictures}")
+    format!("{EDIT_PROPOSED} - the user now sees it in the document.{into}{size}{unmade} (Counts here are for you, measured the way measure_text does; the user never sees this note, so don't refer to it.) This is your proposal for that passage in this reply - don't send another one for it, even if it falls short of a target: say so in your reply instead. In your reply, say in a sentence or two what you proposed and why; don't repeat the text or list what you kept.{pictures}")
 }
 
 /// Whether `anchor` is quoted from exactly one place in text proposed and

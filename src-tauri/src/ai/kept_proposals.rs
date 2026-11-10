@@ -161,12 +161,29 @@ pub(crate) fn pending_text(file: &Path) -> Option<String> {
         .map(str::to_string)
 }
 
+/// Whether `file`'s editor holds revisions of the AI's the user hasn't
+/// decided on.
+pub(crate) fn has_undecided(file: &Path) -> bool {
+    stored(file, "")
+        .and_then(|k| k["proposals"].as_array().map(|p| !p.is_empty()))
+        .unwrap_or(false)
+}
+
+/// The most of a file's revised text said after read_file's own excerpt.
+const NOTE_MOST: usize = 40_000;
+
 /// What Textus AI left waiting in `file`, said to the model after the
 /// file's text: its own revisions the user hasn't decided, and changes
 /// that met other edits. None where nothing waits.
 pub(crate) fn waiting_note(file: &Path) -> Option<String> {
     let mut lines = Vec::new();
     if let Some(text) = pending_text(file) {
+        let text: String = if text.chars().count() > NOTE_MOST {
+            let cut: String = text.chars().take(NOTE_MOST).collect();
+            format!("{cut}\n… (cut here; read_file the lines you need)")
+        } else {
+            text
+        };
         lines.push(format!(
             "Your revision to this file waits for the user to accept or reject it; the text above is the file on disk. With your revision it reads:\n{text}"
         ));

@@ -37,7 +37,12 @@ pub struct FileChange {
 
 /// Where one request's file changes go.
 pub struct FileEdits {
+    /// The folder, canonical: what "inside it" is checked against.
     root: PathBuf,
+    /// The folder as the editor names it: the files' paths are written from
+    /// it, so the tree, its tabs and the stores find them (a folder under a
+    /// link keeps its own spelling).
+    named: PathBuf,
     record: PathBuf,
     /// The document open in the editor: its changes are proposals.
     open_document: Option<PathBuf>,
@@ -56,12 +61,14 @@ impl FileEdits {
         open_document: Option<&Path>,
         ask_first: bool,
     ) -> Option<Self> {
-        let root = root?.canonicalize().ok()?;
+        let named = root?.to_path_buf();
+        let root = named.canonicalize().ok()?;
         let record = crate::ai::scratch::conversation_dir(conversation?)
             .ok()?
             .join("changes");
         Some(Self {
             root,
+            named,
             record,
             open_document: open_document.and_then(|p| p.canonicalize().ok()),
             ask_first,
@@ -103,6 +110,14 @@ impl FileEdits {
         let made = (|| {
             let file = self.target(&rel)?;
             let now = self.current(&file)?;
+            // Made in this reply: it waits as a whole to be kept, its later
+            // changes written in with it.
+            let made_now = self
+                .made
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|c| c.file == file.to_string_lossy() && c.before.is_none());
             let after = change(&args, now.as_deref())?;
             if after.len() > MAX_BYTES {
                 return Err("That is too long for one file (2 MB at most).".to_string());
@@ -116,28 +131,45 @@ impl FileEdits {
                 file: file.to_string_lossy().into_owned(),
                 // A file it makes is made even as a revision: it waits, marked
                 // as the AI's, for the user to keep or discard it.
-                applied: !self.ask_first || now.is_none(),
+                applied: !self.ask_first || now.is_none() || made_now,
                 before: now,
                 after,
             };
             if change.applied {
                 write(&file, &change.after)?;
             }
-            save(&self.record, &change)?;
+            // Unrecorded, it couldn't be undone: put the file back.
+            if let Err(problem) = save(&self.record, &change) {
+                if change.applied {
+                    match &change.before {
+                        Some(before) => write(&file, before)?,
+                        None => {
+                            let _ = std::fs::remove_file(&file);
+                        }
+                    }
+                }
+                return Err(problem);
+            }
             self.made.lock().unwrap().push(change.clone());
             Ok(change)
         })();
         match made {
             Ok(change) => {
                 args["change"] = json!(change.id);
-                let text = match (change.applied, change.before.is_none() && self.ask_first) {
-                    (true, true) => format!(
+                let made = change.before.is_none();
+                let text = match (change.applied, made, self.ask_first) {
+                    (true, true, true) => format!(
                         "Created `{}` - marked as yours until the user keeps or discards it.",
                         change.path
                     ),
-                    (true, false) => format!("Changed `{}` - the user can undo it.", change.path),
-                    (false, _) => format!(
-                        "Kept `{}` as a revision in that file for the user to accept or reject: it isn't on disk until they accept it. Later changes to it build on this one, and read_file shows it with your revision.",
+                    (true, true, false) => {
+                        format!("Created `{}` - the user can undo it.", change.path)
+                    }
+                    (true, false, _) => {
+                        format!("Changed `{}` - the user can undo it.", change.path)
+                    }
+                    (false, _, _) => format!(
+                        "Kept `{}` as a revision in that file for the user to accept or reject: it isn't on disk until they accept it. Later changes to it in this reply build on this one; from your next reply on, read_file shows it with your revision.",
                         change.path
                     ),
                 };
@@ -166,17 +198,18 @@ impl FileEdits {
                     return Err("Files and folders whose names start with \".\" (.git, .textus) aren't changed.".to_string())
                 }
                 Component::Normal(name) => inside.push(name),
+                Component::CurDir => {}
                 _ => return Err("Give the path from the folder, without `..`.".to_string()),
             }
         }
         if !matches!(file_kind(relative), Some(FileKind::Text)) {
             return Err(format!("`{rel}` isn't a text file; only text files (Markdown, plain text and the like) are written."));
         }
-        let file = self.root.join(&inside);
+        let file = self.named.join(&inside);
         // A link inside the folder may point out of it.
         let mut existing = file.as_path();
         while !existing.exists() {
-            existing = existing.parent().unwrap_or(&self.root);
+            existing = existing.parent().unwrap_or(&self.named);
         }
         let real = existing.canonicalize().map_err(|e| e.to_string())?;
         if !real.starts_with(&self.root) {
@@ -207,9 +240,19 @@ impl FileEdits {
         {
             return Ok(Some(last.after.clone()));
         }
-        // A change kept as a revision before, not yet placed: this builds on it.
+        // A change kept as a revision before, not yet placed: this builds on
+        // it. Written straight in, a revision left waiting is the user's to
+        // decide, never written along with this.
         if let Some(waiting) = crate::ai::kept_proposals::pending_text(file) {
-            return Ok(Some(waiting));
+            if self.ask_first {
+                return Ok(Some(waiting));
+            }
+            return Err(format!("A revision of yours to `{}` still waits for the user to accept or reject it; tell them what you would change instead of changing it now.", file.display()));
+        }
+        // Its revisions placed in the editor and still undecided: a change
+        // now would land under them.
+        if crate::ai::kept_proposals::has_undecided(file) {
+            return Err("The user is still deciding on your revisions in that file; tell them what else you would change instead of changing it now.".to_string());
         }
         if !file.exists() {
             return Ok(None);
@@ -270,7 +313,9 @@ fn edit_file(args: &serde_json::Value, now: Option<&str>) -> Result<String, Stri
         return Err("That file doesn't exist yet: create it with write_file.".to_string());
     };
     let old = args["old"].as_str().unwrap_or("");
-    let new = args["new"].as_str().unwrap_or("");
+    let Some(new) = args["new"].as_str() else {
+        return Err("`new` is required: what the text becomes (\"\" to delete it).".to_string());
+    };
     if old.is_empty() {
         return Err("`old` is required: the text to replace, verbatim.".to_string());
     }

@@ -248,7 +248,7 @@ impl ChapterRun<'_, '_> {
             .unwrap_or_else(|e| e.into_inner())
             .push((call.call_id.clone(), made));
         format!(
-            "The chapters were changed at once, each by a helper; their edits are proposed in the document, where the user accepts or rejects them:\n{}\nDon't propose these edits again. Tell the user in a sentence or two what was done, and about any chapter not done.",
+            "The chapters were changed at once, each by a helper; their edits are in the document, as revisions or written in as the user set:\n{}\nDon't propose these edits again. Tell the user in a sentence or two what was done, and about any chapter not done.",
             lines.join("\n")
         )
         .into()
