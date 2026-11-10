@@ -519,6 +519,7 @@ utiliser une.
   splitSwap: "Échanger les deux côtés",
   islandSize: "Taille",
   islandFill: "Remplir",
+  islandAway: "{n} de plus rangées",
   islandRestore: "Rétablir la taille",
   splitEven: "Égaliser les deux côtés",
   openBeside: "Ouvrir à côté",

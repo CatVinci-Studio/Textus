@@ -516,6 +516,7 @@ para usar una.
   splitSwap: "Intercambiar los lados",
   islandSize: "Tamaño",
   islandFill: "Llenar",
+  islandAway: "{n} más guardadas",
   islandRestore: "Restaurar tamaño",
   splitEven: "Igualar los dos lados",
   openBeside: "Abrir al lado",

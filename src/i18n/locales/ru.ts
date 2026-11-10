@@ -511,6 +511,7 @@ export default {
   splitSwap: "Поменять стороны местами",
   islandSize: "Размер",
   islandFill: "Развернуть",
+  islandAway: "Скрыто ещё {n}",
   islandRestore: "Вернуть размер",
   splitEven: "Сделать стороны равными",
   openBeside: "Открыть рядом",

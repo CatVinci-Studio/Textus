@@ -1,0 +1,8 @@
+/* A filled island's note (FillNote): at its row's end, level with its
+   tabs, gone once the others are back. */
+.island-fill-note {
+  flex: none;
+  align-self: center;
+  margin-left: var(--space-2);
+  font-size: var(--text-caption);
+}

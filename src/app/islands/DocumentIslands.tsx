@@ -1,3 +1,4 @@
+import { FillNote } from "./FillNote";
 import { islandSizeMenu } from "./island-size-menu";
 import { Island } from "../../engine/layout/Island";
 import {
@@ -277,12 +278,17 @@ export function DocumentIslands({
                     key={`island:${pane.id}`}
                     kind="documents"
                     paneId={pane.id}
-                    row={tabBar(
-                      listOf(pane),
-                      pane.front ?? "",
-                      pane.id,
-                      place.inner,
-                    )}
+                    row={
+                      <>
+                        {tabBar(
+                          listOf(pane),
+                          pane.front ?? "",
+                          pane.id,
+                          place.inner,
+                        )}
+                        <FillNote paneId={pane.id} t={t} />
+                      </>
+                    }
                     rowStyle={place.row}
                     inner={place.inner}
                     sheetStyle={body(pane.id)}

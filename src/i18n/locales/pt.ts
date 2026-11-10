@@ -506,6 +506,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   splitSwap: "Trocar os lados",
   islandSize: "Tamanho",
   islandFill: "Preencher",
+  islandAway: "Mais {n} guardadas",
   islandRestore: "Restaurar tamanho",
   splitEven: "Igualar os dois lados",
   openBeside: "Abrir ao lado",

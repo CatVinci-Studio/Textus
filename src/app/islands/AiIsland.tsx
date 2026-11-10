@@ -1,3 +1,4 @@
+import { FillNote } from "./FillNote";
 import { useLayoutEffect, useRef } from "react";
 import type { IslandPlace } from "../../engine/layout/IslandArea";
 import { AgentIslandTools, AgentTabs } from "./AgentTabs";
@@ -73,6 +74,7 @@ export function AiIsland({
             scope={conversations}
             inner={place.inner}
             island={place.paneId}
+            end={<FillNote paneId={place.paneId} t={t} />}
             t={t}
           />
         ) : undefined

@@ -484,6 +484,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   splitSwap: "左右を入れ替え",
   islandSize: "サイズ",
   islandFill: "最大化",
+  islandAway: "ほかに {n} 個を隠しています",
   islandRestore: "サイズを戻す",
   splitEven: "両側を同じ大きさに",
   openBeside: "横に開く",

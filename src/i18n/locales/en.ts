@@ -498,6 +498,7 @@ type /name in a conversation to use one.
   splitSwap: "Swap the Two Sides",
   islandSize: "Size",
   islandFill: "Fill",
+  islandAway: "{n} more put away",
   islandRestore: "Restore Size",
   splitEven: "Make Both Sides Equal",
   openBeside: "Open to the Side",

@@ -508,6 +508,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   splitSwap: "Seiten tauschen",
   islandSize: "Größe",
   islandFill: "Füllen",
+  islandAway: "{n} weitere ausgeblendet",
   islandRestore: "Größe zurücksetzen",
   splitEven: "Beide Seiten gleich groß",
   openBeside: "Daneben öffnen",

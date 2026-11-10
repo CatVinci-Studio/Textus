@@ -453,6 +453,7 @@ export default {
   splitSwap: "交换两边",
   islandSize: "大小",
   islandFill: "铺满",
+  islandAway: "另有 {n} 个岛已收起",
   islandRestore: "还原大小",
   splitEven: "两边一样大",
   openBeside: "在旁边打开",
