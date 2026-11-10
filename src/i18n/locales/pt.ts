@@ -1432,6 +1432,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialDoneBody:
     "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Memória, no painel de IA.`,
+  closePromptNamed: "“{name}” tem alterações não salvas.",
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",

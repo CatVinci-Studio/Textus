@@ -1444,6 +1444,7 @@ export default {
   tutorialDoneBody:
     "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Онлайн-уроках.",
   tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Память» в панели ИИ.`,
+  closePromptNamed: "В «{name}» есть несохранённые изменения.",
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",

@@ -80,6 +80,11 @@
   /* A mono face every platform has comes before the CJK faces, or Latin would
      be drawn proportional; the CJK faces come before the generic, which a
      Chinese Windows resolves to NSimSun. */
+  /* The name "Textus" where the app shows it as a mark: a serif, as
+     CatVinci's own type (macOS's New York via ui-serif first). */
+  --font-brand:
+    ui-serif, "Iowan Old Style", Georgia, "Times New Roman",
+    var(--font-cjk-serif), serif;
   --font-mono:
     "Fira Code", "JetBrains Mono", "SF Mono", Menlo, "Cascadia Mono", Consolas,
     "DejaVu Sans Mono", "Noto Sans Mono", "Liberation Mono",

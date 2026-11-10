@@ -1447,6 +1447,7 @@ para usar una.
   tutorialDoneBody:
     "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Memoria, en el panel de IA.`,
+  closePromptNamed: "«{name}» tiene cambios sin guardar.",
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",

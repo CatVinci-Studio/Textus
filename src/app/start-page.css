@@ -36,8 +36,9 @@
 
 .start-page-title {
   margin: 0;
+  font-family: var(--font-brand);
   font-size: var(--text-large-title);
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.01em;
 }
 

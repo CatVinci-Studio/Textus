@@ -1314,6 +1314,7 @@ export default {
   tutorialDoneBody:
     "開始寫你自己的吧，表格、公式、主題、審閱這些都在線上教學裡。",
   tutorialDoneMemory: `${AI_NAME} 會慢慢記住你的要求和風格，可以在 AI 面板的「記憶」裡查看。`,
+  closePromptNamed: "「{name}」有未儲存的變更。",
   closePromptMessage: "這份文件有未儲存的變更。",
   closePromptSave: "儲存",
   closePromptDiscard: "不儲存",

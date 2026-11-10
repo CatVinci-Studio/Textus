@@ -1465,6 +1465,7 @@ utiliser une.
   tutorialDoneBody:
     "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Mémoire, dans le panneau IA.`,
+  closePromptNamed: "« {name} » a des modifications non enregistrées.",
   closePromptMessage:
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",

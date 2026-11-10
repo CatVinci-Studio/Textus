@@ -1407,6 +1407,7 @@ type /name in a conversation to use one.
   tutorialDoneBody:
     "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory in the AI panel.`,
+  closePromptNamed: "“{name}” has unsaved changes.",
   closePromptMessage: "This document has unsaved changes.",
   closePromptSave: "Save",
   closePromptDiscard: "Don't Save",

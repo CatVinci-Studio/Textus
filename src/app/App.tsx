@@ -1,3 +1,4 @@
+import { tabTitle } from "../document/doc-tabs";
 import { conversationScope } from "../ai/chat/conversation-scope";
 import { AiIsland } from "./islands/AiIsland";
 import { useAiIsland } from "./islands/useAiIsland";
@@ -297,6 +298,14 @@ function App() {
           onSave={() => void closeSaving()}
           onDiscard={() => void closeDiscarding()}
           onCancel={cancelClose}
+          name={
+            pendingClose?.kind === "tab"
+              ? tabTitle(
+                  tabs.find((tab) => tab.id === pendingClose.tabId) ?? tabs[0],
+                  t,
+                )
+              : null
+          }
           t={t}
         />
 

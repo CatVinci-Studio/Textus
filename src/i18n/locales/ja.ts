@@ -1379,6 +1379,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialDoneBody:
     "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「記憶」で確かめられます。`,
+  closePromptNamed: "「{name}」には保存されていない変更があります。",
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",
   closePromptDiscard: "保存しない",

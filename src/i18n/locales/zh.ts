@@ -1312,6 +1312,7 @@ export default {
   tutorialDoneBody:
     "开始写你自己的吧，表格、公式、主题、审阅这些都在在线教程里。",
   tutorialDoneMemory: `${AI_NAME} 会慢慢记住你的要求和风格，可以在 AI 面板的“记忆”里查看。`,
+  closePromptNamed: "“{name}”有未保存的更改。",
   closePromptMessage: "文档有未保存的更改。",
   closePromptSave: "保存",
   closePromptDiscard: "不保存",

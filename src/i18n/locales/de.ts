@@ -1440,6 +1440,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialDoneBody:
     "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Gedächtnis nach.`,
+  closePromptNamed: "„{name}“ hat nicht gespeicherte Änderungen.",
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",

@@ -197,14 +197,14 @@ function ReportForm({
           )}
       </div>
       <textarea
-        className="report-problem-text"
+        className="tx-input report-problem-text"
         aria-label={t.reportWhat}
         placeholder={t.reportWhat}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
       <input
-        className="report-problem-contact"
+        className="tx-input report-problem-contact"
         aria-label={t.reportContact}
         placeholder={t.reportContact}
         value={contact}

@@ -1366,6 +1366,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialDoneBody:
     "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 온라인 튜토리얼에 있습니다.",
   tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘기억’에서 확인할 수 있습니다.`,
+  closePromptNamed: "“{name}”에 저장하지 않은 변경 사항이 있습니다.",
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",
   closePromptDiscard: "저장 안 함",

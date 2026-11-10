@@ -12,9 +12,12 @@ export function ClosePrompt({
   onSave,
   onDiscard,
   onCancel,
+  name,
   t,
 }: {
   open: boolean;
+  /** The document closing, named in the question; none for a window. */
+  name?: string | null;
   phone: boolean;
   /** useModalDialog's wiring for the desktop dialog. */
   dialogProps: ReturnType<typeof useModalDialog>;
@@ -23,6 +26,9 @@ export function ClosePrompt({
   onCancel: () => void;
   t: Strings;
 }) {
+  const message = name
+    ? t.closePromptNamed.replace("{name}", name)
+    : t.closePromptMessage;
   return (
     <>
       <Presence show={open && phone} exitMs={250}>
@@ -30,7 +36,7 @@ export function ClosePrompt({
           // The sheet runs its onClose before the chosen action; the
           // handlers still hold the pending close they were rendered with.
           <ActionSheet
-            title={t.closePromptMessage}
+            title={message}
             items={[
               {
                 label: t.closePromptSave,
@@ -54,9 +60,9 @@ export function ClosePrompt({
               {...dialogProps}
               role="dialog"
               aria-modal="true"
-              aria-label={t.closePromptMessage}
+              aria-label={message}
             >
-              <p>{t.closePromptMessage}</p>
+              <p>{message}</p>
               <div className="close-prompt-buttons">
                 <button className="close-prompt-discard" onClick={onDiscard}>
                   {t.closePromptDiscard}
