@@ -153,7 +153,7 @@ Every radius, padding, margin, gap and component size MUST be a multiple of 4 px
 
 ### 5.2 Spacing scale and use
 
-`--space-1` 4 · `--space-2` 8 · `--space-3` 12 · `--space-4` 16 · `--space-5` 20 · `--space-6` 24 · `--space-8` 32.
+`--space-1` 4 · `--space-2` 8 · `--space-3` 12 · `--space-4` 16 · `--space-6` 24 · `--space-8` 32. (`--space-5` is kept for plugins and draws 24.) `scripts/check-design-values.mjs` (in `npm run check`) fails on spacing off this scale, a radius not from `--shape-*` and a blurred shadow not from `--shadow-*`; a line that must differ says why with `design: allow`.
 
 | Between                                          | Use   |
 | ------------------------------------------------ | ----- |
@@ -161,7 +161,7 @@ Every radius, padding, margin, gap and component size MUST be a multiple of 4 px
 | Controls in a row; rows of a dense list          | 8     |
 | A panel's edge and its content; a card's padding | 12    |
 | Groups in a panel or page                        | 16–24 |
-| A dialog's edge and its content                  | 20–24 |
+| A dialog's edge and its content                  | 24    |
 
 ### 5.3 Control heights
 
@@ -209,7 +209,7 @@ Every surface that appears in the window is one of these. Each row says where it
 
 Every size in the interface is written once, in **interface pixels** on the 4 px grid, and drawn at the interface's size. Nothing - the app, a plugin, a script - draws a fixed number of screen pixels.
 
-**The scale.** `--chrome-scale` = the desktop's base (1.1, one step up from the first design) × Interface Text Size × the window's step (1 up to 1200 px wide, then a gentle line to at most 1.15, about 2550 px), the same on every desktop platform. Icons take one step more (`--icon-scale`, 1.15). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
+**The scale.** `--chrome-scale` = the desktop's base (1.1, one step up from the first design) × Interface Text Size, the same on every desktop platform. It never follows the window's size: a bigger window shows more, not bigger (as VS Code, Obsidian and Typora). `--window-scale` stays 1 for plugins that read it. Icons take one step more (`--icon-scale`, 1.15). The phone's chrome is 1. Hairlines (1–2 px) never scale; the document's typography doesn't either - it has the document's zoom.
 
 **Where a size is written, and how it scales:**
 
@@ -230,27 +230,23 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 - **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
 - **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.
 
-**Reusing it.** The pieces live together and are the only way in: `src/engine/tokens/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/engine/controls/useChromeScale.ts`, `src/engine/controls/side-panel-width.ts`, `src/engine/tokens/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
+**Reusing it.** The pieces live together and are the only way in: `src/engine/tokens/chrome-scale.ts` (`chromeScale`, `scaledPx`), `src/engine/controls/useChromeScale.ts`, `src/engine/controls/side-panel-width.ts`, `src/engine/tokens/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
 
-### 5.7 The window frame - Planned (Textus 1.3.13)
+### 5.7 Islands and tabs - In force (Textus 1.3.13)
 
-The desktop window is a **frame** around the document. The work is tracked in R2 `software/plans/refactor-1.3.13-2026-11-09.md`; until it lands, 5.4 and 5.6 describe the window.
-
-- **One frame colour.** The title bar, the activity rail and the sidebar are one surface in `--ui-frame` (by default `--ui-subtle`, the sidebar's colour today); the document is `--ui-bg`. Opening or closing the sidebar never changes a colour: the frame only grows or shrinks.
-- **The title bar is one row across the window**: the window's controls, the sidebar button (⌘\\), the title or the tabs, then the status (plugin items, word count, Textus AI). Settings has no button here: it is in the app menu (⌘,).
-- **Frosted by default.** With one document the bar is frosted `--ui-frame`, and the document scrolls under it. The switch moves to Settings › Advanced; a user who turned it off keeps it off.
-- **Tabs live in the title bar.** One document: no tabs, the title centred over the document column. Two or more: the tabs take the bar's row, which turns solid `--ui-frame`; the open tab is the document's own surface (`--ui-bg`), joined to the page below with no line, its lower corners curving into the bar and a soft shadow on its sides. The tabs start at the document column's left edge (after the sidebar button when the sidebar is closed). In a side-by-side split each pane's tabs sit over its own column; in a top-and-bottom split the lower pane keeps a tab row of its own.
-- **Activity rail.** A column of icons on the left: Files, Outline, Search, then plugins' sidebar pages (`sidebarTabs`), in an order the user drags. Clicking the open one closes the sidebar. Nothing sits at its foot. It shows by default; its right-click menu hides it (Settings › Appearance brings it back) and picks which icons it shows. Rail and sidebar open and close together or alone.
-- **The document panel.** In a busy window - the sidebar open, two or more tabs, a split, the AI panel open - the document is a rounded panel (`--shape-m`, a `--ui-border` hairline, 8 of frame around it). Writing alone (one document, sidebar closed) it is flush with the frame. The panel appears and goes by fading its edge, not by animating its margins (10).
-- **Lines.** One horizontal line at most: the bar's lower edge where it meets a solid tab row, broken under the open tab. Frosted, the bar ends without a line. Vertical lines only where the frame meets the document.
-- **Motion stays as it is** (10): the sidebar, rail and AI panel slide on transforms, entering on `--dur-slow` and the spring, leaving on `--dur-base` and `--ease-in`; tabs open, close and slide on `--dur-base`.
-- **Start page.** Two columns, centred as one block: on the left the mark, "Textus", and three text rows - New Document, Open File…, Open Folder… - each with its icon and its shortcut, no frame; on the right Recent Folders and Recent Files, five each, a row's × removing it. The two columns share their top and bottom edges; a narrow window stacks them. With nothing recent only the left column shows.
-- **Format bar.** Built in, under the title bar, off by default (View › Format Bar, and Settings). It holds only what Markdown keeps: heading level, bold, italic, strikethrough, highlight, inline code, link, lists, task, quote, insert. Frosted with the bar for one document, solid with tabs.
-- **"Folder", not "project".** The interface says "Open Folder…" everywhere a folder is opened.
+- **A window holds islands; an island holds tabs.** An island is only layout: a row of tabs over a rounded sheet (`src/engine/layout/`). Tabs are the content - documents, plugin views, web pages, the start page, Textus AI's conversations, Settings' page and a plugin's page - and any island takes any tab. An island its last tab leaves goes away.
+- **Dragging moves tabs.** A tab dragged out of its row makes a new island where it is let go, or joins another island's row; the islands make room as it moves, and the move is made only on release. A whole island moves only with Alt (Option) held. Whatever a drag does has no menu item.
+- **Textus AI.** Its button opens the conversation's tab in an island of its own on the right; pressed again while that tab is in front of an island of AI tabs only, it closes them; in front of an island it shares, it does nothing; anywhere else it brings the tab to the front. Closing a conversation's tab closes the conversation (it stays in History).
+- **Settings.** The rail's gear (and ⌘,) opens the sidebar on Settings' list of pages, grouped and folded, with the one settings search; picking a page replaces the page in the one Settings tab. A page has no title or description line - the list and the tab say which it is.
+- **Plugins.** The rail's puzzle opens the sidebar on the plugin list (search, ⋯); a plugin opens its own page in a tab named "Plugin: name", so it never reads as a tab the plugin opens itself.
+- **Sidebar panels.** Row 1 is the panel's name on the window bar's line; row 2, level with the islands' top edge, is its search - only for a panel that searches - with the panel's actions (⋯) beside it. A sidebar panel holds what is used at a glance; forms and setup go on a page in a tab.
+- **One level of box.** Groups are boxes on the page; nothing inside a group is boxed again, and no group repeats the title above it.
+- **Zen** shows the tab in use alone, nothing else; the split comes back when Zen ends. An × at the top right leaves it.
+- **Documents always open as tabs** (no new-window choice); a tab dragged out of the window opens a window of its own.
 
 ## 6. Shape - In force
 
-- **Containers** are rounded rectangles in three sizes: `--shape-l` 16 (dialogs, sheets, Settings), `--shape-m` 12 (cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields). Nothing is rounder than its level; nothing is under `--shape-xs` 4.
+- **Containers** are rounded rectangles in three sizes: `--shape-m` 12 (islands, dialogs, sheets, cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields), `--shape-xs` 4 (the smallest inner box). `--shape-l` is kept for plugins and draws 12. Nothing is rounder than its level; nothing is under `--shape-xs` 4.
 - **Nesting** is concentric: a box inside another takes the outer radius less the padding between them (r = R − p). Boxes on one level share one radius. A large container keeps its radius and keeps its capsules at least one padding from its edge.
 - **Controls** are capsules (`--shape-pill`): buttons, selects, segmented controls (track and thumb), chips, tags and switches. A button with only an icon is a circle.
 - **Fields** - one-line, search and multi-line, in the app and in plugin pages - are rounded rectangles (`--shape-s`). `scripts/check-field-shapes.mjs` (in `npm run check`) fails on a field drawn as a capsule.
@@ -265,6 +261,8 @@ The desktop window is a **frame** around the document. The work is tracked in R2
 | Flat    | No border, no shadow                                                                      | Regions of the window                         |
 | Grouped | A `--ui-border` hairline, no shadow                                                       | Cards, board columns, tables, Settings groups |
 | Overlay | `--ui-surface` + its one shadow (`--shadow-popover`, `--shadow-dialog`, `--shadow-sheet`) | Menus, popovers, dialogs, sheets              |
+
+- **Three shadows**, by how far a surface stands off what is under it: `--shadow-1` resting on it (a switch's thumb, a selected segment, a margin card, a picture), `--shadow-2` floating over it (menus, popovers, a card under the pointer, the review bar), `--shadow-3` over everything (dialogs, sheets, drawers). The older names (`--shadow-popover`, `--shadow-card`…) stay, each one of the three.
 
 - Shadows MUST appear only on overlays, each paired with its surface.
 - Blur materials are only for overlays with content scrolling underneath, and only on macOS and iOS (`<html data-platform>`). Overlays only darken what is under them; they never blur it. The title bar's opt-in frosted option is the exception: the user may turn it on wherever the engine can blur, because they asked for that surface to be one. _Planned (Textus 1.3.13)_: the title bar is frosted by default wherever the engine can blur (5.7); its switch moves to Settings › Advanced.
@@ -482,6 +480,15 @@ Planned: `api.select()` for a field's dropdown and `data-tooltip` for the app's 
 ```
 
 No `<style>` is needed for any of it. A page's own CSS is for layout only (grid, flex, widths), with token values.
+
+### 15.8 Where a plugin puts things - In force (Textus 1.3.13)
+
+One rule for every plugin:
+
+1. **Content** - a board, a database, a reader - opens in a tab (`layout.openView`).
+2. **Settings and setup** - a server address, keys, options - go on the plugin's own page, which Textus draws from its declared settings and opens in a tab (`layout.openSettings()`).
+3. **Quick or frequent things** - a status, a list to pick from, "sync now" - go in a sidebar panel: simple, at a glance, no forms.
+4. **An AI plugin** (an outside agent) may add a small entry at the window's top right that calls up its conversation.
 
 ## 16. Front-end architecture
 

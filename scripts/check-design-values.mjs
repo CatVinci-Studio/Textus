@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The interface's CSS keeps to the design tokens (docs/dev/design-tokens.md):
+// The interface's CSS keeps to the design tokens (docs/design/design-language.md):
 // radii and shadows come from tokens, spacing stays on the 4-point scale
 // (text sizes: check-text-sizes.mjs). A line that must differ says why
 // with "design: allow" on it or the line above. Exits 1 with a list of what strays.

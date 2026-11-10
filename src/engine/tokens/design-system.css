@@ -4,7 +4,7 @@
 @import "../controls/controls.css";
 
 :root {
-  /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
+  /* Shape (docs/design/design-language.md). Containers are rounded rectangles in
      three sizes (4, 8, 12), bigger and further forward rounder; a box
      inside another takes the outer radius less the padding between them,
      never below --shape-xs. Controls are capsules (--shape-pill), or
