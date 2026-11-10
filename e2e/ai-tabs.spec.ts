@@ -155,3 +155,35 @@ test("with only Settings open, the AI settles in at a panel's width and can be u
   const w = (await sheet.boundingBox())!.width;
   expect(w).toBeLessThan(600);
 });
+
+test("let go in the middle of the document's island, it joins it; near its edge, it opens beside", async ({
+  page,
+}) => {
+  await open(page);
+  await aiButton(page).click();
+  await expect(islands(page)).toHaveCount(2);
+  const drag = async (fx: number) => {
+    const a = (await tabs(page).last().boundingBox())!;
+    const sheet = (await page.locator("section.island").first().boundingBox())!;
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(a.x - 100, a.y + 200, { steps: 10 });
+    await page.mouse.move(
+      sheet.x + sheet.width * fx,
+      sheet.y + sheet.height / 2,
+      {
+        steps: 20,
+      },
+    );
+    await page.waitForTimeout(500);
+    await page.mouse.up();
+  };
+  await drag(0.5);
+  await expect(islands(page)).toHaveCount(0);
+  await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  await drag(0.1);
+  await expect(islands(page)).toHaveCount(2);
+  await expect(
+    page.locator(".island-row").first().locator(".tab-pill"),
+  ).toHaveText(["新对话"]);
+});

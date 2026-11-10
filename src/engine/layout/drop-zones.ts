@@ -26,9 +26,12 @@ export interface DropTarget {
 /** How near an island's edge (a share of its width or height) a tab must
  *  be to open a new island there; inside that, it joins the island. */
 const EDGE = 0.2;
-/** For a tab, which has no middle (it joins an island by its row): how
- *  near the top or bottom (a share of the height) stacks it there; else
- *  the half it is over puts it on that side. */
+/** The place already aimed at holds a little past its line, so a pointer
+ *  resting on it doesn't flicker between two. */
+const HOLD = 1.25;
+/** For a whole island, which can't join another: how near the top or
+ *  bottom (a share of the height) stacks it there; else the half it is
+ *  over puts it on that side. */
 const STACK_EDGE = 0.12;
 /** How near the documents' outer edge puts a drop beside all of them: a
  *  share of that side, kept between two lengths (interface px). */
@@ -130,12 +133,14 @@ export function dropGeometry(): DropGeometry {
   return { panes, single, bars };
 }
 
-/** The zone of the document under (x, y); null off the documents. */
+/** The zone of the document under (x, y); null off the documents. `held`,
+ *  the one aimed at until now, keeps its zone a little past its line. */
 export function dropTargetAt(
   x: number,
   y: number,
   geometry: DropGeometry = dropGeometry(),
   halves = false,
+  held?: DropTarget | null,
 ): DropTarget | null {
   let rect: DOMRect;
   let tabId: string | undefined;
@@ -168,8 +173,13 @@ export function dropTargetAt(
           ["right", 1 - fx],
         ] as [DropZone, number][])),
   ];
-  const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
-  const zone: DropZone = near > EDGE ? "center" : side;
+  const kept = held && !held.whole && held.tabId === tabId ? held.zone : null;
+  const band = (side: DropZone) =>
+    EDGE * (kept === side ? HOLD : kept === "center" ? 1 / HOLD : 1);
+  const [side, near] = sides
+    .map(([side, near]) => [side, near / band(side)] as const)
+    .reduce((a, b) => (b[1] < a[1] ? b : a));
+  const zone: DropZone = near > 1 ? "center" : side;
   return { zone, tabId, rect };
 }
 

@@ -5,6 +5,7 @@ import {
   barDropAt,
   dropGeometry,
   dropTargetAt,
+  type DropTarget,
 } from "../../engine/layout/drop-zones";
 import {
   joined,
@@ -16,7 +17,7 @@ import {
   type SplitLayout,
 } from "../../engine/layout/ops";
 import { paneOf, previewSplit, splitLayout } from "../../engine/layout/store";
-import { paneWithTab } from "../../engine/layout/tree";
+import { paneById, paneWithTab } from "../../engine/layout/tree";
 import { setDragging } from "../../engine/controls/document-drop";
 import { commitDrop, dropLayout } from "./split-drop";
 import { liftIsland, type IslandLift } from "./island-lift";
@@ -33,6 +34,7 @@ interface Place {
   opens: boolean;
   next: SplitLayout | null | undefined;
   shown: SplitLayout | null;
+  target?: DropTarget;
 }
 
 /**
@@ -87,7 +89,9 @@ export function pullTab(
   /** The place under (x, y). */
   const placeAt = (x: number, y: number, alt: boolean): Place | null => {
     const whole = wholeIsland(alt);
-    const target = dropTargetAt(x, y, geometry, true);
+    // A tab: an island's outer fifth opens one beside it, the rest joins
+    // it. A whole island can't join: it goes to the half it is over.
+    const target = dropTargetAt(x, y, geometry, !!whole, current?.target);
     if (whole) {
       if (!target || target.zone === "center") return null;
       const beside = target.whole ? null : paneOf(base, target.tabId);
@@ -115,11 +119,17 @@ export function pullTab(
     if (!target) return null;
     const next = dropLayout(splitLayout(), tabId, target, opts.tabIds);
     if (next === undefined) return null;
+    const pane = target.zone === "center" ? paneOf(base, target.tabId) : null;
+    // Its own island's middle: where it came from.
+    if (pane && pane === paneOf(base, tabId)) return null;
+    const end = pane ? (paneById(base.root, pane)?.tabs.length ?? 0) : 0;
     return {
       key: `${target.whole ? "whole" : target.tabId}:${target.zone}`,
       opens: target.zone !== "center",
       next,
-      shown: next,
+      // Joining: its slot at the row's end, the row's document in front.
+      shown: pane ? joined(base, tabId, pane, end) : next,
+      target,
     };
   };
 
