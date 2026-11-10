@@ -1,4 +1,4 @@
-import { chromeScaleAt } from "../../engine/tokens/chrome-scale";
+import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import {
@@ -38,7 +38,7 @@ export function storedSidebarWidth(): number {
 export function useSidebarWidth(windowWidth: number, beside = 0) {
   // Kept in the interface's size units, shown at its size now.
   const [chosen, setChosen] = useState(storedSidebarWidth);
-  const scale = chromeScaleAt(windowWidth);
+  const scale = chromeScale();
   const width = clampSidePanel(
     chosen * scale,
     windowWidth,
@@ -48,7 +48,7 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
   );
   const setWidth = useCallback(
     (next: number, persist = true) => {
-      const step = chromeScaleAt(windowWidth);
+      const step = chromeScale();
       const base = Math.round(
         clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
       );

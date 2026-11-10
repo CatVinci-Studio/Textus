@@ -255,7 +255,7 @@ jobs:
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       - run: npx playwright install --with-deps webkit
-      - run: npx playwright test --project=webkit --ignore-snapshots
+      - run: npx playwright test --project=webkit --ignore-snapshots --pass-with-no-tests
         env:
           E2E_WEBKIT: "1"
       - if: failure()

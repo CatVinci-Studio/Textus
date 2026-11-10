@@ -17,7 +17,6 @@ import { installScrollReveal } from "./engine/controls/scroll-reveal";
 import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
 import { markEngineQuirks } from "./engine/controls/engine-quirks";
-import { installWindowScale } from "./engine/tokens/window-scale";
 import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";
@@ -39,7 +38,6 @@ void restoreFolderAccess().catch(() => {});
 publishWindowChrome();
 installMobileViewport();
 markEngineQuirks();
-installWindowScale();
 // The plugin API draft, on the window in a development build.
 exposePluginApiForDevelopment();
 

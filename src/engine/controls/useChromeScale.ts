@@ -1,11 +1,11 @@
-import { chromeScaleAt } from "../tokens/chrome-scale";
+import { chromeScale } from "../tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** `--chrome-scale` now, for sizes set from script; follows the window's
  *  width and Interface Text Size. */
 export function useChromeScale(): number {
   return useSyncExternalStore(subscribe, () =>
-    typeof window === "undefined" ? 1 : chromeScaleAt(window.innerWidth),
+    typeof window === "undefined" ? 1 : chromeScale(),
   );
 }
 

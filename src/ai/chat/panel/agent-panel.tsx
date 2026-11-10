@@ -1,4 +1,4 @@
-import { chromeScaleAt } from "../../../engine/tokens/chrome-scale";
+import { chromeScale } from "../../../engine/tokens/chrome-scale";
 import {
   createContext,
   useCallback,
@@ -63,7 +63,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
       : AGENT_PANEL_DEFAULT_WIDTH;
   });
   // Kept in the interface's size units, shown at its size now.
-  const scale = chromeScaleAt(windowWidth);
+  const scale = chromeScale();
   const width = clampSidePanel(
     chosen * scale,
     windowWidth,
@@ -85,7 +85,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   // Remembered once a drag lets go, not on every frame of it.
   const setWidth = useCallback(
     (next: number, persist = true) => {
-      const step = chromeScaleAt(windowWidth);
+      const step = chromeScale();
       const base = Math.round(
         clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
       );

@@ -14,7 +14,7 @@ import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
-import { chromeScaleAt } from "../../engine/tokens/chrome-scale";
+import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
 import { PANEL_FLOOR } from "../../engine/controls/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
@@ -63,7 +63,7 @@ export function useSidePanels(aiOn: boolean) {
   // the document keeps its room after all of them.
   const { settings } = useSettings();
   const rail = railShown(settings)
-    ? Math.round(RAIL_WIDTH * chromeScaleAt(windowWidth))
+    ? Math.round(RAIL_WIDTH * chromeScale())
     : 0;
   // With the AI panel open the sidebar leaves it its narrowest, so a small
   // window still keeps the document its room (the panel's open state, one
@@ -71,7 +71,7 @@ export function useSidePanels(aiOn: boolean) {
   const [agentShown, setAgentShown] = useState(
     () => getUiState("agentPanelOpen") === true,
   );
-  const scale = chromeScaleAt(windowWidth);
+  const scale = chromeScale();
   const sidebarWidth = useSidebarWidth(
     windowWidth,
     rail + (agentShown ? PANEL_FLOOR * scale : 0),

@@ -31,16 +31,15 @@
   --paper-bg: #fff;
   --stage-bg: #000;
   /* The window's chrome (title bar, icon buttons, sidebar tabs) grows with
-     the interface text and, in a straight line, with the window's width
-     (--window-scale). */
+     the interface text only: a bigger window shows more, not bigger.
+     --window-scale stays 1 for plugins' pages that still read it. */
+  --window-scale: 1;
   /* The desktop's base: what 100% Interface Text Size means, one step up
      from the first design (chrome-scale.ts keeps the same number). */
   --chrome-base: 1.1;
   /* Icons one step larger than their design size (icons.tsx iconSize). */
   --icon-scale: 1.15;
-  --chrome-scale: calc(
-    var(--chrome-base) * var(--ui-text-scale, 1) * var(--window-scale, 1)
-  );
+  --chrome-scale: calc(var(--chrome-base) * var(--ui-text-scale, 1));
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
@@ -48,20 +47,20 @@
      grow with --chrome-scale, as every other interface length does
      (vite.chrome-scale.ts); the phone's with --ui-text-scale.
      The document's own text is the theme's, in em. */
-  /* Four sizes, far enough apart to read as chosen - a role names which:
-     small (11) for what is said about something - a count, a hint, a
-     group's title, a key, an empty state; body (13) for everything read
-     or used - lists, rows, menus, fields, buttons, a pane's name; title
-     (17) for a dialog's or a sheet's; large (22) for a welcome. No 12 or
-     14 between them: a size a step off its neighbour looked like a slip. */
-  --text-caption: calc(11px * var(--chrome-scale, 1));
+  /* Four sizes, even and on the grid, far enough apart to read as chosen;
+     a role names which: small (12) for what is said about something - a
+     count, a hint, a group's title, a key, an empty state; body (14) for
+     everything read or used - lists, rows, menus, fields, buttons, a pane's
+     name; title (18) for a dialog's or a sheet's; large (24) for a welcome.
+     Whole pixels after the interface's size (below), so text stays sharp. */
+  --text-caption: calc(12px * var(--chrome-scale, 1));
   --text-footnote: var(--text-caption);
   --text-secondary: var(--text-body);
   --text-control: var(--text-body);
-  --text-body: calc(13px * var(--chrome-scale, 1));
+  --text-body: calc(14px * var(--chrome-scale, 1));
   --text-body-large: var(--text-body);
-  --text-title: calc(17px * var(--chrome-scale, 1));
-  --text-large-title: calc(22px * var(--chrome-scale, 1));
+  --text-title: calc(18px * var(--chrome-scale, 1));
+  --text-large-title: calc(24px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
   --text-sm: var(--text-footnote);
@@ -1001,5 +1000,16 @@ input[type="checkbox"].ui-check:checked {
 @supports (corner-shape: superellipse(1.25)) {
   :where(*) {
     corner-shape: superellipse(1.25);
+  }
+}
+
+/* Text on whole pixels where the engine can round: a size times the
+   interface's step lands between pixels and blurs. */
+@supports (width: round(1px, 1px)) {
+  :root:not([data-window-chrome="mobile"]) {
+    --text-caption: round(calc(12px * var(--chrome-scale, 1)), 1px);
+    --text-body: round(calc(14px * var(--chrome-scale, 1)), 1px);
+    --text-title: round(calc(18px * var(--chrome-scale, 1)), 1px);
+    --text-large-title: round(calc(24px * var(--chrome-scale, 1)), 1px);
   }
 }

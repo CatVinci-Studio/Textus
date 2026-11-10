@@ -1,14 +1,13 @@
-import { windowScale } from "./window-scale";
-
 /** What 100% Interface Text Size draws at on the desktop: one step up from
  *  the first design, every step growing with it (design-system.css
  *  --chrome-base). */
 export const CHROME_BASE = 1.1;
 
 /** The interface's size step now, as `--chrome-scale` has it: Interface
- *  Text Size times the window's width step. A panel's widths are in this
- *  step's units, so it grows with what it holds. */
-export function chromeScaleAt(windowWidth: number): number {
+ *  Text Size on the desktop's base - not the window's size (as VS Code,
+ *  Obsidian and Typora: a bigger window shows more, not bigger). A panel's
+ *  widths are in this step's units, so it grows with what it holds. */
+export function chromeScale(): number {
   // The phone's chrome keeps its size (design-system.css).
   if (
     typeof document !== "undefined" &&
@@ -21,7 +20,7 @@ export function chromeScaleAt(windowWidth: number): number {
       : Number.parseFloat(
           document.documentElement.style.getPropertyValue("--ui-text-scale"),
         ) || 1;
-  return CHROME_BASE * text * windowScale(windowWidth);
+  return CHROME_BASE * text;
 }
 
 /** `n` interface pixels as drawn now: a size set from script grows with
@@ -29,5 +28,5 @@ export function chromeScaleAt(windowWidth: number): number {
 export function scaledPx(n: number): number {
   return typeof window === "undefined"
     ? n
-    : n * chromeScaleAt(window.innerWidth);
+    : n * chromeScale();
 }
