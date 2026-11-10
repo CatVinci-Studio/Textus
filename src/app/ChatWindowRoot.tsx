@@ -8,6 +8,6 @@ import "./islands/agent-tabs.css";
  *  the docked panel's tabs (AgentTabs), its row's insets as the editor's rows'. */
 export function ChatWindowRoot() {
   return (
-    <ChatWindowApp tabs={(props) => <AgentTabs {...props} popOut={false} />} />
+    <ChatWindowApp tabs={(props) => <AgentTabs {...props} />} />
   );
 }

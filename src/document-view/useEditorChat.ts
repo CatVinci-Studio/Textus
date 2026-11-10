@@ -164,14 +164,13 @@ export function useEditorChat({
   }
 
   // The AI island's row of conversations asks the editor on screen.
-  const actions = useRef({ startPanelConversation, popOutPanel });
-  actions.current = { startPanelConversation, popOutPanel };
+  const actions = useRef({ startPanelConversation });
+  actions.current = { startPanelConversation };
   useEffect(() => {
     if (!isActive) return;
     const onAsk = (e: Event) => {
-      const what = (e as CustomEvent<"new" | "pop-out">).detail;
-      if (what === "new") actions.current.startPanelConversation();
-      else actions.current.popOutPanel();
+      if ((e as CustomEvent<"new">).detail === "new")
+        actions.current.startPanelConversation();
     };
     window.addEventListener(AGENT_TABS_EVENT, onAsk);
     return () => window.removeEventListener(AGENT_TABS_EVENT, onAsk);

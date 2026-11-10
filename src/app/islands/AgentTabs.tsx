@@ -1,4 +1,3 @@
-import { pullTab } from "./tab-pull";
 import {
   useEffect,
   useRef,
@@ -46,35 +45,29 @@ function useLive(scope: string | null): string | null {
 }
 
 /** Asks the document in front: its undecided edits come first. */
-const ask = (what: "new" | "pop-out") =>
+const ask = (what: "new") =>
   window.dispatchEvent(new CustomEvent(AGENT_TABS_EVENT, { detail: what }));
 
 /**
  * The AI island's tabs, for its row (IslandRow), in the window bar's row
  * over it: a tab a conversation open in this folder, + a new one, the window's
  * own tab bar for all the rest - order, close, menu; those past its room
- * list behind the row's own button (TabBar). A tab's menu also opens the folder's memory.
- * `scope` is the folder (conversation-scope); a draft never saved has one
- * conversation and no tabs to keep. The detached chat window passes its
- * own new conversation and end buttons, and has nowhere to pop out to.
+ * list behind the row's own button (TabBar). Only the detached chat
+ * window has it now (the window's AI is a tab of its islands): it passes
+ * its own new conversation and end buttons, and keeps no memory view, so a
+ * tab's menu only starts a conversation. `scope` is the folder
+ * (conversation-scope); a draft never saved has one conversation and no
+ * tabs to keep.
  */
 export function AgentTabs({
   scope,
-  onNew = () => ask("new"),
-  popOut = true,
+  onNew,
   end,
-  inner,
-  island,
   t,
 }: {
   scope: string | null;
-  onNew?: () => void;
-  popOut?: boolean;
+  onNew: () => void;
   end?: ReactNode;
-  /** Its row is below another island's, not in the window bar's. */
-  inner?: boolean;
-  /** Its island's pane: a tab pulled out of the row moves the island. */
-  island?: string;
   t: Strings;
 }) {
   const open = useOpen(scope);
@@ -88,14 +81,11 @@ export function AgentTabs({
     panel.setTab("chat");
     if (scope) setLiveConversation(scope, id);
   };
-  const memory = panel.tab === "memory";
-  const islandMenu = agentIslandMenu(t, panel.setTab, onNew);
   return (
     <>
       <TabBar
-        inner={inner}
         tabs={ids.map((id) => ({ id, title: title(id), dirty: false }))}
-        activeTabId={memory ? "" : (live ?? DRAFT)}
+        activeTabId={live ?? DRAFT}
         onActivate={(id) => (id === DRAFT ? panel.setTab("chat") : show(id))}
         onClose={(id) => {
           if (!scope || id === DRAFT) return;
@@ -111,30 +101,8 @@ export function AgentTabs({
         onReorder={(id, index) =>
           scope && reorderConversation(scope, id, index)
         }
-        // Pulled out of the row, a conversation brings its island along:
-        // it docks left, under, wherever it is let go.
-        onPullOut={
-          island
-            ? (id, title) =>
-                pullTab(id, title, { tabIds: [], activate: () => {}, island })
-            : undefined
-        }
         previewTab={null}
-        menuFor={(id) => [
-          ...islandMenu,
-          ...(popOut
-            ? [
-                "separator" as const,
-                {
-                  label: t.agentPanelPopOut,
-                  onSelect: () => {
-                    if (id !== DRAFT) show(id);
-                    ask("pop-out");
-                  },
-                },
-              ]
-            : []),
-        ]}
+        menuFor={() => [{ label: t.chatNewConversation, onSelect: onNew }]}
         labels={{
           tabs: t.agentPanelTitle,
           close: t.menuCloseTab,
