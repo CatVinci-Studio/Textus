@@ -6,6 +6,7 @@ import { AppMenuButton } from "./WindowControls";
 import { MenuBar } from "../menu/MenuBar";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { TextusAiButton } from "../../ai/TextusAiSwitch";
+import { AgentButtons } from "../../ai/agents/AgentButtons";
 import { canUseWindows, isIOSApp } from "../../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../../engine/controls/icons";
 import { useBarLayout } from "../../engine/layout/useBarLayout";
@@ -197,13 +198,16 @@ export function WindowBar({
               }}
             />
           ) : (
-            <TextusAiButton
-              className="window-bar-toggle"
-              panelOpen={agentOpen}
-              showPanel={showAgentToggle}
-              shortcut={agentShortcut}
-              onTogglePanel={onToggleAgent}
-            />
+            <>
+              <AgentButtons aiOpen={agentOpen} onToggleAi={onToggleAgent} />
+              <TextusAiButton
+                className="window-bar-toggle"
+                panelOpen={agentOpen}
+                showPanel={showAgentToggle}
+                shortcut={agentShortcut}
+                onTogglePanel={onToggleAgent}
+              />
+            </>
           )}
         </div>
         <WindowCaptionButtons />

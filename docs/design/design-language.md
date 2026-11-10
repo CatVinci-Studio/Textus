@@ -488,7 +488,7 @@ One rule for every plugin:
 1. **Content** - a board, a database, a reader - opens in a tab (`layout.openView`).
 2. **Settings and setup** - a server address, keys, options - go on the plugin's own page, which Textus draws from its declared settings and opens in a tab (`layout.openSettings()`).
 3. **Quick or frequent things** - a status, a list to pick from, "sync now" - go in a sidebar panel: simple, at a glance, no forms.
-4. **An AI plugin** (an outside agent) may add a small entry at the window's top right that calls up its conversation.
+4. **An AI plugin** (an outside agent, `contributes.agents`) gets a button at the window bar's end, beside Textus AI's, drawn from the plugin's icon: a press opens the AI with that agent; pressed again while it is in use, it acts as the AI button does. The plugin draws nothing there itself.
 
 ## 16. Front-end architecture
 

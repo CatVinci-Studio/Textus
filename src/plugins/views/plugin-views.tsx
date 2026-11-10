@@ -1,4 +1,5 @@
 import { Suspense, useSyncExternalStore, type ComponentType } from "react";
+import { PluginTabIcon } from "./plugin-tab-icon";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import {
   contextItemsVersion,
@@ -36,9 +37,6 @@ export const PluginWebviewPanel = waiting(
 );
 export const PluginSettingsWebview = waiting(
   lazyComponent(webviews, (m) => m.PluginSettingsWebview),
-);
-export const PluginTabIcon = waiting(
-  lazyComponent(webviews, (m) => m.PluginTabIcon),
 );
 export const PluginCodeBlock = waiting(
   lazyComponent(webviews, (m) => m.PluginCodeBlock),
@@ -82,3 +80,5 @@ export function ViewTitleActions({ view }: { view: string }) {
     </div>
   );
 }
+
+export { PluginTabIcon };

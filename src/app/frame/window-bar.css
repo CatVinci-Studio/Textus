@@ -300,6 +300,7 @@
    reads as a different kind of thing from its neighbours. The sidebar's has
    a class of its own, so the AI button is the one .window-bar-toggle. */
 .window-bar-toggle,
+.window-bar-agent,
 .window-bar-sidebar-toggle,
 .window-menu-button {
   pointer-events: auto;
@@ -319,6 +320,7 @@
 }
 
 .window-bar-toggle:hover,
+.window-bar-agent:hover,
 .window-bar-sidebar-toggle:hover,
 .window-menu-button:hover,
 .window-bar-toggle-on {
@@ -328,6 +330,7 @@
 
 /* Hover arrives in 80ms; turning on or off changes in 120ms. */
 .window-bar-toggle,
+.window-bar-agent,
 .window-bar-sidebar-toggle,
 .window-menu-button {
   transition:
@@ -396,4 +399,10 @@
   flex: 1;
   overflow-y: auto;
   background: var(--doc-bg);
+}
+
+/* An outside agent's button without an icon of its own: its first letter. */
+.window-bar-agent-letter {
+  font-size: var(--text-caption);
+  font-weight: 600;
 }
