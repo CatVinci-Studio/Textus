@@ -2,6 +2,7 @@ import { linkToFile } from "./islands/link-to-file";
 import { useEffect, useRef } from "react";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
+import { useIslandNumbers } from "./islands/useIslandNumbers";
 import { useNavHistory } from "./useNavHistory";
 import { useExternalChangeReload } from "../document/useExternalChangeReload";
 import { tabReadOnly } from "../document/read-only";
@@ -68,6 +69,7 @@ export function useWindowWiring({
     toggleTextusAi: textusAi.toggle,
   });
 
+  useIslandNumbers(setActiveTabId);
   useNavHistory({ tabsRef, activeTabId, setActiveTabId });
 
   useTutorialTabRecovery(tutorial, tabState, docs.claimPracticeTab);
@@ -162,6 +164,7 @@ export function useWindowWiring({
 
   useMenuBridge({
     activeTabId,
+    shortcuts: settings.shortcuts,
     liveTabs,
     t,
     pdfPageNumbers: settings.pdfPageNumbers,

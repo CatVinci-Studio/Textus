@@ -25,6 +25,9 @@ export interface FramePart {
   /** A view its own stylesheet places (the sidebar, sized by its edge's
    *  drag): only clipped. */
   own?: boolean;
+  /** A view standing just above the box it follows (an island's row of
+   *  tabs over its sheet), clipped to the box's sides. */
+  above?: boolean;
   /** New to the window: grows in from this edge of its place. */
   grows?: Edge;
 }
@@ -32,7 +35,9 @@ export interface FramePart {
 interface Run {
   from: Rect;
   to: Rect;
-  start: number;
+  /** Set on the first frame drawn: a change whose first frame comes late
+   *  (a tab's content loading) still starts from its beginning. */
+  start: number | null;
 }
 
 interface Group {
@@ -72,17 +77,16 @@ export class FrameClock {
         this.runs.delete(key);
       }
     const moving = animate && motionAllowed();
-    const now = performance.now();
     for (const [key, part] of parts) {
       const from = this.shown.get(key) ?? (moving ? grown(part) : part.rect);
       if (moving && !sameRect(from, part.rect))
-        this.runs.set(key, { from, to: part.rect, start: now });
+        this.runs.set(key, { from, to: part.rect, start: null });
       else {
         this.runs.delete(key);
         this.shown.set(key, part.rect);
       }
     }
-    this.paint(now);
+    this.paint(null);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
   }
@@ -107,10 +111,15 @@ export class FrameClock {
     if (this.runs.size) this.frame = requestAnimationFrame((t) => this.tick(t));
   }
 
-  private paint(now: number) {
+  /** `now` null: the changes' first frame, drawn before the page paints. */
+  private paint(now: number | null) {
     const span = duration(SETTLE);
     for (const [key, run] of this.runs) {
-      const t = Math.min(1, (now - run.start) / span);
+      if (now !== null) run.start ??= now;
+      const t =
+        now === null || run.start === null
+          ? 0
+          : Math.min(1, (now - run.start) / span);
       this.shown.set(
         key,
         t >= 1 ? run.to : between(run.from, run.to, this.ease(t)),
@@ -145,7 +154,10 @@ export class FrameClock {
       s.width = `${end.w}px`;
       s.height = `${end.h}px`;
     }
-    const box = this.shown.get(part.follow) ?? end;
+    const on = this.shown.get(part.follow) ?? end;
+    const box = part.above
+      ? { x: on.x, y: on.y - end.h, w: on.w, h: end.h }
+      : on;
     const settled = sameRect(box, end);
     const dx = part.still ? 0 : box.x - end.x;
     const dy = part.still ? 0 : box.y - end.y;
@@ -169,11 +181,11 @@ function grown(part: FramePart): Rect {
     case "right":
       return { x: r.x + r.w, y: r.y, w: 0, h: r.h };
     case "left":
-      return { ...r, w: 0 };
+      return { x: r.x, y: r.y, w: 0, h: r.h };
     case "bottom":
       return { x: r.x, y: r.y + r.h, w: r.w, h: 0 };
     case "top":
-      return { ...r, h: 0 };
+      return { x: r.x, y: r.y, w: r.w, h: 0 };
     default:
       return r;
   }

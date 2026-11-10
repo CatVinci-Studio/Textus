@@ -32,12 +32,16 @@ import type { Strings } from "../../i18n/strings";
 import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
 import { closeSplit, splitEditor } from "../../engine/layout/store";
+import { pickIsland } from "../../engine/layout/island-numbers";
+import { islandKeyOf } from "./island-key";
 import { openCommandPalette } from "../command-palette-entry";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/report-open";
 
 export interface MenuBridgeHandlers {
   activeTabId: string;
+  /** The heading keys: with the islands' numbers up they go to an island. */
+  shortcuts: Shortcuts;
   /** Read inside handlers, with pending edits flushed so an export carries
    *  what is on screen. */
   liveTabs: () => DocTab[];
@@ -254,6 +258,10 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id.
       listenToThisWindow<string>("menu-insert-block", (event) => {
+        // A Mac's menu takes ⌘1–⌘6 before the page: with the islands'
+        // numbers up, the heading it sends is that island's key.
+        const island = islandKeyOf(event.payload, h().shortcuts);
+        if (island && pickIsland(island)) return;
         window.dispatchEvent(
           new CustomEvent(INSERT_BLOCK_EVENT, { detail: event.payload }),
         );

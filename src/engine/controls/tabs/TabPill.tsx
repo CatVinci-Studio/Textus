@@ -50,6 +50,8 @@ function barAt(x: number, y: number, own: Element | null): Element | null {
 
 export function TabPill({
   tab,
+  width,
+  cut,
   tabIds,
   isActive,
   labels,
@@ -63,6 +65,10 @@ export function TabPill({
   onUnlock,
 }: {
   tab: TabInfo;
+  /** Its width in the row and whether its name is cut (tab-widths.ts);
+   *  none until the row is measured: as wide as its content then. */
+  width?: number;
+  cut?: boolean;
   tabIds: string[];
   isActive: boolean;
   labels: { close: string; unsaved: string; readOnly?: string };
@@ -249,6 +255,7 @@ export function TabPill({
       ref={elRef}
       data-flip-id={tab.id}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
+      style={width === undefined ? undefined : { width }}
       data-marked={tab.marked || undefined}
       onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
       role="tab"
@@ -309,7 +316,9 @@ export function TabPill({
           </span>
         </Tooltip>
       )}
-      <span className="tab-pill-title">{title}</span>
+      <span className="tab-pill-title" data-cut={cut || undefined}>
+        {title}
+      </span>
       {/* Not a button: a tab holds no control of its own. */}
       <Tooltip text={labels.close} description={null}>
         <span

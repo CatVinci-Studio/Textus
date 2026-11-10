@@ -2,6 +2,7 @@ import { useRef, type CSSProperties, type ReactNode } from "react";
 import { nodeAt, panesOf, type Pane } from "./tree";
 import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
+import { IslandNumbers } from "./IslandNumbers";
 import { SplitDivider } from "./SplitDivider";
 import { settleTabRows, useTabRows } from "./useTabRows";
 import type { Strings } from "../../i18n/strings";
@@ -113,6 +114,7 @@ export function IslandArea({
     >
       <div ref={probe} className="frame-probe" aria-hidden="true" />
       {content(places)}
+      <IslandNumbers />
       {layout &&
         solved?.dividers.map(({ line, rect, before, after }) => (
           <SplitDivider

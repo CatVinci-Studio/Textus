@@ -29,9 +29,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Sized by content up to max-width; when tabs stop fitting they shrink
-     together to min-width, as Chrome's do, then the bar scrolls and lists
-     them all (TabList). */
+  /* Its width is set from tab-widths.ts, between min-width and max-width;
+     until the row is measured it is sized by its content. */
   flex-shrink: 1;
   min-width: calc(56px * var(--chrome-scale));
   max-width: 200px;

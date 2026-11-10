@@ -232,3 +232,41 @@
 :root .island-row[data-plain] > .tab-bar > .tab-pill-active::after {
   display: none;
 }
+
+/* ---- Numbers ------------------------------------------------------- */
+
+/* While ⌘ is held (island-numbers.ts): each island's number at its
+   middle, over the window, taking no click. */
+.island-numbers {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-floating);
+  pointer-events: none;
+}
+
+.island-number {
+  --enter-scale: var(--scale-enter);
+  --exit-scale: var(--scale-enter);
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  translate: -50% -50%;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-surface);
+  box-shadow: var(--shadow-popover);
+  color: var(--ui-text);
+  /* The app's face, not an imported theme's body font. */
+  font-family: var(--font-sans);
+  font-size: var(--text-body-large);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  animation: motion-enter var(--dur-fast) var(--ease-out);
+}
+
+.island-numbers[data-state="closing"] > .island-number {
+  animation: motion-exit var(--dur-instant) var(--ease-in) forwards;
+}

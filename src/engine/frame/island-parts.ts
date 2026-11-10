@@ -47,8 +47,14 @@ export function islandParts(
   for (const { key, rects, front } of islands) {
     const grows = edgeOf(rects.whole, area);
     const sheet = sheetKey(key);
+    // Its row at its full width throughout, standing on the sheet as the
+    // sheet moves: its tabs are never laid out again mid-slide.
     if (rects.row)
-      parts.set(rowKey(key), { rect: shift(rects.row, origin), grows });
+      parts.set(rowKey(key), {
+        rect: shift(rects.row, origin),
+        follow: sheet,
+        above: true,
+      });
     parts.set(sheet, { rect: shift(rects.sheet, origin), grows });
     const onSheet = { rect: shift(rects.sheet, origin), follow: sheet };
     if (front) parts.set(viewKey(front), onSheet);

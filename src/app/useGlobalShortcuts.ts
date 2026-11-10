@@ -25,6 +25,7 @@ import {
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
 import { closeSplit, splitEditor, splitLayout } from "../engine/layout/store";
+import { pickIsland } from "../engine/layout/island-numbers";
 import { openCommandPalette } from "./command-palette-entry";
 import { isImeKeydown } from "../utils/ime";
 
@@ -121,6 +122,14 @@ export function useGlobalShortcuts(opts: {
       // in text fields, or the macOS menu bar would change the document behind.
       if (target?.closest('[aria-modal="true"]')) {
         if (heading) e.preventDefault();
+        return;
+      }
+      // With the islands' numbers up, ⌘1–⌘6 goes to an island, from a
+      // text field too (the AI's): never a heading.
+      const island = /^mod\+([1-6])$/.exec(combo);
+      if (island && pickIsland(Number(island[1]))) {
+        e.preventDefault();
+        e.stopPropagation();
         return;
       }
       if (heading && target?.closest("input, textarea")) {
