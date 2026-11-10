@@ -164,9 +164,6 @@ button.plugin-card-open:hover .plugin-card-name {
   font-size: var(--text-body-large);
   font-weight: 600;
 }
-.plugin-install.is-installed {
-  color: var(--ui-muted);
-}
 /* A plugin's button, and the menu beside it when it has one. */
 .plugin-action {
   position: relative;

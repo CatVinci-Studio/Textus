@@ -145,10 +145,10 @@ export function AvailableSkills({
                 </span>
               )}
             </div>
-            <div className="settings-row-control">
+            <div className="settings-row-control plugin-action">
               <button
                 type="button"
-                className="plugin-install"
+                className="text-button plugin-action-main"
                 disabled={busy === skill.name}
                 onClick={() => void install(skill)}
               >

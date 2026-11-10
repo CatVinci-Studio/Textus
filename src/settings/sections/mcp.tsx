@@ -183,7 +183,7 @@ function ServerCard({
         <span className="mcp-actions">
           <button
             type="button"
-            className="settings-skill-action"
+            className="text-button settings-inline-button"
             onClick={onEdit}
           >
             {t.mcpEdit}
@@ -191,7 +191,7 @@ function ServerCard({
           {server.enabled && (
             <button
               type="button"
-              className="settings-skill-action"
+              className="text-button settings-inline-button"
               onClick={onRestart}
             >
               {t.mcpRestart}
@@ -199,7 +199,7 @@ function ServerCard({
           )}
           <button
             type="button"
-            className="settings-skill-action"
+            className="text-button settings-inline-button"
             onClick={onRemove}
           >
             {t.mcpRemove}
@@ -411,7 +411,7 @@ function McpForm({
           </button>
           <button
             type="button"
-            className="plugin-install"
+            className="text-button settings-inline-button"
             disabled={!ready}
             onClick={() => onSave(built())}
           >

@@ -856,35 +856,9 @@ button.settings-inline-button {
   gap: 4px;
 }
 
-/* Customize… / Open / Reset: words, not boxed buttons, so the actions don't
-   outweigh the skills. */
-button.settings-skill-action {
-  width: auto;
-  margin: 0;
-  padding: 4px 4px;
-  border: none;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: transparent;
-  color: var(--ui-accent-text);
-  font: inherit;
-  font-size: var(--text-control);
-  white-space: nowrap;
-  cursor: pointer;
-}
-
 .settings-skill-actions {
   display: flex;
-  gap: 2px;
-}
-
-button.settings-skill-action:hover {
-  background: color-mix(in srgb, var(--ui-accent) 10%, transparent);
-}
-
-button.settings-skill-action:focus-visible {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: 1px;
+  gap: var(--space-1);
 }
 
 .settings-builtin-skill input[type="checkbox"] {
