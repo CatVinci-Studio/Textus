@@ -881,7 +881,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentPersonalizationGroupLabel: "Instruções de escrita e habilidades",
   agentAdvancedGroupLabel: "Avançado",
   writingModelLabel: "Modelo auxiliar",
-  writingFeaturesLabel: "Assistência de escrita",
+  writingFeaturesLabel: "Continuar e revisar",
   modelDefault: "padrão",
   aiAccountLabel: "Conexão",
   customBaseUrlLabel: "URL base",
@@ -1616,8 +1616,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   extensionsIntroThemes: "A aparência dos documentos, sobre o tema escolhido.",
   extensionsIntroSkills: `Jeitos de fazer bem um tipo de tarefa, para o ${AI_NAME} e o menu /.`,
   extensionsIntroMcp: `Servidores que dão mais ferramentas ao ${AI_NAME}.`,
-  extensionsThemesNone:
-    "Nenhum tema adicionado ainda. Os incluídos são escolhidos em {page}.",
+  extensionsThemesNone: "Nenhum tema adicionado ainda.",
   extensionsThemesInstalled: "Temas instalados",
   extensionsAvailable: "Disponíveis",
   extensionsFold: "Ocultar",
@@ -1808,8 +1807,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginCardsRestore: "Mostrar de novo",
   pluginScreenshot: "{name} em uso",
   pluginsMine: "Feitos por você",
-  pluginsInstalledNone:
-    "Nenhum plugin instalado ainda. Escolha um em {section}, mais abaixo.",
+  pluginsInstalledNone: "Nenhum plugin instalado ainda.",
   skillsInstalledNone:
     "Nenhuma habilidade adicionada ainda. Escolha uma em {section}, mais abaixo, ou crie a sua.",
   pluginStatusBroken: "Não foi possível ler: {reason}",

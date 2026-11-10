@@ -98,16 +98,12 @@ function ProviderDetail({
   connected?: ConnectedState;
   onStatusChange: () => void;
 }) {
+  // Its state is said on its sign-in row; one with nothing to sign in to
+  // says it here instead.
   const status =
     entry.keyOptional && entry.id !== "custom"
       ? t.providerNoKeyRequired
-      : isSetUp(connected)
-        ? entry.auth.includes("oauth")
-          ? t.accountConnectedAs
-          : t.apiKeyConfigured
-        : entry.auth.includes("oauth")
-          ? t.accountNotConnected
-          : t.providerNotConfigured;
+      : undefined;
   return (
     <div className="providers-detail">
       <SettingsGroup title={status}>

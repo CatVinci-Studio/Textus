@@ -903,7 +903,7 @@ utiliser une.
   agentPersonalizationGroupLabel: "Instructions d'écriture et compétences",
   agentAdvancedGroupLabel: "Avancé",
   writingModelLabel: "Modèle d'assistance",
-  writingFeaturesLabel: "Aide à l'écriture",
+  writingFeaturesLabel: "Suite et vérification",
   modelDefault: "par défaut",
   aiAccountLabel: "Connexion",
   customBaseUrlLabel: "URL de base",
@@ -1657,8 +1657,7 @@ utiliser une.
     "L’apparence des documents, par-dessus le thème choisi.",
   extensionsIntroSkills: `Des façons de bien faire un type de tâche, pour ${AI_NAME} et le menu /.`,
   extensionsIntroMcp: `Des serveurs qui donnent plus d’outils à ${AI_NAME}.`,
-  extensionsThemesNone:
-    "Aucun thème ajouté pour l’instant. Les thèmes intégrés se choisissent dans {page}.",
+  extensionsThemesNone: "Aucun thème ajouté.",
   extensionsThemesInstalled: "Thèmes installés",
   extensionsAvailable: "Disponibles",
   extensionsFold: "Masquer",
@@ -1853,8 +1852,7 @@ utiliser une.
   pluginCardsRestore: "Afficher à nouveau",
   pluginScreenshot: "{name} en action",
   pluginsMine: "Créées par vous",
-  pluginsInstalledNone:
-    "Aucun plugin installé pour l’instant. Choisissez-en un dans {section}, plus bas.",
+  pluginsInstalledNone: "Aucune extension installée.",
   skillsInstalledNone:
     "Aucune compétence ajoutée pour l’instant. Choisissez-en une dans {section}, plus bas, ou créez la vôtre.",
   pluginStatusBroken: "Illisible : {reason}",

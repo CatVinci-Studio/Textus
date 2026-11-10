@@ -895,7 +895,7 @@ para usar una.
   agentPersonalizationGroupLabel: "Instrucciones de escritura y habilidades",
   agentAdvancedGroupLabel: "Avanzado",
   writingModelLabel: "Modelo de asistencia",
-  writingFeaturesLabel: "Asistencia de escritura",
+  writingFeaturesLabel: "Continuar y revisar",
   modelDefault: "predeterminado",
   aiAccountLabel: "Conexión",
   customBaseUrlLabel: "URL base",
@@ -1635,8 +1635,7 @@ para usar una.
     "El aspecto de los documentos, sobre el tema que elijas.",
   extensionsIntroSkills: `Formas de hacer bien un tipo de tarea, para ${AI_NAME} y el menú /.`,
   extensionsIntroMcp: `Servidores que dan más herramientas a ${AI_NAME}.`,
-  extensionsThemesNone:
-    "Aún no has añadido temas. Los incluidos se eligen en {page}.",
+  extensionsThemesNone: "Aún no has añadido temas.",
   extensionsThemesInstalled: "Temas instalados",
   extensionsAvailable: "Disponibles",
   extensionsFold: "Ocultar",
@@ -1831,8 +1830,7 @@ para usar una.
   pluginCardsRestore: "Mostrar de nuevo",
   pluginScreenshot: "{name} en uso",
   pluginsMine: "Hechos por ti",
-  pluginsInstalledNone:
-    "Aún no has instalado plugins. Elige uno en {section}, más abajo.",
+  pluginsInstalledNone: "Aún no hay complementos instalados.",
   skillsInstalledNone:
     "Aún no has añadido habilidades. Elige una en {section}, más abajo, o crea la tuya.",
   pluginStatusBroken: "No se puede leer: {reason}",

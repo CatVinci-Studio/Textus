@@ -149,10 +149,16 @@ button.plugin-card-open:hover .plugin-card-name {
   background: color-mix(in srgb, var(--ui-muted) 7%, var(--ui-bg));
   overflow: hidden;
 }
-.plugin-icon img {
+.plugin-icon img,
+.plugin-icon-mask {
   width: 62%;
   height: 62%;
   object-fit: contain;
+}
+.plugin-icon-mask {
+  background: var(--ui-text);
+  mask: center / contain no-repeat;
+  -webkit-mask: center / contain no-repeat;
 }
 .plugin-icon-large {
   width: 56px;

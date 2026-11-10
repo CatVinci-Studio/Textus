@@ -2,7 +2,7 @@
 // a file.
 
 import { useChangedFiles } from "../ai/chat/file-changes";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import {
   ChevronIcon,
@@ -116,7 +116,7 @@ export function DirNode({
           aria-level={depth}
           aria-expanded={open}
           data-drop-dir={path}
-          style={{ paddingLeft: depth * 14 }}
+          style={{ "--depth": depth } as CSSProperties}
           // A double click folds or unfolds it once, as a click does; going
           // into it is the row's menu's Show Only This Folder.
           onClick={(e) => {
@@ -210,14 +210,14 @@ function FileNode({
   return (
     <>
       <div
-        className={`tree-row${active ? " tree-row-active" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
+        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
         role="treeitem"
         aria-level={depth}
         aria-selected={active}
         data-ai-changed={changed || undefined}
         // Dropped on a file, a drag goes into that file's folder.
         data-drop-dir={parentDir(entry.path) ?? undefined}
-        style={{ paddingLeft: depth * 14 + 12 }}
+        style={{ "--depth": depth } as CSSProperties}
         onClick={(e) => {
           if (tree.takeDragClick()) return;
           if ((e.metaKey || e.ctrlKey) && tree.openInNewWindow)

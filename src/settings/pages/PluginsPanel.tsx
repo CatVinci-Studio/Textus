@@ -146,6 +146,9 @@ export function PluginsPanel({
             )
           }
         />
+        {!folded.has("installed") && !installed.length && (
+          <p className="tx-list-note">{t.pluginsInstalledNone}</p>
+        )}
         {!folded.has("installed") &&
           installed.map((record) => (
             <PluginRow

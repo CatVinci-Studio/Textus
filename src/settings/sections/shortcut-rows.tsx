@@ -191,22 +191,9 @@ function ShortcutRecorder({
       <div className="settings-row">
         <span className="settings-row-label">{label}</span>
         <div className="shortcut-row-controls">
-          <button
-            className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
-            aria-label={`${label}: ${recording ? t.shortcutRecording : combo ? formatCombo(combo) : t.shortcutUnset}`}
-            aria-pressed={recording}
-            onClick={() => {
-              setError("");
-              setRecording(true);
-            }}
-            onBlur={() => setRecording(false)}
-          >
-            {recording
-              ? t.shortcutRecording
-              : combo
-                ? formatCombo(combo)
-                : t.shortcutUnset}
-          </button>
+          {/* The key last, so every row's lines up at the end; what acts
+              on it before it. */}
+
           {combo && !recording && (
             <button
               className="text-button settings-inline-button shortcut-clear"
@@ -229,6 +216,22 @@ function ShortcutRecorder({
               {t.shortcutReset}
             </button>
           )}
+          <button
+            className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
+            aria-label={`${label}: ${recording ? t.shortcutRecording : combo ? formatCombo(combo) : t.shortcutUnset}`}
+            aria-pressed={recording}
+            onClick={() => {
+              setError("");
+              setRecording(true);
+            }}
+            onBlur={() => setRecording(false)}
+          >
+            {recording
+              ? t.shortcutRecording
+              : combo
+                ? formatCombo(combo)
+                : t.shortcutUnset}
+          </button>
         </div>
       </div>
       {(error || taken) && (

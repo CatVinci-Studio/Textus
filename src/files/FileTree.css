@@ -19,12 +19,17 @@
   display: none;
 }
 
+/* Each level in by its depth; a file by its folder's chevron too, so its
+   icon stands under the folders' icons. The step and the chevron are the
+   tree's measures, not spacing. */
 .tree-row {
+  --tree-step: 14px;
+  --tree-chevron: calc(10px * var(--icon-scale, 1));
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 4px 8px;
+  padding: 4px 8px 4px calc(var(--depth, 0) * var(--tree-step));
   background: none;
   border: none;
   color: inherit;
@@ -37,6 +42,12 @@
 /* Inside the ring: the sidebar scrolls, and clips what lies outside it. */
 :is(.tree-row, .outline-row):focus-visible {
   outline-offset: -2px;
+}
+
+.tree-row-file {
+  padding-left: calc(
+    var(--depth, 0) * var(--tree-step) + var(--tree-chevron) + 8px
+  );
 }
 
 .tree-row:hover {
@@ -68,11 +79,12 @@
   transform: rotate(90deg);
 }
 
+/* The folder's name in line with the panel's title above it. */
 .tree-toolbar {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 2px 4px;
+  padding: 0 2px 4px 8px;
 }
 
 .tree-root-label {
@@ -196,6 +208,17 @@
   flex: 1;
   min-width: 0;
   padding-left: 2px;
+}
+
+/* The heading the reader is at: its whole row, its triangle too. */
+.outline-row[aria-current] {
+  border-radius: var(--shape-s);
+  background: var(--ui-selected);
+  color: var(--ui-selected-text);
+}
+
+.outline-row[aria-current] > .tree-row-active {
+  background: none;
 }
 
 /* Left out by a .gitignore or as build output, as the search leaves it. */

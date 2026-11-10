@@ -856,7 +856,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentPersonalizationGroupLabel: "執筆の指示とスキル",
   agentAdvancedGroupLabel: "詳細設定",
   writingModelLabel: "補助モデル",
-  writingFeaturesLabel: "執筆アシスト",
+  writingFeaturesLabel: "続きの提案と校正",
   modelDefault: "デフォルト",
   aiAccountLabel: "接続",
   customBaseUrlLabel: "ベースURL",
@@ -1564,8 +1564,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   extensionsIntroThemes: "選んだテーマの上に重ねる、文書の見た目です。",
   extensionsIntroSkills: `ある種の作業をうまくこなす方法。${AI_NAME} と / メニューで使えます。`,
   extensionsIntroMcp: `${AI_NAME} にツールを増やすサーバーです。`,
-  extensionsThemesNone:
-    "追加したテーマはまだありません。内蔵テーマは「{page}」で選べます。",
+  extensionsThemesNone: "追加したテーマはまだありません。",
   extensionsThemesInstalled: "インストール済みのテーマ",
   extensionsAvailable: "インストール可能",
   extensionsFold: "閉じる",
@@ -1756,8 +1755,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginCardsRestore: "再び表示",
   pluginScreenshot: "{name} の画面",
   pluginsMine: "自分で作ったもの",
-  pluginsInstalledNone:
-    "インストールしたプラグインはまだありません。下の「{section}」から選べます。",
+  pluginsInstalledNone: "インストールしたプラグインはまだありません。",
   skillsInstalledNone:
     "追加したスキルはまだありません。下の「{section}」から選ぶか、自分で作れます。",
   pluginStatusBroken: "読み込めません：{reason}",

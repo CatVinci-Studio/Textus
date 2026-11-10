@@ -843,7 +843,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentPersonalizationGroupLabel: "글쓰기 지침 및 스킬",
   agentAdvancedGroupLabel: "고급",
   writingModelLabel: "보조 모델",
-  writingFeaturesLabel: "글쓰기 보조",
+  writingFeaturesLabel: "이어 쓰기와 검사",
   modelDefault: "기본값",
   aiAccountLabel: "연결",
   customBaseUrlLabel: "기본 URL",
@@ -1547,8 +1547,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   extensionsIntroThemes: "고른 테마 위에 얹는 문서의 모양입니다.",
   extensionsIntroSkills: `한 가지 일을 잘 해내는 방법으로, ${AI_NAME}와 / 메뉴에서 씁니다.`,
   extensionsIntroMcp: `${AI_NAME}에게 도구를 더해 주는 서버입니다.`,
-  extensionsThemesNone:
-    "아직 추가한 테마가 없습니다. 내장 테마는 ‘{page}’에서 고릅니다.",
+  extensionsThemesNone: "추가한 테마가 없습니다.",
   extensionsThemesInstalled: "설치된 테마",
   extensionsAvailable: "설치 가능",
   extensionsFold: "접기",
@@ -1738,8 +1737,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginCardsRestore: "다시 표시",
   pluginScreenshot: "{name} 사용 화면",
   pluginsMine: "직접 만든 플러그인",
-  pluginsInstalledNone:
-    "아직 설치한 플러그인이 없습니다. 아래 ‘{section}’에서 고를 수 있습니다.",
+  pluginsInstalledNone: "설치한 플러그인이 없습니다.",
   skillsInstalledNone:
     "아직 추가한 스킬이 없습니다. 아래 ‘{section}’에서 고르거나 직접 만들 수 있습니다.",
   pluginStatusBroken: "읽을 수 없음: {reason}",

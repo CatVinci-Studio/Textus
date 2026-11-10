@@ -6,6 +6,8 @@ import { getUiState, setUiState } from "../../storage/ui-state";
  *  scrolls into sight. */
 const FIRST = 8;
 const MORE = 12;
+/** A list this short or shorter shows no fold button. */
+const FOLD_FROM = 3;
 
 function foldedKinds(): string[] {
   const kinds = getUiState("extensionsFolded");
@@ -62,14 +64,17 @@ export function AvailableSection({
           {!message && <span className="extensions-count">{rows.length}</span>}
         </h2>
         {!folded && head}
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          aria-expanded={!folded}
-          onClick={toggle}
-        >
-          {folded ? t.extensionsUnfold : t.extensionsFold}
-        </button>
+        {/* A short list has nothing to fold away. */}
+        {(folded || rows.length > FOLD_FROM) && (
+          <button
+            type="button"
+            className="text-button settings-inline-button"
+            aria-expanded={!folded}
+            onClick={toggle}
+          >
+            {folded ? t.extensionsUnfold : t.extensionsFold}
+          </button>
+        )}
       </div>
       {!folded && (
         <div className="settings-group-body">

@@ -87,6 +87,14 @@
   color: var(--ui-muted);
 }
 
+/* What it does, in two lines: one cut it to a few words beside its button. */
+.plugins-panel-line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+}
+
 .plugins-panel-end {
   display: flex;
   flex: none;

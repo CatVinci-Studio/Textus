@@ -870,7 +870,7 @@ type /name in a conversation to use one.
   agentPersonalizationGroupLabel: "Writing Instructions & Skills",
   agentAdvancedGroupLabel: "Advanced",
   writingModelLabel: "Assist model",
-  writingFeaturesLabel: "Writing Assistance",
+  writingFeaturesLabel: "Continue & Check",
   modelDefault: "default",
   aiAccountLabel: "Connection",
   customBaseUrlLabel: "Base URL",
@@ -1592,8 +1592,7 @@ type /name in a conversation to use one.
   extensionsIntroThemes: "How documents look, on top of the theme you pick.",
   extensionsIntroSkills: `Ways of doing one kind of task well, for ${AI_NAME} and the / menu.`,
   extensionsIntroMcp: `Servers that give ${AI_NAME} more tools.`,
-  extensionsThemesNone:
-    "No themes added yet. The built-in ones are picked in {page}.",
+  extensionsThemesNone: "No themes added yet.",
   extensionsThemesInstalled: "Installed themes",
   extensionsAvailable: "Available",
   extensionsFold: "Hide",
@@ -1785,8 +1784,7 @@ type /name in a conversation to use one.
   pluginCardsRestore: "Show again",
   pluginScreenshot: "{name} at work",
   pluginsMine: "Made by you",
-  pluginsInstalledNone:
-    "No plugins installed yet. Pick one under {section} below.",
+  pluginsInstalledNone: "No plugins installed yet.",
   skillsInstalledNone:
     "No skills added yet. Pick one under {section} below, or make your own.",
   pluginStatusBroken: "Can’t be read: {reason}",

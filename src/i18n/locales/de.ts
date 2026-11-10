@@ -888,7 +888,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentPersonalizationGroupLabel: "Schreibanweisungen & Skills",
   agentAdvancedGroupLabel: "Erweitert",
   writingModelLabel: "Assistenzmodell",
-  writingFeaturesLabel: "Schreibassistenz",
+  writingFeaturesLabel: "Weiterschreiben & Prüfen",
   modelDefault: "Standard",
   aiAccountLabel: "Verbindung",
   customBaseUrlLabel: "Basis-URL",
@@ -1629,8 +1629,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   extensionsIntroThemes: "Wie Dokumente aussehen, über dem gewählten Theme.",
   extensionsIntroSkills: `Wege, eine Art Aufgabe gut zu erledigen – für ${AI_NAME} und das /-Menü.`,
   extensionsIntroMcp: `Server, die ${AI_NAME} mehr Werkzeuge geben.`,
-  extensionsThemesNone:
-    "Noch keine Themes hinzugefügt. Die eingebauten wählst du unter {page}.",
+  extensionsThemesNone: "Noch keine Themes hinzugefügt.",
   extensionsThemesInstalled: "Installierte Designs",
   extensionsAvailable: "Verfügbar",
   extensionsFold: "Ausblenden",
@@ -1825,8 +1824,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginCardsRestore: "Wieder zeigen",
   pluginScreenshot: "{name} bei der Arbeit",
   pluginsMine: "Von dir erstellt",
-  pluginsInstalledNone:
-    "Noch keine Plugins installiert. Wähle eines unter {section} weiter unten.",
+  pluginsInstalledNone: "Noch keine Plugins installiert.",
   skillsInstalledNone:
     "Noch keine Skills hinzugefügt. Wähle einen unter {section} weiter unten oder erstelle deinen eigenen.",
   pluginStatusBroken: "Nicht lesbar: {reason}",

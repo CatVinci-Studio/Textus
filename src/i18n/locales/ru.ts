@@ -889,7 +889,7 @@ export default {
   agentPersonalizationGroupLabel: "Инструкции и навыки",
   agentAdvancedGroupLabel: "Дополнительно",
   writingModelLabel: "Вспомогательная модель",
-  writingFeaturesLabel: "Помощь с текстом",
+  writingFeaturesLabel: "Продолжение и проверка",
   modelDefault: "по умолчанию",
   aiAccountLabel: "Подключение",
   customBaseUrlLabel: "Базовый URL",
@@ -1626,8 +1626,7 @@ export default {
   extensionsIntroThemes: "Как выглядят документы — поверх выбранной темы.",
   extensionsIntroSkills: `Способы хорошо делать определённую работу — для ${AI_NAME} и меню /.`,
   extensionsIntroMcp: `Серверы, которые дают ${AI_NAME} больше инструментов.`,
-  extensionsThemesNone:
-    "Вы ещё не добавили тем. Встроенные выбираются в разделе «{page}».",
+  extensionsThemesNone: "Тем пока не добавлено.",
   extensionsThemesInstalled: "Установленные темы",
   extensionsAvailable: "Доступные",
   extensionsFold: "Свернуть",
@@ -1819,8 +1818,7 @@ export default {
   pluginCardsRestore: "Показать снова",
   pluginScreenshot: "{name} в работе",
   pluginsMine: "Созданные вами",
-  pluginsInstalledNone:
-    "Плагины ещё не установлены. Выберите один в разделе «{section}» ниже.",
+  pluginsInstalledNone: "Плагинов пока нет.",
   skillsInstalledNone:
     "Навыки ещё не добавлены. Выберите один в разделе «{section}» ниже или создайте свой.",
   pluginStatusBroken: "Не удаётся прочитать: {reason}",

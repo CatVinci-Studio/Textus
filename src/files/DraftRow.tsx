@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import { useSettings } from "../prefs/SettingsContext";
 import { FolderIcon } from "../engine/controls/icons";
@@ -55,8 +55,8 @@ export function DraftRow({
   const Icon = doc ? fileIconFor(".md") : FolderIcon;
   return (
     <div
-      className="tree-row tree-row-draft"
-      style={{ paddingLeft: depth * 14 + (doc ? 12 : 0) }}
+      className={`tree-row tree-row-draft${doc ? " tree-row-file" : ""}`}
+      style={{ "--depth": depth } as CSSProperties}
     >
       <Icon className="tree-icon" />
       <input
