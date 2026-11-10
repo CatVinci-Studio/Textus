@@ -131,7 +131,7 @@ ${customCss.trim() ? `\n/* Custom CSS */\n${customCss}\n` : ""}`;
   if (!picked) return;
   try {
     await fs.writeTextFile(picked, css);
-    void exportDoc.revealInDir(picked);
+    void exportDoc.revealInDir(picked).catch(() => undefined);
   } catch (err) {
     await showMessage(
       `${t.exportFailed} ${explainError(err, currentStrings())}`,

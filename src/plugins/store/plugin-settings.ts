@@ -131,7 +131,8 @@ export async function setPluginValue(
     if (Object.keys(next[id]).length === 0) delete next[id];
     return next;
   });
-  project = { root, values: next };
+  // Still that folder: one opened meanwhile keeps its own.
+  if (project?.root === root) project = { root, values: next };
   notify();
 }
 

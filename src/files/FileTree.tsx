@@ -11,7 +11,7 @@ import {
 import { windowIpc } from "../platform/ipc";
 
 const openInNewWindow = (path: string) =>
-  void windowIpc.openPathInNewWindow(path);
+  void windowIpc.openPathInNewWindow(path).catch(() => undefined);
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";

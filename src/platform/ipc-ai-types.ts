@@ -89,7 +89,6 @@ export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 /** The settings.json key of the writing conventions default. Unread here,
  *  but a Rust test checks it against the backend's key.
  *  @public */
-export const WRITING_CONVENTIONS_KEY = "writingConventions";
 /** Its default value, and the per-language value meaning "no choice";
  *  checked by the same test.
  *  @public */

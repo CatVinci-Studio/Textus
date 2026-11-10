@@ -1,3 +1,4 @@
+import { isIOSApp } from "../../platform/capabilities";
 import { createElement } from "react";
 import { registerCommand, runCommand } from "../../app/commands";
 import { registerSidebarTab } from "../../app/frame/sidebar-tabs";
@@ -64,7 +65,8 @@ export function whenContext(extra: WhenContext = {}): WhenContext {
     folderOpen: !!getWindowAccess()?.rootPath(),
     fileExtension: path ? extname(path).toLowerCase() : undefined,
     resourceFilename: path ? path.split(/[\\/]/).pop() : undefined,
-    isMac: isMacPlatform(),
+    // An iPad reports itself as a Mac.
+    isMac: isMacPlatform() && !isIOSApp,
     ...extra,
   };
 }

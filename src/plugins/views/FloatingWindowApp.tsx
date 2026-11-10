@@ -167,7 +167,7 @@ export function FloatingWindowApp() {
       {
         label: t.floatingOpenAi,
         run: () => {
-          void windowIpc.showFloatingOwner(OWNER);
+          void windowIpc.showFloatingOwner(OWNER).catch(() => undefined);
           void emitToWindow(OWNER, OPEN_AGENT_PANEL_EVENT, null);
         },
       },

@@ -27,20 +27,16 @@ export { IpcError } from "./ipc-call";
 export * from "./ipc-plugins";
 export type { UpdateChannel } from "./update-channel";
 export {
-  type SavedImage,
   type IndexedFile,
   type FolderIndex,
-  type WordDocument,
   fs,
   session,
-  type StoredSnapshot,
   type HistoryKind,
   storage,
   drafts,
   ownNotes,
 } from "./ipc-files";
 export {
-  type FloatingDragArgs,
   type WindowBounds,
   windowIpc,
   menuIpc,
@@ -59,16 +55,10 @@ export {
   type CliStatus,
   type DefaultEditorStatus,
   defaultEditor,
-  type Distribution,
   distribution,
   updater,
 } from "./ipc-app";
-export {
-  type OauthStatus,
-  type CustomEndpointConfig,
-  auth,
-  imageHostAuth,
-} from "./ipc-auth";
+export { type CustomEndpointConfig, auth, imageHostAuth } from "./ipc-auth";
 export {
   AI_CANCELLED,
   type GeneratedImageData,
@@ -79,12 +69,9 @@ export {
   type Remembered,
   type Memory,
   type MemoryScope,
-  type MemoryKind,
   type LibraryUse,
   type AgentWorkspaceInfo,
-  WRITING_CONVENTIONS_KEY,
   WRITING_CONVENTIONS_AUTOMATIC,
-  type ConventionsLang,
   WRITING_CONVENTIONS,
   type SkillListItem,
   type RememberedChange,
