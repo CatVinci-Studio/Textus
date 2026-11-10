@@ -2,7 +2,7 @@
    islands (design-language.md 5.7) - told apart by these values alone.
    Every length scales with the chrome; radii are concentric: an island's
    corner is the window's less the gap round it, a tab's the next step in. */
-:is(.app-shell, .chat-window)[data-layout="islands"] {
+:is(:root, .app-shell, .chat-window)[data-layout="islands"] {
   /* Between islands, and from an island to the window's edge; the side by
      the docks keeps the gap too, the activity rail being frame. */
   --island-gap: var(--space-2);
@@ -29,7 +29,7 @@
 /* Where the engine can, the gaps are whole pixels: the page's text starts
    on one. */
 @supports (width: round(1px, 1px)) {
-  :is(.app-shell, .chat-window)[data-layout="islands"] {
+  :is(:root, .app-shell, .chat-window)[data-layout="islands"] {
     --island-gap: round(var(--space-2), 1px);
     --island-inset: round(var(--space-2), 1px);
   }
@@ -37,7 +37,7 @@
 
 /* Classic, as VS Code: islands flush and square; each island's 1px edge
    falls in the 1px gap beside the next, one hairline between them. */
-:is(.app-shell, .chat-window)[data-layout="classic"] {
+:is(:root, .app-shell, .chat-window)[data-layout="classic"] {
   --island-gap: 1px;
   --island-inset: 0px;
   --island-radius: 0px;

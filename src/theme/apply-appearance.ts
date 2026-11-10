@@ -102,6 +102,12 @@ export function useApplyAppearance(
     }
   }, [settings.theme]);
 
+  // The layout on <html> too: its lengths (layout-tokens.css) reach what
+  // is drawn outside the window's shell - a lifted island, a menu.
+  useEffect(() => {
+    document.documentElement.dataset.layout = settings.layout;
+  }, [settings.layout]);
+
   useEffect(() => {
     const root = document.documentElement;
     if (settings.solidTitleBar) root.removeAttribute("data-frosted-title-bar");
