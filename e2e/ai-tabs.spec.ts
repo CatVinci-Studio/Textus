@@ -101,3 +101,26 @@ test("the window's other tabs stay with the document when the AI opens", async (
   ]);
   await expect(rows.last().locator(".tab-pill")).toHaveText(["新对话"]);
 });
+
+test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
+  await open(page);
+  await emit(page, "menu-open-settings");
+  await aiButton(page).click();
+  const rows = page.locator(".island-row");
+  await expect(rows).toHaveCount(2);
+  const from = (await tabs(page).filter({ hasText: "设置" }).boundingBox())!;
+  const sheet = (await page.locator("section.island").last().boundingBox())!;
+  await page.keyboard.down("Alt");
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 40, from.y + 160, { steps: 10 });
+  // The right edge of the AI's island: the whole island goes there.
+  await page.mouse.move(sheet.x + sheet.width - 8, sheet.y + sheet.height / 2, {
+    steps: 20,
+  });
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+  await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
+  await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置"]);
+});
