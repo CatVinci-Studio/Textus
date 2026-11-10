@@ -311,7 +311,7 @@ export default {
   aiChangeModeRevision: "修订（逐条审阅）",
   aiChangeModeDirect: "直接写入",
   aiChangeModeHint:
-    "修订：无论是正在看的文档还是文件夹里的其他文件，每处改动都先留在那个文件里，等你接受或拒绝；Textus AI 新建的文件也等你决定是否保留。直接写入：改动立刻生效并保留标记，每次回复都能撤销。",
+    "修订：无论是正在看的文档还是文件夹里的其他文件，每处改动都先留在那个文件里，等你接受或拒绝；Textus AI 新建的文件也等你决定是否保留。直接写入：改动立刻生效并保留标记，每次回复都能撤销。研究模式的论文无论哪种方式都直接写进文档。",
   aiPendingCount: { other: "{n} 处待审" },
   aiCreatedPending: "新建，待保留",
   aiFileConflict: "之后被改过，修订没有放进去",

@@ -285,16 +285,21 @@ impl ChapterRun<'_, '_> {
         ));
         let specs = self.tools.specs();
         let channel = self.channel;
+        // Its calls' ids marked as its own: a server that numbers its calls
+        // from call_0 does so for every helper, and the window told them
+        // apart by id.
+        let tag = format!("ch{}-", chapter.first);
+        let own = |id: &str| format!("{tag}{id}");
         // Only its edits reach the window: its prose and thinking are for
         // the request's model, which says what was done.
         let sink = move |event: ProviderEvent<'_>| {
             let event = match event {
                 ProviderEvent::ToolStart { call_id, name } => StreamEvent::ToolStart {
-                    call_id: call_id.to_string(),
+                    call_id: own(call_id),
                     name: name.to_string(),
                 },
                 ProviderEvent::ToolArgs { call_id, delta } => StreamEvent::ToolArgsDelta {
-                    call_id: call_id.to_string(),
+                    call_id: own(call_id),
                     delta: delta.to_string(),
                 },
                 _ => return,
@@ -323,7 +328,7 @@ impl ChapterRun<'_, '_> {
                 // drop every chapter's drafts.
                 if let LoopEvent::Turn(turn) = event {
                     channel.send(StreamEvent::Turn {
-                        turn: for_history(turn.clone()),
+                        turn: tagged(for_history(turn.clone()), &tag),
                     });
                 }
             },
@@ -332,9 +337,17 @@ impl ChapterRun<'_, '_> {
         Ok(turns
             .into_iter()
             .filter(|t| matches!(t, AgentTurn::ToolCall { .. } | AgentTurn::ToolResult { .. }))
-            .map(for_history)
+            .map(|turn| tagged(for_history(turn), &tag))
             .collect())
     }
+}
+
+/// `turn` with its call's id marked by `tag` (one helper's).
+fn tagged(mut turn: AgentTurn, tag: &str) -> AgentTurn {
+    if let AgentTurn::ToolCall { call_id, .. } | AgentTurn::ToolResult { call_id, .. } = &mut turn {
+        *call_id = format!("{tag}{call_id}");
+    }
+    turn
 }
 
 #[cfg(test)]

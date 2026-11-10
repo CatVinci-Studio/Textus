@@ -347,7 +347,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aiChangeModeRevision: "Als Überarbeitungen zum Prüfen",
   aiChangeModeDirect: "Direkt geschrieben",
   aiChangeModeHint:
-    "Überarbeitungen: Jede Änderung – im offenen Dokument oder in einer anderen Datei des Ordners – wartet in der Datei, bis du sie annimmst oder ablehnst; eine von Textus AI erstellte Datei wartet, bis du sie behältst. Direkt geschrieben: Änderungen kommen sofort an und bleiben markiert, jede Antwort lässt sich rückgängig machen.",
+    "Überarbeitungen: Jede Änderung – im offenen Dokument oder in einer anderen Datei des Ordners – wartet in der Datei, bis du sie annimmst oder ablehnst; eine von Textus AI erstellte Datei wartet, bis du sie behältst. Direkt geschrieben: Änderungen kommen sofort an und bleiben markiert, jede Antwort lässt sich rückgängig machen. Die Recherche schreibt ihre Arbeit in beiden Fällen direkt ins Dokument.",
   aiPendingCount: { one: "{n} zu prüfen", other: "{n} zu prüfen" },
   aiCreatedPending: "Neu, behalten?",
   aiFileConflict: "Seitdem geändert – die Überarbeitung wurde nicht eingesetzt",

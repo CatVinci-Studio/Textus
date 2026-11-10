@@ -346,7 +346,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aiChangeModeRevision: "Como revisões para revisar",
   aiChangeModeDirect: "Escritas direto",
   aiChangeModeHint:
-    "Revisões: cada alteração – no documento aberto ou em outro arquivo da pasta – espera nesse arquivo até você aceitar ou recusar, e um arquivo criado pelo Textus AI espera para ser mantido. Escritas direto: as alterações entram na hora e ficam marcadas, cada resposta pode ser desfeita.",
+    "Revisões: cada alteração – no documento aberto ou em outro arquivo da pasta – espera nesse arquivo até você aceitar ou recusar, e um arquivo criado pelo Textus AI espera para ser mantido. Escritas direto: as alterações entram na hora e ficam marcadas, cada resposta pode ser desfeita. A pesquisa escreve seu artigo direto no documento em ambos os casos.",
   aiPendingCount: {
     one: "{n} para revisar",
     many: "{n} para revisar",

@@ -358,7 +358,7 @@ utiliser une.
   aiChangeModeRevision: "En révisions à relire",
   aiChangeModeDirect: "Écrites directement",
   aiChangeModeHint:
-    "Révisions : chaque modification – dans le document ouvert ou un autre fichier du dossier – attend dans ce fichier que vous l’acceptiez ou la refusiez, et un fichier créé par Textus AI attend d’être gardé. Écrites directement : les modifications arrivent aussitôt et restent marquées, chaque réponse annulable.",
+    "Révisions : chaque modification – dans le document ouvert ou un autre fichier du dossier – attend dans ce fichier que vous l’acceptiez ou la refusiez, et un fichier créé par Textus AI attend d’être gardé. Écrites directement : les modifications arrivent aussitôt et restent marquées, chaque réponse annulable. La recherche écrit son article directement dans le document dans les deux cas.",
   aiPendingCount: {
     one: "{n} à relire",
     many: "{n} à relire",

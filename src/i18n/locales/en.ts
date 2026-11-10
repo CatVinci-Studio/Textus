@@ -343,7 +343,7 @@ type /name in a conversation to use one.
   aiChangeModeRevision: "As revisions to review",
   aiChangeModeDirect: "Written straight in",
   aiChangeModeHint:
-    "Revisions: every change - in the open document or another file of the folder - waits in that file for you to accept or reject, and a file Textus AI makes waits to be kept. Written straight in: changes land at once and stay marked, each reply undoable.",
+    "Revisions: every change - in the open document or another file of the folder - waits in that file for you to accept or reject, and a file Textus AI makes waits to be kept. Written straight in: changes land at once and stay marked, each reply undoable. Research writes its paper straight into the document either way.",
   aiPendingCount: { one: "{n} to review", other: "{n} to review" },
   aiCreatedPending: "New, keep?",
   aiFileConflict: "Changed since - its revision wasn't placed",
