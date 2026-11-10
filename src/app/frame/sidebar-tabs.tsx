@@ -156,14 +156,24 @@ export function registerSidebarTab(tab: SidebarTabDef): () => void {
   };
 }
 
+/** Textus's own tabs (Files, Outline, Search, Plugins): always first,
+ *  apart from the ones plugins add. */
+export function isOwnTab(id: string): boolean {
+  return id === PLUGINS_TAB.id || BUILT_IN.some((tab) => tab.id === id);
+}
+
 /** The tabs, in the header's order: as the user dragged them, a tab new
- *  since then where it comes. */
+ *  since then where it comes - Textus's own before any a plugin adds. */
 export function sidebarTabs(): SidebarTabDef[] {
   const kept = getUiState("sidebarTabOrder");
-  return orderTabs(
+  const all = orderTabs(
     [...BUILT_IN, ...pluginsTab(), ...added],
     Array.isArray(kept) ? kept : [],
   );
+  return [
+    ...all.filter((tab) => isOwnTab(tab.id)),
+    ...all.filter((tab) => !isOwnTab(tab.id)),
+  ];
 }
 
 /** `tabs` in `order`, those it doesn't name kept after the one before them. */
@@ -182,12 +192,14 @@ export function orderTabs<T extends { id: string }>(
   return out;
 }
 
-/** The tabs' order after `id` is dropped on `target`'s place. */
+/** The tabs' order after `id` is dropped on `target`'s place: within its
+ *  own group, a plugin's never above Textus's. */
 export function moveSidebarTab(id: string, target: string): void {
   const ids = sidebarTabs().map((tab) => tab.id);
   const from = ids.indexOf(id);
   const to = ids.indexOf(target);
   if (from < 0 || to < 0 || from === to) return;
+  if (isOwnTab(id) !== isOwnTab(target)) return;
   ids.splice(from, 1);
   ids.splice(to, 0, id);
   setUiState("sidebarTabOrder", ids);

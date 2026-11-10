@@ -10,7 +10,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { SettingsIcon } from "../../engine/controls/icons";
 import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
-import type { SidebarTabDef } from "./sidebar-tabs";
+import { isOwnTab, type SidebarTabDef } from "./sidebar-tabs";
 
 /** The rail's width in interface px (activity-rail.css draws the same). */
 export const RAIL_WIDTH = 44;
@@ -40,7 +40,6 @@ export function ActivityRail({
   t: Strings;
 }) {
   const { settings, setSettings } = useSettings();
-  const ref = useRef<HTMLElement>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const hidden = new Set(settings.activityRailHidden);
   // The tab shown keeps its icon, hidden or not.
@@ -68,41 +67,24 @@ export function ActivityRail({
     <nav
       className="activity-rail"
       aria-label={t.activityRail}
-      ref={ref}
       onContextMenu={(e) => {
         e.preventDefault();
         setMenu({ x: e.clientX, y: e.clientY });
       }}
     >
-      {shownTabs.map(({ id, label, Icon }) => {
-        const on = sidebarOpen && shownId === id;
-        return (
-          <Tooltip key={id} text={label(t)} side="right">
-            <button
-              type="button"
-              className="activity-rail-item"
-              aria-label={label(t)}
-              aria-pressed={on}
-              data-reorder-id={id}
-              onClick={() => (on ? onCloseSidebar() : onSelect(id))}
-              // Dragged along the column, the others make way.
-              onPointerDown={(e) => {
-                const rail = ref.current;
-                if (!rail || e.pointerType === "touch") return;
-                reorderDrag(e, {
-                  container: rail,
-                  id,
-                  axis: "y",
-                  onDrop: (dragged, index) =>
-                    onMove(dragged, shownTabs[index].id),
-                });
-              }}
-            >
-              <Icon />
-            </button>
-          </Tooltip>
-        );
-      })}
+      <RailGroup
+        tabs={shownTabs.filter((tab) => isOwnTab(tab.id))}
+        on={(id) => sidebarOpen && shownId === id}
+        {...{ onSelect, onCloseSidebar, onMove, t }}
+      />
+      {shownTabs.some((tab) => !isOwnTab(tab.id)) && (
+        <hr className="activity-rail-divider" />
+      )}
+      <RailGroup
+        tabs={shownTabs.filter((tab) => !isOwnTab(tab.id))}
+        on={(id) => sidebarOpen && shownId === id}
+        {...{ onSelect, onCloseSidebar, onMove, t }}
+      />
       {/* Settings at the column's foot, out of the tabs' order. */}
       <Tooltip text={t.settingsTitle} side="right">
         <button
@@ -125,5 +107,54 @@ export function ActivityRail({
         )}
       </Presence>
     </nav>
+  );
+}
+
+/** One group of the rail's icons - Textus's own, or the ones plugins add:
+ *  dragged along it, the others make way; a drag never leaves its group. */
+function RailGroup({
+  tabs,
+  on,
+  onSelect,
+  onCloseSidebar,
+  onMove,
+  t,
+}: {
+  tabs: SidebarTabDef[];
+  on: (id: string) => boolean;
+  onSelect: (id: string) => void;
+  onCloseSidebar: () => void;
+  onMove: (id: string, target: string) => void;
+  t: Strings;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  if (!tabs.length) return null;
+  return (
+    <div className="activity-rail-group" ref={ref}>
+      {tabs.map(({ id, label, Icon }) => (
+        <Tooltip key={id} text={label(t)} side="right">
+          <button
+            type="button"
+            className="activity-rail-item"
+            aria-label={label(t)}
+            aria-pressed={on(id)}
+            data-reorder-id={id}
+            onClick={() => (on(id) ? onCloseSidebar() : onSelect(id))}
+            onPointerDown={(e) => {
+              const group = ref.current;
+              if (!group || e.pointerType === "touch") return;
+              reorderDrag(e, {
+                container: group,
+                id,
+                axis: "y",
+                onDrop: (dragged, index) => onMove(dragged, tabs[index].id),
+              });
+            }}
+          >
+            <Icon />
+          </button>
+        </Tooltip>
+      ))}
+    </div>
   );
 }

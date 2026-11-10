@@ -115,6 +115,22 @@
   z-index: 46;
 }
 
+/* Textus's own icons, then the ones plugins add, a short line between:
+   each a column of its own, a drag kept inside it. */
+.activity-rail-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.activity-rail-divider {
+  width: 20px;
+  margin: 4px 0;
+  border: 0;
+  border-top: 1px solid var(--ui-frame-edge);
+}
+
 /* Settings at the rail's foot, with the window's bottom edge for margin. */
 .activity-rail-settings {
   margin-top: auto;
