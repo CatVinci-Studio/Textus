@@ -13,7 +13,7 @@ export const TAB_MIN_PX = 30;
 
 /** The tabs that fit in `fit` buttons, and those that go under "More" (one
  *  button of its own). The tab shown always keeps a button. */
-export function fitTabs<T extends { id: string }>(
+export function fitSidebarTabs<T extends { id: string }>(
   tabs: readonly T[],
   shownId: string,
   fit: number,
@@ -61,7 +61,7 @@ export function SidebarTabBar({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const { inline, more } = fitTabs(tabs, shownId, fit);
+  const { inline, more } = fitSidebarTabs(tabs, shownId, fit);
   return (
     <div className="sidebar-tabs" ref={ref}>
       {inline.map(({ id, label, Icon }) => (

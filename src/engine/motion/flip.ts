@@ -109,7 +109,7 @@ export function play(
 
 /** What a removed element looked like and where it sat, taken before the
  *  commit that removes it. */
-export interface Ghost {
+interface Ghost {
   node: HTMLElement;
   left: number;
   top: number;
@@ -119,7 +119,7 @@ export interface Ghost {
 
 /** A copy of `el` and its place in its offset parent, for an exit played
  *  after React has removed the original. */
-export function captureGhost(el: HTMLElement): Ghost {
+function captureGhost(el: HTMLElement): Ghost {
   const node = el.cloneNode(true) as HTMLElement;
   // Not one of the list's own items: later measurements must not see it.
   node.removeAttribute("data-flip-id");
@@ -136,7 +136,7 @@ export function captureGhost(el: HTMLElement): Ghost {
 /** Puts a captured copy back where its original was, out of the layout, until
  *  `className`'s animation ends or `exitMs`. `parent` must be the original's
  *  positioned offset parent; `under` puts the copy beneath the survivors. */
-export function releaseGhost(
+function releaseGhost(
   ghost: Ghost,
   parent: HTMLElement,
   className: string,
@@ -219,15 +219,6 @@ export class FlipOnChange extends Component<{
   }
 }
 
-/** What a gesture measured itself mid-move, for ListMotion to start from:
- *  places before it cleared its shifts, the item let go of, and one that left
- *  with the pointer. */
-export interface PendingFlip {
-  rects: Snapshot;
-  dropped?: string;
-  gone?: string;
-}
-
 /**
  * The motion of a keyed list across a commit that changes its items or
  * order: `data-flip-id` items glide to their new places, a removed one plays
@@ -240,51 +231,32 @@ export class ListMotion extends Component<{
   /** The longest the ghost's exit runs - a fallback, not a wait. */
   exitMs: number;
   ghostsUnder?: boolean;
-  pending?: RefObject<PendingFlip | null>;
-  /** See play's `resizes`. */
-  resizes?: (el: Element) => boolean;
 }> {
   getSnapshotBeforeUpdate(previous: { ids: string[] }) {
-    const pending = this.props.pending?.current ?? null;
-    if (this.props.pending) this.props.pending.current = null;
     const { ids } = this.props;
     const container = this.props.container.current;
     const same =
       previous.ids.length === ids.length &&
       previous.ids.every((id, i) => id === ids[i]);
-    if (!container || (same && !pending) || !motionAllowed()) return null;
+    if (!container || same || !motionAllowed()) return null;
     const items = container.querySelectorAll<HTMLElement>("[data-flip-id]");
     const ghosts: Ghost[] = [];
     for (const item of items) {
       const id = item.dataset.flipId!;
-      if (
-        previous.ids.includes(id) &&
-        !ids.includes(id) &&
-        id !== pending?.gone
-      )
+      if (previous.ids.includes(id) && !ids.includes(id))
         ghosts.push(captureGhost(item));
     }
-    return {
-      rects: pending?.rects ?? measure(items),
-      dropped: pending?.dropped,
-      ghosts,
-    };
+    return { rects: measure(items), ghosts };
   }
 
   componentDidUpdate(
     _: unknown,
     __: unknown,
-    snapshot: { rects: Snapshot; dropped?: string; ghosts: Ghost[] } | null,
+    snapshot: { rects: Snapshot; ghosts: Ghost[] } | null,
   ) {
     const container = this.props.container.current;
     if (!snapshot || !container) return;
-    play(snapshot.rects, {
-      resizes: this.props.resizes,
-      timingFor: (el) =>
-        el instanceof HTMLElement && el.dataset.flipId === snapshot.dropped
-          ? { duration: "--dur-base", easing: "--ease-spring-bouncy" }
-          : undefined,
-    });
+    play(snapshot.rects);
     for (const ghost of snapshot.ghosts)
       releaseGhost(
         ghost,

@@ -5,6 +5,7 @@ import {
   type Ref,
 } from "react";
 import { useRowInsets } from "./row-insets";
+import { rowKey, sheetKey } from "../frame/island-parts";
 import "./island.css";
 
 interface IslandPlace {
@@ -44,7 +45,7 @@ export function IslandRow({
     <div
       className="island-row"
       data-at-corner={insets?.atCorner || undefined}
-      data-frame={frame && `row:${frame}`}
+      data-frame={frame && rowKey(frame)}
       data-island-row={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-inner={inner || undefined}
@@ -90,7 +91,7 @@ export function IslandSheet({
   return (
     <section
       {...rest}
-      data-frame={frame && `sheet:${frame}`}
+      data-frame={frame && sheetKey(frame)}
       ref={sheetRef}
       className={className ? `island ${className}` : "island"}
       data-island={ui ? "ui" : "documents"}

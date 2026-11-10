@@ -7,8 +7,8 @@ export const SLIDE =
 
 /**
  * One item dragged along a row or column of its siblings, the others
- * making room as it passes them - tabs, the activity rail, the sidebar's
- * tabs, plugin lists. Measured once when the drag begins (layout values,
+ * making room as it passes them - the activity rail, the sidebar's tabs,
+ * plugin lists (a row of document tabs is the tab strip's). Measured once when the drag begins (layout values,
  * untouched by transforms in flight); each move finds the place by binary
  * search and restyles only the items whose shift changed.
  */
@@ -37,7 +37,7 @@ export function shiftAt(i: number, from: number, to: number, room: number) {
   return 0;
 }
 
-export interface Row {
+interface Row {
   /** Where the dragged item lands with its centre moved by `offset`: its
    *  index among the others. */
   index(offset: number): number;
@@ -49,7 +49,7 @@ export interface Row {
   readonly from: number;
 }
 
-export function row(
+function row(
   items: readonly RowItem[],
   id: string,
   { axis = "x", gap = 0 }: { axis?: "x" | "y"; gap?: number } = {},
