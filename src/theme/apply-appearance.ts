@@ -108,11 +108,11 @@ export function useApplyAppearance(
     document.documentElement.dataset.layout = settings.layout;
   }, [settings.layout]);
 
+  // The window bar is frosted: the document seen through it as it scrolls
+  // under.
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.solidTitleBar) root.removeAttribute("data-frosted-title-bar");
-    else root.setAttribute("data-frosted-title-bar", "");
-  }, [settings.solidTitleBar]);
+    document.documentElement.setAttribute("data-frosted-title-bar", "");
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;

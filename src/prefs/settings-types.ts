@@ -39,10 +39,6 @@ export interface Settings {
   languageChosen: boolean;
   /// Appearance: follow the OS, or pin light/dark.
   theme: ThemeMode;
-  /// The window bar opaque instead of frosted. Frosted - the document seen
-  /// through it, blurred, as it scrolls under - is the default since 1.3.13;
-  /// a new key, so the old opt-in's stored `false` doesn't keep it off.
-  solidTitleBar: boolean;
   /** Off, Textus AI makes no request to any AI service, whatever the
    *  features below are set to; they keep their values. Rust reads it too. */
   textusAi: boolean;
@@ -147,9 +143,6 @@ export interface Settings {
   /// Whether an agent edit's in-document preview types itself in or appears
   /// complete at once.
   enableEditAnimation: boolean;
-  /// Where Quick Ask's "open full conversation" goes: the docked panel
-  /// (default) or the detached window.
-  agentExpandToWindow: boolean;
   /// Whether the detached Agent window floats above other windows. Kept
   /// here rather than per-window so the choice survives closing it.
   pinAgentWindow: boolean;
@@ -281,7 +274,6 @@ export const DEFAULT_SETTINGS: Settings = {
   language: "en",
   languageChosen: false,
   theme: "system",
-  solidTitleBar: false,
   textusAi: true,
   textusAiResumeAt: null,
   enableCompletion: true,
@@ -325,7 +317,6 @@ export const DEFAULT_SETTINGS: Settings = {
   plugins: {},
   suggestNextMessage: true,
   enableEditAnimation: true,
-  agentExpandToWindow: false,
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
   proxyType: "none",

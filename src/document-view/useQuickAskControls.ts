@@ -7,8 +7,6 @@ import type { useInlineChat } from "../ai/chat/quick-ask/useInlineChat";
 import { setQuickAskWidget } from "../ai/chat/quick-ask/quick-ask-widget-plugin";
 import { keepClearOfDock } from "../ai/chat/quick-ask/quick-ask-dock";
 import type { AgentPanelFrame } from "../ai/chat/panel/agent-panel";
-import { canDetachChat } from "../platform/capabilities";
-import type { Settings } from "../prefs/SettingsContext";
 
 /** Opening, closing and handing on Quick Ask, from every entry point (the
  *  shortcut, the context menu, its own buttons). */
@@ -21,9 +19,7 @@ export function useQuickAskControls({
   quickAskEl,
   phone,
   isActive,
-  settings,
   agentPanel,
-  handleDetachChat,
 }: {
   run: EditorRunner;
   inlineChat: ReturnType<typeof useInlineChat>;
@@ -33,9 +29,7 @@ export function useQuickAskControls({
   quickAskEl: HTMLElement | null;
   phone: boolean;
   isActive: boolean;
-  settings: Settings;
   agentPanel: AgentPanelFrame;
-  handleDetachChat: () => void;
 }) {
   // Quick Ask opens at the caret whatever the panel is doing: it has its own
   // conversation. Closing or starting anew with undecided edits asks first.
@@ -126,11 +120,6 @@ export function useQuickAskControls({
     }
     quickConversation.reset();
     inlineChat.close();
-    if (settings.agentExpandToWindow && canDetachChat) {
-      // After the restore has rendered, so the window gets the new turns.
-      requestAnimationFrame(() => handleDetachChat());
-      return;
-    }
     agentPanel.setOpen(true);
   }
 

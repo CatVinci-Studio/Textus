@@ -48,7 +48,7 @@ export function useAskAi(
 }
 
 /** `text` into the AI panel's composer, the caret after it. */
-function fillComposer(text: string) {
+export function fillComposer(text: string) {
   const box = document.querySelector<HTMLTextAreaElement>(
     ".agent-panel-view textarea",
   );

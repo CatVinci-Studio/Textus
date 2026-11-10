@@ -1,3 +1,4 @@
+import { fillComposer } from "../chat/ask-ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -255,7 +256,10 @@ export function useReviewNotes({
   const bar = useNotesBar({
     notes,
     run,
-    revisionFocus: pendingEdits.focusedStop,
+    // By its key: the stop object is made again as the previews change.
+    revisionFocus: pendingEdits.focusedStop
+      ? `${pendingEdits.focusedStop.callId}:${pendingEdits.focusedStop.index}`
+      : null,
     onDone: doneNote,
     onAsk: askAboutNotes,
   });
@@ -264,20 +268,7 @@ export function useReviewNotes({
   function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    window.setTimeout(() => {
-      const box = document.querySelector<HTMLTextAreaElement>(
-        ".agent-panel-view textarea",
-      );
-      if (!box) return;
-      const setter = Object.getOwnPropertyDescriptor(
-        HTMLTextAreaElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(box, text);
-      box.dispatchEvent(new Event("input", { bubbles: true }));
-      box.focus();
-      box.setSelectionRange(text.length, text.length);
-    }, 60);
+    window.setTimeout(() => fillComposer(text), 60);
   }
 
   // No room for a margin: notes go behind badges and a rewrite's

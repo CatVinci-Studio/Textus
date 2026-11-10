@@ -55,6 +55,7 @@ export function useEditorChat({
     tabId: setup.tabId,
     quickAsk: quickConversation,
     quickAskOpen: inlineChat.visible,
+    writing: conversation.busy,
     statuses: pendingEdits.allStatuses,
   });
   const windowChipRef = useRef<SelectionChipHandlers | null>(null);
@@ -138,9 +139,7 @@ export function useEditorChat({
     quickAskEl: setup.quickAskEl,
     phone,
     isActive,
-    settings,
     agentPanel,
-    handleDetachChat,
   });
 
   // A new panel conversation waits while proposals are still undecided.

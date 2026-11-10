@@ -86,14 +86,20 @@ export function ReviewBars({
       ? pendingEdits.reviewStops.map((s) => ({
           key: `ai:${s.callId}:${s.index}`,
           from: s.from,
-          go: () => revealProposal(s.callId, s.index),
+          go: () => {
+            notes.clearPointer();
+            revealProposal(s.callId, s.index);
+          },
         }))
       : []),
     ...(own && !reviewBarShown
       ? own.froms.map((from, i) => ({
           key: `own:${i}`,
           from,
-          go: () => own.pointAt(i),
+          go: () => {
+            notes.clearPointer();
+            own.pointAt(i);
+          },
         }))
       : []),
     ...(notesShown
