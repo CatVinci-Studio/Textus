@@ -9,7 +9,7 @@ import {
 } from "../../../platform/capabilities";
 import { useSettings } from "../../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
-import { Presence, PresenceDiv } from "../../../ui/usePresence";
+import { Presence, PresenceDiv } from "../../../engine/motion/usePresence";
 import { basename } from "../../../utils/path";
 import { knownDocumentsDir } from "../../../platform/documents-path";
 import { APP_NAME } from "../../../i18n/names";

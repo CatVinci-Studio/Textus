@@ -1,6 +1,6 @@
 import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { ReviewBar } from "../ai/revision/ReviewBar";
 import { revisionDisplayName } from "../ai/revision/revision-display";
 import { NotesBar } from "../ai/margin/NotesBar";

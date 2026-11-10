@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { links, systemIpc } from "../../platform/ipc";
-import { usePresence } from "../../ui/usePresence";
+import { usePresence } from "../../engine/motion/usePresence";
 import { useModalDialog } from "../../ui/useModalDialog";
 import { Select } from "../../ui/Select";
 import type { Settings } from "../../prefs/settings-types";

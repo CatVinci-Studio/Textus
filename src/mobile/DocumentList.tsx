@@ -10,9 +10,9 @@ import {
   ListViewIcon,
   MoreIcon,
 } from "../ui/icons";
-import { Presence, usePresenceProps } from "../ui/usePresence";
-import { animate } from "../ui/motion";
-import { ListMotion } from "../ui/flip";
+import { Presence, usePresenceProps } from "../engine/motion/usePresence";
+import { animate } from "../engine/motion/motion";
+import { ListMotion } from "../engine/motion/flip";
 import { fs } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { basename, dirname } from "../utils/path";

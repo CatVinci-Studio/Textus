@@ -20,8 +20,8 @@ import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
 import { quickSummary } from "./quick-summary";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
-import { Presence, PresenceDiv } from "../../ui/usePresence";
-import { scrollBehavior } from "../../ui/motion";
+import { Presence, PresenceDiv } from "../../engine/motion/usePresence";
+import { scrollBehavior } from "../../engine/motion/motion";
 import { composeMessage } from "./user-message";
 import { type ChatBodyProps, proposalsFromTurns } from "./chat-body-types";
 import {

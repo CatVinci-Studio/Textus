@@ -5,7 +5,7 @@ import { AgentTurnView } from "./AgentTurnView";
 import type { AgentTurn } from "../types";
 import { isProposalTool } from "./proposal";
 import { ErrorRow } from "./ErrorRow";
-import { FlipOnChange } from "../../ui/flip";
+import { FlipOnChange } from "../../engine/motion/flip";
 import "../revision/pending-picture.css";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import type { ChatMessagesProps } from "./chat-messages-types";

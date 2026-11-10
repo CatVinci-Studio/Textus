@@ -6,7 +6,7 @@ import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { duration, motionAllowed } from "../../ui/motion";
+import { duration, motionAllowed } from "../../engine/motion/motion";
 import {
   applyReveal,
   caretToSourceOnClick,

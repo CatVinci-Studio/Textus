@@ -10,7 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
-import { usePresenceProps } from "./usePresence";
+import { usePresenceProps } from "../engine/motion/usePresence";
 
 /** How far the tail stays from the bubble's corners. */
 const TAIL_INSET = 12;

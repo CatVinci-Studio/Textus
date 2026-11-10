@@ -16,7 +16,7 @@ import { useSettings } from "../prefs/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu } from "../ui/ContextMenu";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { FileSearch } from "./FileSearch";
 import { type SearchScope } from "./file-search";

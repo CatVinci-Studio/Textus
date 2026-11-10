@@ -26,7 +26,7 @@ import { isProposalTool } from "../ai/chat/proposal";
 import type { EditProposal } from "../ai/types";
 import type { GeneratedImageData, StreamEvent } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
-import { prefersReducedMotion } from "../ui/motion";
+import { prefersReducedMotion } from "../engine/motion/motion";
 import { storeImage } from "../editor/images/image-plugin";
 import { showMessage } from "../ui/app-dialog";
 import { cachedDocument, cachedDocumentMarkdown } from "../ai/doc-markdown";

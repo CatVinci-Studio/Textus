@@ -42,7 +42,7 @@ import type {
   Subpage,
 } from "./pages/types";
 import { useModalDialog } from "../ui/useModalDialog";
-import { usePresenceProps } from "../ui/usePresence";
+import { usePresenceProps } from "../engine/motion/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
 
 // The settings dialog shell: navigation, search and subpages, for every

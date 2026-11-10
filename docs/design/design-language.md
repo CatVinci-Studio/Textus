@@ -288,11 +288,11 @@ The desktop window is a **frame** around the document. The work is tracked in R2
 
 ## 10. Motion - In force
 
-- Durations, curves, offsets and scales come only from `src/ui/motion.css`. `src/ui/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
+- Durations, curves, offsets and scales come only from `src/engine/motion/motion.css`. `src/engine/motion/motion-tokens.test.ts` fails on a new keyframe or a raw time elsewhere.
 - Everything that moves is one of these moves: **enter** (`motion-enter`, `enter()`), **exit** (`motion-exit`, `exit()`), **mark** (`.motion-mark`, `land()`), **glide** (FLIP, `ui/flip.ts`), **beat** (`startBeat` / `enterOnBeat` / `joinBeat`: the parts of one change appear as one), **crossfade** (`crossfade()`), with **presence** (`ui/usePresence.ts`) keeping an element mounted while it exits.
 - Durations: `--dur-instant` 80 ms (press, hover colour), `--dur-fast` 120 ms (small exits, fades), `--dur-base` 200 ms (menus, popovers, dialogs), `--dur-medium` 250 ms (_Planned, 1.3.13_: folded into 200 or 320), `--dur-slow` 320 ms (sidebar, AI panel, Settings, Zen mode), `--dur-sheet` 450 ms (phone sheets). An exit takes about 70% of its entry. Loops (`--dur-blink`, `--dur-pulse`, `--dur-spin`, `--dur-sheen`, `--dur-drift`) are only for "working" indicators.
 - Curves: `--ease-standard` (in place), `--ease-out` (entry), `--ease-in` (exit), `--ease-in-out` (movement), `--ease-spring-bouncy` (about 3% overshoot) only for a finger release.
-- Only `opacity` and `transform` animate (`src/ui/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
+- Only `opacity` and `transform` animate (`src/engine/motion/motion-properties.test.ts`). Size changes use FLIP or a crossfade.
 - Toggles (sidebar, panels, switches, arrows) use transitions so they can reverse; keyframes are only for one-time entries. An exiting element is `inert`; animations never block input.
 - Space is consistent: a surface grows from its anchor and shrinks back into it, enters and leaves the same way, one direction per surface.
 - **Dragging** looks the same everywhere: the copy under the pointer is lifted - `scale: 1.06`, `--ui-surface`, `--shadow-popover` (`.tx-drag-ghost`, `.tree-drag-ghost`, `.tab-pull-ghost`, `.tab-pill-lifted`, `.is-drag-lifted`) - and the place it left, where it stays, is a dashed outline (`.tx-drag-source`). The copy stays exactly under the point it was taken by, zoomed or not.
@@ -391,7 +391,7 @@ A plugin MUST use the lowest tier that can do the job.
 Every plugin page (a sidebar tab, a tab view, a code block, a settings page) gets, before its own HTML and with no setup:
 
 1. **The tokens**: every role token on the list in `src/plugins/views/theme-vars.ts` - colours (tones included), type roles, spacing, shapes, control heights, durations and curves, the popover shadow - kept current when the theme or appearance changes.
-2. **The app's own stylesheets**: `src/ui/motion.css`, `src/engine/tokens/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
+2. **The app's own stylesheets**: `src/engine/motion/motion.css`, `src/engine/tokens/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
 3. **Base element styles** (`src/plugins/host/runtime/plugin-ui.css`): bare `button`, `input`, `select`, `textarea`, headings, links, `.toolbar`, `.list`, `.empty` already look like Textus.
 4. **Attributes on `<html>`**: `data-theme` (`light` | `dark`), `data-platform`, and `data-window-chrome="mobile"` on a phone, so controls take the phone's sizes there.
 5. **The page API** from `acquireTextusApi()` (or `textus`): `t()`, `postMessage`, `onMessage`, `getState` / `setState`, `onExport`, and `menu()` (15.5).

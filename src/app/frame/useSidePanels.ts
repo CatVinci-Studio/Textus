@@ -7,7 +7,7 @@ import {
 } from "react";
 import { isIOSApp } from "../../platform/capabilities";
 import { keyboardUp, whenKeyboardDown } from "../../mobile/keyboard";
-import { usePresence } from "../../ui/usePresence";
+import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
 import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../../storage/ui-state";

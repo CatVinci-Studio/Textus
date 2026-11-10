@@ -128,7 +128,7 @@ instead).
 | `pasteMarkdown(page, md)`           | Pastes text into the active editor and waits for it to land.                                                                                                                                                                                                                  |
 | `sourceOf(page)`                    | The active document's Markdown, read by switching to source mode and back.                                                                                                                                                                                                    |
 | `swallowHtmlDrop(page)`             | Before `openApp`: swallows HTML drag and drop as the app's window does (its file drop takes `dragover` and `drop`), so a drag that works here works there.                                                                                                                    |
-| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/ui/pointer-drag.ts` reads them.                                                                                                                                                  |
+| `dragWithMouse(page, from, to, dx)` | Presses on `from`, moves in steps onto `to`, lets go: a drag made of pointer events, as `src/engine/drag/pointer-drag.ts` reads them.                                                                                                                                                  |
 
 Files on disk are in memory: `window.__devFs` (a folder, path to text) and
 `window.__devFiles` (single documents), set from an init script before
@@ -218,7 +218,7 @@ compare. `BENCH_CPU=1` runs it at full speed, `BENCH_TRACE=1` also saves a
 Chromium trace of each scenario; the header of `e2e/bench/motion.bench.ts`
 has the rest. Animations only move `opacity` and `transform`
 ([design-language.md](../design/design-language.md#10-motion---in-force)); the unit test
-`src/ui/motion-properties.test.ts` reads every stylesheet and fails on
+`src/engine/motion/motion-properties.test.ts` reads every stylesheet and fails on
 anything else.
 
 CI also builds the iOS app for the simulator, unsigned, on macOS (the `ios`

@@ -1,9 +1,9 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../../ui/icons";
-import { measure, play } from "../../ui/flip";
+import { measure, play } from "../../engine/motion/flip";
 import { Tooltip } from "../../ui/Tooltip";
-import { dropIndex, makeRoom, SLIDE } from "../../ui/pointer-drag";
+import { dropIndex, makeRoom, SLIDE } from "../../engine/drag/pointer-drag";
 import { iosFiles } from "../../platform/ios-files";
 import { isIOSApp } from "../../platform/capabilities";
 

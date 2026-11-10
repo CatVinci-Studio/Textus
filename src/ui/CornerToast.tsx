@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { CloseIcon } from "./icons";
 import { Tooltip } from "./Tooltip";
-import { Presence, PresenceDiv } from "./usePresence";
+import { Presence, PresenceDiv } from "../engine/motion/usePresence";
 import "./corner-toast.css";
 
 export interface CornerToastAction {

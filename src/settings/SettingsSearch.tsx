@@ -8,7 +8,7 @@ import {
 import type { Strings } from "../i18n/strings";
 import { announce } from "../ui/announce";
 import { SearchIcon } from "../ui/icons";
-import { scrollBehavior } from "../ui/motion";
+import { scrollBehavior } from "../engine/motion/motion";
 import { useLatest } from "../utils/hooks/useLatest";
 import {
   harvestPage,

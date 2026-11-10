@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useModalDialog } from "../../ui/useModalDialog";
-import { usePresenceProps } from "../../ui/usePresence";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import "./ImageNameDialog.css";
 import { isImeKeydown } from "../../utils/ime";
 

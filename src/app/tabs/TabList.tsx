@@ -3,7 +3,7 @@ import { useMenuButton } from "../../ui/useMenuButton";
 import { ChevronIcon } from "../../ui/icons";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { Tooltip } from "../../ui/Tooltip";
-import { scrollBehavior } from "../../ui/motion";
+import { scrollBehavior } from "../../engine/motion/motion";
 import type { TabInfo } from "./TabPill";
 
 /** Below this a pill is too narrow for its × as well as its name: only the

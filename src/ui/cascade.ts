@@ -1,4 +1,4 @@
-import { animate, duration, motionAllowed } from "./motion";
+import { animate, duration, motionAllowed } from "../engine/motion/motion";
 
 /**
  * Streaming text coming in a word at a time, each fading in a step after the

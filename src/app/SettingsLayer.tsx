@@ -7,7 +7,7 @@ import {
   openPluginPage,
 } from "../settings/pages/extensions-tab";
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 
 // Settings loads on first open, warmed once the window is idle.
 const SettingsPanel = lazyComponent(

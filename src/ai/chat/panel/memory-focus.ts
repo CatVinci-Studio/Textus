@@ -1,6 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { MARK_CLASS } from "../../../ui/moves";
-import { duration, scrollBehavior } from "../../../ui/motion";
+import { duration, scrollBehavior } from "../../../engine/motion/motion";
 
 /**
  * The memory a "Remembered" chip points the Memory tab at: a click opens the

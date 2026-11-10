@@ -5,7 +5,7 @@ import { LanguageWelcome } from "../onboarding/LanguageWelcome";
 import type { Tutorial } from "../onboarding/useTutorial";
 import type { Settings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 

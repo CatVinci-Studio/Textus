@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { Bubble } from "./Bubble";
-import { Presence } from "./usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import "./InfoTip.css";
 import { useTipTimer } from "./useTipTimer";
 

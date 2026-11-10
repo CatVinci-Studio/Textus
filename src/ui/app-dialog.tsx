@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useModalDialog } from "./useModalDialog";
-import { usePresence } from "./usePresence";
+import { usePresence } from "../engine/motion/usePresence";
 import { isImeKeydown } from "../utils/ime";
 
 /**

@@ -3,7 +3,7 @@ import { useChromeScale } from "../../ui/useChromeScale";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { windowInfo } from "../store/plugin-records";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import { ResizeGrip } from "./ResizeGrip";

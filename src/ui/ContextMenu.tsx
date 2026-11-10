@@ -23,7 +23,7 @@ import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { ActionSheet } from "./ActionSheet";
 import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
-import { usePresenceProps, usePresenceState } from "./usePresence";
+import { usePresenceProps, usePresenceState } from "../engine/motion/usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
 

@@ -6,7 +6,7 @@ import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
 import { useTreeKeys } from "../ui/useTreeKeys";
 import { Tooltip } from "../ui/Tooltip";
 import { ContextMenu } from "../ui/ContextMenu";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../utils/nav-history";
 import { setTabJump } from "../editor/tab-jump";
 import { headingSlug } from "../editor/markdown/link-target";

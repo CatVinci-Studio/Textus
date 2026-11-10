@@ -1,5 +1,5 @@
 import { useSettings } from "../../prefs/SettingsContext";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { ImageNameDialog } from "../images/ImageNameDialog";
 import type { ImageStore } from "../images/image-store";

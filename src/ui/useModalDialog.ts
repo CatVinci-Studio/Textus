@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { usePhoneLayout } from "./usePhoneLayout";
-import { usePresenceState } from "./usePresence";
+import { usePresenceState } from "../engine/motion/usePresence";
 import { isImeKeydown } from "../utils/ime";
 
 // `summary` is a <details> toggle: without it Settings' folded Advanced

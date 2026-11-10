@@ -1,7 +1,7 @@
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { duration, length, motionAllowed } from "../../ui/motion";
+import { duration, length, motionAllowed } from "../../engine/motion/motion";
 
 /** How near the bottom of the page the writing may be and still count as
  *  in view - a wheel's last step short of it. */

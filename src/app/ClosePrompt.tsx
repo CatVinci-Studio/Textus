@@ -1,5 +1,5 @@
 import { ActionSheet } from "../ui/ActionSheet";
-import { Presence, PresenceDiv } from "../ui/usePresence";
+import { Presence, PresenceDiv } from "../engine/motion/usePresence";
 import type { useModalDialog } from "../ui/useModalDialog";
 import type { Strings } from "../i18n/strings";
 

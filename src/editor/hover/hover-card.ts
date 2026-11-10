@@ -5,7 +5,7 @@ import type { HoverCard } from "../extension-points";
 import { renderMarkdownHtml } from "../markdown/render-html";
 import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
-import { duration } from "../../ui/motion";
+import { duration } from "../../engine/motion/motion";
 
 /**
  * The card a plugin's hover provider gives: beside the link until the

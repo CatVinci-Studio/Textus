@@ -5,7 +5,7 @@ import {
   type RevisionDisplay,
 } from "../../prefs/SettingsContext";
 import { AssistantIcon, ChevronIcon } from "../../ui/icons";
-import { usePresenceProps } from "../../ui/usePresence";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";
 import {
   effectiveRevisionDisplay,

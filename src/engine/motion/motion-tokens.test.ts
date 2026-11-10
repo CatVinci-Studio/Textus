@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 // Timing comes from motion.css's tokens and movement from its shared moves,
 // so one change there reaches everything and reduced motion reaches it too.
 
-const SRC = fileURLToPath(new URL("..", import.meta.url));
+const SRC = fileURLToPath(new URL("../..", import.meta.url));
 
 /** Keyframes of their own, and why the shared moves don't cover them. */
 const OWN_KEYFRAMES: Record<string, string> = {
@@ -38,7 +38,7 @@ const RAW_TIME = /(?<![\w-])(?!0m?s\b|1ms\b)\d*\.?\d+m?s\b/;
 function stylesheets(): string[] {
   return readdirSync(SRC, { recursive: true, encoding: "utf8" })
     .filter(
-      (file) => file.endsWith(".css") && file !== join("ui", "motion.css"),
+      (file) => file.endsWith(".css") && file !== join("engine", "motion", "motion.css"),
     )
     .map((file) => relative(SRC, join(SRC, file)).split(sep).join("/"));
 }

@@ -3,7 +3,7 @@ import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { AppMenu } from "./app-menu-lazy";
 import {
   buildAppMenu,

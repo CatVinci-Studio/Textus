@@ -34,7 +34,7 @@ import {
 import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
-import { trackDrag } from "../../ui/pointer-drag";
+import { trackDrag } from "../../engine/drag/pointer-drag";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {

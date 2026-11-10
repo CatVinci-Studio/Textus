@@ -2,7 +2,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { NotePopover } from "./ReviewMargin";
 import type { ReviewNote } from "./review-notes-plugin";
 import { BottomCard } from "../../ui/BottomCard";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import type { Strings } from "../../i18n/strings";
 
 /** A review note opened from its numbered badge (no room for a margin): a

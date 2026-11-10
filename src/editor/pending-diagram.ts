@@ -3,7 +3,7 @@
 // editor's own drawer draws it, so it matches the document's diagrams.
 
 import { renderMarkdownInlineHtml } from "./markdown/render-html";
-import { animate, duration } from "../ui/motion";
+import { animate, duration } from "../engine/motion/motion";
 
 /** A run of Markdown text, or a ```mermaid fence in it. */
 export type DiagramPart =

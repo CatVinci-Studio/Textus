@@ -4,8 +4,8 @@ import {
   length,
   motionAllowed,
   type DurationToken,
-} from "./motion";
-import { measure, play } from "./flip";
+} from "../engine/motion/motion";
+import { measure, play } from "../engine/motion/flip";
 
 /** The few moves everything in Textus is made of: enter, exit, and mark (tint
  *  what is about to change, then `land`). Only opacity and transform animate;

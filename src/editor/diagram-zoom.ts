@@ -1,5 +1,5 @@
 import { currentStrings } from "../i18n/current";
-import { motionAllowed } from "../ui/motion";
+import { motionAllowed } from "../engine/motion/motion";
 import "./diagram-zoom.css";
 
 /** How far a diagram can be zoomed out and in. */

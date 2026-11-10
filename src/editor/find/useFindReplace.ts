@@ -4,7 +4,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { compileQuery, findReplaceKey } from "./find-replace-plugin";
-import { scrollBehavior } from "../../ui/motion";
+import { scrollBehavior } from "../../engine/motion/motion";
 import type { EditorRunner } from "../useEditorRunner";
 import { isImeKeydown } from "../../utils/ime";
 import { SMOOTH_SCROLL_MS } from "../lazy-blocks/lazy-blocks-drawer";

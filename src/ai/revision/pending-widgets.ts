@@ -1,6 +1,6 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Decoration } from "@milkdown/kit/prose/view";
-import { prefersReducedMotion } from "../../ui/motion";
+import { prefersReducedMotion } from "../../engine/motion/motion";
 import { enterOnBeat, glideAfter, startBeat } from "../../ui/moves";
 import { inlineSentence } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";

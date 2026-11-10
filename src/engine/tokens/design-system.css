@@ -1,5 +1,5 @@
 /* Application UI contract. Content themes remain scoped to the document. */
-@import "../../ui/motion.css";
+@import "../motion/motion.css";
 @import "../../ui/components.css";
 @import "../../ui/controls.css";
 

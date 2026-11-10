@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useRevealedText } from "./useRevealedText";
 
 let motion = true;
-vi.mock("../../ui/motion", () => ({ motionAllowed: () => motion }));
+vi.mock("../../engine/motion/motion", () => ({ motionAllowed: () => motion }));
 
 const reply = "The reply streams in, ".repeat(20);
 

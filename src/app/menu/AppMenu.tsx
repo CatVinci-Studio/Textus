@@ -23,7 +23,7 @@ import {
 } from "../../platform/capabilities";
 import { useMenuAim } from "../../ui/menu-aim";
 import { CheckIcon, ChevronIcon } from "../../ui/icons";
-import { usePresenceProps } from "../../ui/usePresence";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import "./app-menu.css";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";

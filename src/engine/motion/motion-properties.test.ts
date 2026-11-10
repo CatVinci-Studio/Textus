@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // lays out or repaints each frame drops frames in WebKitGTK. Every stylesheet
 // in src/ is read here; exceptions are listed with their reason.
 
-const SRC = fileURLToPath(new URL("..", import.meta.url));
+const SRC = fileURLToPath(new URL("../..", import.meta.url));
 
 /** What may move or change, on its own. */
 const ALLOWED = new Set([

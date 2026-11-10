@@ -4,7 +4,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import {
   animate as animateElement,
   prefersReducedMotion,
-} from "../../ui/motion";
+} from "../../engine/motion/motion";
 import { pictureState } from "./generated-images";
 import type { RevisionDisplay } from "../../prefs/SettingsContext";
 import {

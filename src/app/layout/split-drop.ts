@@ -1,4 +1,4 @@
-import { dragGhost } from "../../ui/drag-ghost";
+import { dragGhost } from "../../engine/drag/ghost";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   moveToPane,

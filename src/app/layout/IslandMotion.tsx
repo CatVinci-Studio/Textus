@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from "react";
-import { FlipOnChange } from "../../ui/flip";
+import { FlipOnChange } from "../../engine/motion/flip";
 import { markIslandsReady } from "../../ui/Island";
 
 /**

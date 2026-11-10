@@ -7,14 +7,14 @@ import {
   type RefObject,
   type CSSProperties,
 } from "react";
-import { animate } from "../../ui/motion";
-import { ListMotion, measure, type PendingFlip } from "../../ui/flip";
+import { animate } from "../../engine/motion/motion";
+import { ListMotion, measure, type PendingFlip } from "../../engine/motion/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
 import { revealActive, TabListButton, useTabOverflow } from "./TabList";
-import { roomFor, SLIDE } from "../../ui/pointer-drag";
+import { roomFor, SLIDE } from "../../engine/drag/pointer-drag";
 
 interface TabBarProps {
   tabs: TabInfo[];

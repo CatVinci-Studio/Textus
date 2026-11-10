@@ -34,7 +34,7 @@ import { useOpenedCard } from "./margin-layout";
 import { useOwnNotes } from "./useOwnNotes";
 import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
-import { duration } from "../../ui/motion";
+import { duration } from "../../engine/motion/motion";
 import { addsTextOnly } from "../revision/revision-display";
 import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
 import { noteOfAnchor } from "./review-notes-plugin";

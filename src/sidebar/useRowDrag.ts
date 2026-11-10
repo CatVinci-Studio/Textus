@@ -13,8 +13,8 @@ import { documentDrop, setDragging } from "../ui/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";
-import { DRAG_START_PX } from "../ui/pointer-drag";
-import { dragGhost, type DragGhost } from "../ui/drag-ghost";
+import { DRAG_START_PX } from "../engine/drag/pointer-drag";
+import { dragGhost, type DragGhost } from "../engine/drag/ghost";
 
 /** A row being dragged, and the folder under the pointer. */
 export interface Drag {

@@ -4,7 +4,7 @@ import {
   Presence,
   PresenceDiv,
   type PresenceHandle,
-} from "../../ui/usePresence";
+} from "../../engine/motion/usePresence";
 import { ResizeHandle } from "../../ui/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
 import type { PanelMode } from "./useSidePanels";

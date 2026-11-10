@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { animate } from "../../ui/motion";
+import { animate } from "../../engine/motion/motion";
 
 const BOX = ".inline-chat-bar";
 

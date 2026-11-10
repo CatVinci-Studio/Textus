@@ -5,7 +5,7 @@ import { AppMenu } from "../menu/app-menu-lazy";
 import type { MenuChecks } from "../menu/app-menu-model";
 import { HamburgerIcon } from "../../ui/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { isIOSApp } from "../../platform/capabilities";
 import { Tooltip } from "../../ui/Tooltip";
 import "./window-controls.css";

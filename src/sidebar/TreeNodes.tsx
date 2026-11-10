@@ -11,7 +11,7 @@ import { basename, isInside, parentDir } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
 import { ContextMenu } from "../ui/ContextMenu";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./file-search";
 import { localeOf } from "../i18n/langs";

@@ -8,7 +8,7 @@ import { GrammarSuggestion } from "../ai/writing/GrammarSuggestion";
 import { InsertTableDialog } from "../editor/tables/InsertTableDialog";
 import { ImageNameDialog } from "../editor/images/ImageNameDialog";
 import { FindReplaceBar } from "../editor/find/FindReplaceBar";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 

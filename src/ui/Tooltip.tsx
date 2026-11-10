@@ -14,7 +14,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Bubble } from "./Bubble";
-import { Presence } from "./usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import "./Tooltip.css";
 import { useTipTimer } from "./useTipTimer";
 

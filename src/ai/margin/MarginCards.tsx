@@ -3,7 +3,7 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
-import { animate } from "../../ui/motion";
+import { animate } from "../../engine/motion/motion";
 import { joinBeat } from "../../ui/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../ui/Tooltip";

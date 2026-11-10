@@ -2,7 +2,7 @@ import { useEffect, useRef, type CSSProperties } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
 import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
-import { usePresenceProps } from "../../ui/usePresence";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import { Tooltip } from "../../ui/Tooltip";
 import "./FindReplaceBar.css";

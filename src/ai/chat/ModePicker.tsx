@@ -1,7 +1,7 @@
 import { SelectMenu } from "../../ui/SelectMenu";
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import { useMergedRef, usePresence } from "../../ui/usePresence";
+import { useMergedRef, usePresence } from "../../engine/motion/usePresence";
 import { useFloatingList } from "../../ui/useFloatingList";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";

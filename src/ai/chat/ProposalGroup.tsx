@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type CSSProperties } from "react";
-import { FlipOnChange } from "../../ui/flip";
+import { FlipOnChange } from "../../engine/motion/flip";
 import type { AgentTurn, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";

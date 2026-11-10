@@ -12,7 +12,7 @@ import "./AgentTurnView.css";
 import { toolActivityText } from "./tool-activity";
 import { siteOf } from "../citations";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
 
 /** The main window, whose document a reply can go into. */

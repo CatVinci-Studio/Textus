@@ -5,7 +5,7 @@ import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { ReviewNote } from "./review-notes-plugin";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { flip } from "../../ui/flip";
+import { flip } from "../../engine/motion/flip";
 import { columnForMargin, marginRoom, NARROWEST_SHARE } from "./margin-room";
 import "./ReviewMargin.css";
 import { zoomedRectScale } from "../../ui/zoomed-rects";

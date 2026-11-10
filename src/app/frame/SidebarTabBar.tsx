@@ -2,9 +2,9 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import { MoreIcon } from "../../ui/icons";
-import { reorderDrag } from "../../ui/pointer-drag";
+import { reorderDrag } from "../../engine/drag/pointer-drag";
 import type { Strings } from "../../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 

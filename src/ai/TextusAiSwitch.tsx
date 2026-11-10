@@ -4,7 +4,7 @@ import { useSettings } from "../prefs/SettingsContext";
 import { announce } from "../ui/announce";
 import { AssistantIcon } from "../ui/icons";
 import { Tooltip } from "../ui/Tooltip";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
 import "./textus-ai-switch.css";
 

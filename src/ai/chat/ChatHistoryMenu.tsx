@@ -7,7 +7,7 @@ import {
   deleteConversation,
 } from "./chat-history";
 import { CloseIcon, HistoryIcon } from "../../ui/icons";
-import { Presence, PresenceDiv } from "../../ui/usePresence";
+import { Presence, PresenceDiv } from "../../engine/motion/usePresence";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { basename, dirname } from "../../utils/path";
 import type { ChatSummary } from "./chat-history";

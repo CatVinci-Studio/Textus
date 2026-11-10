@@ -42,7 +42,7 @@ it("names only style variables a plugin page is given", () => {
     "src/engine/tokens/design-system.css",
     "src/ui/components.css",
     "src/ui/controls.css",
-    "src/ui/motion.css",
+    "src/engine/motion/motion.css",
   ])
     for (const m of read(css).matchAll(/(--[a-z][\w-]*)\s*:/g)) given.add(m[1]);
   for (const doc of DOCS)

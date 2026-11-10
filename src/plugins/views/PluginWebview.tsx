@@ -24,7 +24,7 @@ import {
 } from "./frame-zoom";
 import { createPortal } from "react-dom";
 import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
-import { Presence } from "../../ui/usePresence";
+import { Presence } from "../../engine/motion/usePresence";
 import {
   createWebview,
   setWebviewState,

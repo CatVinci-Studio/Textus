@@ -1,4 +1,4 @@
-import { motionAllowed } from "./motion";
+import { motionAllowed } from "../engine/motion/motion";
 import { isIOSApp } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";
 

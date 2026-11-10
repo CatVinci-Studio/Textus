@@ -6,7 +6,7 @@ import {
   type ContextMenuOptions,
 } from "../editor/editor-menu";
 import { ContextMenu } from "../ui/ContextMenu";
-import { Presence } from "../ui/usePresence";
+import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";
 import type { Strings } from "../i18n/strings";

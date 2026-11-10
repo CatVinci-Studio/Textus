@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { announce } from "../../ui/announce";
-import { usePresenceProps } from "../../ui/usePresence";
+import { usePresenceProps } from "../../engine/motion/usePresence";
 import { parseKindKey } from "./change-kind";
 import {
   answer,
