@@ -98,31 +98,56 @@ export default tseslint.config(
   {
     files: ["src/{utils,i18n,storage}/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui", "engine"]),
+    rules: above([...SHELL, ...FEATURES, "engine"]),
   },
   {
     files: ["src/platform/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui", "engine"], { tauri: true }),
+    rules: above([...SHELL, ...FEATURES, "engine"], { tauri: true }),
   },
   {
     // The settings model: what every layer above reads.
     files: ["src/prefs/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui", "engine"]),
+    rules: above([...SHELL, ...FEATURES, "engine"]),
   },
   {
     // The engine: tokens and the colour system, motion, drag, controls,
     // layout - what every surface is drawn and moved with. It knows no
-    // document, AI or plugin (docs/dev/architecture.md).
+    // document, AI or plugin (docs/dev/architecture.md); inside it, each
+    // part uses only those before it.
     files: ["src/engine/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES, "ui"]),
+    rules: above([...SHELL, ...FEATURES]),
   },
   {
-    files: ["src/ui/**/*.{ts,tsx}"],
+    files: ["src/engine/tokens/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
-    rules: above([...SHELL, ...FEATURES]),
+    rules: above([
+      ...SHELL,
+      ...FEATURES,
+      "motion",
+      "drag",
+      "controls",
+      "layout",
+    ]),
+  },
+  {
+    files: ["src/engine/motion/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "drag", "controls", "layout"]),
+  },
+  {
+    files: ["src/engine/drag/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "controls", "layout"]),
+  },
+  {
+    // Controls never need the islands: a page with a button doesn't bring
+    // the window's layout along.
+    files: ["src/engine/controls/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([...SHELL, ...FEATURES, "layout"]),
   },
   {
     files: ["src/editor/**/*.{ts,tsx}"],

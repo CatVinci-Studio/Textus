@@ -1,4 +1,4 @@
-import { clampLeft, opensBelow } from "../../ui/placement";
+import { clampLeft, opensBelow } from "../../engine/controls/placement";
 import "./completion-panel.css";
 import type { PanelRow } from "./panel-rows";
 

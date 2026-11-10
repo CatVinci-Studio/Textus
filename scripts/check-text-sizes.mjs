@@ -16,7 +16,7 @@ const ALLOWED_FILES = {
   "src/app/editor-column.css": "the document's text, at its zoom",
   "src/theme/content-base.css": "the document's text",
   "src/editor/milkdown-theme.css": "the document's text",
-  "src/ui/Select.css":
+  "src/engine/controls/Select.css":
     "an invisible native select: 16px keeps iOS from zooming",
   "src/mobile/": "the phone's own type (its --text-* follow Dynamic Type)",
 };

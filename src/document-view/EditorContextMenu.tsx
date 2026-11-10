@@ -5,7 +5,7 @@ import {
   buildPhoneMoreItems,
   type ContextMenuOptions,
 } from "../editor/editor-menu";
-import { ContextMenu } from "../ui/ContextMenu";
+import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import type { Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../settings/textus-ai";

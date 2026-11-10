@@ -12,7 +12,7 @@ import {
 } from "./review-notes-plugin";
 import type { MarginItem } from "./ReviewMargin";
 import { setMarginAvailable } from "./margin-room";
-import { blockAt, holdBlock } from "../../ui/hold-line";
+import { blockAt, holdBlock } from "../../engine/controls/hold-line";
 import type { AgentConversation } from "../chat/useAgentConversation";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import {
@@ -36,7 +36,7 @@ import { useOwnRevisions } from "./useOwnRevisions";
 import { OWN_CHANGES, ownRevisionKey } from "./own-revision-plugin";
 import { duration } from "../../engine/motion/motion";
 import { addsTextOnly } from "../revision/revision-display";
-import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
 import { noteOfAnchor } from "./review-notes-plugin";
 
 /** A proposal shown whole as a margin card's change: what it replaces and

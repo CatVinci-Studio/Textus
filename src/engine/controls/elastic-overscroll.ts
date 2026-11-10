@@ -1,6 +1,6 @@
-import { motionAllowed } from "../engine/motion/motion";
-import { isIOSApp } from "../platform/capabilities";
-import { isMacPlatform } from "../platform/os";
+import { motionAllowed } from "../motion/motion";
+import { isIOSApp } from "../../platform/capabilities";
+import { isMacPlatform } from "../../platform/os";
 
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;

@@ -1,5 +1,9 @@
 import type { Dispatch, SetStateAction } from "react";
-import { CloseIcon, GenericFileIcon, ImageFileIcon } from "../../ui/icons";
+import {
+  CloseIcon,
+  GenericFileIcon,
+  ImageFileIcon,
+} from "../../engine/controls/icons";
 import type { ChatAttachment } from "../types";
 
 /** The files going with the message, above its text, each removable;

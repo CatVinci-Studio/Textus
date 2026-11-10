@@ -1,7 +1,7 @@
-import { useMenuButton } from "../ui/useMenuButton";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import { Fragment, useMemo, useSyncExternalStore } from "react";
-import { Tooltip } from "../ui/Tooltip";
-import { ChevronIcon } from "../ui/icons";
+import { Tooltip } from "../engine/controls/Tooltip";
+import { ChevronIcon } from "../engine/controls/icons";
 import { runCommand } from "./commands";
 import {
   statusItemsSnapshot,

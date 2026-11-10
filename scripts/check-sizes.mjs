@@ -15,7 +15,7 @@ const SCALED = /scaledPx\(|chrome|[sS]cale\b|zoom|step\b/;
 
 /** "file:NAME": why that size doesn't take the chrome scale. */
 const ALLOWED = {
-  "src/ui/side-panel-width.ts:DOCUMENT_MIN_WIDTH":
+  "src/engine/controls/side-panel-width.ts:DOCUMENT_MIN_WIDTH":
     "interface px; callers pass the scale",
   "src/app/frame/sidebar-width.ts:SIDEBAR_DEFAULT_WIDTH":
     "interface px, drawn times the scale",

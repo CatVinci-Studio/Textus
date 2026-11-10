@@ -6,9 +6,13 @@ import {
 import { fs } from "../platform/ipc";
 
 import { basename, parentDir } from "../utils/path";
-import { type ContextMenuItem } from "../ui/ContextMenu";
-import { contributedContextItems } from "../ui/context-menu-items";
-import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
+import { type ContextMenuItem } from "../engine/controls/ContextMenu";
+import { contributedContextItems } from "../engine/controls/context-menu-items";
+import {
+  showConfirm,
+  showMessage,
+  showPrompt,
+} from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";

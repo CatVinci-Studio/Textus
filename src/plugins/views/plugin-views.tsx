@@ -1,10 +1,10 @@
 import { Suspense, useSyncExternalStore, type ComponentType } from "react";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import {
   contextItemsVersion,
   contributedContextItems,
   subscribeContextItems,
-} from "../../ui/context-menu-items";
+} from "../../engine/controls/context-menu-items";
 import { pluginRecord } from "../store/plugin-records";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";

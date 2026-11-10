@@ -2,7 +2,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
 
-vi.mock("../../ui/zoomed-rects", () => ({ zoomedRectScale: () => 1.5 }));
+vi.mock("../../engine/controls/zoomed-rects", () => ({
+  zoomedRectScale: () => 1.5,
+}));
 vi.mock("../../platform/ipc", () => ({
   fs: {
     resolveNoteLink: async () => ({ path: "/v/Note.md", exists: true }),

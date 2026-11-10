@@ -1,10 +1,10 @@
 import { createRoot, type Root } from "react-dom/client";
 import { createElement } from "react";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
-import { currentStrings } from "../i18n/current";
-import { clipboardIpc } from "../platform/ipc";
-import { editIpc } from "../platform/ipc-app";
-import type { Strings } from "../i18n/strings";
+import { currentStrings } from "../../i18n/current";
+import { clipboardIpc } from "../../platform/ipc";
+import { editIpc } from "../../platform/ipc-app";
+import type { Strings } from "../../i18n/strings";
 import "./text-field-menu.css";
 
 /**

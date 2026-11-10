@@ -9,16 +9,16 @@ import { CHAT_TO_EDITOR } from "./chat-bridge";
 import { useChatWindowHandoff } from "./useChatWindowHandoff";
 import { useChatWindowBridge } from "./useChatWindowBridge";
 import { ChatWindowHeader } from "./ChatWindowHeader";
-import { AppDialogHost } from "../../../ui/app-dialog";
+import { AppDialogHost } from "../../../engine/controls/app-dialog";
 // This window doesn't render App, so without this the theme's custom
 // properties are never declared and the window is unstyled.
 import "../../../engine/tokens/base.css";
-import "../../../ui/app-dialog.css";
+import "../../../engine/controls/app-dialog.css";
 import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { TextusAiOffNote } from "../../TextusAiSwitch";
 import "./chat-window.css";
-import { IslandSheet } from "../../../ui/Island";
+import { IslandSheet } from "../../../engine/layout/Island";
 
 /**
  * The chat as its own OS window: the cross-file surface, following the user's

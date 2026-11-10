@@ -6,7 +6,7 @@ import { registerCommand } from "../../app/commands";
 import { defaultShortcuts } from "../../prefs/SettingsContext";
 
 const notices = vi.hoisted(() => ({ showNotice: vi.fn() }));
-vi.mock("../../ui/notices", () => notices);
+vi.mock("../../engine/controls/notices", () => notices);
 
 import { configurePlugins } from "../store/plugin-records";
 import { pluginKey } from "./plugin-keys";

@@ -1,4 +1,4 @@
-import type { QuickPickItem } from "../../ui/quick-pick";
+import type { QuickPickItem } from "../../engine/controls/quick-pick";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
 import {

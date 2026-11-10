@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { MARK_CLASS } from "../../../ui/moves";
+import { MARK_CLASS } from "../../../engine/controls/moves";
 import { duration, scrollBehavior } from "../../../engine/motion/motion";
 
 /**

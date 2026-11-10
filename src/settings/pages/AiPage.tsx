@@ -35,7 +35,7 @@ import {
   BuiltinSkillsSection,
   WritingConventionsRow,
 } from "../sections/skills";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   canDetachChat,
   canPickFolder,

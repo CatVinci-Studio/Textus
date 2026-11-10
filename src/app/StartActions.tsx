@@ -1,6 +1,10 @@
 import { emitToThisWindow } from "../platform/menu-events";
 import { formatCombo } from "../utils/shortcuts";
-import { OpenFolderIcon, PlusIcon, ProjectIcon } from "../ui/icons";
+import {
+  OpenFolderIcon,
+  PlusIcon,
+  ProjectIcon,
+} from "../engine/controls/icons";
 import { canOpenFolder } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 

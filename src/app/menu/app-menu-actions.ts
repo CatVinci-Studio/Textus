@@ -1,5 +1,5 @@
 import { thisWindow } from "../../platform/this-window";
-import { editInFocus } from "../../ui/edit-in-focus";
+import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
 import type { LocalMenuAction, MenuAction } from "./app-menu-model";
 import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";

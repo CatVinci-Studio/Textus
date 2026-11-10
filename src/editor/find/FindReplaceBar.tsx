@@ -1,10 +1,14 @@
 import { useEffect, useRef, type CSSProperties } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
-import { ArrowUpIcon, ChevronIcon, CloseIcon } from "../../ui/icons";
+import {
+  ArrowUpIcon,
+  ChevronIcon,
+  CloseIcon,
+} from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./FindReplaceBar.css";
 import { isImeKeydown } from "../../utils/ime";
 

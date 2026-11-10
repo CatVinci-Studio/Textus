@@ -5,7 +5,7 @@ import type {
   Outline,
   OutlineSection,
 } from "../../platform/bindings/ai-paper";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   addSection,
   editFigures,

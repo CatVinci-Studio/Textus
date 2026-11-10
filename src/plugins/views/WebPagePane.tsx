@@ -1,7 +1,11 @@
 import { useRef, useState } from "react";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { links, webPages } from "../../platform/ipc";
-import { ChevronIcon, DetachIcon, RefreshIcon } from "../../ui/icons";
+import {
+  ChevronIcon,
+  DetachIcon,
+  RefreshIcon,
+} from "../../engine/controls/icons";
 import { hasNativeWebPages } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import { useNativeWebPage } from "./useNativeWebPage";

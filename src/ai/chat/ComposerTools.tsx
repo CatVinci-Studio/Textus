@@ -1,5 +1,9 @@
-import { CloseIcon, LightbulbIcon, SearchIcon } from "../../ui/icons";
-import { Tooltip } from "../../ui/Tooltip";
+import {
+  CloseIcon,
+  LightbulbIcon,
+  SearchIcon,
+} from "../../engine/controls/icons";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { rememberDeepThinking } from "./deep-thinking";
 import type { ChatComposerLabels, ChatComposerProps } from "./composer-types";
 import type { useRequestOptions } from "./useComposerState";

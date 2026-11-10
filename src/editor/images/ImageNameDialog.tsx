@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import "./ImageNameDialog.css";
 import { isImeKeydown } from "../../utils/ime";

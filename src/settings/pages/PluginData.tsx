@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SettingRow } from "../sections/controls";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import { projectRoot } from "../../plugins/store/plugin-settings";

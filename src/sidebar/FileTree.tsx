@@ -7,7 +7,7 @@ import {
   ProjectIcon,
   RefreshIcon,
   SortIcon,
-} from "../ui/icons";
+} from "../engine/controls/icons";
 import { windowIpc } from "../platform/ipc";
 
 const openInNewWindow = (path: string) =>
@@ -15,12 +15,12 @@ const openInNewWindow = (path: string) =>
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, parentDir } from "../utils/path";
 import { canOpenFolder, isIOSApp } from "../platform/capabilities";
-import { ContextMenu } from "../ui/ContextMenu";
+import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
-import { useTreeKeys } from "../ui/useTreeKeys";
+import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { FileSearch } from "./FileSearch";
 import { type SearchScope } from "./file-search";
-import { Tooltip } from "../ui/Tooltip";
+import { Tooltip } from "../engine/controls/Tooltip";
 import { setUiState } from "../storage/ui-state";
 import { TreeContext, type TreeShared, type TreeSort } from "./tree-shared";
 import { useRowDrag } from "./useRowDrag";

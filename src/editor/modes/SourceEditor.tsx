@@ -30,7 +30,7 @@ import {
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { tellCopied } from "../../clipboard/copied";
-import { elasticOverscroll } from "../../ui/elastic-overscroll";
+import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./source-editor.css";
 
 /** A change the tab's markdown made, not the user. */

@@ -4,7 +4,7 @@ import { reopenConversation } from "./reopen-conversation";
 import { claimChatRestore } from "./chat-restore";
 import { deleteConversation } from "./chat-history";
 import { fs } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 
@@ -17,7 +17,7 @@ vi.mock("./chat-history", () => ({
   deleteConversation: vi.fn(),
 }));
 vi.mock("../../platform/ipc", () => ({ fs: { readTextFile: vi.fn() } }));
-vi.mock("../../ui/app-dialog", () => ({ showConfirm: vi.fn() }));
+vi.mock("../../engine/controls/app-dialog", () => ({ showConfirm: vi.fn() }));
 
 const t = {
   chatHistoryMissingText: "{name} is gone",

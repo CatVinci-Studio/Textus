@@ -8,7 +8,10 @@ import {
 } from "@milkdown/kit/preset/commonmark";
 import { insertTableCommand } from "@milkdown/kit/preset/gfm";
 import { NodeSelection } from "@milkdown/kit/prose/state";
-import type { ContextMenuEntry, ContextMenuItem } from "../ui/ContextMenu";
+import type {
+  ContextMenuEntry,
+  ContextMenuItem,
+} from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
 export {

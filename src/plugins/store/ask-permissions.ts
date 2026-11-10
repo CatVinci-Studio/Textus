@@ -1,4 +1,4 @@
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Permission } from "./manifest";
 import { permissionLabel } from "./permissions";
 import { pluginName, windowInfo, type PluginRecord } from "./plugin-records";

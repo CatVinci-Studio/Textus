@@ -5,7 +5,7 @@ import { saveFolder, useSaveTabs } from "./useSaveTabs";
 import { setUiState } from "../storage/ui-state";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import en from "../i18n/locales/en";
 import type { DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
@@ -21,7 +21,7 @@ vi.mock("../platform/ipc", () => ({
   },
   session: { addRecentFile: vi.fn() },
 }));
-vi.mock("../ui/app-dialog", () => ({
+vi.mock("../engine/controls/app-dialog", () => ({
   showConfirm: vi.fn(),
   showMessage: vi.fn(),
 }));

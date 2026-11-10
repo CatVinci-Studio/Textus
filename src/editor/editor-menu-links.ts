@@ -2,7 +2,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Strings } from "../i18n/strings";
-import type { ContextMenuItem } from "../ui/ContextMenu";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { LINK } from "./markdown/link-source";
 import { linkHrefAt } from "./markdown/link-reveal";
 import { parseLink } from "./markdown/link-syntax";

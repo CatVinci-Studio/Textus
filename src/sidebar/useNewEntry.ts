@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { fs } from "../platform/ipc";
 
-import { showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 

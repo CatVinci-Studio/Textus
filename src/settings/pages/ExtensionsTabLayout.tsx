@@ -1,4 +1,4 @@
-import { useMenuButton } from "../../ui/useMenuButton";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { RowHelp } from "../sections/controls";

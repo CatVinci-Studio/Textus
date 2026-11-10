@@ -3,7 +3,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
-import { showPrompt } from "../../ui/app-dialog";
+import { showPrompt } from "../../engine/controls/app-dialog";
 import type { Strings } from "../../i18n/strings";
 import { useLatest } from "../../utils/hooks/useLatest";
 import {

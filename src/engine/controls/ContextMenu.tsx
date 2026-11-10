@@ -18,15 +18,12 @@ function menuHost(): Element {
     [...document.querySelectorAll('[role="dialog"]')].at(-1) ?? document.body
   );
 }
-import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
-import { useViewportClamp } from "../utils/hooks/useViewportClamp";
+import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
+import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { ActionSheet } from "./ActionSheet";
 import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
-import {
-  usePresenceProps,
-  usePresenceState,
-} from "../engine/motion/usePresence";
+import { usePresenceProps, usePresenceState } from "../motion/usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
 

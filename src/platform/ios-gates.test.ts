@@ -40,9 +40,9 @@ const ALLOWED: Record<string, string> = {
   "sidebar/TreeNodes.tsx": "a long press for the row's menu",
   "theme/apply-appearance.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
-  "ui/Select.tsx": "the system's picker",
-  "ui/elastic-overscroll.ts": "the system's own overscroll",
-  "ui/usePhoneLayout.ts": "the phone layout itself",
+  "engine/controls/Select.tsx": "the system's picker",
+  "engine/controls/elastic-overscroll.ts": "the system's own overscroll",
+  "engine/controls/usePhoneLayout.ts": "the phone layout itself",
 };
 
 const SRC = fileURLToPath(new URL("..", import.meta.url));

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { fs } from "../platform/ipc";
 import type { Conventions } from "../platform/ipc-files";
 import { updateProjectSettings } from "../storage/project-settings";
-import { CornerToast } from "../ui/CornerToast";
+import { CornerToast } from "../engine/controls/CornerToast";
 import {
   SAME_FOLDER,
   attachmentsFolderName,

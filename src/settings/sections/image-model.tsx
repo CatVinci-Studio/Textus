@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { auth } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 import { ApiKeyProviderPanel } from "./providers";
 import {

@@ -11,7 +11,7 @@ import {
   SHOW_SIDEBAR_TAB_EVENT,
 } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
-import { editInFocus } from "../../ui/edit-in-focus";
+import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
 import { nativeMenuChecks, type MenuChecks } from "./app-menu-model";
 import { nativeMenuAccelerators, nativeMenuLabels } from "./native-menu-text";

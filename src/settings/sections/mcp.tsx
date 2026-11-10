@@ -5,7 +5,7 @@ import {
   type McpServerStatus,
   type McpToolInfo,
 } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import { ExtensionsTabLayout } from "../pages/ExtensionsTabLayout";
 import { SettingsGroup } from "../pages/SettingsGroup";

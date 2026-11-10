@@ -15,7 +15,10 @@ import type { CodeBlockSeen } from "../manager";
 import { windowInfo } from "../store/plugin-records";
 import { watchTheme, webviewThemeCss, windowIsDark } from "./theme-vars";
 import { pageMenuEntries } from "./webview-menu";
-import { clipboardText, textFieldItems } from "../../ui/text-field-menu";
+import {
+  clipboardText,
+  textFieldItems,
+} from "../../engine/controls/text-field-menu";
 import {
   contentZoom,
   passZoomGesture,
@@ -23,7 +26,10 @@ import {
   watchContentZoom,
 } from "./frame-zoom";
 import { createPortal } from "react-dom";
-import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import {
   createWebview,

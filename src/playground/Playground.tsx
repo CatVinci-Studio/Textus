@@ -1,5 +1,5 @@
-import { NoticeHost, showNotice } from "../ui/notices";
-import { Tooltip } from "../ui/Tooltip";
+import { NoticeHost, showNotice } from "../engine/controls/notices";
+import { Tooltip } from "../engine/controls/Tooltip";
 import {
   type ChangeEvent,
   type RefObject,
@@ -29,11 +29,11 @@ import {
   readMarkdownFile,
 } from "./markdown-file";
 import { documentName, useWebDocuments } from "./useWebDocuments";
-import { ContextMenu } from "../ui/ContextMenu";
+import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
-import { ChevronIcon } from "../ui/icons";
+import { ChevronIcon } from "../engine/controls/icons";
 import { LANGS, LANG_NAMES } from "../i18n/langs";
-import { Select } from "../ui/Select";
+import { Select } from "../engine/controls/Select";
 import mark from "../../src-tauri/icons/128x128.png";
 
 export const DOWNLOAD_URL = "https://textus.md/#download";

@@ -9,9 +9,9 @@ import {
 } from "react";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import { SearchIcon } from "../ui/icons";
-import { fileIconFor } from "../ui/file-icons";
-import { Select } from "../ui/Select";
+import { SearchIcon } from "../engine/controls/icons";
+import { fileIconFor } from "../engine/controls/file-icons";
+import { Select } from "../engine/controls/Select";
 import { localeOf } from "../i18n/langs";
 import { nameCollator } from "../utils/name-order";
 import {

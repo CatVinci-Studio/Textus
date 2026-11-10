@@ -6,7 +6,7 @@ import { useEditorReview } from "./useEditorReview";
 import { EditorMarginLayer } from "./EditorMarginLayer";
 import { EditorOverlays } from "./EditorOverlays";
 import { EditorChatPortals } from "./EditorChatPortals";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import type { TourAi } from "../utils/events";
 import { Milkdown } from "@milkdown/react";

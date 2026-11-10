@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { enter, glideAfter } from "../../ui/moves";
+import { enter, glideAfter } from "../../engine/controls/moves";
 import { measure, play } from "../../engine/motion/flip";
-import { Cascade } from "../../ui/cascade";
+import { Cascade } from "../../engine/controls/cascade";
 import { UnitReveal } from "./unit-reveal";
 import { inlineSentence } from "./sentence-diff";
 import { splitUnits } from "./unit-diff";

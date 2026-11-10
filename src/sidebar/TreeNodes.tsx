@@ -4,13 +4,17 @@
 import { useChangedFiles } from "../ai/chat/file-changes";
 import { useEffect, useMemo, useState } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
-import { ChevronIcon, FolderIcon, FolderOpenIcon } from "../ui/icons";
+import {
+  ChevronIcon,
+  FolderIcon,
+  FolderOpenIcon,
+} from "../engine/controls/icons";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, parentDir } from "../utils/path";
 import { isIOSApp } from "../platform/capabilities";
 import { iosFiles } from "../platform/ios-files";
-import { ContextMenu } from "../ui/ContextMenu";
+import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { useLongPress } from "../utils/hooks/useLongPress";
 import { isDocumentName } from "./file-search";
@@ -19,7 +23,7 @@ import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree } from "./tree-shared";
 import { DraftRow } from "./DraftRow";
 import type { FileOpenHow } from "./tree-shared";
-import { fileIconFor } from "../ui/file-icons";
+import { fileIconFor } from "../engine/controls/file-icons";
 
 interface DirNodeProps {
   path: string;

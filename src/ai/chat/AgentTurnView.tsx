@@ -7,11 +7,18 @@ import { parseUserMessage } from "./user-message";
 import { ReplyThemes, type ReplyThemeLabels } from "./ReplyThemes";
 import type { ReplyPluginLabels } from "./ReplyPlugins";
 import { ReplySkills } from "./ReplySkills";
-import { ChevronIcon, PaperclipIcon, SearchIcon } from "../../ui/icons";
+import {
+  ChevronIcon,
+  PaperclipIcon,
+  SearchIcon,
+} from "../../engine/controls/icons";
 import "./AgentTurnView.css";
 import { toolActivityText } from "./tool-activity";
 import { siteOf } from "../citations";
-import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
 

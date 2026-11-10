@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
-import { Tooltip } from "../../ui/Tooltip";
-import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { reorderDrag } from "../../engine/drag/row";
 import { useSettings } from "../../prefs/SettingsContext";

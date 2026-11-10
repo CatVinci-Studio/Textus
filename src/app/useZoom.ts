@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
-import { blockAt, holdBlock } from "../ui/hold-line";
+import { blockAt, holdBlock } from "../engine/controls/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";

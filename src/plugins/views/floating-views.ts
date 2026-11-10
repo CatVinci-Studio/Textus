@@ -3,7 +3,7 @@ import { windowIpc } from "../../platform/ipc";
 import { thisWindow } from "../../platform/this-window";
 import { setFloatingCount } from "./floating-presence";
 import { dataUrl, readPluginFile } from "../store/files";
-import { contributedContextItems } from "../../ui/context-menu-items";
+import { contributedContextItems } from "../../engine/controls/context-menu-items";
 import type {
   FloatingPlace,
   FloatingViewContribution,

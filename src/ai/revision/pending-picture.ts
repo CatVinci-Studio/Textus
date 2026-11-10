@@ -10,8 +10,8 @@ import {
   retryGeneratedImage,
 } from "./generated-images";
 import { currentStrings } from "../../i18n/current";
-import { showPrompt } from "../../ui/app-dialog";
-import { enter } from "../../ui/moves";
+import { showPrompt } from "../../engine/controls/app-dialog";
+import { enter } from "../../engine/controls/moves";
 import "./pending-picture.css";
 
 /** A picture still being made in a proposal: a moving frame in its place,

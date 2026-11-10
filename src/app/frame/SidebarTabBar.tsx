@@ -1,9 +1,9 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Tooltip } from "../../ui/Tooltip";
-import { ContextMenu } from "../../ui/ContextMenu";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
-import { MoreIcon } from "../../ui/icons";
+import { MoreIcon } from "../../engine/controls/icons";
 import { reorderDrag } from "../../engine/drag/row";
 import type { Strings } from "../../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";

@@ -24,7 +24,7 @@ import {
   type StreamEvent,
 } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { announce } from "../../ui/announce";
+import { announce } from "../../engine/controls/announce";
 import { useSettings, type AgentMode } from "../../prefs/SettingsContext";
 import { imageModelOf } from "../image-models";
 import type { DocumentSnapshot } from "../doc-markdown";

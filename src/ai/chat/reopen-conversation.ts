@@ -5,7 +5,7 @@ import {
 } from "./chat-history";
 import { requestChatRestore, type ChatRestore } from "./chat-restore";
 import { fs } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";

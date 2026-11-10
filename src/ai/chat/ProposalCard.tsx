@@ -19,7 +19,7 @@ import {
   generatedImageUrl,
   onPictureSettled,
 } from "../revision/generated-images";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";

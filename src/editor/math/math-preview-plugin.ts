@@ -1,5 +1,5 @@
 import { onMemoryIdle } from "../../utils/memory-idle";
-import { clampLeft } from "../../ui/placement";
+import { clampLeft } from "../../engine/controls/placement";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";

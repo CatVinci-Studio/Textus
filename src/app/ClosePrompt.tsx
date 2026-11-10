@@ -1,6 +1,6 @@
-import { ActionSheet } from "../ui/ActionSheet";
+import { ActionSheet } from "../engine/controls/ActionSheet";
 import { Presence, PresenceDiv } from "../engine/motion/usePresence";
-import type { useModalDialog } from "../ui/useModalDialog";
+import type { useModalDialog } from "../engine/controls/useModalDialog";
 import type { Strings } from "../i18n/strings";
 
 /** The save/discard/cancel prompt: a dialog on the desktop, an action sheet

@@ -1,6 +1,6 @@
 import { currentStrings } from "../../i18n/current";
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import { showMessage, showPrompt } from "../../ui/app-dialog";
+import { showMessage, showPrompt } from "../../engine/controls/app-dialog";
 import { explainError } from "../../utils/error-explain";
 
 /** The publisher name typed last, offered again. */

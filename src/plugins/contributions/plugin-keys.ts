@@ -7,7 +7,7 @@ import { platformName } from "../../platform/window-chrome";
 import { modIsMeta } from "../../platform/os";
 import { formatCombo, isReservedCombo } from "../../utils/shortcuts";
 import { getUiState, setUiState } from "../../storage/ui-state";
-import { showNotice } from "../../ui/notices";
+import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
 import { windowInfo } from "../store/plugin-records";
 

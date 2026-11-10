@@ -15,7 +15,7 @@ import {
   TableEditIcon,
   TrashIcon,
   UndoIcon,
-} from "../ui/icons";
+} from "../engine/controls/icons";
 import {
   EDIT_ACTION_EVENT,
   EDITOR_MORE_EVENT,
@@ -26,7 +26,7 @@ import {
   TOGGLE_FLOATING_CHAT_EVENT,
   TOGGLE_MARK_EVENT,
 } from "../utils/events";
-import { pressKeepingFocus } from "../ui/tap";
+import { pressKeepingFocus } from "../engine/controls/tap";
 import { keyboardUp } from "./keyboard";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import "./KeyboardToolbar.css";

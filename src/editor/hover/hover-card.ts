@@ -1,5 +1,5 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { EDGE, clampLeft, opensBelow } from "../../ui/placement";
+import { EDGE, clampLeft, opensBelow } from "../../engine/controls/placement";
 import { currentStrings } from "../../i18n/current";
 import type { HoverCard } from "../extension-points";
 import { renderMarkdownHtml } from "../markdown/render-html";

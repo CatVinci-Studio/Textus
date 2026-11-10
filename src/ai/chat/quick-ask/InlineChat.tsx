@@ -1,5 +1,5 @@
-import { IconButton } from "../../../ui/IconButton";
-import { PanelHeader } from "../../../ui/PanelHeader";
+import { IconButton } from "../../../engine/controls/IconButton";
+import { PanelHeader } from "../../../engine/controls/PanelHeader";
 import type { DocumentSnapshot } from "../../doc-markdown";
 import { useRef } from "react";
 import type { AgentConversation } from "../useAgentConversation";
@@ -10,7 +10,11 @@ import type { SelectionChipHandlers } from "../ChatComposer";
 import { CloseConfirmBar, type CloseConfirmLabels } from "../CloseConfirm";
 import { useQuickAskReveal } from "./useQuickAskReveal";
 import { useQuickAskDock } from "./quick-ask-dock";
-import { CloseIcon, DetachIcon, PlusIcon } from "../../../ui/icons";
+import {
+  CloseIcon,
+  DetachIcon,
+  PlusIcon,
+} from "../../../engine/controls/icons";
 import type { AgentMode } from "../../../prefs/SettingsContext";
 import "../AgentTurnView.css";
 import "../inline-chat.css";

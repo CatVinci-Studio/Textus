@@ -3,7 +3,7 @@ import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { getWindowAccess } from "../plugins/app-bridge";
 import { linkPlanner } from "../links/link-rewrite";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { basename } from "../utils/path";
 

@@ -215,7 +215,7 @@ Example: `layout.panels()` and `onDidChangePanels` (commit 36709ec9), or
 - **Asking `isIOSApp` directly** is allowed only in the files listed in
   `src/platform/ios-gates.test.ts`, each with its reason; most needs belong
   in a flag or in the phone layout instead.
-- **The phone layout**: `usePhoneLayout()` (`src/ui/usePhoneLayout.ts`) in
+- **The phone layout**: `usePhoneLayout()` (`src/engine/controls/usePhoneLayout.ts`) in
   components, and CSS in `src/mobile/styles/`, every selector starting
   with `:root[data-window-chrome="mobile"]`.
 - **OS facts** (a Mac's `Cmd`, Windows' window frame) are in

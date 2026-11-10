@@ -1,7 +1,7 @@
 import { useRef } from "react";
-import { ChevronIcon } from "../../ui/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import type { NotesBarState } from "./useNotesBar";
 import "../revision/ReviewBar.css";
 

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseHeadings } from "./outline-parse";
-import { ChevronIcon } from "../ui/icons";
+import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
 import { HEADING_PLACEHOLDER } from "../editor/lazy-blocks/lazy-block-views";
-import { useTreeKeys } from "../ui/useTreeKeys";
-import { Tooltip } from "../ui/Tooltip";
-import { ContextMenu } from "../ui/ContextMenu";
+import { useTreeKeys } from "../engine/controls/useTreeKeys";
+import { Tooltip } from "../engine/controls/Tooltip";
+import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { noteJump } from "../utils/nav-history";
 import { setTabJump } from "../editor/tab-jump";

@@ -15,7 +15,7 @@ import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScaleAt } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
-import { PANEL_FLOOR } from "../../ui/side-panel-width";
+import { PANEL_FLOOR } from "../../engine/controls/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 /** A sidebar tab's id. */

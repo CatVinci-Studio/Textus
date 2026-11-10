@@ -1,8 +1,8 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
-import { ChevronIcon } from "../../ui/icons";
-import { InfoTip } from "../../ui/InfoTip";
+import { ChevronIcon } from "../../engine/controls/icons";
+import { InfoTip } from "../../engine/controls/InfoTip";
 
 /** For a field that takes a machine-read value rather than prose: iOS would
  *  capitalise and autocorrect it into an id the provider rejects. */

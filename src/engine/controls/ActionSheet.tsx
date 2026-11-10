@@ -1,4 +1,4 @@
-import { useSettings } from "../prefs/SettingsContext";
+import { useSettings } from "../../prefs/SettingsContext";
 import { Sheet } from "./Sheet";
 import "./ActionSheet.css";
 

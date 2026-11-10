@@ -13,8 +13,11 @@ import {
   measure,
   type PendingFlip,
 } from "../../engine/motion/flip";
-import { Tooltip } from "../../ui/Tooltip";
-import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
 import { revealActive, TabListButton, useTabOverflow } from "./TabList";

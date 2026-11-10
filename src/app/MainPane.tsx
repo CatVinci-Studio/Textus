@@ -1,4 +1,4 @@
-import { Island } from "../ui/Island";
+import { Island } from "../engine/layout/Island";
 import { EditorKept, KeptWhileHidden } from "./islands/kept";
 import { IslandMotion } from "./layout/IslandMotion";
 import { DocumentCorners } from "./islands/DocumentCorner";
@@ -12,7 +12,7 @@ import {
   useRef,
 } from "react";
 import { useTabRows } from "./layout/useTabRows";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
 import {
   canDragTabsBetweenWindows,
@@ -51,8 +51,8 @@ import {
   splitEditor,
 } from "./layout/store";
 import { pullTab } from "./layout/split-drop";
-import type { ContextMenuItem } from "../ui/ContextMenu";
-import { contributedContextItems } from "../ui/context-menu-items";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
+import { contributedContextItems } from "../engine/controls/context-menu-items";
 import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;

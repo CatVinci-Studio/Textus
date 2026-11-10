@@ -4,7 +4,7 @@ import { currentStrings } from "../../i18n/current";
 /**
  * The form's date and colour fields (textus.ui.pickDate, pickColor, and
  * `date` / `color` in textus.ui.form), drawn with the shared controls a
- * plugin page has too (src/ui/controls.css).
+ * plugin page has too (src/engine/controls/controls.css).
  */
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;

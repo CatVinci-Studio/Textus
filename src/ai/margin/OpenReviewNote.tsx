@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { NotePopover } from "./ReviewMargin";
 import type { ReviewNote } from "./review-notes-plugin";
-import { BottomCard } from "../../ui/BottomCard";
+import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
 import type { Strings } from "../../i18n/strings";
 

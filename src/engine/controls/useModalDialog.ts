@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from "react";
 import { usePhoneLayout } from "./usePhoneLayout";
-import { usePresenceState } from "../engine/motion/usePresence";
-import { isImeKeydown } from "../utils/ime";
+import { usePresenceState } from "../motion/usePresence";
+import { isImeKeydown } from "../../utils/ime";
 
 // `summary` is a <details> toggle: without it Settings' folded Advanced
 // group can't be reached by Tab - the wrap goes back to the close button.

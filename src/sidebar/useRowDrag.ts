@@ -8,8 +8,8 @@ import {
 } from "react";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
-import { showMessage } from "../ui/app-dialog";
-import { documentDrop, setDragging } from "../ui/document-drop";
+import { showMessage } from "../engine/controls/app-dialog";
+import { documentDrop, setDragging } from "../engine/controls/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";

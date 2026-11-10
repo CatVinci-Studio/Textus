@@ -8,7 +8,7 @@ import {
 } from "./editor-extensions";
 import type { DocumentReporting } from "./useDocumentReporting";
 import { effectiveRevisionDisplay } from "../ai/revision/revision-display";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { ReviewNote } from "../ai/margin/review-notes-plugin";
 import type { Settings } from "../prefs/SettingsContext";

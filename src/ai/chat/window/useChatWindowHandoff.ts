@@ -9,7 +9,7 @@ import {
 } from "./chat-bridge";
 import { windowIpc } from "../../../platform/ipc";
 import { listenToThisWindow, unlistenAll } from "../../../platform/events";
-import { editInFocus } from "../../../ui/edit-in-focus";
+import { editInFocus } from "../../../engine/controls/edit-in-focus";
 import { useLatest } from "../../../utils/hooks/useLatest";
 import type { Settings } from "../../../prefs/SettingsContext";
 

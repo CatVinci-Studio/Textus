@@ -11,7 +11,7 @@
 @import "./islands/agent-tabs.css";
 @import "./editor-column.css";
 @import "./notices.css";
-@import "../ui/app-dialog.css";
+@import "../engine/controls/app-dialog.css";
 @import "../sidebar/history-panels.css";
 @import "../export/print.css";
 @import "./modes.css";

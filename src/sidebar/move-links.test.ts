@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fs } from "../platform/ipc";
-import { showConfirm } from "../ui/app-dialog";
+import { showConfirm } from "../engine/controls/app-dialog";
 import { getWindowAccess } from "../plugins/app-bridge";
 import { resolveStrings } from "../i18n/strings";
 import { updateLinksAfterMove } from "./move-links";
@@ -15,7 +15,7 @@ vi.mock("../platform/ipc", () => ({
     writeTextFile: vi.fn(),
   },
 }));
-vi.mock("../ui/app-dialog", () => ({
+vi.mock("../engine/controls/app-dialog", () => ({
   showConfirm: vi.fn(),
   showMessage: vi.fn(),
 }));

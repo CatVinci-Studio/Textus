@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Tooltip } from "../../../ui/Tooltip";
+import { Tooltip } from "../../../engine/controls/Tooltip";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
 import type { LibraryUse } from "../../../platform/ipc";
 import {
@@ -13,9 +13,12 @@ import { Presence, PresenceDiv } from "../../../engine/motion/usePresence";
 import { basename } from "../../../utils/path";
 import { knownDocumentsDir } from "../../../platform/documents-path";
 import { APP_NAME } from "../../../i18n/names";
-import { ChevronIcon, FolderIcon } from "../../../ui/icons";
-import { ActionSheet, type ActionSheetItem } from "../../../ui/ActionSheet";
-import { usePhoneLayout } from "../../../ui/usePhoneLayout";
+import { ChevronIcon, FolderIcon } from "../../../engine/controls/icons";
+import {
+  ActionSheet,
+  type ActionSheetItem,
+} from "../../../engine/controls/ActionSheet";
+import { usePhoneLayout } from "../../../engine/controls/usePhoneLayout";
 import { MemorySections } from "./MemoryView";
 import { RememberedSection } from "./RememberedSection";
 import { useProjectActions } from "./project-actions";

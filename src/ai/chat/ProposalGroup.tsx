@@ -3,7 +3,7 @@ import { FlipOnChange } from "../../engine/motion/flip";
 import type { AgentTurn, EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { diffLines } from "./line-diff";
 import { CHECK, CROSS, ChangeText } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./chat-messages-types";

@@ -10,7 +10,7 @@ import {
 import { MilkdownProvider } from "@milkdown/react";
 import { useSettings, type AgentMode } from "../prefs/SettingsContext";
 import { KatexFirst } from "../editor/math/KatexFirst";
-import { elasticOverscroll } from "../ui/elastic-overscroll";
+import { elasticOverscroll } from "../engine/controls/elastic-overscroll";
 import {
   keepReadingPlace,
   placeIn,

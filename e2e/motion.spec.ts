@@ -111,7 +111,7 @@ for (const reducedMotion of ["no-preference", "reduce"] as const) {
       async ({ page }) => {
         await openApp(page, { animations: true });
         const answer = page.evaluate(async () => {
-          const url = "/src/ui/app-dialog.tsx";
+          const url = "/src/engine/controls/app-dialog.tsx";
           const dialogs = await import(/* @vite-ignore */ url);
           return dialogs.showConfirm("Delete it?", {
             title: "Delete",

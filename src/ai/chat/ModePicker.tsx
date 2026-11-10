@@ -1,8 +1,8 @@
-import { SelectMenu } from "../../ui/SelectMenu";
+import { SelectMenu } from "../../engine/controls/SelectMenu";
 import { Fragment, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { PanelMode } from "../../prefs/SettingsContext";
 import { useMergedRef, usePresence } from "../../engine/motion/usePresence";
-import { useFloatingList } from "../../ui/useFloatingList";
+import { useFloatingList } from "../../engine/controls/useFloatingList";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
 import { isImeKeydown } from "../../utils/ime";

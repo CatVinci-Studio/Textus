@@ -6,7 +6,7 @@ import {
 } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
-import { IconButton } from "../ui/IconButton";
+import { IconButton } from "../engine/controls/IconButton";
 import {
   BoldIcon,
   CodeBlockIcon,
@@ -20,7 +20,7 @@ import {
   QuoteIcon,
   StrikeIcon,
   TableIcon,
-} from "../ui/format-icons";
+} from "../engine/controls/format-icons";
 import { formatCombo } from "../utils/shortcuts";
 import {
   INSERT_BLOCK_EVENT,

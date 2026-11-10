@@ -5,7 +5,7 @@ const quickPickMatches = (
   item: { label: string; description?: string },
   query: string,
 ) => quickPickFilter([item], query).length > 0;
-import { pinyinEngine } from "../utils/pinyin";
+import { pinyinEngine } from "../../utils/pinyin";
 
 beforeAll(() => pinyinEngine.load());
 

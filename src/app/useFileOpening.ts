@@ -30,7 +30,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";

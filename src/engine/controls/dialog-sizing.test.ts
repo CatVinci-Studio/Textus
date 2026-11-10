@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 
 const DIALOG_STYLESHEETS = [
   "settings/SettingsPanel.css",
-  "ui/app-dialog.css",
+  "engine/controls/app-dialog.css",
   "editor/images/ImageNameDialog.css",
   "editor/tables/InsertTableDialog.css",
   "onboarding/TutorialOverlay.css",
@@ -18,7 +18,7 @@ const DIALOG_STYLESHEETS = [
 describe("desktop dialogs size themselves without dvh", () => {
   it.each(DIALOG_STYLESHEETS)("%s", (file) => {
     const css = readFileSync(
-      fileURLToPath(new URL(`../${file}`, import.meta.url)),
+      fileURLToPath(new URL(`../../${file}`, import.meta.url)),
       "utf8",
     ).replace(/\/\*[\s\S]*?\*\//g, "");
     expect(css).not.toMatch(/[\d.][dsl]vh\b/);

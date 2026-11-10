@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { windowIpc } from "../../platform/ipc";
-import { useChromeScale } from "../../ui/useChromeScale";
+import { useChromeScale } from "../../engine/controls/useChromeScale";
 import {
   emitToWindow,
   listenToThisWindow,

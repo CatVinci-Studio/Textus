@@ -17,7 +17,7 @@ test("a confirm is an iOS alert: a narrow centred card over the whole screen", a
   // The module the app itself imported - Vite serves it once - so this is
   // the same queue AppDialogHost shows.
   const answer = page.evaluate(async () => {
-    const url = "/src/ui/app-dialog.tsx";
+    const url = "/src/engine/controls/app-dialog.tsx";
     const dialogs = await import(/* @vite-ignore */ url);
     return dialogs.showConfirm("“Notes.md” will be deleted.", {
       title: "Delete",

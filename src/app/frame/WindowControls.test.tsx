@@ -80,7 +80,8 @@ vi.mock("../../platform/window-chrome", () => ({
 }));
 
 const { AppMenuButton } = await import("./WindowControls");
-const { WindowCaptionButtons } = await import("../../ui/WindowCaptionButtons");
+const { WindowCaptionButtons } =
+  await import("../../engine/controls/WindowCaptionButtons");
 
 afterEach(() => {
   cleanup();

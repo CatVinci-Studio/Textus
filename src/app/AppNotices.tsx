@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { isIOSApp } from "../platform/capabilities";
-import { announce } from "../ui/announce";
-import { CornerToast } from "../ui/CornerToast";
+import { announce } from "../engine/controls/announce";
+import { CornerToast } from "../engine/controls/CornerToast";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import type { useAppUpdate } from "./useAppUpdate";

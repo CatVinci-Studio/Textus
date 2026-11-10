@@ -12,8 +12,11 @@ import {
   type SplitDirection,
 } from "./store";
 import { paneById } from "./tree";
-import { setDragging, type DocumentDrop } from "../../ui/document-drop";
-import { isPhoneLayout } from "../../ui/usePhoneLayout";
+import {
+  setDragging,
+  type DocumentDrop,
+} from "../../engine/controls/document-drop";
+import { isPhoneLayout } from "../../engine/controls/usePhoneLayout";
 import "./split-drop.css";
 
 /**

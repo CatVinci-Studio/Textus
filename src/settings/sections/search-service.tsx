@@ -10,7 +10,7 @@ import {
   useWebSearchStatus,
 } from "../../ai/provider-catalog";
 import { auth } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 
 /** Settings › Textus AI › Web search: the service Textus searches with when

@@ -9,12 +9,12 @@ import { AGENT_MODES, type AgentMode } from "../../prefs/settings-values";
 import { ModeChoice } from "../../ai/chat/ModeChoice";
 import type { AgentSkill } from "../../ai/types";
 import { ai, type SkillListItem } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
-import { IconButton } from "../../ui/IconButton";
-import { TrashIcon } from "../../ui/icons";
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { IconButton } from "../../engine/controls/IconButton";
+import { TrashIcon } from "../../engine/controls/icons";
 import { canTrashFiles } from "../../platform/capabilities";
 import { withoutCreation } from "../../ai/chat/creations";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import {
   AUTOMATIC_CONVENTIONS,

@@ -198,7 +198,7 @@ for (const colorScheme of ["light", "dark"] as const) {
       await open(page, colorScheme);
       void page
         .evaluate(async () => {
-          const url = "/src/ui/app-dialog.tsx";
+          const url = "/src/engine/controls/app-dialog.tsx";
           const dialogs = await import(/* @vite-ignore */ url);
           return dialogs.showConfirm("Delete it?", {
             title: "Delete",

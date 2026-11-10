@@ -20,7 +20,7 @@ vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
 }));
-vi.mock("../ui/app-dialog", () => ({
+vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: mocks.showMessage,
   showConfirm: vi.fn(),
 }));

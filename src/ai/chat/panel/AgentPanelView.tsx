@@ -1,7 +1,11 @@
-import { IconButton } from "../../../ui/IconButton";
-import { PanelHeader } from "../../../ui/PanelHeader";
+import { IconButton } from "../../../engine/controls/IconButton";
+import { PanelHeader } from "../../../engine/controls/PanelHeader";
 import type { ReactNode } from "react";
-import { DetachIcon, PlusIcon, ProjectIcon } from "../../../ui/icons";
+import {
+  DetachIcon,
+  PlusIcon,
+  ProjectIcon,
+} from "../../../engine/controls/icons";
 
 export interface AgentPanelLabels {
   title: string;

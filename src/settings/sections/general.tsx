@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { appVersion } from "../../platform/app-info";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Update } from "../../platform/app-info";
 import { relaunchApp } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
@@ -16,7 +16,7 @@ import { flushPendingWrites } from "../../storage/pending-writes";
 import { checkChannel, selfUpdateAllowed } from "../../platform/distribution";
 import { canAutoUpdate } from "../../platform/capabilities";
 import { useSettings } from "../../prefs/SettingsContext";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import { explainError } from "../../utils/error-explain";
 

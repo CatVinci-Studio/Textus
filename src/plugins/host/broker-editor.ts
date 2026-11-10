@@ -24,7 +24,7 @@ import {
 } from "../contributions/decorations";
 import { optionalStr, type Params, type PluginScope } from "./broker-scope";
 import { FILE_RELOADED_EVENT } from "../../utils/events";
-import { showNotice } from "../../ui/notices";
+import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
 import { emitPluginEvent } from "../app-bridge";
 

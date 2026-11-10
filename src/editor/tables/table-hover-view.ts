@@ -38,7 +38,7 @@ function syncColumns(
 import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { PLUS_ICON_HTML } from "../../ui/icons";
+import { PLUS_ICON_HTML } from "../../engine/controls/icons";
 
 type TableCommand = (
   state: EditorState,

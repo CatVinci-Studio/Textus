@@ -1,7 +1,7 @@
 import { commands, runCommand } from "../app/commands";
 import { currentStrings } from "../i18n/current";
 import { plugins as pluginsIpc } from "../platform/ipc";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { askPlugin, loadPlugins } from "./manager";
 
 /**

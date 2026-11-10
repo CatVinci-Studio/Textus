@@ -6,7 +6,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { useModalDialog } from "../ui/useModalDialog";
+import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";

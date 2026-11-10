@@ -5,7 +5,7 @@ import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { LinkRow, SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   canInstallCliCommand,
   canSetDefaultEditor,

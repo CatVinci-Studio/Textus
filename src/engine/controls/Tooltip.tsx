@@ -1,4 +1,4 @@
-import { scaledPx } from "../engine/tokens/chrome-scale";
+import { scaledPx } from "../tokens/chrome-scale";
 import {
   cloneElement,
   useCallback,
@@ -14,7 +14,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Bubble } from "./Bubble";
-import { Presence } from "../engine/motion/usePresence";
+import { Presence } from "../motion/usePresence";
 import "./Tooltip.css";
 import { useTipTimer } from "./useTipTimer";
 

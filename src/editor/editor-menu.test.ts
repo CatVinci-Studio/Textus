@@ -18,7 +18,7 @@ import {
   type ContextMenuOptions,
 } from "./editor-menu";
 import type { EditorRunner } from "./useEditorRunner";
-import type { ContextMenuItem } from "../ui/ContextMenu";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { resolveStrings } from "../i18n/strings";
 
 // The node names commonmark/gfm register, with just enough spec for the

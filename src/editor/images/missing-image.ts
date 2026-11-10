@@ -1,4 +1,4 @@
-import { IMAGE_ICON_HTML } from "../../ui/icons";
+import { IMAGE_ICON_HTML } from "../../engine/controls/icons";
 import { exportDoc, fs } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import {

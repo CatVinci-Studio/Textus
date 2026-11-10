@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { GrammarPopover, applyLabel } from "./GrammarPopover";
 import type { useGrammarPopover } from "./useGrammarPopover";
-import { BottomCard } from "../../ui/BottomCard";
+import { BottomCard } from "../../engine/controls/BottomCard";
 import { Presence } from "../../engine/motion/usePresence";
 import type { Strings } from "../../i18n/strings";
 

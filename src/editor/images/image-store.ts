@@ -3,7 +3,7 @@ import type { Slice } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { fs } from "../../platform/ipc";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";

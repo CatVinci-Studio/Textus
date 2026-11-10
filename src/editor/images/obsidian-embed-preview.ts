@@ -12,7 +12,7 @@ import {
 import { fs } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import type { Settings } from "../../prefs/SettingsContext";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { basename, dirname, isInside } from "../../utils/path";
 import { localPath } from "../markdown/link-target";
 import {

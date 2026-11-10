@@ -1,6 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { motionAllowed } from "../../engine/motion/motion";
-import { crossfade } from "../../ui/moves";
+import { crossfade } from "../../engine/controls/moves";
 
 /** Animates a decided proposal leaving the text in one move. `callIds` null
  *  means every proposal; `change` returns false when nothing changed. */

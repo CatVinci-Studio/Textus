@@ -11,7 +11,7 @@ vi.mock("../../app/commands", () => ({
   },
   runCommand: vi.fn(),
 }));
-vi.mock("../../ui/app-dialog", () => ({ showMessage }));
+vi.mock("../../engine/controls/app-dialog", () => ({ showMessage }));
 vi.mock("../../i18n/current", async () => {
   const zh = (await import("../../i18n/locales/zh")).default;
   return { currentStrings: () => zh };

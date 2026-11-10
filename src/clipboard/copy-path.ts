@@ -1,5 +1,5 @@
 import type { Strings } from "../i18n/strings";
-import type { ContextMenuItem } from "../ui/ContextMenu";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { canRevealInFileManager } from "../platform/capabilities";
 import { exportDoc } from "../platform/ipc";
 import { relativePath } from "../utils/path";

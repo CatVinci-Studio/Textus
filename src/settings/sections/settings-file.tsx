@@ -8,7 +8,7 @@ import {
   type ThemeCss,
 } from "../../prefs/settings-file";
 import type { UserThemeMeta } from "../../prefs/settings-values";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { explainError } from "../../utils/error-explain";
 import { SettingRow } from "./controls";
 

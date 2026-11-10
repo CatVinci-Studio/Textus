@@ -25,7 +25,7 @@ import {
   useTutorialTabRecovery,
   useWriteLesson,
 } from "./onboarding-wiring";
-import { setDocumentDrop } from "../ui/document-drop";
+import { setDocumentDrop } from "../engine/controls/document-drop";
 import { fileDropOnDocuments } from "./layout/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";

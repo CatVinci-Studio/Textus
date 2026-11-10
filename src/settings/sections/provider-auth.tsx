@@ -3,7 +3,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import type { Strings } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth, type CustomEndpointConfig } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import {
   MaskedKeyInput,
   RowHelp,

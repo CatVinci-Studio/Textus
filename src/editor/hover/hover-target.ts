@@ -5,7 +5,7 @@ import { linkHrefAt } from "../markdown/link-reveal";
 import { linkTarget } from "../markdown/link-target";
 import { parseNoteLink } from "../../utils/note-link";
 import { windowFolder } from "../../platform/window-folder";
-import { zoomedRectScale } from "../../ui/zoomed-rects";
+import { zoomedRectScale } from "../../engine/controls/zoomed-rects";
 
 /** A citation as Pandoc and Zotero write it: `[@key]`, `[@key, p. 4]`,
  *  `[see @key]`, or several in one, `[@a; @b]`. */

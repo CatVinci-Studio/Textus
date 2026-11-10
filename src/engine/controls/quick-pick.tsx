@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { formatCombo } from "../utils/shortcuts";
+import { formatCombo } from "../../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
-import { isImeKeydown } from "../utils/ime";
+import { isImeKeydown } from "../../utils/ime";
 import {
   preparePinyin,
   prepareList,
   rankList,
   type Filterable,
   type PreparedList,
-} from "../utils/list-filter";
+} from "../../utils/list-filter";
 
 /** A list to choose one item from, or several ticked, filtered by what is
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */

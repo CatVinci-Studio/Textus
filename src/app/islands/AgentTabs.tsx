@@ -19,7 +19,10 @@ import { useChatHistory } from "../../ai/chat/chat-history";
 import { ChatHistoryMenu } from "../../ai/chat/ChatHistoryMenu";
 import { reopenConversation } from "../../ai/chat/reopen-conversation";
 import { useAgentPanel } from "../../ai/chat/panel/agent-panel";
-import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { AGENT_TABS_EVENT } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";

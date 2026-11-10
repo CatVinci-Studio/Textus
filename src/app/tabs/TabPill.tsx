@@ -1,8 +1,8 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useEffect, useRef } from "react";
-import { CloseIcon, LockIcon } from "../../ui/icons";
+import { CloseIcon, LockIcon } from "../../engine/controls/icons";
 import { measure, play } from "../../engine/motion/flip";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { row, type Row } from "../../engine/drag/row";
 import { iosFiles } from "../../platform/ios-files";
 import { isIOSApp } from "../../platform/capabilities";

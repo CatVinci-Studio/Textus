@@ -35,9 +35,11 @@ base      platform/  utils/  i18n/  storage/  prefs/            each other; neve
 What the lint enforces:
 
 - **Base** (`platform/`, `utils/`, `i18n/`, `storage/`, `prefs/`) imports
-  no `ui/`, feature or shell folder. The five are one layer to the lint:
+  no `engine/`, feature or shell folder. The five are one layer to the lint:
   nothing stops `utils/` importing `storage/` or `prefs/`.
-- **`ui/`** imports no feature or shell folder.
+- **`engine/`** imports no feature or shell folder; inside it each part
+  uses only those before it - `tokens/`, `motion/`, `drag/`, `controls/`,
+  `layout/` - and `controls/` never the layout.
 - **Features** import no shell folder (`app/`, `document-view/`). They may
   import each other, with one exception: **`editor/`** never imports
   `ai/`, `document/`, `export/`, `links/`, `mobile/`, `onboarding/`,
@@ -85,17 +87,17 @@ for each are in [design-language.md](../design/design-language.md).
 | ---------- | -------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | Tokens     | `src/engine/tokens/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
 | Styles     | `src/engine/tokens/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
-| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)              | React wrappers; no own colours or sizes |
+| Components | `src/engine/controls/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`) | React wrappers; no own colours or sizes |
 | Patterns   | Settings rows, the sidebar, menus, the command palette                                             | Arrangements of components              |
 | Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                              | Compose the layers above                |
 
-Held by tests: `src/ui/spacing-grid.test.ts`, `theme-reach.test.ts`,
+Held by tests: `src/engine/controls/spacing-grid.test.ts`, `theme-reach.test.ts`,
 `motion-tokens.test.ts`, `motion-properties.test.ts`,
 `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, and the contrast tests in
 `src/engine/tokens/palette.test.ts`.
 
 Planned, not built: a layout that gives each layer a folder of its own
-(`src/ui/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
+(`src/engine/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
 `plugins/host/` injecting tokens, styles and icons into plugin pages),
 moved file by file as files are touched; a Stylelint configuration banning
 literal colours, px font sizes, off-grid spacing, raw radii and raw
@@ -127,7 +129,7 @@ that is also the visual regression target.
 | `mobile/`        | Phone-only screens: the document list, the keyboard toolbar, page swipes; `styles/` holds the phone layout's CSS ([ios-code-map.md](ios-code-map.md)).                                                                                                                                                                                                                                                                                                                                                                   |
 | `onboarding/`    | The first-run language picker and the tutorial.                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `plugins/`       | The plugin system ([below](#the-plugin-system)).                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `ui/`            | Widgets and helpers any feature may use: dialogs, `Select`, `ContextMenu`, `Tooltip`, `InfoTip`, `PanelHeader`, `ResizeHandle`, `Sheet`, `CornerToast`, notices, the quick pick, icons and file icons (`file-icons.tsx`), presence and FLIP motion, dragging (`pointer-drag.ts`), Mac-style overscroll (`elastic-overscroll.ts`), engine quirks and guards, `usePhoneLayout`. And the base stylesheets: `base.css`, `design-system.css`, `motion.css`. [reuse.md](reuse.md) says which to use for what.                  |
+| `engine/`        | What every surface is drawn and moved with, knowing no document, AI or plugin, each part using only those before it: `tokens/` (sizes, the interface scale, the one palette a theme's base colours derive into, `palette.ts`), `motion/` (timing, FLIP, presence), `drag/` (a drag, a row making room, the floating copy), `controls/` (dialogs, `Select`, `ContextMenu`, `Tooltip`, `InfoTip`, `PanelHeader`, `ResizeHandle`, `Sheet`, `CornerToast`, notices, the quick pick, icons), `layout/` (the island control).  |
 | `prefs/`         | The settings model: the `Settings` type and defaults (`settings-types.ts`), reading a stored file back (`settings-normalise.ts`), the store and its sync between windows, `SettingsProvider` / `useSettings` (`SettingsContext.tsx`), the rebindable shortcuts (`shortcut-defaults.ts`).                                                                                                                                                                                                                                 |
 | `storage/`       | Persisted state through the backend: the boot snapshot, pending writes, UI state, persisted lists, a project's `.textus/settings.json` (`project-settings.ts`), the webview's own localStorage (`local.ts`).                                                                                                                                                                                                                                                                                                             |
 | `platform/`      | The backend bridge ([below](#talking-to-the-backend)), OS and capability facts (`os.ts`, `capabilities.ts`), window chrome, events, iOS file access, menu events on iOS.                                                                                                                                                                                                                                                                                                                                                 |

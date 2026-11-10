@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { ChevronIcon } from "../../../ui/icons";
+import { ChevronIcon } from "../../../engine/controls/icons";
 import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
 import { Presence, PresenceDiv } from "../../../engine/motion/usePresence";
-import { ActionSheet } from "../../../ui/ActionSheet";
-import { usePhoneLayout } from "../../../ui/usePhoneLayout";
-import { Tooltip } from "../../../ui/Tooltip";
+import { ActionSheet } from "../../../engine/controls/ActionSheet";
+import { usePhoneLayout } from "../../../engine/controls/usePhoneLayout";
+import { Tooltip } from "../../../engine/controls/Tooltip";
 
 export interface QuickAskPendingBarLabels {
   proposalAccept: string;

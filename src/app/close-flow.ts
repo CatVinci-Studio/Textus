@@ -10,11 +10,11 @@ import {
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { flushPendingWrites } from "../storage/pending-writes";
-import { useModalDialog } from "../ui/useModalDialog";
+import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";
 import type { TabState } from "./tabs/useTabState";
 import { undecidedIn } from "../document/undecided";
-import { showNotice } from "../ui/notices";
+import { showNotice } from "../engine/controls/notices";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 

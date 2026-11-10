@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import type { Strings } from "../../i18n/strings";
 import {
   pluginText,

@@ -1,5 +1,5 @@
-import { editIpc } from "../platform/ipc-app";
-import { EDIT_ACTION_EVENT, SOURCE_EDIT_EVENT } from "../utils/events";
+import { editIpc } from "../../platform/ipc-app";
+import { EDIT_ACTION_EVENT, SOURCE_EDIT_EVENT } from "../../utils/events";
 
 /** The Edit menu items that act where the keyboard is. */
 export type FocusedEdit = "undo" | "redo" | "select-all";

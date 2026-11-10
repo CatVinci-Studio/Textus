@@ -1,6 +1,6 @@
 import webviewRuntime from "./runtime/webview.js?raw";
-import componentsCss from "../../ui/components.css?inline";
-import controlsCss from "../../ui/controls.css?inline";
+import componentsCss from "../../engine/controls/components.css?inline";
+import controlsCss from "../../engine/controls/controls.css?inline";
 import designSystemCss from "../../engine/tokens/design-system.css?inline";
 import motionCss from "../../engine/motion/motion.css?inline";
 // Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).

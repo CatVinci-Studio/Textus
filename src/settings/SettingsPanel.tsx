@@ -11,10 +11,10 @@ import {
 } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { localeOf } from "../i18n/strings";
 import type { FixedShortcutGroup } from "../app/fixed-shortcuts";
-import { ChevronIcon, CloseIcon } from "../ui/icons";
+import { ChevronIcon, CloseIcon } from "../engine/controls/icons";
 import { ThemesTab } from "./sections/theme";
 import { openExtensionsTab, type ExtensionsTab } from "./pages/extensions-tab";
 import {
@@ -41,7 +41,7 @@ import type {
   HelpGuide,
   Subpage,
 } from "./pages/types";
-import { useModalDialog } from "../ui/useModalDialog";
+import { useModalDialog } from "../engine/controls/useModalDialog";
 import { usePresenceProps } from "../engine/motion/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
 

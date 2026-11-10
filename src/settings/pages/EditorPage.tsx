@@ -27,7 +27,7 @@ import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { ExportFileRow } from "../sections/export-files";
 import { PandocArgsRows } from "../sections/pandoc-args";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";

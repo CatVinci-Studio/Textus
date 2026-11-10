@@ -1,6 +1,6 @@
 import type { PresenceHandle } from "../../engine/motion/usePresence";
 import { AGENT_PANEL_DEFAULT_WIDTH } from "../../ai/chat/panel/agent-panel";
-import { ResizeHandle } from "../../ui/ResizeHandle";
+import { ResizeHandle } from "../../engine/controls/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 

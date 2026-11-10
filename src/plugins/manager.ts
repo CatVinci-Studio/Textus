@@ -7,7 +7,7 @@ import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
 import type { PluginFile } from "../platform/ipc";
 import { registerCommand, runCommand } from "../app/commands";
 import { pickWithCommands } from "../app/command-palette-entry";
-import { showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { getActiveDocument } from "./app-bridge";
 import type { PluginHost } from "./host/broker";
 import { lazyModule } from "../lazy/lazy-module";

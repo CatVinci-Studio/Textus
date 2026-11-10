@@ -2,7 +2,7 @@ import { useDeferredValue, useEffect, useRef } from "react";
 import { SplitPreview, type PreviewExtras } from "./SplitPreview";
 import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
-import { elasticOverscroll } from "../../ui/elastic-overscroll";
+import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./SplitView.css";
 
 /**

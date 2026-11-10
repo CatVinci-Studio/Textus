@@ -23,7 +23,7 @@ import {
 import { RevisionCard } from "./MarginCards";
 import { NoteCard } from "./NoteCards";
 import { MarginGroup } from "./MarginGroup";
-import { asDrawn, zoomedRectScale } from "../../ui/zoomed-rects";
+import { asDrawn, zoomedRectScale } from "../../engine/controls/zoomed-rects";
 export { type ReviewMarginLabels, type MarginItem } from "./margin-layout";
 export { NotePopover } from "./NoteCards";
 

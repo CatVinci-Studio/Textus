@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { AgentIslandTools, AgentTabs } from "./AgentTabs";
-import { Island } from "../../ui/Island";
+import { Island } from "../../engine/layout/Island";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import { setDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import type { Strings } from "../../i18n/strings";

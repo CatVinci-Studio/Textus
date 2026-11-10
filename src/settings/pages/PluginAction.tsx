@@ -1,4 +1,4 @@
-import { useMenuButton } from "../../ui/useMenuButton";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
 import { useSyncExternalStore } from "react";
 import type { Strings } from "../../i18n/strings";
 import {

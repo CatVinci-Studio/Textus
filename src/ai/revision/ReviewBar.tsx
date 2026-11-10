@@ -4,7 +4,7 @@ import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "../../prefs/SettingsContext";
-import { AssistantIcon, ChevronIcon } from "../../ui/icons";
+import { AssistantIcon, ChevronIcon } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";
 import {
@@ -12,7 +12,7 @@ import {
   marginViewBlocked,
   needsMargin,
 } from "./revision-display";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { ThinkingIndicator } from "../chat/ThinkingIndicator";
 import "./ReviewBar.css";
 

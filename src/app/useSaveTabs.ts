@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename, parentDir } from "../utils/path";
 import {

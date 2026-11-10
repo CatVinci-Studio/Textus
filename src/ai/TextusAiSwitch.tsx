@@ -1,11 +1,14 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
-import { announce } from "../ui/announce";
-import { AssistantIcon } from "../ui/icons";
-import { Tooltip } from "../ui/Tooltip";
+import { announce } from "../engine/controls/announce";
+import { AssistantIcon } from "../engine/controls/icons";
+import { Tooltip } from "../engine/controls/Tooltip";
 import { Presence } from "../engine/motion/usePresence";
-import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../engine/controls/ContextMenu";
 import "./textus-ai-switch.css";
 
 /** How long "Pause for an hour" keeps Textus AI off. */

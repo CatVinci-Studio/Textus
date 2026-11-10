@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { MODES } from "../modes";
 import type { Strings } from "../../i18n/strings";
 import { AGENT_MODES, type AgentMode } from "../../prefs/settings-values";
-import { CheckIcon, ChevronIcon } from "../../ui/icons";
+import { CheckIcon, ChevronIcon } from "../../engine/controls/icons";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 
 /** The modes a skill applies in, said quietly ("Write · Review"); a click

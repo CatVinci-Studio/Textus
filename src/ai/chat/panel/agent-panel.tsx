@@ -12,7 +12,7 @@ import {
   clampSidePanel,
   sidePanelMax,
   sidePanelMin,
-} from "../../../ui/side-panel-width";
+} from "../../../engine/controls/side-panel-width";
 import type { AgentPanelTab } from "./AgentPanelView";
 import "./agent-panel.css";
 import "../inline-chat.css";

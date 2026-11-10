@@ -1,8 +1,8 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
-import { useMenuButton } from "../../ui/useMenuButton";
-import { ChevronIcon } from "../../ui/icons";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { scrollBehavior } from "../../engine/motion/motion";
 import type { TabInfo } from "./TabPill";
 

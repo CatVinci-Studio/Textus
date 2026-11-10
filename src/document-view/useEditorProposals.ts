@@ -28,7 +28,7 @@ import type { GeneratedImageData, StreamEvent } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
 import { prefersReducedMotion } from "../engine/motion/motion";
 import { storeImage } from "../editor/images/image-plugin";
-import { showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { cachedDocument, cachedDocumentMarkdown } from "../ai/doc-markdown";
 import { offerOldPictureTrash } from "../ai/revision/old-picture";
 import {
@@ -38,7 +38,7 @@ import {
 } from "../ai/revision/generated-images";
 import { resolveStrings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
-import { announce } from "../ui/announce";
+import { announce } from "../engine/controls/announce";
 import { plural } from "../i18n/plural";
 import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";

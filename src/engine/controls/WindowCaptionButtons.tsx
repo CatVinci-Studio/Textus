@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
-import { thisWindow } from "../platform/this-window";
-import { useSettings } from "../prefs/SettingsContext";
+import { thisWindow } from "../../platform/this-window";
+import { useSettings } from "../../prefs/SettingsContext";
 import {
   WindowCloseIcon,
   WindowMaximizeIcon,
   WindowMinimizeIcon,
   WindowRestoreIcon,
 } from "./icons";
-import { appDrawsWindowFrame } from "../platform/window-chrome";
+import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Tooltip } from "./Tooltip";
 import "./window-caption.css";
 

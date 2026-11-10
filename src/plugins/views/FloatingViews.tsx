@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useChromeScale } from "../../ui/useChromeScale";
+import { useChromeScale } from "../../engine/controls/useChromeScale";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { windowInfo } from "../store/plugin-records";
-import { ContextMenu, type ContextMenuEntry } from "../../ui/ContextMenu";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { PluginWebviewPanel } from "./PluginWebview";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";

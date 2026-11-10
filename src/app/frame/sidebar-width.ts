@@ -5,7 +5,7 @@ import {
   clampSidePanel,
   sidePanelMax,
   sidePanelMin,
-} from "../../ui/side-panel-width";
+} from "../../engine/controls/side-panel-width";
 
 /** The sidebar's width as it comes, and the narrowest it can be dragged to:
  *  under this the tree's names are cut to a few letters. */

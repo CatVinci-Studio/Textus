@@ -8,9 +8,9 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { scaledPx } from "../engine/tokens/chrome-scale";
-import { useViewportClamp } from "../utils/hooks/useViewportClamp";
-import { usePresenceProps } from "../engine/motion/usePresence";
+import { scaledPx } from "../tokens/chrome-scale";
+import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePresenceProps } from "../motion/usePresence";
 
 /** How far the tail stays from the bubble's corners. */
 const TAIL_INSET = 12;

@@ -36,7 +36,8 @@ beforeAll(() => {
 afterEach(cleanup);
 
 const { ChatComposer } = await import("../ai/chat/ChatComposer");
-const { pressKeepingFocus, tapKeepingFocus } = await import("../ui/tap");
+const { pressKeepingFocus, tapKeepingFocus } =
+  await import("../engine/controls/tap");
 
 const labels = {
   dropSelection: "Remove selection",

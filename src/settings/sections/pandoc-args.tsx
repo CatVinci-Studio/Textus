@@ -7,7 +7,7 @@ import {
 import { joinCommandLine, splitCommandLine } from "../../prefs/mcp";
 import { exportDoc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 
 // Product names, the same in every language.

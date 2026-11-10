@@ -1,4 +1,4 @@
-import { scaledPx } from "../engine/tokens/chrome-scale";
+import { scaledPx } from "../tokens/chrome-scale";
 import {
   useCallback,
   useEffect,
@@ -8,9 +8,9 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
+import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { Bubble } from "./Bubble";
-import { Presence } from "../engine/motion/usePresence";
+import { Presence } from "../motion/usePresence";
 import "./InfoTip.css";
 import { useTipTimer } from "./useTipTimer";
 

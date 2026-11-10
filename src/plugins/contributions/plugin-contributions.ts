@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { registerCommand, runCommand } from "../../app/commands";
 import { registerSidebarTab } from "../../app/frame/sidebar-tabs";
 import { registerEditorMenuItems } from "../../editor/editor-menu-items";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { isMacPlatform } from "../../platform/os";
@@ -11,7 +11,7 @@ import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
   registerContextItems,
   type ContextMenuPlace,
-} from "../../ui/context-menu-items";
+} from "../../engine/controls/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { startOnEmbed } from "./embeds";
 import { localize, type MenuContribution } from "../store/manifest";

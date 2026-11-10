@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { Lang, Strings } from "../../i18n/strings";
-import { tapKeepingFocus } from "../../ui/tap";
+import { tapKeepingFocus } from "../../engine/controls/tap";
 import type { PickerGroupId } from "./skill-picker";
 
 /** The pickers' words, in the UI language. */

@@ -6,7 +6,7 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useLatest } from "../../utils/hooks/useLatest";
 import {

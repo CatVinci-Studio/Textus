@@ -18,7 +18,7 @@ import {
 } from "../../plugins/manager";
 import { localize, type Permission } from "../../plugins/store/manifest";
 import { openReadme } from "../../plugins/store/readme";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { exportPluginForPublishing } from "../../plugins/store/plugin-export";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";

@@ -10,7 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
-import { ContextMenu } from "../../ui/ContextMenu";
+import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { runCommand } from "../../app/commands";
 import {
@@ -23,7 +23,7 @@ import {
   ImageFileIcon,
   PinIcon,
   SearchIcon,
-} from "../../ui/icons";
+} from "../../engine/controls/icons";
 import { getWindowAccess } from "../app-bridge";
 import { askPlugin, pluginRecord } from "../manager";
 import {

@@ -1,4 +1,4 @@
-import { scaledPx } from "../engine/tokens/chrome-scale";
+import { scaledPx } from "../tokens/chrome-scale";
 import {
   useEffect,
   useLayoutEffect,
@@ -6,7 +6,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { useLatest } from "../utils/hooks/useLatest";
+import { useLatest } from "../../utils/hooks/useLatest";
 
 const MENU_MAX_HEIGHT = 280;
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { phoneTitleRowBottom } from "../ui/usePhoneLayout";
+import { phoneTitleRowBottom } from "../engine/controls/usePhoneLayout";
 
 /**
  * Places a lesson card so it never hides what the lesson is about, folding

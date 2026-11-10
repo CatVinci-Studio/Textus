@@ -19,7 +19,7 @@ import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
 import { MarkdownText } from "../MarkdownText";
 import { QuickAskPendingBar } from "./quick-ask/QuickAskPendingBar";
 import { quickSummary } from "./quick-summary";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { Presence, PresenceDiv } from "../../engine/motion/usePresence";
 import { scrollBehavior } from "../../engine/motion/motion";
 import { composeMessage } from "./user-message";

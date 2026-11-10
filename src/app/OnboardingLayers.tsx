@@ -6,7 +6,7 @@ import type { Tutorial } from "../onboarding/useTutorial";
 import type { Settings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
 import { Presence } from "../engine/motion/usePresence";
-import { usePhoneLayout } from "../ui/usePhoneLayout";
+import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 
 // The tour runs once, on first launch, so it loads only when it starts.

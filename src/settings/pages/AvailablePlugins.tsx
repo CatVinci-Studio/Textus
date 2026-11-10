@@ -12,7 +12,7 @@ import {
   type CatalogState,
   offeredItems,
 } from "../../plugins/store/catalog";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { AvailableSection } from "./AvailableSection";
 import { installsText } from "./installs-text";
 

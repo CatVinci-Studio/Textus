@@ -2,7 +2,7 @@ import { useDeferredValue, useMemo, type CSSProperties } from "react";
 import { countWords } from "../../utils/word-count";
 import { PAUSE_FEATURES_THRESHOLD } from "../../editor/large-doc";
 import { showsStartPage, type DocTab } from "../../document/doc-tabs";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import type { Lang } from "../../i18n/langs";
 import type { Strings } from "../../i18n/strings";
 import "./document-corner.css";

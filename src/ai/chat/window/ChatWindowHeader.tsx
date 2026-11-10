@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import { ChatHistoryMenu } from "../ChatHistoryMenu";
 import { reopenConversation, type ReopenTarget } from "../reopen-conversation";
 import type { ChatContext } from "./chat-bridge";
-import { PinIcon, PlusIcon } from "../../../ui/icons";
-import { WindowCaptionButtons } from "../../../ui/WindowCaptionButtons";
-import { IconButton } from "../../../ui/IconButton";
-import { PanelHeader } from "../../../ui/PanelHeader";
-import { IslandRow } from "../../../ui/Island";
+import { PinIcon, PlusIcon } from "../../../engine/controls/icons";
+import { WindowCaptionButtons } from "../../../engine/controls/WindowCaptionButtons";
+import { IconButton } from "../../../engine/controls/IconButton";
+import { PanelHeader } from "../../../engine/controls/PanelHeader";
+import { IslandRow } from "../../../engine/layout/Island";
 import type { Strings } from "../../../i18n/strings";
 
 /** The AI island's row of conversations, drawn by the app layer. */

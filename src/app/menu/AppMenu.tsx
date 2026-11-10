@@ -21,10 +21,10 @@ import {
   hasAppMenu,
   hasTextusAi,
 } from "../../platform/capabilities";
-import { useMenuAim } from "../../ui/menu-aim";
-import { CheckIcon, ChevronIcon } from "../../ui/icons";
+import { useMenuAim } from "../../engine/controls/menu-aim";
+import { CheckIcon, ChevronIcon } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import "./app-menu.css";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { trackingShown } from "../../ai/margin/track-changes-state";

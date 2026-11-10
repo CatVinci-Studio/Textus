@@ -1,12 +1,19 @@
-import { showConfirm, showMessage, showPrompt } from "../../ui/app-dialog";
+import {
+  showConfirm,
+  showMessage,
+  showPrompt,
+} from "../../engine/controls/app-dialog";
 import {
   endProgress,
   reportProgress,
   showNotice,
   startProgress,
-} from "../../ui/notices";
+} from "../../engine/controls/notices";
 import { showPluginForm, type PluginFormField } from "../views/plugin-form";
-import { showQuickPick, type QuickPickItem } from "../../ui/quick-pick";
+import {
+  showQuickPick,
+  type QuickPickItem,
+} from "../../engine/controls/quick-pick";
 import { removeStatusItem, setStatusItem } from "../contributions/status-items";
 import {
   optionalStr,

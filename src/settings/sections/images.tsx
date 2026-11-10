@@ -15,7 +15,7 @@ import {
   imageFolderExample,
   isImageSubfolder,
 } from "../../prefs/image-folder";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
 import { explainError } from "../../utils/error-explain";
 

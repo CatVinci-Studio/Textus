@@ -1,5 +1,5 @@
 import { escapeHtml } from "../utils/html";
-import { showConfirm, showMessage } from "../ui/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { basename, dirname } from "../utils/path";
 import { katexLoaded, loadKatex } from "../editor/math/katex-loader";

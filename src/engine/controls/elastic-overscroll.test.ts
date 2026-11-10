@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../engine/motion/motion", () => ({ motionAllowed: () => true }));
-vi.mock("../platform/os", () => ({ isMacPlatform: () => true }));
-vi.mock("../platform/capabilities", () => ({ isIOSApp: false }));
+vi.mock("../motion/motion", () => ({ motionAllowed: () => true }));
+vi.mock("../../platform/os", () => ({ isMacPlatform: () => true }));
+vi.mock("../../platform/capabilities", () => ({ isIOSApp: false }));
 
 import { elasticOverscroll } from "./elastic-overscroll";
 

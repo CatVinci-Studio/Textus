@@ -4,8 +4,12 @@ import { NO_RECENTS, type RecentLists } from "./menu/app-menu-model";
 import { readRecents } from "./menu/recents";
 import { menuIpc } from "../platform/ipc-app";
 import { basename, dirname } from "../utils/path";
-import { CloseIcon, FolderIcon, GenericFileIcon } from "../ui/icons";
-import { Tooltip } from "../ui/Tooltip";
+import {
+  CloseIcon,
+  FolderIcon,
+  GenericFileIcon,
+} from "../engine/controls/icons";
+import { Tooltip } from "../engine/controls/Tooltip";
 import type { Strings } from "../i18n/strings";
 import mark from "../../src-tauri/icons/128x128.png";
 import { openingDocuments } from "./start-project";

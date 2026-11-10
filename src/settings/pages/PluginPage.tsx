@@ -4,7 +4,7 @@ import { SettingRow } from "../sections/controls";
 import { PluginSettingRows } from "./PluginSettings";
 import { PluginErrors } from "./PluginErrors";
 import { PluginData } from "./PluginData";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { links } from "../../platform/ipc";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";

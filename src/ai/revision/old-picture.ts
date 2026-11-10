@@ -1,7 +1,7 @@
 import { canTrashFiles } from "../../platform/capabilities";
 import { fs } from "../../platform/ipc";
 import { imageLocation } from "../../editor/images/missing-image";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import type { Strings } from "../../i18n/strings";
 import { explainError } from "../../utils/error-explain";
 

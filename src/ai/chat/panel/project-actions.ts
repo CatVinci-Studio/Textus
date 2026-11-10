@@ -5,7 +5,7 @@ import { useSettings } from "../../../prefs/SettingsContext";
 import { useActiveProvider } from "../../provider-catalog";
 import { errorText } from "../../../utils/error-text";
 import { OPEN_FILE_IN_TAB_EVENT } from "../../../utils/events";
-import { showConfirm } from "../../../ui/app-dialog";
+import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
 
 function openInTab(path: string) {

@@ -13,9 +13,9 @@ import {
 } from "../../prefs/SettingsContext";
 import type { SettingsPageProps } from "../pages/types";
 import { letterSpacingBy } from "../../prefs/settings-normalise";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
-import { ChevronIcon } from "../../ui/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
 
 /** The reader's own size, spacing and font for the document, over the
  *  theme's: folded under one row that says whether any is set. */

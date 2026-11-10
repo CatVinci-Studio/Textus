@@ -7,7 +7,7 @@ import type {
   MemoryScope,
 } from "../../../platform/ipc";
 import { localeOf, type Lang, type Strings } from "../../../i18n/strings";
-import { Tooltip } from "../../../ui/Tooltip";
+import { Tooltip } from "../../../engine/controls/Tooltip";
 import { useMemoryFocus } from "./memory-focus";
 import "./MemoryView.css";
 import { RememberedSection } from "./RememberedSection";

@@ -377,7 +377,7 @@ button.settings-danger-button {
   -webkit-user-select: text;
 }
 
-/* Toggles render as switches (src/ui/controls.css, .tx-switch). */
+/* Toggles render as switches (src/engine/controls/controls.css, .tx-switch). */
 
 :is(.settings-row, .settings-skill-item)
   input[type="checkbox"]:checked:active::after {

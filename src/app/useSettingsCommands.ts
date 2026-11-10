@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { registerCommand } from "./commands";
-import { showQuickPick } from "../ui/quick-pick";
+import { showQuickPick } from "../engine/controls/quick-pick";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { THEME_MODES, type Settings } from "../prefs/SettingsContext";
 import { currentStrings } from "../i18n/current";

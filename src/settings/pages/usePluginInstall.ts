@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { showConfirm, showMessage } from "../../ui/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import {

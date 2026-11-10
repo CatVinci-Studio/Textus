@@ -1,6 +1,6 @@
 import { useLayoutEffect, type RefObject } from "react";
 import { FlipOnChange } from "../../engine/motion/flip";
-import { markIslandsReady } from "../../ui/Island";
+import { markIslandsReady } from "../../engine/layout/Island";
 
 /**
  * The islands' motion in their area: once the window's first layout is up,

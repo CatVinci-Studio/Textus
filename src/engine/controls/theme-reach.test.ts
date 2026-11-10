@@ -7,14 +7,14 @@ import { describe, expect, it } from "vitest";
 // colour written straight into a rule is one no theme reaches. A literal is
 // allowed only where it is not a colour on screen.
 
-const SRC = fileURLToPath(new URL("..", import.meta.url));
+const SRC = fileURLToPath(new URL("../..", import.meta.url));
 
 /** Not part of the window a theme recolours: the document themes
  *  themselves, the browser playground's page, a printout on paper. */
 const OUTSIDE = ["theme/", "playground/", "export/print.css"];
 /** Windows' own caption colour: its close button turns this red on every
  *  theme, as the system's does. */
-const FIXED = ["ui/window-caption.css"];
+const FIXED = ["engine/controls/window-caption.css"];
 
 const LITERAL =
   /#[0-9a-f]{3,8}\b|\b(?:rgba?|hsla?)\(\s*[\d.]|(?<![-\w])(?:white|black)(?![-\w])/i;

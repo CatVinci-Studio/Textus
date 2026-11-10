@@ -1,15 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
-import { ContextMenu, type ContextMenuItem } from "../ui/ContextMenu";
-import { showConfirm, showMessage, showPrompt } from "../ui/app-dialog";
+import {
+  ContextMenu,
+  type ContextMenuItem,
+} from "../engine/controls/ContextMenu";
+import {
+  showConfirm,
+  showMessage,
+  showPrompt,
+} from "../engine/controls/app-dialog";
 import {
   CloseIcon,
   FolderOpenIcon,
   GridViewIcon,
   ListViewIcon,
   MoreIcon,
-} from "../ui/icons";
+} from "../engine/controls/icons";
 import { Presence, usePresenceProps } from "../engine/motion/usePresence";
 import { animate } from "../engine/motion/motion";
 import { ListMotion } from "../engine/motion/flip";

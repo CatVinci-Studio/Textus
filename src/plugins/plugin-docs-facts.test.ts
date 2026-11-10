@@ -40,8 +40,8 @@ it("names only style variables a plugin page is given", () => {
   const given = new Set<string>(WEBVIEW_THEME_VARS);
   for (const css of [
     "src/engine/tokens/design-system.css",
-    "src/ui/components.css",
-    "src/ui/controls.css",
+    "src/engine/controls/components.css",
+    "src/engine/controls/controls.css",
     "src/engine/motion/motion.css",
   ])
     for (const m of read(css).matchAll(/(--[a-z][\w-]*)\s*:/g)) given.add(m[1]);

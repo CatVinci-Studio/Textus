@@ -10,10 +10,10 @@ import {
 } from "../../theme/theme-import";
 import { ornamentRules } from "../../theme/theme-export";
 import { basename } from "../../utils/path";
-import { showMessage } from "../../ui/app-dialog";
+import { showMessage } from "../../engine/controls/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { LinkRow, RowHelp, SettingRow } from "./controls";
 import {
   AvailableThemes,

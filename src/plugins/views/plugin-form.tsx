@@ -1,6 +1,6 @@
 import { useEffect, useId, useState } from "react";
-import { useModalDialog } from "../../ui/useModalDialog";
-import { Select } from "../../ui/Select";
+import { useModalDialog } from "../../engine/controls/useModalDialog";
+import { Select } from "../../engine/controls/Select";
 import { ColorField, DateField } from "./plugin-form-fields";
 import "./plugin-form.css";
 

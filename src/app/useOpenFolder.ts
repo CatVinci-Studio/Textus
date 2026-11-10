@@ -5,7 +5,7 @@ import { canOpenFolder } from "../platform/capabilities";
 import { fs, session, windowIpc } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { useSettings } from "../prefs/SettingsContext";
-import { showMessage } from "../ui/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { dirname, isInside } from "../utils/path";
 import { SHOW_FOLDER_EVENT } from "../utils/events";
 import {

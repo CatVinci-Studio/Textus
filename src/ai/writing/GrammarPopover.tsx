@@ -1,9 +1,9 @@
 import { useRef, type CSSProperties } from "react";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { ChevronIcon } from "../../ui/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
 import type { GrammarKind } from "./grammar-kind";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./GrammarPopover.css";
 
 export interface GrammarPopoverInfo {

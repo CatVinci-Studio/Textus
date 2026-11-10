@@ -4,9 +4,9 @@ import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
 import { animate } from "../../engine/motion/motion";
-import { joinBeat } from "../../ui/moves";
+import { joinBeat } from "../../engine/controls/moves";
 import { CARD_WIDTH } from "./margin-room";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./ReviewMargin.css";
 import { type MarginItem, type ReviewMarginLabels } from "./margin-layout";
 import {

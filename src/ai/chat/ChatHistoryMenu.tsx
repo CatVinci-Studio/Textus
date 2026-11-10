@@ -6,13 +6,13 @@ import {
   useHasArchivedConversations,
   deleteConversation,
 } from "./chat-history";
-import { CloseIcon, HistoryIcon } from "../../ui/icons";
+import { CloseIcon, HistoryIcon } from "../../engine/controls/icons";
 import { Presence, PresenceDiv } from "../../engine/motion/usePresence";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { basename, dirname } from "../../utils/path";
 import type { ChatSummary } from "./chat-history";
 import { useHistorySearch, type HistoryHit } from "./useHistorySearch";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import "./chat-history-menu.css";
 
 /** Conversations by the folder their document lives in - the project they

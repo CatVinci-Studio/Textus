@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useModalDialog } from "./useModalDialog";
-import { usePresence } from "../engine/motion/usePresence";
-import { isImeKeydown } from "../utils/ime";
+import { usePresence } from "../motion/usePresence";
+import { isImeKeydown } from "../../utils/ime";
 
 /**
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.

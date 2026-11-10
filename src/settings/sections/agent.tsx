@@ -11,7 +11,7 @@ import { localeOf, type Strings } from "../../i18n/strings";
 import { SIGN_IN_MODELS, type SignInModels } from "../agent-models";
 import { useActiveProvider } from "../../ai/provider-catalog";
 import { ai, auth } from "../../platform/ipc";
-import { Select } from "../../ui/Select";
+import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 import { explainError } from "../../utils/error-explain";
 

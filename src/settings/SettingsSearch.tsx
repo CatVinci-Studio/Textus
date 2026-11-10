@@ -6,8 +6,8 @@ import {
   type Ref,
 } from "react";
 import type { Strings } from "../i18n/strings";
-import { announce } from "../ui/announce";
-import { SearchIcon } from "../ui/icons";
+import { announce } from "../engine/controls/announce";
+import { SearchIcon } from "../engine/controls/icons";
 import { scrollBehavior } from "../engine/motion/motion";
 import { useLatest } from "../utils/hooks/useLatest";
 import {

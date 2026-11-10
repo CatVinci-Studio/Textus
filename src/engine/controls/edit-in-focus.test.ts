@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EDIT_ACTION_EVENT } from "../utils/events";
+import { EDIT_ACTION_EVENT } from "../../utils/events";
 import { editInFocus } from "./edit-in-focus";
 
 describe("editInFocus", () => {

@@ -5,7 +5,7 @@ import { htmlTableToMarkdown } from "./html-table-markdown";
 import { htmlTableItems } from "../editor-menu-tables";
 import { resolveStrings } from "../../i18n/strings";
 import type { EditorRunner } from "../useEditorRunner";
-import type { ContextMenuItem } from "../../ui/ContextMenu";
+import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 
 afterEach(closeViews);
 

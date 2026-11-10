@@ -1,5 +1,5 @@
 import { useRef, useState, type CSSProperties } from "react";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { FlipOnChange } from "../../engine/motion/flip";
 import { InlineMarkdownText } from "../MarkdownText";
 import type { AgentTurn } from "../types";

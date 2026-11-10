@@ -11,12 +11,17 @@ import {
   type PickerSkill,
 } from "./skill-picker";
 import type { PanelMode } from "../../prefs/SettingsContext";
-import { ArrowUpIcon, CloseIcon, PlusIcon, StopIcon } from "../../ui/icons";
+import {
+  ArrowUpIcon,
+  CloseIcon,
+  PlusIcon,
+  StopIcon,
+} from "../../engine/controls/icons";
 import { ComposerToggles, KindChip } from "./ComposerTools";
 import { ModeAndModelPicker, ModePicker, type ModeChoice } from "./ModePicker";
-import { Tooltip } from "../../ui/Tooltip";
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { FollowUpChips } from "./FollowUpChips";
-import { usePhoneLayout } from "../../ui/usePhoneLayout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 
 import { useComposerSkills } from "./useComposerSkills";
 import {

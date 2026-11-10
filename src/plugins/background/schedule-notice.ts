@@ -1,6 +1,6 @@
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
-import { showNotice } from "../../ui/notices";
+import { showNotice } from "../../engine/controls/notices";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import type { Requirement } from "../store/manifest";
 import { pluginName, pluginRecord, windowInfo } from "../store/plugin-records";

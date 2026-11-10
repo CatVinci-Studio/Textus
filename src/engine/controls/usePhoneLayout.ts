@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { isIOSApp } from "../platform/capabilities";
+import { isIOSApp } from "../../platform/capabilities";
 
 /** The width at which the iPhone layout takes over: the sidebar becomes a
  *  drawer and Textus AI a bottom sheet. */

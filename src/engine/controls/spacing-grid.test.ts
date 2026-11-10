@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 // px is a multiple of 4, or a hairline's 1-2px. The document's own type
 // (themes, the editor's content, print) keeps its typographic spacing.
 
-const SRC = fileURLToPath(new URL("..", import.meta.url));
+const SRC = fileURLToPath(new URL("../..", import.meta.url));
 const TYPOGRAPHY = [
   "theme/",
   "editor/milkdown-theme.css",

@@ -4,7 +4,7 @@ import type { AiProvider } from "../../prefs/SettingsContext";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { useProviderCatalog } from "../../ai/provider-catalog";
-import { ChevronIcon } from "../../ui/icons";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   localizedLabel,

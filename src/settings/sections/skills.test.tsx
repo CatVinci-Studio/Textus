@@ -10,7 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resolveStrings } from "../../i18n/strings";
 import { ai } from "../../platform/ipc";
-import { showConfirm } from "../../ui/app-dialog";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { OwnSkillsList } from "./skills";
 
 const mock = vi.hoisted(() => ({
@@ -21,7 +21,7 @@ const mock = vi.hoisted(() => ({
   },
 }));
 vi.mock("../../prefs/SettingsContext", () => ({ useSettings: () => mock }));
-vi.mock("../../ui/app-dialog", () => ({ showConfirm: vi.fn() }));
+vi.mock("../../engine/controls/app-dialog", () => ({ showConfirm: vi.fn() }));
 vi.mock("../../platform/ipc", () => ({
   ai: {
     listSkills: vi.fn(),

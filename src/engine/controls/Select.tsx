@@ -9,11 +9,11 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { isIOSApp } from "../platform/capabilities";
-import { useMergedRef, usePresence } from "../engine/motion/usePresence";
+import { isIOSApp } from "../../platform/capabilities";
+import { useMergedRef, usePresence } from "../motion/usePresence";
 import { useFloatingList } from "./useFloatingList";
 import "./Select.css";
-import { isImeKeydown } from "../utils/ime";
+import { isImeKeydown } from "../../utils/ime";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
  *  `data-floating-select` so outside-click code treats it as inside its opener.

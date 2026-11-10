@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { announce } from "../ui/announce";
-import { CornerToast } from "../ui/CornerToast";
+import { announce } from "../engine/controls/announce";
+import { CornerToast } from "../engine/controls/CornerToast";
 import { usePluginCard } from "../plugins/store/usePluginCard";
 import { pluginName, pluginText } from "../plugins/store/plugin-records";
 import { PluginIcon } from "../settings/pages/PluginArt";

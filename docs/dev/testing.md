@@ -443,7 +443,7 @@ export's page margins around blocks taller than a page (#151).
 **Interface scale and alignment** (design standard 5.6). The numbers live
 in one place each and their tests sit beside them: the build plugin that
 scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
-(`src/ui/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
+(`src/engine/controls/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
 floating view's size (`floating-views.test.ts`). Changing the scale curve
 (`src/engine/tokens/window-scale.ts`) means updating those numbers, not adding cases.
 `e2e/panel-alignment.spec.ts` checks the one header line at three widths;
