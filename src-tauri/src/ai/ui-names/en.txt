@@ -35,7 +35,6 @@ Built-in skills (Settings, under Skills)
 Customize… (a built-in skill)
 Reset (a customized built-in skill)
 Writing conventions (Settings row)
-Writing Assistance (Settings section)
 Enable AI completion
 Completion tone
 General
@@ -43,6 +42,4 @@ Review
 Create
 Accept
 Reject
-Editor & Appearance (Settings page)
-Import CSS… (Settings › Extensions › Themes, under ⋯)
 Use this theme (under a theme in a reply)

@@ -692,6 +692,11 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         "Writing Instructions (agent.md)",
         "Edit agent.md",
         "Import Skill…",
+        // The Settings pages and groups its paths go through.
+        "Agent",
+        "Writing assist",
+        "Continue & Check",
+        "Turn on memory",
     ] {
         assert!(prompt.contains(label), "the prompt lacks {label}");
         assert!(
@@ -723,7 +728,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     ] {
         assert!(strings.contains(entry), "the UI has no {entry}");
     }
-    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Folder")));
+    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Agent > Folder")));
     // The backend's own pointer to Settings names the same page.
     assert!(crate::ai::route::NOT_CONFIGURED.contains(&format!("Settings > {AI_NAME}.")));
 }
