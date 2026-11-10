@@ -3,6 +3,7 @@ import { panesOf, splitGrid, type Pane, type SplitGrid } from "./tree";
 import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
 import { IslandMotion } from "./IslandMotion";
+import { IslandNumbers } from "./IslandNumbers";
 import { SplitDivider } from "./SplitDivider";
 import { useTabRows } from "./useTabRows";
 import type { Strings } from "../../i18n/strings";
@@ -80,6 +81,7 @@ export function IslandArea({
         area={ref}
       />
       {content(places)}
+      <IslandNumbers />
       {layout &&
         grid?.dividers.map(({ line, style }) => (
           <SplitDivider
