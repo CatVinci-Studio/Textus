@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 /**
  * A split window's panes - its islands - as a tree: a branch lays its
  * children out in a row or a column, each with its share; a pane holds
@@ -268,14 +266,6 @@ export function swapAt(
   });
 }
 
-/** A share of the whole window's document area. */
-interface Box {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
 /** A line between two children of a branch. */
 export interface Divider {
   path: Path;
@@ -286,118 +276,4 @@ export interface Divider {
   at: number;
   from: number;
   to: number;
-}
-
-function layOut(
-  node: LayoutNode,
-  box: Box,
-  path: Path,
-  panes: Map<string, Box>,
-  lines: Divider[],
-) {
-  if (node.kind === "pane") {
-    panes.set(node.id, box);
-    return;
-  }
-  const row = node.direction === "row";
-  let offset = row ? box.x : box.y;
-  node.children.forEach((child, i) => {
-    const size = node.sizes[i] * (row ? box.w : box.h);
-    const part = row
-      ? { x: offset, y: box.y, w: size, h: box.h }
-      : { x: box.x, y: offset, w: box.w, h: size };
-    layOut(child, part, [...path, i], panes, lines);
-    offset += size;
-    if (i < node.children.length - 1)
-      lines.push({
-        path,
-        index: i,
-        direction: node.direction,
-        at: offset,
-        from: row ? box.y : box.x,
-        to: row ? box.y + box.h : box.x + box.w,
-      });
-  });
-}
-
-/** Cuts closer than this are the same line. */
-const near = (n: number) => Math.round(n * 1e6) / 1e6;
-
-export interface SplitGrid {
-  column: CSSProperties;
-  /** Each pane's tab bar and document. */
-  bars: Map<string, CSSProperties>;
-  bodies: Map<string, CSSProperties>;
-  /** The panes along the window's top edge: their bars clear the window
-   *  bar. */
-  top: Set<string>;
-  dividers: { line: Divider; style: CSSProperties }[];
-}
-
-/**
- * The tree as one grid over the document column, so every tab's editor
- * stays a child of it wherever its pane sits. Each cut is a grid line;
- * where a pane's top edge is, a row as tall as its tab bar holds it.
- */
-export function splitGrid(root: LayoutNode): SplitGrid {
-  const boxes = new Map<string, Box>();
-  const lines: Divider[] = [];
-  layOut(root, { x: 0, y: 0, w: 1, h: 1 }, [], boxes, lines);
-  const all = [...boxes.values()];
-  const xs = [...new Set(all.flatMap((b) => [near(b.x), near(b.x + b.w)]))];
-  const ys = [...new Set(all.flatMap((b) => [near(b.y), near(b.y + b.h)]))];
-  xs.sort((a, b) => a - b);
-  ys.sort((a, b) => a - b);
-  const tops = new Set(all.map((b) => near(b.y)));
-  const columns = xs.slice(1).map((x, i) => `minmax(0, ${near(x - xs[i])}fr)`);
-  const rows: string[] = [];
-  // The line each y cut starts at, and its bar's row where a pane starts.
-  const lineAt = new Map<number, number>();
-  const barRow = new Map<number, number>();
-  ys.forEach((y, i) => {
-    lineAt.set(y, rows.length + 1);
-    if (i === ys.length - 1) return;
-    if (tops.has(y)) {
-      barRow.set(y, rows.length + 1);
-      rows.push("max-content");
-    }
-    rows.push(`minmax(0, ${near(ys[i + 1] - y)}fr)`);
-  });
-  const colLine = (x: number) => xs.indexOf(near(x)) + 1;
-  const bars = new Map<string, CSSProperties>();
-  const bodies = new Map<string, CSSProperties>();
-  const top = new Set<string>();
-  for (const [id, b] of boxes) {
-    const gridColumn = `${colLine(b.x)} / ${colLine(b.x + b.w)}`;
-    const bar = barRow.get(near(b.y))!;
-    bars.set(id, { gridColumn, gridRow: `${bar} / ${bar + 1}` });
-    bodies.set(id, {
-      gridColumn,
-      gridRow: `${bar + 1} / ${lineAt.get(near(b.y + b.h))}`,
-    });
-    if (near(b.y) === 0) top.add(id);
-  }
-  const dividers = lines.map((line) => ({
-    line,
-    style:
-      line.direction === "row"
-        ? {
-            gridColumn: `${colLine(line.at)} / span 1`,
-            gridRow: `${lineAt.get(near(line.from))} / ${lineAt.get(near(line.to))}`,
-          }
-        : {
-            gridColumn: `${colLine(line.from)} / ${colLine(line.to)}`,
-            gridRow: `${lineAt.get(near(line.at))} / span 1`,
-          },
-  }));
-  return {
-    column: {
-      gridTemplateColumns: columns.join(" "),
-      gridTemplateRows: rows.join(" "),
-    },
-    bars,
-    bodies,
-    top,
-    dividers,
-  };
 }

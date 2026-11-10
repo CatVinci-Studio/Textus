@@ -143,12 +143,17 @@
 }
 
 /* Between two tabs at rest, a short mark at their middle (as Chrome's):
-   none beside the open tab, the one pointed at, or after the last. */
+   none beside the open tab, the one pointed at, or after the last - their
+   order the strip's (data-place), not the page's. */
 :root
   .island-row
   > .tab-bar
   > .tab-strip
-  > .tab-pill:not(.tab-pill-active):has(+ .tab-pill) {
+  > .tab-pill:not(
+    .tab-pill-active,
+    [data-place~="last"],
+    [data-place~="before-open"]
+  ) {
   background: linear-gradient(var(--tab-divider), var(--tab-divider)) right
     calc(50% - var(--tab-lift) / 2) / 1px 1.1em no-repeat;
 }
@@ -157,7 +162,7 @@
   .island-row
   > .tab-bar
   > .tab-strip
-  > .tab-pill:is(:hover, :has(+ :is(.tab-pill-active, .tab-pill:hover))) {
+  > .tab-pill:is(:hover, :has(+ .tab-pill:hover)) {
   background-image: none;
 }
 
@@ -216,7 +221,7 @@
 .island-row[data-at-corner]
   > .tab-bar
   > .tab-strip
-  > .tab-pill-active:first-child::before {
+  > .tab-pill-active[data-place~="first"]::before {
   display: none;
 }
 

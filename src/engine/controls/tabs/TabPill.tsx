@@ -54,6 +54,7 @@ export function TabPill({
   tab,
   pane,
   place,
+  at,
   width,
   cut,
   isActive,
@@ -72,6 +73,9 @@ export function TabPill({
   pane: string | null;
   /** Its ref in its strip, which places it (useTabStrip). */
   place: (el: HTMLElement | null) => void;
+  /** Where it stands in its row: first, last, just before the open tab -
+   *  what its divider and its curve at the island's corner go by. */
+  at?: string;
   /** Its width in the row and whether its name is cut (tab-widths.ts);
    *  none until the row is measured: as wide as its content then. */
   width?: number;
@@ -234,6 +238,7 @@ export function TabPill({
         place(el);
       }}
       data-tab={tab.id}
+      data-place={at || undefined}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
       style={width === undefined ? undefined : { width }}
       data-marked={tab.marked || undefined}

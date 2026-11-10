@@ -159,6 +159,13 @@ export function TabBar({
             key={tab.id}
             pane={paneId ?? null}
             place={strip.attach(tab.id)}
+            at={[
+              i === 0 && "first",
+              i === tabs.length - 1 && "last",
+              tabs[i + 1]?.id === activeTabId && "before-open",
+            ]
+              .filter(Boolean)
+              .join(" ")}
             tab={tab}
             width={fit?.widths[i]}
             cut={fit?.cut[i]}

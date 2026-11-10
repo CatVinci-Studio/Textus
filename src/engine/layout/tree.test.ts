@@ -4,7 +4,6 @@ import {
   paneBeside,
   panesOf,
   resizeAt,
-  splitGrid,
   splitPane,
   splitWhole,
   swapAt,
@@ -149,56 +148,5 @@ describe("the pane beside", () => {
     expect(paneBeside(root, a.id, "right")?.front).toBe("b");
     expect(paneBeside(root, b.id, "bottom")?.front).toBe("c");
     expect(paneBeside(root, b.id, "right")).toBeUndefined();
-  });
-});
-
-describe("the grid", () => {
-  it("gives each pane its cells, an auto row for each tab bar's edge", () => {
-    const a = pane(["a"]);
-    const b = pane(["b"]);
-    const c = pane(["c"]);
-    // a | (b over c)
-    const root: Branch = {
-      kind: "split",
-      direction: "row",
-      children: [
-        a,
-        {
-          kind: "split",
-          direction: "column",
-          children: [b, c],
-          sizes: [0.5, 0.5],
-        },
-      ],
-      sizes: [0.5, 0.5],
-    };
-    const grid = splitGrid(root);
-    expect(grid.column.gridTemplateColumns).toBe(
-      "minmax(0, 0.5fr) minmax(0, 0.5fr)",
-    );
-    expect(grid.column.gridTemplateRows).toBe(
-      "max-content minmax(0, 0.5fr) max-content minmax(0, 0.5fr)",
-    );
-    expect(grid.bars.get(a.id)).toEqual({
-      gridColumn: "1 / 2",
-      gridRow: "1 / 2",
-    });
-    expect(grid.bodies.get(a.id)).toEqual({
-      gridColumn: "1 / 2",
-      gridRow: "2 / 5",
-    });
-    expect(grid.bars.get(c.id)).toEqual({
-      gridColumn: "2 / 3",
-      gridRow: "3 / 4",
-    });
-    expect(grid.bodies.get(c.id)).toEqual({
-      gridColumn: "2 / 3",
-      gridRow: "4 / 5",
-    });
-    expect([...grid.top]).toEqual([a.id, b.id]);
-    expect(grid.dividers.map((d) => d.style)).toEqual([
-      { gridColumn: "2 / span 1", gridRow: "1 / 5" },
-      { gridColumn: "2 / 3", gridRow: "3 / span 1" },
-    ]);
   });
 });
