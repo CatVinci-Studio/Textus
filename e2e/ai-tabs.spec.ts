@@ -69,6 +69,10 @@ test("pressed again in front of its own island, it collapses; again, it comes ba
   await aiButton(page).click();
   await expect(tabs(page)).toHaveText(["未命名"]);
   await expect(islands(page)).toHaveCount(1);
+  // The document is the tab in use again: the keys go to it.
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toBeVisible();
   await aiButton(page).click();
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
   await expect(conversation(page)).toHaveCount(1);

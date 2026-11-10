@@ -14,6 +14,8 @@ import {
   type DocTab,
 } from "../../document/doc-tabs";
 import { lastViewMode } from "../../editor/modes/view-mode";
+import { splitLayout } from "../../engine/layout/store";
+import { panesOf } from "../../engine/layout/tree";
 
 export interface TabState {
   tabs: DocTab[];
@@ -102,7 +104,7 @@ export function useTabState(): TabState {
   return {
     tabs,
     setTabs,
-    activeTabId,
+    activeTabId: inFront(tabs, activeTabId),
     setActiveTabId,
     tabsRef,
     liveTabs,
@@ -111,4 +113,15 @@ export function useTabState(): TabState {
     addBlankTab,
     addStartTab,
   };
+}
+
+/** The tab in use, or - when it went without another being chosen (the
+ *  AI's tabs put away together) - the first island's front tab, else the
+ *  last: never none, or keys and zoom have nowhere to go. */
+function inFront(tabs: readonly DocTab[], id: string): string {
+  if (tabs.some((tab) => tab.id === id)) return id;
+  const layout = splitLayout();
+  const fronts = layout ? panesOf(layout.root).map((pane) => pane.front) : [];
+  const front = fronts.find((f) => f && tabs.some((tab) => tab.id === f));
+  return front ?? tabs[tabs.length - 1]?.id ?? id;
 }
