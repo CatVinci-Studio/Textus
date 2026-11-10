@@ -52,7 +52,7 @@ function DocumentCorner({
   return (
     <div
       className="document-corner"
-      data-tab-id={tabId}
+      data-corner-of={tabId}
       data-frame={frame}
       style={style}
     >

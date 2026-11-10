@@ -284,7 +284,7 @@ function placeMarks(tabId: string) {
       // A whole island on the move: its word count goes with it.
       if (whole)
         rules.push(
-          `.document-corner[data-tab-id="${tab}"] { visibility: hidden; }`,
+          `.document-corner[data-corner-of="${tab}"] { visibility: hidden; }`,
         );
       roomSelector = null;
       if (!whole && (left || shown)) {
