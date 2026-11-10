@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowUp,
+  ArrowUpRight,
   ArrowUpDown,
   BetweenHorizontalEnd,
   BetweenHorizontalStart,
@@ -108,6 +109,8 @@ export const GenericFileIcon = lucide(File, 15);
 export const TreeTabIcon = lucide(Folder, 15);
 export const OutlineTabIcon = lucide(FileText, 15);
 export const PluginsTabIcon = lucide(Puzzle, 15);
+/** Goes to another place (Settings' way to the plugins panel). */
+export const GoToIcon = lucide(ArrowUpRight, 12);
 export const SettingsIcon = lucide(Settings, 15);
 /** The window bar's sidebar toggle. */
 export const SidebarToggleIcon = lucide(PanelLeft, 15);

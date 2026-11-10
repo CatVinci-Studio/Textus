@@ -1,6 +1,13 @@
 import { Fragment, useState, useSyncExternalStore } from "react";
 import { pageComponent } from "../builtin-pages";
-import { ChevronIcon } from "../../engine/controls/icons";
+import {
+  ChevronIcon,
+  GoToIcon,
+  PluginsTabIcon,
+} from "../../engine/controls/icons";
+import { PLUGINS_SHOWN } from "../../plugins/store/availability";
+import { isDesktopApp } from "../../platform/capabilities";
+import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
@@ -154,6 +161,26 @@ export function SettingsNavPanel() {
               </Fragment>
             );
           })}
+          {/* Plugins' own settings are in their panel: the way there. */}
+          {PLUGINS_SHOWN && isDesktopApp && (
+            <button
+              type="button"
+              className="tx-list-item settings-nav-away"
+              onClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, {
+                    detail: "plugins",
+                  }),
+                )
+              }
+            >
+              <PluginsTabIcon className="settings-nav-icon" />
+              <span className="settings-nav-group-name">
+                {t.extensionsTabPlugins}
+              </span>
+              <GoToIcon className="settings-nav-chevron" />
+            </button>
+          )}
         </nav>
       )}
     </div>
