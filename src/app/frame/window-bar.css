@@ -372,10 +372,11 @@
   min-height: 0;
 }
 
+/* Its content starts level with the islands' top. */
 .sidebar-body {
   flex: 1;
   overflow-y: auto;
-  padding: 4px;
+  padding: 0 4px 4px;
 }
 
 /* Shown while ghost text, grammar check and live Mermaid preview are paused
