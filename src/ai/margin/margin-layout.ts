@@ -122,7 +122,8 @@ export function measureRoom(
 
 /** Sets the column's left edge to `marginLeft` ("" for centred) at once and
  *  glides it there on its transform, as a margin-left transition would lay
- *  the document out on every frame. */
+ *  the document out on every frame - on the frame clock's span and curve,
+ *  so it moves as the islands around it do. */
 export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
   if (contentEl.style.marginLeft === marginLeft) return;
   flip(
@@ -130,7 +131,7 @@ export function placeColumn(contentEl: HTMLElement, marginLeft: string) {
     () => {
       contentEl.style.marginLeft = marginLeft;
     },
-    { duration: "--dur-slow", easing: "--ease-spring" },
+    { duration: "--dur-settle", easing: "--ease-settle" },
   );
 }
 
