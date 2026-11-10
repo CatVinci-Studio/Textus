@@ -37,6 +37,11 @@
   min-height: 0;
 }
 
+/* Memory starts under its history button, not beneath it. */
+.ai-island .agent-panel-memory {
+  padding-top: 40px;
+}
+
 /* Its cards on the paper take a tint. */
 .ai-island .agent-panel-view {
   --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
