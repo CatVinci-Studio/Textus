@@ -231,7 +231,11 @@ fn build_editor_window(
         commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0))
     };
     let (_, (width, height)) = window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
-    let url = if small { "index.html?window=small" } else { "index.html" };
+    let url = if small {
+        "index.html?window=small"
+    } else {
+        "index.html"
+    };
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
         .title(app_identity::APP_NAME)
         .inner_size(width, height)

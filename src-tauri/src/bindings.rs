@@ -350,11 +350,10 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
         ),
         (
             "ai-conventions.ts",
-            builder().commands(collect_commands![
-                crate::ai::conventions::measure_text,
-            ])
-            // The document languages WRITING_CONVENTIONS is keyed by.
-            .typ::<crate::ai::rules::Lang>(),
+            builder()
+                .commands(collect_commands![crate::ai::conventions::measure_text,])
+                // The document languages WRITING_CONVENTIONS is keyed by.
+                .typ::<crate::ai::rules::Lang>(),
         ),
     ]
 }

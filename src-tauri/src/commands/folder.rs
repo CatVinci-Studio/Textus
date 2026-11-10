@@ -88,7 +88,12 @@ pub async fn search_folder_text(
 ) -> Result<crate::plugins::workspace::SearchResult, String> {
     use crate::plugins::workspace::{search_in, MAX_SEARCH_HITS, SEARCH_TIME};
     read_folder(root, move |root| {
-        search_in(root, &query, MAX_SEARCH_HITS, std::time::Instant::now() + SEARCH_TIME)
+        search_in(
+            root,
+            &query,
+            MAX_SEARCH_HITS,
+            std::time::Instant::now() + SEARCH_TIME,
+        )
     })
     .await
 }

@@ -151,8 +151,15 @@ pub(crate) fn build(
     .accelerator("CmdOrCtrl+Shift+T")
     .build(app)?;
 
+    // Under New Tab, as a browser's File menu has it. Cmd/Ctrl+Shift+N:
+    // Cmd+N is New Tab's.
+    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
+    let new_window_item = MenuItemBuilder::with_id(NEW_WINDOW_ID, l(NEW_WINDOW_ID, "New Window"))
+        .accelerator(NEW_WINDOW_ACCEL)
+        .build(app)?;
     let file_menu = SubmenuBuilder::new(app, l("menu:file", "File"))
         .item(&new_file_item)
+        .item(&new_window_item)
         .item(&open_file_item)
         .item(&open_folder_item)
         .item(&open_recent_menu)
@@ -354,11 +361,6 @@ pub(crate) fn build(
         builder.build()?
     };
 
-    // Cmd/Ctrl+Shift+N: Cmd+N is New Tab's.
-    const NEW_WINDOW_ACCEL: &str = "CmdOrCtrl+Shift+N";
-    let new_window_item = item(NEW_WINDOW_ID, "New Window")
-        .accelerator(NEW_WINDOW_ACCEL)
-        .build(app)?;
     // Built manually so it doesn't own Cmd+W, which is Close Tab's.
     let close_window_item = item(CLOSE_WINDOW_ID, "Close Window")
         .accelerator("CmdOrCtrl+Shift+W")
@@ -366,8 +368,6 @@ pub(crate) fn build(
 
     let window_menu = {
         let builder = SubmenuBuilder::new(app, l("menu:window", "Window"))
-            .item(&new_window_item)
-            .separator()
             .minimize_with_text(l("predefined:minimize", "Minimize"))
             .maximize_with_text(l("predefined:maximize", "Zoom"))
             .separator()

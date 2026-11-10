@@ -14,7 +14,6 @@ use tauri::ipc::Channel;
 use tauri::Manager;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 
-
 /// What an agent's process says, in order.
 #[derive(Clone, serde::Serialize)]
 #[cfg_attr(test, derive(specta::Type))]

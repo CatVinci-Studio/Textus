@@ -77,7 +77,11 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     }
     // Still launching, or no window alive: park the whole batch, as one
     // window's tabs, for the window that mounts next.
-    app.state::<PendingOpenPaths>().0.lock().unwrap().push(paths);
+    app.state::<PendingOpenPaths>()
+        .0
+        .lock()
+        .unwrap()
+        .push(paths);
     if ui_ready {
         let _ = crate::editor_windows::open_new_window(app);
     }
