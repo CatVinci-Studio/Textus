@@ -349,6 +349,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentActionInsertAtCursor: "Am Cursor einfügen",
   commentLocate: "Im Dokument anzeigen",
   commentApplySuggestion: "Vorschlag übernehmen",
+  zoomTogetherLabel: "Alle Dokumente zusammen zoomen",
+  zoomTogetherHint:
+    "Eingeschaltet ändert ein Zoom die Größe aller Dokumente zugleich; ausgeschaltet behält jeder Tab seine eigene. Einstellungen, Plugin-Seiten und die KI werden nicht gezoomt.",
   aiChangeModeLabel: "Wie Textus AI Dateien ändert",
   aiChangeModeRevision: "Als Überarbeitungen zum Prüfen",
   aiChangeModeDirect: "Direkt geschrieben",

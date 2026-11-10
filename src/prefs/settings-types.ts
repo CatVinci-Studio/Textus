@@ -165,6 +165,9 @@ export interface Settings {
   typewriterMode: boolean;
   /** The formatting row under the title bar. */
   formatBar: boolean;
+  /** Every document zoomed together, not each tab its own (documents
+   *  only: Settings, plugin pages and the AI aren't zoomed). */
+  zoomTogether: boolean;
   /** The view every document is in, in every window. */
   viewMode: ViewMode;
   /** Zen mode in every window. */
@@ -330,6 +333,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   formatBar: true,
+  zoomTogether: false,
   viewMode: "rich",
   zenMode: false,
   contentWidth: "auto",

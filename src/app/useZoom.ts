@@ -6,8 +6,8 @@ import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
 import { CONTENT_ZOOM_EVENT, contentZoom } from "../plugins/views/frame-zoom";
 
-/// Document zoom, each tab its own, scoped to the editor content; the window
-/// chrome stays at 100%. Published as `--content-zoom` on the tab's own
+/// Document zoom, each tab its own (or, with zoomTogether, all documents
+/// one), scoped to the editor content; the window chrome stays at 100%. Published as `--content-zoom` on the tab's own
 /// element (the window's default on the root, for tabs not zoomed yet).
 /// Fed by trackpad pinch, mod+wheel and the View menu; a tab that shows no
 /// document (Settings, an AI conversation, a plugin's page) isn't zoomed.
@@ -177,10 +177,25 @@ const heldSource = new WeakMap<
  * The live value is a ref, since pinch updates arrive per frame; `persist`
  * gets it once it comes to rest.
  */
-export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
+export function useZoom(
+  initialZoom: number,
+  persist: (zoom: number) => void,
+  /** Every document zoomed together (settings.zoomTogether). */
+  together: boolean,
+) {
   const zoomRef = useRef(snap(initialZoom));
   const persistRef = useRef(persist);
   persistRef.current = persist;
+  const togetherRef = useRef(together);
+  togetherRef.current = together;
+
+  // Turned on: every document takes the window's one zoom.
+  useEffect(() => {
+    if (!together) return;
+    for (const tab of document.querySelectorAll<HTMLElement>("[data-tab-id]"))
+      tab.style.removeProperty("--content-zoom");
+    window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
+  }, [together]);
 
   useEffect(() => {
     let raf = 0;
@@ -198,7 +213,13 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       const next = zoomRef.current;
       const prev = contentZoom(tab);
       const setZoomVar = () => {
-        tab.style.setProperty("--content-zoom", String(next));
+        // Together: the window's own zoom, which every document reads.
+        if (togetherRef.current)
+          document.documentElement.style.setProperty(
+            "--content-zoom",
+            String(next),
+          );
+        else tab.style.setProperty("--content-zoom", String(next));
         window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
       };
       // Zoom leaves scrollTop alone, so without this the text under the

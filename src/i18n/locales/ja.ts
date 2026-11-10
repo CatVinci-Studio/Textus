@@ -331,6 +331,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentActionInsertAtCursor: "カーソル位置に挿入",
   commentLocate: "文書内で表示",
   commentApplySuggestion: "提案を適用",
+  zoomTogetherLabel: "すべての文書をまとめて拡大縮小",
+  zoomTogetherHint:
+    "オンにすると、拡大縮小がすべての文書の大きさを一度に変えます。オフではタブごとに保たれます。設定、プラグインのページ、AI は拡大縮小されません。",
   aiChangeModeLabel: "Textus AI のファイルの変え方",
   aiChangeModeRevision: "確認する修正として",
   aiChangeModeDirect: "直接書き込む",

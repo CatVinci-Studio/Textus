@@ -349,6 +349,9 @@ export default {
   agentActionInsertAtCursor: "Вставка у курсора",
   commentLocate: "Показать в документе",
   commentApplySuggestion: "Применить предложение",
+  zoomTogetherLabel: "Масштабировать все документы вместе",
+  zoomTogetherHint:
+    "Если включено, масштаб меняет размер всех документов сразу; если выключено, у каждой вкладки свой. Настройки, страницы плагинов и ИИ не масштабируются.",
   aiChangeModeLabel: "Как Textus AI меняет файлы",
   aiChangeModeRevision: "Правками на проверку",
   aiChangeModeDirect: "Сразу в файл",

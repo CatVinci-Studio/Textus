@@ -344,6 +344,9 @@ type /name in a conversation to use one.
   agentActionInsertAtCursor: "Insert at cursor",
   commentLocate: "Show in document",
   commentApplySuggestion: "Apply suggestion",
+  zoomTogetherLabel: "Zoom all documents together",
+  zoomTogetherHint:
+    "On, a zoom sets every document's size at once; off, each tab keeps its own. Settings, plugin pages and the AI aren't zoomed.",
   aiChangeModeLabel: "How Textus AI changes files",
   aiChangeModeRevision: "As revisions to review",
   aiChangeModeDirect: "Written straight in",

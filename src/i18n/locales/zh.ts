@@ -312,6 +312,9 @@ export default {
   agentActionInsertAtCursor: "在光标处插入",
   commentLocate: "在文档中定位",
   commentApplySuggestion: "采用建议",
+  zoomTogetherLabel: "所有文档同步缩放",
+  zoomTogetherHint:
+    "打开后，缩放会同时改变所有文档的大小；关闭时每个标签各自保持。设置、插件页面和 AI 不随之缩放。",
   aiChangeModeLabel: "Textus AI 的修改方式",
   aiChangeModeRevision: "修订（逐条审阅）",
   aiChangeModeDirect: "直接写入",

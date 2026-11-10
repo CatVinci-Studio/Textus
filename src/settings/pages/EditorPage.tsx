@@ -63,6 +63,12 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
           onChange={(on) => setSettings({ formatBar: on })}
         />
         <ToggleRow
+          label={t.zoomTogetherLabel}
+          help={t.zoomTogetherHint}
+          checked={settings.zoomTogether}
+          onChange={(on) => setSettings({ zoomTogether: on })}
+        />
+        <ToggleRow
           label={t.menuViewTypewriter}
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}

@@ -358,6 +358,9 @@ para usar una.
   agentActionInsertAtCursor: "Insertar en el cursor",
   commentLocate: "Mostrar en el documento",
   commentApplySuggestion: "Aplicar sugerencia",
+  zoomTogetherLabel: "Ampliar todos los documentos a la vez",
+  zoomTogetherHint:
+    "Activado, un zoom cambia el tamaño de todos los documentos a la vez; desactivado, cada pestaña conserva el suyo. Los ajustes, las páginas de complementos y la IA no se amplían.",
   aiChangeModeLabel: "Cómo cambia Textus AI los archivos",
   aiChangeModeRevision: "Como revisiones para revisar",
   aiChangeModeDirect: "Escritos directamente",

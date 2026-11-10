@@ -312,6 +312,9 @@ export default {
   agentActionInsertAtCursor: "在游標處插入",
   commentLocate: "在文件中顯示",
   commentApplySuggestion: "採用建議",
+  zoomTogetherLabel: "所有文件同步縮放",
+  zoomTogetherHint:
+    "開啟後，縮放會同時改變所有文件的大小；關閉時每個分頁各自保持。設定、外掛頁面和 AI 不隨之縮放。",
   aiChangeModeLabel: "Textus AI 的修改方式",
   aiChangeModeRevision: "修訂（逐條審閱）",
   aiChangeModeDirect: "直接寫入",

@@ -32,7 +32,11 @@ export function useWindowShell({
   const panels = useSidePanels(textusAi.on);
   const settingsOpening = useSettingsOpening(tabState);
   const appUpdate = useAppUpdate(settings.updateChannel);
-  useZoom(settings.zoom, (zoom) => setSettings({ zoom }));
+  useZoom(
+    settings.zoom,
+    (zoom) => setSettings({ zoom }),
+    settings.zoomTogether,
+  );
   const tutorial = useTutorial(textusAi.on);
   const evaluateTutorialDocumentChange =
     useTutorialDocumentEvaluation(tutorial);

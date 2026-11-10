@@ -360,6 +360,9 @@ utiliser une.
   agentActionInsertAtCursor: "Insérer au curseur",
   commentLocate: "Afficher dans le document",
   commentApplySuggestion: "Appliquer la suggestion",
+  zoomTogetherLabel: "Zoomer tous les documents ensemble",
+  zoomTogetherHint:
+    "Activé, un zoom règle la taille de tous les documents à la fois ; désactivé, chaque onglet garde la sienne. Les réglages, les pages d’extensions et l’IA ne sont pas zoomés.",
   aiChangeModeLabel: "Comment Textus AI modifie les fichiers",
   aiChangeModeRevision: "En révisions à relire",
   aiChangeModeDirect: "Écrites directement",

@@ -347,6 +347,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentActionInsertAtCursor: "Inserir no cursor",
   commentLocate: "Mostrar no documento",
   commentApplySuggestion: "Aplicar sugestão",
+  zoomTogetherLabel: "Ampliar todos os documentos juntos",
+  zoomTogetherHint:
+    "Ativado, um zoom muda o tamanho de todos os documentos de uma vez; desativado, cada aba mantém o seu. As configurações, as páginas de plugins e a IA não são ampliadas.",
   aiChangeModeLabel: "Como o Textus AI altera arquivos",
   aiChangeModeRevision: "Como revisões para revisar",
   aiChangeModeDirect: "Escritas direto",

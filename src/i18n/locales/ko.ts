@@ -324,6 +324,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentActionInsertAtCursor: "커서 위치에 삽입",
   commentLocate: "문서에서 보기",
   commentApplySuggestion: "제안 적용",
+  zoomTogetherLabel: "모든 문서를 함께 확대/축소",
+  zoomTogetherHint:
+    "켜면 확대/축소가 모든 문서의 크기를 한꺼번에 바꾸고, 끄면 탭마다 따로 유지합니다. 설정, 플러그인 페이지, AI는 확대/축소되지 않습니다.",
   aiChangeModeLabel: "Textus AI가 파일을 바꾸는 방식",
   aiChangeModeRevision: "검토할 수정으로",
   aiChangeModeDirect: "바로 쓰기",
