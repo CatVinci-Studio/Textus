@@ -13,6 +13,7 @@ import { openBeside, moveToPane, splitLayout } from "../../engine/layout/store";
 import { panesOf, paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   AI_PRESS_EVENT,
   DRAFT,
@@ -29,6 +30,14 @@ const conversationOf = (tab: DocTab) =>
   DRAFT;
 
 const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
+
+/** The AI island's first width: a panel's (380 at the interface's size),
+ *  never under a third or over half of the islands' area. */
+function aiShare(): number {
+  const area = document.querySelector(".main-pane")?.clientWidth ?? 0;
+  if (!area) return 0.35;
+  return Math.min(0.5, Math.max(0.3, scaledPx(380) / area));
+}
 
 /**
  * The AI's conversations as tabs (desktop): while the AI is shown, one tab
@@ -126,7 +135,12 @@ export function useAiTabs({
           if (home) moveToPane(tab.id, home.id);
           else {
             const right = layout && panesOf(layout.root).at(-1);
-            openBeside(tab.id, right?.front ?? tabsRef.current[0]?.id ?? null);
+            openBeside(
+              tab.id,
+              right?.front ?? tabsRef.current[0]?.id ?? null,
+              "right",
+              aiShare(),
+            );
           }
         }
       });

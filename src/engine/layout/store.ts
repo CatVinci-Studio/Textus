@@ -143,6 +143,8 @@ export function openBeside(
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
+  /** The new pane's share of the window, when it splits it (half). */
+  share = 0.5,
 ): void {
   if (!from || from === tabId) return;
   const home = layout && paneWithTab(layout.root, from);
@@ -150,7 +152,13 @@ export function openBeside(
     // The window's other tabs stay on `from`'s side: they join the pane
     // in use as the layout takes them in.
     setSplitLayout(
-      pairLayout(side === "right" ? "row" : "column", from, tabId, 0),
+      pairLayout(
+        side === "right" ? "row" : "column",
+        from,
+        tabId,
+        0,
+        1 - share,
+      ),
     );
     return;
   }

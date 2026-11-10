@@ -94,8 +94,9 @@
 /* Out of the way until wanted: shown while the pointer is over the panel
    or focus is in it, as VS Code's explorer does. Touch has no hover. */
 @media (hover: hover) {
+  /* Hidden, they take no room: the folder's name has the whole line. */
   .file-tree:not(:hover, :focus-within) .tree-tool {
-    opacity: 0;
+    display: none;
   }
 }
 
