@@ -36,14 +36,6 @@
     visibility 0s linear var(--dur-base);
 }
 
-:root:not(.zen) .main-pane {
-  margin-left: var(--rail-width, 0px);
-}
-
-:root:not(.zen) .sidebar:not(.sidebar-collapsed) ~ .main-pane {
-  margin-left: calc(var(--rail-width, 0px) + var(--sidebar-width, 240px));
-}
-
 /* Below the window bar: the bar's own row stays the window's to drag. */
 .sidebar-resizer {
   top: var(--window-bar-height);

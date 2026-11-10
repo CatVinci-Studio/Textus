@@ -94,6 +94,21 @@
   clip-path: inset(-1px 0 0 var(--tabs-inset-start, 8px));
 }
 
+/* Tabs hidden before its start: the first ones in view fade in from it,
+   none cut off mid-name. */
+:root .island-row > .tab-bar[data-scrolled] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent var(--tabs-inset-start, 8px),
+    #000 calc(var(--tabs-inset-start, 8px) + 3em)
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent var(--tabs-inset-start, 8px),
+    #000 calc(var(--tabs-inset-start, 8px) + 3em)
+  );
+}
+
 /* A tab: its words, its x and the + on the row's middle line, level with
    the bar's own controls; the line between tabs the layout's. */
 :root .island-row > .tab-bar > .tab-pill {

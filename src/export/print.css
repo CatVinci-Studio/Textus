@@ -22,9 +22,9 @@
     display: none !important;
   }
 
-  /* The room the sidebar had on screen. */
-  .main-pane {
-    margin-left: 0 !important;
+  /* The room the rail and the sidebar had on screen. */
+  .app-shell > .main-pane {
+    grid-column: 1 / -1 !important;
   }
 
   /* Editing affordances, not content. Keep in step with

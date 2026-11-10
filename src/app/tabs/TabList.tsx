@@ -14,7 +14,9 @@ const NARROW = 84;
  * Many tabs, as Chrome has them: the pills shrink together, the narrow ones
  * give up their × (the open one keeps it), and once even that leaves them
  * past the row, a button at its end lists every tab. Watches the row as it
- * and its tabs change; marks it data-narrow and data-overflow.
+ * and its tabs change; marks it data-narrow and data-overflow, and
+ * data-scrolled while tabs lie hidden before its start (faded there, not
+ * cut off mid-name).
  */
 export function useTabOverflow(
   bar: RefObject<HTMLElement | null>,
@@ -36,10 +38,17 @@ export function useTabOverflow(
       setOverflow(over);
       revealActive(el, false);
     };
+    const scrolled = () =>
+      el.toggleAttribute("data-scrolled", el.scrollLeft > 1);
     fit();
+    scrolled();
     const resized = new ResizeObserver(fit);
     resized.observe(el);
-    return () => resized.disconnect();
+    el.addEventListener("scroll", scrolled, { passive: true });
+    return () => {
+      resized.disconnect();
+      el.removeEventListener("scroll", scrolled);
+    };
   }, [bar, count]);
   return overflow;
 }
