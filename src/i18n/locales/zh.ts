@@ -1549,7 +1549,7 @@ export default {
   navAppearance: "外观",
   navEditing: "编辑",
   navProviders: "服务商",
-  navChatWriting: "协作辅助",
+  navChatWriting: "写作辅助",
   navSkillsMemory: "技能与记忆",
   navPrivacyData: "隐私与数据",
   leadGeneral: "语言、打开方式、文件和更新",

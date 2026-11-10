@@ -1,10 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { AgentIslandTools } from "./AgentTabs";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import { useSettings } from "../../prefs/SettingsContext";
 import { setAiMount } from "./ai-tabs";
-import { StandaloneChat } from "../../ai/chat/StandaloneChat";
 import "./ai-tab.css";
+
+// The whole chat: loaded when the AI opens with no document to host it.
+const StandaloneChat = lazy(() =>
+  import("../../ai/chat/StandaloneChat").then((m) => ({
+    default: m.StandaloneChat,
+  })),
+);
 
 /**
  * An AI conversation's tab: the element its conversation is drawn into (by
@@ -28,7 +34,11 @@ export function AiTab({ tabId }: { tabId: string }) {
     <div className="ai-tab">
       <div className="agent-panel-mount" ref={mount} hidden={!hosted} />
       {/* No document's editor draws the conversation: its own. */}
-      {!hosted && mountEl && <StandaloneChat />}
+      {!hosted && mountEl && (
+        <Suspense fallback={null}>
+          <StandaloneChat />
+        </Suspense>
+      )}
       <AgentIslandTools t={t} />
     </div>
   );
