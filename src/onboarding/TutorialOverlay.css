@@ -48,7 +48,7 @@
 /* With the AI panel open, the card goes to the bottom corner, off the text
    the panel narrows; over an overlaying panel, the other corner. */
 @media (min-width: 721px) {
-  .app-shell:is(:has(> .agent-panel), :has(.ai-island)) .tutorial-card {
+  .app-shell:is(:has(> .agent-panel), :has(.ai-tab)) .tutorial-card {
     top: auto;
     bottom: 18px;
   }

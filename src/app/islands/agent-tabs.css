@@ -1,6 +1,5 @@
-/* The AI island (AiIsland, an Island of kind "ai"; island.css draws it):
-   what is its own - its conversation filling it, its history at the top
-   right, and how it comes and goes. */
+/* The AI's row parts (AgentTabs): the chat window's row of conversations
+   and its buttons, and the iPad's docked panel. */
 
 /* The row's own buttons after its tabs (the chat window's history, pin). */
 .agent-tabs-actions {
@@ -8,43 +7,6 @@
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
-}
-
-/* The conversation's own header gives way to the island's row. */
-.ai-island .agent-panel-header {
-  display: none;
-}
-
-/* Its cell in the documents' grid; it slides in as Textus AI's button
-   opens it and out as it closes, the documents taking the room after. */
-.ai-island {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  color: var(--ui-text);
-  animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
-}
-
-.ai-island[data-state="closing"] {
-  animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
-}
-
-.ai-island > .agent-panel-mount {
-  flex: 1;
-  min-height: 0;
-}
-
-/* Memory starts under its history button, not beneath it. */
-.ai-island .agent-panel-memory {
-  padding-top: 40px;
-}
-
-/* Its cards on the paper take a tint. */
-.ai-island .agent-panel-view {
-  --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
 }
 
 /* The iPad's docked panel holds its conversation the same way. */

@@ -48,7 +48,7 @@ export function useEditorCarets({
  *  would otherwise go into the document; the AI panel has its own. */
 const ownsMenu = (target: EventTarget | null) =>
   !(target as HTMLElement | null)?.closest?.(
-    ".inline-chat, .agent-panel, .ai-island, .find-replace-bar, input, textarea, .cm-content",
+    ".inline-chat, .agent-panel, .ai-tab, .find-replace-bar, input, textarea, .cm-content",
   );
 
 /**

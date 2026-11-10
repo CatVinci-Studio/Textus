@@ -28,7 +28,7 @@ export const CARD_OBSTACLES = [
   ".grammar-popover",
   ".ghost-text",
   ".agent-panel",
-  ".ai-island",
+  ".ai-tab",
 ].join(", ");
 
 export function placedBox(

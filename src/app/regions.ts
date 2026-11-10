@@ -20,7 +20,7 @@ const REGIONS: { region: string; start?: string }[] = [
     start: ".ProseMirror, .cm-content",
   },
   { region: ".review-bar" },
-  { region: ":is(.agent-panel, .ai-island)", start: "textarea" },
+  { region: ":is(.agent-panel, .ai-tab)", start: "textarea" },
 ];
 
 const TABBABLE =
