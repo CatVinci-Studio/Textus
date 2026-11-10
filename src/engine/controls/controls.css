@@ -415,6 +415,13 @@ input[type="range"].tx-slider {
 [data-bubble-tail] {
   --tail-size: 10px;
 }
+/* On a side edge, which in a one-line bubble is short: the bubble's
+   corners a step tighter, so the tail's base sits on the straight run
+   between them and meets the edge cleanly. */
+:is([data-bubble-tail="left"], [data-bubble-tail="right"])[data-bubble-tail] {
+  --tail-size: 8px;
+  border-radius: var(--shape-xs);
+}
 [data-bubble-tail="top"] {
   transform-origin: var(--tail-at, 50%) 0;
 }
