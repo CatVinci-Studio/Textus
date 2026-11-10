@@ -1356,10 +1356,6 @@ button.settings-skill-action:focus-visible {
 .settings-group-body > .theme-gallery-item[data-in-use] > .theme-gallery-preview {
   box-shadow: 0 0 0 2px var(--ui-accent);
 }
-.settings-group-body > .theme-gallery-item > .plugin-card-open {
-  gap: 2px;
-  padding: 0;
-}
 .settings-group-body > .theme-gallery-item .plugin-card-description {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1370,17 +1366,41 @@ button.settings-skill-action:focus-visible {
 .settings-group-body > .theme-gallery-item .plugin-byline {
   font-size: var(--text-caption);
 }
-.settings-group-body > .theme-gallery-item > .settings-row-control {
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  max-width: none;
-  margin-top: auto;
-}
-.theme-card-name {
+/* The name, then its small buttons at the line's end. */
+.theme-card-head {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-width: 0;
+}
+.theme-card-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.theme-card-head > .theme-card-name {
+  flex: 1 1 auto;
+}
+.theme-card-actions {
+  display: flex;
+  flex: none;
+  gap: var(--space-1);
+}
+.theme-card-actions > .settings-inline-button {
+  min-height: var(--control-height-sm);
+  padding-inline: var(--space-2);
+  font-size: var(--text-caption);
+}
+.theme-card-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 600;
 }
 

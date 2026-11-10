@@ -398,13 +398,6 @@ export function ThemesTab({ t }: { t: Strings }) {
                     )
                   )
                 }
-                status={
-                  settings.themeId === theme.id && (
-                    <span className="plugin-official">
-                      {t.themeGalleryInUse}
-                    </span>
-                  )
-                }
                 onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
               >
                 {updates.has(theme.id) && (

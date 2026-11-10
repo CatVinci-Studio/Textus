@@ -177,34 +177,22 @@ export function ThemeCard({
   description,
   previews,
   byline,
-  status,
   onOpen,
   children,
   ...rest
 }: {
   t: Strings;
   name: string;
-  /** Beside the name: "In use". */
-  status?: ReactNode;
   description?: string;
   previews?: string[];
   byline?: ReactNode;
   onOpen?: () => void;
   children: ReactNode;
 } & HTMLAttributes<HTMLDivElement>) {
-  const text = (
-    <>
-      <span className="settings-row-label plugin-card-name theme-card-name">
-        {name}
-        {status}
-      </span>
-      {description && (
-        <span className="settings-row-hint plugin-card-description">
-          {description}
-        </span>
-      )}
-      {byline}
-    </>
+  const title = (
+    <span className="settings-row-label plugin-card-name theme-card-name">
+      {name}
+    </span>
   );
   return (
     <div
@@ -223,14 +211,23 @@ export function ThemeCard({
           Aa
         </div>
       )}
-      {onOpen ? (
-        <button type="button" className="plugin-card-open" onClick={onOpen}>
-          {text}
-        </button>
-      ) : (
-        <div className="plugin-card-open">{text}</div>
+      {/* Its name and its buttons on one line; what it is under them. */}
+      <div className="theme-card-head">
+        {onOpen ? (
+          <button type="button" className="theme-card-open" onClick={onOpen}>
+            {title}
+          </button>
+        ) : (
+          title
+        )}
+        <div className="theme-card-actions">{children}</div>
+      </div>
+      {description && (
+        <span className="settings-row-hint plugin-card-description">
+          {description}
+        </span>
       )}
-      <div className="settings-row-control">{children}</div>
+      {byline}
     </div>
   );
 }
