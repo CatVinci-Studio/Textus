@@ -21,7 +21,7 @@ import {
   resolveTarget,
   type NoteTarget,
   type PathIndex,
-} from "../../links/link-resolve";
+} from "../../files/link-resolve";
 
 export { pathIndex, resolveTarget, type PathIndex };
 

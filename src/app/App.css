@@ -12,6 +12,6 @@
 @import "./editor-column.css";
 @import "./notices.css";
 @import "../engine/controls/app-dialog.css";
-@import "../sidebar/history-panels.css";
+@import "../files/history-panels.css";
 @import "../export/print.css";
 @import "./modes.css";

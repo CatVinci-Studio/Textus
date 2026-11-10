@@ -1,4 +1,4 @@
-import { notesRoot } from "../../links/link-style";
+import { notesRoot } from "../../files/link-style";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
 import { basename, slashed } from "../../utils/path";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
@@ -15,8 +15,8 @@ import {
   withFrontmatter,
   type Frontmatter,
 } from "../../utils/frontmatter";
-import { linkPlanner } from "../../links/link-rewrite";
-import { blockIdAt } from "../../links/block-id";
+import { linkPlanner } from "../../files/link-rewrite";
+import { blockIdAt } from "../../files/block-id";
 import { setWillExport } from "../contributions/will-export";
 import { setWillSave } from "../contributions/will-save";
 import {

@@ -15,7 +15,7 @@ import { ActivityRail } from "./ActivityRail";
 import { useSettings } from "../../prefs/SettingsContext";
 import { moveSidebarTab, sidebarTab, sidebarTabs } from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
-import type { FileOpenHow } from "../../sidebar/tree-shared";
+import type { FileOpenHow } from "../../files/tree-shared";
 
 /** The left sidebar and its tabs, plus the scrim behind its drawer on iPhone. */
 export function Sidebar({

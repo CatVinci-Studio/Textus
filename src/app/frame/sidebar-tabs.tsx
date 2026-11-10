@@ -2,14 +2,14 @@ import { getUiState, setUiState } from "../../storage/ui-state";
 import { StartActions } from "../StartActions";
 import "../start-page.css";
 import type { ComponentType } from "react";
-import { FileTree } from "../../sidebar/FileTree";
-import { Outline } from "../../sidebar/Outline";
+import { FileTree } from "../../files/FileTree";
+import { Outline } from "../../files/Outline";
 import { TreeTabIcon, OutlineTabIcon } from "../../engine/controls/icons";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
 import { PHONE_QUERY } from "../../engine/controls/usePhoneLayout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
-import type { FileOpenHow } from "../../sidebar/tree-shared";
+import type { FileOpenHow } from "../../files/tree-shared";
 
 /** What every sidebar tab's panel is given: the window's document and
  *  folder, and its ways to open a file or close the sidebar. */

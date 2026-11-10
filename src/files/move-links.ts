@@ -1,8 +1,8 @@
-import { notesRoot, renameRule } from "../links/link-style";
+import { notesRoot, renameRule } from "./link-style";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { getWindowAccess } from "../plugins/app-bridge";
-import { linkPlanner } from "../links/link-rewrite";
+import { linkPlanner } from "./link-rewrite";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { FILE_WRITTEN_EVENT } from "../utils/events";
 import { basename } from "../utils/path";

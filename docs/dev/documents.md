@@ -147,7 +147,7 @@ window shows.
 
 When the app itself renames, moves or deletes a file (the file tree, the
 iPhone's document list), the open tabs follow (`app/useDocumentActions.ts`),
-and links to a moved note are rewritten (`sidebar/move-links.ts`).
+and links to a moved note are rewritten (`files/move-links.ts`).
 
 ## Closing
 

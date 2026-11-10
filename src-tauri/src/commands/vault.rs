@@ -3,7 +3,7 @@
 //! folder holding `.obsidian/`, else the folder open in the window when the
 //! document is in it, else the document's own folder). A wikilink with a
 //! folder is from the vault root. The rules are `link-resolve.ts`'s; both
-//! run `src/links/link-resolve.cases.json`.
+//! run `src/files/link-resolve.cases.json`.
 
 use std::path::{Component, Path, PathBuf};
 use std::sync::{Arc, Mutex};

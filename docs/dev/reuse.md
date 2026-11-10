@@ -52,11 +52,11 @@ The pieces:
 | Folding case and accents                                 | `utils/search-fold.ts`; pinyin `utils/pinyin.ts`                                                               |
 | Paths: `/`-separated, a note file, a URL or a drive path | `utils/path.ts` (`slashed`, `isNoteFile`, `noteStem`, `hasUrlScheme`, `isDrivePath`, `relativePath`)           |
 | Reading a `[[link]]`                                     | `utils/note-link.ts` (`parseNoteLink`; `WIKILINK_SOURCE` to find them in text)                                 |
-| Where a link goes, as a click takes it                   | `links/link-resolve.ts` (and Rust `resolve_note_link`, which shares its cases)                                 |
-| Writing a link the way the folder does                   | `links/link-style.ts`, `links/link-resolve.ts` `linkToTarget`; Markdown links `editor/markdown/link-syntax.ts` |
+| Where a link goes, as a click takes it                   | `files/link-resolve.ts` (and Rust `resolve_note_link`, which shares its cases)                                 |
+| Writing a link the way the folder does                   | `files/link-style.ts`, `files/link-resolve.ts` `linkToTarget`; Markdown links `editor/markdown/link-syntax.ts` |
 | A `#heading` or `^block` inside a note                   | `editor/markdown/link-target.ts` `headingIndex`, `editor/markdown/heading-jump.ts`                             |
 | Scrolling to a place in the document                     | `revealPosition` (`editor/reveal-position.ts`); a tab not yet shown takes a `setTabJump`                       |
-| Rewriting links when a note moves                        | `links/link-rewrite.ts`                                                                                        |
+| Rewriting links when a note moves                        | `files/link-rewrite.ts`                                                                                        |
 | Front matter                                             | `utils/frontmatter.ts`                                                                                         |
 | `\|` in a table cell                                     | `editor/tables/cell-pipes.ts`                                                                                  |
 | How the folder is written, whichever app made it         | `conventions` (Rust `src-tauri/src/conventions/`, `fs.folderConventions`; plugins `files.conventions`)         |

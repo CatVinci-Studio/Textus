@@ -48,11 +48,10 @@ const FEATURES = [
   "document",
   "editor",
   "export",
-  "links",
+  "files",
   "mobile",
   "onboarding",
   "settings",
-  "sidebar",
   "theme",
 ];
 const SHELL = ["app", "document-view"];
@@ -158,16 +157,15 @@ export default tseslint.config(
       "ai",
       "document",
       "export",
-      "links",
+      "files",
       "mobile",
       "onboarding",
       "plugins",
-      "sidebar",
     ]),
   },
   {
     files: [
-      "src/{ai,clipboard,document,export,links,mobile,onboarding,settings,sidebar,theme}/**/*.{ts,tsx}",
+      "src/{ai,clipboard,document,export,files,mobile,onboarding,settings,theme}/**/*.{ts,tsx}",
     ],
     ignores: ["**/*.test.*"],
     rules: above(SHELL),

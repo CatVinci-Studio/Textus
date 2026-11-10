@@ -10,7 +10,7 @@ import {
   movedBy,
   planLinkUpdates,
   rewriteMovedLinks,
-} from "../../links/link-rewrite";
+} from "../../files/link-rewrite";
 import { relativePath } from "../../utils/path";
 
 describe("a glob", () => {

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   registerNoteCompletion,
   setNoteCompletionRoot,
-} from "../sidebar/note-completion";
+} from "../files/note-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";

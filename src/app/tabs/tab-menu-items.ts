@@ -3,7 +3,7 @@ import { tabIsDirty } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
 import { pathItems } from "../../clipboard/copy-path";
 import { windowFolder } from "../../platform/window-folder";
-import { isWithin } from "../../sidebar/tree-root";
+import { isWithin } from "../../files/tree-root";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 

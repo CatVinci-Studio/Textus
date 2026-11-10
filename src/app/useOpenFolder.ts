@@ -12,7 +12,7 @@ import {
   agentRootOnClose,
   agentRootOnOpen,
   nextTreeRoot,
-} from "../sidebar/tree-root";
+} from "../files/tree-root";
 
 /** The folder the last session had open, for the window that restores the
  *  session; later windows start without one. */

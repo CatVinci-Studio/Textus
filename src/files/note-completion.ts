@@ -6,8 +6,8 @@ import {
 } from "../editor/extension-points";
 import { fs } from "../platform/ipc";
 import type { IndexedFile } from "../platform/ipc";
-import { linkToTarget, pathIndex, type LinkStyle } from "../links/link-resolve";
-import { linkStyleAt } from "../links/link-style";
+import { linkToTarget, pathIndex, type LinkStyle } from "./link-resolve";
+import { linkStyleAt } from "./link-style";
 
 /**
  * `[[` lists the folder's notes - the core's fallback, gone as soon as a
