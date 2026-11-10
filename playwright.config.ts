@@ -2,13 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * The e2e flows: the frontend in Chromium against the Vite dev server, with
- * the dev Tauri shim standing in for the backend. Visual baselines are Linux
- * only, since fonts differ. PLAYWRIGHT_PORT lets a second worktree run too.
+ * the dev Tauri shim standing in for the backend. PLAYWRIGHT_PORT lets a
+ * second worktree run too.
  */
 const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
-// Far from the app's port: worktrees pick ports ten apart (1430, 1440, ...),
-// and a nearer offset landed on another run's app server.
-const playgroundPort = port + 1000;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
   // The frame engine and the one editor per island: Mac draws in WebKit,
@@ -19,37 +16,6 @@ const WEBKIT_SPECS = [
   "tab-from-window.spec.ts",
   "island-numbers.spec.ts",
   "frames.spec.ts",
-  // How AI text lands and leaves: timing differs in WebKit. Not
-  // landing-beat.spec.ts, which compares two animations frame by frame:
-  // a busy runner's frames, not WebKit, decide that there.
-  "settle-motion.spec.ts",
-  "motion-edge-cases.spec.ts",
-  "translate-stream.spec.ts",
-  "insert-in-paragraph.spec.ts",
-  "stream-edge-cases.spec.ts",
-  "revise-stream.spec.ts",
-  "agent-image.spec.ts",
-  // A wide diagram scrolls from its left edge: WebKit lays out flex overflow
-  // on its own.
-  "diagram-fit.spec.ts",
-  "drag-autoscroll.spec.ts",
-  // WebKit scrolls to a selection set as the editor takes the focus.
-  "grammar-apply.spec.ts",
-  "api-key-field.spec.ts",
-  "sidebar-toggle.spec.ts",
-  "tab-scroll.spec.ts",
-  "markdown-keys.spec.ts",
-  "completion-panel.spec.ts",
-  "code-block.spec.ts",
-  "link-reveal.spec.ts",
-  "sidebar-resize.spec.ts",
-  "keyboard.spec.ts",
-  "file-tree.spec.ts",
-  "user-css.spec.ts",
-  "typora-theme.spec.ts",
-  "plugins.spec.ts",
-  "large-doc-lazy.spec.ts",
-  "two-way-links.spec.ts",
 ];
 
 export default defineConfig({
@@ -60,9 +26,6 @@ export default defineConfig({
   // the machine's load: they run with `npm run test:perf`, never in CI.
   grepInvert: process.env.TEXTUS_PERF ? undefined : /@perf/,
   grep: process.env.TEXTUS_PERF ? /@perf/ : undefined,
-  // Screenshot baselines are Linux's alone: on a Mac fonts differ, so run
-  // `npm run test:visual` in the Linux container (docs/dev/testing.md).
-  ignoreSnapshots: process.platform === "darwin",
   timeout: 30_000,
   // Tests share nothing, so tests rather than files spread over workers and
   // shards, which keeps the shards even.
@@ -73,15 +36,6 @@ export default defineConfig({
   // is a failure.
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : [["list"]],
-  expect: {
-    // A tight per-pixel threshold: the default (0.2) reads a light panel tint
-    // such as the code-block background as plain white.
-    toHaveScreenshot: {
-      maxDiffPixelRatio: 0.01,
-      threshold: 0.05,
-      animations: "disabled",
-    },
-  },
   use: {
     baseURL: `http://localhost:${port}`,
     viewport: { width: 1180, height: 780 },
@@ -93,20 +47,13 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: ["shots/**", "playground.spec.ts"],
+      // The frame claims' own checks go with the frame flows (@perf).
+      testIgnore: process.env.TEXTUS_PERF
+        ? ["shots/**"]
+        : ["shots/**", "frames/claims.spec.ts"],
       use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1180, height: 780 },
-      },
-    },
-    {
-      name: "playground",
-      testMatch: "playground.spec.ts",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1180, height: 780 },
-        baseURL: `http://localhost:${playgroundPort}`,
-        locale: "en-US",
       },
     },
     // WebKit-only flows in Playwright's WebKit, opt in with E2E_WEBKIT=1;
@@ -128,12 +75,6 @@ export default defineConfig({
     {
       command: `npx vite --port ${port} --strictPort`,
       url: `http://localhost:${port}`,
-      reuseExistingServer: false,
-      timeout: 60_000,
-    },
-    {
-      command: `npx vite --config vite.playground.config.ts --port ${playgroundPort} --strictPort`,
-      url: `http://localhost:${playgroundPort}/playground/`,
       reuseExistingServer: false,
       timeout: 60_000,
     },

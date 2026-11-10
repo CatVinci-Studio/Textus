@@ -70,7 +70,6 @@ a key the macOS menu takes reaches nothing.
 | `npm run check`: types, lint, unit tests, formats               | locally, CI                        | every change; every pull request                        | yes                            |
 | e2e flows in Chromium (`npm run test:e2e`)                      | locally (4 workers), CI (4 shards) | before a push; every pull request touching the frontend | yes                            |
 | e2e flows in WebKit (`E2E_WEBKIT=1`)                            | CI                                 | after a merge to `main`                                 | no: looked at before a release |
-| Screenshots (`e2e/visual.spec.ts`)                              | Linux only                         | before a release; after a change to the look            | no                             |
 | Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point                                | never                          |
 | Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed                     | never: compared by hand        |
 
@@ -171,7 +170,6 @@ three CI runs, the same commands on every platform;
 holds. The rest are run by hand:
 
 ```sh
-npm run test:visual                    # the e2e flows plus screenshot comparison (Linux baselines)
 E2E_WEBKIT=1 npm run test:e2e          # adds the WebKit project (npx playwright install webkit once)
 npm run test:perf                      # the stopwatch flows (@perf: frame budgets, slides) - never in CI
 npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
@@ -199,9 +197,11 @@ saving; the native jobs' `npm test` skips it with
 help guides in English, Chinese and Japanese, all ten languages with
 `TEXTUS_ROUNDTRIP_ALL=1`.
 
-`npm run test:visual` compares `e2e/visual.spec.ts` against Linux baselines
-(they depend on the fonts of the machine that took them). The WebKit
-project covers the few flows where WebKit differs (`WEBKIT_SPECS` in
+Layout and motion are checked as numbers in the engine's unit tests (the
+solver, the tab strip, the row insets, the drop zones): an e2e flow checks
+what a user sees happen - where a tab lands, which island it joins - not
+pixels or styles. There are no screenshot baselines. The WebKit project
+covers the few flows where WebKit differs (`WEBKIT_SPECS` in
 `playwright.config.ts`); CI runs it after a merge, in the `e2e-webkit`
 job. `playwright.webview.config.ts` runs the flows in an old Chromium you
 point it at, the oldest WebView2 Textus supports
@@ -446,15 +446,6 @@ scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
 (`src/engine/controls/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
 floating view's size (`floating-views.test.ts`). Changing the scale curve
 (`src/engine/tokens/window-scale.ts`) means updating those numbers, not adding cases.
-`e2e/panel-alignment.spec.ts` checks the one header line at three widths;
-`e2e/database.spec.ts` checks that a dragged copy stays under the pointer,
-zoomed or not. Screenshots in `visual.spec.ts` are taken at the window
-widths where the scale is 1 or a known step, so they change only when the
-look does.
-
-Baselines are per platform. After an intended UI change:
-`npm run test:visual -- --update-snapshots`, then look at every changed
-image before keeping it - a baseline happily records a bug.
 
 ### 6. Built app (`scripts/smoke-linux.sh`)
 

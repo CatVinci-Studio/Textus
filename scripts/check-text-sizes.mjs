@@ -23,7 +23,6 @@ const ALLOWED_FILES = {
 /** A glyph drawn to fit a fixed-size badge or button: the sizes allowed
  *  in that file. */
 const GLYPHS = {
-  "src/ai/margin/ReviewMargin.css": ["12px"],
   "src/editor/diagram-zoom.css": ["1.2rem", "1.5rem"],
 };
 

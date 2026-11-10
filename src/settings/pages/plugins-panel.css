@@ -103,13 +103,6 @@
   padding-right: 4px;
 }
 
-/* The gear, as the tree's tools: shown on the row's hover or focus. */
-@media (hover: hover) {
-  .plugins-panel-row:not(:hover, :focus-within) .plugins-panel-gear {
-    opacity: 0;
-  }
-}
-
 /* A group's heading folds it. */
 .plugins-panel-group {
   display: flex;

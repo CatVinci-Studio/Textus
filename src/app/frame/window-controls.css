@@ -1,6 +1,7 @@
 /* The menu button sits where the macOS traffic lights would be, narrower
-   than a caption button. */
-.window-menu-button {
+   than a caption button. Over the bar's shared button rule whichever
+   stylesheet loads last (window-bar.css). */
+.window-menu-button.window-menu-button {
   width: calc(34px * var(--chrome-scale));
   margin-left: -8px;
   color: var(--ui-muted);

@@ -87,9 +87,6 @@ Before either kind, in the release's pull request:
 - **What CI doesn't block on.** Look at the latest `main` run's WebKit job
   and at any test reported flaky (testing.md › Flaky tests); fix or file
   each.
-- **Screenshots.** Run `npm run test:visual -- e2e/visual.spec.ts` on Linux
-  (testing.md › Which tests run when); look at each changed image, and
-  update the baseline only for a change you meant.
 - **Speed.** When the release touches the editor, large documents or plugin
   loading, run the benchmarks on the same machine as last time and compare.
 

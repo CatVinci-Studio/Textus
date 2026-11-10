@@ -292,7 +292,7 @@ async function isolate(targets: Locator[]): Promise<() => Promise<void>> {
     content: `
       [data-active-tab="true"] .ProseMirror > *${keep},
       .window-bar, .tab-bar, .shots-traffic-lights,
-      [class*="review-bar"], [class*="notes-bar"] { visibility: hidden !important; }
+      [class*="review-bar"] { visibility: hidden !important; }
       .ProseMirror { caret-color: transparent !important; }
     `,
   });

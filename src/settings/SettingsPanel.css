@@ -826,14 +826,6 @@ button.settings-inline-button {
   color: var(--ui-accent-text);
 }
 
-/* The built-in skills: a disclosure like Advanced, its count of those
-   switched on at the right of the title. */
-.settings-builtin-skills-count {
-  margin-left: auto;
-  font-size: var(--text-footnote);
-  font-weight: 400;
-}
-
 .settings-builtin-category-title {
   padding: 12px 0 2px;
   color: var(--ui-muted);
@@ -1139,12 +1131,6 @@ button.settings-inline-button {
   margin-top: 4px;
   font-size: var(--text-footnote);
   color: var(--ui-muted);
-}
-
-/* The Get more themes row sits between other rows; a link row's
-   `border: none` would drop the card's hairline above it. */
-.settings-group-body > * + button.theme-more-entry {
-  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 /* Extensions › Themes › Get themes: each theme is a card like a catalog

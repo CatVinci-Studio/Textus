@@ -84,7 +84,6 @@
 
 /* Settings › Extensions › Plugins: a card per plugin opening its own page.
    No icons: a list of names reads at a glance. */
-.plugin-install-buttons,
 .plugin-detail-actions {
   display: flex;
   flex-wrap: wrap;
@@ -305,24 +304,9 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-back:hover {
   background: var(--ui-hover);
 }
-.plugin-page-head {
-  margin-bottom: var(--space-4);
-}
-.plugin-page-title-row {
-  align-items: flex-start;
-  gap: var(--space-3);
-}
 .plugin-page-title {
   margin: 0 0 4px;
   font-size: var(--text-body-large);
-}
-/* Get plugins: the search over the catalog, above its cards. */
-.plugin-search {
-  flex: none;
-  margin: var(--space-2) 0 var(--space-3);
-}
-.plugin-page-title-row .plugin-byline {
-  margin-top: var(--space-1);
 }
 .plugin-requirement-met {
   color: var(--ui-muted);
@@ -609,35 +593,6 @@ button.plugin-card-open:hover .plugin-card-name {
   margin: 0 0 var(--space-3);
 }
 
-/* Every Extensions tab: a line of what it holds with Get more and "…" on
-   the right, the installed items, Advanced. */
-.extensions-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin: 0 0 var(--space-3);
-}
-.extensions-intro {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-  margin: 0;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
-.extensions-head-actions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: var(--space-2);
-}
-.extensions-get-more {
-  border-color: var(--ui-primary);
-  background: var(--ui-primary);
-  color: var(--ui-on-primary);
-}
 /* Installed, then Available: a count after each title; Available folds,
    with its sort and the fold button on its title's line. */
 .extensions-count {
@@ -682,9 +637,6 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 /* Plugin features off: everything under the switch, quieter. */
 .extensions-off .settings-group,
-.extensions-off .plugin-search {
-  opacity: 0.6;
-}
 .extensions-more {
   position: relative;
 }
@@ -725,16 +677,6 @@ button.plugin-card-open:hover .plugin-card-name {
   display: flex;
   gap: var(--space-2);
   margin-top: 4px;
-}
-button.mcp-homepage {
-  padding: 0;
-  border: 0;
-  background: none;
-  font-family: var(--font-mono);
-  cursor: pointer;
-}
-button.mcp-homepage:hover {
-  text-decoration: underline;
 }
 .mcp-form {
   display: flex;

@@ -26,20 +26,6 @@
   padding: 12px 0 0 24px;
 }
 
-.providers-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-size: var(--text-title);
-}
-
-.providers-head-name {
-  font-size: var(--text-body);
-  font-weight: 600;
-}
-
-.providers-head-status,
 .providers-note {
   color: var(--ui-muted);
   font-size: var(--text-caption);

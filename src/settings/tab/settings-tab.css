@@ -15,11 +15,6 @@
   scrollbar-gutter: auto;
 }
 
-.settings-tab-lead {
-  margin: 0 0 12px;
-  color: var(--ui-muted);
-}
-
 /* About's card: the app's icon, name and version, and checking for
    updates at its end - the page's one row that isn't in a section. */
 .settings-about-card {

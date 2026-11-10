@@ -16,12 +16,6 @@
   box-sizing: border-box;
 }
 
-.plugin-list-filter {
-  /* settings-text-input grows in a row; in this column it would grow tall. */
-  flex: none;
-  margin: var(--space-2);
-}
-
 .plugin-list-message {
   padding: 0 var(--space-3) var(--space-1);
   color: var(--ui-muted);
@@ -64,10 +58,6 @@
    left last doesn't stay lit. */
 .plugin-list-row:hover,
 .plugin-list-rows:focus-visible .plugin-list-row.is-active,
-.plugin-list:has(.plugin-list-filter:focus-visible) .plugin-list-row.is-active {
-  background: var(--ui-hover);
-}
-
 .plugin-list-rows:focus-visible .plugin-list-row.is-active {
   outline: 2px solid var(--focus-ring, var(--ui-accent));
   outline-offset: -2px;

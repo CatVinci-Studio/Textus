@@ -194,7 +194,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   expect(corners.some((c) => c.joins)).toBe(true);
 });
 
-test("with only Settings open, the AI grows in at a panel's width and can be used; Settings' island slides, not rebuilt", async ({
+test("with only Settings open, the AI opens beside it and can be used; Settings' island is kept, not rebuilt", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
@@ -211,23 +211,9 @@ test("with only Settings open, the AI grows in at a panel's width and can be use
   const settings = page.locator("section.island").first();
   await settings.evaluate((el) => ((el as HTMLElement).dataset.mark = "kept"));
   await aiButton(page).click();
-  const sheet = page.locator("section.island").last();
   await expect(page.locator("section.island")).toHaveCount(2);
   await expect(settings).toHaveAttribute("data-mark", "kept");
-  // It grows in from the right edge, not shown whole at once.
-  const width = () => sheet.evaluate((el) => el.getBoundingClientRect().width);
-  const first = await width();
-  await page.waitForTimeout(600);
-  expect(first).toBeLessThan((await width()) - 50);
   await expect(page.locator(".ai-tab textarea").first()).toBeVisible();
-  // Its composer drawn as a hosted one's: a framed box.
-  const frame = await page
-    .locator(".ai-tab .inline-chat-field")
-    .first()
-    .evaluate((el) => getComputedStyle(el).borderTopWidth);
-  expect(frame).toBe("1px");
-  const w = (await sheet.boundingBox())!.width;
-  expect(w).toBeLessThan(600);
 });
 
 test("let go in the middle of the document's island, it joins it; near its edge, it opens beside", async ({

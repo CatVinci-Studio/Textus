@@ -790,7 +790,6 @@
   .inline-chat-skill-item,
   .completion-item,
   .tree-row,
-  .clipboard-entry,
   .chat-history-entry,
   .settings-nav-item
 ) {
@@ -806,7 +805,6 @@
   .combobox-option,
   .inline-chat-skill-item,
   .tree-row,
-  .clipboard-entry,
   .chat-history-entry,
   .settings-nav-item
 ):is(:hover, :focus-visible, .is-active, .inline-chat-skill-item-active) {

@@ -12,7 +12,8 @@ import {
 } from "./claims";
 
 // The checks the frame-by-frame flows (frames.spec.ts) rest on, held to
-// recordings written by hand: no page, so they run with every e2e run.
+// recordings written by hand: no page; they run with the frame flows
+// (npm run test:perf).
 
 function box(left: number, width: number, more: Partial<FrameBox> = {}) {
   return {
