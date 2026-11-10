@@ -57,6 +57,7 @@ export {
   type ColorSwatchMode,
   REVISION_DISPLAYS,
   type RevisionDisplay,
+  type AiChangeMode,
   type CompletionTone,
   COMPLETION_TONES,
   type SearchService,

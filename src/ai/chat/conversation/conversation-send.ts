@@ -24,7 +24,8 @@ import type { AgentRequestOptions } from "./conversation-types";
 const requestPrefs = (settings: Settings) => ({
   searchService: settings.searchService,
   searxngUrl: settings.searxngUrl,
-  askBeforeFileChanges: settings.agentAskBeforeFileChanges,
+  // Revisions: the folder's other files are kept as revisions, not written.
+  askBeforeFileChanges: settings.aiChangeMode === "revision",
 });
 
 /** One message of `model`'s conversation, about `document`: the request,

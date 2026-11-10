@@ -312,9 +312,11 @@ export default {
   agentActionInsertAtCursor: "在光标处插入",
   commentLocate: "在文档中定位",
   commentApplySuggestion: "采用建议",
-  askBeforeFileChangesLabel: "改文件前先问我",
-  askBeforeFileChangesHint:
-    '通用模式下，Textus AI 会直接修改文件夹里的其他文件，每次回复的改动都能撤销。打开后，改动先留着，由你点"应用"。',
+  aiChangeModeLabel: "Textus AI 的修改方式",
+  aiChangeModeRevision: "修订（逐条审阅）",
+  aiChangeModeDirect: "直接写入",
+  aiChangeModeHint:
+    "修订：无论是正在看的文档还是文件夹里的其他文件，每处改动都先留在那个文件里，等你接受或拒绝；Textus AI 新建的文件也等你决定是否保留。直接写入：改动立刻生效并保留标记，每次回复都能撤销。",
   filesChangedTitle: "改动的文件",
   filesKeptTitle: "待应用的改动",
   filesNew: "新建",

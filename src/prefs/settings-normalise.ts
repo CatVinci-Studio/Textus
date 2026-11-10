@@ -17,6 +17,8 @@ import {
   IMAGE_HOSTS,
   type ImageHost,
   REVISION_DISPLAYS,
+  AI_CHANGE_MODES,
+  type AiChangeMode,
   type RevisionDisplay,
   type Creation,
   CREATION_KINDS,
@@ -143,6 +145,11 @@ function readSettings(parsed: Raw | null): Settings {
               )
             ? (parsed.revisionDisplay as RevisionDisplay)
             : DEFAULT_SETTINGS.revisionDisplay,
+      aiChangeMode: AI_CHANGE_MODES.includes(
+        parsed.aiChangeMode as AiChangeMode,
+      )
+        ? (parsed.aiChangeMode as AiChangeMode)
+        : DEFAULT_SETTINGS.aiChangeMode,
       shortcuts: storedShortcuts(parsed.shortcuts),
       commandShortcuts: stringMap(parsed.commandShortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),

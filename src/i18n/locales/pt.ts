@@ -347,9 +347,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentActionInsertAtCursor: "Inserir no cursor",
   commentLocate: "Mostrar no documento",
   commentApplySuggestion: "Aplicar sugestão",
-  askBeforeFileChangesLabel: "Perguntar antes de alterar arquivos",
-  askBeforeFileChangesHint:
-    "No modo Geral, o Textus AI altera diretamente outros arquivos da pasta; as alterações de cada resposta podem ser desfeitas. Ativado, ele as guarda até você aplicar.",
+  aiChangeModeLabel: "Como o Textus AI altera arquivos",
+  aiChangeModeRevision: "Como revisões para revisar",
+  aiChangeModeDirect: "Escritas direto",
+  aiChangeModeHint:
+    "Revisões: cada alteração – no documento aberto ou em outro arquivo da pasta – espera nesse arquivo até você aceitar ou recusar, e um arquivo criado pelo Textus AI espera para ser mantido. Escritas direto: as alterações entram na hora e ficam marcadas, cada resposta pode ser desfeita.",
   filesChangedTitle: "Arquivos alterados",
   filesKeptTitle: "Alterações a aplicar",
   filesNew: "novo",

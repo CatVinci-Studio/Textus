@@ -349,9 +349,11 @@ export default {
   agentActionInsertAtCursor: "Вставка у курсора",
   commentLocate: "Показать в документе",
   commentApplySuggestion: "Применить предложение",
-  askBeforeFileChangesLabel: "Спрашивать перед изменением файлов",
-  askBeforeFileChangesHint:
-    "В режиме «Общий» Textus AI сразу меняет другие файлы в папке; изменения каждого ответа можно отменить. Если включено, изменения ждут, пока вы их примените.",
+  aiChangeModeLabel: "Как Textus AI меняет файлы",
+  aiChangeModeRevision: "Правками на проверку",
+  aiChangeModeDirect: "Сразу в файл",
+  aiChangeModeHint:
+    "Правки: каждое изменение – в открытом документе или другом файле папки – ждёт в этом файле, пока вы его примете или отклоните, а файл, созданный Textus AI, ждёт, оставить ли его. Сразу в файл: изменения применяются сразу и остаются отмеченными, каждый ответ можно отменить.",
   filesChangedTitle: "Изменённые файлы",
   filesKeptTitle: "Изменения к применению",
   filesNew: "новый",

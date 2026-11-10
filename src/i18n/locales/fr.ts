@@ -360,9 +360,11 @@ utiliser une.
   agentActionInsertAtCursor: "Insérer au curseur",
   commentLocate: "Afficher dans le document",
   commentApplySuggestion: "Appliquer la suggestion",
-  askBeforeFileChangesLabel: "Demander avant de modifier des fichiers",
-  askBeforeFileChangesHint:
-    "En mode Général, Textus AI modifie directement les autres fichiers du dossier ; les changements de chaque réponse peuvent être annulés. Activé, il les garde jusqu’à ce que vous les appliquiez.",
+  aiChangeModeLabel: "Comment Textus AI modifie les fichiers",
+  aiChangeModeRevision: "En révisions à relire",
+  aiChangeModeDirect: "Écrites directement",
+  aiChangeModeHint:
+    "Révisions : chaque modification – dans le document ouvert ou un autre fichier du dossier – attend dans ce fichier que vous l’acceptiez ou la refusiez, et un fichier créé par Textus AI attend d’être gardé. Écrites directement : les modifications arrivent aussitôt et restent marquées, chaque réponse annulable.",
   filesChangedTitle: "Fichiers modifiés",
   filesKeptTitle: "Modifications à appliquer",
   filesNew: "nouveau",

@@ -344,9 +344,11 @@ type /name in a conversation to use one.
   agentActionInsertAtCursor: "Insert at cursor",
   commentLocate: "Show in document",
   commentApplySuggestion: "Apply suggestion",
-  askBeforeFileChangesLabel: "Ask before changing files",
-  askBeforeFileChangesHint:
-    "In General mode, Textus AI changes other files in the folder directly; each reply's changes can be undone. On, it keeps them for you to apply.",
+  aiChangeModeLabel: "How Textus AI changes files",
+  aiChangeModeRevision: "As revisions to review",
+  aiChangeModeDirect: "Written straight in",
+  aiChangeModeHint:
+    "Revisions: every change - in the open document or another file of the folder - waits in that file for you to accept or reject, and a file Textus AI makes waits to be kept. Written straight in: changes land at once and stay marked, each reply undoable.",
   filesChangedTitle: "Files changed",
   filesKeptTitle: "Changes to apply",
   filesNew: "new",

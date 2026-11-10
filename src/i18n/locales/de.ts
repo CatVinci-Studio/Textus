@@ -349,9 +349,11 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   agentActionInsertAtCursor: "Am Cursor einfügen",
   commentLocate: "Im Dokument anzeigen",
   commentApplySuggestion: "Vorschlag übernehmen",
-  askBeforeFileChangesLabel: "Vor Dateiänderungen fragen",
-  askBeforeFileChangesHint:
-    "Im Modus „Allgemein“ ändert Textus AI andere Dateien im Ordner direkt; die Änderungen jeder Antwort lassen sich rückgängig machen. Eingeschaltet wartet jede Änderung, bis du sie anwendest.",
+  aiChangeModeLabel: "Wie Textus AI Dateien ändert",
+  aiChangeModeRevision: "Als Überarbeitungen zum Prüfen",
+  aiChangeModeDirect: "Direkt geschrieben",
+  aiChangeModeHint:
+    "Überarbeitungen: Jede Änderung – im offenen Dokument oder in einer anderen Datei des Ordners – wartet in der Datei, bis du sie annimmst oder ablehnst; eine von Textus AI erstellte Datei wartet, bis du sie behältst. Direkt geschrieben: Änderungen kommen sofort an und bleiben markiert, jede Antwort lässt sich rückgängig machen.",
   filesChangedTitle: "Geänderte Dateien",
   filesKeptTitle: "Anzuwendende Änderungen",
   filesNew: "neu",

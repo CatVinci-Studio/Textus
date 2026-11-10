@@ -19,6 +19,7 @@ import {
   type PandocArgsFormat,
   type ColorSwatchMode,
   type RevisionDisplay,
+  type AiChangeMode,
   type CompletionTone,
   type SearchService,
   type GrammarStrictness,
@@ -109,8 +110,10 @@ export interface Settings {
   /// The composer's Web search button starts on. The provider's own
   /// search where it has one, else Textus's web_search on `searchService`.
   enableWebSearch: boolean;
-  /// General mode's changes to the folder's files wait for Apply.
-  agentAskBeforeFileChanges: boolean;
+  /// Textus AI's changes as revisions to review (the default) or written
+  /// straight in - the open document and the folder's other files alike.
+  /// Other agents (Claude Code, Codex) go their own way.
+  aiChangeMode: AiChangeMode;
   /// The image service ("" for none, the default: a picture costs money), its
   /// model ("" for its default) and, for an OpenAI-compatible endpoint, its address.
   imageModelProvider: string;
@@ -304,7 +307,7 @@ export const DEFAULT_SETTINGS: Settings = {
   completionTone: "default",
   writingConventions: "automatic",
   enableWebSearch: false,
-  agentAskBeforeFileChanges: false,
+  aiChangeMode: "revision",
   imageModelProvider: "chat",
   imageModel: "",
   imagesPerRequest: 2,

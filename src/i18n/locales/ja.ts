@@ -331,9 +331,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentActionInsertAtCursor: "カーソル位置に挿入",
   commentLocate: "文書内で表示",
   commentApplySuggestion: "提案を適用",
-  askBeforeFileChangesLabel: "ファイルを変更する前に確認",
-  askBeforeFileChangesHint:
-    "汎用モードでは、Textus AI がフォルダ内の他のファイルを直接変更し、返信ごとの変更は元に戻せます。オンにすると、変更は「適用」を押すまで保留されます。",
+  aiChangeModeLabel: "Textus AI のファイルの変え方",
+  aiChangeModeRevision: "確認する修正として",
+  aiChangeModeDirect: "直接書き込む",
+  aiChangeModeHint:
+    "修正：開いている文書でもフォルダ内の別のファイルでも、変更はそのファイルで承認か却下を待ち、Textus AI が作ったファイルは残すかどうかを待ちます。直接書き込む：変更はすぐ反映され、印が残り、返信ごとに元に戻せます。",
   filesChangedTitle: "変更したファイル",
   filesKeptTitle: "適用待ちの変更",
   filesNew: "新規",

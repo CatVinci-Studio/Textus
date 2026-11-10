@@ -312,9 +312,11 @@ export default {
   agentActionInsertAtCursor: "在游標處插入",
   commentLocate: "在文件中顯示",
   commentApplySuggestion: "採用建議",
-  askBeforeFileChangesLabel: "改檔案前先問我",
-  askBeforeFileChangesHint:
-    "通用模式下，Textus AI 會直接修改資料夾裡的其他檔案，每次回覆的改動都能復原。開啟後，改動先保留，由你點「套用」。",
+  aiChangeModeLabel: "Textus AI 的修改方式",
+  aiChangeModeRevision: "修訂（逐條審閱）",
+  aiChangeModeDirect: "直接寫入",
+  aiChangeModeHint:
+    "修訂：無論是正在看的文件還是資料夾裡的其他檔案，每處改動都先留在那個檔案裡，等你接受或拒絕；Textus AI 新建的檔案也等你決定是否保留。直接寫入：改動立刻生效並保留標記，每次回覆都能復原。",
   filesChangedTitle: "改動的檔案",
   filesKeptTitle: "待套用的改動",
   filesNew: "新建",

@@ -358,9 +358,11 @@ para usar una.
   agentActionInsertAtCursor: "Insertar en el cursor",
   commentLocate: "Mostrar en el documento",
   commentApplySuggestion: "Aplicar sugerencia",
-  askBeforeFileChangesLabel: "Preguntar antes de cambiar archivos",
-  askBeforeFileChangesHint:
-    "En el modo General, Textus AI cambia directamente otros archivos de la carpeta; los cambios de cada respuesta se pueden deshacer. Activado, los guarda hasta que los apliques.",
+  aiChangeModeLabel: "Cómo cambia Textus AI los archivos",
+  aiChangeModeRevision: "Como revisiones para revisar",
+  aiChangeModeDirect: "Escritos directamente",
+  aiChangeModeHint:
+    "Revisiones: cada cambio – en el documento abierto u otro archivo de la carpeta – espera en ese archivo a que lo aceptes o rechaces, y un archivo creado por Textus AI espera a que lo conserves. Escritos directamente: los cambios llegan al momento y quedan marcados, cada respuesta se puede deshacer.",
   filesChangedTitle: "Archivos modificados",
   filesKeptTitle: "Cambios por aplicar",
   filesNew: "nuevo",

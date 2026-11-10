@@ -324,9 +324,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentActionInsertAtCursor: "커서 위치에 삽입",
   commentLocate: "문서에서 보기",
   commentApplySuggestion: "제안 적용",
-  askBeforeFileChangesLabel: "파일을 바꾸기 전에 묻기",
-  askBeforeFileChangesHint:
-    "일반 모드에서 Textus AI는 폴더의 다른 파일을 바로 바꾸며, 답변마다의 변경은 되돌릴 수 있습니다. 켜면 변경을 보관해 두고 직접 적용합니다.",
+  aiChangeModeLabel: "Textus AI가 파일을 바꾸는 방식",
+  aiChangeModeRevision: "검토할 수정으로",
+  aiChangeModeDirect: "바로 쓰기",
+  aiChangeModeHint:
+    "수정: 열린 문서든 폴더의 다른 파일이든 모든 변경은 그 파일에서 수락하거나 거절할 때까지 기다리고, Textus AI가 만든 파일은 유지할지 기다립니다. 바로 쓰기: 변경이 바로 반영되고 표시가 남으며, 답변마다 되돌릴 수 있습니다.",
   filesChangedTitle: "변경된 파일",
   filesKeptTitle: "적용할 변경",
   filesNew: "새 파일",

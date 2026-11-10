@@ -110,8 +110,18 @@ fn asked_first_a_change_waits_and_an_edited_file_is_left_alone() {
         ),
         edit_file,
     );
-    assert!(out.text.contains("for the user to apply"));
+    assert!(out.text.contains("as a revision"));
     assert_eq!(std::fs::read_to_string(&a).unwrap(), "One two three.\n");
+    // A file it makes is made, marked as its own until kept.
+    let made = edits.run(
+        &call("write_file", json!({"path": "c.md", "content": "New.\n"})),
+        write_file,
+    );
+    assert!(made.text.contains("until the user keeps or discards it"));
+    assert_eq!(
+        std::fs::read_to_string(dir.path().join("c.md")).unwrap(),
+        "New.\n"
+    );
     let ids = vec![change_of(&out)];
     let (changes, _) = ai_set_file_changes(conversation.clone(), ids.clone(), true).unwrap();
     assert!(changes[0].applied);

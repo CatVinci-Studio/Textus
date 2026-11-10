@@ -99,6 +99,10 @@ export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
 /// In the order the menus list them, the default first.
 export const REVISION_DISPLAYS = ["final", "original", "inline"] as const;
+/** How Textus AI's changes land: as revisions to review (the open document
+ *  and the folder's other files alike), or written straight in. */
+export const AI_CHANGE_MODES = ["revision", "direct"] as const;
+export type AiChangeMode = (typeof AI_CHANGE_MODES)[number];
 export type RevisionDisplay = (typeof REVISION_DISPLAYS)[number];
 
 /// Tone presets for AI completion, each resolved to an English style

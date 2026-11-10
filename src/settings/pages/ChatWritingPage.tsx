@@ -7,6 +7,7 @@ import {
   type GrammarStrictness,
   type ProxyType,
   type RevisionDisplay,
+  type AiChangeMode,
 } from "../../prefs/SettingsContext";
 import {
   marginViewBlocked,
@@ -42,6 +43,21 @@ export function ChatWritingPage({
         />
         {settings.enableAskAi && (
           <>
+            <SettingRow label={t.aiChangeModeLabel} help={t.aiChangeModeHint}>
+              <Select
+                className="settings-select"
+                aria-label={t.aiChangeModeLabel}
+                value={settings.aiChangeMode}
+                onChange={(e) =>
+                  setSettings({
+                    aiChangeMode: e.target.value as AiChangeMode,
+                  })
+                }
+              >
+                <option value="revision">{t.aiChangeModeRevision}</option>
+                <option value="direct">{t.aiChangeModeDirect}</option>
+              </Select>
+            </SettingRow>
             <SettingRow label={t.revisionDisplayLabel}>
               <Select
                 className="settings-select"

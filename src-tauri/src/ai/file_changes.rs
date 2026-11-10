@@ -1,8 +1,9 @@
 //! General mode's changes to the folder's other files: write_file and
 //! edit_file write straight to disk, each change kept (the file before and
 //! after) in the conversation's scratch folder, so a reply's changes undo
-//! and redo together. While the user asks to approve them first, a change
-//! is only kept, and written once they apply it.
+//! and redo together. With changes as revisions (ask_first), a change to a
+//! file is only kept - the editor shows it as revisions in that file - and a
+//! file made is made, marked as the AI's until the user keeps it.
 
 use crate::ai::project::{file_kind, is_hidden, FileKind};
 use crate::ai::tools::{Access, Run, Tool, EDITING_MODES};
@@ -113,9 +114,11 @@ impl FileEdits {
                 id: change_id(),
                 path: rel.trim().trim_start_matches(['@', '/']).to_string(),
                 file: file.to_string_lossy().into_owned(),
+                // A file it makes is made even as a revision: it waits, marked
+                // as the AI's, for the user to keep or discard it.
+                applied: !self.ask_first || now.is_none(),
                 before: now,
                 after,
-                applied: !self.ask_first,
             };
             if change.applied {
                 write(&file, &change.after)?;
@@ -127,13 +130,16 @@ impl FileEdits {
         match made {
             Ok(change) => {
                 args["change"] = json!(change.id);
-                let text = if change.applied {
-                    format!("Changed `{}` - the user can undo it.", change.path)
-                } else {
-                    format!(
-                        "Kept `{}` for the user to apply: it isn't on disk until they do. Later changes to it build on this one.",
+                let text = match (change.applied, change.before.is_none() && self.ask_first) {
+                    (true, true) => format!(
+                        "Created `{}` - marked as yours until the user keeps or discards it.",
                         change.path
-                    )
+                    ),
+                    (true, false) => format!("Changed `{}` - the user can undo it.", change.path),
+                    (false, _) => format!(
+                        "Kept `{}` as a revision in that file for the user to accept or reject: it isn't on disk until they accept it. Later changes to it build on this one, and read_file shows it with your revision.",
+                        change.path
+                    ),
                 };
                 ToolOutput {
                     text,
@@ -313,7 +319,7 @@ fn record_of(conversation: &str) -> Result<PathBuf, String> {
 }
 
 /// Puts `change` on disk (`on`) or takes it off: written, or the file
-/// back as it was - one the change made moved into the record, never
+/// back as it was - one the change made moved to the Trash, never
 /// deleted. Refused where the file no longer reads as the change left it.
 fn set(record: &Path, change: &mut FileChange, on: bool) -> Result<(), String> {
     if change.applied == on {
@@ -335,7 +341,13 @@ fn set(record: &Path, change: &mut FileChange, on: bool) -> Result<(), String> {
     match (on, &change.before) {
         (true, _) => write(file, &change.after)?,
         (false, Some(before)) => write(file, before)?,
-        (false, None) => set_aside(file, &record.join(format!("{}.removed", change.id)))?,
+        // A file it made, discarded: to the Trash, where the user can get it
+        // back; set aside in the record where there is none.
+        (false, None) => {
+            if trash::delete(file).is_err() {
+                set_aside(file, &record.join(format!("{}.removed", change.id)))?
+            }
+        }
     }
     change.applied = on;
     Ok(())
