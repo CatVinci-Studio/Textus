@@ -125,9 +125,13 @@ export function pullTab(
 
   /** What the islands show: as they were, the tab's place closed, or the
    *  room where it is aimed. */
+  let closed: SplitLayout | null = null;
   const show = (place: Place | null) => {
     if (place) previewSplit(place.shown);
-    else if (left && !wholeIsland(last.alt)) previewSplit(lifted(base, tabId));
+    // One layout for "its place closed", made once: a new one each move
+    // redrew every island each move, and the bottom flickered.
+    else if (left && !wholeIsland(last.alt))
+      previewSplit((closed ??= lifted(base, tabId)));
     else previewSplit(null);
     marks.update(left, place?.shown ?? null, !!wholeIsland(last.alt));
   };
@@ -159,7 +163,10 @@ export function pullTab(
     );
     window.clearTimeout(timer);
     if (again !== undefined) timer = window.setTimeout(aim, again);
-    if (shown === (place?.key ?? null)) current = place;
+    // The same place keeps the layout it was given: a fresh one per move
+    // would redraw the islands on every move.
+    if (shown === (place?.key ?? null) && place?.key !== current?.key)
+      current = place;
     show(current);
   };
 
@@ -277,7 +284,9 @@ function placeMarks(tabId: string) {
           );
         }
       }
-      style.textContent = rules.join("\n");
+      // Rewritten only when it changes: each rewrite restyles the page.
+      const text = rules.join("\n");
+      if (style.textContent !== text) style.textContent = text;
     },
     /** Where the room shown is, for the pill to land on. */
     room(): DOMRect | null {
