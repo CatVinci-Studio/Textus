@@ -221,6 +221,16 @@ impl FileEdits {
                     .to_string(),
             );
         }
+        // A link inside the folder may also lead into a hidden one.
+        if real.strip_prefix(&self.root).is_ok_and(|rel| {
+            rel.components()
+                .any(|c| matches!(c, Component::Normal(n) if is_hidden(&n.to_string_lossy())))
+        }) {
+            return Err(
+                "Files and folders whose names start with \".\" (.git, .textus) aren't changed."
+                    .to_string(),
+            );
+        }
         let real_file = file.canonicalize().unwrap_or_else(|_| file.clone());
         if self.open_document.as_deref() == Some(real_file.as_path()) {
             return Err("That is the open document: change it with propose_edit.".to_string());

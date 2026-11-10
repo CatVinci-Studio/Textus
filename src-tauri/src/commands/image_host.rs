@@ -246,7 +246,8 @@ async fn send(
         } else if e.is_timeout() {
             format!("{name} didn't answer in time")
         } else {
-            format!("couldn't reach {name}: {e}")
+            // Without its address, which may carry the key.
+            format!("couldn't reach {name}: {}", e.without_url())
         }
     })?;
     let status = response.status();

@@ -8,9 +8,10 @@ import type { UserThemeMeta } from "./settings-values";
  * Settings as a file, to back them up or carry them to another computer;
  * the same payload a settings sync would carry. It holds what is shared
  * between computers and the CSS of imported themes, and, when asked, the AI
- * records: conversations and memories. API keys live in the
- * system keychain, never here; an MCP server's environment and header values
- * (its tokens) are left blank, and an import keeps this computer's own.
+ * records: conversations and memories. API keys live in owner-only files
+ * of the app's config, never here; an MCP server's environment and header
+ * values (its tokens) are left blank, and an import fills in this
+ * computer's own only for the same server as it is set up here.
  */
 
 const FORMAT = "textus-settings";
