@@ -4,7 +4,7 @@ import type { SizeRule } from "./distribute";
 
 /** The least an island keeps: a document's column of text, a panel's
  *  settings rows; stacked, room for a few lines. */
-const DOC_MIN = 360;
+export const DOC_MIN = 360;
 const PANEL_MIN = 320;
 const STACKED_MIN = 160;
 

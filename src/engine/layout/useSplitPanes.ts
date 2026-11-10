@@ -1,7 +1,10 @@
 import { useEffect, useSyncExternalStore } from "react";
 import {
+  arrivalOf,
+  arrivalsTaken,
   closeSplit,
   pairLayout,
+  type Arrival,
   setSplitLayout,
   splitLayout,
   splitRequest,
@@ -40,7 +43,15 @@ export function resolveSplit(
   request: SplitRequest | null,
   tabIds: readonly string[],
   active: string,
+  arrival: (tabId: string) => Arrival | undefined = arrivalOf,
 ): SplitLayout | null | Blank {
+  // A tab arriving with its place asked for takes it, not the pane in use.
+  if (!request)
+    for (const id of tabIds) {
+      const place = arrival(id);
+      if (place && !(layout && paneWithTab(layout.root, id)))
+        layout = place(layout) ?? layout;
+    }
   if (request) {
     const side = request.direction === "row" ? "right" : "bottom";
     const home = layout && paneWithTab(layout.root, active);
@@ -136,7 +147,10 @@ export function useSplitPanes(
       addBlankTab();
     } else if (resolved === null) {
       if (layout || request) closeSplit();
-    } else setSplitLayout(resolved);
+    } else {
+      setSplitLayout(resolved);
+      arrivalsTaken(resolved);
+    }
   }, [resolved, layout, request, addBlankTab]);
   // A drag's preview stands in for the layout while it lasts.
   if (preview) return preview;

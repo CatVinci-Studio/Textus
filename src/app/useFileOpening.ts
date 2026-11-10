@@ -40,7 +40,11 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { useLatest } from "../utils/hooks/useLatest";
-import { openBeside } from "../engine/layout/store";
+import {
+  besideLayout,
+  openBeside,
+  placeOnArrival,
+} from "../engine/layout/store";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
@@ -194,15 +198,19 @@ export function useFileOpening(opts: {
       const show = (id: string) => {
         setActiveTabId(id);
         const { drop } = open;
-        if (open.where === "beside")
-          requestAnimationFrame(() => openBeside(id, from));
-        else if (drop)
-          requestAnimationFrame(() =>
-            splitForDrop(
-              id,
-              drop,
-              tabsRef.current.map((tab) => tab.id),
-            ),
+        // A tab just made takes its place as it arrives, in the same
+        // update: never drawn first in front where it doesn't stay.
+        const arriving = !tabsRef.current.some((tab) => tab.id === id);
+        if (open.where === "beside") {
+          if (arriving)
+            placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
+          else openBeside(id, from);
+        } else if (drop)
+          splitForDrop(
+            id,
+            drop,
+            [...new Set([...tabsRef.current.map((tab) => tab.id), id])],
+            arriving,
           );
       };
       const existing = tabsRef.current.find(

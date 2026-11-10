@@ -239,9 +239,8 @@ export function useTabDragMerge(opts: {
         return next;
       });
       setActiveTabId(newTab.id);
-      // Once it is in front, the next frame: the split takes it from there.
-      if (split)
-        requestAnimationFrame(() => splitForDrop(newTab.id, split, ids));
+      // Its island taken as it arrives, in the same update.
+      if (split) splitForDrop(newTab.id, split, ids, true);
     });
     return unlistenAll(unlisten);
   }, [arrival, setActiveTabId, setTabs, tabsRef]);

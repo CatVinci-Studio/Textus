@@ -11,16 +11,14 @@ import {
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import {
-  openAtEdge,
-  openBeside,
-  moveToPane,
+  besideLayout,
+  placeOnArrival,
   splitLayout,
 } from "../../engine/layout/store";
+import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
-import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { frameLayout } from "../../engine/frame/frame-store";
 import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
 
 const NONE: string[] = [];
@@ -28,14 +26,6 @@ const NONE: string[] = [];
 const conversationOf = (tab: DocTab) => conversationIn(tab.view?.state);
 
 const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
-
-/** The AI island's first width: a panel's (380 at the interface's size),
- *  never under a third or over half of the islands' area. */
-function aiShare(): number {
-  const area = frameLayout().area.w;
-  if (!area) return 0.35;
-  return Math.min(0.5, Math.max(0.3, scaledPx(380) / area));
-}
 
 /**
  * The AI's conversations as tabs (desktop): while the AI is shown, one tab
@@ -127,26 +117,29 @@ export function useAiTabs({
       const kept = current.find((tab) => !gone.includes(tab.id));
       // The tab in use stays in front where the AI opens beside it.
       const inUse = activeNow.current;
-      requestAnimationFrame(() => {
-        const layout = splitLayout();
-        const home = kept && layout && paneWithTab(layout.root, kept.id);
-        // Opened with the button, the AI is what is in use.
-        if (!home && !starting) tabs.setActiveTabId(made[0].id);
-        for (const tab of made) {
-          if (home) moveToPane(tab.id, home.id);
-          // A window already split: a column of its own at the right of
-          // all of it, not beside whichever island came last.
-          else if (layout) openAtEdge(tab.id, "right");
-          else
-            openBeside(
-              tab.id,
-              inUse ?? tabsRef.current[0]?.id ?? null,
-              "right",
-              aiShare(),
-              tabsRef.current.map((t) => t.id),
-            );
-        }
-      });
+      // Each placed as it arrives, in the same update as it is added.
+      const layout = splitLayout();
+      const home = kept && layout && paneWithTab(layout.root, kept.id);
+      // Opened with the button, the AI is what is in use.
+      if (!home && !starting) tabs.setActiveTabId(made[0].id);
+      const windowTabs = tabsRef.current.map((t) => t.id);
+      for (const tab of made)
+        placeOnArrival(tab.id, (now) =>
+          home
+            ? ((now && moveTab(now, tab.id, home.id)) ?? now)
+            : now
+              ? // A window already split: a column of its own at the right
+                // of all of it, not beside whichever island came last.
+                (splitOff(now, tab.id, null, "right") ?? now)
+              : besideLayout(
+                  now,
+                  tab.id,
+                  inUse ?? windowTabs[0] ?? null,
+                  "right",
+                  undefined,
+                  windowTabs,
+                ),
+        );
     }
     had.current = new Set(wanted);
   });

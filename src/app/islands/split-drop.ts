@@ -6,6 +6,7 @@ import {
   setSplitLayout,
   splitLayout,
   type SplitDirection,
+  placeOnArrival,
 } from "../../engine/layout/store";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById } from "../../engine/layout/tree";
@@ -68,14 +69,21 @@ export function commitDrop(next: SplitLayout | null | undefined): void {
   else if (next === null) closeSplit();
 }
 
-/** Puts `tabId` where it was dropped (dropLayout). Call once `tabId` is
- *  among the window's tabs and in front. */
+/** Puts `tabId` where it was dropped (dropLayout): at once for a tab of
+ *  the window, else as it arrives (placeOnArrival), never first drawn in
+ *  the pane in use. */
 export function splitForDrop(
   tabId: string,
   target: DropTarget,
   tabIds: readonly string[],
+  arriving = false,
 ): void {
-  commitDrop(dropLayout(splitLayout(), tabId, target, tabIds));
+  if (arriving)
+    placeOnArrival(
+      tabId,
+      (now) => dropLayout(now, tabId, target, tabIds) ?? now,
+    );
+  else commitDrop(dropLayout(splitLayout(), tabId, target, tabIds));
 }
 
 /** The pane something on its way in shows in, in the preview of where it

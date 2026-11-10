@@ -64,16 +64,17 @@ export function useSidePanels(aiOn: boolean) {
   // the document keeps its room after all of them.
   const { settings } = useSettings();
   const rail = railShown(settings) ? Math.round(RAIL_WIDTH * chromeScale()) : 0;
-  // With the AI panel open the sidebar leaves it its narrowest, so a small
-  // window still keeps the document its room (the panel's open state, one
-  // render late, is enough: it only bounds the sidebar).
+  // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
+  // a small window still keeps the document its room (the panel's open
+  // state, one render late, is enough: it only bounds the sidebar). On the
+  // desktop the AI is an island: the solver keeps its room.
   const [agentShown, setAgentShown] = useState(
     () => getUiState("agentPanelOpen") === true,
   );
   const scale = chromeScale();
   const sidebarWidth = useSidebarWidth(
     windowWidth,
-    rail + (agentShown ? PANEL_FLOOR * scale : 0),
+    rail + (isIOSApp && agentShown ? PANEL_FLOOR * scale : 0),
   );
   // An iPhone's or iPad's sidebar is a drawer over the page: never put away.
   useNarrowSidebar(

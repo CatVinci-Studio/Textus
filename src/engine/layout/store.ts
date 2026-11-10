@@ -142,11 +142,12 @@ export function focusPane(id: string): void {
 }
 
 /**
- * Shows `tabId` beside `from`: in the pane to its right (or below, on
- * `bottom`) if there is one, else in a new pane there; splitting the window
- * when it isn't. Call once both tabs are in the window's tabs.
+ * `layout` with `tabId` beside `from`: in the pane to its right (or below,
+ * on `bottom`) if there is one, else in a new pane there; the window split
+ * when it isn't. Null when there is nothing to do.
  */
-export function openBeside(
+export function besideLayout(
+  layout: SplitLayout | null,
   tabId: string,
   from: string | null,
   side: "right" | "bottom" = "right",
@@ -155,8 +156,8 @@ export function openBeside(
   /** The window's tabs in their order, when it splits it: they stay on
    *  `from`'s side, `from` in front. */
   windowTabs: readonly string[] = [],
-): void {
-  if (!from || from === tabId) return;
+): SplitLayout | null {
+  if (!from || from === tabId) return null;
   const home = layout && paneWithTab(layout.root, from);
   if (!layout || !home) {
     const pair = pairLayout(
@@ -169,12 +170,46 @@ export function openBeside(
     const stay = windowTabs.filter((id) => id !== tabId);
     const [first] = pair.root.kind === "split" ? pair.root.children : [];
     if (first?.kind === "pane" && stay.includes(from)) first.tabs = stay;
-    setSplitLayout(pair);
-    return;
+    return pair;
   }
   const next = paneBeside(layout.root, home.id, side);
-  if (next) moveToPane(tabId, next.id);
-  else splitBeside(tabId, home.id, side);
+  return next
+    ? moveTab(layout, tabId, next.id)
+    : splitOff(layout, tabId, home.id, side);
+}
+
+/** Shows `tabId` beside `from` (besideLayout), both tabs of the window. */
+export function openBeside(
+  tabId: string,
+  from: string | null,
+  side: "right" | "bottom" = "right",
+  share = 0.5,
+  windowTabs: readonly string[] = [],
+): void {
+  const next = besideLayout(layout, tabId, from, side, share, windowTabs);
+  if (next) setSplitLayout(next);
+}
+
+/** Where a tab not yet among the window's goes once it is: asked for as it
+ *  is opened (beside, on a side it was dropped on, the AI's island), and
+ *  taken by the layout as the tab arrives, so it is never drawn first in
+ *  the pane in use. */
+export type Arrival = (layout: SplitLayout | null) => SplitLayout | null;
+const arriving = new Map<string, Arrival>();
+
+export function placeOnArrival(tabId: string, place: Arrival): void {
+  arriving.set(tabId, place);
+}
+
+export function arrivalOf(tabId: string): Arrival | undefined {
+  return arriving.get(tabId);
+}
+
+/** The tabs `next` holds have arrived: their places are taken. */
+export function arrivalsTaken(next: SplitLayout | null): void {
+  if (!next) return;
+  for (const id of arriving.keys())
+    if (paneWithTab(next.root, id)) arriving.delete(id);
 }
 
 /** A branch rearranged: turned the other way, or the two children either

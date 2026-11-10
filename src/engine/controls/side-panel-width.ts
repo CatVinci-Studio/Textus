@@ -1,3 +1,4 @@
+import { DOC_MIN } from "../frame/island-rules";
 /**
  * The one rule both side panels follow - the sidebar on the left and the AI
  * panel on the right: each keeps the width it was dragged to, but a window
@@ -5,8 +6,9 @@
  * always leaving the document room between them.
  */
 
-/** The narrowest the document column is squeezed to by a panel. */
-export const DOCUMENT_MIN_WIDTH = 360;
+/** The narrowest the document column is squeezed to by a panel: an
+ *  island's own least (island-rules). */
+export const DOCUMENT_MIN_WIDTH = DOC_MIN;
 /** The most of the window one panel takes. */
 const PANEL_SHARE = 0.45;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveSplit } from "./useSplitPanes";
-import { pairLayout, type SplitLayout } from "./store";
+import { besideLayout, pairLayout, type SplitLayout } from "./store";
 import { panesOf } from "./tree";
 
 /** Each pane's tabs and the one in front, and which pane is in use. */
@@ -66,6 +66,22 @@ describe("resolveSplit", () => {
       fronts: ["a", "n"],
       focus: 1,
     });
+    // One whose place was asked for as it opened takes that place instead,
+    // in the update it arrives in; unsplit, it splits the window.
+    const beside = (id: string) =>
+      id === "n"
+        ? (now: SplitLayout | null) => besideLayout(now, "n", "a")
+        : undefined;
+    const first = split([["a"], ["b"]], ["a", "b"], 0);
+    expect(look(resolveSplit(first, null, ["a", "b", "n"], "n"))).toMatchObject(
+      { tabs: [["a", "n"], ["b"]] },
+    );
+    expect(
+      look(resolveSplit(first, null, ["a", "b", "n"], "n", beside)),
+    ).toMatchObject({ tabs: [["a"], ["b", "n"]] });
+    expect(
+      look(resolveSplit(null, null, ["a", "n"], "n", beside)),
+    ).toMatchObject({ tabs: [["a"], ["n"]] });
   });
 
   it("takes the blank tab into the pane waiting for it, and ends when a pane has no tabs", () => {
