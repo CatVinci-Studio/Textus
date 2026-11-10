@@ -93,3 +93,28 @@ test("too narrow for the sidebar and the islands at their least, the sidebar ste
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
 });
+
+test("its edge dragged out, the sidebar shows whole at its new width and the islands make room", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-toggle-sidebar");
+  const sidebar = page.locator(".sidebar");
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  await page.waitForTimeout(600);
+  const edge = (await page.locator(".sidebar-resizer").boundingBox())!;
+  const before = (await sidebar.boundingBox())!;
+  const island = (await page.locator("section.island").first().boundingBox())!;
+  await page.mouse.move(edge.x + edge.width / 2, edge.y + edge.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(edge.x + 120, edge.y + edge.height / 2, { steps: 12 });
+  await page.mouse.up();
+  await page.waitForTimeout(600);
+  const after = (await sidebar.boundingBox())!;
+  expectNear(after.width, before.width + 120, 4);
+  // Not clipped at the width it had.
+  const clip = await sidebar.evaluate((el) => getComputedStyle(el).clipPath);
+  expect(clip === "none" || clip === "").toBe(true);
+  const moved = (await page.locator("section.island").first().boundingBox())!;
+  expectNear(moved.x, island.x + 120, 4);
+});

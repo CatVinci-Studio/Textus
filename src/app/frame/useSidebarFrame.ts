@@ -8,16 +8,19 @@ import { frameClock } from "../../engine/frame/clock";
  * revealed by it - nothing inside it laid out again frame by frame. Off
  * for an iPhone's drawer, which slides on its own (sidebar-frame.css).
  */
-export function useSidebarFrame(open: boolean, on: boolean) {
+export function useSidebarFrame(open: boolean, on: boolean, width: number) {
   const aside = useRef<HTMLElement | null>(null);
-  const placed = useRef(false);
+  /** Open or not when last placed; none before the first time. */
+  const was = useRef<boolean | null>(null);
   useLayoutEffect(() => {
     const el = aside.current;
     if (!el || !on) return;
+    // Its width is the one its edge's drag set (--sidebar-width): the
+    // column takes each new one at once, so a widened sidebar shows whole.
     const box = {
       x: el.offsetLeft,
       y: el.offsetTop,
-      w: el.offsetWidth,
+      w: width,
       h: el.offsetHeight,
     };
     frameClock.attach("sidebar", el);
@@ -31,9 +34,9 @@ export function useSidebarFrame(open: boolean, on: boolean) {
         ],
       ]),
       { x: 0, y: 0 },
-      placed.current,
+      was.current !== null && was.current !== open,
     );
-    placed.current = true;
-  }, [open, on]);
+    was.current = open;
+  }, [open, on, width]);
   return aside;
 }

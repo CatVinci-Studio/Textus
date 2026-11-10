@@ -64,7 +64,7 @@ export function Sidebar({
   // A tab dragged: drawn again in its new order.
   const [, moved] = useReducer((n: number) => n + 1, 0);
   const { settings } = useSettings();
-  const frame = useSidebarFrame(open, !isIOSApp);
+  const frame = useSidebarFrame(open, !isIOSApp, width.width);
   const presenceRef = presence.ref;
   const asideRef = useCallback(
     (el: HTMLElement | null) => {
