@@ -275,7 +275,8 @@ function placeMarks(tabId: string) {
   const style = document.createElement("style");
   document.head.append(style);
   const tab = CSS.escape(tabId);
-  let roomSelector: string | null = null;
+  /** The row whose slot it would take (a pane). */
+  let roomRow: string | undefined;
   let roomPane: string | null = null;
   return {
     update(left: boolean, shown: SplitLayout | null, whole: boolean) {
@@ -287,7 +288,7 @@ function placeMarks(tabId: string) {
         rules.push(
           `.document-corner[data-corner-of="${tab}"] { visibility: hidden; }`,
         );
-      roomSelector = null;
+      roomRow = undefined;
       roomPane = null;
       if (!whole && (left || shown)) {
         rules.push(`[data-tab-id="${tab}"] { visibility: hidden; }`);
@@ -303,7 +304,7 @@ function placeMarks(tabId: string) {
         } else if (pane) {
           // Joining a row: its slot there, dashed.
           const slot = `.tab-pill[data-tab="${tab}"]`;
-          roomSelector = slot;
+          roomRow = pane.id;
           rules.push(
             `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
             `${slot}::before, ${slot}::after { display: none !important; }`,
@@ -320,8 +321,7 @@ function placeMarks(tabId: string) {
     room(): DOMRect | null {
       const at = roomPane && islandAt(roomPane);
       if (at) return at;
-      const el = roomSelector && document.querySelector(roomSelector);
-      return el ? el.getBoundingClientRect() : null;
+      return roomRow === undefined ? null : tabRectOf(roomRow, tabId);
     },
     /** The new island's room: the place holds while the pointer is on it,
      *  and lets go once it leaves, the islands coming back. */

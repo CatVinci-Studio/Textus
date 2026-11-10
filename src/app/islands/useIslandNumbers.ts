@@ -13,10 +13,10 @@ function focusTab(tabId: string, tries = 10): void {
     const id = CSS.escape(tabId);
     // The tab's view, not its corner's readout, which carries its id too.
     const view = document.querySelector(
-      `[data-active-tab][data-tab-id="${id}"]`,
+      `[data-active-tab="true"][data-tab-id="${id}"]`,
     );
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
-    if (target?.getClientRects().length) target.focus({ preventScroll: true });
+    if (target) target.focus({ preventScroll: true });
     else if (tries > 0) focusTab(tabId, tries - 1);
     else
       document

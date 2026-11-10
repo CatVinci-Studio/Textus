@@ -155,6 +155,7 @@ export function TabBar({
         {tabs.map((tab, i) => (
           <TabPill
             key={tab.id}
+            pane={paneId ?? null}
             place={strip.attach(tab.id)}
             tab={tab}
             width={fit?.widths[i]}

@@ -1,4 +1,5 @@
 import { scaledPx } from "../../tokens/chrome-scale";
+import { frameLayout } from "../../frame/frame-store";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
@@ -34,20 +35,22 @@ const REORDER_THRESHOLD_PX = 5;
 const LIFT_MS = 300;
 const LIFT_SLOP_PX = 8;
 
-/** Another tab bar than `own` under (x, y). */
-function barAt(x: number, y: number, own: Element | null): Element | null {
-  for (const bar of document.querySelectorAll(".tab-bar")) {
-    if (bar === own) continue;
-    // Its whole row, the room kept at its ends included.
-    const box = (bar.closest(".island-row") ?? bar).getBoundingClientRect();
-    if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom)
-      return bar;
-  }
-  return null;
+/** Another island's row than pane `own`'s under (x, y), as placed. */
+function rowAt(x: number, y: number, own: string | null): boolean {
+  return frameLayout().islands.some(
+    ({ paneId, row }) =>
+      paneId !== own &&
+      !!row &&
+      x >= row.x &&
+      x <= row.x + row.w &&
+      y >= row.y &&
+      y <= row.y + row.h,
+  );
 }
 
 export function TabPill({
   tab,
+  pane,
   place,
   width,
   cut,
@@ -63,6 +66,8 @@ export function TabPill({
   onUnlock,
 }: {
   tab: TabInfo;
+  /** Its row's pane (null: the one row unsplit). */
+  pane: string | null;
   /** Its ref in its strip, which places it (useTabStrip). */
   place: (el: HTMLElement | null) => void;
   /** Its width in the row and whether its name is cut (tab-widths.ts);
@@ -182,10 +187,7 @@ export function TabPill({
     }
 
     // Across onto another pane's bar: it goes on as a pull, let go there.
-    if (
-      onPullOut &&
-      barAt(e.clientX, e.clientY, elRef.current?.parentElement ?? null)
-    ) {
+    if (onPullOut && rowAt(e.clientX, e.clientY, pane)) {
       gesture.current = null;
       carry(0);
       onPullOut(tab.id, title);
@@ -208,10 +210,8 @@ export function TabPill({
     if (!g) return;
     if (!g.reordering) {
       // Lifted and let go where it was: the tab's menu, as a long press.
-      if (g.lifted && onMenu) {
-        const box = e.currentTarget.getBoundingClientRect();
-        onMenu(box.left, box.bottom);
-      } else onActivate(tab.id);
+      if (g.lifted && onMenu) onMenu(e.clientX, e.clientY);
+      else onActivate(tab.id);
       return;
     }
     // It glides on from where it was let go to the place it passed into.
