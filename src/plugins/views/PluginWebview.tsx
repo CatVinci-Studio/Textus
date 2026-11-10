@@ -202,16 +202,20 @@ export function PluginWebview({
         endpoint = connected;
         webviewConnected(id, connected);
         if (inDocument)
-          connected?.notify("zoom", { zoom: contentZoom() * ownZoom.current });
+          connected?.notify("zoom", {
+            zoom: contentZoom(frame) * ownZoom.current,
+          });
       },
     );
     // A page in the document draws at the document's zoom itself.
     tellZoom.current = inDocument
       ? () =>
-          endpoint?.notify("zoom", { zoom: contentZoom() * ownZoom.current })
+          endpoint?.notify("zoom", {
+            zoom: contentZoom(frame) * ownZoom.current,
+          })
       : null;
     const stopZoom = inDocument
-      ? watchContentZoom(() => tellZoom.current?.())
+      ? watchContentZoom(() => tellZoom.current?.(), frame)
       : () => {};
     const stopTheme = watchTheme(() =>
       endpoint?.notify("theme", {

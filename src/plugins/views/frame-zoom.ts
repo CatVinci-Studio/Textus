@@ -6,29 +6,30 @@
  * told the zoom to draw at instead.
  */
 
-/** The document's zoom, `--content-zoom` (1 when unset). */
-export function contentZoom(): number {
+/** Sent whenever a tab's zoom (or the window's default) changes. */
+export const CONTENT_ZOOM_EVENT = "textus:content-zoom";
+
+/** The zoom `at` is drawn at - its tab's `--content-zoom` (1 when unset). */
+export function contentZoom(at: Element = document.documentElement): number {
   return (
-    parseFloat(
-      document.documentElement.style.getPropertyValue("--content-zoom"),
-    ) || 1
+    parseFloat(getComputedStyle(at).getPropertyValue("--content-zoom")) || 1
   );
 }
 
-/** Calls `changed` with the zoom whenever it changes; returns the stop. */
-export function watchContentZoom(changed: (zoom: number) => void): () => void {
-  let last = contentZoom();
-  const observer = new MutationObserver(() => {
-    const now = contentZoom();
+/** Calls `changed` with `at`'s zoom whenever it changes; returns the stop. */
+export function watchContentZoom(
+  changed: (zoom: number) => void,
+  at?: Element,
+): () => void {
+  let last = contentZoom(at);
+  const check = () => {
+    const now = contentZoom(at);
     if (now === last) return;
     last = now;
     changed(now);
-  });
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["style"],
-  });
-  return () => observer.disconnect();
+  };
+  window.addEventListener(CONTENT_ZOOM_EVENT, check);
+  return () => window.removeEventListener(CONTENT_ZOOM_EVENT, check);
 }
 
 interface Point {

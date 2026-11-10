@@ -7,11 +7,8 @@
  */
 export function zoomedRectScale(inside: HTMLElement): number {
   const zoom =
-    parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue(
-        "--content-zoom",
-      ),
-    ) || 1;
+    parseFloat(getComputedStyle(inside).getPropertyValue("--content-zoom")) ||
+    1;
   if (Math.abs(zoom - 1) < 0.01) return 1;
   const drawn = inside.getBoundingClientRect().width;
   const laid = inside.offsetWidth;

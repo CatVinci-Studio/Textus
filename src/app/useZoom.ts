@@ -4,10 +4,13 @@ import { blockAt, holdBlock } from "../engine/controls/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
+import { CONTENT_ZOOM_EVENT, contentZoom } from "../plugins/views/frame-zoom";
 
-/// Document zoom, scoped to the editor content; the window chrome stays at
-/// 100%. Published as `--content-zoom`, so fixed overlays keep unzoomed
-/// coordinates. Fed by trackpad pinch, mod+wheel and the View menu.
+/// Document zoom, each tab its own, scoped to the editor content; the window
+/// chrome stays at 100%. Published as `--content-zoom` on the tab's own
+/// element (the window's default on the root, for tabs not zoomed yet).
+/// Fed by trackpad pinch, mod+wheel and the View menu; a tab that shows no
+/// document (Settings, an AI conversation, a plugin's page) isn't zoomed.
 
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 3;
@@ -43,20 +46,33 @@ type Pane =
   | { kind: "rendered"; scroller: HTMLElement; content: Element }
   | { kind: "source"; scroller: HTMLElement };
 
-/// The pane under the pointer, else the focused one, else the first on
-/// screen. Split panes sit side by side, hence the x.
-function zoomPane(x: number | null, y: number | null): Pane | null {
-  const tab = '[data-active-tab="true"]';
+/// The tab a zoom is for: the one under the pointer, else the one in use;
+/// null when it shows no document.
+function zoomTab(x: number | null, y: number | null): HTMLElement | null {
+  const under =
+    x !== null && y !== null
+      ? document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-tab-id]")
+      : null;
+  const tab =
+    under ?? document.querySelector<HTMLElement>('[data-active-tab="true"]');
+  return tab?.querySelector(".editor-scroll, .source-view") ? tab : null;
+}
+
+/// In `tab`: the pane under the pointer, else the focused one, else the
+/// first on screen. Split view's panes sit side by side, hence the x.
+function zoomPane(
+  tab: HTMLElement,
+  x: number | null,
+  y: number | null,
+): Pane | null {
   const panes: Pane[] = [];
-  for (const selector of [`${tab} .editor-scroll`, `${tab} .split-preview`]) {
-    const scroller = document.querySelector<HTMLElement>(selector);
+  for (const selector of [".editor-scroll", ".split-preview"]) {
+    const scroller = tab.querySelector<HTMLElement>(selector);
     const content = scroller?.querySelector(".milkdown");
     if (scroller && content)
       panes.push({ kind: "rendered", scroller, content });
   }
-  const source = document.querySelector<HTMLElement>(
-    `${tab} .source-view .cm-scroller`,
-  );
+  const source = tab.querySelector<HTMLElement>(".source-view .cm-scroller");
   if (source) panes.push({ kind: "source", scroller: source });
   const shown = panes.filter((pane) => {
     const box = pane.scroller.getBoundingClientRect();
@@ -171,23 +187,24 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
     let persistTimer: ReturnType<typeof setTimeout> | undefined;
     // The viewport point the next apply holds still (null: the focused
     // pane's centre).
-    let appliedZoom = 1;
     let anchorClientX: number | null = null;
     let anchorClientY: number | null = null;
+    // The tab the next apply zooms, and to what.
+    let target: HTMLElement | null = null;
 
     const apply = () => {
+      const tab = target;
+      if (!tab) return;
       const next = zoomRef.current;
-      const prev = appliedZoom;
-      appliedZoom = next;
-      const setZoomVar = () =>
-        document.documentElement.style.setProperty(
-          "--content-zoom",
-          String(next),
-        );
+      const prev = contentZoom(tab);
+      const setZoomVar = () => {
+        tab.style.setProperty("--content-zoom", String(next));
+        window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
+      };
       // Zoom leaves scrollTop alone, so without this the text under the
       // pointer slides with every step.
       const pane =
-        prev === next ? null : zoomPane(anchorClientX, anchorClientY);
+        prev === next ? null : zoomPane(tab, anchorClientX, anchorClientY);
       if (!pane) {
         setZoomVar();
         return;
@@ -223,36 +240,45 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
       apply();
     };
 
-    // Saves a pending zoom, from the timer or when the window closes.
+    // Saves a pending zoom, from the timer or when the window closes: the
+    // zoom new tabs start at. Tabs on the old default keep it.
     const persistNow = () => {
       if (persistTimer === undefined) return;
       clearTimeout(persistTimer);
       persistTimer = undefined;
+      const root = document.documentElement;
+      const was = contentZoom(root);
+      for (const tab of document.querySelectorAll<HTMLElement>("[data-tab-id]"))
+        if (!tab.style.getPropertyValue("--content-zoom"))
+          tab.style.setProperty("--content-zoom", String(was));
+      root.style.setProperty("--content-zoom", String(zoomRef.current));
       persistRef.current(zoomRef.current);
     };
     const unregisterFlush = onFlush(persistNow);
 
     // `snapped: false` mid-pinch, so the 100% snap zone doesn't feel sticky.
+    // `to` the zoom from the tab's own; `tab` fixed for a pinch's gesture.
     const setZoom = (
-      zoom: number,
+      to: (current: number) => number,
       snapped = true,
       point: { clientX: number; clientY: number } | null = null,
-    ) => {
-      // The start page has no document to zoom; changing the zoom there
-      // would only show on the next one opened.
-      if (document.querySelector('[data-active-tab="true"] .start-page'))
-        return;
+      tab = zoomTab(point?.clientX ?? null, point?.clientY ?? null),
+    ): boolean => {
+      // Not a document (the start page, Settings, a conversation): no zoom.
+      if (!tab) return false;
+      target = tab;
       anchorClientX = point?.clientX ?? null;
       anchorClientY = point?.clientY ?? null;
+      const zoom = to(contentZoom(tab));
       zoomRef.current = snapped ? snap(zoom) : clamp(zoom);
       if (!raf) raf = requestAnimationFrame(applyFrame);
       clearTimeout(persistTimer);
       persistTimer = setTimeout(persistNow, PERSIST_DELAY_MS);
+      return true;
     };
 
     // The restored zoom is the starting state, not a step to anchor.
     if (zoomRef.current !== 1) {
-      appliedZoom = zoomRef.current;
       document.documentElement.style.setProperty(
         "--content-zoom",
         String(zoomRef.current),
@@ -262,18 +288,29 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
     // Trackpad pinch: scale is cumulative from the gesture's start, so the
     // zoom at gesturestart is the base it multiplies.
     let pinchBase = 1;
+    let pinchTab: HTMLElement | null = null;
     const onGestureStart = (e: Event) => {
       e.preventDefault();
-      pinchBase = zoomRef.current;
+      const { clientX, clientY } = e as WebKitGestureEvent;
+      pinchTab = zoomTab(clientX, clientY);
+      pinchBase = pinchTab ? contentZoom(pinchTab) : 1;
     };
     const onGestureChange = (e: Event) => {
       e.preventDefault();
       const { scale } = e as WebKitGestureEvent;
-      if (scale > 0) setZoom(pinchBase * scale, false, e as WebKitGestureEvent);
+      if (scale > 0 && pinchTab)
+        setZoom(
+          () => pinchBase * scale,
+          false,
+          e as WebKitGestureEvent,
+          pinchTab,
+        );
     };
     const onGestureEnd = (e: Event) => {
       e.preventDefault();
-      setZoom(zoomRef.current, true, e as WebKitGestureEvent);
+      if (pinchTab)
+        setZoom(() => zoomRef.current, true, e as WebKitGestureEvent, pinchTab);
+      pinchTab = null;
     };
 
     // mod+wheel zoom. Exponential, so steps are proportional to the current
@@ -287,8 +324,8 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
         lastScroll = e.timeStamp;
         return;
       }
-      e.preventDefault();
-      setZoom(zoomRef.current * Math.exp(-e.deltaY * 0.0015), true, e);
+      if (setZoom((z) => z * Math.exp(-e.deltaY * 0.0015), true, e))
+        e.preventDefault();
     };
 
     window.addEventListener("gesturestart", onGestureStart);
@@ -297,13 +334,9 @@ export function useZoom(initialZoom: number, persist: (zoom: number) => void) {
     window.addEventListener("wheel", onWheel, { passive: false });
 
     const unlistenMenu = unlistenAll(
-      listenToThisWindow("menu-zoom-in", () =>
-        setZoom(zoomRef.current * MENU_STEP),
-      ),
-      listenToThisWindow("menu-zoom-out", () =>
-        setZoom(zoomRef.current / MENU_STEP),
-      ),
-      listenToThisWindow("menu-zoom-reset", () => setZoom(1)),
+      listenToThisWindow("menu-zoom-in", () => setZoom((z) => z * MENU_STEP)),
+      listenToThisWindow("menu-zoom-out", () => setZoom((z) => z / MENU_STEP)),
+      listenToThisWindow("menu-zoom-reset", () => setZoom(() => 1)),
     );
 
     return () => {
