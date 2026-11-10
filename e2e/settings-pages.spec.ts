@@ -90,10 +90,6 @@ test("the list's last item goes to the plugins panel", async ({ page }) => {
   await emit(page, "menu-open-settings");
   await page.locator(".settings-nav-away").click();
   await expect(sidebarTitle(page)).toHaveText("插件");
-  await gear(page).click();
-  await page
-    .locator(".sidebar")
-    .screenshot({ path: "test-results/nav-away.png" });
 });
 
 test("installed themes show as the store's do", async ({ page }) => {
