@@ -286,8 +286,8 @@ export function TreeTabIcon({ className }: IconProps) {
   );
 }
 
-/** The outline: a heading over its subheadings, branched off it - a tree
- *  of headings, never three even lines like the app menu's. */
+/** The outline: a page, its heading bold over its subheadings - the
+ *  document's structure, unlike the app menu's three even lines. */
 export function OutlineTabIcon({ className }: IconProps) {
   return (
     <svg
@@ -298,12 +298,26 @@ export function OutlineTabIcon({ className }: IconProps) {
       viewBox="0 0 16 16"
       fill="none"
     >
+      <rect
+        x="2.5"
+        y="1.75"
+        width="11"
+        height="12.5"
+        rx="2"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
       <path
-        d="M2 3.5H14M3.5 5.5V12.5M3.5 8.5H6M3.5 12.5H6M8 8.5H14M8 12.5H12.5"
+        d="M5 5h6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6.5 8.5h4.5M6.5 11h3"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
