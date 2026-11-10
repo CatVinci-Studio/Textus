@@ -25,7 +25,7 @@ export function PluginDetail({
 }: {
   id: string;
   t: Strings;
-  onBack: () => void;
+  onBack?: () => void;
 }) {
   const snapshot = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);

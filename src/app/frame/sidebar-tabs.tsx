@@ -1,4 +1,3 @@
-import { emitToThisWindow } from "../../platform/menu-events";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { StartActions } from "../StartActions";
 import "../start-page.css";
@@ -51,9 +50,6 @@ export interface SidebarTabDef {
   label: (t: Strings) => string;
   Icon: ComponentType;
   Panel: ComponentType<SidebarTabProps>;
-  /** Opens a tab of its own instead of the sidebar (Plugins): the rail's
-   *  icon runs this. */
-  opens?: () => void;
 }
 
 function FilesPanel({
@@ -132,15 +128,14 @@ const BUILT_IN: SidebarTabDef[] = [
   },
 ];
 
-/** Plugins: where they run, the desktop. Its icon opens the Plugins tab
- *  (page-tabs.tsx); the panel is only for a sidebar remembered on it.
+/** Plugins: where they run, the desktop - the list, the switch for them
+ *  all and the ways to add one; a plugin's page opens in a tab of its own.
  *  Asked when the tabs are listed, not when this loads. */
 const PLUGINS_TAB: SidebarTabDef = {
   id: "plugins",
   label: (t) => t.extensionsTabPlugins,
   Icon: PluginsTabIcon,
   Panel: ({ t }) => <PluginsPanel t={t} />,
-  opens: () => emitToThisWindow("menu-manage-plugins"),
 };
 
 const pluginsTab = () => (PLUGINS_SHOWN && isDesktopApp ? [PLUGINS_TAB] : []);

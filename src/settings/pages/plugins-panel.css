@@ -8,9 +8,17 @@
   padding: 0 2px;
 }
 
-.plugins-panel-search {
-  flex: none;
+/* The search, and "⋯" beside it. */
+.plugins-panel-top {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-bottom: 4px;
+}
+
+.plugins-panel-search {
+  flex: 1;
+  min-width: 0;
 }
 
 .plugins-panel-count {

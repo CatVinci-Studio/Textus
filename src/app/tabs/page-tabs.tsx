@@ -4,9 +4,10 @@ import type { TabState } from "./useTabState";
 import "./page-tabs.css";
 
 /**
- * Textus's own pages shown as tabs - Settings, Plugins: tabs like any
- * other (dragged into any island, split off), one of each in a window,
- * opened again by going to it. What they show comes from the window
+ * Textus's own pages shown as tabs - Settings, a plugin's page: tabs like
+ * any other (dragged into any island, split off), one of each in a window,
+ * opened again by going to it (the plugin page showing the plugin last
+ * opened from the sidebar's list). What they show comes from the window
  * (PageTabProvider), which knows what each needs.
  */
 export type AppPage = "settings" | "plugins";
@@ -24,18 +25,24 @@ export function pageOf(tab: DocTab | undefined): AppPage | null {
 }
 
 /** Brings `page`'s tab to the front, opening it where tabs open if there
- *  is none; `to` is where in it to go. */
-export function showPage(tabs: TabState, page: AppPage, to?: string): void {
+ *  is none; `to` is where in it to go, `title` what the tab is called
+ *  there (a plugin's name). */
+export function showPage(
+  tabs: TabState,
+  page: AppPage,
+  to?: string,
+  title?: string,
+): void {
   const state: PageRequest = { to, at: Date.now() };
   const open = tabs.tabsRef.current.find((tab) => pageOf(tab) === page);
   if (open) {
-    if (to) tabs.updateTab(open.id, { view: { ...open.view!, state } });
+    if (to) tabs.updateTab(open.id, { view: { ...open.view!, state, title } });
     tabs.setActiveTabId(open.id);
     return;
   }
   const made: DocTab = {
     ...makeBlankTab(),
-    view: { plugin: "textus", view: page, kind: "page", state },
+    view: { plugin: "textus", view: page, kind: "page", state, title },
   };
   tabs.setTabs((prev) => [...prev, made]);
   tabs.setActiveTabId(made.id);

@@ -88,7 +88,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.view?.kind === "page")
     return tab.view.view === "settings"
       ? t.settingsTitle
-      : t.extensionsTabPlugins;
+      : (tab.view.title ?? t.extensionsTabPlugins);
   if (tab.view)
     return (
       tab.view.title ??

@@ -23,16 +23,19 @@ export function MarketPluginPage({
   installed: boolean;
   /** Its button (PluginAction). */
   action: ReactNode;
-  onBack: () => void;
+  /** Back to a list it was opened from; none in a tab of its own. */
+  onBack?: () => void;
 }) {
   const record = { id: item.id, manifest: item.manifest };
   const name = pluginName(record);
   const installs = installsText(item, t);
   return (
     <div className="plugin-page market-plugin-page" data-market-page={item.id}>
-      <button type="button" className="plugin-back" onClick={onBack}>
-        ‹ {t.pluginBackToList}
-      </button>
+      {onBack && (
+        <button type="button" className="plugin-back" onClick={onBack}>
+          ‹ {t.pluginBackToList}
+        </button>
+      )}
       <div className="market-plugin-head">
         <PluginIcon
           id={item.id}

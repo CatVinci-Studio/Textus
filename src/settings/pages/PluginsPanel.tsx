@@ -5,7 +5,18 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import { ChevronIcon } from "../../engine/controls/icons";
+import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
+import { IconButton } from "../../engine/controls/IconButton";
+import {
+  ContextMenu,
+  type ContextMenuEntry,
+} from "../../engine/controls/ContextMenu";
+import { Presence } from "../../engine/motion/usePresence";
+import { requestCreate } from "../../ai/chat/create-request";
+import { isDesktopApp } from "../../platform/capabilities";
+import { plugins as pluginsIpc } from "../../platform/ipc";
+import { setAllPlugins } from "../../plugins/manager";
+import { installPluginFiles } from "./PluginsPage";
 import { emitToThisWindow } from "../../platform/menu-events";
 import {
   pluginName,
@@ -37,8 +48,9 @@ const openPage = (id: string) =>
 /**
  * The sidebar's Plugins page: one box over what is installed and what the
  * market offers, a row each - icon, name, its line, who made it - and the
- * one thing to do beside it (install, update) or its settings. The full
- * page of each stays in Settings › Extensions.
+ * one thing to do beside it (install, update). A row opens its plugin's
+ * page in a tab; "⋯" by the search turns all plugins on or off and adds
+ * one from a file, a folder, or Create.
  */
 export function PluginsPanel({
   t,
@@ -53,7 +65,8 @@ export function PluginsPanel({
 }) {
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { actionFor, install, installing } = usePluginActions(t);
+  const { actionFor, install, installing, attempt } = usePluginActions(t);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const fold = (group: string) =>
@@ -76,13 +89,38 @@ export function PluginsPanel({
       : [];
   return (
     <div className="plugins-panel">
-      <SearchField
-        className="plugins-panel-search"
-        value={query}
-        placeholder={t.pluginsSearch}
-        aria-label={t.pluginsSearch}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <div className="plugins-panel-top">
+        <SearchField
+          className="plugins-panel-search"
+          value={query}
+          placeholder={t.pluginsSearch}
+          aria-label={t.pluginsSearch}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        <IconButton
+          label={t.pluginsMore}
+          className="tree-tool"
+          onClick={() => {
+            const box = document
+              .querySelector(".plugins-panel-top .tree-tool")
+              ?.getBoundingClientRect();
+            setMenu(box ? { x: box.left, y: box.bottom + 4 } : null);
+          }}
+        >
+          <MoreIcon />
+        </IconButton>
+      </div>
+      {!plugins.allOn && <p className="tx-list-note">{t.pluginsAllOffNote}</p>}
+      <Presence show={menu !== null} exitMs={120}>
+        {menu && (
+          <ContextMenu
+            x={menu.x}
+            y={menu.y}
+            items={addMenu(t, plugins.allOn, attempt)}
+            onClose={() => setMenu(null)}
+          />
+        )}
+      </Presence>
       <section aria-label={t.pluginsInstalledGroup}>
         <GroupHeading
           label={t.pluginsInstalledGroup}
@@ -260,4 +298,36 @@ function GroupHeading({
       )}
     </button>
   );
+}
+
+/** The list's "⋯": plugins on or off as a whole, then the ways to add one. */
+function addMenu(
+  t: Strings,
+  allOn: boolean,
+  attempt: (run: () => Promise<unknown>) => Promise<unknown>,
+): ContextMenuEntry[] {
+  const add = (folder: boolean) =>
+    void attempt(async () => {
+      const opened = await installPluginFiles(t, folder);
+      if (opened) openPage(opened);
+    });
+  return [
+    {
+      label: t.pluginsAllLabel,
+      checked: allOn,
+      onSelect: () => void attempt(() => setAllPlugins(!allOn)),
+    },
+    "separator",
+    { label: t.createMakePlugin, onSelect: () => requestCreate("", "plugin") },
+    ...(isDesktopApp
+      ? [
+          { label: t.pluginsInstallFile, onSelect: () => add(false) },
+          { label: t.pluginsLoadFolder, onSelect: () => add(true) },
+          {
+            label: t.pluginsOpenScripts,
+            onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
+          },
+        ]
+      : []),
+  ];
 }

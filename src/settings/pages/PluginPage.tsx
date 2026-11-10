@@ -108,7 +108,8 @@ export function PluginPage({
   allOn: boolean;
   update: string | null;
   installing: boolean;
-  onBack: () => void;
+  /** Back to a list it was opened from; none in a tab of its own. */
+  onBack?: () => void;
   onEnable: (on: boolean) => void;
   onUpdate: () => void;
   /** The AI panel in Create mode, asked to change it. */
@@ -123,9 +124,11 @@ export function PluginPage({
   const switchable = !!manifest && canSwitch(record.status);
   return (
     <div className="plugin-page" data-plugin-page={record.id}>
-      <button type="button" className="plugin-back" onClick={onBack}>
-        ‹ {t.pluginBackToList}
-      </button>
+      {onBack && (
+        <button type="button" className="plugin-back" onClick={onBack}>
+          ‹ {t.pluginBackToList}
+        </button>
+      )}
       <div className="settings-group-body plugin-page-head">
         {/* Only the switch turns the plugin on or off: its name, its
             description and its links are for reading and clicking. */}
@@ -287,7 +290,7 @@ export function PluginPage({
               );
               if (!ok) return;
               await uninstallPlugin(record.id);
-              onBack();
+              onBack?.();
             })
           }
         >

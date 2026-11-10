@@ -131,17 +131,15 @@ function RailGroup({
   if (!tabs.length) return null;
   return (
     <div className="activity-rail-group" ref={ref}>
-      {tabs.map(({ id, label, Icon, opens }) => (
+      {tabs.map(({ id, label, Icon }) => (
         <Tooltip key={id} text={label(t)} side="right">
           <button
             type="button"
             className="activity-rail-item"
             aria-label={label(t)}
-            aria-pressed={!opens && on(id)}
+            aria-pressed={on(id)}
             data-reorder-id={id}
-            onClick={() =>
-              opens ? opens() : on(id) ? onCloseSidebar() : onSelect(id)
-            }
+            onClick={() => (on(id) ? onCloseSidebar() : onSelect(id))}
             onPointerDown={(e) => {
               const group = ref.current;
               if (!group || e.pointerType === "touch") return;

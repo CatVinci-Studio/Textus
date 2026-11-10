@@ -4,59 +4,30 @@ import {
   type ContentWidth,
   type EmbedDisplay,
   type ImageAlign,
-  UI_TEXT_SCALES,
-  type UiTextScale,
   type ColorSwatchMode,
   type DiagramEngine,
-  type Settings,
 } from "../../prefs/SettingsContext";
 import type { ViewMode } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
-import { useSyncExternalStore } from "react";
-import {
-  subscribeTracking,
-  trackingShown,
-} from "../../ai/margin/track-changes-state";
-import {
-  readOnlyShown,
-  subscribeReadOnly,
-} from "../../document/read-only-state";
-import { emitMenuEvent } from "../../platform/menu-events";
-import { ThemeSection } from "../sections/theme";
 import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { ExportFileRow } from "../sections/export-files";
 import { PandocArgsRows } from "../sections/pandoc-args";
 import { Select } from "../../engine/controls/Select";
-import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
-import { openExtensionsTab } from "./extensions-tab";
 
-/** Editor & Appearance: the theme, the window's layout and view modes, and how Markdown is typed and shown. */
+/** Editing: how the text is set, the view a document opens in, how
+ *  Markdown is typed and shown, images, export. */
 export function EditorPage({
   t,
   settings,
   setSettings,
-  phone,
-  percent,
-  openPage,
   docPath = null,
 }: SettingsPageProps) {
-  const tracking = useSyncExternalStore(subscribeTracking, trackingShown);
-  const readOnly = useSyncExternalStore(subscribeReadOnly, readOnlyShown);
   return (
     <>
-      <SettingsGroup title={t.navTheme}>
-        <ThemeSection
-          t={t}
-          onMore={() => {
-            openExtensionsTab("themes");
-            openPage("extensions");
-          }}
-        />
-      </SettingsGroup>
-      {/* How the text is set, and the window's own. */}
+      {/* How the text is set. */}
       <SettingsGroup title={t.settingsTextGroup}>
         <SettingRow label={t.contentWidthLabel}>
           <Select
@@ -75,58 +46,6 @@ export function EditorPage({
           </Select>
         </SettingRow>
         <DocTextFold t={t} settings={settings} setSettings={setSettings} />
-        {/* A phone's UI is sized by iOS's own text styles instead. */}
-        {!phone && (
-          <SettingRow label={t.uiTextScaleLabel}>
-            <Select
-              className="settings-select"
-              aria-label={t.uiTextScaleLabel}
-              value={String(settings.uiTextScale)}
-              onChange={(e) =>
-                setSettings({
-                  uiTextScale: Number(e.target.value) as UiTextScale,
-                })
-              }
-            >
-              {UI_TEXT_SCALES.map((scale) => (
-                <option key={scale} value={String(scale)}>
-                  {percent.format(scale)}
-                </option>
-              ))}
-            </Select>
-          </SettingRow>
-        )}
-        {!phone && (
-          <SettingRow label={t.layoutLabel}>
-            <Select
-              className="settings-select"
-              aria-label={t.layoutLabel}
-              value={settings.layout}
-              onChange={(e) =>
-                setSettings({
-                  layout: e.target.value as Settings["layout"],
-                })
-              }
-            >
-              <option value="islands">{t.layoutIslands}</option>
-              <option value="classic">{t.layoutClassic}</option>
-            </Select>
-          </SettingRow>
-        )}
-        <ToggleRow
-          label={t.activityRailLabel}
-          help={t.activityRailHelp}
-          checked={settings.activityRail}
-          onChange={(on) => setSettings({ activityRail: on })}
-        />
-        {appDrawsWindowFrame && (
-          <ToggleRow
-            label={t.menuBarLabel}
-            help={t.menuBarHelp}
-            checked={settings.menuBarShown}
-            onChange={(on) => setSettings({ menuBarShown: on })}
-          />
-        )}
       </SettingsGroup>
       {/* One view for every document in every window. */}
       <SettingsGroup title={t.settingsViewGroup}>
@@ -153,24 +72,6 @@ export function EditorPage({
           label={t.menuViewTypewriter}
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}
-        />
-        <ToggleRow
-          label={t.menuToggleZenMode}
-          checked={settings.zenMode}
-          onChange={(on) => setSettings({ zenMode: on })}
-        />
-      </SettingsGroup>
-      {/* The document in front's, as the View menu's own. */}
-      <SettingsGroup title={t.settingsDocumentGroup}>
-        <ToggleRow
-          label={t.menuTrackChanges}
-          checked={tracking}
-          onChange={() => emitMenuEvent("track-changes")}
-        />
-        <ToggleRow
-          label={t.menuToggleReadOnly}
-          checked={readOnly}
-          onChange={() => emitMenuEvent("toggle-read-only")}
         />
       </SettingsGroup>
       {/* What the document shows, then how typing behaves. */}
@@ -267,15 +168,9 @@ export function EditorPage({
           )}
         </SettingsGroup>
       )}
-      {/* Rarely changed: the frosted title bar, how diagrams are drawn,
-      colour swatches, and the ** and ` pairs. */}
+      {/* Rarely changed: how diagrams are drawn, colour swatches, and the
+       ** and ` pairs. */}
       <AdvancedFold t={t}>
-        <ToggleRow
-          label={t.frostedTitleBarLabel}
-          help={t.frostedTitleBarHelp}
-          checked={!settings.solidTitleBar}
-          onChange={(on) => setSettings({ solidTitleBar: !on })}
-        />
         {settings.enableMermaid && (
           <SettingRow label={t.diagramEngineLabel} help={t.diagramEngineHint}>
             <Select

@@ -9,6 +9,8 @@ import {
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
 import { Presence } from "../engine/motion/usePresence";
 import { isIOSApp } from "../platform/capabilities";
+import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import { pluginName, pluginRecord } from "../plugins/manager";
 import { showPage, type PageRequest } from "./tabs/page-tabs";
 import type { TabState } from "./tabs/useTabState";
 import type { Strings } from "../i18n/strings";
@@ -16,11 +18,17 @@ import type { Strings } from "../i18n/strings";
 /** Settings and Plugins as tabs: everywhere but the iPhone and iPad. */
 const inTabs = !isIOSApp;
 
-// The Plugins tab loads with Settings' module group, on first open.
-const PluginsTab = lazyComponent(
-  lazyModule("plugins-tab", () => import("../settings/pages/PluginsTab")),
-  (m) => m.PluginsTab,
+// A plugin's tab loads on first open.
+const PluginTab = lazyComponent(
+  lazyModule("plugin-tab", () => import("../settings/pages/PluginTab")),
+  (m) => m.PluginTab,
 );
+
+/** A plugin's name, for its tab. */
+const pluginTitle = (id: string) => {
+  const record = pluginRecord(id);
+  return record ? pluginName(record) : id;
+};
 
 // Settings loads on first open, warmed once the window is idle.
 const SettingsPanel = lazyComponent(
@@ -65,7 +73,13 @@ export function useSettingsOpening(tabs: TabState) {
     openUpdates: () =>
       inTabs ? showPage(tabs, "settings", "updates") : request("updates"),
     openPluginSettings: (id?: string) => {
-      if (inTabs) return showPage(tabs, "plugins", id);
+      // A plugin's page in its tab; the list itself is the sidebar's.
+      if (inTabs)
+        return id
+          ? showPage(tabs, "plugins", id, pluginTitle(id))
+          : window.dispatchEvent(
+              new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "plugins" }),
+            );
       if (id) openPluginPage(id);
       else openExtensionsTab("plugins");
       request("extensions");
@@ -120,8 +134,8 @@ export function SettingsTabPage({
   );
 }
 
-/** The Plugins tab's page, at the plugin last asked for. */
-export function PluginsTabPage({
+/** A plugin's tab: the page of the plugin last asked for. */
+export function PluginTabPage({
   request,
   t,
 }: {
@@ -130,7 +144,7 @@ export function PluginsTabPage({
 }) {
   return (
     <Suspense fallback={null}>
-      <PluginsTab t={t} to={request?.to ?? null} key={request?.at ?? 0} />
+      <PluginTab t={t} id={request?.to ?? null} />
     </Suspense>
   );
 }
