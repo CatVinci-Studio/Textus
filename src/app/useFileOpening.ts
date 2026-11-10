@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
   listenToThisWindow,
@@ -191,6 +191,24 @@ export function useFileOpening(opts: {
   );
 
   const activeIdRef = useLatest(activeTabId);
+  // Tabs made for a path, until they are among the window's tabs: an open
+  // of the same path meanwhile shows that one instead of making another.
+  const opened = useRef(new Map<string, { id: string; at: number }>());
+  const justOpened = useCallback(
+    (path: string): string | null => {
+      const made = opened.current.get(path);
+      if (!made) return null;
+      if (tabsRef.current.some((tab) => tab.id === made.id)) {
+        opened.current.delete(path);
+        return null;
+      }
+      // Still arriving (a moment), else closed before it did.
+      if (Date.now() - made.at < 2000) return made.id;
+      opened.current.delete(path);
+      return null;
+    },
+    [tabsRef],
+  );
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       // Beside the tab in front: once the tab is among the window's.
@@ -242,8 +260,13 @@ export function useFileOpening(opts: {
         show(existing.id);
         return;
       }
+      // Opened again while its first open still reads the file: one tab.
+      const already = justOpened(path);
+      if (already) return show(already);
       const doc = await readDocument(path, open.asDocument, open.place);
       if (!doc) return;
+      const meanwhile = justOpened(path);
+      if (meanwhile) return show(meanwhile);
       // A plugin's tab has no source to show.
       const newTab: DocTab = {
         ...makeBlankTab(),
@@ -254,6 +277,7 @@ export function useFileOpening(opts: {
       const jump =
         newTab.path && openingJump(open, path, newTab.diskMtime, restoreCarets);
       if (jump) setTabJump(newTab.id, jump);
+      opened.current.set(path, { id: newTab.id, at: Date.now() });
       setTabs((prev) => [...prev, newTab]);
       show(newTab.id);
     },
@@ -264,6 +288,7 @@ export function useFileOpening(opts: {
       setActiveTabId,
       restoreCarets,
       readDocument,
+      justOpened,
     ],
   );
 

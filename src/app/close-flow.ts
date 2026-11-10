@@ -138,17 +138,24 @@ export function useWindowCloseGuard(
       await flushAutosave();
       const dirty = liveTabs().filter(tabIsDirty);
       if (dirty.length > 0 && keep.current) {
-        await Promise.all(
+        // A draft that can't be kept (a full disk): asked about instead,
+        // never a window that can no longer close.
+        const kept = await Promise.allSettled(
           dirty.map((tab) =>
             drafts.saveDraftSnapshot(tab.id, tab.path, tab.content),
           ),
         );
+        if (kept.some((result) => result.status === "rejected")) {
+          event.preventDefault();
+          setPendingClose({ kind: "window" });
+          return;
+        }
       } else if (dirty.length > 0) {
         event.preventDefault();
         setPendingClose({ kind: "window" });
         return;
       }
-      await flushPendingWrites();
+      await flushPendingWrites().catch(() => undefined);
     });
     return unlistenAll(unlisten);
   }, [liveTabs, flushAutosave, setPendingClose, keep]);
