@@ -1237,14 +1237,15 @@ br:is(.pending-delete, .pending-sentence-hot) {
   counter-reset: katexEqnNo mmlEqnNo;
 }
 
-/* GitHub-style alerts: the matching accent on the border and a badge in
-   place of the marker. Accent values are GitHub's own. */
+/* GitHub-style alerts: a border and badge in the kind's colour, each kind a
+   colour of the palette (engine/tokens/base.css), so a theme's own colours
+   reach them. */
 .milkdown {
-  --doc-alert-note: #007aff;
-  --doc-alert-tip: #34c759;
-  --doc-alert-important: #af52de;
-  --doc-alert-warning: #ff9500;
-  --doc-alert-caution: #ff3b30;
+  --doc-alert-note: var(--doc-accent);
+  --doc-alert-tip: var(--tone-green);
+  --doc-alert-important: var(--tone-purple);
+  --doc-alert-warning: var(--doc-mark);
+  --doc-alert-caution: var(--tone-red);
 }
 
 .milkdown blockquote.md-alert-note {
@@ -1275,7 +1276,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
   align-items: center;
   gap: 0.5em;
   font-weight: 600;
-  color: var(--doc-alert-accent);
+  /* As words, a step towards the text so a bright colour still reads. */
+  color: color-mix(in srgb, var(--doc-alert-accent) 50%, var(--doc-text));
 }
 
 .md-alert-title svg {
@@ -1508,65 +1510,33 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font: inherit;
 }
 
-/* Syntax highlighting tokens (via refractor/Prism token classes); the colour
-   rules are in content-base.css's layer, so a theme's own token rules win. */
+/* Syntax highlighting tokens (via refractor/Prism token classes), from the
+   palette's colours a step towards the page's text so they read on the code
+   block; the colour rules are in content-base.css's layer, so a theme's own
+   token rules win. */
 :root {
-  --doc-token-string: #457236;
-  --doc-token-number: #8f5a1c;
-  --doc-token-keyword: #8a46a8;
-  --doc-token-function: #3462cc;
-  --doc-token-tag: #a83a4b;
+  --doc-token-string: color-mix(
+    in srgb,
+    var(--tone-green) 72%,
+    var(--doc-text)
+  );
+  --doc-token-number: color-mix(in srgb, var(--doc-mark) 72%, var(--doc-text));
+  --doc-token-keyword: color-mix(
+    in srgb,
+    var(--tone-purple) 72%,
+    var(--doc-text)
+  );
+  --doc-token-function: var(--doc-accent-text);
+  --doc-token-tag: color-mix(in srgb, var(--tone-red) 72%, var(--doc-text));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --doc-token-string: #8fc47a;
-    --doc-token-number: #d6a35c;
-    --doc-token-keyword: #c793e6;
-    --doc-token-function: #6c9bf7;
-    --doc-token-tag: #e08a97;
-  }
-  :root:not([data-theme="light"]) .milkdown {
-    --doc-alert-note: #0a84ff;
-    --doc-alert-tip: #30d158;
-    --doc-alert-important: #bf5af2;
-    --doc-alert-warning: #ff9f0a;
-    --doc-alert-caution: #ff453a;
-  }
-}
-
-:root[data-theme="dark"] {
-  --doc-token-string: #8fc47a;
-  --doc-token-number: #d6a35c;
-  --doc-token-keyword: #c793e6;
-  --doc-token-function: #6c9bf7;
-  --doc-token-tag: #e08a97;
-}
-
-:root[data-theme="dark"] .milkdown {
-  --doc-alert-note: #0a84ff;
-  --doc-alert-tip: #30d158;
-  --doc-alert-important: #bf5af2;
-  --doc-alert-warning: #ff9f0a;
-  --doc-alert-caution: #ff453a;
-}
-
-/* A one-design theme keeps its light page in dark mode, so the dark tokens
-   would be pale on it. */
-:root[data-light-page] {
-  --doc-token-string: #457236;
-  --doc-token-number: #8f5a1c;
-  --doc-token-keyword: #8a46a8;
-  --doc-token-function: #3462cc;
-  --doc-token-tag: #a83a4b;
-}
-
+/* A one-design theme keeps its light page in dark mode: the palette's light
+   colours there, or the dark ones would be pale on it. */
 :root[data-light-page] .milkdown {
-  --doc-alert-note: #007aff;
-  --doc-alert-tip: #34c759;
-  --doc-alert-important: #af52de;
-  --doc-alert-warning: #ff9500;
-  --doc-alert-caution: #ff3b30;
+  --doc-mark: #ff9500;
+  --tone-green: #34c759;
+  --tone-purple: #af52de;
+  --tone-red: #ff3b30;
 }
 
 /* List markers are an out-of-flow ::before, not ::marker: in WKWebView a

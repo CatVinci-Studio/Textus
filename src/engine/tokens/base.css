@@ -97,7 +97,9 @@
   --doc-border: #d2d2d7;
   --doc-quote-border: #d2d2d7;
   --doc-code-bg: #f5f5f7;
-  --doc-highlight-bg: #ffdfb2;
+  /* What marks "here" and "now": highlights, matches, notes. */
+  --doc-mark: #ff9500;
+  --doc-highlight-bg: color-mix(in srgb, var(--doc-mark) 30%, var(--doc-bg));
   /* The interface's, from the document's, so any theme recolours the whole
      window; an imported theme's are derived and contrast-checked in
      engine/tokens/palette.ts, and a theme may set any of them itself. */
@@ -221,7 +223,8 @@
     --doc-border: #38383a;
     --doc-quote-border: #48484a;
     --doc-code-bg: #2c2c2e;
-    --doc-highlight-bg: #694817;
+    --doc-mark: #ff9f0a;
+    --doc-highlight-bg: color-mix(in srgb, var(--doc-mark) 34%, var(--doc-bg));
     /* Dark frames recede by darkening: a lighter frame would read as
        raised above the page. */
     --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
@@ -239,7 +242,8 @@
   --doc-border: #38383a;
   --doc-quote-border: #48484a;
   --doc-code-bg: #2c2c2e;
-  --doc-highlight-bg: #694817;
+  --doc-mark: #ff9f0a;
+  --doc-highlight-bg: color-mix(in srgb, var(--doc-mark) 34%, var(--doc-bg));
   /* Dark frames recede by darkening: a lighter frame would read as
      raised above the page. */
   --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));

@@ -95,8 +95,8 @@
   --ui-on-fill: #fff;
   /* Find's matches, and the one it is on: a highlighter's yellow and
      orange, translucent so they read on any page. */
-  --ui-find-match: rgb(255 212 0 / 40%);
-  --ui-find-match-active: rgb(255 140 0 / 55%);
+  --ui-find-match: color-mix(in srgb, var(--doc-mark) 30%, transparent);
+  --ui-find-match-active: color-mix(in srgb, var(--doc-mark) 60%, transparent);
   --ui-overlay: rgb(20 27 40 / 30%);
   /* Behind a picture or diagram in the viewer: darker than a dialog's veil,
      so the document doesn't read as its surroundings. */

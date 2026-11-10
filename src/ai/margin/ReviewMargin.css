@@ -351,20 +351,16 @@
 }
 
 :root {
-  --review-note-line: #c99a2e;
-  --review-anchor-bg: rgb(232 190 80 / 22%);
-  --review-anchor-hot-bg: rgb(232 190 80 / 42%);
-  --review-note-bg: color-mix(in srgb, #f6eedb 55%, var(--ui-surface));
-  --review-note-border: color-mix(in srgb, #d9c79a 45%, var(--ui-surface));
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --review-anchor-bg: rgb(232 190 80 / 16%);
-    --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-    --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
-    --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
-  }
+  /* The palette's mark: a note is "look here". */
+  --review-note-line: var(--doc-mark);
+  --review-anchor-bg: color-mix(in srgb, var(--doc-mark) 22%, transparent);
+  --review-anchor-hot-bg: color-mix(in srgb, var(--doc-mark) 42%, transparent);
+  --review-note-bg: color-mix(in srgb, var(--doc-mark) 8%, var(--ui-surface));
+  --review-note-border: color-mix(
+    in srgb,
+    var(--doc-mark) 30%,
+    var(--ui-surface)
+  );
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -383,13 +379,6 @@
     background: none;
     box-shadow: none;
   }
-}
-
-:root[data-theme="dark"] {
-  --review-anchor-bg: rgb(232 190 80 / 16%);
-  --review-anchor-hot-bg: rgb(232 190 80 / 30%);
-  --review-note-bg: color-mix(in srgb, #4a3f25 35%, var(--ui-surface));
-  --review-note-border: color-mix(in srgb, #8a7440 40%, var(--ui-surface));
 }
 
 /* A rewrite's changed sentence in the margin, in the editor's own surface
