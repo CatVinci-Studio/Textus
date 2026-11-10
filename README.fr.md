@@ -64,7 +64,7 @@ Gratuit et open source, sous licence MIT.
 
 > iPhone et iPad : bientôt sur l’App Store (pas encore en Chine continentale).
 
-Bêta : dans **Réglages › Général › À propos de Textus**, réglez le **Canal de mise à jour** sur **Bêta**.
+Bêta : dans **Réglages › À propos**, réglez le **Canal de mise à jour** sur **Bêta**.
 
 ## Écriture
 
@@ -100,7 +100,7 @@ Pas seulement l’écriture : les extensions ajoutent tout ce dont vous avez bes
 | **Aperçu rapide** | **Historique des versions** |
 | <img src="docs/images/readme/fr/plugin-preview.webp" alt="En s’arrêtant sur un lien, la note apparaît dans une carte" width="420" /> | <img src="docs/images/readme/fr/plugin-history.webp" alt="Les versions précédentes d’une note, à côté d’elle" width="420" /> |
 
-Cartes mentales, diapositives Marp, tableaux kanban, PDF et Word dans un onglet, citations Zotero, graphiques en tout genre et plus encore sont dans **Réglages › Extensions**, sur ordinateur comme sur iPhone et iPad.
+Cartes mentales, diapositives Marp, tableaux kanban, PDF et Word dans un onglet, citations Zotero, graphiques en tout genre et plus encore sont dans le panneau **Modules** sur ordinateur (le puzzle de la colonne de gauche) et dans **Réglages › Extensions** sur iPhone et iPad.
 
 Beaucoup de plugins confient aussi leurs outils à Textus AI : il suffit de le lui demander dans une conversation. Les plugins sont dans [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) et les thèmes dans [textus-themes](https://github.com/CatVinci-Studio/textus-themes), où vous pouvez partager les vôtres.
 

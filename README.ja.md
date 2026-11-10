@@ -64,7 +64,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 > iPhone版とiPad版は、まもなくApp Storeで公開します（中国本土を除く）。
 
-ベータ版：**設定 › 一般 › Textus について** で **アップデートチャンネル** を **ベータ版** にします。
+ベータ版：**設定 › について** で **アップデートチャンネル** を **ベータ版** にします。
 
 ## 執筆
 
@@ -100,7 +100,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **クイックプレビュー** | **バージョン履歴** |
 | <img src="docs/images/readme/ja/plugin-preview.webp" alt="リンクにポインタを置くと、リンク先のノートがカードで表示される" width="420" /> | <img src="docs/images/readme/ja/plugin-history.webp" alt="ノートの過去のバージョンを横に表示" width="420" /> |
 
-マインドマップ、Marpのスライド、カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは **設定 › 拡張機能** にあります。パソコンでもiPhoneとiPadでも使えます。
+マインドマップ、Marpのスライド、カンバン、タブで開くPDFとWord、Zoteroからの引用、さまざまなグラフなどは、パソコンでは左の列のパズル **プラグイン** パネルに、iPhoneとiPadでは **設定 › 拡張機能** にあります。
 
 多くのプラグインは自分の機能を Textus AI にも渡すので、会話の中で頼むだけで使えます。プラグインは [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)、テーマは [textus-themes](https://github.com/CatVinci-Studio/textus-themes) にあり、自作のテーマも共有できます。
 

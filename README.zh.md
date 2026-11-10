@@ -65,7 +65,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 
 > iPhone 与 iPad 版即将在 App Store 上架（暂不支持中国大陆）。
 
-测试版：在 **设置 › 通用 › 关于 Textus** 中把 **更新通道** 改为 **测试版**。
+测试版：在 **设置 › 关于** 中把 **更新通道** 改为 **测试版**。
 
 ## 写作
 
@@ -101,7 +101,7 @@ https://github.com/user-attachments/assets/56473ad9-5cb0-4608-b3c8-30882420edcd
 | **浮动卡片** | **版本历史** |
 | <img src="docs/images/readme/zh/plugin-preview.webp" alt="停在链接上，卡片显示那篇笔记" width="420" /> | <img src="docs/images/readme/zh/plugin-history.webp" alt="一篇文档的历史版本和差异" width="420" /> |
 
-还有思维导图、Marp 幻灯片、看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，都在 **设置 › 扩展**，电脑和 iPhone、iPad 上都能用。
+还有思维导图、Marp 幻灯片、看板、PDF 与 Word 阅读、Zotero 引用、各类图表等，电脑上在左侧图标栏的拼图 **插件** 面板里，iPhone、iPad 上在 **设置 › 扩展**。
 
 不少插件还会把自己的功能交给 Textus AI，在对话里直接让它去做就行。插件在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主题在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也欢迎分享你自己的主题。
 

@@ -68,7 +68,7 @@ Free and open source, under the MIT license.
 
 > iPhone and iPad: on the App Store soon (not yet in mainland China).
 
-Beta: in **Settings › General › About Textus**, set **Update channel** to **Beta**.
+Beta: in **Settings › About**, set **Update channel** to **Beta**.
 
 ## Writing
 
@@ -104,7 +104,7 @@ Not just writing: plugins add whatever else you need.
 | **Quick Preview** | **Version History** |
 | <img src="docs/images/readme/en/plugin-preview.webp" alt="Resting on a link shows that note in a card" width="420" /> | <img src="docs/images/readme/en/plugin-history.webp" alt="A note's earlier versions beside it" width="420" /> |
 
-Mind maps, Marp slides, Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in **Settings › Extensions**, on the computer and on iPhone and iPad.
+Mind maps, Marp slides, Kanban boards, PDF and Word in a tab, Zotero citations, charts of every kind and more are in the **Plugins** panel on the computer (the puzzle in the left column), and in **Settings › Extensions** on iPhone and iPad.
 
 Many plugins also hand Textus AI their own tools, so you can ask for what they do in a conversation. The plugins are in [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins) and the themes in [textus-themes](https://github.com/CatVinci-Studio/textus-themes), where you can share your own.
 

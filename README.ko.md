@@ -64,7 +64,7 @@ MIT 라이선스로 공개된 무료 오픈 소스입니다.
 
 > iPhone·iPad 버전이 곧 App Store에 나옵니다(중국 본토 제외).
 
-베타: **설정 › 일반 › Textus 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요.
+베타: **설정 › 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요.
 
 ## 글쓰기
 
@@ -100,7 +100,7 @@ MIT 라이선스로 공개된 무료 오픈 소스입니다.
 | **빠른 미리보기** | **버전 기록** |
 | <img src="docs/images/readme/ko/plugin-preview.webp" alt="링크 위에 멈추면 그 노트가 카드로 보인다" width="420" /> | <img src="docs/images/readme/ko/plugin-history.webp" alt="노트의 이전 버전을 옆에 표시" width="420" /> |
 
-마인드맵, Marp 슬라이드, 칸반 보드, 탭에서 여는 PDF와 Word, Zotero 인용, 다양한 차트 등은 **설정 › 확장**에 있습니다. 컴퓨터에서도, iPhone·iPad에서도 쓸 수 있습니다.
+마인드맵, Marp 슬라이드, 칸반 보드, 탭에서 여는 PDF와 Word, Zotero 인용, 다양한 차트 등은 컴퓨터에서는 왼쪽 열의 퍼즐 **플러그인** 패널에, iPhone·iPad에서는 **설정 › 확장**에 있습니다.
 
 많은 플러그인이 자기 기능을 Textus AI에도 넘겨 주어, 대화에서 부탁하기만 하면 됩니다. 플러그인은 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins), 테마는 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)에 있으며, 직접 만든 테마도 공유할 수 있습니다.
 

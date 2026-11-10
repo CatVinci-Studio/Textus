@@ -65,7 +65,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 
 > iPhone 與 iPad 版即將在 App Store 上架（暫不支援中國大陸）。
 
-測試版：在 **設定 › 一般 › 關於 Textus** 中把 **更新通道** 改為 **測試版**。
+測試版：在 **設定 › 關於** 中把 **更新通道** 改為 **測試版**。
 
 ## 寫作
 
@@ -101,7 +101,7 @@ https://github.com/user-attachments/assets/f366f282-e3f9-43d9-9a29-edb6d1ace3f5
 | **快速預覽** | **版本紀錄** |
 | <img src="docs/images/readme/zh-hant/plugin-preview.webp" alt="停在連結上，卡片顯示那篇筆記" width="420" /> | <img src="docs/images/readme/zh-hant/plugin-history.webp" alt="一篇筆記的歷史版本並排在旁" width="420" /> |
 
-還有思維導圖、Marp 投影片、看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，都在 **設定 › 擴充功能**，電腦和 iPhone、iPad 上都能用。
+還有思維導圖、Marp 投影片、看板、在分頁中閱讀 PDF 與 Word、Zotero 引用、各類圖表等，電腦上在左側圖示列的拼圖 **外掛程式** 面板裡，iPhone、iPad 上在 **設定 › 擴充功能**。
 
 不少外掛還會把自己的功能交給 Textus AI，在對話裡直接讓它去做就行。外掛在 [textus-plugins](https://github.com/CatVinci-Studio/textus-plugins)，主題在 [textus-themes](https://github.com/CatVinci-Studio/textus-themes)，也歡迎分享你自己的主題。
 
