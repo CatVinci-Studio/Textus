@@ -129,12 +129,6 @@ export function splitBeside(tabId: string, id: string, side: Side): void {
   if (next) setSplitLayout(next);
 }
 
-/** `tabId` in a new pane beside the whole layout on `side`. */
-export function splitAtEdge(tabId: string, side: Side): void {
-  const next = layout && splitOff(layout, tabId, null, side);
-  if (next) setSplitLayout(next);
-}
-
 /** The pane a tab opened next joins. */
 export function focusPane(id: string): void {
   if (layout) setSplitLayout(focusOn(layout, id));

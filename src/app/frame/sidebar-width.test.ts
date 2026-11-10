@@ -90,13 +90,12 @@ describe("the remembered sidebar width", () => {
     expect(localStorage.getItem(KEY)).toBe("480");
   });
 
-  it("grows with a wide window, in the interface's size units", () => {
+  it("keeps its width in a wide window: the interface doesn't grow with it", () => {
     localStorage.setItem(KEY, "240");
-    // 2560 wide: the interface is 1.15 times its size.
     const { result } = renderHook(() => useSidebarWidth(2560));
-    expect(result.current.width).toBe(276);
+    expect(result.current.width).toBe(240);
     act(() => result.current.setWidth(345));
-    expect(localStorage.getItem(KEY)).toBe("300");
+    expect(localStorage.getItem(KEY)).toBe("345");
   });
 
   it("resets to the default", () => {

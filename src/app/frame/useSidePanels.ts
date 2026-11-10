@@ -63,9 +63,7 @@ export function useSidePanels(aiOn: boolean) {
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
   const { settings } = useSettings();
-  const rail = railShown(settings)
-    ? Math.round(RAIL_WIDTH * chromeScale())
-    : 0;
+  const rail = railShown(settings) ? Math.round(RAIL_WIDTH * chromeScale()) : 0;
   // With the AI panel open the sidebar leaves it its narrowest, so a small
   // window still keeps the document its room (the panel's open state, one
   // render late, is enough: it only bounds the sidebar).

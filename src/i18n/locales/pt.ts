@@ -1400,7 +1400,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialPluginsBody:
     "Mapas mentais, teclas do Vim, slides, citações e mais: adicione só o que precisar, de uma única loja.",
   tutorialPluginsTask:
-    "Abra o ícone de quebra-cabeça na coluna da esquerda para ver os plugins",
+    "Clique no ícone de quebra-cabeça à esquerda para abrir Plugins",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",

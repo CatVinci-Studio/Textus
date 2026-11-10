@@ -51,30 +51,3 @@ export function ExpandingSearch({
     </div>
   );
 }
-
-/**
- * A pane's top line (pane.css): its name - unless what picked the pane
- * already says it - then its search, folded, and its buttons. Open, the
- * search takes the name's place.
- */
-export function PaneTop({
-  title,
-  search,
-  children,
-}: {
-  title?: ReactNode;
-  search?: { label: string; active: boolean; field: () => ReactNode };
-  children?: ReactNode;
-}) {
-  return (
-    <div className="tx-pane-top" data-has-search={search ? "" : undefined}>
-      {title !== undefined ? (
-        <h2 className="tx-pane-title">{title}</h2>
-      ) : (
-        <span className="tx-pane-fill" />
-      )}
-      {search && <ExpandingSearch {...search} />}
-      {children}
-    </div>
-  );
-}

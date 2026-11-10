@@ -1405,7 +1405,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialPluginsBody:
     "Mindmaps, Vim-Tasten, Folien, Zitate und mehr – füg nur hinzu, was du brauchst, aus einem Store.",
   tutorialPluginsTask:
-    "Öffne das Puzzle-Symbol in der linken Leiste, um die Plugins zu sehen",
+    "Klicke links auf das Puzzle-Symbol, um Plugins zu öffnen",
   tutorialConnectTitle: "KI verbinden",
   tutorialConnectBody:
     "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",

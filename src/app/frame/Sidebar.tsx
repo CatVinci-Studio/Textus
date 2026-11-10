@@ -105,7 +105,11 @@ export function Sidebar({
                   name, on the window bar's line; the panel's own first row
                   (its search, its tools) starts under it, level with the
                   islands' tops. Without the rail, the tabs are here again. */}
-              {rail && <h2 className="tx-pane-title sidebar-title">{shown.label(t)}</h2>}
+              {rail && (
+                <h2 className="tx-pane-title sidebar-title">
+                  {shown.label(t)}
+                </h2>
+              )}
               {!rail && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}

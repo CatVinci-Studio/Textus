@@ -14,7 +14,6 @@ import {
 import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { PluginsPanel } from "../../settings/pages/PluginsPanel";
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
 import { SearchPanel } from "../../files/SearchPanel";
@@ -134,14 +133,28 @@ const BUILT_IN: SidebarTabDef[] = [
   },
 ];
 
-/** Plugins: where they run, the desktop - the list, the switch for them
- *  all and the ways to add one; a plugin's page opens in a tab of its own.
- *  Asked when the tabs are listed, not when this loads. */
+// The plugin list, loaded when the puzzle first opens it (it registers
+// plugins' own sidebar tabs here, so not before).
+const PluginsPanel = lazyComponent(
+  lazyModule(
+    "plugins-panel",
+    () => import("../../settings/pages/PluginsPanel"),
+  ),
+  (m) => m.PluginsPanel,
+);
+
+/** Plugins: where they run, the desktop - the list and the ways to add one;
+ *  a plugin's page opens in a tab of its own. Asked when the tabs are
+ *  listed, not when this loads. */
 const PLUGINS_TAB: SidebarTabDef = {
   id: "plugins",
   label: (t) => t.extensionsTabPlugins,
   Icon: PluginsTabIcon,
-  Panel: ({ t }) => <PluginsPanel t={t} />,
+  Panel: ({ t }) => (
+    <Suspense fallback={null}>
+      <PluginsPanel t={t} />
+    </Suspense>
+  ),
 };
 
 const pluginsTab = () => (PLUGINS_SHOWN && isDesktopApp ? [PLUGINS_TAB] : []);

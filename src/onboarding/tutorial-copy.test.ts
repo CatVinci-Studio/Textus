@@ -17,7 +17,7 @@ describe.each(LANGS)("the tour in %s", (lang) => {
   it("names the buttons the learner clicks as the app does", () => {
     expect(t.tutorialWriteSend).toContain(t.proposalAccept);
     expect(t.tutorialDoneMemory).toContain(t.agentTabProject);
-    expect(t.tutorialPluginsTask).toContain(t.navExtensions);
+    expect(t.tutorialPluginsTask).toContain(t.extensionsTabPlugins);
   });
 
   it("has the learner type the practice notes' title", () => {

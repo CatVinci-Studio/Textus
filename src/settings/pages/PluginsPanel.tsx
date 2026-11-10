@@ -5,10 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import {
-  ChevronIcon,
-  MoreIcon,
-} from "../../engine/controls/icons";
+import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
 import { IconButton } from "../../engine/controls/IconButton";
 import {
   ContextMenu,
@@ -164,7 +161,6 @@ export function PluginsPanel({
               off={record.status !== "on"}
               picked={picked === record.id}
               onOpen={() => onPick(record.id)}
-              t={t}
               // An update is the one thing to do from here: one small
               // button; other versions are on the plugin's page.
               end={
@@ -224,7 +220,6 @@ export function PluginsPanel({
               manifest={item.manifest}
               picked={picked === item.id}
               onOpen={() => onPick(item.id)}
-              t={t}
               end={actionFor(item.id)}
               icon={
                 <PluginIcon
@@ -251,7 +246,6 @@ function PluginRow({
   end,
   onOpen,
   picked = false,
-  t,
 }: {
   id: string;
   name: string;
@@ -264,7 +258,6 @@ function PluginRow({
   onOpen: () => void;
   /** Its page shows beside the list. */
   picked?: boolean;
-  t: Strings;
 }) {
   const by = manifest?.author || manifest?.publisher;
   return (
@@ -277,7 +270,6 @@ function PluginRow({
       <button
         type="button"
         className="plugins-panel-open"
-        aria-label={t.pluginOpenDetails.replace("{name}", name)}
         aria-current={picked || undefined}
         onClick={onOpen}
       >

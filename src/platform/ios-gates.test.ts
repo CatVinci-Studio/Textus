@@ -14,11 +14,12 @@ const ALLOWED: Record<string, string> = {
   "ai/revision/pending-accept.ts":
     "no focus: the keyboard would cover the sheet",
   "app/App.tsx": "the keyboard toolbar and the document list",
-  "app/AppNotices.tsx": "no Esc key: Zen mode's hint stays as the way out",
+  "app/SettingsLayer.tsx": "Settings is a sheet over the window, not a tab",
   "app/frame/Sidebar.tsx": "the sidebar is a drawer, its width the layout's",
   "app/frame/WindowBar.tsx": "the sidebar opens from the phone's own bar",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
+  "app/islands/useWindowAi.ts": "the AI is a panel of its own, not tabs",
   "engine/controls/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "app/useFileOpening.ts": "no files dropped on the window",
   "app/frame/useSidePanels.ts":

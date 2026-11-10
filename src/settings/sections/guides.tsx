@@ -15,15 +15,12 @@ export function GuidesSection({
 }) {
   return (
     <>
-        <LinkRow
-          label={t.menuHelpMarkdown}
-          onOpen={() => openHelp("markdown")}
-        />
-        <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
-        <LinkRow
-          label={t.menuHelpTutorials}
-          onOpen={() => void links.openTutorialsPage(language)}
-        />
+      <LinkRow label={t.menuHelpMarkdown} onOpen={() => openHelp("markdown")} />
+      <LinkRow label={t.menuHelpAgent} onOpen={() => openHelp("agent")} />
+      <LinkRow
+        label={t.menuHelpTutorials}
+        onOpen={() => void links.openTutorialsPage(language)}
+      />
     </>
   );
 }

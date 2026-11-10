@@ -150,9 +150,6 @@ export function useCardPlacement(
       // Never out from under the pointer or the keyboard: a button the
       // learner is about to press must stay where it is.
       if (card.matches(":hover, :focus-within")) return;
-      const css = getComputedStyle(card);
-      const docked =
-        parseFloat(css.getPropertyValue("--docked-panel-width")) || 0;
       // A phone's title row, status bar included; none on the desktop.
       const bar = phoneTitleRowBottom();
       const narrow = window.innerWidth <= 720;
@@ -160,7 +157,7 @@ export function useCardPlacement(
       const area: Box = {
         left: gap,
         top: narrow ? bar + gap : 48,
-        right: window.innerWidth - gap - (narrow ? 0 : docked),
+        right: window.innerWidth - gap,
         bottom: window.innerHeight - gap,
       };
       const width = card.offsetWidth;

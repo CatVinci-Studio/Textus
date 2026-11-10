@@ -101,7 +101,6 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
           {canInstallCliCommand && <CliCommandSection t={t} />}
         </SettingsGroup>
       )}
-
     </>
   );
 }

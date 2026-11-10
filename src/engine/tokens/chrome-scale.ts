@@ -26,7 +26,5 @@ export function chromeScale(): number {
 /** `n` interface pixels as drawn now: a size set from script grows with
  *  the interface as the stylesheets' lengths do. */
 export function scaledPx(n: number): number {
-  return typeof window === "undefined"
-    ? n
-    : n * chromeScale();
+  return typeof window === "undefined" ? n : n * chromeScale();
 }

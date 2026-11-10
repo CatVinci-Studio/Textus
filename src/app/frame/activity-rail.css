@@ -100,8 +100,6 @@
   z-index: 46;
 }
 
-
-
 :root[data-side-to-top] .sidebar-resizer {
   top: 0;
 }

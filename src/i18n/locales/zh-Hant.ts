@@ -1285,8 +1285,7 @@ export default {
   tutorialPluginsTitle: "外掛程式",
   tutorialPluginsBody:
     "心智圖、Vim 按鍵、投影片、文獻引用……需要什麼就裝什麼，都在一個商店裡。",
-  tutorialPluginsTask:
-    "Open the puzzle icon in the left column to see the plugins",
+  tutorialPluginsTask: "點左側圖示列的拼圖，看看有哪些外掛程式",
   tutorialConnectTitle: "連線你的 AI",
   tutorialConnectBody: "連上之後，下面的 AI 功能可以真的試一試。",
   tutorialConnectTask: "登入或填入金鑰；也可以先略過",

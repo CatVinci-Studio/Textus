@@ -79,7 +79,11 @@ export function PageTabContent({ tab }: { tab: DocTab }) {
   if (!page) return null;
   return (
     <div className="page-tab">
-      {render(page, (tab.view?.state as PageRequest | undefined) ?? null, tab.id)}
+      {render(
+        page,
+        (tab.view?.state as PageRequest | undefined) ?? null,
+        tab.id,
+      )}
     </div>
   );
 }

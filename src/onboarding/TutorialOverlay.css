@@ -37,9 +37,9 @@
 .tutorial-card {
   position: fixed;
   top: 48px;
-  right: calc(18px + var(--docked-panel-width, 0px));
+  right: 18px;
   z-index: var(--z-popover);
-  width: min(380px, calc(100vw - 36px - var(--docked-panel-width, 0px)));
+  width: min(380px, calc(100vw - 36px));
   max-height: calc(100vh - 66px);
   overflow-y: auto;
   padding: 16px;

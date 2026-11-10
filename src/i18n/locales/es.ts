@@ -1414,7 +1414,7 @@ para usar una.
   tutorialPluginsBody:
     "Mapas mentales, teclas de Vim, diapositivas, citas y más: añade solo lo que necesites, desde una sola tienda.",
   tutorialPluginsTask:
-    "Abre el icono de puzle de la columna izquierda para ver los plugins",
+    "Haz clic en el icono de puzle de la columna izquierda para abrir Complementos",
   tutorialConnectTitle: "Conecta tu IA",
   tutorialConnectBody:
     "Con una IA conectada, podrás probar de verdad lo que sigue.",

@@ -1,13 +1,5 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useModalDialog } from "../engine/controls/useModalDialog";
-import { useDockedPanelWidth } from "../utils/hooks/useDockedPanelWidth";
 import { useCardPlacement } from "./card-placement";
 import type { TutorialStepId } from "./tutorial-steps";
 import "./TutorialOverlay.css";
@@ -149,7 +141,6 @@ export function TutorialOverlay({
   const contentId = `${id}content`;
   const primaryRef = useRef<HTMLButtonElement>(null);
   const modal = useModalDialog(onSkip, layout === "overlay");
-  const dockedWidth = useDockedPanelWidth();
   // Keeps clear of what the lesson is about; with no room it folds to its
   // header, unless the learner opened or folded it on this lesson.
   const placement = useCardPlacement(
@@ -176,12 +167,7 @@ export function TutorialOverlay({
     <div
       {...modal}
       className={`tutorial-surface tutorial-${layout} tutorial-step-${stepId} floating-surface`}
-      style={
-        {
-          ...placement.style,
-          "--docked-panel-width": `${dockedWidth}px`,
-        } as CSSProperties
-      }
+      style={placement.style}
       data-place={placement.place ?? undefined}
       role="dialog"
       aria-modal={layout === "overlay"}

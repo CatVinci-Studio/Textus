@@ -3,8 +3,8 @@
  * sidebar panel, a list beside a page (Settings' pages, Providers), a
  * plugin's list - one definition each, so no two panes differ:
  *
- * - its top line: a search box ("搜索…", saying what is listed) or, with
- *   nothing to search, its name - the same height and inset either way;
+ * - its name on the window bar's line, its search (if it finds things) on
+ *   the second row;
  * - a list item: one size of text, one padding, one hover and one
  *   selection, whatever the list holds.
  *
@@ -16,30 +16,6 @@
   --pane-inset: 12px;
 }
 
-.tx-pane-top {
-  display: flex;
-  align-items: center;
-  min-height: calc(var(--control-height-sm) + var(--pane-inset) + 8px);
-  padding: var(--pane-inset) var(--pane-inset) 8px;
-  box-sizing: border-box;
-}
-
-/* Its name, or the search opened in its place, takes the room; its
-   buttons keep theirs at the end. */
-.tx-pane-top {
-  gap: 2px;
-}
-
-.tx-pane-top > :is(.tx-pane-title, .tx-pane-fill) {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Opened, the search covers the name. */
-.tx-pane-top:has(> .tx-search-expanded) > .tx-pane-title {
-  display: none;
-}
-
 .tx-search-expanded {
   display: flex;
   flex: 1;
@@ -49,10 +25,6 @@
 /* In a section's heading the field stays a field's width. */
 .settings-group-actions > .tx-search-expanded {
   flex: 0 1 220px;
-}
-
-.tx-pane-top .tx-search {
-  margin: 0;
 }
 
 .tx-pane-title {
@@ -94,9 +66,11 @@
   background: var(--ui-hover);
 }
 
+/* Picked: the selection's fill, the text as it was (as the outline's and
+   the file tree's), so it reads on any theme. */
 .tx-list-item:is([aria-current], [aria-selected="true"]) {
   background: var(--ui-selected);
-  color: var(--ui-accent-text);
+  color: var(--ui-text);
 }
 
 /* A sidebar panel's second row - level with the islands' tops - holds

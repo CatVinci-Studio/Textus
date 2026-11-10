@@ -6,6 +6,6 @@
   pointer-events: none;
   /* The shadow follows the island's own shape - its tab rising from the
      sheet - not the box around it. */
-  filter: drop-shadow(0 10px 24px color-mix(in srgb, #000 16%, transparent));
+  filter: drop-shadow(var(--shadow-popover));
   opacity: 0.96;
 }

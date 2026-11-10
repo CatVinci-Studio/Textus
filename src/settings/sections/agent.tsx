@@ -213,26 +213,6 @@ export function AgentModelSection({ t }: { t: Strings }) {
   return <ProviderModelRow t={t} kind="agent" />;
 }
 
-/** `provider`'s model for the chat, or for writing: its own page's
- *  pickers (Settings › Providers). */
-export function ProviderModelPicker({
-  t,
-  provider,
-  kind,
-  label,
-}: {
-  t: Strings;
-  provider: string;
-  kind: "writing" | "agent";
-  label: string;
-}) {
-  return (
-    <ProviderModelRow t={t} kind={kind} provider={provider} label={label} />
-  );
-}
-
-/// One fetch for both pickers: the provider's live model list, on top of the
-/// catalog's. Absent where listing can't work.
 export function ModelListRow({
   t,
   provider: given,

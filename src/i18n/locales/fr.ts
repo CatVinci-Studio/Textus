@@ -1431,7 +1431,7 @@ utiliser une.
   tutorialPluginsBody:
     "Cartes mentales, touches Vim, diapositives, citations et plus : n'ajoutez que ce dont vous avez besoin, depuis une seule boutique.",
   tutorialPluginsTask:
-    "Ouvrez l'icône puzzle dans la colonne de gauche pour voir les plugins",
+    "Cliquez sur l'icône puzzle à gauche pour ouvrir Modules",
   tutorialConnectTitle: "Connectez votre IA",
   tutorialConnectBody:
     "Une fois connectée, vous pourrez vraiment essayer la suite.",

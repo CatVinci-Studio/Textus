@@ -246,7 +246,7 @@ export function useTabDragMerge(opts: {
         requestAnimationFrame(() => splitForDrop(newTab.id, split, ids));
     });
     return unlistenAll(unlisten);
-  }, [setActiveTabId, setTabs, tabsRef]);
+  }, [arrival, setActiveTabId, setTabs, tabsRef]);
 
   // Rust sends the global cursor every tick; made window-local here.
   useEffect(() => {
@@ -271,7 +271,7 @@ export function useTabDragMerge(opts: {
       },
     );
     return unlistenAll(unlisten);
-  }, [setActiveTabId, setTabs, tabsRef]);
+  }, [arrival, setActiveTabId, setTabs, tabsRef]);
 
   return { dragHoverPreview, handleTabDetach, moveTabToNewWindow };
 }

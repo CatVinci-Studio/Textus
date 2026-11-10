@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { FindReplace } from "./useFindReplace";
 import {
@@ -7,7 +7,6 @@ import {
   CloseIcon,
 } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { useDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import "./FindReplaceBar.css";
 import { isImeKeydown } from "../../utils/ime";
@@ -36,7 +35,6 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
   const { query, replacement, caseSensitive, useRegex, status, replaceOpen } =
     findReplace;
   const presence = usePresenceProps<HTMLDivElement>();
-  const dockedWidth = useDockedPanelWidth();
   const findInput = useRef<HTMLInputElement>(null);
 
   // On opening and on each Find while open: typing replaces the query.
@@ -83,7 +81,6 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
     <div
       {...presence}
       className="find-replace-bar floating-surface"
-      style={{ "--docked-panel-width": `${dockedWidth}px` } as CSSProperties}
       onKeyDown={onBarKeyDown}
     >
       <div className="find-replace-row">

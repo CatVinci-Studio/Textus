@@ -51,7 +51,8 @@ describe("file name search", () => {
 
   it("matches Chinese names typed in pinyin, whole or by initials", () => {
     expect(names("dierzhang")).toEqual(["第二章.txt"]);
-    expect(names("cg")).toEqual(["第一章 草稿.md"]);
+    // Pinyin first; letters in order with others between come after.
+    expect(names("cg")[0]).toBe("第一章 草稿.md");
     expect(names("dz")).toEqual([]);
     expect(names("dyz")).toEqual(["第一章 草稿.md"]);
   });

@@ -34,7 +34,8 @@ const platform = vi.hoisted(() => ({
   isIOSApp: false,
 }));
 const lastIOSDocument = vi.hoisted(() => vi.fn());
-vi.mock("../platform/capabilities", () => ({
+vi.mock("../platform/capabilities", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../platform/capabilities")>()),
   get canUseWindows() {
     return platform.canUseWindows;
   },
@@ -65,10 +66,7 @@ const INITIAL: DocTab = {
 };
 
 /** Runs the hook against a tab list held here, the way App holds it. */
-async function restore(
-  restoreCarets = true,
-  launchStartPage = false,
-) {
+async function restore(restoreCarets = true, launchStartPage = false) {
   // `drained` is module state (one drain per window): a fresh module each.
   vi.resetModules();
   const { useStartupRestore } = await import("./startup-restore");
@@ -322,6 +320,5 @@ describe("startup restore into the initial tab", () => {
       await waitFor(() => expect(tabs()[0].path).toBe("/docs/a.md"));
       expect(takeTabJump("initial")).toBeNull();
     });
-
   });
 });

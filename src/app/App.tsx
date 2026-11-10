@@ -1,8 +1,6 @@
 import { tabTitle } from "../document/doc-tabs";
-import { conversationScope } from "../ai/chat/conversation-scope";
-import { useAiTabs } from "./islands/useAiTabs";
+import { useWindowAi } from "./islands/useWindowAi";
 import { AiTab } from "./islands/AiTab";
-import { useDocumentInFront } from "./tabs/useDocumentInFront";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../engine/controls/CornerToast";
@@ -111,19 +109,10 @@ function App() {
     zen: zenMode,
   });
 
-  // The AI's conversations: the document in front's folder's - with an
-  // AI tab or a page tab in front, still that document's - as tabs on the
-  // desktop (useAiTabs), the live one drawn into its tab.
-  const docInFront = useDocumentInFront(tabs, activeTabId);
-  const inFront = tabs.find((tab) => tab.id === docInFront) ?? activeTab;
-  const conversations = conversationScope(
-    inFront.path,
-    settings.agentWorkspaceRoot || null,
-  );
-  const aiTabMount = useAiTabs({
+  const aiTabMount = useWindowAi({
     tabs: shell.tabState,
-    scope: conversations,
-    shown: !isIOSApp && agentPanel.open,
+    workspaceRoot: settings.agentWorkspaceRoot || null,
+    shown: agentPanel.open,
     setShown: agentPanel.setOpen,
   });
 

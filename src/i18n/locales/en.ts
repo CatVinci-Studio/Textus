@@ -1375,7 +1375,7 @@ type /name in a conversation to use one.
   tutorialPluginsBody:
     "Mind maps, Vim keys, slides, citations and more - add only what you need, from one store.",
   tutorialPluginsTask:
-    "Open the puzzle icon in the left column to see the plugins",
+    "Click the puzzle icon in the left column to open Plugins",
   tutorialConnectTitle: "Connect your AI",
   tutorialConnectBody:
     "Once it's connected, you can really try the AI features that follow.",

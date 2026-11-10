@@ -1,6 +1,5 @@
 import { linkToFile } from "./islands/link-to-file";
 import { useEffect, useRef } from "react";
-import { setReadOnlyShown } from "../document/read-only-state";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useNavHistory } from "./useNavHistory";
@@ -159,7 +158,6 @@ export function useWindowWiring({
     folderOpen: openFolder.folder !== null,
   };
   useNativeMenuChecks(menuChecks);
-  useEffect(() => setReadOnlyShown(menuChecks.readOnly), [menuChecks.readOnly]);
   useNativeMenuAccelerators(settings.shortcuts);
 
   useMenuBridge({

@@ -13,10 +13,6 @@
   border-inline-end: 1px solid var(--ui-border);
 }
 
-.providers-list > .tx-pane-top {
-  padding-inline: 0 8px;
-}
-
 .providers-item-name {
   flex: 1;
   min-width: 0;
