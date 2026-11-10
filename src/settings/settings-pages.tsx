@@ -89,7 +89,7 @@ const BUILT_IN: SettingsPageDef[] = [
     available: ai,
     label: (t) => t.navMemorySkills,
   },
-  { id: "mcp", group: "ai", available: ai, label: () => "MCP" },
+  { id: "mcp", group: "ai", available: ai, label: (t) => t.navExternalTools },
   // The iPhone's and iPad's: there plugins, themes and skills are managed
   // in Settings; the desktop has the sidebar's plugins and these pages.
   {

@@ -68,4 +68,14 @@ test("an outside agent's button opens the AI with that agent", async ({
   // Pressed again, as the AI button: its own island collapses.
   await agent.click();
   await expect(page.locator(".ai-tab")).toHaveCount(0);
+  // Listed in Settings' External tools, Manage opening its plugin's page.
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", { detail: { page: "mcp" } }),
+    ),
+  );
+  const row = page.locator(".settings-row", { hasText: "Coder" });
+  await expect(row).toBeVisible();
+  await row.getByRole("button", { name: "管理" }).click();
+  await expect(page.locator(".tab-pill").last()).toContainText("插件：");
 });

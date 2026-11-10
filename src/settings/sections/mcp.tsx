@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
   mcp,
@@ -21,7 +21,14 @@ import { explainError } from "../../utils/error-explain";
 /** Settings › Extensions › MCP: the servers Textus AI may use, each a card
  *  with its switch and state, and a form to add, change or try one. The
  *  servers run in Rust; this asks for their state. */
-export function McpSection({ t }: { t: Strings }) {
+export function McpSection({
+  t,
+  after,
+}: {
+  t: Strings;
+  /** Shown under the list, not while a server is being edited. */
+  after?: ReactNode;
+}) {
   const { settings, setSettings } = useSettings();
   const servers = settings.mcpServers;
   const [status, setStatus] = useState<McpServerStatus[]>([]);
@@ -114,6 +121,7 @@ export function McpSection({ t }: { t: Strings }) {
           <p className="plugin-empty">{t.mcpNone}</p>
         )
       }
+      footer={after}
     />
   );
 }

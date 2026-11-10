@@ -1,9 +1,11 @@
 import type { SettingsPageProps } from "./types";
 import { McpSection } from "../sections/mcp";
+import { AcpAgentsSection } from "../sections/acp-agents";
 
-/** Settings › Textus AI › MCP: the servers that give the AI more tools. */
+/** Settings › Textus AI › External tools: the MCP servers that give the AI
+ *  more tools, and the ACP agents plugins bring. */
 export function McpPage({ t, settings }: SettingsPageProps) {
   if (!settings.textusAi)
     return <p className="tx-list-note">{t.textusAiOffHint}</p>;
-  return <McpSection t={t} />;
+  return <McpSection t={t} after={<AcpAgentsSection t={t} />} />;
 }
