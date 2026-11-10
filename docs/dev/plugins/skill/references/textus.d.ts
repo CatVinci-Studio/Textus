@@ -352,6 +352,9 @@ declare global {
       /** Opens the sidebar on a tab: a plugin's sidebar tab id, or `tree`
        *  (Files) or `outline`. From 1.3.10. */
       showSidebarTab(id: string): Promise<void>;
+      /** Opens the plugin's own page in its tab - its settings, version,
+       *  permissions: where setup forms go, not a sidebar. From 1.3.13. */
+      openSettings(): Promise<void>;
       /** A web page in a tab, for a host the plugin was granted. */
       openWebPage(
         url: string,

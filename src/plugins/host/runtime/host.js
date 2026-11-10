@@ -641,6 +641,9 @@
       showSidebarTab: function (id) {
         return call("layout.showSidebarTab", { id: String(id) });
       },
+      openSettings: function () {
+        return call("layout.openSettings", {});
+      },
       openWebPage: function (url, options) {
         return call("layout.openWebPage", {
           url: String(url),

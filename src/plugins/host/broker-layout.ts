@@ -1,3 +1,4 @@
+import { emitToThisWindow } from "../../platform/menu-events";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
 import { splitLayout } from "../../engine/layout/store";
@@ -92,6 +93,11 @@ export function layoutHandlers(p: PluginScope) {
         },
         whereOf(where),
       );
+    },
+    // The plugin's own page - its settings, version, permissions - in its
+    // tab: where a form that has no place in a sidebar goes.
+    "layout.openSettings": () => {
+      emitToThisWindow("menu-plugin-command", `plugin-settings:${p.id}`);
     },
     // A sidebar tab - any plugin's, or Files and Outline - shown.
     "layout.showSidebarTab": ({ id }: Params) => {
