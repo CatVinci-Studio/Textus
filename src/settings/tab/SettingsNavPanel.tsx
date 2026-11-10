@@ -1,4 +1,5 @@
 import { Fragment, useState, useSyncExternalStore } from "react";
+import { pageComponent } from "../builtin-pages";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
@@ -58,11 +59,14 @@ export function SettingsNavPanel() {
     fixedShortcuts: [],
     pluginCommands: [],
   };
-  const searchPages: SearchablePage[] = pages.map((p) => ({
-    key: p.id,
-    name: p.label(t),
-    render: () => <p.Page {...indexProps} indexing />,
-  }));
+  const searchPages: SearchablePage[] = pages.map((p) => {
+    const Page = pageComponent(p);
+    return {
+      key: p.id,
+      name: p.label(t),
+      render: () => <Page {...indexProps} indexing />,
+    };
+  });
   return (
     <div className="settings-nav-panel">
       <div className="tx-pane-row">

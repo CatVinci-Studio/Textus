@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { pageComponent } from "../builtin-pages";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
@@ -47,6 +48,7 @@ export function SettingsTab({
   const content = useRef<HTMLDivElement>(null);
   const id = page === "updates" ? "about" : page;
   const shown = settingsPage(id) ?? settingsPages()[0];
+  const Page = pageComponent(shown);
   useEffect(() => setSettingsPageShown(shown.id), [shown.id]);
   useReveal(content, jump ?? null);
   const pageProps: SettingsPageProps = {
@@ -78,7 +80,7 @@ export function SettingsTab({
         {shown.id === "about" ? (
           <AboutPage {...pageProps} checkUpdates={page === "updates"} />
         ) : (
-          <shown.Page {...pageProps} />
+          <Page {...pageProps} />
         )}
       </div>
     </div>

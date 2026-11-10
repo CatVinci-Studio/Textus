@@ -11,25 +11,9 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
-import { AboutPage } from "./pages/AboutPage";
-import { AppearancePage, ThemeStorePage } from "./pages/AppearancePage";
-import { ChatWritingPage } from "./pages/ChatWritingPage";
-import {
-  EditExportPage,
-  EditImagesPage,
-  EditMarkdownPage,
-  EditTextPage,
-} from "./pages/EditorPage";
-import { ExtensionsPage } from "./pages/ExtensionsPage";
-import { GeneralPage } from "./pages/GeneralPage";
-import { ProvidersPage } from "./pages/ProvidersPage";
-import { MemoryPage } from "./pages/MemoryPage";
-import { McpPage } from "./pages/McpPage";
-import { ShortcutsPage } from "./pages/ShortcutsPage";
 import type { SettingsPageProps } from "./pages/types";
 
 const NAV_ICON = 15;
-import { PrivacySection } from "./sections/privacy";
 
 /** A Settings page: its id, its name in the list, its icon (a page of its
  *  own's), the group it is listed under (Appearance's, Editing's, Textus
@@ -42,7 +26,9 @@ export interface SettingsPageDef {
   group?: SettingsGroupId;
   /** Left out where it means nothing (Shortcuts on a phone). */
   available?: () => boolean;
-  Page: ComponentType<SettingsPageProps>;
+  /** A plugin's page; the built-in ones' are builtin-pages.tsx's, loaded
+   *  with Settings, not at startup. */
+  Page?: ComponentType<SettingsPageProps>;
 }
 
 export type SettingsGroupId = "look" | "edit" | "ai";
@@ -65,73 +51,62 @@ const BUILT_IN: SettingsPageDef[] = [
     id: "general",
     label: (t) => t.navGeneral,
     Icon: lucide(SlidersHorizontal, NAV_ICON),
-    Page: GeneralPage,
   },
   {
     id: "look-basic",
     group: "look",
     label: (t) => t.navLookBasic,
-    Page: AppearancePage,
   },
   {
     id: "store",
     group: "look",
     label: (t) => t.navThemeStore,
-    Page: ThemeStorePage,
   },
   {
     id: "edit-text",
     group: "edit",
     label: (t) => t.navEditText,
-    Page: EditTextPage,
   },
   {
     id: "edit-md",
     group: "edit",
     label: () => "Markdown",
-    Page: EditMarkdownPage,
   },
   {
     id: "edit-img",
     group: "edit",
     label: (t) => t.navEditImages,
-    Page: EditImagesPage,
   },
   {
     id: "edit-export",
     group: "edit",
     label: (t) => t.menuExport,
-    Page: EditExportPage,
   },
   {
     id: "providers",
     group: "ai",
     available: ai,
     label: (t) => t.navProvidersModels,
-    Page: ProvidersPage,
   },
   {
     id: "chat",
     group: "ai",
     available: ai,
     label: (t) => t.navChatWriting,
-    Page: ChatWritingPage,
   },
   {
     id: "memory",
     group: "ai",
     available: ai,
     label: (t) => t.navMemorySkills,
-    Page: MemoryPage,
   },
-  { id: "mcp", group: "ai", available: ai, label: () => "MCP", Page: McpPage },
+  { id: "mcp", group: "ai", available: ai, label: () => "MCP" },
   // The iPhone's and iPad's: there plugins, themes and skills are managed
   // in Settings; the desktop has the sidebar's plugins and these pages.
   {
     id: "extensions",
     label: (t) => t.navExtensions,
     available: () => isIOSApp,
-    Page: ExtensionsPage,
   },
   {
     id: "shortcuts",
@@ -139,19 +114,16 @@ const BUILT_IN: SettingsPageDef[] = [
     Icon: lucide(Keyboard, NAV_ICON),
     // A phone has no keyboard to bind shortcuts on.
     available: () => !isIOSApp,
-    Page: ShortcutsPage,
   },
   {
     id: "privacy",
     label: (t) => t.navPrivacyData,
     Icon: lucide(ShieldCheck, NAV_ICON),
-    Page: ({ t }) => <PrivacySection t={t} />,
   },
   {
     id: "about",
     label: (t) => t.navAbout,
     Icon: lucide(Info, NAV_ICON),
-    Page: AboutPage,
   },
 ];
 

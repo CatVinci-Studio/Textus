@@ -1,4 +1,5 @@
 import { AboutSection } from "./sections/about";
+import { pageComponent } from "./builtin-pages";
 import { GuidesSection } from "./sections/guides";
 import { SettingsGroup } from "./pages/SettingsGroup";
 import { useEffect, useRef, useState } from "react";
@@ -156,7 +157,9 @@ export function SettingsPanel({
   };
   const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);
-    return page ? <page.Page {...pageProps} indexing={indexing} /> : null;
+    if (!page) return null;
+    const Page = pageComponent(page);
+    return <Page {...pageProps} indexing={indexing} />;
   };
   const tabTitles: Partial<Record<ExtensionsTab, string>> = {
     themes: t.extensionsTabThemes,
