@@ -26,7 +26,7 @@ import {
   useWriteLesson,
 } from "./onboarding-wiring";
 import { setDocumentDrop } from "../engine/controls/document-drop";
-import { fileDropOnDocuments } from "./layout/split-drop";
+import { fileDropOnDocuments } from "./islands/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../prefs/SettingsContext";

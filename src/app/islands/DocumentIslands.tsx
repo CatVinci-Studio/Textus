@@ -1,48 +1,48 @@
-import { Island } from "../engine/layout/Island";
+import { Island } from "../../engine/layout/Island";
 import {
   IslandArea,
   type IslandContent,
   type IslandPlace,
-} from "../engine/layout/IslandArea";
-import { useChangedFiles } from "../ai/chat/file-changes";
-import { DocumentCorners } from "./islands/DocumentCorner";
-import { DocumentViews } from "./islands/DocumentViews";
-import type { Lang } from "../i18n/langs";
+} from "../../engine/layout/IslandArea";
+import { useChangedFiles } from "../../ai/chat/file-changes";
+import { DocumentCorners } from "./DocumentCorner";
+import { DocumentViews } from "./DocumentViews";
+import type { Lang } from "../../i18n/langs";
 import {
   type ComponentProps,
   type CSSProperties,
   type ReactNode,
   useLayoutEffect,
 } from "react";
-import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
   canDragTabsBetweenWindows,
   canUseWindows,
-} from "../platform/capabilities";
+} from "../../platform/capabilities";
 import {
   showsStartPage,
   tabIsDirty,
   tabTitle,
   type DocTab,
-} from "../document/doc-tabs";
-import { tabReadOnly } from "../document/read-only";
-import type { Strings } from "../i18n/strings";
-import type { TourAi } from "../utils/events";
-import type { AgentMode } from "../prefs/SettingsContext";
-import { TabBar } from "../engine/controls/tabs/TabBar";
-import { tabMenuItems } from "./tabs/tab-menu-items";
-import { FormatBar } from "./FormatBar";
-import { useSplitPanes } from "../engine/layout/useSplitPanes";
-import { islandOf, panesOf, type Pane } from "../engine/layout/tree";
+} from "../../document/doc-tabs";
+import { tabReadOnly } from "../../document/read-only";
+import type { Strings } from "../../i18n/strings";
+import type { TourAi } from "../../utils/events";
+import type { AgentMode } from "../../prefs/SettingsContext";
+import { TabBar } from "../../engine/controls/tabs/TabBar";
+import { tabMenuItems } from "../tabs/tab-menu-items";
+import { FormatBar } from "../FormatBar";
+import { useSplitPanes } from "../../engine/layout/useSplitPanes";
+import { islandOf, panesOf, type Pane } from "../../engine/layout/tree";
 import {
   focusPane,
   openBeside,
   reorderInPane,
   splitEditor,
-} from "../engine/layout/store";
-import { pullTab } from "./layout/split-drop";
-import type { ContextMenuItem } from "../engine/controls/ContextMenu";
-import { contributedContextItems } from "../engine/controls/context-menu-items";
+} from "../../engine/layout/store";
+import { pullTab } from "./split-drop";
+import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
+import { contributedContextItems } from "../../engine/controls/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 
@@ -56,9 +56,10 @@ function pluginTabItems(
 /** Panes named in reading order, for tests and styles to find. */
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
-/** The document column: the tab bar over every open tab's editor. */
+/** The documents islands: each pane of open tabs an island, its tab row over
+ *  its sheet, each tab's view on it - drawn by the engine's island area. */
 
-export function MainPane({
+export function DocumentIslands({
   tabs,
   activeTabId,
   showTabBar,

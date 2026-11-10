@@ -254,7 +254,7 @@ both together. Desktop-only code is `#[cfg(desktop)]`;
 attached to it) and `app/App.tsx` (the window) are where everything meets,
 and are kept as compositions: each calls hooks and renders components that
 live beside it (`document-view/use*.ts`, `app/useWindow*.ts`,
-`app/Sidebar.tsx`, `app/MainPane.tsx`) or in the feature's own folder
+`app/frame/Sidebar.tsx`, `app/islands/DocumentIslands.tsx`) or in the feature's own folder
 (`ai/margin/useReviewNotes.ts`, `editor/modes/...`). When you add to them,
 add a hook or a component the same way - as `WindowBar`,
 `useDraftAutosave` or `useApplyAppearance` are - rather than more code in

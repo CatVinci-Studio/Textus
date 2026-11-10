@@ -51,7 +51,7 @@
 
 /* A documents island made after the window's first layout (a split, a
    tab let go at an edge) settles in, its row with it; the others slide to
-   their new places (MainPane). The AI island has its own entrance. */
+   their new places (IslandMotion). The AI island has its own entrance. */
 [data-island="documents"][data-fresh],
 .island-row[data-island-row="documents"][data-fresh] {
   animation: motion-settle-in var(--dur-base) var(--ease-out);

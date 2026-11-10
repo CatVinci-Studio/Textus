@@ -23,7 +23,7 @@ import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
 import { Sidebar } from "./frame/Sidebar";
-import { MainPane } from "./MainPane";
+import { DocumentIslands } from "./islands/DocumentIslands";
 import { AgentPanelDock } from "./islands/AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
 import {
@@ -58,7 +58,7 @@ const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
-  // Whether the main pane's top row has tabs (MainPane says, as it knows
+  // Whether the main pane's top row has tabs (DocumentIslands says, as it knows
   // its split).
   const [tabsInBar, setTabsInBar] = useState(false);
   const shell = useWindowShell({ settings, setSettings });
@@ -207,7 +207,7 @@ function App() {
           t={t}
         />
 
-        <MainPane
+        <DocumentIslands
           tabs={tabs}
           activeTabId={activeTabId}
           showTabBar={showTabBar}
