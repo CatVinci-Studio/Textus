@@ -285,6 +285,9 @@ export function useResolvedWebview(
   const initialBlock = useRef(target.codeBlock);
   useEffect(() => {
     const made = createWebview(plugin, kind, key, resource);
+    // An answer for a page already let go (remounted, moved) is not this
+    // one's: its "No webview" must not cover the page that replaced it.
+    let current = true;
     setRecord(made);
     setError(null);
     resolveWebview(made, {
@@ -294,13 +297,17 @@ export function useResolvedWebview(
       target: initialTarget.current,
       codeBlock: initialBlock.current,
     }).catch((err) => {
+      if (!current) return;
       const message = String((err as Error)?.message ?? err);
       // Asked before the plugin had set its page up: once more, quietly.
       if (attempt === 0 && /No webview provider/.test(message))
         window.setTimeout(() => setAttempt(1), RETRY_MS);
       else setError(message);
     });
-    return () => disposeWebview(made.id);
+    return () => {
+      current = false;
+      disposeWebview(made.id);
+    };
   }, [plugin, kind, key, view, viewType, resource, attempt]);
   return { record, error, retry: () => setAttempt((n) => n + 1) };
 }

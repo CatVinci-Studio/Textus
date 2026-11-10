@@ -617,6 +617,11 @@ export function installDevTauriShim(): void {
       // native side always answers with a list.
       case "take_pending_open_paths":
         return Promise.resolve([]);
+      // Files opened from outside while the window runs: the native side
+      // hands them to the focused window as tabs - this one.
+      case "open_paths":
+        emitSoon("open-paths-as-tabs", args.paths);
+        return Promise.resolve(null);
     }
     // No fake folder: the folder of a document opened anyway (dropped in,
     // `__devFiles`) lists as empty, as the native side never answers null.
