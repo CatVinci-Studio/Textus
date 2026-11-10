@@ -116,6 +116,9 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
+              {shown.titled && (
+                <h2 className="sidebar-panel-title">{shown.label(t)}</h2>
+              )}
               <ViewTitleActions view={shown.id} />
               <shown.Panel
                 t={t}

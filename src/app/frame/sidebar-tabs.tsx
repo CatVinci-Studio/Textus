@@ -50,6 +50,9 @@ export interface SidebarTabDef {
   label: (t: Strings) => string;
   Icon: ComponentType;
   Panel: ComponentType<SidebarTabProps>;
+  /** Its name over it: a panel with no search box or header of its own
+   *  to say what it is (Outline, a plugin's page). */
+  titled?: boolean;
 }
 
 function FilesPanel({
@@ -98,6 +101,7 @@ const BUILT_IN: SidebarTabDef[] = [
     id: "outline",
     label: (t) => t.outlineTab,
     Icon: OutlineTabIcon,
+    titled: true,
     Panel: ({ activeContent, activeTabId }) => (
       <Outline content={activeContent} tabId={activeTabId} />
     ),

@@ -189,6 +189,9 @@ export function Outline({ content, tabId }: OutlineProps) {
             <span
               className={`tree-row${h.index === current ? " tree-row-active" : ""}`}
             >
+              <span className="outline-level" aria-hidden="true">
+                H{h.level}
+              </span>
               <span className="tree-label">{headingLabel(h.text)}</span>
             </span>
           </div>
