@@ -109,11 +109,13 @@ export function DocumentIslands({
 }) {
   // Files Textus AI changed: their tabs say so.
   const changed = useChangedFiles();
-  const split = useSplitPanes(
+  const kept = useSplitPanes(
     tabs.map((tab) => tab.id),
     activeTabId,
     onAdd,
   );
+  // Zen shows the tab in use alone; the split waits until Zen ends.
+  const split = zen ? null : kept;
   const phone = usePhoneLayout();
   // A phone's column has its bar of its own, not islands.
   const islands = canUseWindows;
