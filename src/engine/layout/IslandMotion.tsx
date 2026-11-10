@@ -1,6 +1,7 @@
 import { useLayoutEffect, type RefObject } from "react";
 import { FlipOnChange } from "../motion/flip";
 import { markIslandsReady } from "./Island";
+import { settleTabRows } from "./useTabRows";
 
 /**
  * The islands' motion in their area: once the window's first layout is up,
@@ -28,6 +29,7 @@ export function IslandMotion({
       easing="--ease-settle"
       // A seam dragged: the islands follow the pointer 1:1, a slide lags.
       still={() => !!document.querySelector(".tx-grip[data-gripped]")}
+      prepare={settleTabRows}
     />
   );
 }

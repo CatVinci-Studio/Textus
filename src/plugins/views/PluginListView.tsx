@@ -1,3 +1,4 @@
+import { PluginProblem } from "./PluginProblem";
 import {
   memo,
   useCallback,
@@ -237,7 +238,7 @@ export const PluginListPane = memo(function PluginListPane({
       {info?.message && (
         <div className="plugin-list-message">{info.message}</div>
       )}
-      {error && <div className="plugin-webview-problem">{error}</div>}
+      {error && <PluginProblem error={error} />}
       <div
         className="plugin-list-rows"
         role="tree"

@@ -1,3 +1,4 @@
+import { duration } from "../../engine/motion/motion";
 import {
   useCallback,
   useEffect,
@@ -112,7 +113,10 @@ export function useSidePanels(aiOn: boolean) {
   }, [aiOn, agentPanel]);
   // Both side panels play their way out before their contents go; the
   // editor makes or takes back its room at once.
-  const sidebarPresence = usePresence(panelOpen, { exitMs: 250 });
+  // Out on the islands' clock (sidebar-frame.css).
+  const sidebarPresence = usePresence(panelOpen, {
+    exitMs: duration("--dur-settle"),
+  });
   const sidebarClosing = sidebarPresence.state === "closing";
   const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
   const agentClosing = agentPresence.state === "closing";

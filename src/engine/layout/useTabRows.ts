@@ -48,6 +48,16 @@ function lengthOf(within: HTMLElement, name: string): number {
   return px;
 }
 
+/** Each mounted area's measuring, run at once. */
+const settlers = new Set<() => void>();
+
+/** Measures every tab row now, in the layout just committed: before a
+ *  slide reads where things end, so the rows' insets end there with them
+ *  instead of jumping a frame later. */
+export function settleTabRows(): void {
+  for (const settle of settlers) settle();
+}
+
 /**
  * The tabs take the window bar's row (design-language.md 5.7); each
  * island's row (IslandRow) in `pane` is measured as rowInsets says and
@@ -60,9 +70,8 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
     const main = pane.current;
     if (!main) return;
     let frame = 0;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
+    const now = () => {
+      {
         // The last of the bar's leading controls (the menu, then the
         // sidebar's toggle; the traffic lights' room in the chat window).
         const leadEnd = Math.max(
@@ -142,8 +151,23 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
               !!bar?.querySelector(":scope > .tab-pill-active:first-child"),
           );
         }
+      }
+    };
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        // Mid-slide the rows are drawn where they were: measured then,
+        // they gave insets for a place they are leaving. The slide's start
+        // measured the end already (settleTabRows); again once it is over.
+        const sliding = main
+          .getAnimations({ subtree: true })
+          .filter((a) => a.id === "flip");
+        if (sliding.length)
+          void Promise.allSettled(sliding.map((a) => a.finished)).then(measure);
+        else now();
       });
     };
+    settlers.add(now);
     measure();
     const resized = new ResizeObserver(measure);
     resized.observe(main);
@@ -161,6 +185,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
     // The pane slides with the sidebar and the AI panel.
     document.addEventListener("transitionend", measure);
     return () => {
+      settlers.delete(now);
       cancelAnimationFrame(frame);
       resized.disconnect();
       rows.disconnect();

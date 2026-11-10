@@ -1528,6 +1528,8 @@ export default {
   pluginsCatalogLoading: "正在读取列表…",
   pluginsCatalogFailed: "没能读取列表：{reason}",
   pluginsCatalogRetry: "重试",
+  pluginNeedsFolder: "打开一个文件夹后即可使用这个插件。",
+  pluginPageFailed: "这个插件暂时没能显示。",
   pluginsCatalogAllInstalled: "列表里的插件都已经装好了。",
   pluginsSearchNone: "没有和“{query}”相符的插件。",
   marketSearch: "搜索",

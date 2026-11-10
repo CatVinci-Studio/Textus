@@ -51,10 +51,20 @@
   height: 100%;
 }
 
+/* A page that couldn't be made: a quiet note and one way on. */
 .plugin-webview-problem {
-  padding: var(--space-4);
-  color: var(--ui-danger);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  color: var(--ui-muted);
   font-size: var(--text-footnote);
+  text-align: center;
+}
+
+.plugin-webview-problem > p {
+  margin: 0;
 }
 
 /* The plugin's SVG as a mask, filled with the text colour like the

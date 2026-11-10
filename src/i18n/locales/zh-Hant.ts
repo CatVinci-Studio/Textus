@@ -1534,6 +1534,8 @@ export default {
   pluginsCatalogLoading: "正在讀取清單…",
   pluginsCatalogFailed: "無法讀取清單：{reason}",
   pluginsCatalogRetry: "重試",
+  pluginNeedsFolder: "Open a folder to use this plugin.",
+  pluginPageFailed: "This plugin couldn't show its page.",
   pluginsCatalogAllInstalled: "清單裡的外掛都已經裝好了。",
   pluginsSearchNone: "沒有和「{query}」相符的外掛。",
   marketSearch: "搜尋",

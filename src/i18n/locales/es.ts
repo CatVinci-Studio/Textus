@@ -1685,6 +1685,8 @@ para usar una.
   pluginsCatalogLoading: "Cargando la lista…",
   pluginsCatalogFailed: "No se pudo cargar la lista: {reason}",
   pluginsCatalogRetry: "Reintentar",
+  pluginNeedsFolder: "Abre una carpeta para usar este plugin.",
+  pluginPageFailed: "Este plugin no pudo mostrar su página.",
   pluginsCatalogAllInstalled: "Ya tienes todos los complementos de la lista.",
   pluginsSearchNone: "Ningún complemento coincide con «{query}».",
   marketSearch: "Buscar",

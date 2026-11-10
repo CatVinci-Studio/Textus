@@ -34,7 +34,13 @@ export function play(
     duration = "--dur-settle",
     easing = "--ease-settle",
     timingFor,
-  }: Timing & { timingFor?: (el: Element) => Timing | undefined } = {},
+    prepare,
+  }: Timing & {
+    timingFor?: (el: Element) => Timing | undefined;
+    /** Lays out what follows the change (measured lengths set as styles)
+     *  before the new places are read: settled later, it jumped. */
+    prepare?: () => void;
+  } = {},
 ): void {
   if (!motionAllowed()) return;
   const targets = [...before.keys()].filter((el) => el.isConnected);
@@ -43,6 +49,7 @@ export function play(
   for (const el of targets)
     for (const running of el.getAnimations?.() ?? [])
       if (running.id === FLIP_ID) running.cancel();
+  prepare?.();
   const moves: { el: Element; dx: number; dy: number }[] = [];
   for (const el of targets) {
     const was = before.get(el)!;
@@ -160,6 +167,8 @@ export class FlipOnChange extends Component<{
   easing?: EasingToken;
   /** True while the change follows the pointer itself: no slide. */
   still?: () => boolean;
+  /** See play's `prepare`. */
+  prepare?: () => void;
 }> {
   getSnapshotBeforeUpdate(previous: { watch: unknown }): Snapshot | null {
     if (
@@ -175,8 +184,8 @@ export class FlipOnChange extends Component<{
     if (!before) return;
     // After the commit's other layout effects (a parent's may be what moves the
     // layout), but before the frame is painted.
-    const { duration, easing } = this.props;
-    queueMicrotask(() => play(before, { duration, easing }));
+    const { duration, easing, prepare } = this.props;
+    queueMicrotask(() => play(before, { duration, easing, prepare }));
   }
 
   render(): ReactNode {

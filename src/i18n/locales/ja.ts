@@ -1614,6 +1614,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogLoading: "一覧を読み込み中…",
   pluginsCatalogFailed: "一覧を読み込めませんでした: {reason}",
   pluginsCatalogRetry: "再試行",
+  pluginNeedsFolder: "フォルダを開くとこのプラグインを使えます。",
+  pluginPageFailed: "このプラグインのページを表示できませんでした。",
   pluginsCatalogAllInstalled: "一覧のプラグインはすべてインストール済みです。",
   pluginsSearchNone: "「{query}」に一致するプラグインはありません。",
   marketSearch: "検索",

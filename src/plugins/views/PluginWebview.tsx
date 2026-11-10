@@ -26,6 +26,7 @@ import {
   watchContentZoom,
 } from "./frame-zoom";
 import { createPortal } from "react-dom";
+import { PluginProblem } from "./PluginProblem";
 import {
   ContextMenu,
   type ContextMenuEntry,
@@ -63,6 +64,8 @@ export function webviewPage(record: WebviewRecord, html: string) {
 /** The tallest a code block's frame grows: at most 70% of the window, so a
  *  long table or board scrolls inside and the note around it stays in
  *  view. */
+/** How long a page asked for too early waits to be asked again (ms). */
+const RETRY_MS = 600;
 const MAX_CODE_BLOCK_HEIGHT = 1200;
 const CODE_BLOCK_SHARE = 0.7;
 const codeBlockMax = () =>
@@ -267,9 +270,14 @@ export function useResolvedWebview(
     codeBlock?: CodeBlockSeen;
   },
   resource?: string,
-): { record: WebviewRecord | null; error: string | null } {
+): {
+  record: WebviewRecord | null;
+  error: string | null;
+  retry: () => void;
+} {
   const [record, setRecord] = useState<WebviewRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const { view, viewType } = target;
   // What the view was opened with counts only when it is made.
   const initialState = useRef(target.state);
@@ -285,22 +293,30 @@ export function useResolvedWebview(
       state: initialState.current,
       target: initialTarget.current,
       codeBlock: initialBlock.current,
-    }).catch((err) => setError(String((err as Error)?.message ?? err)));
+    }).catch((err) => {
+      const message = String((err as Error)?.message ?? err);
+      // Asked before the plugin had set its page up: once more, quietly.
+      if (attempt === 0 && /No webview provider/.test(message))
+        window.setTimeout(() => setAttempt(1), RETRY_MS);
+      else setError(message);
+    });
     return () => disposeWebview(made.id);
-  }, [plugin, kind, key, view, viewType, resource]);
-  return { record, error };
+  }, [plugin, kind, key, view, viewType, resource, attempt]);
+  return { record, error, retry: () => setAttempt((n) => n + 1) };
 }
 
 function WebviewOrProblem({
   record,
   error,
+  retry,
   className,
 }: {
   record: WebviewRecord | null;
   error: string | null;
+  retry?: () => void;
   className?: string;
 }) {
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} retry={retry} />;
   if (!record) return null;
   return <PluginWebview id={record.id} className={className} />;
 }
@@ -315,7 +331,7 @@ export function PluginWebviewPanel({
   view: string;
   kind: "sidebar" | "view" | "floating";
 }) {
-  const { record, error } = useResolvedWebview(
+  const { record, error, retry } = useResolvedWebview(
     plugin,
     kind,
     `${plugin}:${view}`,
@@ -325,6 +341,7 @@ export function PluginWebviewPanel({
     <WebviewOrProblem
       record={record}
       error={error}
+      retry={retry}
       className="plugin-webview-panel"
     />
   );
@@ -338,7 +355,7 @@ export function PluginSettingsWebview({ plugin }: { plugin: string }) {
     `${plugin}:settings`,
     {},
   );
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} />;
   if (!record) return null;
   // As tall as the page: Settings scrolls, not a box inside it.
   return (
@@ -368,7 +385,7 @@ export function PluginTabPane({
   state?: unknown;
   target?: unknown;
 }) {
-  const { record, error } = useResolvedWebview(
+  const { record, error, retry } = useResolvedWebview(
     plugin,
     kind,
     `tab:${tabId}`,
@@ -380,6 +397,7 @@ export function PluginTabPane({
       <WebviewOrProblem
         record={record}
         error={error}
+        retry={retry}
         className="plugin-webview-tab"
       />
     </div>
@@ -467,7 +485,7 @@ export function PluginCodeBlock({
     told.current = now;
     codeBlockChanged(record, { ...now, meta: JSON.parse(meta) });
   }, [record, seen.source, seen.block, meta]);
-  if (error) return <div className="plugin-webview-problem">{error}</div>;
+  if (error) return <PluginProblem error={error} />;
   if (!record) return null;
   return (
     <PluginWebview

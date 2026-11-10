@@ -20,9 +20,11 @@
      them, or WebKit's Select All, selected them along with the page. */
   user-select: none;
   -webkit-user-select: none;
+  /* On the islands' clock (FlipOnChange, settle): one change, one
+     motion - on a clock of its own it tore from them mid-slide. */
   transition:
-    transform var(--dur-slow) var(--ease-spring),
-    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-settle) var(--ease-settle),
+    opacity var(--dur-settle) var(--ease-out),
     visibility 0s;
 }
 
@@ -31,9 +33,9 @@
   opacity: var(--motion-travel-fade);
   visibility: hidden;
   transition:
-    transform var(--dur-base) var(--ease-in),
-    opacity var(--dur-base) var(--ease-in),
-    visibility 0s linear var(--dur-base);
+    transform var(--dur-settle) var(--ease-settle),
+    opacity var(--dur-settle) var(--ease-in),
+    visibility 0s linear var(--dur-settle);
 }
 
 /* Below the window bar: the bar's own row stays the window's to drag. */
