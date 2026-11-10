@@ -145,16 +145,18 @@ pub async fn export_via_pandoc(
             cmd.arg("--reference-doc").arg(doc);
         }
         let mut child = cmd.spawn().map_err(|e| e.to_string())?;
-        child
+        // Pandoc may stop reading early (a bad argument): its own message
+        // then says why, not the broken pipe the write sees.
+        let written = child
             .stdin
             .take()
             .ok_or_else(|| "failed to open pandoc stdin".to_string())?
-            .write_all(markdown.as_bytes())
-            .map_err(|e| e.to_string())?;
+            .write_all(markdown.as_bytes());
         let output = child.wait_with_output().map_err(|e| e.to_string())?;
         if !output.status.success() {
             return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
         }
+        written.map_err(|e| e.to_string())?;
         Ok(())
     })
     .await

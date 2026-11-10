@@ -166,8 +166,7 @@ pub(crate) async fn open_paths(app: tauri::AppHandle, paths: Vec<String>) {
     queue_paths_to_open(&app, paths);
 }
 
-/// ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own,
-/// whatever the tab setting.
+/// ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own.
 #[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]

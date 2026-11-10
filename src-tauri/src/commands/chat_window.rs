@@ -36,8 +36,8 @@ pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
         .map(|entry| entry.scope.clone())
 }
 
-/// Everything a detached chat window needs to carry on where the embedded
-/// panel left off. `state` is opaque JSON whose shape TypeScript defines.
+/// Everything a detached chat window needs to carry on where the window's
+/// own conversation left off. `state` is opaque JSON whose shape TypeScript defines.
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct ChatHandoff {
@@ -193,7 +193,8 @@ pub fn take_chat_handoff(
     pending.0.lock().unwrap().remove(window.label())
 }
 
-/// Closes the detached chat serving this editor, if one is open (re-embedding the panel).
+/// Closes the detached chat serving this editor, if one is open (its
+/// conversation back in the window's AI tab).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn close_chat_window(

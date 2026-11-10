@@ -17,10 +17,7 @@ export const commands = {
 	 *  a file manager's open does.
 	 */
 	open_paths: (paths: string[]) => __TAURI_INVOKE<void>("open_paths", { paths }),
-	/**
-	 *  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own,
-	 *  whatever the tab setting.
-	 */
+	/**  ⌘/Ctrl-click in the sidebar's file tree: the file in a window of its own. */
 	open_path_in_new_window: (path: string) => __TAURI_INVOKE<void>("open_path_in_new_window", { path }),
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
@@ -76,7 +73,10 @@ export const commands = {
 	 *  CHAT_ADOPT_HANDOFF says another one is waiting. Destructive either way.
 	 */
 	take_chat_handoff: () => __TAURI_INVOKE<ChatHandoff | null>("take_chat_handoff"),
-	/**  Closes the detached chat serving this editor, if one is open (re-embedding the panel). */
+	/**
+	 *  Closes the detached chat serving this editor, if one is open (its
+	 *  conversation back in the window's AI tab).
+	 */
 	close_chat_window: () => __TAURI_INVOKE<void>("close_chat_window"),
 	/**
 	 *  Shows tab `id`'s page at `bounds`, making it the first time; an existing
@@ -232,8 +232,8 @@ export const commands = {
 
 /* Types */
 /**
- *  Everything a detached chat window needs to carry on where the embedded
- *  panel left off. `state` is opaque JSON whose shape TypeScript defines.
+ *  Everything a detached chat window needs to carry on where the window's
+ *  own conversation left off. `state` is opaque JSON whose shape TypeScript defines.
  */
 export type ChatHandoff = {
 	/**

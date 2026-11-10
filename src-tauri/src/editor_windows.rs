@@ -318,7 +318,6 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         return Ok(());
     };
     let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
-    #[cfg(desktop)]
     // Where the last window closed, if still on a screen, else centred on the main
     // one; no bigger than its screen.
     #[cfg(desktop)]
@@ -340,9 +339,12 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         }
     };
     let window = settings::with_boot(builder, app.handle(), "main").build()?;
+    // As every other window built with the app's chrome.
+    #[cfg(target_os = "macos")]
+    draw_at_full_frame_rate(&window);
     #[cfg(target_os = "linux")]
     end_web_process_with_window(&window);
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
     let _ = window;
     Ok(())
 }
