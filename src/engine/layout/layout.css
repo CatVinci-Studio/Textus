@@ -78,8 +78,10 @@
 }
 
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider {
-  /* Dragged, its line fills the gap between the islands. */
+  /* Dragged, its line fills the gap between the islands, up through
+     their rows of tabs. */
   --grip-line: var(--island-gap);
+  --grip-reach: var(--window-bar-height);
   background: transparent;
 }
 

@@ -36,9 +36,9 @@
 }
 
 .tx-grip[aria-orientation="horizontal"]::after {
-  width: 15px;
-  height: 3px;
-  background-size: 5px 3px;
+  width: 10px;
+  height: 2px;
+  background-size: 4px 2px;
   background-repeat: repeat-x;
   background-position: left center;
 }
@@ -49,10 +49,17 @@
 
 /* Dragged: the seam filled - its own width (--grip-line), or a hairline
    where the seam has none. */
+/* Above the window bar, where its line reaches into the bar's row. */
+.tx-grip[data-gripped] {
+  z-index: 47;
+}
+
 .tx-grip[data-gripped]::after {
-  top: 0;
+  /* Up through what tops the seam (the islands' rows of tabs): the line
+     parts the islands whole, not only their pages. */
+  top: calc(-1 * var(--grip-reach, 0px));
   width: var(--grip-line, 3px);
-  height: 100%;
+  height: calc(100% + var(--grip-reach, 0px));
   background: var(--ui-accent);
   opacity: 1;
   translate: -50% 0;
