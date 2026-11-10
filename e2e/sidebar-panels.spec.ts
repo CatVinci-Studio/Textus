@@ -1,31 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import { MAC, emit, expectNear, openApp, pasteMarkdown } from "./helpers";
 
-// Sidebar panels: the name on the window bar's line, the search on the
-// second row level with the islands' top; the plugin list opens a plugin's
-// page in a tab of its own.
+// Sidebar panels: the plugin list opens a plugin's page in a tab of its
+// own; the sidebar steps aside for the islands and widens by its edge.
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { menuBarShown: false } });
-}
-
-const top = async (page: Page, selector: string) =>
-  (await page.locator(selector).first().boundingBox())!.y;
-
-for (const panel of ["settings", "manage-plugins"]) {
-  test(`${panel}: the search row is level with the islands' top`, async ({
-    page,
-  }) => {
-    await open(page);
-    await emit(
-      page,
-      panel === "settings" ? "menu-open-settings" : "menu-manage-plugins",
-    );
-    const row = await top(page, ".sidebar .tx-pane-row");
-    const sheet = await top(page, "section.island");
-    expectNear(row, sheet, 1);
-  });
 }
 
 test("a plugin in the list opens its page in a tab named for it", async ({

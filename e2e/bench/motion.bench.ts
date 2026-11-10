@@ -126,7 +126,9 @@ async function dragEdge(page: Page, handle: string, by: number) {
   await page.mouse.up();
 }
 
-test("side panels resized by their edge", async ({ page }) => {
+test("the sidebar and the AI's island resized by their edges", async ({
+  page,
+}) => {
   await open(page);
   await pasteMarkdown(page, LONG_DOC);
   await emit(page, "menu-toggle-sidebar");
@@ -135,8 +137,9 @@ test("side panels resized by their edge", async ({ page }) => {
   await bench(page, "sidebar-drag", () =>
     dragEdge(page, ".sidebar-resizer", 120),
   );
-  await bench(page, "ai-panel-drag", () =>
-    dragEdge(page, ".agent-panel-resizer", -120),
+  // The AI is an island: the line between it and the document.
+  await bench(page, "ai-island-drag", () =>
+    dragEdge(page, ".split-divider", -120),
   );
 });
 

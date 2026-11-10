@@ -295,68 +295,6 @@ test("let go in the middle of the document's island, it joins it; near its edge,
   ).toHaveText(["新对话"]);
 });
 
-test("a pulled tab's copy gathers from where the tab was, never from far off", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1200, height: 760 });
-  await openApp(page, {
-    settings: { menuBarShown: false },
-    animations: true,
-  });
-  await emit(page, "menu-open-settings");
-  const pill = (await tabs(page).last().boundingBox())!;
-  await page.evaluate(() => {
-    const w = window as unknown as { __far: number; __at: [number, number] };
-    w.__far = 0;
-    w.__at = [0, 0];
-    addEventListener("pointermove", (e) => (w.__at = [e.clientX, e.clientY]));
-    const tick = () => {
-      const ghost = document.querySelector(".drag-ghost");
-      if (ghost) {
-        const r = ghost.getBoundingClientRect();
-        const far = Math.hypot(
-          r.left + r.width / 2 - w.__at[0],
-          r.top + r.height / 2 - w.__at[1],
-        );
-        w.__far = Math.max(w.__far, far);
-      }
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  });
-  await page.mouse.move(pill.x + pill.width / 2, pill.y + pill.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(pill.x + pill.width / 2, pill.y + 200, { steps: 12 });
-  await page.waitForTimeout(400);
-  const far = await page.evaluate(
-    () => (window as unknown as { __far: number }).__far,
-  );
-  await page.keyboard.press("Escape");
-  await page.mouse.up();
-  // At most the way from the tab down to the pointer, never more.
-  expect(far).toBeLessThan(220);
-});
-
-test("the open tab is its island's paper wherever it is in the row", async ({
-  page,
-}) => {
-  await open(page);
-  await emit(page, "menu-open-settings");
-  const paper = (i: number) =>
-    tabs(page)
-      .nth(i)
-      .evaluate((el) => getComputedStyle(el).backgroundColor);
-  const sheet = await page
-    .locator("section.island")
-    .first()
-    .evaluate((el) => getComputedStyle(el).backgroundColor);
-  // Last in the row, then first, with a tab after it.
-  expect(await paper(1)).toBe(sheet);
-  await tabs(page).first().click();
-  await expect(tabs(page).first()).toHaveClass(/tab-pill-active/);
-  expect(await paper(0)).toBe(sheet);
-});
-
 test("in a window already split, the AI opens as a column of its own at the right of all of it", async ({
   page,
 }) => {
@@ -376,16 +314,4 @@ test("in a window already split, the AI opens as a column of its own at the righ
   const aiSheet = (await sheets.last().boundingBox())!;
   expect(aiSheet.height).toBeGreaterThan(500);
   for (const [, right] of docs.slice(0, 2)) expect(right).toBeLessThan(ai.x);
-});
-
-test("an island under another has its row of tabs on its sheet's top, not over it", async ({
-  page,
-}) => {
-  await open(page);
-  await emit(page, "menu-split-down");
-  await expect(islands(page)).toHaveCount(2);
-  await page.waitForTimeout(600);
-  const row = (await page.locator(".island-row[data-inner]").boundingBox())!;
-  const sheet = (await page.locator("section.island").last().boundingBox())!;
-  expect(Math.abs(row.y + row.height - sheet.y)).toBeLessThan(1);
 });

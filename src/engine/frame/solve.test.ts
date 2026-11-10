@@ -62,6 +62,8 @@ describe("solveIslands", () => {
     const b = solveIslands(input(root)).islands.get("b")!;
     expect(b.inner).toBe(true);
     expect(b.row).toEqual({ x: 0, y: 404, w: 1200, h: 40 });
+    // Its row stands on its sheet's top, not over it.
+    expect(b.sheet.y).toBe(b.row!.y + b.row!.h);
   });
 
   it("a narrow window takes from the AI first, the document kept to its minimum", () => {
