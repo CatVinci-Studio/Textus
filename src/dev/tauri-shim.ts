@@ -1121,7 +1121,8 @@ export function installDevTauriShim(): void {
         );
       }
       case "plugin_fs_documents":
-      case "plugin_fs_search": {
+      case "plugin_fs_search":
+      case "search_folder_text": {
         const root = String(args.root).replace(/\/$/, "");
         const docs = Object.keys(folder)
           .filter(
@@ -1137,7 +1138,9 @@ export function installDevTauriShim(): void {
         if (cmd === "plugin_fs_documents")
           return Promise.resolve({ documents: docs, truncated: false });
         const needle = String(args.query).trim().toLowerCase();
-        const limit = Number(args.limit ?? 200);
+        const limit = Number(
+          args.limit ?? (cmd === "search_folder_text" ? 1000 : 200),
+        );
         const hits = docs.flatMap((doc) =>
           doc.text.split("\n").flatMap((text, at) =>
             needle && text.toLowerCase().includes(needle)

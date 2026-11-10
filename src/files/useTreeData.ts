@@ -17,13 +17,12 @@ function savedScope(): SearchScope {
   return getUiState("fileSearchScope") === "documents" ? "documents" : "all";
 }
 
-/** What the tree shows: its sort, the search's query and scope, and
+/** What the tree shows: its sort, its scope (every file or documents), and
  *  `generation`, bumped by Refresh to remount every node and re-index.
  *  `reload` re-reads only the folders named and opens them; `refresh`
  *  re-reads them as they are. */
 export function useTreeView(base: string) {
   const [generation, setGeneration] = useState(0);
-  const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TreeSort>(savedSort);
   const [scope, setScope] = useState<SearchScope>(savedScope);
   const [showHidden, setShowHidden] = useState(
@@ -42,8 +41,6 @@ export function useTreeView(base: string) {
   return {
     generation,
     setGeneration,
-    query,
-    setQuery,
     sort,
     setSort,
     scope,

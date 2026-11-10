@@ -1,0 +1,45 @@
+/* SearchField: the one search box. */
+.tx-search {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  height: var(--control-height-sm);
+  padding: 0 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+}
+
+/* The ring is drawn on the field, inside its border, not around the bare
+   input. */
+.tx-search:focus-within {
+  border-color: var(--ui-accent);
+  box-shadow: inset 0 0 0 1px var(--ui-accent);
+}
+
+.tx-search-icon {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.tx-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ui-selected-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+}
+
+.tx-search-input:focus,
+.tx-search-input:focus-visible {
+  outline: none;
+}
+
+.tx-search-input::-webkit-search-cancel-button {
+  display: none;
+}

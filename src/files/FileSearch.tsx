@@ -6,20 +6,15 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import { SearchIcon } from "../engine/controls/icons";
+import { SearchField } from "../engine/controls/SearchField";
 import { fileIconFor } from "../engine/controls/file-icons";
-import { Select } from "../engine/controls/Select";
 import { localeOf } from "../i18n/langs";
 import { nameCollator } from "../utils/name-order";
-import {
-  matchFiles,
-  searchEntries,
-  type SearchEntry,
-  type SearchScope,
-} from "./file-search";
+import { matchFiles, searchEntries, type SearchEntry } from "./file-search";
 import { pinyinEngine } from "../utils/pinyin";
 import type { Strings } from "../i18n/strings";
 import { isImeKeydown } from "../utils/ime";
@@ -97,20 +92,19 @@ function focusEditor() {
   editor?.focus();
 }
 
-/** The files matching the query in the scope, a beat behind the keystroke
+/** The files matching the query, a beat behind the keystroke
  *  so a large index can't hold up typing. */
 function useFileMatches(
   index: ReturnType<typeof useFolderIndex>["index"],
   query: string,
-  scope: SearchScope,
 ) {
   const deferredQuery = useDeferredValue(query);
   return useMemo(
     () =>
       index.kind === "ready"
-        ? matchFiles(index.entries, deferredQuery, scope)
+        ? matchFiles(index.entries, deferredQuery, "all")
         : [],
-    [index, deferredQuery, scope],
+    [index, deferredQuery],
   );
 }
 
@@ -119,23 +113,21 @@ export function FileSearch({
   refreshKey,
   query,
   onQueryChange,
-  scope,
-  onScopeChange,
   onOpen,
   focusRequest,
   onFocusHandled,
+  children,
 }: {
   root: string;
   refreshKey: number;
   query: string;
   onQueryChange: (query: string) => void;
-  /** Every file or documents only. */
-  scope: SearchScope;
-  onScopeChange: (scope: SearchScope) => void;
   onOpen: (path: string) => void;
   /** Set by the search shortcut: take the keyboard once mounted. */
   focusRequest: boolean;
   onFocusHandled: () => void;
+  /** More results, under the files' (the text found in them). */
+  children?: ReactNode;
 }) {
   const { t, settings } = useSettings();
   const collator = nameCollator(localeOf(settings.language));
@@ -156,7 +148,7 @@ export function FileSearch({
     onFocusHandled();
   }, [focusRequest, onFocusHandled]);
 
-  const matches = useFileMatches(index, query, scope);
+  const matches = useFileMatches(index, query);
   const active = Math.min(selected, Math.max(matches.length - 1, 0));
   const listId = useId();
 
@@ -186,56 +178,37 @@ export function FileSearch({
   return (
     <>
       <div className="file-search-bar">
-        <div className="file-search-field">
-          <SearchIcon className="file-search-icon" />
-          <input
-            ref={input}
-            className="file-search-input"
-            type="search"
-            value={query}
-            placeholder={t.treeSearchPlaceholder}
-            aria-label={t.treeSearchPlaceholder}
-            // A combobox: the focus stays in the box while ↑/↓ move
-            // through the results, which a screen reader follows here.
-            role="combobox"
-            aria-autocomplete="list"
-            aria-expanded={searching}
-            aria-controls={searching ? listId : undefined}
-            aria-activedescendant={
-              searching && matches.length > 0
-                ? `${listId}-${active}`
-                : undefined
-            }
-            spellCheck={false}
-            autoComplete="off"
-            onFocus={ensure}
-            onChange={(e) => {
-              onQueryChange(e.target.value);
-              setSelected(0);
-            }}
-            onKeyDown={onKeyDown}
-          />
-        </div>
-        <Select
-          className="file-search-scope"
-          value={scope}
-          aria-label={t.treeSearchScope}
-          title={t.treeSearchScope}
+        <SearchField
+          ref={input}
+          value={query}
+          placeholder={t.searchPlaceholder}
+          aria-label={t.searchPlaceholder}
+          // A combobox: the focus stays in the box while ↑/↓ move
+          // through the results, which a screen reader follows here.
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={searching}
+          aria-controls={searching ? listId : undefined}
+          aria-activedescendant={
+            searching && matches.length > 0 ? `${listId}-${active}` : undefined
+          }
+          onFocus={ensure}
           onChange={(e) => {
-            onScopeChange(e.target.value === "documents" ? "documents" : "all");
+            onQueryChange(e.target.value);
             setSelected(0);
           }}
-        >
-          <option value="all">{t.treeSearchScopeAll}</option>
-          <option value="documents">{t.treeSearchScopeDocuments}</option>
-        </Select>
+          onKeyDown={onKeyDown}
+        />
       </div>
+      {searching && (
+        <h3 className="file-search-heading">{t.searchNamesHeading}</h3>
+      )}
       {searching && (
         <div
           id={listId}
           className="file-search-results"
           role="listbox"
-          aria-label={t.treeSearchPlaceholder}
+          aria-label={t.searchNamesHeading}
         >
           {matches.map((entry, i) => {
             const Icon = fileIconFor(entry.name);
@@ -271,6 +244,7 @@ export function FileSearch({
           <SearchNote index={index} matched={matches.length > 0} t={t} />
         </div>
       )}
+      {searching && children}
     </>
   );
 }

@@ -13,9 +13,9 @@ const MAX_DOCUMENT_BYTES: u64 = 4 * 1024 * 1024;
 /// The most text `plugin_fs_documents` hands over at once.
 const MAX_TOTAL_BYTES: u64 = 64 * 1024 * 1024;
 /// The most matching lines a search returns, whatever it asks.
-const MAX_SEARCH_HITS: usize = 1000;
+pub(crate) const MAX_SEARCH_HITS: usize = 1000;
 /// How long a search reads before it stops.
-const SEARCH_TIME: Duration = Duration::from_secs(5);
+pub(crate) const SEARCH_TIME: Duration = Duration::from_secs(5);
 
 fn is_markdown(path: &Path) -> bool {
     matches!(
@@ -120,7 +120,7 @@ pub struct SearchResult {
     truncated: bool,
 }
 
-fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> SearchResult {
+pub(crate) fn search_in(root: &Path, query: &str, limit: usize, deadline: Instant) -> SearchResult {
     let needle = query.trim().to_lowercase();
     let mut hits = Vec::new();
     if needle.is_empty() {

@@ -80,6 +80,10 @@ export const fs = {
   /** Every document under `root`, for the sidebar's file-name search.
    *  Rejects with "TOO_BROAD" as the picker does. */
   indexFolder: (root: string) => command("index_folder", root),
+  /** The lines of the documents under `root` holding `query`, ignoring
+   *  case, for the Search page. Rejects as `indexFolder` does. */
+  searchFolderText: (root: string, query: string) =>
+    command("search_folder_text", root, query),
   /** Every Markdown document under `root` with its text, for the links a
    *  rename updates. Rejects as `indexFolder` does. */
   folderDocuments: (root: string) => command("folder_documents", root),

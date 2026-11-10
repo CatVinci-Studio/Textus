@@ -148,13 +148,19 @@ test("an empty window's Files tab offers the start page's three ways to begin", 
   await expect(page.locator(".sidebar-body .start-page-action")).toHaveCount(3);
 });
 
-test.describe("file name search", () => {
+test.describe("the Search page", () => {
   const search = (page: Page) =>
-    page.getByRole("combobox", { name: "Search file names" });
+    page.getByRole("combobox", { name: "Search names and text" });
+  /** Its icon in the activity rail. */
+  const openSearch = (page: Page) =>
+    page
+      .locator(".activity-rail")
+      .getByRole("button", { name: "Search" })
+      .click();
   const results = (page: Page) =>
     page.locator(".file-search-results [role=option]");
 
-  test("the shortcut opens the Files tab with the box focused", async ({
+  test("the shortcut opens the Search page with the box focused", async ({
     page,
   }) => {
     await open(page);
@@ -164,6 +170,9 @@ test.describe("file name search", () => {
     await page.locator(editor).click();
     await page.keyboard.press("ControlOrMeta+Shift+O");
     await expect(search(page)).toBeFocused();
+    await expect(
+      page.locator(".activity-rail").getByRole("button", { name: "Search" }),
+    ).toHaveAttribute("aria-pressed", "true");
   });
 
   test("filters across the folder, opens with Enter and clears with Esc", async ({
@@ -184,15 +193,21 @@ test.describe("file name search", () => {
       "chart.png",
     ]);
     await expect(results(page).first()).toContainText("novel");
-    // The tree is hidden behind the results, not gone.
-    await expect(page.locator(".tree-main")).toBeHidden();
+    // Under the names, the documents' lines holding it, its text marked.
+    await expect(page.locator(".search-text-name .tree-label")).toHaveText([
+      "ch1.md",
+      "ch2.md",
+      "ch10.md",
+    ]);
+    await expect(page.locator(".search-text-line mark").first()).toHaveText(
+      "Ch",
+    );
     await page.keyboard.press("ArrowDown");
     await expect(results(page).nth(1)).toHaveAttribute("aria-selected", "true");
     await page.keyboard.press("Enter");
     await expect(page.locator(`${editor} h1`)).toContainText("Chapter two");
     await page.keyboard.press("Escape");
     await expect(search(page)).toHaveValue("");
-    await expect(page.locator(".tree-main")).toBeVisible();
     await expect(page.locator(editor)).toBeFocused();
   });
 
@@ -217,6 +232,7 @@ test.describe("file name search", () => {
   test("opens another kind of file the way the tree does", async ({ page }) => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");
+    await openSearch(page);
     await search(page).fill("chart");
     await results(page).first().click();
     await expect(page.locator(".window-bar-title-text")).toHaveText(
@@ -230,12 +246,13 @@ test.describe("file name search", () => {
   }) => {
     await open(page);
     await openFolderFromMenu(page, "/work/notes");
-    await search(page).click();
+    await openSearch(page);
     await search(page).fill("草稿");
     await expect(results(page)).toHaveText(["第一章 草稿.mdessays"]);
     await search(page).fill("secret");
-    await expect(page.locator(".file-search-note")).toHaveText(
+    await expect(page.locator(".file-search-note")).toHaveText([
       "No file names match.",
-    );
+      "No text matches.",
+    ]);
   });
 });

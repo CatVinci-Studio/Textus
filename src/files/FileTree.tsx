@@ -18,8 +18,6 @@ import { canOpenFolder, isIOSApp } from "../platform/capabilities";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
-import { FileSearch } from "./FileSearch";
-import { type SearchScope } from "./file-search";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { setUiState } from "../storage/ui-state";
 import { TreeContext, type TreeShared, type TreeSort } from "./tree-shared";
@@ -55,9 +53,6 @@ interface FileTreeProps {
   /** A file or folder was dragged into another folder: open tabs follow
    *  it to its new path. */
   onEntryMoved: (from: string, to: string) => void;
-  /** The search shortcut asked for the search box. */
-  searchFocusRequest: boolean;
-  onSearchFocusHandled: () => void;
 }
 
 export function FileTree({
@@ -70,19 +65,16 @@ export function FileTree({
   onOpenAsFolder,
   onCloseFolder,
   onEntryMoved,
-  searchFocusRequest,
-  onSearchFocusHandled,
 }: FileTreeProps) {
   const { t } = useSettings();
   const view = useTreeView(folder ?? root);
-  const { generation, setGeneration, query, setQuery } = view;
+  const { generation, setGeneration } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
   const { showHidden, setShowHidden } = view;
   // Not on iOS: above Documents is the app's private container, and above
   // a folder picked in Files is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
   const parent = isIOSApp || root === folder ? null : parentDir(root);
-  const searching = query.trim() !== "";
   const treeRef = useRef<HTMLDivElement>(null);
   const treeKeys = useTreeKeys(treeRef);
   const desktop = !isIOSApp && canOpenFolder;
@@ -170,6 +162,17 @@ export function FileTree({
           onSelect: pick("modified"),
         },
         "separator",
+        // What the tree lists: every file, or documents and folders.
+        ...(["all", "documents"] as const).map((next) => ({
+          label:
+            next === "all" ? t.treeSearchScopeAll : t.treeSearchScopeDocuments,
+          checked: scope === next,
+          onSelect: () => {
+            setScope(next);
+            setUiState("fileSearchScope", next);
+          },
+        })),
+        "separator",
         {
           label: t.treeShowHidden,
           checked: showHidden,
@@ -181,32 +184,11 @@ export function FileTree({
       ],
     });
   };
-  const changeScope = (next: SearchScope) => {
-    setScope(next);
-    setUiState("fileSearchScope", next);
-  };
 
   return (
     <TreeContext.Provider value={shared}>
       <div className={`file-tree${drag ? " file-tree-dragging" : ""}`}>
-        {/* Not on iOS: its folders can be Files-app URLs, which the
-          backend can't walk. */}
-        {canOpenFolder && (
-          <FileSearch
-            root={folder ?? root}
-            refreshKey={generation}
-            query={query}
-            onQueryChange={setQuery}
-            scope={scope}
-            onScopeChange={changeScope}
-            onOpen={onFileSelect}
-            focusRequest={searchFocusRequest}
-            onFocusHandled={onSearchFocusHandled}
-          />
-        )}
-        {/* Hidden, not unmounted, while search results stand in for it: the
-          folders the user had open stay open. */}
-        <div className="tree-main" hidden={searching}>
+        <div className="tree-main">
           <div className="tree-toolbar">
             {/* The way up is the parent folder, by name: an arrow alone read
               as "collapse" or "scroll up". */}

@@ -4,7 +4,12 @@ import "../start-page.css";
 import type { ComponentType } from "react";
 import { FileTree } from "../../files/FileTree";
 import { Outline } from "../../files/Outline";
-import { TreeTabIcon, OutlineTabIcon } from "../../engine/controls/icons";
+import {
+  TreeTabIcon,
+  OutlineTabIcon,
+  SearchIcon,
+} from "../../engine/controls/icons";
+import { SearchPanel } from "../../files/SearchPanel";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
 import { PHONE_QUERY } from "../../engine/controls/usePhoneLayout";
 import type { Strings } from "../../i18n/strings";
@@ -27,7 +32,7 @@ export interface SidebarTabProps {
   onClose: () => void;
   /** A file or folder was dragged into another folder in the tree. */
   onEntryMoved: (from: string, to: string) => void;
-  /** The search shortcut asked for the Files tab's search box. */
+  /** The search shortcut asked for the Search tab's box. */
   searchFocusRequest: boolean;
   onSearchFocusHandled: () => void;
 }
@@ -50,8 +55,6 @@ function FilesPanel({
   onOpenFile,
   onClose,
   onEntryMoved,
-  searchFocusRequest,
-  onSearchFocusHandled,
 }: SidebarTabProps) {
   if (!openFolder.treeRoot)
     // No folder: the start page's three ways to begin, so a window with
@@ -76,8 +79,6 @@ function FilesPanel({
       onOpenAsFolder={canOpenFolder ? openFolder.openFolder : undefined}
       onCloseFolder={openFolder.closeFolder}
       onEntryMoved={onEntryMoved}
-      searchFocusRequest={searchFocusRequest}
-      onSearchFocusHandled={onSearchFocusHandled}
     />
   );
 }
@@ -96,6 +97,30 @@ const BUILT_IN: SidebarTabDef[] = [
     Panel: ({ activeContent, activeTabId }) => (
       <Outline content={activeContent} tabId={activeTabId} />
     ),
+  },
+  {
+    id: "search",
+    label: (t) => t.searchTab,
+    Icon: SearchIcon,
+    Panel: ({
+      t,
+      openFolder,
+      onOpenFile,
+      searchFocusRequest,
+      onSearchFocusHandled,
+    }) =>
+      // Over the folder the tree shows: the opened one, else the
+      // document's.
+      openFolder.treeRoot ? (
+        <SearchPanel
+          root={openFolder.folder ?? openFolder.treeRoot}
+          onOpen={(path) => onOpenFile(path)}
+          focusRequest={searchFocusRequest}
+          onFocusHandled={onSearchFocusHandled}
+        />
+      ) : (
+        <div className="file-search-note">{t.searchNoFolder}</div>
+      ),
   },
 ];
 

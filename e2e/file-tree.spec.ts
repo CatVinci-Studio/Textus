@@ -59,7 +59,7 @@ test("the parent folder's name takes the tree up a level in one click", async ({
   await expect(row(page, "other.md")).toBeVisible();
 });
 
-test("the Sort menu shows hidden files and sorts by name or by date modified; the filter keeps documents", async ({
+test("the Sort menu shows hidden files, sorts by name or by date modified, and keeps to documents", async ({
   page,
 }) => {
   await open(page, {
@@ -95,11 +95,9 @@ test("the Sort menu shows hidden files and sorts by name or by date modified; th
   ).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Escape");
 
-  // The filter beside the search box is the tree's too.
-  await page.getByRole("combobox", { name: "Show" }).click();
-  await page
-    .getByRole("option", { name: "Documents only", exact: true })
-    .click();
+  // What the tree lists is in the same menu.
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitemradio", { name: "Documents only" }).click();
   await expect(rows(page)).toHaveText(["drafts", "b.md", "a.md"]);
   expect(
     await page.evaluate(() => [

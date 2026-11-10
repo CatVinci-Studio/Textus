@@ -1,0 +1,77 @@
+/* The Search page (SearchPanel): its box, the files whose names match,
+   then the lines holding the text. Rows are the tree's (FileTree.css). */
+.file-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 2px 8px;
+}
+
+/* A result is two lines: the name, then its folder. */
+.file-search-row {
+  align-items: flex-start;
+}
+
+.file-search-row .tree-icon {
+  margin-top: 2px;
+}
+
+.file-search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.file-search-folder {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  /* Cut from the start: the folder's end is the useful part. The <bdi>
+     inside keeps its text in order. */
+  direction: rtl;
+  font-size: var(--text-caption);
+  opacity: 0.9;
+}
+
+.file-search-note {
+  padding: 8px 8px;
+  font-size: var(--text-footnote);
+  opacity: 0.65;
+  user-select: text;
+}
+
+/* Each list's small title. */
+.file-search-heading {
+  margin: 8px 8px 2px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--ui-muted);
+}
+
+/* A document holding the text, its count at the end; its lines under it,
+   indented to its name. */
+.search-text-name .tree-label {
+  flex: 1;
+}
+
+.found-count {
+  flex-shrink: 0;
+  padding: 0 8px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--ui-hover);
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.search-text-line {
+  padding-left: 32px;
+}
+
+.search-text-snippet {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}

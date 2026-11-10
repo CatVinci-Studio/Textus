@@ -68,6 +68,11 @@ export const commands = {
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
 	/**
+	 *  The lines of the documents under `root` holding `query`, ignoring case,
+	 *  for the Search page. Refuses what `index_folder` refuses.
+	 */
+	search_folder_text: (root: string, query: string) => __TAURI_INVOKE<SearchResult>("search_folder_text", { root, query }),
+	/**
 	 *  Every Markdown document under `root` with its text, for the links a rename
 	 *  in the sidebar updates. Refuses what `index_folder` refuses.
 	 */
@@ -461,6 +466,21 @@ export type SavedImage_Serialize = {
 	 *  instead of a Markdown image.
 	 */
 	embed: string | null,
+};
+
+/**  A line that holds what was searched for. */
+export type SearchHit = {
+	path: string,
+	rel: string,
+	/**  1-based. */
+	line: number,
+	text: string,
+};
+
+export type SearchResult = {
+	hits: SearchHit[],
+	/**  There may be more: the limit or the time was reached first. */
+	truncated: boolean,
 };
 
 /**  One setting and where it came from. */

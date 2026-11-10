@@ -63,10 +63,11 @@ export function useWindowDocuments({
   );
   const hasTree = openFolder.treeRoot !== null;
   const searchFiles = useCallback(() => {
-    showFiles();
+    setPanelOpen(true);
+    setPanelMode("search");
     // No tree yet: a request left standing would take the keyboard later.
     if (hasTree) setSearchFocusRequest(true);
-  }, [showFiles, hasTree]);
+  }, [setPanelOpen, setPanelMode, hasTree]);
   useWindowTitle(activeTitle);
   useSessionPaths(tabs);
   useProjectTabs(

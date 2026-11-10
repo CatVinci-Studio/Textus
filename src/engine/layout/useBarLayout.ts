@@ -8,8 +8,9 @@ import { useFullscreenMark } from "./useFullscreenMark";
 
 /**
  * This window's bar (barLayout), published on <html> for the styles:
- * data-bar-rows, and data-menu-in-rail while the app menu sits in the
- * rail's column.
+ * data-bar-rows; data-menu-in-rail while the app menu sits in the rail's
+ * column; data-side-to-top and data-rail-to-top while those columns reach
+ * the window's top.
  */
 export function useBarLayout({
   menuBarShown,
@@ -28,15 +29,22 @@ export function useBarLayout({
     zen,
     fullscreen,
   });
-  const { rows, menuInRail } = layout;
+  const { rows, menuInRail, sideToTop, railToTop } = layout;
   useLayoutEffect(() => {
     const root = document.documentElement;
     root.dataset.barRows = String(rows);
     root.toggleAttribute("data-menu-in-rail", menuInRail);
+    root.toggleAttribute("data-side-to-top", sideToTop);
+    root.toggleAttribute("data-rail-to-top", railToTop);
     return () => {
       delete root.dataset.barRows;
-      root.removeAttribute("data-menu-in-rail");
+      for (const name of [
+        "data-menu-in-rail",
+        "data-side-to-top",
+        "data-rail-to-top",
+      ])
+        root.removeAttribute(name);
     };
-  }, [rows, menuInRail]);
+  }, [rows, menuInRail, sideToTop, railToTop]);
   return layout;
 }

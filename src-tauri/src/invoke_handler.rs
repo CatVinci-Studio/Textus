@@ -64,6 +64,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         save_file_dialog,
         list_dir,
         commands::folder::index_folder,
+        commands::folder::search_folder_text,
         commands::folder::folder_documents,
         read_text_file,
         commands::word_import::open_word_document,

@@ -20,6 +20,12 @@ export interface BarLayout {
   lead: BarItem[];
   /** The app menu sits in the rail's column. */
   menuInRail: boolean;
+  /** Nothing of the bar's lies over the sidebar's column (no traffic
+   *  lights): the sidebar reaches the window's top. */
+  sideToTop: boolean;
+  /** Nothing over the rail's column either (a Mac in full screen): the
+   *  rail starts at the top too. */
+  railToTop: boolean;
 }
 
 export function barLayout({
@@ -37,19 +43,29 @@ export function barLayout({
   zen: boolean;
   fullscreen: boolean;
 }): BarLayout {
+  const none = { menuInRail: false, sideToTop: false, railToTop: false };
   // An iPhone or iPad: its menu, the sidebar opened from its own bar.
-  if (platform === "ios") return { rows: 1, lead: ["menu"], menuInRail: false };
+  if (platform === "ios") return { rows: 1, lead: ["menu"], ...none };
   const railShown = rail && !zen;
   const toggle: BarItem[] = railShown ? [] : ["sidebar-toggle"];
+  // In full screen the lights are gone: with the rail, the bar leaves the
+  // left columns alone.
   if (platform === "macos")
     return {
       rows: 1,
       lead: [...(fullscreen ? [] : (["lights"] as BarItem[])), ...toggle],
-      menuInRail: false,
+      ...none,
+      sideToTop: fullscreen && railShown,
+      railToTop: fullscreen && railShown,
     };
   // In Zen no documents' tabs need a row under the menu bar: it shares
   // the bar's row with the AI island's.
-  if (menuBar)
-    return { rows: zen ? 1 : 2, lead: ["menu-bar"], menuInRail: false };
-  return { rows: 1, lead: ["menu", ...toggle], menuInRail: railShown };
+  if (menuBar) return { rows: zen ? 1 : 2, lead: ["menu-bar"], ...none };
+  return {
+    rows: 1,
+    lead: ["menu", ...toggle],
+    ...none,
+    menuInRail: railShown,
+    sideToTop: railShown,
+  };
 }

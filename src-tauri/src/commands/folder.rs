@@ -41,7 +41,10 @@ fn index(root: &Path, limits: &Limits) -> FolderIndex {
 
 /// `read` on the folder `root`, off the main thread. Refuses the home folder
 /// and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
-async fn read_folder<T: Send + 'static>(root: String, read: fn(&Path) -> T) -> Result<T, String> {
+async fn read_folder<T: Send + 'static>(
+    root: String,
+    read: impl FnOnce(&Path) -> T + Send + 'static,
+) -> Result<T, String> {
     crate::commands::fs::require_non_empty(&root)?;
     tauri::async_runtime::spawn_blocking(move || {
         let root = PathBuf::from(root);
@@ -73,6 +76,21 @@ pub async fn folder_documents(
     root: String,
 ) -> Result<crate::plugins::workspace::WorkspaceDocuments, String> {
     read_folder(root, crate::plugins::workspace::documents_in).await
+}
+
+/// The lines of the documents under `root` holding `query`, ignoring case,
+/// for the Search page. Refuses what `index_folder` refuses.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn search_folder_text(
+    root: String,
+    query: String,
+) -> Result<crate::plugins::workspace::SearchResult, String> {
+    use crate::plugins::workspace::{search_in, MAX_SEARCH_HITS, SEARCH_TIME};
+    read_folder(root, move |root| {
+        search_in(root, &query, MAX_SEARCH_HITS, std::time::Instant::now() + SEARCH_TIME)
+    })
+    .await
 }
 
 /// File > Open Folder…: a folder picker. The home folder or a drive root is
