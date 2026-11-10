@@ -12,6 +12,42 @@ import { scaledPx } from "../tokens/chrome-scale";
 import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
 import { usePresenceProps } from "../motion/usePresence";
 
+export type BubbleSide = "above" | "below" | "left" | "right";
+
+/** The side a bubble takes, `side` or the one across from it, whichever
+ *  fits (`side` when neither does). */
+function placeSide(
+  side: BubbleSide,
+  box: DOMRect,
+  width: number,
+  height: number,
+  space: number,
+): BubbleSide {
+  const margin = 8;
+  const fits: Record<BubbleSide, boolean> = {
+    above: box.top - space - height >= margin,
+    below: box.bottom + space + height <= window.innerHeight - margin,
+    left: box.left - space - width >= margin,
+    right: box.right + space + width <= window.innerWidth - margin,
+  };
+  const across: Record<BubbleSide, BubbleSide> = {
+    above: "below",
+    below: "above",
+    left: "right",
+    right: "left",
+  };
+  return fits[side] || !fits[across[side]] ? side : across[side];
+}
+
+/** The edge of the bubble its tail leaves from: the one facing the
+ *  element. */
+const TAIL: Record<BubbleSide, string> = {
+  above: "bottom",
+  below: "top",
+  left: "right",
+  right: "left",
+};
+
 /** How far the tail stays from the bubble's corners. */
 const TAIL_INSET = 12;
 
@@ -34,7 +70,7 @@ export function Bubble({
   ...rest
 }: {
   anchor: RefObject<HTMLElement | null>;
-  side?: "above" | "below";
+  side?: BubbleSide;
   align?: "center" | "start";
   /** Between the element and the tail's tip, in design px. */
   gap: number;
@@ -42,7 +78,11 @@ export function Bubble({
   children: ReactNode;
 } & Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">) {
   const ref = useRef<HTMLDivElement>(null);
-  const [at, setAt] = useState({ x: 0, y: 0, above: false });
+  const [at, setAt] = useState<{ x: number; y: number; side: BubbleSide }>({
+    x: 0,
+    y: 0,
+    side,
+  });
   // The bubble's size is known only once in the DOM, so it is placed in a
   // layout effect, before the first paint.
   useLayoutEffect(() => {
@@ -52,32 +92,43 @@ export function Bubble({
     const width = el.offsetWidth;
     const height = el.offsetHeight;
     const space = scaledPx(gap);
-    const aboveY = box.top - space - height;
-    const belowY = box.bottom + space;
-    const fitsAbove = aboveY >= 8;
-    const fitsBelow = belowY + height <= window.innerHeight - 8;
-    const above =
-      side === "above" ? fitsAbove || !fitsBelow : !fitsBelow && fitsAbove;
+    const placed = placeSide(side, box, width, height, space);
+    const across = placed === "left" || placed === "right";
     setAt({
-      x: align === "start" ? box.left : box.left + box.width / 2 - width / 2,
-      y: above ? aboveY : belowY,
-      above,
+      x: across
+        ? placed === "right"
+          ? box.right + space
+          : box.left - space - width
+        : align === "start"
+          ? box.left
+          : box.left + box.width / 2 - width / 2,
+      y: across
+        ? box.top + box.height / 2 - height / 2
+        : placed === "above"
+          ? box.top - space - height
+          : box.bottom + space,
+      side: placed,
     });
   }, [anchor, side, align, gap, children]);
   const pos = useViewportClamp(ref, at.x, at.y);
 
-  // The tail under the element's middle, wherever the clamp moved the body.
+  // The tail at the element's middle, wherever the clamp moved the body:
+  // along its top or bottom edge, or its left or right one.
+  const across = at.side === "left" || at.side === "right";
   const [tailAt, setTailAt] = useState<number | null>(null);
   useLayoutEffect(() => {
     const box = anchor.current?.getBoundingClientRect();
-    const width = ref.current?.offsetWidth ?? 0;
-    if (!box || !width) return;
+    const el = ref.current;
+    const length = (across ? el?.offsetHeight : el?.offsetWidth) ?? 0;
+    if (!box || !length) return;
     const inset = scaledPx(TAIL_INSET);
-    const middle = box.left + box.width / 2 - pos.left;
+    const middle = across
+      ? box.top + box.height / 2 - pos.top
+      : box.left + box.width / 2 - pos.left;
     setTailAt(
-      Math.min(Math.max(middle, inset), Math.max(inset, width - inset)),
+      Math.min(Math.max(middle, inset), Math.max(inset, length - inset)),
     );
-  }, [anchor, pos.left, children]);
+  }, [anchor, across, pos.left, pos.top, children]);
 
   const presence = usePresenceProps(ref);
   return createPortal(
@@ -85,7 +136,7 @@ export function Bubble({
       {...rest}
       {...presence}
       className={className}
-      data-bubble-tail={at.above ? "bottom" : "top"}
+      data-bubble-tail={TAIL[at.side]}
       style={
         {
           ...style,

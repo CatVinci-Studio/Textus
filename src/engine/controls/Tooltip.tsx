@@ -13,7 +13,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { Bubble } from "./Bubble";
+import { Bubble, type BubbleSide } from "./Bubble";
 import { Presence } from "../motion/usePresence";
 import "./Tooltip.css";
 import { useTipTimer } from "./useTipTimer";
@@ -61,7 +61,7 @@ export function Tooltip({
   description?: string | null;
   /** Where it prefers to sit; it moves to the other side when there is
    *  no room. "above" for buttons along the bottom (the composer). */
-  side?: "above" | "below";
+  side?: BubbleSide;
   children: ReactElement<TriggerProps>;
 }) {
   const [open, setOpenState] = useState(false);
@@ -186,7 +186,7 @@ function TooltipBubble({
 }: {
   id: string;
   anchor: RefObject<HTMLElement | null>;
-  side: "above" | "below";
+  side: BubbleSide;
   children: string;
 }) {
   return (

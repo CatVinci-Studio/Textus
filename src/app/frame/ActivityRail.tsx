@@ -77,7 +77,7 @@ export function ActivityRail({
       {shownTabs.map(({ id, label, Icon }) => {
         const on = sidebarOpen && shownId === id;
         return (
-          <Tooltip key={id} text={label(t)}>
+          <Tooltip key={id} text={label(t)} side="right">
             <button
               type="button"
               className="activity-rail-item"
@@ -104,7 +104,7 @@ export function ActivityRail({
         );
       })}
       {/* Settings at the column's foot, out of the tabs' order. */}
-      <Tooltip text={t.settingsTitle}>
+      <Tooltip text={t.settingsTitle} side="right">
         <button
           type="button"
           className="activity-rail-item activity-rail-settings"

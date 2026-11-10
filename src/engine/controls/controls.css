@@ -421,6 +421,12 @@ input[type="range"].tx-slider {
 [data-bubble-tail="bottom"] {
   transform-origin: var(--tail-at, 50%) 100%;
 }
+[data-bubble-tail="left"] {
+  transform-origin: 0 var(--tail-at, 50%);
+}
+[data-bubble-tail="right"] {
+  transform-origin: 100% var(--tail-at, 50%);
+}
 [data-bubble-tail]::after {
   content: "";
   position: absolute;
