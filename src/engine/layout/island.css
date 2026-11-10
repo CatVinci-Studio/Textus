@@ -154,6 +154,20 @@
   background: var(--ui-hover);
 }
 
+/* Between two tabs at rest, a short mark at their middle (as Chrome's):
+   none beside the open tab, the one pointed at, or after the last. */
+:root .island-row > .tab-bar > .tab-pill:has(+ .tab-pill) {
+  background: linear-gradient(var(--tab-divider), var(--tab-divider)) right
+    calc(50% - var(--tab-lift) / 2) / 1px 1.1em no-repeat;
+}
+
+:root
+  .island-row
+  > .tab-bar
+  > .tab-pill:is(:hover, :has(+ :is(.tab-pill-active, .tab-pill:hover))) {
+  background-image: none;
+}
+
 /* Open, it is its island's own top: the page's colour, over the row's
    line. */
 :root .island-row > .tab-bar > .tab-pill-active {
