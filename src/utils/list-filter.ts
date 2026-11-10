@@ -93,18 +93,51 @@ function score(
   if (every) return 3;
   const chars = pinyin ? list.pinyin[i] : undefined;
   // No reading starts with its first letter: no need to spell it out.
-  if (!chars || !list.initials[i].includes(query[0])) return -1;
-  return pinyinIndexOf(chars, query) >= 0 ? 4 : -1;
+  if (
+    chars &&
+    list.initials[i].includes(query[0]) &&
+    pinyinIndexOf(chars, query) >= 0
+  )
+    return 4;
+  if (query.length < 2) return -1;
+  // The first letters of its words ("pln" for "Plan Notes"), then its
+  // letters in order with others between ("pln" for "plan.md").
+  if (initialsOf(label).startsWith(query.replace(/\s+/g, ""))) return 5;
+  return spanOf(label, query) >= 0 ? 6 : -1;
 }
 
-const BUCKETS = 5;
+/** The first letter of each word of `label`. */
+function initialsOf(label: string): string {
+  let out = "";
+  for (let i = 0; i < label.length; i++)
+    if (label[i] !== " " && (i === 0 || WORD_EDGE.test(label[i - 1])))
+      out += label[i];
+  return out;
+}
+
+/** How far `label` runs to hold `query`'s letters in order (spaces in the
+ *  query ignored), or -1 if it doesn't: the shorter, the closer a match. */
+function spanOf(label: string, query: string): number {
+  let from = -1;
+  let at = -1;
+  for (const ch of query) {
+    if (ch === " ") continue;
+    at = label.indexOf(ch, at + 1);
+    if (at < 0) return -1;
+    if (from < 0) from = at;
+  }
+  return at - from;
+}
+
+const BUCKETS = 7;
 
 /**
  * The best `limit` items for `query`: the label starting with it (shortest
  * first), then a
  * word of it starting with it, then containing it, then every word in the
- * label or keywords, then the label spelt in pinyin; the provider's order
- * within each. An empty query keeps the provider's order.
+ * label or keywords, then the label spelt in pinyin, then the first letters
+ * of its words, then its letters in order with others skipped (tightest
+ * first); the provider's order within each. An empty query keeps the provider's order.
  */
 export function rankList<T extends Filterable>(
   list: PreparedList<T>,
@@ -126,6 +159,10 @@ export function rankList<T extends Filterable>(
   // Of the labels starting with it, the closest - "smile" before "smiley" -
   // first; the provider's order between those as long.
   buckets[0].sort((a, b) => list.labels[a].length - list.labels[b].length);
+  // Letters skipped: the tightest run first.
+  buckets[6].sort(
+    (a, b) => spanOf(list.labels[a], needle) - spanOf(list.labels[b], needle),
+  );
   const out: T[] = [];
   for (const bucket of buckets)
     for (const i of bucket) {
