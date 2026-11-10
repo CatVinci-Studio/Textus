@@ -140,35 +140,29 @@ export function splitAtEdge(tabId: string, side: Side): void {
   if (next) setSplitLayout(next);
 }
 
-/** The layout an island was filled from, for Restore, and the filled
- *  root (as JSON): Restore stands while nothing else has moved. */
-let filled: { id: string; from: SplitLayout; to: string } | null = null;
-
 /** Island `id` at `share` of its row or column (1/3, 1/2, 2/3). */
 export function sizeIsland(id: string, share: number): void {
   if (layout) setSplitLayout(sizePane(layout, id, share));
 }
 
-/** Whether island `id` is filled and nothing has moved since. */
-export function islandFilled(id: string): boolean {
-  return (
-    filled?.id === id && !!layout && JSON.stringify(layout.root) === filled.to
-  );
+let zoomed: string | null = null;
+
+/** The island filling the documents' area, the others put away for now
+ *  (useSplitPanes); null for none. */
+export function zoomedIsland(): string | null {
+  return zoomed;
 }
 
-/** Island `id` as large as its neighbours let it be; again, back as it
- *  was. */
-export function fillIsland(id: string): void {
-  if (!layout) return;
-  if (filled && islandFilled(id)) {
-    const back = filled.from;
-    filled = null;
-    setSplitLayout(back);
-    return;
-  }
-  const to = sizePane(layout, id, 1);
-  filled = { id, from: layout, to: JSON.stringify(to.root) };
-  setSplitLayout(to);
+/** Island `id` fills the area, or, filled already, the others come back. */
+export function fillIsland(id: string | null): void {
+  const next = id === zoomed ? null : id;
+  if (next === zoomed) return;
+  zoomed = next;
+  publish();
+}
+
+export function islandFilled(id: string): boolean {
+  return zoomed === id;
 }
 
 /** The AI island shown or not, as Textus AI's button has it; opened, it
