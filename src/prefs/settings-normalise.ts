@@ -115,6 +115,13 @@ function readSettings(parsed: Raw | null): Settings {
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      // A profile from before 1.3.13 kept it off, the old default: on once,
+      // then as the user leaves it.
+      formatBar:
+        parsed.formatBarOnce === true && typeof parsed.formatBar === "boolean"
+          ? parsed.formatBar
+          : true,
+      formatBarOnce: true,
       onboardingShown:
         typeof parsed.onboardingShown === "boolean"
           ? parsed.onboardingShown

@@ -158,6 +158,9 @@ export interface Settings {
   typewriterMode: boolean;
   /** The formatting row under the title bar. */
   formatBar: boolean;
+  /** formatBar has been turned on once for a profile from before it was
+   *  on by default (settings-normalise.ts). */
+  formatBarOnce: boolean;
   /** Every document zoomed together, not each tab its own (documents
    *  only: Settings, plugin pages and the AI aren't zoomed). */
   zoomTogether: boolean;
@@ -324,6 +327,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyPort: "",
   typewriterMode: false,
   formatBar: true,
+  formatBarOnce: true,
   zoomTogether: false,
   viewMode: "rich",
   zenMode: false,

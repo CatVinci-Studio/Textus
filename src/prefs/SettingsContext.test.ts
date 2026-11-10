@@ -108,6 +108,19 @@ describe("settings from a build with features since taken out", () => {
     );
     expect(loadSettings().revisionDisplay).toBe("final");
   });
+
+  it("turn on the format bar once for a profile that kept the old default", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", formatBar: false }),
+    );
+    expect(loadSettings().formatBar).toBe(true);
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ language: "zh", formatBar: false, formatBarOnce: true }),
+    );
+    expect(loadSettings().formatBar).toBe(false);
+  });
 });
 
 describe("colour swatches", () => {
