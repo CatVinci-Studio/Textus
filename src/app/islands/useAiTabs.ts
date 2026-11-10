@@ -61,6 +61,8 @@ export function useAiTabs({
   const history = useChatHistory();
   useSyncExternalStore(onAiMounts, aiMountsVersion);
   const had = useRef<ReadonlySet<string>>(new Set());
+  // The window's first tabs: shown as it opens, the document stays in use.
+  const opening = useRef(true);
 
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
@@ -109,6 +111,8 @@ export function useAiTabs({
         ...prev.filter((tab) => !gone.includes(tab.id)),
         ...made,
       ]);
+    const starting = opening.current;
+    opening.current = false;
     if (made.length) {
       // Beside the AI's other tabs; the first in an island of its own on
       // the right of everything.
@@ -116,8 +120,8 @@ export function useAiTabs({
       requestAnimationFrame(() => {
         const layout = splitLayout();
         const home = kept && layout && paneWithTab(layout.root, kept.id);
-        // Opened, the AI is what is in use.
-        if (!home) tabs.setActiveTabId(made[0].id);
+        // Opened with the button, the AI is what is in use.
+        if (!home && !starting) tabs.setActiveTabId(made[0].id);
         for (const tab of made) {
           if (home) moveToPane(tab.id, home.id);
           else {

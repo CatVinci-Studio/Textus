@@ -421,8 +421,10 @@ for (const lang of LANGS) {
         },
         // Larger words for a small card.
         settings: { enableCompletion: true },
-        storage: panel ? { "textus-agent-panel-open": "1" } : {},
       });
+      // The AI's conversation, opened as a person opens it.
+      if (panel)
+        await page.getByRole("button", { name: "Textus AI" }).first().click();
     }
 
     /** The note's paragraph the edit rewrites. */
@@ -569,6 +571,8 @@ for (const lang of LANGS) {
     });
 
     test("ai: skills", async ({ page }) => {
+      // Create fills its tab: a small window keeps its composer's words large.
+      await page.setViewportSize({ width: 760, height: 600 });
       await start(page, {
         lang,
         file: {
@@ -594,7 +598,7 @@ for (const lang of LANGS) {
     });
 
     test("ai: models", async ({ page }) => {
-      await page.setViewportSize({ width: 860, height: 900 });
+      await page.setViewportSize({ width: 860, height: 1100 });
       await start(page, {
         lang,
         file: {
@@ -609,19 +613,21 @@ for (const lang of LANGS) {
           }
         ).__devEmitTauriEvent("menu-open-settings"),
       );
-      await page
-        .locator(".settings-nav-item", { hasText: "Textus AI" })
-        .click();
-      await page.locator(".provider-picker .combobox-trigger").click();
-      const list = page.locator(".combobox-list");
-      await expect(list).toBeVisible();
-      await card(
-        page,
-        lang,
-        "ai-models",
-        [page.locator(".provider-picker .combobox-trigger"), list],
-        { margin: 0 },
+      // Textus AI › Providers & models: the model choice over the
+      // providers, list and picked one side by side.
+      await page.evaluate(() =>
+        window.dispatchEvent(
+          new CustomEvent("textus:open-settings-page", {
+            detail: { page: "providers" },
+          }),
+        ),
       );
+      // The providers, list and picked one side by side.
+      const providers = page.locator(".providers-page");
+      await providers.scrollIntoViewIfNeeded();
+      await expect(providers.locator(".providers-detail")).toBeVisible();
+      await page.waitForTimeout(400);
+      await card(page, lang, "ai-models", [providers], { margin: 12 });
     });
 
     /** The plugin cards' notes: the sample's linked notes, on disk. */
@@ -798,7 +804,7 @@ for (const lang of LANGS) {
       if (await page.locator(".sidebar.sidebar-collapsed").count())
         await emitTo(page, "menu-toggle-sidebar");
       await page
-        .locator(".sidebar-tabs")
+        .locator(".activity-rail")
         .getByRole("button", {
           name: pluginWord(
             "catvinci.version-history",
