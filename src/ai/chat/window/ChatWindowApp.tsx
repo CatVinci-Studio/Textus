@@ -18,6 +18,7 @@ import "../AgentTurnView.css";
 import "../inline-chat.css";
 import { TextusAiOffNote } from "../../TextusAiSwitch";
 import "./chat-window.css";
+import { IslandSheet } from "../../../ui/Island";
 
 /**
  * The chat as its own OS window: the cross-file surface, following the user's
@@ -65,51 +66,39 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   // note, and comes back as it was once Textus AI is on again.
   if (!settings.textusAi)
     return (
-      <div
-        className="chat-window"
-        data-layout={settings.layout}
-        data-islands=""
-      >
+      <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <div className="chat-window-ai-off" data-island="">
+        <IslandSheet kind="ai" className="chat-window-ai-off">
           <TextusAiOffNote />
-        </div>
+        </IslandSheet>
         {dialogs}
       </div>
     );
   if (lost)
     return (
-      <div
-        className="chat-window"
-        data-layout={settings.layout}
-        data-islands=""
-      >
+      <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <div className="chat-window-lost" data-island="">
+        <IslandSheet kind="ai" className="chat-window-lost">
           {t.chatWindowLost}
-        </div>
+        </IslandSheet>
         {dialogs}
       </div>
     );
   if (!claimed || !context)
     return (
-      <div
-        className="chat-window"
-        data-layout={settings.layout}
-        data-islands=""
-      >
+      <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <div className="chat-window-loading" data-island="">
+        <IslandSheet kind="ai" className="chat-window-loading">
           {t.agentThinking}
-        </div>
+        </IslandSheet>
         {dialogs}
       </div>
     );
 
   return (
-    <div className="chat-window" data-layout={settings.layout} data-islands="">
+    <div className="chat-window" data-layout={settings.layout}>
       {header}
-      <div className="chat-window-body" data-island="">
+      <IslandSheet kind="ai" className="chat-window-body">
         <ChatBody
           document={context.document}
           selectedText={context.selectedText}
@@ -146,7 +135,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
             onReveal: () => sendScoped(CHAT_TO_EDITOR.revealSelection, {}),
           }}
         />
-      </div>
+      </IslandSheet>
       {dialogs}
     </div>
   );

@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-  type CSSProperties,
   type ReactNode,
 } from "react";
 import { TabBar } from "../tabs/TabBar";
@@ -47,8 +46,8 @@ const ask = (what: "new" | "pop-out") =>
   window.dispatchEvent(new CustomEvent(AGENT_TABS_EVENT, { detail: what }));
 
 /**
- * The AI island's row of tabs (layout.css), in the window bar's row over
- * it: a tab a conversation open in this folder, + a new one, the window's
+ * The AI island's tabs, for its row (IslandRow), in the window bar's row
+ * over it: a tab a conversation open in this folder, + a new one, the window's
  * own tab bar for all the rest - order, close, menu; those past its room
  * list behind the row's own button (TabBar). A tab's menu also opens the folder's memory.
  * `scope` is the folder (conversation-scope); a draft never saved has one
@@ -60,8 +59,6 @@ export function AgentTabs({
   onNew = () => ask("new"),
   popOut = true,
   end,
-  paneId,
-  style,
   inner,
   t,
 }: {
@@ -69,10 +66,7 @@ export function AgentTabs({
   onNew?: () => void;
   popOut?: boolean;
   end?: ReactNode;
-  /** Its island's pane, its cell in the split's grid, and whether it is
-   *  a row below another pane (not the window bar's). */
-  paneId?: string;
-  style?: CSSProperties;
+  /** Its row is below another island's, not in the window bar's. */
   inner?: boolean;
   t: Strings;
 }) {
@@ -90,14 +84,7 @@ export function AgentTabs({
   const memory = panel.tab === "memory";
   const islandMenu = agentIslandMenu(t, panel.setTab, onNew);
   return (
-    <div
-      className="agent-tabs-row"
-      // An island's row wherever it is, a clean sheet's side too.
-      data-islands=""
-      data-pane-id={paneId}
-      data-inner={inner || undefined}
-      style={style}
-    >
+    <>
       <TabBar
         inner={inner}
         tabs={ids.map((id) => ({ id, title: title(id), dirty: false }))}
@@ -141,8 +128,8 @@ export function AgentTabs({
           all: t.menuAllTabs,
         }}
       />
-      <div className="agent-tabs-actions">{end}</div>
-    </div>
+      {end && <div className="agent-tabs-actions">{end}</div>}
+    </>
   );
 }
 

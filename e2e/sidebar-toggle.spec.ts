@@ -91,13 +91,17 @@ test("with the activity rail, the window shows its tabs, one or many, + beside t
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
-  await expect(page.locator(".main-pane > .tab-bar .tab-pill")).toHaveCount(1);
   await expect(
-    page.locator(".main-pane > .tab-bar .tab-bar-add"),
+    page.locator("[data-island-row=documents] > .tab-bar .tab-pill"),
+  ).toHaveCount(1);
+  await expect(
+    page.locator("[data-island-row=documents] > .tab-bar .tab-bar-add"),
   ).toBeVisible();
   // The rail turned off: the title, centred over the document column.
   await changeSettings(page, { activityRail: false });
-  await expect(page.locator(".main-pane > .tab-bar")).toHaveCount(0);
+  await expect(
+    page.locator("[data-island-row=documents] > .tab-bar"),
+  ).toHaveCount(0);
   expectNear(
     await centre(page, ".window-bar-title"),
     await centre(page, ".main-pane"),

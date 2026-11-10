@@ -128,7 +128,7 @@ test("a new tab opens in the pane in use; closing a pane's last tab ends the spl
     "data-active-tab",
     "true",
   );
-  const bars = page.locator(".main-pane-split > .tab-bar");
+  const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
   await expect(bars).toHaveCount(2);
   await expect(bars.first().locator('[role="tab"]')).toHaveCount(2);
   await expect(bars.last().locator('[role="tab"]')).toHaveCount(1);
@@ -152,7 +152,7 @@ test("a tab dragged onto the other pane moves into its tab bar", async ({
     await expect(page.locator(panes)).toHaveCount(2, { timeout: 500 });
   }).toPass();
   await emit(page, "menu-new-file");
-  const bars = page.locator(".main-pane-split > .tab-bar");
+  const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
   await expect(bars.first().locator('[role="tab"]')).toHaveCount(2);
   await pasteMarkdown(page, "# Three");
   const three = bars.first().locator('[role="tab"][aria-selected="true"]');
@@ -186,7 +186,10 @@ async function splitThree(page: Page) {
   await emit(page, "menu-new-file");
   // The new tab in front first, or the paste goes into Two.
   await expect(
-    page.locator(".main-pane-split > .tab-bar").first().locator('[role="tab"]'),
+    page
+      .locator(".main-pane-split > .island-row > .tab-bar")
+      .first()
+      .locator('[role="tab"]'),
   ).toHaveCount(2);
   await pasteMarkdown(page, "# Three");
   await expect(page.locator('[data-active-tab="true"] h1')).toContainText(
@@ -196,7 +199,7 @@ async function splitThree(page: Page) {
 
 /** Each pane's tab titles: its bar's, in order. */
 async function barTitles(page: Page) {
-  const bars = page.locator(".main-pane-split > .tab-bar");
+  const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
   return [
     await bars.first().locator('[role="tab"]').allTextContents(),
     await bars.last().locator('[role="tab"]').allTextContents(),
@@ -208,7 +211,7 @@ for (const way of ["along the bars", "down and across"])
     page,
   }) => {
     await splitThree(page);
-    const bars = page.locator(".main-pane-split > .tab-bar");
+    const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
     const three = bars.first().locator('[role="tab"][aria-selected="true"]');
     const from = (await three.boundingBox())!;
     const before = (await bars.last().locator('[role="tab"]').boundingBox())!;
@@ -243,7 +246,7 @@ test("a pulled tab whose release the page never heard is let go at the next move
   page,
 }) => {
   await splitThree(page);
-  const bars = page.locator(".main-pane-split > .tab-bar");
+  const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
   const three = bars.first().locator('[role="tab"][aria-selected="true"]');
   const from = (await three.boundingBox())!;
   const to = (await bars.last().boundingBox())!;
@@ -281,7 +284,7 @@ test("a tab dragged onto another pane's edge opens in a new pane on that side", 
   page,
 }) => {
   await splitThree(page);
-  const bars = page.locator(".main-pane-split > .tab-bar");
+  const bars = page.locator(".main-pane-split > .island-row > .tab-bar");
   const three = bars.first().locator('[role="tab"][aria-selected="true"]');
   const from = (await three.boundingBox())!;
   const to = (await page.locator(pane("second")).boundingBox())!;
@@ -317,7 +320,7 @@ test("a tab dragged to the split's outer edge opens beside all its panes, the fu
   await pasteMarkdown(page, "# Three");
   // The pane with both tabs gives up the one in front.
   const bar = page
-    .locator(".main-pane-split > .tab-bar")
+    .locator(".main-pane-split > .island-row > .tab-bar")
     .filter({ has: page.locator('[role="tab"]').nth(1) });
   await expect(bar).toHaveCount(1);
   const from = (await bar

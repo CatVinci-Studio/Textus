@@ -12,19 +12,24 @@ async function layout(page: Page) {
     const rect = (selector: string) =>
       document.querySelector(selector)!.getBoundingClientRect();
     return {
-      tabs: rect(".main-pane > .tab-bar").bottom,
-      firstTab: rect(".main-pane > .tab-bar .tab-pill").left,
+      tabs: rect("[data-island-row=documents] > .tab-bar").bottom,
+      firstTab: rect("[data-island-row=documents] > .tab-bar .tab-pill").left,
       toggle: rect(".window-bar-sidebar-toggle").right,
-      lastTab: rect(".main-pane > .tab-bar .tab-bar-add").right,
+      lastTab: rect("[data-island-row=documents] > .tab-bar .tab-bar-add")
+        .right,
       status: rect(".window-bar-status").left,
       // The open tab's foot and its island's top.
       seam:
-        rect(".main-pane > .tab-bar .tab-pill-active").bottom -
-        rect(".island-frame").top,
-      aiEdgeTop: rect(".agent-island").top,
+        rect("[data-island-row=documents] > .tab-bar .tab-pill-active").bottom -
+        rect('[data-island="documents"]').top,
+      // ...and the AI island's, likewise.
+      aiSeam:
+        rect('[data-island-row="ai"] .tab-pill-active').bottom -
+        rect(".ai-island").top,
+      aiEdgeTop: rect(".ai-island").top,
       bar: rect(".window-bar").bottom,
       panel: rect(".ai-island").width,
-      document: rect(".main-pane > .tab-bar").width,
+      document: rect("[data-island-row=documents]").width,
     };
   });
 }
@@ -38,8 +43,10 @@ async function open(page: Page, width: number) {
   await pasteMarkdown(page, SAMPLE_DOC);
   // A second tab, for the tab bar.
   await emit(page, "menu-open-help", "markdown");
-  await expect(page.locator(".main-pane > .tab-bar")).toBeVisible();
-  await expect(page.locator(".agent-tabs-row")).toBeVisible();
+  await expect(
+    page.locator("[data-island-row=documents] > .tab-bar"),
+  ).toBeVisible();
+  await expect(page.locator('[data-island-row="ai"]')).toBeVisible();
 }
 
 // From 960: narrower, the rail and both panels at their narrowest leave the
@@ -53,6 +60,7 @@ for (const width of [960, 1280, 1920])
     expect(at.lastTab).toBeLessThanOrEqual(at.status);
     expect(at.aiEdgeTop).toBeGreaterThanOrEqual(at.bar - 1);
     expect(Math.abs(at.seam)).toBeLessThan(0.5);
+    expect(Math.abs(at.aiSeam)).toBeLessThan(0.5);
     // The document keeps at least 360 (times the scale, 1 here and up).
     expect(at.document).toBeGreaterThanOrEqual(359);
   });

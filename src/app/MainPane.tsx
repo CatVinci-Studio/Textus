@@ -1,4 +1,4 @@
-import { IslandFrame } from "./layout/IslandFrame";
+import { Island } from "../ui/Island";
 import { useKeptLoaded } from "../utils/kept-loaded";
 import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
@@ -171,6 +171,8 @@ export function MainPane({
     onAdd,
   );
   const phone = usePhoneLayout();
+  // A phone's column has its bar of its own, not islands.
+  const islands = canUseWindows;
   const grid = split && splitGrid(split.root);
   const all = split ? panesOf(split.root) : [];
   const panes = all.filter((p) => islandOf(p) === "documents");
@@ -202,8 +204,8 @@ export function MainPane({
     list: DocTab[],
     active: string,
     pane: string | null,
-    style?: CSSProperties,
     inner = false,
+    style?: CSSProperties,
   ) => (
     <TabBar
       key={pane ?? "window"}
@@ -287,31 +289,42 @@ export function MainPane({
       data-split={split?.root.direction}
       style={grid?.column}
     >
-      {/* Each pane's island, under its documents (layout.css). */}
-      {split && grid ? (
-        panes.map((p) => (
-          <IslandFrame
-            key={`island:${p.id}`}
-            paneId={p.id}
-            style={body(p.id)}
-          />
-        ))
-      ) : (
-        <IslandFrame paneId={null} />
-      )}
-      {split && grid
-        ? panes.map(
-            (p) =>
-              tabsInBar &&
+      {/* Each pane of documents an island: its row of tabs over its sheet,
+          its documents on the sheet (below). A phone's column has its own
+          bar; a clean sheet is the page itself. */}
+      {!islands
+        ? split && grid
+          ? panes.map((p) =>
               tabBar(
                 p.tabs.flatMap((id) => byId.get(id) ?? []),
                 p.front ?? "",
                 p.id,
-                grid.bars.get(p.id),
                 !grid.top.has(p.id),
+                grid.bars.get(p.id),
               ),
-          )
-        : showTabBar && tabBar(tabs, activeTabId, null)}
+            )
+          : showTabBar && tabBar(tabs, activeTabId, null)
+        : split && grid
+          ? tabsInBar &&
+            panes.map((p) => (
+              <Island
+                key={`island:${p.id}`}
+                kind="documents"
+                paneId={p.id}
+                row={tabBar(
+                  p.tabs.flatMap((id) => byId.get(id) ?? []),
+                  p.front ?? "",
+                  p.id,
+                  !grid.top.has(p.id),
+                )}
+                rowStyle={grid.bars.get(p.id)}
+                inner={!grid.top.has(p.id)}
+                sheetStyle={body(p.id)}
+              />
+            ))
+          : showTabBar && (
+              <Island kind="documents" row={tabBar(tabs, activeTabId, null)} />
+            )}
       {ai &&
         grid &&
         aiIsland?.({
@@ -319,6 +332,7 @@ export function MainPane({
           bar: grid.bars.get(ai.id),
           body: grid.bodies.get(ai.id),
           inner: !grid.top.has(ai.id),
+          plain: !tabsInBar,
         })}
       {formatBar &&
         !docsSplit &&

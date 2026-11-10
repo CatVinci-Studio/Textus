@@ -47,7 +47,9 @@ test("a new library entry opens in a tab with the panel still on Memory, its tem
   });
   await createEntry(page, "Lin");
   // The entry opened in a tab of its own...
-  await expect(page.locator(".main-pane > .tab-bar .tab-pill")).toHaveCount(2);
+  await expect(
+    page.locator("[data-island-row=documents] > .tab-bar .tab-pill"),
+  ).toHaveCount(2);
   // ...and the panel, now drawn by that tab's editor, is still on Memory.
   await expect(page.locator(".agent-panel-memory")).toBeVisible();
   const editor = page.locator('[data-active-tab="true"] .ProseMirror');
@@ -171,7 +173,7 @@ test("what Textus AI remembers shows under its reply, and Undo takes it back", a
   await expect(remembered).toHaveClass(/motion-mark/);
   await expect(remembered).toContainText(REMEMBERED.text);
   // Back to the conversation: its tab.
-  await page.locator(".agent-tabs-row .tab-pill").first().click();
+  await page.locator("[data-island-row=ai] .tab-pill").first().click();
 
   await chip.getByRole("button", { name: "Undo" }).click();
   await expect(chip).toHaveText("Undone. No longer remembered.");

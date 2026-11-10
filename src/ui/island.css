@@ -1,0 +1,180 @@
+/* Islands (Island.tsx, design-language.md 5.7): a row of tabs over a
+   sheet, the same for documents and Textus AI, in the editor's window and
+   the chat window alike. Every island rule lives here, keyed on the
+   island's own marks - data-island (its sheet), data-island-row (its
+   row), data-plain, data-inner; layout-tokens.css holds the values that
+   tell the two layouts apart. */
+
+/* ---- Sheet --------------------------------------------------------- */
+
+[data-island] {
+  border-radius: var(--island-radius);
+  background: var(--ui-bg);
+  box-shadow: var(--island-edge);
+}
+
+/* A documents island's sheet is paper under its editors, never a target. */
+[data-island="documents"] {
+  pointer-events: none;
+}
+
+/* Its first tab rising from its edge, open (useTabRows): the corner goes
+   square, the island's side running straight up into the tab. */
+[data-island][data-corner-joined] {
+  border-top-left-radius: 0;
+}
+
+/* Plain - beside a clean sheet, and in Zen: no island but the page's own
+   side, the same paper, a hairline between. */
+[data-island][data-plain] {
+  border-radius: 0;
+  background: var(--doc-bg);
+  box-shadow: none;
+}
+
+[data-island="ai"][data-plain] {
+  border-left: 1px solid var(--ui-frame-edge);
+}
+
+/* ---- Row ----------------------------------------------------------- */
+
+/* As tall as the window bar; its tabs from --tabs-inset-start on, its own
+   controls (the AI's) before --tabs-inset-end. Only its tabs and buttons
+   take a click: the rest of a top row is the window bar's, beneath. */
+.island-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: var(--window-bar-height);
+  padding-right: var(--tabs-inset-end, 8px);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.island-row > * {
+  pointer-events: auto;
+}
+
+/* In the window bar's row, over the bar. */
+.island-row:not([data-inner]) {
+  z-index: 46;
+}
+
+/* Under another island: the gap above, as between sheets. */
+.island-row[data-inner] {
+  margin-top: var(--island-gap);
+}
+
+/* Its tabs scroll under its ends: they show only between them (and the
+   first open tab's curve before them), and only there take a click, so the
+   bar's controls stay reachable. */
+:root .island-row > .tab-bar {
+  flex: 1;
+  min-width: 0;
+  height: auto;
+  padding: 0 0 0 var(--tabs-inset-start, 8px);
+  clip-path: inset(
+    -1px 0 0 calc(var(--tabs-inset-start, 8px) - var(--tab-radius))
+  );
+  align-items: flex-end;
+  gap: var(--tab-gap);
+  border-bottom: 0;
+  background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
+    bottom / calc(100% - var(--tabs-inset-start, 0px)) 1px no-repeat;
+  overflow-y: hidden;
+  pointer-events: none;
+}
+
+.island-row > .tab-bar > * {
+  pointer-events: auto;
+}
+
+/* Scrolled, no sliver of a tab shows before its start. */
+:root .island-row > .tab-bar[data-overflow] {
+  clip-path: inset(-1px 0 0 var(--tabs-inset-start, 8px));
+}
+
+/* A tab: its words, its x and the + on the row's middle line, level with
+   the bar's own controls; the line between tabs the layout's. */
+:root .island-row > .tab-bar > .tab-pill {
+  position: relative;
+  align-self: stretch;
+  margin-top: var(--tab-lift);
+  padding: 0 8px var(--tab-lift);
+  border-inline-end: 1px solid var(--tab-line);
+  border-radius: var(--tab-radius) var(--tab-radius) 0 0;
+  background: transparent;
+  /* Muted on the sunk frame would be too faint to read. */
+  color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame-fill));
+}
+
+:root .island-row > .tab-bar > .tab-pill:hover:not(.tab-pill-active) {
+  background: var(--ui-hover);
+}
+
+/* Open, it is its island's own top: the page's colour, over the row's
+   line. */
+:root .island-row > .tab-bar > .tab-pill-active {
+  overflow: visible;
+  z-index: 1;
+  background: var(--ui-bg);
+  color: var(--ui-text);
+}
+
+/* Where it meets its island's top edge, each side curves in to it (a
+   radius of 0 draws none). */
+:root .island-row > .tab-bar > .tab-pill-active::before,
+:root .island-row > .tab-bar > .tab-pill-active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: var(--tab-radius);
+  height: var(--tab-radius);
+  pointer-events: none;
+}
+
+:root .island-row > .tab-bar > .tab-pill-active::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at 0 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+:root .island-row > .tab-bar > .tab-pill-active::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at 100% 0,
+    transparent calc(var(--tab-radius) - 0.5px),
+    var(--ui-bg) var(--tab-radius)
+  );
+}
+
+/* At its island's edge (data-at-corner) the first tab's side is the
+   island's, straight up: no curve there. */
+.island-row > .tab-bar[data-at-corner] > .tab-pill-active:first-child::before {
+  display: none;
+}
+
+:root .island-row > .tab-bar > .tab-bar-add {
+  align-self: center;
+}
+
+/* Plain, its tabs are words on the page: the open one only darker. */
+:root .island-row[data-plain] > .tab-bar > .tab-pill-active {
+  background: transparent;
+}
+
+:root .island-row[data-plain] > .tab-bar > .tab-pill-active::before,
+:root .island-row[data-plain] > .tab-bar > .tab-pill-active::after {
+  display: none;
+}
+
+/* Zen hides the documents' tabs (modes.css); the AI's stay, in place. */
+.zen .island-row[data-island-row="ai"] > .tab-bar {
+  position: relative;
+  opacity: 1;
+  visibility: visible;
+  background: none;
+}

@@ -1,43 +1,8 @@
-/* The AI island's conversations (AgentTabs) take the window bar's row over
-   the island, as the documents' do (layout.css): the tabs from its edge,
-   all clear of the bar's
-   status and the window's buttons (useTabRows). In the chat window the row
-   is that window's bar. Inside the island only its history. */
-.agent-tabs-row {
-  display: flex;
-  align-items: stretch;
-  min-width: 0;
-  height: var(--window-bar-height);
-  padding-right: var(--tabs-inset-end, 8px);
-  pointer-events: none;
-}
+/* The AI island (AiIsland, an Island of kind "ai"; island.css draws it):
+   what is its own - its conversation filling it, its history at the top
+   right, and how it comes and goes. */
 
-/* The top one is the window bar's row: above it, its tabs alone taking a
-   click (layout.css). A lower one keeps the gap above, as documents' do. */
-.main-pane > .agent-tabs-row:not([data-inner]) {
-  z-index: 46;
-}
-
-.app-shell[data-tabs="bar"] .main-pane-split > .agent-tabs-row[data-inner] {
-  margin-top: var(--island-gap);
-}
-
-.agent-tabs-row > * {
-  pointer-events: auto;
-}
-
-/* The row's end inset is the holder's, its buttons inside it. */
-.agent-tabs-row > .tab-bar {
-  --tabs-inset-end: 0px;
-  flex: 1;
-  min-width: 0;
-  pointer-events: none;
-}
-
-.agent-tabs-row > .tab-bar > * {
-  pointer-events: auto;
-}
-
+/* The row's own buttons after its tabs (the chat window's history, pin). */
 .agent-tabs-actions {
   display: flex;
   align-items: center;
@@ -45,20 +10,20 @@
   flex-shrink: 0;
 }
 
-/* Its own header gives way to the row. */
-:is(.agent-panel[data-tabbed], .ai-island) .agent-panel-header {
+/* The conversation's own header gives way to the island's row. */
+.ai-island .agent-panel-header {
   display: none;
 }
-
-/* ---- The island ---------------------------------------------------- */
 
 /* Its cell in the documents' grid; it slides in as Textus AI's button
    opens it and out as it closes, the documents taking the room after. */
 .ai-island {
   position: relative;
   display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
   color: var(--ui-text);
   animation: motion-nudge-in-end var(--dur-slow) var(--ease-out);
 }
@@ -67,48 +32,17 @@
   animation: motion-nudge-out-end var(--dur-base) var(--ease-in) forwards;
 }
 
+.ai-island > .agent-panel-mount {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Its cards on the paper take a tint. */
 .ai-island .agent-panel-view {
   --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
 }
 
-/* Beside a clean sheet, and in Zen, it is no island but the sheet's own
-   side: the same paper, a hairline between, its tabs plain words. */
-:is(.app-shell:not([data-tabs]), .zen .app-shell) .ai-island {
-  border-left: 1px solid var(--ui-frame-edge);
-  background: var(--doc-bg);
-}
-
-:is(.app-shell:not([data-tabs]), .zen .app-shell) .ai-island [data-island] {
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:is(.app-shell:not([data-tabs]), .zen .app-shell)
-  .agent-tabs-row
-  .tab-pill-active {
-  background: transparent;
-}
-
-:is(.app-shell:not([data-tabs]), .zen .app-shell)
-  .agent-tabs-row
-  .tab-pill-active::before,
-:is(.app-shell:not([data-tabs]), .zen .app-shell)
-  .agent-tabs-row
-  .tab-pill-active::after {
-  display: none;
-}
-
-/* Zen hides the documents' tabs; the AI's stay, in place. */
-.zen .agent-tabs-row .tab-bar {
-  position: relative;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: none;
-  background: none;
-}
-
+/* The iPad's docked panel holds its conversation the same way. */
 .agent-island {
   position: relative;
   flex: 1;

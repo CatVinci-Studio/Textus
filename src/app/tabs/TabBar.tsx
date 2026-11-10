@@ -131,8 +131,6 @@ export function TabBar({
       data-pane-id={paneId}
       ref={barRef}
       role="tablist"
-      // An island's row (layout.css): drawn as one where islands are.
-      data-island-row=""
       aria-label={labels.tabs}
       onKeyDown={onKeyDown}
     >

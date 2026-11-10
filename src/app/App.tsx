@@ -146,8 +146,6 @@ function App() {
         // none.
         data-layout={settings.layout}
         data-tabs={tabRow}
-        // Where the islands are drawn (layout.css): the window, with its tabs.
-        data-islands={tabRow === "bar" || undefined}
         style={
           {
             // The sidebar's dragged width; an iPad's sidebar has no handle.
@@ -237,7 +235,8 @@ function App() {
               ? undefined
               : (place) => (
                   <AiIsland
-                    place={place}
+                    // In Zen it is the page's side too.
+                    place={zenMode ? { ...place, plain: true } : place}
                     state={agentPresence.state}
                     mountRef={setAgentPanelEl}
                     conversations={conversations}

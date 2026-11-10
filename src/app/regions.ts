@@ -10,7 +10,10 @@ const REGIONS: { region: string; start?: string }[] = [
     region: ".sidebar:not(.sidebar-collapsed)",
     start: '[role="treeitem"][tabindex="0"], .sidebar-tab-active',
   },
-  { region: ".main-pane > .tab-bar", start: '[role="tab"][tabindex="0"]' },
+  {
+    region: ":is(.main-pane, .main-pane > .island-row) > .tab-bar",
+    start: '[role="tab"][tabindex="0"]',
+  },
   {
     region:
       '[data-active-tab="true"] > :is(.editor-scroll, .source-view, .split-view)',

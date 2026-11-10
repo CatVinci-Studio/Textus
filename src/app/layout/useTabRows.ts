@@ -47,11 +47,11 @@ function lengthOf(within: HTMLElement, name: string): number {
 }
 
 /**
- * The tabs take the window bar's row (design-language.md 5.7); each of the
- * pane's tab rows - one, or a split's panes' - is measured as rowInsets
- * says and given --tabs-inset-start/-end and data-at-corner. Its island
- * (IslandFrame) is told when its first tab stands at its edge, open:
- * data-corner-joined squares that corner.
+ * The tabs take the window bar's row (design-language.md 5.7); each
+ * island's row (IslandRow) in `pane` is measured as rowInsets says and
+ * given --tabs-inset-start/-end, its tab bar data-at-corner. Its sheet is
+ * told when its first tab stands at its edge, open: data-corner-joined
+ * squares that corner.
  */
 export function useTabRows(pane: RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
@@ -92,12 +92,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
         const corner =
           lengthOf(shell, "--island-radius") + lengthOf(shell, "--tab-radius");
         const air = scaledPx(AIR);
-        const rows = [
-          ...main.querySelectorAll<HTMLElement>(":scope > .tab-bar"),
-          ...document.querySelectorAll<HTMLElement>(
-            ".agent-tabs-row > .tab-bar",
-          ),
-        ];
+        const rows = [...main.querySelectorAll<HTMLElement>(".island-row")];
         tabs.disconnect();
         for (const row of rows) {
           // Which tab is open decides the corner: told when it changes.
@@ -109,13 +104,9 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
           // A split's grid resized moves its rows; the area's own style
           // changes too often to watch.
           resized.observe(row);
-          // The AI island's row is its holder's, its buttons at the end
-          // (AgentTabs); its island the one under it.
-          const ai = row.parentElement?.classList.contains("agent-tabs-row");
-          const holder = ai ? row.parentElement! : row;
-          // A lower pane's row has no bar controls to clear.
-          const inBar = !row.classList.contains("tab-bar-inner");
-          const box = holder.getBoundingClientRect();
+          // A row under another island has no bar controls to clear.
+          const inBar = !row.hasAttribute("data-inner");
+          const box = row.getBoundingClientRect();
           // The first of them over this row.
           const statusStart = Math.min(
             ...ends.filter((end) => end.left >= box.left).map((e) => e.left),
@@ -127,30 +118,21 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             air,
             Math.max(air, corner),
           );
-          holder.style.setProperty("--tabs-inset-start", `${insets.start}px`);
-          holder.style.setProperty("--tabs-inset-end", `${insets.end}px`);
-          row.toggleAttribute("data-at-corner", insets.atCorner);
-          // Its island: the pane's frame (IslandFrame), one alone or each
-          // of a split's by its pane.
+          row.style.setProperty("--tabs-inset-start", `${insets.start}px`);
+          row.style.setProperty("--tabs-inset-end", `${insets.end}px`);
+          const bar = row.querySelector(":scope > .tab-bar");
+          bar?.toggleAttribute("data-at-corner", insets.atCorner);
+          // Its island: the sheet of the same pane (Island).
           const id = row.dataset.paneId;
-          const aiPane = holder.dataset.paneId;
-          const island = ai
-            ? aiPane
-              ? main.querySelector(
-                  `.agent-island[data-pane-id="${CSS.escape(aiPane)}"]`,
-                )
-              : holder
-                  .closest(".ai-island, .chat-window")
-                  ?.querySelector("[data-island]")
-            : main.querySelector(
-                id
-                  ? `:scope > .island-frame[data-pane-id="${CSS.escape(id)}"]`
-                  : ":scope > .island-frame:not([data-pane-id])",
-              );
+          const island = main.querySelector(
+            id
+              ? `[data-island][data-pane-id="${CSS.escape(id)}"]`
+              : "[data-island]:not([data-pane-id])",
+          );
           island?.toggleAttribute(
             "data-corner-joined",
             insets.atCorner &&
-              !!row.querySelector(":scope > .tab-pill-active:first-child"),
+              !!bar?.querySelector(":scope > .tab-pill-active:first-child"),
           );
         }
       });

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type CSSProperties } from "react";
 import { AgentIslandTools, AgentTabs } from "./AgentTabs";
+import { Island } from "../../ui/Island";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import { setDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import type { Strings } from "../../i18n/strings";
@@ -11,6 +12,8 @@ export interface AiIslandPlace {
   body?: CSSProperties;
   /** Its row is below another pane's, not the window bar's. */
   inner: boolean;
+  /** Beside a clean sheet, or in Zen: the page's own side (Island). */
+  plain?: boolean;
 }
 
 /**
@@ -70,50 +73,41 @@ export function AiIsland({
     };
   }, [onWidth]);
   return (
-    <>
-      {aiOn && (
-        <AgentTabs
-          scope={conversations}
-          paneId={place.paneId}
-          style={place.bar}
-          inner={place.inner}
-          t={t}
-        />
-      )}
-      <section
-        ref={ref}
-        className="ai-island"
-        aria-label={t.agentPanelTitle}
-        data-state={state}
-        data-islands=""
-        data-pane-id={place.paneId}
-        style={place.body}
-        inert={state === "closing" || undefined}
-      >
-        <div
-          className="agent-island"
-          data-island=""
-          data-pane-id={place.paneId}
-        >
-          <div className="agent-panel-mount" ref={mountRef} />
-          {aiOn && <AgentIslandTools t={t} />}
-          {/* Source mode, split view and AI off have no conversation, so
-              say so instead of an empty column. */}
-          {!aiOn && <TextusAiOffNote className="agent-panel-placeholder" />}
-          {aiOn && sourceMode && (
-            <div className="agent-panel-placeholder">
-              <p>{t.agentPanelSourceMode}</p>
-              <button
-                type="button"
-                className="text-button"
-                onClick={onToggleSourceMode}
-              >
-                {t.agentPanelBackToEditor}
-              </button>
-            </div>
-          )}
+    <Island
+      kind="ai"
+      paneId={place.paneId}
+      plain={place.plain}
+      row={
+        aiOn ? (
+          <AgentTabs scope={conversations} inner={place.inner} t={t} />
+        ) : undefined
+      }
+      rowStyle={place.bar}
+      inner={place.inner}
+      sheetStyle={place.body}
+      sheetRef={ref}
+      className="ai-island"
+      aria-label={t.agentPanelTitle}
+      data-state={state}
+      inert={state === "closing" || undefined}
+    >
+      <div className="agent-panel-mount" ref={mountRef} />
+      {aiOn && <AgentIslandTools t={t} />}
+      {/* Source mode, split view and AI off have no conversation, so
+          say so instead of an empty column. */}
+      {!aiOn && <TextusAiOffNote className="agent-panel-placeholder" />}
+      {aiOn && sourceMode && (
+        <div className="agent-panel-placeholder">
+          <p>{t.agentPanelSourceMode}</p>
+          <button
+            type="button"
+            className="text-button"
+            onClick={onToggleSourceMode}
+          >
+            {t.agentPanelBackToEditor}
+          </button>
         </div>
-      </section>
-    </>
+      )}
+    </Island>
   );
 }

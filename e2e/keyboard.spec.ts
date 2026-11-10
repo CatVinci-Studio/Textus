@@ -51,7 +51,7 @@ test("F6 and Shift+F6 go round the regions and back to the caret", async ({
     ".ai-island",
     ".window-bar",
     ".sidebar",
-    ".main-pane > .tab-bar",
+    "[data-island-row=documents] > .tab-bar",
     editor,
   ];
   for (const region of order) {

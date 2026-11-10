@@ -150,7 +150,7 @@
 }
 
 :root[data-modal-open]
-  :is(.window-bar, .main-pane > .tab-bar)
+  :is(.window-bar, .main-pane > .island-row)
   *:not(.window-caption, .window-caption *) {
   pointer-events: none;
 }
@@ -318,7 +318,8 @@
   --header-height: calc(var(--window-bar-height) + 36px * var(--chrome-scale));
 }
 
-:root:not([data-window-chrome="mobile"]) :is(.sidebar-header, .tab-bar) {
+:root:not([data-window-chrome="mobile"])
+  :is(.sidebar-header, :not(.island-row) > .tab-bar) {
   box-sizing: border-box;
   height: var(--header-height);
 }

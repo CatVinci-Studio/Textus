@@ -4,7 +4,6 @@ import { AgentTabs } from "./islands/AgentTabs";
 import { useTabRows } from "./layout/useTabRows";
 import "./tabs/TabBar.css";
 import "./layout/layout-tokens.css";
-import "./layout/layout.css";
 import "./islands/agent-tabs.css";
 
 /** The detached chat window: one AI island under its row of conversations,

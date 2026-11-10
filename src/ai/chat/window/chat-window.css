@@ -114,7 +114,7 @@
 
 /* With its row of conversations (ChatWindowRoot) the window is the editor's
    AI island alone: the frame, the row over the island, the island inset in
-   it (layout.css). */
+   it (island.css). */
 .chat-window[data-layout] {
   --ui-frame: var(--ui-frame-sunk);
   --ui-frame-fill: var(--ui-frame);
@@ -127,7 +127,7 @@
   padding: 0 4px 0 var(--island-inset);
 }
 
-.chat-window-tabs > .agent-tabs-row {
+.chat-window-tabs > .island-row {
   flex: 1;
   min-width: 0;
   align-self: stretch;

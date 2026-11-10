@@ -89,7 +89,7 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
   } else {
     // One document: the column below the tab bar.
     const box = main.getBoundingClientRect();
-    const bar = main.querySelector(":scope > .tab-bar");
+    const bar = main.querySelector(":scope > .island-row, :scope > .tab-bar");
     const top = bar ? bar.getBoundingClientRect().bottom : box.top;
     rect = new DOMRect(box.left, top, box.width, box.bottom - top);
     tabId = main.querySelector<HTMLElement>(':scope > [data-active-tab="true"]')

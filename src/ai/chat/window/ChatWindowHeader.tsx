@@ -6,6 +6,7 @@ import { PinIcon, PlusIcon } from "../../../ui/icons";
 import { WindowCaptionButtons } from "../../../ui/WindowCaptionButtons";
 import { IconButton } from "../../../ui/IconButton";
 import { PanelHeader } from "../../../ui/PanelHeader";
+import { IslandRow } from "../../../ui/Island";
 import type { Strings } from "../../../i18n/strings";
 
 /** The AI island's row of conversations, drawn by the app layer. */
@@ -70,17 +71,19 @@ export function ChatWindowHeader({
       >
         {/* The traffic lights' room, for the row to clear. */}
         <span className="window-bar-lead chat-window-lights" aria-hidden />
-        {tabs({
-          scope,
-          onNew: () => !busy && onNewConversation(),
-          end: (
-            <>
-              {history}
-              {pin}
-            </>
-          ),
-          t,
-        })}
+        <IslandRow kind="ai">
+          {tabs({
+            scope,
+            onNew: () => !busy && onNewConversation(),
+            end: (
+              <>
+                {history}
+                {pin}
+              </>
+            ),
+            t,
+          })}
+        </IslandRow>
         <WindowCaptionButtons />
       </div>
     );
