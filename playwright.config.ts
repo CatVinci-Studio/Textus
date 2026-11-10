@@ -11,6 +11,14 @@ const port = Number(process.env.PLAYWRIGHT_PORT) || 1430;
 const playgroundPort = port + 1000;
 /** The specs the opt-in WebKit project runs (projects below). */
 const WEBKIT_SPECS = [
+  // The frame engine and the one editor per island: Mac draws in WebKit,
+  // whose layout and clip-path the islands' motion leans on.
+  "ai-tabs.spec.ts",
+  "editor-per-island.spec.ts",
+  "sidebar-panels.spec.ts",
+  "tab-from-window.spec.ts",
+  "island-numbers.spec.ts",
+  "frames.spec.ts",
   // How AI text lands and leaves: timing differs in WebKit. Not
   // landing-beat.spec.ts, which compares two animations frame by frame:
   // a busy runner's frames, not WebKit, decide that there.
