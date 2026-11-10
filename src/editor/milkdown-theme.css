@@ -681,7 +681,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .md-toc-item a {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
   text-decoration: none;
   cursor: pointer;
 }
@@ -702,7 +702,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 /* An Obsidian wikilink: its source in the link colour. */
 .wikilink {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 .wikilink-source-hidden {
@@ -915,7 +915,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   font-size: 0.85em;
 }
 .rhtml-a {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
   text-decoration: underline;
 }
 .rhtml-code,
@@ -1416,7 +1416,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 .code-block-copy.is-copied {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* Stays at the top as the list scrolls. */
@@ -1746,7 +1746,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 
 .table-add-row-btn:hover,
 .table-add-col-btn:hover {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
   border-color: var(--doc-accent);
 }
 

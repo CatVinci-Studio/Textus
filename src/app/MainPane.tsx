@@ -1,4 +1,6 @@
 import { Island } from "../ui/Island";
+import { DocumentCorners } from "./islands/DocumentCorner";
+import type { Lang } from "../i18n/langs";
 import { useKeptLoaded } from "../utils/kept-loaded";
 import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
@@ -133,6 +135,7 @@ export function MainPane({
   formatBar,
   tour,
   aiIsland,
+  lang,
   t,
 }: {
   tabs: DocTab[];
@@ -161,6 +164,8 @@ export function MainPane({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   /** Draws the AI island at its place in the grid (AiIsland). */
   aiIsland?: (place: AiIslandPlace) => ReactNode;
+  /** The interface's language: how a document's length is counted. */
+  lang: Lang;
   t: Strings;
 }) {
   const mainRef = useRef<HTMLElement>(null);
@@ -328,6 +333,21 @@ export function MainPane({
           : showTabBar && (
               <Island kind="documents" row={tabBar(tabs, activeTabId, null)} />
             )}
+      {/* Each document's length at its page's corner. */}
+      {islands && (
+        <DocumentCorners
+          fronts={
+            split && grid
+              ? panes.map((p) => ({
+                  tab: byId.get(p.front ?? ""),
+                  style: body(p.id),
+                }))
+              : [{ tab: byId.get(activeTabId) }]
+          }
+          lang={lang}
+          t={t}
+        />
+      )}
       {ai &&
         grid &&
         aiIsland?.({

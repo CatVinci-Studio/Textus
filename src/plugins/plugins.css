@@ -826,7 +826,7 @@ button.mcp-homepage:hover {
   height: 44px;
   border-radius: var(--shape-pill);
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 .create-studio-mark svg {
   width: 22px;
@@ -880,7 +880,7 @@ button.mcp-homepage:hover {
   padding: 0 var(--space-2);
   border-radius: var(--shape-pill);
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font-size: var(--text-footnote);
   line-height: 18px;
 }

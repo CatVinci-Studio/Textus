@@ -78,7 +78,7 @@
 
 .tutorial-chapter.is-current {
   border-color: var(--tutorial-line);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: var(--tutorial-soft);
 }
 
@@ -127,7 +127,7 @@
   flex: 0 0 42px;
   border: 1px solid var(--tutorial-line);
   border-radius: var(--shape-m);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: var(--tutorial-soft);
   font: 600 19px/1 var(--font-mono);
 }
@@ -196,7 +196,7 @@
   padding: 1px 4px;
   border-radius: var(--shape-xs);
   background: var(--tutorial-soft);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font: 600 0.92em / 1.4 var(--font-mono);
   user-select: text;
 }
@@ -210,7 +210,7 @@
   border: 1px solid var(--tutorial-line);
   border-radius: 50%;
   corner-shape: round;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: var(--ui-bg);
   font-size: var(--text-caption);
   font-weight: 700;
@@ -252,7 +252,7 @@
   gap: 8px;
   padding: 2px 0;
   border: 0;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: transparent;
   font: inherit;
   font-size: var(--text-body);
@@ -272,7 +272,7 @@
   height: 18px;
   border-radius: 50%;
   corner-shape: round;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: var(--tutorial-soft);
   font-size: 8px;
 }
@@ -287,7 +287,7 @@
 
 .tutorial-btn[aria-pressed="true"] {
   border-color: var(--ui-accent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: var(--tutorial-soft);
 }
 

@@ -77,7 +77,7 @@
   width: 14px;
   height: 14px;
   margin-left: -4px;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .app-menu-chevron {

@@ -251,6 +251,7 @@ function App() {
                 }
               : null
           }
+          lang={settings.language}
           t={t}
         />
 

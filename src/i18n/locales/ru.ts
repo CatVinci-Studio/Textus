@@ -675,6 +675,7 @@ export default {
   outlineCollapseAll: "Свернуть все",
   wordUnit: "сл.",
   wordsUnit: "сл.",
+  wordCountDetail: "{words} сл. · {characters} знаков (без пробелов)",
   alertNote: "Примечание",
   alertTip: "Совет",
   alertImportant: "Важно",

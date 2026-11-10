@@ -56,7 +56,7 @@
 
 .hover-card-button:hover {
   border-color: var(--ui-accent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* Positioned: the list bullets, drawn out of the flow, scroll and clip with

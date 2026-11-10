@@ -668,6 +668,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   outlineCollapseAll: "Recolher tudo",
   wordUnit: "palavra",
   wordsUnit: "palavras",
+  wordCountDetail: "{words} palavras · {characters} caracteres (sem espaços)",
   alertNote: "Nota",
   alertTip: "Dica",
   alertImportant: "Importante",

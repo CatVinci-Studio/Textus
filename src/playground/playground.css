@@ -79,7 +79,7 @@ body {
 
 .playground-actions .text-button[aria-pressed="true"] {
   border-color: var(--ui-accent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .playground-download {

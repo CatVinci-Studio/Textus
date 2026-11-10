@@ -29,6 +29,11 @@ describe("countWords", () => {
     expect(countWords("x {textus-width=50% textus-rotate=180}").words).toBe(1);
   });
 
+  it("counts characters as 文字数 does: letters, digits and CJK punctuation, no spaces or marks", () => {
+    expect(countWords("吾輩は猫である。名前はまだ無い。").characters).toBe(16);
+    expect(countWords("**Hello** world 42").characters).toBe(12);
+  });
+
   it("leaves fenced code out", () => {
     expect(countWords("一二\n```\nlet x = 1;\n```\n三").words).toBe(3);
   });

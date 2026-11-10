@@ -6,7 +6,7 @@ import { AppMenuButton } from "./WindowControls";
 import { MenuBar } from "../menu/MenuBar";
 import { Tooltip } from "../../ui/Tooltip";
 import { TextusAiButton } from "../../ai/TextusAiSwitch";
-import { isIOSApp } from "../../platform/capabilities";
+import { canUseWindows, isIOSApp } from "../../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../../ui/icons";
 import { useBarLayout } from "./useBarLayout";
 import { useTitleRoom } from "./useTitleRoom";
@@ -174,12 +174,14 @@ export function WindowBar({
               <PluginStatusItems />
             </Suspense>
           )}
-          {largeDoc && (
+          {/* On the desktop each document says these at its own corner
+              (DocumentCorner); a phone or an iPad has one, up here. */}
+          {!canUseWindows && largeDoc && (
             <span className="large-doc-badge" title={t.largeDocHint}>
               {t.largeDocBadge}
             </span>
           )}
-          {!pages && (
+          {!canUseWindows && !pages && (
             <span className="word-count">
               {words > 0 &&
                 `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}

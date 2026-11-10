@@ -44,7 +44,7 @@ body {
 }
 
 a {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .muted {

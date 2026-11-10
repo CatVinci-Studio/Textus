@@ -147,7 +147,7 @@
 }
 
 .plugin-list-badge[data-tone="accent"] {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 

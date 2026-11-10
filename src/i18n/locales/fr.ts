@@ -686,6 +686,7 @@ utiliser une.
   outlineCollapseAll: "Tout replier",
   wordUnit: "mot",
   wordsUnit: "mots",
+  wordCountDetail: "{words} mots · {characters} caractères (sans espaces)",
   alertNote: "Remarque",
   alertTip: "Astuce",
   alertImportant: "Important",

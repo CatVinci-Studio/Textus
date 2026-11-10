@@ -633,6 +633,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   outlineCollapseAll: "모두 접기",
   wordUnit: "단어",
   wordsUnit: "단어",
+  wordCountDetail: "{words}단어 · 공백 제외 {characters}자",
   alertNote: "참고",
   alertTip: "팁",
   alertImportant: "중요",

@@ -196,7 +196,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 12%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-panel-empty-mark svg {

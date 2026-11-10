@@ -128,7 +128,7 @@
 
 .pending-picture-retry:hover {
   border-color: var(--doc-accent);
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* A made picture, Redraw… over its corner while the pointer is on it. */
@@ -165,7 +165,7 @@
 
 .pending-picture-redraw:hover {
   border-color: var(--doc-accent);
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* No hover on a touch screen: the button stays. */

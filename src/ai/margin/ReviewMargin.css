@@ -114,7 +114,7 @@
   border-radius: 50%;
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font-size: 8.5px;
   font-weight: 700;
 }
@@ -217,7 +217,7 @@
 
 .review-note-chip-text ins {
   text-decoration: none;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* A revision cut to its chip keeps the card's look: its number, then its

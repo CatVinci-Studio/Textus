@@ -156,7 +156,7 @@ button.agent-context-chip:hover {
 }
 
 .agent-markdown a {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   text-decoration: none;
 }
 
@@ -483,7 +483,7 @@ button.agent-context-chip:hover {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font: inherit;
   cursor: pointer;
 }

@@ -657,6 +657,7 @@ type /name in a conversation to use one.
   outlineCollapseAll: "Collapse All",
   wordUnit: "word",
   wordsUnit: "words",
+  wordCountDetail: "{words} words · {characters} characters (no spaces)",
   alertNote: "Note",
   alertTip: "Tip",
   alertImportant: "Important",

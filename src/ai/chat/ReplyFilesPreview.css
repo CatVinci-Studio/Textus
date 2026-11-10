@@ -9,7 +9,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   cursor: pointer;
 }
 

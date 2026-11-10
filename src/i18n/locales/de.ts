@@ -670,6 +670,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   outlineCollapseAll: "Alle zuklappen",
   wordUnit: "Wort",
   wordsUnit: "Wörter",
+  wordCountDetail: "{words} Wörter · {characters} Zeichen (ohne Leerzeichen)",
   alertNote: "Hinweis",
   alertTip: "Tipp",
   alertImportant: "Wichtig",

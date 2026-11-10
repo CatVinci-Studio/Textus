@@ -599,6 +599,7 @@ export default {
   outlineCollapseAll: "全部折叠",
   wordUnit: "字",
   wordsUnit: "字",
+  wordCountDetail: "{words} 字 · {characters} 个字符（不含空格）",
   alertNote: "备注",
   alertTip: "提示",
   alertImportant: "重要",

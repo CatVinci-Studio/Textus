@@ -280,7 +280,7 @@
 .inline-chat-toggle.is-active {
   border-color: var(--ui-accent);
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* On, but nothing can search: a dot on the button, its tooltip says why. */
@@ -758,7 +758,7 @@
   white-space: nowrap;
   align-self: center;
   font-size: var(--text-caption);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-proposal-title {
@@ -867,7 +867,7 @@
 }
 
 .agent-proposal-status-accepted {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-proposal-status-invalid {
@@ -1478,7 +1478,7 @@ li[data-state="kept"] .agent-proposal-sentence-text {
 .agent-comment .agent-proposal-show {
   margin-left: auto;
   font-size: var(--text-caption);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-comment-quote {
@@ -1714,7 +1714,7 @@ button.chat-queue-action:hover {
 }
 
 .agent-file-changes-path:hover:not(:disabled) {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .agent-file-changes-path:disabled {

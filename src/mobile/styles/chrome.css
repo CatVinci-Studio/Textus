@@ -117,7 +117,7 @@
     border: none;
     border-radius: 0;
     background: none;
-    color: var(--ui-accent);
+    color: var(--ui-accent-text);
     font-size: var(--text-body);
     font-weight: 400;
     opacity: 1;
@@ -299,7 +299,7 @@
      re-checked for every element added to the editor. */
   :root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
     padding: 0 8px;
-    color: var(--ui-accent);
+    color: var(--ui-accent-text);
     font-size: var(--text-secondary);
   }
 

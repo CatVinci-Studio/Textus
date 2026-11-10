@@ -53,7 +53,7 @@
 }
 
 .block-folded-line:hover {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 .block-foldable[data-folded] > .block-folded-line {

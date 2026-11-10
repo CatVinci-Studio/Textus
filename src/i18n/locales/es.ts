@@ -680,6 +680,7 @@ para usar una.
   outlineCollapseAll: "Contraer todo",
   wordUnit: "palabra",
   wordsUnit: "palabras",
+  wordCountDetail: "{words} palabras · {characters} caracteres (sin espacios)",
   alertNote: "Nota",
   alertTip: "Consejo",
   alertImportant: "Importante",

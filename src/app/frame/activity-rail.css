@@ -73,7 +73,7 @@
 
 .activity-rail-item[aria-pressed="true"] {
   background: var(--ui-selected);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* With the rail holding the tabs, the sidebar's header is only the bar's

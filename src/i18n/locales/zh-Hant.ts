@@ -600,6 +600,7 @@ export default {
   outlineCollapseAll: "全部摺疊",
   wordUnit: "字",
   wordsUnit: "字",
+  wordCountDetail: "{words} 字 · {characters} 個字元（不含空格）",
   alertNote: "備註",
   alertTip: "提示",
   alertImportant: "重要",

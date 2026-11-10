@@ -45,7 +45,7 @@
 }
 
 .note-embed-open:hover {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* Folded (block-fold.css): its line alone, no rule beside it. */
@@ -71,7 +71,7 @@
 
 /* An embed drawn as its name: too deep, a loop, or not found. */
 .note-embed-chip:not(.wikilink-missing) {
-  color: var(--doc-accent);
+  color: var(--doc-accent-text);
 }
 
 /* A plugin's block in an embedded note: a line to open it by. */

@@ -79,7 +79,7 @@
 /* A block toggle that is on where the caret is. */
 .keyboard-toolbar-button[aria-pressed="true"] {
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .kbt-bold {
@@ -108,7 +108,7 @@
 }
 
 .keyboard-toolbar-ai {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font-size: var(--text-secondary);
   font-weight: 600;
   white-space: nowrap;

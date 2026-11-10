@@ -428,7 +428,7 @@ button.settings-inline-button {
 
 .shortcut-capture-active {
   border-color: var(--ui-accent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .api-key-input-row {
@@ -835,7 +835,7 @@ button.settings-inline-button {
    the one tag that asks for a look, so it takes the accent. */
 .settings-skill-tag-notice {
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 /* The built-in skills: a disclosure like Advanced, its count of those
@@ -878,7 +878,7 @@ button.settings-skill-action {
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: transparent;
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
   font: inherit;
   font-size: var(--text-control);
   white-space: nowrap;

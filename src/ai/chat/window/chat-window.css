@@ -60,7 +60,7 @@
    like the docked one. Pinned shows by colour; the icon never changes. */
 .chat-window-pin-on,
 .chat-window-pin-on:not(:disabled):hover {
-  color: var(--ui-accent);
+  color: var(--ui-accent-text);
 }
 
 .chat-window-body {
