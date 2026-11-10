@@ -128,7 +128,7 @@
 }
 /* What it found in the page, and the one it is on. */
 .tx-hit {
-  border-radius: 2px;
+  border-radius: var(--shape-xs);
   background: var(
     --find-match-bg,
     color-mix(in srgb, var(--ui-warning) 35%, transparent)

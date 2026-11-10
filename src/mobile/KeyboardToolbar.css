@@ -93,7 +93,7 @@
 
 .kbt-code {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--text-body);
 }
 
 /* An image's widths, written out. */
@@ -117,5 +117,6 @@
 /* The document's scroller ends at the strip: the editor keeps the caret inside
    its scroller, so a line being typed would otherwise stop behind the strip. */
 :root.has-keyboard-toolbar .editor-scroll {
+  /* design: allow - the keyboard toolbar's touch height. */
   margin-bottom: 44px;
 }

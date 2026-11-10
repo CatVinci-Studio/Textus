@@ -1398,7 +1398,7 @@
   corner-shape: round;
   background: var(--ui-success);
   color: var(--ui-on-fill);
-  font-size: 10.5px;
+  font-size: var(--text-mark);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   transition: background var(--dur-fast) var(--ease-standard);

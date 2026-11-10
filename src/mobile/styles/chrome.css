@@ -61,7 +61,7 @@
      tints it, a destructive answer is shown on its button instead. */
   :root[data-window-chrome="mobile"] .app-dialog-title {
     margin: 0;
-    padding: 20px 16px 0;
+    padding: 24px 16px 0;
     color: var(--ui-text);
     font-size: var(--text-body);
     font-weight: 600;
@@ -70,13 +70,13 @@
 
   :root[data-window-chrome="mobile"] .app-dialog p {
     margin: 0;
-    padding: 4px 16px 20px;
+    padding: 4px 16px 24px;
     font-size: var(--text-footnote);
     line-height: 1.4;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog > p:first-child {
-    padding-top: 20px;
+    padding-top: 24px;
   }
 
   :root[data-window-chrome="mobile"] .app-dialog-input {
@@ -194,7 +194,7 @@
   }
 
   :root[data-window-chrome="mobile"] .app-menu-inline .app-menu-item {
-    padding-left: 28px;
+    padding-left: 24px;
   }
 
   :root[data-window-chrome="mobile"]

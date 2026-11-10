@@ -5,11 +5,12 @@
 
 :root {
   /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in
-     three sizes, bigger and further forward rounder; a box inside another
-     takes the outer radius less the padding between them, never below
-     --shape-xs. Controls are capsules (--shape-pill), or circles. */
-  --shape-l: 16px;
+     three sizes (4, 8, 12), bigger and further forward rounder; a box
+     inside another takes the outer radius less the padding between them,
+     never below --shape-xs. Controls are capsules (--shape-pill), or
+     circles. --shape-l stays for plugins, as the largest. */
   --shape-m: 12px;
+  --shape-l: var(--shape-m);
   --shape-s: 8px;
   --shape-xs: 4px;
   --shape-pill: 999px;
@@ -61,6 +62,8 @@
   --text-body-large: var(--text-body);
   --text-title: calc(18px * var(--chrome-scale, 1));
   --text-large-title: calc(24px * var(--chrome-scale, 1));
+  /* Not a text size: the digit in a count badge or a numbered mark. */
+  --text-mark: calc(9px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
   --text-sm: var(--text-footnote);
@@ -73,7 +76,8 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
+  /* 20 is off the scale: kept for plugins, as 24. */
+  --space-5: var(--space-6);
   --space-6: 24px;
   --space-8: 32px;
   /* The accent as a fill under --ui-on-fill. */
@@ -97,25 +101,28 @@
   /* Behind a picture or diagram in the viewer: darker than a dialog's veil,
      so the document doesn't read as its surroundings. */
   --ui-overlay-strong: rgb(0 0 0 / 60%);
-  --shadow-popover: 0 4px 16px rgb(20 27 40 / 10%);
-  --shadow-dialog: 0 16px 48px rgb(20 27 40 / 16%);
-  /* A phone sheet's edge over the page, a drawer's over the editor. */
-  --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 14%);
-  --shadow-drawer: 8px 0 24px rgb(0 0 0 / 16%);
-  /* The selected segment of a segmented control, a page thumbnail. */
-  --shadow-raised: 0 1px 3px rgb(0 0 0 / 12%);
-  /* A switch's thumb, lifted off its track. */
-  --shadow-thumb: 0 1px 3px rgb(0 0 0 / 25%);
-  /* A margin card at rest and under the pointer; the review bar floating
-     over the page; the AI panel lying over a narrow window from its edge;
-     a picture in the document. */
-  --shadow-card: 0 8px 22px -16px rgb(0 0 0 / 30%);
-  --shadow-card-hover: 0 12px 26px -14px rgb(0 0 0 / 35%);
-  --shadow-bar: 0 14px 30px -14px rgb(0 0 0 / 50%);
-  --shadow-edge-end: -8px 0 24px rgb(0 0 0 / 18%);
-  --shadow-image: 0 2px 10px rgb(0 0 0 / 8%);
-  /* A document page in the phone's list, lying on its surface. */
-  --shadow-tile: 0 1px 4px rgb(0 0 0 / 8%);
+  /* Three shadows, by how far a surface stands off what is under it:
+     resting on it (1), floating over it (2), over everything (3). The
+     names below say who uses which. */
+  --shadow-1: 0 1px 3px rgb(0 0 0 / 12%);
+  --shadow-2: 0 4px 16px rgb(20 27 40 / 10%);
+  --shadow-3: 0 16px 48px rgb(20 27 40 / 16%);
+  /* A menu or popover; a card under the pointer; the review bar. */
+  --shadow-popover: var(--shadow-2);
+  --shadow-card-hover: var(--shadow-2);
+  --shadow-bar: var(--shadow-2);
+  /* A dialog; a phone's sheet, a drawer, a panel over a narrow window. */
+  --shadow-dialog: var(--shadow-3);
+  --shadow-sheet: var(--shadow-3);
+  --shadow-drawer: var(--shadow-3);
+  --shadow-edge-end: var(--shadow-3);
+  /* A selected segment, a switch's thumb, a margin card, a picture in the
+     document, a page in the phone's list. */
+  --shadow-raised: var(--shadow-1);
+  --shadow-thumb: var(--shadow-1);
+  --shadow-card: var(--shadow-1);
+  --shadow-image: var(--shadow-1);
+  --shadow-tile: var(--shadow-1);
   /* The grey and white squares behind a colour that may be translucent:
      the convention for "transparent", the same on every theme. */
   --transparency-checker: repeating-conic-gradient(#c8c8c8 0 25%, #fff 0 50%);
@@ -183,10 +190,9 @@
     --ui-danger-fill: #c43d51;
     --ui-overlay: rgb(0 0 0 / 48%);
     --ui-overlay-strong: rgb(0 0 0 / 72%);
-    --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
-    --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
-    --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
-    --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
+    --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
+    --shadow-2: 0 4px 16px rgb(0 0 0 / 24%);
+    --shadow-3: 0 16px 48px rgb(0 0 0 / 32%);
   }
 }
 
@@ -198,10 +204,9 @@
   --ui-danger-fill: #c43d51;
   --ui-overlay: rgb(0 0 0 / 48%);
   --ui-overlay-strong: rgb(0 0 0 / 72%);
-  --shadow-popover: 0 4px 16px rgb(0 0 0 / 24%);
-  --shadow-dialog: 0 16px 48px rgb(0 0 0 / 32%);
-  --shadow-sheet: 0 -8px 24px rgb(0 0 0 / 40%);
-  --shadow-drawer: 8px 0 24px rgb(0 0 0 / 40%);
+  --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
+  --shadow-2: 0 4px 16px rgb(0 0 0 / 24%);
+  --shadow-3: 0 16px 48px rgb(0 0 0 / 32%);
 }
 
 /* The window's own surfaces: the interface's type and colour. */
@@ -1011,5 +1016,6 @@ input[type="checkbox"].ui-check:checked {
     --text-body: round(calc(14px * var(--chrome-scale, 1)), 1px);
     --text-title: round(calc(18px * var(--chrome-scale, 1)), 1px);
     --text-large-title: round(calc(24px * var(--chrome-scale, 1)), 1px);
+    --text-mark: round(calc(9px * var(--chrome-scale, 1)), 1px);
   }
 }

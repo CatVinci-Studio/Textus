@@ -163,7 +163,7 @@
   margin: 0;
   /* No padding top or bottom: padding is the one part of a box that never
      gives way, and with the keyboard up it held 64px the / list needed. */
-  padding: 0 28px;
+  padding: 0 24px;
   /* Short of room (the / list or the keyboard up on a phone) it is cut,
      never squashed - and it drops what no longer fits whole (below), so
      the cut never runs through the hint's line. */

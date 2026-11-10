@@ -167,7 +167,7 @@
 
   :root[data-window-chrome="mobile"] .settings-group + .settings-group,
   :root[data-window-chrome="mobile"] .settings-advanced {
-    margin-top: 28px;
+    margin-top: 24px;
   }
 
   :root[data-window-chrome="mobile"] .settings-group-title {

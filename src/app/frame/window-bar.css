@@ -13,6 +13,7 @@
   align-items: center;
   /* Left inset is room for the macOS traffic lights, which float over the
      top-left corner. */
+  /* design: allow - clears macOS's window buttons. */
   padding: 0 12px 0 76px;
   background: var(--ui-frame-fill);
 }
@@ -119,6 +120,7 @@
   width: 36px;
   height: 28px;
   /* Its centre on the rail's: past the bar's own start padding. */
+  /* design: allow - centres on the rail, from its button size. */
   margin-left: calc((var(--rail-width) - 36px) / 2 - 12px);
   border-radius: var(--shape-s);
   color: var(--ui-muted);

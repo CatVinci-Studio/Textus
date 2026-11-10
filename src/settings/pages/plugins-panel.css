@@ -142,7 +142,7 @@
 
 .plugins-panel-update {
   height: auto;
-  padding: 2px 10px;
+  padding: 2px 8px;
   font-size: var(--text-caption);
   white-space: nowrap;
 }

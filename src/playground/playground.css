@@ -132,9 +132,9 @@ body {
 .playground-documents {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-height: var(--control-height-sm);
-  padding: 0 10px 0 12px;
+  padding: 0 8px 0 12px;
   max-width: 260px;
   color: inherit;
 }

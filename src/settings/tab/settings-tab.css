@@ -35,7 +35,7 @@
 .settings-about-card-icon {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: var(--shape-m);
 }
 
 .settings-about-card-text {

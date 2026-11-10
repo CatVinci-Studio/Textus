@@ -95,6 +95,7 @@
 .corner-toast-more {
   order: 1;
   flex-basis: 100%;
+  /* design: allow - lines up with the text after the toast's icon. */
   padding: 0 4px 4px 36px;
   color: var(--ui-muted);
   font-size: var(--text-sm);

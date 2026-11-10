@@ -36,7 +36,7 @@
   display: block;
   width: 48px;
   height: 48px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .language-welcome-eyebrow {
@@ -66,14 +66,14 @@
 .language-welcome-continue {
   gap: 8px;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 24px;
   font-size: var(--text-control);
   cursor: pointer;
 }
 
 @media (max-width: 520px) {
   .language-welcome {
-    padding: 24px 20px;
+    padding: 24px 24px;
   }
 }
 

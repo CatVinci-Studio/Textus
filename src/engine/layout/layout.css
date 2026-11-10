@@ -85,10 +85,12 @@
 }
 
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider-row {
+  /* design: allow - half a hairline, to sit on the pixel. */
   margin-left: calc(var(--island-gap) / -2 - 0.5px);
 }
 
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider-column {
+  /* design: allow - half a hairline, to sit on the pixel. */
   margin-top: calc(var(--island-gap) / 2 - 0.5px);
 }
 

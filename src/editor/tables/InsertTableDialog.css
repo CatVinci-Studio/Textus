@@ -18,7 +18,7 @@
 .insert-table-fields {
   display: flex;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .insert-table-fields label {

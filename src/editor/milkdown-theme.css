@@ -116,6 +116,7 @@
 .milkdown .ProseMirror.ghost-text-caret:focus .ghost-text::before {
   content: "\200b";
   border-left: 1.5px solid var(--doc-text);
+  /* design: allow - half a hairline, to sit on the pixel. */
   margin-left: -0.5px;
   animation: ghost-caret-blink var(--dur-blink) step-end infinite;
 }
@@ -219,7 +220,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   display: block;
   /* The tint reaches past the column; the content keeps its accepted width. */
   margin-inline: -6px;
-  padding: 2px 6px;
+  padding: 2px 8px;
 }
 
 .pending-blocks > :first-child {
@@ -433,8 +434,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* The ✓ / ✕ pair: outlined while undecided; the choice made fills in. */
 .pending-pick {
   display: inline-flex;
-  gap: 3px;
-  margin: 0 2px 0 5px;
+  gap: 4px;
+  margin: 0 2px 0 4px;
   vertical-align: 0.12em;
   white-space: nowrap;
   user-select: none;
@@ -747,7 +748,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
   gap: 2px;
   box-sizing: border-box;
   max-width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: var(--doc-radius);
   font-family: var(--font-sans);
   font-size: var(--text-body);
@@ -763,7 +764,7 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .missing-image-head {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--doc-text);
   font-weight: 600;
 }
@@ -785,8 +786,8 @@ br:is(.pending-delete, .pending-sentence-hot) {
 .missing-image-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .missing-image-actions button {

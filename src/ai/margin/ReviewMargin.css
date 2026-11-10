@@ -115,7 +115,7 @@
   corner-shape: round;
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
   color: var(--ui-accent-text);
-  font-size: 8.5px;
+  font-size: var(--text-mark);
   font-weight: 700;
 }
 
@@ -189,7 +189,7 @@
 .review-note-chip :is(.revision-note-num, .review-note-num) {
   min-width: 12px;
   height: 12px;
-  font-size: 8px;
+  font-size: var(--text-mark);
 }
 
 .review-note-chip .revision-note-pick {
@@ -405,7 +405,7 @@
   corner-shape: round;
   background: var(--ui-success);
   color: var(--ui-on-fill);
-  font-size: 9.5px;
+  font-size: var(--text-mark);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

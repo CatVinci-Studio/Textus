@@ -30,7 +30,7 @@
   max-height: 100%;
   overflow-y: auto;
   width: min(540px, calc(100vw - 48px));
-  padding: 20px 24px 24px;
+  padding: 24px 24px 24px;
 }
 
 /* Beside the docked AI panel, never over it: the AI lessons happen there. */
@@ -274,7 +274,7 @@
   corner-shape: round;
   color: var(--ui-accent-text);
   background: var(--tutorial-soft);
-  font-size: 8px;
+  font-size: var(--text-mark);
 }
 
 .tutorial-controls,

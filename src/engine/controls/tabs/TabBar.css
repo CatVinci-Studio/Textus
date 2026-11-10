@@ -196,6 +196,7 @@
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: var(--ui-frame-fill, var(--ui-bg));
+  /* design: allow - a fade over the overflowing tabs, not a shadow. */
   box-shadow: -8px 0 8px var(--ui-frame-fill, var(--ui-bg));
   color: var(--ui-muted);
   cursor: pointer;
