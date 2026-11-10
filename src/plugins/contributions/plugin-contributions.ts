@@ -6,7 +6,6 @@ import { registerEditorMenuItems } from "../../editor/editor-menu-items";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
-import { isMacPlatform } from "../../platform/os";
 import { extname } from "../../utils/path";
 import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
