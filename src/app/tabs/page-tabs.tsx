@@ -10,7 +10,7 @@ import "./page-tabs.css";
  * opened from the sidebar's list). What they show comes from the window
  * (PageTabProvider), which knows what each needs.
  */
-export type AppPage = "settings" | "plugins" | "create";
+export type AppPage = "settings" | "plugins" | "create" | "ai";
 
 /** Where a page is asked to go: a Settings category, a plugin; `at` is
  *  new on each request, so an open page takes it too. */
@@ -51,7 +51,11 @@ export function showPage(
   tabs.setActiveTabId(made.id);
 }
 
-type RenderPage = (page: AppPage, request: PageRequest | null) => ReactNode;
+type RenderPage = (
+  page: AppPage,
+  request: PageRequest | null,
+  tabId: string,
+) => ReactNode;
 
 const PageTabContext = createContext<RenderPage>(() => null);
 
@@ -75,7 +79,7 @@ export function PageTabContent({ tab }: { tab: DocTab }) {
   if (!page) return null;
   return (
     <div className="page-tab">
-      {render(page, (tab.view?.state as PageRequest | undefined) ?? null)}
+      {render(page, (tab.view?.state as PageRequest | undefined) ?? null, tab.id)}
     </div>
   );
 }

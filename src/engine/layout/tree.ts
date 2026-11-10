@@ -65,9 +65,8 @@ export function aiPane(): Pane {
 
 export const islandOf = (p: Pane): IslandKind => p.island ?? "documents";
 
-/** An island stays while it has tabs; the AI island, while it is open. */
-export const keepsItself = (p: Pane) =>
-  p.tabs.length > 0 || islandOf(p) === "ai";
+/** An island stays while it has tabs. */
+export const keepsItself = (p: Pane) => p.tabs.length > 0;
 
 /** The panes, in reading order: left to right, top to bottom. */
 export function panesOf(node: LayoutNode): Pane[] {

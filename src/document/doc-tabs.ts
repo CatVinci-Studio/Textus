@@ -90,6 +90,8 @@ export function tabTitle(tab: DocTab, t: Strings): string {
       ? t.settingsTitle
       : tab.view.view === "create"
         ? t.extensionsTabCreate
+        : tab.view.view === "ai"
+          ? (tab.view.title ?? t.chatNewConversation)
         : tab.view.title
           ? // Told apart from a tab the plugin opens itself, of the same name.
             t.pluginPageTab.replace("{name}", tab.view.title)

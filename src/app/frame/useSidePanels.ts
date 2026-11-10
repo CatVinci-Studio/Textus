@@ -1,3 +1,4 @@
+import { AI_PRESS_EVENT } from "../islands/ai-tabs";
 import { duration } from "../../engine/motion/motion";
 import {
   useCallback,
@@ -108,6 +109,12 @@ export function useSidePanels(aiOn: boolean) {
         });
         return;
       }
+    }
+    // Shown on the desktop: what a press does is the AI tabs' to decide -
+    // bring theirs to the front, or hide the AI (useAiTabs).
+    if (!isIOSApp && agentPanel.open) {
+      window.dispatchEvent(new Event(AI_PRESS_EVENT));
+      return;
     }
     agentPanel.toggle();
   }, [aiOn, agentPanel]);

@@ -1,7 +1,8 @@
 import { tabTitle } from "../document/doc-tabs";
 import { conversationScope } from "../ai/chat/conversation-scope";
-import { AiIsland } from "./islands/AiIsland";
-import { useAiIsland } from "./islands/useAiIsland";
+import { useAiTabs } from "./islands/useAiTabs";
+import { AiTab } from "./islands/AiTab";
+import { useDocumentInFront } from "./tabs/useDocumentInFront";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../engine/controls/CornerToast";
@@ -110,18 +111,21 @@ function App() {
     zen: zenMode,
   });
 
-  // The AI island, in the documents' grid on the desktop; its
-  // conversations the document's folder's.
+  // The AI's conversations: the document in front's folder's - with an
+  // AI tab or a page tab in front, still that document's - as tabs on the
+  // desktop (useAiTabs), the live one drawn into its tab.
+  const docInFront = useDocumentInFront(tabs, activeTabId);
+  const inFront = tabs.find((tab) => tab.id === docInFront) ?? activeTab;
   const conversations = conversationScope(
-    activeTab.path,
+    inFront.path,
     settings.agentWorkspaceRoot || null,
   );
-  const aiIsland = useAiIsland(
-    !isIOSApp && agentPresence.mounted,
-    tabs.map((tab) => tab.id),
-    activeTabId,
-    agentPanel.width,
-  );
+  const aiTabMount = useAiTabs({
+    tabs: shell.tabState,
+    scope: conversations,
+    shown: !isIOSApp && agentPanel.open,
+    setShown: agentPanel.setOpen,
+  });
 
   // Whether the tabs are in the window bar's row (with the menu bar spelled
   // out, in the row under it), or none: a clean sheet; the phone's own bar.
@@ -138,8 +142,14 @@ function App() {
       .filter((c) => !c.id.startsWith("textus."))
       .map((c) => ({ id: c.id, title: c.title(t), shortcut: c.shortcut })),
   };
-  const renderPage = (page: AppPage, request: PageRequest | null) =>
-    page === "settings" ? (
+  const renderPage = (
+    page: AppPage,
+    request: PageRequest | null,
+    tabId: string,
+  ) =>
+    page === "ai" ? (
+      <AiTab tabId={tabId} />
+    ) : page === "settings" ? (
       <SettingsTabPage request={request} {...settingsProps} />
     ) : page === "create" ? (
       <CreateTabPage t={t} />
@@ -153,7 +163,7 @@ function App() {
         // The conversation stays in the panel while it plays its exit.
         open={agentPresence.mounted}
         setOpen={agentPanel.setOpen}
-        container={agentPanelEl}
+        container={isIOSApp ? agentPanelEl : aiTabMount}
         tab={agentPanel.tab}
         setTab={agentPanel.setTab}
       >
@@ -198,7 +208,7 @@ function App() {
                   ? agentPresence.mounted
                     ? -(agentPanel.width / 2)
                     : 0
-                  : -(aiIsland.drawnWidth / 2)
+                  : 0
               }px`,
             } as React.CSSProperties
           }
@@ -262,24 +272,6 @@ function App() {
             onChange={handleChange}
             typewriter={settings.typewriterMode}
             formatBar={settings.formatBar}
-            aiIsland={
-              isIOSApp
-                ? undefined
-                : (place) => (
-                    <AiIsland
-                      // In Zen it is the page's side too.
-                      place={zenMode ? { ...place, plain: true } : place}
-                      state={agentPresence.state}
-                      mountRef={setAgentPanelEl}
-                      conversations={conversations}
-                      aiOn={textusAi.on}
-                      sourceMode={!!activeTab.sourceMode}
-                      onToggleSourceMode={toggleSourceMode}
-                      onWidth={aiIsland.setDrawnWidth}
-                      t={t}
-                    />
-                  )
-            }
             tour={
               tutorial.active && tutorial.tabId
                 ? {
