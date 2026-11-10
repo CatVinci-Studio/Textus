@@ -1,14 +1,9 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { useMenuButton } from "../useMenuButton";
 import { ChevronIcon } from "../icons";
-import { scaledPx } from "../../tokens/chrome-scale";
 import { Tooltip } from "../Tooltip";
 import { scrollBehavior } from "../../motion/motion";
 import type { TabInfo } from "./TabPill";
-
-/** Below this a pill is too narrow for its × as well as its name: only the
- *  open tab keeps one, as Chrome does. */
-const NARROW = 84;
 
 /**
  * Many tabs, as Chrome has them: the pills shrink together, the narrow ones
@@ -26,19 +21,18 @@ export function useTabOverflow(
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;
+    const resized = new ResizeObserver(() => fit());
     const fit = () => {
-      const pills = el.querySelectorAll<HTMLElement>(".tab-pill");
-      const widest = Math.max(0, ...[...pills].map((p) => p.offsetWidth));
-      el.toggleAttribute(
-        "data-narrow",
-        widest > 0 && widest < scaledPx(NARROW),
-      );
-      // A title longer than its tab fades out at its end (TabBar.css).
-      for (const title of el.querySelectorAll<HTMLElement>(".tab-pill-title"))
+      // A title longer than its tab fades out at its end (TabBar.css);
+      // each title watched, as a tab still growing in was cut a moment and
+      // kept the fade after.
+      for (const title of el.querySelectorAll<HTMLElement>(".tab-pill-title")) {
         title.toggleAttribute(
           "data-cut",
           title.scrollWidth > title.clientWidth + 1,
         );
+        resized.observe(title);
+      }
       const over = el.scrollWidth > el.clientWidth + 1;
       el.toggleAttribute("data-overflow", over);
       setOverflow(over);
@@ -48,11 +42,14 @@ export function useTabOverflow(
       el.toggleAttribute("data-scrolled", el.scrollLeft > 1);
     fit();
     scrolled();
-    const resized = new ResizeObserver(fit);
     resized.observe(el);
     // A tab renamed at its widest changes no size: its words are watched.
     const renamed = new MutationObserver(fit);
-    renamed.observe(el, { subtree: true, characterData: true });
+    renamed.observe(el, {
+      subtree: true,
+      characterData: true,
+      childList: true,
+    });
     el.addEventListener("scroll", scrolled, { passive: true });
     return () => {
       resized.disconnect();

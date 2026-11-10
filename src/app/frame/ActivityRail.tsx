@@ -6,6 +6,7 @@ import {
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { reorderDrag } from "../../engine/drag/row";
+import { liftBeyondGroup } from "./rail-lift";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SettingsIcon } from "../../engine/controls/icons";
 import { emitToThisWindow } from "../../platform/menu-events";
@@ -95,6 +96,7 @@ export function ActivityRail({
         tabs={top}
         on={(id) => sidebarOpen && shownId === id}
         // A pinned plugin's icon let go below the line goes back under it.
+        canLeave={(id) => pinned.includes(id)}
         onDropBeyond={(id, side) =>
           side === "after" && pinned.includes(id) && pin(id, false)
         }
@@ -106,6 +108,7 @@ export function ActivityRail({
         scrolls
         on={(id) => sidebarOpen && shownId === id}
         // Let go above the line: pinned among Textus's own.
+        canLeave={() => true}
         onDropBeyond={(id, side) => side === "before" && pin(id, true)}
         {...{ onSelect, onCloseSidebar, onMove, t }}
       />
@@ -148,6 +151,7 @@ function RailGroup({
   tabs,
   on,
   scrolls = false,
+  canLeave,
   onDropBeyond,
   onSelect,
   onCloseSidebar,
@@ -157,6 +161,8 @@ function RailGroup({
   tabs: SidebarTabDef[];
   on: (id: string) => boolean;
   scrolls?: boolean;
+  /** Whether `id` let go in the other group changes anything. */
+  canLeave: (id: string) => boolean;
   onDropBeyond: (id: string, side: "before" | "after") => void;
   onSelect: (id: string) => void;
   onCloseSidebar: () => void;
@@ -183,6 +189,17 @@ function RailGroup({
               const group = ref.current;
               if (!group || e.pointerType === "touch") return;
               const startY = e.clientY;
+              if (canLeave(id))
+                liftBeyondGroup(
+                  e.nativeEvent,
+                  e.currentTarget,
+                  group,
+                  [
+                    ...(group.parentElement?.querySelectorAll<HTMLElement>(
+                      ".activity-rail-group",
+                    ) ?? []),
+                  ].find((g) => g !== group) ?? null,
+                );
               window.addEventListener(
                 "pointerup",
                 (up) => {

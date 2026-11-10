@@ -165,9 +165,10 @@
   background: var(--ui-hover);
 }
 
-/* Too narrow for a name and an ×: only the open tab keeps its ×. */
-.tab-bar[data-narrow] .tab-pill:not(.tab-pill-active) .tab-pill-close {
-  display: none;
+/* Every tab keeps its ×'s room, shown on the open tab and the one pointed
+   at: a tab never changes width as it opens or another closes. */
+.tab-pill:not(.tab-pill-active, :hover, :focus-visible) .tab-pill-close {
+  visibility: hidden;
 }
 
 /* Overflowing, the + stays beside the list at the row's end as the tabs
