@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import type { Strings } from "../../i18n/strings";
 import { links, themeGallery } from "../../platform/ipc";
 import {
@@ -162,8 +168,68 @@ function GalleryUnreachable({ t, retry }: { t: Strings; retry: () => void }) {
   );
 }
 
-/** A gallery theme's row: its screenshot, then its name, line and byline,
- *  opening its page; Install beside it. */
+/** A theme's card, installed or in the gallery alike: its screenshot (an
+ *  empty sample when it has none), its name, line and byline - opening its
+ *  page when it has one - and its buttons. */
+export function ThemeCard({
+  t,
+  name,
+  description,
+  previews,
+  byline,
+  onOpen,
+  children,
+  ...rest
+}: {
+  t: Strings;
+  name: string;
+  description?: string;
+  previews?: string[];
+  byline?: ReactNode;
+  onOpen?: () => void;
+  children: ReactNode;
+} & HTMLAttributes<HTMLDivElement>) {
+  const text = (
+    <>
+      <span className="settings-row-label plugin-card-name">{name}</span>
+      {description && (
+        <span className="settings-row-hint plugin-card-description">
+          {description}
+        </span>
+      )}
+      {byline}
+    </>
+  );
+  return (
+    <div
+      {...rest}
+      className="theme-gallery-item"
+      aria-label={name}
+      role="group"
+    >
+      {previews?.length ? (
+        <GalleryPreview
+          paths={previews}
+          label={`${t.themePreviewEnlarge}: ${name}`}
+        />
+      ) : (
+        <div className="theme-gallery-preview theme-sample" aria-hidden>
+          Aa
+        </div>
+      )}
+      {onOpen ? (
+        <button type="button" className="plugin-card-open" onClick={onOpen}>
+          {text}
+        </button>
+      ) : (
+        <div className="plugin-card-open">{text}</div>
+      )}
+      <div className="settings-row-control">{children}</div>
+    </div>
+  );
+}
+
+/** A gallery theme's card: Install beside it. */
 function GalleryItem({
   t,
   theme,
@@ -178,34 +244,37 @@ function GalleryItem({
   onOpen: () => void;
 }) {
   return (
-    <div className="theme-gallery-item" aria-label={theme.name} role="group">
-      <GalleryPreview
-        paths={theme.previews}
-        label={`${t.themePreviewEnlarge}: ${theme.name}`}
-      />
-      <button type="button" className="plugin-card-open" onClick={onOpen}>
-        <span className="settings-row-label plugin-card-name">
-          {theme.name}
-        </span>
-        {theme.description && (
-          <span className="settings-row-hint plugin-card-description">
-            {theme.description}
-          </span>
-        )}
-        <ThemeByline t={t} theme={theme} />
+    <ThemeCard
+      t={t}
+      name={theme.name}
+      description={theme.description}
+      previews={theme.previews}
+      byline={<ThemeByline t={t} theme={theme} />}
+      onOpen={onOpen}
+    >
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        disabled={busy}
+        onClick={onInstall}
+      >
+        {t.themeGalleryInstall}
       </button>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          disabled={busy}
-          onClick={onInstall}
-        >
-          {t.themeGalleryInstall}
-        </button>
-      </div>
-    </div>
+    </ThemeCard>
   );
+}
+
+/** The gallery's entry for each installed theme, by the installed id. */
+export function galleryCopies(
+  catalog: GalleryTheme[] | null,
+  userThemes: Parameters<typeof installedCopy>[1],
+): Map<string, GalleryTheme> {
+  const out = new Map<string, GalleryTheme>();
+  for (const theme of catalog ?? []) {
+    const installed = installedCopy(theme, userThemes);
+    if (installed) out.set(installed.id, theme);
+  }
+  return out;
 }
 
 /** Who made a gallery theme and how often it was installed. */

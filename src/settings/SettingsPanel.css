@@ -1310,3 +1310,13 @@ button.settings-skill-action:focus-visible {
   border-right: 1px solid var(--ui-frame-edge);
   background: var(--ui-frame);
 }
+
+/* A theme with no screenshot (one's own, an imported one): a quiet sample
+   in the same frame. */
+.theme-gallery-preview.theme-sample {
+  display: grid;
+  place-items: center;
+  font-family: var(--doc-font, inherit);
+  font-size: var(--text-lg);
+  color: var(--ui-muted);
+}

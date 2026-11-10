@@ -17,7 +17,10 @@ import { Select } from "../../engine/controls/Select";
 import { RowHelp, SettingRow } from "./controls";
 import {
   AvailableThemes,
+  galleryCopies,
   galleryUpdates,
+  ThemeByline,
+  ThemeCard,
   useGalleryCatalog,
   useGalleryInstall,
 } from "./theme-gallery";
@@ -327,6 +330,7 @@ export function ThemesTab({ t }: { t: Strings }) {
   const gallery = useGalleryCatalog();
   const install = useGalleryInstall(t);
   const updates = galleryUpdates(gallery.catalog, settings.userThemes);
+  const copies = galleryCopies(gallery.catalog, settings.userThemes);
   const mine = settings.userThemes.filter((theme) =>
     matchesWords(theme.name, query),
   );
@@ -370,23 +374,31 @@ export function ThemesTab({ t }: { t: Strings }) {
       installedCount={settings.userThemes.length}
       installed={
         mine.length ? (
-          mine.map((theme) => (
-            <div
-              key={theme.id}
-              className="settings-row plugin-card"
-              data-user-theme={theme.id}
-            >
-              <div className="plugin-card-open">
-                <span className="settings-row-label plugin-card-name">
-                  {theme.name}
-                </span>
-                {madeByAi(settings.creations, "theme", theme.id) && (
-                  <span className="plugin-byline">
-                    <span className="plugin-official">{t.madeByTextusAi}</span>
-                  </span>
-                )}
-              </div>
-              <div className="settings-row-control">
+          mine.map((theme) => {
+            const copy = copies.get(theme.id);
+            return (
+              <ThemeCard
+                key={theme.id}
+                t={t}
+                data-user-theme={theme.id}
+                name={theme.name}
+                description={copy?.description}
+                previews={copy?.previews}
+                byline={
+                  copy ? (
+                    <ThemeByline t={t} theme={copy} />
+                  ) : (
+                    madeByAi(settings.creations, "theme", theme.id) && (
+                      <span className="plugin-byline">
+                        <span className="plugin-official">
+                          {t.madeByTextusAi}
+                        </span>
+                      </span>
+                    )
+                  )
+                }
+                onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
+              >
                 {updates.has(theme.id) && (
                   <button
                     type="button"
@@ -419,9 +431,9 @@ export function ThemesTab({ t }: { t: Strings }) {
                 >
                   {t.themeDeleteButton}
                 </button>
-              </div>
-            </div>
-          ))
+              </ThemeCard>
+            );
+          })
         ) : (
           <p className="plugin-empty">
             {query.trim()
