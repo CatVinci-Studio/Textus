@@ -58,6 +58,21 @@ export function splitRequest(): SplitRequest | null {
   return request;
 }
 
+let preview: SplitLayout | null = null;
+
+/** A drop in progress, shown before it is made: drawn in the committed
+ *  layout's place (useSplitPanes) and never stored, so letting go of the
+ *  drag elsewhere, or Escape, leaves the layout as it was. */
+export function splitPreview(): SplitLayout | null {
+  return preview;
+}
+
+export function previewSplit(next: SplitLayout | null): void {
+  if (preview === next) return;
+  preview = next;
+  publish();
+}
+
 /** Two panes, one tab each (the second may be on its way: null), the
  *  first's share `ratio`; `focus` is the pane in use. */
 export function pairLayout(

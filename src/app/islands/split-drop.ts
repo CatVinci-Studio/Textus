@@ -1,16 +1,20 @@
 import { dragGhost } from "../../engine/drag/ghost";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
-  moveToPane,
+  closeSplit,
   pairLayout,
   paneOf,
-  reorderInPane,
+  previewSplit,
   setSplitLayout,
-  splitAtEdge,
-  splitBeside,
   splitLayout,
   type SplitDirection,
 } from "../../engine/layout/store";
+import {
+  moveTab,
+  reorderTab,
+  splitOff,
+  type SplitLayout,
+} from "../../engine/layout/ops";
 import { paneById } from "../../engine/layout/tree";
 import {
   setDragging,
@@ -73,30 +77,86 @@ function union(rects: DOMRect[]): DOMRect {
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
-/** The zone of the document under (x, y); null off the documents. */
-export function dropTargetAt(x: number, y: number): DropTarget | null {
+/** Where the documents and their tab rows are, read once: a drag tests
+ *  against the layout it began over, not the preview moving under it. */
+export interface DropGeometry {
+  /** A split's panes: each one's body and the tab in front there. */
+  panes: { rect: DOMRect; tabId: string | undefined }[];
+  /** One document: the column under its tab row. */
+  single: { rect: DOMRect; tabId: string | undefined } | null;
+  /** A split's tab rows: the row, its tabs' centres, its pane's body. */
+  bars: {
+    pane: string;
+    row: DOMRect;
+    pills: { id: string; center: number }[];
+    body: DOMRect;
+  }[];
+}
+
+export function dropGeometry(): DropGeometry {
   const main = document.querySelector<HTMLElement>(".main-pane");
-  if (!main) return null;
-  const panes = [...main.querySelectorAll<HTMLElement>(":scope > .split-pane")];
-  let rect: DOMRect;
-  let tabId: string | undefined;
-  if (panes.length) {
-    const pane = panes.find((p) => inside(p.getBoundingClientRect(), x, y));
-    if (!pane?.dataset.tabId) return null;
-    const area = union(panes.map((p) => p.getBoundingClientRect()));
-    const edge = outerEdge(area, x, y);
-    if (edge)
-      return { zone: edge, tabId: pane.dataset.tabId, rect: area, whole: true };
-    rect = pane.getBoundingClientRect();
-    tabId = pane.dataset.tabId;
-  } else {
-    // One document: the column below the tab bar.
+  const none: DropGeometry = { panes: [], single: null, bars: [] };
+  if (!main) return none;
+  const panes = [
+    ...main.querySelectorAll<HTMLElement>(":scope > .split-pane"),
+  ].map((p) => ({ rect: p.getBoundingClientRect(), tabId: p.dataset.tabId }));
+  let single: DropGeometry["single"] = null;
+  if (!panes.length) {
     const box = main.getBoundingClientRect();
     const bar = main.querySelector(":scope > .island-row, :scope > .tab-bar");
     const top = bar ? bar.getBoundingClientRect().bottom : box.top;
-    rect = new DOMRect(box.left, top, box.width, box.bottom - top);
-    tabId = main.querySelector<HTMLElement>(':scope > [data-active-tab="true"]')
-      ?.dataset.tabId;
+    single = {
+      rect: new DOMRect(box.left, top, box.width, box.bottom - top),
+      tabId: main.querySelector<HTMLElement>(
+        ':scope > [data-active-tab="true"]',
+      )?.dataset.tabId,
+    };
+  }
+  const bars = [
+    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-id]"),
+  ].map((bar) => {
+    const pane = bar.dataset.paneId!;
+    const body = document.querySelector<HTMLElement>(
+      `.split-pane[data-pane-id="${CSS.escape(pane)}"]`,
+    );
+    return {
+      pane,
+      // Its whole row, the room kept at its ends included.
+      row: (bar.closest(".island-row") ?? bar).getBoundingClientRect(),
+      pills: [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].map(
+        (pill) => {
+          const box = pill.getBoundingClientRect();
+          return { id: pill.dataset.flipId!, center: box.left + box.width / 2 };
+        },
+      ),
+      // Lit where the document will show, not over the bar.
+      body: (body ?? bar).getBoundingClientRect(),
+    };
+  });
+  return { panes, single, bars };
+}
+
+/** The zone of the document under (x, y); null off the documents. */
+export function dropTargetAt(
+  x: number,
+  y: number,
+  geometry: DropGeometry = dropGeometry(),
+): DropTarget | null {
+  let rect: DOMRect;
+  let tabId: string | undefined;
+  const { panes, single } = geometry;
+  if (panes.length) {
+    const pane = panes.find((p) => inside(p.rect, x, y));
+    if (!pane?.tabId) return null;
+    const area = union(panes.map((p) => p.rect));
+    const edge = outerEdge(area, x, y);
+    if (edge) return { zone: edge, tabId: pane.tabId, rect: area, whole: true };
+    rect = pane.rect;
+    tabId = pane.tabId;
+  } else {
+    if (!single) return null;
+    rect = single.rect;
+    tabId = single.tabId;
   }
   if (!tabId || !inside(rect, x, y)) return null;
   const fx = (x - rect.left) / rect.width;
@@ -117,37 +177,18 @@ export function dropTargetAt(x: number, y: number): DropTarget | null {
   return { zone, tabId, rect };
 }
 
-/** A split pane's tab bar under (x, y), and the slot there: how many of
+/** A split pane's tab row under (x, y), and the slot there: how many of
  *  its other tabs lie left of x. */
 function barDropAt(
   x: number,
   y: number,
   tabId: string,
+  geometry: DropGeometry,
 ): { pane: string; index: number; rect: DOMRect } | null {
-  // Its whole row, the room kept at its ends included.
-  const bar = [
-    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-id]"),
-  ].find((el) =>
-    inside((el.closest(".island-row") ?? el).getBoundingClientRect(), x, y),
-  );
+  const bar = geometry.bars.find((b) => inside(b.row, x, y));
   if (!bar) return null;
-  const index = [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].filter(
-    (pill) => {
-      const box = pill.getBoundingClientRect();
-      return pill.dataset.flipId !== tabId && box.left + box.width / 2 < x;
-    },
-  ).length;
-  const pane = bar.dataset.paneId!;
-  // Lit where the document will show, not over the bar (and the title bar
-  // a top pane's bar reaches under).
-  const body = document.querySelector<HTMLElement>(
-    `.split-pane[data-pane-id="${CSS.escape(pane)}"]`,
-  );
-  return {
-    pane,
-    index,
-    rect: (body ?? bar).getBoundingClientRect(),
-  };
+  const index = bar.pills.filter((p) => p.id !== tabId && p.center < x).length;
+  return { pane: bar.pane, index, rect: bar.body };
 }
 
 function inside(rect: DOMRect, x: number, y: number): boolean {
@@ -199,35 +240,34 @@ export function showDropHint(target: DropTarget | null): void {
 }
 
 /**
- * Puts `tabId` where it was dropped: on a pane's edge, into a new pane on
- * that side of it; in its middle, into that pane. With one document an
- * edge splits the window, and a tab dropped on its own document pairs with
- * a neighbour. Call once `tabId` is among the window's tabs and in front.
+ * The layout once `tabId` is dropped at `target`: on a pane's edge, in a
+ * new pane on that side of it; in its middle, in that pane. With one
+ * document an edge splits the window, and a tab dropped on its own
+ * document pairs with a neighbour. Null ends the split; undefined: the
+ * drop changes nothing.
  */
-export function splitForDrop(
+export function dropLayout(
+  now: SplitLayout | null,
   tabId: string,
   target: DropTarget,
   tabIds: readonly string[],
-): void {
-  const now = splitLayout();
-  if (now && target.whole && target.zone !== "center") {
-    splitAtEdge(tabId, target.zone);
-    return;
-  }
+): SplitLayout | null | undefined {
+  if (now && target.whole && target.zone !== "center")
+    return splitOff(now, tabId, null, target.zone) ?? undefined;
   const pane = paneOf(now, target.tabId);
   if (now && pane !== null) {
-    if (target.zone === "center") moveToPane(tabId, pane);
+    if (target.zone === "center") return moveTab(now, tabId, pane);
     // A pane's only tab dropped on its own edge stays where it is.
-    else if (paneById(now.root, pane)?.tabs.some((id) => id !== tabId))
-      splitBeside(tabId, pane, target.zone);
-    return;
+    if (!paneById(now.root, pane)?.tabs.some((id) => id !== tabId))
+      return undefined;
+    return splitOff(now, tabId, pane, target.zone) ?? undefined;
   }
-  if (target.zone === "center") return;
+  if (target.zone === "center") return undefined;
   let other = target.tabId;
   if (other === tabId) {
     const at = tabIds.indexOf(tabId);
     other = tabIds[at + 1] ?? tabIds[at - 1];
-    if (!other) return;
+    if (!other) return undefined;
   }
   const direction: SplitDirection =
     target.zone === "left" || target.zone === "right" ? "row" : "column";
@@ -239,11 +279,29 @@ export function splitForDrop(
     ? pairLayout(direction, tabId, other, 1)
     : pairLayout(direction, other, tabId, 0);
   const [a, b] = layout.root.children;
-  if (a.kind === "pane" && b.kind === "pane") {
-    (first ? b : a).tabs = rest;
-  }
-  setSplitLayout(layout);
+  if (a.kind === "pane" && b.kind === "pane") (first ? b : a).tabs = rest;
+  return layout;
 }
+
+/** Commits a layout dropLayout gave. */
+function commitDrop(next: SplitLayout | null | undefined): void {
+  if (next) setSplitLayout(next);
+  else if (next === null) closeSplit();
+}
+
+/** Puts `tabId` where it was dropped (dropLayout). Call once `tabId` is
+ *  among the window's tabs and in front. */
+export function splitForDrop(
+  tabId: string,
+  target: DropTarget,
+  tabIds: readonly string[],
+): void {
+  commitDrop(dropLayout(splitLayout(), tabId, target, tabIds));
+}
+
+/** How long the pointer rests on a place before the layout shows it: a
+ *  drag passing over places doesn't flicker through them. */
+const PREVIEW_DWELL_MS = 80;
 
 /**
  * A tab pulled down out of the tab bar, followed to its drop: over a
@@ -264,11 +322,43 @@ export function pullTab(
 ): void {
   const ghost = dragGhost(title, "tab-pull-ghost");
   setDragging(true);
+  // Tested against the layout the drag began over (DropGeometry).
+  const geometry = dropGeometry();
   const outside = (e: PointerEvent) =>
     e.clientX < 0 ||
     e.clientY < 0 ||
     e.clientX > window.innerWidth ||
     e.clientY > window.innerHeight;
+  /** The layout a drop at (x, y) makes, and a key naming the place. */
+  const placeAt = (x: number, y: number) => {
+    const now = splitLayout();
+    const bar = barDropAt(x, y, tabId, geometry);
+    if (bar && now) {
+      const moved = moveTab(now, tabId, bar.pane);
+      return {
+        key: `bar:${bar.pane}:${bar.index}`,
+        next: moved && reorderTab(moved, bar.pane, tabId, bar.index),
+      };
+    }
+    const target = dropTargetAt(x, y, geometry);
+    if (!target) return null;
+    return {
+      key: `${target.whole ? "whole" : target.tabId}:${target.zone}`,
+      next: dropLayout(now, tabId, target, opts.tabIds),
+    };
+  };
+  let shown: string | null = null;
+  let timer = 0;
+  /** The layout shows the place under the pointer once it rests there. */
+  const preview = (place: ReturnType<typeof placeAt>) => {
+    const key = place?.key ?? null;
+    if (key === shown) return;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      shown = key;
+      previewSplit(place?.next ?? null);
+    }, PREVIEW_DWELL_MS);
+  };
   const move = (e: PointerEvent) => {
     // Let go where no pointerup reached the page (WebView2 can lose it).
     if (e.buttons === 0) {
@@ -281,33 +371,22 @@ export function pullTab(
       return;
     }
     ghost.move(e.clientX, e.clientY);
-    const bar = barDropAt(e.clientX, e.clientY, tabId);
-    showDropHint(
-      bar
-        ? { zone: "center", tabId, rect: bar.rect }
-        : dropTargetAt(e.clientX, e.clientY),
-    );
+    preview(placeAt(e.clientX, e.clientY));
   };
   const up = (e: PointerEvent) => {
-    const bar = barDropAt(e.clientX, e.clientY, tabId);
-    const target = dropTargetAt(e.clientX, e.clientY);
-    stop();
     if (opts.releaseOutside && outside(e)) {
+      stop();
       opts.releaseOutside(tabId);
       return;
     }
-    if (bar) {
+    const place = placeAt(e.clientX, e.clientY);
+    if (place) {
       opts.activate(tabId);
-      requestAnimationFrame(() => {
-        moveToPane(tabId, bar.pane);
-        reorderInPane(bar.pane, tabId, bar.index);
-      });
-      return;
+      // The layout it showed, made before the preview goes: the same
+      // panes, so nothing jumps back and forth.
+      commitDrop(place.next);
     }
-    if (!target) return;
-    opts.activate(tabId);
-    // Once it is in front, the next frame: the split takes it from there.
-    requestAnimationFrame(() => splitForDrop(tabId, target, opts.tabIds));
+    stop();
   };
   const key = (e: KeyboardEvent) => {
     if (e.key === "Escape") stop();
@@ -317,9 +396,10 @@ export function pullTab(
     window.removeEventListener("pointerup", up);
     window.removeEventListener("pointercancel", stop);
     window.removeEventListener("keydown", key, true);
+    window.clearTimeout(timer);
     ghost.remove();
     setDragging(false);
-    showDropHint(null);
+    previewSplit(null);
   }
   window.addEventListener("pointermove", move);
   window.addEventListener("pointerup", up);

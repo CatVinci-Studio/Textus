@@ -8,6 +8,7 @@ import {
   subscribeSplit,
   type SplitLayout,
   type SplitRequest,
+  splitPreview,
 } from "./store";
 import {
   mapPanes,
@@ -128,6 +129,7 @@ export function useSplitPanes(
 ): SplitLayout | null {
   const layout = useSyncExternalStore(subscribeSplit, splitLayout);
   const request = useSyncExternalStore(subscribeSplit, splitRequest);
+  const preview = useSyncExternalStore(subscribeSplit, splitPreview);
   const resolved = resolveSplit(layout, request, tabIds, active);
   useEffect(() => {
     if (resolved && "blank" in resolved) {
@@ -139,6 +141,8 @@ export function useSplitPanes(
       if (layout || request) closeSplit();
     } else setSplitLayout(resolved);
   }, [resolved, layout, request, addBlankTab]);
+  // A drag's preview stands in for the layout while it lasts.
+  if (preview) return preview;
   if (!resolved || "blank" in resolved) return null;
   return panesOf(resolved.root).every((p) => p.front || islandOf(p) === "ai")
     ? resolved
