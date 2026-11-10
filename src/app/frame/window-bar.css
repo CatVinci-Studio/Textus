@@ -191,15 +191,16 @@
   pointer-events: none;
 }
 
-/* Centered on the window, where a native title sits, hence absolute. */
+/* Over the document it names, placed by the window's clock
+   (useTitleRoom.ts): its box spans the room it has, its words centred in
+   it. Centred on the window until placed. */
 .window-bar-title {
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  /* Never under the status on its right (useTitleRoom.ts). */
-  max-width: min(45%, var(--window-bar-title-room, 45%));
+  left: 25%;
+  width: 50%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-size: var(--text-secondary);
   color: var(--ui-muted);
@@ -228,61 +229,6 @@
 
 .window-bar-lock:hover {
   color: var(--ui-text);
-}
-
-/* Bounded so it never slides under the app-drawn caption buttons. */
-:root[data-window-chrome="app"] .window-bar-title {
-  max-width: min(
-    max(0px, calc(100% - 300px)),
-    var(--window-bar-title-room, 100%)
-  );
-}
-
-/* Centred in the document column rather than the window: with the sidebar
-   or the AI panel open, the window's centre is not the page's, and the title
-   would sit off the column it names. Its two halves are kept apart because
-   they arrive at different moments: the sidebar's rides its slide, on the
-   slide's curves, on the compositor with it; the AI panel's belongs to the
-   room the editor makes or takes back beside it, so the title follows that
-   move on the page's own spring, as the text it names does. The fade stays
-   for zen, which takes the title out of clicks and fades it back in. */
-:root:not([data-window-chrome="mobile"], .zen)
-  .window-bar:not(:has(> .window-menu-bar))
-  .window-bar-title {
-  translate: calc(
-    var(--window-bar-title-slide, 0px) + var(--rail-width, 0px) / 2
-  );
-  transform: translateX(calc(-50% + var(--window-bar-title-shift, 0px)));
-  transition:
-    translate var(--window-bar-title-dur, var(--dur-base))
-      var(--window-bar-title-ease, var(--ease-in)),
-    transform var(--window-bar-title-shift-dur, var(--dur-slow))
-      var(--ease-spring),
-    opacity var(--dur-slow) var(--ease-in-out),
-    visibility 0s;
-}
-
-/* The sidebar's own curves: a spring in, and a faster ease-in out. */
-.app-shell:has(> .sidebar:not(.sidebar-collapsed)) {
-  --window-bar-title-dur: var(--dur-slow);
-  --window-bar-title-ease: var(--ease-spring);
-}
-
-/* A dragged edge sets its width every frame: the title keeps up instead of
-   trailing the column it names. Its own value beats the one it inherits. */
-.app-shell:has(.resize-handle-active) .window-bar-title {
-  --window-bar-title-dur: 0s;
-  --window-bar-title-shift-dur: 0s;
-}
-
-/* Reduced motion leaves the sidebar no travel to follow, so the title's half
-   arrives with it - and with nothing travelling, the panel's half lands at
-   once, as its column does. */
-@media (prefers-reduced-motion: reduce) {
-  .window-bar-title {
-    --window-bar-title-dur: 0s;
-    --window-bar-title-shift-dur: 0s;
-  }
 }
 
 .window-bar-status {

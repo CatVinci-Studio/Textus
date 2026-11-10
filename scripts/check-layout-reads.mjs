@@ -38,8 +38,6 @@ const ALLOWED = {
     "the rail's groups, a list its stylesheet places, at a drag's end",
   "src/app/frame/rail-lift.ts":
     "the rail's groups, a list its stylesheet places, as an icon is carried",
-  "src/app/frame/useTitleRoom.ts":
-    "the window bar's title and status, outside the frame",
 };
 
 function* files(dir) {

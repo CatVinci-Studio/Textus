@@ -45,12 +45,15 @@ export function rowInsets(
 }
 
 /** What of the window bar the rows keep clear of, in the viewport. */
-interface BarObstacles {
+export interface BarObstacles {
   /** The end of its leading controls (the menu, the sidebar's toggle). */
   leadEnd: number;
   /** Where each control ending it starts (its status, the window's
    *  buttons). */
   ends: readonly number[];
+  /** The bar's own sides and foot. */
+  left: number;
+  right: number;
   bottom: number;
   /** The sheet's corner and the tab's curve in beside it. */
   corner: number;
@@ -73,6 +76,15 @@ function lengthOf(name: string): number {
 
 /** The window bar's controls, measured: they are outside the islands,
  *  placed by their own stylesheet - the rows' inputs, not their layout. */
+function barSides() {
+  const box = document.querySelector(BAR)?.getBoundingClientRect();
+  return {
+    left: box?.left ?? 0,
+    right: box?.right ?? window.innerWidth,
+    bottom: box?.bottom ?? 0,
+  };
+}
+
 function measure(): BarObstacles {
   const boxes = (selector: string) =>
     [...document.querySelectorAll(selector)]
@@ -82,7 +94,7 @@ function measure(): BarObstacles {
   return {
     leadEnd: Math.max(-Infinity, ...boxes(LEAD).map((box) => box.right)),
     ends: boxes(ENDS).map((box) => box.left),
-    bottom: document.querySelector(BAR)?.getBoundingClientRect().bottom ?? 0,
+    ...barSides(),
     corner: lengthOf("--island-radius") + lengthOf("--tab-radius"),
   };
 }
@@ -146,6 +158,11 @@ function subscribe(listener: () => void) {
 
 const snapshot = () => obstacles;
 
+/** The window bar's controls as last measured; null until they are. */
+export function useBarObstacles(): BarObstacles | null {
+  return useSyncExternalStore(subscribe, snapshot);
+}
+
 /** Where `island`'s row (none: the window's width, the chat window's)
  *  starts and ends its tabs, given the window bar's controls. */
 function insetsFor(
@@ -180,7 +197,7 @@ function insetsFor(
 export function useRowInsets(
   frame: string | undefined,
 ): (RowInsets & { joined: boolean }) | null {
-  const bar = useSyncExternalStore(subscribe, snapshot);
+  const bar = useBarObstacles();
   const { islands } = useFrameLayout();
   if (!bar) return null;
   const island = frame ? islands.find((i) => i.key === frame) : null;

@@ -48,7 +48,7 @@
    rather than in the window, and gives way first. */
 .window-menu-bar ~ .window-bar-title {
   position: static;
-  transform: none;
+  width: auto;
   flex: 1 1 0;
   min-width: 0;
   max-width: none;

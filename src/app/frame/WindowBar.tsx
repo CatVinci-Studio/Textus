@@ -87,7 +87,9 @@ export function WindowBar({
     agentOpen,
     onToggleAgent,
   );
-  const { titleRef, statusRef } = useTitleRoom();
+  const titleRef = useTitleRoom(
+    !bar.lead.includes("menu-bar") && canUseWindows,
+  );
   return (
     <>
       {/* The frosted bar's glass, layered under it: see window-bar.css. */}
@@ -169,7 +171,7 @@ export function WindowBar({
             </Tooltip>
           )}
         </span>
-        <div className="window-bar-status" ref={statusRef}>
+        <div className="window-bar-status">
           {hasStatus && (
             <Suspense fallback={null}>
               <PluginStatusItems />

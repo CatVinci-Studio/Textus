@@ -1,5 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { frameClock } from "../../engine/frame/clock";
+import { useFrameLayout } from "../../engine/frame/frame-store";
+import { useBarObstacles } from "../../engine/layout/row-insets";
 
 /** Room kept between the title and what sits beside it. */
 const GAP = 12;
@@ -7,73 +10,49 @@ const GAP = 12;
 const MIN_HALF = 80;
 
 /**
- * The window bar's title is centred over the document column, not laid out
- * beside the status on its right (a page's path, the word count): this
- * keeps it from running under that status, as wide as twice the room from
- * its centre to the status, so a long name is cut short with an ellipsis.
+ * The window bar's title over the document it names: centred on its
+ * island as the solver places it, as wide as twice the room from there to
+ * the controls either side (a long name cut short), else the free stretch
+ * between them; moved on the window's clock with the islands. `on` false
+ * leaves it to its stylesheet (the menu bar's row, a phone's).
  */
-export function useTitleRoom() {
+export function useTitleRoom(on: boolean) {
   const titleRef = useRef<HTMLSpanElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const title = titleRef.current;
-    const status = statusRef.current;
-    if (!title || !status) return;
-    let frame = 0;
-    const measure = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        const nudge = parseFloat(title.style.marginLeft) || 0;
-        const box = title.getBoundingClientRect();
-        // Where it would be centred, without the last nudge.
-        const centre = box.left + box.width / 2 - nudge;
-        const right =
-          (status.firstElementChild
-            ? status.getBoundingClientRect().left
-            : window.innerWidth) - scaledPx(GAP);
-        const half = right - centre;
-        if (half >= MIN_HALF) {
-          title.style.setProperty("--window-bar-title-room", `${2 * half}px`);
-          title.style.marginLeft = "";
-          return;
-        }
-        // No room either side of the column's centre (a narrow window with
-        // the sidebar open): the free stretch before the status instead.
-        let left = 0;
-        for (
-          let el = title.previousElementSibling;
-          el;
-          el = el.previousElementSibling
-        )
-          left = Math.max(
-            left,
-            el.getBoundingClientRect().right + scaledPx(GAP),
-          );
-        const span = Math.max(0, right - left);
-        title.style.setProperty("--window-bar-title-room", `${span}px`);
-        title.style.marginLeft = `${left + span / 2 - centre}px`;
-      });
-    };
-    measure();
-    const resized = new ResizeObserver(measure);
-    resized.observe(status);
-    resized.observe(title.parentElement ?? title);
-    const changed = new MutationObserver(measure);
-    changed.observe(status, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    // The title slides with the sidebar and the AI panel.
-    title.addEventListener("transitionend", measure);
-    window.addEventListener("resize", measure);
-    return () => {
-      cancelAnimationFrame(frame);
-      resized.disconnect();
-      changed.disconnect();
-      title.removeEventListener("transitionend", measure);
-      window.removeEventListener("resize", measure);
-    };
-  }, []);
-  return { titleRef, statusRef };
+  const bar = useBarObstacles();
+  const { islands } = useFrameLayout();
+  const island = islands.find((i) => i.paneId === null) ?? islands[0];
+  const width = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    if (!on || !bar || !island) {
+      frameClock.drop("title");
+      frameClock.attach("title", null);
+      el.style.left = "";
+      el.style.width = "";
+      return;
+    }
+    const gap = scaledPx(GAP);
+    const centre = island.whole.x + island.whole.w / 2;
+    const start = Math.max(bar.left, bar.leadEnd) + gap;
+    const end =
+      Math.min(bar.right, ...bar.ends.filter((e) => e > centre)) - gap;
+    const half = Math.min(centre - start, end - centre);
+    const rect =
+      half >= scaledPx(MIN_HALF)
+        ? { x: centre - half, w: 2 * half }
+        : { x: start, w: Math.max(0, end - start) };
+    frameClock.attach("title", el);
+    // A window resized moves it at once, as the islands.
+    const resized = width.current !== null && width.current !== bar.right;
+    width.current = bar.right;
+    frameClock.set(
+      "title",
+      new Map([["title", { rect: { ...rect, y: 0, h: 0 }, along: true }]]),
+      { x: bar.left, y: 0 },
+      !resized,
+    );
+  });
+  useLayoutEffect(() => () => frameClock.drop("title"), []);
+  return titleRef;
 }
