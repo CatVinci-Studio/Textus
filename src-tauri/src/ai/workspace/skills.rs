@@ -292,7 +292,8 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
     }
     let mut deleted = Vec::new();
     for path in copies {
-        std::fs::remove_file(path).map_err(|e| e.to_string())?;
+        // The user may have edited their copy: to the Trash.
+        crate::atomic::to_trash(path)?;
         deleted.push(path.to_string_lossy().to_string());
     }
     Ok(deleted)

@@ -295,6 +295,17 @@ const RUNNABLE: &[&str] = &[
     "applescript",
     "workflow",
     "action",
+    "terminal",
+    "fileloc",
+    "inetloc",
+    "webloc",
+    "dmg",
+    "mpkg",
+    "appref-ms",
+    "jnlp",
+    "chm",
+    "msp",
+    "settingcontent-ms",
 ];
 
 #[cfg(desktop)]
@@ -303,6 +314,24 @@ fn is_runnable(path: &str) -> bool {
         .extension()
         .and_then(|ext| ext.to_str())
         .is_some_and(|ext| RUNNABLE.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
+/// A file with no extension its owner may run (a script cloned with its
+/// +x bit): the system would run it in a terminal.
+#[cfg(desktop)]
+fn marked_to_run(path: &std::path::Path) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        path.extension().is_none()
+            && std::fs::metadata(path)
+                .is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = path;
+        false
+    }
 }
 
 /// A local file a document links to, opened in the app the system picks for
@@ -314,7 +343,12 @@ fn is_runnable(path: &str) -> bool {
 pub async fn open_linked_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
     let opener = app.opener();
-    if is_runnable(&path) || std::path::Path::new(&path).is_dir() {
+    // What it is, not what it is called: a link named notes.txt may lead to
+    // a script, and a file with no extension marked to run opens in a
+    // terminal.
+    let real = std::fs::canonicalize(&path).unwrap_or_else(|_| path.clone().into());
+    let real_name = real.to_string_lossy();
+    if is_runnable(&path) || is_runnable(&real_name) || marked_to_run(&real) || real.is_dir() {
         opener.reveal_item_in_dir(&path)
     } else {
         opener.open_path(&path, None::<&str>)

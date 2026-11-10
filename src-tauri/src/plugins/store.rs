@@ -346,10 +346,8 @@ pub fn plugin_store_clear(
             None => loose_place(&app, &id)?,
         },
     };
-    match std::fs::remove_dir_all(&dir) {
-        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
-        _ => Ok(()),
-    }
+    // It may hold the user's notes.
+    crate::atomic::to_trash(&dir)
 }
 
 #[cfg(test)]

@@ -254,3 +254,24 @@ impl Drop for TempDir {
 
 #[cfg(test)]
 mod tests;
+
+/// `path` (a file or a folder) out of the way the user can get it back:
+/// to the Trash where the system has one, else removed - for what may hold
+/// the user's own work (a plugin's notes, a skill they edited, a theme).
+pub(crate) fn to_trash(path: &std::path::Path) -> Result<(), String> {
+    if !path.exists() {
+        return Ok(());
+    }
+    // Tests' own temporary files aren't sent to the user's Trash.
+    #[cfg(all(desktop, not(test)))]
+    return trash::delete(path).map_err(|e| e.to_string());
+    #[cfg(any(not(desktop), test))]
+    {
+        if path.is_dir() {
+            std::fs::remove_dir_all(path)
+        } else {
+            std::fs::remove_file(path)
+        }
+        .map_err(|e| e.to_string())
+    }
+}

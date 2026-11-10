@@ -407,10 +407,8 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     if target.is_dir() {
         std::fs::remove_dir_all(&target).map_err(|e| e.to_string())?;
     }
-    let data = data_dir(&app, &id)?;
-    if data.is_dir() {
-        std::fs::remove_dir_all(&data).map_err(|e| e.to_string())?;
-    }
+    // Its data may be the user's: to the Trash.
+    crate::atomic::to_trash(&data_dir(&app, &id)?)?;
     super::store::forget_global(&app, &id)?;
     // A script's file goes to the Trash, or it would be found again.
     #[cfg(desktop)]
