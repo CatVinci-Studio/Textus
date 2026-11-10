@@ -119,7 +119,89 @@ fn restore_pictures(dir: &Path) {
 }
 
 fn app_data(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    app.path().app_data_dir().map_err(|e| e.to_string())
+    let dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let _ = KNOWN_APP_DATA.set(dir.clone());
+    Ok(dir)
+}
+
+/// The app's data folder once a request or a command has named it: where
+/// the agent's tools look for what waits in a file.
+static KNOWN_APP_DATA: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+
+/// Remembers the app's data folder for the agent's tools.
+pub(crate) fn know_app_data(app: &tauri::AppHandle) {
+    let _ = app_data(app);
+}
+
+/// A store kept for `file` (`suffix` marks the frontend's store of its
+/// changes kept as revisions), as JSON.
+fn stored(file: &Path, suffix: &str) -> Option<serde_json::Value> {
+    stored_in(KNOWN_APP_DATA.get()?, file, suffix)
+}
+
+fn stored_in(data: &Path, file: &Path, suffix: &str) -> Option<serde_json::Value> {
+    let kept = kept_file(&format!("{}{suffix}", file.to_str()?), None, data)?;
+    serde_json::from_slice(&std::fs::read(kept).ok()?).ok()
+}
+
+/// The frontend's store of the changes Textus AI kept as revisions for a
+/// file it didn't have open (file-revisions.ts).
+const CHANGES: &str = "#ai-changes";
+
+/// `file` with the change Textus AI kept as a revision there and not yet
+/// placed in its editor: what a later change builds on.
+pub(crate) fn pending_text(file: &Path) -> Option<String> {
+    let kept = stored(file, CHANGES)?;
+    kept["incoming"]
+        .as_array()?
+        .iter()
+        .rev()
+        .find(|r| !r["conflict"].as_bool().unwrap_or(false))?["after"]
+        .as_str()
+        .map(str::to_string)
+}
+
+/// What Textus AI left waiting in `file`, said to the model after the
+/// file's text: its own revisions the user hasn't decided, and changes
+/// that met other edits. None where nothing waits.
+pub(crate) fn waiting_note(file: &Path) -> Option<String> {
+    let mut lines = Vec::new();
+    if let Some(text) = pending_text(file) {
+        lines.push(format!(
+            "Your revision to this file waits for the user to accept or reject it; the text above is the file on disk. With your revision it reads:\n{text}"
+        ));
+    }
+    let met = stored(file, CHANGES)
+        .and_then(|k| k["incoming"].as_array().cloned())
+        .map_or(0, |all| {
+            all.iter()
+                .filter(|r| r["conflict"].as_bool() == Some(true))
+                .count()
+        });
+    if met > 0 {
+        lines.push("An earlier revision of yours met other edits to this file and was not placed; the user sees it listed.".to_string());
+    }
+    let proposals = stored(file, "").and_then(|k| k["proposals"].as_array().cloned());
+    let undecided: Vec<String> = proposals
+        .unwrap_or_default()
+        .iter()
+        .filter_map(|p| {
+            let p = &p["proposal"];
+            let action = p["action"].as_str()?;
+            let text = p["text"].as_str().unwrap_or("");
+            Some(format!(
+                "- {action}: {}",
+                text.chars().take(400).collect::<String>()
+            ))
+        })
+        .collect();
+    if !undecided.is_empty() {
+        lines.push(format!(
+            "Your revisions in this file the user hasn't decided yet (pending, not in the text above):\n{}",
+            undecided.join("\n")
+        ));
+    }
+    (!lines.is_empty()).then(|| lines.join("\n\n"))
 }
 
 /// The proposals kept for the document, or None when there are none - their
@@ -181,6 +263,23 @@ pub async fn kept_proposals_write(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_change_kept_as_a_revision_is_found_for_its_file() {
+        let dir = tempfile::tempdir().unwrap();
+        let data = dir.path().join("data");
+        let doc = dir.path().join("a.md");
+        let store = kept_file(&format!("{}{CHANGES}", doc.to_str().unwrap()), None, &data).unwrap();
+        std::fs::create_dir_all(store.parent().unwrap()).unwrap();
+        std::fs::write(
+            &store,
+            r#"{"version":1,"incoming":[{"ids":["x"],"conversation":"c","before":"A.","after":"B."}]}"#,
+        )
+        .unwrap();
+        let kept = stored_in(&data, &doc, CHANGES).unwrap();
+        assert_eq!(kept["incoming"][0]["after"], "B.");
+        assert!(stored_in(&data, &doc, "").is_none());
+    }
 
     #[test]
     fn proposals_an_older_textus_kept_in_the_project_move_to_the_app_data() {

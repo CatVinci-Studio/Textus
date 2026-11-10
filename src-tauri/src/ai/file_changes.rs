@@ -193,7 +193,8 @@ impl FileEdits {
     }
 
     /// The file's text as this request left it: its last kept change, else
-    /// the disk; None for a file not there yet.
+    /// a revision kept for it earlier, else the disk; None for a file not
+    /// there yet.
     fn current(&self, file: &Path) -> Result<Option<String>, String> {
         let name = file.to_string_lossy();
         if let Some(last) = self
@@ -205,6 +206,10 @@ impl FileEdits {
             .find(|c| c.file == name)
         {
             return Ok(Some(last.after.clone()));
+        }
+        // A change kept as a revision before, not yet placed: this builds on it.
+        if let Some(waiting) = crate::ai::kept_proposals::pending_text(file) {
+            return Ok(Some(waiting));
         }
         if !file.exists() {
             return Ok(None);

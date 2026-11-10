@@ -242,6 +242,7 @@ async fn ai_agent_message_inner(
             let helper_tools = ToolRegistry::builtin(false, false, mode, entry.supports_vision)
                 .only(tools::PROPOSE_EDIT_TOOL_NAME);
             let helpers = HelperTurns::default();
+            crate::ai::kept_proposals::know_app_data(&app);
             let file_edits = crate::ai::file_changes::FileEdits::new(
                 workspace.root.as_deref().map(Path::new),
                 request.conversation.as_deref(),
