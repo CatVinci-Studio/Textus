@@ -533,6 +533,8 @@ type /name in a conversation to use one.
     "The request took too long. Check your connection, then retry.",
   aiErrorNetwork:
     "Couldn't reach the service. Check your internet connection or proxy settings.",
+  aiErrorContextLength:
+    "The conversation is too long for this model. Start a new conversation, or attach less.",
   aiErrorModel: `This model isn't available for your account. Pick another in Settings > ${AI_NAME}.`,
   grammarIgnore: "Ignore",
   grammarKindSpelling: "Spelling",

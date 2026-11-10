@@ -543,6 +543,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A solicitação demorou demais. Verifique sua conexão e tente de novo.",
   aiErrorNetwork:
     "Não foi possível acessar o serviço. Verifique sua conexão com a internet ou as configurações de proxy.",
+  aiErrorContextLength:
+    "A conversa está longa demais para este modelo. Comece uma nova conversa ou anexe menos.",
   aiErrorModel: `Este modelo não está disponível para sua conta. Escolha outro em Ajustes > ${AI_NAME}.`,
   grammarIgnore: "Ignorar",
   grammarKindSpelling: "Ortografia",

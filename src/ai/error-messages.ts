@@ -15,10 +15,15 @@ export type AiErrorKind =
   | "server"
   | "timeout"
   | "network"
-  | "model";
+  | "model"
+  | "contextLength";
 
 const PATTERNS: [AiErrorKind, RegExp][] = [
   ["notConfigured", /isn't set up yet|not configured/i],
+  [
+    "contextLength",
+    /context_length_exceeded|maximum context length|context length|prompt is too long|input (is )?too long|too many tokens/i,
+  ],
   ["workspaceKey", /not scoped to a workspace|anthropic-workspace-id/i],
   // Before rate limits: some services send a used-up balance as a 429.
   [
@@ -60,6 +65,7 @@ const TEXT: Record<AiErrorKind, TextKey> = {
   timeout: "aiErrorTimeout",
   network: "aiErrorNetwork",
   model: "aiErrorModel",
+  contextLength: "aiErrorContextLength",
 };
 
 /** What to do about each kind, in the user's language. */

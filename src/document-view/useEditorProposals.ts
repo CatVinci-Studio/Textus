@@ -132,9 +132,10 @@ export function useEditorProposals({
   useEffect(() => {
     if (filePath) reportUndecided(filePath, "ai", undecided);
   }, [filePath, undecided]);
-  // Written straight in: each proposal Textus AI sends now taken as soon as
-  // it is whole, the text before the first kept for the marks. Restored or
-  // placed ones (from before the switch) stay for the writer to decide.
+  // Written straight in: each proposal Textus AI sends now taken once the
+  // backend has taken it whole, the text before the first kept for the
+  // marks. Restored or placed ones (from before the switch), and drafts a
+  // Stop cut off, stay for the writer to decide.
   const direct = settings.aiChangeMode === "direct";
   const sentNow = useRef(new Set<string>());
   const { previews, accept } = pendingEdits;
@@ -311,7 +312,6 @@ export function useEditorProposals({
     const canvas: ProposalCanvas = {
       text: withBegunPictures,
       show: (callId, proposal, streaming) => {
-        sentNow.current.add(callId);
         addPreviews(
           [
             {
@@ -356,8 +356,13 @@ export function useEditorProposals({
       proposalStream.finish("failed");
       return;
     }
-    if (event.type === "turn" && event.turn.kind === "ToolResult")
-      proposalStream.result(event.turn.call_id, isRefusal(event.turn.output));
+    if (event.type === "turn" && event.turn.kind === "ToolResult") {
+      const refused = isRefusal(event.turn.output);
+      // Written straight in only once the backend took it whole: never a
+      // draft cut off by Stop, nor one it then refused.
+      if (!refused) sentNow.current.add(event.turn.call_id);
+      proposalStream.result(event.turn.call_id, refused);
+    }
     else if (event.type === "toolStart")
       proposalStream.toolStart(event.callId, event.name);
     else if (event.type === "toolArgsDelta")

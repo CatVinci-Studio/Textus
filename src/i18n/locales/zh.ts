@@ -483,6 +483,8 @@ export default {
   aiErrorServer: "服务端出了问题，请过一会儿再试。",
   aiErrorTimeout: "请求超时，请检查网络后重试。",
   aiErrorNetwork: "无法连接到服务，请检查网络或代理设置。",
+  aiErrorContextLength:
+    "对话太长，超出了这个模型的上限。请新建一个对话，或少附加一些内容。",
   aiErrorModel: `你的账号无法使用这个模型，请在「设置 > ${AI_NAME}」中换一个。`,
   grammarIgnore: "忽略",
   grammarKindSpelling: "错别字",

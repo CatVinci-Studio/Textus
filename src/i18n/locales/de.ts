@@ -541,6 +541,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die Anfrage hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal.",
   aiErrorNetwork:
     "Der Dienst ist nicht erreichbar. Prüfe deine Internetverbindung oder die Proxy-Einstellungen.",
+  aiErrorContextLength:
+    "Die Unterhaltung ist für dieses Modell zu lang. Beginne eine neue Unterhaltung oder hänge weniger an.",
   aiErrorModel: `Dieses Modell ist für dein Konto nicht verfügbar. Wähle unter Einstellungen > ${AI_NAME} ein anderes.`,
   grammarIgnore: "Ignorieren",
   grammarKindSpelling: "Rechtschreibung",

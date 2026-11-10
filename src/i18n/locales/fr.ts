@@ -555,6 +555,8 @@ utiliser une.
     "La requête a pris trop de temps. Vérifiez votre connexion, puis réessayez.",
   aiErrorNetwork:
     "Impossible de joindre le service. Vérifiez votre connexion Internet ou les réglages du proxy.",
+  aiErrorContextLength:
+    "La conversation est trop longue pour ce modèle. Commencez une nouvelle conversation ou joignez moins.",
   aiErrorModel: `Ce modèle n'est pas disponible pour votre compte. Choisissez-en un autre dans Réglages > ${AI_NAME}.`,
   grammarIgnore: "Ignorer",
   grammarKindSpelling: "Orthographe",

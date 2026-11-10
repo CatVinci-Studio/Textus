@@ -103,7 +103,8 @@ pub async fn ai_agent_message(
         searxng_url,
         request_id,
         image_model,
-        ask_before_file_changes: ask_before_file_changes.unwrap_or(false),
+        // Revisions unless told otherwise: the app's own default.
+        ask_before_file_changes: ask_before_file_changes.unwrap_or(true),
     };
     let web_service = web_search.then(|| request.search_service(&app)).flatten();
     let ui_language = ui_language.unwrap_or_else(|| "en".to_string());
@@ -353,8 +354,10 @@ async fn ai_agent_message_inner(
             .await
             {
                 // A server that doesn't implement `tools` properly gets a single
-                // tool-less completion instead of failing the request.
-                Err(_) if agent.falls_back_to_plain_chat() => {
+                // tool-less completion instead of failing the request. Only
+                // that: a rate limit, a key refused or a timeout is said as it
+                // is, not hidden behind a second request.
+                Err(e) if agent.falls_back_to_plain_chat() && refuses_tools(&e) => {
                     let instructions = build_instructions(
                         &workspace,
                         &document,
@@ -472,3 +475,24 @@ fn selected_picture(message: &str, doc_path: Option<&str>) -> Option<ImageAttach
 
 #[cfg(test)]
 mod tests;
+
+/// Whether a request's error says the server can't take tools (it names
+/// them in refusing the request), rather than any other failure.
+fn refuses_tools(error: &str) -> bool {
+    let error = error.to_ascii_lowercase();
+    ["tool", "function call", "function_call", "functions"]
+        .iter()
+        .any(|word| error.contains(word))
+        && ![
+            "429",
+            "rate limit",
+            "timed out",
+            "timeout",
+            "401",
+            "403",
+            "quota",
+            "balance",
+        ]
+        .iter()
+        .any(|word| error.contains(word))
+}

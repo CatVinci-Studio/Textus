@@ -15,6 +15,7 @@ import {
   agentRequest,
 } from "../../agents/agent-request";
 import { keepCancelledTurns } from "../cancelled-turns";
+import { afterFileChanges } from "../file-changes";
 import { streamStep } from "../stream-step";
 import { thinkingDone } from "../thought";
 import { offerSkillAfter, rememberAfter } from "./conversation-passes";
@@ -145,8 +146,9 @@ export async function sendMessage(
     if (!current()) return undefined;
     keepThought();
     model.setHistory((prev) => [...prev, ...newTurns]);
-    // What follows asks Textus AI's model, which an agent's chat doesn't use.
-    if (!agent) {
+    // What follows asks Textus AI's model, which an agent's chat doesn't use,
+    // and is about a conversation that is kept: never a Quick Ask's.
+    if (!agent && model.persist) {
       const after = [...history, ...newTurns];
       void rememberAfter(model, env, after, at + newTurns.length);
       void offerSkillAfter(model, env, after, at + newTurns.length);
@@ -175,6 +177,13 @@ export async function sendMessage(
       return kept;
     }
     ended = "failed";
+    // Files already changed before it failed: shown, marked and undoable
+    // all the same (as revisions, kept for their files).
+    void afterFileChanges(
+      conversationId,
+      model.streamingNow?.turns ?? [],
+      settings.aiChangeMode === "revision",
+    );
     model.patch({
       error: errorText(err),
       retryable: { document, message: trimmed, images, options: sent },

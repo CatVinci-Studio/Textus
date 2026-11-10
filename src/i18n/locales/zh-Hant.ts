@@ -483,6 +483,8 @@ export default {
   aiErrorServer: "服務本身發生問題。過一會兒再重試。",
   aiErrorTimeout: "要求逾時。檢查網路連線後再重試。",
   aiErrorNetwork: "無法連線到服務。檢查網路連線或代理伺服器設定。",
+  aiErrorContextLength:
+    "對話太長，超出了這個模型的上限。請新建一個對話，或少附加一些內容。",
   aiErrorModel: `你的帳號無法使用這個模型。在「設定 > ${AI_NAME}」中改選其他模型。`,
   grammarIgnore: "忽略",
   grammarKindSpelling: "錯別字",

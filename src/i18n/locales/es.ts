@@ -553,6 +553,8 @@ para usar una.
     "La solicitud tardó demasiado. Revisa tu conexión y vuelve a intentarlo.",
   aiErrorNetwork:
     "No se pudo conectar con el servicio. Revisa tu conexión a internet o los ajustes del proxy.",
+  aiErrorContextLength:
+    "La conversación es demasiado larga para este modelo. Empieza una conversación nueva o adjunta menos.",
   aiErrorModel: `Este modelo no está disponible para tu cuenta. Elige otro en Ajustes > ${AI_NAME}.`,
   grammarIgnore: "Ignorar",
   grammarKindSpelling: "Ortografía",

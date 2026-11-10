@@ -20,16 +20,23 @@ pub enum OpenaiAuth {
     ApiKey(String),
 }
 
+/// What a sign-in says when there is none (auth/openai_codex.rs, claude.rs).
+const NOT_LOGGED_IN: &str = "not logged in";
+
 /// OAuth (ChatGPT sign-in) is preferred when both are configured: it's the
 /// richer entitlement, and what a user who did both probably wants.
 pub async fn resolve_openai_auth(app: &AppHandle) -> Result<OpenaiAuth, String> {
-    if let Ok((access_token, account_id)) =
-        crate::auth::openai_codex::get_valid_credential(app).await
-    {
-        return Ok(OpenaiAuth::Codex {
-            access_token,
-            account_id,
-        });
+    match crate::auth::openai_codex::get_valid_credential(app).await {
+        Ok((access_token, account_id)) => {
+            return Ok(OpenaiAuth::Codex {
+                access_token,
+                account_id,
+            })
+        }
+        // Signed in but its refresh failed: said as it is, not quietly
+        // swapped for a pasted key (another account) or "not set up".
+        Err(e) if e != NOT_LOGGED_IN => return Err(format!("ChatGPT sign-in: {e}")),
+        Err(_) => {}
     }
     let key = crate::auth::keys::load_provider_key(app, "openai")?
         .ok_or_else(|| NOT_CONFIGURED.to_string())?;
@@ -39,8 +46,10 @@ pub async fn resolve_openai_auth(app: &AppHandle) -> Result<OpenaiAuth, String> 
 /// Same preference order as `resolve_openai_auth`: OAuth (Claude Pro/Max
 /// sign-in) first, falling back to a pasted API key.
 pub async fn resolve_anthropic_auth(app: &AppHandle) -> Result<AnthropicAuth, String> {
-    if let Ok(access_token) = crate::auth::claude::get_valid_credential(app).await {
-        return Ok(AnthropicAuth::Oauth(access_token));
+    match crate::auth::claude::get_valid_credential(app).await {
+        Ok(access_token) => return Ok(AnthropicAuth::Oauth(access_token)),
+        Err(e) if e != NOT_LOGGED_IN => return Err(format!("Claude sign-in: {e}")),
+        Err(_) => {}
     }
     let key = crate::auth::keys::load_provider_key(app, "anthropic")?
         .ok_or_else(|| NOT_CONFIGURED.to_string())?;

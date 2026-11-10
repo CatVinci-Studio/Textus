@@ -508,6 +508,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "요청 시간이 초과되었습니다. 연결을 확인한 다음 다시 시도하세요.",
   aiErrorNetwork:
     "서비스에 연결할 수 없습니다. 인터넷 연결이나 프록시 설정을 확인하세요.",
+  aiErrorContextLength:
+    "이 모델에는 대화가 너무 깁니다. 새 대화를 시작하거나 첨부를 줄이세요.",
   aiErrorModel: `이 계정에서는 이 모델을 사용할 수 없습니다. 설정 > ${AI_NAME}에서 다른 모델을 선택하세요.`,
   grammarIgnore: "무시",
   grammarKindSpelling: "맞춤법",
