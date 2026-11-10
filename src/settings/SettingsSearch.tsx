@@ -1,3 +1,4 @@
+import { SearchField } from "../engine/controls/SearchField";
 import {
   useEffect,
   useLayoutEffect,
@@ -7,7 +8,6 @@ import {
 } from "react";
 import type { Strings } from "../i18n/strings";
 import { announce } from "../engine/controls/announce";
-import { SearchIcon } from "../engine/controls/icons";
 import { scrollBehavior } from "../engine/motion/motion";
 import { useLatest } from "../utils/hooks/useLatest";
 import {
@@ -104,12 +104,10 @@ export function SettingsSearchField({
 }) {
   const searching = query.trim() !== "";
   return (
-    <div className="settings-search" role="search">
-      <SearchIcon className="settings-search-icon" />
-      <input
+    <div role="search">
+      <SearchField
+        className="settings-search"
         ref={inputRef}
-        className="settings-search-input"
-        type="search"
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={searching}
@@ -120,8 +118,6 @@ export function SettingsSearchField({
         // Its width comes from the column, not from a default size that
         // would widen the categories beside the page.
         size={1}
-        spellCheck={false}
-        autoComplete="off"
         value={query}
         onChange={(e) => onQueryChange(e.target.value)}
         onKeyDown={(e) => {

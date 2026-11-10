@@ -305,20 +305,8 @@ button.plugin-card-open:hover .plugin-card-name {
 }
 /* Get plugins: the search over the catalog, above its cards. */
 .plugin-search {
-  width: 100%;
-  box-sizing: border-box;
+  flex: none;
   margin: var(--space-2) 0 var(--space-3);
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-}
-.plugin-search:focus {
-  outline: none;
-  border-color: var(--ui-primary);
 }
 .plugin-page-title-row .plugin-byline {
   margin-top: var(--space-1);

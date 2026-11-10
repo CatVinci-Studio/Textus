@@ -1,3 +1,4 @@
+import { SearchField } from "../../engine/controls/SearchField";
 import { useCallback, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
@@ -99,14 +100,12 @@ function ChatHistoryList({
   }
 
   const search = (
-    <input
+    <SearchField
       className="chat-history-search"
-      type="search"
       placeholder={t.chatHistorySearch}
       aria-label={t.chatHistorySearch}
       value={query}
       autoFocus
-      spellCheck={false}
       onChange={(e) => setQuery(e.target.value)}
     />
   );

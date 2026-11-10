@@ -318,21 +318,8 @@
 
 /* The Project tab's search, once there is enough to search. */
 .memory-search {
-  width: 100%;
-  box-sizing: border-box;
+  flex: none;
   margin: 0 0 12px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: transparent;
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-}
-
-.memory-search:focus {
-  outline: none;
-  border-color: var(--ui-accent);
 }
 
 /* A library entry the AI wrote: who noted it, and when. */

@@ -1,3 +1,4 @@
+import { SearchField } from "../../../engine/controls/SearchField";
 import { useMemo, useState } from "react";
 import type {
   AgentWorkspaceInfo,
@@ -84,8 +85,7 @@ export function MemorySections({
   return (
     <div className="memory-sections" ref={setRoot}>
       {searchable && (
-        <input
-          type="search"
+        <SearchField
           className="memory-search"
           placeholder={t.memorySearch}
           aria-label={t.memorySearch}

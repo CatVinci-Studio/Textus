@@ -130,19 +130,8 @@
 /* Searching what was said: the field on top, and each conversation found
    with the words it was found by. */
 .chat-history-search {
+  flex: none;
   margin: 4px 4px 8px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-}
-
-.chat-history-search:focus-visible {
-  outline: none;
-  border-color: var(--ui-accent);
 }
 
 .chat-history-hit {

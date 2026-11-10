@@ -1,3 +1,4 @@
+import { SearchField } from "../../engine/controls/SearchField";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -78,8 +79,7 @@ export function ExtensionsTabLayout({
       {top}
       <div className={off ? "extensions-off" : undefined}>
         {onQuery && (
-          <input
-            type="search"
+          <SearchField
             className="plugin-search"
             placeholder={t.marketSearch}
             aria-label={t.marketSearch}

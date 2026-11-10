@@ -26,12 +26,8 @@ import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";
 import { inlineSentence } from "../revision/sentence-diff";
 
-export const CHECK = (
-  <Check aria-hidden />
-);
-export const CROSS = (
-  <X aria-hidden />
-);
+export const CHECK = <Check aria-hidden />;
+export const CROSS = <X aria-hidden />;
 
 /** What the user is told of a generate_image call that made no picture.
  *  Null for a call the model got wrong and sends again: the model's to fix. */

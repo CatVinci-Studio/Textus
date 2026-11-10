@@ -67,6 +67,9 @@
   align-items: stretch;
   min-width: 0;
   height: var(--window-bar-height);
+  /* Never squeezed by a tall view under it (the start page): its foot is
+     where its island starts. */
+  flex-shrink: 0;
   padding-right: var(--tabs-inset-end, 8px);
   box-sizing: border-box;
   pointer-events: none;
@@ -93,15 +96,18 @@
   flex: 1;
   min-width: 0;
   height: auto;
-  padding: 0 0 0 var(--tabs-inset-start, 8px);
+  /* A pixel out to the left, so the open tab's edge at the island's side
+     is inside what the bar shows, level with the island's own. */
+  margin-left: -1px;
+  padding: 0 0 0 calc(var(--tabs-inset-start, 8px) + 1px);
   clip-path: inset(
-    -1px 0 0 calc(var(--tabs-inset-start, 8px) - var(--tab-radius))
+    -1px 0 0 calc(var(--tabs-inset-start, 8px) + 1px - var(--tab-radius))
   );
   align-items: flex-end;
   gap: var(--tab-gap);
   border-bottom: 0;
   background: linear-gradient(var(--tab-row-line), var(--tab-row-line)) right
-    bottom / calc(100% - var(--tabs-inset-start, 0px)) 1px no-repeat;
+    bottom / calc(100% - var(--tabs-inset-start, 0px) - 1px) 1px no-repeat;
   overflow-y: hidden;
   pointer-events: none;
 }
@@ -112,7 +118,7 @@
 
 /* Scrolled, no sliver of a tab shows before its start. */
 :root .island-row > .tab-bar[data-overflow] {
-  clip-path: inset(-1px 0 0 var(--tabs-inset-start, 8px));
+  clip-path: inset(-1px 0 0 calc(var(--tabs-inset-start, 8px) + 1px));
 }
 
 /* Tabs hidden before its start: the first ones in view fade in from it,
@@ -120,13 +126,13 @@
 :root .island-row > .tab-bar[data-scrolled] {
   -webkit-mask-image: linear-gradient(
     to right,
-    transparent var(--tabs-inset-start, 8px),
-    #000 calc(var(--tabs-inset-start, 8px) + 3em)
+    transparent calc(var(--tabs-inset-start, 8px) + 1px),
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
   );
   mask-image: linear-gradient(
     to right,
-    transparent var(--tabs-inset-start, 8px),
-    #000 calc(var(--tabs-inset-start, 8px) + 3em)
+    transparent calc(var(--tabs-inset-start, 8px) + 1px),
+    #000 calc(var(--tabs-inset-start, 8px) + 1px + 3em)
   );
 }
 

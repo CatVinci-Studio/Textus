@@ -74,50 +74,10 @@
   overflow-y: auto;
 }
 
-/* The search box above the categories, drawn like the sidebar's file search. */
+/* The search box above the categories: the shared field, in place. */
 .settings-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  flex: none;
   margin: 16px 12px 0;
-  height: var(--control-height-sm);
-  padding: 0 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-bg);
-  color: var(--ui-muted);
-}
-
-.settings-search:focus-within {
-  border-color: var(--ui-accent);
-  box-shadow: inset 0 0 0 1px var(--ui-accent);
-}
-
-.settings-search-icon {
-  flex-shrink: 0;
-  opacity: 0.6;
-}
-
-.settings-search-input {
-  flex: 1;
-  min-width: 0;
-  width: 100%;
-  padding: 0;
-  border: none;
-  border-radius: var(--shape-s);
-  background: transparent;
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-}
-
-.settings-search-input:focus,
-.settings-search-input:focus-visible {
-  outline: none;
-}
-
-.settings-search-input::-webkit-search-cancel-button {
-  display: none;
 }
 
 /* A result is a row like the one it finds: its name, and under it the
