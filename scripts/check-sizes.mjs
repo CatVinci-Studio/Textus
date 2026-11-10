@@ -17,9 +17,9 @@ const SCALED = /scaledPx\(|chrome|[sS]cale\b|zoom|step\b/;
 const ALLOWED = {
   "src/ui/side-panel-width.ts:DOCUMENT_MIN_WIDTH":
     "interface px; callers pass the scale",
-  "src/app/sidebar-width.ts:SIDEBAR_DEFAULT_WIDTH":
+  "src/app/frame/sidebar-width.ts:SIDEBAR_DEFAULT_WIDTH":
     "interface px, drawn times the scale",
-  "src/app/sidebar-width.ts:SIDEBAR_MIN_WIDTH":
+  "src/app/frame/sidebar-width.ts:SIDEBAR_MIN_WIDTH":
     "interface px, drawn times the scale",
   "src/ai/chat/panel/agent-panel.tsx:AGENT_PANEL_DEFAULT_WIDTH":
     "interface px, drawn times the scale",

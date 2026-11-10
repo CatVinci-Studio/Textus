@@ -15,13 +15,13 @@ const ALLOWED: Record<string, string> = {
     "no focus: the keyboard would cover the sheet",
   "app/App.tsx": "the keyboard toolbar and the document list",
   "app/AppNotices.tsx": "no Esc key: Zen mode's hint stays as the way out",
-  "app/Sidebar.tsx": "the sidebar is a drawer, its width the layout's",
-  "app/WindowBar.tsx": "the sidebar opens from the phone's own bar",
-  "app/WindowControls.tsx": "the title row's menu button",
-  "app/sidebar-tabs.tsx": "the drawer closes over a document it opened",
+  "app/frame/Sidebar.tsx": "the sidebar is a drawer, its width the layout's",
+  "app/frame/WindowBar.tsx": "the sidebar opens from the phone's own bar",
+  "app/frame/WindowControls.tsx": "the title row's menu button",
+  "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
   "app/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "app/useFileOpening.ts": "no files dropped on the window",
-  "app/useSidePanels.ts":
+  "app/frame/useSidePanels.ts":
     "a drawer that starts closed, a sheet over the keyboard",
   "document-view/useQuickAskReview.ts": "the keyboard and the review's focus",
   "document/ios-recents.ts": "the document list's recent documents",

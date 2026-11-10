@@ -21,7 +21,7 @@ import { windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
-import { dropTargetAt, showDropHint, splitForDrop } from "../split/split-drop";
+import { dropTargetAt, showDropHint, splitForDrop } from "../layout/split-drop";
 
 // Moving tabs between windows, as drag source (handed to Rust's floating
 // drag) and as merge target. Within-bar reordering lives in the tab bar.

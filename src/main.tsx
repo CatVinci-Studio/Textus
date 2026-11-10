@@ -10,7 +10,7 @@ import { installDevTauriShim } from "./dev/tauri-shim";
 import { installPolyfills } from "./utils/polyfills";
 import { watchMemoryIdle } from "./utils/memory-idle";
 import { publishWindowChrome } from "./platform/window-chrome";
-import { WindowEdges } from "./app/WindowEdges";
+import { WindowEdges } from "./app/frame/WindowEdges";
 import { installWebviewGuards } from "./ui/webview-guards";
 import { installTextFieldMenu } from "./ui/text-field-menu";
 import { installScrollReveal } from "./ui/scroll-reveal";

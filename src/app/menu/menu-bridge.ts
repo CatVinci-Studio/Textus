@@ -31,7 +31,7 @@ import type { DocTab, HelpDoc } from "../../document/doc-tabs";
 import type { Strings } from "../../i18n/strings";
 import type { PandocSettings } from "../../export/pandoc-options";
 import type { DiagramEngine, Shortcuts } from "../../prefs/SettingsContext";
-import { closeSplit, splitEditor } from "../split/split-layout";
+import { closeSplit, splitEditor } from "../layout/store";
 import { openCommandPalette } from "../command-palette-entry";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/report-open";

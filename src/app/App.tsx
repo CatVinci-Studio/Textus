@@ -1,12 +1,12 @@
 import { conversationScope } from "../ai/chat/conversation-scope";
-import { AiIsland } from "./layout/AiIsland";
-import { useAiIsland } from "./layout/useAiIsland";
+import { AiIsland } from "./islands/AiIsland";
+import { useAiIsland } from "./islands/useAiIsland";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../ui/CornerToast";
 import { Suspense, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
-import { WindowBar } from "./WindowBar";
+import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
 import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { SettingsLayer } from "./SettingsLayer";
@@ -23,9 +23,9 @@ import { aiFeatures } from "../settings/textus-ai";
 import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "./frame/Sidebar";
 import { MainPane } from "./MainPane";
-import { AgentPanelDock } from "./AgentPanelDock";
+import { AgentPanelDock } from "./islands/AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
 import {
   DraftRestoredToast,

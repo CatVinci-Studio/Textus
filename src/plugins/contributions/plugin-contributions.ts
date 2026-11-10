@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import { registerCommand, runCommand } from "../../app/commands";
-import { registerSidebarTab } from "../../app/sidebar-tabs";
+import { registerSidebarTab } from "../../app/frame/sidebar-tabs";
 import { registerEditorMenuItems } from "../../editor/editor-menu-items";
 import { showMessage } from "../../ui/app-dialog";
 import { currentStrings } from "../../i18n/current";

@@ -24,7 +24,7 @@ import {
   FIND_NEXT_EVENT,
   INSERT_BLOCK_EVENT,
 } from "../utils/events";
-import { closeSplit, splitEditor, splitLayout } from "./split/split-layout";
+import { closeSplit, splitEditor, splitLayout } from "./layout/store";
 import { openCommandPalette } from "./command-palette-entry";
 import { isImeKeydown } from "../utils/ime";
 

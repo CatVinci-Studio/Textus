@@ -37,23 +37,18 @@ import {
 import { TabBar } from "./tabs/TabBar";
 import { tabMenuItems } from "./tabs/tab-menu-items";
 import { FormatBar } from "./FormatBar";
-import { useSplitPanes } from "./split/useSplitPanes";
-import { SplitDivider } from "./split/SplitDivider";
-import {
-  islandOf,
-  panesOf,
-  splitGrid,
-  type SplitGrid,
-} from "./split/split-tree";
-import type { AiIslandPlace } from "./layout/AiIsland";
-import "./split/split-panes.css";
+import { useSplitPanes } from "./layout/useSplitPanes";
+import { SplitDivider } from "./layout/SplitDivider";
+import { islandOf, panesOf, splitGrid, type SplitGrid } from "./layout/tree";
+import type { AiIslandPlace } from "./islands/AiIsland";
+import "./layout/split-panes.css";
 import {
   focusPane,
   openBeside,
   reorderInPane,
   splitEditor,
-} from "./split/split-layout";
-import { pullTab } from "./split/split-drop";
+} from "./layout/store";
+import { pullTab } from "./layout/split-drop";
 import type { ContextMenuItem } from "../ui/ContextMenu";
 import { contributedContextItems } from "../ui/context-menu-items";
 import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";

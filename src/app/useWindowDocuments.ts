@@ -1,4 +1,4 @@
-import { railShown } from "./useSidePanels";
+import { railShown } from "./frame/useSidePanels";
 import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -10,7 +10,7 @@ import { useAutosave } from "../document/autosave";
 import { useLastCarets } from "../document/last-carets";
 import { useActiveDocument } from "./useActiveDocument";
 import { useOpenFolder } from "./useOpenFolder";
-import { useSplitRestore } from "./split/split-restore";
+import { useSplitRestore } from "./layout/restore";
 import { useSessionPaths, useWindowTitle } from "./useWindowSession";
 import { useFileOpening } from "./useFileOpening";
 import { useHelpTabs } from "./useHelpTabs";

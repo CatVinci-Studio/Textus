@@ -76,7 +76,7 @@ export interface UiState {
    *  ("codeBlock:chart" -> plugin id). */
   pluginOwners: Record<string, string>;
   /** The split the window was left in, its panes by their documents'
-   *  paths (app/split/split-restore.ts); null when it showed one. Read
+   *  paths (app/layout/restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */
   splitLayout: { tree: unknown } | null;
   /** Settings › Extensions: the kinds whose Available list is folded. */

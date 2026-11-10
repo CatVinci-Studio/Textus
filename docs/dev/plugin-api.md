@@ -55,7 +55,7 @@ pluginApi.editorMenu.register(({ selectedText }) => [
 
 ## Sidebar tabs
 
-[`src/app/sidebar-tabs.tsx`](../../src/app/sidebar-tabs.tsx)
+[`src/app/frame/sidebar-tabs.tsx`](../../src/app/frame/sidebar-tabs.tsx)
 
 ```ts
 pluginApi.sidebarTabs.register({

@@ -1,7 +1,7 @@
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
-import { splitLayout } from "../../app/split/split-layout";
-import { panesOf } from "../../app/split/split-tree";
+import { splitLayout } from "../../app/layout/store";
+import { panesOf } from "../../app/layout/tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
 import { webviewsOf } from "../views/webviews";

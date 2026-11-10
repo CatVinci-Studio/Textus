@@ -7,7 +7,7 @@ import { useZoom } from "./useZoom";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
 import { useTabState } from "./tabs/useTabState";
-import { useSidePanels } from "./useSidePanels";
+import { useSidePanels } from "./frame/useSidePanels";
 import { useWordImported } from "./AppNotices";
 import type { PendingClose } from "./close-flow";
 import { useKeepTabs } from "../document/reload-tabs";

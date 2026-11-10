@@ -40,10 +40,10 @@ import {
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
 import { useLatest } from "../utils/hooks/useLatest";
-import { openBeside } from "./split/split-layout";
+import { openBeside } from "./layout/store";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
-import { splitForDrop, type DropTarget } from "./split/split-drop";
+import { splitForDrop, type DropTarget } from "./layout/split-drop";
 import { explainError } from "../utils/error-explain";
 
 /** How a document opens, beyond which file. */

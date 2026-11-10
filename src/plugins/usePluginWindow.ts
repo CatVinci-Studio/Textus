@@ -31,7 +31,7 @@ import {
 import { setPluginProject } from "./plugin-setting-values";
 import { watchTheme, windowIsDark } from "./views/theme-vars";
 import { usePluginMenuSync } from "./contributions/usePluginMenu";
-import { openBeside } from "../app/split/split-layout";
+import { openBeside } from "../app/layout/store";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
