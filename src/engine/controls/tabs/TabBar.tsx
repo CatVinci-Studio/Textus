@@ -102,7 +102,9 @@ export function TabBar({
 
   const previewRef = useIncomingTabPreview(barRef, previewTab, tabs);
   const fit = useTabFit(barRef, tabs, previewTab !== null);
-  const overflow = !!fit?.overflow;
+  // One tab too long for its row is cut short, not listed: a list of one
+  // tells nothing.
+  const overflow = !!fit?.overflow && tabs.length > 1;
 
   // Tab-list keys: arrows/Home/End move, Enter/Space shows, Delete closes.
   // Only the front tab is in the tab order.
