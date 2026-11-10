@@ -1240,11 +1240,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 /* GitHub-style alerts: the matching accent on the border and a badge in
    place of the marker. Accent values are GitHub's own. */
 .milkdown {
-  --doc-alert-note: #0969da;
-  --doc-alert-tip: #1a7f37;
-  --doc-alert-important: #8250df;
-  --doc-alert-warning: #9a6700;
-  --doc-alert-caution: #cf222e;
+  --doc-alert-note: #007aff;
+  --doc-alert-tip: #34c759;
+  --doc-alert-important: #af52de;
+  --doc-alert-warning: #ff9500;
+  --doc-alert-caution: #ff3b30;
 }
 
 .milkdown blockquote.md-alert-note {
@@ -1527,11 +1527,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
     --doc-token-tag: #e08a97;
   }
   :root:not([data-theme="light"]) .milkdown {
-    --doc-alert-note: #4493f8;
-    --doc-alert-tip: #3fb950;
-    --doc-alert-important: #ab7df8;
-    --doc-alert-warning: #d29922;
-    --doc-alert-caution: #f85149;
+    --doc-alert-note: #0a84ff;
+    --doc-alert-tip: #30d158;
+    --doc-alert-important: #bf5af2;
+    --doc-alert-warning: #ff9f0a;
+    --doc-alert-caution: #ff453a;
   }
 }
 
@@ -1544,11 +1544,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 :root[data-theme="dark"] .milkdown {
-  --doc-alert-note: #4493f8;
-  --doc-alert-tip: #3fb950;
-  --doc-alert-important: #ab7df8;
-  --doc-alert-warning: #d29922;
-  --doc-alert-caution: #f85149;
+  --doc-alert-note: #0a84ff;
+  --doc-alert-tip: #30d158;
+  --doc-alert-important: #bf5af2;
+  --doc-alert-warning: #ff9f0a;
+  --doc-alert-caution: #ff453a;
 }
 
 /* A one-design theme keeps its light page in dark mode, so the dark tokens
@@ -1562,11 +1562,11 @@ br:is(.pending-delete, .pending-sentence-hot) {
 }
 
 :root[data-light-page] .milkdown {
-  --doc-alert-note: #0969da;
-  --doc-alert-tip: #1a7f37;
-  --doc-alert-important: #8250df;
-  --doc-alert-warning: #9a6700;
-  --doc-alert-caution: #cf222e;
+  --doc-alert-note: #007aff;
+  --doc-alert-tip: #34c759;
+  --doc-alert-important: #af52de;
+  --doc-alert-warning: #ff9500;
+  --doc-alert-caution: #ff3b30;
 }
 
 /* List markers are an out-of-flow ::before, not ::marker: in WKWebView a

@@ -87,17 +87,17 @@
 
   color-scheme: light;
   /* The document's colours: what a theme sets. */
-  /* Milk white with a touch of Textus's own warm yellow (the mark's paper):
-     soft on the eyes over a long session, never a cream yellow. Ink not
-     black, links a deep ink blue, a highlight in the mark's gold. */
-  --doc-bg: #fbf9f4;
-  --doc-text: #2a2b30;
-  --doc-muted: #6f6b63;
-  --doc-accent: #2d5383;
-  --doc-border: #e6e2d8;
-  --doc-quote-border: #d6cdb8;
-  --doc-code-bg: #f2efe7;
-  --doc-highlight-bg: #f5e3a6;
+  /* Apple's system palette (user's choice, 2026-11-09, for its brighter,
+     higher contrast text): white paper, #1d1d1f ink, Apple's greys, system
+     blue for the accent, system orange for highlights. */
+  --doc-bg: #ffffff;
+  --doc-text: #1d1d1f;
+  --doc-muted: #6e6e73;
+  --doc-accent: #007aff;
+  --doc-border: #d2d2d7;
+  --doc-quote-border: #d2d2d7;
+  --doc-code-bg: #f5f5f7;
+  --doc-highlight-bg: #ffdfb2;
   /* The interface's, from the document's, so any theme recolours the whole
      window; an imported theme's are derived and contrast-checked in
      theme/theme-chrome.ts, and a theme may set any of them itself. */
@@ -209,14 +209,14 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --ui-danger: #f18b99;
-    --doc-bg: #1f1e1c;
-    --doc-text: #e6e2da;
-    --doc-muted: #a09a8f;
-    --doc-accent: #9fb8e3;
-    --doc-border: #37342f;
-    --doc-quote-border: #4d4639;
-    --doc-code-bg: #2a2825;
-    --doc-highlight-bg: #5a4a1f;
+    --doc-bg: #1c1c1e;
+    --doc-text: #f5f5f7;
+    --doc-muted: #98989d;
+    --doc-accent: #0a84ff;
+    --doc-border: #38383a;
+    --doc-quote-border: #48484a;
+    --doc-code-bg: #2c2c2e;
+    --doc-highlight-bg: #694817;
     /* Dark frames recede by darkening: a lighter frame would read as
        raised above the page. */
     --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
@@ -227,14 +227,14 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ui-danger: #f18b99;
-  --doc-bg: #1f1e1c;
-  --doc-text: #e6e2da;
-  --doc-muted: #a09a8f;
-  --doc-accent: #9fb8e3;
-  --doc-border: #37342f;
-  --doc-quote-border: #4d4639;
-  --doc-code-bg: #2a2825;
-  --doc-highlight-bg: #5a4a1f;
+  --doc-bg: #1c1c1e;
+  --doc-text: #f5f5f7;
+  --doc-muted: #98989d;
+  --doc-accent: #0a84ff;
+  --doc-border: #38383a;
+  --doc-quote-border: #48484a;
+  --doc-code-bg: #2c2c2e;
+  --doc-highlight-bg: #694817;
   /* Dark frames recede by darkening: a lighter frame would read as
      raised above the page. */
   --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
@@ -262,15 +262,15 @@
    has a -text form readable on the background and a -tint for fills.
    Zero specificity (:where), so a theme's own always wins. */
 :where(:root) {
-  --tone-blue: #4081d2;
-  --tone-green: #319751;
-  --tone-orange: #be6517;
-  --tone-purple: #8e6ac7;
-  --tone-red: #c65954;
-  --tone-teal: #00989a;
-  --tone-yellow: #a17a00;
-  --tone-pink: #bc598c;
-  --tone-gray: #77818c;
+  --tone-blue: #007aff;
+  --tone-green: #34c759;
+  --tone-orange: #ff9500;
+  --tone-purple: #af52de;
+  --tone-red: #ff3b30;
+  --tone-teal: #30b0c7;
+  --tone-yellow: #ffcc00;
+  --tone-pink: #ff2d55;
+  --tone-gray: #8e8e93;
   --tone-blue-text: color-mix(in srgb, var(--tone-blue) 72%, var(--ui-text));
   --tone-blue-tint: color-mix(in srgb, var(--tone-blue) 16%, transparent);
   --tone-green-text: color-mix(in srgb, var(--tone-green) 72%, var(--ui-text));
@@ -305,26 +305,26 @@
 
 @media (prefers-color-scheme: dark) {
   :where(:root:not([data-theme="light"])) {
-    --tone-blue: #7aaeef;
-    --tone-green: #76be86;
-    --tone-orange: #e09865;
-    --tone-purple: #b59be6;
-    --tone-red: #e88f87;
-    --tone-teal: #3fc0c0;
-    --tone-yellow: #c6a853;
-    --tone-pink: #df8db5;
-    --tone-gray: #a2acb7;
+    --tone-blue: #0a84ff;
+    --tone-green: #30d158;
+    --tone-orange: #ff9f0a;
+    --tone-purple: #bf5af2;
+    --tone-red: #ff453a;
+    --tone-teal: #40c8e0;
+    --tone-yellow: #ffd60a;
+    --tone-pink: #ff375f;
+    --tone-gray: #98989d;
   }
 }
 
 :where(:root[data-theme="dark"]) {
-  --tone-blue: #7aaeef;
-  --tone-green: #76be86;
-  --tone-orange: #e09865;
-  --tone-purple: #b59be6;
-  --tone-red: #e88f87;
-  --tone-teal: #3fc0c0;
-  --tone-yellow: #c6a853;
-  --tone-pink: #df8db5;
-  --tone-gray: #a2acb7;
+  --tone-blue: #0a84ff;
+  --tone-green: #30d158;
+  --tone-orange: #ff9f0a;
+  --tone-purple: #bf5af2;
+  --tone-red: #ff453a;
+  --tone-teal: #40c8e0;
+  --tone-yellow: #ffd60a;
+  --tone-pink: #ff375f;
+  --tone-gray: #98989d;
 }
