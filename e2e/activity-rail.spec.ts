@@ -31,6 +31,13 @@ test("plugin icons scroll under the line; one dragged above it is pinned", async
     s.clientHeight,
   ]);
   expect(height).toBeGreaterThan(room);
+  // The end with more past it fades; scrolled to the foot, the top does.
+  await expect(scroll).toHaveAttribute("data-more-down", "");
+  await expect(scroll).not.toHaveAttribute("data-more-up", "");
+  await scroll.evaluate((s) => s.scrollTo({ top: s.scrollHeight }));
+  await expect(scroll).toHaveAttribute("data-more-up", "");
+  await expect(scroll).not.toHaveAttribute("data-more-down", "");
+  await scroll.evaluate((s) => s.scrollTo({ top: 0 }));
   const gear = (await page.locator(".activity-rail-settings").boundingBox())!;
   expect(gear.y + gear.height).toBeLessThanOrEqual(480);
 

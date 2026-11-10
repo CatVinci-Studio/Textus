@@ -1,3 +1,4 @@
+import { useScrollFade } from "../../engine/controls/scroll-fade";
 import { useRef, useState } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import {
@@ -170,10 +171,12 @@ function RailGroup({
   t: Strings;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // More plugins above or below than show: that end fades.
+  useScrollFade(ref, "y", !!scrolls && tabs.length > 0);
   if (!tabs.length) return null;
   return (
     <div
-      className={`activity-rail-group${scrolls ? " activity-rail-scroll" : ""}`}
+      className={`activity-rail-group${scrolls ? " activity-rail-scroll tx-scroll-fade" : ""}`}
       ref={ref}
     >
       {tabs.map(({ id, label, Icon }) => (

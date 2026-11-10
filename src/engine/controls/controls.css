@@ -476,6 +476,33 @@ input[type="range"].tx-slider {
   clip-path: polygon(0 0, 100% 0, 100% 100%, calc(100% - 3px) 100%, 0 3px);
 }
 
+/* Down a column (useScrollFade): the same fade at its top and foot. */
+.tx-scroll-fade[data-more-down] {
+  -webkit-mask-image: linear-gradient(
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+  mask-image: linear-gradient(#000 calc(100% - var(--space-6)), transparent);
+}
+.tx-scroll-fade[data-more-up] {
+  -webkit-mask-image: linear-gradient(transparent, #000 var(--space-6));
+  mask-image: linear-gradient(transparent, #000 var(--space-6));
+}
+.tx-scroll-fade[data-more-up][data-more-down] {
+  -webkit-mask-image: linear-gradient(
+    transparent,
+    #000 var(--space-6),
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    transparent,
+    #000 var(--space-6),
+    #000 calc(100% - var(--space-6)),
+    transparent
+  );
+}
+
 /* A scroller with more past an edge (the page runtime marks which):
    that edge fades out, so the board or table reads as going on. */
 .tx-scroll-fade[data-more-right] {
