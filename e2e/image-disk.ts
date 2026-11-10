@@ -12,8 +12,10 @@ export const DOC_PATH = "/home/me/notes/trip.md";
 export const PICKED = "/home/me/Pictures/new cat.png";
 
 // A 1x1 PNG.
+// 16 pixels square: a 1-pixel picture's centre can fall between pixels,
+// and a click there lands on its paragraph.
 const PNG =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+  "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAF0lEQVR4nGP438BAEiJN9aiGUQ1DSgMAnHV/EBlpJJcAAAAASUVORK5CYII=";
 
 export interface Disk {
   /** Paths the backend says exist (file_mtime_ms). */
