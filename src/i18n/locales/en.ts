@@ -1378,7 +1378,7 @@ type /name in a conversation to use one.
   tutorialPluginsBody:
     "Mind maps, Vim keys, slides, citations and more - add only what you need, from one store.",
   tutorialPluginsTask:
-    "Open Settings › Extensions to see the plugins, themes and skills",
+    "Open the puzzle icon in the left column to see the plugins",
   tutorialConnectTitle: "Connect your AI",
   tutorialConnectBody:
     "Once it's connected, you can really try the AI features that follow.",
@@ -1652,8 +1652,10 @@ type /name in a conversation to use one.
   leadAppearance: "Theme, theme gallery and the window",
   leadEditing: "Text, Markdown, images and export",
   leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
+  leadProviders:
+    "Set up each provider; which one each use takes is on Chat & Writing",
+  leadChatWriting:
+    "The provider and model each use takes, and how the chat and writing aids work",
   leadSkillsMemory: "Project, memory, skills and MCP",
   leadPrivacy: "Conversations, draft recovery and the settings file",
   settingsUpdatesGroup: "Updates",
@@ -1846,7 +1848,7 @@ type /name in a conversation to use one.
   webPageHint:
     "A page that stays blank doesn’t allow being shown inside other apps - open it in your browser.",
   pluginKeysTaken:
-    "{name} can't take the keyboard: {holder} has it. Turn one of them off in Settings › Extensions.",
+    "{name} can't take the keyboard: {holder} has it. Turn one of them off in the sidebar's plugin list.",
   shortcutIndentListItem: "Indent List Item",
   shortcutOutdentListItem: "Outdent List Item",
   pluginKeyTaken:

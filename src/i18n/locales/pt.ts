@@ -1403,7 +1403,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tutorialPluginsBody:
     "Mapas mentais, teclas do Vim, slides, citações e mais: adicione só o que precisar, de uma única loja.",
   tutorialPluginsTask:
-    "Abra Ajustes › Extensões para ver os plugins, temas e habilidades",
+    "Abra o ícone de quebra-cabeça na coluna da esquerda para ver os plugins",
   tutorialConnectTitle: "Conecte sua IA",
   tutorialConnectBody:
     "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",
@@ -1666,20 +1666,22 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsCatalogFailed: "Não foi possível carregar a lista: {reason}",
   pluginsCatalogRetry: "Tentar de novo",
   themeGalleryGroup: "Galeria de temas",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "Aparência",
+  navEditing: "Edição",
+  navProviders: "Provedores",
+  navChatWriting: "Chat e escrita",
+  navSkillsMemory: "Habilidades e memória",
+  navPrivacyData: "Privacidade e dados",
+  leadGeneral: "Idioma, como os documentos abrem, arquivos e atualizações",
+  leadAppearance: "Tema, galeria de temas e a janela",
+  leadEditing: "Texto, Markdown, imagens e exportação",
+  leadAi: "O interruptor geral; os ajustes estão nas três páginas abaixo",
+  leadProviders:
+    "Configure cada provedor; qual cada uso leva fica em Chat e escrita",
+  leadChatWriting:
+    "O provedor e o modelo de cada uso, e como o chat e as ajudas funcionam",
+  leadSkillsMemory: "Projeto, memória, habilidades e MCP",
+  leadPrivacy: "Conversas, recuperação de rascunhos e o arquivo de ajustes",
   settingsUpdatesGroup: "Atualizações",
   pluginPageTab: "Plugin: {name}",
   aiUsesGroup: "Qual provedor",
@@ -1872,7 +1874,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   webPageHint:
     "Se a página continuar em branco, o site não permite ser mostrado dentro de outros apps: abra no navegador.",
   pluginKeysTaken:
-    "{name} não pode usar o teclado: {holder} está com ele. Desative um dos dois em Ajustes › Extensões.",
+    "{name} não consegue usar o teclado: {holder} já o usa. Desligue um deles na lista de plugins da barra lateral.",
   shortcutIndentListItem: "Aumentar recuo do item",
   shortcutOutdentListItem: "Diminuir recuo do item",
   pluginKeyTaken:

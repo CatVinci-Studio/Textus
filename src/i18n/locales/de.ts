@@ -1408,7 +1408,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tutorialPluginsBody:
     "Mindmaps, Vim-Tasten, Folien, Zitate und mehr – füg nur hinzu, was du brauchst, aus einem Store.",
   tutorialPluginsTask:
-    "Öffne Einstellungen › Erweiterungen und sieh dir Plugins, Themes und Skills an",
+    "Öffne das Puzzle-Symbol in der linken Leiste, um die Plugins zu sehen",
   tutorialConnectTitle: "KI verbinden",
   tutorialConnectBody:
     "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",
@@ -1679,20 +1679,24 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogFailed: "Die Liste konnte nicht geladen werden: {reason}",
   pluginsCatalogRetry: "Erneut versuchen",
   themeGalleryGroup: "Design-Galerie",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "Darstellung",
+  navEditing: "Bearbeiten",
+  navProviders: "Anbieter",
+  navChatWriting: "Chat & Schreiben",
+  navSkillsMemory: "Skills & Gedächtnis",
+  navPrivacyData: "Datenschutz & Daten",
+  leadGeneral: "Sprache, wie Dokumente öffnen, Dateien und Updates",
+  leadAppearance: "Design, Design-Galerie und das Fenster",
+  leadEditing: "Text, Markdown, Bilder und Export",
+  leadAi:
+    "Der Hauptschalter; die Einstellungen stehen auf den drei Seiten darunter",
+  leadProviders:
+    "Jeden Anbieter einrichten; welcher für was gilt, steht unter Chat & Schreiben",
+  leadChatWriting:
+    "Anbieter und Modell je Zweck, und wie Chat und Schreibhilfen arbeiten",
+  leadSkillsMemory: "Projekt, Gedächtnis, Skills und MCP",
+  leadPrivacy:
+    "Unterhaltungen, Entwurfswiederherstellung und die Einstellungsdatei",
   settingsUpdatesGroup: "Updates",
   pluginPageTab: "Plugin: {name}",
   aiUsesGroup: "Welcher Anbieter",
@@ -1887,7 +1891,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   webPageHint:
     "Bleibt die Seite leer, erlaubt die Website keine Anzeige in anderen Apps – öffne sie im Browser.",
   pluginKeysTaken:
-    "{name} kann die Tastatur nicht übernehmen: {holder} nutzt sie. Schalte eines davon unter Einstellungen › Erweiterungen aus.",
+    "{name} kann die Tastatur nicht übernehmen: {holder} hat sie. Schalte eines davon in der Plugin-Liste der Seitenleiste aus.",
   shortcutIndentListItem: "Listenelement einrücken",
   shortcutOutdentListItem: "Listenelement ausrücken",
   pluginKeyTaken:

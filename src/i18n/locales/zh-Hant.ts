@@ -1288,7 +1288,8 @@ export default {
   tutorialPluginsTitle: "外掛程式",
   tutorialPluginsBody:
     "心智圖、Vim 按鍵、投影片、文獻引用……需要什麼就裝什麼，都在一個商店裡。",
-  tutorialPluginsTask: "打開 設定 › 擴充功能，看看有哪些外掛程式、主題和 Skill",
+  tutorialPluginsTask:
+    "Open the puzzle icon in the left column to see the plugins",
   tutorialConnectTitle: "連線你的 AI",
   tutorialConnectBody: "連上之後，下面的 AI 功能可以真的試一試。",
   tutorialConnectTask: "登入或填入金鑰；也可以先略過",
@@ -1544,8 +1545,10 @@ export default {
   leadAppearance: "Theme, theme gallery and the window",
   leadEditing: "Text, Markdown, images and export",
   leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
+  leadProviders:
+    "Set up each provider; which one each use takes is on Chat & Writing",
+  leadChatWriting:
+    "The provider and model each use takes, and how the chat and writing aids work",
   leadSkillsMemory: "Project, memory, skills and MCP",
   leadPrivacy: "Conversations, draft recovery and the settings file",
   settingsUpdatesGroup: "Updates",
@@ -1728,7 +1731,7 @@ export default {
   webPageHint:
     "如果頁面一直是空白，表示這個網站不允許嵌入其他應用程式，請在瀏覽器中開啟。",
   pluginKeysTaken:
-    "「{name}」無法接管鍵盤：「{holder}」正在使用。請在 設定 › 擴充功能 中關閉其中一個。",
+    "{name} can't take the keyboard: {holder} has it. Turn one of them off in the sidebar's plugin list.",
   shortcutIndentListItem: "清單項目縮排",
   shortcutOutdentListItem: "清單項目取消縮排",
   pluginKeyTaken:

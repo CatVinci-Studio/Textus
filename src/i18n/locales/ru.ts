@@ -1415,7 +1415,7 @@ export default {
   tutorialPluginsBody:
     "Интеллект-карты, клавиши Vim, слайды, цитаты и многое другое — ставьте только нужное, из одного магазина.",
   tutorialPluginsTask:
-    "Откройте Настройки › Расширения и посмотрите плагины, темы и навыки",
+    "Откройте значок пазла в левой колонке, чтобы посмотреть плагины",
   tutorialConnectTitle: "Подключите ИИ",
   tutorialConnectBody:
     "С подключённым ИИ всё, что дальше, можно попробовать по-настоящему.",
@@ -1679,20 +1679,22 @@ export default {
   pluginsCatalogFailed: "Не удалось загрузить список: {reason}",
   pluginsCatalogRetry: "Повторить",
   themeGalleryGroup: "Галерея тем",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "Оформление",
+  navEditing: "Редактирование",
+  navProviders: "Провайдеры",
+  navChatWriting: "Чат и письмо",
+  navSkillsMemory: "Навыки и память",
+  navPrivacyData: "Конфиденциальность и данные",
+  leadGeneral: "Язык, открытие документов, файлы и обновления",
+  leadAppearance: "Тема, галерея тем и окно",
+  leadEditing: "Текст, Markdown, изображения и экспорт",
+  leadAi: "Общий переключатель; настройки — на трёх страницах ниже",
+  leadProviders:
+    "Настройте каждого провайдера; что для чего — в «Чат и письмо»",
+  leadChatWriting:
+    "Провайдер и модель для каждой задачи, работа чата и помощников",
+  leadSkillsMemory: "Проект, память, навыки и MCP",
+  leadPrivacy: "Беседы, восстановление черновиков и файл настроек",
   settingsUpdatesGroup: "Обновления",
   pluginPageTab: "Плагин: {name}",
   aiUsesGroup: "Какой провайдер",
@@ -1886,7 +1888,7 @@ export default {
   webPageHint:
     "Если страница остаётся пустой, сайт не разрешает показывать себя в других приложениях — откройте её в браузере.",
   pluginKeysTaken:
-    "{name} не может перехватить клавиатуру: она у {holder}. Отключите один из них в Настройки › Расширения.",
+    "{name} не может занять клавиатуру: её занимает {holder}. Выключите один из них в списке плагинов на боковой панели.",
   shortcutIndentListItem: "Увеличить отступ пункта",
   shortcutOutdentListItem: "Уменьшить отступ пункта",
   pluginKeyTaken:

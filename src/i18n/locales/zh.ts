@@ -1286,7 +1286,7 @@ export default {
   tutorialPluginsTitle: "插件",
   tutorialPluginsBody:
     "思维导图、Vim 按键、幻灯片、文献引用……需要什么就装什么，都在一个商店里。",
-  tutorialPluginsTask: "打开 设置 › 扩展，看看有哪些插件、主题和 Skill",
+  tutorialPluginsTask: "点左侧图标栏的拼图，看看有哪些插件",
   tutorialConnectTitle: "连接你的 AI",
   tutorialConnectBody: "连上之后，下面的 AI 功能可以真的试一试。",
   tutorialConnectTask: "登录或填 key；也可以先跳过",
@@ -1722,7 +1722,7 @@ export default {
   webPageHint:
     "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
   pluginKeysTaken:
-    "「{name}」无法接管键盘：「{holder}」正在使用。请在 设置 › 扩展 中关掉其中一个。",
+    "「{name}」无法接管键盘：「{holder}」正在使用。请在侧栏的插件列表里关掉其中一个。",
   shortcutIndentListItem: "列表项缩进",
   shortcutOutdentListItem: "列表项取消缩进",
   pluginKeyTaken:

@@ -1417,7 +1417,7 @@ para usar una.
   tutorialPluginsBody:
     "Mapas mentales, teclas de Vim, diapositivas, citas y más: añade solo lo que necesites, desde una sola tienda.",
   tutorialPluginsTask:
-    "Abre Ajustes › Extensiones para ver los complementos, temas y habilidades",
+    "Abre el icono de puzle de la columna izquierda para ver los plugins",
   tutorialConnectTitle: "Conecta tu IA",
   tutorialConnectBody:
     "Con una IA conectada, podrás probar de verdad lo que sigue.",
@@ -1685,20 +1685,25 @@ para usar una.
   pluginsCatalogFailed: "No se pudo cargar la lista: {reason}",
   pluginsCatalogRetry: "Reintentar",
   themeGalleryGroup: "Galería de temas",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "Apariencia",
+  navEditing: "Edición",
+  navProviders: "Proveedores",
+  navChatWriting: "Chat y escritura",
+  navSkillsMemory: "Habilidades y memoria",
+  navPrivacyData: "Privacidad y datos",
+  leadGeneral:
+    "Idioma, cómo se abren los documentos, archivos y actualizaciones",
+  leadAppearance: "Tema, galería de temas y la ventana",
+  leadEditing: "Texto, Markdown, imágenes y exportación",
+  leadAi:
+    "El interruptor general; los ajustes están en las tres páginas de abajo",
+  leadProviders:
+    "Configura cada proveedor; cuál usa cada función se elige en Chat y escritura",
+  leadChatWriting:
+    "El proveedor y modelo de cada uso, y cómo funcionan el chat y las ayudas",
+  leadSkillsMemory: "Proyecto, memoria, habilidades y MCP",
+  leadPrivacy:
+    "Conversaciones, recuperación de borradores y archivo de ajustes",
   settingsUpdatesGroup: "Actualizaciones",
   pluginPageTab: "Plugin: {name}",
   aiUsesGroup: "Qué proveedor",
@@ -1891,7 +1896,7 @@ para usar una.
   webPageHint:
     "Si la página sigue en blanco, el sitio no permite mostrarse dentro de otras apps: ábrela en tu navegador.",
   pluginKeysTaken:
-    "{name} no puede usar el teclado: lo tiene {holder}. Desactiva uno de los dos en Ajustes › Extensiones.",
+    "{name} no puede usar el teclado: lo tiene {holder}. Desactiva uno de ellos en la lista de plugins de la barra lateral.",
   shortcutIndentListItem: "Aumentar sangría del elemento",
   shortcutOutdentListItem: "Reducir sangría del elemento",
   pluginKeyTaken:

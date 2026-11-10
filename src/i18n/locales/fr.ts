@@ -1434,7 +1434,7 @@ utiliser une.
   tutorialPluginsBody:
     "Cartes mentales, touches Vim, diapositives, citations et plus : n'ajoutez que ce dont vous avez besoin, depuis une seule boutique.",
   tutorialPluginsTask:
-    "Ouvrez Réglages › Extensions pour voir les modules, thèmes et compétences",
+    "Ouvrez l'icône puzzle dans la colonne de gauche pour voir les plugins",
   tutorialConnectTitle: "Connectez votre IA",
   tutorialConnectBody:
     "Une fois connectée, vous pourrez vraiment essayer la suite.",
@@ -1707,20 +1707,24 @@ utiliser une.
   pluginsCatalogFailed: "Impossible de charger la liste : {reason}",
   pluginsCatalogRetry: "Réessayer",
   themeGalleryGroup: "Galerie de thèmes",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "Apparence",
+  navEditing: "Édition",
+  navProviders: "Fournisseurs",
+  navChatWriting: "Chat et écriture",
+  navSkillsMemory: "Compétences et mémoire",
+  navPrivacyData: "Confidentialité et données",
+  leadGeneral: "Langue, ouverture des documents, fichiers et mises à jour",
+  leadAppearance: "Thème, galerie de thèmes et fenêtre",
+  leadEditing: "Texte, Markdown, images et export",
+  leadAi:
+    "L'interrupteur général ; les réglages sont sur les trois pages en dessous",
+  leadProviders:
+    "Configurez chaque fournisseur ; le choix par usage est dans Chat et écriture",
+  leadChatWriting:
+    "Le fournisseur et le modèle de chaque usage, et le fonctionnement du chat et des aides",
+  leadSkillsMemory: "Projet, mémoire, compétences et MCP",
+  leadPrivacy:
+    "Conversations, récupération des brouillons et fichier de réglages",
   settingsUpdatesGroup: "Mises à jour",
   pluginPageTab: "Plugin : {name}",
   aiUsesGroup: "Quel fournisseur",
@@ -1916,7 +1920,7 @@ utiliser une.
   webPageHint:
     "Une page qui reste vide refuse de s’afficher dans d’autres apps : ouvrez-la dans votre navigateur.",
   pluginKeysTaken:
-    "{name} ne peut pas prendre le clavier : {holder} l’utilise. Désactivez l’un des deux dans Réglages › Extensions.",
+    "{name} ne peut pas prendre le clavier : {holder} l'a déjà. Désactivez l'un des deux dans la liste des plugins de la barre latérale.",
   shortcutIndentListItem: "Indenter l’élément de liste",
   shortcutOutdentListItem: "Désindenter l’élément de liste",
   pluginKeyTaken:

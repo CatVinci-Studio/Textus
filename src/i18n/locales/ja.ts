@@ -1351,7 +1351,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialPluginsBody:
     "マインドマップ、Vim キー、スライド、文献の引用など、必要なものだけをひとつのストアから入れられます。",
   tutorialPluginsTask:
-    "設定 › 拡張機能 を開いて、プラグイン、テーマ、スキルを見てみましょう",
+    "左の列のパズルアイコンを開いてプラグインを見てみましょう",
   tutorialConnectTitle: "AI を接続する",
   tutorialConnectBody: "接続すると、この先の AI 機能を実際に試せます。",
   tutorialConnectTask:
@@ -1614,20 +1614,21 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginsCatalogFailed: "一覧を読み込めませんでした: {reason}",
   pluginsCatalogRetry: "再試行",
   themeGalleryGroup: "テーマギャラリー",
-  navAppearance: "Appearance",
-  navEditing: "Editing",
-  navProviders: "Providers",
-  navChatWriting: "Chat & Writing",
-  navSkillsMemory: "Skills & Memory",
-  navPrivacyData: "Privacy & Data",
-  leadGeneral: "Language, how documents open, files and updates",
-  leadAppearance: "Theme, theme gallery and the window",
-  leadEditing: "Text, Markdown, images and export",
-  leadAi: "Its switch; its settings are on the three pages under it",
-  leadProviders: "Set up each provider; which one each use takes is on Chat & Writing",
-  leadChatWriting: "The provider and model each use takes, and how the chat and writing aids work",
-  leadSkillsMemory: "Project, memory, skills and MCP",
-  leadPrivacy: "Conversations, draft recovery and the settings file",
+  navAppearance: "外観",
+  navEditing: "編集",
+  navProviders: "プロバイダー",
+  navChatWriting: "チャットと執筆",
+  navSkillsMemory: "スキルとメモリー",
+  navPrivacyData: "プライバシーとデータ",
+  leadGeneral: "言語、ドキュメントの開き方、ファイル、アップデート",
+  leadAppearance: "テーマ、テーマギャラリー、ウィンドウ",
+  leadEditing: "本文、Markdown、画像、書き出し",
+  leadAi: "全体のスイッチ。詳しい設定は下の3ページにあります",
+  leadProviders:
+    "プロバイダーごとに設定します。用途ごとの選択は「チャットと執筆」で",
+  leadChatWriting: "用途ごとのプロバイダーとモデル、チャットと執筆支援の動き",
+  leadSkillsMemory: "プロジェクト、メモリー、スキル、MCP",
+  leadPrivacy: "会話履歴、下書きの復元、設定ファイル",
   settingsUpdatesGroup: "アップデート",
   pluginPageTab: "プラグイン：{name}",
   aiUsesGroup: "使うサービス",
@@ -1819,7 +1820,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   webPageHint:
     "ページが空白のままなら、そのサイトは他のアプリ内での表示を許可していません。ブラウザで開いてください。",
   pluginKeysTaken:
-    "「{name}」はキーボードを使えません。「{holder}」が使用中です。設定 › 拡張機能 でどちらかをオフにしてください。",
+    "{name} はキーボードを使えません：{holder} が使用中です。サイドバーのプラグイン一覧でどちらかをオフにしてください。",
   shortcutIndentListItem: "リスト項目をインデント",
   shortcutOutdentListItem: "リスト項目のインデントを戻す",
   pluginKeyTaken:
