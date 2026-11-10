@@ -89,7 +89,7 @@ export function pullTab(
   /** The place under (x, y). */
   const placeAt = (x: number, y: number, alt: boolean): Place | null => {
     const whole = wholeIsland(alt);
-    // A tab: an island's outer fifth opens one beside it, the rest joins
+    // A tab: an island's outer tenth opens one beside it, the rest joins
     // it. A whole island can't join: it goes to the half it is over.
     const target = dropTargetAt(x, y, geometry, !!whole, current?.target);
     if (whole) {

@@ -111,9 +111,12 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
         const shellBox = shell.getBoundingClientRect();
         tabs.disconnect();
         for (const row of rows) {
-          // Which tab is open decides the corner: told when it changes.
+          // Which tab is first and open decides the corner: told when one
+          // opens, and when one comes or goes (a closing tab's copy, a tab
+          // riding in, stands first for a moment).
           tabs.observe(row, {
             subtree: true,
+            childList: true,
             attributes: true,
             attributeFilter: ["class"],
           });
@@ -148,7 +151,11 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
           island?.toggleAttribute(
             "data-corner-joined",
             insets.atCorner &&
-              !!bar?.querySelector(":scope > .tab-pill-active:first-child"),
+              !!bar
+                ?.querySelector(
+                  ":scope > .tab-pill:not(.tab-pill-ghost, .tab-pill-preview)",
+                )
+                ?.classList.contains("tab-pill-active"),
           );
         }
       }

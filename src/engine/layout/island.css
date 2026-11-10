@@ -75,11 +75,6 @@
   z-index: 46;
 }
 
-/* Under another island: the gap above, as between sheets. */
-.island-row[data-inner] {
-  margin-top: var(--island-gap);
-}
-
 /* Its tabs scroll under its ends: they show only between them (and the
    first open tab's curve before them), and only there take a click, so the
    bar's controls stay reachable. */
@@ -214,7 +209,11 @@
 
 /* At its island's edge (data-at-corner) the first tab's side is the
    island's, straight up: no curve there. */
-.island-row > .tab-bar[data-at-corner] > .tab-pill-active:first-child::before {
+.island-row > .tab-bar[data-at-corner] > .tab-pill-active:first-child::before,
+.island-row
+  > .tab-bar[data-at-corner]
+  > .tab-pill-ghost:first-child
+  + .tab-pill-active::before {
   display: none;
 }
 

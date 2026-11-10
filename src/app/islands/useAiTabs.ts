@@ -10,8 +10,13 @@ import {
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
-import { openBeside, moveToPane, splitLayout } from "../../engine/layout/store";
-import { panesOf, paneWithTab } from "../../engine/layout/tree";
+import {
+  openAtEdge,
+  openBeside,
+  moveToPane,
+  splitLayout,
+} from "../../engine/layout/store";
+import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -128,16 +133,17 @@ export function useAiTabs({
         if (!home && !starting) tabs.setActiveTabId(made[0].id);
         for (const tab of made) {
           if (home) moveToPane(tab.id, home.id);
-          else {
-            const right = layout && panesOf(layout.root).at(-1);
+          // A window already split: a column of its own at the right of
+          // all of it, not beside whichever island came last.
+          else if (layout) openAtEdge(tab.id, "right");
+          else
             openBeside(
               tab.id,
-              right?.front ?? inUse ?? tabsRef.current[0]?.id ?? null,
+              inUse ?? tabsRef.current[0]?.id ?? null,
               "right",
               aiShare(),
               tabsRef.current.map((t) => t.id),
             );
-          }
         }
       });
     }

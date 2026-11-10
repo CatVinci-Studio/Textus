@@ -154,6 +154,44 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
   await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置"]);
+
+  // And back, the document's island to the left of the AI's: each first
+  // open tab at its island's edge still joins its sheet's square corner.
+  await tabs(page).filter({ hasText: "未命名" }).click();
+  const back = (await tabs(page).filter({ hasText: "未命名" }).boundingBox())!;
+  const left = (await page.locator("section.island").first().boundingBox())!;
+  await page.keyboard.down("Alt");
+  await page.mouse.move(back.x + back.width / 2, back.y + back.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(back.x - 40, back.y + 160, { steps: 10 });
+  await page.mouse.move(left.x + 8, left.y + left.height / 2, { steps: 20 });
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  await page.keyboard.up("Alt");
+  await expect(rows.first().locator(".tab-pill")).toHaveText([
+    "未命名",
+    "设置",
+  ]);
+  await page.waitForTimeout(600);
+  const corners = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>(".island-row")].map((row) => {
+      const bar = row.querySelector(".tab-bar");
+      const first = bar?.querySelector(
+        ":scope > .tab-pill:not(.tab-pill-ghost, .tab-pill-preview)",
+      );
+      const sheet = document.querySelector(
+        `section.island[data-pane-id="${row.dataset.paneId}"]`,
+      );
+      return {
+        joins:
+          !!bar?.hasAttribute("data-at-corner") &&
+          !!first?.classList.contains("tab-pill-active"),
+        joined: !!sheet?.hasAttribute("data-corner-joined"),
+      };
+    }),
+  );
+  for (const { joins, joined } of corners) expect(joined).toBe(joins);
+  expect(corners.some((c) => c.joins)).toBe(true);
 });
 
 test("with only Settings open, the AI grows in at a panel's width and can be used; Settings' island slides, not rebuilt", async ({
@@ -217,7 +255,7 @@ test("let go in the middle of the document's island, it joins it; near its edge,
   await drag(0.5);
   await expect(islands(page)).toHaveCount(1);
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
-  await drag(0.1);
+  await drag(0.04);
   await expect(islands(page)).toHaveCount(2);
   await expect(
     page.locator(".island-row").first().locator(".tab-pill"),
@@ -284,4 +322,37 @@ test("the open tab is its island's paper wherever it is in the row", async ({
   await tabs(page).first().click();
   await expect(tabs(page).first()).toHaveClass(/tab-pill-active/);
   expect(await paper(0)).toBe(sheet);
+});
+
+test("in a window already split, the AI opens as a column of its own at the right of all of it", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-split-down");
+  await expect(islands(page)).toHaveCount(2);
+  await aiButton(page).click();
+  await expect(islands(page)).toHaveCount(3);
+  const ai = (await page.locator(".ai-tab").first().boundingBox())!;
+  const docs = await page
+    .locator("section.island")
+    .evaluateAll((els) =>
+      els.map((e) => e.getBoundingClientRect()).map((r) => [r.top, r.right]),
+    );
+  // Full height beside both stacked islands, right of each.
+  const sheets = page.locator("section.island");
+  const aiSheet = (await sheets.last().boundingBox())!;
+  expect(aiSheet.height).toBeGreaterThan(500);
+  for (const [, right] of docs.slice(0, 2)) expect(right).toBeLessThan(ai.x);
+});
+
+test("an island under another has its row of tabs on its sheet's top, not over it", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-split-down");
+  await expect(islands(page)).toHaveCount(2);
+  await page.waitForTimeout(600);
+  const row = (await page.locator(".island-row[data-inner]").boundingBox())!;
+  const sheet = (await page.locator("section.island").last().boundingBox())!;
+  expect(Math.abs(row.y + row.height - sheet.y)).toBeLessThan(1);
 });

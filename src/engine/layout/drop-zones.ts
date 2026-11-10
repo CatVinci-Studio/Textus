@@ -25,7 +25,7 @@ export interface DropTarget {
 
 /** How near an island's edge (a share of its width or height) a tab must
  *  be to open a new island there; inside that, it joins the island. */
-const EDGE = 0.2;
+const EDGE = 0.1;
 /** The place already aimed at holds a little past its line, so a pointer
  *  resting on it doesn't flicker between two. */
 const HOLD = 1.25;

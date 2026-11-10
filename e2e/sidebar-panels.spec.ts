@@ -83,4 +83,13 @@ test("too narrow for the sidebar and the islands at their least, the sidebar ste
   await emit(page, "menu-toggle-sidebar");
   await page.waitForTimeout(300);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  // Opening the AI where it leaves too little room puts nothing away.
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(1);
+  await page.setViewportSize({ width: 1000, height: 760 });
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await page.waitForTimeout(300);
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
 });

@@ -16,21 +16,21 @@ const at = (x: number, y: number, held?: ReturnType<typeof dropTargetAt>) =>
   dropTargetAt(x, y, geometry, false, held)?.zone;
 
 describe("dropTargetAt", () => {
-  it("an island's outer fifth opens beside it, the rest joins it", () => {
-    expect(at(400 + 70, 300)).toBe("left");
-    expect(at(400 + 90, 300)).toBe("center");
-    expect(at(400 + 200, 130)).toBe("center");
-    expect(at(400 + 200, 110)).toBe("top");
-    expect(at(400 + 200, 520)).toBe("bottom");
+  it("an island's outer tenth opens beside it, the rest joins it", () => {
+    expect(at(400 + 35, 300)).toBe("left");
+    expect(at(400 + 45, 300)).toBe("center");
+    expect(at(400 + 200, 70)).toBe("center");
+    expect(at(400 + 200, 50)).toBe("top");
+    expect(at(400 + 200, 560)).toBe("bottom");
   });
 
   it("the place aimed at holds a little past its line", () => {
-    const left = dropTargetAt(400 + 70, 300, geometry)!;
-    expect(at(400 + 90, 300, left)).toBe("left");
-    expect(at(400 + 110, 300, left)).toBe("center");
+    const left = dropTargetAt(400 + 35, 300, geometry)!;
+    expect(at(400 + 45, 300, left)).toBe("left");
+    expect(at(400 + 55, 300, left)).toBe("center");
     const middle = dropTargetAt(400 + 200, 300, geometry)!;
-    expect(at(400 + 70, 300, middle)).toBe("center");
-    expect(at(400 + 60, 300, middle)).toBe("left");
+    expect(at(400 + 35, 300, middle)).toBe("center");
+    expect(at(400 + 28, 300, middle)).toBe("left");
   });
 
   it("whole islands go to the half they are over", () => {
