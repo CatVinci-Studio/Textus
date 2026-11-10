@@ -53,6 +53,8 @@ export interface TreeShared {
   /** An empty folder's one button: a new document named in place there,
    *  with its label. Null where documents aren't made here. */
   newDocument: { label: string; start: () => void } | null;
+  /** A folder to bring into view: it and those above it open. */
+  reveal: string | null;
 }
 
 export interface TreeDraft {

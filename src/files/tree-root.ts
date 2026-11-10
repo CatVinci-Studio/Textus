@@ -7,8 +7,8 @@ export function isWithin(path: string, dir: string): boolean {
 
 /**
  * Where the file tree is rooted after the front document or opened folder
- * changes. An opened folder holds the tree; otherwise it stays while the
- * document is inside it. A draft shows `fallback`, or leaves the tree.
+ * changes. An opened folder is always the root; otherwise it stays while
+ * the document is inside it. A draft shows `fallback`, or leaves the tree.
  */
 export function nextTreeRoot({
   current,
@@ -21,12 +21,8 @@ export function nextTreeRoot({
   docPath: string | null;
   fallback: string | null;
 }): string | null {
-  if (folder) {
-    if (!current || !isWithin(current, folder)) return folder;
-    if (docPath && isInside(docPath, folder) && !isInside(docPath, current))
-      return folder;
-    return current;
-  }
+  // An opened folder is the tree's root, whole, as a project is.
+  if (folder) return folder;
   if (!docPath) return fallback ?? current;
   if (current && isInside(docPath, current)) return current;
   return dirname(docPath);

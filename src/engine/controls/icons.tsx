@@ -323,6 +323,26 @@ export function OutlineTabIcon({ className }: IconProps) {
   );
 }
 
+/** Settings: a gear, its hub open. */
+export function SettingsIcon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      width="15"
+      height="15"
+      style={iconSize(15, 15)}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      strokeLinejoin="round"
+    >
+      <path d="M12.73 6.37 14.43 6.52v2.96l-1.7.15-.24.56 1.11 1.31-2.1 2.1-1.31-1.11-.56.24-.15 1.7H6.52l-.15-1.7-.56-.24-1.31 1.11-2.1-2.1 1.11-1.31-.24-.56-1.7-.15V6.52l1.7-.15.24-.56L2.4 4.5l2.1-2.1 1.31 1.11.56-.24.15-1.7h2.96l.15 1.7.56.24L11.5 2.4l2.1 2.1-1.11 1.31z" />
+      <circle cx="8" cy="8" r="2.1" />
+    </svg>
+  );
+}
+
 /** The window bar's sidebar toggle: a window with its left pane drawn. */
 export function SidebarToggleIcon({ className }: IconProps) {
   return (

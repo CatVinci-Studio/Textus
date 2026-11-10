@@ -326,7 +326,7 @@ async function frame(page: Page) {
   );
 }
 
-test("the title bar, the activity rail and the sidebar are one frame; the sidebar's contents stay below the bar", async ({
+test("the title bar, the activity rail and the sidebar are one frame; the sidebar's contents clear the bar's lead", async ({
   page,
 }) => {
   // Opaque, so the bar's colour is the frame's own.
@@ -344,10 +344,15 @@ test("the title bar, the activity rail and the sidebar are one frame; the sideba
     .evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(page_).not.toBe(bar);
 
-  // Its contents stay below the bar rather than riding up into it.
+  // With the app menu in the rail (no traffic lights to clear) its
+  // contents start at the window's top, over the bar; else under it.
   const box = (await page.locator(".window-bar").boundingBox())!;
   const body = (await page.locator(".sidebar-body").boundingBox())!;
-  expect(body.y).toBeGreaterThanOrEqual(box.y + box.height);
+  const menuInRail = await page.evaluate(() =>
+    document.documentElement.hasAttribute("data-menu-in-rail"),
+  );
+  if (menuInRail) expect(body.y).toBeLessThan(4);
+  else expect(body.y).toBeGreaterThanOrEqual(box.y + box.height);
 
   // Closed, the sidebar slides under the rail: nothing of it shows past
   // the rail's edge, and the page floats beside the rail as a sheet, its

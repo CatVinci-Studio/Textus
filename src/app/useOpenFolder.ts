@@ -91,14 +91,17 @@ export function useOpenFolder({
     (root: string) => setTree((prev) => ({ ...prev, root })),
     [],
   );
-  // A plugin's textus.showFolder: a folder inside the open one, only.
+  // A plugin's textus.showFolder: a folder inside the open one, only. The
+  // opened folder stays the root and opens down to it; without one, the
+  // tree narrows to it.
+  const [revealed, setRevealed] = useState<string | null>(null);
   useEffect(() => {
     const show = (event: Event) => {
       const path = (event as CustomEvent<unknown>).detail;
-      // Inside the project, or inside what the tree shows without one.
       const top = folder ?? treeRoot;
-      if (typeof path === "string" && top && isInside(path, top))
-        setTreeRoot(path);
+      if (typeof path !== "string" || !top || !isInside(path, top)) return;
+      if (folder) setRevealed(path);
+      else setTreeRoot(path);
     };
     window.addEventListener(SHOW_FOLDER_EVENT, show);
     return () => window.removeEventListener(SHOW_FOLDER_EVENT, show);
@@ -185,6 +188,7 @@ export function useOpenFolder({
     folder,
     treeRoot,
     setTreeRoot,
+    revealed,
     openFolder,
     openFolderDialog,
     closeFolder,

@@ -34,10 +34,13 @@ import { useNewEntry } from "./useNewEntry";
 export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
-  /** Where the tree is rooted; the toolbar's parent folder and double-clicking
-   *  a folder move it through `onRootChange` without touching the open document. */
+  /** Where the tree is rooted. With no folder opened, the toolbar's parent
+   *  folder and Show Only This Folder move it through `onRootChange`,
+   *  without touching the open document; an opened folder stays whole. */
   root: string;
   onRootChange: (path: string) => void;
+  /** A folder to bring into view (a plugin's showFolder). */
+  reveal?: string | null;
   /** The folder opened with File > Open Folder…, or null. The tree stays
    *  inside it, and the search covers all of it. */
   folder: string | null;
@@ -60,6 +63,7 @@ interface FileTreeProps {
 export function FileTree({
   root,
   onRootChange,
+  reveal = null,
   folder,
   activePath,
   onFileSelect,
@@ -92,7 +96,7 @@ export function FileTree({
     onFileSelect,
     onEntryMoved,
     setDraft,
-    onRootChange,
+    folder ? null : onRootChange,
   );
   const { drag, onRowPointerDown, takeDragClick } = useRowDrag(
     treeRef,
@@ -122,6 +126,7 @@ export function FileTree({
             start: () => setDraft({ dir: root, kind: "document" }),
           }
         : null,
+      reveal,
     }),
     [
       sort,
@@ -140,6 +145,7 @@ export function FileTree({
       setDraft,
       root,
       t,
+      reveal,
     ],
   );
 
@@ -332,7 +338,6 @@ export function FileTree({
               depth={0}
               activePath={activePath}
               onFileSelect={onFileSelect}
-              onEnter={onRootChange}
             />
           </div>
         </div>

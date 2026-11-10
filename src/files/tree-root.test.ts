@@ -54,17 +54,11 @@ describe("the file tree's root with an opened folder", () => {
     expect(root("/notes", null, "/notes", "/Documents")).toBe("/notes");
   });
 
-  it("keeps a subfolder the user entered while the document is in it", () => {
+  it("never narrows to a subfolder of it", () => {
     expect(root("/notes/novel", "/notes/novel/ch2.md", "/notes")).toBe(
-      "/notes/novel",
+      "/notes",
     );
-    expect(root("/notes/novel", "/elsewhere/c.md", "/notes")).toBe(
-      "/notes/novel",
-    );
-  });
-
-  it("goes back to the folder for a document elsewhere in it", () => {
-    expect(root("/notes/novel", "/notes/essays/e.md", "/notes")).toBe("/notes");
+    expect(root("/notes/novel", "/elsewhere/c.md", "/notes")).toBe("/notes");
   });
 
   it("starts at the folder, and returns to it from outside", () => {

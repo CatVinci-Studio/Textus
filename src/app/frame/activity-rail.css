@@ -86,3 +86,50 @@
   padding: 0;
   border-bottom: 0;
 }
+
+/* With the app menu in the rail (no traffic lights to clear), the sidebar
+   owns its column to the window's top: over the bar there, as the islands'
+   top rows are, its own tools on the bar's line. */
+:root[data-menu-in-rail]:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar {
+  z-index: 46;
+}
+
+:root[data-menu-in-rail]:not([data-window-chrome="mobile"])
+  .app-shell:has(> .activity-rail)
+  .sidebar-header {
+  height: 0;
+}
+
+:root[data-menu-in-rail] .sidebar-resizer {
+  top: 0;
+}
+
+/* Settings at the rail's foot, with the window's bottom edge for margin. */
+.activity-rail-settings {
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+
+/* A faint line where the rail meets the open sidebar - softer than the
+   frame's edge against the document. Down from the window's top where the
+   sidebar reaches it, else from under the bar. */
+.app-shell > .sidebar::before {
+  content: "";
+  position: absolute;
+  top: var(--window-bar-height);
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--ui-frame-edge) 55%, transparent);
+  pointer-events: none;
+}
+
+.app-shell:not(:has(> .activity-rail)) > .sidebar::before {
+  display: none;
+}
+
+:root[data-menu-in-rail] .app-shell > .sidebar::before {
+  top: 0;
+}

@@ -21,6 +21,7 @@ import { isDocumentName } from "./file-search";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
 import { useTree } from "./tree-shared";
+import { isWithin } from "./tree-root";
 import { DraftRow } from "./DraftRow";
 import type { FileOpenHow } from "./tree-shared";
 import { fileIconFor } from "../engine/controls/file-icons";
@@ -32,8 +33,6 @@ interface DirNodeProps {
   ignored?: boolean;
   activePath: string | null;
   onFileSelect: (path: string, how?: FileOpenHow) => void;
-  /** Re-roots the tree at a folder (double-click on its row). */
-  onEnter: (path: string) => void;
 }
 
 /** Newest first; one the system gave no date for goes last. */
@@ -47,7 +46,6 @@ export function DirNode({
   ignored = false,
   activePath,
   onFileSelect,
-  onEnter,
 }: DirNodeProps) {
   const tree = useTree();
   const version = tree.versions[path] ?? 0;
@@ -61,11 +59,16 @@ export function DirNode({
     listing: string;
     entries: DirEntryInfo[];
   } | null>(null);
-  // A document opened further down shows where it is: its folders open, the
-  // rest stay as they were.
+  // A document opened further down shows where it is, and so does a folder
+  // asked to be shown (a plugin's showFolder): the folders on the way open,
+  // the rest stay as they were.
   useEffect(() => {
-    if (activePath !== null && isInside(activePath, path)) setOpen(true);
-  }, [activePath, path]);
+    if (
+      (activePath !== null && isInside(activePath, path)) ||
+      (tree.reveal && isWithin(tree.reveal, path))
+    )
+      setOpen(true);
+  }, [activePath, tree.reveal, path]);
   // Something was made in it or moved into it, or is being named in it:
   // show it.
   const drafting = tree.draft?.dir === path ? tree.draft.kind : null;
@@ -171,7 +174,6 @@ export function DirNode({
                 ignored={entry.ignored}
                 activePath={activePath}
                 onFileSelect={onFileSelect}
-                onEnter={onEnter}
               />
             ) : (
               <FileNode

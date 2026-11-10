@@ -7,6 +7,8 @@ import {
 import { Presence } from "../../engine/motion/usePresence";
 import { reorderDrag } from "../../engine/drag/row";
 import { useSettings } from "../../prefs/SettingsContext";
+import { SettingsIcon } from "../../engine/controls/icons";
+import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 
@@ -101,6 +103,17 @@ export function ActivityRail({
           </Tooltip>
         );
       })}
+      {/* Settings at the column's foot, out of the tabs' order. */}
+      <Tooltip text={t.settingsTitle}>
+        <button
+          type="button"
+          className="activity-rail-item activity-rail-settings"
+          aria-label={t.settingsTitle}
+          onClick={() => emitToThisWindow("menu-open-settings")}
+        >
+          <SettingsIcon />
+        </button>
+      </Tooltip>
       <Presence show={menu !== null} exitMs={120}>
         {menu && (
           <ContextMenu

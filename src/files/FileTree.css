@@ -88,6 +88,15 @@
 .tree-tool {
   flex-shrink: 0;
   opacity: 0.7;
+  transition: opacity var(--dur-fast) var(--ease-standard);
+}
+
+/* Out of the way until wanted: shown while the pointer is over the panel
+   or focus is in it, as VS Code's explorer does. Touch has no hover. */
+@media (hover: hover) {
+  .file-tree:not(:hover, :focus-within) .tree-tool {
+    opacity: 0;
+  }
 }
 
 .tree-tool:disabled {

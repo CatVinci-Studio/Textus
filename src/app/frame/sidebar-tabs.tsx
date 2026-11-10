@@ -65,6 +65,7 @@ function FilesPanel({
     <FileTree
       root={openFolder.treeRoot}
       onRootChange={openFolder.setTreeRoot}
+      reveal={openFolder.revealed}
       folder={openFolder.folder}
       activePath={activePath}
       onFileSelect={(path, how) => {
