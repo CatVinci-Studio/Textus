@@ -147,8 +147,10 @@ export function openBeside(
   if (!from || from === tabId) return;
   const home = layout && paneWithTab(layout.root, from);
   if (!layout || !home) {
+    // The window's other tabs stay on `from`'s side: they join the pane
+    // in use as the layout takes them in.
     setSplitLayout(
-      pairLayout(side === "right" ? "row" : "column", from, tabId, 1),
+      pairLayout(side === "right" ? "row" : "column", from, tabId, 0),
     );
     return;
   }

@@ -85,3 +85,19 @@ test("Zen shows the tab in use alone, and the split comes back after", async ({
   await emit(page, "menu-toggle-zen-mode");
   await expect(islands(page)).toHaveCount(2);
 });
+
+test("the window's other tabs stay with the document when the AI opens", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-open-settings");
+  await expect(tabs(page)).toHaveText(["未命名", "设置"]);
+  await aiButton(page).click();
+  await expect(islands(page)).toHaveCount(2);
+  const rows = page.locator(".island-row");
+  await expect(rows.first().locator(".tab-pill")).toHaveText([
+    "未命名",
+    "设置",
+  ]);
+  await expect(rows.last().locator(".tab-pill")).toHaveText(["新对话"]);
+});
