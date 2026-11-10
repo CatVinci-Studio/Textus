@@ -286,8 +286,8 @@ function App() {
             t={t}
           />
 
-          {/* On the desktop the AI island is one in the documents' grid; an
-            iPhone or iPad keeps its own page. */}
+          {/* The desktop's conversations are tabs (useAiTabs); an iPhone or iPad
+            keeps its own panel. */}
           {isIOSApp && agentPresence.mounted && (
             <AgentPanelDock
               presence={agentPresence}

@@ -1,13 +1,6 @@
 import { useRef, type CSSProperties, type ReactNode } from "react";
-import {
-  islandOf,
-  panesOf,
-  splitGrid,
-  type Pane,
-  type SplitGrid,
-} from "./tree";
+import { panesOf, splitGrid, type Pane, type SplitGrid } from "./tree";
 import type { SplitLayout } from "./ops";
-import type { IslandKind } from "./Island";
 import { IslandMotion } from "./IslandMotion";
 import { SplitDivider } from "./SplitDivider";
 import { useTabRows } from "./useTabRows";
@@ -30,8 +23,8 @@ export interface IslandPlace {
   plain: boolean;
 }
 
-/** One kind of island's content: given where each of its islands goes
- *  (one place, unsplit, for documents with no layout), draws them all. */
+/** The islands' content: given where each goes (one place, unsplit, with
+ *  no layout), draws them all. */
 export type IslandContent = (
   places: { pane: Pane | null; place: IslandPlace }[],
 ) => ReactNode;
@@ -39,33 +32,28 @@ export type IslandContent = (
 /**
  * The islands' area (design-language.md 5.7): the window's layout drawn as
  * one grid, each island where the tree puts it, the dividers between them
- * and every move a slide. It knows no document or conversation - each kind
- * of island draws its own content at the places it is given.
+ * and every move a slide. It knows no tab's content: `content` draws it at
+ * the places it is given.
  */
 export function IslandArea({
   layout,
   plain,
-  contents,
+  content,
   t,
 }: {
-  /** The window's layout; null: one island of documents filling it. */
+  /** The window's layout; null: one island filling it. */
   layout: SplitLayout | null;
   plain: boolean;
-  contents: Partial<Record<IslandKind, IslandContent>>;
+  content: IslandContent;
   t: Strings;
 }) {
   const ref = useRef<HTMLElement>(null);
   useTabRows(ref);
   const grid = layout && splitGrid(layout.root);
   const all = layout ? panesOf(layout.root) : [];
-  const placesOf = (kind: IslandKind) =>
-    grid
-      ? all
-          .filter((pane) => islandOf(pane) === kind)
-          .map((pane) => ({ pane, place: placeOf(grid, pane.id, plain) }))
-      : kind === "documents"
-        ? [{ pane: null, place: { inner: false, plain } }]
-        : [];
+  const places = grid
+    ? all.map((pane) => ({ pane, place: placeOf(grid, pane.id, plain) }))
+    : [{ pane: null, place: { inner: false, plain } }];
   return (
     <main
       ref={ref}
@@ -77,8 +65,7 @@ export function IslandArea({
         layout={`${grid?.column.gridTemplateColumns} ${grid?.column.gridTemplateRows} ${all.map((p) => p.id)}`}
         area={ref}
       />
-      {contents.documents?.(placesOf("documents"))}
-      {contents.ai?.(placesOf("ai"))}
+      {content(places)}
       {layout &&
         grid?.dividers.map(({ line, style }) => (
           <SplitDivider

@@ -71,7 +71,7 @@ export function ChatWindowHeader({
       >
         {/* The traffic lights' room, for the row to clear. */}
         <span className="window-bar-lead chat-window-lights" aria-hidden />
-        <IslandRow kind="ai">
+        <IslandRow ui>
           {tabs({
             scope,
             onNew: () => !busy && onNewConversation(),

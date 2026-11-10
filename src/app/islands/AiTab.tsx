@@ -20,10 +20,7 @@ export function AiTab({ tabId }: { tabId: string }) {
     return <TextusAiOffNote className="agent-panel-placeholder" />;
   return (
     <div className="ai-tab">
-      <div
-        className="agent-panel-mount"
-        ref={mount}
-      />
+      <div className="agent-panel-mount" ref={mount} />
       <AgentIslandTools t={t} />
     </div>
   );

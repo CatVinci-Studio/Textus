@@ -6,7 +6,7 @@ import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 
 /** The docked Agent panel on an iPad (a page of its own on a phone): the
  *  active tab's editor renders its conversation into the mount point here.
- *  The desktop's is an island in the documents' grid (AiIsland). */
+ *  The desktop's conversations are tabs (AiTab). */
 export function AgentPanelDock({
   presence,
   closing,

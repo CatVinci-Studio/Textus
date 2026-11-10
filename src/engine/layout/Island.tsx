@@ -21,12 +21,10 @@ function useFresh(): boolean {
   return useState(() => ready)[0];
 }
 
-/** What an island holds: documents (files, plugin views, web pages) or a
- *  Textus AI conversation. */
-export type IslandKind = "documents" | "ai";
-
 interface IslandPlace {
-  kind: IslandKind;
+  /** The interface's paper, not a page's, and a target itself: an island
+   *  that is one panel (the chat window's). */
+  ui?: boolean;
   /** Its pane in the window's layout; ties its row to its sheet. */
   paneId?: string;
   /** Plain: a clean sheet's or Zen's - no floating sheet, the page's own
@@ -41,7 +39,7 @@ interface IslandPlace {
  * window bar's row, so it has no bar controls to clear.
  */
 export function IslandRow({
-  kind,
+  ui,
   paneId,
   plain,
   inner,
@@ -57,7 +55,7 @@ export function IslandRow({
     <div
       className="island-row"
       data-fresh={fresh || undefined}
-      data-island-row={kind}
+      data-island-row={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-inner={inner || undefined}
       data-plain={plain || undefined}
@@ -76,7 +74,7 @@ export function IslandRow({
  * pane goes.
  */
 export function IslandSheet({
-  kind,
+  ui,
   paneId,
   plain,
   sheetRef,
@@ -95,7 +93,7 @@ export function IslandSheet({
       data-fresh={fresh || undefined}
       ref={sheetRef}
       className={className ? `island ${className}` : "island"}
-      data-island={kind}
+      data-island={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-plain={plain || undefined}
       aria-hidden={children ? rest["aria-hidden"] : true}
@@ -128,7 +126,7 @@ export function Island({
     <>
       {row !== undefined && (
         <IslandRow
-          kind={sheet.kind}
+          ui={sheet.ui}
           paneId={sheet.paneId}
           plain={sheet.plain}
           inner={inner}

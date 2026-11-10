@@ -1,6 +1,6 @@
 /* The window's layout (design-language.md 5.7): the base - the frame and
    the window bar's row - the docks on it (activity rail, sidebar), and
-   the islands' area: each pane of documents and the AI island, a row of
+   the islands' area: each pane an island, a row of
    tabs over a sheet (Island, ui/island.css). One structure for both
    layouts; layout-tokens.css holds what tells them apart. App marks the shell: data-layout, and
    data-tabs ("bar": the tabs take the window bar's row; on the desktop

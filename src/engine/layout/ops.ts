@@ -1,6 +1,4 @@
 import {
-  aiPane,
-  islandOf,
   keepsItself,
   shareOf,
   mapPanes,
@@ -15,19 +13,16 @@ import {
   turnAt,
   type Branch,
   type LayoutNode,
-  type Pane,
   type Path,
   type Side,
 } from "./tree";
 
 /**
  * Everything that rearranges a window's islands, as pure functions: a
- * layout in, the layout after out - null when one island of documents is
+ * layout in, the layout after out - null when one island is
  * left (no split). The menus, the keys and every drag call these and commit
  * what comes back (store.ts); a drag in progress shows it first, as
- * a preview. An island takes only its kind's tabs: documents' panes the
- * window's tabs, the AI island none of them (its tabs are the folder's
- * conversations).
+ * a preview. Any island takes any of the window's tabs.
  */
 
 export interface SplitLayout {
@@ -37,28 +32,16 @@ export interface SplitLayout {
   focus: string;
 }
 
-/** The layout after `root` changed: tidied, the focus kept on a pane of
- *  documents that is still there; null when one pane is left. */
+/** The layout after `root` changed: tidied, the focus kept on a pane
+ *  still there; null when one pane is left. */
 function settled(root: LayoutNode, focus: string): SplitLayout | null {
   const left = tidy(root);
   if (!left || left.kind === "pane") return null;
   const kept = paneById(left, focus);
   return {
     root: left,
-    focus:
-      kept && islandOf(kept) === "documents" ? focus : firstDocuments(left).id,
+    focus: kept ? focus : panesOf(left)[0].id,
   };
-}
-
-function firstDocuments(root: LayoutNode): Pane {
-  const panes = panesOf(root);
-  return panes.find((p) => islandOf(p) === "documents") ?? panes[0];
-}
-
-/** Pane `id` takes document tabs. */
-function takesDocuments(root: LayoutNode, id: string): boolean {
-  const p = paneById(root, id);
-  return !!p && islandOf(p) === "documents";
 }
 
 /** The tree with `tabId` out of whichever pane holds it. */
@@ -82,7 +65,7 @@ export function moveTab(
   id: string,
   index?: number,
 ): SplitLayout | null {
-  if (!takesDocuments(layout.root, id)) return layout;
+  if (!paneById(layout.root, id)) return layout;
   const root = mapPanes(withoutTab(layout.root, tabId), (p) => {
     if (p.id !== id) return p;
     const tabs = [...p.tabs];
@@ -138,7 +121,7 @@ export function movePane(
   const rest = tidy(layout.root, (p) => p.id !== id && keepsItself(p));
   if (!rest) return layout;
   // Moved to the layout's edge the same way it ran, it keeps its width
-  // (or height): the AI island docked left is as wide as it was.
+  // (or height): an island docked left is as wide as it was.
   const was = shareOf(layout.root, id);
   const across = side === "left" || side === "right" ? "row" : "column";
   const root =
@@ -150,7 +133,7 @@ export function movePane(
           was?.direction === across ? was.share : undefined,
         )
       : splitPane(rest, target, side, moved);
-  return settled(root, islandOf(moved) === "documents" ? id : layout.focus);
+  return settled(root, id);
 }
 
 /** A branch rearranged: turned the other way, the two children either side
@@ -173,38 +156,9 @@ export function arrange(
 /** Pane `id` in use: a tab opened next joins it. Only documents' panes
  *  take that. */
 export function focusOn(layout: SplitLayout, id: string): SplitLayout {
-  return layout.focus === id || !takesDocuments(layout.root, id)
+  return layout.focus === id || !paneById(layout.root, id)
     ? layout
     : { ...layout, focus: id };
-}
-
-/** The AI island open: at the right of everything, `share` of the width,
- *  if it isn't there already. `base` is the layout of documents (null: one
- *  pane of `tabIds`, `active` in front). */
-export function withAi(
-  base: SplitLayout | null,
-  tabIds: readonly string[],
-  active: string,
-  share: number,
-): SplitLayout {
-  if (base && panesOf(base.root).some((p) => islandOf(p) === "ai")) return base;
-  const docs: LayoutNode = base?.root ?? pane([...tabIds], active);
-  const root = splitWhole(docs, "right", aiPane());
-  const at = root.sizes.length - 1;
-  const rest = 1 - root.sizes[at];
-  const sizes = root.sizes.map((size, i) =>
-    i === at ? share : (size / rest) * (1 - share),
-  );
-  return {
-    root: { ...root, sizes },
-    focus: base?.focus ?? panesOf(docs)[0].id,
-  };
-}
-
-/** The AI island closed: the documents take its room. */
-export function withoutAi(layout: SplitLayout): SplitLayout | null {
-  const rest = tidy(layout.root, (p) => islandOf(p) !== "ai" && keepsItself(p));
-  return rest ? settled(rest, layout.focus) : null;
 }
 
 /** One island of `tabIds`, `front` in front, as a layout: what a window

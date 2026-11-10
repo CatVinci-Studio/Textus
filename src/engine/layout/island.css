@@ -1,14 +1,13 @@
 /* Islands (Island.tsx, design-language.md 5.7): a row of tabs over a
-   sheet, the same for documents and Textus AI, in the editor's window and
-   the chat window alike. Every island rule lives here, keyed on the
+   sheet, in the editor's window and the chat window alike. Every island rule lives here, keyed on the
    island's own marks - data-island (its sheet), data-island-row (its
    row), data-plain, data-inner; layout-tokens.css holds the values that
    tell the two layouts apart. */
 
 /* ---- Sheet --------------------------------------------------------- */
 
-/* Its paper: the page's own for documents (a theme's or the user's
-   --doc-bg), the interface's for the AI. Its row's open tab is the same. */
+/* Its paper: the page's own (a theme's or the user's --doc-bg), the
+   interface's for a panel's (ui). Its row's open tab is the same. */
 [data-island],
 .island-row {
   --island-paper: var(--ui-bg);
@@ -44,14 +43,14 @@
   box-shadow: none;
 }
 
-[data-island="ai"][data-plain],
-.island-row[data-island-row="ai"][data-plain] {
+[data-island="ui"][data-plain],
+.island-row[data-island-row="ui"][data-plain] {
   border-left: 1px solid var(--ui-frame-edge);
 }
 
 /* A documents island made after the window's first layout (a split, a
    tab let go at an edge) settles in, its row with it; the others slide to
-   their new places (IslandMotion). The AI island has its own entrance. */
+   their new places (IslandMotion). */
 [data-island="documents"][data-fresh],
 .island-row[data-island-row="documents"][data-fresh] {
   animation: motion-settle-in var(--dur-base) var(--ease-out);
@@ -237,12 +236,4 @@
 :root .island-row[data-plain] > .tab-bar > .tab-pill-active::before,
 :root .island-row[data-plain] > .tab-bar > .tab-pill-active::after {
   display: none;
-}
-
-/* Zen hides the documents' tabs (modes.css); the AI's stay, in place. */
-.zen .island-row[data-island-row="ai"] > .tab-bar {
-  position: relative;
-  opacity: 1;
-  visibility: visible;
-  background: none;
 }

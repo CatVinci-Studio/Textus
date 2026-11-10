@@ -58,8 +58,7 @@ export function barLayout({
       sideToTop: fullscreen && railShown,
       railToTop: fullscreen && railShown,
     };
-  // In Zen no documents' tabs need a row under the menu bar: it shares
-  // the bar's row with the AI island's.
+  // In Zen no tabs need a row under the menu bar.
   if (menuBar) return { rows: zen ? 1 : 2, lead: ["menu-bar"], ...none };
   return {
     rows: 1,

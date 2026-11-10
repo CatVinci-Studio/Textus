@@ -71,6 +71,8 @@ export function readSavedSplit(raw: unknown): SavedNode | null {
   return new Set(all).size === all.length ? node : null;
 }
 
+/** The islands that show a file, as saved: one showing none (a page, a
+ *  conversation) is left out, its room shared by the rest. */
 function saveNode(
   node: LayoutNode,
   pathOf: (id: string) => string | null,
@@ -79,12 +81,15 @@ function saveNode(
     const path = node.front && pathOf(node.front);
     return path ? { path } : null;
   }
-  const children = node.children.map((c) => saveNode(c, pathOf));
-  if (children.some((c) => !c)) return null;
+  const kept = node.children
+    .map((c, i) => ({ node: saveNode(c, pathOf), size: node.sizes[i] }))
+    .filter((c): c is { node: SavedNode; size: number } => !!c.node);
+  if (kept.length < 2) return kept[0]?.node ?? null;
+  const total = kept.reduce((sum, c) => sum + c.size, 0);
   return {
     direction: node.direction,
-    sizes: node.sizes,
-    children: children as SavedNode[],
+    sizes: kept.map((c) => c.size / total),
+    children: kept.map((c) => c.node),
   };
 }
 
@@ -121,7 +126,7 @@ export function useSplitRestore(
       const pathOf = (id: string) =>
         tabsRef.current.find((tab) => tab.id === id)?.path ?? null;
       const tree = layout && saveNode(layout.root, pathOf);
-      setUiState("splitLayout", tree ? { tree } : null);
+      setUiState("splitLayout", tree && !("path" in tree) ? { tree } : null);
     });
     return () => {
       clearTimeout(timer);

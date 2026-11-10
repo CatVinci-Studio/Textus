@@ -1,9 +1,5 @@
 import { Island } from "../../engine/layout/Island";
-import {
-  IslandArea,
-  type IslandContent,
-  type IslandPlace,
-} from "../../engine/layout/IslandArea";
+import { IslandArea, type IslandContent } from "../../engine/layout/IslandArea";
 import { useChangedFiles } from "../../ai/chat/file-changes";
 import { DocumentCorners } from "./DocumentCorner";
 import { DocumentViews } from "./DocumentViews";
@@ -11,7 +7,6 @@ import type { Lang } from "../../i18n/langs";
 import {
   type ComponentProps,
   type CSSProperties,
-  type ReactNode,
   useLayoutEffect,
   useSyncExternalStore,
 } from "react";
@@ -34,7 +29,7 @@ import { TabBar } from "../../engine/controls/tabs/TabBar";
 import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useSplitPanes } from "../../engine/layout/useSplitPanes";
-import { islandOf, panesOf, type Pane } from "../../engine/layout/tree";
+import { panesOf, type Pane } from "../../engine/layout/tree";
 import {
   focusPane,
   reorderInPane,
@@ -78,7 +73,6 @@ export function DocumentIslands({
   typewriter,
   formatBar,
   tour,
-  aiIsland,
   zen,
   lang,
   t,
@@ -107,10 +101,7 @@ export function DocumentIslands({
   /** The tour's practice tab, its AI and the AI panel mode its lesson
    *  needs, while the tour runs; else null. */
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
-  /** Draws the AI island at its place in the grid (AiIsland). */
-  aiIsland?: (place: IslandPlace) => ReactNode;
-  /** Zen: no tabs, the documents plain paper (the AI island's beside them
-   *  too). */
+  /** Zen: no tabs, the documents plain paper. */
   zen: boolean;
   /** The interface's language: how a document's length is counted. */
   lang: Lang;
@@ -126,10 +117,7 @@ export function DocumentIslands({
   const phone = usePhoneLayout();
   // A phone's column has its bar of its own, not islands.
   const islands = canUseWindows;
-  const panes = split
-    ? panesOf(split.root).filter((p) => islandOf(p) === "documents")
-    : [];
-  // Documents split, not only beside the AI island.
+  const panes = split ? panesOf(split.root) : [];
   const docsSplit = panes.length > 1;
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
@@ -242,11 +230,7 @@ export function DocumentIslands({
           !pane
             ? showTabBar &&
               (islands ? (
-                <Island
-                  key="window"
-                  kind="documents"
-                  row={tabBar(tabs, activeTabId, null)}
-                />
+                <Island key="window" row={tabBar(tabs, activeTabId, null)} />
               ) : (
                 tabBar(tabs, activeTabId, null)
               ))
@@ -261,7 +245,6 @@ export function DocumentIslands({
               : tabsInBar && (
                   <Island
                     key={`island:${pane.id}`}
-                    kind="documents"
                     paneId={pane.id}
                     row={tabBar(
                       listOf(pane),
@@ -290,11 +273,7 @@ export function DocumentIslands({
           !docsSplit &&
           !phone &&
           formatsShown(byId.get(activeTabId)) && (
-            <FormatBar
-              t={t}
-              // Beside the AI island, over the documents' sheet alone.
-              style={panes[0] ? body(panes[0].id) : undefined}
-            />
+            <FormatBar t={t} style={panes[0] ? body(panes[0].id) : undefined} />
           )}
         <DocumentViews
           tabs={tabs}
@@ -312,16 +291,7 @@ export function DocumentIslands({
   };
 
   return (
-    <IslandArea
-      layout={split}
-      plain={!tabsInBar}
-      contents={{
-        documents,
-        ai:
-          aiIsland && ((places) => places.map(({ place }) => aiIsland(place))),
-      }}
-      t={t}
-    />
+    <IslandArea layout={split} plain={!tabsInBar} content={documents} t={t} />
   );
 }
 

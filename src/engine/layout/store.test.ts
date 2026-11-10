@@ -10,8 +10,8 @@ import {
   splitBeside,
   splitLayout,
 } from "./store";
-import { aiPane, islandOf, panesOf, type Branch } from "./tree";
-import { focusOn, movePane, moveTab, splitOff, type SplitLayout } from "./ops";
+import { pane, panesOf, type Branch } from "./tree";
+import { movePane, moveTab, splitOff, type SplitLayout } from "./ops";
 
 afterEach(() => closeSplit());
 
@@ -81,70 +81,50 @@ describe("more panes", () => {
   });
 });
 
-describe("islands of two kinds (ops)", () => {
-  /** Documents a | b, the AI island on the right. */
-  function withAi(): SplitLayout {
+describe("three islands (ops)", () => {
+  /** a | b | c, one tab each. */
+  function three(): SplitLayout {
     const docs = pairLayout("row", "a", "b");
-    const ai = aiPane();
     return {
       root: {
         kind: "split",
         direction: "row",
-        children: [docs.root, ai],
+        children: [docs.root, pane(["c"])],
         sizes: [0.7, 0.3],
       },
       focus: docs.focus,
     };
   }
-  const kinds = (l: SplitLayout | null) =>
-    panesOf(l!.root).map((p) => [islandOf(p), p.tabs.join("")]);
+  const tabsOf = (l: SplitLayout | null) =>
+    panesOf(l!.root).map((p) => p.tabs.join(""));
 
-  it("never moves a document into the AI island", () => {
-    const layout = withAi();
-    const ai = panesOf(layout.root)[2].id;
-    expect(moveTab(layout, "a", ai)).toBe(layout);
-    expect(focusOn(layout, ai)).toBe(layout);
-  });
-
-  it("keeps the AI island when the documents beside it go down to one", () => {
-    const layout = withAi();
+  it("closes an island its last tab leaves, the one it joined in use", () => {
+    const layout = three();
     const [, second] = panesOf(layout.root);
     const next = moveTab(layout, "a", second.id, 0);
-    expect(kinds(next)).toEqual([
-      ["documents", "ab"],
-      ["ai", ""],
-    ]);
-    // The AI island is never the pane in use.
+    expect(tabsOf(next)).toEqual(["ab", "c"]);
     expect(next!.focus).toBe(second.id);
   });
 
   it("moves an island beside another, or to the window's edge", () => {
-    const layout = withAi();
-    const [first, , ai] = panesOf(layout.root);
-    expect(kinds(movePane(layout, ai.id, first.id, "left"))).toEqual([
-      ["ai", ""],
-      ["documents", "a"],
-      ["documents", "b"],
+    const layout = three();
+    const [first, , last] = panesOf(layout.root);
+    expect(tabsOf(movePane(layout, last.id, first.id, "left"))).toEqual([
+      "c",
+      "a",
+      "b",
     ]);
     const below = movePane(layout, first.id, null, "bottom")!;
     expect(below.root.direction).toBe("column");
-    expect(kinds(below)).toEqual([
-      ["documents", "b"],
-      ["ai", ""],
-      ["documents", "a"],
-    ]);
+    expect(tabsOf(below)).toEqual(["b", "c", "a"]);
   });
 
   it("splits a tab off beside a pane, the new pane in use", () => {
-    const layout = moveTab(withAi(), "c", panesOf(withAi().root)[0].id)!;
+    const layout = three();
     const first = panesOf(layout.root)[0];
-    const next = splitOff(layout, "c", first.id, "bottom")!;
-    expect(kinds(next)).toEqual([
-      ["documents", "a"],
-      ["documents", "c"],
-      ["documents", "b"],
-      ["ai", ""],
-    ]);
+    const withC = moveTab(layout, "c", first.id)!;
+    const next = splitOff(withC, "c", first.id, "bottom")!;
+    expect(tabsOf(next)).toEqual(["a", "c", "b"]);
     expect(next.focus).toBe(panesOf(next.root)[1].id);
   });
 });

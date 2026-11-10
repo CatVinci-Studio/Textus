@@ -18,7 +18,6 @@ import {
   paneWithTab,
   splitPane,
   tidy,
-  islandOf,
   keepsItself,
   type Branch,
 } from "./tree";
@@ -83,12 +82,10 @@ function settle(
   }));
   const known = new Set(panesOf(root).flatMap((p) => p.tabs));
   const fresh = tabIds.filter((id) => !known.has(id));
-  // Opened tabs join the pane in use, or the first of documents.
-  const inUse = paneById(root, layout.focus);
-  const focus =
-    inUse && islandOf(inUse) === "documents"
-      ? layout.focus
-      : (panesOf(root).find((p) => islandOf(p) === "documents") ?? inUse)!.id;
+  // Opened tabs join the pane in use, or the first.
+  const focus = paneById(root, layout.focus)
+    ? layout.focus
+    : panesOf(root)[0].id;
   if (fresh.length)
     root = mapPanes(root, (p) =>
       p.id === focus ? { ...p, tabs: [...p.tabs, ...fresh] } : p,
@@ -144,7 +141,5 @@ export function useSplitPanes(
   // A drag's preview stands in for the layout while it lasts.
   if (preview) return preview;
   if (!resolved || "blank" in resolved) return null;
-  return panesOf(resolved.root).every((p) => p.front || islandOf(p) === "ai")
-    ? resolved
-    : null;
+  return panesOf(resolved.root).every((p) => p.front) ? resolved : null;
 }

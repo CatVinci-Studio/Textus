@@ -68,7 +68,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     return (
       <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <IslandSheet kind="ai" className="chat-window-ai-off">
+        <IslandSheet ui className="chat-window-ai-off">
           <TextusAiOffNote />
         </IslandSheet>
         {dialogs}
@@ -78,7 +78,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     return (
       <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <IslandSheet kind="ai" className="chat-window-lost">
+        <IslandSheet ui className="chat-window-lost">
           {t.chatWindowLost}
         </IslandSheet>
         {dialogs}
@@ -88,7 +88,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     return (
       <div className="chat-window" data-layout={settings.layout}>
         {header}
-        <IslandSheet kind="ai" className="chat-window-loading">
+        <IslandSheet ui className="chat-window-loading">
           {t.agentThinking}
         </IslandSheet>
         {dialogs}
@@ -98,7 +98,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   return (
     <div className="chat-window" data-layout={settings.layout}>
       {header}
-      <IslandSheet kind="ai" className="chat-window-body">
+      <IslandSheet ui className="chat-window-body">
         <ChatBody
           document={context.document}
           selectedText={context.selectedText}

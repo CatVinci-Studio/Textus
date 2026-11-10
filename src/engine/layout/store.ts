@@ -1,8 +1,6 @@
 import {
-  islandOf,
   pane,
   paneBeside,
-  panesOf,
   paneWithTab,
   type Path,
   type Side,
@@ -10,8 +8,6 @@ import {
 } from "./tree";
 import {
   arrange,
-  withAi,
-  withoutAi,
   focusOn,
   moveTab,
   reorderTab,
@@ -137,20 +133,6 @@ export function splitBeside(tabId: string, id: string, side: Side): void {
 export function splitAtEdge(tabId: string, side: Side): void {
   const next = layout && splitOff(layout, tabId, null, side);
   if (next) setSplitLayout(next);
-}
-
-/** The AI island shown or not, as Textus AI's button has it; opened, it
- *  takes `share` of the width at the right. */
-export function showAiIsland(
-  show: boolean,
-  tabIds: readonly string[],
-  active: string,
-  share: number,
-): void {
-  const has =
-    !!layout && panesOf(layout.root).some((p) => islandOf(p) === "ai");
-  if (show && !has) setSplitLayout(withAi(layout, tabIds, active, share));
-  else if (!show && has && layout) commit(withoutAi(layout));
 }
 
 /** The pane a tab opened next joins. */

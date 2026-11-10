@@ -9,16 +9,9 @@ import type { CSSProperties } from "react";
 
 export type SplitDirection = "row" | "column";
 
-/** What an island holds: documents (files, plugin views, web pages), or
- *  Textus AI's conversations - the folder's (conversation-scope), so its
- *  pane keeps no tabs of its own. */
-export type IslandKind = "documents" | "ai";
-
 export interface Pane {
   kind: "pane";
   id: string;
-  /** Absent: documents. */
-  island?: IslandKind;
   /** Its tab bar's tabs, in order. */
   tabs: string[];
   /** The tab it shows; null while a blank tab opens into it. */
@@ -50,20 +43,6 @@ export function pane(tabs: string[], front: string | null = tabs[0] ?? null) {
   made += 1;
   return { kind: "pane", id: `pane-${made}`, tabs, front } satisfies Pane;
 }
-
-/** The AI island. */
-export function aiPane(): Pane {
-  made += 1;
-  return {
-    kind: "pane",
-    id: `pane-${made}`,
-    island: "ai",
-    tabs: [],
-    front: null,
-  };
-}
-
-export const islandOf = (p: Pane): IslandKind => p.island ?? "documents";
 
 /** An island stays while it has tabs. */
 export const keepsItself = (p: Pane) => p.tabs.length > 0;

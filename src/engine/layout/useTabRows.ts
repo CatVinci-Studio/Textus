@@ -84,8 +84,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             .filter((box) => box.width > 0)
             .map((box) => box.right),
         );
-        // What ends the bar: its status (beside the AI island while that
-        // is open), then the window's buttons.
+        // What ends the bar: its status, then the window's buttons.
         const ends = [
           ...document.querySelectorAll(
             ".window-bar-status, .window-bar .window-caption",
