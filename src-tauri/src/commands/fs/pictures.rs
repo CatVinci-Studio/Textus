@@ -50,12 +50,29 @@ impl ImageFolder {
 
     /// The src the markdown gets for the file `name` in this folder.
     pub(crate) fn src(&self, name: &str) -> String {
-        if self.src_prefix.is_empty() {
+        markdown_path(&if self.src_prefix.is_empty() {
             name.to_string()
         } else {
             format!("{}/{name}", self.src_prefix)
+        })
+    }
+}
+
+/// A path as a Markdown link's destination: a space as %20, and what would
+/// end the link or be read as an escape (`(`, `)`, `%`) escaped too, so it
+/// needs no angle brackets and reads back as written.
+pub(crate) fn markdown_path(path: &str) -> String {
+    let mut out = String::with_capacity(path.len());
+    for c in path.chars() {
+        match c {
+            '%' => out.push_str("%25"),
+            ' ' => out.push_str("%20"),
+            '(' => out.push_str("%28"),
+            ')' => out.push_str("%29"),
+            _ => out.push(c),
         }
     }
+    out
 }
 
 #[derive(Serialize)]

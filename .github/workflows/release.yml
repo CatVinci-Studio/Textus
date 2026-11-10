@@ -173,6 +173,16 @@ jobs:
           # Saved from a tag no later tag can read: it only crowds out main's.
           save-if: false
 
+      # The Linux bundlers (linuxdeploy, the AppImage plugin and runtime)
+      # Tauri downloads on every build otherwise; kept per architecture.
+      - name: Linux bundler cache
+        if: startsWith(matrix.platform, 'ubuntu')
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/tauri
+          key: tauri-bundlers-${{ matrix.platform }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: tauri-bundlers-${{ matrix.platform }}-
+
       # ring (rustls, under reqwest) assembles its ARM64 Windows code with
       # clang, which must be on PATH. The windows-11-arm image ships LLVM;
       # this makes sure the build finds it, or says why it can't.

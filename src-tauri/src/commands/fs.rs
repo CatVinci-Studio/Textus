@@ -340,7 +340,7 @@ pub async fn save_pasted_image(
     });
     let src = match folder {
         Some(folder) => folder.src(&name),
-        None => dir.join(&name).to_string_lossy().to_string(),
+        None => pictures::markdown_path(&dir.join(&name).to_string_lossy()),
     };
     Ok(SavedImage { src, embed })
 }
