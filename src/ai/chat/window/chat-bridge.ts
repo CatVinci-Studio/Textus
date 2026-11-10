@@ -31,7 +31,16 @@ export const CHAT_TO_EDITOR = {
   /** Open a history conversation's document in a tab, so the window can
    *  restore that conversation. */
   openDocument: "chat:open-document",
+  /** Files a reply changed, or what waits in them: the editor marks them,
+   *  reads them again and places their revisions, as it would its own. */
+  filesChanged: "chat:files-changed",
 } as const;
+
+/** What `filesChanged` carries. */
+export interface FilesChangedMessage {
+  written: { file: string; applied: boolean; before: string | null }[];
+  revised: string[];
+}
 
 /** Rust -> every editor window: the set of open chat windows changed. Only the
  *  backend sees chats closed from another editor window. Keep in step with Rust. */

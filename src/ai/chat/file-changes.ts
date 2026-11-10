@@ -127,11 +127,33 @@ export function useChangedFiles(): ReadonlySet<string> {
   return useSyncExternalStore(onChangedFiles, () => snapshot);
 }
 
+/** Where another window must hear of changes made here (the detached chat
+ *  tells its editor); none in an editor window. */
+let relay:
+  | ((
+      written: { file: string; applied: boolean; before: string | null }[],
+      revised: string[],
+    ) => void)
+  | null = null;
+
+export function relayFileChanges(to: typeof relay): () => void {
+  relay = to;
+  return () => {
+    if (relay === to) relay = null;
+  };
+}
+
+/** Files whose revisions changed here, for the window that shows them. */
+export function revisionsChanged(files: string[]) {
+  if (files.length) relay?.([], files);
+}
+
 /** Files written or put back: open tabs of them read the disk again, and
  *  those now changed are marked. */
 export function filesChanged(
   files: { file: string; applied: boolean; before: string | null }[],
 ) {
+  relay?.(files, []);
   for (const { file, applied, before } of files) {
     // The earliest text before: a reply's later changes build on it.
     if (applied && !bases.has(file)) {
@@ -159,12 +181,17 @@ export async function afterFileChanges(
   if (ids.length === 0) return;
   try {
     const changes = await ai.fileChanges(conversation, ids);
+    const revised: string[] = [];
     for (const { id, file, before, after, applied } of changes) {
-      if (!applied && before != null)
+      if (!applied && before != null) {
         await keepAsRevisions({ id, file, before, after });
-      else if (revisions && applied && before == null)
+        revised.push(file);
+      } else if (revisions && applied && before == null) {
         await keepAsCreated(file);
+        revised.push(file);
+      }
     }
+    revisionsChanged(revised);
     filesChanged(
       changes.filter((c) => c.applied && !(revisions && c.before == null)),
     );

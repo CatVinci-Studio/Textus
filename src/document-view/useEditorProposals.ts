@@ -362,8 +362,7 @@ export function useEditorProposals({
       // draft cut off by Stop, nor one it then refused.
       if (!refused) sentNow.current.add(event.turn.call_id);
       proposalStream.result(event.turn.call_id, refused);
-    }
-    else if (event.type === "toolStart")
+    } else if (event.type === "toolStart")
       proposalStream.toolStart(event.callId, event.name);
     else if (event.type === "toolArgsDelta")
       proposalStream.argsDelta(event.callId, event.delta);

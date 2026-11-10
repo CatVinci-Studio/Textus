@@ -10,6 +10,7 @@ import {
   type OpenDocumentMessage,
 } from "./chat-bridge";
 import { flushPendingWrites } from "../../../storage/pending-writes";
+import { useFilesToEditor } from "./files-to-editor";
 import { unlistenAll } from "../../../platform/events";
 import type { ChatWindowHandoff } from "./useChatWindowHandoff";
 import type { Strings } from "../../../i18n/strings";
@@ -136,6 +137,7 @@ export function useChatWindowBridge({
     [statuses],
   );
 
+  useFilesToEditor(editorLabel);
   return {
     docPath,
     requestDocPath,

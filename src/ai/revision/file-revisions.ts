@@ -115,6 +115,13 @@ async function recount(path: string, kept: FileRevisions | null) {
   });
 }
 
+/** Another window changed what waits in `path`: counted again here, and
+ *  its editor told. */
+export async function revisionsArrived(path: string): Promise<void> {
+  await proposalsKept(path);
+  window.dispatchEvent(new CustomEvent(FILE_REVISIONS_EVENT, { detail: path }));
+}
+
 /** The editor wrote its kept proposals: the count follows them. */
 export function proposalsKept(path: string): Promise<void> {
   return updateFileRevisions(path, () => undefined);

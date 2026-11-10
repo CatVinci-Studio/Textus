@@ -1,3 +1,4 @@
+import { useFilesFromChat } from "../ai/chat/window/files-to-editor";
 import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
@@ -380,6 +381,7 @@ export function useFileOpening(opts: {
     );
     if (open) await exportDoc.openLinkedFile(path);
   };
+  useFilesFromChat();
   // The detached chat window reopened a past conversation.
   useEffect(
     () =>
