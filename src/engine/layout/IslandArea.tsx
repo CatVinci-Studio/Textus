@@ -1,18 +1,24 @@
 import { useRef, type CSSProperties, type ReactNode } from "react";
-import { panesOf, splitGrid, type Pane, type SplitGrid } from "./tree";
+import { nodeAt, panesOf, type Pane } from "./tree";
 import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
-import { IslandMotion } from "./IslandMotion";
 import { SplitDivider } from "./SplitDivider";
-import { useTabRows } from "./useTabRows";
+import { settleTabRows, useTabRows } from "./useTabRows";
 import type { Strings } from "../../i18n/strings";
+import { rectStyle, type Rect } from "../frame/rect";
+import { solveIslands, type IslandsLayout } from "../frame/solve";
+import { dividerKey, type PlacedIsland } from "../frame/island-parts";
+import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
+import { usePanelWidth } from "../frame/panel-width";
+import { islandRule } from "../frame/island-rules";
+import { useIslandFrame } from "../frame/useIslandFrame";
 import "./split-panes.css";
 
-/** Where one island goes in the area's grid. */
+/** Where one island goes in the area, in pixels. */
 export interface IslandPlace {
   /** Its pane; none when the area is one island, unsplit. */
   paneId?: string;
-  /** Its row of tabs' cell, and its sheet's under it. */
+  /** Its row of tabs, and its sheet under it. */
   row?: CSSProperties;
   sheet?: CSSProperties;
   /** Its row and its sheet together: the sheet of an island that shows no
@@ -22,6 +28,8 @@ export interface IslandPlace {
   inner: boolean;
   /** No floating sheets: a clean sheet's, Zen's (Island's plain). */
   plain: boolean;
+  /** Its key in the window's frame: its parts' data-frame. */
+  frame: string;
 }
 
 /** The islands' content: given where each goes (one place, unsplit, with
@@ -31,15 +39,18 @@ export type IslandContent = (
 ) => ReactNode;
 
 /**
- * The islands' area (design-language.md 5.7): the window's layout drawn as
- * one grid, each island where the tree puts it, the dividers between them
- * and every move a slide. It knows no tab's content: `content` draws it at
- * the places it is given.
+ * The islands' area (design-language.md 5.7): the layout solved in pixels
+ * (frame/solve.ts), each island placed there and moved by the window's one
+ * clock (useIslandFrame), the dividers in the gaps between them. It knows
+ * no tab's content: `content` draws it at the places it is given.
  */
 export function IslandArea({
   layout,
   tabs,
+  front,
+  rows,
   plain,
+  isPanel,
   content,
   t,
 }: {
@@ -47,46 +58,71 @@ export function IslandArea({
   layout: SplitLayout | null;
   /** The window's tabs, for the one island unsplit. */
   tabs: readonly string[];
+  /** The tab in front of the one island, unsplit. */
+  front: string | null;
+  /** The islands show rows of tabs. */
+  rows: boolean;
   plain: boolean;
+  /** A panel's island (the AI, Settings): it keeps its width. */
+  isPanel: (pane: Pane) => boolean;
   content: IslandContent;
   t: Strings;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const probe = useRef<HTMLDivElement>(null);
   const keyed = useRef(new Map<string, string>());
   useTabRows(ref);
-  const grid = layout && splitGrid(layout.root);
+  const panel = usePanelWidth();
+  const room = useIslandRoom(ref, probe, `${!!layout} ${rows} ${plain}`);
   const all = layout ? panesOf(layout.root) : [];
   const { keys, byTab } = islandKeys(
-    grid ? all : [{ id: "window", tabs }],
+    layout ? all : [{ id: "window", tabs }],
     keyed.current,
   );
   keyed.current = byTab;
-  const places = grid
-    ? all.map((pane, i) => ({
-        pane,
-        place: placeOf(grid, pane.id, plain),
-        key: keys[i]!,
-      }))
-    : [{ pane: null, place: { inner: false, plain }, key: keys[0]! }];
+  const area = room && boxOf(room, rows);
+  const solved =
+    room && area && solve(room, area, layout, keys[0], rows, panel, isPanel);
+  const box = (key: string) => solved?.islands.get(key);
+  const places = (layout ? all : [null]).map((pane, i) => {
+    const rects = box(pane ? pane.id : keys[0]);
+    return {
+      pane,
+      key: keys[i],
+      place: {
+        paneId: pane?.id,
+        row: rects?.row ? rectStyle(rects.row) : undefined,
+        sheet: rects && rectStyle(rects.sheet),
+        whole: rects && rectStyle(rects.whole),
+        inner: rects?.inner ?? false,
+        plain,
+        frame: keys[i],
+      },
+    };
+  });
+  const placed: PlacedIsland[] = places.flatMap(({ pane, key }) => {
+    const rects = box(pane ? pane.id : keys[0]);
+    return rects ? [{ key, rects, front: pane ? pane.front : front }] : [];
+  });
+  useIslandFrame(ref, room, area, solved, placed, settleTabRows);
   return (
     <main
       ref={ref}
       className={layout ? "main-pane main-pane-split" : "main-pane"}
       data-split={layout?.root.direction}
-      style={grid?.column}
     >
-      <IslandMotion
-        layout={`${grid?.column.gridTemplateColumns} ${grid?.column.gridTemplateRows} ${all.map((p) => p.id)}`}
-        area={ref}
-      />
+      <div ref={probe} className="frame-probe" aria-hidden="true" />
       {content(places)}
       {layout &&
-        grid?.dividers.map(({ line, style }) => (
+        solved?.dividers.map(({ line, rect, before, after }) => (
           <SplitDivider
-            key={`${line.path.join(".")}:${line.index}`}
+            key={dividerKey(line.path, line.index)}
+            frame={dividerKey(line.path, line.index)}
             layout={layout}
             line={line}
-            style={style}
+            style={rectStyle(rect)}
+            sides={{ before, after }}
+            fixed={fixedSide(layout, line.path, line.index, isPanel)}
             t={t}
           />
         ))}
@@ -94,18 +130,49 @@ export function IslandArea({
   );
 }
 
-function placeOf(grid: SplitGrid, id: string, plain: boolean): IslandPlace {
-  const sheet = grid.bodies.get(id);
-  const row = grid.bars.get(id);
-  const top = String(row?.gridRow ?? "").split(" / ")[0];
-  const end = String(sheet?.gridRow ?? "").split(" / ")[1];
+/** The islands' box in the area: inset from its sides and foot; without
+ *  rows, under the window bar. */
+function boxOf(room: IslandRoom, rows: boolean): Rect {
+  const top = rows ? 0 : room.bar;
   return {
-    paneId: id,
-    row,
-    sheet,
-    whole:
-      sheet && top && end ? { ...sheet, gridRow: `${top} / ${end}` } : sheet,
-    inner: !grid.top.has(id),
-    plain,
+    x: room.inset,
+    y: top,
+    w: Math.max(0, room.w - 2 * room.inset),
+    h: Math.max(0, room.h - top - room.inset),
   };
+}
+
+function solve(
+  room: IslandRoom,
+  box: Rect,
+  layout: SplitLayout | null,
+  single: string,
+  rows: boolean,
+  panel: number,
+  isPanel: (pane: Pane) => boolean,
+): IslandsLayout {
+  return solveIslands({
+    root: layout?.root ?? null,
+    single,
+    box,
+    gap: room.gap,
+    rowHeight: rows ? room.bar : 0,
+    rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
+  });
+}
+
+/** Which side of a divider is a panel's island, keeping its width. */
+function fixedSide(
+  layout: SplitLayout,
+  path: number[],
+  index: number,
+  isPanel: (pane: Pane) => boolean,
+): "before" | "after" | null {
+  const side = (i: number) => {
+    const node = nodeAt(layout.root, [...path, i]);
+    return node?.kind === "pane" && isPanel(node);
+  };
+  const before = side(index);
+  const after = side(index + 1);
+  return before === after ? null : before ? "before" : "after";
 }

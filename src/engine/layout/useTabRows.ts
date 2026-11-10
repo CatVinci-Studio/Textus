@@ -1,5 +1,6 @@
 import { useLayoutEffect, type RefObject } from "react";
 import { scaledPx } from "../tokens/chrome-scale";
+import { frameClock } from "../frame/clock";
 
 /** Air kept between the tabs and the window bar's own controls. */
 const AIR = 8;
@@ -107,6 +108,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             .querySelector(".window-bar, .chat-window-header")
             ?.getBoundingClientRect().bottom ?? 0;
         const rows = [...main.querySelectorAll<HTMLElement>(".island-row")];
+        const shellBox = shell.getBoundingClientRect();
         tabs.disconnect();
         for (const row of rows) {
           // Which tab is open decides the corner: told when it changes.
@@ -115,12 +117,11 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             attributes: true,
             attributeFilter: ["class"],
           });
-          // A split's grid resized moves its rows; the area's own style
-          // changes too often to watch.
-          resized.observe(row);
+          // Where the row ends up, not where a slide has it now: insets
+          // for the place it is leaving would jump when it lands.
+          const box = endOf(row, shellBox);
           // Only a row in the window bar's has its controls to clear: not
           // one under another island, nor under the menu bar's own row.
-          const box = row.getBoundingClientRect();
           const inBar = box.top < barBottom - 1;
           // The first of them over this row.
           const statusStart = Math.min(
@@ -154,17 +155,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
     };
     const measure = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => {
-        // Mid-slide the rows are drawn where they were: measured then,
-        // they gave insets for a place they are leaving. The slide's start
-        // measured the end already (settleTabRows); again once it is over.
-        const sliding = main
-          .getAnimations({ subtree: true })
-          .filter((a) => a.id === "flip");
-        if (sliding.length)
-          void Promise.allSettled(sliding.map((a) => a.finished)).then(measure);
-        else now();
-      });
+      frame = requestAnimationFrame(now);
     };
     settlers.add(now);
     measure();
@@ -181,8 +172,6 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
       attributeFilter: ["class"],
     });
     window.addEventListener("resize", measure);
-    // The pane slides with the sidebar and the AI panel.
-    document.addEventListener("transitionend", measure);
     return () => {
       settlers.delete(now);
       cancelAnimationFrame(frame);
@@ -190,7 +179,15 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
       rows.disconnect();
       tabs.disconnect();
       window.removeEventListener("resize", measure);
-      document.removeEventListener("transitionend", measure);
     };
   }, [pane]);
+}
+
+/** A row's rect at the end of any slide, in the viewport. */
+function endOf(row: HTMLElement, shell: DOMRect) {
+  const end = row.dataset.frame && frameClock.targetOf(row.dataset.frame);
+  if (!end) return row.getBoundingClientRect();
+  const left = shell.left + end.x;
+  const top = shell.top + end.y;
+  return { left, top, right: left + end.w, bottom: top + end.h };
 }

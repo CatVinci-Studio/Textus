@@ -3,29 +3,17 @@ import { useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import { Presence } from "../motion/usePresence";
+import { chromeScale } from "../tokens/chrome-scale";
+import { panelWidth, setPanelWidth } from "../frame/panel-width";
 import { arrangeBranch, closeSplit, type SplitLayout } from "./store";
-import { nodeAt, panesOf, type Divider } from "./tree";
+import { nodeAt, type Divider } from "./tree";
 
-/** How far one arrow key press moves the divider, as a share of the two
- *  panes it parts. */
+/** How far one arrow key press moves the divider: a share of the two
+ *  panes it parts, or a panel's width in pixels. */
 const KEY_STEP = 0.05;
+const KEY_PIXELS = 24;
 
-/** Where the panes on one side of a divider are drawn, together. */
-function extent(layout: SplitLayout, line: Divider, child: number) {
-  const node = nodeAt(layout.root, [...line.path, child]);
-  const rects = (node ? panesOf(node) : []).flatMap((p) =>
-    [
-      ...document.querySelectorAll<HTMLElement>(
-        `.main-pane-split > [data-pane-id="${CSS.escape(p.id)}"]`,
-      ),
-    ].map((el) => el.getBoundingClientRect()),
-  );
-  const row = line.direction === "row";
-  return {
-    start: Math.min(...rects.map((r) => (row ? r.left : r.top))),
-    end: Math.max(...rects.map((r) => (row ? r.right : r.bottom))),
-  };
-}
+type Span = { start: number; end: number };
 
 /** The line between two panes (or groups of them): drag or arrow keys
  *  resize the two, double click evens them, right-click turns their
@@ -34,15 +22,24 @@ export function SplitDivider({
   layout,
   line,
   style,
+  frame,
+  sides,
+  fixed,
   t,
 }: {
   layout: SplitLayout;
   line: Divider;
   style: CSSProperties;
+  /** Its key in the window's frame. */
+  frame: string;
+  /** The two sides it parts, in the area's pixels (frame/solve.ts). */
+  sides: { before: Span; after: Span };
+  /** The side that is a panel's island, sized in pixels, not shares. */
+  fixed: "before" | "after" | null;
   t: Strings;
 }) {
   const row = line.direction === "row";
-  const drag = useRef<{ start: number; size: number } | null>(null);
+  const drag = useRef<{ origin: number } | null>(null);
   const [dragging, setDragging] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const branch = nodeAt(layout.root, line.path);
@@ -51,6 +48,23 @@ export function SplitDivider({
     sizes[line.index] / (sizes[line.index] + sizes[line.index + 1]);
   const share = (value: number) =>
     arrangeBranch(line.path, { index: line.index, share: value });
+  const { before, after } = sides;
+  // The divider at `at` (the area's pixels): a panel takes its width from
+  // it, two documents their shares.
+  const moveTo = (at: number) => {
+    if (fixed === "after")
+      setPanelWidth((after.end - at - gapHalf(sides)) / chromeScale());
+    else if (fixed === "before")
+      setPanelWidth((at - before.start - gapHalf(sides)) / chromeScale());
+    else share((at - before.start) / (after.end - before.start));
+  };
+  const step = (sign: number) => {
+    if (fixed)
+      setPanelWidth(
+        panelWidth() + (fixed === "after" ? -sign : sign) * KEY_PIXELS,
+      );
+    else share(current + sign * KEY_STEP);
+  };
   const end = () => {
     drag.current = null;
     setDragging(false);
@@ -61,6 +75,7 @@ export function SplitDivider({
         className={`split-divider tx-grip split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
         data-gripped={dragging || undefined}
         style={style}
+        data-frame={frame}
         role="separator"
         aria-orientation={row ? "vertical" : "horizontal"}
         aria-label={t.splitDivider}
@@ -72,18 +87,15 @@ export function SplitDivider({
           if (e.button !== 0) return;
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
-          const before = extent(layout, line, line.index);
-          const after = extent(layout, line, line.index + 1);
-          drag.current = {
-            start: before.start,
-            size: after.end - before.start,
-          };
+          const area = e.currentTarget.closest(".main-pane");
+          const box = area?.getBoundingClientRect();
+          drag.current = { origin: box ? (row ? box.left : box.top) : 0 };
           setDragging(true);
         }}
         onPointerMove={(e) => {
           const d = drag.current;
-          if (!d || d.size <= 0) return;
-          share(((row ? e.clientX : e.clientY) - d.start) / d.size);
+          if (!d) return;
+          moveTo((row ? e.clientX : e.clientY) - d.origin);
         }}
         onPointerUp={end}
         onPointerCancel={end}
@@ -95,8 +107,8 @@ export function SplitDivider({
         onKeyDown={(e) => {
           const back = row ? "ArrowLeft" : "ArrowUp";
           const on = row ? "ArrowRight" : "ArrowDown";
-          if (e.key === back) share(current - KEY_STEP);
-          else if (e.key === on) share(current + KEY_STEP);
+          if (e.key === back) step(-1);
+          else if (e.key === on) step(1);
           else return;
           e.preventDefault();
         }}
@@ -115,3 +127,7 @@ export function SplitDivider({
     </>
   );
 }
+
+/** Half the gap between the two sides: the divider sits in its middle. */
+const gapHalf = ({ before, after }: { before: Span; after: Span }) =>
+  (after.start - before.end) / 2;

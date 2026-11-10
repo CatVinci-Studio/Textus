@@ -1,25 +1,10 @@
 import {
-  useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
   type Ref,
 } from "react";
 import "./island.css";
-
-/** Whether the window's first islands are up: one made after that is new,
- *  and plays its entrance; the first ones simply are. */
-let ready = false;
-
-/** Called once the window's first layout is on screen. */
-export function markIslandsReady(): void {
-  ready = true;
-}
-
-/** True for an island made after the window's first layout. */
-function useFresh(): boolean {
-  return useState(() => ready)[0];
-}
 
 interface IslandPlace {
   /** The interface's paper, not a page's, and a target itself: an island
@@ -30,6 +15,8 @@ interface IslandPlace {
   /** Plain: a clean sheet's or Zen's - no floating sheet, the page's own
    *  paper, its tabs words. */
   plain?: boolean;
+  /** Its key in the window's frame (frame/island-parts.ts). */
+  frame?: string;
 }
 
 /**
@@ -42,6 +29,7 @@ export function IslandRow({
   ui,
   paneId,
   plain,
+  frame,
   inner,
   style,
   children,
@@ -50,11 +38,10 @@ export function IslandRow({
   style?: CSSProperties;
   children: ReactNode;
 }) {
-  const fresh = useFresh();
   return (
     <div
       className="island-row"
-      data-fresh={fresh || undefined}
+      data-frame={frame && `row:${frame}`}
       data-island-row={ui ? "ui" : "documents"}
       data-pane-id={paneId}
       data-inner={inner || undefined}
@@ -77,6 +64,7 @@ export function IslandSheet({
   ui,
   paneId,
   plain,
+  frame,
   sheetRef,
   className,
   children,
@@ -86,11 +74,10 @@ export function IslandSheet({
     sheetRef?: Ref<HTMLElement>;
     children?: ReactNode;
   }) {
-  const fresh = useFresh();
   return (
     <section
       {...rest}
-      data-fresh={fresh || undefined}
+      data-frame={frame && `sheet:${frame}`}
       ref={sheetRef}
       className={className ? `island ${className}` : "island"}
       data-island={ui ? "ui" : "documents"}
@@ -104,8 +91,8 @@ export function IslandSheet({
 }
 
 /**
- * One island: its row of tabs over its sheet, each in its own cell of the
- * area's grid (`row`, `sheet` styles) - or, with no row, the sheet alone.
+ * One island: its row of tabs over its sheet, each where the area places
+ * it (`row`, `sheet` styles) - or, with no row, the sheet alone.
  */
 export function Island({
   row,
@@ -129,6 +116,7 @@ export function Island({
           ui={sheet.ui}
           paneId={sheet.paneId}
           plain={sheet.plain}
+          frame={sheet.frame}
           inner={inner}
           style={rowStyle}
         >

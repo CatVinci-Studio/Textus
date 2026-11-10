@@ -48,14 +48,6 @@
   border-left: 1px solid var(--ui-frame-edge);
 }
 
-/* An island made after the window's first layout (a split, a tab let go
-   at an edge, the AI opened) settles in, its row with it; the others slide
-   to their new places (IslandMotion). */
-[data-island][data-fresh],
-.island-row[data-fresh] {
-  animation: motion-settle-in var(--dur-base) var(--ease-out);
-}
-
 /* ---- Row ----------------------------------------------------------- */
 
 /* As tall as the window bar; its tabs from --tabs-inset-start on, its own

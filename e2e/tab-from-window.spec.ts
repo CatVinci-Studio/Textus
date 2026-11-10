@@ -36,7 +36,7 @@ test("let go over the documents' right edge, it opens an island there", async ({
     ...at,
     row: false,
   });
-  await expect(page.locator(".main-pane > .split-pane")).toHaveCount(2);
+  await expect(page.locator(".main-pane > section.island")).toHaveCount(2);
   const rows = page.locator(".island-row");
   await expect(rows.last().locator(".tab-pill")).toHaveCount(1);
   await expect(page.locator(".ProseMirror:visible").last()).toContainText(
@@ -61,5 +61,5 @@ test("let go over the row, it joins the row", async ({ page }) => {
     row: true,
   });
   await expect(page.locator(".tab-pill")).toHaveCount(2);
-  await expect(page.locator(".main-pane > .split-pane")).toHaveCount(0);
+  await expect(page.locator(".main-pane > section.island")).toHaveCount(1);
 });

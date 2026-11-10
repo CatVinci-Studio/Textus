@@ -52,7 +52,9 @@ export function DocumentViews({
   activeTabId: string;
   /** The tabs in front of a pane: its id and its name in reading order. */
   shownIn: ReadonlyMap<string, { id: string; name: string }>;
-  styleOf: (paneId: string) => CSSProperties | undefined;
+  /** Where a pane's views lie; null: the one island unsplit's. Undefined
+   *  where nothing places them (a phone's column). */
+  styleOf: (paneId: string | null) => CSSProperties | undefined;
   onActivate: (tabId: string) => void;
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
@@ -69,6 +71,15 @@ export function DocumentViews({
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = shownIn.get(tab.id);
+        const single = !pane && tab.id === activeTabId && shownIn.size === 0;
+        // On its island's sheet; a tab in none of them (one pulled away)
+        // takes no room, in front or not.
+        const placed = pane
+          ? styleOf(pane.id)
+          : single
+            ? styleOf(null)
+            : undefined;
+        const shown = !!pane || (single && !!placed);
         return (
           <div
             key={tab.id}
@@ -76,19 +87,9 @@ export function DocumentViews({
             data-tab-id={tab.id}
             data-pane={pane?.name}
             data-pane-id={pane?.id}
-            className={pane ? "split-pane" : undefined}
-            // Laid out by islands, a tab in none of them (one pulled away)
-            // takes no room, in front or not.
-            style={
-              pane
-                ? styleOf(pane.id)
-                : {
-                    display:
-                      tab.id === activeTabId && shownIn.size === 0
-                        ? "contents"
-                        : "none",
-                  }
-            }
+            data-frame={shown ? `view:${tab.id}` : undefined}
+            className={shown ? "split-pane" : undefined}
+            style={shown ? placed : { display: single ? "contents" : "none" }}
             onPointerDownCapture={
               pane && tab.id !== activeTabId
                 ? () => onActivate(tab.id)

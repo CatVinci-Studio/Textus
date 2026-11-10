@@ -27,8 +27,6 @@ import { commands } from "./commands";
 import { platformName } from "../platform/window-chrome";
 import { Presence } from "../engine/motion/usePresence";
 import { FlipOnChange } from "../engine/motion/flip";
-import { settleTabRows } from "../engine/layout/useTabRows";
-import { isIslandSheet } from "../engine/layout/IslandMotion";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
 import { aiFeatures } from "../settings/textus-ai";
 import { useWindowShell } from "./useWindowShell";
@@ -156,21 +154,20 @@ function App() {
         tab={agentPanel.tab}
         setTab={agentPanel.setTab}
       >
-        <FlipOnChange
-          // The sidebar moves its column itself (app-shell.css): not here.
-          watch={`${agentPresence.mounted} ${zenMode}`}
-          targets={() =>
-            document.querySelectorAll(
-              // The islands whole and what is inside them: a sheet that
-              // jumped while its tabs slid came apart.
-              '.main-pane > :is([data-island], .island-row, .split-pane), [data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
-            )
-          }
-          duration="--dur-settle"
-          easing="--ease-settle"
-          prepare={settleTabRows}
-          resizes={isIslandSheet}
-        />
+        {/* An iPad's AI panel makes room by sliding the page; the
+            desktop's islands move on the frame's clock (IslandArea). */}
+        {isIOSApp && (
+          <FlipOnChange
+            watch={agentPresence.mounted}
+            targets={() =>
+              document.querySelectorAll(
+                '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view',
+              )
+            }
+            duration="--dur-settle"
+            easing="--ease-settle"
+          />
+        )}
         <div
           className="app-shell"
           // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the

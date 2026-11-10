@@ -21,14 +21,15 @@ function counted(tab: DocTab | undefined): tab is DocTab {
  * A document's readouts at its page's bottom right, each island its own -
  * with several open the window bar couldn't say whose they were: its
  * length as its language counts it (the breakdown on hover), and the large
- * document note while some features rest. `style` is its pane's cell in the
- * split's grid; alone it sits in the area's corner.
+ * document note while some features rest. `style` is its island's sheet,
+ * whose bottom right it keeps; it moves with that sheet (`frame`).
  */
 function DocumentCorner({
   tabId,
   content,
   lang,
   style,
+  frame,
   t,
 }: {
   /** Its tab: a drag hides the corner of the document it carries. */
@@ -36,6 +37,7 @@ function DocumentCorner({
   content: string;
   lang: Lang;
   style?: CSSProperties;
+  frame: string;
   t: Strings;
 }) {
   // Deferred, so a whole-document count doesn't sit in the edit's render.
@@ -48,7 +50,12 @@ function DocumentCorner({
     .replace("{words}", String(count.words))
     .replace("{characters}", String(count.characters));
   return (
-    <div className="document-corner" data-tab-id={tabId} style={style}>
+    <div
+      className="document-corner"
+      data-tab-id={tabId}
+      data-frame={frame}
+      style={style}
+    >
       {large && (
         <span className="large-doc-badge" title={t.largeDocHint}>
           {t.largeDocBadge}
@@ -71,12 +78,12 @@ export function DocumentCorners({
   lang,
   t,
 }: {
-  fronts: { tab: DocTab | undefined; style?: CSSProperties }[];
+  fronts: { tab: DocTab | undefined; style?: CSSProperties; frame: string }[];
   lang: Lang;
   t: Strings;
 }) {
   return fronts.map(
-    ({ tab, style }) =>
+    ({ tab, style, frame }) =>
       counted(tab) && (
         <DocumentCorner
           key={tab.id}
@@ -84,6 +91,7 @@ export function DocumentCorners({
           content={tab.content}
           lang={lang}
           style={style}
+          frame={`corner:${frame}`}
           t={t}
         />
       ),

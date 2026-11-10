@@ -1,8 +1,13 @@
-/* Several documents at once: the document column becomes a grid of the
-   panes' tab bars and documents (tree.ts's splitGrid), the lines
-   between them laid over their edges. */
-.main-pane.main-pane-split {
-  display: grid;
+/* The islands' parts lie where the area places them (frame/solve.ts):
+   their rows, sheets, views and the lines between them, each placed
+   absolutely. The probe resolves the layout's spacings for it. */
+.frame-probe {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  width: var(--island-inset, 0px);
+  height: var(--window-bar-height);
+  margin-left: var(--island-gap, 0px);
 }
 
 /* A pane's own tab bar, over its document; one below another pane keeps
@@ -26,24 +31,20 @@
   overflow: hidden;
 }
 
-/* The line between them, on the edge where the next pane starts, its hit
+/* The line between them, down the middle of the gap it lies in; its hit
    area a few px wider either side. */
 .split-divider {
-  position: relative;
   z-index: 5;
-  background: var(--ui-border);
+  min-width: 1px;
+  min-height: 1px;
+  background: linear-gradient(var(--ui-border), var(--ui-border)) center / 1px
+    100% no-repeat;
   touch-action: none;
   outline: none;
 }
 
-.split-divider-row {
-  justify-self: start;
-  width: 1px;
-}
-
 .split-divider-column {
-  align-self: start;
-  height: 1px;
+  background-size: 100% 1px;
 }
 
 .split-divider::before {

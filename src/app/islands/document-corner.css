@@ -1,28 +1,19 @@
-/* A document's readouts at its page's bottom right (DocumentCorner): in its
-   pane's cell, over its editor, quiet - the page's own paper behind them so
-   text scrolling under stays clear of them. */
+/* A document's readouts at its page's bottom right (DocumentCorner): laid
+   over its island's sheet, over its editor, quiet - the page's own paper
+   behind them so text scrolling under stays clear of them. */
 .document-corner {
-  position: relative;
   z-index: 3;
-  align-self: end;
-  justify-self: end;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: flex-end;
   gap: var(--space-2);
-  margin: 0 var(--space-3) var(--space-2) 0;
+  padding: 0 var(--space-3) var(--space-2) 0;
+  box-sizing: border-box;
   pointer-events: none;
 }
 
 .document-corner > * {
   pointer-events: auto;
-}
-
-/* One document: the area's corner, inside its island. */
-.main-pane:not(.main-pane-split) > .document-corner {
-  position: absolute;
-  right: calc(var(--island-inset, 0px) + var(--space-3));
-  bottom: calc(var(--island-inset, 0px) + var(--space-2));
-  margin: 0;
 }
 
 .document-corner .word-count {

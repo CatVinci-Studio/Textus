@@ -6,7 +6,7 @@ import { emit, openApp, pasteMarkdown } from "./helpers";
 // them only from an island of AI tabs alone.
 
 const tabs = (page: Page) => page.locator(".tab-pill");
-const islands = (page: Page) => page.locator(".main-pane > .split-pane");
+const islands = (page: Page) => page.locator(".main-pane > section.island");
 const conversation = (page: Page) =>
   page.locator(".ai-tab .agent-panel-mount > *");
 
@@ -41,7 +41,7 @@ test("pressed again in front of its own island, it collapses; again, it comes ba
   await expect(conversation(page)).toHaveCount(1);
   await aiButton(page).click();
   await expect(tabs(page)).toHaveText(["未命名"]);
-  await expect(islands(page)).toHaveCount(0);
+  await expect(islands(page)).toHaveCount(1);
   await aiButton(page).click();
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
   await expect(conversation(page)).toHaveCount(1);
@@ -64,7 +64,7 @@ test("dragged into the document's island, it stays there and the button leaves i
   // The room opens before the drop takes it.
   await page.waitForTimeout(500);
   await page.mouse.up();
-  await expect(islands(page)).toHaveCount(0);
+  await expect(islands(page)).toHaveCount(1);
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
   await expect(conversation(page)).toHaveCount(1);
   // In front of an island it shares: the button does nothing.
@@ -80,7 +80,7 @@ test("Zen shows the tab in use alone, and the split comes back after", async ({
   await expect(islands(page)).toHaveCount(2);
   await page.locator(".ProseMirror").first().click();
   await emit(page, "menu-toggle-zen-mode");
-  await expect(islands(page)).toHaveCount(0);
+  await expect(islands(page)).toHaveCount(1);
   await expect(page.locator(".ai-tab:visible")).toHaveCount(0);
   await emit(page, "menu-toggle-zen-mode");
   await expect(islands(page)).toHaveCount(2);
@@ -125,7 +125,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置"]);
 });
 
-test("with only Settings open, the AI settles in at a panel's width and can be used; Settings' island slides, not rebuilt", async ({
+test("with only Settings open, the AI grows in at a panel's width and can be used; Settings' island slides, not rebuilt", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
@@ -145,12 +145,11 @@ test("with only Settings open, the AI settles in at a panel's width and can be u
   const sheet = page.locator("section.island").last();
   await expect(page.locator("section.island")).toHaveCount(2);
   await expect(settings).toHaveAttribute("data-mark", "kept");
-  await expect(settings).not.toHaveAttribute("data-fresh", /.*/);
-  await expect(sheet).toHaveAttribute("data-fresh", "true");
-  const playing = await sheet.evaluate(
-    (el) => getComputedStyle(el).animationName,
-  );
-  expect(playing).toBe("motion-settle-in");
+  // It grows in from the right edge, not shown whole at once.
+  const width = () => sheet.evaluate((el) => el.getBoundingClientRect().width);
+  const first = await width();
+  await page.waitForTimeout(600);
+  expect(first).toBeLessThan((await width()) - 50);
   await expect(page.locator(".ai-tab textarea").first()).toBeVisible();
   // Its composer drawn as a hosted one's: a framed box.
   const frame = await page
@@ -185,7 +184,7 @@ test("let go in the middle of the document's island, it joins it; near its edge,
     await page.mouse.up();
   };
   await drag(0.5);
-  await expect(islands(page)).toHaveCount(0);
+  await expect(islands(page)).toHaveCount(1);
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
   await drag(0.1);
   await expect(islands(page)).toHaveCount(2);

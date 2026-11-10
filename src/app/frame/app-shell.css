@@ -30,9 +30,8 @@ body {
 /* On the desktop the window is one grid (design-language.md 5.7): the
    activity rail's column, the sidebar's, the islands' area; the window
    bar's row over them, the rest under it. Each part is placed by its cell,
-   none by margins. The sidebar's column opens in one step and the sidebar
-   slides into it on its transform alone, so the documents never reflow
-   frame by frame. */
+   none by margins. The sidebar's column opens in one step; the motion is
+   the frame clock's (below). */
 :root:not([data-window-chrome="mobile"]) .app-shell {
   --sidebar-column: 0px;
   display: grid;
@@ -48,18 +47,12 @@ body {
   --sidebar-column: var(--sidebar-width, 240px);
 }
 
-/* The rail under the bar; the sidebar the full height, its header the
-   bar's room; the islands' area too, its top rows of tabs in the bar's. */
+/* The rail under the bar; the islands' area the full height, its top
+   rows of tabs in the bar's. */
 :root:not([data-window-chrome="mobile"]) .app-shell > .activity-rail {
   position: relative;
   inset: auto;
   grid-area: 2 / 1 / 3 / 2;
-}
-
-:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
-  position: relative;
-  inset: auto;
-  grid-area: 1 / 2 / 3 / 3;
 }
 
 :root:not([data-window-chrome="mobile"]) .app-shell > .main-pane {
@@ -72,29 +65,30 @@ body {
    the rail and the sidebar under it, the islands' rows of tabs their own. */
 :root[data-bar-rows="2"]:not([data-window-chrome="mobile"])
   .app-shell
-  > :is(.sidebar, .main-pane) {
+  > .main-pane {
   grid-row: 2 / 3;
 }
 
-/* The sidebar opens and closes as one motion: its column's width, the
-   islands beside it following the real layout - no slide of its own, no
-   second clock. Its contents keep their width and are revealed. Off while
-   its edge is dragged, so the edge stays under the pointer. */
-:root:not([data-window-chrome="mobile"]) .app-shell {
-  transition: grid-template-columns var(--dur-settle) var(--ease-settle);
-}
-:root:not([data-window-chrome="mobile"])
-  .app-shell:has(.sidebar-resizer[data-gripped]) {
-  transition: none;
-}
+/* The sidebar opens and closes on the islands' clock (useSidebarFrame):
+   its column takes its width at once, the islands move into the room
+   frame by frame, and the sidebar, at its full width throughout, is
+   revealed - clipped - as they do. It lies over its column, not in it. */
 :root:not([data-window-chrome="mobile"]) .app-shell > .sidebar,
 :root:not([data-window-chrome="mobile"])
   .app-shell
   > .sidebar.sidebar-collapsed {
-  width: auto;
-  overflow: hidden;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--rail-width, 0px);
+  width: var(--sidebar-width, 240px);
   transform: none;
   opacity: 1;
+}
+:root[data-bar-rows="2"]:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar {
+  top: var(--window-bar-height);
 }
 :root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
   transition: visibility 0s;
@@ -103,12 +97,6 @@ body {
   .app-shell
   > .sidebar.sidebar-collapsed {
   transition: visibility 0s linear var(--dur-settle);
-}
-:root:not([data-window-chrome="mobile"])
-  .app-shell
-  > .sidebar
-  > :is(.sidebar-header, .sidebar-body) {
-  min-width: var(--sidebar-width, 240px);
 }
 :root:not([data-window-chrome="mobile"])
   .app-shell

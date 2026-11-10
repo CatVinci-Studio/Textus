@@ -1,4 +1,5 @@
-import { useReducer } from "react";
+import { useCallback, useReducer } from "react";
+import { useSidebarFrame } from "./useSidebarFrame";
 import { isIOSApp } from "../../platform/capabilities";
 import {
   Presence,
@@ -63,6 +64,15 @@ export function Sidebar({
   // A tab dragged: drawn again in its new order.
   const [, moved] = useReducer((n: number) => n + 1, 0);
   const { settings } = useSettings();
+  const frame = useSidebarFrame(open, !isIOSApp);
+  const presenceRef = presence.ref;
+  const asideRef = useCallback(
+    (el: HTMLElement | null) => {
+      presenceRef(el);
+      frame.current = el;
+    },
+    [presenceRef, frame],
+  );
   // The phone opens the sidebar from its own bar; there is no rail there.
   const rail = settings.activityRail && !isIOSApp;
   const move = (id: string, target: string) => {
@@ -92,7 +102,7 @@ export function Sidebar({
         )}
       </Presence>
       <aside
-        ref={presence.ref}
+        ref={asideRef}
         aria-label={t.menuToggleSidebar}
         className={`sidebar ${open ? "" : "sidebar-collapsed"}`}
       >

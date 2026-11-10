@@ -62,36 +62,11 @@
   background: var(--ui-frame-fill);
 }
 
-/* One pane: its island fills the area under the window bar's row. */
-.main-pane:not(.main-pane-split) > .island {
-  position: absolute;
-  inset: var(--window-bar-height) var(--island-inset) var(--island-inset);
-}
-
-/* A split: each pane's island on its cell, the gap between panes. Side by
-   side the grid's own; one under another, above the lower pane's row - a
-   pane's row and its island stay one block. The dividers stay as handles,
-   unseen, in the gap. */
-.app-shell[data-tabs="bar"] .main-pane-split {
-  column-gap: var(--island-gap);
-  row-gap: 0;
-}
-
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider {
   /* Dragged, a hairline down the middle of the gap, up through the
      islands' rows of tabs. */
   --grip-reach: var(--window-bar-height);
   background: transparent;
-}
-
-.app-shell[data-tabs="bar"] .main-pane-split > .split-divider-row {
-  /* design: allow - half a hairline, to sit on the pixel. */
-  margin-left: calc(var(--island-gap) / -2 - 0.5px);
-}
-
-.app-shell[data-tabs="bar"] .main-pane-split > .split-divider-column {
-  /* design: allow - half a hairline, to sit on the pixel. */
-  margin-top: calc(var(--island-gap) / 2 - 0.5px);
 }
 
 /* Every tab's view shows on its island, not under it: the editor, the

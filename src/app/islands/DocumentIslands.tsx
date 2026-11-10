@@ -51,6 +51,8 @@ function pluginTabItems(
 
 /** Panes named in reading order, for tests and styles to find. */
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
+/** The one island of a window not split, as the area knows it. */
+const WINDOW = "window";
 
 /** The documents islands: each pane of open tabs an island, its tab row over
  *  its sheet, each tab's view on it - drawn by the engine's island area. */
@@ -219,8 +221,11 @@ export function DocumentIslands({
   );
 
   const documents: IslandContent = (places) => {
+    // The views lie on their island's sheet, placed by the area; a
+    // phone's column lays its view out under its own bar.
     for (const { pane, place } of places)
-      if (pane) cells.set(pane.id, tabsInBar ? place.sheet : place.whole);
+      if (islands)
+        cells.set(pane?.id ?? WINDOW, tabsInBar ? place.sheet : place.whole);
     const listOf = (pane: Pane) =>
       pane.tabs.flatMap((id) => byId.get(id) ?? []);
     return (
@@ -232,7 +237,13 @@ export function DocumentIslands({
           !pane
             ? showTabBar &&
               (islands ? (
-                <Island key={key} row={tabBar(tabs, activeTabId, null)} />
+                <Island
+                  key={key}
+                  frame={place.frame}
+                  row={tabBar(tabs, activeTabId, null)}
+                  rowStyle={place.row}
+                  sheetStyle={place.sheet}
+                />
               ) : (
                 tabBar(tabs, activeTabId, null)
               ))
@@ -247,6 +258,7 @@ export function DocumentIslands({
               : tabsInBar && (
                   <Island
                     key={key}
+                    frame={place.frame}
                     paneId={pane.id}
                     row={tabBar(
                       listOf(pane),
@@ -263,9 +275,10 @@ export function DocumentIslands({
         {/* Each document's length at its page's corner. */}
         {islands && (
           <DocumentCorners
-            fronts={places.map(({ pane }) => ({
+            fronts={places.map(({ pane, place }) => ({
               tab: byId.get(pane ? (pane.front ?? "") : activeTabId),
-              style: pane ? body(pane.id) : undefined,
+              style: body(pane?.id ?? WINDOW),
+              frame: place.frame,
             }))}
             lang={lang}
             t={t}
@@ -275,13 +288,13 @@ export function DocumentIslands({
           !docsSplit &&
           !phone &&
           formatsShown(byId.get(activeTabId)) && (
-            <FormatBar t={t} style={panes[0] ? body(panes[0].id) : undefined} />
+            <FormatBar t={t} style={barOver(panes[0] && body(panes[0].id))} />
           )}
         <DocumentViews
           tabs={tabs}
           activeTabId={activeTabId}
           shownIn={shownIn}
-          styleOf={body}
+          styleOf={(pane) => body(pane ?? WINDOW)}
           onActivate={onActivate}
           onChange={onChange}
           typewriter={typewriter}
@@ -296,10 +309,30 @@ export function DocumentIslands({
     <IslandArea
       layout={split}
       tabs={tabs.map((tab) => tab.id)}
+      front={activeTabId}
+      rows={tabsInBar}
       plain={!tabsInBar}
+      // A panel's island holds pages only (the AI, Settings, a plugin's).
+      isPanel={(pane) =>
+        pane.tabs.length > 0 &&
+        pane.tabs.every((id) => byId.get(id)?.view?.kind === "page")
+      }
       content={documents}
       t={t}
     />
+  );
+}
+
+/** The format bar across the top of a sheet: its left and width, its top
+ *  the sheet's (its height its own). */
+function barOver(sheet: CSSProperties | undefined): CSSProperties | undefined {
+  return (
+    sheet && {
+      left: sheet.left,
+      width: sheet.width,
+      top: sheet.top,
+      right: "auto",
+    }
   );
 }
 
