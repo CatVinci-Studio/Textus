@@ -71,6 +71,23 @@ for (const width of [960, 1280, 1920])
     expect(at.document).toBeGreaterThanOrEqual(359);
   });
 
+// The same on screens that scale: the open tab still meets its island
+// within half a physical pixel, and the rows still clear the bar.
+for (const scale of [1.25, 1.5, 2])
+  test.describe(`at ${scale}x`, () => {
+    test.use({ deviceScaleFactor: scale });
+    for (const width of [1280, 2560])
+      test(`header lines meet at ${width}px`, async ({ page }) => {
+        await open(page, width);
+        const at = await layout(page);
+        expect(Math.abs(at.tabs - at.bar)).toBeLessThanOrEqual(1);
+        expect(at.firstTab).toBeGreaterThan(at.menu);
+        expect(at.lastTab).toBeLessThanOrEqual(at.status);
+        expect(Math.abs(at.seam)).toBeLessThan(0.5 / scale);
+        expect(Math.abs(at.aiSeam)).toBeLessThan(0.5 / scale);
+      });
+  });
+
 test("a squeezed AI panel can still be dragged narrower", async ({ page }) => {
   // Squeezed but above its narrowest: narrower, the rail and the sidebar
   // leave it exactly that.
