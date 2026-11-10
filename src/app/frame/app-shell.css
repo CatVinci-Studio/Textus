@@ -72,30 +72,17 @@ body {
    its column takes its width at once, the islands move into the room
    frame by frame, and the sidebar, at its full width throughout, is
    revealed - clipped - as they do. It lies over its column, not in it. */
-:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar,
-:root:not([data-window-chrome="mobile"])
-  .app-shell
-  > .sidebar.sidebar-collapsed {
+:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
   position: absolute;
   top: 0;
   bottom: 0;
   left: var(--rail-width, 0px);
   width: var(--sidebar-width, 240px);
-  transform: none;
-  opacity: 1;
 }
 :root[data-bar-rows="2"]:not([data-window-chrome="mobile"])
   .app-shell
   > .sidebar {
   top: var(--window-bar-height);
-}
-:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
-  transition: visibility 0s;
-}
-:root:not([data-window-chrome="mobile"])
-  .app-shell
-  > .sidebar.sidebar-collapsed {
-  transition: visibility 0s linear var(--dur-settle);
 }
 :root:not([data-window-chrome="mobile"])
   .app-shell

@@ -20,15 +20,19 @@
      them, or WebKit's Select All, selected them along with the page. */
   user-select: none;
   -webkit-user-select: none;
-  /* On the islands' clock (FlipOnChange, settle): one change, one
-     motion - on a clock of its own it tore from them mid-slide. */
+}
+
+/* A phone's or iPad's drawer slides on its own. The desktop's sidebar is
+   revealed on the window's clock instead (useSidebarFrame): clipped to its
+   column, it needs no hiding. */
+:root[data-window-chrome="mobile"] .sidebar {
   transition:
     transform var(--dur-settle) var(--ease-settle),
     opacity var(--dur-settle) var(--ease-out),
     visibility 0s;
 }
 
-.sidebar-collapsed {
+:root[data-window-chrome="mobile"] .sidebar-collapsed {
   transform: translateX(calc(-100% * var(--motion-travel)));
   opacity: var(--motion-travel-fade);
   visibility: hidden;
@@ -128,7 +132,7 @@
   background: var(--ui-hover);
 }
 
-.main-pane {
+:root[data-window-chrome="mobile"] .main-pane {
   flex: 1;
   position: relative;
   display: flex;

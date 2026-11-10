@@ -56,9 +56,14 @@
 
 /* ---- Islands ------------------------------------------------------- */
 
-/* The documents' area: the frame, the islands inset in it. */
+/* The islands' area: what the solver places them in (IslandArea), every
+   part absolute in it; in the frame's fill with tabs in the bar. */
+.main-pane {
+  position: relative;
+  min-width: 0;
+}
+
 .app-shell[data-tabs="bar"] .main-pane {
-  padding: 0 var(--island-inset) var(--island-inset);
   background: var(--ui-frame-fill);
 }
 

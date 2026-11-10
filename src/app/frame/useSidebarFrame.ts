@@ -15,14 +15,9 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
   useLayoutEffect(() => {
     const el = aside.current;
     if (!el || !on) return;
-    // Its width is the one its edge's drag set (--sidebar-width): the
-    // column takes each new one at once, so a widened sidebar shows whole.
-    const box = {
-      x: el.offsetLeft,
-      y: el.offsetTop,
-      w: width,
-      h: el.offsetHeight,
-    };
+    // Only its width matters: it lies over its column, at the same place,
+    // and is clipped to it - its width the one its edge's drag set.
+    const box = { x: 0, y: 0, w: width, h: 0 };
     frameClock.attach("sidebar", el);
     frameClock.set(
       "sidebar",

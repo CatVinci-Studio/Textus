@@ -29,8 +29,6 @@ const ALLOWED = {
     "a tab's measures as its stylesheet draws them (a probe), not where it is",
   "src/engine/layout/row-insets.ts":
     "the window bar's own controls and the layout's radii, outside the frame",
-  "src/app/frame/useSidebarFrame.ts":
-    "the sidebar's width as its edge's drag sets it: the column's input",
   "src/app/frame/SidebarTabBar.tsx":
     "the sidebar's own width, for how many of its tabs show; a menu's anchor",
   "src/app/frame/WindowControls.tsx": "a menu's anchor: the button pressed",
