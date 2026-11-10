@@ -24,14 +24,14 @@
   position: absolute;
   top: -2px;
   right: -3px;
-  min-width: 14px;
-  height: 14px;
-  padding: 0 3px;
+  min-width: 1.4em;
+  height: 1.4em;
+  padding: 0 0.3em;
   border-radius: var(--shape-pill);
   background: var(--ui-accent);
   color: var(--ui-on-accent, #fff);
-  font-size: 10px;
-  line-height: 14px;
+  font-size: var(--text-caption);
+  line-height: 1.4em;
   text-align: center;
 }
 

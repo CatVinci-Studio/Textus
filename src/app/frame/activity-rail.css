@@ -76,14 +76,17 @@
   color: var(--ui-accent-text);
 }
 
-/* With the rail holding the tabs, the sidebar's header is only the bar's
-   room: the frame is one surface - bar, rail, sidebar - with no line inside
-   it, and the panel's own tools start under the bar. */
+/* With the rail holding the tabs, the sidebar's header is the panel's
+   name on the bar's line: the frame is one surface - bar, rail, sidebar -
+   with no line inside it, and the panel's first row (its search) starts
+   under it, level with the islands' tops. */
 :root:not([data-window-chrome="mobile"])
   .app-shell:has(> .activity-rail)
   .sidebar-header {
+  display: flex;
+  align-items: center;
   height: var(--window-bar-height);
-  padding: 0;
+  padding: 0 var(--pane-inset);
   border-bottom: 0;
 }
 
@@ -97,11 +100,7 @@
   z-index: 46;
 }
 
-:root[data-side-to-top]:not([data-window-chrome="mobile"])
-  .app-shell:has(> .activity-rail)
-  .sidebar-header {
-  height: 0;
-}
+
 
 :root[data-side-to-top] .sidebar-resizer {
   top: 0;

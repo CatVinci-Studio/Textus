@@ -10,13 +10,15 @@ import "./page-tabs.css";
  * opened from the sidebar's list). What they show comes from the window
  * (PageTabProvider), which knows what each needs.
  */
-export type AppPage = "settings" | "plugins";
+export type AppPage = "settings" | "plugins" | "create";
 
 /** Where a page is asked to go: a Settings category, a plugin; `at` is
  *  new on each request, so an open page takes it too. */
 export interface PageRequest {
   to?: string;
   at: number;
+  /** A row to go to there (a Settings search result). */
+  jump?: unknown;
 }
 
 /** The page tab `tab` shows, if it is one. */
@@ -32,8 +34,9 @@ export function showPage(
   page: AppPage,
   to?: string,
   title?: string,
+  jump?: unknown,
 ): void {
-  const state: PageRequest = { to, at: Date.now() };
+  const state: PageRequest = { to, at: Date.now(), jump };
   const open = tabs.tabsRef.current.find((tab) => pageOf(tab) === page);
   if (open) {
     if (to) tabs.updateTab(open.id, { view: { ...open.view!, state, title } });

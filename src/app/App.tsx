@@ -9,7 +9,12 @@ import { Suspense, useState } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
-import { PluginTabPage, SettingsLayer, SettingsTabPage } from "./SettingsLayer";
+import {
+  CreateTabPage,
+  PluginTabPage,
+  SettingsLayer,
+  SettingsTabPage,
+} from "./SettingsLayer";
 import {
   PageTabProvider,
   type AppPage,
@@ -136,6 +141,8 @@ function App() {
   const renderPage = (page: AppPage, request: PageRequest | null) =>
     page === "settings" ? (
       <SettingsTabPage request={request} {...settingsProps} />
+    ) : page === "create" ? (
+      <CreateTabPage t={t} />
     ) : (
       <PluginTabPage request={request} t={t} />
     );

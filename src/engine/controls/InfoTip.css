@@ -11,8 +11,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: calc(16px * var(--ui-text-scale, 1));
-  height: calc(16px * var(--ui-text-scale, 1));
+  width: 16px;
+  height: 16px;
   padding: 0;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-pill);

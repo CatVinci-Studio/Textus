@@ -190,8 +190,6 @@ export function applyContributions(
       registerSidebarTab({
         id: tab.id,
         label: () => text(tab.title),
-        // A list brings its own filter box; a page says nothing of itself.
-        titled: tab.type !== "list",
         Icon: () =>
           createElement(PluginTabIcon, {
             plugin: id,

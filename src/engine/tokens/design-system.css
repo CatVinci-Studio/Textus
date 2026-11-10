@@ -48,22 +48,19 @@
      grow with --chrome-scale, as every other interface length does
      (vite.chrome-scale.ts); the phone's with --ui-text-scale.
      The document's own text is the theme's, in em. */
-  /* A badge, a count, a key on a keycap. */
+  /* Four sizes, far enough apart to read as chosen - a role names which:
+     small (11) for what is said about something - a count, a hint, a
+     group's title, a key, an empty state; body (13) for everything read
+     or used - lists, rows, menus, fields, buttons, a pane's name; title
+     (17) for a dialog's or a sheet's; large (22) for a welcome. No 12 or
+     14 between them: a size a step off its neighbour looked like a slip. */
   --text-caption: calc(11px * var(--chrome-scale, 1));
-  /* What explains: a hint, a note, a group's title, an empty state. */
-  --text-footnote: calc(12px * var(--chrome-scale, 1));
-  /* What sits beside or under the main text in a dense surface: a card's
-     text, a list's entries, a field in a bar. */
-  --text-secondary: calc(12px * var(--chrome-scale, 1));
-  /* A control's label: buttons, segments, selects. */
-  --text-control: calc(13px * var(--chrome-scale, 1));
-  /* The main text of a panel, a menu, a list or a field. */
+  --text-footnote: var(--text-caption);
+  --text-secondary: var(--text-body);
+  --text-control: var(--text-body);
   --text-body: calc(13px * var(--chrome-scale, 1));
-  /* The main text where there is room: Settings' rows, a dialog's. */
-  --text-body-large: calc(14px * var(--chrome-scale, 1));
-  /* A sheet's, a panel's or a navigation bar's title. */
+  --text-body-large: var(--text-body);
   --text-title: calc(17px * var(--chrome-scale, 1));
-  /* A page's own title, a welcome. */
   --text-large-title: calc(22px * var(--chrome-scale, 1));
   /* The size names plugins' webviews were given (plugins/views/theme-vars.ts). */
   --text-xs: var(--text-caption);
@@ -612,8 +609,8 @@
 
 /* They grow with the window as the chrome's other icons do. */
 :is(.inline-chat-attach, .inline-chat-toggle) {
-  width: calc(var(--control-height-sm) * var(--chrome-scale));
-  height: calc(var(--control-height-sm) * var(--chrome-scale));
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
   border: 1px solid var(--ui-border);
 }
 

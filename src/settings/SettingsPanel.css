@@ -188,6 +188,27 @@
 
 /* Each group is a quiet inset card: the title above it, rows inside, and the
    only rules are the hairlines between rows of the same card. */
+/* A section's heading, and what acts on the whole section at its end. */
+.settings-group-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  min-height: 26px;
+}
+
+.settings-group-head > .settings-group-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-group-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
 .settings-group + .settings-group {
   margin-top: 24px;
 }

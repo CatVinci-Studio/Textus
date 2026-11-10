@@ -24,7 +24,34 @@
   box-sizing: border-box;
 }
 
-.tx-pane-top > .tx-search {
+/* Its name, or the search opened in its place, takes the room; its
+   buttons keep theirs at the end. */
+.tx-pane-top {
+  gap: 2px;
+}
+
+.tx-pane-top > :is(.tx-pane-title, .tx-pane-fill) {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Opened, the search covers the name. */
+.tx-pane-top:has(> .tx-search-expanded) > .tx-pane-title {
+  display: none;
+}
+
+.tx-search-expanded {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+/* In a section's heading the field stays a field's width. */
+.settings-group-actions > .tx-search-expanded {
+  flex: 0 1 220px;
+}
+
+.tx-pane-top .tx-search {
   margin: 0;
 }
 
@@ -38,12 +65,21 @@
   color: var(--ui-text);
 }
 
+/* A heading between a list's items: a day, a group. */
+.tx-list-heading {
+  margin: 12px 8px 4px;
+  padding: 0;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
 .tx-list-item {
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 4px 8px;
   border: 0;
   border-radius: var(--shape-s);
   background: none;

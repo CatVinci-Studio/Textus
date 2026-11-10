@@ -1,3 +1,4 @@
+import { SettingsGroup } from "../pages/SettingsGroup";
 import { useCallback, useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -405,16 +406,7 @@ export function BuiltinSkillsSection({
         ))}
     </>
   );
-  return (
-    <details className="disclosure settings-advanced settings-builtin-skills">
-      <summary>
-        <span className="settings-builtin-skills-title">
-          {t.agentSkillsBuiltin}
-        </span>
-      </summary>
-      <div className="settings-advanced-body">{rows}</div>
-    </details>
-  );
+  return <SettingsGroup title={t.agentSkillsBuiltin}>{rows}</SettingsGroup>;
 }
 
 /// Writing conventions: Automatic, or one profile, grouped by document

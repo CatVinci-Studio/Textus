@@ -91,7 +91,6 @@ function ProviderDetail({
   connected?: ConnectedState;
   onStatusChange: () => void;
 }) {
-  const label = localizedLabel(entry, t);
   const status =
     entry.keyOptional && entry.id !== "custom"
       ? t.providerNoKeyRequired
@@ -104,14 +103,7 @@ function ProviderDetail({
           : t.providerNotConfigured;
   return (
     <div className="providers-detail">
-      <div className="providers-head">
-        <ProviderLogo id={entry.id} label={label} />
-        <div>
-          <div className="providers-head-name">{label}</div>
-          <div className="providers-head-status">{status}</div>
-        </div>
-      </div>
-      <SettingsGroup>
+      <SettingsGroup title={status}>
         {entry.id === "custom" ? (
           <CustomProviderPanel t={t} onStatusChange={onStatusChange} />
         ) : (

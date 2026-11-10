@@ -51,13 +51,7 @@
   font-size: var(--text-footnote);
   font-variant-numeric: tabular-nums;
 }
-/* A heading between rows: a day, a group. */
-.tx-list-heading {
-  padding: var(--space-3) var(--space-2) var(--space-1);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  font-weight: 500;
-}
+/* A heading between rows - a day, a group - is pane.css's. */
 
 /* Folding: <details class="tx-disclosure"><summary>…</summary>…</details>,
    or a button with aria-expanded holding a .tx-disclosure-caret. The app's

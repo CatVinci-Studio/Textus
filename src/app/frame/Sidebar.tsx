@@ -101,10 +101,11 @@ export function Sidebar({
         {presence.mounted && (
           <>
             <div className="sidebar-header" inert={closing || undefined}>
-              {/* With the rail holding the tabs (its pressed icon says which
-                  is open), the header is only the bar's room, and the panel's
-                  own tools start under the line; without it, the tabs are
-                  here again. */}
+              {/* With the rail holding the tabs, the header is the panel's
+                  name, on the window bar's line; the panel's own first row
+                  (its search, its tools) starts under it, level with the
+                  islands' tops. Without the rail, the tabs are here again. */}
+              {rail && <h2 className="tx-pane-title sidebar-title">{shown.label(t)}</h2>}
               {!rail && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}
@@ -116,11 +117,6 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {shown.titled && (
-                <div className="tx-pane-top">
-                  <h2 className="tx-pane-title">{shown.label(t)}</h2>
-                </div>
-              )}
               <ViewTitleActions view={shown.id} />
               <shown.Panel
                 t={t}

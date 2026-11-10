@@ -46,12 +46,7 @@
 
 /* A filtered list's small titles and its notes (nothing found, still
    reading), under the box. */
-.tx-list-heading {
-  margin: 8px 8px 2px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--ui-muted);
-}
+/* .tx-list-heading: pane.css. */
 
 .tx-list-note {
   padding: 8px 8px;

@@ -3,15 +3,18 @@ import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { RowHelp } from "../sections/controls";
+import { SettingsGroup } from "./SettingsGroup";
 
 export interface ExtensionsAction {
   label: string;
   onSelect: () => void;
 }
 
-/** One tab of Settings › Extensions: a line of what it holds and its
- *  actions, `top` (a switch over all of them), one search over both lists,
- *  what is installed, what is available, then Advanced, folded. */
+/** A list of things one adds to Textus - themes, skills, MCP servers:
+ *  `top` (a switch over all of them), one search over both lists while it
+ *  is long, then what is installed - its section's heading holding what
+ *  acts on the list (⋯, the main action) and its "?" - what is available,
+ *  and Advanced, folded. Sections and rows as every Settings page has. */
 export function ExtensionsTabLayout({
   t,
   intro,
@@ -32,6 +35,7 @@ export function ExtensionsTabLayout({
   advanced,
 }: {
   t: Strings;
+  /** What the list is, for its "?" (with `help`). */
   intro: string;
   help?: ReactNode;
   primary?: ExtensionsAction;
@@ -53,29 +57,6 @@ export function ExtensionsTabLayout({
 }) {
   return (
     <>
-      <div className="extensions-head">
-        <p className="extensions-intro">
-          {intro}
-          {help && <RowHelp label={intro}>{help}</RowHelp>}
-        </p>
-        <div className="extensions-head-actions">
-          {actions.length > 0 && <MoreMenu t={t} actions={actions} />}
-          {primary && (
-            <button
-              type="button"
-              className="text-button settings-inline-button extensions-get-more"
-              onClick={primary.onSelect}
-            >
-              {primary.label}
-            </button>
-          )}
-        </div>
-      </div>
-      {error && (
-        <div className="settings-error" role="alert">
-          {error}
-        </div>
-      )}
       {top}
       <div className={off ? "extensions-off" : undefined}>
         {onQuery && (
@@ -87,16 +68,36 @@ export function ExtensionsTabLayout({
             onChange={(e) => onQuery(e.target.value)}
           />
         )}
-        <section className="settings-group" aria-label={installedTitle}>
-          <h2 className="settings-group-title">
-            {installedTitle}
-            {!!installedCount && (
-              <span className="extensions-count">{installedCount}</span>
-            )}
-            {installedAction}
-          </h2>
-          <div className="settings-group-body">{installed}</div>
-        </section>
+        <SettingsGroup
+          title={
+            installedCount
+              ? `${installedTitle} ${installedCount}`
+              : installedTitle
+          }
+          actions={
+            <>
+              {installedAction}
+              {help && <RowHelp label={intro}>{help}</RowHelp>}
+              {actions.length > 0 && <MoreMenu t={t} actions={actions} />}
+              {primary && (
+                <button
+                  type="button"
+                  className="text-button settings-inline-button"
+                  onClick={primary.onSelect}
+                >
+                  {primary.label}
+                </button>
+              )}
+            </>
+          }
+        >
+          {error && (
+            <div className="settings-error" role="alert">
+              {error}
+            </div>
+          )}
+          {installed}
+        </SettingsGroup>
         {available}
         {footer}
       </div>

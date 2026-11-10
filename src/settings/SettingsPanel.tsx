@@ -1,5 +1,6 @@
 import { AboutSection } from "./sections/about";
 import { GuidesSection } from "./sections/guides";
+import { SettingsGroup } from "./pages/SettingsGroup";
 import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
@@ -167,7 +168,13 @@ export function SettingsPanel({
     ) : (
       <>
         <h1 className="settings-category-title">{subpageTitles[s]}</h1>
-        <GuidesSection t={t} language={settings.language} openHelp={openHelp} />
+        <SettingsGroup>
+          <GuidesSection
+            t={t}
+            language={settings.language}
+            openHelp={openHelp}
+          />
+        </SettingsGroup>
       </>
     );
 

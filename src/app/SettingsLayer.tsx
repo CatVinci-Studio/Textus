@@ -27,6 +27,23 @@ const SettingsTab = lazyComponent(
   (m) => m.SettingsTab,
 );
 
+// Create - the AI making a theme, plugin or skill - loads on first open.
+const CreateTab = lazyComponent(
+  lazyModule("create-tab", () => import("../settings/pages/CreateTab")),
+  (m) => m.CreateTab,
+);
+
+/** The Create tab's page: its conversation, filling the tab. */
+export function CreateTabPage({ t }: { t: Strings }) {
+  return (
+    <Suspense fallback={null}>
+      <div className="create-tab">
+        <CreateTab t={t} />
+      </div>
+    </Suspense>
+  );
+}
+
 // A plugin's tab loads on first open.
 const PluginTab = lazyComponent(
   lazyModule("plugin-tab", () => import("../settings/pages/PluginTab")),
@@ -68,7 +85,8 @@ export function useSettingsOpening(tabs: TabState) {
   useEffect(() => {
     const open = () => {
       openExtensionsTab("create");
-      if (inTabs) showPage(tabs, "settings", "skills");
+      // Making a theme, a plugin or a skill with the AI: a tab of its own.
+      if (inTabs) showPage(tabs, "create");
       else setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
     window.addEventListener(OPEN_CREATE_EVENT, open);
