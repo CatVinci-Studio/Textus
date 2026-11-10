@@ -15,7 +15,7 @@ import {
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "./builtin-themes";
-import { applyThemeChrome, clearThemeChrome } from "./theme-chrome";
+import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { adaptTyporaCss, namedSystemFonts } from "./typora-compat";
 import { isIOSApp } from "../platform/capabilities";
 import { withCurrentVariables } from "./legacy-variables";

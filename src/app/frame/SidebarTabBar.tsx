@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu } from "../../ui/ContextMenu";

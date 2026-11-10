@@ -1,7 +1,7 @@
 /* Application UI contract. Content themes remain scoped to the document. */
-@import "./motion.css";
-@import "./components.css";
-@import "./controls.css";
+@import "../../ui/motion.css";
+@import "../../ui/components.css";
+@import "../../ui/controls.css";
 
 :root {
   /* Shape (docs/dev/design-tokens.md). Containers are rounded rectangles in

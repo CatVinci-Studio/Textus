@@ -11,7 +11,7 @@ import {
   storedSidebarWidth,
   useSidebarWidth,
 } from "./sidebar-width";
-import { CHROME_BASE } from "../../ui/chrome-scale";
+import { CHROME_BASE } from "../../engine/tokens/chrome-scale";
 
 // No boot snapshot here: ui-state keeps the width in localStorage.
 const KEY = "textus-sidebar-width";

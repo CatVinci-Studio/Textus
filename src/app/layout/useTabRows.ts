@@ -1,5 +1,5 @@
 import { useLayoutEffect, type RefObject } from "react";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 
 /** Air kept between the tabs and the window bar's own controls. */
 const AIR = 8;

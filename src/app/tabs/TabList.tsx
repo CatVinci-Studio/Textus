@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { useMenuButton } from "../../ui/useMenuButton";
 import { ChevronIcon } from "../../ui/icons";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { Tooltip } from "../../ui/Tooltip";
 import { scrollBehavior } from "../../ui/motion";
 import type { TabInfo } from "./TabPill";

@@ -1,4 +1,4 @@
-import { chromeScaleAt } from "../../../ui/chrome-scale";
+import { chromeScaleAt } from "../../../engine/tokens/chrome-scale";
 import {
   createContext,
   useCallback,

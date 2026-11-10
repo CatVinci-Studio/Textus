@@ -13,7 +13,7 @@ import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
-import { chromeScaleAt } from "../../ui/chrome-scale";
+import { chromeScaleAt } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
 import { PANEL_FLOOR } from "../../ui/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";

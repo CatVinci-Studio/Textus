@@ -1,4 +1,4 @@
-import { scaledPx } from "./chrome-scale";
+import { scaledPx } from "../engine/tokens/chrome-scale";
 
 /** How close a popup comes to the window's edge, in interface pixels. */
 export const EDGE = 8;

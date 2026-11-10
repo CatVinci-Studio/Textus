@@ -181,7 +181,7 @@ in `src/storage/local.ts`.
   right (`src-tauri/src/boot.js`, `src/storage/boot.ts`). For an imported
   theme that includes the app's chrome colours derived from it: working
   them out takes a CSS engine (`applyThemeChrome` in
-  `src/theme/theme-chrome.ts`), so the frontend remembers the result in
+  `src/engine/tokens/palette.ts`), so the frontend remembers the result in
   `ui-state.json` (`themeChrome`, per theme and appearance) and the boot
   script applies it when it matches.
 - Until its page first paints, a window shows the platform's own

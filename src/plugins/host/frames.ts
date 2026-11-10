@@ -1,7 +1,7 @@
 import webviewRuntime from "./runtime/webview.js?raw";
 import componentsCss from "../../ui/components.css?inline";
 import controlsCss from "../../ui/controls.css?inline";
-import designSystemCss from "../../ui/design-system.css?inline";
+import designSystemCss from "../../engine/tokens/design-system.css?inline";
 import motionCss from "../../ui/motion.css?inline";
 // Processed as the app's own are, their lengths scaled (vite.chrome-scale.ts).
 import pluginUiCss from "./runtime/plugin-ui.css?inline";

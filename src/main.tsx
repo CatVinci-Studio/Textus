@@ -17,7 +17,7 @@ import { installScrollReveal } from "./ui/scroll-reveal";
 import { restoreFolderAccess } from "./platform/ios-files";
 import { installMobileViewport } from "./platform/mobile-viewport";
 import { markEngineQuirks } from "./ui/engine-quirks";
-import { installWindowScale } from "./ui/window-scale";
+import { installWindowScale } from "./engine/tokens/window-scale";
 import { flushWhenHidden } from "./storage/pending-writes";
 import { exposePluginApiForDevelopment } from "./plugin-api";
 import "./mobile/styles/index.css";

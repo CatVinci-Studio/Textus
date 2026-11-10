@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** A card's width and the air between it and the text. */

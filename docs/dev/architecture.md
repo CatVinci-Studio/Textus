@@ -81,18 +81,18 @@ components → patterns → features**. A layer never re-defines a value an
 earlier one defines, and never imports from a later one. The design rules
 for each are in [design-language.md](../design/design-language.md).
 
-| Layer      | Today                                                                                   | Holds                                   |
-| ---------- | --------------------------------------------------------------------------------------- | --------------------------------------- |
-| Tokens     | `src/ui/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
-| Styles     | `src/ui/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
-| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)   | React wrappers; no own colours or sizes |
-| Patterns   | Settings rows, the sidebar, menus, the command palette                                  | Arrangements of components              |
-| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                   | Compose the layers above                |
+| Layer      | Today                                                                                              | Holds                                   |
+| ---------- | -------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| Tokens     | `src/engine/tokens/base.css`, `design-system.css` (variables), `motion.css`                        | Role tokens and their derivation        |
+| Styles     | `src/engine/tokens/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
+| Components | `src/ui/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`)              | React wrappers; no own colours or sizes |
+| Patterns   | Settings rows, the sidebar, menus, the command palette                                             | Arrangements of components              |
+| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                              | Compose the layers above                |
 
 Held by tests: `src/ui/spacing-grid.test.ts`, `theme-reach.test.ts`,
 `motion-tokens.test.ts`, `motion-properties.test.ts`,
 `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, and the contrast tests in
-`src/theme/theme-chrome.test.ts`.
+`src/engine/tokens/palette.test.ts`.
 
 Planned, not built: a layout that gives each layer a folder of its own
 (`src/ui/tokens/`, `styles/`, `icons/`, `components/`, `patterns/`, with
@@ -119,7 +119,7 @@ that is also the visual regression target.
 | `editor/`        | The Markdown editor. Core plugins register in `editor-extensions.ts`, in load order. Subfolders by feature: `markdown/` (parse, save, paste, front matter, render to HTML), `marks/`, `math/`, `code/`, `tables/`, `images/`, `html/`, `find/`, `embeds/`, `chart/`, `emoji/`, `hover/`, `completion/`, `clipboard/`, `lazy-blocks/`, `keys/` (key handling per platform), `modes/` (source in CodeMirror, split, typewriter, zen; `view-mode.ts` is **View › Mode**). `extension-points.ts` is where plugins add to it. |
 | `ai/`            | Textus AI. `editor-plugins.ts` registers its plugins on the editor. `chat/` is the conversation the three chat surfaces share, with `quick-ask/`, `panel/` and `window/`; `revision/` turns a proposed edit into decided sentences; `margin/` draws revisions and notes beside the text; `writing/` is completion and the grammar check; `paper/` the long-form paper writer ([ai-paper.md](../design/ai-paper.md)); `skills/` the built-in skills and their translations; `citations.ts` sources as footnotes.          |
 | `export/`        | **File › Export**: PDF and HTML from the rendered page, everything else through pandoc.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `theme/`         | How documents look and how themes are read: the built-in themes, the document CSS (`content-base.css`), importing a Typora theme, the theme gallery, window colours from a theme (`theme-chrome.ts`), putting the appearance settings on the page.                                                                                                                                                                                                                                                                       |
+| `theme/`         | How documents look and how themes are read: the built-in themes, the document CSS (`content-base.css`), importing a Typora theme, the theme gallery, window colours from a theme (`engine/tokens/palette.ts`), putting the appearance settings on the page.                                                                                                                                                                                                                                                              |
 | `settings/`      | The Settings window: `pages/` (General, Editor, AI, Extensions with the plugin pages, Create), `sections/` (the rows; `controls.tsx` holds `SettingRow` and `ToggleRow`), search over the pages (`settings-search.ts`).                                                                                                                                                                                                                                                                                                  |
 | `links/`         | Notes and the links between them: one resolver for every way a link is followed (`link-resolve.ts`, its cases shared with Rust `resolve_note_link`), writing a link the way the folder does, rewriting links when a note moves, block ids.                                                                                                                                                                                                                                                                               |
 | `sidebar/`       | The file tree, file search, the outline, moving files with their links.                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
@@ -212,7 +212,7 @@ end to end.
 - An imported theme is CSS text: `theme-import.ts` inlines its `@import`s
   and assets, `typora-compat.ts` adapts Typora selectors,
   `legacy-variables.ts` reads pre-1.3 variable names under today's, and
-  `theme-chrome.ts` reads its colours to tint the window around it.
+  `engine/tokens/palette.ts` reads its colours to tint the window around it.
 
 ## Backend (`src-tauri/`)
 

@@ -107,7 +107,7 @@ describe("the theme skill and its sample", () => {
       expect(skill).toContain(`\`${name}\``);
     const appCss = [
       readFileSync("src/theme/content-base.css", "utf8"),
-      readFileSync("src/ui/base.css", "utf8"),
+      readFileSync("src/engine/tokens/base.css", "utf8"),
       readFileSync("src/editor/milkdown-theme.css", "utf8"),
     ].join("\n");
     for (const [, name] of skill.matchAll(/`(--[a-z-]+)`/g))

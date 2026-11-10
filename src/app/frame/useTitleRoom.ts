@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 
 /** Room kept between the title and what sits beside it. */
 const GAP = 12;

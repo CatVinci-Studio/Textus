@@ -445,7 +445,7 @@ in one place each and their tests sit beside them: the build plugin that
 scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
 (`src/ui/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
 floating view's size (`floating-views.test.ts`). Changing the scale curve
-(`src/ui/window-scale.ts`) means updating those numbers, not adding cases.
+(`src/engine/tokens/window-scale.ts`) means updating those numbers, not adding cases.
 `e2e/panel-alignment.spec.ts` checks the one header line at three widths;
 `e2e/database.spec.ts` checks that a dragged copy stays under the pointer,
 zoomed or not. Screenshots in `visual.spec.ts` are taken at the window

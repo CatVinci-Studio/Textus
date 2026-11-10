@@ -1,4 +1,4 @@
-import { chromeScaleAt } from "./chrome-scale";
+import { chromeScaleAt } from "../engine/tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
 /** `--chrome-scale` now, for sizes set from script; follows the window's

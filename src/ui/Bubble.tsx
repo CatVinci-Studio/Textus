@@ -8,7 +8,7 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
-import { scaledPx } from "./chrome-scale";
+import { scaledPx } from "../engine/tokens/chrome-scale";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { usePresenceProps } from "./usePresence";
 

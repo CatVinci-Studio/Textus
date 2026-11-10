@@ -12,7 +12,7 @@ const TOKEN = /var\(--text-/;
 
 /** Files (or folders, ending in /) whose fixed sizes are meant, with why. */
 const ALLOWED_FILES = {
-  "src/ui/design-system.css": "the type scale itself",
+  "src/engine/tokens/design-system.css": "the type scale itself",
   "src/app/editor-column.css": "the document's text, at its zoom",
   "src/theme/content-base.css": "the document's text",
   "src/editor/milkdown-theme.css": "the document's text",

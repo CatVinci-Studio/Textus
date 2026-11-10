@@ -10,13 +10,13 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsProvider, useSettings } from "../prefs/SettingsContext";
 import { themes } from "../platform/ipc";
-import { applyThemeChrome } from "../theme/theme-chrome";
+import { applyThemeChrome } from "../engine/tokens/palette";
 import { AppearanceSync } from "../theme/apply-appearance";
 vi.mock("../platform/ipc", () => ({
   ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: { loadThemeCss: vi.fn() },
 }));
-vi.mock("../theme/theme-chrome", () => ({
+vi.mock("../engine/tokens/palette", () => ({
   applyThemeChrome: vi.fn(),
   clearThemeChrome: () =>
     document.getElementById("textus-imported-chrome")?.remove(),

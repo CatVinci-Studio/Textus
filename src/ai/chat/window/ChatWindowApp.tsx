@@ -12,7 +12,7 @@ import { ChatWindowHeader } from "./ChatWindowHeader";
 import { AppDialogHost } from "../../../ui/app-dialog";
 // This window doesn't render App, so without this the theme's custom
 // properties are never declared and the window is unstyled.
-import "../../../ui/base.css";
+import "../../../engine/tokens/base.css";
 import "../../../ui/app-dialog.css";
 import "../AgentTurnView.css";
 import "../inline-chat.css";

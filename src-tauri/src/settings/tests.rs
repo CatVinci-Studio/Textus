@@ -260,7 +260,7 @@ fn a_pinned_appearance_gives_windows_the_page_background() {
     // Checked against the page itself: a window must open in exactly the colour
     // index.html paints first and ui/base.css's --doc-bg (--ui-bg follows it) keeps.
     let index = include_str!("../../../index.html");
-    let app_css = include_str!("../../../src/ui/base.css");
+    let app_css = include_str!("../../../src/engine/tokens/base.css");
     for (theme, app_css_rule) in [
         ("dark", ":root[data-theme=\"dark\"] {"),
         ("light", ":root {"),

@@ -1,4 +1,4 @@
-import { chromeScaleAt } from "../../ui/chrome-scale";
+import { chromeScaleAt } from "../../engine/tokens/chrome-scale";
 import { useCallback, useState } from "react";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import {

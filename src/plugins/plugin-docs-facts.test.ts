@@ -39,7 +39,7 @@ it("names only style variables a plugin page is given", () => {
   // The theme's, and what the stylesheets a page shares with the window define.
   const given = new Set<string>(WEBVIEW_THEME_VARS);
   for (const css of [
-    "src/ui/design-system.css",
+    "src/engine/tokens/design-system.css",
     "src/ui/components.css",
     "src/ui/controls.css",
     "src/ui/motion.css",

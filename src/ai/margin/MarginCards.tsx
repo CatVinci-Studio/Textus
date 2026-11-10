@@ -1,5 +1,5 @@
 import { changeGlimpse } from "./change-glimpse";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";

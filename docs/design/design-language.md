@@ -50,7 +50,7 @@ Existing names stay as they are. A new name MUST be built from this vocabulary; 
 
 ### 3.1 Inputs and derivation
 
-A theme sets the document's colours; the interface's are derived from them in `src/ui/base.css`, so one theme recolours the whole window:
+A theme sets the document's colours; the interface's are derived from them in `src/engine/tokens/base.css`, so one theme recolours the whole window:
 
 | Input (theme sets) | Derived (interface)                                                                                    |
 | ------------------ | ------------------------------------------------------------------------------------------------------ |
@@ -59,7 +59,7 @@ A theme sets the document's colours; the interface's are derived from them in `s
 | `--doc-muted`      | `--ui-muted`                                                                                           |
 | `--doc-accent`     | `--ui-accent`; `--ui-selected` = accent 13%                                                            |
 
-A theme MAY also set any `--ui-*` directly; its value wins over the derived one. Imported Typora themes that set no variables are sampled by `src/theme/theme-chrome.ts`.
+A theme MAY also set any `--ui-*` directly; its value wins over the derived one. Imported Typora themes that set no variables are sampled by `src/engine/tokens/palette.ts`.
 
 ### 3.2 One job per colour
 
@@ -98,7 +98,7 @@ Tags, board columns, graph groups, chart series, timelines and mind-map branches
 
 Rules:
 
-1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets the defaults in `src/ui/base.css`: fixed hues at one lightness for light appearances and another for dark. The `-text` and `-tint` forms are derived from the tone (mixed toward `--ui-text`, and 16% over the background), so a theme sets only the nine `--tone-{name}` values.
+1. **The theme's palette comes first.** A theme with a signature palette (Dracula, Nord, Catppuccin, One Dark…) SHOULD set the tones from it, so everything in the window - tags, charts, the graph - speaks its colours. A theme that sets none gets the defaults in `src/engine/tokens/base.css`: fixed hues at one lightness for light appearances and another for dark. The `-text` and `-tint` forms are derived from the tone (mixed toward `--ui-text`, and 16% over the background), so a theme sets only the nine `--tone-{name}` values.
 2. **Order is fixed**: blue, green, orange, purple, red, teal, yellow, pink, gray. Series 1 and 2 always differ strongly. A plugin assigns tones in that order (an option's tone is its position among the property's options), not by hashing names.
 3. Chart plugins MUST pass the tones to their library as its default palette, and the interface text, border and muted colours as its axis, grid and label colours.
 
@@ -115,7 +115,7 @@ Rules:
 
 ### 4.2 Interface type roles
 
-Text names a role, never a size. Sizes are set in `src/ui/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
+Text names a role, never a size. Sizes are set in `src/engine/tokens/design-system.css` and follow **Interface text size** (`--ui-text-scale`, 90–125%).
 
 | Role (`--text-…`) | Desktop | Phone | Line height | Weight  | Used for                                                                          |
 | ----------------- | ------- | ----- | ----------- | ------- | --------------------------------------------------------------------------------- |
@@ -211,9 +211,9 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | An app stylesheet                                                | Plain px on the grid, or a token (`--space-*`, `--control-height*`, `--shape-*`) | The build (`vite.chrome-scale.ts`): every length of 3 px and up becomes `calc(Npx * var(--chrome-scale, 1))`. Don't wrap by hand.                                 |
 | The document's stylesheets (themes, the editor's content, print) | Plain px, `em`, `rem`                                                            | The document's zoom, not the chrome scale                                                                                                                         |
-| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/ui/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
+| Script (a width, a gap, a threshold, a margin)                   | A named constant in interface px                                                 | `scaledPx(n)` (`src/engine/tokens/chrome-scale.ts`), or in React `useChromeScale()`. MUST NOT use a bare number. `npm run check` fails on a size constant that isn't scaled. |
 | A side panel's width                                             | Its limits in interface px (`{ min, max }`)                                      | `src/ui/side-panel-width.ts`: shown = chosen × scale, stored in interface px                                                                                      |
-| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/ui/scale-lengths.ts`), the same rule as the build's                                              |
+| A plugin page's stylesheet                                       | Tokens, `%`, `vw`, `clamp()`; px on the grid where nothing else fits             | Its `<style>`s and own sheets are scaled as the page loads (`src/engine/tokens/scale-lengths.ts`), the same rule as the build's                                              |
 | A plugin page's script                                           | Read sizes from layout (`getBoundingClientRect`), never assume them              | -                                                                                                                                                                 |
 
 **Layout rules that follow from it:**
@@ -224,7 +224,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 - **A block in the document** grows with its page up to 70% of the window's height, then scrolls inside.
 - **Floating views** are their manifest's size × the user's resize × scale; folded, a 36 × scale dot.
 
-**Reusing it.** The pieces live together and are the only way in: `src/ui/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/ui/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
+**Reusing it.** The pieces live together and are the only way in: `src/engine/tokens/chrome-scale.ts` (`chromeScaleAt`, `scaledPx`), `src/ui/useChromeScale.ts`, `src/ui/side-panel-width.ts`, `src/engine/tokens/scale-lengths.ts`, `vite.chrome-scale.ts`. A new surface uses them; it doesn't measure the window or the text size itself.
 
 ### 5.7 The window frame - Planned (Textus 1.3.13)
 
@@ -385,7 +385,7 @@ A plugin MUST use the lowest tier that can do the job.
 Every plugin page (a sidebar tab, a tab view, a code block, a settings page) gets, before its own HTML and with no setup:
 
 1. **The tokens**: every role token on the list in `src/plugins/views/theme-vars.ts` - colours (tones included), type roles, spacing, shapes, control heights, durations and curves, the popover shadow - kept current when the theme or appearance changes.
-2. **The app's own stylesheets**: `src/ui/motion.css`, `src/ui/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
+2. **The app's own stylesheets**: `src/ui/motion.css`, `src/engine/tokens/design-system.css` and `src/ui/components.css`, the same files the window loads. A `tx-` class in a page is the app's control from the same rule, not a copy.
 3. **Base element styles** (`src/plugins/host/runtime/plugin-ui.css`): bare `button`, `input`, `select`, `textarea`, headings, links, `.toolbar`, `.list`, `.empty` already look like Textus.
 4. **Attributes on `<html>`**: `data-theme` (`light` | `dark`), `data-platform`, and `data-window-chrome="mobile"` on a phone, so controls take the phone's sizes there.
 5. **The page API** from `acquireTextusApi()` (or `textus`): `t()`, `postMessage`, `onMessage`, `getState` / `setState`, `onExport`, and `menu()` (15.5).

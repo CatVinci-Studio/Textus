@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { memo } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
 import { CARD_WIDTH } from "./margin-room";

@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useEffect, useRef } from "react";
 
 /** How near the bottom still counts as at it, for a wheel's last step. */

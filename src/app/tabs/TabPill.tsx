@@ -1,4 +1,4 @@
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../../ui/icons";
 import { measure, play } from "../../ui/flip";

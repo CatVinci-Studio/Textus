@@ -1,6 +1,6 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { pluginFilesBase } from "../../platform/file-src";
-import { scaleStylesheet } from "../../ui/scale-lengths";
+import { scaleStylesheet } from "../../engine/tokens/scale-lengths";
 
 /**
  * A plugin's own files, and how a webview gets them: each

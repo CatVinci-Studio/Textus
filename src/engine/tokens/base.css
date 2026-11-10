@@ -100,7 +100,7 @@
   --doc-highlight-bg: #ffdfb2;
   /* The interface's, from the document's, so any theme recolours the whole
      window; an imported theme's are derived and contrast-checked in
-     theme/theme-chrome.ts, and a theme may set any of them itself. */
+     engine/tokens/palette.ts, and a theme may set any of them itself. */
   --ui-bg: var(--doc-bg);
   --ui-surface: var(--ui-bg);
   --ui-text: var(--doc-text);

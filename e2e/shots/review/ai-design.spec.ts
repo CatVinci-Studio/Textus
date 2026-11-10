@@ -256,7 +256,7 @@ test("theme imported typora", async ({ page }) => {
   // Apply the theme's derived chrome the way an import does.
   await page.evaluate(async (css) => {
     // The dev server's own module, as the app loads it.
-    const url = "/src/theme/theme-chrome.ts";
+    const url = "/src/engine/tokens/palette.ts";
     const mod = (await import(/* @vite-ignore */ url)) as {
       applyThemeChrome: (css: string, dark: boolean) => void;
     };

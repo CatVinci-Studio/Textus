@@ -5,7 +5,7 @@ import {
   contrast,
   clearThemeChrome,
   themeColumnWidth,
-} from "./theme-chrome";
+} from "./palette";
 const parse = (s: string) =>
   s.match(/\d+/g)!.map(Number) as [number, number, number];
 describe("imported theme chrome", () => {

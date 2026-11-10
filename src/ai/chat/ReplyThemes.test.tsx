@@ -19,7 +19,7 @@ vi.mock("../../platform/ipc", () => ({
     saveThemeCss: vi.fn().mockResolvedValue(undefined),
   },
 }));
-vi.mock("../../theme/theme-chrome", () => ({
+vi.mock("../../engine/tokens/palette", () => ({
   applyThemeChrome: vi.fn(),
   clearThemeChrome: vi.fn(),
 }));

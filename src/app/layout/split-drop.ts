@@ -1,5 +1,5 @@
 import { dragGhost } from "../../ui/drag-ghost";
-import { scaledPx } from "../../ui/chrome-scale";
+import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   moveToPane,
   pairLayout,
