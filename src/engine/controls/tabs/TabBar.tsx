@@ -145,6 +145,9 @@ export function TabBar({
         ghostClass="tab-pill-ghost"
         exitMs={150}
         pending={pendingFlip}
+        // The tab taking the front widens for its ×: with the others'
+        // slide, not a frame before it.
+        resizes={isPill}
       />
       {tabs.map((tab) => (
         <TabPill
@@ -335,3 +338,5 @@ function useIncomingTabPreview(
   }, [barRef, previewTab, tabs]);
   return previewRef;
 }
+
+const isPill = (el: Element) => el.matches(".tab-pill");

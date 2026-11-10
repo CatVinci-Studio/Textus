@@ -241,6 +241,8 @@ export class ListMotion extends Component<{
   exitMs: number;
   ghostsUnder?: boolean;
   pending?: RefObject<PendingFlip | null>;
+  /** See play's `resizes`. */
+  resizes?: (el: Element) => boolean;
 }> {
   getSnapshotBeforeUpdate(previous: { ids: string[] }) {
     const pending = this.props.pending?.current ?? null;
@@ -277,6 +279,7 @@ export class ListMotion extends Component<{
     const container = this.props.container.current;
     if (!snapshot || !container) return;
     play(snapshot.rects, {
+      resizes: this.props.resizes,
       timingFor: (el) =>
         el instanceof HTMLElement && el.dataset.flipId === snapshot.dropped
           ? { duration: "--dur-base", easing: "--ease-spring-bouncy" }
