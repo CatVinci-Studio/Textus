@@ -62,7 +62,12 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
     });
     layer.append(copy);
   });
-  document.body.append(layer);
+  // Inside the window's shell: the islands' lengths and colours (their
+  // radius, their paper) are set there, and a copy outside it lost its
+  // rounded corners.
+  (parts[0]?.closest(".app-shell, .chat-window") ?? document.body).append(
+    layer,
+  );
   // Its own place, as the layout has it: an outline, nothing in it.
   const style = document.createElement("style");
   style.textContent = `
