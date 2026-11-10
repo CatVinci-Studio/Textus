@@ -1,6 +1,7 @@
 import { useRef, type CSSProperties, type ReactNode } from "react";
 import { panesOf, splitGrid, type Pane, type SplitGrid } from "./tree";
 import type { SplitLayout } from "./ops";
+import { islandKeys } from "./island-keys";
 import { IslandMotion } from "./IslandMotion";
 import { SplitDivider } from "./SplitDivider";
 import { useTabRows } from "./useTabRows";
@@ -24,9 +25,9 @@ export interface IslandPlace {
 }
 
 /** The islands' content: given where each goes (one place, unsplit, with
- *  no layout), draws them all. */
+ *  no layout) and the key each is drawn under, draws them all. */
 export type IslandContent = (
-  places: { pane: Pane | null; place: IslandPlace }[],
+  places: { pane: Pane | null; place: IslandPlace; key: string }[],
 ) => ReactNode;
 
 /**
@@ -37,23 +38,36 @@ export type IslandContent = (
  */
 export function IslandArea({
   layout,
+  tabs,
   plain,
   content,
   t,
 }: {
   /** The window's layout; null: one island filling it. */
   layout: SplitLayout | null;
+  /** The window's tabs, for the one island unsplit. */
+  tabs: readonly string[];
   plain: boolean;
   content: IslandContent;
   t: Strings;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const keyed = useRef(new Map<string, string>());
   useTabRows(ref);
   const grid = layout && splitGrid(layout.root);
   const all = layout ? panesOf(layout.root) : [];
+  const { keys, byTab } = islandKeys(
+    grid ? all : [{ id: "window", tabs }],
+    keyed.current,
+  );
+  keyed.current = byTab;
   const places = grid
-    ? all.map((pane) => ({ pane, place: placeOf(grid, pane.id, plain) }))
-    : [{ pane: null, place: { inner: false, plain } }];
+    ? all.map((pane, i) => ({
+        pane,
+        place: placeOf(grid, pane.id, plain),
+        key: keys[i]!,
+      }))
+    : [{ pane: null, place: { inner: false, plain }, key: keys[0]! }];
   return (
     <main
       ref={ref}

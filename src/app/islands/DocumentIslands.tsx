@@ -228,11 +228,11 @@ export function DocumentIslands({
         {/* Each pane of documents an island: its row of tabs over its
             sheet, its documents on the sheet (below). A phone's column has
             its own bar; a clean sheet is the page itself. */}
-        {places.map(({ pane, place }) =>
+        {places.map(({ pane, place, key }) =>
           !pane
             ? showTabBar &&
               (islands ? (
-                <Island key="window" row={tabBar(tabs, activeTabId, null)} />
+                <Island key={key} row={tabBar(tabs, activeTabId, null)} />
               ) : (
                 tabBar(tabs, activeTabId, null)
               ))
@@ -246,7 +246,7 @@ export function DocumentIslands({
                 )
               : tabsInBar && (
                   <Island
-                    key={`island:${pane.id}`}
+                    key={key}
                     paneId={pane.id}
                     row={tabBar(
                       listOf(pane),
@@ -293,7 +293,13 @@ export function DocumentIslands({
   };
 
   return (
-    <IslandArea layout={split} plain={!tabsInBar} content={documents} t={t} />
+    <IslandArea
+      layout={split}
+      tabs={tabs.map((tab) => tab.id)}
+      plain={!tabsInBar}
+      content={documents}
+      t={t}
+    />
   );
 }
 

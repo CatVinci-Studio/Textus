@@ -124,3 +124,34 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
   await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置"]);
 });
+
+test("with only Settings open, the AI settles in at a panel's width and can be used; Settings' island slides, not rebuilt", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false },
+    animations: true,
+  });
+  await emit(page, "menu-open-settings");
+  const doc = tabs(page).filter({ hasText: "未命名" });
+  await doc.click();
+  await doc.hover();
+  await doc.locator(".tab-pill-close").click();
+  await expect(tabs(page)).toHaveText(["设置"]);
+  const settings = page.locator("section.island").first();
+  await settings.evaluate((el) => ((el as HTMLElement).dataset.mark = "kept"));
+  await aiButton(page).click();
+  const sheet = page.locator("section.island").last();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await expect(settings).toHaveAttribute("data-mark", "kept");
+  await expect(settings).not.toHaveAttribute("data-fresh", /.*/);
+  await expect(sheet).toHaveAttribute("data-fresh", "true");
+  const playing = await sheet.evaluate(
+    (el) => getComputedStyle(el).animationName,
+  );
+  expect(playing).toBe("motion-settle-in");
+  await expect(page.locator(".ai-tab textarea").first()).toBeVisible();
+  const w = (await sheet.boundingBox())!.width;
+  expect(w).toBeLessThan(600);
+});
