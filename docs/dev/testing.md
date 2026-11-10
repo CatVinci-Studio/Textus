@@ -445,7 +445,7 @@ in one place each and their tests sit beside them: the build plugin that
 scales lengths (`vite.chrome-scale.test.ts`), the panel width rule
 (`src/engine/controls/side-panel-width.test.ts`, `src/app/frame/sidebar-width.test.ts`) and a
 floating view's size (`floating-views.test.ts`). Changing the scale curve
-(`src/engine/tokens/window-scale.ts`) means updating those numbers, not adding cases.
+(`src/engine/tokens/chrome-scale.ts`) means updating those numbers, not adding cases.
 
 ### 6. Built app (`scripts/smoke-linux.sh`)
 

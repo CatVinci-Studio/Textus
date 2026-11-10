@@ -67,8 +67,7 @@ npm run build:playground   # dist-playground/playground/, built for /playground/
 ```
 
 Its entry is `playground.html` and its Vite config `vite.playground.config.ts`,
-so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job;
-`e2e/playground.spec.ts` runs as the `playground` project of `npm run test:e2e`.
+so `npm run build` and `dist/` are unaffected. CI builds it in the `check` job.
 It is deployed after each newest stable release, not from `main`
 (`deploy-playground.yml`, called by `release.yml`;
 [infrastructure.md](docs/dev/infrastructure.md#playground)).

@@ -281,10 +281,10 @@ on to. The card selected - clicked last, or pointed at by a bar's
 step, whichever came last - stays lit with its passage while it is read,
 not only while pointed at, and its passage is brought into view in one
 eased stroke of a fixed length (`glideScroll`), with its block pulsed. A
-group draws one line, from its first passage. While there are notes, the notes bar (`NotesBar`) stands over the
-bottom of the document, above the review bar when both show: it steps
-through the notes in the order of the text, marks them all done, and picks
-some to ask about together in the AI panel. A card still pushed below its
+group draws one line, from its first passage. While there are notes, they
+share the review bar over the bottom of the document with the changes
+(`ReviewBars`): its arrows step through both in the order of the text; it
+marks the notes all done, and picks some to ask about together in the AI. A card still pushed below its
 passage draws a fainter line, at full strength while it is pointed at.
 
 **Streaming in place.** Such a rewrite is laid out sentence by sentence

@@ -15,7 +15,7 @@ The pieces:
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | A button that is only an icon              | `engine/controls/IconButton.tsx` (named, with the app's Tooltip)                                                                  |
 | A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading)       |
-| A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/controls/motion.css`)                                      |
+| A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/motion/motion.css`)                                      |
 | Closing it on a press outside or Escape    | `utils/hooks/useCloseOnOutsideClick.ts` (input methods spared; `inside` for a badge or the opener)                                |
 | Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `opensBelow`), or `useViewportClamp` for a point                                     |
 | A dialog                                   | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`, `showPrompt`); a dialog of your own takes the `.close-prompt` box |
@@ -27,7 +27,7 @@ The pieces:
 | A panel's top row                          | `engine/controls/PanelHeader.tsx`                                                                                                 |
 | A "?" that explains                        | `engine/controls/InfoTip.tsx`                                                                                                     |
 | A handle that resizes a panel              | `engine/controls/ResizeHandle.tsx`                                                                                                |
-| Dragging to reorder or move                | `engine/controls/pointer-drag.ts` (`trackDrag`, `reorderDrag`, `SLIDE`) - pointer events, never HTML drag and drop                |
+| Dragging to reorder or move                | `engine/drag/pointer-drag.ts` and `engine/drag/row.ts` (`trackDrag`, `reorderDrag`, `SLIDE`) - pointer events, never HTML drag and drop                |
 | A file's icon                              | `engine/controls/file-icons.tsx` (`fileIconFor`)                                                                                  |
 | A Mac-style rubber band past a scroll end  | `engine/controls/elastic-overscroll.ts`                                                                                           |
 | A long press on touch                      | `utils/hooks/useLongPress.ts`                                                                                                     |

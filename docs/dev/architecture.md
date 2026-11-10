@@ -145,7 +145,7 @@ flows are in `e2e/`.
 
 `src/plugins/` runs plugins in sandboxed frames and registers what they
 add into the app's own registries (`app/commands.ts`,
-`app/frame/sidebar-tabs.tsx`, `app/layout/store.ts`, the editor's extension
+`app/frame/sidebar-tabs.tsx`, `engine/layout/store.ts`, the editor's extension
 points). Its folders, by job:
 
 | `plugins/`       | Holds                                                                                                                                                                      |
