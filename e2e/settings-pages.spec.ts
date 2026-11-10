@@ -116,7 +116,9 @@ test("installed themes show as the store's do", async ({ page }) => {
 test("in too narrow a column, Settings asks for room instead of squeezing its rows", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 820, height: 700 });
+  // Narrow enough that, the sidebar stepped aside, Settings and the AI
+  // still share too little.
+  await page.setViewportSize({ width: 640, height: 700 });
   await openApp(page, { settings: { menuBarShown: false } });
   await emit(page, "menu-open-settings");
   await page.getByRole("button", { name: "Textus AI" }).first().click();

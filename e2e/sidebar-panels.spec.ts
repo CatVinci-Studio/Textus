@@ -62,3 +62,25 @@ test("Select All in the second island selects that island's document", async ({
   expect(selected).toContain("第二篇");
   expect(selected).not.toContain("第一篇");
 });
+
+test("too narrow for the sidebar and the islands at their least, the sidebar steps aside, and comes back with the room", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "# 第三章");
+  const sidebar = page.locator(".sidebar");
+  await emit(page, "menu-toggle-sidebar");
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  await page.setViewportSize({ width: 900, height: 760 });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  // Opened by hand in a narrow window, it stays.
+  await page.setViewportSize({ width: 900, height: 760 });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await emit(page, "menu-toggle-sidebar");
+  await page.waitForTimeout(300);
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+});

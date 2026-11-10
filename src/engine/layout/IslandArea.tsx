@@ -1,4 +1,4 @@
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { nodeAt, panesOf, type Pane } from "./tree";
 import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
@@ -7,7 +7,8 @@ import { SplitDivider } from "./SplitDivider";
 import { settleTabRows, useTabRows } from "./useTabRows";
 import type { Strings } from "../../i18n/strings";
 import { rectStyle, type Rect } from "../frame/rect";
-import { solveIslands, type IslandsLayout } from "../frame/solve";
+import { leastWidth, solveIslands, type IslandsLayout } from "../frame/solve";
+import { setIslandsNeed } from "../frame/islands-need";
 import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
@@ -106,6 +107,24 @@ export function IslandArea({
     return rects ? [{ key, rects, front: pane ? pane.front : front }] : [];
   });
   useIslandFrame(ref, room, area, solved, placed, settleTabRows);
+  // What the docks beside the area leave room for (useNarrowSidebar).
+  const need =
+    room &&
+    leastWidth({
+      root: layout?.root ?? {
+        kind: "pane",
+        id: keys[0],
+        tabs: [...tabs],
+        front,
+      },
+      gap: room.gap,
+      rowHeight: 0,
+      rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
+    }) +
+      2 * room.inset;
+  useEffect(() => {
+    if (need) setIslandsNeed(need);
+  }, [need]);
   return (
     <main
       ref={ref}

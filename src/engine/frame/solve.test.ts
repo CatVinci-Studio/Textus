@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { LayoutNode, Pane } from "../layout/tree";
-import { solveIslands, type IslandsInput } from "./solve";
+import { leastWidth, solveIslands, type IslandsInput } from "./solve";
 
 const pane = (id: string): Pane => ({
   kind: "pane",
@@ -94,5 +94,16 @@ describe("solveIslands", () => {
     const { islands } = solveIslands(input(root));
     expect(islands.get("ai")!.sheet.w).toBe(400);
     expect(islands.get("settings")!.sheet.w).toBe(792);
+  });
+
+  it("the least width: each island at its minimum, the gaps between", () => {
+    const root: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [pane("doc"), pane("ai")],
+      sizes: [0.5, 0.5],
+    };
+    expect(leastWidth(input(root))).toBe(360 + 8 + 320);
+    expect(leastWidth(input(null))).toBe(0);
   });
 });

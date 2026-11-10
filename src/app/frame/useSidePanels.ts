@@ -13,6 +13,7 @@ import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
 import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../../storage/ui-state";
+import { useNarrowSidebar } from "./useNarrowSidebar";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
@@ -73,6 +74,13 @@ export function useSidePanels(aiOn: boolean) {
   const sidebarWidth = useSidebarWidth(
     windowWidth,
     rail + (agentShown ? PANEL_FLOOR * scale : 0),
+  );
+  // An iPhone's or iPad's sidebar is a drawer over the page: never put away.
+  useNarrowSidebar(
+    panelOpen,
+    setPanelOpen,
+    isIOSApp ? Infinity : windowWidth - rail,
+    sidebarWidth.width,
   );
   const agentPanel = useAgentPanelState(
     windowWidth,

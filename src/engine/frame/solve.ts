@@ -61,6 +61,15 @@ export function solveIslands(input: IslandsInput): IslandsLayout {
   return out;
 }
 
+/** The least width the islands keep side by side: every island at its
+ *  minimum, the gaps between them. */
+export function leastWidth(
+  input: Omit<IslandsInput, "box" | "single">,
+): number {
+  if (!input.root) return 0;
+  return ruleOf(input as IslandsInput, input.root, "row", 1).min;
+}
+
 function island(input: IslandsInput, box: Rect, top: boolean): IslandRects {
   const h = Math.min(input.rowHeight, box.h);
   const row = h ? { x: box.x, y: box.y, w: box.w, h } : null;
