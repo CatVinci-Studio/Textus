@@ -81,9 +81,14 @@ export function webviewDocument(
     language: options.language,
     l10n: options.l10n,
   });
-  const head = [
+  // The policy first of all, ahead of any of the plugin's bytes: put after
+  // its <head>, a <head> in a comment or after a script kept it out of the
+  // page's head, where it applies.
+  const policy = [
     "<meta charset='utf-8'>",
     `<meta http-equiv="Content-Security-Policy" content="${webviewCsp(options.frameHosts)}">`,
+  ].join("\n");
+  const head = [
     `<style id="textus-theme">${inElement(options.themeCss, "style")}</style>`,
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
     `<style id="textus-shared">${inElement(SHARED_CSS, "style")}</style>`,
@@ -94,11 +99,17 @@ export function webviewDocument(
   // Into the plugin's own <head> if it has one, so its <meta> and styles
   // come after ours; else ahead of everything.
   const at = /<head(\s[^>]*)?>/i.exec(html);
-  const page = at
+  const inner = at
     ? html.slice(0, at.index + at[0].length) +
       head +
       html.slice(at.index + at[0].length)
-    : `<!doctype html><html><head>${head}</head><body>${html}</body></html>`;
+    : `<html><head>${head}</head><body>${html}</body></html>`;
+  // After a doctype of its own (before it, the page would lose standards
+  // mode); else one of ours.
+  const doctype = /^\s*<!doctype[^>]*>/i.exec(inner);
+  const page = doctype
+    ? doctype[0] + policy + inner.slice(doctype[0].length)
+    : `<!doctype html>${policy}${inner}`;
   // The window's platform too, so the shared controls take the phone's
   // sizes on a phone.
   const { windowChrome, platform } = document.documentElement.dataset;

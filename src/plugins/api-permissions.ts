@@ -49,6 +49,7 @@ const API_PERMISSIONS: readonly {
       "files.find",
       "files.stat",
       "files.read",
+      "files.frontmatterGet",
       "metadata.get",
       "metadata.all",
       "metadata.backlinks",

@@ -29,6 +29,31 @@ fn running(state: &PluginsState, id: &str) -> Result<(), String> {
     }
 }
 
+/// `path` resolved inside `root` for a change: as [`inside`], and in no
+/// hidden folder or file of it (.git's hooks, an editor's settings), which a
+/// plugin's write could turn into code that runs. The folder's own .textus
+/// is the user's writing (instructions, library, memory, skills), which a
+/// sync carries; nothing hidden inside it.
+pub(crate) fn writable(root: &Path, path: &Path) -> Result<PathBuf, String> {
+    let resolved = inside(root, path)?;
+    let base = std::fs::canonicalize(root).map_err(|e| e.to_string())?;
+    let hidden = resolved
+        .strip_prefix(&base)
+        .map(|rel| {
+            rel.components().enumerate().any(|(i, c)| {
+                matches!(c, Component::Normal(n)
+                    if n.to_string_lossy().starts_with('.') && !(i == 0 && n == ".textus"))
+            })
+        })
+        .unwrap_or(true);
+    if hidden {
+        return Err(
+            "Files and folders whose names start with \".\" aren't changed by plugins.".to_string(),
+        );
+    }
+    Ok(resolved)
+}
+
 /// `path` resolved inside `root`: no `..`, and still under `root` after
 /// following links in the part that exists; the rest is kept as named.
 pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
@@ -216,7 +241,7 @@ pub async fn plugin_fs_write(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = writable(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     let bytes = if base64.unwrap_or(false) {
         use base64::{engine::general_purpose::STANDARD, Engine};
@@ -249,8 +274,8 @@ pub async fn plugin_fs_rename(
         return Err(refused(&id, "files.write"));
     }
     let root = Path::new(&root);
-    let from = inside(root, Path::new(&from))?;
-    let to = inside(root, Path::new(&to))?;
+    let from = writable(root, Path::new(&from))?;
+    let to = writable(root, Path::new(&to))?;
     require_not_app_data(&app, &from)?;
     require_not_app_data(&app, &to)?;
     if to.exists() {
@@ -279,7 +304,7 @@ pub async fn plugin_fs_trash(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = writable(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
         return Err("The folder itself can't be moved to the Trash.".into());
@@ -310,7 +335,7 @@ pub async fn plugin_fs_mkdir(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = writable(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     tokio::fs::create_dir_all(&path)
         .await

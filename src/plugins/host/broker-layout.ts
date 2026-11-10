@@ -1,3 +1,4 @@
+import { isInside } from "../../utils/path";
 import { emitToThisWindow } from "../../platform/menu-events";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
@@ -68,8 +69,14 @@ export function layoutHandlers(p: PluginScope) {
   return {
     "layout.open": ({ location, where, asDocument }: Params) => {
       const place = locationOf(location);
-      if (!webviewsOf(p.id).some((view) => view.resource === place.path))
+      // Its own view's file, or a file of the folder it may read: never one
+      // elsewhere on the disk.
+      if (!webviewsOf(p.id).some((view) => view.resource === place.path)) {
         p.need("files.read");
+        const root = p.root();
+        if (place.path !== root && !isInside(place.path, root))
+          throw new Error("Only files inside the folder open.");
+      }
       const { path, ...rest } = place;
       access().openFile(path, {
         place: rest,

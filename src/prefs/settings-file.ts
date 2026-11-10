@@ -140,11 +140,27 @@ export function settingsFromFile(
   const mcpServers = Array.isArray(incoming.mcpServers)
     ? incoming.mcpServers.map((server: McpServer) => {
         const mine = current.mcpServers.find((m) => m.id === server.id);
-        return {
-          ...server,
-          env: filled(server.env ?? {}, mine?.env),
-          headers: filled(server.headers ?? {}, mine?.headers),
-        };
+        // The user's own server, as they set it up: its secrets filled in.
+        // Anything else a file brings starts nothing and gets no secret of
+        // theirs until they turn it on themselves - a shared file could
+        // name any program or address.
+        const same =
+          !!mine &&
+          mine.command === server.command &&
+          mine.url === server.url &&
+          JSON.stringify(mine.args) === JSON.stringify(server.args ?? []);
+        return same
+          ? {
+              ...server,
+              env: filled(server.env ?? {}, mine.env),
+              headers: filled(server.headers ?? {}, mine.headers),
+            }
+          : {
+              ...server,
+              enabled: false,
+              env: blanked(server.env ?? {}),
+              headers: blanked(server.headers ?? {}),
+            };
       })
     : current.mcpServers;
   const userThemes = mergedThemes(
@@ -167,6 +183,9 @@ export function settingsFromFile(
       ...current,
       ...incoming,
       mcpServers,
+      // Export's extra pandoc options stay this device's: a shared file's
+      // could run a filter program on the next export.
+      pandocArgs: current.pandocArgs,
       userThemes,
       themeId,
       ...kept,
