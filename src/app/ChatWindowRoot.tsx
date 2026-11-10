@@ -7,7 +7,5 @@ import "./islands/agent-tabs.css";
 /** The detached chat window: one AI island under its row of conversations,
  *  the docked panel's tabs (AgentTabs), its row's insets as the editor's rows'. */
 export function ChatWindowRoot() {
-  return (
-    <ChatWindowApp tabs={(props) => <AgentTabs {...props} />} />
-  );
+  return <ChatWindowApp tabs={(props) => <AgentTabs {...props} />} />;
 }

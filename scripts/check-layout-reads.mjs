@@ -26,7 +26,7 @@ const ALLOWED = {
   "src/engine/frame/useIslandRoom.ts":
     "the room the area has: the solver's one input from the page",
   "src/engine/controls/tabs/tab-room.ts":
-    "a tab's measures as its stylesheet draws them (a probe), not where it is",
+    "a tab's measures as its stylesheet draws them (a probe), and the row's width left after its own controls (+, the AI's buttons), which their stylesheet sizes",
   "src/engine/layout/row-insets.ts":
     "the window bar's own controls and the layout's radii, outside the frame",
   "src/app/frame/SidebarTabBar.tsx":
