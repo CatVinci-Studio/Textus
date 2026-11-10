@@ -8,33 +8,6 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	/**
-	 *  The workspace as the frontend needs it: skills, the resolved project
-	 *  folder, style profile and library. Loaded fresh each time so edits show.
-	 */
-	load_agent_workspace: (docPath: string | null, rootOverride: string | null) => __TAURI_INVOKE<AgentWorkspace_Serialize>("load_agent_workspace", { docPath, rootOverride }),
-	/**
-	 *  Folder picker behind "Choose project folder…". Desktop only: the dialog
-	 *  plugin has no folder picker on iOS.
-	 */
-	pick_workspace_root: () => __TAURI_INVOKE<string | null>("pick_workspace_root"),
-	/**
-	 *  Creates the global config folder (with a starter agent.md and skills/) and
-	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
-	 */
-	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
-	/**
-	 *  Creates the global config folder if needed and returns the agent.md path,
-	 *  which the frontend opens in the editor itself.
-	 */
-	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
-	/**  The project's text files, for the composer's @-mention picker. */
-	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
-	/**
-	 *  One project file's text, for an @-mention, under the same safety rules as
-	 *  the agent's read_file.
-	 */
-	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
 	/**  The changes `ids` of `conversation`, as kept. */
 	ai_file_changes: (conversation: string, ids: string[]) => __TAURI_INVOKE<FileChange_Serialize[]>("ai_file_changes", { conversation, ids }),
 	/**
@@ -48,8 +21,6 @@ export const commands = {
 	 *  returns its absolute path.
 	 */
 	ensure_project_file: (docPath: string | null, workspaceRoot: string | null, rel: string, template: string) => __TAURI_INVOKE<string>("ensure_project_file", { docPath, workspaceRoot, rel, template }),
-	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
-	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
 	/**
 	 *  "Import references…" and "Import a reference folder…": the picked files
 	 *  (zips unpacked) or folder copied into the project's references/ folder,
@@ -62,6 +33,35 @@ export const commands = {
 	 *  frontend opens for review.
 	 */
 	learn_style: (provider: string, model: string | null, docPath: string | null, workspaceRoot: string | null, files: string[]) => __TAURI_INVOKE<string>("learn_style", { provider, model, docPath, workspaceRoot, files }),
+	/**  The project's text files, for the composer's @-mention picker. */
+	list_project_files: (docPath: string | null, workspaceRoot: string | null) => __TAURI_INVOKE<string[]>("list_project_files", { docPath, workspaceRoot }),
+	/**  Multi-select picker for the writing samples "Learn my style" analyses. */
+	pick_text_files: () => __TAURI_INVOKE<string[]>("pick_text_files"),
+	/**
+	 *  One project file's text, for an @-mention, under the same safety rules as
+	 *  the agent's read_file.
+	 */
+	read_project_file: (docPath: string | null, workspaceRoot: string | null, path: string) => __TAURI_INVOKE<string>("read_project_file", { docPath, workspaceRoot, path }),
+	/**
+	 *  Creates the global config folder if needed and returns the agent.md path,
+	 *  which the frontend opens in the editor itself.
+	 */
+	ensure_global_agent_md: (template: string) => __TAURI_INVOKE<string>("ensure_global_agent_md", { template }),
+	/**
+	 *  The workspace as the frontend needs it: skills, the resolved project
+	 *  folder, style profile and library. Loaded fresh each time so edits show.
+	 */
+	load_agent_workspace: (docPath: string | null, rootOverride: string | null) => __TAURI_INVOKE<AgentWorkspace_Serialize>("load_agent_workspace", { docPath, rootOverride }),
+	/**
+	 *  Creates the global config folder (with a starter agent.md and skills/) and
+	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
+	 */
+	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
+	/**
+	 *  Folder picker behind "Choose project folder…". Desktop only: the dialog
+	 *  plugin has no folder picker on iOS.
+	 */
+	pick_workspace_root: () => __TAURI_INVOKE<string | null>("pick_workspace_root"),
 };
 
 /* Types */

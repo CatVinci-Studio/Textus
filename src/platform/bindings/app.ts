@@ -47,7 +47,8 @@ export const commands = {
 	/**
 	 *  The floating tab. Once a tab is in flight its document is handed to Rust and
 	 *  its source is gone (destroy is what macOS honors mid-drag). This thread polls
-	 *  the cursor until release: over a tab row the tab lands there, else in a new window.
+	 *  the cursor until release: over a tab row the tab lands there, over a
+	 *  window's documents it opens split there, else in a new window.
 	 */
 	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource }),
 	/**

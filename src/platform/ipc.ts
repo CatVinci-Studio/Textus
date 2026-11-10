@@ -250,29 +250,6 @@ export const ai = {
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),
-  /** The writing conventions setting's allowed values. */
-  writingConventionsOptions: () => command("writing_conventions_options"),
-  /** The profile a document follows, and each language's in its project. */
-  writingConventionsEffective: (
-    docPath: string | null,
-    workspaceRoot: string | null,
-    document: string | null = null,
-  ) =>
-    command("writing_conventions_effective", docPath, workspaceRoot, document),
-  /** Checks a document's writing conventions offline (no AI provider). */
-  checkConventions: (
-    document: string,
-    docPath: string | null,
-    workspaceRoot: string | null,
-    strictness: string | null = null,
-  ) =>
-    command(
-      "conventions_check_document",
-      document,
-      docPath,
-      workspaceRoot,
-      strictness,
-    ),
   /** Exact platform counts: "x_weighted", "bluesky", "wechat_title"... */
   measureText: (text: string, metric: string) =>
     command("measure_text", text, metric),
