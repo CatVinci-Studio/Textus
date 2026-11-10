@@ -11,7 +11,10 @@ const TYPED_IN = ".ProseMirror, .cm-content, textarea";
 function focusTab(tabId: string, tries = 10): void {
   requestAnimationFrame(() => {
     const id = CSS.escape(tabId);
-    const view = document.querySelector(`[data-tab-id="${id}"]`);
+    // The tab's view, not its corner's readout, which carries its id too.
+    const view = document.querySelector(
+      `[data-active-tab][data-tab-id="${id}"]`,
+    );
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
     if (target?.getClientRects().length) target.focus({ preventScroll: true });
     else if (tries > 0) focusTab(tabId, tries - 1);

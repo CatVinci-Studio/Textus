@@ -34,6 +34,18 @@ test("Ctrl held shows the islands' numbers and a number goes to that island; wit
   await page.keyboard.up("Control");
   await expect(numbers).toHaveCount(0);
   await expect(page.locator(".ProseMirror h2")).toHaveCount(0);
+  // Back to the first, which has words and so its corner's readout: the
+  // focus still goes into its text.
+  await page.keyboard.down("Control");
+  await page.waitForTimeout(600);
+  await page.keyboard.press("1");
+  await page.keyboard.up("Control");
+  await expect(editors.first()).toBeFocused();
+  await page.keyboard.down("Control");
+  await page.waitForTimeout(600);
+  await page.keyboard.press("2");
+  await page.keyboard.up("Control");
+  await expect(editors.last()).toBeFocused();
 
   // What is typed next lands there; pressed at once, Ctrl+2 is a heading.
   await page.keyboard.type("第二篇");
