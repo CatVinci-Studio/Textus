@@ -67,6 +67,12 @@ export function conversationScope(
 const OPEN = "textus-ai-open:";
 const openListeners = new Set<() => void>();
 const openCache = new Map<string, string[]>();
+// Another window's change: never this window's stale copy written back.
+if (typeof window !== "undefined")
+  window.addEventListener("storage", (e) => {
+    if (e.key === null) openCache.clear();
+    else if (e.key.startsWith(OPEN)) openCache.delete(e.key.slice(OPEN.length));
+  });
 
 export function openConversations(scope: string): string[] {
   const cached = openCache.get(scope);
