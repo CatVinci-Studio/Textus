@@ -35,8 +35,13 @@ export function play(
     easing = "--ease-settle",
     timingFor,
     prepare,
+    resizes,
   }: Timing & {
     timingFor?: (el: Element) => Timing | undefined;
+    /** Ones that change size as they move and are only a box (an island's
+     *  sheet): their size eases too, on the same clock - moved alone, an
+     *  edge jumped while the rest slid. */
+    resizes?: (el: Element) => boolean;
     /** Lays out what follows the change (measured lengths set as styles)
      *  before the new places are read: settled later, it jumped. */
     prepare?: () => void;
@@ -50,30 +55,49 @@ export function play(
     for (const running of el.getAnimations?.() ?? [])
       if (running.id === FLIP_ID) running.cancel();
   prepare?.();
-  const moves: { el: Element; dx: number; dy: number }[] = [];
+  type Move = {
+    el: Element;
+    dx: number;
+    dy: number;
+    size?: [DOMRect, DOMRect];
+  };
+  const moves: Move[] = [];
   for (const el of targets) {
     const was = before.get(el)!;
     const now = el.getBoundingClientRect();
     const dx = was.left - now.left;
     const dy = was.top - now.top;
-    if (Math.abs(dx) >= 0.5 || Math.abs(dy) >= 0.5) moves.push({ el, dx, dy });
+    const resized =
+      !!resizes?.(el) &&
+      (Math.abs(was.width - now.width) >= 0.5 ||
+        Math.abs(was.height - now.height) >= 0.5);
+    if (resized || Math.abs(dx) >= 0.5 || Math.abs(dy) >= 0.5)
+      moves.push({ el, dx, dy, size: resized ? [was, now] : undefined });
   }
   // One inside another that slides too moves with it: only its own share
   // is its to play, or it would travel twice.
   const shift = new Map(moves.map((m) => [m.el, m]));
-  const own = moves.map(({ el, dx, dy }) => {
-    for (let up = el.parentElement; up; up = up.parentElement) {
+  const own = moves.map((move) => {
+    for (let up = move.el.parentElement; up; up = up.parentElement) {
       const outer = shift.get(up);
-      if (outer) return { el, dx: dx - outer.dx, dy: dy - outer.dy };
+      if (outer)
+        return { ...move, dx: move.dx - outer.dx, dy: move.dy - outer.dy };
     }
-    return { el, dx, dy };
+    return move;
   });
-  for (const { el, dx, dy } of own) {
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+  const box = (r: DOMRect) => ({
+    width: `${r.width}px`,
+    height: `${r.height}px`,
+  });
+  for (const { el, dx, dy, size } of own) {
+    if (!size && Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
     const timing = timingFor?.(el);
     animate(
       el,
-      [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
+      [
+        { transform: `translate(${dx}px, ${dy}px)`, ...(size && box(size[0])) },
+        { transform: "none", ...(size && box(size[1])) },
+      ],
       {
         duration: timing?.duration ?? duration,
         easing: timing?.easing ?? easing,
@@ -169,6 +193,8 @@ export class FlipOnChange extends Component<{
   still?: () => boolean;
   /** See play's `prepare`. */
   prepare?: () => void;
+  /** See play's `resizes`. */
+  resizes?: (el: Element) => boolean;
 }> {
   getSnapshotBeforeUpdate(previous: { watch: unknown }): Snapshot | null {
     if (
@@ -184,8 +210,8 @@ export class FlipOnChange extends Component<{
     if (!before) return;
     // After the commit's other layout effects (a parent's may be what moves the
     // layout), but before the frame is painted.
-    const { duration, easing, prepare } = this.props;
-    queueMicrotask(() => play(before, { duration, easing, prepare }));
+    const { duration, easing, prepare, resizes } = this.props;
+    queueMicrotask(() => play(before, { duration, easing, prepare, resizes }));
   }
 
   render(): ReactNode {

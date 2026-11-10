@@ -24,6 +24,7 @@ import { platformName } from "../platform/window-chrome";
 import { Presence } from "../engine/motion/usePresence";
 import { FlipOnChange } from "../engine/motion/flip";
 import { settleTabRows } from "../engine/layout/useTabRows";
+import { isIslandSheet } from "../engine/layout/IslandMotion";
 import { AgentPanelProvider } from "../ai/chat/panel/agent-panel";
 import { aiFeatures } from "../settings/textus-ai";
 import { useWindowShell } from "./useWindowShell";
@@ -161,6 +162,7 @@ function App() {
           duration="--dur-settle"
           easing="--ease-settle"
           prepare={settleTabRows}
+          resizes={isIslandSheet}
         />
         <div
           className="app-shell"

@@ -30,6 +30,11 @@ export function IslandMotion({
       // A seam dragged: the islands follow the pointer 1:1, a slide lags.
       still={() => !!document.querySelector(".tx-grip[data-gripped]")}
       prepare={settleTabRows}
+      resizes={isIslandSheet}
     />
   );
 }
+
+/** An island's sheet: a box, no text in it to reflow - its size may ease
+ *  with its slide. */
+export const isIslandSheet = (el: Element) => el.matches("[data-island]");
