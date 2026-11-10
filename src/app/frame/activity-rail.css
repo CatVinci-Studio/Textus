@@ -155,3 +155,19 @@
 :root[data-side-to-top] .app-shell > .sidebar::before {
   top: 0;
 }
+
+/* Under the line: the plugins' icons, scrolling between the top group and
+   Settings when there are more than fit; never pushing either away. */
+.activity-rail-scroll {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.activity-rail-scroll::-webkit-scrollbar {
+  display: none;
+}
+/* Each icon its full size: the group scrolls, its icons don't shrink. */
+.activity-rail-group > * {
+  flex-shrink: 0;
+}

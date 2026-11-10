@@ -47,6 +47,22 @@ export function ActivityRail({
     (tab) => !tab.railFoot && (!hidden.has(tab.id) || tab.id === shownId),
   );
   const settingsOn = sidebarOpen && shownId === "settings";
+  // Textus's own, then the plugins' the user pinned beside them; the rest
+  // under the line, scrolling when they don't all fit.
+  const pinned = settings.activityRailPinned;
+  const top = [
+    ...shownTabs.filter((tab) => isOwnTab(tab.id)),
+    ...pinned.flatMap((id) => shownTabs.filter((tab) => tab.id === id)),
+  ];
+  const rest = shownTabs.filter(
+    (tab) => !isOwnTab(tab.id) && !pinned.includes(tab.id),
+  );
+  const pin = (id: string, on: boolean) =>
+    setSettings({
+      activityRailPinned: on
+        ? [...pinned.filter((p) => p !== id), id]
+        : pinned.filter((p) => p !== id),
+    });
   const menuItems: ContextMenuEntry[] = [
     {
       label: t.activityRailHide,
@@ -76,16 +92,21 @@ export function ActivityRail({
       }}
     >
       <RailGroup
-        tabs={shownTabs.filter((tab) => isOwnTab(tab.id))}
+        tabs={top}
         on={(id) => sidebarOpen && shownId === id}
+        // A pinned plugin's icon let go below the line goes back under it.
+        onDropBeyond={(id, side) =>
+          side === "after" && pinned.includes(id) && pin(id, false)
+        }
         {...{ onSelect, onCloseSidebar, onMove, t }}
       />
-      {shownTabs.some((tab) => !isOwnTab(tab.id)) && (
-        <hr className="activity-rail-divider" />
-      )}
+      {rest.length > 0 && <hr className="activity-rail-divider" />}
       <RailGroup
-        tabs={shownTabs.filter((tab) => !isOwnTab(tab.id))}
+        tabs={rest}
+        scrolls
         on={(id) => sidebarOpen && shownId === id}
+        // Let go above the line: pinned among Textus's own.
+        onDropBeyond={(id, side) => side === "before" && pin(id, true)}
         {...{ onSelect, onCloseSidebar, onMove, t }}
       />
       {/* Settings at the column's foot, out of the tabs' order. */}
@@ -120,11 +141,14 @@ export function ActivityRail({
   );
 }
 
-/** One group of the rail's icons - Textus's own, or the ones plugins add:
- *  dragged along it, the others make way; a drag never leaves its group. */
+/** One group of the rail's icons - the top's, or the plugins' under the
+ *  line: dragged along it, the others make way; let go past its ends,
+ *  `onDropBeyond` hears which way. `scrolls`: the middle that scrolls. */
 function RailGroup({
   tabs,
   on,
+  scrolls = false,
+  onDropBeyond,
   onSelect,
   onCloseSidebar,
   onMove,
@@ -132,6 +156,8 @@ function RailGroup({
 }: {
   tabs: SidebarTabDef[];
   on: (id: string) => boolean;
+  scrolls?: boolean;
+  onDropBeyond: (id: string, side: "before" | "after") => void;
   onSelect: (id: string) => void;
   onCloseSidebar: () => void;
   onMove: (id: string, target: string) => void;
@@ -140,7 +166,10 @@ function RailGroup({
   const ref = useRef<HTMLDivElement>(null);
   if (!tabs.length) return null;
   return (
-    <div className="activity-rail-group" ref={ref}>
+    <div
+      className={`activity-rail-group${scrolls ? " activity-rail-scroll" : ""}`}
+      ref={ref}
+    >
       {tabs.map(({ id, label, Icon }) => (
         <Tooltip key={id} text={label(t)} side="right">
           <button
@@ -153,6 +182,17 @@ function RailGroup({
             onPointerDown={(e) => {
               const group = ref.current;
               if (!group || e.pointerType === "touch") return;
+              const startY = e.clientY;
+              window.addEventListener(
+                "pointerup",
+                (up) => {
+                  if (Math.abs(up.clientY - startY) < 8) return;
+                  const box = group.getBoundingClientRect();
+                  if (up.clientY < box.top) onDropBeyond(id, "before");
+                  else if (up.clientY > box.bottom) onDropBeyond(id, "after");
+                },
+                { once: true },
+              );
               reorderDrag(e, {
                 container: group,
                 id,

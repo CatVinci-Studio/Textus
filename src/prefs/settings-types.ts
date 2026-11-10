@@ -181,6 +181,9 @@ export interface Settings {
   layout: "islands" | "classic";
   /// Sidebar tabs the user took off the rail, by id.
   activityRailHidden: string[];
+  /// Plugins' sidebar tabs the user pinned among Textus's own at the rail's
+  /// top, by id, in order.
+  activityRailPinned: string[];
   /// ![[note]] embeds drawn in full, or folded to a card each until opened.
   embedDisplay: EmbedDisplay;
   /// Typing "*", "**", "~~", "==" or "`" puts the closing mark in at once. Off,
@@ -332,6 +335,7 @@ export const DEFAULT_SETTINGS: Settings = {
   activityRail: true,
   layout: "islands",
   activityRailHidden: [],
+  activityRailPinned: [],
   embedDisplay: "expand",
   autoCloseMarks: true,
   autoCloseBrackets: true,
