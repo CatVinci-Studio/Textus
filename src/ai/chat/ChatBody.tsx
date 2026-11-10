@@ -13,6 +13,7 @@ import type {
 import { ChatMessages } from "./ChatMessages";
 import type { ApplySuggestion } from "./CommentCard";
 import { afterFileChanges } from "./file-changes";
+import { loadSettings } from "../../prefs/settings-store";
 import { ErrorRow } from "./ErrorRow";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 import { ChatComposer, type ChatComposerHandle } from "./ChatComposer";
@@ -126,7 +127,11 @@ export function ChatBody({
   function afterSend(newTurns: AgentTurn[] | undefined) {
     const proposals = proposalsFromTurns(newTurns ?? []);
     if (proposals.length > 0) onProposals(proposals);
-    void afterFileChanges(conversation.conversationId, newTurns ?? []);
+    void afterFileChanges(
+      conversation.conversationId,
+      newTurns ?? [],
+      loadSettings().aiChangeMode === "revision",
+    );
     follow.stick();
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({

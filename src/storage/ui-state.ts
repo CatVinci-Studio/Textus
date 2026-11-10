@@ -50,6 +50,9 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
+  /** Files Textus AI left something in, by path: revisions waiting, a file
+   *  it made waiting to be kept, a file it wrote straight in. */
+  aiFileMarks: Record<string, AiFileMark>;
   /** The note embeds folded, by the document they are in and what they
    *  show, oldest first. */
   foldedEmbeds: string[];
@@ -99,6 +102,16 @@ export interface ThemeChromeCache {
   sourceLength: number;
   /** The stylesheet applyThemeChrome applied. */
   css: string;
+}
+
+/** What Textus AI left in one file. */
+export interface AiFileMark {
+  /** Revisions waiting for the writer, there or still to place. */
+  pending?: number;
+  /** Made by it, waiting to be kept. */
+  created?: boolean;
+  /** Written straight in, its text before kept for the marks. */
+  changed?: boolean;
 }
 
 export type UiStateKey = keyof UiState;
@@ -204,6 +217,11 @@ const LOCAL: {
   },
   pluginCardAnswers: {
     key: "textus-plugin-card-answers",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
+  aiFileMarks: {
+    key: "textus-ai-file-marks",
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },

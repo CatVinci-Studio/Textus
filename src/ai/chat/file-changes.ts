@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import type { AgentTurn } from "../types";
+import { keepAsCreated, keepAsRevisions } from "../revision/file-revisions";
 
 /**
  * General mode's changes to the folder's other files (write_file,
@@ -107,15 +108,26 @@ export function filesChanged(
   publish();
 }
 
-/** After a reply: the files its changes wrote. */
+/** After a reply: the files its changes wrote, and with changes as
+ *  revisions, those kept for their files and the files it made. */
 export async function afterFileChanges(
   conversation: string,
   turns: readonly AgentTurn[],
+  revisions: boolean,
 ) {
   const ids = turns.flatMap((t) => changeOf(t)?.change ?? []);
   if (ids.length === 0) return;
   try {
-    filesChanged(await ai.fileChanges(conversation, ids));
+    const changes = await ai.fileChanges(conversation, ids);
+    for (const { id, file, before, after, applied } of changes) {
+      if (!applied && before != null)
+        await keepAsRevisions({ id, file, conversation, before, after });
+      else if (revisions && applied && before == null)
+        await keepAsCreated({ id, file, conversation });
+    }
+    filesChanged(
+      changes.filter((c) => c.applied && !(revisions && c.before == null)),
+    );
   } catch {
     // The card says what it can; the marks are a convenience.
   }

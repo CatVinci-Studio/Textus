@@ -9,6 +9,8 @@ import { keptFrom, picturesOf, readKept, restorable } from "./kept-proposals";
 import type { SelectionTarget } from "./pending-place";
 import type { ProposalToPlace } from "./pending-place";
 import type { PendingPreview } from "./pending-types";
+import { setAiFileMark } from "./file-revisions";
+import { useIncomingRevisions } from "./useIncomingRevisions";
 
 /** How long the proposals settle before they are written down: a review
  *  bar run through them writes once at the end, not at every step. */
@@ -91,6 +93,8 @@ export function useKeptProposals({
       const json = kept ? JSON.stringify(kept) : null;
       if (json === written.current) return;
       written.current = json;
+      // The tree and its tab say how many wait here.
+      setAiFileMark(filePath, { pending: kept?.proposals.length ?? 0 });
       void ai
         .keptProposalsWrite(filePath, workspaceRoot, kept, picturesOf(kept))
         .catch(() => undefined);
@@ -98,4 +102,7 @@ export function useKeptProposals({
     const timer = window.setTimeout(write, WRITE_AFTER_MS);
     return () => window.clearTimeout(timer);
   }, [previews, pictures, filePath, workspaceRoot, run]);
+
+  // What Textus AI changed in it while it wasn't open, placed here too.
+  useIncomingRevisions({ run, filePath, showPreviews });
 }
