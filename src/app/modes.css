@@ -6,8 +6,9 @@
 }
 
 /* Zen mode: only the text. The window bar stays as an invisible drag strip
-   that shows on hover. Chrome leaves the layout at once and fades where it
-   was; visibility, switched after the fade, takes it out of clicks. */
+   that shows on hover; the sidebar goes as a close does (App). What is left
+   of the chrome fades; visibility, switched after the fade, takes it out
+   of clicks. */
 .tab-bar,
 .agent-panel,
 .window-bar-status,
@@ -17,7 +18,6 @@
     visibility 0s;
 }
 
-.zen .sidebar,
 .zen .agent-panel,
 .zen .tab-bar,
 .zen .window-bar-status,
@@ -28,15 +28,6 @@
   transition:
     opacity var(--dur-slow) var(--ease-in-out),
     visibility 0s linear var(--dur-slow);
-}
-
-.zen .tab-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1;
-  background: var(--ui-surface);
 }
 
 /* A docked panel (the narrow and phone layouts already lie over the

@@ -42,8 +42,7 @@ body {
   grid-template-rows: var(--window-bar-height) minmax(0, 1fr);
 }
 
-:root:not([data-window-chrome="mobile"], .zen)
-  .app-shell:has(> .sidebar:not(.sidebar-collapsed)) {
+:root:not([data-window-chrome="mobile"]) .app-shell[data-sidebar="open"] {
   --sidebar-column: var(--sidebar-width, 240px);
 }
 

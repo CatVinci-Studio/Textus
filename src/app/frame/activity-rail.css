@@ -42,7 +42,7 @@
   -webkit-user-select: none;
 }
 
-.app-shell:has(> .sidebar:not(.sidebar-collapsed)) .activity-rail {
+.app-shell[data-sidebar="open"] .activity-rail {
   border-right-color: transparent;
 }
 

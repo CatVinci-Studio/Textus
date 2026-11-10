@@ -95,6 +95,8 @@ function App() {
     docs;
   const { moveTabToNewWindow, toggleReadOnly } = docs;
   const { toggleSourceMode, zenMode, setZenMode } = docs;
+  // Zen puts the sidebar away as a close does, on the window's clock.
+  const sidebarShown = panelOpen && !zenMode;
   const { menuChecks, entryMoved, skillFilesDeleted } = wiring;
   const { documentsOpen, setDocumentsOpen, openFromDocuments } = wiring;
   const { documentRenamed, documentDeleted } = wiring;
@@ -170,6 +172,8 @@ function App() {
           // none.
           data-layout={settings.layout}
           data-tabs={tabRow}
+          // Its column open: the grid and the rail's edge follow the model.
+          data-sidebar={sidebarShown ? "open" : undefined}
           style={
             {
               // The sidebar's dragged width; an iPad's sidebar has no handle.
@@ -195,7 +199,7 @@ function App() {
             onToggleReadOnly={() => toggleReadOnly()}
           />
           <Sidebar
-            open={panelOpen}
+            open={sidebarShown}
             presence={sidebarPresence}
             closing={sidebarClosing}
             mode={panelMode}
