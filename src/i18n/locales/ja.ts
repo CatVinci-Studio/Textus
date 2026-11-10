@@ -336,6 +336,11 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   aiChangeModeDirect: "直接書き込む",
   aiChangeModeHint:
     "修正：開いている文書でもフォルダ内の別のファイルでも、変更はそのファイルで承認か却下を待ち、Textus AI が作ったファイルは残すかどうかを待ちます。直接書き込む：変更はすぐ反映され、印が残り、返信ごとに元に戻せます。",
+  aiPendingCount: { other: "確認待ち {n} 件" },
+  aiCreatedPending: "新規、残しますか？",
+  aiFileConflict: "その後変更されたため、修正は入れていません",
+  aiKeepFile: "残す",
+  aiDiscardFile: "破棄",
   filesChangedTitle: "変更したファイル",
   filesKeptTitle: "適用待ちの変更",
   filesNew: "新規",

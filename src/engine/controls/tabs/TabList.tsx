@@ -28,7 +28,7 @@ export function useTabFit(
 ): (TabFit & { available: number; between: number }) | null {
   const [room, setRoom] = useState<TabRoom | null>(null);
   // What the row's measures are read from: a tab, and each part one has.
-  const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}`;
+  const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}${tabs.some((tab) => tab.waiting)}`;
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;

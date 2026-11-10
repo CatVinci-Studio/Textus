@@ -62,6 +62,13 @@ export interface ChatMessagesLabels
   filesNew: string;
   filesUndo: string;
   filesApply: string;
+  /** A file's revisions waiting, one whose change met other edits, a file
+   *  made waiting to be kept, and keeping or discarding it. */
+  filesWaiting: (n: number) => string;
+  filesConflict: string;
+  filesCreated: string;
+  filesKeep: string;
+  filesDiscard: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
   commentCount: string;
   commentGroupMore: string;

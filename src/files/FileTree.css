@@ -257,6 +257,16 @@
   color: var(--ui-accent-text);
 }
 
+/* What waits there for the writer: after the name, quiet, never cut. */
+.tree-ai-waiting {
+  flex: none;
+  margin-left: auto;
+  padding-left: var(--space-2);
+  font-size: var(--text-footnote);
+  color: var(--ui-accent-text);
+  white-space: nowrap;
+}
+
 /* A heading's level before its words: small, quiet, the same width for
    H1 to H6 so the words line up within a level. */
 .outline-level {

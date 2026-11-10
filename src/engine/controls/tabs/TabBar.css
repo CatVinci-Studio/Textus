@@ -121,6 +121,22 @@
   height: 12px;
 }
 
+/* How many of Textus AI's revisions wait in it: a small count after its
+   name, in the accent its name takes. */
+.tab-pill-waiting {
+  flex: none;
+  min-width: 1.4em;
+  padding: 0 4px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+  color: var(--ui-accent-text);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: center;
+}
+
 /* At the pill's end: a short name's tab is wider than its name, and a
    click in its middle opens it, never closes it. */
 .tab-pill-close {

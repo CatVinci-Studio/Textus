@@ -37,6 +37,8 @@ interface TabBarProps {
     all: string;
     /** A tab in reading mode's padlock. */
     readOnly?: string;
+    /** A tab's count of Textus AI's revisions waiting in it. */
+    waiting?: (n: number) => string;
   };
   /** A tab's padlock clicked: its reading mode off. */
   onUnlock?: (id: string) => void;

@@ -2,6 +2,8 @@
 // a file.
 
 import { useChangedFiles } from "../ai/chat/file-changes";
+import { useAiFileMarks } from "../ai/revision/file-revisions";
+import { plural } from "../i18n/plural";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
 import {
@@ -202,11 +204,19 @@ function FileNode({
   active: boolean;
   onSelect: (path: string, how?: FileOpenHow) => void;
 }) {
-  const { t } = useSettings();
+  const { t, settings } = useSettings();
+  const lang = settings.language;
   const tree = useTree();
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
-  const changed = useChangedFiles().has(entry.path);
+  const mark = useAiFileMarks()[entry.path];
+  const changed = useChangedFiles().has(entry.path) || !!mark;
+  // What Textus AI left here waiting for the writer, said after the name.
+  const waiting = mark?.pending
+    ? plural(t.aiPendingCount, mark.pending, lang)
+    : mark?.created
+      ? t.aiCreatedPending
+      : null;
   return (
     <>
       <div
@@ -240,6 +250,7 @@ function FileNode({
       >
         <Icon className="tree-icon" />
         <span className="tree-label">{entry.name}</span>
+        {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
       <Presence show={!!press.at} exitMs={250}>
         {press.at && (

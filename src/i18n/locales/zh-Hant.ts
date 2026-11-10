@@ -317,6 +317,11 @@ export default {
   aiChangeModeDirect: "直接寫入",
   aiChangeModeHint:
     "修訂：無論是正在看的文件還是資料夾裡的其他檔案，每處改動都先留在那個檔案裡，等你接受或拒絕；Textus AI 新建的檔案也等你決定是否保留。直接寫入：改動立刻生效並保留標記，每次回覆都能復原。",
+  aiPendingCount: { other: "{n} 處待審" },
+  aiCreatedPending: "新建，待保留",
+  aiFileConflict: "之後被改過，修訂沒有放進去",
+  aiKeepFile: "保留",
+  aiDiscardFile: "丟棄",
   filesChangedTitle: "改動的檔案",
   filesKeptTitle: "待套用的改動",
   filesNew: "新建",

@@ -363,6 +363,15 @@ para usar una.
   aiChangeModeDirect: "Escritos directamente",
   aiChangeModeHint:
     "Revisiones: cada cambio – en el documento abierto u otro archivo de la carpeta – espera en ese archivo a que lo aceptes o rechaces, y un archivo creado por Textus AI espera a que lo conserves. Escritos directamente: los cambios llegan al momento y quedan marcados, cada respuesta se puede deshacer.",
+  aiPendingCount: {
+    one: "{n} por revisar",
+    many: "{n} por revisar",
+    other: "{n} por revisar",
+  },
+  aiCreatedPending: "Nuevo, ¿conservar?",
+  aiFileConflict: "Cambiado desde entonces: la revisión no se colocó",
+  aiKeepFile: "Conservar",
+  aiDiscardFile: "Descartar",
   filesChangedTitle: "Archivos modificados",
   filesKeptTitle: "Cambios por aplicar",
   filesNew: "nuevo",

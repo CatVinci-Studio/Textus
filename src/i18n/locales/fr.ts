@@ -365,6 +365,15 @@ utiliser une.
   aiChangeModeDirect: "Écrites directement",
   aiChangeModeHint:
     "Révisions : chaque modification – dans le document ouvert ou un autre fichier du dossier – attend dans ce fichier que vous l’acceptiez ou la refusiez, et un fichier créé par Textus AI attend d’être gardé. Écrites directement : les modifications arrivent aussitôt et restent marquées, chaque réponse annulable.",
+  aiPendingCount: {
+    one: "{n} à relire",
+    many: "{n} à relire",
+    other: "{n} à relire",
+  },
+  aiCreatedPending: "Nouveau, garder ?",
+  aiFileConflict: "Modifié depuis – la révision n’a pas été placée",
+  aiKeepFile: "Garder",
+  aiDiscardFile: "Jeter",
   filesChangedTitle: "Fichiers modifiés",
   filesKeptTitle: "Modifications à appliquer",
   filesNew: "nouveau",

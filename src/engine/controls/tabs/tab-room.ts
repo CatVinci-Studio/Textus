@@ -23,6 +23,9 @@ interface PillMeasures {
   close: number;
   dot: number;
   lock: number;
+  /** Its count of waiting revisions with one digit, and each more digit. */
+  waiting: number;
+  digit: number;
   min: number;
   max: number;
   shrink: boolean;
@@ -45,6 +48,7 @@ export interface TabShape {
   dirty?: boolean;
   preview?: boolean;
   readOnly?: boolean;
+  waiting?: number;
 }
 
 const px = (value: string) => parseFloat(value) || 0;
@@ -87,6 +91,9 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
   };
   const dot = part("tab-pill-dirty-dot");
   const lock = part("tab-pill-lock");
+  const waiting = part("tab-pill-waiting");
+  waiting.textContent = "0";
+  title.after(waiting);
   (title as HTMLElement).style.cssText = "flex:none;overflow:visible";
   strip.append(probe);
   const style = getComputedStyle(probe);
@@ -109,6 +116,8 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
     close: close ? laidOut(close) - px(getComputedStyle(close).marginLeft) : 0,
     dot: laidOut(dot),
     lock: laidOut(lock),
+    waiting: laidOut(waiting),
+    digit: textWidth("0", fontOf(waiting)) ?? 0,
     min: px(style.minWidth) + outside,
     max: style.maxWidth === "none" ? Infinity : px(style.maxWidth) + outside,
     shrink: style.flexShrink !== "0",
@@ -166,7 +175,12 @@ export function fitTabs(tabs: readonly TabShape[], room: TabRoom): TabFit {
       pill.close +
       pill.gap +
       (tab.dirty ? pill.dot + pill.gap : 0) +
-      (tab.readOnly ? pill.lock + pill.gap : 0),
+      (tab.readOnly ? pill.lock + pill.gap : 0) +
+      (tab.waiting
+        ? pill.waiting +
+          pill.digit * (String(tab.waiting).length - 1) +
+          pill.gap
+        : 0),
   }));
   const fit = tabWidths(parts, pill, room.available, room.between);
   return pill.outside

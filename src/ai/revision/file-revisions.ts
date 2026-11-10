@@ -168,6 +168,17 @@ export async function keepAsCreated(change: {
   await writeFileRevisions(change.file, kept);
 }
 
+/** A file Textus AI made, kept by the writer or gone to the Trash: no
+ *  longer waiting. */
+export async function forgetCreated(file: string): Promise<void> {
+  const kept = await readFileRevisions(file);
+  if (kept) {
+    delete kept.created;
+    await writeFileRevisions(file, kept);
+  }
+  setAiFileMark(file, { created: false });
+}
+
 /** The revisions that turn the document's blocks into `after`'s: each run
  *  of blocks that differs replaced, deleted or added beside its
  *  neighbour, by the blocks' ids. */

@@ -329,6 +329,11 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aiChangeModeDirect: "바로 쓰기",
   aiChangeModeHint:
     "수정: 열린 문서든 폴더의 다른 파일이든 모든 변경은 그 파일에서 수락하거나 거절할 때까지 기다리고, Textus AI가 만든 파일은 유지할지 기다립니다. 바로 쓰기: 변경이 바로 반영되고 표시가 남으며, 답변마다 되돌릴 수 있습니다.",
+  aiPendingCount: { other: "검토할 곳 {n}" },
+  aiCreatedPending: "새 파일, 유지할까요?",
+  aiFileConflict: "그 뒤로 바뀌어 수정을 넣지 않았습니다",
+  aiKeepFile: "유지",
+  aiDiscardFile: "버리기",
   filesChangedTitle: "변경된 파일",
   filesKeptTitle: "적용할 변경",
   filesNew: "새 파일",

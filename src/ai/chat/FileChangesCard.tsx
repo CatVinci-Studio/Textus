@@ -3,6 +3,14 @@ import { ai } from "../../platform/ipc";
 import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import type { FileChange_Serialize as FileChange } from "../../platform/bindings/ai-project";
 import { filesChanged, type FileChangeCall } from "./file-changes";
+import {
+  FILE_REVISIONS_EVENT,
+  forgetCreated,
+  readFileRevisions,
+  useAiFileMarks,
+} from "../revision/file-revisions";
+import type { AiFileMark } from "../../storage/ui-state";
+import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 
 export interface FileChangesLabels {
   filesChangedTitle: string;
@@ -10,12 +18,19 @@ export interface FileChangesLabels {
   filesNew: string;
   filesUndo: string;
   filesApply: string;
+  filesWaiting: (n: number) => string;
+  filesConflict: string;
+  filesCreated: string;
+  filesKeep: string;
+  filesDiscard: string;
 }
 
 /**
  * A reply's changes to the folder's files: each file, which opens on a
- * click, and one button that takes the reply's changes off the disk or
- * puts them on (redo, or applying them where the user approves first).
+ * click. Written straight in, one button takes the reply's changes off the
+ * disk or puts them back. As revisions, each file says what waits in it -
+ * its revisions, a change that met other edits (never dropped), a file
+ * made to keep or discard - and the revisions are decided in the file.
  */
 export function FileChangesCard({
   run,
@@ -44,7 +59,13 @@ export function FileChangesCard({
       live = false;
     };
   }, [conversation, key]);
+  const marks = useAiFileMarks();
+  const conflicts = useConflicts(changes);
   if (!changes || changes.length === 0) return null;
+  // As revisions: some kept off the disk, or a file made waiting to be kept.
+  const revisions = changes.some(
+    (c) => !c.applied || (c.before == null && marks[c.file]?.created),
+  );
   const on = changes.every((c) => c.applied);
   // One row a file, however many changes it had.
   const files = [...new Map(changes.map((c) => [c.file, c])).values()];
@@ -57,6 +78,20 @@ export function FileChangesCard({
     setChanges(now);
     setProblems(refused);
     filesChanged(now);
+  }
+
+  /** A file it made, kept as the writer's or sent to the Trash. */
+  async function decideMade(file: string, keep: boolean) {
+    if (!keep) {
+      const made = changes!.filter((c) => c.file === file).map((c) => c.id);
+      const [now, refused] = await ai.setFileChanges(conversation, made, false);
+      setChanges(
+        (was) => was && was.map((c) => now.find((n) => n.id === c.id) ?? c),
+      );
+      setProblems(refused);
+      if (refused.length) return;
+    }
+    await forgetCreated(file);
   }
 
   return (
@@ -85,8 +120,17 @@ export function FileChangesCard({
             >
               {c.path}
             </button>
-            {made.has(c.file) && (
-              <span className="agent-proposal-kind">{labels.filesNew}</span>
+            {revisions ? (
+              <FileWaiting
+                waiting={marks[c.file]}
+                conflict={conflicts.has(c.file)}
+                labels={labels}
+                onMade={(keep) => void decideMade(c.file, keep)}
+              />
+            ) : (
+              made.has(c.file) && (
+                <span className="agent-proposal-kind">{labels.filesNew}</span>
+              )
             )}
           </li>
         ))}
@@ -96,11 +140,83 @@ export function FileChangesCard({
           {p}
         </div>
       ))}
-      <div className="agent-file-changes-actions">
-        <button type="button" className="tx-button small" onClick={toggle}>
-          {on ? labels.filesUndo : labels.filesApply}
-        </button>
-      </div>
+      {!revisions && (
+        <div className="agent-file-changes-actions">
+          <button type="button" className="tx-button small" onClick={toggle}>
+            {on ? labels.filesUndo : labels.filesApply}
+          </button>
+        </div>
+      )}
     </div>
   );
+}
+
+/** What waits in one file, after its name. */
+function FileWaiting({
+  waiting,
+  conflict,
+  labels,
+  onMade,
+}: {
+  waiting: AiFileMark | undefined;
+  conflict: boolean;
+  labels: FileChangesLabels;
+  onMade: (keep: boolean) => void;
+}) {
+  if (conflict)
+    return (
+      <span className="agent-file-changes-problem">{labels.filesConflict}</span>
+    );
+  if (waiting?.created)
+    return (
+      <>
+        <span className="agent-proposal-kind">{labels.filesCreated}</span>
+        <button
+          type="button"
+          className="tx-button small"
+          onClick={() => onMade(true)}
+        >
+          {labels.filesKeep}
+        </button>
+        <button
+          type="button"
+          className="tx-button small"
+          onClick={() => onMade(false)}
+        >
+          {labels.filesDiscard}
+        </button>
+      </>
+    );
+  return waiting?.pending ? (
+    <span className="agent-proposal-kind">
+      {labels.filesWaiting(waiting.pending)}
+    </span>
+  ) : null;
+}
+
+/** The card's files whose change met other edits, kept in their stores. */
+function useConflicts(changes: FileChange[] | null): ReadonlySet<string> {
+  const [conflicts, setConflicts] = useState<ReadonlySet<string>>(new Set());
+  const files = [...new Set((changes ?? []).map((c) => c.file))].join("\n");
+  const [stamp, restamp] = useState(0);
+  useWindowEvent(FILE_REVISIONS_EVENT, (e) => {
+    if (files.split("\n").includes((e as CustomEvent<string>).detail))
+      restamp((n) => n + 1);
+  });
+  useEffect(() => {
+    let live = true;
+    const list = files ? files.split("\n") : [];
+    void Promise.all(list.map(readFileRevisions)).then((kept) => {
+      if (!live) return;
+      setConflicts(
+        new Set(
+          list.filter((_, i) => kept[i]?.incoming.some((r) => r.conflict)),
+        ),
+      );
+    });
+    return () => {
+      live = false;
+    };
+  }, [files, stamp]);
+  return conflicts;
 }

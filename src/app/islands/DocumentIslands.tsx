@@ -1,6 +1,8 @@
 import { Island } from "../../engine/layout/Island";
 import { IslandArea, type IslandContent } from "../../engine/layout/IslandArea";
 import { useChangedFiles } from "../../ai/chat/file-changes";
+import { useAiFileMarks } from "../../ai/revision/file-revisions";
+import { plural } from "../../i18n/plural";
 import { DocumentCorners } from "./DocumentCorner";
 import { DocumentViews } from "./DocumentViews";
 import type { Lang } from "../../i18n/langs";
@@ -111,6 +113,7 @@ export function DocumentIslands({
 }) {
   // Files Textus AI changed: their tabs say so.
   const changed = useChangedFiles();
+  const marks = useAiFileMarks();
   const kept = useSplitPanes(
     tabs.map((tab) => tab.id),
     activeTabId,
@@ -170,7 +173,8 @@ export function DocumentIslands({
         preview: tab.preview,
         path: tab.path,
         readOnly: tabReadOnly(tab),
-        marked: !!tab.path && changed.has(tab.path),
+        marked: !!tab.path && (changed.has(tab.path) || !!marks[tab.path]),
+        waiting: (tab.path && marks[tab.path]?.pending) || undefined,
       }))}
       onUnlock={onToggleReadOnly}
       onKeep={onKeep}
@@ -216,6 +220,7 @@ export function DocumentIslands({
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,
+        waiting: (n) => plural(t.aiPendingCount, n, lang),
       }}
     />
   );

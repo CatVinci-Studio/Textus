@@ -24,6 +24,8 @@ export interface TabInfo {
   marked?: boolean;
   /** In reading mode: a padlock before its name turns it off. */
   readOnly?: boolean;
+  /** How many of Textus AI's revisions wait in it: a count after its name. */
+  waiting?: number;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -75,7 +77,13 @@ export function TabPill({
   width?: number;
   cut?: boolean;
   isActive: boolean;
-  labels: { close: string; unsaved: string; readOnly?: string };
+  labels: {
+    close: string;
+    unsaved: string;
+    readOnly?: string;
+    /** What its count of waiting revisions says. */
+    waiting?: (n: number) => string;
+  };
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onPullOut?: (id: string, title: string) => void;
@@ -289,6 +297,17 @@ export function TabPill({
       <span className="tab-pill-title" data-cut={cut || undefined}>
         {title}
       </span>
+      {!!tab.waiting && (
+        <Tooltip text={labels.waiting?.(tab.waiting) ?? ""} description={null}>
+          <span
+            className="tab-pill-waiting"
+            role="img"
+            aria-label={labels.waiting?.(tab.waiting)}
+          >
+            {tab.waiting}
+          </span>
+        </Tooltip>
+      )}
       {/* Not a button: a tab holds no control of its own. */}
       <Tooltip text={labels.close} description={null}>
         <span
