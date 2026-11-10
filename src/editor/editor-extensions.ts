@@ -94,7 +94,11 @@ import {
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
-import { tableColumnResizing, tableHoverView } from "./tables/table-hover-view";
+import {
+  tableColumnFreeze,
+  tableColumnResizing,
+  tableHoverView,
+} from "./tables/table-hover-view";
 import { createMermaidPreviewPlugin } from "./mermaid-plugin";
 import { blockKeysPlugin } from "./keys/block-keys-plugin";
 import { blockJoinPlugin } from "./keys/block-join-plugin";
@@ -381,6 +385,8 @@ export function withEditorCore(
         }),
       )
       .use(tableHoverView)
+      // Before the resize plugin: its press holds every column first.
+      .use(tableColumnFreeze)
       .use(tableColumnResizing)
       .use(
         createMermaidPreviewPlugin({

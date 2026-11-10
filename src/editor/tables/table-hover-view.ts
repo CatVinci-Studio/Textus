@@ -4,6 +4,7 @@ import {
   addRowAfter,
   addColumnAfter,
   columnResizing,
+  columnResizingPluginKey,
   TableMap,
   updateColumnsOnResize,
 } from "@milkdown/kit/prose/tables";
@@ -35,7 +36,7 @@ function syncColumns(
     table.style.minWidth = "";
   }
 }
-import { TextSelection } from "@milkdown/kit/prose/state";
+import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { PLUS_ICON_HTML } from "../../engine/controls/icons";
@@ -152,3 +153,68 @@ export const tableHoverView = $view(
  * `View: null` so tableHoverView stays the node view.
  */
 export const tableColumnResizing = $prose(() => columnResizing({ View: null }));
+
+/**
+ * Before a column's edge is dragged in a table laid out by its content,
+ * every column is held at the width it shows: the drag then changes that
+ * column alone, the ones before it standing still and the table growing or
+ * shrinking, rather than its unsized neighbours sharing the change.
+ */
+export const tableColumnFreeze = $prose(
+  () =>
+    new Plugin({
+      props: {
+        handleDOMEvents: {
+          mousedown(view, event) {
+            if (event.button !== 0) return false;
+            const handle = columnResizingPluginKey.getState(
+              view.state,
+            )?.activeHandle;
+            if (handle === undefined || handle < 0) return false;
+            const tr = frozenColumns(view, handle);
+            if (tr) view.dispatch(tr);
+            return false;
+          },
+        },
+      },
+    }),
+);
+
+/** A transaction giving every cell of the table holding the cell at `pos`
+ *  the widths its columns show now; null when they all have widths. */
+function frozenColumns(view: EditorView, pos: number): Transaction | null {
+  const $cell = view.state.doc.resolve(pos);
+  const table = $cell.node(-1);
+  if (!table || table.type.spec.tableRole !== "table") return null;
+  const start = $cell.start(-1);
+  const map = TableMap.get(table);
+  const widths: number[] = [];
+  for (let col = 0; col < map.width; col++) {
+    const at = map.map[col];
+    const cell = table.nodeAt(at);
+    const dom = view.nodeDOM(start + at) as HTMLElement | null;
+    const span = (cell?.attrs.colspan as number) || 1;
+    widths[col] = dom
+      ? Math.round(dom.getBoundingClientRect().width / span)
+      : 0;
+  }
+  if (widths.some((w) => !w)) return null;
+  let tr: Transaction | null = null;
+  const seen = new Set<number>();
+  for (const at of map.map) {
+    if (seen.has(at)) continue;
+    seen.add(at);
+    const cell = table.nodeAt(at);
+    if (!cell) continue;
+    const has = cell.attrs.colwidth as number[] | null;
+    const span = (cell.attrs.colspan as number) || 1;
+    if (has && has.length === span && has.every(Boolean)) continue;
+    const col = map.colCount(at);
+    tr ??= view.state.tr;
+    tr.setNodeMarkup(start + at, null, {
+      ...cell.attrs,
+      colwidth: widths.slice(col, col + span),
+    });
+  }
+  return tr;
+}
