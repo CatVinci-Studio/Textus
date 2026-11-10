@@ -13,7 +13,7 @@ import { Tooltip } from "../Tooltip";
 import { ContextMenu, type ContextMenuEntry } from "../ContextMenu";
 import { Presence } from "../../motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
-import { revealActive, TabListButton, useTabOverflow } from "./TabList";
+import { revealActive, TabListButton, useTabFit } from "./TabList";
 import { roomFor, SLIDE } from "../../drag/row";
 
 interface TabBarProps {
@@ -101,7 +101,8 @@ export function TabBar({
   );
 
   const previewRef = useIncomingTabPreview(barRef, previewTab, tabs);
-  const overflow = useTabOverflow(barRef, tabs.length);
+  const fit = useTabFit(barRef, tabs, previewTab !== null);
+  const overflow = !!fit?.overflow;
 
   // Tab-list keys: arrows/Home/End move, Enter/Space shows, Delete closes.
   // Only the front tab is in the tab order.
@@ -134,6 +135,7 @@ export function TabBar({
       // In the window bar's row, its empty stretch still moves the window.
       data-tauri-drag-region={inner ? undefined : true}
       data-pane-id={paneId}
+      data-overflow={overflow || undefined}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}
@@ -149,10 +151,12 @@ export function TabBar({
         // slide, not a frame before it.
         resizes={isPill}
       />
-      {tabs.map((tab) => (
+      {tabs.map((tab, i) => (
         <TabPill
           key={tab.id}
           tab={tab}
+          width={fit?.widths[i]}
+          cut={fit?.cut[i]}
           tabIds={tabs.map((t) => t.id)}
           isActive={tab.id === activeTabId}
           labels={labels}

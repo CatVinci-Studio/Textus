@@ -1,63 +1,66 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
+import { flushSync } from "react-dom";
 import { useMenuButton } from "../useMenuButton";
 import { ChevronIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
 import { scrollBehavior } from "../../motion/motion";
 import type { TabInfo } from "./TabPill";
+import {
+  fitTabs,
+  readTabRoom,
+  sameRoom,
+  type TabRoom,
+  type TabShape,
+} from "./tab-room";
+import type { TabFit } from "./tab-widths";
 
 /**
- * Many tabs, as Chrome has them: the pills shrink together, the narrow ones
- * give up their × (the open one keeps it), and once even that leaves them
- * past the row, a button at its end lists every tab. Watches the row as it
- * and its tabs change; marks it data-narrow and data-overflow, and
+ * Many tabs: each as wide as its name needs, the widest giving way first
+ * when the row can't hold them, and once even the narrowest don't fit, the
+ * row scrolls and a button at its end lists every tab (tab-widths.ts).
+ * Reads the row's measures as it and the interface change and gives the
+ * tabs' fit to them; null until the row is laid out. Marks the row
  * data-scrolled while tabs lie hidden before its start (faded there, not
  * cut off mid-name).
  */
-export function useTabOverflow(
+export function useTabFit(
   bar: RefObject<HTMLElement | null>,
-  count: number,
-): boolean {
-  const [overflow, setOverflow] = useState(false);
+  tabs: readonly TabShape[],
+  /** Something else stands in the row (a tab riding in). */
+  crowded: boolean,
+): TabFit | null {
+  const [room, setRoom] = useState<TabRoom | null>(null);
+  // What the row's measures are read from: a tab, and each part one has.
+  const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}${crowded}`;
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;
-    const resized = new ResizeObserver(() => fit());
-    const fit = () => {
-      // A title longer than its tab fades out at its end (TabBar.css);
-      // each title watched, as a tab still growing in was cut a moment and
-      // kept the fade after.
-      for (const title of el.querySelectorAll<HTMLElement>(".tab-pill-title")) {
-        title.toggleAttribute(
-          "data-cut",
-          title.scrollWidth > title.clientWidth + 1,
-        );
-        resized.observe(title);
-      }
-      const over = el.scrollWidth > el.clientWidth + 1;
-      el.toggleAttribute("data-overflow", over);
-      setOverflow(over);
-      revealActive(el, false);
+    const read = () => {
+      const next = readTabRoom(el);
+      setRoom((was) => (sameRoom(was, next) ? was : next));
     };
+    read();
+    // Before the frame is drawn: the tabs never show a width the row has
+    // already left.
+    const resized = new ResizeObserver(() => {
+      flushSync(read);
+      revealActive(el, false);
+    });
+    resized.observe(el);
+    // The interface's size, font or theme: the row may keep its width.
+    const restyled = new MutationObserver(read);
+    restyled.observe(document.documentElement, { attributes: true });
     const scrolled = () =>
       el.toggleAttribute("data-scrolled", el.scrollLeft > 1);
-    fit();
     scrolled();
-    resized.observe(el);
-    // A tab renamed at its widest changes no size: its words are watched.
-    const renamed = new MutationObserver(fit);
-    renamed.observe(el, {
-      subtree: true,
-      characterData: true,
-      childList: true,
-    });
     el.addEventListener("scroll", scrolled, { passive: true });
     return () => {
       resized.disconnect();
-      renamed.disconnect();
+      restyled.disconnect();
       el.removeEventListener("scroll", scrolled);
     };
-  }, [bar, count]);
-  return overflow;
+  }, [bar, parts]);
+  return room && fitTabs(tabs, room);
 }
 
 /** The row's list of every tab, the open one ticked; picking one shows it. */
