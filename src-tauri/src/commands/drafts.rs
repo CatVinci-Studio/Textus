@@ -117,6 +117,14 @@ pub async fn take_draft_snapshots(
     Ok(snapshots)
 }
 
+/// A removal that found nothing there is done all the same.
+fn gone(removed: std::io::Result<()>) -> Result<(), String> {
+    match removed {
+        Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.to_string()),
+        _ => Ok(()),
+    }
+}
+
 /// Where taken drafts wait until their window has them again.
 const RESTORING: &str = "restoring";
 
@@ -125,11 +133,7 @@ const RESTORING: &str = "restoring";
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn finish_draft_restore(app: AppHandle) -> Result<(), String> {
-    match fs::remove_dir_all(drafts_dir(&app)?.join(RESTORING)).await {
-        Ok(()) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(e) => Err(e.to_string()),
-    }
+    gone(fs::remove_dir_all(drafts_dir(&app)?.join(RESTORING)).await)
 }
 
 #[tauri::command]
@@ -138,19 +142,11 @@ pub async fn clear_draft_snapshot(app: AppHandle, tab_id: String) -> Result<(), 
     if !valid_component(&tab_id) {
         return Err("invalid tab id".to_string());
     }
-    match fs::remove_file(drafts_dir(&app)?.join(format!("{tab_id}.json"))).await {
-        Ok(()) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(e) => Err(e.to_string()),
-    }
+    gone(fs::remove_file(drafts_dir(&app)?.join(format!("{tab_id}.json"))).await)
 }
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn clear_all_drafts(app: AppHandle) -> Result<(), String> {
-    match fs::remove_dir_all(drafts_dir(&app)?).await {
-        Ok(()) => Ok(()),
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(e) => Err(e.to_string()),
-    }
+    gone(fs::remove_dir_all(drafts_dir(&app)?).await)
 }

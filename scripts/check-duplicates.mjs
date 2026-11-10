@@ -43,7 +43,6 @@ const COPIES_NOW = {
   "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,
   "editor/marks/enclosure-moves.ts | editor/marks/enclosure-moves.ts": 1,
   "plugins/access.rs | plugins/access.rs": 1,
-  "plugins/access.rs | plugins/files.rs": 1,
   "plugins/metadata.rs | plugins/workspace.rs": 1,
   "engine/controls/ContextMenu.tsx | engine/controls/ContextMenu.tsx": 1,
 };
