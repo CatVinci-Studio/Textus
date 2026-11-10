@@ -53,7 +53,6 @@ export function useEditorChat({
   const { pendingEdits, conversation, quickConversation } = proposals;
   useHeldWhileBusy({
     tabId: setup.tabId,
-    filePath,
     quickAsk: quickConversation,
     quickAskOpen: inlineChat.visible,
     statuses: pendingEdits.allStatuses,

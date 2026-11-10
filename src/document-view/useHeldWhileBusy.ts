@@ -1,19 +1,17 @@
 import { useEffect } from "react";
 import { setEditorHeld } from "../document/editor-held";
-import { undecidedIn } from "../document/undecided";
 import type { PendingStatus } from "../ai/revision/usePendingEdits";
 
-/** Keeps a hidden tab's editor loaded while Quick Ask or a proposal of
- *  Textus AI's lives in it, or changes in it wait to be decided. */
+/** Keeps a hidden tab's editor loaded while Quick Ask lives in it or
+ *  Textus AI is still writing into it. Revisions waiting to be decided
+ *  don't hold it: they are kept with the file and come back on open. */
 export function useHeldWhileBusy({
   tabId,
-  filePath,
   quickAsk,
   quickAskOpen,
   statuses,
 }: {
   tabId: string;
-  filePath: string | null;
   quickAsk: { busy: boolean; history: readonly unknown[] };
   quickAskOpen: boolean;
   statuses: Record<string, PendingStatus>;
@@ -22,8 +20,7 @@ export function useHeldWhileBusy({
     quickAskOpen ||
     quickAsk.busy ||
     quickAsk.history.length > 0 ||
-    Object.values(statuses).some((s) => s === "pending" || s === "streaming") ||
-    (filePath !== null && undecidedIn(filePath) > 0);
+    Object.values(statuses).some((s) => s === "streaming");
   useEffect(() => {
     setEditorHeld(tabId, held);
   }, [tabId, held]);

@@ -2,7 +2,13 @@ import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
 import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import type { AgentTurn } from "../types";
-import { keepAsCreated, keepAsRevisions } from "../revision/file-revisions";
+import {
+  keepAsCreated,
+  keepAsRevisions,
+  readFileRevisions,
+  setAiFileMark,
+  writeFileRevisions,
+} from "../revision/file-revisions";
 
 /**
  * General mode's changes to the folder's other files (write_file,
@@ -87,6 +93,36 @@ export function textBeforeChanges(file: string): string | null | undefined {
 /** The file reads as before again: no change of Textus AI's left to show. */
 export function changesSettled(file: string) {
   if (bases.delete(file)) publish();
+  void keepBase(file, undefined);
+}
+
+/** `file`'s text before Textus AI wrote straight in, kept with the file so
+ *  its marks outlive a restart; undefined lets it go. */
+async function keepBase(file: string, base: string | undefined) {
+  const kept = (await readFileRevisions(file)) ?? { version: 1, incoming: [] };
+  if (kept.base === base) return;
+  if (base === undefined) delete kept.base;
+  else kept.base = base;
+  setAiFileMark(file, { changed: base !== undefined });
+  await writeFileRevisions(file, kept);
+}
+
+/** Its text before, noted as Textus AI first writes straight into it (the
+ *  document open, its proposal taken at once). */
+export function noteBase(file: string, before: string) {
+  if (bases.has(file)) return;
+  bases.set(file, before);
+  publish();
+  void keepBase(file, before);
+}
+
+/** A file opened: its text before Textus AI wrote into it, as kept. */
+export async function restoreBase(file: string) {
+  if (bases.has(file)) return;
+  const base = (await readFileRevisions(file))?.base;
+  if (base === undefined || bases.has(file)) return;
+  bases.set(file, base);
+  publish();
 }
 
 /** The files Textus AI changed this session, until undone. */
@@ -101,8 +137,11 @@ export function filesChanged(
 ) {
   for (const { file, applied, before } of files) {
     // The earliest text before: a reply's later changes build on it.
-    if (applied && !bases.has(file)) bases.set(file, before);
-    if (!applied) bases.delete(file);
+    if (applied && !bases.has(file)) {
+      bases.set(file, before);
+      if (before != null) void keepBase(file, before);
+    }
+    if (!applied && bases.delete(file)) void keepBase(file, undefined);
     window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: file }));
   }
   publish();

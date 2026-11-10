@@ -45,6 +45,7 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../engine/controls/announce";
 import { plural } from "../i18n/plural";
 import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
+import { noteBase } from "../ai/chat/file-changes";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
 
@@ -131,6 +132,19 @@ export function useEditorProposals({
   useEffect(() => {
     if (filePath) reportUndecided(filePath, "ai", undecided);
   }, [filePath, undecided]);
+  // Written straight in: each proposal taken as soon as it is whole, the
+  // text before the first kept for the marks.
+  const direct = settings.aiChangeMode === "direct";
+  useEffect(() => {
+    if (!direct) return;
+    const ready = pendingEdits.previews.filter((p) => !p.streaming);
+    if (!ready.length) return;
+    const before = run((ctx) =>
+      cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
+    );
+    if (filePath && before !== undefined) noteBase(filePath, before);
+    for (const preview of ready) pendingEdits.accept(preview.callId);
+  }, [direct, pendingEdits, run, filePath]);
   // The document's undecided proposals outlive closing it.
   useKeptProposals({
     run,

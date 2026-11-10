@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockHunks } from "./file-changes-plugin";
+import { blockHunks } from "./block-hunks";
 import { placesChanged, revisionProposals } from "./file-revisions";
 
 describe("blockHunks", () => {

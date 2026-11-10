@@ -6,7 +6,7 @@ import {
   type AiFileMark,
 } from "../../storage/ui-state";
 import type { EditProposal } from "../types";
-import { blockHunks } from "./file-changes-plugin";
+import { blockHunks } from "./block-hunks";
 
 /**
  * What Textus AI left in a file it didn't have open (aiChangeMode): a change
