@@ -30,3 +30,18 @@
   color: var(--ui-muted);
   font-size: var(--text-caption);
 }
+
+/* A group's name, then the chevron at its end: pointing down while open. */
+.settings-nav-group-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-nav-chevron {
+  color: var(--ui-muted);
+  transition: rotate var(--dur-fast) var(--ease-standard);
+}
+
+.tx-list-item[aria-expanded="true"] .settings-nav-chevron {
+  rotate: 90deg;
+}

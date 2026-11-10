@@ -73,7 +73,7 @@ export function TutorialExperience({
         onClick: () => void links.openTutorialsPage(language, step.clip),
       }
     : null;
-  const settingsPath = `${t.settingsTitle} › ${t.navAi}`;
+  const settingsPath = `${t.settingsTitle} › ${t.navAi} › ${t.navProvidersModels}`;
 
   let status: string | null = null;
   let note: string | null = watching

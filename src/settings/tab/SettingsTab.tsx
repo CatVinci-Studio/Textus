@@ -31,8 +31,7 @@ export interface SettingsTabProps {
 /**
  * Settings as a tab (desktop): one page, the one picked in the sidebar's
  * list of them (SettingsNavPanel) - replaced, not opened beside. The list
- * says which it is, so the page doesn't: a line on what it holds, then its
- * sections.
+ * says which it is, so the page doesn't: only its sections.
  */
 export function SettingsTab({
   page = "general",
@@ -76,7 +75,6 @@ export function SettingsTab({
   return (
     <div className="settings-tab" ref={content}>
       <div className="settings-tab-page settings-content">
-        {shown.lead && <p className="settings-tab-lead">{shown.lead(t)}</p>}
         {shown.id === "about" ? (
           <AboutPage {...pageProps} checkUpdates={page === "updates"} />
         ) : (

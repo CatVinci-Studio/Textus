@@ -1,9 +1,14 @@
-import { useSyncExternalStore } from "react";
+import { Fragment, useState, useSyncExternalStore } from "react";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { SearchField } from "../../engine/controls/SearchField";
-import { settingsPage, settingsPages } from "../settings-pages";
+import {
+  SETTINGS_GROUPS,
+  settingsPage,
+  settingsPages,
+} from "../settings-pages";
 import { SettingsSearchIndex, type SearchablePage } from "../SettingsSearch";
 import { useSettingsSearch } from "../useSettingsSearch";
 import {
@@ -16,7 +21,8 @@ import "./settings-nav.css";
 
 /**
  * Settings' pages in the sidebar (the rail's gear): each page with its
- * icon, Textus AI's under it, the one the Settings tab shows marked; over
+ * icon, Appearance's, Editing's and Textus AI's folded under their groups
+ * until opened, the one the Settings tab shows marked; over
  * them, Settings' one search - its results stand in for the list, and a
  * result goes to its page and row in the tab.
  */
@@ -26,6 +32,13 @@ export function SettingsNavPanel() {
   const shown = useSyncExternalStore(onSettingsPageShown, settingsPageShown);
   const search = useSettingsSearch(() => false);
   const pages = settingsPages();
+  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpen((was) => {
+      const next = new Set(was);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   // The pages read for the search: rendered out of sight, never used.
   const indexProps: SettingsPageProps = {
     t,
@@ -95,19 +108,48 @@ export function SettingsNavPanel() {
         </div>
       ) : (
         <nav className="settings-nav-list" aria-label={t.settingsTitle}>
-          {pages.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className="tx-list-item"
-              data-sub={p.parent ? "" : undefined}
-              aria-current={p.id === shown ? "page" : undefined}
-              onClick={() => openSettingsPage(p.id)}
-            >
-              {p.Icon && <p.Icon className="settings-nav-icon" />}
-              {p.label(t)}
-            </button>
-          ))}
+          {pages.map((p, i) => {
+            const item = (
+              <button
+                key={p.id}
+                type="button"
+                className="tx-list-item"
+                data-sub={p.group ? "" : undefined}
+                aria-current={p.id === shown ? "page" : undefined}
+                onClick={() => openSettingsPage(p.id)}
+              >
+                {p.Icon && <p.Icon className="settings-nav-icon" />}
+                {p.label(t)}
+              </button>
+            );
+            if (!p.group) return item;
+            const first = pages[i - 1]?.group !== p.group;
+            // A group is folded until opened; the page shown keeps its own
+            // open.
+            const isOpen =
+              open.has(p.group) ||
+              pages.some((q) => q.group === p.group && q.id === shown);
+            const group = SETTINGS_GROUPS[p.group];
+            return (
+              <Fragment key={p.id}>
+                {first && (
+                  <button
+                    type="button"
+                    className="tx-list-item"
+                    aria-expanded={isOpen}
+                    onClick={() => toggle(p.group!)}
+                  >
+                    <group.Icon className="settings-nav-icon" />
+                    <span className="settings-nav-group-name">
+                      {group.label(t)}
+                    </span>
+                    <ChevronIcon className="settings-nav-chevron" />
+                  </button>
+                )}
+                {isOpen && item}
+              </Fragment>
+            );
+          })}
         </nav>
       )}
     </div>

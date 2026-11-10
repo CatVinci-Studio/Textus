@@ -14,7 +14,7 @@ import { showMessage } from "../../engine/controls/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../engine/controls/Select";
-import { LinkRow, RowHelp, SettingRow } from "./controls";
+import { RowHelp, SettingRow } from "./controls";
 import {
   AvailableThemes,
   galleryUpdates,
@@ -162,17 +162,12 @@ function useThemeAction() {
 
 /** Settings › Editor & Appearance › Theme: which form (light, dark), which
  *  theme, and whether the title bar frosts what scrolls beneath it. */
-export function ThemeSection({
-  t,
-  onMore,
-}: {
-  t: Strings;
-  onMore: () => void;
-}) {
+export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const appearanceId = useId();
   const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
+  const importTheme = useImportTheme(run);
 
   // Beside the picker, as it removes the theme picked there.
   const deleteCurrentTheme = () =>
@@ -263,11 +258,16 @@ export function ThemeSection({
         )}
       </SettingRow>
 
-      <LinkRow
-        label={t.themeGetMore}
-        onOpen={onMore}
-        className="theme-more-entry"
-      />
+      <SettingRow label={t.themeImportLabel}>
+        <button
+          type="button"
+          className="text-button settings-inline-button"
+          disabled={busy}
+          onClick={() => void importTheme()}
+        >
+          {t.chooseFile}
+        </button>
+      </SettingRow>
     </>
   );
 }
@@ -293,7 +293,7 @@ function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
 }
 
 /** The user's own CSS, on top of whichever theme is picked. */
-function CustomCssRow({ t }: { t: Strings }) {
+export function CustomCssRow({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const labelId = useId();
   return (
@@ -439,7 +439,6 @@ export function ThemesTab({ t }: { t: Strings }) {
           onOpen={(theme) => setOpenTheme(theme.id)}
         />
       }
-      advanced={<CustomCssRow t={t} />}
     />
   );
 }

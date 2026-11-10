@@ -3,21 +3,20 @@ import type { SettingsPageProps } from "./types";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { useProviderCatalog } from "../../ai/provider-catalog";
 import { ProviderLogo } from "../../ai/provider-logos/ProviderLogo";
-import { SearchField } from "../../engine/controls/SearchField";
 import type { Strings } from "../../i18n/strings";
 import {
   localizedLabel,
   useConnectedProviders,
-  useProviderSearch,
   type ConnectedState,
 } from "../sections/provider-connection";
 import {
   CustomProviderPanel,
   ProviderAuthPanel,
 } from "../sections/provider-auth";
-import { ModelListRow, ProviderModelPicker } from "../sections/agent";
+import { ModelListRow } from "../sections/agent";
 import { SettingsGroup } from "./SettingsGroup";
 import "./providers-page.css";
+import { ModelChoices } from "./ModelChoices";
 
 /**
  * Settings › Textus AI › Providers: every provider in a list - its logo,
@@ -28,52 +27,56 @@ import "./providers-page.css";
 export function ProvidersPage({ t, settings }: SettingsPageProps) {
   const catalog = useProviderCatalog();
   const [picked, setPicked] = useState<string>(settings.aiProvider);
-  const { query, setQuery, filtered } = useProviderSearch(catalog, t);
   const { connected, refreshConnected } = useConnectedProviders(
     catalog,
     settings.aiProvider,
   );
   const entry = catalog.find((e) => e.id === picked) ?? catalog[0];
+  if (!settings.textusAi)
+    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
   return (
-    <div className="providers-page">
-      <div className="providers-list">
-        <div className="tx-pane-top">
-          <SearchField
-            value={query}
-            placeholder={t.providerSearchPlaceholder}
-            aria-label={t.providerSearchPlaceholder}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+    <>
+      <ModelChoices t={t} />
+      {/* A heading, no box: the picked provider's side has its own. */}
+      <section className="settings-group" aria-label={t.providersGroup}>
+        <div className="settings-group-head">
+          <h2 className="settings-group-title">{t.providersGroup}</h2>
         </div>
-        {filtered.length === 0 && (
-          <p className="tx-list-note">{t.noProvidersFound}</p>
-        )}
-        {filtered.map((e) => (
-          <button
-            key={e.id}
-            type="button"
-            className="tx-list-item providers-item"
-            aria-current={e.id === entry?.id || undefined}
-            onClick={() => setPicked(e.id)}
-          >
-            <ProviderLogo id={e.id} label={localizedLabel(e, t)} />
-            <span className="providers-item-name">{localizedLabel(e, t)}</span>
-            {isSetUp(connected[e.id]) && (
-              <span className="status-dot" aria-label={t.apiKeyConfigured} />
-            )}
-          </button>
-        ))}
-      </div>
-      {entry && (
-        <ProviderDetail
-          key={entry.id}
-          t={t}
-          entry={entry}
-          connected={connected[entry.id]}
-          onStatusChange={() => refreshConnected(entry)}
-        />
-      )}
-    </div>
+        <div className="providers-page">
+          <div className="providers-list">
+            {catalog.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                className="tx-list-item providers-item"
+                aria-current={e.id === entry?.id || undefined}
+                onClick={() => setPicked(e.id)}
+              >
+                <ProviderLogo id={e.id} label={localizedLabel(e, t)} />
+                <span className="providers-item-name">
+                  {localizedLabel(e, t)}
+                </span>
+                {isSetUp(connected[e.id]) && (
+                  <span
+                    className="status-dot"
+                    aria-label={t.apiKeyConfigured}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+          {entry && (
+            <ProviderDetail
+              key={entry.id}
+              t={t}
+              entry={entry}
+              connected={connected[entry.id]}
+              onStatusChange={() => refreshConnected(entry)}
+            />
+          )}
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -116,18 +119,6 @@ function ProviderDetail({
         )}
       </SettingsGroup>
       <SettingsGroup title={t.providerModelsGroup}>
-        <ProviderModelPicker
-          t={t}
-          provider={entry.id}
-          kind="agent"
-          label={t.agentModelLabel}
-        />
-        <ProviderModelPicker
-          t={t}
-          provider={entry.id}
-          kind="writing"
-          label={t.writingModelLabel}
-        />
         <ModelListRow t={t} provider={entry.id} />
       </SettingsGroup>
       <p className="providers-note">{t.providerKeysLocal}</p>

@@ -1,4 +1,3 @@
-import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow } from "../sections/controls";
 import { useProviderCatalog } from "../../ai/provider-catalog";
@@ -9,25 +8,17 @@ import { ImageModelSection } from "../sections/image-model";
 import { AgentModelSection, WritingModelSection } from "../sections/agent";
 import { Select } from "../../engine/controls/Select";
 
-/** Settings › Textus AI › Models: which provider and model each use takes -
- *  the chat, writing assistance (which may follow the chat's), images. */
-export function ModelsPage({ t, settings }: SettingsPageProps) {
-  if (!settings.textusAi)
-    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
+/** The model each use takes - the chat, writing assistance (whose provider
+ *  may follow the chat's), images: one group over the providers. */
+export function ModelChoices({ t }: { t: Strings }) {
   return (
-    <>
-      <SettingsGroup title={t.aiAskLabel}>
-        <ProviderChoice t={t} use="chat" />
-        <AgentModelSection t={t} />
-      </SettingsGroup>
-      <SettingsGroup title={t.writingFeaturesLabel}>
-        <ProviderChoice t={t} use="writing" />
-        <WritingModelSection t={t} />
-      </SettingsGroup>
-      <SettingsGroup title={t.imageGenerationGroupLabel}>
-        <ImageModelSection t={t} />
-      </SettingsGroup>
-    </>
+    <SettingsGroup title={t.modelChoiceGroup}>
+      <ProviderChoice t={t} use="chat" />
+      <AgentModelSection t={t} />
+      <ProviderChoice t={t} use="writing" />
+      <WritingModelSection t={t} />
+      <ImageModelSection t={t} />
+    </SettingsGroup>
   );
 }
 

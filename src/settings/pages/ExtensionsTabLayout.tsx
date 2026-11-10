@@ -1,4 +1,5 @@
 import { SearchField } from "../../engine/controls/SearchField";
+import { ExpandingSearch } from "../../engine/controls/ExpandingSearch";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -11,8 +12,8 @@ export interface ExtensionsAction {
 }
 
 /** A list of things one adds to Textus - themes, skills, MCP servers:
- *  `top` (a switch over all of them), one search over both lists while it
- *  is long, then what is installed - its section's heading holding what
+ *  `top` (a switch over all of them), then what is installed - its search
+ *  over both lists folded to a magnifier at its heading - its section's heading holding what
  *  acts on the list (⋯, the main action) and its "?" - what is available,
  *  and Advanced, folded. Sections and rows as every Settings page has. */
 export function ExtensionsTabLayout({
@@ -59,15 +60,6 @@ export function ExtensionsTabLayout({
     <>
       {top}
       <div className={off ? "extensions-off" : undefined}>
-        {onQuery && (
-          <SearchField
-            className="plugin-search"
-            placeholder={t.marketSearch}
-            aria-label={t.marketSearch}
-            value={query}
-            onChange={(e) => onQuery(e.target.value)}
-          />
-        )}
         <SettingsGroup
           title={
             installedCount
@@ -76,6 +68,20 @@ export function ExtensionsTabLayout({
           }
           actions={
             <>
+              {onQuery && (
+                <ExpandingSearch
+                  label={t.marketSearch}
+                  active={!!query?.trim()}
+                  field={() => (
+                    <SearchField
+                      value={query}
+                      placeholder={t.marketSearch}
+                      aria-label={t.marketSearch}
+                      onChange={(e) => onQuery(e.target.value)}
+                    />
+                  )}
+                />
+              )}
               {installedAction}
               {help && <RowHelp label={intro}>{help}</RowHelp>}
               {actions.length > 0 && <MoreMenu t={t} actions={actions} />}

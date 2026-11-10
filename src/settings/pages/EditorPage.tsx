@@ -17,14 +17,8 @@ import { Select } from "../../engine/controls/Select";
 import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 
-/** Editing: how the text is set, the view a document opens in, how
- *  Markdown is typed and shown, images, export. */
-export function EditorPage({
-  t,
-  settings,
-  setSettings,
-  docPath = null,
-}: SettingsPageProps) {
+/** Editing › Text: how the text is set, and the view a document opens in. */
+export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
       {/* How the text is set. */}
@@ -74,6 +68,18 @@ export function EditorPage({
           onChange={(v) => setSettings({ typewriterMode: v })}
         />
       </SettingsGroup>
+    </>
+  );
+}
+
+/** Editing › Markdown: what the document shows and how typing behaves; diagrams, colour swatches, the ** and ` pairs under Advanced. */
+export function EditMarkdownPage({
+  t,
+  settings,
+  setSettings,
+}: SettingsPageProps) {
+  return (
+    <>
       {/* What the document shows, then how typing behaves. */}
       <SettingsGroup title={t.navMarkdown}>
         <ToggleRow
@@ -115,59 +121,6 @@ export function EditorPage({
           </Select>
         </SettingRow>
       </SettingsGroup>
-      <SettingsGroup title={t.imageStorageGroupLabel}>
-        <SettingRow label={t.imageAlignLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.imageAlignLabel}
-            value={settings.imageAlign}
-            onChange={(e) =>
-              setSettings({ imageAlign: e.target.value as ImageAlign })
-            }
-          >
-            <option value="center">{t.imageAlignCenter}</option>
-            <option value="left">{t.imageAlignLeft}</option>
-          </Select>
-        </SettingRow>
-        <ImageStorageSection t={t} docPath={docPath} />
-      </SettingsGroup>
-      {/* No PDF export on the phone, so no group there either. */}
-      {canExportPdf && (
-        <SettingsGroup title={t.menuExport}>
-          <ToggleRow
-            label={t.pdfPageNumbersLabel}
-            checked={settings.pdfPageNumbers}
-            onChange={(v) => setSettings({ pdfPageNumbers: v })}
-          />
-          {isMacPlatform() && (
-            <ToggleRow
-              label={t.pdfLightColorsLabel}
-              checked={settings.pdfLightColors}
-              onChange={(v) => setSettings({ pdfLightColors: v })}
-            />
-          )}
-          {canExportWithPandoc && (
-            <>
-              <ExportFileRow t={t} setting="docxReferenceDoc" />
-              <ToggleRow
-                label={t.exportTocLabel}
-                checked={settings.exportToc}
-                onChange={(v) => setSettings({ exportToc: v })}
-              />
-              <ToggleRow
-                label={t.exportNumberHeadingsLabel}
-                help={t.exportNumberHeadingsHelp}
-                checked={settings.exportNumberHeadings}
-                onChange={(v) => setSettings({ exportNumberHeadings: v })}
-              />
-              <ExportFileRow t={t} setting="exportBibliography" />
-              {settings.exportBibliography && (
-                <ExportFileRow t={t} setting="exportCsl" />
-              )}
-            </>
-          )}
-        </SettingsGroup>
-      )}
       {/* Rarely changed: how diagrams are drawn, colour swatches, and the
        ** and ` pairs. */}
       <AdvancedFold t={t}>
@@ -209,8 +162,90 @@ export function EditorPage({
           checked={settings.autoCloseMarks}
           onChange={(v) => setSettings({ autoCloseMarks: v })}
         />
-        {canExportWithPandoc && <PandocArgsRows t={t} />}
       </AdvancedFold>
+    </>
+  );
+}
+
+/** Editing › Images: how a picture on its own line sits, and where pasted images go. */
+export function EditImagesPage({
+  t,
+  settings,
+  setSettings,
+  docPath = null,
+}: SettingsPageProps) {
+  return (
+    <>
+      <SettingsGroup title={t.imageStorageGroupLabel}>
+        <SettingRow label={t.imageAlignLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.imageAlignLabel}
+            value={settings.imageAlign}
+            onChange={(e) =>
+              setSettings({ imageAlign: e.target.value as ImageAlign })
+            }
+          >
+            <option value="center">{t.imageAlignCenter}</option>
+            <option value="left">{t.imageAlignLeft}</option>
+          </Select>
+        </SettingRow>
+        <ImageStorageSection t={t} docPath={docPath} />
+      </SettingsGroup>
+    </>
+  );
+}
+
+/** Editing › Export: PDF and Word, Pandoc's arguments under Advanced. */
+export function EditExportPage({
+  t,
+  settings,
+  setSettings,
+}: SettingsPageProps) {
+  return (
+    <>
+      {/* No PDF export on the phone, so no group there either. */}
+      {canExportPdf && (
+        <SettingsGroup title={t.menuExport}>
+          <ToggleRow
+            label={t.pdfPageNumbersLabel}
+            checked={settings.pdfPageNumbers}
+            onChange={(v) => setSettings({ pdfPageNumbers: v })}
+          />
+          {isMacPlatform() && (
+            <ToggleRow
+              label={t.pdfLightColorsLabel}
+              checked={settings.pdfLightColors}
+              onChange={(v) => setSettings({ pdfLightColors: v })}
+            />
+          )}
+          {canExportWithPandoc && (
+            <>
+              <ExportFileRow t={t} setting="docxReferenceDoc" />
+              <ToggleRow
+                label={t.exportTocLabel}
+                checked={settings.exportToc}
+                onChange={(v) => setSettings({ exportToc: v })}
+              />
+              <ToggleRow
+                label={t.exportNumberHeadingsLabel}
+                help={t.exportNumberHeadingsHelp}
+                checked={settings.exportNumberHeadings}
+                onChange={(v) => setSettings({ exportNumberHeadings: v })}
+              />
+              <ExportFileRow t={t} setting="exportBibliography" />
+              {settings.exportBibliography && (
+                <ExportFileRow t={t} setting="exportCsl" />
+              )}
+            </>
+          )}
+        </SettingsGroup>
+      )}
+      {canExportWithPandoc && (
+        <AdvancedFold t={t}>
+          <PandocArgsRows t={t} />
+        </AdvancedFold>
+      )}
     </>
   );
 }

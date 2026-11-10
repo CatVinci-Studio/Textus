@@ -241,8 +241,11 @@ export function BuiltinSkillsSection({
   onOpenFile,
   onFilesDeleted,
   onClose,
+  bare = false,
 }: {
   t: Strings;
+  /** Its rows only, for a section that lists them with others. */
+  bare?: boolean;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -406,6 +409,7 @@ export function BuiltinSkillsSection({
         ))}
     </>
   );
+  if (bare) return rows;
   return <SettingsGroup title={t.agentSkillsBuiltin}>{rows}</SettingsGroup>;
 }
 

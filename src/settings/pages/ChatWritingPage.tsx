@@ -13,19 +13,15 @@ import {
   revisionDisplayName,
 } from "../../ai/revision/revision-display";
 import type { TextKey } from "../../i18n/strings";
-import {
-  AdvancedFold,
-  SettingRow,
-  ToggleRow,
-  VERBATIM_INPUT,
-} from "../sections/controls";
+import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
 import { SearchServiceSection } from "../sections/search-service";
 import { WritingConventionsRow } from "../sections/skills";
 import { Select } from "../../engine/controls/Select";
 
 /**
- * Settings › Textus AI › Chat & Writing: how the chat, the writing aids and
- * research work (which model each takes is Models').
+ * Settings › Textus AI › Chat & Writing, from what is used most to what is
+ * set once: the chat, writing assistance, research writing, then the web
+ * search service and the network.
  */
 export function ChatWritingPage({
   t,
@@ -81,7 +77,17 @@ export function ChatWritingPage({
               checked={settings.agentAskBeforeFileChanges}
               onChange={(v) => setSettings({ agentAskBeforeFileChanges: v })}
             />
-            <SearchServiceSection t={t} />
+            <ToggleRow
+              label={t.suggestNextMessageLabel}
+              help={t.suggestNextMessageHint}
+              checked={settings.suggestNextMessage}
+              onChange={(v) => setSettings({ suggestNextMessage: v })}
+            />
+            <ToggleRow
+              label={t.editAnimationLabel}
+              checked={settings.enableEditAnimation}
+              onChange={(v) => setSettings({ enableEditAnimation: v })}
+            />
           </>
         )}
       </SettingsGroup>
@@ -135,6 +141,7 @@ export function ChatWritingPage({
             </Select>
           </SettingRow>
         )}
+        <WritingConventionsRow t={t} />
       </SettingsGroup>
 
       {settings.enableAskAi && (
@@ -154,25 +161,8 @@ export function ChatWritingPage({
         </SettingsGroup>
       )}
 
-      {/* Rarely changed: the writing conventions, the network, and how the
-          conversation behaves. */}
-      <AdvancedFold t={t}>
-        <WritingConventionsRow t={t} />
-        {settings.enableAskAi && (
-          <>
-            <ToggleRow
-              label={t.suggestNextMessageLabel}
-              help={t.suggestNextMessageHint}
-              checked={settings.suggestNextMessage}
-              onChange={(v) => setSettings({ suggestNextMessage: v })}
-            />
-            <ToggleRow
-              label={t.editAnimationLabel}
-              checked={settings.enableEditAnimation}
-              onChange={(v) => setSettings({ enableEditAnimation: v })}
-            />
-          </>
-        )}
+      <SettingsGroup title={t.netGroup}>
+        {settings.enableAskAi && <SearchServiceSection t={t} />}
         <SettingRow label={t.proxyLabel}>
           <Select
             className="settings-select"
@@ -212,7 +202,7 @@ export function ChatWritingPage({
             />
           </div>
         )}
-      </AdvancedFold>
+      </SettingsGroup>
     </>
   );
 }

@@ -12,116 +12,119 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AboutPage } from "./pages/AboutPage";
-import { AiPage } from "./pages/AiPage";
-import { AppearancePage } from "./pages/AppearancePage";
+import { AppearancePage, ThemeStorePage } from "./pages/AppearancePage";
 import { ChatWritingPage } from "./pages/ChatWritingPage";
-import { EditorPage } from "./pages/EditorPage";
+import {
+  EditExportPage,
+  EditImagesPage,
+  EditMarkdownPage,
+  EditTextPage,
+} from "./pages/EditorPage";
 import { ExtensionsPage } from "./pages/ExtensionsPage";
 import { GeneralPage } from "./pages/GeneralPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
-import { ModelsPage } from "./pages/ModelsPage";
 import { MemoryPage } from "./pages/MemoryPage";
 import { McpPage } from "./pages/McpPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
-import { SkillsPage } from "./pages/SkillsPage";
 import type { SettingsPageProps } from "./pages/types";
+
+const NAV_ICON = 15;
 import { PrivacySection } from "./sections/privacy";
 
-/** A Settings page: its id, its name in the navigation and the line under
- *  its title, its icon (a top page's), the page it sits under (Textus AI's
- *  three), whether this platform shows it, and its component. Plugins add
+/** A Settings page: its id, its name in the list, its icon (a page of its
+ *  own's), the group it is listed under (Appearance's, Editing's, Textus
+ *  AI's), whether this platform shows it, and its component. Plugins add
  *  theirs the same way. */
 export interface SettingsPageDef {
   id: string;
   label: (t: Strings) => string;
-  lead?: (t: Strings) => string;
   Icon?: ComponentType<{ className?: string }>;
-  parent?: string;
+  group?: SettingsGroupId;
   /** Left out where it means nothing (Shortcuts on a phone). */
   available?: () => boolean;
   Page: ComponentType<SettingsPageProps>;
 }
 
-const NAV_ICON = 15;
+export type SettingsGroupId = "look" | "edit" | "ai";
+
+/** The groups pages are listed under: a name and an icon, folded until
+ *  opened. */
+export const SETTINGS_GROUPS: Record<
+  SettingsGroupId,
+  { label: (t: Strings) => string; Icon: ComponentType<{ className?: string }> }
+> = {
+  look: { label: (t) => t.navAppearance, Icon: lucide(Palette, NAV_ICON) },
+  edit: { label: (t) => t.navEditing, Icon: lucide(PenLine, NAV_ICON) },
+  ai: { label: (t) => t.navAi, Icon: lucide(Sparkles, NAV_ICON) },
+};
+
+const ai = () => hasTextusAi;
 
 const BUILT_IN: SettingsPageDef[] = [
   {
     id: "general",
     label: (t) => t.navGeneral,
-    lead: (t) => t.leadGeneral,
     Icon: lucide(SlidersHorizontal, NAV_ICON),
     Page: GeneralPage,
   },
   {
-    id: "appearance",
-    label: (t) => t.navAppearance,
-    lead: (t) => t.leadAppearance,
-    Icon: lucide(Palette, NAV_ICON),
+    id: "look-basic",
+    group: "look",
+    label: (t) => t.navLookBasic,
     Page: AppearancePage,
   },
   {
-    id: "editor",
-    label: (t) => t.navEditing,
-    lead: (t) => t.leadEditing,
-    Icon: lucide(PenLine, NAV_ICON),
-    Page: EditorPage,
+    id: "store",
+    group: "look",
+    label: (t) => t.navThemeStore,
+    Page: ThemeStorePage,
   },
   {
-    id: "ai",
-    label: (t) => t.navAi,
-    lead: (t) => t.leadAi,
-    Icon: lucide(Sparkles, NAV_ICON),
-    available: () => hasTextusAi,
-    Page: AiPage,
+    id: "edit-text",
+    group: "edit",
+    label: (t) => t.navEditText,
+    Page: EditTextPage,
+  },
+  {
+    id: "edit-md",
+    group: "edit",
+    label: () => "Markdown",
+    Page: EditMarkdownPage,
+  },
+  {
+    id: "edit-img",
+    group: "edit",
+    label: (t) => t.navEditImages,
+    Page: EditImagesPage,
+  },
+  {
+    id: "edit-export",
+    group: "edit",
+    label: (t) => t.menuExport,
+    Page: EditExportPage,
   },
   {
     id: "providers",
-    parent: "ai",
-    label: (t) => t.navProviders,
-    lead: (t) => t.leadProviders,
-    available: () => hasTextusAi,
+    group: "ai",
+    available: ai,
+    label: (t) => t.navProvidersModels,
     Page: ProvidersPage,
   },
   {
-    id: "models",
-    parent: "ai",
-    label: (t) => t.navModels,
-    lead: (t) => t.leadModels,
-    available: () => hasTextusAi,
-    Page: ModelsPage,
-  },
-  {
     id: "chat",
-    parent: "ai",
+    group: "ai",
+    available: ai,
     label: (t) => t.navChatWriting,
-    lead: (t) => t.leadChatWriting,
-    available: () => hasTextusAi,
     Page: ChatWritingPage,
   },
   {
     id: "memory",
-    parent: "ai",
-    label: (t) => t.navMemory,
-    lead: (t) => t.leadMemory,
-    available: () => hasTextusAi,
+    group: "ai",
+    available: ai,
+    label: (t) => t.navMemorySkills,
     Page: MemoryPage,
   },
-  {
-    id: "skills",
-    parent: "ai",
-    label: (t) => t.navSkills,
-    lead: (t) => t.leadSkills,
-    available: () => hasTextusAi,
-    Page: SkillsPage,
-  },
-  {
-    id: "mcp",
-    parent: "ai",
-    label: () => "MCP",
-    lead: (t) => t.leadMcp,
-    available: () => hasTextusAi,
-    Page: McpPage,
-  },
+  { id: "mcp", group: "ai", available: ai, label: () => "MCP", Page: McpPage },
   // The iPhone's and iPad's: there plugins, themes and skills are managed
   // in Settings; the desktop has the sidebar's plugins and these pages.
   {
@@ -141,7 +144,6 @@ const BUILT_IN: SettingsPageDef[] = [
   {
     id: "privacy",
     label: (t) => t.navPrivacyData,
-    lead: (t) => t.leadPrivacy,
     Icon: lucide(ShieldCheck, NAV_ICON),
     Page: ({ t }) => <PrivacySection t={t} />,
   },

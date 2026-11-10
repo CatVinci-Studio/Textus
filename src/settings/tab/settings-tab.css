@@ -19,3 +19,69 @@
   margin: 0 0 12px;
   color: var(--ui-muted);
 }
+
+/* About's card: the app's icon, name and version, and checking for
+   updates at its end - the page's one row that isn't in a section. */
+.settings-about-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+}
+
+.settings-about-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+
+.settings-about-card-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.settings-about-card-name {
+  font-weight: 600;
+}
+
+.settings-about-card-version {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+/* Where Textus lives and who made it: one quiet line, last. */
+.settings-about-links {
+  margin: 16px 0 0;
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  text-align: center;
+}
+
+.settings-about-links > button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.settings-about-links > button:hover {
+  color: var(--ui-text);
+}
+
+/* The update button at the card's end, its answer under the card's text. */
+.settings-about-card > .settings-about-link {
+  flex: none;
+  width: auto;
+  padding-inline: 12px;
+}
+
+/* Rows given in a wrapper of their own (the update channel's) sit in the
+   section's list as its own rows do. */
+.settings-group-body > .settings-about-channel {
+  display: contents;
+}
