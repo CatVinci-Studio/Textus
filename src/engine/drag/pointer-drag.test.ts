@@ -1,30 +1,26 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import {
-  dropIndex,
-  makeRoom,
-  roomFor,
-  trackDrag,
-  type Slot,
-} from "./pointer-drag";
+import { trackDrag } from "./pointer-drag";
+import { passedCount, roomFor, shiftAt } from "./row";
 
-const slots: Slot[] = ["a", "b", "c", "d"].map((id, i) => ({
-  id,
-  center: 20 + i * 40,
-  size: 36,
-}));
+// Four items 36 wide, 4 apart: centres 20, 60, 100, 140.
+const centersWithout = (i: number) =>
+  [20, 60, 100, 140].filter((_, j) => j !== i);
 
 it("drops where the dragged item's center has passed the others", () => {
-  expect(dropIndex(slots, "a", 0)).toBe(0);
-  expect(dropIndex(slots, "a", 45)).toBe(1);
-  expect(dropIndex(slots, "a", 200)).toBe(3);
-  expect(dropIndex(slots, "d", -90)).toBe(1);
+  expect(passedCount(centersWithout(0), 20)).toBe(0);
+  expect(passedCount(centersWithout(0), 20 + 45)).toBe(1);
+  expect(passedCount(centersWithout(0), 20 + 200)).toBe(3);
+  expect(passedCount(centersWithout(3), 140 - 90)).toBe(1);
 });
 
 it("moves each passed item one slot the other way", () => {
-  const room = makeRoom(slots, "a", 85, 4);
-  expect(Object.fromEntries(room)).toEqual({ b: -40, c: -40 });
-  expect(Object.fromEntries(makeRoom(slots, "d", -50, 4))).toEqual({ c: 40 });
+  // The first dragged past two: those two step back.
+  const to = passedCount(centersWithout(0), 20 + 85);
+  expect([0, 1, 2].map((i) => shiftAt(i, 0, to, 40))).toEqual([-40, -40, 0]);
+  // The last dragged back past one: it steps on.
+  const back = passedCount(centersWithout(3), 140 - 50);
+  expect([0, 1, 2].map((i) => shiftAt(i, 3, back, 40))).toEqual([0, 0, 40]);
 });
 
 const pointer = (type: string, x: number, y = 0) =>

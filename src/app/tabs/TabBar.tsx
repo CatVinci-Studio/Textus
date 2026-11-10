@@ -14,7 +14,7 @@ import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
 import { revealActive, TabListButton, useTabOverflow } from "./TabList";
-import { roomFor, SLIDE } from "../../engine/drag/pointer-drag";
+import { roomFor, SLIDE } from "../../engine/drag/row";
 
 interface TabBarProps {
   tabs: TabInfo[];

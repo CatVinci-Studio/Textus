@@ -4,7 +4,7 @@ import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu } from "../../ui/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { MoreIcon } from "../../ui/icons";
-import { reorderDrag } from "../../engine/drag/pointer-drag";
+import { reorderDrag } from "../../engine/drag/row";
 import type { Strings } from "../../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 

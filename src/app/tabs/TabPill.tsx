@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../../ui/icons";
 import { measure, play } from "../../engine/motion/flip";
 import { Tooltip } from "../../ui/Tooltip";
-import { dropIndex, makeRoom, SLIDE } from "../../engine/drag/pointer-drag";
+import { row, type Row } from "../../engine/drag/row";
 import { iosFiles } from "../../platform/ios-files";
 import { isIOSApp } from "../../platform/capabilities";
 
@@ -47,15 +47,6 @@ function barAt(x: number, y: number, own: Element | null): Element | null {
   return null;
 }
 
-interface PillRect {
-  id: string;
-  center: number;
-  width: number;
-}
-
-const slotsOf = (rects: PillRect[]) =>
-  rects.map((r) => ({ id: r.id, center: r.center, size: r.width }));
-
 export function TabPill({
   tab,
   tabIds,
@@ -94,9 +85,8 @@ export function TabPill({
     /** A finger's press, until it has held still long enough to lift. */
     waiting?: ReturnType<typeof setTimeout>;
     lifted?: boolean;
-    // Resting geometry, measured once; live shifting compares against it.
-    rects: PillRect[];
-    gap: number;
+    /** The row it is dragged along, measured once the drag begins. */
+    line?: Row;
   } | null>(null);
   const title = tab.title;
 
@@ -164,8 +154,6 @@ export function TabPill({
       startX: e.clientX,
       startY: e.clientY,
       reordering: false,
-      rects: [],
-      gap: 0,
       waiting: touch ? setTimeout(lift, LIFT_MS) : undefined,
     };
     if (!touch) e.currentTarget.setPointerCapture(e.pointerId);
@@ -209,40 +197,17 @@ export function TabPill({
     if (!g.reordering) {
       if (Math.abs(dx) < REORDER_THRESHOLD_PX) return;
       g.reordering = true;
-      g.rects = tabIds
-        .map((id) => {
-          const node = pillNode(id);
-          if (!node) return null;
-          // Layout values, immune to transforms in flight.
-          return {
-            id,
-            center: node.offsetLeft + node.offsetWidth / 2,
-            width: node.offsetWidth,
-          };
-        })
-        .filter((r): r is PillRect => r !== null);
       const bar = elRef.current?.parentElement;
-      g.gap = bar ? parseFloat(getComputedStyle(bar).columnGap) || 0 : 0;
+      g.line = row(
+        tabIds.flatMap((id) => {
+          const node = pillNode(id);
+          return node ? [{ id, node }] : [];
+        }),
+        tab.id,
+        { gap: bar ? parseFloat(getComputedStyle(bar).columnGap) || 0 : 0 },
+      );
     }
-
-    const el = elRef.current;
-    const mine = g.rects.find((r) => r.id === tab.id);
-    if (!el || !mine) return;
-    el.style.transition = "none";
-    // `translate`, not `transform`: the lifted `scale` would scale the
-    // offset too, and the pill drift off the pointer.
-    el.style.translate = `${dx}px 0`;
-    el.style.zIndex = "10";
-
-    const shifts = makeRoom(slotsOf(g.rects), tab.id, dx, g.gap);
-    for (const r of g.rects) {
-      if (r.id === tab.id) continue;
-      const node = pillNode(r.id);
-      if (!node) continue;
-      const shift = shifts.get(r.id) ?? 0;
-      node.style.transition = SLIDE;
-      node.style.transform = shift ? `translateX(${shift}px)` : "";
-    }
+    g.line?.move(dx);
   }
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
@@ -260,7 +225,7 @@ export function TabPill({
     }
     // The drop index is how many OTHER pills the center passed. FLIP comes
     // from the visual positions, so every pill glides to its final slot.
-    const index = dropIndex(slotsOf(g.rects), tab.id, e.clientX - g.startX);
+    const index = g.line?.index(e.clientX - g.startX) ?? -1;
     if (index === tabIds.indexOf(tab.id)) {
       // Back in its own slot: no commit follows to play the slides.
       const bar = elRef.current?.parentElement;
