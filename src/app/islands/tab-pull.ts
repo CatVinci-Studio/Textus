@@ -18,6 +18,7 @@ import {
 } from "../../engine/layout/ops";
 import { paneOf, previewSplit, splitLayout } from "../../engine/layout/store";
 import { paneById, paneWithTab } from "../../engine/layout/tree";
+import { frameLayout } from "../../engine/frame/frame-store";
 import { setDragging } from "../../engine/controls/document-drop";
 import { commitDrop, dropLayout } from "./split-drop";
 import { liftIsland, type IslandLift } from "./island-lift";
@@ -60,7 +61,7 @@ export function pullTab(
   },
 ): void {
   const pill = document.querySelector<HTMLElement>(
-    `.tab-pill[data-flip-id="${CSS.escape(tabId)}"]`,
+    `.tab-pill[data-tab="${CSS.escape(tabId)}"]`,
   );
   const ghost = dragGhost(title, "tab-pull-ghost");
   if (pill) ghost.gather(pill.getBoundingClientRect());
@@ -165,7 +166,7 @@ export function pullTab(
     const { x, y, alt } = last;
     // Over the room it opened, the place holds: the islands moved under a
     // pointer tested against where they were, and a drop there went astray.
-    const room = current && !wholeIsland(alt) ? marks.room() : null;
+    const room = current && !wholeIsland(alt) ? marks.island() : null;
     if (
       room &&
       x >= room.left &&
@@ -276,32 +277,37 @@ function placeMarks(tabId: string) {
   document.head.append(style);
   const tab = CSS.escape(tabId);
   let roomSelector: string | null = null;
+  let roomPane: string | null = null;
   return {
     update(left: boolean, shown: SplitLayout | null, whole: boolean) {
       const rules: string[] = [];
       if (!left && !shown && !whole)
-        rules.push(`.tab-pill[data-flip-id="${tab}"] { opacity: 0.4; }`);
+        rules.push(`.tab-pill[data-tab="${tab}"] { opacity: 0.4; }`);
       // A whole island on the move: its word count goes with it.
       if (whole)
         rules.push(
           `.document-corner[data-corner-of="${tab}"] { visibility: hidden; }`,
         );
       roomSelector = null;
+      roomPane = null;
       if (!whole && (left || shown)) {
         rules.push(`[data-tab-id="${tab}"] { visibility: hidden; }`);
         const pane = shown && paneWithTab(shown.root, tabId);
+        const slot = `.tab-pill[data-tab="${tab}"]`;
+        // Its slot in the row it would join, or in the new island's own
+        // row: the island it lands in, told by the tab it gains.
+        if (pane)
+          rules.push(
+            `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
+            `${slot}::before, ${slot}::after { display: none !important; }`,
+            `${slot} > * { visibility: hidden; }`,
+          );
+        roomSelector = pane ? slot : null;
         if (pane && pane.tabs.length === 1) {
           const id = CSS.escape(pane.id);
-          roomSelector = `section.island[data-pane-id="${id}"]`;
+          roomPane = pane.id;
           rules.push(
-            `${roomSelector} { background: var(--drop-room-island) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
-            `.island-row[data-pane-id="${id}"] { visibility: hidden; }`,
-          );
-        } else if (pane) {
-          roomSelector = `.tab-pill[data-flip-id="${tab}"]`;
-          rules.push(
-            `${roomSelector} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
-            `${roomSelector} > * { visibility: hidden; }`,
+            `section.island[data-pane-id="${id}"] { background: var(--drop-room-island) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
           );
         }
       }
@@ -309,10 +315,20 @@ function placeMarks(tabId: string) {
       const text = rules.join("\n");
       if (style.textContent !== text) style.textContent = text;
     },
-    /** Where the room shown is, for the pill to land on. */
+    /** Where the tab's slot is, for the pill to land on. */
     room(): DOMRect | null {
       const el = roomSelector && document.querySelector(roomSelector);
       return el ? el.getBoundingClientRect() : null;
+    },
+    /** The new island the room opened, its row included, where the
+     *  solver puts it: the place holds while the pointer is on it, and
+     *  lets go once it leaves. */
+    island(): DOMRect | null {
+      const at =
+        roomPane && frameLayout().islands.find((i) => i.paneId === roomPane);
+      return at
+        ? new DOMRect(at.whole.x, at.whole.y, at.whole.w, at.whole.h)
+        : null;
     },
     remove() {
       style.remove();

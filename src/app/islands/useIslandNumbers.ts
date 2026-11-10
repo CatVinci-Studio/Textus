@@ -20,7 +20,7 @@ function focusTab(tabId: string, tries = 10): void {
     else if (tries > 0) focusTab(tabId, tries - 1);
     else
       document
-        .querySelector<HTMLElement>(`.tab-pill[data-flip-id="${id}"]`)
+        .querySelector<HTMLElement>(`.tab-pill[data-tab="${id}"]`)
         ?.focus({ preventScroll: true });
   });
 }

@@ -4,6 +4,7 @@ import { islandParts, type PlacedIsland } from "./island-parts";
 import type { IslandsLayout } from "./solve";
 import type { IslandRoom } from "./useIslandRoom";
 import type { Rect } from "./rect";
+import { setFrameLayout } from "./frame-store";
 
 /** Something held by the pointer moves with it, not after it. */
 const GRIPPED = ".tx-grip[data-gripped], .sidebar-resizer[data-gripped]";
@@ -59,6 +60,40 @@ export function useIslandFrame(
     const animate = !!was && !resized && !document.querySelector(GRIPPED);
     last.current = { shell: room.shell, sign };
     frameClock.set("islands", parts, room.origin, animate);
+    publish(room, box, solved, islands);
     after();
+  });
+}
+
+/** The solve, in the viewport's pixels, for what reads the islands' places. */
+function publish(
+  room: IslandRoom,
+  box: Rect,
+  solved: IslandsLayout,
+  islands: readonly PlacedIsland[],
+) {
+  const dx = room.origin.x + room.shellAt.x;
+  const dy = room.origin.y + room.shellAt.y;
+  const at = (r: Rect): Rect => ({ ...r, x: r.x + dx, y: r.y + dy });
+  setFrameLayout({
+    islands: islands.map(({ key, paneId, rects, tabs, front }) => ({
+      key,
+      paneId,
+      row: rects.row && at(rects.row),
+      sheet: at(rects.sheet),
+      whole: at(rects.whole),
+      tabs,
+      front,
+    })),
+    dividers: solved.dividers.map((d) => {
+      const by = d.line.direction === "row" ? dx : dy;
+      return {
+        ...d,
+        rect: at(d.rect),
+        before: { start: d.before.start + by, end: d.before.end + by },
+        after: { start: d.after.start + by, end: d.after.end + by },
+      };
+    }),
+    area: at(box),
   });
 }

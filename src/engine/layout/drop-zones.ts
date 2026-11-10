@@ -128,10 +128,10 @@ export function dropGeometry(): DropGeometry {
       pane,
       // Its whole row, the room kept at its ends included.
       row: (bar.closest(".island-row") ?? bar).getBoundingClientRect(),
-      pills: [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].map(
+      pills: [...bar.querySelectorAll<HTMLElement>("[data-tab]")].map(
         (pill) => {
           const box = pill.getBoundingClientRect();
-          return { id: pill.dataset.flipId!, center: box.left + box.width / 2 };
+          return { id: pill.dataset.tab!, center: box.left + box.width / 2 };
         },
       ),
       // Lit where the document will show, not over the bar.

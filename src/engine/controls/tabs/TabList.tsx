@@ -3,8 +3,7 @@ import { flushSync } from "react-dom";
 import { useMenuButton } from "../useMenuButton";
 import { ChevronIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
-import { scrollBehavior } from "../../motion/motion";
-import { frameClock } from "../../frame/clock";
+import { onFontsChange } from "../text-measure";
 import type { TabInfo } from "./TabPill";
 import {
   fitTabs,
@@ -19,20 +18,17 @@ import type { TabFit } from "./tab-widths";
  * Many tabs: each as wide as its name needs, the widest giving way first
  * when the row can't hold them, and once even the narrowest don't fit, the
  * row scrolls and a button at its end lists every tab (tab-widths.ts).
- * Reads the row's measures as it and the interface change and gives the
- * tabs' fit to them; null until the row is laid out. Marks the row
- * data-scrolled while tabs lie hidden before its start (faded there, not
- * cut off mid-name).
+ * The row's measures are read as it, the interface or its fonts change;
+ * null until the row is laid out. Marks the row data-scrolled while tabs
+ * lie hidden before its start (faded there, not cut off mid-name).
  */
 export function useTabFit(
   bar: RefObject<HTMLElement | null>,
   tabs: readonly TabShape[],
-  /** Something else stands in the row (a tab riding in). */
-  crowded: boolean,
-): TabFit | null {
+): (TabFit & { available: number; between: number }) | null {
   const [room, setRoom] = useState<TabRoom | null>(null);
   // What the row's measures are read from: a tab, and each part one has.
-  const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}${crowded}`;
+  const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}`;
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;
@@ -42,20 +38,14 @@ export function useTabFit(
     };
     read();
     // Before the frame is drawn: the tabs never show a width the row has
-    // already left.
-    const resized = new ResizeObserver(() => {
-      // Mid-slide its island's row is between widths: the tabs keep the fit
-      // for where it lands, measured again once it is there.
-      const row = el.closest<HTMLElement>("[data-frame]");
-      const end = row?.dataset.frame && frameClock.targetOf(row.dataset.frame);
-      if (end && Math.abs(end.w - row.offsetWidth) > 0.5) return;
-      flushSync(read);
-      revealActive(el, false);
-    });
+    // already left. (A row is laid out at the width it slides to.)
+    const resized = new ResizeObserver(() => flushSync(read));
     resized.observe(el);
     // The interface's size, font or theme: the row may keep its width.
     const restyled = new MutationObserver(read);
     restyled.observe(document.documentElement, { attributes: true });
+    // A font arriving draws the same names at other widths.
+    const fonts = onFontsChange(() => setRoom(readTabRoom(el)));
     const scrolled = () =>
       el.toggleAttribute("data-scrolled", el.scrollLeft > 1);
     scrolled();
@@ -63,10 +53,17 @@ export function useTabFit(
     return () => {
       resized.disconnect();
       restyled.disconnect();
+      fonts();
       el.removeEventListener("scroll", scrolled);
     };
   }, [bar, parts]);
-  return room && fitTabs(tabs, room);
+  return (
+    room && {
+      ...fitTabs(tabs, room),
+      available: room.available,
+      between: room.between,
+    }
+  );
 }
 
 /** The row's list of every tab, the open one ticked; picking one shows it. */
@@ -105,31 +102,4 @@ export function TabListButton({
       {list.menu}
     </>
   );
-}
-
-/**
- * Scrolls the row alone (never the page) to bring its open tab into the
- * part that shows: inside its ends, before the + and the list held at its
- * end. A phone shows two or three pills, a full row only some.
- */
-export function revealActive(bar: HTMLElement, smooth: boolean) {
-  const pill = bar.querySelector<HTMLElement>(".tab-pill-active");
-  if (!pill) return;
-  const box = bar.getBoundingClientRect();
-  const style = getComputedStyle(bar);
-  const held = bar.hasAttribute("data-overflow")
-    ? [...bar.querySelectorAll(".tab-bar-add, .tab-bar-list")].reduce(
-        (sum, el) => sum + el.getBoundingClientRect().width,
-        0,
-      )
-    : 0;
-  const left = box.left + parseFloat(style.paddingLeft);
-  const right = box.right - parseFloat(style.paddingRight) - held;
-  const at = pill.getBoundingClientRect();
-  const margin = 12;
-  const behavior = smooth ? scrollBehavior() : "auto";
-  if (at.left < left + margin)
-    bar.scrollBy({ left: at.left - left - margin, behavior });
-  else if (at.right > right - margin)
-    bar.scrollBy({ left: at.right - right + margin, behavior });
 }

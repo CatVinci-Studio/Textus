@@ -104,7 +104,17 @@ export function IslandArea({
   });
   const placed: PlacedIsland[] = places.flatMap(({ pane, key }) => {
     const rects = box(pane ? pane.id : keys[0]);
-    return rects ? [{ key, rects, front: pane ? pane.front : front }] : [];
+    return rects
+      ? [
+          {
+            key,
+            paneId: pane?.id ?? null,
+            rects,
+            tabs: pane ? pane.tabs : tabs,
+            front: pane ? pane.front : front,
+          },
+        ]
+      : [];
   });
   useIslandFrame(ref, room, area, solved, placed, settleTabRows);
   // What the docks beside the area leave room for (useNarrowSidebar).

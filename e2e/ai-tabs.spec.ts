@@ -177,7 +177,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
     [...document.querySelectorAll<HTMLElement>(".island-row")].map((row) => {
       const bar = row.querySelector(".tab-bar");
       const first = bar?.querySelector(
-        ":scope > .tab-pill:not(.tab-pill-ghost, .tab-pill-preview)",
+        ":scope > .tab-strip > .tab-pill:not(.tab-pill-preview)",
       );
       const sheet = document.querySelector(
         `section.island[data-pane-id="${row.dataset.paneId}"]`,

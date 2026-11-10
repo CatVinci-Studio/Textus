@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { dragSlots, incomingSlots, stripSlots } from "./tab-strip";
 import { tabWidths, type TabParts } from "./tab-widths";
 
 const LIMITS = { min: 56, max: 200 };
@@ -85,5 +86,31 @@ describe("tabWidths", () => {
       cut: [],
       overflow: false,
     });
+  });
+});
+
+describe("the tabs' places along their strip", () => {
+  const slots = stripSlots([100, 60, 80], 2);
+
+  it("lays them side by side, a gap apart", () => {
+    expect(slots).toEqual([
+      { x: 0, w: 100 },
+      { x: 102, w: 60 },
+      { x: 164, w: 80 },
+    ]);
+  });
+
+  it("makes room as a dragged tab passes the others", () => {
+    const drag = dragSlots(slots, 0, 160, 2);
+    expect(drag.to).toBe(2);
+    expect(drag.slots.map((s) => s.x)).toEqual([0, 0, 62]);
+    expect(dragSlots(slots, 0, 10, 2).to).toBe(0);
+  });
+
+  it("opens a place for a tab riding in, kept inside the strip", () => {
+    const ride = incomingSlots(slots, 50, 140, 2);
+    expect(ride.at).toBe(2);
+    expect(ride.slots.map((s) => s.x)).toEqual([0, 102, 216]);
+    expect(incomingSlots(slots, 50, -40, 2).incoming.x).toBe(0);
   });
 });

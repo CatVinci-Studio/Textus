@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { trackDrag } from "./pointer-drag";
-import { passedCount, roomFor, shiftAt } from "./row";
+import { passedCount, shiftAt } from "./row";
 
 // Four items 36 wide, 4 apart: centres 20, 60, 100, 140.
 const centersWithout = (i: number) =>
@@ -56,19 +56,4 @@ it("swallows the click a drag's release sends", () => {
   document.body.click();
   expect(clicked).not.toHaveBeenCalled();
   document.body.removeEventListener("click", clicked);
-});
-
-describe("roomFor", () => {
-  it("moves on what lies past the place something arrives at", () => {
-    const centers = new Map([
-      ["a", 50],
-      ["b", 150],
-      ["c", 250],
-    ]);
-    expect([...roomFor(centers, 120, 100)]).toEqual([
-      ["a", 0],
-      ["b", 100],
-      ["c", 100],
-    ]);
-  });
 });

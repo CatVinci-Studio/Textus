@@ -153,7 +153,7 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
             insets.atCorner &&
               !!bar
                 ?.querySelector(
-                  ":scope > .tab-pill:not(.tab-pill-ghost, .tab-pill-preview)",
+                  ":scope > .tab-strip > .tab-pill:not(.tab-pill-preview)",
                 )
                 ?.classList.contains("tab-pill-active"),
           );

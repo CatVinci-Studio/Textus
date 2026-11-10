@@ -22,16 +22,23 @@
   display: none;
 }
 
-/* An arriving pill takes its full width at once while neighbours slide
-   aside; growing its width reflowed the bar every frame. */
+/* The tabs' strip: as long as its tabs, each placed along it by the
+   window's clock (useTabStrip), so the row scrolls over it. */
+.tab-strip {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+}
 
 .tab-pill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Its width is set from tab-widths.ts, between min-width and max-width;
-     until the row is measured it is sized by its content. */
-  flex-shrink: 1;
+  /* Its width is set from tab-widths.ts, between min-width and max-width. */
+  box-sizing: border-box;
   min-width: calc(56px * var(--chrome-scale));
   max-width: 200px;
   padding: 4px 8px;
@@ -39,11 +46,6 @@
   font-size: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-
-.tab-pill[data-entered]:not(.tab-pill-ghost) {
-  animation: none;
 }
 
 /* Held by a finger until it lifts: it rises under it, ready to drag, and
@@ -63,16 +65,9 @@
   outline-offset: -2px;
 }
 
-.tab-pill-ghost {
-  --exit-scale: var(--scale-enter);
-  animation: motion-exit var(--dur-fast) var(--ease-in) forwards;
-}
-
-/* An incoming tab riding this bar mid-drag. No pop-in: a pill still scaling
-   would skew the slot math that positions it. */
+/* An incoming tab riding this bar mid-drag. */
 .tab-pill-preview {
   pointer-events: none;
-  animation: none;
 }
 
 /* The pill following the cursor is its own tiny OS window, since nothing in

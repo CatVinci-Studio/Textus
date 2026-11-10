@@ -6,7 +6,10 @@ import type { IslandRects } from "./solve";
  *  split keeps the island that stays), its rects, the tab in front. */
 export interface PlacedIsland {
   key: string;
+  /** Its pane; null for the one island of a window not split. */
+  paneId: string | null;
   rects: IslandRects;
+  tabs: readonly string[];
   front: string | null;
 }
 

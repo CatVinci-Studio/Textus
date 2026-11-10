@@ -13,6 +13,8 @@ export interface IslandRoom {
   bar: number;
   /** The shell's own size: when it changed, the window was resized. */
   shell: { w: number; h: number };
+  /** Where the shell sits in the viewport. */
+  shellAt: { x: number; y: number };
 }
 
 const same = (a: IslandRoom | null, b: IslandRoom) =>
@@ -23,7 +25,9 @@ const same = (a: IslandRoom | null, b: IslandRoom) =>
   a.origin.y === b.origin.y &&
   a.inset === b.inset &&
   a.gap === b.gap &&
-  a.bar === b.bar;
+  a.bar === b.bar &&
+  a.shellAt.x === b.shellAt.x &&
+  a.shellAt.y === b.shellAt.y;
 
 /**
  * Measured when the area changes size (a sidebar opened, the window
@@ -63,6 +67,7 @@ function measure(
   if (!el || !probe) return null;
   const shell = el.offsetParent as HTMLElement | null;
   const style = getComputedStyle(probe);
+  const at = shell?.getBoundingClientRect();
   return {
     w: el.clientWidth,
     h: el.clientHeight,
@@ -71,5 +76,6 @@ function measure(
     gap: parseFloat(style.marginLeft) || 0,
     bar: parseFloat(style.height) || 0,
     shell: { w: shell?.clientWidth ?? 0, h: shell?.clientHeight ?? 0 },
+    shellAt: { x: at?.left ?? 0, y: at?.top ?? 0 },
   };
 }

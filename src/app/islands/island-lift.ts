@@ -41,7 +41,7 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
     // Unmarked and at rest, so no rule a drag sets on the island (its
     // place's outline, a tab dimmed or lifted) takes the copy too.
     for (const node of [copy, ...copy.querySelectorAll<HTMLElement>("*")]) {
-      for (const name of ["data-pane-id", "data-tab-id", "data-flip-id"])
+      for (const name of ["data-pane-id", "data-tab-id", "data-tab"])
         node.removeAttribute(name);
       node.classList.remove("tab-pill-lifted", "is-drag-lifted");
       node.style.removeProperty("translate");

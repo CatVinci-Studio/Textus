@@ -12,6 +12,10 @@ import { tabWidths, type TabFit } from "./tab-widths";
 interface PillMeasures {
   /** Its name's font. */
   font: string;
+  /** How much wider the page draws a name than the canvas measures it
+   *  (1 where they agree): the check that keeps a whole name from being
+   *  cut when a font or its spacing differs from what the canvas knows. */
+  textFix: number;
   /** Its padding and borders, both sides. */
   pad: number;
   /** Between its parts. */
@@ -61,9 +65,10 @@ function laidOut(el: Element): number {
 
 /** A copy of `pill` with every part a tab can have, in the row for a
  *  moment and never drawn: measured as the row's stylesheet makes it. */
-function measurePill(bar: HTMLElement, pill: HTMLElement): PillMeasures {
+function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
   const probe = pill.cloneNode(true) as HTMLElement;
-  probe.removeAttribute("data-flip-id");
+  probe.removeAttribute("data-tab");
+  probe.removeAttribute("data-strip-key");
   probe.removeAttribute("style");
   probe.classList.remove("tab-pill-looking");
   probe.style.cssText = "position:absolute;visibility:hidden;animation:none";
@@ -75,14 +80,15 @@ function measurePill(bar: HTMLElement, pill: HTMLElement): PillMeasures {
     const has = probe.querySelector(`.${name}`);
     if (has) return has;
     const made =
-      bar.querySelector(`.${name}`)?.cloneNode(true) ??
+      strip.querySelector(`.${name}`)?.cloneNode(true) ??
       Object.assign(document.createElement("span"), { className: name });
     title.before(made);
     return made as Element;
   };
   const dot = part("tab-pill-dirty-dot");
   const lock = part("tab-pill-lock");
-  bar.append(probe);
+  (title as HTMLElement).style.cssText = "flex:none;overflow:visible";
+  strip.append(probe);
   const style = getComputedStyle(probe);
   const pad =
     px(style.paddingLeft) +
@@ -91,8 +97,12 @@ function measurePill(bar: HTMLElement, pill: HTMLElement): PillMeasures {
     px(style.borderRightWidth);
   const outside = style.boxSizing === "border-box" ? 0 : pad;
   const close = probe.querySelector(".tab-pill-close");
+  const font = fontOf(title);
+  const drawn = title.getBoundingClientRect().width;
+  const measured = textWidth(title.textContent ?? "", font) ?? 0;
   const measures: PillMeasures = {
-    font: fontOf(title),
+    font,
+    textFix: drawn > 0 && measured > 0 ? Math.max(1, drawn / measured) : 1,
     pad,
     gap: px(style.columnGap),
     // Not its margin: the free room it is pushed to the end with.
@@ -111,8 +121,11 @@ function measurePill(bar: HTMLElement, pill: HTMLElement): PillMeasures {
 /** The row's measures now; null while it has no tab to measure by or is
  *  not laid out. */
 export function readTabRoom(bar: HTMLElement): TabRoom | null {
-  const pill = bar.querySelector<HTMLElement>(":scope > .tab-pill");
-  if (!pill) return null;
+  const strip = bar.querySelector<HTMLElement>(":scope > .tab-strip");
+  const pill = strip?.querySelector<HTMLElement>(
+    ":scope > .tab-pill:not(.tab-pill-preview)",
+  );
+  if (!strip || !pill) return null;
   const style = getComputedStyle(bar);
   const between = px(style.columnGap);
   const inner =
@@ -121,18 +134,18 @@ export function readTabRoom(bar: HTMLElement): TabRoom | null {
       ? px(style.paddingLeft) + px(style.paddingRight)
       : 0);
   if (!(inner > 0)) return null;
-  // What else stands in the row: its +, a tab riding in from another
-  // window. Not its list of tabs, which shows only once they overflow.
+  // What else stands in the row: its +. Not its list of tabs, which shows
+  // only once they overflow.
   let taken = 0;
   for (const child of bar.children) {
-    if (child.matches(".tab-pill[data-flip-id], .tab-bar-list")) continue;
+    if (child.matches(".tab-strip, .tab-bar-list")) continue;
     if (/absolute|fixed/.test(getComputedStyle(child).position)) continue;
     taken += laidOut(child) + between;
   }
   return {
     available: Math.floor(inner - taken),
     between,
-    pill: measurePill(bar, pill),
+    pill: measurePill(strip, pill),
   };
 }
 
@@ -145,8 +158,8 @@ export function fitTabs(tabs: readonly TabShape[], room: TabRoom): TabFit {
   const { pill } = room;
   const parts = tabs.map((tab) => ({
     title: Math.ceil(
-      textWidth(tab.title, tab.preview ? `italic ${pill.font}` : pill.font) ??
-        0,
+      (textWidth(tab.title, tab.preview ? `italic ${pill.font}` : pill.font) ??
+        0) * pill.textFix,
     ),
     fixed:
       pill.pad +

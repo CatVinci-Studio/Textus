@@ -30,6 +30,9 @@ export interface FramePart {
   above?: boolean;
   /** New to the window: grows in from this edge of its place. */
   grows?: Edge;
+  /** A box placed along its row only (a tab in its strip): its height and
+   *  top stay its stylesheet's. */
+  along?: boolean;
 }
 
 interface Run {
@@ -78,6 +81,9 @@ export class FrameClock {
       }
     const moving = animate && motionAllowed();
     for (const [key, part] of parts) {
+      // Already on its way there: it keeps going, not started over.
+      const running = this.runs.get(key);
+      if (moving && running && sameRect(running.to, part.rect)) continue;
       const from = this.shown.get(key) ?? (moving ? grown(part) : part.rect);
       if (moving && !sameRect(from, part.rect))
         this.runs.set(key, { from, to: part.rect, start: null });
@@ -89,6 +95,26 @@ export class FrameClock {
     this.paint(null);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
+  }
+
+  /** Group `name` gone with its container. */
+  drop(name: string): void {
+    for (const key of this.groups.get(name)?.parts.keys() ?? []) {
+      this.shown.delete(key);
+      this.runs.delete(key);
+    }
+    this.groups.delete(name);
+  }
+
+  /** Part `key` drawn at `rect` now, from where a gesture left it (a tab
+   *  let go mid-drag); the next `set` moves it on from there. */
+  place(key: string, rect: Rect): void {
+    this.runs.delete(key);
+    this.shown.set(key, rect);
+    for (const group of this.groups.values()) {
+      const part = group.parts.get(key);
+      if (part) this.write(key, part, group.origin);
+    }
   }
 
   /** Where part `key` is drawn now, if placed. */
@@ -140,6 +166,11 @@ export class FrameClock {
     const at = this.shown.get(key);
     if (!el || !at) return;
     const s = el.style;
+    if (part.along) {
+      s.left = `${at.x - origin.x}px`;
+      s.width = `${at.w}px`;
+      return;
+    }
     if (!part.follow) {
       s.left = `${at.x - origin.x}px`;
       s.top = `${at.y - origin.y}px`;

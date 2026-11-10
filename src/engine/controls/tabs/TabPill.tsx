@@ -1,9 +1,7 @@
 import { scaledPx } from "../../tokens/chrome-scale";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../icons";
-import { measure, play } from "../../motion/flip";
 import { Tooltip } from "../Tooltip";
-import { row, type Row } from "../../drag/row";
 import { iosFiles } from "../../../platform/ios-files";
 import { isIOSApp } from "../../../platform/capabilities";
 
@@ -50,35 +48,38 @@ function barAt(x: number, y: number, own: Element | null): Element | null {
 
 export function TabPill({
   tab,
+  place,
   width,
   cut,
-  tabIds,
   isActive,
   labels,
   onActivate,
   onClose,
   onPullOut,
-  onReorder,
+  onDrag,
+  onDrop,
   onKeep,
-  captureFlip,
   onMenu,
   onUnlock,
 }: {
   tab: TabInfo;
+  /** Its ref in its strip, which places it (useTabStrip). */
+  place: (el: HTMLElement | null) => void;
   /** Its width in the row and whether its name is cut (tab-widths.ts);
    *  none until the row is measured: as wide as its content then. */
   width?: number;
   cut?: boolean;
-  tabIds: string[];
   isActive: boolean;
   labels: { close: string; unsaved: string; readOnly?: string };
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onPullOut?: (id: string, title: string) => void;
-  onReorder: (id: string, index: number) => void;
+  /** Dragged `dx` along the row, and let go there: the strip makes room
+   *  and moves it on. */
+  onDrag: (id: string, dx: number) => void;
+  onDrop: (id: string, dx: number) => void;
   /** A double click keeps a preview tab. */
   onKeep?: (id: string) => void;
-  captureFlip: (how: { dropped?: string; gone?: string }) => void;
   onMenu?: (x: number, y: number) => void;
   /** Its padlock clicked: reading mode off. */
   onUnlock?: (id: string) => void;
@@ -91,25 +92,17 @@ export function TabPill({
     /** A finger's press, until it has held still long enough to lift. */
     waiting?: ReturnType<typeof setTimeout>;
     lifted?: boolean;
-    /** The row it is dragged along, measured once the drag begins. */
-    line?: Row;
   } | null>(null);
   const title = tab.title;
 
-  const pillNode = (id: string): HTMLElement | null =>
-    elRef.current?.parentElement?.querySelector<HTMLElement>(
-      `[data-flip-id="${CSS.escape(id)}"]`,
-    ) ?? null;
-
-  function clearInlineStyles() {
-    for (const id of tabIds) {
-      const node = pillNode(id);
-      if (!node) continue;
-      node.style.transition = "";
-      node.style.transform = "";
-      node.style.translate = "";
-      node.style.zIndex = "";
-    }
+  /** It follows the pointer `dx` along; 0 puts it back in its place. */
+  function carry(dx: number) {
+    const el = elRef.current;
+    if (!el) return;
+    // `translate`, not `transform`: the lifted look's scale would scale the
+    // offset too, and the tab drift off the pointer.
+    el.style.translate = dx ? `${dx}px 0` : "";
+    el.style.zIndex = dx ? "10" : "";
   }
 
   // Once lifted, the finger drags the tab, not the bar: its moves are kept
@@ -183,7 +176,7 @@ export function TabPill({
       // Pulled out of the bar: neighbours slide home, and the drag is the
       // caller's from here.
       gesture.current = null;
-      clearInlineStyles();
+      carry(0);
       onPullOut(tab.id, title);
       return;
     }
@@ -194,7 +187,7 @@ export function TabPill({
       barAt(e.clientX, e.clientY, elRef.current?.parentElement ?? null)
     ) {
       gesture.current = null;
-      clearInlineStyles();
+      carry(0);
       onPullOut(tab.id, title);
       return;
     }
@@ -203,17 +196,9 @@ export function TabPill({
     if (!g.reordering) {
       if (Math.abs(dx) < REORDER_THRESHOLD_PX) return;
       g.reordering = true;
-      const bar = elRef.current?.parentElement;
-      g.line = row(
-        tabIds.flatMap((id) => {
-          const node = pillNode(id);
-          return node ? [{ id, node }] : [];
-        }),
-        tab.id,
-        { gap: bar ? parseFloat(getComputedStyle(bar).columnGap) || 0 : 0 },
-      );
     }
-    g.line?.move(dx);
+    carry(dx);
+    onDrag(tab.id, dx);
   }
 
   function handlePointerUp(e: React.PointerEvent<HTMLDivElement>) {
@@ -229,31 +214,18 @@ export function TabPill({
       } else onActivate(tab.id);
       return;
     }
-    // The drop index is how many OTHER pills the center passed. FLIP comes
-    // from the visual positions, so every pill glides to its final slot.
-    const index = g.line?.index(e.clientX - g.startX) ?? -1;
-    if (index === tabIds.indexOf(tab.id)) {
-      // Back in its own slot: no commit follows to play the slides.
-      const bar = elRef.current?.parentElement;
-      const rects = measure(bar?.querySelectorAll("[data-flip-id]") ?? []);
-      clearInlineStyles();
-      play(rects, {
-        timingFor: (el) =>
-          el === elRef.current
-            ? { duration: "--dur-base", easing: "--ease-spring-bouncy" }
-            : undefined,
-      });
-    } else {
-      captureFlip({ dropped: tab.id });
-      clearInlineStyles();
-    }
-    onReorder(tab.id, index);
+    // It glides on from where it was let go to the place it passed into.
+    carry(0);
+    onDrop(tab.id, e.clientX - g.startX);
   }
 
   return (
     <div
-      ref={elRef}
-      data-flip-id={tab.id}
+      ref={(el) => {
+        elRef.current = el;
+        place(el);
+      }}
+      data-tab={tab.id}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
       style={width === undefined ? undefined : { width }}
       data-marked={tab.marked || undefined}
@@ -265,9 +237,11 @@ export function TabPill({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {
+        const g = gesture.current;
         letGo();
         gesture.current = null;
-        clearInlineStyles();
+        carry(0);
+        if (g?.reordering) onDrop(tab.id, 0);
       }}
       onContextMenu={
         onMenu &&
@@ -284,10 +258,6 @@ export function TabPill({
         if (e.button !== 1) return;
         e.preventDefault();
         onClose(tab.id);
-      }}
-      // Entered once: a moved node restarts its stylesheet animation.
-      onAnimationEnd={(e) => {
-        if (e.target === e.currentTarget) e.currentTarget.dataset.entered = "";
       }}
     >
       {tab.dirty && (

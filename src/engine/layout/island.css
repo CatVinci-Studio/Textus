@@ -124,10 +124,8 @@
 
 /* A tab: its words, its x and the + on the row's middle line, level with
    the bar's own controls; the line between tabs the layout's. */
-:root .island-row > .tab-bar > .tab-pill {
-  position: relative;
-  align-self: stretch;
-  margin-top: var(--tab-lift);
+:root .island-row > .tab-bar > .tab-strip > .tab-pill {
+  top: var(--tab-lift);
   padding: 0 8px var(--tab-lift);
   border-inline-end: 1px solid var(--tab-line);
   border-radius: var(--tab-radius) var(--tab-radius) 0 0;
@@ -136,7 +134,7 @@
   color: color-mix(in srgb, var(--ui-text) 72%, var(--ui-frame-fill));
 }
 
-:root .island-row > .tab-bar > .tab-pill:hover:not(.tab-pill-active) {
+:root .island-row > .tab-bar > .tab-strip > .tab-pill:hover:not(.tab-pill-active) {
   background: var(--ui-hover);
 }
 
@@ -145,6 +143,7 @@
 :root
   .island-row
   > .tab-bar
+  > .tab-strip
   > .tab-pill:not(.tab-pill-active):has(+ .tab-pill) {
   background: linear-gradient(var(--tab-divider), var(--tab-divider)) right
     calc(50% - var(--tab-lift) / 2) / 1px 1.1em no-repeat;
@@ -153,13 +152,14 @@
 :root
   .island-row
   > .tab-bar
+  > .tab-strip
   > .tab-pill:is(:hover, :has(+ :is(.tab-pill-active, .tab-pill:hover))) {
   background-image: none;
 }
 
 /* Open, it is its island's own top: the page's colour, over the row's
    line. */
-:root .island-row > .tab-bar > .tab-pill-active {
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active {
   overflow: visible;
   z-index: 1;
   background: var(--island-paper);
@@ -175,8 +175,8 @@
 
 /* Where it meets its island's top edge, each side curves in to it (a
    radius of 0 draws none). */
-:root .island-row > .tab-bar > .tab-pill-active::before,
-:root .island-row > .tab-bar > .tab-pill-active::after {
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::before,
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::after {
   content: "";
   position: absolute;
   bottom: 0;
@@ -185,7 +185,7 @@
   pointer-events: none;
 }
 
-:root .island-row > .tab-bar > .tab-pill-active::before {
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::before {
   right: 100%;
   background: radial-gradient(
     circle at 0 0,
@@ -196,7 +196,7 @@
   );
 }
 
-:root .island-row > .tab-bar > .tab-pill-active::after {
+:root .island-row > .tab-bar > .tab-strip > .tab-pill-active::after {
   left: 100%;
   background: radial-gradient(
     circle at 100% 0,
@@ -209,11 +209,10 @@
 
 /* At its island's edge (data-at-corner) the first tab's side is the
    island's, straight up: no curve there. */
-.island-row > .tab-bar[data-at-corner] > .tab-pill-active:first-child::before,
 .island-row
   > .tab-bar[data-at-corner]
-  > .tab-pill-ghost:first-child
-  + .tab-pill-active::before {
+  > .tab-strip
+  > .tab-pill-active:first-child::before {
   display: none;
 }
 
@@ -222,13 +221,13 @@
 }
 
 /* Plain, its tabs are words on the page: the open one only darker. */
-:root .island-row[data-plain] > .tab-bar > .tab-pill-active {
+:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active {
   background: transparent;
   box-shadow: none;
 }
 
-:root .island-row[data-plain] > .tab-bar > .tab-pill-active::before,
-:root .island-row[data-plain] > .tab-bar > .tab-pill-active::after {
+:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active::before,
+:root .island-row[data-plain] > .tab-bar > .tab-strip > .tab-pill-active::after {
   display: none;
 }
 

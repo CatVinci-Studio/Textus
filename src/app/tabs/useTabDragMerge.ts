@@ -224,7 +224,7 @@ export function useTabDragMerge(opts: {
       if (row && at) {
         index = tabsRef.current.filter((tab) => {
           const node = document.querySelector<HTMLElement>(
-            `[data-flip-id="${CSS.escape(tab.id)}"]`,
+            `[data-tab="${CSS.escape(tab.id)}"]`,
           );
           if (!node) return false;
           const rect = node.getBoundingClientRect();
