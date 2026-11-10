@@ -613,7 +613,7 @@ for (const lang of LANGS) {
           }
         ).__devEmitTauriEvent("menu-open-settings"),
       );
-      // Textus AI › Providers & models: the model choice over the
+      // Textus AI › Models: the model choice over the
       // providers, list and picked one side by side.
       await page.evaluate(() =>
         window.dispatchEvent(

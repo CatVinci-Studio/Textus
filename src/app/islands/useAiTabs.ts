@@ -76,6 +76,8 @@ export function useAiTabs({
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
   const { tabsRef, setTabs, updateTab, activeTabId } = tabs;
+  const activeNow = useRef(activeTabId);
+  activeNow.current = activeTabId;
 
   // The tabs follow the conversations: one each, a closed one's gone, a
   // draft's tab becoming its conversation once sent.
@@ -126,6 +128,8 @@ export function useAiTabs({
       // Beside the AI's other tabs; the first in an island of its own on
       // the right of everything.
       const kept = current.find((tab) => !gone.includes(tab.id));
+      // The tab in use stays in front where the AI opens beside it.
+      const inUse = activeNow.current;
       requestAnimationFrame(() => {
         const layout = splitLayout();
         const home = kept && layout && paneWithTab(layout.root, kept.id);
@@ -137,9 +141,10 @@ export function useAiTabs({
             const right = layout && panesOf(layout.root).at(-1);
             openBeside(
               tab.id,
-              right?.front ?? tabsRef.current[0]?.id ?? null,
+              right?.front ?? inUse ?? tabsRef.current[0]?.id ?? null,
               "right",
               aiShare(),
+              tabsRef.current.map((t) => t.id),
             );
           }
         }

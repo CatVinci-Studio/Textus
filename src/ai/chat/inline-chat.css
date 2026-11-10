@@ -550,6 +550,13 @@
   opacity: 1;
 }
 
+/* The hint, wrapped in a narrow box, breaks between its phrases, never
+   inside a word. */
+.inline-chat-input:placeholder-shown {
+  word-break: keep-all;
+  line-break: strict;
+}
+
 /* A suggested next message (Tab takes it) is fainter still: it read as
    something the writer had typed themselves. */
 .inline-chat-input-suggested::placeholder {

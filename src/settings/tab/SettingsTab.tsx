@@ -76,6 +76,9 @@ export function SettingsTab({
   };
   return (
     <div className="settings-tab" ref={content}>
+      {/* Too narrow a column to set anything in: shown instead of the page
+          (settings-tab.css). */}
+      <p className="tx-empty settings-tab-narrow">{t.settingsNeedsRoom}</p>
       <div className="settings-tab-page settings-content">
         {shown.id === "about" ? (
           <AboutPage {...pageProps} checkUpdates={page === "updates"} />

@@ -139,7 +139,7 @@ describe("the connect lesson", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
     const write = screen.getByRole("dialog", { name: t.tutorialWriteTitle });
     expect(write).toHaveTextContent(
-      "Connect an AI later in Settings › Textus AI › Providers & models to try it yourself.",
+      "Connect an AI later in Settings › Textus AI › Models to try it yourself.",
     );
   });
 

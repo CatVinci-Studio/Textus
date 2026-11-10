@@ -112,3 +112,14 @@ test("installed themes show as the store's do", async ({ page }) => {
   await expect(mine).toHaveClass(/theme-gallery-item/);
   await expect(mine.locator(".theme-gallery-preview")).toBeVisible();
 });
+
+test("in too narrow a column, Settings asks for room instead of squeezing its rows", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 820, height: 700 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await emit(page, "menu-open-settings");
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator(".settings-tab-narrow")).toBeVisible();
+  await expect(page.locator(".settings-tab-page")).toBeHidden();
+});

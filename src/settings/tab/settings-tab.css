@@ -93,6 +93,21 @@
   word-break: keep-all;
   overflow-wrap: break-word;
 }
+.settings-tab-narrow {
+  display: none;
+}
+@container settings-page (max-width: 300px) {
+  .settings-tab-narrow {
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    margin: 0;
+  }
+  .settings-tab .settings-tab-page {
+    display: none;
+  }
+}
+
 @container settings-page (max-width: 460px) {
   .settings-row {
     flex-wrap: wrap;
@@ -101,7 +116,7 @@
   /* The name keeps a readable width; its control goes under it only when
      the two don't fit side by side. */
   .settings-row > :first-child:not(:only-child) {
-    flex: 1 1 12em;
+    flex: 1 1 8em;
   }
   .settings-row > :last-child:not(:first-child) {
     max-width: none;

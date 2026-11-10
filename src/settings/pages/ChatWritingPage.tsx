@@ -19,7 +19,7 @@ import { WritingConventionsRow } from "../sections/skills";
 import { Select } from "../../engine/controls/Select";
 
 /**
- * Settings › Textus AI › Chat & Writing, from what is used most to what is
+ * Settings › Textus AI › Writing assist, from what is used most to what is
  * set once: the chat, writing assistance, research writing, then the web
  * search service and the network.
  */
@@ -29,7 +29,6 @@ export function ChatWritingPage({
   setSettings,
   phone,
   marginAvailable,
-  noMargin,
 }: SettingsPageProps) {
   if (!settings.textusAi)
     return <p className="tx-list-note">{t.textusAiOffHint}</p>;
@@ -43,10 +42,7 @@ export function ChatWritingPage({
         />
         {settings.enableAskAi && (
           <>
-            <SettingRow
-              label={t.revisionDisplayLabel}
-              hint={noMargin ? t.revisionDisplayNoRoom : undefined}
-            >
+            <SettingRow label={t.revisionDisplayLabel}>
               <Select
                 className="settings-select"
                 aria-label={t.revisionDisplayLabel}
