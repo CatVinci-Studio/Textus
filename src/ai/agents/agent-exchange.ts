@@ -18,6 +18,7 @@ import {
   type SessionUpdate,
 } from "./acp-client";
 import { applyUpdate, finish, thoughtOf, type AgentView } from "./agent-view";
+import { askingMode, type ConfigOption } from "./agent-mode";
 
 /**
  * One exchange with an external agent, in a session kept for the
@@ -146,11 +147,11 @@ async function start(
       clientInfo: { name: "Textus", version: await appVersion() },
     });
     const open = () =>
-      session.connection.request<{ sessionId: string }>("session/new", {
-        cwd,
-        mcpServers: [],
-      });
-    let opened: { sessionId: string };
+      session.connection.request<{
+        sessionId: string;
+        configOptions?: ConfigOption[];
+      }>("session/new", { cwd, mcpServers: [] });
+    let opened: { sessionId: string; configOptions?: ConfigOption[] };
     try {
       opened = await open();
     } catch (err) {
@@ -163,6 +164,13 @@ async function start(
       opened = await open();
     }
     session.sessionId = opened.sessionId;
+    // Every change asks first, in Textus, whatever mode it was set to.
+    const asking = askingMode(opened.configOptions);
+    if (asking)
+      await session.connection.request("session/set_config_option", {
+        sessionId: opened.sessionId,
+        ...asking,
+      });
   } catch (err) {
     session.connection.stop();
     throw explain(agent, err);
