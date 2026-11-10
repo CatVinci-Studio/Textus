@@ -22,6 +22,9 @@ body {
   display: flex;
   height: 100vh;
   overflow: clip;
+  /* The frame's colour under everything: a gap while parts move shows the
+     frame, never the window's white. */
+  background: var(--ui-frame);
 }
 
 /* On the desktop the window is one grid (design-language.md 5.7): the
@@ -71,4 +74,45 @@ body {
   .app-shell
   > :is(.sidebar, .main-pane) {
   grid-row: 2 / 3;
+}
+
+/* The sidebar opens and closes as one motion: its column's width, the
+   islands beside it following the real layout - no slide of its own, no
+   second clock. Its contents keep their width and are revealed. Off while
+   its edge is dragged, so the edge stays under the pointer. */
+:root:not([data-window-chrome="mobile"]) .app-shell {
+  transition: grid-template-columns var(--dur-settle) var(--ease-settle);
+}
+:root:not([data-window-chrome="mobile"])
+  .app-shell:has(.sidebar-resizer[data-gripped]) {
+  transition: none;
+}
+:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar,
+:root:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar.sidebar-collapsed {
+  width: auto;
+  overflow: hidden;
+  transform: none;
+  opacity: 1;
+}
+:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
+  transition: visibility 0s;
+}
+:root:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar.sidebar-collapsed {
+  transition: visibility 0s linear var(--dur-settle);
+}
+:root:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar
+  > :is(.sidebar-header, .sidebar-body) {
+  min-width: var(--sidebar-width, 240px);
+}
+:root:not([data-window-chrome="mobile"])
+  .app-shell
+  > .sidebar
+  > .sidebar-resizer {
+  right: 0;
 }

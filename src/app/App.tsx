@@ -157,7 +157,8 @@ function App() {
         setTab={agentPanel.setTab}
       >
         <FlipOnChange
-          watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
+          // The sidebar moves its column itself (app-shell.css): not here.
+          watch={`${agentPresence.mounted} ${zenMode}`}
           targets={() =>
             document.querySelectorAll(
               // The islands whole and what is inside them: a sheet that
