@@ -176,7 +176,10 @@ export class PluginHost {
   start(): Promise<void> {
     this.code ??= lazyModule(`plugin:${this.id}`, () =>
       this.load().catch((err) => {
-        this.deps.failed(this.id, String((err as Error)?.message ?? err));
+        // Stopped while starting (a reload, an update): its replacement is
+        // the plugin now, and must not be turned off for this one.
+        if (!this.stopped)
+          this.deps.failed(this.id, String((err as Error)?.message ?? err));
         throw err;
       }),
     );
@@ -262,16 +265,19 @@ export class PluginHost {
       );
     });
     hostsContainer().append(frame);
-    this.endpoint = await withTimeout(
+    const endpoint = await withTimeout(
       connected,
       START_MS,
       `Starting ${this.name}`,
     );
+    if (this.stopped) throw new Error("Stopped");
+    this.endpoint = endpoint;
     const exported = await withTimeout(
       this.endpoint.call<unknown>("$activate"),
       START_MS,
       `Activating ${this.name}`,
     );
+    if (this.stopped) throw new Error("Stopped");
     this.exports = Array.isArray(exported) ? exported.map(String) : [];
     let missed = 0;
     this.pinger = setInterval(() => {
