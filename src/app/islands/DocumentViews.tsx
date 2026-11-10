@@ -1,6 +1,7 @@
 import { Suspense, type CSSProperties } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
 import { PageTabContent } from "../tabs/page-tabs";
+import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { EditorPane } from "../../document-view/EditorPane";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
@@ -58,6 +59,9 @@ export function DocumentViews({
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   t: Strings;
 }) {
+  // The document in front draws the conversation and the margin, even
+  // with an AI tab or a page tab active.
+  const inFront = useDocumentInFront(tabs, activeTabId);
   return (
     <>
       {/* A tab's editor stays mounted while hidden, so switching keeps its
@@ -159,7 +163,7 @@ export function DocumentViews({
                   docTitle={tabTitle(tab, t)}
                   initialValue={tab.content}
                   onChange={onChange}
-                  isActive={tab.id === activeTabId}
+                  isActive={tab.id === inFront}
                   tour={tour && tab.id === tour.tabId ? tour.ai : null}
                   tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
                   readOnly={tabReadOnly(tab)}
