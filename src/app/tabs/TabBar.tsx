@@ -8,7 +8,11 @@ import {
   type CSSProperties,
 } from "react";
 import { animate } from "../../engine/motion/motion";
-import { ListMotion, measure, type PendingFlip } from "../../engine/motion/flip";
+import {
+  ListMotion,
+  measure,
+  type PendingFlip,
+} from "../../engine/motion/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { ContextMenu, type ContextMenuItem } from "../../ui/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
