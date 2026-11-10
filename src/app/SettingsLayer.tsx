@@ -11,6 +11,11 @@ import type { SettingsTabProps } from "../settings/tab/SettingsTab";
 import { Presence } from "../engine/motion/usePresence";
 import { isIOSApp } from "../platform/capabilities";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
+import {
+  OPEN_SETTINGS_PAGE_EVENT,
+  settingsPageShown,
+  type SettingsPageRequest,
+} from "../settings/settings-nav";
 import { pluginName, pluginRecord } from "../plugins/manager";
 import { showPage, type PageRequest } from "./tabs/page-tabs";
 import type { TabState } from "./tabs/useTabState";
@@ -49,6 +54,12 @@ const PluginTab = lazyComponent(
   lazyModule("plugin-tab", () => import("../settings/pages/PluginTab")),
   (m) => m.PluginTab,
 );
+
+/** The sidebar, open on Settings' pages. */
+const showSettingsList = () =>
+  window.dispatchEvent(
+    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "settings" }),
+  );
 
 /** A plugin's name, for its tab. */
 const pluginTitle = (id: string) => {
@@ -90,15 +101,30 @@ export function useSettingsOpening(tabs: TabState) {
       else setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
     window.addEventListener(OPEN_CREATE_EVENT, open);
-    return () => window.removeEventListener(OPEN_CREATE_EVENT, open);
+    // A page picked in the sidebar's list, or a search result there.
+    const page = (e: Event) => {
+      const { page, jump } = (e as CustomEvent<SettingsPageRequest>).detail;
+      showPage(tabs, "settings", page, undefined, jump);
+    };
+    window.addEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
+    return () => {
+      window.removeEventListener(OPEN_CREATE_EVENT, open);
+      window.removeEventListener(OPEN_SETTINGS_PAGE_EVENT, page);
+    };
   }, [tabs]);
   return {
     open: state.open,
     request: state.request,
-    openSettings: () =>
-      inTabs ? showPage(tabs, "settings") : request("general"),
-    openUpdates: () =>
-      inTabs ? showPage(tabs, "settings", "updates") : request("updates"),
+    openSettings: () => {
+      if (!inTabs) return request("general");
+      showSettingsList();
+      showPage(tabs, "settings", settingsPageShown());
+    },
+    openUpdates: () => {
+      if (!inTabs) return request("updates");
+      showSettingsList();
+      showPage(tabs, "settings", "updates");
+    },
     openPluginSettings: (id?: string) => {
       // A plugin's page in its tab; the list itself is the sidebar's.
       if (inTabs)
@@ -148,7 +174,12 @@ export function SettingsTabPage({
 }: SettingsTabProps & { request: PageRequest | null }) {
   return (
     <Suspense fallback={null}>
-      <SettingsTab key={request?.at ?? 0} {...props} page={request?.to} />
+      <SettingsTab
+        key={request?.at ?? 0}
+        {...props}
+        page={request?.to}
+        jump={request?.jump as SettingsTabProps["jump"]}
+      />
     </Suspense>
   );
 }

@@ -44,24 +44,27 @@ export function ActivityRail({
   const hidden = new Set(settings.activityRailHidden);
   // The tab shown keeps its icon, hidden or not.
   const shownTabs = tabs.filter(
-    (tab) => !hidden.has(tab.id) || tab.id === shownId,
+    (tab) => !tab.railFoot && (!hidden.has(tab.id) || tab.id === shownId),
   );
+  const settingsOn = sidebarOpen && shownId === "settings";
   const menuItems: ContextMenuEntry[] = [
     {
       label: t.activityRailHide,
       onSelect: () => setSettings({ activityRail: false }),
     },
     "separator",
-    ...tabs.map((tab) => ({
-      label: tab.label(t),
-      checked: !hidden.has(tab.id),
-      onSelect: () =>
-        setSettings({
-          activityRailHidden: hidden.has(tab.id)
-            ? settings.activityRailHidden.filter((id) => id !== tab.id)
-            : [...settings.activityRailHidden, tab.id],
-        }),
-    })),
+    ...tabs
+      .filter((tab) => !tab.railFoot)
+      .map((tab) => ({
+        label: tab.label(t),
+        checked: !hidden.has(tab.id),
+        onSelect: () =>
+          setSettings({
+            activityRailHidden: hidden.has(tab.id)
+              ? settings.activityRailHidden.filter((id) => id !== tab.id)
+              : [...settings.activityRailHidden, tab.id],
+          }),
+      })),
   ];
   return (
     <nav
@@ -91,7 +94,14 @@ export function ActivityRail({
           type="button"
           className="activity-rail-item activity-rail-settings"
           aria-label={t.settingsTitle}
-          onClick={() => emitToThisWindow("menu-open-settings")}
+          aria-pressed={settingsOn}
+          // Like every rail icon: opens the sidebar on Settings' pages, or
+          // closes it (the Settings tab comes to the front as it opens).
+          onClick={() =>
+            settingsOn
+              ? onCloseSidebar()
+              : emitToThisWindow("menu-open-settings")
+          }
         >
           <SettingsIcon />
         </button>

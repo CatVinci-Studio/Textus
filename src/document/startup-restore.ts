@@ -11,7 +11,6 @@ import {
   type DocTab,
   type HelpDoc,
 } from "./doc-tabs";
-import type { NewDocumentMode } from "../prefs/SettingsContext";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
 import { isWordDocument } from "./word-import";
@@ -33,7 +32,6 @@ let drained = false;
 export interface StartupRestoreOptions {
   activeTabId: string;
   enableDraftRecovery: boolean;
-  newDocumentMode: NewDocumentMode;
   language: string;
   onboardingShown: boolean;
   setTabs: (updater: (prev: DocTab[]) => DocTab[]) => void;
@@ -215,49 +213,34 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         });
         opts.setTabs((prev) => prev.filter((tab) => tab.id !== recovered.id));
       };
-      if (opts.newDocumentMode === "tab") {
-        const paths = await windowIpc.takePendingOpenPaths();
-        if (paths.length > 0) {
-          opts.stopTutorial();
-          const [first, ...rest] = paths;
-          const recovered = recoveredFor(first);
-          if (recovered) {
-            loadRecoveredIntoInitialTab(recovered);
-          } else if (isWordDocument(first) || (await opensInPlugin(first))) {
-            // Converted into the initial tab, or shown there by a plugin.
-            await opts.replaceTabWithFile(opts.activeTabId, first);
-          } else {
-            const { content: text, diskMtime } = await readDocFromDisk(first);
-            restoreCaret(first, diskMtime);
-            loadIntoInitialTab({
-              path: first,
-              content: text,
-              savedContent: text,
-              diskMtime,
-            });
-          }
-          for (const p of rest) {
-            // Its recovered tab is already open: that is this document.
-            if (recoveredFor(p)) continue;
-            await opts.openPathInTab(p, { restoreCaret: true });
-          }
-          return;
+      // This window's documents: ones opened from outside, or the tabs it had
+      // last session (a window a tab was dragged out into is one of its own).
+      const paths = await windowIpc.takePendingWindowPaths();
+      if (paths.length > 0) {
+        opts.stopTutorial();
+        const [first, ...rest] = paths;
+        const recovered = recoveredFor(first);
+        if (recovered) {
+          loadRecoveredIntoInitialTab(recovered);
+        } else if (isWordDocument(first) || (await opensInPlugin(first))) {
+          // Converted into the initial tab, or shown there by a plugin.
+          await opts.replaceTabWithFile(opts.activeTabId, first);
+        } else {
+          const { content: text, diskMtime } = await readDocFromDisk(first);
+          restoreCaret(first, diskMtime);
+          loadIntoInitialTab({
+            path: first,
+            content: text,
+            savedContent: text,
+            diskMtime,
+          });
         }
-      } else {
-        // This window's documents: one opened from outside, or the tabs it
-        // had last session.
-        const [pending, ...rest] = await windowIpc.takePendingWindowPaths();
-        if (pending) {
-          opts.stopTutorial();
-          const recovered = recoveredFor(pending);
-          if (recovered) loadRecoveredIntoInitialTab(recovered);
-          else await opts.openFile(pending, { restoreCaret: true });
-          for (const p of rest) {
-            if (recoveredFor(p)) continue;
-            await opts.openPathInTab(p, { restoreCaret: true });
-          }
-          return;
+        for (const p of rest) {
+          // Its recovered tab is already open: that is this document.
+          if (recoveredFor(p)) continue;
+          await opts.openPathInTab(p, { restoreCaret: true });
         }
+        return;
       }
       // iOS: the document that was open last time.
       const last = isIOSApp ? await lastIOSDocument() : null;

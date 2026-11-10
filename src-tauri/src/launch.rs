@@ -27,15 +27,11 @@ pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
         .extend(paths.into_iter().map(|path| vec![path]));
 }
 
-/// The last session's windows, each with its documents as tabs; one window
-/// for them all in tab mode.
+/// The last session's windows, each with its documents as tabs: a window
+/// a tab was dragged out into comes back as its own window.
 #[cfg(desktop)]
 pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<Vec<String>>) {
     if windows.is_empty() {
-        return;
-    }
-    if commands::prefs::read_new_document_mode(app) == "tab" {
-        queue_paths_to_open(app, windows.concat());
         return;
     }
     let ui_ready = UI_READY.load(Ordering::Relaxed);
@@ -57,44 +53,32 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         return;
     }
     let ui_ready = UI_READY.load(Ordering::Relaxed);
-
-    if commands::prefs::read_new_document_mode(app) == "tab" {
-        // Already running: hand the whole batch to the focused window as tabs.
-        // Nothing is queued here, or the next window to mount would open them again.
-        let target = if ui_ready {
-            menu::focused_editor_window(app)
-        } else {
-            None
-        };
-        if let Some(label) = target {
-            let _ = app.emit_to(
-                EventTarget::webview_window(&label),
-                "open-paths-as-tabs",
-                paths,
-            );
-            // The open came from outside (a file manager, a second launch),
-            // so the window it landed in is probably behind something.
-            if let Some(window) = app.get_webview_window(&label) {
-                let _ = window.unminimize();
-                let _ = window.set_focus();
-            }
-            return;
-        }
-        // Still launching, or no window alive: park the whole batch for the window
-        // that mounts next.
-        queue_pending(app, paths);
-        if ui_ready {
-            let _ = crate::editor_windows::open_new_window(app);
+    // Documents open as tabs, always. Already running: hand the whole batch
+    // to the focused window. Nothing is queued then, or the next window to
+    // mount would open them again.
+    let target = if ui_ready {
+        menu::focused_editor_window(app)
+    } else {
+        None
+    };
+    if let Some(label) = target {
+        let _ = app.emit_to(
+            EventTarget::webview_window(&label),
+            "open-paths-as-tabs",
+            paths,
+        );
+        // The open came from outside (a file manager, a second launch),
+        // so the window it landed in is probably behind something.
+        if let Some(window) = app.get_webview_window(&label) {
+            let _ = window.unminimize();
+            let _ = window.set_focus();
         }
         return;
     }
-
-    // "window" mode (default): one queued file rides the initial window while
-    // launching; everything else gets a window of its own.
-    let count = paths.len();
-    queue_pending(app, paths);
-    let extra_windows = if ui_ready { count } else { count - 1 };
-    for _ in 0..extra_windows {
+    // Still launching, or no window alive: park the whole batch, as one
+    // window's tabs, for the window that mounts next.
+    app.state::<PendingOpenPaths>().0.lock().unwrap().push(paths);
+    if ui_ready {
         let _ = crate::editor_windows::open_new_window(app);
     }
 }

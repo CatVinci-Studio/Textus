@@ -19,6 +19,9 @@ import { EditorPage } from "./pages/EditorPage";
 import { ExtensionsPage } from "./pages/ExtensionsPage";
 import { GeneralPage } from "./pages/GeneralPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
+import { ModelsPage } from "./pages/ModelsPage";
+import { MemoryPage } from "./pages/MemoryPage";
+import { McpPage } from "./pages/McpPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import { SkillsPage } from "./pages/SkillsPage";
 import type { SettingsPageProps } from "./pages/types";
@@ -80,6 +83,14 @@ const BUILT_IN: SettingsPageDef[] = [
     Page: ProvidersPage,
   },
   {
+    id: "models",
+    parent: "ai",
+    label: (t) => t.navModels,
+    lead: (t) => t.leadModels,
+    available: () => hasTextusAi,
+    Page: ModelsPage,
+  },
+  {
     id: "chat",
     parent: "ai",
     label: (t) => t.navChatWriting,
@@ -88,12 +99,28 @@ const BUILT_IN: SettingsPageDef[] = [
     Page: ChatWritingPage,
   },
   {
+    id: "memory",
+    parent: "ai",
+    label: (t) => t.navMemory,
+    lead: (t) => t.leadMemory,
+    available: () => hasTextusAi,
+    Page: MemoryPage,
+  },
+  {
     id: "skills",
     parent: "ai",
-    label: (t) => t.navSkillsMemory,
-    lead: (t) => t.leadSkillsMemory,
+    label: (t) => t.navSkills,
+    lead: (t) => t.leadSkills,
     available: () => hasTextusAi,
     Page: SkillsPage,
+  },
+  {
+    id: "mcp",
+    parent: "ai",
+    label: () => "MCP",
+    lead: (t) => t.leadMcp,
+    available: () => hasTextusAi,
+    Page: McpPage,
   },
   // The iPhone's and iPad's: there plugins, themes and skills are managed
   // in Settings; the desktop has the sidebar's plugins and these pages.

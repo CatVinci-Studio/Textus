@@ -36,7 +36,6 @@ export { type Settings } from "./settings-types";
 export {
   type ThemeMode,
   type AiProvider,
-  type NewDocumentMode,
   type ContentWidth,
   type ImageAlign,
   type EmbedDisplay,

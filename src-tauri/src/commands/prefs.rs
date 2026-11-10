@@ -33,18 +33,6 @@ fn write_pref(app: &AppHandle, key: &str, value: serde_json::Value) -> Result<()
     crate::atomic::write_sync(&path, prefs.to_string()).map_err(|e| e.to_string())
 }
 
-/// Internal helper for window-spawning decisions. Defaults to "window" on
-/// anything but an explicit "tab".
-pub fn read_new_document_mode(app: &AppHandle) -> String {
-    match crate::settings::read_setting(app, "newDocumentMode")
-        .as_ref()
-        .and_then(|v| v.as_str())
-    {
-        Some("tab") => "tab".to_string(),
-        _ => "window".to_string(),
-    }
-}
-
 /// Whether to reopen last session's documents (default) or start blank.
 pub fn read_restore_session_on_startup(app: &AppHandle) -> bool {
     crate::settings::read_setting(app, "restoreSessionOnStartup")

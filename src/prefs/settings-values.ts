@@ -8,7 +8,6 @@ export type ThemeMode = "system" | "light" | "dark";
 /// A provider catalog id ("openai", "anthropic", "custom", ...). Not a closed
 /// union: the catalog, fetched at runtime, decides which exist.
 export type AiProvider = string;
-export type NewDocumentMode = "window" | "tab";
 /** How wide the text column runs: "auto" widens with the window, "standard"
  *  keeps the classic fixed measure, "full" uses the whole pane. */
 export type ContentWidth = "auto" | "standard" | "full";

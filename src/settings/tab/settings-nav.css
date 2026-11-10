@@ -1,0 +1,32 @@
+/* Settings' pages in the sidebar: the list under its search, Textus AI's
+   pages under it in line with its name. */
+.settings-nav-list,
+.settings-nav-results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-nav-list > .tx-list-item[data-sub] {
+  padding-inline-start: calc(8px + 8px + 16px);
+}
+
+.settings-nav-icon {
+  color: var(--ui-muted);
+}
+
+.tx-list-item[aria-current] .settings-nav-icon {
+  color: inherit;
+}
+
+/* A result: the row's name, and under it the page (and group) it is in. */
+.settings-nav-hit-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.settings-nav-hit-where {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}

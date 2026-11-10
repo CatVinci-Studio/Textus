@@ -9,7 +9,11 @@ import {
   OutlineTabIcon,
   SearchIcon,
   PluginsTabIcon,
+  SettingsIcon,
 } from "../../engine/controls/icons";
+import { Suspense } from "react";
+import { lazyModule } from "../../lazy/lazy-module";
+import { lazyComponent } from "../../lazy/lazy-component";
 import { PluginsPanel } from "../../settings/pages/PluginsPanel";
 import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
@@ -50,6 +54,8 @@ export interface SidebarTabDef {
   label: (t: Strings) => string;
   Icon: ComponentType;
   Panel: ComponentType<SidebarTabProps>;
+  /** Not among the rail's icons (Settings: the gear at its foot). */
+  railFoot?: boolean;
 }
 
 function FilesPanel({
@@ -140,6 +146,30 @@ const PLUGINS_TAB: SidebarTabDef = {
 
 const pluginsTab = () => (PLUGINS_SHOWN && isDesktopApp ? [PLUGINS_TAB] : []);
 
+// Settings' pages, loaded when the gear first opens them.
+const SettingsNavPanel = lazyComponent(
+  lazyModule(
+    "settings-nav",
+    () => import("../../settings/tab/SettingsNavPanel"),
+  ),
+  (m) => m.SettingsNavPanel,
+);
+
+/** Settings: its pages, opened by the rail's gear (desktop); the page
+ *  picked shows in the window's Settings tab. */
+const SETTINGS_TAB: SidebarTabDef = {
+  id: "settings",
+  label: (t) => t.settingsTitle,
+  Icon: SettingsIcon,
+  Panel: () => (
+    <Suspense fallback={null}>
+      <SettingsNavPanel />
+    </Suspense>
+  ),
+  railFoot: true,
+};
+const settingsTab = () => (isIOSApp ? [] : [SETTINGS_TAB]);
+
 const added: SidebarTabDef[] = [];
 
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
@@ -160,7 +190,11 @@ export function registerSidebarTab(tab: SidebarTabDef): () => void {
 /** Textus's own tabs (Files, Outline, Search, Plugins): always first,
  *  apart from the ones plugins add. */
 export function isOwnTab(id: string): boolean {
-  return id === PLUGINS_TAB.id || BUILT_IN.some((tab) => tab.id === id);
+  return (
+    id === PLUGINS_TAB.id ||
+    id === SETTINGS_TAB.id ||
+    BUILT_IN.some((tab) => tab.id === id)
+  );
 }
 
 /** The tabs, in the header's order: as the user dragged them, a tab new
@@ -168,7 +202,7 @@ export function isOwnTab(id: string): boolean {
 export function sidebarTabs(): SidebarTabDef[] {
   const kept = getUiState("sidebarTabOrder");
   const all = orderTabs(
-    [...BUILT_IN, ...pluginsTab(), ...added],
+    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...added],
     Array.isArray(kept) ? kept : [],
   );
   return [

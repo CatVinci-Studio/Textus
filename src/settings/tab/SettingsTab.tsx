@@ -1,18 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { settingsPage, settingsPages } from "../settings-pages";
+import { revealEntry } from "../SettingsSearch";
+import { findEntryElement, type SearchEntry } from "../settings-search";
 import {
-  revealEntry,
-  SettingsSearchField,
-  SettingsSearchIndex,
-  SettingsSearchResults,
-  type SearchablePage,
-} from "../SettingsSearch";
-import { findEntryElement, type SearchMatch } from "../settings-search";
-import { useSettingsSearch } from "../useSettingsSearch";
+  OPEN_SETTINGS_PAGE_EVENT,
+  setSettingsPageShown,
+} from "../settings-nav";
 import { AboutPage } from "../pages/AboutPage";
 import type { SettingsPageProps, ShortcutCommand } from "../pages/types";
 import type { FixedShortcutGroup } from "../../app/fixed-shortcuts";
@@ -20,8 +17,10 @@ import "../SettingsPanel.css";
 import "./settings-tab.css";
 
 export interface SettingsTabProps {
-  /** The page to show first; "updates" is About, checking at once. */
+  /** The page to show; "updates" is About, checking at once. */
   page?: string;
+  /** A search result's row to go to on it. */
+  jump?: SearchEntry;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   docPath?: string | null;
@@ -30,13 +29,14 @@ export interface SettingsTabProps {
 }
 
 /**
- * Settings as a tab (desktop): its pages listed on the left - an icon
- * each, Textus AI's three under it - the search over them, and the page
- * on the right under its title and the line saying what it holds. While
- * the search holds a query, its results stand in for the page.
+ * Settings as a tab (desktop): one page, the one picked in the sidebar's
+ * list of them (SettingsNavPanel) - replaced, not opened beside. The list
+ * says which it is, so the page doesn't: a line on what it holds, then its
+ * sections.
  */
 export function SettingsTab({
-  page: first = "general",
+  page = "general",
+  jump,
   onOpenFile,
   onFilesDeleted,
   docPath = null,
@@ -45,20 +45,11 @@ export function SettingsTab({
 }: SettingsTabProps) {
   const { settings, setSettings, t } = useSettings();
   const marginAvailable = useMarginAvailable();
-  const root = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
-  const [page, setPage] = useState(first === "updates" ? "about" : first);
-  const [jump, setJump] = useState<SearchMatch["entry"] | null>(null);
-  // ⌘F searches Settings only while it is the tab in use.
-  const search = useSettingsSearch(
-    () =>
-      !!root.current?.offsetParent &&
-      root.current.contains(document.activeElement),
-  );
-  useReveal(content, jump, () => setJump(null));
-
-  const pages = settingsPages();
-  const shown = settingsPage(page) ?? pages[0];
+  const id = page === "updates" ? "about" : page;
+  const shown = settingsPage(id) ?? settingsPages()[0];
+  useEffect(() => setSettingsPageShown(shown.id), [shown.id]);
+  useReveal(content, jump ?? null);
   const pageProps: SettingsPageProps = {
     t,
     settings,
@@ -70,7 +61,10 @@ export function SettingsTab({
     marginAvailable,
     noMargin: !marginAvailable,
     setSubpage: () => {},
-    openPage: setPage,
+    openPage: (to) =>
+      window.dispatchEvent(
+        new CustomEvent(OPEN_SETTINGS_PAGE_EVENT, { detail: { page: to } }),
+      ),
     openHelp: (doc) => emitMenuEvent(`help-doc:${doc}`),
     onOpenFile,
     onFilesDeleted,
@@ -79,112 +73,25 @@ export function SettingsTab({
     fixedShortcuts,
     pluginCommands,
   };
-  const searchPages: SearchablePage[] = pages.map((p) => ({
-    key: p.id,
-    name: p.parent
-      ? `${settingsPage(p.parent)?.label(t)} › ${p.label(t)}`
-      : p.label(t),
-    render: () => <p.Page {...pageProps} indexing />,
-  }));
-  const groups = searchPages
-    .map((p) => ({
-      key: p.key,
-      name: p.name,
-      matches: search.matches.filter((m) => m.entry.page === p.key),
-    }))
-    .filter((g) => g.matches.length > 0);
-  const flat = groups.flatMap((g) => g.matches);
-  const active = Math.min(search.active, Math.max(flat.length - 1, 0));
-  const optionId = (i: number) => `${search.listId}-option-${i}`;
-  const pick = (match: SearchMatch | undefined) => {
-    if (!match) return;
-    search.setQuery("");
-    setPage(match.entry.page);
-    setJump(match.entry);
-  };
-
   return (
-    <div className="settings-tab" ref={root}>
-      <nav className="settings-tab-nav" aria-label={t.settingsTitle}>
-        <div className="tx-pane-top">
-          <SettingsSearchField
-            t={t}
-            inputRef={search.searchInput}
-            query={search.query}
-            listId={search.listId}
-            activeId={flat.length ? optionId(active) : undefined}
-            onQueryChange={(next) => {
-              search.setQuery(next);
-              search.setActive(0);
-            }}
-            onMove={(step) =>
-              flat.length &&
-              search.setActive((active + step + flat.length) % flat.length)
-            }
-            onPick={() => pick(flat[active])}
-          />
-        </div>
-        {pages.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            className="tx-list-item settings-tab-nav-item"
-            data-sub={p.parent ? "" : undefined}
-            aria-current={
-              !search.searching && p.id === shown.id ? "page" : undefined
-            }
-            onClick={() => {
-              search.setQuery("");
-              setPage(p.id);
-            }}
-          >
-            {p.Icon && <p.Icon className="settings-tab-nav-icon" />}
-            {p.label(t)}
-          </button>
-        ))}
-      </nav>
-      <div
-        className="settings-tab-page settings-content"
-        ref={content}
-        key={search.searching ? "search" : shown.id}
-      >
-        {search.searching ? (
-          <SettingsSearchResults
-            t={t}
-            groups={groups}
-            listId={search.listId}
-            optionId={optionId}
-            active={active}
-            onPick={pick}
-          />
+    <div className="settings-tab" ref={content}>
+      <div className="settings-tab-page settings-content">
+        {shown.lead && <p className="settings-tab-lead">{shown.lead(t)}</p>}
+        {shown.id === "about" ? (
+          <AboutPage {...pageProps} checkUpdates={page === "updates"} />
         ) : (
-          <>
-            {/* Its name is the one picked beside it: not said again. */}
-            {shown.lead && <p className="settings-tab-lead">{shown.lead(t)}</p>}
-            {shown.id === "about" ? (
-              <AboutPage {...pageProps} checkUpdates={first === "updates"} />
-            ) : (
-              <shown.Page {...pageProps} />
-            )}
-          </>
-        )}
-        {search.searching && (
-          <SettingsSearchIndex
-            pages={searchPages}
-            onEntries={search.setEntries}
-          />
+          <shown.Page {...pageProps} />
         )}
       </div>
     </div>
   );
 }
 
-/** Once a picked result's page is up, goes to its row: one that waits on
+/** Once the page is up, goes to the search result's row: one that waits on
  *  the backend (a status, a list) can come a few frames late. */
 function useReveal(
   content: React.RefObject<HTMLDivElement | null>,
-  jump: SearchMatch["entry"] | null,
-  done: () => void,
+  jump: SearchEntry | null,
 ) {
   useEffect(() => {
     if (!jump) return;
@@ -193,13 +100,9 @@ function useReveal(
     const go = () => {
       const el = content.current && findEntryElement(content.current, jump);
       if (el) revealEntry(el);
-      else if (++tries < 30) {
-        frame = requestAnimationFrame(go);
-        return;
-      }
-      done();
+      else if (++tries < 30) frame = requestAnimationFrame(go);
     };
     go();
     return () => cancelAnimationFrame(frame);
-  }, [jump, content, done]);
+  }, [jump, content]);
 }

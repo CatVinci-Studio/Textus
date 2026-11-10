@@ -98,3 +98,18 @@
   background: var(--ui-selected);
   color: var(--ui-accent-text);
 }
+
+/* A sidebar panel's second row - level with the islands' tops - holds
+   its search, and what acts on the panel beside it (⋯, add). Only a panel
+   that finds things has one. */
+.tx-pane-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 8px;
+}
+
+.tx-pane-row > .tx-search {
+  flex: 1;
+  margin: 0;
+}

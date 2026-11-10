@@ -1,13 +1,8 @@
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import { type NewDocumentMode } from "../../prefs/SettingsContext";
 import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "../sections/controls";
-import {
-  CliCommandSection,
-  DefaultEditorSection,
-  UpdateChannelRow,
-} from "../sections/general";
+import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
 import { Select } from "../../engine/controls/Select";
 import {
@@ -40,21 +35,6 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
         </SettingRow>
         {canUseWindows && (
           <>
-            <SettingRow label={t.newDocumentModeLabel}>
-              <Select
-                className="settings-select"
-                aria-label={t.newDocumentModeLabel}
-                value={settings.newDocumentMode}
-                onChange={(e) =>
-                  setSettings({
-                    newDocumentMode: e.target.value as NewDocumentMode,
-                  })
-                }
-              >
-                <option value="window">{t.newDocumentModeWindow}</option>
-                <option value="tab">{t.newDocumentModeTab}</option>
-              </Select>
-            </SettingRow>
             <SettingRow label={t.startupOpenLabel}>
               <Select
                 className="settings-select"
@@ -122,9 +102,6 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
         </SettingsGroup>
       )}
 
-      <SettingsGroup title={t.settingsUpdatesGroup}>
-        <UpdateChannelRow t={t} />
-      </SettingsGroup>
     </>
   );
 }

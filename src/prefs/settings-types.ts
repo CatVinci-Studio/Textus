@@ -6,7 +6,6 @@ import { DEFAULT_SHORTCUTS, type Shortcuts } from "./shortcut-defaults";
 import {
   type ThemeMode,
   type AiProvider,
-  type NewDocumentMode,
   type ContentWidth,
   type ImageAlign,
   type EmbedDisplay,
@@ -219,9 +218,6 @@ export interface Settings {
   userThemes: UserThemeMeta[];
   /** What Create made, newest first (see `Creation`). */
   creations: Creation[];
-  /// "window" (default): another document opens a new OS window; "tab": a
-  /// tab in this one. Rust reads it from the settings file, often before any webview exists.
-  newDocumentMode: NewDocumentMode;
   /// Whether startup reopens last session's documents. Rust reads it before
   /// any webview exists; it also lets an update relaunch reopen what was open.
   restoreSessionOnStartup: boolean;
@@ -353,7 +349,6 @@ export const DEFAULT_SETTINGS: Settings = {
   themeId: "default",
   userThemes: [],
   creations: [],
-  newDocumentMode: "window",
   restoreSessionOnStartup: true,
   startPageOnLaunch: false,
   closeLastToStartPage: false,

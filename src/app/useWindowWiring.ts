@@ -84,7 +84,6 @@ export function useWindowWiring({
   useStartupRestore({
     activeTabId,
     enableDraftRecovery: settings.enableDraftRecovery,
-    newDocumentMode: settings.newDocumentMode,
     language: settings.language,
     onboardingShown: settings.onboardingShown,
     setTabs,
