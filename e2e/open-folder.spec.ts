@@ -250,7 +250,7 @@ test.describe("the Search page", () => {
     await search(page).fill("草稿");
     await expect(results(page)).toHaveText(["第一章 草稿.mdessays"]);
     await search(page).fill("secret");
-    await expect(page.locator(".file-search-note")).toHaveText([
+    await expect(page.locator(".tx-list-note")).toHaveText([
       "No file names match.",
       "No text matches.",
     ]);
