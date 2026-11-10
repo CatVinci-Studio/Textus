@@ -1,3 +1,5 @@
+import { frameLayout } from "../../engine/frame/frame-store";
+import type { Rect } from "../../engine/frame/rect";
 import "./island-lift.css";
 import "./split-drop.css";
 
@@ -20,8 +22,15 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
     ...document.querySelectorAll<HTMLElement>(
       `section.island${pane}, .island-row${pane}, .split-pane${pane}`,
     ),
-  ].filter((el) => el.getClientRects().length > 0);
-  const rects = parts.map((el) => el.getBoundingClientRect());
+  ];
+  // Where the solver placed its row and its sheet; its documents lie on
+  // its sheet.
+  const placed = frameLayout().islands.find((island) => island.paneId === id);
+  const at = (r: Rect | null | undefined) =>
+    r ? new DOMRect(r.x, r.y, r.w, r.h) : new DOMRect();
+  const rects = parts.map((el) =>
+    at(el.classList.contains("island-row") ? placed?.row : placed?.sheet),
+  );
   const left = Math.min(...rects.map((r) => r.left));
   const top = Math.min(...rects.map((r) => r.top));
   const right = Math.max(...rects.map((r) => r.right));

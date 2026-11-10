@@ -1,3 +1,4 @@
+import { frameLayout } from "../frame/frame-store";
 import "../controls/resize-handle.css";
 import { useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
@@ -87,9 +88,8 @@ export function SplitDivider({
           if (e.button !== 0) return;
           e.preventDefault();
           e.currentTarget.setPointerCapture(e.pointerId);
-          const area = e.currentTarget.closest(".main-pane");
-          const box = area?.getBoundingClientRect();
-          drag.current = { origin: box ? (row ? box.left : box.top) : 0 };
+          const { origin } = frameLayout();
+          drag.current = { origin: row ? origin.x : origin.y };
           setDragging(true);
         }}
         onPointerMove={(e) => {

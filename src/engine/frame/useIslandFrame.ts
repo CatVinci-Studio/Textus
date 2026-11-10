@@ -93,5 +93,6 @@ function publish(
       };
     }),
     area: at(box),
+    origin: { x: dx, y: dy },
   });
 }

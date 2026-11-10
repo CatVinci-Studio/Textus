@@ -10,6 +10,7 @@ import {
 } from "./island-numbers";
 import { pairLayout, setSplitLayout, splitLayout } from "./store";
 import { panesOf } from "./tree";
+import { setFrameLayout } from "../frame/frame-store";
 
 const mod = { type: "key", mod: true, digit: false, repeat: false } as const;
 const other = { type: "key", mod: false, digit: false, repeat: false } as const;
@@ -53,12 +54,21 @@ describe("the hold in a window", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     setSplitLayout(pairLayout("row", "left-tab", "right-tab"));
-    for (const pane of panesOf(splitLayout()!.root)) {
-      const sheet = document.createElement("section");
-      sheet.className = "island";
-      sheet.dataset.paneId = pane.id;
-      document.body.append(sheet);
-    }
+    const sheet = (x: number) => ({ x, y: 40, w: 400, h: 600 });
+    setFrameLayout({
+      islands: panesOf(splitLayout()!.root).map((pane, i) => ({
+        paneId: pane.id,
+        key: pane.id,
+        row: null,
+        sheet: sheet(i * 400),
+        whole: sheet(i * 400),
+        tabs: pane.tabs,
+        front: pane.front,
+      })),
+      dividers: [],
+      area: { x: 0, y: 40, w: 800, h: 600 },
+      origin: { x: 0, y: 0 },
+    });
     stop = watchIslandNumbers(false, picked);
   });
 

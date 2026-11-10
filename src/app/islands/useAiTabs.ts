@@ -20,6 +20,7 @@ import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { frameLayout } from "../../engine/frame/frame-store";
 import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
 
 const NONE: string[] = [];
@@ -31,7 +32,7 @@ const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
 /** The AI island's first width: a panel's (380 at the interface's size),
  *  never under a third or over half of the islands' area. */
 function aiShare(): number {
-  const area = document.querySelector(".main-pane")?.clientWidth ?? 0;
+  const area = frameLayout().area.w;
   if (!area) return 0.35;
   return Math.min(0.5, Math.max(0.3, scaledPx(380) / area));
 }

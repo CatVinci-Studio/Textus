@@ -1,3 +1,4 @@
+import { frameLayout } from "../frame/frame-store";
 import { panesOf } from "./tree";
 import { splitLayout } from "./store";
 
@@ -43,16 +44,14 @@ export interface IslandAnchor {
 export function islandAnchors(): IslandAnchor[] {
   const layout = splitLayout();
   if (!layout) return [];
-  const sheets = new Map(
-    [
-      ...document.querySelectorAll<HTMLElement>("section.island[data-pane-id]"),
-    ].map((sheet) => [sheet.dataset.paneId, sheet]),
+  const placed = new Map(
+    frameLayout().islands.map((island) => [island.paneId, island.sheet]),
   );
   return panesOf(layout.root)
     .flatMap((pane) => {
-      const sheet = sheets.get(pane.id);
-      return sheet
-        ? [{ paneId: pane.id, rect: sheet.getBoundingClientRect() }]
+      const r = placed.get(pane.id);
+      return r
+        ? [{ paneId: pane.id, rect: new DOMRect(r.x, r.y, r.w, r.h) }]
         : [];
     })
     .slice(0, MOST);

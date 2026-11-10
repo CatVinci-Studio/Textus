@@ -26,12 +26,15 @@ export interface FrameLayout {
   dividers: readonly DividerRects[];
   /** The islands' box, inset from the area's sides. */
   area: Rect;
+  /** Where the area's own (0, 0) is: what its parts are placed from. */
+  origin: { x: number; y: number };
 }
 
 const EMPTY: FrameLayout = {
   islands: [],
   dividers: [],
   area: { x: 0, y: 0, w: 0, h: 0 },
+  origin: { x: 0, y: 0 },
 };
 
 let current: FrameLayout = EMPTY;
