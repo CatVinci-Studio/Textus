@@ -177,7 +177,7 @@ export function FileSearch({
 
   return (
     <>
-      <div className="file-search-bar">
+      <div className="tx-pane-row file-search-bar">
         <SearchField
           ref={input}
           value={query}

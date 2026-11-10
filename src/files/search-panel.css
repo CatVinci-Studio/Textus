@@ -1,11 +1,6 @@
 /* The Search page (SearchPanel): its box, the files whose names match,
    then the lines holding the text. Rows are the tree's (FileTree.css). */
-.file-search-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0 2px 8px;
-}
+/* The search's row is pane.css's (.tx-pane-row). */
 
 /* A result is two lines: the name, then its folder. */
 .file-search-row {

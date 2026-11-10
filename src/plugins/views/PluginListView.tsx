@@ -1,3 +1,4 @@
+import { SearchField } from "../../engine/controls/SearchField";
 import { PluginProblem } from "./PluginProblem";
 import {
   memo,
@@ -223,17 +224,19 @@ export const PluginListPane = memo(function PluginListPane({
   return (
     <div className={`plugin-list ${className ?? ""}`}>
       {info?.filterPlaceholder !== undefined && (
-        <input
-          className="plugin-list-filter settings-text-input"
-          placeholder={info.filterPlaceholder}
-          aria-label={info.filterPlaceholder}
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setActive(0);
-          }}
-          onKeyDown={onKey}
-        />
+        // The sidebar's second row, as every panel's search is.
+        <div className="tx-pane-row">
+          <SearchField
+            placeholder={info.filterPlaceholder}
+            aria-label={info.filterPlaceholder}
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+            }}
+            onKeyDown={onKey}
+          />
+        </div>
       )}
       {info?.message && (
         <div className="plugin-list-message">{info.message}</div>
