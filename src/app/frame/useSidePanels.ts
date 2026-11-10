@@ -53,8 +53,7 @@ export function useSidePanels(aiOn: boolean) {
     if (isIOSApp && panelOpen)
       window.dispatchEvent(new CustomEvent(CLOSE_FIND_REPLACE_EVENT));
   }, [panelOpen]);
-  // The docked Agent panel: App owns the frame, the active tab's editor
-  // renders its conversation into it.
+  // The docked Agent panel: App owns the frame.
   // Both panels narrow with a small window, by one rule; the AI panel also
   // leaves the document room beside an open sidebar.
   const windowWidth = useSyncExternalStore(subscribeWindowResize, () =>
@@ -80,7 +79,6 @@ export function useSidePanels(aiOn: boolean) {
     rail + (panelOpen ? sidebarWidth.width : 0),
   );
   useEffect(() => setAgentShown(agentPanel.open), [agentPanel.open]);
-  const [agentPanelEl, setAgentPanelEl] = useState<HTMLElement | null>(null);
   // On a phone, the document gives up focus here and the AI page's input
   // doesn't take it, so the keyboard goes away in one movement. With the
   // keyboard up, the page comes once it has gone, or its bottom jumps.
@@ -140,8 +138,6 @@ export function useSidePanels(aiOn: boolean) {
     toggleSidebar,
     sidebarWidth,
     agentPanel,
-    agentPanelEl,
-    setAgentPanelEl,
     toggleAgentPanel,
     sidebarPresence,
     sidebarClosing,

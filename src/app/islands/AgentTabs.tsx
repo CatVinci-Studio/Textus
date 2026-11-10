@@ -45,7 +45,7 @@ function useLive(scope: string | null): string | null {
   );
 }
 
-/** Asks the editor on screen, whose conversation it is. */
+/** Asks the document in front: its undecided edits come first. */
 const ask = (what: "new" | "pop-out") =>
   window.dispatchEvent(new CustomEvent(AGENT_TABS_EVENT, { detail: what }));
 

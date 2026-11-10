@@ -3,7 +3,7 @@ import { AI_CANCELLED, ai } from "../platform/ipc";
 import { errorText } from "../utils/error-text";
 import { imageModelOf } from "../ai/image-models";
 import type { useAgentPanel } from "../ai/chat/panel/agent-panel";
-import type { AgentConversation } from "../ai/chat/useAgentConversation";
+import type { AgentConversation } from "../ai/chat/conversation/conversation-types";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { GeneratedImageData } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";

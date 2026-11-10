@@ -18,23 +18,22 @@ import "./agent-panel.css";
 import "../inline-chat.css";
 
 /**
- * The docked Agent panel's frame: open, width, tab and the element to render
- * into. Each tab's editor portals its own chat into it while active, so the
- * conversation switches with the document.
+ * The docked Agent panel's frame: open, width and tab. The window's
+ * conversations draw themselves in it; the document in front reads whether
+ * it shows.
  */
 export interface AgentPanelFrame {
   setOpen: (open: boolean) => void;
-  /** The element the active editor portals into; null while closed. */
-  container: HTMLElement | null;
-  /** Which of the panel's tabs shows. The frame's, not each editor's, so
-   *  bringing another document to the front doesn't reset it. */
+  /** The AI shows (still, while it plays its exit). */
+  shown: boolean;
+  /** Which of the panel's tabs shows. */
   tab: AgentPanelTab;
   setTab: (tab: AgentPanelTab) => void;
 }
 
 const AgentPanelContext = createContext<AgentPanelFrame>({
   setOpen: () => {},
-  container: null,
+  shown: false,
   tab: "chat",
   setTab: () => {},
 });
@@ -104,21 +103,19 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
 export function AgentPanelProvider({
   open,
   setOpen,
-  container,
   tab,
   setTab,
   children,
 }: {
   open: boolean;
   setOpen: (open: boolean) => void;
-  container: HTMLElement | null;
   tab: AgentPanelTab;
   setTab: (tab: AgentPanelTab) => void;
   children: ReactNode;
 }) {
   const value = useMemo(
-    () => ({ setOpen, container: open ? container : null, tab, setTab }),
-    [open, setOpen, container, tab, setTab],
+    () => ({ setOpen, shown: open, tab, setTab }),
+    [open, setOpen, tab, setTab],
   );
   return (
     <AgentPanelContext.Provider value={value}>

@@ -1,4 +1,4 @@
-import type { AgentRequestOptions } from "./useAgentConversation";
+import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type { ImageAttachment } from "../types";
 
 /** A message sent while a reply was still coming; it goes once the replies

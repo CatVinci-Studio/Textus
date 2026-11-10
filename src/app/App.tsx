@@ -1,6 +1,7 @@
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
 import { AiTab } from "./islands/AiTab";
+import { conversationIn } from "./islands/ai-tabs";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../engine/controls/CornerToast";
@@ -82,8 +83,7 @@ function App() {
   const { tabs, activeTabId, setActiveTabId, addBlankTab, reorderTab } =
     shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
-  const { agentPanel, agentPanelEl, setAgentPanelEl, toggleAgentPanel } =
-    shell.panels;
+  const { agentPanel, toggleAgentPanel } = shell.panels;
   const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =
     shell.panels;
   const { panelMode, setPanelMode } = shell.panels;
@@ -107,7 +107,7 @@ function App() {
     zen: zenMode,
   });
 
-  const aiTabMount = useWindowAi({
+  useWindowAi({
     tabs: shell.tabState,
     workspaceRoot: settings.agentWorkspaceRoot || null,
     shown: agentPanel.open,
@@ -129,13 +129,9 @@ function App() {
       .filter((c) => !c.id.startsWith("textus."))
       .map((c) => ({ id: c.id, title: c.title(t), shortcut: c.shortcut })),
   };
-  const renderPage = (
-    page: AppPage,
-    request: PageRequest | null,
-    tabId: string,
-  ) =>
+  const renderPage = (page: AppPage, request: PageRequest | null) =>
     page === "ai" ? (
-      <AiTab tabId={tabId} />
+      <AiTab conversation={conversationIn(request)} />
     ) : page === "settings" ? (
       <SettingsTabPage request={request} {...settingsProps} />
     ) : page === "create" ? (
@@ -150,7 +146,6 @@ function App() {
         // The conversation stays in the panel while it plays its exit.
         open={agentPresence.mounted}
         setOpen={agentPanel.setOpen}
-        container={isIOSApp ? agentPanelEl : aiTabMount}
         tab={agentPanel.tab}
         setTab={agentPanel.setTab}
       >
@@ -283,7 +278,6 @@ function App() {
               min={agentPanel.min}
               max={agentPanel.max}
               onResize={agentPanel.setWidth}
-              mountRef={setAgentPanelEl}
               sourceMode={!!activeTab.sourceMode}
               onToggleSourceMode={toggleSourceMode}
               aiOn={textusAi.on}

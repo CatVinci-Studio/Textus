@@ -3,10 +3,11 @@ import { AGENT_PANEL_DEFAULT_WIDTH } from "../../ai/chat/panel/agent-panel";
 import { ResizeHandle } from "../../engine/controls/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
+import { WindowConversation } from "../../ai/chat/panel/window-conversation";
 
 /** The docked Agent panel on an iPad (a page of its own on a phone): the
- *  active tab's editor renders its conversation into the mount point here.
- *  The desktop's conversations are tabs (AiTab). */
+ *  live conversation where the document in front is. The desktop's
+ *  conversations are tabs (AiTab). */
 export function AgentPanelDock({
   presence,
   closing,
@@ -14,7 +15,6 @@ export function AgentPanelDock({
   min,
   max,
   onResize,
-  mountRef,
   sourceMode,
   onToggleSourceMode,
   aiOn,
@@ -28,7 +28,6 @@ export function AgentPanelDock({
   max: number;
   /** `done`: the drag let go, or a key moved it - remember it. */
   onResize: (width: number, done: boolean) => void;
-  mountRef: (el: HTMLElement | null) => void;
   /** The active tab is in source mode or split view. */
   sourceMode: boolean;
   onToggleSourceMode: () => void;
@@ -57,7 +56,9 @@ export function AgentPanelDock({
         label={t.agentPanelResize}
       />
       <div className="agent-island">
-        <div className="agent-panel-mount" ref={mountRef} />
+        <div className="agent-panel-mount">
+          {aiOn && !sourceMode && <WindowConversation />}
+        </div>
       </div>
       {/* Source mode, split view and AI off have no conversation, so say so
         instead of an empty column. */}

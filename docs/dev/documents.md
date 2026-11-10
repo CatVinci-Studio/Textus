@@ -172,8 +172,8 @@ and links to a moved note are rewritten (`files/move-links.ts`).
 A document's editor out of sight for 10 minutes is let go, and opens
 again at its text with its undo history when shown (`EditorKept` in
 `src/app/islands/DocumentIslands.tsx`, `utils/kept-loaded.ts`; the undo history is kept
-in the app's `undo/` folder by `editor/undo-file.ts`). An editor holding a
-Textus AI conversation, Quick Ask, a proposal or undecided changes stays
+in the app's `undo/` folder by `editor/undo-file.ts`). An editor holding
+Quick Ask, a proposal of Textus AI's or undecided changes stays
 loaded (`document/editor-held.ts`), and so does one with no file to come
 back from. Plugin views and web pages out of sight
 are let go after 5 minutes.

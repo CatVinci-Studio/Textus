@@ -33,6 +33,33 @@ test("the AI button opens a conversation tab in an island on the right", async (
   expect(ai!.x).toBeGreaterThan(doc!.x + doc!.width);
 });
 
+test("a conversation keeps its turns when the document in front is closed and another opened", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  await box.fill("第三章写了什么？");
+  await box.press("Enter");
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  const kept = async () => {
+    await expect(turns).toContainText("第三章写了什么？");
+    await expect(turns).toContainText("Canned dev-shim reply to:");
+  };
+  await kept();
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  // The window's own, not the document's: closing the document keeps it.
+  const doc = tabs(page).filter({ hasText: "未命名" });
+  await doc.hover();
+  await doc.locator(".tab-pill-close").click();
+  await expect(tabs(page)).toHaveText(["新对话"]);
+  await kept();
+  await emit(page, "menu-new-file");
+  await expect(doc).toHaveCount(1);
+  await kept();
+});
+
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
   page,
 }) => {

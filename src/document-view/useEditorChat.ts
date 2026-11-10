@@ -54,7 +54,7 @@ export function useEditorChat({
   useHeldWhileBusy({
     tabId: setup.tabId,
     filePath,
-    chats: [conversation, quickConversation],
+    quickAsk: quickConversation,
     quickAskOpen: inlineChat.visible,
     statuses: pendingEdits.allStatuses,
   });
@@ -81,13 +81,11 @@ export function useEditorChat({
     handleDetachChat,
   } = bridge;
 
-  // The docked panel, rendered by this editor only while it is the active
-  // tab and the panel is open.
+  // The AI's panel shows, with this document the one in front.
   const agentPanel = useAgentPanel();
-  const panelContainer = isActive ? agentPanel.container : null;
+  const panelShown = isActive && agentPanel.shown;
   // The panel, or the detached window while this is the tab it shows.
-  const chatTracking =
-    panelContainer !== null || (detachedChatLabel !== null && isActive);
+  const chatTracking = panelShown || (detachedChatLabel !== null && isActive);
   const { panelSelection, updatePanelSelection } = usePanelSelection(
     run,
     chatTracking,
@@ -188,7 +186,7 @@ export function useEditorChat({
     quickConversation,
     bridge,
     agentPanel,
-    panelContainer,
+    panelShown,
     panelSelection,
     quickChipHandlers,
     panelChipHandlers,

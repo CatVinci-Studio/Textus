@@ -3,7 +3,11 @@ import { reportUndecided } from "../document/undecided";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { PendingEditCallbacks } from "./editor-extensions";
-import { useAgentConversation } from "../ai/chat/useAgentConversation";
+import {
+  useLiveConversation,
+  useOwnConversation,
+} from "../ai/chat/conversation/useConversation";
+import type { DocumentPort } from "../ai/chat/conversation/document-port";
 import {
   usePendingEdits,
   type CitationStyle,
@@ -44,8 +48,9 @@ import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
 
-/** The editor's side of AI edits: pending previews, the two conversations
- *  that propose them, and streaming proposals into the document. */
+/** The editor's side of AI edits: pending previews, the conversations that
+ *  propose them (the window's live one, and Quick Ask's own), and streaming
+ *  proposals into the document. */
 export function useEditorProposals({
   run,
   pendingEditActionsRef,
@@ -314,7 +319,7 @@ export function useEditorProposals({
     // requestTargetRef is a stable ref; addPreviews and discard are stable
     // per editor.
   }, [addPreviews, discardRefused, run, animated]);
-  // Not memoized: the conversations read it through a ref.
+  // Not memoized: the conversations reach it through `port`.
   const handleStreamEvent = (event: StreamEvent) => {
     // A picture written into a proposal's text is being made: show its frame.
     if (event.type === "picture") {
@@ -342,28 +347,33 @@ export function useEditorProposals({
     )
       proposalStream.finalCall(event.turn.call_id, event.turn.arguments);
   };
-  // Owned here so a finished exchange is saved to history when the popup
-  // closes. Only sidebar history restoration resumes one.
-  const agentModel = settings.agentModels[settings.aiProvider] || undefined;
-  const conversation = useAgentConversation(
+  const streamEvent = useLatest(handleStreamEvent);
+  const statuses = useLatest(pendingEdits.allStatuses);
+  // This document as a conversation reaches it, whenever it sends.
+  const port = useMemo(
+    (): DocumentPort => ({
+      docPath: filePath,
+      onStreamEvent: (event) => streamEvent.current(event),
+      proposalStatuses: () => statuses.current,
+    }),
+    [filePath, streamEvent, statuses],
+  );
+  // The window's, read here: it outlives this editor. In front, it is
+  // followed as it streams.
+  const conversation = useLiveConversation(
     filePath,
     settings.agentWorkspaceRoot || null,
-    settings.aiProvider,
-    settings.enableWebSearch,
-    agentModel,
-    handleStreamEvent,
-    pendingEdits.allStatuses,
+    isActive,
   );
   // Quick Ask's one-off exchange, kept out of History. "Continue in the
   // panel" hands it to `conversation`.
-  const quickConversation = useAgentConversation(
-    filePath,
-    settings.agentWorkspaceRoot || null,
-    settings.aiProvider,
-    settings.enableWebSearch,
-    agentModel,
-    handleStreamEvent,
-    pendingEdits.allStatuses,
+  const quickConversation = useOwnConversation(
+    () => ({
+      docPath: filePath,
+      workspaceRoot: settingsRef.current.agentWorkspaceRoot || null,
+      settings: settingsRef.current,
+      port,
+    }),
     false,
   );
   useEffect(() => {
@@ -409,6 +419,7 @@ export function useEditorProposals({
     pendingEdits,
     conversation,
     quickConversation,
+    port,
     supersedePending,
     requestTargetRef,
     detachedTargetRef,

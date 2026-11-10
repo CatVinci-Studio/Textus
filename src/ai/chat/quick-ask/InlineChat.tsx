@@ -2,7 +2,7 @@ import { IconButton } from "../../../engine/controls/IconButton";
 import { PanelHeader } from "../../../engine/controls/PanelHeader";
 import type { DocumentSnapshot } from "../../doc-markdown";
 import { useRef } from "react";
-import type { AgentConversation } from "../useAgentConversation";
+import type { AgentConversation } from "../conversation/conversation-types";
 import type { PendingStatus } from "../../revision/usePendingEdits";
 import type { EditProposal } from "../../types";
 import { ChatBody, type ChatBodyLabels } from "../ChatBody";

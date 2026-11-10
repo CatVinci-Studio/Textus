@@ -3,7 +3,7 @@ import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
 import { MessageQueue } from "./MessageQueue";
 import { useRef } from "react";
-import type { AgentRequestOptions } from "./useAgentConversation";
+import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type {
   AgentTurn,
   ChatAttachment,

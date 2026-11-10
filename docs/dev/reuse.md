@@ -67,14 +67,16 @@ How a request runs is [ai-agent.md](../design/ai-agent.md); how a proposed
 edit becomes decided sentences is [ai-proposals.md](../design/ai-proposals.md).
 To build on it:
 
-| Need                                       | Use                                                                                                |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Asking Textus AI from anywhere in the app  | `askAi(text, mode)` (`ai/chat/ask-ai.ts`)                                                          |
-| A conversation on a surface                | `ai/chat/ChatBody.tsx` (messages and composer, shared by the panel, Quick Ask and the chat window) |
-| A proposed edit shown, decided and applied | `ai/revision/` (its editor plugin and the review bar); never write the document directly           |
-| Notes beside the text                      | `ai/margin/`                                                                                       |
-| Blocks as the model sees them (`[#id]`)    | `ai/doc-blocks.ts`, `ai/doc-markdown.ts`                                                           |
-| Streaming text in                          | `ai/stream-reveal.ts`                                                                              |
-| Sources as footnotes                       | `ai/citations.ts`                                                                                  |
-| A provider and its models                  | `ai/provider-catalog.ts`, Rust `crates/aicompat` (no Tauri inside)                                 |
-| From a plugin                              | `textus.ai.registerTool` (a tool the AI may call), `ai.state()` / `ai.onDidChangeState`            |
+| Need                                       | Use                                                                                                                                                      |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Asking Textus AI from anywhere in the app  | `askAi(text, mode)` (`ai/chat/ask-ai.ts`)                                                                                                                |
+| A conversation on a surface                | `ai/chat/ChatBody.tsx` (messages and composer, shared by the panel, Quick Ask and the chat window)                                                       |
+| A conversation's state                     | `ConversationModel` (`ai/chat/conversation/`): the window's by `conversationFor`, read with `useConversation`; a surface's own with `useOwnConversation` |
+| The document the AI works on               | `attachedDocument` (`ai/chat/conversation/document-port.ts`), attached by the editor in front                                                            |
+| A proposed edit shown, decided and applied | `ai/revision/` (its editor plugin and the review bar); never write the document directly                                                                 |
+| Notes beside the text                      | `ai/margin/`                                                                                                                                             |
+| Blocks as the model sees them (`[#id]`)    | `ai/doc-blocks.ts`, `ai/doc-markdown.ts`                                                                                                                 |
+| Streaming text in                          | `ai/stream-reveal.ts`                                                                                                                                    |
+| Sources as footnotes                       | `ai/citations.ts`                                                                                                                                        |
+| A provider and its models                  | `ai/provider-catalog.ts`, Rust `crates/aicompat` (no Tauri inside)                                                                                       |
+| From a plugin                              | `textus.ai.registerTool` (a tool the AI may call), `ai.state()` / `ai.onDidChangeState`                                                                  |
