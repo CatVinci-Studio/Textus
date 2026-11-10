@@ -328,7 +328,9 @@ export function updateUiState<K extends UiStateKey>(
     return;
   }
   written.add(key);
-  trackWrite(
+  // After this window's last update of it: two at once read the same live
+  // value and the second's patch dropped the first's change.
+  const next = (updating.get(key) ?? Promise.resolve()).then(() =>
     storage.uiStateGet().then((live) => {
       const value = change(live[key]);
       // The cache may have been replaced by the refresh meanwhile.
@@ -336,8 +338,19 @@ export function updateUiState<K extends UiStateKey>(
       if (cached) cached[key] = value;
       return storage.uiStatePatch({ [key]: value });
     }),
-  ).catch(() => {});
+  );
+  updating.set(
+    key,
+    next.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  trackWrite(next).catch(() => {});
 }
+
+/** Each field's updates in this window, one after another. */
+const updating = new Map<string, Promise<void>>();
 
 /** Resolves once the live values have replaced the boot snapshot, for a
  *  read-modify-write that must not build on a stale one. */
