@@ -4,9 +4,11 @@ import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
 import { unlistenAll } from "../platform/events";
 import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { fileTextFor } from "./tracked-file";
+import { openDocumentAt } from "../plugins/app-bridge";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
-// file changed on disk reload; dirty tabs wait for the save-time prompt.
+// file changed on disk take the new text (in place when open in an editor);
+// dirty tabs wait for the save-time prompt.
 // While the window shows, the documents on screen are also checked every
 // moment, so another app writing one shows up without a click back into
 // Textus. `liveTabs` includes edits the editor hasn't reported yet.
@@ -65,12 +67,26 @@ export function useExternalChangeReload(
             updateTab(tab.id, { diskMtime: mtime });
             continue;
           }
-          updateTab(tab.id, {
-            content,
-            savedContent: content,
-            diskMtime: mtime,
-            reloadKey: live.reloadKey + 1,
-          });
+          // Open in an editor: the new text taken in place, one undo step,
+          // so the AI conversation the editor holds goes on (an agent
+          // writing the file itself, mid-turn). Otherwise a remount.
+          const open = openDocumentAt(tab.path);
+          if (open?.replaceText(content, open.revision())) {
+            // As the editor writes it out: what it reports from now on.
+            const shown =
+              liveTabs().find((tb) => tb.id === tab.id)?.content ?? content;
+            updateTab(tab.id, {
+              content: shown,
+              savedContent: shown,
+              diskMtime: mtime,
+            });
+          } else
+            updateTab(tab.id, {
+              content,
+              savedContent: content,
+              diskMtime: mtime,
+              reloadKey: live.reloadKey + 1,
+            });
           window.dispatchEvent(
             new CustomEvent(FILE_RELOADED_EVENT, { detail: tab.path }),
           );
