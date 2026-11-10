@@ -1,8 +1,8 @@
 import { Island } from "../ui/Island";
+import { EditorKept, KeptWhileHidden } from "./islands/kept";
+import { IslandMotion } from "./layout/IslandMotion";
 import { DocumentCorners } from "./islands/DocumentCorner";
 import type { Lang } from "../i18n/langs";
-import { useKeptLoaded } from "../utils/kept-loaded";
-import { editorHeld } from "../document/editor-held";
 import type { ReactNode } from "react";
 import {
   type ComponentProps,
@@ -81,40 +81,6 @@ function pluginTabItems(
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 
 /** The document column: the tab bar over every open tab's editor. */
-
-/** A plugin's page in a tab out of sight is let go after a while (three
- *  at most kept); shown again, it loads afresh, its saved state restored. */
-function KeptWhileHidden({
-  shown,
-  children,
-}: {
-  shown: boolean;
-  children: ReactNode;
-}) {
-  return useKeptLoaded("plugin-view", shown) ? children : null;
-}
-
-/** A document's editor out of sight ten minutes is let go, unless Textus
- *  AI or undecided changes live in it, or it has no file to come back
- *  from; shown again, it opens at its text with its undo history. */
-const EDITOR_HIDDEN_MS = 10 * 60_000;
-
-function EditorKept({
-  tabId,
-  shown,
-  children,
-}: {
-  tabId: string;
-  shown: boolean;
-  children: ReactNode;
-}) {
-  const loaded = useKeptLoaded("editor", shown, {
-    hiddenMs: EDITOR_HIDDEN_MS,
-    max: Infinity,
-    hold: () => editorHeld(tabId),
-  });
-  return loaded ? children : null;
-}
 
 export function MainPane({
   tabs,
@@ -302,6 +268,10 @@ export function MainPane({
       data-split={split?.root.direction}
       style={grid?.column}
     >
+      <IslandMotion
+        layout={`${grid?.column.gridTemplateColumns} ${grid?.column.gridTemplateRows} ${all.map((p) => p.id)}`}
+        area={mainRef}
+      />
       {/* Each pane of documents an island: its row of tabs over its sheet,
           its documents on the sheet (below). A phone's column has its own
           bar; a clean sheet is the page itself. */}

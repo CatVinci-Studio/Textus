@@ -1,5 +1,25 @@
-import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from "react";
+import {
+  useState,
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+  type Ref,
+} from "react";
 import "./island.css";
+
+/** Whether the window's first islands are up: one made after that is new,
+ *  and plays its entrance; the first ones simply are. */
+let ready = false;
+
+/** Called once the window's first layout is on screen. */
+export function markIslandsReady(): void {
+  ready = true;
+}
+
+/** True for an island made after the window's first layout. */
+function useFresh(): boolean {
+  return useState(() => ready)[0];
+}
 
 /** What an island holds: documents (files, plugin views, web pages) or a
  *  Textus AI conversation. */
@@ -32,9 +52,11 @@ export function IslandRow({
   style?: CSSProperties;
   children: ReactNode;
 }) {
+  const fresh = useFresh();
   return (
     <div
       className="island-row"
+      data-fresh={fresh || undefined}
       data-island-row={kind}
       data-pane-id={paneId}
       data-inner={inner || undefined}
@@ -66,9 +88,11 @@ export function IslandSheet({
     sheetRef?: Ref<HTMLElement>;
     children?: ReactNode;
   }) {
+  const fresh = useFresh();
   return (
     <section
       {...rest}
+      data-fresh={fresh || undefined}
       ref={sheetRef}
       className={className ? `island ${className}` : "island"}
       data-island={kind}
