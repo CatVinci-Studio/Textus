@@ -31,8 +31,8 @@ type Timing = { duration?: DurationToken | number; easing?: EasingToken };
 export function play(
   before: Snapshot,
   {
-    duration = "--dur-base",
-    easing = "--ease-in-out",
+    duration = "--dur-settle",
+    easing = "--ease-settle",
     timingFor,
   }: Timing & { timingFor?: (el: Element) => Timing | undefined } = {},
 ): void {

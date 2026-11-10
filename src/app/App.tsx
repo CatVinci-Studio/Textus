@@ -131,8 +131,8 @@ function App() {
             '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
           )
         }
-        duration="--dur-slow"
-        easing="--ease-spring"
+        duration="--dur-settle"
+        easing="--ease-settle"
       />
       <div
         className="app-shell"

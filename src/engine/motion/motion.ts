@@ -12,7 +12,10 @@ export type DurationToken =
   | "--dur-sheet"
   | "--dur-linger"
   | "--dur-stagger"
-  | "--dur-cascade";
+  | "--dur-cascade"
+  | "--dur-settle"
+  | "--dur-land"
+  | "--dur-tuck";
 
 export type EasingToken =
   | "--ease-standard"
@@ -20,7 +23,10 @@ export type EasingToken =
   | "--ease-in"
   | "--ease-in-out"
   | "--ease-spring"
-  | "--ease-spring-bouncy";
+  | "--ease-spring-bouncy"
+  | "--ease-settle"
+  | "--ease-land"
+  | "--ease-tuck";
 
 const REDUCE_QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -34,6 +40,9 @@ const DURATIONS: Record<DurationToken, number> = {
   "--dur-linger": 1600,
   "--dur-stagger": 18,
   "--dur-cascade": 700,
+  "--dur-settle": 415,
+  "--dur-land": 445,
+  "--dur-tuck": 265,
 };
 
 /** The cubic fallbacks an engine without linear() runs. */
@@ -44,6 +53,9 @@ const CUBIC: Record<EasingToken, string> = {
   "--ease-in-out": "cubic-bezier(0.45, 0, 0.25, 1)",
   "--ease-spring": "cubic-bezier(0.16, 1, 0.3, 1)",
   "--ease-spring-bouncy": "cubic-bezier(0.34, 1.3, 0.64, 1)",
+  "--ease-settle": "cubic-bezier(0.16, 1, 0.3, 1)",
+  "--ease-land": "cubic-bezier(0.16, 1, 0.3, 1)",
+  "--ease-tuck": "cubic-bezier(0.16, 1, 0.3, 1)",
 };
 
 /** Whether the system asks for reduced motion. Read live: the setting can

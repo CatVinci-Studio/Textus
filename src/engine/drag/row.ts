@@ -1,8 +1,9 @@
 import { trackDrag } from "./pointer-drag";
 
-/** One slide for every item making way, so overlapping moves read as one. */
+/** One slide for every item making way, so overlapping moves read as one:
+ *  the settle spring (motion.css). */
 export const SLIDE =
-  "transform calc(var(--dur-base) * var(--motion-travel)) var(--ease-in-out)";
+  "transform calc(var(--dur-settle) * var(--motion-travel)) var(--ease-settle)";
 
 /**
  * One item dragged along a row or column of its siblings, the others

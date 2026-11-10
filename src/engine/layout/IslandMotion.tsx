@@ -24,8 +24,8 @@ export function IslandMotion({
           ":scope > :is([data-island], .island-row, .split-pane)",
         ) ?? []
       }
-      duration="--dur-base"
-      easing="--ease-spring"
+      duration="--dur-settle"
+      easing="--ease-settle"
     />
   );
 }

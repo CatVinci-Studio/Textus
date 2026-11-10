@@ -60,6 +60,20 @@
      drop, switch thumb). Menus and dialogs never bounce. */
   --ease-spring-bouncy: cubic-bezier(0.34, 1.3, 0.64, 1);
 
+  /* The three springs everything that moves from place to place uses
+     (design-language.md, motion table), each its curve and the time it
+     takes to come to rest; cubic stand-ins until the @supports block.
+     Settle: islands and tabs making room, sliding to new places - looks
+     done at 0.28s, no overshoot. Land: what is let go landing - 0.32s, a
+     0.3% overshoot. Tuck: a tab gathering into the pill at the pointer -
+     0.18s. */
+  --dur-settle: 415ms;
+  --dur-land: 445ms;
+  --dur-tuck: 265ms;
+  --ease-settle: var(--ease-out);
+  --ease-land: var(--ease-out);
+  --ease-tuck: var(--ease-out);
+
   /* Entrance offsets and scales. */
   --motion-distance-sm: 4px;
   --motion-distance-md: 8px;
@@ -86,6 +100,135 @@
 
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
+    --ease-settle: linear(
+      0,
+      0.0232,
+      0.08,
+      0.1553,
+      0.239,
+      0.3244,
+      0.4071,
+      0.4846,
+      0.5555,
+      0.6192,
+      0.6756,
+      0.725,
+      0.7679,
+      0.8048,
+      0.8364,
+      0.8633,
+      0.8861,
+      0.9053,
+      0.9214,
+      0.935,
+      0.9463,
+      0.9557,
+      0.9635,
+      0.97,
+      0.9753,
+      0.9798,
+      0.9834,
+      0.9864,
+      0.9889,
+      0.9909,
+      0.9926,
+      0.994,
+      0.9951,
+      0.996,
+      0.9967,
+      0.9974,
+      0.9979,
+      0.9983,
+      0.9986,
+      0.9989,
+      1
+    );
+    --ease-land: linear(
+      0,
+      0.021,
+      0.0739,
+      0.1465,
+      0.2296,
+      0.3165,
+      0.4027,
+      0.4849,
+      0.5613,
+      0.6305,
+      0.6923,
+      0.7464,
+      0.7933,
+      0.8334,
+      0.8673,
+      0.8955,
+      0.9189,
+      0.938,
+      0.9535,
+      0.9659,
+      0.9756,
+      0.9832,
+      0.9891,
+      0.9935,
+      0.9967,
+      0.9991,
+      1.0007,
+      1.0018,
+      1.0025,
+      1.0028,
+      1.003,
+      1.0029,
+      1.0028,
+      1.0026,
+      1.0024,
+      1.0021,
+      1.0018,
+      1.0016,
+      1.0014,
+      1.0012,
+      1
+    );
+    --ease-tuck: linear(
+      0,
+      0.023,
+      0.0791,
+      0.1536,
+      0.2367,
+      0.3215,
+      0.4039,
+      0.4811,
+      0.5519,
+      0.6156,
+      0.672,
+      0.7216,
+      0.7646,
+      0.8018,
+      0.8336,
+      0.8608,
+      0.8838,
+      0.9033,
+      0.9196,
+      0.9334,
+      0.9449,
+      0.9544,
+      0.9624,
+      0.969,
+      0.9745,
+      0.9791,
+      0.9828,
+      0.9859,
+      0.9885,
+      0.9906,
+      0.9923,
+      0.9937,
+      0.9949,
+      0.9958,
+      0.9966,
+      0.9972,
+      0.9977,
+      0.9982,
+      0.9985,
+      0.9988,
+      1
+    );
     /* Spring, response 0.32s, damping 0.86 (iOS "smooth"): settles in
        about 350ms, 0.5% overshoot. Pair with --dur-slow or --dur-sheet. */
     --ease-spring: linear(
