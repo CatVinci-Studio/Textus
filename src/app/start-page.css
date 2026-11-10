@@ -26,18 +26,19 @@
 .start-page-brand {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
+/* The mark and the name, the page's one large thing. */
 .start-page-mark {
-  width: calc(44px * var(--chrome-scale));
+  width: calc(72px * var(--chrome-scale));
   height: auto;
 }
 
 .start-page-title {
   margin: 0;
   font-family: var(--font-brand);
-  font-size: var(--text-large-title);
+  font-size: calc(var(--text-large-title) * 1.6);
   font-weight: 500;
   letter-spacing: 0.01em;
 }
