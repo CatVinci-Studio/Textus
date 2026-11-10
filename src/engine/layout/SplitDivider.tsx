@@ -24,6 +24,7 @@ export function SplitDivider({
   line,
   style,
   frame,
+  reach,
   sides,
   fixed,
   t,
@@ -33,6 +34,9 @@ export function SplitDivider({
   style: CSSProperties;
   /** Its key in the window's frame. */
   frame: string;
+  /** It starts at the islands' top: dragged, its line reaches up through
+   *  the rows of tabs there. */
+  reach: boolean;
   /** The two sides it parts, in the area's pixels (frame/solve.ts). */
   sides: { before: Span; after: Span };
   /** The side that is a panel's island, sized in pixels, not shares. */
@@ -75,6 +79,7 @@ export function SplitDivider({
       <div
         className={`split-divider tx-grip split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
         data-gripped={dragging || undefined}
+        data-reach={reach || undefined}
         style={style}
         data-frame={frame}
         role="separator"

@@ -43,9 +43,11 @@
 }
 
 /* Below the window bar: the bar's own row stays the window's to drag. */
+/* Astride its edge: the line it moves at its middle, so a press either
+   side of it takes. */
 .sidebar-resizer {
   top: var(--window-bar-height);
-  right: 0;
+  right: -5px;
 }
 
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over

@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useState,
-  type ComponentType,
-  type CSSProperties,
-} from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
 import { IconButton } from "../engine/controls/IconButton";
@@ -139,10 +134,9 @@ const GROUPS: Button[][] = [
   ],
 ];
 
-const ACTIVE_TAB = '.main-pane [data-active-tab="true"]';
-
-/** What is on at the caret of the document on screen, kept current. */
-function useCaretBlock(): CaretBlock {
+/** What is on at the caret of one document, kept current: nothing while
+ *  the caret is in another. */
+function useCaretBlock(tabId: string): CaretBlock {
   const [block, setBlock] = useState<CaretBlock>(NO_BLOCK);
   useEffect(() => {
     let frame = 0;
@@ -150,7 +144,13 @@ function useCaretBlock(): CaretBlock {
     const read = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() =>
-        setBlock(caretBlock(document.querySelector(ACTIVE_TAB))),
+        setBlock(
+          caretBlock(
+            document.querySelector(
+              `.main-pane [data-active-tab="true"][data-tab-id="${CSS.escape(tabId)}"]`,
+            ),
+          ),
+        ),
       );
     };
     read();
@@ -161,23 +161,32 @@ function useCaretBlock(): CaretBlock {
       document.removeEventListener("selectionchange", read);
       document.removeEventListener("input", read);
     };
-  }, []);
+  }, [tabId]);
   return block;
+}
+
+/** Another island's bar: its document takes the keys first, at the
+ *  selection it kept, so the format lands there. */
+function focusDocument(tabId: string) {
+  const editor = document.querySelector<HTMLElement>(
+    `.main-pane [data-tab-id="${CSS.escape(tabId)}"] .ProseMirror`,
+  );
+  if (editor && !editor.contains(document.activeElement)) editor.focus();
 }
 
 export function FormatBar({
   t,
-  style,
+  tabId,
 }: {
   t: Strings;
-  /** Its place in a split's grid. */
-  style?: CSSProperties;
+  /** The document it formats: a press brings it into use first (its
+   *  island's pointerdown), so the menu's events reach it. */
+  tabId: string;
 }) {
-  const block = useCaretBlock();
+  const block = useCaretBlock(tabId);
   return (
     <div
       className="format-bar"
-      style={style}
       role="toolbar"
       aria-label={t.toolbarLabel}
       // A press leaves the caret where it was, in the document.
@@ -193,11 +202,12 @@ export function FormatBar({
                 label={label}
                 hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
                 pressed={b.on ? b.on(block) : undefined}
-                onClick={() =>
+                onClick={() => {
+                  focusDocument(tabId);
                   window.dispatchEvent(
                     new CustomEvent(b.event, { detail: b.detail }),
-                  )
-                }
+                  );
+                }}
               >
                 <b.Icon />
               </IconButton>

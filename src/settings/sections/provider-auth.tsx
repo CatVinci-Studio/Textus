@@ -245,28 +245,26 @@ export function ApiKeyProviderPanel({
   }
 
   return (
-    <div>
-      <div className="settings-row">
-        <div>
-          <div className="settings-row-label">
-            {t.apiKeyLabelTemplate.replace("{name}", label)}
-            {keyOptional && (
-              <RowHelp label={t.apiKeyLabelTemplate.replace("{name}", label)}>
-                {t.apiKeyOptionalHintTemplate.replace("{name}", label)}
-              </RowHelp>
-            )}
-          </div>
+    <div className="settings-row">
+      <div>
+        <div className="settings-row-label">
+          {t.apiKeyLabelTemplate.replace("{name}", label)}
+          {keyOptional && (
+            <RowHelp label={t.apiKeyLabelTemplate.replace("{name}", label)}>
+              {t.apiKeyOptionalHintTemplate.replace("{name}", label)}
+            </RowHelp>
+          )}
         </div>
-        <SecretInput
-          t={t}
-          label={t.apiKeyLabelTemplate.replace("{name}", label)}
-          saved={configured}
-          value={input}
-          onChange={setInput}
-          onSave={save}
-          onClear={clear}
-        />
       </div>
+      <SecretInput
+        t={t}
+        label={t.apiKeyLabelTemplate.replace("{name}", label)}
+        saved={configured}
+        value={input}
+        onChange={setInput}
+        onSave={save}
+        onClear={clear}
+      />
     </div>
   );
 }

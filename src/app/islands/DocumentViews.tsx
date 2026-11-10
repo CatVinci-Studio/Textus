@@ -61,7 +61,8 @@ export function DocumentViews({
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
-  /** What tops the tab in use's view, riding with it (the format bar). */
+  /** What tops each island's document in front, riding with it (the
+   *  format bar). */
   above?: (tab: DocTab) => ReactNode;
   t: Strings;
 }) {
@@ -105,7 +106,7 @@ export function DocumentViews({
                 : undefined
             }
           >
-            {shown && tab.id === activeTabId && above?.(tab)}
+            {shown && above?.(tab)}
             {tab.view?.kind === "page" ? (
               <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
                 <PageTabContent tab={tab} />

@@ -4,7 +4,7 @@
 .resize-handle {
   position: absolute;
   bottom: 0;
-  width: 6px;
+  width: 10px;
   cursor: col-resize;
   z-index: 5;
   touch-action: none;
@@ -60,7 +60,7 @@
   width: var(--grip-line, 1px);
   height: calc(100% + var(--grip-reach, 0px));
   border-radius: 0;
-  background: var(--ui-muted);
+  background: var(--ui-accent);
   opacity: 1;
   translate: -50% 0;
 }

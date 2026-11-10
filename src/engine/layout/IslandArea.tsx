@@ -150,6 +150,9 @@ export function IslandArea({
             layout={layout}
             line={line}
             style={rectStyle(rect)}
+            // Up through the window bar's row only from the islands' top:
+            // one lower down stops at the island above.
+            reach={!!area && rect.y <= area.y + 0.5}
             sides={{ before, after }}
             fixed={fixedSide(layout, line.path, line.index, isPanel)}
             t={t}

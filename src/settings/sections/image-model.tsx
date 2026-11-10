@@ -5,6 +5,7 @@ import { auth } from "../../platform/ipc";
 import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
 import { ApiKeyProviderPanel } from "./providers";
+import { openSettingsPage } from "../settings-nav";
 import {
   FOLLOW_CHAT,
   useChatGptSignedIn,
@@ -80,7 +81,21 @@ export function ImageModelSection({ t }: { t: Strings }) {
             ? t.imageServiceFollowNoPictures
             : chatGptWithoutSignIn
               ? t.imageChatGptSignInHint
-              : undefined
+              : entry &&
+                askKey &&
+                entry.id !== "custom" && (
+                  // The key is the provider's one, kept on Providers.
+                  <>
+                    {t.imageServiceNoKey.replace("{name}", label(entry, t))}{" "}
+                    <button
+                      type="button"
+                      className="text-button"
+                      onClick={() => openSettingsPage("providers")}
+                    >
+                      {t.imageServiceSetKey}
+                    </button>
+                  </>
+                )
         }
       >
         <Select
@@ -169,12 +184,12 @@ export function ImageModelSection({ t }: { t: Strings }) {
           </SettingRow>
         </>
       )}
-      {entry && askKey && (
+      {entry?.id === "custom" && askKey && (
         <ApiKeyProviderPanel
           t={t}
           providerId={entry.keyId}
           label={label(entry, t)}
-          keyOptional={entry.id === "custom"}
+          keyOptional
         />
       )}
     </>

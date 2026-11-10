@@ -32,8 +32,8 @@ export interface DropTarget {
  *  a narrower band, as stacking is the rarer wish. Inside that, it joins
  *  the island. */
 const EDGE: Record<DropZone, number> = {
-  left: 0.1,
-  right: 0.1,
+  left: 0.2,
+  right: 0.2,
   top: 0.05,
   bottom: 0.05,
   center: 0,

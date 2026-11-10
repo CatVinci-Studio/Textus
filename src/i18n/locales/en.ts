@@ -312,6 +312,8 @@ type /name in a conversation to use one.
   imageServiceFollowNoPictures:
     "Your chat provider makes no pictures - choose a service for them.",
   imageProviderChatGpt: "OpenAI · ChatGPT sign-in (experimental)",
+  imageServiceNoKey: "{name} has no API key yet.",
+  imageServiceSetKey: "Set it in Providers",
   imageChatGptSignInHint:
     "Sign in with ChatGPT under the chat provider above first.",
   imageChatGptHelp:

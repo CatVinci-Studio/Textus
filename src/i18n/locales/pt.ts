@@ -314,6 +314,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageServiceFollowNoPictures:
     "Seu provedor de chat não faz imagens: escolha um serviço para elas.",
   imageProviderChatGpt: "OpenAI · login do ChatGPT (experimental)",
+  imageServiceNoKey: "{name} ainda não tem chave de API.",
+  imageServiceSetKey: "Definir em Provedores",
   imageChatGptSignInHint:
     "Primeiro entre com o ChatGPT no provedor de chat acima.",
   imageChatGptHelp:

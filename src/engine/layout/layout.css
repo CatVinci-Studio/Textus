@@ -68,10 +68,13 @@
 }
 
 .app-shell[data-tabs="bar"] .main-pane-split > .split-divider {
-  /* Dragged, a hairline down the middle of the gap, up through the
-     islands' rows of tabs. */
-  --grip-reach: var(--window-bar-height);
   background: transparent;
+}
+
+/* Dragged, a hairline down the middle of the gap, up through the islands'
+   rows of tabs - from the islands' top only, never into an island above. */
+.app-shell[data-tabs="bar"] .main-pane-split > .split-divider[data-reach] {
+  --grip-reach: var(--window-bar-height);
 }
 
 /* Every tab's view shows on its island, not under it: the editor, the

@@ -282,6 +282,8 @@ export default {
   imageServiceFollowNoPictures:
     "当前的对话服务不能画图，请为图片另选一个服务。",
   imageProviderChatGpt: "OpenAI · ChatGPT 订阅（实验性）",
+  imageServiceNoKey: "{name} 还没有 API Key。",
+  imageServiceSetKey: "去「服务商」设置",
   imageChatGptSignInHint: "请先在上方的对话服务里用 ChatGPT 登录。",
   imageChatGptHelp:
     "图片使用你 ChatGPT 订阅自带的画图额度，不消耗 API 余额。它走的是 ChatGPT 自家应用使用的接口，不是公开的 API，可能随时失效；OpenAI API Key 的方式不受影响。",

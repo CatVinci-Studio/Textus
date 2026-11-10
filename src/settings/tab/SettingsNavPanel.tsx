@@ -40,7 +40,19 @@ export function SettingsNavPanel() {
   const shown = useSyncExternalStore(onSettingsPageShown, settingsPageShown);
   const search = useSettingsSearch(() => false);
   const pages = settingsPages();
-  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const groupOf = (id: string | null) => pages.find((p) => p.id === id)?.group;
+  // A group opens as one of its pages is shown, and folds when told to,
+  // that page's too.
+  const [open, setOpen] = useState<ReadonlySet<string>>(() => {
+    const group = groupOf(shown);
+    return new Set(group ? [group] : []);
+  });
+  const [openedFor, setOpenedFor] = useState(shown);
+  if (openedFor !== shown) {
+    setOpenedFor(shown);
+    const group = groupOf(shown);
+    if (group) setOpen((was) => new Set(was).add(group));
+  }
   const toggle = (id: string) =>
     setOpen((was) => {
       const next = new Set(was);
@@ -156,11 +168,7 @@ export function SettingsNavPanel() {
             if (!p.group)
               return p.id === "shortcuts" ? [pluginsItem, item] : item;
             const first = pages[i - 1]?.group !== p.group;
-            // A group is folded until opened; the page shown keeps its own
-            // open.
-            const isOpen =
-              open.has(p.group) ||
-              pages.some((q) => q.group === p.group && q.id === shown);
+            const isOpen = open.has(p.group);
             const group = SETTINGS_GROUPS[p.group];
             return (
               <Fragment key={p.id}>

@@ -293,6 +293,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageServiceFollowNoPictures:
     "채팅 서비스는 이미지를 만들지 않습니다. 이미지용 서비스를 고르세요.",
   imageProviderChatGpt: "OpenAI · ChatGPT 로그인 (실험적)",
+  imageServiceNoKey: "{name}의 API 키가 아직 없습니다.",
+  imageServiceSetKey: "서비스에서 설정",
   imageChatGptSignInHint: "먼저 위의 채팅 서비스에서 ChatGPT로 로그인하세요.",
   imageChatGptHelp:
     "이미지는 API 크레딧이 아니라 ChatGPT 요금제의 이미지 생성 한도에서 나갑니다. ChatGPT 앱이 쓰는 서비스를 거치며 공개 API가 아니므로 예고 없이 작동을 멈출 수 있습니다. OpenAI API 키는 그와 상관없이 작동합니다.",

@@ -298,9 +298,11 @@ export function DocumentIslands({
           onChange={onChange}
           typewriter={typewriter}
           tour={tour}
-          // On the sheet of the document in use, wherever it is.
+          // On every island's document in front.
           above={(tab) =>
-            formatBar && !phone && formatsShown(tab) && <FormatBar t={t} />
+            formatBar &&
+            !phone &&
+            formatsShown(tab) && <FormatBar t={t} tabId={tab.id} />
           }
           t={t}
         />

@@ -326,6 +326,8 @@ utiliser une.
   imageServiceFollowNoPictures:
     "Ton fournisseur de chat ne fait pas d’images : choisis un service pour elles.",
   imageProviderChatGpt: "OpenAI · connexion ChatGPT (expérimental)",
+  imageServiceNoKey: "Aucune clé API pour {name} pour l’instant.",
+  imageServiceSetKey: "La définir dans Fournisseurs",
   imageChatGptSignInHint:
     "Connecte-toi d’abord avec ChatGPT dans le fournisseur de chat ci-dessus.",
   imageChatGptHelp:

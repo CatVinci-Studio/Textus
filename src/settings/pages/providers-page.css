@@ -48,7 +48,7 @@
   flex-wrap: wrap;
   row-gap: 8px;
 }
-.providers-detail .settings-row > :first-child {
+.providers-detail .settings-row:not(:has(.api-key-input-row)) > :first-child {
   flex: 1 1 10em;
   overflow-wrap: normal;
 }
@@ -56,7 +56,9 @@
   white-space: nowrap;
 }
 /* Wrapped under its words, a control keeps to the row's end. */
-.providers-detail .settings-row > :last-child:not(:first-child) {
+.providers-detail
+  .settings-row:not(:has(.api-key-input-row))
+  > :last-child:not(:first-child) {
   margin-inline-start: auto;
 }
 
@@ -79,16 +81,13 @@
 .providers-detail .settings-group + .settings-group {
   margin-top: var(--space-6);
 }
-/* The key: the panel's width, under its name. */
+/* The key: the panel's width, under its name (the rules above, for a
+   row side by side, leave it alone). */
 .providers-detail .settings-row:has(.api-key-input-row) {
   flex-direction: column;
   align-items: stretch;
 }
-.providers-detail
-  .settings-row:has(.api-key-input-row)
-  > .settings-row-control {
-  max-width: none;
-}
+
 .providers-detail .api-key-input {
   max-width: none;
 }

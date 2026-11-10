@@ -325,6 +325,8 @@ para usar una.
   imageServiceFollowNoPictures:
     "Tu proveedor de chat no hace imágenes: elige un servicio para ellas.",
   imageProviderChatGpt: "OpenAI · inicio de sesión de ChatGPT (experimental)",
+  imageServiceNoKey: "{name} aún no tiene clave de API.",
+  imageServiceSetKey: "Configurarla en Proveedores",
   imageChatGptSignInHint:
     "Primero inicia sesión con ChatGPT en el proveedor de chat de arriba.",
   imageChatGptHelp:
