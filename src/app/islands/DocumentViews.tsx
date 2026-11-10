@@ -1,3 +1,4 @@
+import { viewKey } from "../../engine/frame/island-parts";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
 import { PageTabContent } from "../tabs/page-tabs";
@@ -90,7 +91,7 @@ export function DocumentViews({
             data-tab-id={tab.id}
             data-pane={pane?.name}
             data-pane-id={pane?.id}
-            data-frame={shown ? `view:${tab.id}` : undefined}
+            data-frame={shown ? viewKey(tab.id) : undefined}
             className={shown ? "split-pane" : undefined}
             style={shown ? placed : { display: single ? "contents" : "none" }}
             onPointerDownCapture={

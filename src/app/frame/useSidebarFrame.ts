@@ -33,5 +33,18 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
     );
     was.current = open;
   }, [open, on, width]);
+  // Off (an iPhone's drawer) or gone: the clock lets it go.
+  useLayoutEffect(() => {
+    if (on) return;
+    frameClock.drop("sidebar");
+    frameClock.attach("sidebar", null);
+  }, [on]);
+  useLayoutEffect(
+    () => () => {
+      frameClock.drop("sidebar");
+      frameClock.attach("sidebar", null);
+    },
+    [],
+  );
   return aside;
 }

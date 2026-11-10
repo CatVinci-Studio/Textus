@@ -12,12 +12,13 @@ export function setIslandsNeed(next: number): void {
   for (const listener of listeners) listener();
 }
 
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+const snapshot = () => need;
+
 export function useIslandsNeed(): number {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    () => need,
-  );
+  return useSyncExternalStore(subscribe, snapshot);
 }

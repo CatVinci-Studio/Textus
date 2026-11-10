@@ -60,8 +60,18 @@ export class FrameClock {
   private ease = easingFn("--ease-settle");
 
   attach(key: string, el: HTMLElement | null): void {
-    if (el) this.elements.set(key, el);
-    else this.elements.delete(key);
+    if (!el) {
+      this.elements.delete(key);
+      return;
+    }
+    const had = this.elements.get(key);
+    this.elements.set(key, el);
+    // A new element for a part already placed: drawn where it is at once.
+    if (had !== el)
+      for (const group of this.groups.values()) {
+        const part = group.parts.get(key);
+        if (part) this.write(key, part, group.origin);
+      }
   }
 
   /** The group's parts as they now should be; `animate` false puts them
@@ -73,6 +83,11 @@ export class FrameClock {
     animate: boolean,
   ): void {
     const was = this.groups.get(name);
+    // The same places again (a render that moved nothing): nothing to write.
+    if (was && same(was, parts, origin) && !this.runningIn(parts)) {
+      this.groups.set(name, { parts, origin });
+      return;
+    }
     this.groups.set(name, { parts, origin });
     for (const key of was?.parts.keys() ?? [])
       if (!parts.has(key)) {
@@ -80,6 +95,8 @@ export class FrameClock {
         this.runs.delete(key);
       }
     const moving = animate && motionAllowed();
+    // The curve as the tokens say now (a theme, reduced motion).
+    if (moving) this.ease = easingFn("--ease-settle");
     for (const [key, part] of parts) {
       // Already on its way there: it keeps going, not started over.
       const running = this.runs.get(key);
@@ -95,6 +112,11 @@ export class FrameClock {
     this.paint(null);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
+  }
+
+  private runningIn(parts: Map<string, FramePart>): boolean {
+    for (const key of parts.keys()) if (this.runs.has(key)) return true;
+    return false;
   }
 
   /** Group `name` gone with its container. */
@@ -203,6 +225,30 @@ export class FrameClock {
         ? ""
         : `inset(${top}px ${right}px ${bottom}px ${left}px)`;
   }
+}
+
+/** Whether `group` already holds `parts` at `origin`, every one alike. */
+function same(
+  group: Group,
+  parts: Map<string, FramePart>,
+  origin: { x: number; y: number },
+): boolean {
+  if (group.origin.x !== origin.x || group.origin.y !== origin.y) return false;
+  if (group.parts.size !== parts.size) return false;
+  for (const [key, part] of parts) {
+    const was = group.parts.get(key);
+    if (
+      !was ||
+      !sameRect(was.rect, part.rect) ||
+      was.follow !== part.follow ||
+      was.still !== part.still ||
+      was.own !== part.own ||
+      was.above !== part.above ||
+      was.along !== part.along
+    )
+      return false;
+  }
+  return true;
 }
 
 /** A new part's first frame: none of it yet, at the edge it grows from. */

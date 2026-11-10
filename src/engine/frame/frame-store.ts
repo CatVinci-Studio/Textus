@@ -51,7 +51,7 @@ export function frameLayout(): FrameLayout {
   return current;
 }
 
-export function onFrameLayout(listener: () => void): () => void {
+function onFrameLayout(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }

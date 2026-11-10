@@ -1,6 +1,6 @@
-/* The sidebar slides on its transform alone, over the layout, so the editor
-   never reflows per frame. Transitions, not keyframes, so a mid-slide toggle
-   reverses from where it is. */
+/* The sidebar lies over its column at its own width (app-shell.css): the
+   window's clock reveals it on the desktop, a phone's drawer slides on its
+   transform. */
 /* --sidebar-width stays an ordinary inherited property: registered as
    non-inherited, WebKit never restyled the sidebar and its edge couldn't drag. */
 .sidebar {
@@ -45,7 +45,7 @@
 /* Below the window bar: the bar's own row stays the window's to drag. */
 .sidebar-resizer {
   top: var(--window-bar-height);
-  right: -3px;
+  right: 0;
 }
 
 /* Thin, unobtrusive sidebar scrollbar: invisible until the pointer is over

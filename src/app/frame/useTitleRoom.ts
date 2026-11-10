@@ -21,11 +21,12 @@ export function useTitleRoom(on: boolean) {
   const bar = useBarObstacles();
   const { islands } = useFrameLayout();
   const island = islands.find((i) => i.paneId === null) ?? islands[0];
+  const across = island && { x: island.whole.x, w: island.whole.w };
   const width = useRef<number | null>(null);
   useLayoutEffect(() => {
     const el = titleRef.current;
     if (!el) return;
-    if (!on || !bar || !island) {
+    if (!on || !bar || !across) {
       frameClock.drop("title");
       frameClock.attach("title", null);
       el.style.left = "";
@@ -33,7 +34,7 @@ export function useTitleRoom(on: boolean) {
       return;
     }
     const gap = scaledPx(GAP);
-    const centre = island.whole.x + island.whole.w / 2;
+    const centre = across.x + across.w / 2;
     const start = Math.max(bar.left, bar.leadEnd) + gap;
     const end =
       Math.min(bar.right, ...bar.ends.filter((e) => e > centre)) - gap;
@@ -52,7 +53,9 @@ export function useTitleRoom(on: boolean) {
       { x: bar.left, y: 0 },
       !resized,
     );
-  });
+    // Its island's span, not the object made again each solve.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [on, bar, across?.x, across?.w]);
   useLayoutEffect(() => () => frameClock.drop("title"), []);
   return titleRef;
 }

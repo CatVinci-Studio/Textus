@@ -147,11 +147,9 @@ export function useSplitPanes(
       addBlankTab();
     } else if (resolved === null) {
       if (layout || request) closeSplit();
-    } else {
-      setSplitLayout(resolved);
-      arrivalsTaken(resolved);
-    }
-  }, [resolved, layout, request, addBlankTab]);
+    } else setSplitLayout(resolved);
+    arrivalsTaken(tabIds);
+  }, [resolved, layout, request, addBlankTab, tabIds]);
   // A drag's preview stands in for the layout while it lasts.
   if (preview) return preview;
   if (!resolved || "blank" in resolved) return null;

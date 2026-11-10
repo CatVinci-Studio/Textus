@@ -7,7 +7,7 @@ import { useSyncExternalStore } from "react";
  * panel's. Per viewer, in localStorage.
  */
 const KEY = "textus-panel-width";
-export const PANEL_DEFAULT = 400;
+const PANEL_DEFAULT = 400;
 
 let width = read();
 const listeners = new Set<() => void>();

@@ -198,11 +198,10 @@ export function arrivalOf(tabId: string): Arrival | undefined {
   return arriving.get(tabId);
 }
 
-/** The tabs `next` holds have arrived: their places are taken. */
-export function arrivalsTaken(next: SplitLayout | null): void {
-  if (!next) return;
-  for (const id of arriving.keys())
-    if (paneWithTab(next.root, id)) arriving.delete(id);
+/** The window's tabs settled: a place asked for a tab now among them has
+ *  been taken (or it went where it could), whatever the layout became. */
+export function arrivalsTaken(tabIds: readonly string[]): void {
+  for (const id of tabIds) arriving.delete(id);
 }
 
 /** A branch rearranged: turned the other way, or the two children either

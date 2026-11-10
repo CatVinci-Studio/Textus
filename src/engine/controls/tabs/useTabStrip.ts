@@ -76,6 +76,9 @@ export function useTabStrip({
     if (!widths || !tabWidths) return;
     const slots = stripSlots(tabWidths, gap);
     setStripPlaces(pane, { ids, slots, scrolled });
+    // Tabs gone from the row let go of their refs.
+    for (const id of refs.current.keys())
+      if (id !== INCOMING && !ids.includes(id)) refs.current.delete(id);
     const before = was.current;
     const changed = before.ids.join("\n") !== ids.join("\n");
     if (incomingX !== null && widths.length > ids.length) {
@@ -125,9 +128,14 @@ export function useTabStrip({
     [keyOf],
   );
 
+  /** The strip's own ref: placed by the clock, and what its tabs are
+   *  found in. */
   const stripRef = useCallback(
-    (el: HTMLElement | null) => frameClock.attach(name, el),
-    [name],
+    (el: HTMLElement | null) => {
+      strip.current = el;
+      frameClock.attach(name, el);
+    },
+    [name, strip],
   );
 
   /** Tab `id` dragged `dx` along: the others make room as it passes. */

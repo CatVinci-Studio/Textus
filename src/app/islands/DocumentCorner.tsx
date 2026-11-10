@@ -1,3 +1,4 @@
+import { cornerKey } from "../../engine/frame/island-parts";
 import { useDeferredValue, useMemo, type CSSProperties } from "react";
 import { countWords } from "../../utils/word-count";
 import { PAUSE_FEATURES_THRESHOLD } from "../../editor/large-doc";
@@ -91,7 +92,7 @@ export function DocumentCorners({
           content={tab.content}
           lang={lang}
           style={style}
-          frame={`corner:${frame}`}
+          frame={cornerKey(frame)}
           t={t}
         />
       ),

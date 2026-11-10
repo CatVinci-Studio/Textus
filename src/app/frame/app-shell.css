@@ -71,22 +71,10 @@ body {
 /* The sidebar opens and closes on the islands' clock (useSidebarFrame):
    its column takes its width at once, the islands move into the room
    frame by frame, and the sidebar, at its full width throughout, is
-   revealed - clipped - as they do. It lies over its column, not in it. */
-:root:not([data-window-chrome="mobile"]) .app-shell > .sidebar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--rail-width, 0px);
-  width: var(--sidebar-width, 240px);
-}
+   revealed - clipped - as they do. It lies over its column, not in it
+   (sidebar-frame.css). */
 :root[data-bar-rows="2"]:not([data-window-chrome="mobile"])
   .app-shell
   > .sidebar {
   top: var(--window-bar-height);
-}
-:root:not([data-window-chrome="mobile"])
-  .app-shell
-  > .sidebar
-  > .sidebar-resizer {
-  right: 0;
 }

@@ -22,9 +22,11 @@ export function useIslandFrame(
   solved: IslandsLayout | null,
   islands: readonly PlacedIsland[],
 ): void {
-  const last = useRef<{ shell: IslandRoom["shell"]; sign: string } | null>(
-    null,
-  );
+  const last = useRef<{
+    shell: IslandRoom["shell"];
+    sign: string;
+    held: string;
+  } | null>(null);
   const attached = useRef(new Set<string>());
   useLayoutEffect(() => {
     const main = area.current;
@@ -39,6 +41,17 @@ export function useIslandFrame(
       box,
       room.origin,
     );
+    const sign = [...parts]
+      .map(([k, p]) => `${k}:${p.rect.x},${p.rect.y},${p.rect.w},${p.rect.h}`)
+      .join(" ");
+    // What the islands hold, which the published layout carries too.
+    const held = `${room.origin.x},${room.origin.y},${room.shellAt.x},${room.shellAt.y} ${islands
+      .map((i) => `${i.key}:${i.paneId}:${i.front}:${i.tabs.join(",")}`)
+      .join(" ")}`;
+    const was = last.current;
+    // A render that moved and changed nothing (a keystroke): nothing to
+    // find, publish or place.
+    if (was?.sign === sign && was.held === held) return;
     // Its parts' elements, found by their keys: React draws them, the
     // clock places them.
     const found = new Set<string>();
@@ -50,17 +63,20 @@ export function useIslandFrame(
       if (!found.has(key)) frameClock.attach(key, null);
     attached.current = found;
     publish(room, box, solved, islands);
-    const sign = [...parts]
-      .map(([k, p]) => `${k}:${p.rect.x},${p.rect.y},${p.rect.w},${p.rect.h}`)
-      .join(" ");
-    const was = last.current;
-    if (was?.sign === sign) return;
     const resized =
       was && (was.shell.w !== room.shell.w || was.shell.h !== room.shell.h);
     const animate = !!was && !resized && !document.querySelector(GRIPPED);
-    last.current = { shell: room.shell, sign };
+    last.current = { shell: room.shell, sign, held };
     frameClock.set("islands", parts, room.origin, animate);
   });
+  // Gone with its area: its parts let go.
+  useLayoutEffect(
+    () => () => {
+      for (const key of attached.current) frameClock.attach(key, null);
+      frameClock.drop("islands");
+    },
+    [],
+  );
 }
 
 /** The solve, in the viewport's pixels, for what reads the islands' places. */

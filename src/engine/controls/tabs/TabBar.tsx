@@ -147,13 +147,7 @@ export function TabBar({
       aria-label={labels.tabs}
       onKeyDown={onKeyDown}
     >
-      <div
-        className="tab-strip"
-        ref={(el) => {
-          stripEl.current = el;
-          strip.stripRef(el);
-        }}
-      >
+      <div className="tab-strip" ref={strip.stripRef}>
         {tabs.map((tab, i) => (
           <TabPill
             key={tab.id}
