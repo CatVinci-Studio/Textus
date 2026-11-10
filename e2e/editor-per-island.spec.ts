@@ -1,0 +1,38 @@
+import { expect, test } from "@playwright/test";
+import { openApp } from "./helpers";
+import { openPath } from "./plugin-helpers";
+
+// One editor per island, as VS Code keeps one per group: a tab out of
+// sight lets its editor go, and comes back at its text with its undo.
+
+test("only the tab in front has an editor; back again, its edit and its undo are there", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/w/a.md": "# A\n\nalpha line\n",
+      "/w/b.md": "# B\n\nbeta line\n",
+    };
+  });
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/w/a.md");
+  await openPath(page, "/w/b.md");
+  const front = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(front.locator("h1")).toContainText("B");
+  const tab = (name: string) =>
+    page.locator(".tab-pill").filter({ hasText: name });
+  await tab("a.md").click();
+  await front.locator("p").first().click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" EDITED");
+  await tab("b.md").click();
+  await expect(front.locator("h1")).toContainText("B");
+  await expect(page.locator(".ProseMirror")).toHaveCount(1);
+  await tab("a.md").click();
+  await expect(front.locator("p").first()).toContainText("EDITED");
+  await front.focus();
+  await page.keyboard.press("Control+z");
+  await expect(front.locator("p").first()).toHaveText("alpha line");
+});

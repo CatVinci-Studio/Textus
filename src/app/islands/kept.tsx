@@ -14,11 +14,11 @@ export function KeptWhileHidden({
   return useKeptLoaded("plugin-view", shown) ? children : null;
 }
 
-/** A document's editor out of sight ten minutes is let go, unless Textus
- *  AI or undecided changes live in it, or it has no file to come back
- *  from; shown again, it opens at its text with its undo history. */
-const EDITOR_HIDDEN_MS = 10 * 60_000;
-
+/** A document's editor is mounted only while its tab is in front of an
+ *  island, as VS Code keeps one editor per group: shown again, it opens at
+ *  its text with its undo history, caret and reading place. Kept out of
+ *  sight only while something can't be left: Textus AI working in it, or
+ *  changes there waiting to be decided. */
 export function EditorKept({
   tabId,
   shown,
@@ -28,10 +28,5 @@ export function EditorKept({
   shown: boolean;
   children: ReactNode;
 }) {
-  const loaded = useKeptLoaded("editor", shown, {
-    hiddenMs: EDITOR_HIDDEN_MS,
-    max: Infinity,
-    hold: () => editorHeld(tabId),
-  });
-  return loaded ? children : null;
+  return shown || editorHeld(tabId) ? children : null;
 }

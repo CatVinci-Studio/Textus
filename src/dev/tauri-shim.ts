@@ -574,6 +574,7 @@ export function installDevTauriShim(): void {
   // (files only). `__devPickFolder` answers the folder picker ("TOO_BROAD"
   // refuses); `__devRecents` are the recent lists.
   const recents = { files: [] as string[], folders: [] as string[] };
+  const undoKept = new Map<string, { hash: string; history: string }>();
   w.__devRecents = recents;
   const pushRecent = (list: string[], path: string) => {
     const at = list.indexOf(path);
@@ -598,6 +599,26 @@ export function installDevTauriShim(): void {
       case "add_recent_folder":
         pushRecent(recents.folders, String(args.path));
         return Promise.resolve(null);
+      // Undo files (undo_files.rs), in memory: a history kept per path and
+      // given back only at the text it ends at.
+      case "undo_file_save":
+        undoKept.set(String(args.path), {
+          hash: String(args.hash),
+          history: String(args.history),
+        });
+        return Promise.resolve(null);
+      case "undo_file_load": {
+        const kept = undoKept.get(String(args.path));
+        return Promise.resolve(
+          kept && kept.hash === String(args.hash) ? kept.history : null,
+        );
+      }
+      case "undo_file_move": {
+        const kept = undoKept.get(String(args.from));
+        if (kept) undoKept.set(String(args.to), kept);
+        undoKept.delete(String(args.from));
+        return Promise.resolve(null);
+      }
       case "remove_recent":
         for (const list of [recents.files, recents.folders]) {
           const at = list.indexOf(String(args.path));

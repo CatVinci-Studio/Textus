@@ -66,8 +66,8 @@ export function DocumentViews({
   const inFront = useDocumentInFront(tabs, activeTabId);
   return (
     <>
-      {/* A tab's editor stays mounted while hidden, so switching keeps its
-          state; one out of sight a long while is let go (EditorKept). */}
+      {/* A document's editor is mounted while its tab is in front (or a
+          draft with no file to come back from), else let go (EditorKept). */}
       {/* In a split, a click or focus in a pane brings its tab to the front. */}
       {tabs.map((tab) => {
         const pane = shownIn.get(tab.id);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -74,22 +74,23 @@ export function useEditorFlush(
   run: EditorRunner,
   { reportedDocRef, reportedMarkdownRef, reportDoc }: DocumentReporting,
 ) {
-  // The debounce reports the same doc again later: a harmless repeat.
-  useEffect(
+  const flush = useCallback(
     () =>
-      registerEditorFlush(
-        tabId,
-        () =>
-          run((ctx) => {
-            const { doc } = ctx.get(editorViewCtx).state;
-            const reported = reportedDocRef.current;
-            if (reported && !doc.eq(reported)) {
-              reportedDocRef.current = doc;
-              reportDoc(ctx, doc);
-            }
-            return reportedMarkdownRef.current;
-          }) ?? null,
-      ),
-    [tabId, run, reportDoc, reportedDocRef, reportedMarkdownRef],
+      run((ctx) => {
+        const { doc } = ctx.get(editorViewCtx).state;
+        const reported = reportedDocRef.current;
+        if (reported && !doc.eq(reported)) {
+          reportedDocRef.current = doc;
+          reportDoc(ctx, doc);
+        }
+        return reportedMarkdownRef.current;
+      }) ?? null,
+    [run, reportDoc, reportedDocRef, reportedMarkdownRef],
   );
+  // The debounce reports the same doc again later: a harmless repeat.
+  useEffect(() => registerEditorFlush(tabId, flush), [tabId, flush]);
+  // Let go when its tab leaves the front: what was typed a moment before
+  // goes out first, while the editor is still there to read it from.
+  const last = useLatest(flush);
+  useLayoutEffect(() => () => void last.current(), [last]);
 }

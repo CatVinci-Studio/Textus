@@ -11,7 +11,6 @@ export const KEEP_HIDDEN_MS = 5 * 60_000;
 interface Kept {
   visible: boolean;
   seen: number;
-  hold: () => boolean;
   unload: () => void;
 }
 
@@ -29,14 +28,12 @@ export interface KeptHandle {
 export interface KeepOptions {
   hiddenMs?: number;
   max?: number;
-  /** True while it must stay loaded though hidden: asked again later. */
-  hold?: () => boolean;
 }
 
 export function keepLoaded(
   group: string,
   unload: () => void,
-  { hiddenMs = KEEP_HIDDEN_MS, max = 3, hold = () => false }: KeepOptions = {},
+  { hiddenMs = KEEP_HIDDEN_MS, max = 3 }: KeepOptions = {},
 ): KeptHandle {
   const kept = groups.get(group) ?? new Map<object, Kept>();
   groups.set(group, kept);
@@ -45,17 +42,13 @@ export function keepLoaded(
   const entry: Kept = {
     visible: false,
     seen: Date.now(),
-    hold,
     unload: () => {
       kept.delete(key);
       clearTimeout(timer);
       unload();
     },
   };
-  const later = () => {
-    if (hold()) timer = window.setTimeout(later, hiddenMs);
-    else entry.unload();
-  };
+  const later = () => entry.unload();
   return {
     shown() {
       entry.visible = true;
@@ -63,7 +56,7 @@ export function keepLoaded(
       clearTimeout(timer);
       kept.set(key, entry);
       const hidden = [...kept.values()]
-        .filter((k) => !k.visible && !k.hold())
+        .filter((k) => !k.visible)
         .sort((a, b) => a.seen - b.seen);
       while (kept.size > max && hidden.length) hidden.shift()!.unload();
     },
