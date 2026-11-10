@@ -31,7 +31,7 @@ export interface SettingsPageDef {
   Page?: ComponentType<SettingsPageProps>;
 }
 
-export type SettingsGroupId = "look" | "edit" | "ai";
+export type SettingsGroupId = "edit" | "ai";
 
 /** The groups pages are listed under: a name and an icon, folded until
  *  opened. */
@@ -39,7 +39,6 @@ export const SETTINGS_GROUPS: Record<
   SettingsGroupId,
   { label: (t: Strings) => string; Icon: ComponentType<{ className?: string }> }
 > = {
-  look: { label: (t) => t.navAppearance, Icon: lucide(Palette, NAV_ICON) },
   edit: { label: (t) => t.navEditing, Icon: lucide(PenLine, NAV_ICON) },
   ai: { label: (t) => t.navAi, Icon: lucide(Sparkles, NAV_ICON) },
 };
@@ -54,23 +53,13 @@ const BUILT_IN: SettingsPageDef[] = [
   },
   {
     id: "look-basic",
-    group: "look",
-    label: (t) => t.navLookBasic,
-  },
-  {
-    id: "store",
-    group: "look",
-    label: (t) => t.navThemeStore,
+    label: (t) => t.navAppearance,
+    Icon: lucide(Palette, NAV_ICON),
   },
   {
     id: "edit-text",
     group: "edit",
     label: (t) => t.navEditText,
-  },
-  {
-    id: "edit-md",
-    group: "edit",
-    label: () => "Markdown",
   },
   {
     id: "edit-img",

@@ -177,12 +177,15 @@ export function ThemeCard({
   description,
   previews,
   byline,
+  status,
   onOpen,
   children,
   ...rest
 }: {
   t: Strings;
   name: string;
+  /** Beside the name: "In use". */
+  status?: ReactNode;
   description?: string;
   previews?: string[];
   byline?: ReactNode;
@@ -191,7 +194,10 @@ export function ThemeCard({
 } & HTMLAttributes<HTMLDivElement>) {
   const text = (
     <>
-      <span className="settings-row-label plugin-card-name">{name}</span>
+      <span className="settings-row-label plugin-card-name theme-card-name">
+        {name}
+        {status}
+      </span>
       {description && (
         <span className="settings-row-hint plugin-card-description">
           {description}

@@ -73,3 +73,36 @@
 .providers-detail .settings-row > :last-child:not(:first-child) {
   margin-inline-start: auto;
 }
+
+/* The list and the picked provider: one panel, framed as a group is. */
+.providers-page {
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+}
+.providers-list {
+  padding-bottom: 0;
+}
+/* Its right side a sign-in panel: headings and rows, no boxes. */
+.providers-detail .settings-group-body {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.providers-detail .settings-group + .settings-group {
+  margin-top: var(--space-6);
+}
+/* The key: the panel's width, under its name. */
+.providers-detail .settings-row:has(.api-key-input-row) {
+  flex-direction: column;
+  align-items: stretch;
+}
+.providers-detail
+  .settings-row:has(.api-key-input-row)
+  > .settings-row-control {
+  max-width: none;
+}
+.providers-detail .api-key-input {
+  max-width: none;
+}

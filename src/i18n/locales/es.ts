@@ -307,13 +307,13 @@ para usar una.
     "Tras cada respuesta, hasta tres cosas que probablemente dirás después aparecen como botones sobre el cuadro de mensaje, la más probable también en gris dentro; haz clic en una para enviarla, o pulsa Tab para usar la gris. Cuesta una petición breve más.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Siguientes mensajes sugeridos",
-  researchSubHelpersLabel: "Investigación: delegar partes de una pregunta",
+  researchSubHelpersLabel: "Investigar con subagentes",
   researchSubHelpersHint:
     "En Investigación, quien estudia una pregunta puede pasar una parte más concreta a un ayudante propio. Más a fondo, pero más lento, con entre un cuarto y la mitad más de llamadas al modelo.",
-  researchCheckClaimsLabel: "Investigación: comprobar cada frase citada",
+  researchCheckClaimsLabel: "Comprobar citas",
   researchCheckClaimsHint:
     "Antes de revisar el borrador, cada frase que cita una fuente se compara con las notas de esa fuente, y la que dice más que ellas se reescribe. Más cuidadoso, con una llamada al modelo más por sección.",
-  rememberAutomaticallyLabel: "Recordar automáticamente",
+  rememberAutomaticallyLabel: "Activar la memoria",
   rememberAutomaticallyHint: `${AI_NAME} guarda lo que pides y cómo escribes para próximas conversaciones. Puedes verlo, cambiarlo o deshacerlo en Memoria, en el panel de IA. Tras cada respuesta, pregunta brevemente al mismo modelo qué conservar.`,
   toolRemember: "Recordando esto",
   agentGeneratingImage: "Generando una imagen…",

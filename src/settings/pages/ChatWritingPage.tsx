@@ -72,21 +72,16 @@ export function ChatWritingPage({
               </Select>
             </SettingRow>
             <ToggleRow
-              label={t.askBeforeFileChangesLabel}
-              help={t.askBeforeFileChangesHint}
-              checked={settings.agentAskBeforeFileChanges}
-              onChange={(v) => setSettings({ agentAskBeforeFileChanges: v })}
+              label={t.researchSubHelpersLabel}
+              help={t.researchSubHelpersHint}
+              checked={settings.researchSubHelpers}
+              onChange={(v) => setSettings({ researchSubHelpers: v })}
             />
             <ToggleRow
-              label={t.suggestNextMessageLabel}
-              help={t.suggestNextMessageHint}
-              checked={settings.suggestNextMessage}
-              onChange={(v) => setSettings({ suggestNextMessage: v })}
-            />
-            <ToggleRow
-              label={t.editAnimationLabel}
-              checked={settings.enableEditAnimation}
-              onChange={(v) => setSettings({ enableEditAnimation: v })}
+              label={t.researchCheckClaimsLabel}
+              help={t.researchCheckClaimsHint}
+              checked={settings.researchCheckClaims}
+              onChange={(v) => setSettings({ researchCheckClaims: v })}
             />
           </>
         )}
@@ -143,23 +138,6 @@ export function ChatWritingPage({
         )}
         <WritingConventionsRow t={t} />
       </SettingsGroup>
-
-      {settings.enableAskAi && (
-        <SettingsGroup title={t.researchGroup}>
-          <ToggleRow
-            label={t.researchSubHelpersLabel}
-            help={t.researchSubHelpersHint}
-            checked={settings.researchSubHelpers}
-            onChange={(v) => setSettings({ researchSubHelpers: v })}
-          />
-          <ToggleRow
-            label={t.researchCheckClaimsLabel}
-            help={t.researchCheckClaimsHint}
-            checked={settings.researchCheckClaims}
-            onChange={(v) => setSettings({ researchCheckClaims: v })}
-          />
-        </SettingsGroup>
-      )}
 
       <SettingsGroup title={t.netGroup}>
         {settings.enableAskAi && <SearchServiceSection t={t} />}

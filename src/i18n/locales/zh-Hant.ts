@@ -263,13 +263,13 @@ export default {
     "每次回覆後，在輸入框上方以按鈕列出最多三句你接下來可能要說的話，最可能的一句也以灰字顯示在輸入框裡；點一下就送出，按 Tab 採用灰字。會多一次簡短請求。",
   composerSuggestionTab: "Tab 採用",
   composerFollowUps: "建議的下一句",
-  researchSubHelpersLabel: "研究時把子問題交給助手",
+  researchSubHelpersLabel: "使用子 agent 研究",
   researchSubHelpersHint:
     "研究模式裡，查一個問題的助手可以把其中更窄的一塊交給自己的子助手去查。資料更細，但更慢，模型呼叫多約 25%–50%。",
-  researchCheckClaimsLabel: "研究時逐句核對引用",
+  researchCheckClaimsLabel: "引用核對",
   researchCheckClaimsHint:
     "研究模式修改草稿前，把每個帶引用的句子和該來源的筆記對一遍，說過頭的會改寫。更嚴謹，每節多一次模型呼叫。",
-  rememberAutomaticallyLabel: "自動記住",
+  rememberAutomaticallyLabel: "開啟記憶功能",
   rememberAutomaticallyHint: `${AI_NAME} 會記下你的要求和寫作習慣，供以後的對話使用；可以在 AI 面板的「記憶」裡查看、修改或復原。每次回覆後，會再向同一個模型發一次簡短請求，決定記下什麼。`,
   toolRemember: "記下來",
   agentGeneratingImage: "正在產生圖片…",

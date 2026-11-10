@@ -293,13 +293,13 @@ type /name in a conversation to use one.
     "After each reply, up to three things you will probably say next show as buttons over the message box, the likeliest also grey in it; click one to send it, or Tab to take the grey one. It costs one more short request.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Suggested next messages",
-  researchSubHelpersLabel: "Research: hand parts of a question to helpers",
+  researchSubHelpersLabel: "Research with sub-agents",
   researchSubHelpersHint:
     "In Research, the helper looking into a question may hand a narrower part to a helper of its own. More thorough, but slower, with a quarter to half more model calls.",
-  researchCheckClaimsLabel: "Research: check each cited sentence",
+  researchCheckClaimsLabel: "Check citations",
   researchCheckClaimsHint:
     "Before Research revises its draft, every sentence that cites a source is compared with the notes on that source, and one that says more than they do is rewritten. More careful, with one more model call per section.",
-  rememberAutomaticallyLabel: "Remember automatically",
+  rememberAutomaticallyLabel: "Turn on memory",
   rememberAutomaticallyHint: `${AI_NAME} keeps what you ask for and how you write, for later conversations. See, change or undo it under Memory in the AI panel. After each reply it asks the same model once more, briefly, what to keep.`,
   toolRemember: "Remembering this",
   agentGeneratingImage: "Generating an image…",

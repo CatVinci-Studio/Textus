@@ -47,13 +47,13 @@ export function MemoryPage({
   return (
     <>
       <SettingsGroup title={t.memoryGroup}>
-        {canPickFolder && <AgentWorkspaceRootSection t={t} />}
         <ToggleRow
           label={t.rememberAutomaticallyLabel}
           help={t.rememberAutomaticallyHint}
           checked={settings.rememberAutomatically}
           onChange={(v) => setSettings({ rememberAutomatically: v })}
         />
+        {canPickFolder && <AgentWorkspaceRootSection t={t} />}
         <AgentSystemPromptSection
           t={t}
           onOpenFile={onOpenFile}

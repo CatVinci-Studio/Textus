@@ -295,14 +295,13 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Depois de cada resposta, até três coisas que você provavelmente dirá a seguir aparecem como botões acima da caixa de mensagem, a mais provável também em cinza dentro dela; clique numa para enviá-la, ou use Tab para a cinza. Custa mais um pedido curto.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Próximas mensagens sugeridas",
-  researchSubHelpersLabel:
-    "Pesquisa: passar partes de uma pergunta a ajudantes",
+  researchSubHelpersLabel: "Pesquisar com subagentes",
   researchSubHelpersHint:
     "Na Pesquisa, quem investiga uma pergunta pode passar uma parte mais específica a um ajudante próprio. Mais completo, porém mais lento, com um quarto a metade a mais de chamadas ao modelo.",
-  researchCheckClaimsLabel: "Pesquisa: verificar cada frase citada",
+  researchCheckClaimsLabel: "Verificar citações",
   researchCheckClaimsHint:
     "Antes de revisar o rascunho, cada frase que cita uma fonte é comparada com as notas dessa fonte, e a que diz mais do que elas é reescrita. Mais cuidadoso, com uma chamada ao modelo a mais por seção.",
-  rememberAutomaticallyLabel: "Lembrar automaticamente",
+  rememberAutomaticallyLabel: "Ativar a memória",
   rememberAutomaticallyHint: `A ${AI_NAME} guarda o que você pede e como você escreve para as próximas conversas. Veja, altere ou desfaça em Memória, no painel de IA. Depois de cada resposta, pergunta brevemente ao mesmo modelo o que guardar.`,
   toolRemember: "Lembrando isto",
   agentGeneratingImage: "Gerando uma imagem…",

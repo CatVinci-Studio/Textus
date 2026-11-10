@@ -397,6 +397,13 @@ export function ThemesTab({ t }: { t: Strings }) {
                     )
                   )
                 }
+                status={
+                  settings.themeId === theme.id && (
+                    <span className="plugin-official">
+                      {t.themeGalleryInUse}
+                    </span>
+                  )
+                }
                 onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
               >
                 {updates.has(theme.id) && (
@@ -409,11 +416,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                     {t.themeGalleryUpdate}
                   </button>
                 )}
-                {settings.themeId === theme.id ? (
-                  <span className="settings-row-value">
-                    {t.themeGalleryInUse}
-                  </span>
-                ) : (
+                {settings.themeId !== theme.id && (
                   <button
                     type="button"
                     className="text-button settings-inline-button"

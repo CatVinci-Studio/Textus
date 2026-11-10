@@ -37,7 +37,8 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
   return (
     <>
       <ModelChoices t={t} />
-      {/* A heading, no box: the picked provider's side has its own. */}
+      {/* One panel: the list on the left, the picked one's sign-in and
+          models on the right, nothing boxed inside it. */}
       <section className="settings-group" aria-label={t.providersGroup}>
         <div className="settings-group-head">
           <h2 className="settings-group-title">{t.providersGroup}</h2>
@@ -56,7 +57,10 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
                 <span className="providers-item-name">
                   {localizedLabel(e, t)}
                 </span>
-                {isSetUp(connected[e.id]) && (
+                {/* Set up by the user: a key or an account. A provider that
+                    needs neither (a local Ollama) shows nothing it can't
+                    know. */}
+                {!e.keyOptional && isSetUp(connected[e.id]) && (
                   <span
                     className="status-dot"
                     aria-label={t.apiKeyConfigured}

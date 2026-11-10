@@ -22,10 +22,20 @@ import type { SettingsPageProps } from "./pages/types";
  *  Settings (its tab, its sheet, its list's search), never at startup. */
 const BUILT_IN: Record<string, ComponentType<SettingsPageProps>> = {
   general: GeneralPage,
-  "look-basic": AppearancePage,
-  store: ThemeStorePage,
-  "edit-text": EditTextPage,
-  "edit-md": EditMarkdownPage,
+  // Appearance: the basics, then the theme store under them.
+  "look-basic": (props) => (
+    <>
+      <AppearancePage {...props} />
+      <ThemeStorePage {...props} />
+    </>
+  ),
+  // Text: how it is set, then what Markdown shows and does.
+  "edit-text": (props) => (
+    <>
+      <EditTextPage {...props} />
+      <EditMarkdownPage {...props} />
+    </>
+  ),
   "edit-img": EditImagesPage,
   "edit-export": EditExportPage,
   providers: ProvidersPage,

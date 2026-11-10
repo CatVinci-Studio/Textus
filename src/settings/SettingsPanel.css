@@ -1320,3 +1320,49 @@ button.settings-skill-action:focus-visible {
   font-size: var(--text-lg);
   color: var(--ui-muted);
 }
+
+/* Themes, installed and in the store: in their group's frame, a grid of
+   tiles - the screenshot, the name (and a tag when in use), the line and
+   who made it, then the buttons. */
+.settings-group-body:has(> .theme-gallery-item) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-6) var(--space-4);
+  padding: var(--space-4);
+}
+.settings-group-body:has(> .theme-gallery-item) > * + * {
+  border-top: 0;
+}
+.settings-group-body:has(> .theme-gallery-item) > :not(.theme-gallery-item) {
+  grid-column: 1 / -1;
+}
+.settings-group-body > .theme-gallery-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding: 0;
+}
+.settings-group-body > .theme-gallery-item > .theme-gallery-preview {
+  width: 100%;
+}
+.settings-group-body > .theme-gallery-item > .plugin-card-open {
+  padding: 0;
+}
+.settings-group-body > .theme-gallery-item > .settings-row-control {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  max-width: none;
+}
+/* Appearance's advanced fold, then the store's groups: a group's gap. */
+.settings-advanced + .settings-group,
+.settings-advanced + * > .settings-group:first-child {
+  margin-top: var(--space-6);
+}
+
+.theme-card-name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+}

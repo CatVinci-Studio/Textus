@@ -297,13 +297,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Nach jeder Antwort stehen bis zu drei Dinge, die du wahrscheinlich als Nächstes schreibst, als Schaltflächen über dem Eingabefeld, das wahrscheinlichste auch grau darin; ein Klick sendet es, Tab übernimmt das graue. Kostet eine weitere kurze Anfrage.",
   composerSuggestionTab: "Tab",
   composerFollowUps: "Vorgeschlagene nächste Nachrichten",
-  researchSubHelpersLabel: "Recherche: Teilfragen an Helfer abgeben",
+  researchSubHelpersLabel: "Mit Unteragenten recherchieren",
   researchSubHelpersHint:
     "In der Recherche darf der Helfer einer Frage einen engeren Teil an einen eigenen Helfer abgeben. Gründlicher, aber langsamer, mit einem Viertel bis zur Hälfte mehr Modellaufrufen.",
-  researchCheckClaimsLabel: "Recherche: jeden zitierten Satz prüfen",
+  researchCheckClaimsLabel: "Zitate prüfen",
   researchCheckClaimsHint:
     "Bevor die Recherche ihren Entwurf überarbeitet, wird jeder Satz mit Quelle mit den Notizen zu dieser Quelle verglichen, und einer, der mehr sagt als sie, wird neu geschrieben. Sorgfältiger, mit einem Modellaufruf mehr pro Abschnitt.",
-  rememberAutomaticallyLabel: "Automatisch merken",
+  rememberAutomaticallyLabel: "Gedächtnis einschalten",
   rememberAutomaticallyHint: `${AI_NAME} merkt sich, was du dir wünschst und wie du schreibst, für spätere Gespräche. Unter Gedächtnis im KI-Bereich kannst du es ansehen, ändern oder rückgängig machen. Nach jeder Antwort fragt es dasselbe Modell kurz ein weiteres Mal, was es behalten soll.`,
   toolRemember: "Merkt sich das",
   agentGeneratingImage: "Bild wird erstellt…",

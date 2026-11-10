@@ -182,18 +182,16 @@ function BackToStable({ t }: { t: Strings }) {
     }
   }
 
+  // Beside the channel picked: a button, its state under it if any.
   return (
-    <SettingRow
-      label={t.backToStableLabel}
-      hint={t.backToStableHint.replace("{version}", version)}
-    >
+    <>
       <button
         type="button"
         className="text-button settings-inline-button"
         disabled={phase === "working"}
         onClick={() => void goBack()}
       >
-        {t.backToStableButton}
+        {t.backToStableLabel}
       </button>
       {message && (
         <div
@@ -203,7 +201,7 @@ function BackToStable({ t }: { t: Strings }) {
           {message}
         </div>
       )}
-    </SettingRow>
+    </>
   );
 }
 
@@ -234,8 +232,8 @@ export function UpdateChannelRow({ t }: { t: Strings }) {
           <option value="stable">{t.updateChannelStable}</option>
           <option value="beta">{t.updateChannelBeta}</option>
         </Select>
+        {settings.updateChannel === "stable" && <BackToStable t={t} />}
       </SettingRow>
-      {settings.updateChannel === "stable" && <BackToStable t={t} />}
     </div>
   );
 }
