@@ -25,9 +25,11 @@ export function useAppUpdate(channel: UpdateChannel) {
     // iOS updates come from the App Store; the updater isn't built there.
     if (!canAutoUpdate) return;
     let cancelled = false;
-    void selfUpdateAllowed().then((allowed) => {
-      if (!cancelled) setSelfUpdate(allowed);
-    });
+    void selfUpdateAllowed()
+      .then((allowed) => {
+        if (!cancelled) setSelfUpdate(allowed);
+      })
+      .catch(() => undefined);
 
     const checkOnce = () => {
       selfUpdateAllowed()

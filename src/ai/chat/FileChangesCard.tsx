@@ -75,10 +75,14 @@ export function FileChangesCard({
   );
 
   async function toggle() {
-    const [now, refused] = await ai.setFileChanges(conversation, ids, !on);
-    setChanges(now);
-    setProblems(refused);
-    filesChanged(now);
+    try {
+      const [now, refused] = await ai.setFileChanges(conversation, ids, !on);
+      setChanges(now);
+      setProblems(refused);
+      filesChanged(now);
+    } catch (err) {
+      setProblems([String(err)]);
+    }
   }
 
   /** A file it made, kept as the writer's or sent to the Trash. */

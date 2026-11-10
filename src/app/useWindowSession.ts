@@ -1,3 +1,4 @@
+import { trackWrite } from "../storage/pending-writes";
 import { useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
@@ -24,8 +25,10 @@ export function useSessionPaths(tabs: DocTab[]): void {
   const sessionPathsKey = tabs.map((tab) => pathOf(tab) ?? "").join("\n");
   useEffect(() => {
     if (!canUseWindows) return;
-    void session.updateSessionPaths(
-      sessionPathsKey.split("\n").filter((path) => !!path),
-    );
+    void trackWrite(
+      session.updateSessionPaths(
+        sessionPathsKey.split("\n").filter((path) => !!path),
+      ),
+    ).catch(() => undefined);
   }, [sessionPathsKey]);
 }
