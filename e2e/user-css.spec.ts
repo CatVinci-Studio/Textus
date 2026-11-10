@@ -221,7 +221,9 @@ async function expectCustomCssWins(page: Page, label: string) {
     await page.evaluate(
       () =>
         getComputedStyle(
-          document.querySelector('[data-active-tab="true"] .editor-scroll') ??
+          // The page's sheet: its island's, where the tabs are.
+          document.querySelector('[data-island="documents"]') ??
+            document.querySelector('[data-active-tab="true"] .editor-scroll') ??
             document.querySelector(".editor-scroll")!,
         ).backgroundColor,
     ),

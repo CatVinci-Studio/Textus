@@ -42,7 +42,11 @@ interface TabBarProps {
     unsaved: string;
     /** The list of every tab, once they overflow the row. */
     all: string;
+    /** A tab in reading mode's padlock. */
+    readOnly?: string;
   };
+  /** A tab's padlock clicked: its reading mode off. */
+  onUnlock?: (id: string) => void;
   /** Where it sits in a split's grid. */
   style?: CSSProperties;
   /** The split pane it is the bar of: a pulled tab is let go onto it. */
@@ -63,6 +67,7 @@ export function TabBar({
   previewTab,
   menuFor,
   labels,
+  onUnlock,
   style,
   paneId,
   inner,
@@ -148,6 +153,7 @@ export function TabBar({
           tabIds={tabs.map((t) => t.id)}
           isActive={tab.id === activeTabId}
           labels={labels}
+          onUnlock={onUnlock}
           onActivate={onActivate}
           onClose={onClose}
           onPullOut={onPullOut}

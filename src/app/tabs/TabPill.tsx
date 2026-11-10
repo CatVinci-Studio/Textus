@@ -1,6 +1,6 @@
 import { scaledPx } from "../../ui/chrome-scale";
 import { useEffect, useRef } from "react";
-import { CloseIcon } from "../../ui/icons";
+import { CloseIcon, LockIcon } from "../../ui/icons";
 import { measure, play } from "../../ui/flip";
 import { Tooltip } from "../../ui/Tooltip";
 import { dropIndex, makeRoom, SLIDE } from "../../ui/pointer-drag";
@@ -22,6 +22,8 @@ export interface TabInfo {
   preview?: boolean;
   /** The file, for Textus AI's mark on one it changed. */
   path?: string | null;
+  /** In reading mode: a padlock before its name turns it off. */
+  readOnly?: boolean;
 }
 
 // Drag distances to leave the bar (vertical) or start a reorder
@@ -37,7 +39,8 @@ const LIFT_SLOP_PX = 8;
 function barAt(x: number, y: number, own: Element | null): Element | null {
   for (const bar of document.querySelectorAll(".tab-bar")) {
     if (bar === own) continue;
-    const box = bar.getBoundingClientRect();
+    // Its whole row, the room kept at its ends included.
+    const box = (bar.closest(".island-row") ?? bar).getBoundingClientRect();
     if (x >= box.left && x <= box.right && y >= box.top && y <= box.bottom)
       return bar;
   }
@@ -65,11 +68,12 @@ export function TabPill({
   onKeep,
   captureFlip,
   onMenu,
+  onUnlock,
 }: {
   tab: TabInfo;
   tabIds: string[];
   isActive: boolean;
-  labels: { close: string; unsaved: string };
+  labels: { close: string; unsaved: string; readOnly?: string };
   onActivate: (id: string) => void;
   onClose: (id: string) => void;
   onPullOut?: (id: string, title: string) => void;
@@ -78,6 +82,8 @@ export function TabPill({
   onKeep?: (id: string) => void;
   captureFlip: (how: { dropped?: string; gone?: string }) => void;
   onMenu?: (x: number, y: number) => void;
+  /** Its padlock clicked: reading mode off. */
+  onUnlock?: (id: string) => void;
 }) {
   const changed = useChangedFiles();
   const elRef = useRef<HTMLDivElement>(null);
@@ -318,6 +324,25 @@ export function TabPill({
           role="img"
           aria-label={labels.unsaved}
         />
+      )}
+      {tab.readOnly && (
+        // With the tabs in the window bar's row the title, and its
+        // padlock, give way to them: the tab carries it instead.
+        <Tooltip text={labels.readOnly ?? ""} description={null}>
+          <span
+            className="tab-pill-lock"
+            role="img"
+            aria-label={labels.readOnly}
+            onPointerDown={(e) => onUnlock && e.stopPropagation()}
+            onClick={(e) => {
+              if (!onUnlock) return;
+              e.stopPropagation();
+              onUnlock(tab.id);
+            }}
+          >
+            <LockIcon />
+          </span>
+        </Tooltip>
       )}
       <span className="tab-pill-title">{title}</span>
       {/* Not a button: a tab holds no control of its own. */}

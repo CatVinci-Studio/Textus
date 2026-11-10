@@ -121,9 +121,12 @@ function barDropAt(
   y: number,
   tabId: string,
 ): { pane: string; index: number; rect: DOMRect } | null {
+  // Its whole row, the room kept at its ends included.
   const bar = [
     ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-id]"),
-  ].find((el) => inside(el.getBoundingClientRect(), x, y));
+  ].find((el) =>
+    inside((el.closest(".island-row") ?? el).getBoundingClientRect(), x, y),
+  );
   if (!bar) return null;
   const index = [...bar.querySelectorAll<HTMLElement>("[data-flip-id]")].filter(
     (pill) => {

@@ -275,9 +275,10 @@ test("a pulled tab whose release the page never heard is let go at the next move
   await page.mouse.up();
   await page.mouse.move(to.x + to.width - 32, to.y + to.height / 2);
   await expect(page.locator(".tab-pull-ghost")).toHaveCount(0);
-  expect((await barTitles(page)).map((titles) => titles.length)).toEqual([
-    1, 2,
-  ]);
+  // It joins the bar the frame after it lands.
+  await expect
+    .poll(async () => (await barTitles(page)).map((titles) => titles.length))
+    .toEqual([1, 2]);
 });
 
 test("a tab dragged onto another pane's edge opens in a new pane on that side", async ({

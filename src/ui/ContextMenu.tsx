@@ -9,6 +9,15 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+
+/** Where a menu is drawn: in the dialog open over the window, whose menu
+ *  it is, else on the page itself - never inside its opener, whose clip
+ *  (a tab row's) would cut it. */
+function menuHost(): Element {
+  return (
+    [...document.querySelectorAll('[role="dialog"]')].at(-1) ?? document.body
+  );
+}
 import { useCloseOnOutsideClick } from "../utils/hooks/useCloseOnOutsideClick";
 import { useViewportClamp } from "../utils/hooks/useViewportClamp";
 import { ActionSheet } from "./ActionSheet";
@@ -164,7 +173,7 @@ function PointerMenu({
   const { openGroup, setOpenGroup, rowRefs, aim } = useSubmenu(ref);
   const group = openGroup ? items[openGroup.index] : undefined;
 
-  // On the page itself: an ancestor's clip (a tab row's) would cut it.
+  // Out of its opener: an ancestor's clip (a tab row's) would cut it.
   return createPortal(
     <div
       {...presence}
@@ -228,7 +237,7 @@ function PointerMenu({
         />
       )}
     </div>,
-    document.body,
+    menuHost(),
   );
 }
 
@@ -399,6 +408,6 @@ function SubMenu({
         ),
       )}
     </div>,
-    document.body,
+    menuHost(),
   );
 }

@@ -218,7 +218,9 @@ export function MainPane({
         dirty: tabIsDirty(tab),
         preview: tab.preview,
         path: tab.path,
+        readOnly: tabReadOnly(tab),
       }))}
+      onUnlock={onToggleReadOnly}
       onKeep={onKeep}
       activeTabId={active}
       onActivate={onActivate}
@@ -278,6 +280,7 @@ export function MainPane({
         add: t.menuNewTab,
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
+        readOnly: t.readOnlyLock,
       }}
     />
   );

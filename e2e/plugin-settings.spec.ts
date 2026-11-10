@@ -99,9 +99,7 @@ test("installing from the list turns the plugin on, behind its permissions; unin
   expect(Math.abs((left[0] as number) - (right[0] as number))).toBeLessThan(2);
   expect([left[1], right[1]]).toEqual(["0px", "0px"]);
   await more.click();
-  await expect(
-    listed.getByRole("menuitem", { name: "Uninstall" }),
-  ).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Uninstall" })).toBeVisible();
   await more.click();
   const card = listed;
   await expect(card.getByRole("button", { name: "Turn Off" })).toBeVisible();
@@ -111,7 +109,7 @@ test("installing from the list turns the plugin on, behind its permissions; unin
   await listed.getByRole("button", { name: "Turn Off" }).click();
   await expect(listed.getByRole("button", { name: "Turn On" })).toBeVisible();
   await more.click();
-  await listed.getByRole("menuitem", { name: "Uninstall" }).click();
+  await page.getByRole("menuitem", { name: "Uninstall" }).click();
   await page
     .locator(".app-dialog")
     .getByRole("button", { name: "Uninstall" })

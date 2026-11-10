@@ -101,6 +101,22 @@
   opacity: 0.7;
 }
 
+/* Reading mode's padlock before the name; a click turns it off. */
+.tab-pill-lock {
+  display: inline-flex;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.tab-pill-lock:hover {
+  opacity: 1;
+}
+
+.tab-pill-lock svg {
+  width: 12px;
+  height: 12px;
+}
+
 /* At the pill's end: a short name's tab is wider than its name, and a
    click in its middle opens it, never closes it. */
 .tab-pill-close {

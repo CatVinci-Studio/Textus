@@ -42,7 +42,9 @@ test("a read-only document takes no change, and its padlock turns it off", async
   await openApp(page, { settings: { language: "en" } });
   await openNote(page);
   await emit(page, "menu-toggle-read-only");
-  const lock = page.getByRole("button", { name: /Reading mode/ });
+  // With the rail the tabs show, the open one carrying the padlock (the
+  // title, and its own, give way to them).
+  const lock = page.getByRole("img", { name: /Reading mode/ });
   await expect(lock).toBeVisible();
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
@@ -69,15 +71,11 @@ test("a file left read-only is read-only when opened again", async ({
   await openApp(page, { settings: { language: "en" } });
   await openNote(page);
   await emit(page, "menu-toggle-read-only");
-  await expect(
-    page.getByRole("button", { name: /Reading mode/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("img", { name: /Reading mode/ })).toBeVisible();
   await page.reload();
   await page.waitForSelector(editor);
   await openNote(page);
-  await expect(
-    page.getByRole("button", { name: /Reading mode/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("img", { name: /Reading mode/ })).toBeVisible();
   await page.locator(editor).click();
   await page.keyboard.type("typed", { delay: 20 });
   await expect(page.locator(editor)).toHaveText("Kept as it is.");
