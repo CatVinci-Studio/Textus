@@ -84,7 +84,9 @@ textarea.tx-input {
 .tx-segmented {
   --segment-inset: 2px;
   display: flex;
-  flex-wrap: wrap;
+  /* One row always: a switch stacked into a column reads as a list. */
+  flex-wrap: nowrap;
+  white-space: nowrap;
   gap: 2px;
   padding: var(--segment-inset);
   border-radius: var(--shape-pill);

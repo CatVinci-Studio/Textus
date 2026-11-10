@@ -85,3 +85,36 @@
 .settings-group-body > .settings-about-channel {
   display: contents;
 }
+
+/* A narrow page (an island beside others, a small window): each row's name
+   over its control, the name kept whole, never a character a line. */
+.settings-row-label,
+.settings-row > :first-child {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+@container settings-page (max-width: 460px) {
+  .settings-row {
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+  .settings-row > :first-child:not(:only-child) {
+    flex: 1 1 100%;
+  }
+  .settings-row > :last-child:not(:first-child) {
+    max-width: none;
+    margin-inline-start: auto;
+  }
+  /* A segmented switch keeps its segments, a little tighter. */
+  .settings-row :is(.appearance-option, .tx-segment) {
+    padding-inline: var(--space-2);
+  }
+}
+
+/* A group's heading keeps its words whole; its buttons wrap under it. */
+.settings-group-head {
+  flex-wrap: wrap;
+}
+.settings-group-head > .settings-group-title {
+  white-space: nowrap;
+}
