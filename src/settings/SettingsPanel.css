@@ -1327,7 +1327,9 @@ button.settings-inline-button {
   width: 100%;
   border-radius: var(--shape-xs);
 }
-.settings-group-body > .theme-gallery-item[data-in-use] > .theme-gallery-preview {
+.settings-group-body
+  > .theme-gallery-item[data-in-use]
+  > .theme-gallery-preview {
   box-shadow: 0 0 0 2px var(--ui-accent);
 }
 .settings-group-body > .theme-gallery-item .plugin-card-description {
