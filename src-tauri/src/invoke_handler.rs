@@ -39,7 +39,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
     crate::with_plugin_commands![
         // Shared: desktop and iOS.
         take_pending_window_paths,
-        take_pending_open_paths,
         settings::settings_get,
         settings::settings_patch,
         settings::settings_fill_defaults,
@@ -270,7 +269,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::web_page::web_page_reload,
         #[cfg(desktop)]
-        commands::chat_window::focus_chat_window,
         #[cfg(desktop)]
         commands::chat_window::current_chat_window,
         #[cfg(desktop)]

@@ -35,6 +35,5 @@ Create = 創造
 Accept = 接受
 Reject = 拒絕
 Editor & Appearance (Settings page) = 編輯器與外觀
-Get more themes (Settings row, under Theme) = 取得更多主題
 Import CSS… (Settings › Extensions › Themes, under ⋯) = 匯入 CSS…
 Use this theme (under a theme in a reply) = 使用此主題

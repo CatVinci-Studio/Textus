@@ -100,7 +100,7 @@ pub fn on_menu(app: &AppHandle, item: &str) {
 /// or with none open, by the one opened for it.
 fn run_plugin_command(app: &AppHandle, command: &str) {
     let window = app
-        .webview_windows()
+        .windows()
         .into_iter()
         .find(|(label, _)| crate::commands::chat_window::is_editor_window(label))
         .map(|(_, window)| window);

@@ -82,13 +82,48 @@ fn move_target(path: &Path, into: &Path) -> Result<PathBuf, String> {
     Ok(into.join(name))
 }
 
+/// `path` with its folder made canonical but not itself: a link is moved
+/// or trashed as the link, never as the file it points to.
+fn itself(path: &str) -> Result<PathBuf, String> {
+    let path = PathBuf::from(path);
+    let name = path.file_name().ok_or("No name")?;
+    let parent = path.parent().ok_or("No folder")?;
+    let parent = if parent.as_os_str().is_empty() {
+        std::path::Path::new(".")
+    } else {
+        parent
+    };
+    let folder = parent.canonicalize().map_err(|e| e.to_string())?;
+    let me = folder.join(name);
+    std::fs::symlink_metadata(&me).map_err(|e| e.to_string())?;
+    Ok(me)
+}
+
+/// Whether `a` and `b` are one file (one name differing only in case on a
+/// disk that doesn't tell case apart).
+fn same_file(a: &std::path::Path, b: &std::path::Path) -> bool {
+    let (Ok(a), Ok(b)) = (std::fs::symlink_metadata(a), std::fs::symlink_metadata(b)) else {
+        // The other name isn't there at all: nothing to overwrite.
+        return true;
+    };
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        a.dev() == b.dev() && a.ino() == b.ino()
+    }
+    // Windows' disks don't tell case apart.
+    #[cfg(not(unix))]
+    {
+        let _ = (a, b);
+        true
+    }
+}
+
 /// Moves a file or folder into the folder `into`. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(path: String, into: String) -> Result<String, String> {
-    let from = PathBuf::from(&path)
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
+    let from = itself(&path)?;
     let into = existing_dir(&into)
         .await?
         .canonicalize()
@@ -124,8 +159,10 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
         return Ok(path);
     }
     // A change of case only (notes.md -> Notes.md) is the same file on
-    // macOS and Windows, so it can't be checked for as taken.
-    let case_only = to.to_string_lossy().to_lowercase() == path.to_lowercase();
+    // macOS and Windows, so it can't be checked for as taken - but on a
+    // disk that tells case apart the other name is another file.
+    let case_only =
+        to.to_string_lossy().to_lowercase() == path.to_lowercase() && same_file(&from, &to);
     if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
         return Err("Already exists".into());
     }
@@ -138,9 +175,7 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
-    let target = PathBuf::from(&path)
-        .canonicalize()
-        .map_err(|e| e.to_string())?;
+    let target = itself(&path)?;
     if std::fs::canonicalize(&root).is_ok_and(|r| target == r || r.starts_with(&target)) {
         return Err("The folder the tree shows can't be moved to the Trash".into());
     }

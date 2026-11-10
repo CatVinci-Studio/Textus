@@ -70,7 +70,6 @@ export const windowIpc = {
   openPathInNewWindow: (path: string) =>
     desktopActionCommand("open_path_in_new_window", path),
   takePendingWindowPaths: () => command("take_pending_window_paths"),
-  takePendingOpenPaths: () => command("take_pending_open_paths"),
   /** Pops the chat panel into its own OS window and resolves to its label.
    *  One per editor window: if it exists it is focused, and `state` is
    *  parked for it to claim so the conversation is handed over again. */
@@ -87,9 +86,6 @@ export const windowIpc = {
       null,
     ) as Promise<ChatHandoff | null>,
   closeChatWindow: () => desktopQueryCommand("close_chat_window", undefined),
-  /** Brings the chat window serving this editor to the front, handing it
-   *  nothing; false when there is none. */
-  focusChatWindow: () => desktopQueryCommand("focus_chat_window", false),
   /** The chat window serving THIS editor window, if any. */
   currentChatWindow: () => desktopQueryCommand("current_chat_window", null),
   /** Whether a plugin's floating view can float over the desktop here. */

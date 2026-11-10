@@ -48,7 +48,7 @@ pub struct LastState(Mutex<Option<AppState>>);
 
 pub fn current(app: &tauri::AppHandle) -> AppState {
     state_of(
-        app.webview_windows()
+        app.windows()
             .into_iter()
             .filter(|(label, w)| is_user_window(label) && w.is_visible().unwrap_or(true))
             .map(|(_, w)| w.is_focused().unwrap_or(false)),
@@ -76,7 +76,7 @@ pub fn changed(app: &tauri::AppHandle) {
         if now == AppState::Active {
             super::notify::activated(&app);
         }
-        for label in app.webview_windows().into_keys() {
+        for label in app.windows().into_keys() {
             let _ = app.emit_to(tauri::EventTarget::webview_window(&label), EVENT, now);
         }
     });

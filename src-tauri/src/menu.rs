@@ -134,7 +134,7 @@ fn emit_to_focused_payload<S: serde::Serialize + Clone>(
 /// chat resolves to its editor; failing that, any editor window. An item run
 /// from inside a window names it, since its webview focus may not register.
 pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
-    let windows = app.webview_windows();
+    let windows = app.windows();
     let focused = MENU_ORIGIN
         .with(|origin| origin.borrow().clone())
         .filter(|label| windows.contains_key(label))
@@ -294,7 +294,7 @@ pub(crate) fn quit(app_handle: &tauri::AppHandle) {
     );
     // close() (not destroy()) so each frontend gets its close-requested
     // prompt.
-    let windows = app_handle.webview_windows();
+    let windows = app_handle.windows();
     if windows.is_empty() {
         // No window open (macOS, or background mode): nothing to close,
         // nothing to ask.
@@ -432,7 +432,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         // close() (not destroy()) so the frontend's dirty-tab prompt still
         // runs, same as the red traffic-light button.
         if let Some((_, window)) = app_handle
-            .webview_windows()
+            .windows()
             .iter()
             .find(|(_, w)| w.is_focused().unwrap_or(false))
         {

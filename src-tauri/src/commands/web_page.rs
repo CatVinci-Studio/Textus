@@ -69,7 +69,8 @@ fn open_outside(app: &AppHandle, url: &Url) {
 
 /// Shows tab `id`'s page at `bounds`, making it the first time; an existing
 /// page is moved and shown again where it was left.
-#[tauri::command]
+// Async, as a window's child webview is built (chat_window.rs).
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn web_page_show(
     window: Window,

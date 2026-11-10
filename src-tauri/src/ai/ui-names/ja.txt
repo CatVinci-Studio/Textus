@@ -35,6 +35,5 @@ Create = 作成
 Accept = 適用
 Reject = 却下
 Editor & Appearance (Settings page) = 編集と外観
-Get more themes (Settings row, under Theme) = テーマをさらに入手
 Import CSS… (Settings › Extensions › Themes, under ⋯) = CSSをインポート…
 Use this theme (under a theme in a reply) = このテーマを使う

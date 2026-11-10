@@ -95,7 +95,7 @@ pub fn apply(app: &AppHandle, change: Change) {
             && ends_when_turned_off(
                 Os::current(),
                 handle
-                    .webview_windows()
+                    .windows()
                     .keys()
                     .any(|l| crate::schedule::app_state::is_user_window(l)),
             )
@@ -114,7 +114,7 @@ fn update(app: &AppHandle, change: impl FnOnce(&mut Status)) {
         change(&mut status);
         status.clone()
     };
-    for label in app.webview_windows().into_keys() {
+    for label in app.windows().into_keys() {
         let _ = app.emit_to(
             tauri::EventTarget::webview_window(&label),
             STATUS_EVENT,

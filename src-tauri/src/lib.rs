@@ -85,10 +85,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 schedule::app_state::changed(app);
             }
             if matches!(event, tauri::WindowEvent::Destroyed) {
-                let no_other_windows = app
-                    .webview_windows()
-                    .keys()
-                    .all(|label| label == window.label());
+                let no_other_windows = app.windows().keys().all(|label| label == window.label());
                 if let Some(state) = app.try_state::<SessionTabsState>() {
                     // The last editor window keeps its documents in the session file.
                     commands::session::forget_window(app, window.label(), &state);
@@ -173,7 +170,7 @@ pub fn run() {
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
         let paths = paths_from_argv(argv, std::path::Path::new(&cwd));
         let editor_open = app
-            .webview_windows()
+            .windows()
             .keys()
             .any(|label| commands::chat_window::is_editor_window(label));
         if paths.is_empty() && !editor_open {

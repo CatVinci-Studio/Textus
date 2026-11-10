@@ -193,26 +193,6 @@ pub fn take_chat_handoff(
     pending.0.lock().unwrap().remove(window.label())
 }
 
-/// Brings the detached chat serving this editor to the front without handing
-/// it anything, which would overwrite its newer conversation. Returns whether there was one.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn focus_chat_window(
-    app: tauri::AppHandle,
-    window: tauri::WebviewWindow,
-    open: State<OpenChatWindows>,
-) -> bool {
-    let Some(label) = chat_serving(window.label(), &open) else {
-        return false;
-    };
-    let Some(win) = app.get_webview_window(&label) else {
-        return false;
-    };
-    let _ = win.unminimize();
-    let _ = win.show();
-    win.set_focus().is_ok()
-}
-
 /// Closes the detached chat serving this editor, if one is open (re-embedding the panel).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -270,7 +250,7 @@ fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
 /// Announces the registry change to every editor window (the only ones that
 /// listen).
 pub fn notify_chat_windows_changed(app: &tauri::AppHandle) {
-    for (label, window) in app.webview_windows() {
+    for (label, window) in app.windows() {
         if is_editor_window(&label) {
             let _ = window.emit(CHAT_WINDOWS_CHANGED, ());
         }

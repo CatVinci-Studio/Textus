@@ -21,14 +21,17 @@ fn read_prefs(app: &AppHandle) -> serde_json::Value {
     serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!({}))
 }
 
-/// Merges `value` into the existing prefs.json under `key` instead of
-/// overwriting the whole file, which still holds the old mirrored keys.
+/// Merges `value` into prefs.json under `key`, keeping its other keys; a
+/// file that isn't an object (edited by hand) starts again empty.
 fn write_pref(app: &AppHandle, key: &str, value: serde_json::Value) -> Result<(), String> {
     let path = prefs_path(app)?;
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
     let mut prefs = read_prefs(app);
+    if !prefs.is_object() {
+        prefs = serde_json::json!({});
+    }
     prefs[key] = value;
     crate::atomic::write_sync(&path, prefs.to_string()).map_err(|e| e.to_string())
 }

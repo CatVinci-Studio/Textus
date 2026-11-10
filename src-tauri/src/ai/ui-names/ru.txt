@@ -35,6 +35,5 @@ Create = Создание
 Accept = Принять
 Reject = Отклонить
 Editor & Appearance (Settings page) = Редактор и оформление
-Get more themes (Settings row, under Theme) = Другие темы
 Import CSS… (Settings › Extensions › Themes, under ⋯) = Импортировать CSS…
 Use this theme (under a theme in a reply) = Использовать эту тему

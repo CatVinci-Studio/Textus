@@ -309,7 +309,7 @@ async fn listening_window(app: &AppHandle) -> Option<String> {
     let deadline = Instant::now() + WINDOW_READY_WITHIN;
     let mut opened = false;
     loop {
-        let windows = app.webview_windows();
+        let windows = app.windows();
         let listening: Vec<String> = app
             .state::<CliBridge>()
             .listening

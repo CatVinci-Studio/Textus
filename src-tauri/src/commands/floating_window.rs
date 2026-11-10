@@ -34,7 +34,9 @@ pub fn floating_label(view: &str) -> String {
 /// Opens `view`'s floating window for the calling editor window, at `x`, `y`
 /// (screen points), or by the bottom-right corner of its screen; an open one
 /// stays where it is. Answers the window's label.
-#[tauri::command]
+// Async: a window built on the main thread inside a sync command stalls
+// WebView2 (chat_window.rs).
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn open_floating_window(
     app: tauri::AppHandle,
@@ -147,7 +149,7 @@ pub fn show_floating_owner(app: tauri::AppHandle, owner: String) {
     if !crate::commands::chat_window::is_editor_window(&owner) {
         return;
     }
-    if let Some(window) = app.get_webview_window(&owner) {
+    if let Some(window) = app.get_window(&owner) {
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();

@@ -69,7 +69,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
         );
         // The open came from outside (a file manager, a second launch),
         // so the window it landed in is probably behind something.
-        if let Some(window) = app.get_webview_window(&label) {
+        if let Some(window) = app.get_window(&label) {
             let _ = window.unminimize();
             let _ = window.set_focus();
         }
@@ -97,7 +97,12 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     if UI_READY.load(Ordering::Relaxed) {
         let _ = app.emit("open-paths-as-tabs", paths);
     } else {
-        queue_pending(app, paths);
+        // One batch: the one webview takes one, as its tabs.
+        app.state::<PendingOpenPaths>()
+            .0
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(paths);
     }
 }
 
@@ -181,16 +186,6 @@ pub(crate) fn take_pending_window_paths(pending: State<PendingOpenPaths>) -> Vec
     } else {
         windows.remove(0)
     }
-}
-
-/// Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
-/// one window opens every path as a tab.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_open_paths(pending: State<PendingOpenPaths>) -> Vec<String> {
-    UI_READY.store(true, Ordering::Relaxed);
-    let mut windows = pending.0.lock().unwrap();
-    std::mem::take(&mut *windows).concat()
 }
 
 /// Files the system asked to open: Finder's "Open With" on macOS (never

@@ -83,7 +83,7 @@ pub fn patch_from_backend(app: &AppHandle, patch: Map<String, Value>) -> Option<
 /// Delivers an event to every window, one by one: every event is
 /// window-addressed.
 pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, payload: S) {
-    for label in app.webview_windows().into_keys() {
+    for label in app.windows().into_keys() {
         let _ = app.emit_to(
             tauri::EventTarget::webview_window(&label),
             event,
@@ -203,7 +203,7 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
 #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 pub(crate) fn pinned_background(settings: &Value) -> Option<tauri::window::Color> {
     match settings.get("theme").and_then(Value::as_str) {
-        Some("dark") => Some(tauri::window::Color(0x1f, 0x1e, 0x1c, 0xff)),
+        Some("dark") => Some(tauri::window::Color(0x1c, 0x1c, 0x1e, 0xff)),
         Some("light") => Some(tauri::window::Color(0xfb, 0xf9, 0xf4, 0xff)),
         _ => None,
     }
@@ -217,7 +217,7 @@ pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
         return;
     };
     let color = pinned_background(&stores.settings.snapshot().0);
-    for (label, window) in app.webview_windows() {
+    for (label, window) in app.windows() {
         // Only the windows the user sees: not the transparent tab-drag
         // pill, the hidden PDF-export renderers or background host.
         if label == crate::tab_drag::DRAG_PILL_LABEL

@@ -9,11 +9,6 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 /** Commands */
 export const commands = {
 	take_pending_window_paths: () => __TAURI_INVOKE<string[]>("take_pending_window_paths"),
-	/**
-	 *  Tab-mode counterpart to take_pending_window_paths: drains the whole queue so
-	 *  one window opens every path as a tab.
-	 */
-	take_pending_open_paths: () => __TAURI_INVOKE<string[]>("take_pending_open_paths"),
 	take_pending_show_help: () => __TAURI_INVOKE<string | null>("take_pending_show_help"),
 	take_pending_menu_event: () => __TAURI_INVOKE<string | null>("take_pending_menu_event"),
 	take_pending_open_folder: () => __TAURI_INVOKE<string | null>("take_pending_open_folder"),
@@ -99,11 +94,6 @@ export const commands = {
 	web_page_navigate: (id: string, url: string) => __TAURI_INVOKE<null>("web_page_navigate", { id, url }),
 	/**  Loads tab `id`'s page again. */
 	web_page_reload: (id: string) => __TAURI_INVOKE<null>("web_page_reload", { id }),
-	/**
-	 *  Brings the detached chat serving this editor to the front without handing
-	 *  it anything, which would overwrite its newer conversation. Returns whether there was one.
-	 */
-	focus_chat_window: () => __TAURI_INVOKE<boolean>("focus_chat_window"),
 	/**
 	 *  The chat window serving the calling editor window, if any. Asked on mount
 	 *  and focus, so a reloaded webview never trusts a stale label.

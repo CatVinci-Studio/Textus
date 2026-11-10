@@ -93,7 +93,7 @@ pub struct WindowBounds {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn list_window_bounds(app: tauri::AppHandle) -> Vec<WindowBounds> {
-    app.webview_windows()
+    app.windows()
         .iter()
         .filter_map(|(label, window)| {
             // Never a drop target: the pill being dragged, a detached chat (a dropped tab
@@ -134,7 +134,7 @@ const TAB_ROW_HEIGHT_LOGICAL: f64 = 72.0;
 /// drop back where it came from.
 #[cfg(any(target_os = "macos", windows))]
 fn window_hit(app: &tauri::AppHandle, x: f64, y: f64) -> Option<(String, bool)> {
-    for (label, window) in app.webview_windows() {
+    for (label, window) in app.windows() {
         if !crate::commands::chat_window::is_editor_window(&label)
             || !window.is_visible().unwrap_or(false)
         {

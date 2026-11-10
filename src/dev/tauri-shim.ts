@@ -634,10 +634,6 @@ export function installDevTauriShim(): void {
         return Promise.resolve([...recents.files]);
       case "list_recent_folders":
         return Promise.resolve([...recents.folders]);
-      // Files opened from outside before the window was ready: none here. The
-      // native side always answers with a list.
-      case "take_pending_open_paths":
-        return Promise.resolve([]);
       // Files opened from outside while the window runs: the native side
       // hands them to the focused window as tabs - this one.
       case "open_paths":

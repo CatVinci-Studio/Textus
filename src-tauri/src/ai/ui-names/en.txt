@@ -44,6 +44,5 @@ Create
 Accept
 Reject
 Editor & Appearance (Settings page)
-Get more themes (Settings row, under Theme)
 Import CSS… (Settings › Extensions › Themes, under ⋯)
 Use this theme (under a theme in a reply)

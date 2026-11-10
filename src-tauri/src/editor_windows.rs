@@ -132,7 +132,7 @@ pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
                 return;
             };
             let window = objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void;
-            for (label, webview) in app.webview_windows() {
+            for (label, webview) in app.windows() {
                 if webview.ns_window().ok() == Some(window) {
                     let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
                 }
@@ -281,7 +281,7 @@ pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
 #[cfg(desktop)]
 pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
     let existing = app
-        .webview_windows()
+        .windows()
         .into_iter()
         .find(|(label, _)| commands::chat_window::is_editor_window(label))
         .map(|(_, window)| window);

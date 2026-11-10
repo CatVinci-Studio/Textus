@@ -188,7 +188,7 @@ fn open_target(app: &tauri::AppHandle, open: NotificationOpen) {
         .pending
         .lock()
         .unwrap_or_else(|e| e.into_inner()) = Some(open);
-    let window = crate::menu::focused_editor_window(app).and_then(|l| app.get_webview_window(&l));
+    let window = crate::menu::focused_editor_window(app).and_then(|l| app.get_window(&l));
     match window {
         Some(window) => {
             let _ = window.unminimize();
