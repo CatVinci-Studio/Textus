@@ -28,3 +28,8 @@
 .ai-tab .agent-panel-view {
   --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
 }
+
+/* The conversation starts under the history button, not beneath it. */
+.ai-tab .agent-panel-body {
+  padding-top: calc(var(--control-height-sm) + var(--space-3));
+}

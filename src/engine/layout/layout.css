@@ -97,7 +97,8 @@
 /* Every tab's view shows on its island, not under it: the editor, the
    source, the start page, a plugin's or a web page. The page's own views
    are the island's paper. */
-.app-shell[data-tabs="bar"] .main-pane [data-active-tab] > * {
+/* Weightless, so what floats over a view (the review bars) keeps its own. */
+:where(.app-shell[data-tabs="bar"] .main-pane [data-active-tab]) > * {
   position: relative;
 }
 
