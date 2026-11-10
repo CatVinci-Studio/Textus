@@ -1,23 +1,13 @@
-import { useLayoutEffect, useRef, type CSSProperties } from "react";
+import { useLayoutEffect, useRef } from "react";
+import type { IslandPlace } from "../../engine/layout/IslandArea";
 import { AgentIslandTools, AgentTabs } from "./AgentTabs";
 import { Island } from "../../engine/layout/Island";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
 import { setDockedPanelWidth } from "../../utils/hooks/useDockedPanelWidth";
 import type { Strings } from "../../i18n/strings";
 
-export interface AiIslandPlace {
-  paneId: string;
-  /** Its row's cell and its sheet's, in the split's grid. */
-  bar?: CSSProperties;
-  body?: CSSProperties;
-  /** Its row is below another pane's, not the window bar's. */
-  inner: boolean;
-  /** Beside a clean sheet, or in Zen: the page's own side (Island). */
-  plain?: boolean;
-}
-
 /**
- * The AI island in the documents' grid (MainPane), an island as any other:
+ * The AI island's content (IslandArea), an island as any other:
  * its row of conversations (AgentTabs) over its sheet, which the active
  * tab's editor renders its conversation into (`mountRef`), History in its
  * corner. `state` plays it in and out as Textus AI's button opens and
@@ -35,7 +25,7 @@ export function AiIsland({
   onWidth,
   t,
 }: {
-  place: AiIslandPlace;
+  place: IslandPlace;
   state: string;
   mountRef: (el: HTMLElement | null) => void;
   /** The folder whose conversations its tabs are. */
@@ -82,9 +72,9 @@ export function AiIsland({
           <AgentTabs scope={conversations} inner={place.inner} t={t} />
         ) : undefined
       }
-      rowStyle={place.bar}
+      rowStyle={place.row}
       inner={place.inner}
-      sheetStyle={place.body}
+      sheetStyle={place.sheet}
       sheetRef={ref}
       className="ai-island"
       aria-label={t.agentPanelTitle}

@@ -1,27 +1,24 @@
 import { Island } from "../engine/layout/Island";
+import {
+  IslandArea,
+  type IslandContent,
+  type IslandPlace,
+} from "../engine/layout/IslandArea";
 import { useChangedFiles } from "../ai/chat/file-changes";
-import { EditorKept, KeptWhileHidden } from "./islands/kept";
-import { IslandMotion } from "../engine/layout/IslandMotion";
 import { DocumentCorners } from "./islands/DocumentCorner";
+import { DocumentViews } from "./islands/DocumentViews";
 import type { Lang } from "../i18n/langs";
-import type { ReactNode } from "react";
 import {
   type ComponentProps,
   type CSSProperties,
-  Suspense,
+  type ReactNode,
   useLayoutEffect,
-  useRef,
 } from "react";
-import { useTabRows } from "../engine/layout/useTabRows";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
-import { EditorPane } from "../document-view/EditorPane";
 import {
   canDragTabsBetweenWindows,
   canUseWindows,
 } from "../platform/capabilities";
-import { lazyModule } from "../lazy/lazy-module";
-import { lazyComponent } from "../lazy/lazy-component";
-import { DocSourceEditor } from "../editor/modes/lazy-doc-source-editor";
 import {
   showsStartPage,
   tabIsDirty,
@@ -32,24 +29,11 @@ import { tabReadOnly } from "../document/read-only";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
 import type { AgentMode } from "../prefs/SettingsContext";
-import {
-  PluginListPane,
-  PluginTabPane,
-  WebPagePane,
-} from "../plugins/views/plugin-views";
 import { TabBar } from "../engine/controls/tabs/TabBar";
 import { tabMenuItems } from "./tabs/tab-menu-items";
 import { FormatBar } from "./FormatBar";
 import { useSplitPanes } from "../engine/layout/useSplitPanes";
-import { SplitDivider } from "../engine/layout/SplitDivider";
-import {
-  islandOf,
-  panesOf,
-  splitGrid,
-  type SplitGrid,
-} from "../engine/layout/tree";
-import type { AiIslandPlace } from "./islands/AiIsland";
-import "../engine/layout/split-panes.css";
+import { islandOf, panesOf, type Pane } from "../engine/layout/tree";
 import {
   focusPane,
   openBeside,
@@ -59,22 +43,8 @@ import {
 import { pullTab } from "./layout/split-drop";
 import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { contributedContextItems } from "../engine/controls/context-menu-items";
-import { withPluginBlocks } from "../document-view/plugins/plugin-code-blocks";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
-
-// Its Markdown renderer loads when a tab first shows it, not with the window.
-// Shown only when the user chose it, so kept out of the startup chunk.
-const StartPage = lazyComponent(
-  // Loaded while the window is idle: on first use React holds a suspended
-  // page back for 300ms, a pause between closing a document and the page.
-  lazyModule("start-page", () => import("./StartPage"), { warm: true }),
-  (m) => m.StartPage,
-);
-const SplitView = lazyComponent(
-  lazyModule("split-view", () => import("../editor/modes/SplitView")),
-  (m) => m.SplitView,
-);
 
 function pluginTabItems(
   path: string | null,
@@ -136,7 +106,7 @@ export function MainPane({
    *  needs, while the tour runs; else null. */
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
   /** Draws the AI island at its place in the grid (AiIsland). */
-  aiIsland?: (place: AiIslandPlace) => ReactNode;
+  aiIsland?: (place: IslandPlace) => ReactNode;
   /** Zen: no tabs, the documents plain paper (the AI island's beside them
    *  too). */
   zen: boolean;
@@ -144,10 +114,8 @@ export function MainPane({
   lang: Lang;
   t: Strings;
 }) {
-  const mainRef = useRef<HTMLElement>(null);
   // Files Textus AI changed: their tabs say so.
   const changed = useChangedFiles();
-  useTabRows(mainRef);
   const split = useSplitPanes(
     tabs.map((tab) => tab.id),
     activeTabId,
@@ -156,10 +124,9 @@ export function MainPane({
   const phone = usePhoneLayout();
   // A phone's column has its bar of its own, not islands.
   const islands = canUseWindows;
-  const grid = split && splitGrid(split.root);
-  const all = split ? panesOf(split.root) : [];
-  const panes = all.filter((p) => islandOf(p) === "documents");
-  const ai = all.find((p) => islandOf(p) === "ai");
+  const panes = split
+    ? panesOf(split.root).filter((p) => islandOf(p) === "documents")
+    : [];
   // Documents split, not only beside the AI island.
   const docsSplit = panes.length > 1;
   // Each pane shows its tab in front; its place in reading order names it.
@@ -172,10 +139,11 @@ export function MainPane({
   // A split's top panes always have their tabs; one pane, when shown;
   // none in Zen, its documents plain paper.
   const tabsInBar = !zen && (docsSplit || showTabBar);
-  // The one pane's sheet, without its row, reaches up into the bar's.
-  const body = (id: string) =>
-    tabsInBar || !grid ? grid?.bodies.get(id) : withBarRow(grid, id);
   useLayoutEffect(() => onTabsInBar(tabsInBar), [tabsInBar, onTabsInBar]);
+  // Each pane's sheet in the area's grid, as the area places them; without
+  // its row, the sheet reaches up into the bar's.
+  const cells = new Map<string, CSSProperties | undefined>();
+  const body = (id: string) => cells.get(id);
   const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems({
     tabs,
     activeTabId,
@@ -270,206 +238,101 @@ export function MainPane({
     />
   );
 
-  return (
-    <main
-      ref={mainRef}
-      className={split ? "main-pane main-pane-split" : "main-pane"}
-      data-split={split?.root.direction}
-      style={grid?.column}
-    >
-      <IslandMotion
-        layout={`${grid?.column.gridTemplateColumns} ${grid?.column.gridTemplateRows} ${all.map((p) => p.id)}`}
-        area={mainRef}
-      />
-      {/* Each pane of documents an island: its row of tabs over its sheet,
-          its documents on the sheet (below). A phone's column has its own
-          bar; a clean sheet is the page itself. */}
-      {!islands
-        ? split && grid
-          ? panes.map((p) =>
-              tabBar(
-                p.tabs.flatMap((id) => byId.get(id) ?? []),
-                p.front ?? "",
-                p.id,
-                !grid.top.has(p.id),
-                grid.bars.get(p.id),
-              ),
-            )
-          : showTabBar && tabBar(tabs, activeTabId, null)
-        : split && grid
-          ? tabsInBar &&
-            panes.map((p) => (
-              <Island
-                key={`island:${p.id}`}
-                kind="documents"
-                paneId={p.id}
-                row={tabBar(
-                  p.tabs.flatMap((id) => byId.get(id) ?? []),
-                  p.front ?? "",
-                  p.id,
-                  !grid.top.has(p.id),
-                )}
-                rowStyle={grid.bars.get(p.id)}
-                inner={!grid.top.has(p.id)}
-                sheetStyle={body(p.id)}
-              />
-            ))
-          : showTabBar && (
-              <Island kind="documents" row={tabBar(tabs, activeTabId, null)} />
-            )}
-      {/* Each document's length at its page's corner. */}
-      {islands && (
-        <DocumentCorners
-          fronts={
-            split && grid
-              ? panes.map((p) => ({
-                  tab: byId.get(p.front ?? ""),
-                  style: body(p.id),
-                }))
-              : [{ tab: byId.get(activeTabId) }]
-          }
-          lang={lang}
-          t={t}
-        />
-      )}
-      {ai &&
-        grid &&
-        aiIsland?.({
-          paneId: ai.id,
-          bar: grid.bars.get(ai.id),
-          body: grid.bodies.get(ai.id),
-          inner: !grid.top.has(ai.id),
-          plain: !tabsInBar,
-        })}
-      {formatBar &&
-        !docsSplit &&
-        !phone &&
-        formatsShown(byId.get(activeTabId)) && (
-          <FormatBar
+  const documents: IslandContent = (places) => {
+    for (const { pane, place } of places)
+      if (pane) cells.set(pane.id, tabsInBar ? place.sheet : place.whole);
+    const listOf = (pane: Pane) =>
+      pane.tabs.flatMap((id) => byId.get(id) ?? []);
+    return (
+      <>
+        {/* Each pane of documents an island: its row of tabs over its
+            sheet, its documents on the sheet (below). A phone's column has
+            its own bar; a clean sheet is the page itself. */}
+        {places.map(({ pane, place }) =>
+          !pane
+            ? showTabBar &&
+              (islands ? (
+                <Island
+                  key="window"
+                  kind="documents"
+                  row={tabBar(tabs, activeTabId, null)}
+                />
+              ) : (
+                tabBar(tabs, activeTabId, null)
+              ))
+            : !islands
+              ? tabBar(
+                  listOf(pane),
+                  pane.front ?? "",
+                  pane.id,
+                  place.inner,
+                  place.row,
+                )
+              : tabsInBar && (
+                  <Island
+                    key={`island:${pane.id}`}
+                    kind="documents"
+                    paneId={pane.id}
+                    row={tabBar(
+                      listOf(pane),
+                      pane.front ?? "",
+                      pane.id,
+                      place.inner,
+                    )}
+                    rowStyle={place.row}
+                    inner={place.inner}
+                    sheetStyle={body(pane.id)}
+                  />
+                ),
+        )}
+        {/* Each document's length at its page's corner. */}
+        {islands && (
+          <DocumentCorners
+            fronts={places.map(({ pane }) => ({
+              tab: byId.get(pane ? (pane.front ?? "") : activeTabId),
+              style: pane ? body(pane.id) : undefined,
+            }))}
+            lang={lang}
             t={t}
-            // Beside the AI island, over the documents' sheet alone.
-            style={split && panes[0] ? body(panes[0].id) : undefined}
           />
         )}
+        {formatBar &&
+          !docsSplit &&
+          !phone &&
+          formatsShown(byId.get(activeTabId)) && (
+            <FormatBar
+              t={t}
+              // Beside the AI island, over the documents' sheet alone.
+              style={panes[0] ? body(panes[0].id) : undefined}
+            />
+          )}
+        <DocumentViews
+          tabs={tabs}
+          activeTabId={activeTabId}
+          shownIn={shownIn}
+          styleOf={body}
+          onActivate={onActivate}
+          onChange={onChange}
+          typewriter={typewriter}
+          tour={tour}
+          t={t}
+        />
+      </>
+    );
+  };
 
-      {/* A tab's editor stays mounted while hidden, so switching keeps its
-        state; one out of sight a long while is let go (EditorKept). */}
-      {/* In a split, a click or focus in a pane brings its tab to the front. */}
-      {tabs.map((tab) => {
-        const pane = shownIn.get(tab.id);
-        return (
-          <div
-            key={tab.id}
-            data-active-tab={tab.id === activeTabId}
-            data-tab-id={tab.id}
-            data-pane={pane?.name}
-            data-pane-id={pane?.id}
-            className={pane ? "split-pane" : undefined}
-            style={
-              pane && grid
-                ? body(pane.id)
-                : { display: tab.id === activeTabId ? "contents" : "none" }
-            }
-            onPointerDownCapture={
-              pane && tab.id !== activeTabId
-                ? () => onActivate(tab.id)
-                : undefined
-            }
-            onFocusCapture={
-              pane && tab.id !== activeTabId
-                ? () => onActivate(tab.id)
-                : undefined
-            }
-          >
-            {tab.view?.kind === "web" && tab.view.resource ? (
-              <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
-            ) : tab.view?.kind === "list" ? (
-              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
-                <PluginListPane
-                  plugin={tab.view.plugin}
-                  view={tab.view.view}
-                  className="plugin-list-tab"
-                />
-              </KeptWhileHidden>
-            ) : tab.view && tab.view.kind !== "web" ? (
-              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
-                <PluginTabPane
-                  tabId={tab.id}
-                  plugin={tab.view.plugin}
-                  view={tab.view.view}
-                  kind={tab.view.kind}
-                  resource={tab.view.resource}
-                  state={tab.view.state}
-                  target={tab.view.target}
-                />
-              </KeptWhileHidden>
-            ) : showsStartPage(tab) ? (
-              <Suspense fallback={null}>
-                <StartPage t={t} />
-              </Suspense>
-            ) : tab.sourceMode && tab.splitView ? (
-              <Suspense fallback={null}>
-                <SplitView
-                  content={tab.content}
-                  filePath={tab.path}
-                  typewriter={typewriter}
-                  onChange={(markdown) => onChange(tab.id, markdown)}
-                  readOnly={tabReadOnly(tab)}
-                  previewExtras={withPluginBlocks}
-                />
-              </Suspense>
-            ) : tab.sourceMode ? (
-              <Suspense fallback={null}>
-                <DocSourceEditor
-                  value={tab.content}
-                  docPath={tab.path}
-                  typewriter={typewriter}
-                  onChange={(markdown) => onChange(tab.id, markdown)}
-                  readOnly={tabReadOnly(tab)}
-                />
-              </Suspense>
-            ) : (
-              <EditorKept
-                tabId={tab.id}
-                shown={tab.id === activeTabId || !!pane || !tab.path}
-              >
-                <EditorPane
-                  key={`${tab.id}-${tab.reloadKey}`}
-                  tabId={tab.id}
-                  filePath={tab.path}
-                  docTitle={tabTitle(tab, t)}
-                  initialValue={tab.content}
-                  onChange={onChange}
-                  isActive={tab.id === activeTabId}
-                  tour={tour && tab.id === tour.tabId ? tour.ai : null}
-                  tourMode={tour && tab.id === tour.tabId ? tour.mode : null}
-                  readOnly={tabReadOnly(tab)}
-                />
-              </EditorKept>
-            )}
-          </div>
-        );
-      })}
-      {split &&
-        grid?.dividers.map(({ line, style }) => (
-          <SplitDivider
-            key={`${line.path.join(".")}:${line.index}`}
-            layout={split}
-            line={line}
-            style={style}
-            t={t}
-          />
-        ))}
-    </main>
+  return (
+    <IslandArea
+      layout={split}
+      plain={!tabsInBar}
+      contents={{
+        documents,
+        ai:
+          aiIsland && ((places) => places.map(({ place }) => aiIsland(place))),
+      }}
+      t={t}
+    />
   );
-}
-
-/** Pane `id`'s sheet in the grid, taking in its row above as well. */
-function withBarRow(grid: SplitGrid, id: string): CSSProperties | undefined {
-  const sheet = grid.bodies.get(id);
-  const row = String(grid.bars.get(id)?.gridRow ?? "").split(" / ")[0];
-  const end = String(sheet?.gridRow ?? "").split(" / ")[1];
-  return sheet && row && end ? { ...sheet, gridRow: `${row} / ${end}` } : sheet;
 }
 
 /** A document in the rendered editor: what the format bar formats. */
