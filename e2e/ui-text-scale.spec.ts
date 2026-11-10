@@ -27,7 +27,7 @@ async function box(page: Page, selector: string) {
 async function sizes(page: Page) {
   return {
     bar: (await box(page, ".window-bar")).height,
-    barButton: (await box(page, ".window-bar-sidebar-toggle")).width,
+    barButton: (await box(page, ".window-bar-toggle")).width,
     tabIcon: (await box(page, ".activity-rail-item svg")).width,
     outline: await fontSize(page, ".sidebar .outline-row .tree-label"),
     composer: await fontSize(page, ".agent-panel-view textarea"),
@@ -79,7 +79,7 @@ test("a wider window takes the icons and the bar up in a straight line", async (
   });
   const chrome = async () => ({
     bar: (await box(page, ".window-bar")).height,
-    button: (await box(page, ".window-bar-sidebar-toggle")).width,
+    button: (await box(page, ".window-bar-toggle")).width,
     tabIcon: (await box(page, ".activity-rail-item svg")).width,
   });
   const small = await chrome();

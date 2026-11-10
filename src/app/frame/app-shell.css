@@ -64,3 +64,11 @@ body {
   min-width: 0;
   min-height: 0;
 }
+
+/* The menu bar spelled out (barLayout) is a row of its own: the islands,
+   the rail and the sidebar under it, the islands' rows of tabs their own. */
+:root[data-bar-rows="2"]:not([data-window-chrome="mobile"])
+  .app-shell
+  > :is(.sidebar, .main-pane) {
+  grid-row: 2 / 3;
+}

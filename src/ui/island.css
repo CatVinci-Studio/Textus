@@ -7,9 +7,21 @@
 
 /* ---- Sheet --------------------------------------------------------- */
 
+/* Its paper: the page's own for documents (a theme's or the user's
+   --doc-bg), the interface's for the AI. Its row's open tab is the same. */
+[data-island],
+.island-row {
+  --island-paper: var(--ui-bg);
+}
+
+[data-island="documents"],
+.island-row[data-island-row="documents"] {
+  --island-paper: var(--doc-bg, var(--ui-bg));
+}
+
 [data-island] {
   border-radius: var(--island-radius);
-  background: var(--ui-bg);
+  background: var(--island-paper);
   box-shadow: var(--island-edge);
 }
 
@@ -132,7 +144,7 @@
 :root .island-row > .tab-bar > .tab-pill-active {
   overflow: visible;
   z-index: 1;
-  background: var(--ui-bg);
+  background: var(--island-paper);
   color: var(--ui-text);
 }
 
@@ -153,7 +165,7 @@
   background: radial-gradient(
     circle at 0 0,
     transparent calc(var(--tab-radius) - 0.5px),
-    var(--ui-bg) var(--tab-radius)
+    var(--island-paper) var(--tab-radius)
   );
 }
 
@@ -162,7 +174,7 @@
   background: radial-gradient(
     circle at 100% 0,
     transparent calc(var(--tab-radius) - 0.5px),
-    var(--ui-bg) var(--tab-radius)
+    var(--island-paper) var(--tab-radius)
   );
 }
 

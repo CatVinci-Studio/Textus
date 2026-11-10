@@ -1,15 +1,14 @@
-import { Suspense, useSyncExternalStore } from "react";
+import { Fragment, Suspense, useSyncExternalStore } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../../ui/WindowCaptionButtons";
 import type { MenuChecks } from "../menu/app-menu-model";
 import { AppMenuButton } from "./WindowControls";
 import { MenuBar } from "../menu/MenuBar";
-import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Tooltip } from "../../ui/Tooltip";
 import { TextusAiButton } from "../../ai/TextusAiSwitch";
 import { isIOSApp } from "../../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../../ui/icons";
-import { useFullscreenMark } from "./useFullscreenMark";
+import { useBarLayout } from "./useBarLayout";
 import { useTitleRoom } from "./useTitleRoom";
 import { usePhoneLayout } from "../../ui/usePhoneLayout";
 import { PageSwitch } from "../../mobile/PageSwitch";
@@ -67,12 +66,15 @@ export function WindowBar({
   onToggleReadOnly: () => void;
 }) {
   const { t, settings } = useSettings();
-  useFullscreenMark();
+  const bar = useBarLayout({
+    menuBarShown: settings.menuBarShown,
+    rail: settings.activityRail,
+    zen: !!menuChecks.zen,
+  });
   const hasStatus = useSyncExternalStore(
     subscribeStatusItems,
     () => statusItemsSnapshot().length > 0,
   );
-  const menuBar = appDrawsWindowFrame && settings.menuBarShown;
   // A phone switches between the document and Textus AI as two pages: the
   // capsule takes the AI button's place, and the word count goes into the
   // menu to leave the row to the title.
@@ -94,33 +96,53 @@ export function WindowBar({
         <i />
       </div>
       <header className="window-bar" data-tauri-drag-region>
-        {menuBar ? (
-          <>
-            <MenuBar checks={menuChecks} />
-            {/* For a window too narrow for the titles. */}
-            <span className="window-menu-fallback">
-              <AppMenuButton checks={menuChecks} />
-            </span>
-          </>
-        ) : (
-          <AppMenuButton
-            checks={pages ? { ...menuChecks, words } : menuChecks}
-          />
-        )}
-        {/* The iPhone and the iPad open the sidebar from their own bar. */}
-        {!isIOSApp && !menuBar && (
-          <Tooltip text={`${t.menuToggleSidebar} (${sidebarShortcut})`}>
-            <button
-              type="button"
-              className="window-bar-sidebar-toggle"
-              aria-pressed={sidebarOpen}
-              aria-label={t.menuToggleSidebar}
-              onClick={onToggleSidebar}
-            >
-              <SidebarToggleIcon />
-            </button>
-          </Tooltip>
-        )}
+        {bar.lead.map((item) => {
+          switch (item) {
+            case "lights":
+              // The traffic lights' room, for the tabs to clear.
+              return (
+                <span
+                  key={item}
+                  className="window-bar-lead window-bar-lights"
+                  aria-hidden
+                />
+              );
+            case "menu-bar":
+              return (
+                <Fragment key={item}>
+                  <MenuBar checks={menuChecks} />
+                  {/* For a window too narrow for the titles. */}
+                  <span className="window-menu-fallback">
+                    <AppMenuButton checks={menuChecks} />
+                  </span>
+                </Fragment>
+              );
+            case "menu":
+              return (
+                <AppMenuButton
+                  key={item}
+                  checks={pages ? { ...menuChecks, words } : menuChecks}
+                />
+              );
+            case "sidebar-toggle":
+              return (
+                <Tooltip
+                  key={item}
+                  text={`${t.menuToggleSidebar} (${sidebarShortcut})`}
+                >
+                  <button
+                    type="button"
+                    className="window-bar-sidebar-toggle"
+                    aria-pressed={sidebarOpen}
+                    aria-label={t.menuToggleSidebar}
+                    onClick={onToggleSidebar}
+                  >
+                    <SidebarToggleIcon />
+                  </button>
+                </Tooltip>
+              );
+          }
+        })}
         {/* The unsaved dot leads the title, as a native edited title does. */}
         <span className="window-bar-title" ref={titleRef}>
           {dirty && (

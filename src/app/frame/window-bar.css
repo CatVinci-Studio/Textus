@@ -104,6 +104,40 @@
   padding-left: 12px;
 }
 
+/* The traffic lights' room (barLayout), for the tabs to clear. */
+.window-bar-lights {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 70px;
+  height: 1px;
+}
+
+/* With the rail, the app menu is the rail's first icon (barLayout): in
+   its column, at its icons' size, a hairline between it and them. */
+:root[data-menu-in-rail] .window-menu-button {
+  width: 36px;
+  height: 28px;
+  /* Its centre on the rail's: past the bar's own start padding. */
+  margin-left: calc((var(--rail-width) - 36px) / 2 - 12px);
+  border-radius: var(--shape-s);
+  color: var(--ui-muted);
+  opacity: 1;
+}
+
+:root[data-menu-in-rail] .window-menu-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+:root[data-menu-in-rail] .activity-rail::before {
+  content: "";
+  align-self: stretch;
+  height: 1px;
+  margin: -4px 8px 0;
+  background: var(--ui-frame-edge);
+}
+
 /* The row's first control: the sidebar's toggle. */
 .window-bar-sidebar-toggle {
   flex-shrink: 0;

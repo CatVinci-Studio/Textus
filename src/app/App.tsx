@@ -8,7 +8,6 @@ import { Suspense, useState } from "react";
 import { AppDialogHost } from "../ui/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
-import { appDrawsWindowFrame } from "../platform/window-chrome";
 import { SettingsLayer } from "./SettingsLayer";
 import { usePhoneLayout } from "../ui/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
@@ -111,14 +110,9 @@ function App() {
     agentPanel.width,
   );
 
-  // Where the tabs are: the window bar's row, a row of their own under the
-  // menu bar, or none (a clean sheet; the phone's own bar).
-  const tabRow =
-    !tabsInBar || isIOSApp
-      ? undefined
-      : appDrawsWindowFrame && settings.menuBarShown
-        ? "row"
-        : "bar";
+  // Whether the tabs are in the window bar's row (with the menu bar spelled
+  // out, in the row under it), or none: a clean sheet; the phone's own bar.
+  const tabRow = tabsInBar && !isIOSApp ? "bar" : undefined;
 
   return (
     <AgentPanelProvider

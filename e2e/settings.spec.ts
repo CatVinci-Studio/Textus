@@ -589,7 +589,7 @@ test.describe("desktop", () => {
     ).toBeInViewport({ ratio: 1 });
 
     // The bar is dimmed with the rest, and its buttons rest: a press on
-    // the sidebar toggle lands on the bar itself, which only moves the
+    // its menu button lands on the bar itself, which only moves the
     // window.
     const dim = await page.evaluate(
       () =>
@@ -599,9 +599,7 @@ test.describe("desktop", () => {
         ).backgroundColor,
     );
     expect(dim).not.toBe("rgba(0, 0, 0, 0)");
-    const toggle = (await page
-      .locator(".window-bar-sidebar-toggle")
-      .boundingBox())!;
+    const toggle = (await page.locator(".window-menu-button").boundingBox())!;
     expect(
       await page.evaluate(
         ([x, y]) => document.elementFromPoint(x, y)?.className,

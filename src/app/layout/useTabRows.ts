@@ -92,6 +92,10 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
         const corner =
           lengthOf(shell, "--island-radius") + lengthOf(shell, "--tab-radius");
         const air = scaledPx(AIR);
+        const barBottom =
+          document
+            .querySelector(".window-bar, .chat-window-header")
+            ?.getBoundingClientRect().bottom ?? 0;
         const rows = [...main.querySelectorAll<HTMLElement>(".island-row")];
         tabs.disconnect();
         for (const row of rows) {
@@ -104,9 +108,10 @@ export function useTabRows(pane: RefObject<HTMLElement | null>) {
           // A split's grid resized moves its rows; the area's own style
           // changes too often to watch.
           resized.observe(row);
-          // A row under another island has no bar controls to clear.
-          const inBar = !row.hasAttribute("data-inner");
+          // Only a row in the window bar's has its controls to clear: not
+          // one under another island, nor under the menu bar's own row.
           const box = row.getBoundingClientRect();
+          const inBar = box.top < barBottom - 1;
           // The first of them over this row.
           const statusStart = Math.min(
             ...ends.filter((end) => end.left >= box.left).map((e) => e.left),

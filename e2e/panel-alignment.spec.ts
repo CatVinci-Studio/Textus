@@ -1,5 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown, SAMPLE_DOC } from "./helpers";
+import {
+  changeSettings,
+  emit,
+  openApp,
+  pasteMarkdown,
+  SAMPLE_DOC,
+} from "./helpers";
 
 // With two documents the tabs take the window bar's row, ending on its line,
 // clear of its controls at both ends (design-language.md 5.7), the open one
@@ -14,7 +20,7 @@ async function layout(page: Page) {
     return {
       tabs: rect("[data-island-row=documents] > .tab-bar").bottom,
       firstTab: rect("[data-island-row=documents] > .tab-bar .tab-pill").left,
-      toggle: rect(".window-bar-sidebar-toggle").right,
+      menu: rect(".window-menu-button").right,
       lastTab: rect("[data-island-row=documents] > .tab-bar .tab-bar-add")
         .right,
       status: rect(".window-bar-status").left,
@@ -56,7 +62,7 @@ for (const width of [960, 1280, 1920])
     await open(page, width);
     const at = await layout(page);
     expect(Math.abs(at.tabs - at.bar)).toBeLessThanOrEqual(1);
-    expect(at.firstTab).toBeGreaterThan(at.toggle);
+    expect(at.firstTab).toBeGreaterThan(at.menu);
     expect(at.lastTab).toBeLessThanOrEqual(at.status);
     expect(at.aiEdgeTop).toBeGreaterThanOrEqual(at.bar - 1);
     expect(Math.abs(at.seam)).toBeLessThan(0.5);
@@ -80,4 +86,44 @@ test("a squeezed AI panel can still be dragged narrower", async ({ page }) => {
   await expect
     .poll(async () => (await layout(page)).panel)
     .toBeLessThan(before);
+});
+
+// The bar's start (barLayout): with the rail the app menu is its first icon,
+// on its centre line, and the rail's icons open the sidebar; without the
+// rail the sidebar's button is back. The menu bar spelled out is a row of
+// its own, the islands' tabs and the rail under it.
+test("the app menu sits in the rail's column; the menu bar takes a row of its own", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-new-file");
+  const centre = (selector: string) =>
+    page.evaluate((s) => {
+      const box = document.querySelector(s)!.getBoundingClientRect();
+      return { x: box.left + box.width / 2, top: box.top, bottom: box.bottom };
+    }, selector);
+  const menu = await centre(".window-menu-button");
+  const rail = await centre(".activity-rail-item");
+  expect(Math.abs(menu.x - rail.x)).toBeLessThan(0.5);
+  await expect(page.locator(".window-bar-sidebar-toggle")).toHaveCount(0);
+  // The first tab whole, clear of the menu.
+  const firstTab = await page
+    .locator("[data-island-row=documents] .tab-pill")
+    .first()
+    .boundingBox();
+  expect(firstTab!.x).toBeGreaterThan(menu.x);
+
+  await changeSettings(page, { activityRail: false });
+  await expect(page.locator(".window-bar-sidebar-toggle")).toBeVisible();
+
+  await changeSettings(page, { activityRail: true, menuBarShown: true });
+  await expect(page.locator(".window-menu-bar")).toBeVisible();
+  const bar = await centre(".window-bar");
+  const row = await centre("[data-island-row=documents]");
+  const railTop = await centre(".activity-rail");
+  expect(row.top).toBeGreaterThanOrEqual(bar.bottom - 0.5);
+  expect(Math.abs(railTop.top - row.top)).toBeLessThan(0.5);
+  // The window's buttons stay in the first row.
+  const close = await centre(".window-caption");
+  expect(close.bottom).toBeLessThanOrEqual(bar.bottom + 0.5);
 });

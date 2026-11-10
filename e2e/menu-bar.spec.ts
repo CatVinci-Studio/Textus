@@ -12,7 +12,8 @@ const bar = '[role="menubar"]';
 test("off by default; Settings turns it on, and the sidebar's button makes room", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
+  // Without the rail, whose icons otherwise open the sidebar.
+  await openApp(page, { settings: { language: "en", activityRail: false } });
   await expect(page.locator(".window-menu-button")).toBeVisible();
   await expect(
     page.locator('.window-bar [aria-label="Sidebar"]'),

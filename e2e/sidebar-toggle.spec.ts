@@ -36,10 +36,11 @@ async function look(page: Page, selector: string) {
   });
 }
 
-test("the toggle opens and closes the sidebar, beside the menu button", async ({
+test("without the rail, the toggle opens and closes the sidebar, beside the menu button", async ({
   page,
 }) => {
-  await openApp(page, { settings: { language: "en" } });
+  // With it, the rail's icons open the sidebar and the bar has no toggle.
+  await openApp(page, { settings: { language: "en", activityRail: false } });
   const button = page.locator(toggle);
   await expect(button).toHaveAccessibleDescription(/^Sidebar \(.+\\\)$/);
   // A first launch opens with the sidebar closed.
@@ -238,7 +239,9 @@ test.describe("on a Mac", () => {
   test("past the traffic lights, and in their corner in full screen", async ({
     page,
   }) => {
-    await openApp(page, { settings: { language: "en" } });
+    await openApp(page, {
+      settings: { language: "en", activityRail: false },
+    });
     // The Mac app uses the system's menu bar, so no menu button in the row.
     await page.evaluate(() => {
       document.documentElement.dataset.windowChrome = "native";
@@ -255,7 +258,10 @@ test.describe("on a Mac", () => {
     "moves into that corner and back at once, as the lights go and come",
     { tag: "@perf" },
     async ({ page }) => {
-      await openApp(page, { settings: { language: "en" }, animations: true });
+      await openApp(page, {
+        settings: { language: "en", activityRail: false },
+        animations: true,
+      });
       await page.evaluate(() => {
         document.documentElement.dataset.windowChrome = "native";
         document.querySelector(".window-menu-button")?.remove();
@@ -326,7 +332,7 @@ test("the title bar, the activity rail and the sidebar are one frame; the sideba
   // Opaque, so the bar's colour is the frame's own.
   await openApp(page, { settings: { language: "en", solidTitleBar: true } });
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.locator(toggle).click();
+  await emit(page, "menu-toggle-sidebar");
   await expect(page.locator(sidebar)).not.toHaveClass(/sidebar-collapsed/);
   const [bar, rail, side] = await frame(page);
   expect(rail).toBe(bar);
@@ -346,7 +352,7 @@ test("the title bar, the activity rail and the sidebar are one frame; the sideba
   // Closed, the sidebar slides under the rail: nothing of it shows past
   // the rail's edge, and the page floats beside the rail as a sheet, its
   // own edge the line between them.
-  await page.locator(toggle).click();
+  await emit(page, "menu-toggle-sidebar");
   await expect(page.locator(sidebar)).toHaveClass(/sidebar-collapsed/);
   await expect(page.locator(sidebar)).toBeHidden();
   await expect(page.locator(".activity-rail")).toHaveCSS(
