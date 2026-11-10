@@ -1,4 +1,4 @@
-import { isIOSApp } from "../../platform/capabilities";
+import { pluginPlatform } from "../plugin-platform";
 import { createElement } from "react";
 import { registerCommand, runCommand } from "../../app/commands";
 import { registerSidebarTab } from "../../app/frame/sidebar-tabs";
@@ -65,8 +65,8 @@ export function whenContext(extra: WhenContext = {}): WhenContext {
     folderOpen: !!getWindowAccess()?.rootPath(),
     fileExtension: path ? extname(path).toLowerCase() : undefined,
     resourceFilename: path ? path.split(/[\\/]/).pop() : undefined,
-    // An iPad reports itself as a Mac.
-    isMac: isMacPlatform() && !isIOSApp,
+    // As plugins are told the system (an iPad reports itself as a Mac).
+    isMac: pluginPlatform() === "macos",
     ...extra,
   };
 }
