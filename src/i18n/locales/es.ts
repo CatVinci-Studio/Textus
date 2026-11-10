@@ -373,6 +373,7 @@ para usar una.
   },
   aiCreatedPending: "Nuevo, ¿conservar?",
   aiFileConflict: "Cambiado desde entonces: la revisión no se colocó",
+  aiDismissConflict: "Descartar",
   aiKeepFile: "Conservar",
   aiDiscardFile: "Descartar",
   filesChangedTitle: "Archivos modificados",

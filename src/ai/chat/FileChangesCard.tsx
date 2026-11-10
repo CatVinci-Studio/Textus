@@ -5,6 +5,7 @@ import type { FileChange_Serialize as FileChange } from "../../platform/bindings
 import { filesChanged, type FileChangeCall } from "./file-changes";
 import {
   FILE_REVISIONS_EVENT,
+  dismissConflicts,
   forgetCreated,
   readFileRevisions,
   useAiFileMarks,
@@ -23,6 +24,7 @@ export interface FileChangesLabels {
   filesCreated: string;
   filesKeep: string;
   filesDiscard: string;
+  filesDismiss: string;
 }
 
 /**
@@ -62,10 +64,9 @@ export function FileChangesCard({
   const marks = useAiFileMarks();
   const conflicts = useConflicts(changes);
   if (!changes || changes.length === 0) return null;
-  // As revisions: some kept off the disk, or a file made waiting to be kept.
-  const revisions = changes.some(
-    (c) => !c.applied || (c.before == null && marks[c.file]?.created),
-  );
+  // Made as revisions: what waits is decided in each file, never undone
+  // from here (Undo would send a file kept since to the Trash).
+  const revisions = changes.some((c) => c.revision);
   const on = changes.every((c) => c.applied);
   // One row a file, however many changes it had.
   const files = [...new Map(changes.map((c) => [c.file, c])).values()];
@@ -126,6 +127,7 @@ export function FileChangesCard({
                 conflict={conflicts.has(c.file)}
                 labels={labels}
                 onMade={(keep) => void decideMade(c.file, keep)}
+                onDismiss={() => void dismissConflicts(c.file)}
               />
             ) : (
               made.has(c.file) && (
@@ -157,15 +159,25 @@ function FileWaiting({
   conflict,
   labels,
   onMade,
+  onDismiss,
 }: {
   waiting: AiFileMark | undefined;
   conflict: boolean;
   labels: FileChangesLabels;
   onMade: (keep: boolean) => void;
+  /** The change that met the writer's edits, let go of. */
+  onDismiss: () => void;
 }) {
   if (conflict)
     return (
-      <span className="agent-file-changes-problem">{labels.filesConflict}</span>
+      <>
+        <span className="agent-file-changes-problem">
+          {labels.filesConflict}
+        </span>
+        <button type="button" className="tx-button small" onClick={onDismiss}>
+          {labels.filesDismiss}
+        </button>
+      </>
     );
   if (waiting?.created)
     return (

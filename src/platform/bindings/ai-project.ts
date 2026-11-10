@@ -333,6 +333,11 @@ export type FileChange_Deserialize = {
 	after: string,
 	/**  On disk now: false while waiting to be applied, or once undone. */
 	applied: boolean,
+	/**
+	 *  Made while changes land as revisions: kept for review, a file made
+	 *  waiting to be kept.
+	 */
+	revision?: boolean,
 };
 
 /**  One change to one file. */
@@ -347,6 +352,11 @@ export type FileChange_Serialize = {
 	after: string,
 	/**  On disk now: false while waiting to be applied, or once undone. */
 	applied: boolean,
+	/**
+	 *  Made while changes land as revisions: kept for review, a file made
+	 *  waiting to be kept.
+	 */
+	revision: boolean,
 };
 
 /**  One forgotten memory or library entry, for the Memory tab. */

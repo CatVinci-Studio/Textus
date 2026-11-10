@@ -360,6 +360,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aiPendingCount: { one: "{n} zu prüfen", other: "{n} zu prüfen" },
   aiCreatedPending: "Neu, behalten?",
   aiFileConflict: "Seitdem geändert – die Überarbeitung wurde nicht eingesetzt",
+  aiDismissConflict: "Verwerfen",
   aiKeepFile: "Behalten",
   aiDiscardFile: "Verwerfen",
   filesChangedTitle: "Geänderte Dateien",

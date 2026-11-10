@@ -6,9 +6,8 @@ import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { serializeBlocks } from "../doc-markdown";
 import {
   FILE_REVISIONS_EVENT,
-  readFileRevisions,
   revisionProposals,
-  writeFileRevisions,
+  updateFileRevisions,
 } from "./file-revisions";
 import type { ProposalToPlace, SelectionTarget } from "./pending-place";
 
@@ -22,10 +21,13 @@ import type { ProposalToPlace, SelectionTarget } from "./pending-place";
 export function useIncomingRevisions({
   run,
   filePath,
+  restored,
   showPreviews,
 }: {
   run: EditorRunner;
   filePath: string | null;
+  /** Its kept proposals are back in it. */
+  restored: boolean;
   showPreviews: (
     proposals: ProposalToPlace[],
     target: SelectionTarget | null,
@@ -37,12 +39,13 @@ export function useIncomingRevisions({
     if ((e as CustomEvent<string>).detail === filePath) arrived();
   });
   useEffect(() => {
-    if (!ready || !filePath) return;
+    // After its kept proposals are back: placed before, they were written
+    // over by the restore's empty list.
+    if (!ready || !restored || !filePath) return;
     let cancelled = false;
-    void readFileRevisions(filePath).then((kept) => {
-      if (cancelled || !kept) return;
+    void updateFileRevisions(filePath, (kept) => {
       const waiting = kept.incoming.filter((r) => !r.conflict);
-      if (!waiting.length) return;
+      if (cancelled || !waiting.length) return undefined;
       for (const revision of waiting) {
         const placed = run((ctx) => {
           const blocks = serializeBlocks(ctx, ctx.get(editorViewCtx).state.doc);
@@ -54,26 +57,28 @@ export function useIncomingRevisions({
           };
           const before = read(revision.before);
           const after = read(revision.after);
-          if (!before || !after) return null;
+          // Unreadable, or the file reads otherwise now: kept apart.
+          if (!before || !after) return "conflict";
           const now = blocks.map((b) => b.markdown);
           if (before.join("\n\n") !== now.join("\n\n")) return "conflict";
           return revisionProposals(blocks, after);
         });
-        if (!placed) continue;
+        if (placed === undefined) return undefined;
         if (placed === "conflict") {
           revision.conflict = true;
           continue;
         }
         const last = revision.ids[revision.ids.length - 1];
-        placed.forEach((proposal, i) =>
-          showPreviews([{ callId: `${last}:${i}`, proposal }], null),
+        showPreviews(
+          placed.map((proposal, i) => ({ callId: `${last}:${i}`, proposal })),
+          null,
         );
         kept.incoming = kept.incoming.filter((r) => r !== revision);
       }
-      void writeFileRevisions(filePath, kept);
+      return kept;
     });
     return () => {
       cancelled = true;
     };
-  }, [ready, filePath, more, run, showPreviews]);
+  }, [ready, restored, filePath, more, run, showPreviews]);
 }

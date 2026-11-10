@@ -355,6 +355,7 @@ type /name in a conversation to use one.
   aiPendingCount: { one: "{n} to review", other: "{n} to review" },
   aiCreatedPending: "New, keep?",
   aiFileConflict: "Changed since - its revision wasn't placed",
+  aiDismissConflict: "Dismiss",
   aiKeepFile: "Keep",
   aiDiscardFile: "Discard",
   filesChangedTitle: "Files changed",

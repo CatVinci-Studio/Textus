@@ -365,6 +365,7 @@ export default {
   },
   aiCreatedPending: "Новый, оставить?",
   aiFileConflict: "Изменён после этого – правка не вставлена",
+  aiDismissConflict: "Отклонить",
   aiKeepFile: "Оставить",
   aiDiscardFile: "Удалить",
   filesChangedTitle: "Изменённые файлы",

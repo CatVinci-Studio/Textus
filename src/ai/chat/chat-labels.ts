@@ -90,6 +90,7 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     filesCreated: t.aiCreatedPending,
     filesKeep: t.aiKeepFile,
     filesDiscard: t.aiDiscardFile,
+    filesDismiss: t.aiDismissConflict,
     commentCount: t.reviewGroupNotes,
     commentGroupMore: t.commentGroupMore,
     memorySaved: t.memoryChipSaved,

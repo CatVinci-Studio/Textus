@@ -30,7 +30,7 @@ export const commands = {
 	take_detached_tab: () => __TAURI_INVOKE<DetachedTab_Serialize | null>("take_detached_tab"),
 	/**
 	 *  A tab's own right-click Move to New Window: the tab handed to a fresh
-	 *  window, which takes it as it opens.
+	 *  small window (build_small_window), which takes it as it opens.
 	 */
 	move_tab_to_new_window: (tab: DetachedTab_Deserialize) => __TAURI_INVOKE<null>("move_tab_to_new_window", { tab }),
 	/**

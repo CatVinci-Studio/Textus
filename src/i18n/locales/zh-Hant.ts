@@ -323,6 +323,7 @@ export default {
   aiPendingCount: { other: "{n} 處待審" },
   aiCreatedPending: "新建，待保留",
   aiFileConflict: "之後被改過，修訂沒有放進去",
+  aiDismissConflict: "忽略",
   aiKeepFile: "保留",
   aiDiscardFile: "丟棄",
   filesChangedTitle: "改動的檔案",

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { ai } from "../../platform/ipc";
@@ -9,7 +9,7 @@ import { keptFrom, picturesOf, readKept, restorable } from "./kept-proposals";
 import type { SelectionTarget } from "./pending-place";
 import type { ProposalToPlace } from "./pending-place";
 import type { PendingPreview } from "./pending-types";
-import { setAiFileMark } from "./file-revisions";
+import { proposalsKept } from "./file-revisions";
 import { restoreBase } from "../chat/file-changes";
 import { useIncomingRevisions } from "./useIncomingRevisions";
 
@@ -37,8 +37,10 @@ export function useKeptProposals({
   ) => void;
   decide: (callId: string, index: number, take: boolean | null) => void;
 }) {
-  // The document whose kept proposals this editor has offered again.
+  // The document whose kept proposals this editor has offered again; as
+  // state too, so what waits on the restore runs once it is done.
   const restored = useRef<string | null>(null);
+  const [restoredFor, setRestoredFor] = useState<string | null>(null);
   // What was last written for it, so an unchanged list isn't written again.
   const written = useRef<string | null>(null);
   const ready = run(() => true) === true;
@@ -58,6 +60,7 @@ export function useKeptProposals({
       .then((value) => {
         if (cancelled) return;
         restored.current = filePath;
+        setRestoredFor(filePath);
         const kept = readKept(value);
         if (!kept) return;
         written.current = JSON.stringify(kept);
@@ -94,24 +97,34 @@ export function useKeptProposals({
         (id) => pictureState(id) === "ready",
       );
     });
+    // Nothing new to write: a list sent off and back again isn't written
+    // as the editor goes either.
     if (kept === undefined) return;
     const json = kept ? JSON.stringify(kept) : null;
-    if (json === written.current) return;
+    if (json === written.current) {
+      unsent.current = null;
+      return;
+    }
     const send = () => {
       unsent.current = null;
       written.current = json;
-      // The tree and its tab say how many wait here.
-      setAiFileMark(filePath, { pending: kept?.proposals.length ?? 0 });
       void ai
         .keptProposalsWrite(filePath, workspaceRoot, kept, picturesOf(kept))
-        .catch(() => undefined);
+        .catch(() => undefined)
+        // The tree and its tab say how many wait here.
+        .then(() => proposalsKept(filePath));
     };
     unsent.current = send;
     const timer = window.setTimeout(send, WRITE_AFTER_MS);
     return () => window.clearTimeout(timer);
-  }, [previews, pictures, filePath, workspaceRoot, run]);
+  }, [previews, pictures, filePath, workspaceRoot, run, restoredFor]);
   useEffect(() => () => unsent.current?.(), []);
 
   // What Textus AI changed in it while it wasn't open, placed here too.
-  useIncomingRevisions({ run, filePath, showPreviews });
+  useIncomingRevisions({
+    run,
+    filePath,
+    restored: restoredFor === filePath,
+    showPreviews,
+  });
 }

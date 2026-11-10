@@ -33,6 +33,10 @@ pub struct FileChange {
     pub after: String,
     /// On disk now: false while waiting to be applied, or once undone.
     pub applied: bool,
+    /// Made while changes land as revisions: kept for review, a file made
+    /// waiting to be kept.
+    #[serde(default)]
+    pub revision: bool,
 }
 
 /// Where one request's file changes go.
@@ -134,6 +138,7 @@ impl FileEdits {
                 applied: !self.ask_first || now.is_none() || made_now,
                 before: now,
                 after,
+                revision: self.ask_first,
             };
             if change.applied {
                 write(&file, &change.after)?;

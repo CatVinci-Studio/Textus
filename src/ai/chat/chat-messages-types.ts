@@ -69,6 +69,7 @@ export interface ChatMessagesLabels
   filesCreated: string;
   filesKeep: string;
   filesDiscard: string;
+  filesDismiss: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
   commentCount: string;
   commentGroupMore: string;

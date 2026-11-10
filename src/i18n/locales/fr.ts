@@ -375,6 +375,7 @@ utiliser une.
   },
   aiCreatedPending: "Nouveau, garder ?",
   aiFileConflict: "Modifié depuis – la révision n’a pas été placée",
+  aiDismissConflict: "Ignorer",
   aiKeepFile: "Garder",
   aiDiscardFile: "Jeter",
   filesChangedTitle: "Fichiers modifiés",

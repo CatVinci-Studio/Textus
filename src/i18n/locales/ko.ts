@@ -335,6 +335,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aiPendingCount: { other: "검토할 곳 {n}" },
   aiCreatedPending: "새 파일, 유지할까요?",
   aiFileConflict: "그 뒤로 바뀌어 수정을 넣지 않았습니다",
+  aiDismissConflict: "닫기",
   aiKeepFile: "유지",
   aiDiscardFile: "버리기",
   filesChangedTitle: "변경된 파일",

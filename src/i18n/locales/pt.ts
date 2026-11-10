@@ -362,6 +362,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   },
   aiCreatedPending: "Novo, manter?",
   aiFileConflict: "Alterado desde então – a revisão não foi colocada",
+  aiDismissConflict: "Dispensar",
   aiKeepFile: "Manter",
   aiDiscardFile: "Descartar",
   filesChangedTitle: "Arquivos alterados",

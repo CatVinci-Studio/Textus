@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { ai } from "../../platform/ipc";
 import {
   getUiState,
-  setUiState,
+  updateUiState,
   type AiFileMark,
 } from "../../storage/ui-state";
 import type { EditProposal } from "../types";
@@ -20,7 +20,6 @@ import { blockHunks } from "./block-hunks";
 export interface IncomingRevision {
   /** Its changes' ids, in its conversation's record. */
   ids: string[];
-  conversation: string;
   /** The file as the change found it, and as the change leaves it. */
   before: string;
   after: string;
@@ -33,7 +32,7 @@ export interface FileRevisions {
   version: 1;
   incoming: IncomingRevision[];
   /** Made by Textus AI, waiting to be kept. */
-  created?: { conversation: string; id: string };
+  created?: boolean;
   /** Its text before Textus AI wrote straight in. */
   base?: string;
 }
@@ -52,7 +51,7 @@ export async function readFileRevisions(
   return value as FileRevisions;
 }
 
-export async function writeFileRevisions(
+async function writeFileRevisions(
   path: string,
   value: FileRevisions | null,
 ): Promise<void> {
@@ -62,7 +61,63 @@ export async function writeFileRevisions(
   await ai
     .keptProposalsWrite(storeOf(path), null, empty ? null : value, [])
     .catch(() => undefined);
-  window.dispatchEvent(new CustomEvent(FILE_REVISIONS_EVENT, { detail: path }));
+}
+
+/** Each file's changes to its store, one after another: two at once read
+ *  the same store and the second's write undid the first's. */
+const queues = new Map<string, Promise<unknown>>();
+
+/**
+ * Changes `path`'s store by `change` (given what is kept, or a fresh
+ * one), after any change to it still going; null clears it, undefined
+ * leaves it. Then the file's marks are counted again from what is kept,
+ * and, when it changed, its editor is told.
+ */
+export function updateFileRevisions(
+  path: string,
+  change: (kept: FileRevisions) => FileRevisions | null | undefined,
+): Promise<void> {
+  const next = (queues.get(path) ?? Promise.resolve()).then(async () => {
+    const kept = (await readFileRevisions(path)) ?? {
+      version: 1 as const,
+      incoming: [],
+    };
+    const after = change(kept);
+    if (after !== undefined) await writeFileRevisions(path, after);
+    await recount(path, after === undefined ? kept : after);
+    // Told only of a change: its editor reads it again when told.
+    if (after !== undefined)
+      window.dispatchEvent(
+        new CustomEvent(FILE_REVISIONS_EVENT, { detail: path }),
+      );
+  });
+  const settled = next.catch(() => undefined);
+  queues.set(path, settled);
+  void settled.then(() => {
+    if (queues.get(path) === settled) queues.delete(path);
+  });
+  return settled;
+}
+
+/** The file's marks from what is kept: its revisions in its editor's
+ *  store and those still to place, a file made to keep, a text before. */
+async function recount(path: string, kept: FileRevisions | null) {
+  const placed = (await ai.keptProposalsRead(path, null).catch(() => null)) as {
+    proposals?: unknown[];
+  } | null;
+  const waiting = (kept?.incoming ?? [])
+    .filter((r) => !r.conflict)
+    .reduce((n, r) => n + placesChanged(r.before, r.after), 0);
+  setAiFileMark(path, {
+    pending: (placed?.proposals?.length ?? 0) + waiting,
+    created: !!kept?.created,
+    changed: kept?.base !== undefined,
+  });
+}
+
+/** The editor wrote its kept proposals: the count follows them. */
+export function proposalsKept(path: string): Promise<void> {
+  return updateFileRevisions(path, () => undefined);
 }
 
 /** Fired with a file's path when what Textus AI left in it changed. */
@@ -78,8 +133,9 @@ function readMarks(): Record<string, AiFileMark> {
   return stored && typeof stored === "object" ? { ...stored } : {};
 }
 
-/** What Textus AI left in `path`, as the tree and its tab show it. */
-export function setAiFileMark(path: string, patch: AiFileMark): void {
+/** What Textus AI left in `path`, as the tree and its tab show it; kept
+ *  for every window, each changing only its own file's. */
+function setAiFileMark(path: string, patch: AiFileMark): void {
   const next = { ...marks[path], ...patch };
   if (!next.pending) delete next.pending;
   if (!next.created) delete next.created;
@@ -89,12 +145,17 @@ export function setAiFileMark(path: string, patch: AiFileMark): void {
   marks = { ...marks };
   if (Object.keys(next).length) marks[path] = next;
   else delete marks[path];
-  setUiState("aiFileMarks", marks);
+  const mine = marks[path];
+  updateUiState("aiFileMarks", (live) => {
+    const all = { ...(live && typeof live === "object" ? live : {}) } as Record<
+      string,
+      AiFileMark
+    >;
+    if (mine) all[path] = mine;
+    else delete all[path];
+    return all;
+  });
   for (const listener of listeners) listener();
-}
-
-export function aiFileMark(path: string): AiFileMark | undefined {
-  return marks[path];
 }
 
 function subscribe(listener: () => void) {
@@ -121,62 +182,48 @@ export function placesChanged(before: string, after: string): number {
 
 /** One change kept as revisions in its file: merged with what waits there
  *  already, from the earliest text it found to the latest it left. */
-export async function keepAsRevisions(change: {
+export function keepAsRevisions(change: {
   file: string;
   id: string;
-  conversation: string;
   before: string;
   after: string;
 }): Promise<void> {
-  const kept = (await readFileRevisions(change.file)) ?? {
-    version: 1,
-    incoming: [],
-  };
-  const open = kept.incoming.find((r) => !r.conflict);
-  if (open) {
-    open.ids.push(change.id);
-    open.after = change.after;
-  } else
-    kept.incoming.push({
-      ids: [change.id],
-      conversation: change.conversation,
-      before: change.before,
-      after: change.after,
-    });
-  const waiting = kept.incoming.find((r) => !r.conflict)!;
-  setAiFileMark(change.file, {
-    pending:
-      (aiFileMark(change.file)?.pending ?? 0) -
-      (open ? placesChanged(open.before, open.after) : 0) +
-      placesChanged(waiting.before, waiting.after),
+  return updateFileRevisions(change.file, (kept) => {
+    const open = kept.incoming.find((r) => !r.conflict);
+    if (open) {
+      open.ids.push(change.id);
+      open.after = change.after;
+    } else
+      kept.incoming.push({
+        ids: [change.id],
+        before: change.before,
+        after: change.after,
+      });
+    return kept;
   });
-  await writeFileRevisions(change.file, kept);
 }
 
 /** A file Textus AI made, waiting to be kept. */
-export async function keepAsCreated(change: {
-  file: string;
-  id: string;
-  conversation: string;
-}): Promise<void> {
-  const kept = (await readFileRevisions(change.file)) ?? {
-    version: 1,
-    incoming: [],
-  };
-  kept.created = { conversation: change.conversation, id: change.id };
-  setAiFileMark(change.file, { created: true });
-  await writeFileRevisions(change.file, kept);
+export function keepAsCreated(file: string): Promise<void> {
+  return updateFileRevisions(file, (kept) => ({ ...kept, created: true }));
 }
 
 /** A file Textus AI made, kept by the writer or gone to the Trash: no
  *  longer waiting. */
-export async function forgetCreated(file: string): Promise<void> {
-  const kept = await readFileRevisions(file);
-  if (kept) {
+export function forgetCreated(file: string): Promise<void> {
+  return updateFileRevisions(file, (kept) => {
     delete kept.created;
-    await writeFileRevisions(file, kept);
-  }
-  setAiFileMark(file, { created: false });
+    return kept;
+  });
+}
+
+/** A change that met the writer's own edits, let go of: the card no
+ *  longer lists it, nor does Textus AI hear of it. */
+export function dismissConflicts(file: string): Promise<void> {
+  return updateFileRevisions(file, (kept) => ({
+    ...kept,
+    incoming: kept.incoming.filter((r) => !r.conflict),
+  }));
 }
 
 /** The revisions that turn the document's blocks into `after`'s: each run

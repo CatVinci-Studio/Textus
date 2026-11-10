@@ -132,19 +132,25 @@ export function useEditorProposals({
   useEffect(() => {
     if (filePath) reportUndecided(filePath, "ai", undecided);
   }, [filePath, undecided]);
-  // Written straight in: each proposal taken as soon as it is whole, the
-  // text before the first kept for the marks.
+  // Written straight in: each proposal Textus AI sends now taken as soon as
+  // it is whole, the text before the first kept for the marks. Restored or
+  // placed ones (from before the switch) stay for the writer to decide.
   const direct = settings.aiChangeMode === "direct";
+  const sentNow = useRef(new Set<string>());
+  const { previews, accept } = pendingEdits;
   useEffect(() => {
     if (!direct) return;
-    const ready = pendingEdits.previews.filter((p) => !p.streaming);
+    const ready = previews.filter(
+      (p) => !p.streaming && sentNow.current.has(p.callId),
+    );
     if (!ready.length) return;
     const before = run((ctx) =>
       cachedDocumentMarkdown(ctx, ctx.get(editorViewCtx).state.doc),
     );
     if (filePath && before !== undefined) noteBase(filePath, before);
-    for (const preview of ready) pendingEdits.accept(preview.callId);
-  }, [direct, pendingEdits, run, filePath]);
+    for (const preview of ready)
+      if (accept(preview.callId)) sentNow.current.delete(preview.callId);
+  }, [direct, previews, accept, run, filePath]);
   // The document's undecided proposals outlive closing it.
   useKeptProposals({
     run,
@@ -304,7 +310,8 @@ export function useEditorProposals({
     // Pictures written into the text show as their frames.
     const canvas: ProposalCanvas = {
       text: withBegunPictures,
-      show: (callId, proposal, streaming) =>
+      show: (callId, proposal, streaming) => {
+        sentNow.current.add(callId);
         addPreviews(
           [
             {
@@ -317,7 +324,8 @@ export function useEditorProposals({
             },
           ],
           requestTargetRef.current,
-        ),
+        );
+      },
       discard: discardRefused,
     };
     return new ProposalStream(
@@ -422,6 +430,7 @@ export function useEditorProposals({
   // Proposals resolve here whether the chat is embedded or detached.
   const showProposals = useCallback(
     (proposals: { callId: string; proposal: EditProposal }[]) => {
+      for (const { callId } of proposals) sentNow.current.add(callId);
       addPreviews(proposals, requestTargetRef.current);
     },
     [addPreviews],

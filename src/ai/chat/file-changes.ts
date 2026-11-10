@@ -6,8 +6,7 @@ import {
   keepAsCreated,
   keepAsRevisions,
   readFileRevisions,
-  setAiFileMark,
-  writeFileRevisions,
+  updateFileRevisions,
 } from "../revision/file-revisions";
 
 /**
@@ -98,13 +97,11 @@ export function changesSettled(file: string) {
 
 /** `file`'s text before Textus AI wrote straight in, kept with the file so
  *  its marks outlive a restart; undefined lets it go. */
-async function keepBase(file: string, base: string | undefined) {
-  const kept = (await readFileRevisions(file)) ?? { version: 1, incoming: [] };
-  if (kept.base === base) return;
-  if (base === undefined) delete kept.base;
-  else kept.base = base;
-  setAiFileMark(file, { changed: base !== undefined });
-  await writeFileRevisions(file, kept);
+function keepBase(file: string, base: string | undefined) {
+  return updateFileRevisions(file, ({ base: was, ...kept }) => {
+    if (was === base) return undefined;
+    return base === undefined ? kept : { ...kept, base };
+  });
 }
 
 /** Its text before, noted as Textus AI first writes straight into it (the
@@ -141,7 +138,11 @@ export function filesChanged(
       bases.set(file, before);
       if (before != null) void keepBase(file, before);
     }
-    if (!applied && bases.delete(file)) void keepBase(file, undefined);
+    // Undone: its marks go, here and in the store (known or not yet).
+    if (!applied) {
+      bases.delete(file);
+      void keepBase(file, undefined);
+    }
     window.dispatchEvent(new CustomEvent(FILE_WRITTEN_EVENT, { detail: file }));
   }
   publish();
@@ -160,9 +161,9 @@ export async function afterFileChanges(
     const changes = await ai.fileChanges(conversation, ids);
     for (const { id, file, before, after, applied } of changes) {
       if (!applied && before != null)
-        await keepAsRevisions({ id, file, conversation, before, after });
+        await keepAsRevisions({ id, file, before, after });
       else if (revisions && applied && before == null)
-        await keepAsCreated({ id, file, conversation });
+        await keepAsCreated(file);
     }
     filesChanged(
       changes.filter((c) => c.applied && !(revisions && c.before == null)),

@@ -342,6 +342,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   aiPendingCount: { other: "確認待ち {n} 件" },
   aiCreatedPending: "新規、残しますか？",
   aiFileConflict: "その後変更されたため、修正は入れていません",
+  aiDismissConflict: "破棄",
   aiKeepFile: "残す",
   aiDiscardFile: "破棄",
   filesChangedTitle: "変更したファイル",
