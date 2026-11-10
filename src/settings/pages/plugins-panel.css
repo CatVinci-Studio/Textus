@@ -1,0 +1,86 @@
+/* The sidebar's Plugins page (PluginsPanel): the shared search box, then
+   a row per plugin - its icon, name, line and maker - its button at the
+   end. Headings and notes are the Search page's (search-panel.css). */
+.plugins-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 2px;
+}
+
+.plugins-panel-search {
+  flex: none;
+  margin-bottom: 4px;
+}
+
+.plugins-panel-count {
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.plugins-panel-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--shape-s);
+}
+
+.plugins-panel-row:hover {
+  background: var(--ui-hover);
+}
+
+.plugins-panel-row[data-off] .plugins-panel-open {
+  opacity: 0.6;
+}
+
+.plugins-panel-open {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: default;
+}
+
+.plugins-panel-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.plugins-panel-name {
+  font-size: var(--text-secondary);
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.plugins-panel-line,
+.plugins-panel-by {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--text-caption);
+  color: var(--ui-muted);
+}
+
+.plugins-panel-end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+/* The gear, as the tree's tools: shown on the row's hover or focus. */
+@media (hover: hover) {
+  .plugins-panel-row:not(:hover, :focus-within) .plugins-panel-gear {
+    opacity: 0;
+  }
+}

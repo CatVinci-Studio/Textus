@@ -1,12 +1,12 @@
 /**
- * A file's icon by its extension. Markdown, pictures and anything else are
- * Textus's own (icons.tsx); the other kinds are Lucide's (ISC licence, see
- * THIRD-PARTY-NOTICES.md), drawn on its 24-unit grid with a stroke thinned
- * to read like ours at the tree's size.
+ * A file's icon by its extension, every one Lucide's (ISC licence, see
+ * THIRD-PARTY-NOTICES.md): Markdown, pictures and anything else from
+ * icons.tsx, the other kinds' shapes here, in the same weight.
  */
 import type { ReactNode } from "react";
 import {
   GenericFileIcon,
+  ICON_STROKE,
   iconSize,
   ImageFileIcon,
   MarkdownFileIcon,
@@ -211,7 +211,8 @@ const KIND_OF = new Map(
   Object.entries(KINDS).flatMap(([kind, exts]) => exts.map((e) => [e, kind])),
 );
 
-/** A Lucide shape drawn as one of ours: `size` px, thinned stroke. */
+/** A Lucide shape drawn as one of ours: `size` px, the icons' one line
+ *  weight (as icons.tsx's lucide()). */
 export function lucideIcon(shape: ReactNode, size = 15) {
   return function LucideIcon({ className }: IconProps) {
     return (
@@ -223,7 +224,7 @@ export function lucideIcon(shape: ReactNode, size = 15) {
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.7"
+        strokeWidth={(ICON_STROKE * 24) / size}
         strokeLinecap="round"
         strokeLinejoin="round"
       >

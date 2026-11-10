@@ -33,21 +33,6 @@
   opacity: 0.9;
 }
 
-.file-search-note {
-  padding: 8px 8px;
-  font-size: var(--text-footnote);
-  opacity: 0.65;
-  user-select: text;
-}
-
-/* Each list's small title. */
-.file-search-heading {
-  margin: 8px 8px 2px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--ui-muted);
-}
-
 /* A document holding the text, its count at the end; its lines under it,
    indented to its name. */
 .search-text-name .tree-label {

@@ -4,7 +4,7 @@ Code and artwork from other projects that ship inside Textus.
 
 ## Lucide icons
 
-The file-type icons in `src/engine/controls/file-icons.tsx` are from [Lucide](https://lucide.dev) (lucide-static 0.460.0).
+The app's icons (`src/engine/controls/icons.tsx`, `file-icons.tsx`, `format-icons.tsx`) are from [Lucide](https://lucide.dev): the `lucide-react` package 0.460.0, and shapes copied from lucide-static 0.460.0.
 
 ```
 ISC License

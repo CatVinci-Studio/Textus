@@ -8,7 +8,11 @@ import {
   TreeTabIcon,
   OutlineTabIcon,
   SearchIcon,
+  PluginsTabIcon,
 } from "../../engine/controls/icons";
+import { PluginsPanel } from "../../settings/pages/PluginsPanel";
+import { PLUGINS_SHOWN } from "../../plugins/store/availability";
+import { isDesktopApp } from "../../platform/capabilities";
 import { SearchPanel } from "../../files/SearchPanel";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
 import { PHONE_QUERY } from "../../engine/controls/usePhoneLayout";
@@ -119,10 +123,21 @@ const BUILT_IN: SidebarTabDef[] = [
           onFocusHandled={onSearchFocusHandled}
         />
       ) : (
-        <div className="file-search-note">{t.searchNoFolder}</div>
+        <div className="tx-list-note">{t.searchNoFolder}</div>
       ),
   },
 ];
+
+/** Plugins: where they run, the desktop, as Settings › Extensions has
+ *  them. Asked when the tabs are listed, not when this loads. */
+const PLUGINS_TAB: SidebarTabDef = {
+  id: "plugins",
+  label: (t) => t.extensionsTabPlugins,
+  Icon: PluginsTabIcon,
+  Panel: ({ t }) => <PluginsPanel t={t} />,
+};
+
+const pluginsTab = () => (PLUGINS_SHOWN && isDesktopApp ? [PLUGINS_TAB] : []);
 
 const added: SidebarTabDef[] = [];
 
@@ -145,7 +160,10 @@ export function registerSidebarTab(tab: SidebarTabDef): () => void {
  *  since then where it comes. */
 export function sidebarTabs(): SidebarTabDef[] {
   const kept = getUiState("sidebarTabOrder");
-  return orderTabs([...BUILT_IN, ...added], Array.isArray(kept) ? kept : []);
+  return orderTabs(
+    [...BUILT_IN, ...pluginsTab(), ...added],
+    Array.isArray(kept) ? kept : [],
+  );
 }
 
 /** `tabs` in `order`, those it doesn't name kept after the one before them. */

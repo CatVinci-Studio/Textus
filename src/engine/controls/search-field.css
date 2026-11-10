@@ -43,3 +43,19 @@
 .tx-search-input::-webkit-search-cancel-button {
   display: none;
 }
+
+/* A filtered list's small titles and its notes (nothing found, still
+   reading), under the box. */
+.tx-list-heading {
+  margin: 8px 8px 2px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--ui-muted);
+}
+
+.tx-list-note {
+  padding: 8px 8px;
+  font-size: var(--text-footnote);
+  opacity: 0.65;
+  user-select: text;
+}

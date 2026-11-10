@@ -24,6 +24,7 @@ it("sizes each icon as a whole, never a shape inside it", async () => {
   const source = readFileSync(new URL("./icons.tsx", import.meta.url), "utf8");
   const inner = [...source.matchAll(/<(\w+)[^<>]*?style=\{iconSize/gs)]
     .map((m) => m[1])
-    .filter((tag) => tag !== "svg");
+    // A Lucide component (capitalised) is the svg itself.
+    .filter((tag) => tag !== "svg" && !/^[A-Z]/.test(tag));
   expect(inner).toEqual([]);
 });

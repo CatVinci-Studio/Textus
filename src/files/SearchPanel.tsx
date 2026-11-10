@@ -130,7 +130,7 @@ function TextMatches({
           : null;
   return (
     <section className="search-text" aria-label={t.searchTextHeading}>
-      <h3 className="file-search-heading">{t.searchTextHeading}</h3>
+      <h3 className="tx-list-heading">{t.searchTextHeading}</h3>
       {groups.map((hits) => {
         const Icon = fileIconFor(hits[0].path);
         return (
@@ -160,9 +160,9 @@ function TextMatches({
           </div>
         );
       })}
-      {note && <div className="file-search-note">{note}</div>}
+      {note && <div className="tx-list-note">{note}</div>}
       {state.kind === "ready" && state.truncated && (
-        <div className="file-search-note">{t.searchTextCapped}</div>
+        <div className="tx-list-note">{t.searchTextCapped}</div>
       )}
     </section>
   );

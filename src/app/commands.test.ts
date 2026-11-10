@@ -41,11 +41,12 @@ describe("commands", () => {
 describe("sidebar tabs", () => {
   it("are Files, Outline and Search, then any added", () => {
     const t = resolveStrings("en");
-    expect(sidebarTabs().map((tab) => tab.id)).toEqual([
-      "tree",
-      "outline",
-      "search",
-    ]);
+    // Then Plugins, where plugins run.
+    expect(
+      sidebarTabs()
+        .map((tab) => tab.id)
+        .slice(0, 3),
+    ).toEqual(["tree", "outline", "search"]);
     const remove = registerSidebarTab({
       id: "example",
       label: () => "Example",

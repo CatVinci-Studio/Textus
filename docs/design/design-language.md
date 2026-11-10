@@ -271,11 +271,9 @@ The desktop window is a **frame** around the document. The work is tracked in R2
 
 ## 8. Icons - In force
 
-- One set (`src/engine/controls/icons.tsx`): stroked line art on a 16-unit grid, 1.4 stroke, round caps and joins, `currentColor`.
-- File types (`src/engine/controls/file-icons.tsx`): Markdown, pictures and other files are ours; the rest are Lucide's (ISC), stroked thinner to match. A new kind of file takes a Lucide icon before one of our own.
-- Sizes follow the text role beside them: 16 with `body`, 14 with `secondary`, 12 with `caption`.
-- _Planned (Textus 1.3.13)_: icons in the rail, the title bar, the AI panel and plugins' icons go up one step, set by one icon-size token; hit areas follow.
-- A new icon is added to the set on the same grid and stroke; a surface MUST NOT draw a one-off icon for something the set has.
+- One set: Lucide's (ISC, `lucide-react`), one weight for every icon - a line as thick at every size (`ICON_STROKE`), round caps and joins, `currentColor` - drawn at each icon's design size and grown with the interface (`iconSize`, `--icon-scale`). `src/engine/controls/icons.tsx` names them for the app; file types (`file-icons.tsx`), the format bar (`format-icons.tsx`) and plugins' `tx-icon` names (`components.css`) use the same set and weight.
+- Only the Windows caption buttons are drawn by hand: they follow the system's 10×10 glyphs.
+- A new icon takes a Lucide one, added to `icons.tsx`; a surface MUST NOT draw a one-off icon.
 - Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.
 - Emoji are content, not icons; the interface MUST NOT use emoji as icons.
 

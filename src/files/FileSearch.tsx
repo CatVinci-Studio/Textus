@@ -200,9 +200,7 @@ export function FileSearch({
           onKeyDown={onKeyDown}
         />
       </div>
-      {searching && (
-        <h3 className="file-search-heading">{t.searchNamesHeading}</h3>
-      )}
+      {searching && <h3 className="tx-list-heading">{t.searchNamesHeading}</h3>}
       {searching && (
         <div
           id={listId}
@@ -270,9 +268,9 @@ function SearchNote({
             : null;
   return (
     <>
-      {note && <div className="file-search-note">{note}</div>}
+      {note && <div className="tx-list-note">{note}</div>}
       {index.kind === "ready" && index.truncated && (
-        <div className="file-search-note">
+        <div className="tx-list-note">
           {t.treeSearchCapped.replace("{n}", String(index.entries.length))}
         </div>
       )}
