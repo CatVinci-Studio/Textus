@@ -15,6 +15,7 @@ import {
   focusOn,
   moveTab,
   reorderTab,
+  sizePane,
   splitOff,
   type SplitLayout,
 } from "./ops";
@@ -137,6 +138,37 @@ export function splitBeside(tabId: string, id: string, side: Side): void {
 export function splitAtEdge(tabId: string, side: Side): void {
   const next = layout && splitOff(layout, tabId, null, side);
   if (next) setSplitLayout(next);
+}
+
+/** The layout an island was filled from, for Restore, and the filled
+ *  root (as JSON): Restore stands while nothing else has moved. */
+let filled: { id: string; from: SplitLayout; to: string } | null = null;
+
+/** Island `id` at `share` of its row or column (1/3, 1/2, 2/3). */
+export function sizeIsland(id: string, share: number): void {
+  if (layout) setSplitLayout(sizePane(layout, id, share));
+}
+
+/** Whether island `id` is filled and nothing has moved since. */
+export function islandFilled(id: string): boolean {
+  return (
+    filled?.id === id && !!layout && JSON.stringify(layout.root) === filled.to
+  );
+}
+
+/** Island `id` as large as its neighbours let it be; again, back as it
+ *  was. */
+export function fillIsland(id: string): void {
+  if (!layout) return;
+  if (filled && islandFilled(id)) {
+    const back = filled.from;
+    filled = null;
+    setSplitLayout(back);
+    return;
+  }
+  const to = sizePane(layout, id, 1);
+  filled = { id, from: layout, to: JSON.stringify(to.root) };
+  setSplitLayout(to);
 }
 
 /** The AI island shown or not, as Textus AI's button has it; opened, it

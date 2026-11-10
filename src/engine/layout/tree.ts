@@ -423,3 +423,32 @@ export function splitGrid(root: LayoutNode): SplitGrid {
     dividers,
   };
 }
+
+/** Pane `id` at `share` of the branch it sits in, the others there giving
+ *  or taking room in proportion; each keeps MIN_SHARE. */
+export function sizeAt(
+  node: LayoutNode,
+  id: string,
+  share: number,
+): LayoutNode {
+  if (node.kind === "pane") return node;
+  const at = node.children.findIndex((c) => c.kind === "pane" && c.id === id);
+  if (at < 0)
+    return {
+      ...node,
+      children: node.children.map((c) => sizeAt(c, id, share)),
+    };
+  const others = node.sizes.length - 1;
+  const own = Math.min(1 - MIN_SHARE * others, Math.max(MIN_SHARE, share));
+  const rest = 1 - node.sizes[at];
+  const sizes = node.sizes.map((size, i) =>
+    i === at
+      ? own
+      : Math.max(
+          MIN_SHARE,
+          rest > 0 ? (size / rest) * (1 - own) : (1 - own) / others,
+        ),
+  );
+  const total = sizes.reduce((a, b) => a + b, 0);
+  return { ...node, sizes: sizes.map((s) => s / total) };
+}

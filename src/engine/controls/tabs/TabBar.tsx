@@ -10,7 +10,7 @@ import {
 import { animate } from "../../motion/motion";
 import { ListMotion, measure, type PendingFlip } from "../../motion/flip";
 import { Tooltip } from "../Tooltip";
-import { ContextMenu, type ContextMenuItem } from "../ContextMenu";
+import { ContextMenu, type ContextMenuEntry } from "../ContextMenu";
 import { Presence } from "../../motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
 import { revealActive, TabListButton, useTabOverflow } from "./TabList";
@@ -33,7 +33,7 @@ interface TabBarProps {
   // cursor; on release it becomes the real tab in that slot.
   previewTab: { title: string; dirty: boolean; x: number } | null;
   /** A tab's right-click menu (Open to the Side, Close). */
-  menuFor?: (id: string) => (ContextMenuItem | "separator")[];
+  menuFor?: (id: string) => ContextMenuEntry[];
   /** What the icon-only buttons' tooltips and a screen reader say. */
   labels: {
     tabs: string;
@@ -76,7 +76,7 @@ export function TabBar({
   const [menu, setMenu] = useState<{
     x: number;
     y: number;
-    items: (ContextMenuItem | "separator")[];
+    items: ContextMenuEntry[];
   } | null>(null);
 
   // The open tab in view, as it changes (and as the row narrows: TabList).

@@ -1,3 +1,4 @@
+import { islandSizeMenu } from "./island-size-menu";
 import { pullTab } from "./split-drop";
 import {
   useEffect,
@@ -122,6 +123,7 @@ export function AgentTabs({
         previewTab={null}
         menuFor={(id) => [
           ...islandMenu,
+          ...(island ? [islandSizeMenu(t, island)] : []),
           ...(popOut
             ? [
                 "separator" as const,

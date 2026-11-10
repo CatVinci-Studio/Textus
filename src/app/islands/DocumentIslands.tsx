@@ -1,3 +1,4 @@
+import { islandSizeMenu } from "./island-size-menu";
 import { Island } from "../../engine/layout/Island";
 import {
   IslandArea,
@@ -223,6 +224,8 @@ export function DocumentIslands({
           : []),
         ...pathItem(id, byId.get(id)?.path),
         ...readOnlyItem(id),
+        // In a split, the island's size.
+        ...(pane !== null ? [islandSizeMenu(t, pane)] : []),
         "separator",
         { label: t.menuCloseTab, onSelect: () => onClose(id) },
         ...closeManyItems(list, id),
