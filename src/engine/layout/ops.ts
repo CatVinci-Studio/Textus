@@ -2,6 +2,7 @@ import {
   aiPane,
   islandOf,
   keepsItself,
+  shareOf,
   mapPanes,
   pane,
   paneById,
@@ -136,9 +137,18 @@ export function movePane(
   if (!moved || id === target) return layout;
   const rest = tidy(layout.root, (p) => p.id !== id && keepsItself(p));
   if (!rest) return layout;
+  // Moved to the layout's edge the same way it ran, it keeps its width
+  // (or height): the AI island docked left is as wide as it was.
+  const was = shareOf(layout.root, id);
+  const across = side === "left" || side === "right" ? "row" : "column";
   const root =
     target === null
-      ? splitWhole(rest, side, moved)
+      ? splitWhole(
+          rest,
+          side,
+          moved,
+          was?.direction === across ? was.share : undefined,
+        )
       : splitPane(rest, target, side, moved);
   return settled(root, islandOf(moved) === "documents" ? id : layout.focus);
 }

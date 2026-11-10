@@ -10,6 +10,7 @@ import {
   type SplitDirection,
 } from "../../engine/layout/store";
 import {
+  movePane,
   moveTab,
   reorderTab,
   splitOff,
@@ -318,6 +319,9 @@ export function pullTab(
     detach?: (id: string) => void;
     /** Let go outside the window, where `detach` can't follow the pointer. */
     releaseOutside?: (id: string) => void;
+    /** The island this tab moves whole (the AI's, whose tabs stay in
+     *  it). A document's tab moves its whole island while Alt is held. */
+    island?: string;
   },
 ): void {
   const ghost = dragGhost(title, "tab-pull-ghost");
@@ -330,8 +334,10 @@ export function pullTab(
     e.clientX > window.innerWidth ||
     e.clientY > window.innerHeight;
   /** The layout a drop at (x, y) makes, and a key naming the place. */
-  const placeAt = (x: number, y: number) => {
+  const placeAt = (x: number, y: number, alt = false) => {
     const now = splitLayout();
+    const whole = opts.island ?? (alt ? paneOf(now, tabId) : null);
+    if (whole) return islandPlaceAt(now, whole, x, y);
     const bar = barDropAt(x, y, tabId, geometry);
     if (bar && now) {
       const moved = moveTab(now, tabId, bar.pane);
@@ -345,6 +351,23 @@ export function pullTab(
     return {
       key: `${target.whole ? "whole" : target.tabId}:${target.zone}`,
       next: dropLayout(now, tabId, target, opts.tabIds),
+    };
+  };
+  /** The whole island `id` moved beside the document under (x, y), or
+   *  beside them all at the outer edge. */
+  const islandPlaceAt = (
+    now: SplitLayout | null,
+    id: string,
+    x: number,
+    y: number,
+  ) => {
+    const target = dropTargetAt(x, y, geometry);
+    if (!now || !target || target.zone === "center") return null;
+    const beside = target.whole ? null : paneOf(now, target.tabId);
+    if (beside === id) return null;
+    return {
+      key: `island:${beside ?? "whole"}:${target.zone}`,
+      next: movePane(now, id, beside, target.zone),
     };
   };
   let shown: string | null = null;
@@ -365,13 +388,13 @@ export function pullTab(
       up(e);
       return;
     }
-    if (opts.detach && outside(e)) {
+    if (opts.detach && !opts.island && !e.altKey && outside(e)) {
       stop();
       opts.detach(tabId);
       return;
     }
     ghost.move(e.clientX, e.clientY);
-    preview(placeAt(e.clientX, e.clientY));
+    preview(placeAt(e.clientX, e.clientY, e.altKey));
   };
   const up = (e: PointerEvent) => {
     if (opts.releaseOutside && outside(e)) {
@@ -379,7 +402,7 @@ export function pullTab(
       opts.releaseOutside(tabId);
       return;
     }
-    const place = placeAt(e.clientX, e.clientY);
+    const place = placeAt(e.clientX, e.clientY, e.altKey);
     if (place) {
       opts.activate(tabId);
       // The layout it showed, made before the preview goes: the same

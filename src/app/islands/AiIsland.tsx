@@ -69,7 +69,12 @@ export function AiIsland({
       plain={place.plain}
       row={
         aiOn ? (
-          <AgentTabs scope={conversations} inner={place.inner} t={t} />
+          <AgentTabs
+            scope={conversations}
+            inner={place.inner}
+            island={place.paneId}
+            t={t}
+          />
         ) : undefined
       }
       rowStyle={place.row}

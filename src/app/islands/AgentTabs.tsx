@@ -1,3 +1,4 @@
+import { pullTab } from "./split-drop";
 import {
   useEffect,
   useRef,
@@ -63,6 +64,7 @@ export function AgentTabs({
   popOut = true,
   end,
   inner,
+  island,
   t,
 }: {
   scope: string | null;
@@ -71,6 +73,8 @@ export function AgentTabs({
   end?: ReactNode;
   /** Its row is below another island's, not in the window bar's. */
   inner?: boolean;
+  /** Its island's pane: a tab pulled out of the row moves the island. */
+  island?: string;
   t: Strings;
 }) {
   const open = useOpen(scope);
@@ -106,6 +110,14 @@ export function AgentTabs({
         }}
         onReorder={(id, index) =>
           scope && reorderConversation(scope, id, index)
+        }
+        // Pulled out of the row, a conversation brings its island along:
+        // it docks left, under, wherever it is let go.
+        onPullOut={
+          island
+            ? (id, title) =>
+                pullTab(id, title, { tabIds: [], activate: () => {}, island })
+            : undefined
         }
         previewTab={null}
         menuFor={(id) => [

@@ -182,8 +182,13 @@ export function splitPane(
 }
 
 /** `added` beside the whole layout on `side`: the full height or width,
- *  its share what each of the others would have. */
-export function splitWhole(root: LayoutNode, side: Side, added: Pane): Branch {
+ *  its share what each of the others would have, or `share`. */
+export function splitWhole(
+  root: LayoutNode,
+  side: Side,
+  added: Pane,
+  share?: number,
+): Branch {
   const direction: SplitDirection =
     side === "left" || side === "right" ? "row" : "column";
   const before = side === "left" || side === "top";
@@ -191,14 +196,29 @@ export function splitWhole(root: LayoutNode, side: Side, added: Pane): Branch {
     root.kind === "split" && root.direction === direction
       ? [root.children, root.sizes]
       : [[root], [1]];
-  const share = 1 / (children.length + 1);
-  const kept = sizes.map((size) => size * (1 - share));
+  const own = share ?? 1 / (children.length + 1);
+  const kept = sizes.map((size) => size * (1 - own));
   return {
     kind: "split",
     direction,
     children: before ? [added, ...children] : [...children, added],
-    sizes: before ? [share, ...kept] : [...kept, share],
+    sizes: before ? [own, ...kept] : [...kept, own],
   };
+}
+
+/** Pane `id`'s share of the branch it sits in, and which way that runs. */
+export function shareOf(
+  node: LayoutNode,
+  id: string,
+): { direction: SplitDirection; share: number } | null {
+  if (node.kind === "pane") return null;
+  const at = node.children.findIndex((c) => c.kind === "pane" && c.id === id);
+  if (at >= 0) return { direction: node.direction, share: node.sizes[at] };
+  for (const child of node.children) {
+    const found = shareOf(child, id);
+    if (found) return found;
+  }
+  return null;
 }
 
 /** The pane next to pane `id` on `side`, in the branch it sits in. */
