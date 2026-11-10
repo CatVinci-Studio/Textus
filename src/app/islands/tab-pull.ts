@@ -87,7 +87,7 @@ export function pullTab(
   /** The place under (x, y). */
   const placeAt = (x: number, y: number, alt: boolean): Place | null => {
     const whole = wholeIsland(alt);
-    const target = dropTargetAt(x, y, geometry);
+    const target = dropTargetAt(x, y, geometry, true);
     if (whole) {
       if (!target || target.zone === "center") return null;
       const beside = target.whole ? null : paneOf(base, target.tabId);
@@ -153,6 +153,17 @@ export function pullTab(
   let current: Place | null = null;
   const aim = () => {
     const { x, y, alt } = last;
+    // Over the room it opened, the place holds: the islands moved under a
+    // pointer tested against where they were, and a drop there went astray.
+    const room = current && !wholeIsland(alt) ? marks.room() : null;
+    if (
+      room &&
+      x >= room.left &&
+      x <= room.right &&
+      y >= room.top &&
+      y <= room.bottom
+    )
+      return;
     // Nothing is aimed at until the tab has left its place.
     const place = left || wholeIsland(alt) ? placeAt(x, y, alt) : null;
     const { shown, again } = intent.settle(

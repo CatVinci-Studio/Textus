@@ -10,22 +10,24 @@ export interface DragGhost {
   move(x: number, y: number): void;
   /** Out of sight while something else follows the pointer instead. */
   hide(hidden: boolean): void;
-  /** Gathers in from `from` (the tab it was) to its own size at the
-   *  pointer: the tuck spring. */
+  /** Gathers in from `from` (the tab it was) to the pointer: the tuck
+   *  spring. */
   gather(from: DOMRect): void;
-  /** Flies to `to` and grows into it (the land spring), then goes. */
+  /** Flies to `to`'s start and fades there (the land spring), then goes. */
   land(to: DOMRect): void;
   remove(): void;
 }
 
-/** The transform that lays `ghost`, where it is, over `rect`. */
+/** The move that puts `ghost`, where it is, at `rect`'s start: never
+ *  scaled - grown to an island's size, its words blurred across it. */
 function toward(ghost: HTMLElement, rect: DOMRect): Keyframe {
   const box = ghost.getBoundingClientRect();
-  const dx = rect.left + rect.width / 2 - (box.left + box.width / 2);
-  const dy = rect.top + rect.height / 2 - (box.top + box.height / 2);
-  const sx = box.width ? rect.width / box.width : 1;
-  const sy = box.height ? rect.height / box.height : 1;
-  return { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` };
+  const dx = rect.left - box.left;
+  const dy =
+    rect.top +
+    Math.min(rect.height, box.height) / 2 -
+    (box.top + box.height / 2);
+  return { transform: `translate(${dx}px, ${dy}px)` };
 }
 
 export function dragGhost(text: string, className: string): DragGhost {
@@ -52,7 +54,7 @@ export function dragGhost(text: string, className: string): DragGhost {
     land(to) {
       const flight = animate(
         ghost,
-        [{ transform: "none" }, { ...toward(ghost, to), opacity: 0.6 }],
+        [{ transform: "none" }, { ...toward(ghost, to), opacity: 0 }],
         { duration: "--dur-land", easing: "--ease-land", fill: "forwards" },
       );
       if (flight) void flight.finished.finally(() => ghost.remove());

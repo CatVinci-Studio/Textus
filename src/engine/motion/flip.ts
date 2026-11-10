@@ -51,14 +51,25 @@ export function play(
     const dy = was.top - now.top;
     if (Math.abs(dx) >= 0.5 || Math.abs(dy) >= 0.5) moves.push({ el, dx, dy });
   }
-  for (const { el, dx, dy } of moves) {
-    const own = timingFor?.(el);
+  // One inside another that slides too moves with it: only its own share
+  // is its to play, or it would travel twice.
+  const shift = new Map(moves.map((m) => [m.el, m]));
+  const own = moves.map(({ el, dx, dy }) => {
+    for (let up = el.parentElement; up; up = up.parentElement) {
+      const outer = shift.get(up);
+      if (outer) return { el, dx: dx - outer.dx, dy: dy - outer.dy };
+    }
+    return { el, dx, dy };
+  });
+  for (const { el, dx, dy } of own) {
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+    const timing = timingFor?.(el);
     animate(
       el,
       [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
       {
-        duration: own?.duration ?? duration,
-        easing: own?.easing ?? easing,
+        duration: timing?.duration ?? duration,
+        easing: timing?.easing ?? easing,
         id: FLIP_ID,
       },
     );
@@ -147,9 +158,15 @@ export class FlipOnChange extends Component<{
   targets: () => Iterable<Element>;
   duration?: DurationToken | number;
   easing?: EasingToken;
+  /** True while the change follows the pointer itself: no slide. */
+  still?: () => boolean;
 }> {
   getSnapshotBeforeUpdate(previous: { watch: unknown }): Snapshot | null {
-    if (Object.is(previous.watch, this.props.watch) || !motionAllowed())
+    if (
+      Object.is(previous.watch, this.props.watch) ||
+      !motionAllowed() ||
+      this.props.still?.()
+    )
       return null;
     return measure(this.props.targets());
   }

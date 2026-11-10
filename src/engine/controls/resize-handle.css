@@ -47,8 +47,7 @@
   opacity: 1;
 }
 
-/* Dragged: the seam filled - its own width (--grip-line), or a hairline
-   where the seam has none. */
+/* Dragged: a hairline down the seam (--grip-line). */
 /* Above the window bar, where its line reaches into the bar's row. */
 .tx-grip[data-gripped] {
   z-index: 47;
@@ -58,9 +57,10 @@
   /* Up through what tops the seam (the islands' rows of tabs): the line
      parts the islands whole, not only their pages. */
   top: calc(-1 * var(--grip-reach, 0px));
-  width: var(--grip-line, 3px);
+  width: var(--grip-line, 1px);
   height: calc(100% + var(--grip-reach, 0px));
-  background: var(--ui-accent);
+  border-radius: 0;
+  background: var(--ui-muted);
   opacity: 1;
   translate: -50% 0;
 }
@@ -69,6 +69,6 @@
   top: 50%;
   left: 0;
   width: 100%;
-  height: var(--grip-line, 3px);
+  height: var(--grip-line, 1px);
   translate: 0 -50%;
 }

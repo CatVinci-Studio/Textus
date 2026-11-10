@@ -26,6 +26,8 @@ export function IslandMotion({
       }
       duration="--dur-settle"
       easing="--ease-settle"
+      // A seam dragged: the islands follow the pointer 1:1, a slide lags.
+      still={() => !!document.querySelector(".tx-grip[data-gripped]")}
     />
   );
 }

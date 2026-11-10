@@ -128,7 +128,9 @@ function App() {
         watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
         targets={() =>
           document.querySelectorAll(
-            '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
+            // The islands whole and what is inside them: a sheet that
+            // jumped while its tabs slid came apart.
+            '.main-pane > :is([data-island], .island-row, .split-pane), [data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
           )
         }
         duration="--dur-settle"

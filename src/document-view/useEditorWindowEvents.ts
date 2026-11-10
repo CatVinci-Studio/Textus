@@ -1,3 +1,4 @@
+import { splitLayout } from "../engine/layout/store";
 import { useCallback, useEffect } from "react";
 import {
   openToText,
@@ -123,12 +124,12 @@ export function useEditorWindowEvents({
   /** This editor's document; null for one never saved. */
   docPath: string | null;
 }) {
-  // Every tab's editor stays mounted, hidden with display:none, but these
-  // events mean the editor on screen; without this guard each fires in
-  // every tab.
+  // Every tab's editor stays mounted, hidden with display:none, and a split
+  // shows several: these events mean the one in use - the one with focus,
+  // else the one in the island in use. Without this guard each fired in
+  // every editor shown, and the last took the selection.
   const isOnScreen = useCallback(
-    () =>
-      run((ctx) => ctx.get(editorViewCtx).dom.offsetParent !== null) ?? false,
+    () => run((ctx) => editorInUse(ctx.get(editorViewCtx).dom)) ?? false,
     [run],
   );
 
@@ -320,4 +321,13 @@ export function useEditorWindowEvents({
   });
   useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
   useEffect(() => claimRestore.current(), [docPath, claimRestore]);
+}
+
+function editorInUse(dom: HTMLElement): boolean {
+  if (dom.offsetParent === null) return false;
+  const focused = document.activeElement?.closest(".ProseMirror");
+  if (focused) return focused === dom;
+  const focus = splitLayout()?.focus;
+  if (!focus) return true;
+  return dom.closest<HTMLElement>(".split-pane")?.dataset.paneId === focus;
 }
