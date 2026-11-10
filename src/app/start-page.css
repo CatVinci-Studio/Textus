@@ -13,40 +13,46 @@
   container-type: inline-size;
 }
 
+/* One column, in the middle: the mark and the name, the ways to begin,
+   then what was open lately. */
 .start-page-body {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  align-items: stretch;
-  gap: var(--space-8);
-  width: min(760px, 100% - 2 * var(--space-6));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: min(520px, 100% - 2 * var(--space-6));
   padding: var(--space-8) 0;
 }
 
-/* Nothing recent: the left column alone, in the middle. */
-.start-page-body:not(:has(.start-page-recents)) {
-  grid-template-columns: minmax(0, 1fr);
-  width: min(320px, 100% - 2 * var(--space-6));
-}
-
-.start-page-side {
+.start-page-brand {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
 }
 
 .start-page-mark {
-  /* Grows with the window, within a mark's sizes. */
-  width: clamp(72px, 14cqi, 112px);
+  width: calc(44px * var(--chrome-scale));
   height: auto;
-  margin: 0 0 var(--space-3) calc(-1 * var(--space-2));
 }
 
 .start-page-title {
-  margin: 0 0 auto;
+  margin: 0;
   font-size: var(--text-large-title);
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+/* New, Open, Open Folder: capsules in a row, New the primary. */
+.start-page-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* The recent folders as capsules. */
+.start-page-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 :is(.start-page-actions, .start-page-recent ul) {
@@ -107,13 +113,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* The recent folders over the recent files; the last row ends where the
-   left column's does. */
 .start-page-recents {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-6);
+  gap: var(--space-5);
   min-width: 0;
 }
 
@@ -198,18 +201,6 @@
 .start-page-remove:hover {
   background: var(--ui-hover);
   color: var(--ui-text);
-}
-
-/* A narrow window: one column, the recent lists under the actions. */
-@container (max-width: 640px) {
-  .start-page-body {
-    grid-template-columns: minmax(0, 1fr);
-    width: min(440px, 100% - 2 * var(--space-6));
-  }
-
-  .start-page-title {
-    margin-bottom: 0;
-  }
 }
 
 /* The sidebar with no folder: the same three rows. */

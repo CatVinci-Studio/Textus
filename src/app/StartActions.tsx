@@ -1,33 +1,41 @@
 import { emitToThisWindow } from "../platform/menu-events";
 import { formatCombo } from "../utils/shortcuts";
 import {
-  OpenFolderIcon,
-  PlusIcon,
-  ProjectIcon,
+  FolderOpenIcon,
+  GenericFileIcon,
+  NewDocumentIcon,
 } from "../engine/controls/icons";
+import { Tooltip } from "../engine/controls/Tooltip";
 import { canOpenFolder } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 
 /**
- * The three ways to begin - a new document, a file, a folder - as rows of an
- * icon, a name and its keys: the start page's, and the sidebar's when no
- * folder is open (one look in both, start-page.css). Run here as the menu
- * items' events, not through the native menu: in a window-per-document setup
- * that would open another window.
+ * The three ways to begin - a new document, a file, a folder: the start
+ * page's capsule buttons (the first the primary, its keys in its tip), or
+ * the sidebar's rows of an icon, a name and its keys when no folder is open
+ * (start-page.css). Run here as the menu items' events, not through the
+ * native menu: in a window-per-document setup that would open another
+ * window.
  */
-export function StartActions({ t }: { t: Strings }) {
+export function StartActions({
+  t,
+  look = "rows",
+}: {
+  t: Strings;
+  look?: "rows" | "buttons";
+}) {
   const actions = [
     {
       label: t.menuNewFile,
       event: "menu-new-file",
       combo: "mod+n",
-      icon: <PlusIcon />,
+      icon: <NewDocumentIcon />,
     },
     {
       label: t.menuOpenFile,
       event: "menu-open-file",
       combo: "mod+o",
-      icon: <OpenFolderIcon />,
+      icon: <GenericFileIcon />,
     },
     ...(canOpenFolder
       ? [
@@ -35,11 +43,36 @@ export function StartActions({ t }: { t: Strings }) {
             label: t.menuOpenFolder,
             event: "menu-open-folder",
             combo: undefined,
-            icon: <ProjectIcon />,
+            icon: <FolderOpenIcon />,
           },
         ]
       : []),
   ];
+  if (look === "buttons")
+    return (
+      <div className="start-page-buttons">
+        {actions.map((a, i) => {
+          const button = (
+            <button
+              key={a.event}
+              type="button"
+              className={i === 0 ? "tx-button primary" : "tx-button"}
+              onClick={() => emitToThisWindow(a.event)}
+            >
+              {a.icon}
+              {a.label}
+            </button>
+          );
+          return a.combo ? (
+            <Tooltip key={a.event} text={formatCombo(a.combo)}>
+              {button}
+            </Tooltip>
+          ) : (
+            button
+          );
+        })}
+      </div>
+    );
   return (
     <ul className="start-page-actions">
       {actions.map((a) => (

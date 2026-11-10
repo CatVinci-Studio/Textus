@@ -7,7 +7,7 @@ import { basename, dirname } from "../utils/path";
 import {
   CloseIcon,
   FolderIcon,
-  GenericFileIcon,
+  MarkdownFileIcon,
 } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
 import type { Strings } from "../i18n/strings";
@@ -116,9 +116,43 @@ function RecentList({
   );
 }
 
+/** The recent folders as a row of capsules, each its name, its place in
+ *  its tip. */
+function FolderChips({
+  title,
+  paths,
+  onOpen,
+}: {
+  title: string;
+  paths: string[];
+  onOpen: (path: string) => void;
+}) {
+  if (paths.length === 0) return null;
+  return (
+    <section className="start-page-recent" aria-label={title}>
+      <h2 className="start-page-heading">{title}</h2>
+      <div className="start-page-chips">
+        {paths.slice(0, RECENT_SHOWN).map((path) => (
+          <Tooltip key={path} text={path} description={null}>
+            <button
+              type="button"
+              className="tx-button small start-page-chip"
+              onClick={() => onOpen(path)}
+            >
+              <FolderIcon />
+              {basename(path.replace(/[\\/]+$/, "")) || path}
+            </button>
+          </Tooltip>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 /**
- * What a window shows with nothing open in it, when the user chose so:
- * new, open and the recent projects and files. Anything opened here takes
+ * What a window shows with nothing open in it, when the user chose so: one
+ * column - the mark and the name, new and open, the recent folders as
+ * capsules, the recent files. Anything opened here takes
  * its place.
  */
 export function StartPage({ t }: { t: Strings }) {
@@ -142,7 +176,7 @@ export function StartPage({ t }: { t: Strings }) {
   return (
     <div className="start-page" role="region" aria-label={t.startPageTab}>
       <div className="start-page-body">
-        <div className="start-page-side">
+        <header className="start-page-brand">
           <img
             className="start-page-mark"
             src={mark}
@@ -151,32 +185,29 @@ export function StartPage({ t }: { t: Strings }) {
             height={128}
           />
           <h1 className="start-page-title">Textus</h1>
-          <StartActions t={t} />
-        </div>
+        </header>
+        <StartActions t={t} look="buttons" />
         {anyRecent && (
           <div className="start-page-recents">
-            <RecentList
+            <FolderChips
               title={t.startPageRecentProjects}
               paths={recents.folders}
-              event="menu-open-recent-folder"
-              icon={<FolderIcon />}
-              onRemove={removeRecent}
-              removeLabel={t.startPageRemoveRecent}
               // A folder shows a document of its own too: the sidebar
               // alone changing left the start page looking untouched.
-              then={(folder) =>
+              onOpen={(folder) => {
+                emitToThisWindow("menu-open-recent-folder", folder);
                 void openingDocuments(folder, recents.files).then((docs) =>
                   docs.length
                     ? emitToThisWindow("open-project-documents", docs)
                     : setEmpty(folder),
-                )
-              }
+                );
+              }}
             />
             <RecentList
               title={t.startPageRecentFiles}
               paths={recents.files}
               event="menu-open-recent"
-              icon={<GenericFileIcon />}
+              icon={<MarkdownFileIcon />}
               onRemove={removeRecent}
               removeLabel={t.startPageRemoveRecent}
             />
