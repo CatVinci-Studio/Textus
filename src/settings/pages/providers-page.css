@@ -3,43 +3,18 @@
 .providers-page {
   display: grid;
   grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-m);
-  overflow: hidden;
 }
 
 .providers-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 8px 8px;
+  padding: 0 8px 8px 0;
   border-inline-end: 1px solid var(--ui-border);
 }
 
-.providers-list > .pane-search {
-  margin: 0 -8px;
-}
-
-.providers-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 0;
-  border-radius: var(--shape-s);
-  background: none;
-  color: var(--ui-text);
-  font: inherit;
-  text-align: start;
-  cursor: default;
-}
-
-.providers-item:hover {
-  background: var(--ui-hover);
-}
-
-.providers-item[aria-current] {
-  background: var(--ui-selected);
+.providers-list > .tx-pane-top {
+  padding-inline: 0 8px;
 }
 
 .providers-item-name {
@@ -52,7 +27,7 @@
 
 .providers-detail {
   min-width: 0;
-  padding: 16px 18px;
+  padding: 12px 0 0 24px;
 }
 
 .providers-head {

@@ -129,14 +129,3 @@
   flex-direction: column;
   min-width: 0;
 }
-
-/* A panel's name over it, where nothing else says what it is: as a list
-   heading, on the line the other panels' search boxes take. */
-.sidebar-panel-title {
-  margin: 0;
-  padding: 14px 14px 6px;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  color: var(--ui-muted);
-  letter-spacing: 0.02em;
-}

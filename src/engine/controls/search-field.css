@@ -32,7 +32,7 @@
   background: transparent;
   color: var(--ui-selected-text);
   font: inherit;
-  font-size: var(--text-secondary);
+  font-size: var(--pane-text, var(--text-secondary));
 }
 
 .tx-search-input:focus,
@@ -60,14 +60,4 @@
   user-select: text;
 }
 
-/* The search atop a list pane (Settings' pages, Providers, a plugin
-   list): one size and one inset everywhere - the pane's edges 12px off. */
-.pane-search {
-  padding: 12px 12px 8px;
-}
-
-/* Its box fills it: a box's own margins (the Settings sheet's) are
-   the sheet's, not the pane's. */
-.pane-search .tx-search {
-  margin: 0;
-}
+/* A pane's top line is pane.css's (.tx-pane-top). */

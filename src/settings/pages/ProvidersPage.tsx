@@ -37,7 +37,7 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
   return (
     <div className="providers-page">
       <div className="providers-list">
-        <div className="pane-search">
+        <div className="tx-pane-top">
           <SearchField
             value={query}
             placeholder={t.providerSearchPlaceholder}
@@ -52,7 +52,7 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
           <button
             key={e.id}
             type="button"
-            className="providers-item"
+            className="tx-list-item providers-item"
             aria-current={e.id === entry?.id || undefined}
             onClick={() => setPicked(e.id)}
           >

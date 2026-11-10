@@ -1,0 +1,64 @@
+/*
+ * The parts every pane is made of (design-language.md, panes) - a
+ * sidebar panel, a list beside a page (Settings' pages, Providers), a
+ * plugin's list - one definition each, so no two panes differ:
+ *
+ * - its top line: a search box ("搜索…", saying what is listed) or, with
+ *   nothing to search, its name - the same height and inset either way;
+ * - a list item: one size of text, one padding, one hover and one
+ *   selection, whatever the list holds.
+ *
+ * A page beside such a list doesn't repeat the name the list has picked.
+ */
+:root {
+  /* The text of lists and their tops: the sidebar's own (Files, Outline). */
+  --pane-text: var(--text-body);
+  --pane-inset: 12px;
+}
+
+.tx-pane-top {
+  display: flex;
+  align-items: center;
+  min-height: calc(var(--control-height-sm) + var(--pane-inset) + 8px);
+  padding: var(--pane-inset) var(--pane-inset) 8px;
+  box-sizing: border-box;
+}
+
+.tx-pane-top > .tx-search {
+  margin: 0;
+}
+
+.tx-pane-title {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--pane-text);
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.tx-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--pane-text);
+  text-align: start;
+  cursor: default;
+}
+
+.tx-list-item:hover {
+  background: var(--ui-hover);
+}
+
+.tx-list-item:is([aria-current], [aria-selected="true"]) {
+  background: var(--ui-selected);
+  color: var(--ui-accent-text);
+}

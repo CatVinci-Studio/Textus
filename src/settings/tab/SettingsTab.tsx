@@ -106,7 +106,7 @@ export function SettingsTab({
   return (
     <div className="settings-tab" ref={root}>
       <nav className="settings-tab-nav" aria-label={t.settingsTitle}>
-        <div className="pane-search">
+        <div className="tx-pane-top">
           <SettingsSearchField
             t={t}
             inputRef={search.searchInput}
@@ -128,7 +128,7 @@ export function SettingsTab({
           <button
             key={p.id}
             type="button"
-            className="settings-tab-nav-item"
+            className="tx-list-item settings-tab-nav-item"
             data-sub={p.parent ? "" : undefined}
             aria-current={
               !search.searching && p.id === shown.id ? "page" : undefined
@@ -159,7 +159,7 @@ export function SettingsTab({
           />
         ) : (
           <>
-            <h1 className="settings-category-title">{shown.label(t)}</h1>
+            {/* Its name is the one picked beside it: not said again. */}
             {shown.lead && <p className="settings-tab-lead">{shown.lead(t)}</p>}
             {shown.id === "about" ? (
               <AboutPage {...pageProps} checkUpdates={first === "updates"} />

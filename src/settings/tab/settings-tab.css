@@ -18,32 +18,8 @@
   border-inline-end: 1px solid var(--ui-border);
 }
 
-.settings-tab-nav > .pane-search {
+.settings-tab-nav > .tx-pane-top {
   margin: 0 -8px;
-}
-
-.settings-tab-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 0;
-  border-radius: var(--shape-s);
-  background: none;
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-secondary);
-  text-align: start;
-  cursor: default;
-}
-
-.settings-tab-nav-item:hover {
-  background: var(--ui-hover);
-}
-
-.settings-tab-nav-item[aria-current="page"] {
-  background: var(--ui-selected);
-  color: var(--ui-accent-text);
 }
 
 /* Textus AI's three pages, under it: in line with its name. */
@@ -55,7 +31,7 @@
   color: var(--ui-muted);
 }
 
-.settings-tab-nav-item[aria-current="page"] .settings-tab-nav-icon {
+.settings-tab-nav-item[aria-current] .settings-tab-nav-icon {
   color: inherit;
 }
 
@@ -65,12 +41,8 @@
   padding: 22px 30px 40px;
 }
 
-.settings-tab-page > .settings-category-title {
-  margin-bottom: 4px;
-}
-
 .settings-tab-lead {
   margin: 0 0 18px;
   color: var(--ui-muted);
-  font-size: var(--text-secondary);
+  font-size: var(--pane-text);
 }
