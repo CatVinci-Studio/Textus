@@ -1,3 +1,4 @@
+import type { AgentMode_Serialize as AgentMode } from "../platform/bindings/ai-skills";
 /** Each setting's possible values: the modes, sizes, services and kinds a
  *  setting chooses among, with the lists Settings offers. */
 
@@ -186,7 +187,7 @@ export const IMAGE_HOSTS: ImageHost[] = ["picgo", "smms", "imgur", "custom"];
 export type ImageNamingMode = "auto" | "original" | "ask";
 /** The AI conversation's mode: Write adds and changes text, Review only
  *  reads and comments, Create makes a theme, plugin or skill. In composer order. */
-export type AgentMode = "write" | "review" | "create";
+export type { AgentMode };
 export const AGENT_MODES: readonly AgentMode[] = ["write", "review", "create"];
 /** The AI panel's modes: the agent's, then Research, which researches a
  *  topic and writes a paper (docs/design/ai-paper.md). Research never

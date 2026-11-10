@@ -1,4 +1,4 @@
-import type { AgentMode } from "../prefs/SettingsContext";
+import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
 import { isIOSApp } from "./capabilities";
 import { iosFiles } from "./ios-files";
 import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";

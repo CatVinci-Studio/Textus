@@ -4,7 +4,7 @@ import type { ImageModel, ImageProviderEntry } from "../ai/image-models";
 import type { SentBlock } from "../ai/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
-import type { AgentMode } from "../prefs/SettingsContext";
+import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
 import type {
   CompletionRequest_Deserialize as CompletionRequest,
   GrammarRequest_Deserialize as GrammarRequest,
