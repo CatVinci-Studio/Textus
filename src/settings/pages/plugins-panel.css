@@ -8,17 +8,51 @@
   padding: 0 2px;
 }
 
-/* The search, and "⋯" beside it. */
+/* Over the search: the switch for all plugins, then "update all" (while
+   there are updates) and "+" at the row's end. */
 .plugins-panel-top {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 4px;
+  gap: 2px;
+  padding: 0 4px 0 6px;
+  min-height: 28px;
+}
+
+.plugins-panel-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline-end: auto;
+  font-size: var(--text-secondary);
+  color: var(--ui-muted);
+}
+
+.plugins-panel-switch .tx-switch {
+  font-size: var(--text-secondary);
+}
+
+.plugins-panel-update-all {
+  position: relative;
+}
+
+.plugins-panel-badge {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: var(--shape-pill);
+  background: var(--ui-accent);
+  color: var(--ui-on-accent, #fff);
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
 }
 
 .plugins-panel-search {
-  flex: 1;
-  min-width: 0;
+  flex: none;
+  margin: 4px 0;
 }
 
 .plugins-panel-count {

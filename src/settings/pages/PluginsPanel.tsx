@@ -5,7 +5,11 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
+import {
+  ChevronIcon,
+  PlusIcon,
+  RefreshIcon,
+} from "../../engine/controls/icons";
 import { IconButton } from "../../engine/controls/IconButton";
 import {
   ContextMenu,
@@ -49,8 +53,9 @@ const openPage = (id: string) =>
  * The sidebar's Plugins page: one box over what is installed and what the
  * market offers, a row each - icon, name, its line, who made it - and the
  * one thing to do beside it (install, update). A row opens its plugin's
- * page in a tab; "⋯" by the search turns all plugins on or off and adds
- * one from a file, a folder, or Create.
+ * page in a tab. Over the search: the switch for all plugins, "update
+ * all" while there are updates, and "+" to add one (Create, a file, a
+ * folder).
  */
 export function PluginsPanel({
   t,
@@ -65,7 +70,8 @@ export function PluginsPanel({
 }) {
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { actionFor, install, installing, attempt } = usePluginActions(t);
+  const { actionFor, install, installing, attempt, updateAll } =
+    usePluginActions(t);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
@@ -79,6 +85,12 @@ export function PluginsPanel({
     void loadCatalog();
   }, []);
   const installedIds = new Set(plugins.records.map((r) => r.id));
+  const updates =
+    catalog.status === "ready"
+      ? catalog.items.filter(
+          (i) => installedIds.has(i.id) && updateFor(i.id, catalog),
+        )
+      : [];
   const installed = plugins.records.filter((r) => pluginMatches(r, query));
   const offered =
     catalog.status === "ready"
@@ -90,33 +102,59 @@ export function PluginsPanel({
   return (
     <div className="plugins-panel">
       <div className="plugins-panel-top">
-        <SearchField
-          className="plugins-panel-search"
-          value={query}
-          placeholder={t.pluginsSearch}
-          aria-label={t.pluginsSearch}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <label className="plugins-panel-switch">
+          <input
+            type="checkbox"
+            role="switch"
+            className="tx-switch"
+            checked={plugins.allOn}
+            onChange={(e) => {
+              const on = e.target.checked;
+              void attempt(() => setAllPlugins(on));
+            }}
+          />
+          {t.pluginsAllLabel}
+        </label>
+        {updates.length > 0 && (
+          <IconButton
+            label={t.pluginsUpdateAll.replace(
+              "{count}",
+              String(updates.length),
+            )}
+            className="tree-tool plugins-panel-update-all"
+            disabled={installing !== null}
+            onClick={() => void updateAll(updates)}
+          >
+            <RefreshIcon />
+            <span className="plugins-panel-badge">{updates.length}</span>
+          </IconButton>
+        )}
         <IconButton
-          label={t.pluginsMore}
-          className="tree-tool"
+          label={t.pluginsAdd}
+          className="tree-tool plugins-panel-add"
           onClick={() => {
             const box = document
-              .querySelector(".plugins-panel-top .tree-tool")
+              .querySelector(".plugins-panel-add")
               ?.getBoundingClientRect();
             setMenu(box ? { x: box.left, y: box.bottom + 4 } : null);
           }}
         >
-          <MoreIcon />
+          <PlusIcon />
         </IconButton>
       </div>
-      {!plugins.allOn && <p className="tx-list-note">{t.pluginsAllOffNote}</p>}
+      <SearchField
+        className="plugins-panel-search"
+        value={query}
+        placeholder={t.pluginsSearch}
+        aria-label={t.pluginsSearch}
+        onChange={(e) => setQuery(e.target.value)}
+      />
       <Presence show={menu !== null} exitMs={120}>
         {menu && (
           <ContextMenu
             x={menu.x}
             y={menu.y}
-            items={addMenu(t, plugins.allOn, attempt)}
+            items={addMenu(t, attempt)}
             onClose={() => setMenu(null)}
           />
         )}
@@ -300,10 +338,9 @@ function GroupHeading({
   );
 }
 
-/** The list's "⋯": plugins on or off as a whole, then the ways to add one. */
+/** The list's "+": the ways to add a plugin. */
 function addMenu(
   t: Strings,
-  allOn: boolean,
   attempt: (run: () => Promise<unknown>) => Promise<unknown>,
 ): ContextMenuEntry[] {
   const add = (folder: boolean) =>
@@ -312,15 +349,10 @@ function addMenu(
       if (opened) openPage(opened);
     });
   return [
-    {
-      label: t.pluginsAllLabel,
-      checked: allOn,
-      onSelect: () => void attempt(() => setAllPlugins(!allOn)),
-    },
-    "separator",
     { label: t.createMakePlugin, onSelect: () => requestCreate("", "plugin") },
     ...(isDesktopApp
       ? [
+          "separator" as const,
           { label: t.pluginsInstallFile, onSelect: () => add(false) },
           { label: t.pluginsLoadFolder, onSelect: () => add(true) },
           {
