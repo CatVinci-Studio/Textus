@@ -42,20 +42,25 @@ export function useChatWindowBridge({
 
   // Closing hands the conversation back for re-embedding. The window dies once
   // this resolves, so pending storage writes are flushed first.
+  // Listened for once: one listener at every moment, the conversation read
+  // as it then is.
+  const conversationNow = useRef(conversation);
+  conversationNow.current = conversation;
   useEffect(() => {
     const win = thisWindow();
     const unlisten = win.onCloseRequested(async () => {
+      const { conversationId, history } = conversationNow.current;
       if (editorLabel.current)
         sendToWindow(editorLabel.current, CHAT_TO_EDITOR.reembed, {
-          conversationId: conversation.conversationId,
-          turns: conversation.history,
+          conversationId,
+          turns: history,
           docPath:
             requestDocPath.current ?? contextRef.current?.docPath ?? null,
         });
       await flushPendingWrites();
     });
     return unlistenAll(unlisten);
-  }, [conversation.conversationId, conversation.history, editorLabel]);
+  }, [editorLabel]);
 
   useEffect(() => {
     void thisWindow().setAlwaysOnTop(pinned);
