@@ -33,6 +33,12 @@ export function useTabOverflow(
         "data-narrow",
         widest > 0 && widest < scaledPx(NARROW),
       );
+      // A title longer than its tab fades out at its end (TabBar.css).
+      for (const title of el.querySelectorAll<HTMLElement>(".tab-pill-title"))
+        title.toggleAttribute(
+          "data-cut",
+          title.scrollWidth > title.clientWidth + 1,
+        );
       const over = el.scrollWidth > el.clientWidth + 1;
       el.toggleAttribute("data-overflow", over);
       setOverflow(over);
@@ -44,9 +50,13 @@ export function useTabOverflow(
     scrolled();
     const resized = new ResizeObserver(fit);
     resized.observe(el);
+    // A tab renamed at its widest changes no size: its words are watched.
+    const renamed = new MutationObserver(fit);
+    renamed.observe(el, { subtree: true, characterData: true });
     el.addEventListener("scroll", scrolled, { passive: true });
     return () => {
       resized.disconnect();
+      renamed.disconnect();
       el.removeEventListener("scroll", scrolled);
     };
   }, [bar, count]);

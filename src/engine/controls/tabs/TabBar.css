@@ -79,10 +79,20 @@
 /* The pill following the cursor is its own tiny OS window, since nothing in
    this webview can paint beyond the window's edge. */
 
+/* A title too long for its tab fades out over its last letters, as
+   Chrome's and Arc's do, with no ellipsis; a short one is untouched. */
 .tab-pill-title {
   overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tab-pill-title[data-cut] {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - 1.5em),
+    transparent
+  );
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.5em), transparent);
 }
 
 /* Opened to look: the next file looked at takes its place. Not
