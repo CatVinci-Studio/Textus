@@ -1,4 +1,4 @@
-import { Suspense, type CSSProperties } from "react";
+import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
 import { PageTabContent } from "../tabs/page-tabs";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
@@ -46,6 +46,7 @@ export function DocumentViews({
   onChange,
   typewriter,
   tour,
+  above,
   t,
 }: {
   tabs: DocTab[];
@@ -59,6 +60,8 @@ export function DocumentViews({
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
   tour: { tabId: string; ai: TourAi; mode: AgentMode | null } | null;
+  /** What tops the tab in use's view, riding with it (the format bar). */
+  above?: (tab: DocTab) => ReactNode;
   t: Strings;
 }) {
   // The document in front is the AI's and draws the margin, even with an
@@ -101,6 +104,7 @@ export function DocumentViews({
                 : undefined
             }
           >
+            {shown && tab.id === activeTabId && above?.(tab)}
             {tab.view?.kind === "page" ? (
               <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
                 <PageTabContent tab={tab} />

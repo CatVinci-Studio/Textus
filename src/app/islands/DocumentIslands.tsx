@@ -284,12 +284,6 @@ export function DocumentIslands({
             t={t}
           />
         )}
-        {formatBar &&
-          !docsSplit &&
-          !phone &&
-          formatsShown(byId.get(activeTabId)) && (
-            <FormatBar t={t} style={barOver(panes[0] && body(panes[0].id))} />
-          )}
         <DocumentViews
           tabs={tabs}
           activeTabId={activeTabId}
@@ -299,6 +293,10 @@ export function DocumentIslands({
           onChange={onChange}
           typewriter={typewriter}
           tour={tour}
+          // On the sheet of the document in use, wherever it is.
+          above={(tab) =>
+            formatBar && !phone && formatsShown(tab) && <FormatBar t={t} />
+          }
           t={t}
         />
       </>
@@ -325,17 +323,6 @@ export function DocumentIslands({
 
 /** The format bar across the top of a sheet: its left and width, its top
  *  the sheet's (its height its own). */
-function barOver(sheet: CSSProperties | undefined): CSSProperties | undefined {
-  return (
-    sheet && {
-      left: sheet.left,
-      width: sheet.width,
-      top: sheet.top,
-      right: "auto",
-    }
-  );
-}
-
 /** A document in the rendered editor: what the format bar formats. */
 function formatsShown(tab: DocTab | undefined): boolean {
   return !!tab && !tab.view && !tab.sourceMode && !showsStartPage(tab);

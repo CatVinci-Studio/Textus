@@ -1,18 +1,16 @@
-/* The format bar (design-language.md 5.7). With one document it is part of
-   the frame: under the window bar, in the frame's fill (glass when the bar
-   is), the hairline where the frame meets the page below it, the page
-   scrolling beneath. With several it sits at the top of the floating sheet,
-   on the page's own surface. */
-.main-pane {
+/* The format bar (design-language.md 5.7): the top of the sheet of the
+   document in use, on the page's own surface, riding with its view as the
+   islands move; the page scrolls beneath it. */
+.split-pane {
   --format-bar-height: calc(32px * var(--chrome-scale));
 }
 
 .format-bar {
   position: absolute;
-  top: var(--window-bar-height);
+  top: 0;
   left: 0;
   right: 0;
-  z-index: 40;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -20,10 +18,10 @@
   padding: 0 var(--space-3);
   overflow-x: auto;
   scrollbar-width: none;
-  border-bottom: 1px solid var(--ui-frame-edge);
-  background: var(--ui-frame-fill);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid var(--ui-border);
+  /* The sheet's paper, inside its rounded top. */
+  border-radius: var(--island-radius) var(--island-radius) 0 0;
+  background: var(--doc-bg, var(--ui-bg));
 }
 
 .format-bar::-webkit-scrollbar {
@@ -48,22 +46,23 @@
   color: var(--ui-text);
 }
 
-/* The page's text starts below the bar, not under it. */
-.main-pane:has(> .format-bar) .editor-content:not(.typewriter-active) {
-  padding-top: calc(3rem + var(--format-bar-height));
+/* With no row of tabs the sheet reaches up under the window bar: the bar
+   sits below it. */
+.app-shell:not([data-tabs="bar"]) .split-pane > .format-bar {
+  top: var(--window-bar-height);
+  border-radius: 0;
 }
 
-/* Several documents: in the column's flow at the top of the sheet. */
-:root:not([data-window-chrome="mobile"])
-  .app-shell:not(:has(.window-menu-bar)):has(
-    .main-pane > .island-row:not([data-inner])
-  )
-  .format-bar {
-  position: relative;
-  top: 0;
-  flex: none;
-  border-bottom-color: var(--ui-border);
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+/* The page's text starts below the bar, not under it. */
+.main-pane
+  .split-pane:has(> .format-bar)
+  .editor-content:not(.typewriter-active) {
+  padding-top: calc(1.5rem + var(--format-bar-height));
+}
+
+.app-shell:not([data-tabs="bar"])
+  .main-pane
+  .split-pane:has(> .format-bar)
+  .editor-content:not(.typewriter-active) {
+  padding-top: calc(3rem + var(--format-bar-height));
 }

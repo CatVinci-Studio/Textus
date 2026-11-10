@@ -326,7 +326,7 @@ export const DEFAULT_SETTINGS: Settings = {
   proxyHost: "",
   proxyPort: "",
   typewriterMode: false,
-  formatBar: false,
+  formatBar: true,
   viewMode: "rich",
   zenMode: false,
   contentWidth: "auto",
