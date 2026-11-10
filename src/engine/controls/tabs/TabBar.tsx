@@ -85,6 +85,7 @@ export function TabBar({
   const overflow = !!fit?.overflow && tabs.length > 1;
   const strip = useTabStrip({
     strip: stripEl,
+    pane: paneId ?? null,
     ids,
     widths: fit?.widths ?? null,
     gap: fit?.between ?? 0,

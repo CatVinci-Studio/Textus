@@ -4,6 +4,7 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   barDropAt,
   dropGeometry,
+  tabRectOf,
   dropTargetAt,
   type DropTarget,
 } from "../../engine/layout/drop-zones";
@@ -60,11 +61,9 @@ export function pullTab(
     island?: string;
   },
 ): void {
-  const pill = document.querySelector<HTMLElement>(
-    `.tab-pill[data-tab="${CSS.escape(tabId)}"]`,
-  );
   const ghost = dragGhost(title, "tab-pull-ghost");
-  if (pill) ghost.gather(pill.getBoundingClientRect());
+  const from = tabRectOf(paneOf(splitLayout(), tabId), tabId);
+  if (from) ghost.gather(from);
   setDragging(true);
   // The layout the drag began over: tested against, and the base of every
   // preview (one island, spelt out, for a window not split).

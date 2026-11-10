@@ -23,6 +23,8 @@ import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
 import { arrivalPreview, splitForDrop } from "../islands/split-drop";
+import { tabRectOf } from "../../engine/layout/drop-zones";
+import { paneOf, splitLayout } from "../../engine/layout/store";
 
 // Moving tabs between windows, as drag source (handed to Rust's floating
 // drag) and as merge target. Within-bar reordering lives in the tab bar.
@@ -223,12 +225,8 @@ export function useTabDragMerge(opts: {
       let index = tabsRef.current.length;
       if (row && at) {
         index = tabsRef.current.filter((tab) => {
-          const node = document.querySelector<HTMLElement>(
-            `[data-tab="${CSS.escape(tab.id)}"]`,
-          );
-          if (!node) return false;
-          const rect = node.getBoundingClientRect();
-          return rect.left + rect.width / 2 < at.x;
+          const rect = tabRectOf(paneOf(splitLayout(), tab.id), tab.id);
+          return !!rect && rect.left + rect.width / 2 < at.x;
         }).length;
       }
       previewWinRef.current = null;

@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from "react";
 import { scaledPx } from "../tokens/chrome-scale";
-import { useFrameLayout } from "../frame/frame-store";
+import { setStripOrigins } from "../controls/tabs/tab-strips";
+import {
+  frameLayout,
+  useFrameLayout,
+  type FrameIsland,
+} from "../frame/frame-store";
 
 /** Air kept between the tabs and the window bar's own controls. */
 const AIR = 8;
@@ -141,20 +146,12 @@ function subscribe(listener: () => void) {
 
 const snapshot = () => obstacles;
 
-/**
- * Where the row of the island `frame` keys starts and ends its tabs, and
- * whether its sheet's corner joins its first tab (open there); null until
- * it is placed. A row with no island in the frame (the chat window's)
- * spans the window.
- */
-export function useRowInsets(
-  frame: string | undefined,
-): (RowInsets & { joined: boolean }) | null {
-  const bar = useSyncExternalStore(subscribe, snapshot);
-  const { islands } = useFrameLayout();
-  if (!bar) return null;
-  const island = frame ? islands.find((i) => i.key === frame) : null;
-  if (frame && !island?.row) return null;
+/** Where `island`'s row (none: the window's width, the chat window's)
+ *  starts and ends its tabs, given the window bar's controls. */
+function insetsFor(
+  island: FrameIsland | null,
+  bar: BarObstacles,
+): RowInsets & { joined: boolean } {
   const row = island?.row ?? { x: 0, y: 0, w: window.innerWidth, h: 0 };
   // Only a row in the window bar's has its controls to clear: not one
   // under another island, nor under the menu bar's own row.
@@ -173,3 +170,30 @@ export function useRowInsets(
   const joined = insets.atCorner && !!island && island.front === island.tabs[0];
   return { ...insets, joined };
 }
+
+/**
+ * Where the row of the island `frame` keys starts and ends its tabs, and
+ * whether its sheet's corner joins its first tab (open there); null until
+ * it is placed. A row with no island in the frame (the chat window's)
+ * spans the window.
+ */
+export function useRowInsets(
+  frame: string | undefined,
+): (RowInsets & { joined: boolean }) | null {
+  const bar = useSyncExternalStore(subscribe, snapshot);
+  const { islands } = useFrameLayout();
+  if (!bar) return null;
+  const island = frame ? islands.find((i) => i.key === frame) : null;
+  if (frame && !island?.row) return null;
+  return insetsFor(island ?? null, bar);
+}
+
+/** Where the tabs of pane `paneId`'s row (null: the one island unsplit)
+ *  start, in the viewport, unscrolled; null while it has no row. */
+export function tabsStartOf(paneId: string | null): number | null {
+  const island = frameLayout().islands.find((i) => i.paneId === paneId);
+  if (!island?.row) return null;
+  return island.row.x + (obstacles ? insetsFor(island, obstacles).start : 0);
+}
+
+setStripOrigins(tabsStartOf);

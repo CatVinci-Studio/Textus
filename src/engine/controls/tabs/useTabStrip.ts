@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef } from "react";
 import { animate } from "../../motion/motion";
 import { frameClock, type FramePart } from "../../frame/clock";
+import { dropStripPlaces, setStripPlaces, stripOrigin } from "./tab-strips";
 import {
   dragSlots,
   incomingSlots,
@@ -21,12 +22,15 @@ export const INCOMING = "\u0000incoming";
  */
 export function useTabStrip({
   strip,
+  pane,
   ids,
   widths,
   gap,
   incomingX,
 }: {
   strip: React.RefObject<HTMLElement | null>;
+  /** Its pane (null: the one row unsplit), for a drag to find its tabs. */
+  pane: string | null;
   ids: readonly string[];
   /** The tabs' widths, the incoming one's last while it rides in; null
    *  until the row is measured. */
@@ -43,8 +47,12 @@ export function useTabStrip({
     incoming: null,
   });
   const dragging = useRef<{ at: number; to: number } | null>(null);
-  /** The strip's start in the viewport, read once as a tab rides in. */
+  /** The strip's start in the viewport, as a tab rides in. */
   const startAt = useRef<number | null>(null);
+  const scrolled = useCallback(
+    () => strip.current?.parentElement?.scrollLeft ?? 0,
+    [strip],
+  );
 
   const lay = useCallback(
     (slots: readonly Slot[], order: readonly string[], animated: boolean) => {
@@ -67,10 +75,11 @@ export function useTabStrip({
   useLayoutEffect(() => {
     if (!widths || !tabWidths) return;
     const slots = stripSlots(tabWidths, gap);
+    setStripPlaces(pane, { ids, slots, scrolled });
     const before = was.current;
     const changed = before.ids.join("\n") !== ids.join("\n");
     if (incomingX !== null && widths.length > ids.length) {
-      startAt.current ??= strip.current?.getBoundingClientRect().left ?? 0;
+      startAt.current ??= (stripOrigin(pane) ?? 0) - scrolled();
       const ride = incomingSlots(
         slots,
         widths[ids.length]!,
@@ -95,9 +104,10 @@ export function useTabStrip({
     was.current = { ids, incoming: null };
     // tabWidths is widths' head: the join keeps the effect to real changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids.join("\n"), widths?.join(","), gap, incomingX, lay, keyOf]);
+  }, [ids.join("\n"), widths?.join(","), gap, incomingX, lay, keyOf, pane]);
 
   useEffect(() => () => frameClock.drop(name), [name]);
+  useEffect(() => () => dropStripPlaces(pane, scrolled), [pane, scrolled]);
 
   /** The ref placing tab `id`'s pill. */
   const attach = useCallback(

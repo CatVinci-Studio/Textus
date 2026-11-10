@@ -1,5 +1,9 @@
 import { scaledPx } from "../tokens/chrome-scale";
 import { isPhoneLayout } from "../controls/usePhoneLayout";
+import { frameLayout } from "../frame/frame-store";
+import type { Rect } from "../frame/rect";
+import { stripPlaces } from "../controls/tabs/tab-strips";
+import { tabsStartOf } from "./row-insets";
 
 /*
  * Where something dragged over the islands would land (design-language.md,
@@ -82,8 +86,9 @@ function union(rects: DOMRect[]): DOMRect {
   return new DOMRect(left, top, right - left, bottom - top);
 }
 
-/** Where the documents and their tab rows are, read once: a drag tests
- *  against the layout it began over, not the preview moving under it. */
+/** Where the documents and their tab rows are, as the drag found them:
+ *  a drag tests against the layout it began over, not the preview moving
+ *  under it. */
 export interface DropGeometry {
   /** A split's panes: each one's body and the tab in front there. */
   panes: { rect: DOMRect; tabId: string | undefined }[];
@@ -98,47 +103,56 @@ export interface DropGeometry {
   }[];
 }
 
+const domRect = (r: Rect) => new DOMRect(r.x, r.y, r.w, r.h);
+
+/** The islands as the solver placed them and their tabs as their strips
+ *  laid them out (frame-store, tab-strips). */
 export function dropGeometry(): DropGeometry {
-  const main = document.querySelector<HTMLElement>(".main-pane");
-  const none: DropGeometry = { panes: [], single: null, bars: [] };
-  if (!main) return none;
-  const panes = [
-    ...main.querySelectorAll<HTMLElement>(":scope > .split-pane"),
-  ].map((p) => ({ rect: p.getBoundingClientRect(), tabId: p.dataset.tabId }));
-  let single: DropGeometry["single"] = null;
-  if (!panes.length) {
-    const box = main.getBoundingClientRect();
-    const bar = main.querySelector(":scope > .island-row, :scope > .tab-bar");
-    const top = bar ? bar.getBoundingClientRect().bottom : box.top;
-    single = {
-      rect: new DOMRect(box.left, top, box.width, box.bottom - top),
-      tabId: main.querySelector<HTMLElement>(
-        ':scope > [data-active-tab="true"]',
-      )?.dataset.tabId,
-    };
-  }
-  const bars = [
-    ...document.querySelectorAll<HTMLElement>(".tab-bar[data-pane-id]"),
-  ].map((bar) => {
-    const pane = bar.dataset.paneId!;
-    const body = document.querySelector<HTMLElement>(
-      `.split-pane[data-pane-id="${CSS.escape(pane)}"]`,
-    );
-    return {
-      pane,
-      // Its whole row, the room kept at its ends included.
-      row: (bar.closest(".island-row") ?? bar).getBoundingClientRect(),
-      pills: [...bar.querySelectorAll<HTMLElement>("[data-tab]")].map(
-        (pill) => {
-          const box = pill.getBoundingClientRect();
-          return { id: pill.dataset.tab!, center: box.left + box.width / 2 };
+  const { islands } = frameLayout();
+  const split = islands.filter((island) => island.paneId !== null);
+  const one = islands.find((island) => island.paneId === null);
+  return {
+    panes: split.map((island) => ({
+      rect: domRect(island.sheet),
+      tabId: island.front ?? undefined,
+    })),
+    single:
+      !split.length && one
+        ? { rect: domRect(one.sheet), tabId: one.front ?? undefined }
+        : null,
+    bars: split.flatMap((island) => {
+      const pane = island.paneId!;
+      const strip = stripPlaces(pane);
+      const start = tabsStartOf(pane);
+      if (!island.row || !strip || start === null) return [];
+      const from = start - strip.scrolled();
+      return [
+        {
+          pane,
+          // Its whole row, the room kept at its ends included.
+          row: domRect(island.row),
+          pills: strip.ids.map((id, i) => ({
+            id,
+            center: from + strip.slots[i]!.x + strip.slots[i]!.w / 2,
+          })),
+          // Lit where the document will show, not over the bar.
+          body: domRect(island.sheet),
         },
-      ),
-      // Lit where the document will show, not over the bar.
-      body: (body ?? bar).getBoundingClientRect(),
-    };
-  });
-  return { panes, single, bars };
+      ];
+    }),
+  };
+}
+
+/** Where tab `id` of pane `pane`'s row (null: the one row unsplit) is
+ *  drawn, in the viewport: its strip's place for it on its row. */
+export function tabRectOf(pane: string | null, id: string): DOMRect | null {
+  const island = frameLayout().islands.find((i) => i.paneId === pane);
+  const strip = stripPlaces(pane);
+  const start = tabsStartOf(pane);
+  const slot = strip?.slots[strip.ids.indexOf(id)];
+  if (!island?.row || !strip || !slot || start === null) return null;
+  const x = start - strip.scrolled() + slot.x;
+  return new DOMRect(x, island.row.y, slot.w, island.row.h);
 }
 
 /** The zone of the document under (x, y); null off the documents. `held`,
