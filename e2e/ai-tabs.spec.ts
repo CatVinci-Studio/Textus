@@ -235,3 +235,23 @@ test("a pulled tab's copy gathers from where the tab was, never from far off", a
   // At most the way from the tab down to the pointer, never more.
   expect(far).toBeLessThan(220);
 });
+
+test("the open tab is its island's paper wherever it is in the row", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-open-settings");
+  const paper = (i: number) =>
+    tabs(page)
+      .nth(i)
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+  const sheet = await page
+    .locator("section.island")
+    .first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
+  // Last in the row, then first, with a tab after it.
+  expect(await paper(1)).toBe(sheet);
+  await tabs(page).first().click();
+  await expect(tabs(page).first()).toHaveClass(/tab-pill-active/);
+  expect(await paper(0)).toBe(sheet);
+});
