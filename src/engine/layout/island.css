@@ -155,6 +155,13 @@
   z-index: 1;
   background: var(--island-paper);
   color: var(--ui-text);
+  /* Its island's edge, up its sides and over its top: one outline from
+     the sheet round the tab, no step where they meet. Offset, not spread,
+     so no line falls across its foot. */
+  box-shadow:
+    -1px 0 0 0 var(--tab-edge),
+    1px 0 0 0 var(--tab-edge),
+    0 -1px 0 0 var(--tab-edge);
 }
 
 /* Where it meets its island's top edge, each side curves in to it (a
@@ -173,7 +180,9 @@
   right: 100%;
   background: radial-gradient(
     circle at 0 0,
-    transparent calc(var(--tab-radius) - 0.5px),
+    transparent calc(var(--tab-radius) - 1.5px),
+    var(--tab-edge) calc(var(--tab-radius) - 1px),
+    var(--tab-edge) calc(var(--tab-radius) - 0.5px),
     var(--island-paper) var(--tab-radius)
   );
 }
@@ -182,7 +191,9 @@
   left: 100%;
   background: radial-gradient(
     circle at 100% 0,
-    transparent calc(var(--tab-radius) - 0.5px),
+    transparent calc(var(--tab-radius) - 1.5px),
+    var(--tab-edge) calc(var(--tab-radius) - 1px),
+    var(--tab-edge) calc(var(--tab-radius) - 0.5px),
     var(--island-paper) var(--tab-radius)
   );
 }
@@ -200,6 +211,7 @@
 /* Plain, its tabs are words on the page: the open one only darker. */
 :root .island-row[data-plain] > .tab-bar > .tab-pill-active {
   background: transparent;
+  box-shadow: none;
 }
 
 :root .island-row[data-plain] > .tab-bar > .tab-pill-active::before,

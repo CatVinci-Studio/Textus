@@ -13,6 +13,8 @@
     0 0 0 1px var(--ui-frame-edge),
     0 2px 10px color-mix(in srgb, var(--ui-text) 7%, transparent);
   --tab-radius: var(--shape-s);
+  /* The open tab's edge: its island's, carried up round it. */
+  --tab-edge: var(--ui-frame-edge);
   /* How far a tab stands below its row's top: its words keep to the row's
      middle line, the rest of it joins its island. */
   --tab-lift: 4px;
@@ -41,6 +43,7 @@
   --island-radius: 0px;
   --island-edge: 0 0 0 1px var(--ui-frame-edge);
   --tab-radius: 0px;
+  --tab-edge: transparent;
   --tab-lift: 0px;
   --tab-gap: 0px;
   --tab-row-line: var(--ui-frame-edge);

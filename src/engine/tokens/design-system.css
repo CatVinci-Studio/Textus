@@ -153,6 +153,14 @@
   );
 }
 
+/* On a whole pixel: the tabs in it end where their sheets begin, and a
+   fraction left between them showed the sheet's edge as a line. */
+@supports (width: round(1px, 1px)) {
+  :root {
+    --window-bar-height: round(calc(28px * var(--chrome-scale)), 1px);
+  }
+}
+
 /* iOS's text styles at their default size, and its control sizes. Hit
    areas reach 44 on their own (mobile/styles). */
 :root[data-window-chrome="mobile"] {

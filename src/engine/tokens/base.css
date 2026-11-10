@@ -116,11 +116,13 @@
   --ui-border: color-mix(in srgb, var(--ui-text) 16%, var(--ui-bg));
   --ui-subtle: color-mix(in srgb, var(--ui-text) 4%, var(--ui-bg));
   /* The window's frame - the title bar, the activity rail, the sidebar -
-     one surface around the document (design-language.md 5.7). */
-  --ui-frame: var(--ui-subtle);
+     one surface around the document (design-language.md 5.7): the paper
+     warmed a touch, a cream a step from it rather than a grey. */
+  --ui-frame-tint: #a08c64;
+  --ui-frame: color-mix(in srgb, var(--ui-frame-tint) 5%, var(--ui-bg));
   /* The frame a step further back, under a floating page (several
      documents). */
-  --ui-frame-sunk: color-mix(in srgb, var(--ui-text) 4%, var(--ui-subtle));
+  --ui-frame-sunk: color-mix(in srgb, var(--ui-frame-tint) 8%, var(--ui-bg));
   /* What the frame is filled with: the frame's colour, or frosted - the same
      colour a little clear, over the page - when the title bar is. One fill
      for the bar, the rail and the sidebar, so they never differ. */
@@ -227,8 +229,8 @@
     --doc-highlight-bg: color-mix(in srgb, var(--doc-mark) 34%, var(--doc-bg));
     /* Dark frames recede by darkening: a lighter frame would read as
        raised above the page. */
-    --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
-    --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
+    --ui-frame: color-mix(in srgb, #000 10%, var(--ui-bg));
+    --ui-frame-sunk: color-mix(in srgb, #000 16%, var(--ui-bg));
   }
 }
 
@@ -246,8 +248,8 @@
   --doc-highlight-bg: color-mix(in srgb, var(--doc-mark) 34%, var(--doc-bg));
   /* Dark frames recede by darkening: a lighter frame would read as
      raised above the page. */
-  --ui-frame: color-mix(in srgb, #000 18%, var(--ui-bg));
-  --ui-frame-sunk: color-mix(in srgb, #000 30%, var(--ui-bg));
+  --ui-frame: color-mix(in srgb, #000 10%, var(--ui-bg));
+  --ui-frame-sunk: color-mix(in srgb, #000 16%, var(--ui-bg));
 }
 
 * {
