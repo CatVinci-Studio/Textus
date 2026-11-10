@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
-import { showAiIsland } from "../layout/store";
+import { showAiIsland } from "../../engine/layout/store";
 
 /**
  * The AI island in the documents' grid: in the layout while its panel is

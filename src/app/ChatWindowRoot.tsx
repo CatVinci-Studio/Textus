@@ -1,8 +1,8 @@
 import { useRef } from "react";
 import { ChatWindowApp } from "../ai/chat/window/ChatWindowApp";
 import { AgentTabs } from "./islands/AgentTabs";
-import { useTabRows } from "./layout/useTabRows";
-import "./tabs/TabBar.css";
+import { useTabRows } from "../engine/layout/useTabRows";
+import "../engine/controls/tabs/TabBar.css";
 import "../engine/tokens/layout-tokens.css";
 import "./islands/agent-tabs.css";
 

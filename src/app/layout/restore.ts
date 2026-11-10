@@ -1,14 +1,18 @@
 import { useEffect, useRef } from "react";
 import type { DocTab } from "../../document/doc-tabs";
 import { getUiState, setUiState } from "../../storage/ui-state";
-import { setSplitLayout, splitLayout, subscribeSplit } from "./store";
+import {
+  setSplitLayout,
+  splitLayout,
+  subscribeSplit,
+} from "../../engine/layout/store";
 import {
   pane,
   panesOf,
   type Branch,
   type LayoutNode,
   type SplitDirection,
-} from "./tree";
+} from "../../engine/layout/tree";
 
 /** A split as saved: its branches, and each pane by the path of the
  *  document it showed. */

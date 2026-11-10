@@ -1,9 +1,9 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
-import { useMenuButton } from "../../engine/controls/useMenuButton";
-import { ChevronIcon } from "../../engine/controls/icons";
-import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { Tooltip } from "../../engine/controls/Tooltip";
-import { scrollBehavior } from "../../engine/motion/motion";
+import { useMenuButton } from "../useMenuButton";
+import { ChevronIcon } from "../icons";
+import { scaledPx } from "../../tokens/chrome-scale";
+import { Tooltip } from "../Tooltip";
+import { scrollBehavior } from "../../motion/motion";
 import type { TabInfo } from "./TabPill";
 
 /** Below this a pill is too narrow for its × as well as its name: only the

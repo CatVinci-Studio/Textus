@@ -215,7 +215,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* A file Textus AI changed: its name in the accent, as in the file tree. */
-.tab-pill[data-ai-changed] .tab-pill-title {
+/* A marked tab (a file Textus AI changed): its name in the accent. */
+.tab-pill[data-marked] .tab-pill-title {
   color: var(--ui-accent-text);
 }

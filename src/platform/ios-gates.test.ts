@@ -19,7 +19,7 @@ const ALLOWED: Record<string, string> = {
   "app/frame/WindowBar.tsx": "the sidebar opens from the phone's own bar",
   "app/frame/WindowControls.tsx": "the title row's menu button",
   "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
-  "app/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
+  "engine/controls/tabs/TabPill.tsx": "a haptic tap as a tab lifts",
   "app/useFileOpening.ts": "no files dropped on the window",
   "app/frame/useSidePanels.ts":
     "a drawer that starts closed, a sheet over the keyboard",

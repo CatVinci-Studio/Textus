@@ -1,17 +1,15 @@
-import { scaledPx } from "../../engine/tokens/chrome-scale";
+import { scaledPx } from "../../tokens/chrome-scale";
 import { useEffect, useRef } from "react";
-import { CloseIcon, LockIcon } from "../../engine/controls/icons";
-import { measure, play } from "../../engine/motion/flip";
-import { Tooltip } from "../../engine/controls/Tooltip";
-import { row, type Row } from "../../engine/drag/row";
-import { iosFiles } from "../../platform/ios-files";
-import { isIOSApp } from "../../platform/capabilities";
+import { CloseIcon, LockIcon } from "../icons";
+import { measure, play } from "../../motion/flip";
+import { Tooltip } from "../Tooltip";
+import { row, type Row } from "../../drag/row";
+import { iosFiles } from "../../../platform/ios-files";
+import { isIOSApp } from "../../../platform/capabilities";
 
 // One tab in the bar and what a pointer or finger does with it: a click
 // brings it to the front, a drag along the bar reorders, one down out of it
 // is the caller's pull. A finger holds it still first to lift it.
-
-import { useChangedFiles } from "../../ai/chat/file-changes";
 
 export interface TabInfo {
   id: string;
@@ -20,8 +18,11 @@ export interface TabInfo {
   dirty: boolean;
   /** Opened to look (DocTab.preview): its title in italics. */
   preview?: boolean;
-  /** The file, for Textus AI's mark on one it changed. */
+  /** The file, where it has one. */
   path?: string | null;
+  /** Its content's own mark (a file Textus AI changed): its name in the
+   *  accent, as in the file tree. */
+  marked?: boolean;
   /** In reading mode: a padlock before its name turns it off. */
   readOnly?: boolean;
 }
@@ -76,7 +77,6 @@ export function TabPill({
   /** Its padlock clicked: reading mode off. */
   onUnlock?: (id: string) => void;
 }) {
-  const changed = useChangedFiles();
   const elRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<{
     startX: number;
@@ -249,7 +249,7 @@ export function TabPill({
       ref={elRef}
       data-flip-id={tab.id}
       className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
-      data-ai-changed={(tab.path && changed.has(tab.path)) || undefined}
+      data-marked={tab.marked || undefined}
       onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
       role="tab"
       aria-selected={isActive}

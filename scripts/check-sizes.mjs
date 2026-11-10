@@ -46,8 +46,9 @@ const ALLOWED = {
     "a threshold for redrawing, not a size drawn",
   "src/engine/drag/pointer-drag.ts:DRAG_START_PX":
     "a pointer's slop, not a size drawn",
-  "src/app/tabs/TabPill.tsx:LIFT_SLOP_PX": "a pointer's slop, not a size drawn",
-  "src/app/tabs/TabPill.tsx:REORDER_THRESHOLD_PX":
+  "src/engine/controls/tabs/TabPill.tsx:LIFT_SLOP_PX":
+    "a pointer's slop, not a size drawn",
+  "src/engine/controls/tabs/TabPill.tsx:REORDER_THRESHOLD_PX":
     "a pointer's slop, not a size drawn",
   "src/ai/paper/figure-check.ts:WIDTH":
     "a figure drawn to be checked, not shown",

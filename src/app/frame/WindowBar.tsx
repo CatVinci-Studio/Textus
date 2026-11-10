@@ -8,7 +8,7 @@ import { Tooltip } from "../../engine/controls/Tooltip";
 import { TextusAiButton } from "../../ai/TextusAiSwitch";
 import { canUseWindows, isIOSApp } from "../../platform/capabilities";
 import { LockIcon, SidebarToggleIcon } from "../../engine/controls/icons";
-import { useBarLayout } from "./useBarLayout";
+import { useBarLayout } from "../../engine/layout/useBarLayout";
 import { useTitleRoom } from "./useTitleRoom";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { PageSwitch } from "../../mobile/PageSwitch";

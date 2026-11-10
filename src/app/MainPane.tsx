@@ -1,6 +1,7 @@
 import { Island } from "../engine/layout/Island";
+import { useChangedFiles } from "../ai/chat/file-changes";
 import { EditorKept, KeptWhileHidden } from "./islands/kept";
-import { IslandMotion } from "./layout/IslandMotion";
+import { IslandMotion } from "../engine/layout/IslandMotion";
 import { DocumentCorners } from "./islands/DocumentCorner";
 import type { Lang } from "../i18n/langs";
 import type { ReactNode } from "react";
@@ -11,7 +12,7 @@ import {
   useLayoutEffect,
   useRef,
 } from "react";
-import { useTabRows } from "./layout/useTabRows";
+import { useTabRows } from "../engine/layout/useTabRows";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { EditorPane } from "../document-view/EditorPane";
 import {
@@ -36,20 +37,25 @@ import {
   PluginTabPane,
   WebPagePane,
 } from "../plugins/views/plugin-views";
-import { TabBar } from "./tabs/TabBar";
+import { TabBar } from "../engine/controls/tabs/TabBar";
 import { tabMenuItems } from "./tabs/tab-menu-items";
 import { FormatBar } from "./FormatBar";
-import { useSplitPanes } from "./layout/useSplitPanes";
-import { SplitDivider } from "./layout/SplitDivider";
-import { islandOf, panesOf, splitGrid, type SplitGrid } from "./layout/tree";
+import { useSplitPanes } from "../engine/layout/useSplitPanes";
+import { SplitDivider } from "../engine/layout/SplitDivider";
+import {
+  islandOf,
+  panesOf,
+  splitGrid,
+  type SplitGrid,
+} from "../engine/layout/tree";
 import type { AiIslandPlace } from "./islands/AiIsland";
-import "./layout/split-panes.css";
+import "../engine/layout/split-panes.css";
 import {
   focusPane,
   openBeside,
   reorderInPane,
   splitEditor,
-} from "./layout/store";
+} from "../engine/layout/store";
 import { pullTab } from "./layout/split-drop";
 import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 import { contributedContextItems } from "../engine/controls/context-menu-items";
@@ -139,6 +145,8 @@ export function MainPane({
   t: Strings;
 }) {
   const mainRef = useRef<HTMLElement>(null);
+  // Files Textus AI changed: their tabs say so.
+  const changed = useChangedFiles();
   useTabRows(mainRef);
   const split = useSplitPanes(
     tabs.map((tab) => tab.id),
@@ -195,6 +203,7 @@ export function MainPane({
         preview: tab.preview,
         path: tab.path,
         readOnly: tabReadOnly(tab),
+        marked: !!tab.path && changed.has(tab.path),
       }))}
       onUnlock={onToggleReadOnly}
       onKeep={onKeep}

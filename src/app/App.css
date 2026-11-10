@@ -5,9 +5,9 @@
 @import "./frame/sidebar-frame.css";
 @import "./frame/activity-rail.css";
 @import "./frame/window-bar.css";
-@import "./tabs/TabBar.css";
+@import "../engine/controls/tabs/TabBar.css";
 @import "../engine/tokens/layout-tokens.css";
-@import "./layout/layout.css";
+@import "../engine/layout/layout.css";
 @import "./islands/agent-tabs.css";
 @import "./editor-column.css";
 @import "./notices.css";

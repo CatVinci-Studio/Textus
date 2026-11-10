@@ -10,8 +10,8 @@ import {
   splitBeside,
   splitLayout,
   type SplitDirection,
-} from "./store";
-import { paneById } from "./tree";
+} from "../../engine/layout/store";
+import { paneById } from "../../engine/layout/tree";
 import {
   setDragging,
   type DocumentDrop,

@@ -1,7 +1,7 @@
 import { useRef, useState, type CSSProperties } from "react";
-import { ContextMenu } from "../../engine/controls/ContextMenu";
+import { ContextMenu } from "../controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
-import { Presence } from "../../engine/motion/usePresence";
+import { Presence } from "../motion/usePresence";
 import { arrangeBranch, closeSplit, type SplitLayout } from "./store";
 import { nodeAt, panesOf, type Divider } from "./tree";
 

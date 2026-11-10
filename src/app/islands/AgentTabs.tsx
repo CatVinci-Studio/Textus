@@ -5,7 +5,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import { TabBar } from "../tabs/TabBar";
+import { TabBar } from "../../engine/controls/tabs/TabBar";
 import {
   closeConversation,
   liveConversation,
