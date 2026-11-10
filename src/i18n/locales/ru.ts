@@ -1704,7 +1704,7 @@ export default {
   acpAgentManage: "Управлять",
   navChatWriting: "Помощь в письме",
   navSkillsMemory: "Навыки и память",
-  navPrivacyData: "Конфиденциальность и данные",
+  navPrivacyData: "Приватность и данные",
   leadGeneral: "Язык, открытие документов, файлы и обновления",
   leadAppearance: "Тема, галерея тем и окно",
   leadEditing: "Текст, Markdown, изображения и экспорт",
