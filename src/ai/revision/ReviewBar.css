@@ -28,11 +28,6 @@
   animation: motion-enter var(--dur-slow) var(--ease-spring-bouncy) both;
 }
 
-/* The notes bar, standing above the review bar when both show. */
-.review-bar-raised {
-  bottom: calc(66px + var(--status-bar-height, 0px));
-}
-
 .review-bar[data-state="closing"] {
   animation: motion-exit var(--dur-fast) var(--ease-in) both;
 }

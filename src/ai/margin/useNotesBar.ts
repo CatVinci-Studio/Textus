@@ -49,6 +49,14 @@ export function useNotesBar({
     run((ctx) => revealPosition(ctx.get(editorViewCtx), note.from));
   }
 
+  /** Points at note `id` and brings it into view. */
+  function pointAt(id: string) {
+    const note = ordered.find((n) => n.id === id);
+    if (!note) return;
+    setPointer({ id, over: revisionFocus });
+    run((ctx) => revealPosition(ctx.get(editorViewCtx), note.from));
+  }
+
   function togglePick(id: string) {
     if (!picked) return;
     const next = new Set(picked);
@@ -58,6 +66,9 @@ export function useNotesBar({
 
   return {
     count: ordered.length,
+    /** The notes, top to bottom. */
+    ordered,
+    pointAt,
     /** Where the pointer is among the notes, -1 before the first step. */
     position: ordered.findIndex((n) => n.id === focused),
     /** The key of the note's card it points at, for the margin. */

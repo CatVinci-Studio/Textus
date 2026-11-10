@@ -1,26 +1,33 @@
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
 import { Presence } from "../engine/motion/usePresence";
-import { ReviewBar } from "../ai/revision/ReviewBar";
+import { ReviewBar, type BarChanges } from "../ai/revision/ReviewBar";
 import { revisionDisplayName } from "../ai/revision/revision-display";
-import { NotesBar } from "../ai/margin/NotesBar";
 import type { usePendingEdits } from "../ai/revision/usePendingEdits";
 import type { NotesBarState } from "../ai/margin/useNotesBar";
 
-/** The writer's own tracked changes, for the review bar while no AI edits
- *  are pending. */
+/** The writer's own tracked changes, for the bar while no AI edits are
+ *  pending: where each is, and pointing at one. */
 export interface OwnReview {
-  stops: number;
+  froms: number[];
   position: number;
-  step: (by: 1 | -1) => void;
+  pointAt: (index: number) => void;
   acceptAll: () => void;
   rejectAll: () => void;
 }
 
+/** One place the bar steps to: a change or a note, where it starts. */
+interface Stop {
+  key: string;
+  from: number;
+  go: () => void;
+}
+
 /**
- * The bars over the bottom of the document: the review bar while edits are
- * pending (the AI's, else the writer's own), and the notes bar above it
- * while there are review notes.
+ * The one bar over the bottom of the document while anything waits in it:
+ * Textus AI's changes (else the writer's own) and the review notes, its ‹ ›
+ * going through all of them in the document's order.
  */
 export function ReviewBars({
   paneEl,
@@ -30,7 +37,7 @@ export function ReviewBars({
   noMargin,
   pendingEdits,
   notes,
-  stepReview,
+  revealProposal,
   onOpenChat,
   own,
 }: {
@@ -42,68 +49,110 @@ export function ReviewBars({
   noMargin: boolean;
   pendingEdits: ReturnType<typeof usePendingEdits>;
   notes: NotesBarState;
-  stepReview: (by: 1 | -1) => void;
+  revealProposal: (callId: string, index: number) => void;
   onOpenChat: () => void;
   own: OwnReview | null;
 }) {
   const { t, settings, setSettings } = useSettings();
+  const view = {
+    display: settings.revisionDisplay,
+    displayName: (mode: BarChanges["display"]) => revisionDisplayName(t, mode),
+    onDisplay: (mode: BarChanges["display"]) =>
+      setSettings({ revisionDisplay: mode }),
+  };
+  const changes: BarChanges | null = reviewBarShown
+    ? {
+        ...view,
+        taken: pendingEdits.reviewCount.taken,
+        total: pendingEdits.reviewCount.total,
+        onAccept: pendingEdits.acceptAll,
+        onReject: pendingEdits.rejectAll,
+        streaming: pendingEdits.reviewStreaming,
+        painting: pendingEdits.picturesPainting,
+      }
+    : own
+      ? {
+          ...view,
+          taken: own.froms.length,
+          total: own.froms.length,
+          onAccept: own.acceptAll,
+          onReject: own.rejectAll,
+          streaming: false,
+          painting: false,
+        }
+      : null;
+  const stops: Stop[] = [
+    ...(reviewBarShown
+      ? pendingEdits.reviewStops.map((s) => ({
+          key: `ai:${s.callId}:${s.index}`,
+          from: s.from,
+          go: () => revealProposal(s.callId, s.index),
+        }))
+      : []),
+    ...(own && !reviewBarShown
+      ? own.froms.map((from, i) => ({
+          key: `own:${i}`,
+          from,
+          go: () => own.pointAt(i),
+        }))
+      : []),
+    ...(notesShown
+      ? notes.ordered.map((note) => ({
+          key: `note:${note.id}`,
+          from: note.from,
+          go: () => notes.pointAt(note.id),
+        }))
+      : []),
+  ].sort((a, b) => a.from - b.from);
+
+  // Where each kind's own pointer is: a card picked moves the bar there.
+  const focused = [
+    pendingEdits.focusedStop &&
+      `ai:${pendingEdits.focusedStop.callId}:${pendingEdits.focusedStop.index}`,
+    own && own.position >= 0 && `own:${own.position}`,
+    notes.position >= 0 && `note:${notes.ordered[notes.position]?.id}`,
+  ].filter((key): key is string => !!key);
+  const [at, setAt] = useState<string | null>(null);
+  const focusedKeys = focused.join("\n");
+  useEffect(() => {
+    const keys = focusedKeys ? focusedKeys.split("\n") : [];
+    setAt((was) => (was && keys.includes(was) ? was : (keys.at(-1) ?? null)));
+  }, [focusedKeys]);
+  const position = stops.findIndex((s) => s.key === at);
+  const step = (by: 1 | -1) => {
+    if (!stops.length) return;
+    const next =
+      position < 0
+        ? by > 0
+          ? 0
+          : stops.length - 1
+        : (position + by + stops.length) % stops.length;
+    stops[next]!.go();
+    setAt(stops[next]!.key);
+  };
+
+  const shown = !!changes || notesShown;
   if (!paneEl) return null;
   return createPortal(
-    <>
-      <Presence show={reviewBarShown} exitMs={200}>
-        {reviewBarShown && (
-          <ReviewBar
-            labels={t}
-            taken={pendingEdits.reviewCount.taken}
-            total={pendingEdits.reviewCount.total}
-            position={pendingEdits.stopIndex}
-            stops={pendingEdits.reviewStops.length}
-            phone={phone}
-            onPrevious={() => stepReview(-1)}
-            onNext={() => stepReview(1)}
-            onAccept={pendingEdits.acceptAll}
-            onReject={pendingEdits.rejectAll}
-            onOpenChat={onOpenChat}
-            display={settings.revisionDisplay}
-            displayName={(mode) => revisionDisplayName(t, mode)}
-            onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            streaming={pendingEdits.reviewStreaming}
-            painting={pendingEdits.picturesPainting}
-          />
-        )}
-      </Presence>
-      <Presence show={!!own} exitMs={200}>
-        {own && (
-          <ReviewBar
-            labels={t}
-            taken={own.stops}
-            total={own.stops}
-            position={own.position}
-            stops={own.stops}
-            phone={phone}
-            onPrevious={() => own.step(-1)}
-            onNext={() => own.step(1)}
-            onAccept={own.acceptAll}
-            onReject={own.rejectAll}
-            display={settings.revisionDisplay}
-            displayName={(mode) => revisionDisplayName(t, mode)}
-            onDisplay={(mode) => setSettings({ revisionDisplay: mode })}
-            streaming={false}
-            painting={false}
-          />
-        )}
-      </Presence>
-      <Presence show={notesShown} exitMs={200}>
-        {notesShown && (
-          <NotesBar
-            bar={notes}
-            labels={t}
-            raised={reviewBarShown || !!own}
-            canPick={!noMargin}
-          />
-        )}
-      </Presence>
-    </>,
+    <Presence show={shown} exitMs={200}>
+      {shown && (
+        <ReviewBar
+          labels={t}
+          phone={phone}
+          position={position}
+          stops={stops.length}
+          onPrevious={() => step(-1)}
+          onNext={() => step(1)}
+          changes={changes}
+          notes={
+            notesShown
+              ? { count: notes.count, bar: notes, canPick: !noMargin }
+              : null
+          }
+          onOpenChat={reviewBarShown ? onOpenChat : undefined}
+        />
+      )}
+    </Presence>,
     paneEl,
   );
 }

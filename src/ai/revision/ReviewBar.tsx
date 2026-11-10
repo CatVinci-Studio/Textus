@@ -15,6 +15,7 @@ import {
 } from "./revision-display";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { ThinkingIndicator } from "../chat/ThinkingIndicator";
+import type { NotesBarState } from "../margin/useNotesBar";
 import "./ReviewBar.css";
 
 export interface ReviewBarLabels {
@@ -32,50 +33,67 @@ export interface ReviewBarLabels {
   quickAskNextEdit: string;
   /** In place of the bar's name while a rewrite is still being written. */
   agentWritingEdit: string;
+  reviewNotesLabel: string;
+  reviewGroupNotes: string;
+  reviewNotesPick: string;
+  reviewNotesAllDone: string;
+  reviewNotesPicked: string;
+  reviewNoteAsk: string;
+  cancel: string;
 }
 
-/** The pending edits' controls over the bottom of the document: step through
- *  the changes, then Accept or Reject. On a phone, the AI sheet's collapsed form. */
-export function ReviewBar({
-  labels,
-  taken,
-  total,
-  position,
-  stops,
-  phone,
-  onPrevious,
-  onNext,
-  onAccept,
-  onReject,
-  onOpenChat,
-  display,
-  displayName,
-  onDisplay,
-  streaming,
-  painting,
-}: {
-  /** A picture in a pending proposal is still being made: Accept waits
-   *  for it, and says so. */
-  painting: boolean;
-  /** A rewrite is still streaming in: Accept / Reject wait until it is all
-   *  in, though its changes can be stepped through as they come. */
-  streaming: boolean;
-  /** How revisions show. */
-  display: RevisionDisplay;
-  displayName: (mode: RevisionDisplay) => string;
-  onDisplay: (mode: RevisionDisplay) => void;
-  labels: ReviewBarLabels;
+/** The changes waiting: what Accept and Reject do, and how they show. */
+export interface BarChanges {
   /** Sentences Accept would take, of all pending ones. */
   taken: number;
   total: number;
-  /** The pointer (-1: not on a stop yet) and how many stops there are. */
-  position: number;
-  stops: number;
-  phone: boolean;
-  onPrevious: () => void;
-  onNext: () => void;
   onAccept: () => void;
   onReject: () => void;
+  /** A rewrite still streaming in: Accept / Reject wait until it is all
+   *  in, though its changes can be stepped through as they come. */
+  streaming: boolean;
+  /** A picture in a pending proposal is still being made. */
+  painting: boolean;
+  display: RevisionDisplay;
+  displayName: (mode: RevisionDisplay) => string;
+  onDisplay: (mode: RevisionDisplay) => void;
+}
+
+/** The notes waiting: marked done together, or picked to ask about. */
+export interface BarNotes {
+  count: number;
+  bar: NotesBarState;
+  /** Picking needs the margin's cards (not a phone's badges). */
+  canPick: boolean;
+}
+
+/**
+ * One bar over the bottom of the document for everything waiting in it:
+ * the changes (Textus AI's, else the writer's own) and the review notes,
+ * stepped through together in the document's order; then Accept or Reject
+ * the changes, and mark the notes done or pick some to ask about. On a
+ * phone, the AI sheet's collapsed form.
+ */
+export function ReviewBar({
+  labels,
+  phone,
+  position,
+  stops,
+  onPrevious,
+  onNext,
+  changes,
+  notes,
+  onOpenChat,
+}: {
+  labels: ReviewBarLabels;
+  phone: boolean;
+  /** The pointer among all the stops (-1: not on one yet), and how many. */
+  position: number;
+  stops: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  changes: BarChanges | null;
+  notes: BarNotes | null;
   /** Phone: back to the conversation. */
   onOpenChat?: () => void;
 }) {
@@ -94,6 +112,9 @@ export function ReviewBar({
     : REVISION_DISPLAYS;
   const marginAvailable = useMarginAvailable();
   const noMargin = !phone && !marginAvailable;
+  const display = changes?.display ?? "final";
+  const displayName = changes?.displayName ?? String;
+  const onDisplay = changes?.onDisplay ?? (() => undefined);
   const shown = effectiveRevisionDisplay(
     display,
     !phone && marginAvailable,
@@ -101,6 +122,11 @@ export function ReviewBar({
   );
   const waiting = noMargin && shown !== display;
   const noMarginId = useId();
+  const streaming = !!changes?.streaming;
+  const picking = !!notes && notes.bar.picked !== null;
+  // Once shown, the count stays, even if the rewrite ends with one change.
+  const [counted, setCounted] = useState(false);
+  if (!counted && (stops > 1 || streaming)) setCounted(true);
   const view = (
     <div className="review-bar-view" ref={menuRef}>
       <Tooltip
@@ -168,16 +194,13 @@ export function ReviewBar({
       )}
     </div>
   );
-  const accept =
-    taken < total
-      ? labels.proposalAcceptSome
-          .replace("{k}", String(taken))
-          .replace("{n}", String(total))
-      : labels.proposalAccept;
-  // Once shown, the count stays, even if the rewrite ends with one change.
-  const [counted, setCounted] = useState(false);
-  if (!counted && (stops > 1 || streaming)) setCounted(true);
-  const nav = (counted || stops > 1 || streaming) && (
+  const counts = [
+    changes && labels.proposalChangeCount.replace("{n}", String(changes.total)),
+    notes && labels.reviewGroupNotes.replace("{n}", String(notes.count)),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const nav = (counted || stops > 1 || streaming) && !picking && (
     <span className="review-bar-nav">
       <Tooltip text={labels.quickAskPrevEdit} side="above">
         <button
@@ -191,7 +214,7 @@ export function ReviewBar({
       </Tooltip>
       <span className="review-bar-pos">
         {position < 0
-          ? labels.proposalChangeCount.replace("{n}", String(stops))
+          ? counts
           : labels.quickAskPosition
               .replace("{i}", String(position + 1))
               .replace("{n}", String(stops))}
@@ -208,12 +231,22 @@ export function ReviewBar({
       </Tooltip>
     </span>
   );
+  const name = picking
+    ? labels.reviewNotesPicked.replace(
+        "{n}",
+        String(notes!.bar.picked?.size ?? 0),
+      )
+    : changes && notes
+      ? `${labels.reviewBarLabel} · ${labels.reviewNotesLabel}`
+      : changes
+        ? labels.reviewBarLabel
+        : labels.reviewNotesLabel;
   return (
     <div
       {...presence}
       className={`review-bar${phone ? " review-bar-phone" : ""}`}
       role="toolbar"
-      aria-label={labels.reviewBarLabel}
+      aria-label={name}
     >
       <div className="review-bar-top">
         {/* While a rewrite is still written, the bar says so in its name's place. */}
@@ -222,10 +255,10 @@ export function ReviewBar({
             <ThinkingIndicator label={labels.agentWritingEdit} />
           </span>
         ) : (
-          <span className="review-bar-label">{labels.reviewBarLabel}</span>
+          <span className="review-bar-label">{name}</span>
         )}
         {nav}
-        {view}
+        {changes && !picking && view}
         {phone && onOpenChat && (
           <Tooltip text={labels.reviewBarOpenChat} side="above">
             <button
@@ -241,22 +274,72 @@ export function ReviewBar({
       </div>
       {!phone && <span className="review-bar-sep" aria-hidden="true" />}
       <div className="review-bar-actions">
-        <button
-          type="button"
-          className="review-bar-button review-bar-accept"
-          disabled={streaming || painting}
-          onClick={onAccept}
-        >
-          {painting ? labels.proposalPicturePainting : accept}
-        </button>
-        <button
-          type="button"
-          className="review-bar-button"
-          disabled={streaming}
-          onClick={onReject}
-        >
-          {labels.proposalReject}
-        </button>
+        {picking ? (
+          <>
+            <button
+              type="button"
+              className="review-bar-button review-bar-primary"
+              disabled={(notes!.bar.picked?.size ?? 0) === 0}
+              onClick={notes!.bar.askPicked}
+            >
+              {labels.reviewNoteAsk}
+            </button>
+            <button
+              type="button"
+              className="review-bar-button"
+              onClick={notes!.bar.stopPicking}
+            >
+              {labels.cancel}
+            </button>
+          </>
+        ) : (
+          <>
+            {changes && (
+              <>
+                <button
+                  type="button"
+                  className="review-bar-button review-bar-accept"
+                  disabled={streaming || changes.painting}
+                  onClick={changes.onAccept}
+                >
+                  {changes.painting
+                    ? labels.proposalPicturePainting
+                    : changes.taken < changes.total
+                      ? labels.proposalAcceptSome
+                          .replace("{k}", String(changes.taken))
+                          .replace("{n}", String(changes.total))
+                      : labels.proposalAccept}
+                </button>
+                <button
+                  type="button"
+                  className="review-bar-button"
+                  disabled={streaming}
+                  onClick={changes.onReject}
+                >
+                  {labels.proposalReject}
+                </button>
+              </>
+            )}
+            {notes && notes.canPick && notes.count > 1 && (
+              <button
+                type="button"
+                className="review-bar-button"
+                onClick={notes.bar.startPicking}
+              >
+                {labels.reviewNotesPick}
+              </button>
+            )}
+            {notes && (
+              <button
+                type="button"
+                className={`review-bar-button${changes ? "" : " review-bar-primary"}`}
+                onClick={notes.bar.allDone}
+              >
+                {labels.reviewNotesAllDone}
+              </button>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

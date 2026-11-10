@@ -64,6 +64,8 @@ test("a revision kept for a file not open shows in its text once it opens", asyn
   await expect(page.locator(".tab-pill-active .tab-pill-waiting")).toHaveText(
     "1",
   );
+  // One bar for all that waits there.
+  await expect(page.locator(".review-bar")).toHaveCount(1);
   // Placed: no longer waiting apart from the text.
   await expect
     .poll(() =>
