@@ -251,7 +251,7 @@ function placeMarks(tabId: string) {
   return {
     update(left: boolean, shown: SplitLayout | null, whole: boolean) {
       const rules: string[] = [];
-      if (!left && !shown)
+      if (!left && !shown && !whole)
         rules.push(`.tab-pill[data-flip-id="${tab}"] { opacity: 0.4; }`);
       roomSelector = null;
       if (!whole && (left || shown)) {

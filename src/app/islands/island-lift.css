@@ -4,7 +4,8 @@
   position: fixed;
   z-index: 60;
   pointer-events: none;
-  border-radius: var(--island-radius, var(--shape-m));
-  box-shadow: 0 12px 36px color-mix(in srgb, #000 18%, transparent);
-  opacity: 0.94;
+  /* The shadow follows the island's own shape - its tab rising from the
+     sheet - not the box around it. */
+  filter: drop-shadow(0 10px 24px color-mix(in srgb, #000 16%, transparent));
+  opacity: 0.96;
 }

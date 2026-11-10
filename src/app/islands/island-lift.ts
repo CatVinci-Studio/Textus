@@ -38,9 +38,16 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
   parts.forEach((el, i) => {
     const copy = el.cloneNode(true) as HTMLElement;
     copy.removeAttribute("id");
-    // Unmarked, so the outline its place gets doesn't take the copy too.
-    for (const node of [copy, ...copy.querySelectorAll("[data-pane-id]")])
-      node.removeAttribute("data-pane-id");
+    // Unmarked and at rest, so no rule a drag sets on the island (its
+    // place's outline, a tab dimmed or lifted) takes the copy too.
+    for (const node of [copy, ...copy.querySelectorAll<HTMLElement>("*")]) {
+      for (const name of ["data-pane-id", "data-tab-id", "data-flip-id"])
+        node.removeAttribute(name);
+      node.classList.remove("tab-pill-lifted", "is-drag-lifted");
+      node.style.removeProperty("translate");
+      node.style.removeProperty("transform");
+      node.style.removeProperty("opacity");
+    }
     const r = rects[i];
     Object.assign(copy.style, {
       position: "absolute",
