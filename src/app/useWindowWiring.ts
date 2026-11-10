@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { linkToFile } from "./islands/link-to-file";
+import { useEffect, useRef } from "react";
 import { setReadOnlyShown } from "../document/read-only-state";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
@@ -48,6 +49,8 @@ export function useWindowWiring({
 }) {
   const { tabState, tutorial, textusAi, panels, setPendingClose } = shell;
   const { tabsRef, activeTabId, setActiveTabId, setTabs, liveTabs } = tabState;
+  const activeRef = useRef(activeTabId);
+  activeRef.current = activeTabId;
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
 
   useSettingsCommands(settings, setSettings);
@@ -110,10 +113,21 @@ export function useWindowWiring({
   // let go.
   useEffect(() => {
     setDocumentDrop(
-      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop })),
+      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop }), {
+        tabIds: () => liveTabs().map((tab) => tab.id),
+        // With Shift: a link to it in the document in use (one never
+        // saved has no place to link from: it opens instead).
+        link: (path) => {
+          const from = liveTabs().find(
+            (tab) => tab.id === activeRef.current,
+          )?.path;
+          if (from) void linkToFile(path, from, openFolder.folder);
+          else void openPathInTab(path);
+        },
+      }),
     );
     return () => setDocumentDrop(null);
-  }, [openPathInTab]);
+  }, [openPathInTab, liveTabs, openFolder.folder]);
 
   useWindowCloseGuard(
     liveTabs,

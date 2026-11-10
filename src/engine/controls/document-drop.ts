@@ -3,12 +3,14 @@
  *  needs to know nothing of tabs or splits. */
 export interface DocumentDrop {
   /** The pointer is at (x, y): shows where a drop would open; false when
-   *  it isn't over the documents. */
-  over(x: number, y: number): boolean;
+   *  it isn't over the documents. `link`: Shift is held, the drop will
+   *  link to it instead. */
+  over(x: number, y: number, link?: boolean): boolean;
   /** The drag left or was given up: nothing shown any more. */
   leave(): void;
-  /** `path` let go at (x, y); false when that isn't over the documents. */
-  drop(path: string, x: number, y: number): boolean;
+  /** `path` let go at (x, y), opened there or, with `link`, linked to in
+   *  the document in use; false when that isn't over the documents. */
+  drop(path: string, x: number, y: number, link?: boolean): boolean;
 }
 
 let current: DocumentDrop | null = null;

@@ -98,7 +98,8 @@ export function useRowDrag(
         y: e.clientY,
         into,
       });
-      if (!into && !start.isDir) documentDrop()?.over(e.clientX, e.clientY);
+      if (!into && !start.isDir)
+        documentDrop()?.over(e.clientX, e.clientY, e.shiftKey);
       else documentDrop()?.leave();
     };
     const end = (e: PointerEvent) => {
@@ -108,7 +109,7 @@ export function useRowDrag(
       show(null);
       documentDrop()?.leave();
       if (!dropped.into && !dropped.isDir && e.type === "pointerup")
-        documentDrop()?.drop(dropped.path, e.clientX, e.clientY);
+        documentDrop()?.drop(dropped.path, e.clientX, e.clientY, e.shiftKey);
       dragClick.current = true;
       // A click may not follow (released outside the row).
       window.setTimeout(() => (dragClick.current = false), 0);

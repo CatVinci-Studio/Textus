@@ -196,50 +196,6 @@ function inside(rect: DOMRect, x: number, y: number): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
 }
 
-/** The share a pane added beside the whole split on `zone` gets. */
-function wholeShare(zone: DropZone): number {
-  const root = splitLayout()?.root;
-  const direction = zone === "left" || zone === "right" ? "row" : "column";
-  return root?.kind === "split" && root.direction === direction
-    ? 1 / (root.children.length + 1)
-    : 0.5;
-}
-
-let hint: HTMLDivElement | null = null;
-
-/** Lights up where a drop at `target` would put the document; null
- *  takes the light away. */
-export function showDropHint(target: DropTarget | null): void {
-  if (!target) {
-    hint?.remove();
-    hint = null;
-    return;
-  }
-  if (!hint) {
-    hint = document.createElement("div");
-    hint.className = "split-drop-hint";
-    hint.setAttribute("aria-hidden", "true");
-    document.body.append(hint);
-  }
-  const { rect, zone } = target;
-  // Beside every pane, the new one takes what each of those beside it will.
-  const share = target.whole ? wholeShare(zone) : 0.5;
-  const half = (w: number) => w * share;
-  const box = {
-    left: zone === "right" ? rect.right - half(rect.width) : rect.left,
-    top: zone === "bottom" ? rect.bottom - half(rect.height) : rect.top,
-    width: zone === "left" || zone === "right" ? half(rect.width) : rect.width,
-    height:
-      zone === "top" || zone === "bottom" ? half(rect.height) : rect.height,
-  };
-  Object.assign(hint.style, {
-    left: `${box.left}px`,
-    top: `${box.top}px`,
-    width: `${box.width}px`,
-    height: `${box.height}px`,
-  });
-}
-
 /**
  * The layout once `tabId` is dropped at `target`: on a pane's edge, in a
  * new pane on that side of it; in its middle, in that pane. With one
@@ -430,23 +386,82 @@ export function pullTab(
   window.addEventListener("keydown", key, true);
 }
 
-/** What a sidebar file dragged over the documents does: `open` gets where
- *  it was let go. */
+/** The pane something on its way in shows in, in the preview of where it
+ *  will open: an island of its own, still empty. */
+const ARRIVING = "drop:arriving";
+
+/**
+ * Something not yet a tab of this window dragged over its documents - a
+ * file from the sidebar, a tab from another window: the islands make room
+ * where it will open, as for a tab pulled within the window (pullTab).
+ * Tested against the layout the drag found (DropGeometry).
+ */
+export function arrivalPreview(tabIds: () => readonly string[]) {
+  let geometry: DropGeometry | null = null;
+  let shown: string | null = null;
+  const clear = () => {
+    shown = null;
+    previewSplit(null);
+  };
+  return {
+    /** Where a drop at (x, y) lands, shown; null off the documents. */
+    show(x: number, y: number): DropTarget | null {
+      geometry ??= dropGeometry();
+      const target = dropTargetAt(x, y, geometry);
+      const key = target
+        ? `${target.whole ? "whole" : target.tabId}:${target.zone}`
+        : null;
+      if (key === shown) return target;
+      shown = key;
+      previewSplit(
+        target
+          ? (dropLayout(splitLayout(), ARRIVING, target, [
+              ...tabIds(),
+              ARRIVING,
+            ]) ?? null)
+          : null,
+      );
+      return target;
+    },
+    /** Nothing shown; the layout the drag found kept for a drop that
+     *  follows at once. */
+    clear() {
+      clear();
+      const was = geometry;
+      window.setTimeout(() => {
+        if (geometry === was) geometry = null;
+      }, 0);
+    },
+    /** Where a drop at (x, y) lands, the preview gone. */
+    take(x: number, y: number): DropTarget | null {
+      const target = dropTargetAt(x, y, geometry ?? dropGeometry());
+      geometry = null;
+      clear();
+      return target;
+    },
+  };
+}
+
+/** What a sidebar file dragged over the documents does: room made where it
+ *  will open (arrivalPreview); `open` gets where it was let go. With Shift
+ *  held it is linked to instead (`link`). */
 export function fileDropOnDocuments(
   open: (path: string, target: DropTarget) => void,
+  opts: { tabIds: () => readonly string[]; link: (path: string) => void },
 ): DocumentDrop {
+  const arrival = arrivalPreview(opts.tabIds);
   return {
-    over(x, y) {
-      const target = dropTargetAt(x, y);
-      showDropHint(target);
-      return !!target;
+    over(x, y, link = false) {
+      if (!link) return !!arrival.show(x, y);
+      arrival.clear();
+      return !!dropTargetAt(x, y);
     },
-    leave: () => showDropHint(null),
-    drop(path, x, y) {
-      const target = dropTargetAt(x, y);
-      showDropHint(null);
+    leave: arrival.clear,
+    drop(path, x, y, link = false) {
+      const target = arrival.take(x, y);
       if (!target) return false;
-      open(path, target);
+      if (link) opts.link(path);
+      else open(path, target);
       return true;
     },
   };

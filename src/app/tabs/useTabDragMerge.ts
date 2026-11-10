@@ -2,6 +2,7 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type Dispatch,
@@ -21,11 +22,7 @@ import { windowIpc, type WindowBounds } from "../../platform/ipc";
 import { flushPendingWrites } from "../../storage/pending-writes";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { canUseWindows } from "../../platform/capabilities";
-import {
-  dropTargetAt,
-  showDropHint,
-  splitForDrop,
-} from "../islands/split-drop";
+import { arrivalPreview, splitForDrop } from "../islands/split-drop";
 
 // Moving tabs between windows, as drag source (handed to Rust's floating
 // drag) and as merge target. Within-bar reordering lives in the tab bar.
@@ -79,6 +76,12 @@ export function useTabDragMerge(opts: {
   // This window's top-left corner in global logical points, cached for one
   // hover: the window can't move while something is dragged over it.
   const previewWinRef = useRef<{ left: number; top: number } | null>(null);
+  // A tab from another window over the documents: room made where it
+  // will open.
+  const arrival = useMemo(
+    () => arrivalPreview(() => tabsRef.current.map((tab) => tab.id)),
+    [tabsRef],
+  );
 
   const hitTestWindow = useCallback(
     async (screenX: number, screenY: number): Promise<string | null> => {
@@ -216,7 +219,7 @@ export function useTabDragMerge(opts: {
       const newTab = { ...makeBlankTab(), ...doc };
       const corner = previewWinRef.current;
       const at = corner && { x: x - corner.left, y: y - corner.top };
-      const split = !row && at ? dropTargetAt(at.x, at.y) : null;
+      const split = !row && at ? arrival.take(at.x, at.y) : null;
       let index = tabsRef.current.length;
       if (row && at) {
         index = tabsRef.current.filter((tab) => {
@@ -230,7 +233,7 @@ export function useTabDragMerge(opts: {
       }
       previewWinRef.current = null;
       setDragHoverPreview(null);
-      showDropHint(null);
+      arrival.clear();
       const ids = [...tabsRef.current.map((tab) => tab.id), newTab.id];
       setTabs((prev) => {
         const next = [...prev];
@@ -253,17 +256,17 @@ export function useTabDragMerge(opts: {
         if (!event.payload) {
           previewWinRef.current = null;
           setDragHoverPreview(null);
-          showDropHint(null);
+          arrival.clear();
           return;
         }
         const { y, row, ...preview } = event.payload;
         const at = await local(preview.x, y);
         if (row) {
-          showDropHint(null);
+          arrival.clear();
           setDragHoverPreview({ ...preview, x: at.x });
         } else {
           setDragHoverPreview(null);
-          showDropHint(dropTargetAt(at.x, at.y));
+          arrival.show(at.x, at.y);
         }
       },
     );
