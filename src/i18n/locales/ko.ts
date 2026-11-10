@@ -482,7 +482,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   toolbarItalic: "기울임꼴",
   toolbarHighlight: "강조 표시",
   toolbarMore: "더 보기",
-  zenExitHint: "Esc 키로 젠 모드 종료",
   zenExitButton: "젠 모드 종료",
   openDialogText: "텍스트 파일",
   openDialogAll: "모든 파일",

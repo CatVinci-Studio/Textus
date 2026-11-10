@@ -517,7 +517,6 @@ export default {
   toolbarItalic: "Курсив",
   toolbarHighlight: "Выделение цветом",
   toolbarMore: "Ещё",
-  zenExitHint: "Esc — выйти из режима дзен",
   zenExitButton: "Выйти из режима дзен",
   openDialogText: "Текстовые файлы",
   openDialogAll: "Все файлы",

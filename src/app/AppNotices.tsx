@@ -1,23 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
-import { isIOSApp } from "../platform/capabilities";
+import { IconButton } from "../engine/controls/IconButton";
+import { CloseIcon } from "../engine/controls/icons";
 import { announce } from "../engine/controls/announce";
 import { CornerToast } from "../engine/controls/CornerToast";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
 import type { useAppUpdate } from "./useAppUpdate";
 
-/** Zen mode's way out, shown while it is on. */
-export function ZenHint({ onExit, t }: { onExit: () => void; t: Strings }) {
-  return isIOSApp ? (
-    // No Esc key on a phone: the hint is the way out, so it stays and takes
-    // a tap.
-    <button type="button" className="zen-hint zen-hint-button" onClick={onExit}>
-      {t.zenExitButton}
-    </button>
-  ) : (
-    <div className="zen-hint" role="status">
-      {t.zenExitHint}
-    </div>
+/** Zen mode's way out while it is on: a quiet × at the top right (Esc
+ *  doesn't leave it - Esc closes what is open in the text). */
+export function ZenExit({ onExit, t }: { onExit: () => void; t: Strings }) {
+  return (
+    <IconButton label={t.zenExitButton} onClick={onExit} className="zen-exit">
+      <CloseIcon />
+    </IconButton>
   );
 }
 

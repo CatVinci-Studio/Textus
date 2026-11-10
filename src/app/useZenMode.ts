@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import { ZEN_MODE_EVENT } from "../utils/events";
-import { isImeKeydown } from "../utils/ime";
 import { useSettings } from "../prefs/SettingsContext";
 
 /**
  * Zen mode: only the text. Chrome goes away and every paragraph but the
- * current one dims. Esc leaves. One for every window (Settings' zenMode).
+ * current one dims. The × at the top right leaves (ZenExit). One for
+ * every window (Settings' zenMode).
  */
 export function useZenMode() {
   const { settings, setSettings } = useSettings();
@@ -26,24 +26,6 @@ export function useZenMode() {
   useEffect(() => {
     window.dispatchEvent(new CustomEvent(ZEN_MODE_EVENT, { detail: zenMode }));
   }, [zenMode]);
-  useEffect(() => {
-    if (!zenMode) return;
-    // Capture phase: the editor handles Escape itself. Anything on screen
-    // that Escape should close first keeps it.
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (isImeKeydown(e)) return;
-      if (
-        document.querySelector(
-          ':is([role="dialog"], [role="menu"], .inline-chat, .find-replace-bar, .context-menu):not([data-state="closing"] *, [data-state="closing"])',
-        )
-      )
-        return;
-      setZenMode(false);
-    };
-    window.addEventListener("keydown", onKey, true);
-    return () => window.removeEventListener("keydown", onKey, true);
-  }, [zenMode, setZenMode]);
 
   return { zenMode, setZenMode, toggleZenMode };
 }

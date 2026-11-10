@@ -522,7 +522,6 @@ para usar una.
   toolbarItalic: "Cursiva",
   toolbarHighlight: "Resaltar",
   toolbarMore: "Más",
-  zenExitHint: "Esc para salir del modo zen",
   zenExitButton: "Salir del modo zen",
   openDialogText: "Archivos de texto",
   openDialogAll: "Todos los archivos",

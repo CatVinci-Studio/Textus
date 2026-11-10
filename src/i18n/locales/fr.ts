@@ -525,7 +525,6 @@ utiliser une.
   toolbarItalic: "Italique",
   toolbarHighlight: "Surligner",
   toolbarMore: "Plus",
-  zenExitHint: "Esc pour quitter le mode zen",
   zenExitButton: "Quitter le mode zen",
   openDialogText: "Fichiers texte",
   openDialogAll: "Tous les fichiers",

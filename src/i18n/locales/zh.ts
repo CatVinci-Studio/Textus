@@ -459,7 +459,6 @@ export default {
   toolbarItalic: "斜体",
   toolbarHighlight: "高亮",
   toolbarMore: "更多",
-  zenExitHint: "按 Esc 退出禅模式",
   zenExitButton: "退出禅模式",
   openDialogText: "文本文件",
   openDialogAll: "所有文件",

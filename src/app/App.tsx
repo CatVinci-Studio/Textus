@@ -32,7 +32,7 @@ import {
   DraftRestoredToast,
   UpdateToast,
   WordImportNotice,
-  ZenHint,
+  ZenExit,
 } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
 import { QuickPickHost } from "../engine/controls/quick-pick";
@@ -345,7 +345,7 @@ function App() {
         <FloatingViewsHost />
         <NoticeHost />
 
-        {zenMode && <ZenHint onExit={() => setZenMode(false)} t={t} />}
+        {zenMode && <ZenExit onExit={() => setZenMode(false)} t={t} />}
 
         <CornerStack corner="start">
           <WordImportNotice
