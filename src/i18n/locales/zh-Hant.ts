@@ -582,7 +582,7 @@ export default {
   errorNoFolder: "請先開啟一個資料夾。",
   treeNameTaken: "這裡已經有名為「{name}」的檔案或檔案夾。",
   treeActionFailed: "操作失敗：{reason}",
-  shortcutSearchFiles: "搜尋檔案名稱",
+  shortcutSearchFiles: "搜尋",
   menuDocuments: "文件",
   docListTitle: "文件",
   docListClose: "關閉",

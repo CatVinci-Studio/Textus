@@ -658,7 +658,7 @@ para usar una.
   errorNoFolder: "Abre primero una carpeta.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
-  shortcutSearchFiles: "Buscar nombres de archivo",
+  shortcutSearchFiles: "Buscar",
   menuDocuments: "Documentos",
   docListTitle: "Documentos",
   docListClose: "Cerrar",

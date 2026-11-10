@@ -652,7 +652,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   errorNoFolder: "Öffne zuerst einen Ordner.",
   treeNameTaken: "Hier gibt es schon etwas namens „{name}“.",
   treeActionFailed: "Das hat nicht geklappt: {reason}",
-  shortcutSearchFiles: "Dateinamen suchen",
+  shortcutSearchFiles: "Suchen",
   menuDocuments: "Dokumente",
   docListTitle: "Dokumente",
   docListClose: "Schließen",

@@ -646,7 +646,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorNoFolder: "Abra uma pasta primeiro.",
   treeNameTaken: "Já existe algo chamado “{name}” aqui.",
   treeActionFailed: "Não deu certo: {reason}",
-  shortcutSearchFiles: "Buscar nomes de arquivo",
+  shortcutSearchFiles: "Pesquisar",
   menuDocuments: "Documentos",
   docListTitle: "Documentos",
   docListClose: "Fechar",

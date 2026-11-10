@@ -663,7 +663,7 @@ utiliser une.
   errorNoFolder: "Ouvrez d'abord un dossier.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
-  shortcutSearchFiles: "Rechercher des noms de fichier",
+  shortcutSearchFiles: "Rechercher",
   menuDocuments: "Documents",
   docListTitle: "Documents",
   docListClose: "Fermer",

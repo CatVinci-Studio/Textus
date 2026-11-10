@@ -652,7 +652,7 @@ export default {
   errorNoFolder: "Сначала откройте папку.",
   treeNameTaken: "Здесь уже есть что-то с именем «{name}».",
   treeActionFailed: "Не получилось: {reason}",
-  shortcutSearchFiles: "Поиск по именам файлов",
+  shortcutSearchFiles: "Поиск",
   menuDocuments: "Документы",
   docListTitle: "Документы",
   docListClose: "Закрыть",

@@ -382,8 +382,15 @@ button.settings-inline-button {
 .shortcut-capture-button {
   min-width: 120px;
   text-align: center;
-  font-family: var(--font-mono);
   font-size: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Clear waits for the row it is on: a column of them was all one saw. */
+@media (hover: hover) {
+  .shortcut-setting:not(:hover, :focus-within) .shortcut-clear {
+    visibility: hidden;
+  }
 }
 
 .shortcut-capture-active {

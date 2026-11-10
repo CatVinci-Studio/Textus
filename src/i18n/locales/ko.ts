@@ -615,7 +615,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorNoFolder: "먼저 폴더를 여세요.",
   treeNameTaken: "여기에 이미 “{name}”(이)라는 항목이 있습니다.",
   treeActionFailed: "할 수 없습니다: {reason}",
-  shortcutSearchFiles: "파일 이름 검색",
+  shortcutSearchFiles: "검색",
   menuDocuments: "문서",
   docListTitle: "문서",
   docListClose: "닫기",

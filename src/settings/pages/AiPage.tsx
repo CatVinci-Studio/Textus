@@ -60,7 +60,7 @@ export function AiPage({
 }: SettingsPageProps) {
   return (
     <>
-      <SettingsGroup title={t.menuTextusAi}>
+      <SettingsGroup>
         <ToggleRow
           label={t.textusAiToggleLabel}
           hint={settings.textusAi ? undefined : t.textusAiOffHint}

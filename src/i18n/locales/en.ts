@@ -639,7 +639,7 @@ type /name in a conversation to use one.
   errorNoFolder: "Open a folder first.",
   treeNameTaken: "There is already something named “{name}” here.",
   treeActionFailed: "That didn’t work: {reason}",
-  shortcutSearchFiles: "Search file names",
+  shortcutSearchFiles: "Search",
   menuDocuments: "Documents",
   docListTitle: "Documents",
   docListClose: "Close",

@@ -209,7 +209,7 @@ function ShortcutRecorder({
           </button>
           {combo && !recording && (
             <button
-              className="text-button settings-inline-button"
+              className="text-button settings-inline-button shortcut-clear"
               aria-label={`${t.shortcutClear}: ${label}`}
               onClick={() => {
                 setError("");

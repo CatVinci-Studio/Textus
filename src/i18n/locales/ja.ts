@@ -625,7 +625,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   errorNoFolder: "先にフォルダを開いてください。",
   treeNameTaken: "ここにはすでに「{name}」という名前のものがあります。",
   treeActionFailed: "できませんでした: {reason}",
-  shortcutSearchFiles: "ファイル名を検索",
+  shortcutSearchFiles: "検索",
   menuDocuments: "書類",
   docListTitle: "書類",
   docListClose: "閉じる",
