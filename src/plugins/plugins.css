@@ -328,11 +328,11 @@ button.plugin-card-open:hover .plugin-card-name {
 .plugin-detail-actions {
   padding: var(--space-4) 0 var(--space-2);
 }
+/* A plugin's own settings page, on the plugin's page between its groups:
+   it draws its own. */
 .plugin-settings-page {
   display: flex;
   flex-direction: column;
-  margin: var(--space-2) 0 0;
-  border-top: 1px solid var(--ui-border);
 }
 .plugin-webview-settings {
   min-height: 120px;

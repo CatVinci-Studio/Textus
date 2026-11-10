@@ -200,28 +200,30 @@ export function PluginPage({
           })}
         </SettingsGroup>
       )}
-      {manifest && (
-        <SettingsGroup title={t.pluginSettingsGroup}>
-          {!on ? (
-            <p className="plugin-empty">
-              {t.pluginSettingsOff.replace("{name}", name)}
-            </p>
-          ) : manifest.contributes.settings.length === 0 &&
-            !manifest.contributes.settingsPage ? (
-            <p className="plugin-empty">
-              {t.pluginNoSettings.replace("{name}", name)}
-            </p>
-          ) : (
-            <>
+      {manifest &&
+        (!on ||
+          manifest.contributes.settings.length > 0 ||
+          !manifest.contributes.settingsPage) && (
+          <SettingsGroup title={t.pluginSettingsGroup}>
+            {!on ? (
+              <p className="plugin-empty">
+                {t.pluginSettingsOff.replace("{name}", name)}
+              </p>
+            ) : manifest.contributes.settings.length === 0 ? (
+              <p className="plugin-empty">
+                {t.pluginNoSettings.replace("{name}", name)}
+              </p>
+            ) : (
               <PluginSettingRows record={record} t={t} />
-              {manifest.contributes.settingsPage && (
-                <div className="plugin-settings-page">
-                  <PluginSettingsWebview plugin={record.id} />
-                </div>
-              )}
-            </>
-          )}
-        </SettingsGroup>
+            )}
+          </SettingsGroup>
+        )}
+      {/* The plugin's own settings page draws its own groups: on the page,
+          not inside one. */}
+      {on && manifest?.contributes.settingsPage && (
+        <div className="plugin-settings-page">
+          <PluginSettingsWebview plugin={record.id} />
+        </div>
       )}
       <PluginReadme
         id={record.id}

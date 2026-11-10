@@ -104,6 +104,12 @@
   padding: 0 8px 4px;
 }
 
+/* On the name's line: at its end, the line's height. */
+.sidebar-header > .sidebar-view-actions {
+  margin-inline-start: auto;
+  padding: 0;
+}
+
 .sidebar-view-action {
   display: flex;
   align-items: center;

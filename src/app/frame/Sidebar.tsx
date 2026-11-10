@@ -105,10 +105,15 @@ export function Sidebar({
                   name, on the window bar's line; the panel's own first row
                   (its search, its tools) starts under it, level with the
                   islands' tops. Without the rail, the tabs are here again. */}
+              {/* A plugin's buttons for its panel (menus "view/title")
+                  end the name's line: no row of their own. */}
               {rail && (
-                <h2 className="tx-pane-title sidebar-title">
-                  {shown.label(t)}
-                </h2>
+                <>
+                  <h2 className="tx-pane-title sidebar-title">
+                    {shown.label(t)}
+                  </h2>
+                  <ViewTitleActions view={shown.id} />
+                </>
               )}
               {!rail && (
                 <SidebarTabBar
@@ -121,7 +126,7 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              <ViewTitleActions view={shown.id} />
+              {!rail && <ViewTitleActions view={shown.id} />}
               <shown.Panel
                 t={t}
                 openFolder={openFolder}
