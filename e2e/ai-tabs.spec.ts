@@ -255,6 +255,39 @@ test("let go in the middle of the document's island, it joins it; near its edge,
   await drag(0.5);
   await expect(islands(page)).toHaveCount(1);
   await expect(tabs(page)).toHaveText(["未命名", "新对话"]);
+  // Near its top the room for a new island opens above; held over that
+  // room it stays, and once the pointer leaves it upwards the island comes
+  // back, the pointer over its row: let go there, the tab stays in it.
+  {
+    const a = (await tabs(page).last().boundingBox())!;
+    const sheet = (await page.locator("section.island").first().boundingBox())!;
+    const row = (await page.locator(".island-row").first().boundingBox())!;
+    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(a.x - 100, a.y + 200, { steps: 10 });
+    await page.mouse.move(
+      sheet.x + sheet.width / 2,
+      sheet.y + sheet.height * 0.02,
+      {
+        steps: 20,
+      },
+    );
+    await page.waitForTimeout(500);
+    await expect(page.locator("section.island")).toHaveCount(2);
+    const room = (await page.locator("section.island").first().boundingBox())!;
+    await page.mouse.move(sheet.x + sheet.width / 2, room.y + room.height / 2, {
+      steps: 10,
+    });
+    await page.waitForTimeout(500);
+    await expect(page.locator("section.island")).toHaveCount(2);
+    await page.mouse.move(sheet.x + sheet.width / 3, row.y + row.height / 2, {
+      steps: 10,
+    });
+    await page.waitForTimeout(500);
+    await expect(page.locator("section.island")).toHaveCount(1);
+    await page.mouse.up();
+    await expect(islands(page)).toHaveCount(1);
+  }
   await drag(0.04);
   await expect(islands(page)).toHaveCount(2);
   await expect(

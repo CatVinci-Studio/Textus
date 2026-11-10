@@ -293,21 +293,22 @@ function placeMarks(tabId: string) {
       if (!whole && (left || shown)) {
         rules.push(`[data-tab-id="${tab}"] { visibility: hidden; }`);
         const pane = shown && paneWithTab(shown.root, tabId);
-        const slot = `.tab-pill[data-tab="${tab}"]`;
-        // Its slot in the row it would join, or in the new island's own
-        // row: the island it lands in, told by the tab it gains.
-        if (pane)
-          rules.push(
-            `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
-            `${slot}::before, ${slot}::after { display: none !important; }`,
-            `${slot} > * { visibility: hidden; }`,
-          );
-        roomSelector = pane ? slot : null;
         if (pane && pane.tabs.length === 1) {
+          // A new island: only its room, dashed; no row of its own.
           const id = CSS.escape(pane.id);
           roomPane = pane.id;
           rules.push(
             `section.island[data-pane-id="${id}"] { background: var(--drop-room-island) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
+            `.island-row[data-pane-id="${id}"] { visibility: hidden; }`,
+          );
+        } else if (pane) {
+          // Joining a row: its slot there, dashed.
+          const slot = `.tab-pill[data-tab="${tab}"]`;
+          roomSelector = slot;
+          rules.push(
+            `${slot} { background: var(--drop-room-slot) center / 100% 100% no-repeat !important; box-shadow: none !important; }`,
+            `${slot}::before, ${slot}::after { display: none !important; }`,
+            `${slot} > * { visibility: hidden; }`,
           );
         }
       }
@@ -315,23 +316,29 @@ function placeMarks(tabId: string) {
       const text = rules.join("\n");
       if (style.textContent !== text) style.textContent = text;
     },
-    /** Where the tab's slot is, for the pill to land on. */
+    /** Where the tab lands: its slot in a row, or the new island's room,
+     *  where the solver puts it. */
     room(): DOMRect | null {
+      const at = roomPane && islandAt(roomPane);
+      if (at) return at;
       const el = roomSelector && document.querySelector(roomSelector);
       return el ? el.getBoundingClientRect() : null;
     },
-    /** The new island the room opened, its row included, where the
-     *  solver puts it: the place holds while the pointer is on it, and
-     *  lets go once it leaves. */
+    /** The new island's room: the place holds while the pointer is on it,
+     *  and lets go once it leaves, the islands coming back. */
     island(): DOMRect | null {
-      const at =
-        roomPane && frameLayout().islands.find((i) => i.paneId === roomPane);
-      return at
-        ? new DOMRect(at.whole.x, at.whole.y, at.whole.w, at.whole.h)
-        : null;
+      return roomPane ? islandAt(roomPane) : null;
     },
     remove() {
       style.remove();
     },
   };
+}
+
+/** Pane `id`'s sheet, as the solver last placed it. */
+function islandAt(id: string): DOMRect | null {
+  const at = frameLayout().islands.find((island) => island.paneId === id);
+  return at
+    ? new DOMRect(at.sheet.x, at.sheet.y, at.sheet.w, at.sheet.h)
+    : null;
 }
