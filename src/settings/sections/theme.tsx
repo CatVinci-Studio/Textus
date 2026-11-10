@@ -426,7 +426,7 @@ export function ThemesTab({ t }: { t: Strings }) {
           <p className="plugin-empty">
             {query.trim()
               ? t.pluginsSearchNone.replace("{query}", query.trim())
-              : t.extensionsThemesNone.replace("{page}", t.navEditor)}
+              : t.extensionsThemesNone.replace("{page}", t.navAppearance)}
           </p>
         )
       }

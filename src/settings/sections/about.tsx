@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
 import { links } from "../../platform/ipc";
-import { UpdateButton, UpdateChannelRow } from "./general";
+import { UpdateButton } from "./general";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
 
 /** Settings › General › About Textus: the app, its version and updates,
@@ -54,7 +54,6 @@ export function AboutSection({
         </button>
         <UpdateButton t={t} checkOnOpen={checkNow} />
       </div>
-      <UpdateChannelRow t={t} />
       <div className="settings-about-credit">{t.aboutMadeBy}</div>
     </div>
   );

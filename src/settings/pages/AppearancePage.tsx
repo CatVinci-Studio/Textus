@@ -20,7 +20,7 @@ export function AppearancePage({
   phone,
   percent,
 }: SettingsPageProps) {
-  const gallery = useRef<HTMLDivElement>(null);
+  const gallery = useRef<HTMLElement>(null);
   return (
     <>
       <SettingsGroup title={t.navTheme}>
@@ -34,11 +34,15 @@ export function AppearancePage({
           }
         />
       </SettingsGroup>
-      <div ref={gallery}>
-        <SettingsGroup title={t.extensionsTabThemes}>
-          <ThemesTab t={t} />
-        </SettingsGroup>
-      </div>
+      {/* The gallery draws its own boxes: under a heading, not in one. */}
+      <section
+        ref={gallery}
+        className="settings-group"
+        aria-label={t.themeGalleryGroup}
+      >
+        <h2 className="settings-group-title">{t.themeGalleryGroup}</h2>
+        <ThemesTab t={t} />
+      </section>
       <SettingsGroup title={t.settingsInterfaceGroup}>
         {/* A phone's UI is sized by iOS's own text styles instead. */}
         {!phone && (

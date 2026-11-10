@@ -1,3 +1,4 @@
+import { writingProviderOf } from "../../prefs/settings-types";
 import { useCallback } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { triggerGhostTextNow } from "./ghost-text-plugin";
@@ -61,15 +62,15 @@ export function useAiActions(
   const triggerCompletion = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const { aiProvider, completionTone, writingModels, language } =
-        getSettings();
+      const { completionTone, writingModels, language } = getSettings();
+      const provider = writingProviderOf(getSettings());
       const style = buildCompletionStyle(completionTone);
       report(
         triggerGhostTextNow(
           view,
-          aiProvider,
+          provider,
           style,
-          writingModels[aiProvider] || null,
+          writingModels[provider] || null,
           {
             docPath: getDocPath(),
             workspaceRoot: getSettings().agentWorkspaceRoot || null,
@@ -84,13 +85,14 @@ export function useAiActions(
   const triggerGrammarCheck = useCallback(() => {
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
-      const { aiProvider, grammarStrictness, writingModels } = getSettings();
+      const { grammarStrictness, writingModels } = getSettings();
+      const provider = writingProviderOf(getSettings());
       report(
         triggerGrammarCheckNow(
           view,
-          aiProvider,
+          provider,
           grammarStrictness,
-          writingModels[aiProvider] || null,
+          writingModels[provider] || null,
           {
             docPath: getDocPath(),
             workspaceRoot: getSettings().agentWorkspaceRoot || null,

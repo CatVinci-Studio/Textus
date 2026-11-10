@@ -9,7 +9,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf, type Strings } from "../../i18n/strings";
 import { SIGN_IN_MODELS, type SignInModels } from "../agent-models";
-import { useActiveProvider } from "../../ai/provider-catalog";
+import { useProviderCatalog } from "../../ai/provider-catalog";
+import { writingProviderOf } from "../../prefs/settings-types";
 import { ai, auth } from "../../platform/ipc";
 import { Select } from "../../engine/controls/Select";
 import { SettingRow, VERBATIM_INPUT } from "./controls";
@@ -69,12 +70,19 @@ function useFetchedModels(provider: string) {
 function ProviderModelRow({
   t,
   kind,
+  provider: given,
+  label: givenLabel,
 }: {
   t: Strings;
   kind: "writing" | "agent";
+  /** Whose models; else the one this kind uses now. */
+  provider?: string;
+  label?: string;
 }) {
   const { settings, setSettings } = useSettings();
-  const provider = settings.aiProvider;
+  const provider =
+    given ??
+    (kind === "agent" ? settings.aiProvider : writingProviderOf(settings));
   const signIn = useSignInModels(provider);
   const { models: fetched } = useFetchedModels(provider);
 
@@ -95,7 +103,7 @@ function ProviderModelRow({
     },
     [kind, provider, setSettings, settings.agentModels, settings.writingModels],
   );
-  const entry = useActiveProvider();
+  const entry = useProviderCatalog().find((e) => e.id === provider);
 
   // The OAuth backend only accepts its preset family, so a saved API model id
   // becomes that mode's default rather than a blank select.
@@ -161,7 +169,8 @@ function ProviderModelRow({
           .filter((m) => m !== defaultModel)
           .map((m) => ({ value: m, label: describe(m) })),
       ];
-  const label = kind === "agent" ? t.agentModelLabel : t.writingModelLabel;
+  const label =
+    givenLabel ?? (kind === "agent" ? t.agentModelLabel : t.writingModelLabel);
 
   return (
     <SettingRow
@@ -204,13 +213,37 @@ export function AgentModelSection({ t }: { t: Strings }) {
   return <ProviderModelRow t={t} kind="agent" />;
 }
 
+/** `provider`'s model for the chat, or for writing: its own page's
+ *  pickers (Settings › Providers). */
+export function ProviderModelPicker({
+  t,
+  provider,
+  kind,
+  label,
+}: {
+  t: Strings;
+  provider: string;
+  kind: "writing" | "agent";
+  label: string;
+}) {
+  return (
+    <ProviderModelRow t={t} kind={kind} provider={provider} label={label} />
+  );
+}
+
 /// One fetch for both pickers: the provider's live model list, on top of the
 /// catalog's. Absent where listing can't work.
-export function ModelListRow({ t }: { t: Strings }) {
+export function ModelListRow({
+  t,
+  provider: given,
+}: {
+  t: Strings;
+  provider?: string;
+}) {
   const { settings } = useSettings();
-  const provider = settings.aiProvider;
+  const provider = given ?? settings.aiProvider;
   const signIn = useSignInModels(provider);
-  const entry = useActiveProvider();
+  const entry = useProviderCatalog().find((e) => e.id === provider);
   const { at } = useFetchedModels(provider);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

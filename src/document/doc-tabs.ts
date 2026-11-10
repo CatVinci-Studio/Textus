@@ -88,7 +88,10 @@ export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.view?.kind === "page")
     return tab.view.view === "settings"
       ? t.settingsTitle
-      : (tab.view.title ?? t.extensionsTabPlugins);
+      : tab.view.title
+        ? // Told apart from a tab the plugin opens itself, of the same name.
+          t.pluginPageTab.replace("{name}", tab.view.title)
+        : t.extensionsTabPlugins;
   if (tab.view)
     return (
       tab.view.title ??

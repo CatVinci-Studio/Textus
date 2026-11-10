@@ -1,0 +1,76 @@
+/* Settings in a tab: its pages on the left (the shared list-top search
+   over them), the page on the right, each scrolling on its own. */
+.settings-tab {
+  display: grid;
+  grid-template-columns: minmax(180px, 210px) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  color: var(--ui-text);
+  container: settings-page / inline-size;
+}
+
+.settings-tab-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px 12px;
+  overflow-y: auto;
+  border-inline-end: 1px solid var(--ui-border);
+}
+
+.settings-tab-nav > .pane-search {
+  margin: 0 -8px;
+}
+
+.settings-tab-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+  text-align: start;
+  cursor: default;
+}
+
+.settings-tab-nav-item:hover {
+  background: var(--ui-hover);
+}
+
+.settings-tab-nav-item[aria-current="page"] {
+  background: var(--ui-selected);
+  color: var(--ui-accent-text);
+}
+
+/* Textus AI's three pages, under it: in line with its name. */
+.settings-tab-nav-item[data-sub] {
+  padding-inline-start: calc(10px + 8px + 1.15em);
+}
+
+.settings-tab-nav-icon {
+  color: var(--ui-muted);
+}
+
+.settings-tab-nav-item[aria-current="page"] .settings-tab-nav-icon {
+  color: inherit;
+}
+
+.settings-tab .settings-tab-page {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 22px 30px 40px;
+}
+
+.settings-tab-page > .settings-category-title {
+  margin-bottom: 4px;
+}
+
+.settings-tab-lead {
+  margin: 0 0 18px;
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+}

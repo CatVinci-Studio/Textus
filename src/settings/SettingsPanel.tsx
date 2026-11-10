@@ -1,14 +1,6 @@
 import { AboutSection } from "./sections/about";
 import { GuidesSection } from "./sections/guides";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMarginAvailable } from "../ai/margin/margin-room";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
@@ -26,14 +18,11 @@ import {
 } from "./SettingsSearch";
 import {
   findEntryElement,
-  matchEntries,
   type SearchEntry,
   type SearchMatch,
 } from "./settings-search";
-import { comboFromEvent } from "../utils/shortcuts";
-import { useWindowEvent } from "../utils/hooks/useWindowEvent";
-import { TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
 import "./SettingsPanel.css";
+import { useSettingsSearch } from "./useSettingsSearch";
 import { settingsPage, settingsPages } from "./settings-pages";
 import type {
   SettingsPageProps,
@@ -64,8 +53,6 @@ export interface SettingsPanelProps {
   pluginCommands?: ShortcutCommand[];
   /** The page to open at; General when left out. */
   initialCategory?: string;
-  /** Drawn as a tab's page (desktop): no dialog round it, no close. */
-  inTab?: boolean;
 }
 
 type Category = string;
@@ -109,7 +96,6 @@ export function SettingsPanel({
   fixedShortcuts = [],
   pluginCommands = [],
   initialCategory = "general",
-  inTab = false,
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // A phone never has a margin, so there is nothing to explain there.
@@ -122,7 +108,7 @@ export function SettingsPanel({
   });
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
-  const modal = useModalDialog(onClose, !inTab, undefined, false);
+  const modal = useModalDialog(onClose, true, undefined, false);
   // Rendered inside a Presence: it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
   const nav = useSettingsNav(initialCategory);
@@ -323,16 +309,6 @@ export function SettingsPanel({
       )}
     </div>
   );
-  if (inTab)
-    return (
-      <div
-        className="settings-panel settings-in-tab"
-        role="region"
-        aria-label={t.settingsTitle}
-      >
-        {layout}
-      </div>
-    );
   return (
     <div {...presence} className="settings-backdrop" onClick={onClose}>
       <div
@@ -439,57 +415,5 @@ function useSettingsNav(initialCategory: Category) {
     direction,
     open,
     back,
-  };
-}
-
-/** The search box: while it holds a query its results stand in for the page,
- *  and picking one goes to the row. */
-function useSettingsSearch() {
-  const [query, setQuery] = useState("");
-  const searching = query.trim() !== "";
-  const deferredQuery = useDeferredValue(query);
-  const [entries, setEntries] = useState<SearchEntry[]>([]);
-  const [active, setActive] = useState(0);
-  const searchInput = useRef<HTMLInputElement>(null);
-  const listId = useId();
-  const matches = useMemo(
-    () => matchEntries(entries, deferredQuery),
-    [entries, deferredQuery],
-  );
-
-  const focusSearch = useCallback(() => {
-    searchInput.current?.focus();
-    searchInput.current?.select();
-  }, []);
-  // Ctrl/⌘+F finds in Settings while it is open, not in the document behind
-  // it; on a Mac the Edit › Find menu takes the keys first.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (comboFromEvent(e) !== "mod+f") return;
-      // A shortcut being recorded takes the keys as they are.
-      if (
-        e.target instanceof Element &&
-        e.target.closest(".shortcut-capture-active")
-      )
-        return;
-      e.preventDefault();
-      e.stopPropagation();
-      focusSearch();
-    };
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [focusSearch]);
-  useWindowEvent(TOGGLE_FIND_REPLACE_EVENT, focusSearch);
-
-  return {
-    query,
-    setQuery,
-    searching,
-    setEntries,
-    active,
-    setActive,
-    matches,
-    searchInput,
-    listId,
   };
 }

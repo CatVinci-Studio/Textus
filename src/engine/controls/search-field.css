@@ -59,3 +59,15 @@
   opacity: 0.65;
   user-select: text;
 }
+
+/* The search atop a list pane (Settings' pages, Providers, a plugin
+   list): one size and one inset everywhere - the pane's edges 12px off. */
+.pane-search {
+  padding: 12px 12px 8px;
+}
+
+/* Its box fills it: a box's own margins (the Settings sheet's) are
+   the sheet's, not the pane's. */
+.pane-search .tx-search {
+  margin: 0;
+}

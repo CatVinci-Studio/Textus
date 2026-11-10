@@ -8,27 +8,12 @@
   padding: 0 2px;
 }
 
-/* Over the search: the switch for all plugins, then "update all" (while
-   there are updates) and "+" at the row's end. */
+/* The search, then "update all" (while there are updates) and "⋯". */
 .plugins-panel-top {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 0 4px 0 6px;
-  min-height: 28px;
-}
-
-.plugins-panel-switch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-inline-end: auto;
-  font-size: var(--text-secondary);
-  color: var(--ui-muted);
-}
-
-.plugins-panel-switch .tx-switch {
-  font-size: var(--text-secondary);
+  margin-bottom: 4px;
 }
 
 .plugins-panel-update-all {
@@ -51,8 +36,8 @@
 }
 
 .plugins-panel-search {
-  flex: none;
-  margin: 4px 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .plugins-panel-count {

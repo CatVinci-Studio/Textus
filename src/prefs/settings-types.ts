@@ -82,6 +82,9 @@ export interface Settings {
   /** Dot-separated path to the public URL in the endpoint's JSON response. */
   imageUploadUrlField: string;
   aiProvider: AiProvider;
+  /** The provider completion and grammar checking use; "" follows the
+   *  chat's (aiProvider), so changing the chat's leaves them be. */
+  writingProvider: string;
   /// Shared model for inline completion and grammar checking, per provider.
   /// Missing/"" keeps the provider's low-cost writing default.
   writingModels: Record<string, string>;
@@ -293,6 +296,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imageUploadEndpoint: "",
   imageUploadUrlField: "url",
   aiProvider: "openai",
+  writingProvider: "",
   writingModels: {},
   agentModels: {},
   chatAgent: "",
@@ -370,3 +374,10 @@ export const DEFAULT_SETTINGS: Settings = {
   keepUnsavedOnClose: false,
   runInBackground: false,
 };
+
+/** The provider writing assistance uses: its own, else the chat's. */
+export function writingProviderOf(
+  settings: Pick<Settings, "writingProvider" | "aiProvider">,
+): string {
+  return settings.writingProvider || settings.aiProvider;
+}

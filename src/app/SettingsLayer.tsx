@@ -7,6 +7,7 @@ import {
   openPluginPage,
 } from "../settings/pages/extensions-tab";
 import type { SettingsPanelProps } from "../settings/SettingsPanel";
+import type { SettingsTabProps } from "../settings/tab/SettingsTab";
 import { Presence } from "../engine/motion/usePresence";
 import { isIOSApp } from "../platform/capabilities";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
@@ -17,6 +18,14 @@ import type { Strings } from "../i18n/strings";
 
 /** Settings and Plugins as tabs: everywhere but the iPhone and iPad. */
 const inTabs = !isIOSApp;
+
+// Settings' tab loads with Settings, warmed once the window is idle.
+const SettingsTab = lazyComponent(
+  lazyModule("settings-tab", () => import("../settings/tab/SettingsTab"), {
+    warm: true,
+  }),
+  (m) => m.SettingsTab,
+);
 
 // A plugin's tab loads on first open.
 const PluginTab = lazyComponent(
@@ -59,7 +68,7 @@ export function useSettingsOpening(tabs: TabState) {
   useEffect(() => {
     const open = () => {
       openExtensionsTab("create");
-      if (inTabs) showPage(tabs, "settings", "extensions");
+      if (inTabs) showPage(tabs, "settings", "skills");
       else setState((s) => ({ open: "extensions", request: s.request + 1 }));
     };
     window.addEventListener(OPEN_CREATE_EVENT, open);
@@ -113,23 +122,15 @@ export function SettingsLayer({
   );
 }
 
-/** The Settings tab's page: Settings drawn in the tab, at the page last
- *  asked for (each request remounts it there). */
+/** The Settings tab's page, at the page last asked for (each request
+ *  remounts it there). */
 export function SettingsTabPage({
   request,
   ...props
-}: Omit<SettingsPanelProps, "onClose" | "initialCategory" | "inTab"> & {
-  request: PageRequest | null;
-}) {
+}: SettingsTabProps & { request: PageRequest | null }) {
   return (
     <Suspense fallback={null}>
-      <SettingsPanel
-        key={request?.at ?? 0}
-        {...props}
-        inTab
-        onClose={() => {}}
-        initialCategory={request?.to ?? "general"}
-      />
+      <SettingsTab key={request?.at ?? 0} {...props} page={request?.to} />
     </Suspense>
   );
 }

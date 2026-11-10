@@ -29,25 +29,6 @@
   overflow: hidden;
 }
 
-/* As a tab's page: the island is its frame - it fills it, no edge,
-   radius or shadow of its own; the list of pages on the island's paper,
-   a line beside it as the Plugins tab has. */
-.settings-panel.settings-in-tab {
-  width: 100%;
-  max-width: none;
-  height: 100%;
-  max-height: none;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.settings-in-tab .settings-sidebar {
-  background: transparent;
-  border-inline-end: 1px solid var(--ui-border);
-}
-
 .settings-header {
   display: flex;
   align-items: center;

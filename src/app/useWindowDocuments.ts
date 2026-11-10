@@ -1,3 +1,4 @@
+import { writingProviderOf } from "../prefs/settings-types";
 import { railShown } from "./frame/useSidePanels";
 import { useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -149,9 +150,9 @@ export function useWindowDocuments({
   const aiTitleFor = useDraftTitles(
     tabs,
     settings.textusAi && settings.autoSuggestFilename
-      ? settings.aiProvider
+      ? writingProviderOf(settings)
       : null,
-    settings.writingModels[settings.aiProvider] || null,
+    settings.writingModels[writingProviderOf(settings)] || null,
   );
   const saving = useSaveTabs({
     tabState,

@@ -1,0 +1,22 @@
+/* A provider's logo, at the size of the text beside it, scaled with
+   it: a square the mark fills; a custom endpoint's initial in a tile. */
+.provider-logo {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.provider-logo > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.provider-logo-letter {
+  border-radius: var(--shape-s);
+  background: var(--ui-hover);
+  color: var(--ui-muted);
+  font-size: 0.8em;
+  font-weight: 600;
+}

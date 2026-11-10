@@ -1,3 +1,4 @@
+import { writingProviderOf } from "../prefs/settings-types";
 import type { Editor } from "@milkdown/kit/core";
 import { createGhostTextPlugin } from "./writing/ghost-text-plugin";
 import { buildCompletionStyle } from "./writing/completion-style";
@@ -71,9 +72,11 @@ export function withAiPlugins(
         createGhostTextPlugin({
           enabled: () =>
             aiFeatures(settings.current).completion && tour.current !== "muted",
-          provider: () => settings.current.aiProvider,
+          provider: () => writingProviderOf(settings.current),
           model: () =>
-            settings.current.writingModels[settings.current.aiProvider] || null,
+            settings.current.writingModels[
+              writingProviderOf(settings.current)
+            ] || null,
           style: () => buildCompletionStyle(settings.current.completionTone),
           uiLanguage: () => settings.current.language,
           project: () => ({
@@ -89,9 +92,11 @@ export function withAiPlugins(
         createGrammarCheckPlugin({
           enabled: () =>
             aiFeatures(settings.current).grammar && tour.current !== "muted",
-          provider: () => settings.current.aiProvider,
+          provider: () => writingProviderOf(settings.current),
           model: () =>
-            settings.current.writingModels[settings.current.aiProvider] || null,
+            settings.current.writingModels[
+              writingProviderOf(settings.current)
+            ] || null,
           strictness: () => settings.current.grammarStrictness,
           uiLanguage: () => settings.current.language,
           project: () => ({

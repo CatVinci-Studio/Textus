@@ -1,0 +1,86 @@
+/* Providers: the list on the left (the shared list-top search over it),
+   the picked one beside it; on a narrow page they stack. */
+.providers-page {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+  overflow: hidden;
+}
+
+.providers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px 8px;
+  border-inline-end: 1px solid var(--ui-border);
+}
+
+.providers-list > .pane-search {
+  margin: 0 -8px;
+}
+
+.providers-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--shape-s);
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  text-align: start;
+  cursor: default;
+}
+
+.providers-item:hover {
+  background: var(--ui-hover);
+}
+
+.providers-item[aria-current] {
+  background: var(--ui-selected);
+}
+
+.providers-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.providers-detail {
+  min-width: 0;
+  padding: 16px 18px;
+}
+
+.providers-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: var(--text-title);
+}
+
+.providers-head-name {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.providers-head-status,
+.providers-note {
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+}
+
+@container settings-page (max-width: 560px) {
+  .providers-page {
+    grid-template-columns: 1fr;
+  }
+
+  .providers-list {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--ui-border);
+  }
+}

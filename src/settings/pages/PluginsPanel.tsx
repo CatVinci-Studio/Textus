@@ -7,7 +7,7 @@ import {
 import { SearchField } from "../../engine/controls/SearchField";
 import {
   ChevronIcon,
-  PlusIcon,
+  MoreIcon,
   RefreshIcon,
 } from "../../engine/controls/icons";
 import { IconButton } from "../../engine/controls/IconButton";
@@ -53,9 +53,8 @@ const openPage = (id: string) =>
  * The sidebar's Plugins page: one box over what is installed and what the
  * market offers, a row each - icon, name, its line, who made it - and the
  * one thing to do beside it (install, update). A row opens its plugin's
- * page in a tab. Over the search: the switch for all plugins, "update
- * all" while there are updates, and "+" to add one (Create, a file, a
- * folder).
+ * page in a tab. Beside the search: "update all" while there are
+ * updates, and "⋯" to add one or turn them all off.
  */
 export function PluginsPanel({
   t,
@@ -102,19 +101,13 @@ export function PluginsPanel({
   return (
     <div className="plugins-panel">
       <div className="plugins-panel-top">
-        <label className="plugins-panel-switch">
-          <input
-            type="checkbox"
-            role="switch"
-            className="tx-switch"
-            checked={plugins.allOn}
-            onChange={(e) => {
-              const on = e.target.checked;
-              void attempt(() => setAllPlugins(on));
-            }}
-          />
-          {t.pluginsAllLabel}
-        </label>
+        <SearchField
+          className="plugins-panel-search"
+          value={query}
+          placeholder={t.pluginsSearch}
+          aria-label={t.pluginsSearch}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         {updates.length > 0 && (
           <IconButton
             label={t.pluginsUpdateAll.replace(
@@ -130,31 +123,24 @@ export function PluginsPanel({
           </IconButton>
         )}
         <IconButton
-          label={t.pluginsAdd}
-          className="tree-tool plugins-panel-add"
+          label={t.pluginsMore}
+          className="tree-tool plugins-panel-more"
           onClick={() => {
             const box = document
-              .querySelector(".plugins-panel-add")
+              .querySelector(".plugins-panel-more")
               ?.getBoundingClientRect();
             setMenu(box ? { x: box.left, y: box.bottom + 4 } : null);
           }}
         >
-          <PlusIcon />
+          <MoreIcon />
         </IconButton>
       </div>
-      <SearchField
-        className="plugins-panel-search"
-        value={query}
-        placeholder={t.pluginsSearch}
-        aria-label={t.pluginsSearch}
-        onChange={(e) => setQuery(e.target.value)}
-      />
       <Presence show={menu !== null} exitMs={120}>
         {menu && (
           <ContextMenu
             x={menu.x}
             y={menu.y}
-            items={addMenu(t, attempt)}
+            items={moreMenu(t, plugins.allOn, attempt)}
             onClose={() => setMenu(null)}
           />
         )}
@@ -338,28 +324,35 @@ function GroupHeading({
   );
 }
 
-/** The list's "+": the ways to add a plugin. */
-function addMenu(
+/** The list's "⋯": add a plugin - from a file, by making one, or as a
+ *  script - and turn every plugin off (or back on) at once. */
+function moreMenu(
   t: Strings,
+  allOn: boolean,
   attempt: (run: () => Promise<unknown>) => Promise<unknown>,
 ): ContextMenuEntry[] {
-  const add = (folder: boolean) =>
+  const fromFile = () =>
     void attempt(async () => {
-      const opened = await installPluginFiles(t, folder);
+      const opened = await installPluginFiles(t, false);
       if (opened) openPage(opened);
     });
   return [
+    ...(isDesktopApp
+      ? [{ label: t.pluginsInstallFile, onSelect: fromFile }]
+      : []),
     { label: t.createMakePlugin, onSelect: () => requestCreate("", "plugin") },
     ...(isDesktopApp
       ? [
-          "separator" as const,
-          { label: t.pluginsInstallFile, onSelect: () => add(false) },
-          { label: t.pluginsLoadFolder, onSelect: () => add(true) },
           {
             label: t.pluginsOpenScripts,
             onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
           },
         ]
       : []),
+    "separator",
+    {
+      label: allOn ? t.pluginsDisableAll : t.pluginsEnableAll,
+      onSelect: () => void attempt(() => setAllPlugins(!allOn)),
+    },
   ];
 }

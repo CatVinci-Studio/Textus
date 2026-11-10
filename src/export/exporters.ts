@@ -307,7 +307,7 @@ async function drawnPictures(): Promise<Map<string, (string | null)[]>> {
 // The menu's place a failed Pandoc export points to.
 function pandocErrorText(err: unknown, t: Strings): string {
   const where = t.pandocErrorSettings
-    .replace("{page}", t.navEditor)
+    .replace("{page}", t.navEditing)
     .replace("{group}", t.menuExport);
   return `${t.exportFailed} ${explainError(err, t)}\n\n${where}`;
 }
