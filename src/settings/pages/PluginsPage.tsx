@@ -59,20 +59,8 @@ export function PluginsPage({ t }: SettingsPageProps) {
 
   const installFile = (folder: boolean) =>
     attempt(async () => {
-      const paths =
-        (await pluginsIpc.pickPackage(folder, t.pluginPackageFilter)) ?? [];
-      if (!paths.length) return;
-      if (folder) return setOpen(await loadDevPlugin(paths[0]));
-      // Several installed one after another; one alone opens its page,
-      // with its README.
-      if (paths.length === 1) return setOpen(await installPlugin(paths[0]));
-      // One that fails doesn't stop the others: each failure is told after.
-      const failed: string[] = [];
-      for (const path of paths)
-        await installPlugin(path).catch((e: unknown) =>
-          failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
-        );
-      if (failed.length) throw new Error(failed.join("\n"));
+      const opened = await installPluginFiles(t, folder);
+      if (opened) setOpen(opened);
     });
 
   // A catalog plugin installed from its page goes on as the installed
@@ -328,11 +316,32 @@ function PluginCard({
 
 /** What "Edit with AI" puts in the AI panel's box: the plugin, and the
  *  error it last stopped with, for the user to say what to change. */
-function editRequest(record: PluginRecord, t: Strings): string {
+export function editRequest(record: PluginRecord, t: Strings): string {
   const ask = t.pluginEditWithAiAsk
     .replace("{name}", pluginName(record))
     .replace("{id}", record.id);
   return record.problem
     ? `${ask}${t.pluginEditWithAiError.replace("{error}", record.problem)}`
     : ask;
+}
+
+/** Installs plugins picked from disk - a folder loaded as it is, or one or
+ *  more packages; the id of the one to open after (one alone), else null.
+ *  One that fails doesn't stop the others: each failure is told after. */
+export async function installPluginFiles(
+  t: Strings,
+  folder: boolean,
+): Promise<string | null> {
+  const paths =
+    (await pluginsIpc.pickPackage(folder, t.pluginPackageFilter)) ?? [];
+  if (!paths.length) return null;
+  if (folder) return loadDevPlugin(paths[0]);
+  if (paths.length === 1) return installPlugin(paths[0]);
+  const failed: string[] = [];
+  for (const path of paths)
+    await installPlugin(path).catch((e: unknown) =>
+      failed.push(`${path.split(/[\\/]/).pop()}: ${String(e)}`),
+    );
+  if (failed.length) throw new Error(failed.join("\n"));
+  return null;
 }

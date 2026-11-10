@@ -1706,6 +1706,8 @@ utiliser une.
   pluginsCatalogLoading: "Chargement de la liste…",
   pluginsCatalogFailed: "Impossible de charger la liste : {reason}",
   pluginsCatalogRetry: "Réessayer",
+  pluginsSearch: "Rechercher des plugins",
+  pluginUpdateNow: "Mettre à jour",
   pluginNeedsFolder: "Ouvrez un dossier pour utiliser ce plugin.",
   pluginPageFailed: "Ce plugin n'a pas pu afficher sa page.",
   pluginsCatalogAllInstalled:

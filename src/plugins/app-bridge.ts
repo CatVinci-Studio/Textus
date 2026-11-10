@@ -74,7 +74,9 @@ export interface PluginTabView {
   plugin: string;
   /** A view's id (contributes.views) or a custom editor's viewType. */
   view: string;
-  kind: "view" | "list" | "editor" | "web";
+  /** "page": one of Textus's own (app/tabs/page-tabs.tsx), `plugin`
+   *  "textus" and `view` the page. */
+  kind: "view" | "list" | "editor" | "web" | "page";
   /** The file a custom editor shows; a web page's address. */
   resource?: string;
   title?: string;

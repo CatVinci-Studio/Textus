@@ -1678,6 +1678,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginsCatalogLoading: "Liste wird geladen …",
   pluginsCatalogFailed: "Die Liste konnte nicht geladen werden: {reason}",
   pluginsCatalogRetry: "Erneut versuchen",
+  pluginsSearch: "Plugins suchen",
+  pluginUpdateNow: "Aktualisieren",
   pluginNeedsFolder: "Öffne einen Ordner, um dieses Plugin zu nutzen.",
   pluginPageFailed: "Dieses Plugin konnte seine Seite nicht zeigen.",
   pluginsCatalogAllInstalled: "Alle Plugins der Liste sind installiert.",

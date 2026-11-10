@@ -1533,6 +1533,8 @@ export default {
   pluginsCatalogLoading: "正在讀取清單…",
   pluginsCatalogFailed: "無法讀取清單：{reason}",
   pluginsCatalogRetry: "重試",
+  pluginsSearch: "Search plugins",
+  pluginUpdateNow: "Update",
   pluginNeedsFolder: "Open a folder to use this plugin.",
   pluginPageFailed: "This plugin couldn't show its page.",
   pluginsCatalogAllInstalled: "清單裡的外掛都已經裝好了。",

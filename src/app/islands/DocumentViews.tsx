@@ -1,5 +1,6 @@
 import { Suspense, type CSSProperties } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
+import { PageTabContent } from "../tabs/page-tabs";
 import { EditorPane } from "../../document-view/EditorPane";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
@@ -95,7 +96,11 @@ export function DocumentViews({
                 : undefined
             }
           >
-            {tab.view?.kind === "web" && tab.view.resource ? (
+            {tab.view?.kind === "page" ? (
+              <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>
+                <PageTabContent tab={tab} />
+              </KeptWhileHidden>
+            ) : tab.view?.kind === "web" && tab.view.resource ? (
               <WebPagePane tabId={tab.id} url={tab.view.resource} t={t} />
             ) : tab.view?.kind === "list" ? (
               <KeptWhileHidden shown={tab.id === activeTabId || !!pane}>

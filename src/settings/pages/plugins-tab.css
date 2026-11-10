@@ -1,0 +1,32 @@
+/* The Plugins tab: the list at a fixed share on the left, the picked
+   plugin's page beside it, each scrolling on its own. */
+.plugins-tab {
+  display: grid;
+  grid-template-columns: minmax(240px, 30%) minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+}
+
+.plugins-tab-list {
+  overflow-y: auto;
+  padding: 12px 8px;
+  border-inline-end: 1px solid var(--ui-border);
+}
+
+.plugins-tab-page {
+  overflow-y: auto;
+  min-width: 0;
+  padding: 20px 28px 40px;
+}
+
+.plugins-tab-intro {
+  margin: 0 0 16px;
+  color: var(--ui-muted);
+}
+
+.plugins-tab-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}

@@ -1527,6 +1527,8 @@ export default {
   pluginsCatalogLoading: "正在读取列表…",
   pluginsCatalogFailed: "没能读取列表：{reason}",
   pluginsCatalogRetry: "重试",
+  pluginsSearch: "搜索插件",
+  pluginUpdateNow: "更新",
   pluginNeedsFolder: "打开一个文件夹后即可使用这个插件。",
   pluginPageFailed: "这个插件暂时没能显示。",
   pluginsCatalogAllInstalled: "列表里的插件都已经装好了。",

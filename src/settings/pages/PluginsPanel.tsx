@@ -5,8 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
-import { SettingsIcon } from "../../engine/controls/icons";
-import { Tooltip } from "../../engine/controls/Tooltip";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { emitToThisWindow } from "../../platform/menu-events";
 import {
   pluginName,
@@ -30,7 +29,8 @@ import { PluginIcon } from "./PluginArt";
 import { usePluginActions } from "./PluginAction";
 import "./plugins-panel.css";
 
-/** Opens a plugin's page in Settings (its README, settings, data). */
+/** Opens a plugin's page (its README, settings, data) in the Plugins
+ *  tab. */
 const openPage = (id: string) =>
   emitToThisWindow("menu-plugin-command", `plugin-settings:${id}`);
 
@@ -40,11 +40,28 @@ const openPage = (id: string) =>
  * one thing to do beside it (install, update) or its settings. The full
  * page of each stays in Settings › Extensions.
  */
-export function PluginsPanel({ t }: { t: Strings }) {
+export function PluginsPanel({
+  t,
+  picked,
+  onPick = openPage,
+}: {
+  t: Strings;
+  /** The plugin whose page shows beside the list. */
+  picked?: string | null;
+  /** A row chosen: its plugin's page. */
+  onPick?: (id: string) => void;
+}) {
   const plugins = useSyncExternalStore(subscribePlugins, pluginsSnapshot);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
-  const { actionFor } = usePluginActions(t);
+  const { actionFor, install, installing } = usePluginActions(t);
   const [query, setQuery] = useState("");
+  const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
+  const fold = (group: string) =>
+    setFolded((was) => {
+      const next = new Set(was);
+      if (!next.delete(group)) next.add(group);
+      return next;
+    });
   useEffect(() => {
     void loadCatalog();
   }, []);
@@ -62,49 +79,70 @@ export function PluginsPanel({ t }: { t: Strings }) {
       <SearchField
         className="plugins-panel-search"
         value={query}
-        placeholder={t.marketSearch}
-        aria-label={t.marketSearch}
+        placeholder={t.pluginsSearch}
+        aria-label={t.pluginsSearch}
         onChange={(e) => setQuery(e.target.value)}
       />
       <section aria-label={t.pluginsInstalledGroup}>
-        <h3 className="tx-list-heading">
-          {t.pluginsInstalledGroup}
-          <span className="plugins-panel-count">{installed.length}</span>
-        </h3>
-        {installed.map((record) => (
-          <PluginRow
-            key={record.id}
-            id={record.id}
-            name={pluginName(record)}
-            line={
-              record.manifest?.description
-                ? pluginText(record, record.manifest.description)
-                : ""
-            }
-            manifest={record.manifest}
-            off={record.status !== "on"}
-            onOpen={() => openPage(record.id)}
-            gear
-            t={t}
-            // An update is the one thing to do from here.
-            end={
-              catalog.status === "ready" && updateFor(record.id, catalog)
-                ? actionFor(record.id)
-                : null
-            }
-            icon={
-              <PluginIcon
-                id={record.id}
-                manifest={record.manifest}
-                origin={record.origin}
-              />
-            }
-          />
-        ))}
+        <GroupHeading
+          label={t.pluginsInstalledGroup}
+          count={installed.length}
+          open={!folded.has("installed")}
+          onToggle={() => fold("installed")}
+        />
+        {!folded.has("installed") &&
+          installed.map((record) => (
+            <PluginRow
+              key={record.id}
+              id={record.id}
+              name={pluginName(record)}
+              line={
+                record.manifest?.description
+                  ? pluginText(record, record.manifest.description)
+                  : ""
+              }
+              manifest={record.manifest}
+              off={record.status !== "on"}
+              picked={picked === record.id}
+              onOpen={() => onPick(record.id)}
+              t={t}
+              // An update is the one thing to do from here: one small
+              // button; other versions are on the plugin's page.
+              end={
+                catalog.status === "ready" && updateFor(record.id, catalog) ? (
+                  <button
+                    type="button"
+                    className="tx-button primary plugins-panel-update"
+                    disabled={installing !== null}
+                    onClick={() => {
+                      const item = catalog.items.find(
+                        (i) => i.id === record.id,
+                      );
+                      if (item) void install(item);
+                    }}
+                  >
+                    {t.pluginUpdateNow}
+                  </button>
+                ) : null
+              }
+              icon={
+                <PluginIcon
+                  id={record.id}
+                  manifest={record.manifest}
+                  origin={record.origin}
+                />
+              }
+            />
+          ))}
       </section>
       <section aria-label={t.extensionsAvailable}>
-        <h3 className="tx-list-heading">{t.extensionsAvailable}</h3>
-        {catalog.status !== "ready" ? (
+        <GroupHeading
+          label={t.extensionsAvailable}
+          count={catalog.status === "ready" ? offered.length : undefined}
+          open={!folded.has("available")}
+          onToggle={() => fold("available")}
+        />
+        {folded.has("available") ? null : catalog.status !== "ready" ? (
           <p className="tx-list-note">
             {catalog.status === "failed"
               ? t.pluginsCatalogFailed.replace("{reason}", catalog.error)
@@ -125,7 +163,8 @@ export function PluginsPanel({ t }: { t: Strings }) {
                 item.manifest.description,
               )}
               manifest={item.manifest}
-              onOpen={() => emitToThisWindow("menu-manage-plugins")}
+              picked={picked === item.id}
+              onOpen={() => onPick(item.id)}
               t={t}
               end={actionFor(item.id)}
               icon={
@@ -152,7 +191,7 @@ function PluginRow({
   icon,
   end,
   onOpen,
-  gear = false,
+  picked = false,
   t,
 }: {
   id: string;
@@ -164,8 +203,8 @@ function PluginRow({
   /** Its button: install, or update. */
   end: ReactNode;
   onOpen: () => void;
-  /** Installed: a gear to its settings. */
-  gear?: boolean;
+  /** Its page shows beside the list. */
+  picked?: boolean;
   t: Strings;
 }) {
   const by = manifest?.author || manifest?.publisher;
@@ -174,11 +213,13 @@ function PluginRow({
       className="plugins-panel-row"
       data-plugin={id}
       data-off={off || undefined}
+      data-picked={picked || undefined}
     >
       <button
         type="button"
         className="plugins-panel-open"
         aria-label={t.pluginOpenDetails.replace("{name}", name)}
+        aria-current={picked || undefined}
         onClick={onOpen}
       >
         {icon}
@@ -188,21 +229,35 @@ function PluginRow({
           {by && <span className="plugins-panel-by">{by}</span>}
         </span>
       </button>
-      <span className="plugins-panel-end">
-        {end}
-        {gear && (
-          <Tooltip text={t.pluginOpenDetails.replace("{name}", name)}>
-            <button
-              type="button"
-              className="tree-tool plugins-panel-gear"
-              aria-label={t.pluginOpenDetails.replace("{name}", name)}
-              onClick={onOpen}
-            >
-              <SettingsIcon />
-            </button>
-          </Tooltip>
-        )}
-      </span>
+      {end && <span className="plugins-panel-end">{end}</span>}
     </div>
+  );
+}
+
+/** A group's heading: a button that folds it, with how many it holds. */
+function GroupHeading({
+  label,
+  count,
+  open,
+  onToggle,
+}: {
+  label: string;
+  count?: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="tx-list-heading plugins-panel-group"
+      aria-expanded={open}
+      onClick={onToggle}
+    >
+      <ChevronIcon className="plugins-panel-chevron" />
+      {label}
+      {count !== undefined && (
+        <span className="plugins-panel-count">{count}</span>
+      )}
+    </button>
   );
 }

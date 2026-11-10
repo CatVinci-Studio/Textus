@@ -84,6 +84,11 @@ export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
   if (showsStartPage(tab)) return t.startPageTab;
+  // Textus's own pages, named in the window's language.
+  if (tab.view?.kind === "page")
+    return tab.view.view === "settings"
+      ? t.settingsTitle
+      : t.extensionsTabPlugins;
   if (tab.view)
     return (
       tab.view.title ??

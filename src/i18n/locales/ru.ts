@@ -1678,6 +1678,8 @@ export default {
   pluginsCatalogLoading: "Загрузка списка…",
   pluginsCatalogFailed: "Не удалось загрузить список: {reason}",
   pluginsCatalogRetry: "Повторить",
+  pluginsSearch: "Поиск плагинов",
+  pluginUpdateNow: "Обновить",
   pluginNeedsFolder: "Откройте папку, чтобы пользоваться этим плагином.",
   pluginPageFailed: "Плагин не смог показать свою страницу.",
   pluginsCatalogAllInstalled: "Все плагины из списка уже установлены.",

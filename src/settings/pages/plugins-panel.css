@@ -84,3 +84,48 @@
     opacity: 0;
   }
 }
+
+/* A group's heading folds it. */
+.plugins-panel-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  border: 0;
+  background: none;
+  text-align: start;
+  cursor: default;
+}
+
+/* Pointing down while open, right while folded. */
+.plugins-panel-chevron {
+  rotate: 90deg;
+  transition: rotate var(--dur-fast) var(--ease-standard);
+}
+
+.plugins-panel-group[aria-expanded="false"] .plugins-panel-chevron {
+  rotate: 0deg;
+}
+
+/* The one whose page shows beside the list. */
+.plugins-panel-row[data-picked] {
+  background: var(--ui-selected);
+}
+
+/* Its name and line keep their room; the button never squeezes them. */
+.plugins-panel-text {
+  flex: 1;
+}
+
+.plugins-panel-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.plugins-panel-update {
+  height: auto;
+  padding: 2px 10px;
+  font-size: var(--text-caption);
+  white-space: nowrap;
+}

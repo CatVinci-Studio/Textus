@@ -64,6 +64,8 @@ export interface SettingsPanelProps {
   pluginCommands?: ShortcutCommand[];
   /** The page to open at; General when left out. */
   initialCategory?: string;
+  /** Drawn as a tab's page (desktop): no dialog round it, no close. */
+  inTab?: boolean;
 }
 
 type Category = string;
@@ -107,6 +109,7 @@ export function SettingsPanel({
   fixedShortcuts = [],
   pluginCommands = [],
   initialCategory = "general",
+  inTab = false,
 }: SettingsPanelProps) {
   const { settings, setSettings, t } = useSettings();
   // A phone never has a margin, so there is nothing to explain there.
@@ -119,7 +122,7 @@ export function SettingsPanel({
   });
   // Closing Settings on a phone leaves the keyboard down: the user is
   // going back to the page, not necessarily to typing.
-  const modal = useModalDialog(onClose, true, undefined, false);
+  const modal = useModalDialog(onClose, !inTab, undefined, false);
   // Rendered inside a Presence: it goes the way it came.
   const presence = usePresenceProps<HTMLDivElement>();
   const nav = useSettingsNav(initialCategory);
@@ -223,6 +226,113 @@ export function SettingsPanel({
   // The phone's list leads to pages; it has no current one.
   const current = (id: Category) => !phone && !searching && category === id;
 
+  const layout = (
+    <div className="settings-layout" data-nav={nav.direction ?? undefined}>
+      {!pushed && (
+        <div className="settings-sidebar" key={atHome ? "home" : "side"}>
+          <SettingsSearchField
+            t={t}
+            inputRef={searchInput}
+            query={query}
+            listId={listId}
+            activeId={flatMatches.length ? optionId(activeIndex) : undefined}
+            onQueryChange={(next) => {
+              setQuery(next);
+              setActive(0);
+            }}
+            onMove={(step) =>
+              flatMatches.length &&
+              setActive(
+                (activeIndex + step + flatMatches.length) % flatMatches.length,
+              )
+            }
+            onPick={() => pick(flatMatches[activeIndex])}
+          />
+          {(!phone || !searching) && (
+            <nav className="settings-nav">
+              {categories.map((c) => (
+                <button
+                  key={c.id}
+                  aria-current={current(c.id) ? "page" : undefined}
+                  data-label={c.label}
+                  className={`settings-nav-item ${current(c.id) ? "settings-nav-item-active" : ""}`}
+                  onClick={() => {
+                    setQuery("");
+                    nav.open(c.id);
+                  }}
+                >
+                  <span className="settings-nav-label" data-label={c.label}>
+                    {c.label}
+                  </span>
+                  {phone && <ChevronIcon className="settings-nav-chevron" />}
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
+      )}
+
+      {searching ? (
+        <div
+          className="settings-content"
+          key="search"
+          role="region"
+          aria-label={t.settingsSearchResults}
+        >
+          <SettingsSearchResults
+            t={t}
+            groups={resultGroups}
+            listId={listId}
+            optionId={optionId}
+            active={activeIndex}
+            onPick={pick}
+          />
+        </div>
+      ) : atHome ? null : subpage ? (
+        <div
+          ref={content}
+          className="settings-content"
+          key={subpage}
+          role="region"
+          aria-label={subpageTitles[subpage]}
+        >
+          <button
+            type="button"
+            className="text-button settings-back-button"
+            onClick={nav.back}
+          >
+            <ChevronIcon className="settings-back-chevron" />
+            {categories.find((c) => c.id === category)?.label}
+          </button>
+          {renderSubpage(subpage)}
+        </div>
+      ) : (
+        <div
+          ref={content}
+          className="settings-content"
+          key={category}
+          role="region"
+          aria-label={categoryLabel}
+        >
+          <h1 className="settings-category-title">{categoryLabel}</h1>
+          {renderCategory(category)}
+        </div>
+      )}
+      {searching && (
+        <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
+      )}
+    </div>
+  );
+  if (inTab)
+    return (
+      <div
+        className="settings-panel settings-in-tab"
+        role="region"
+        aria-label={t.settingsTitle}
+      >
+        {layout}
+      </div>
+    );
   return (
     <div {...presence} className="settings-backdrop" onClick={onClose}>
       <div
@@ -260,106 +370,7 @@ export function SettingsPanel({
           </button>
         </div>
 
-        <div className="settings-layout" data-nav={nav.direction ?? undefined}>
-          {!pushed && (
-            <div className="settings-sidebar" key={atHome ? "home" : "side"}>
-              <SettingsSearchField
-                t={t}
-                inputRef={searchInput}
-                query={query}
-                listId={listId}
-                activeId={
-                  flatMatches.length ? optionId(activeIndex) : undefined
-                }
-                onQueryChange={(next) => {
-                  setQuery(next);
-                  setActive(0);
-                }}
-                onMove={(step) =>
-                  flatMatches.length &&
-                  setActive(
-                    (activeIndex + step + flatMatches.length) %
-                      flatMatches.length,
-                  )
-                }
-                onPick={() => pick(flatMatches[activeIndex])}
-              />
-              {(!phone || !searching) && (
-                <nav className="settings-nav">
-                  {categories.map((c) => (
-                    <button
-                      key={c.id}
-                      aria-current={current(c.id) ? "page" : undefined}
-                      data-label={c.label}
-                      className={`settings-nav-item ${current(c.id) ? "settings-nav-item-active" : ""}`}
-                      onClick={() => {
-                        setQuery("");
-                        nav.open(c.id);
-                      }}
-                    >
-                      <span className="settings-nav-label" data-label={c.label}>
-                        {c.label}
-                      </span>
-                      {phone && (
-                        <ChevronIcon className="settings-nav-chevron" />
-                      )}
-                    </button>
-                  ))}
-                </nav>
-              )}
-            </div>
-          )}
-
-          {searching ? (
-            <div
-              className="settings-content"
-              key="search"
-              role="region"
-              aria-label={t.settingsSearchResults}
-            >
-              <SettingsSearchResults
-                t={t}
-                groups={resultGroups}
-                listId={listId}
-                optionId={optionId}
-                active={activeIndex}
-                onPick={pick}
-              />
-            </div>
-          ) : atHome ? null : subpage ? (
-            <div
-              ref={content}
-              className="settings-content"
-              key={subpage}
-              role="region"
-              aria-label={subpageTitles[subpage]}
-            >
-              <button
-                type="button"
-                className="text-button settings-back-button"
-                onClick={nav.back}
-              >
-                <ChevronIcon className="settings-back-chevron" />
-                {categories.find((c) => c.id === category)?.label}
-              </button>
-              {renderSubpage(subpage)}
-            </div>
-          ) : (
-            <div
-              ref={content}
-              className="settings-content"
-              key={category}
-              role="region"
-              aria-label={categoryLabel}
-            >
-              <h1 className="settings-category-title">{categoryLabel}</h1>
-              {renderCategory(category)}
-            </div>
-          )}
-          {searching && (
-            <SettingsSearchIndex pages={searchPages} onEntries={setEntries} />
-          )}
-        </div>
+        {layout}
       </div>
     </div>
   );

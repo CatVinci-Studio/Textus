@@ -9,7 +9,16 @@ import { Suspense, useState } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
-import { SettingsLayer } from "./SettingsLayer";
+import {
+  PluginsTabPage,
+  SettingsLayer,
+  SettingsTabPage,
+} from "./SettingsLayer";
+import {
+  PageTabProvider,
+  type AppPage,
+  type PageRequest,
+} from "./tabs/page-tabs";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
 import { formatCombo } from "../utils/shortcuts";
@@ -116,264 +125,271 @@ function App() {
   // out, in the row under it), or none: a clean sheet; the phone's own bar.
   const tabRow = tabsInBar && !isIOSApp ? "bar" : undefined;
 
+  // What Settings needs, as a sheet or as a tab.
+  const settingsProps = {
+    onOpenFile: (path: string) => void openFile(path),
+    onFilesDeleted: skillFilesDeleted,
+    docPath: activeTab.path,
+    fixedShortcuts: fixedShortcutGroups(t, platformName()),
+    pluginCommands: commands()
+      // Textus's own (Save, Close Tab) have their keys under File.
+      .filter((c) => !c.id.startsWith("textus."))
+      .map((c) => ({ id: c.id, title: c.title(t), shortcut: c.shortcut })),
+  };
+  const renderPage = (page: AppPage, request: PageRequest | null) =>
+    page === "settings" ? (
+      <SettingsTabPage request={request} {...settingsProps} />
+    ) : (
+      <PluginsTabPage request={request} t={t} />
+    );
+
   return (
-    <AgentPanelProvider
-      // The conversation stays in the panel while it plays its exit.
-      open={agentPresence.mounted}
-      setOpen={agentPanel.setOpen}
-      container={agentPanelEl}
-      tab={agentPanel.tab}
-      setTab={agentPanel.setTab}
-    >
-      <FlipOnChange
-        watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
-        targets={() =>
-          document.querySelectorAll(
-            // The islands whole and what is inside them: a sheet that
-            // jumped while its tabs slid came apart.
-            '.main-pane > :is([data-island], .island-row, .split-pane), [data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
-          )
-        }
-        duration="--dur-settle"
-        easing="--ease-settle"
-        prepare={settleTabRows}
-      />
-      <div
-        className="app-shell"
-        // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
-        // window bar's row, in a row of their own under the menu bar, or
-        // none.
-        data-layout={settings.layout}
-        data-tabs={tabRow}
-        style={
-          {
-            // The sidebar's dragged width; an iPad's sidebar has no handle.
-            ...(!isIOSApp && {
-              "--sidebar-width": `${sidebarWidth.width}px`,
-            }),
-            // The document column is half the sidebar's width right of the
-            // window's centre, and half the AI panel's width left of it. The
-            // window bar's title follows both to stay over the column. The
-            // sidebar's half is kept apart so it can ride the sidebar's
-            // slide; the panel's so it can follow the room the editor makes
-            // or takes back, at the page's pace.
-            "--window-bar-title-slide": `${
-              panelOpen ? sidebarWidth.width / 2 : 0
-            }px`,
-            "--window-bar-title-shift": `${
-              isIOSApp
-                ? agentPresence.mounted
-                  ? -(agentPanel.width / 2)
-                  : 0
-                : -(aiIsland.drawnWidth / 2)
-            }px`,
-          } as React.CSSProperties
-        }
+    <PageTabProvider render={renderPage}>
+      <AgentPanelProvider
+        // The conversation stays in the panel while it plays its exit.
+        open={agentPresence.mounted}
+        setOpen={agentPanel.setOpen}
+        container={agentPanelEl}
+        tab={agentPanel.tab}
+        setTab={agentPanel.setTab}
       >
-        <WindowBar
-          menuChecks={menuChecks}
-          title={activeTitle}
-          dirty={activeDirty}
-          largeDoc={featuresPaused}
-          words={wordCount.words}
-          sidebarOpen={panelOpen}
-          sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
-          onToggleSidebar={toggleSidebar}
-          showAgentToggle={aiFeatures(settings, tutorial.active).chat}
-          agentOpen={agentPanel.open}
-          agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
-          onToggleAgent={toggleAgentPanel}
-          onToggleReadOnly={() => toggleReadOnly()}
-        />
-        <Sidebar
-          open={panelOpen}
-          presence={sidebarPresence}
-          closing={sidebarClosing}
-          mode={panelMode}
-          onModeChange={setPanelMode}
-          width={sidebarWidth}
-          openFolder={openFolder}
-          activePath={activeTab.path}
-          activeContent={activeTab.content}
-          activeTabId={activeTab.id}
-          onToggle={toggleSidebar}
-          onClose={() => setPanelOpen(false)}
-          onOpenFile={(path, how) =>
-            void openFile(
-              path,
-              how === "beside"
-                ? { where: "beside" }
-                : { preview: how === "preview" },
+        <FlipOnChange
+          watch={`${panelOpen} ${agentPresence.mounted} ${zenMode}`}
+          targets={() =>
+            document.querySelectorAll(
+              // The islands whole and what is inside them: a sheet that
+              // jumped while its tabs slid came apart.
+              '.main-pane > :is([data-island], .island-row, .split-pane), [data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view, .tab-bar > [data-flip-id]',
             )
           }
-          onEntryMoved={entryMoved}
-          searchFocusRequest={searchFocusRequest}
-          onSearchFocusHandled={clearSearchFocusRequest}
-          t={t}
+          duration="--dur-settle"
+          easing="--ease-settle"
+          prepare={settleTabRows}
         />
-
-        <DocumentIslands
-          tabs={tabs}
-          activeTabId={activeTabId}
-          showTabBar={showTabBar}
-          onActivate={setActiveTabId}
-          onClose={requestCloseTab}
-          onAdd={addBlankTab}
-          onDetach={handleTabDetach}
-          onMoveToNewWindow={moveTabToNewWindow}
-          onToggleReadOnly={toggleReadOnly}
-          onReorder={reorderTab}
-          onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
-          previewTab={dragHoverPreview}
-          onTabsInBar={setTabsInBar}
-          onChange={handleChange}
-          typewriter={settings.typewriterMode}
-          formatBar={settings.formatBar}
-          aiIsland={
-            isIOSApp
-              ? undefined
-              : (place) => (
-                  <AiIsland
-                    // In Zen it is the page's side too.
-                    place={zenMode ? { ...place, plain: true } : place}
-                    state={agentPresence.state}
-                    mountRef={setAgentPanelEl}
-                    conversations={conversations}
-                    aiOn={textusAi.on}
-                    sourceMode={!!activeTab.sourceMode}
-                    onToggleSourceMode={toggleSourceMode}
-                    onWidth={aiIsland.setDrawnWidth}
-                    t={t}
-                  />
-                )
+        <div
+          className="app-shell"
+          // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
+          // window bar's row, in a row of their own under the menu bar, or
+          // none.
+          data-layout={settings.layout}
+          data-tabs={tabRow}
+          style={
+            {
+              // The sidebar's dragged width; an iPad's sidebar has no handle.
+              ...(!isIOSApp && {
+                "--sidebar-width": `${sidebarWidth.width}px`,
+              }),
+              // The document column is half the sidebar's width right of the
+              // window's centre, and half the AI panel's width left of it. The
+              // window bar's title follows both to stay over the column. The
+              // sidebar's half is kept apart so it can ride the sidebar's
+              // slide; the panel's so it can follow the room the editor makes
+              // or takes back, at the page's pace.
+              "--window-bar-title-slide": `${
+                panelOpen ? sidebarWidth.width / 2 : 0
+              }px`,
+              "--window-bar-title-shift": `${
+                isIOSApp
+                  ? agentPresence.mounted
+                    ? -(agentPanel.width / 2)
+                    : 0
+                  : -(aiIsland.drawnWidth / 2)
+              }px`,
+            } as React.CSSProperties
           }
-          tour={
-            tutorial.active && tutorial.tabId
-              ? {
-                  tabId: tutorial.tabId,
-                  ai: tutorial.practiceAi,
-                  mode: tutorial.agentMode,
-                }
-              : null
-          }
-          zen={zenMode}
-          lang={settings.language}
-          t={t}
-        />
-
-        {/* On the desktop the AI island is one in the documents' grid; an
-            iPhone or iPad keeps its own page. */}
-        {isIOSApp && agentPresence.mounted && (
-          <AgentPanelDock
-            presence={agentPresence}
-            closing={agentClosing}
-            width={agentPanel.width}
-            min={agentPanel.min}
-            max={agentPanel.max}
-            onResize={agentPanel.setWidth}
-            mountRef={setAgentPanelEl}
-            sourceMode={!!activeTab.sourceMode}
-            onToggleSourceMode={toggleSourceMode}
-            aiOn={textusAi.on}
+        >
+          <WindowBar
+            menuChecks={menuChecks}
+            title={activeTitle}
+            dirty={activeDirty}
+            largeDoc={featuresPaused}
+            words={wordCount.words}
+            sidebarOpen={panelOpen}
+            sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+            onToggleSidebar={toggleSidebar}
+            showAgentToggle={aiFeatures(settings, tutorial.active).chat}
+            agentOpen={agentPanel.open}
+            agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
+            onToggleAgent={toggleAgentPanel}
+            onToggleReadOnly={() => toggleReadOnly()}
+          />
+          <Sidebar
+            open={panelOpen}
+            presence={sidebarPresence}
+            closing={sidebarClosing}
+            mode={panelMode}
+            onModeChange={setPanelMode}
+            width={sidebarWidth}
+            openFolder={openFolder}
+            activePath={activeTab.path}
+            activeContent={activeTab.content}
+            activeTabId={activeTab.id}
+            onToggle={toggleSidebar}
+            onClose={() => setPanelOpen(false)}
+            onOpenFile={(path, how) =>
+              void openFile(
+                path,
+                how === "beside"
+                  ? { where: "beside" }
+                  : { preview: how === "preview" },
+              )
+            }
+            onEntryMoved={entryMoved}
+            searchFocusRequest={searchFocusRequest}
+            onSearchFocusHandled={clearSearchFocusRequest}
             t={t}
           />
-        )}
 
-        <SettingsLayer
-          opening={settingsOpening}
-          onOpenFile={(path) => void openFile(path)}
-          onFilesDeleted={skillFilesDeleted}
-          docPath={activeTab.path}
-          fixedShortcuts={fixedShortcutGroups(t, platformName())}
-          pluginCommands={commands()
-            // Textus's own (Save, Close Tab) have their keys under File.
-            .filter((c) => !c.id.startsWith("textus."))
-            .map((c) => ({
-              id: c.id,
-              title: c.title(t),
-              shortcut: c.shortcut,
-            }))}
-        />
+          <DocumentIslands
+            tabs={tabs}
+            activeTabId={activeTabId}
+            showTabBar={showTabBar}
+            onActivate={setActiveTabId}
+            onClose={requestCloseTab}
+            onAdd={addBlankTab}
+            onDetach={handleTabDetach}
+            onMoveToNewWindow={moveTabToNewWindow}
+            onToggleReadOnly={toggleReadOnly}
+            onReorder={reorderTab}
+            onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
+            previewTab={dragHoverPreview}
+            onTabsInBar={setTabsInBar}
+            onChange={handleChange}
+            typewriter={settings.typewriterMode}
+            formatBar={settings.formatBar}
+            aiIsland={
+              isIOSApp
+                ? undefined
+                : (place) => (
+                    <AiIsland
+                      // In Zen it is the page's side too.
+                      place={zenMode ? { ...place, plain: true } : place}
+                      state={agentPresence.state}
+                      mountRef={setAgentPanelEl}
+                      conversations={conversations}
+                      aiOn={textusAi.on}
+                      sourceMode={!!activeTab.sourceMode}
+                      onToggleSourceMode={toggleSourceMode}
+                      onWidth={aiIsland.setDrawnWidth}
+                      t={t}
+                    />
+                  )
+            }
+            tour={
+              tutorial.active && tutorial.tabId
+                ? {
+                    tabId: tutorial.tabId,
+                    ai: tutorial.practiceAi,
+                    mode: tutorial.agentMode,
+                  }
+                : null
+            }
+            zen={zenMode}
+            lang={settings.language}
+            t={t}
+          />
 
-        <ClosePrompt
-          open={!!pendingClose}
-          phone={phone}
-          dialogProps={closePrompt}
-          onSave={() => void closeSaving()}
-          onDiscard={() => void closeDiscarding()}
-          onCancel={cancelClose}
-          name={
-            pendingClose?.kind === "tab"
-              ? tabTitle(
-                  tabs.find((tab) => tab.id === pendingClose.tabId) ?? tabs[0],
-                  t,
-                )
-              : null
-          }
-          t={t}
-        />
+          {/* On the desktop the AI island is one in the documents' grid; an
+            iPhone or iPad keeps its own page. */}
+          {isIOSApp && agentPresence.mounted && (
+            <AgentPanelDock
+              presence={agentPresence}
+              closing={agentClosing}
+              width={agentPanel.width}
+              min={agentPanel.min}
+              max={agentPanel.max}
+              onResize={agentPanel.setWidth}
+              mountRef={setAgentPanelEl}
+              sourceMode={!!activeTab.sourceMode}
+              onToggleSourceMode={toggleSourceMode}
+              aiOn={textusAi.on}
+              t={t}
+            />
+          )}
 
-        {isIOSApp && (
-          <Suspense fallback={null}>
-            <KeyboardToolbar />
-          </Suspense>
-        )}
-        <Presence show={isIOSApp && documentsOpen} exitMs={320}>
-          {isIOSApp && documentsOpen && (
+          <SettingsLayer opening={settingsOpening} {...settingsProps} />
+
+          <ClosePrompt
+            open={!!pendingClose}
+            phone={phone}
+            dialogProps={closePrompt}
+            onSave={() => void closeSaving()}
+            onDiscard={() => void closeDiscarding()}
+            onCancel={cancelClose}
+            name={
+              pendingClose?.kind === "tab"
+                ? tabTitle(
+                    tabs.find((tab) => tab.id === pendingClose.tabId) ??
+                      tabs[0],
+                    t,
+                  )
+                : null
+            }
+            t={t}
+          />
+
+          {isIOSApp && (
             <Suspense fallback={null}>
-              <DocumentList
-                activePath={activeTab.path}
-                onClose={() => setDocumentsOpen(false)}
-                onOpen={openFromDocuments}
-                onRenamed={documentRenamed}
-                onDeleted={documentDeleted}
-                onOpenOther={() => {
-                  setDocumentsOpen(false);
-                  void openFileDialog();
-                }}
-              />
+              <KeyboardToolbar />
             </Suspense>
           )}
-        </Presence>
-        <AppDialogHost okLabel={t.dialogOk} />
-        <ReportProblemHost t={t} settings={settings} />
-        <QuickPickHost
-          emptyLabel={t.pluginQuickPickEmpty}
-          okLabel={t.pluginOk}
-        />
-        <PluginFormHost />
-        <FloatingViewsHost />
-        <NoticeHost />
+          <Presence show={isIOSApp && documentsOpen} exitMs={320}>
+            {isIOSApp && documentsOpen && (
+              <Suspense fallback={null}>
+                <DocumentList
+                  activePath={activeTab.path}
+                  onClose={() => setDocumentsOpen(false)}
+                  onOpen={openFromDocuments}
+                  onRenamed={documentRenamed}
+                  onDeleted={documentDeleted}
+                  onOpenOther={() => {
+                    setDocumentsOpen(false);
+                    void openFileDialog();
+                  }}
+                />
+              </Suspense>
+            )}
+          </Presence>
+          <AppDialogHost okLabel={t.dialogOk} />
+          <ReportProblemHost t={t} settings={settings} />
+          <QuickPickHost
+            emptyLabel={t.pluginQuickPickEmpty}
+            okLabel={t.pluginOk}
+          />
+          <PluginFormHost />
+          <FloatingViewsHost />
+          <NoticeHost />
 
-        {zenMode && <ZenExit onExit={() => setZenMode(false)} t={t} />}
+          {zenMode && <ZenExit onExit={() => setZenMode(false)} t={t} />}
 
-        <CornerStack corner="start">
-          <WordImportNotice
-            path={wordImported.path}
-            onDismiss={wordImported.dismiss}
+          <CornerStack corner="start">
+            <WordImportNotice
+              path={wordImported.path}
+              onDismiss={wordImported.dismiss}
+              t={t}
+            />
+            <DraftRestoredToast
+              count={draftsRestoredCount}
+              onDismiss={() => setDraftsRestoredCount(0)}
+              t={t}
+            />
+          </CornerStack>
+
+          <CornerStack corner="end">
+            <SuggestCard t={t} />
+            <ConventionsCard path={activeTab.path} settings={settings} t={t} />
+            <UpdateToast appUpdate={appUpdate} t={t} />
+          </CornerStack>
+
+          <OnboardingLayers
+            tutorial={tutorial}
+            settings={settings}
+            setSettings={setSettings}
             t={t}
           />
-          <DraftRestoredToast
-            count={draftsRestoredCount}
-            onDismiss={() => setDraftsRestoredCount(0)}
-            t={t}
-          />
-        </CornerStack>
-
-        <CornerStack corner="end">
-          <SuggestCard t={t} />
-          <ConventionsCard path={activeTab.path} settings={settings} t={t} />
-          <UpdateToast appUpdate={appUpdate} t={t} />
-        </CornerStack>
-
-        <OnboardingLayers
-          tutorial={tutorial}
-          settings={settings}
-          setSettings={setSettings}
-          t={t}
-        />
-      </div>
-    </AgentPanelProvider>
+        </div>
+      </AgentPanelProvider>
+    </PageTabProvider>
   );
 }
 

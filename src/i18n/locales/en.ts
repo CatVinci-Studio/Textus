@@ -1641,6 +1641,8 @@ type /name in a conversation to use one.
   pluginsCatalogLoading: "Loading the list…",
   pluginsCatalogFailed: "Couldn’t load the list: {reason}",
   pluginsCatalogRetry: "Try again",
+  pluginsSearch: "Search plugins",
+  pluginUpdateNow: "Update",
   pluginNeedsFolder: "Open a folder to use this plugin.",
   pluginPageFailed: "This plugin couldn't show its page.",
   pluginsCatalogAllInstalled: "You have every plugin listed here.",

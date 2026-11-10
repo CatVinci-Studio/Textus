@@ -1596,6 +1596,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginsCatalogLoading: "목록을 불러오는 중…",
   pluginsCatalogFailed: "목록을 불러오지 못했습니다: {reason}",
   pluginsCatalogRetry: "다시 시도",
+  pluginsSearch: "플러그인 검색",
+  pluginUpdateNow: "업데이트",
   pluginNeedsFolder: "폴더를 열면 이 플러그인을 사용할 수 있습니다.",
   pluginPageFailed: "이 플러그인의 페이지를 표시하지 못했습니다.",
   pluginsCatalogAllInstalled: "목록의 플러그인을 모두 설치했습니다.",
