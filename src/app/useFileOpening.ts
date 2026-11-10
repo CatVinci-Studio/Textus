@@ -43,7 +43,8 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { openBeside } from "../engine/layout/store";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";
-import { splitForDrop, type DropTarget } from "./islands/split-drop";
+import { splitForDrop } from "./islands/split-drop";
+import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
 
 /** How a document opens, beyond which file. */

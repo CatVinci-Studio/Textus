@@ -25,11 +25,14 @@ function counted(tab: DocTab | undefined): tab is DocTab {
  * split's grid; alone it sits in the area's corner.
  */
 function DocumentCorner({
+  tabId,
   content,
   lang,
   style,
   t,
 }: {
+  /** Its tab: a drag hides the corner of the document it carries. */
+  tabId: string;
   content: string;
   lang: Lang;
   style?: CSSProperties;
@@ -45,7 +48,7 @@ function DocumentCorner({
     .replace("{words}", String(count.words))
     .replace("{characters}", String(count.characters));
   return (
-    <div className="document-corner" style={style}>
+    <div className="document-corner" data-tab-id={tabId} style={style}>
       {large && (
         <span className="large-doc-badge" title={t.largeDocHint}>
           {t.largeDocBadge}
@@ -77,6 +80,7 @@ export function DocumentCorners({
       counted(tab) && (
         <DocumentCorner
           key={tab.id}
+          tabId={tab.id}
           content={tab.content}
           lang={lang}
           style={style}

@@ -1,4 +1,4 @@
-import { pullTab } from "./split-drop";
+import { pullTab } from "./tab-pull";
 import {
   useEffect,
   useRef,

@@ -206,3 +206,56 @@ export function withoutAi(layout: SplitLayout): SplitLayout | null {
   const rest = tidy(layout.root, (p) => islandOf(p) !== "ai" && keepsItself(p));
   return rest ? settled(rest, layout.focus) : null;
 }
+
+/** One island of `tabIds`, `front` in front, as a layout: what a window
+ *  with no split shows, spelt out so a drag's preview can work on it. */
+export function oneIsland(
+  tabIds: readonly string[],
+  front: string | null,
+): SplitLayout {
+  const only = { ...pane([...tabIds]), front };
+  return {
+    root: { kind: "split", direction: "row", children: [only], sizes: [1] },
+    focus: only.id,
+  };
+}
+
+/** A drag's preview once the tab has left its place: `tabId` out of its
+ *  island, the island gone if that was all it held. Never stored. */
+export function lifted(layout: SplitLayout, tabId: string): SplitLayout {
+  const left = tidy(withoutTab(layout.root, tabId), keepsItself);
+  if (!left) return layout;
+  return {
+    root:
+      left.kind === "pane"
+        ? { kind: "split", direction: "row", children: [left], sizes: [1] }
+        : left,
+    focus: layout.focus,
+  };
+}
+
+/** A drag's preview of `tabId` joining pane `id` at `index`: its place
+ *  closed, a slot opened there, what that pane shows unchanged. One island
+ *  left is spelt out as one. Never stored. */
+export function joined(
+  layout: SplitLayout,
+  tabId: string,
+  id: string,
+  index: number,
+): SplitLayout {
+  const root = mapPanes(withoutTab(layout.root, tabId), (p) => {
+    if (p.id !== id) return p;
+    const tabs = [...p.tabs];
+    tabs.splice(Math.min(index, tabs.length), 0, tabId);
+    return { ...p, tabs };
+  });
+  const left = tidy(root, keepsItself);
+  if (!left) return layout;
+  return {
+    root:
+      left.kind === "pane"
+        ? { kind: "split", direction: "row", children: [left], sizes: [1] }
+        : left,
+    focus: layout.focus,
+  };
+}

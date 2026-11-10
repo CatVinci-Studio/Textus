@@ -72,10 +72,17 @@ export function DocumentViews({
             data-pane={pane?.name}
             data-pane-id={pane?.id}
             className={pane ? "split-pane" : undefined}
+            // Laid out by islands, a tab in none of them (one pulled away)
+            // takes no room, in front or not.
             style={
               pane
                 ? styleOf(pane.id)
-                : { display: tab.id === activeTabId ? "contents" : "none" }
+                : {
+                    display:
+                      tab.id === activeTabId && shownIn.size === 0
+                        ? "contents"
+                        : "none",
+                  }
             }
             onPointerDownCapture={
               pane && tab.id !== activeTabId

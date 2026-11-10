@@ -1,0 +1,10 @@
+/* An island lifted whole (island-lift.ts): above everything, a shadow
+   under it, following the pointer with no easing. */
+.island-lift {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  border-radius: var(--island-radius, var(--shape-m));
+  box-shadow: 0 12px 36px color-mix(in srgb, #000 18%, transparent);
+  opacity: 0.94;
+}

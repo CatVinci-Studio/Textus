@@ -13,6 +13,7 @@ import {
   type CSSProperties,
   type ReactNode,
   useLayoutEffect,
+  useSyncExternalStore,
 } from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
@@ -34,8 +35,13 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useSplitPanes } from "../../engine/layout/useSplitPanes";
 import { islandOf, panesOf, type Pane } from "../../engine/layout/tree";
-import { focusPane, reorderInPane } from "../../engine/layout/store";
-import { pullTab } from "./split-drop";
+import {
+  focusPane,
+  reorderInPane,
+  splitPreview,
+  subscribeSplit,
+} from "../../engine/layout/store";
+import { pullTab } from "./tab-pull";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../engine/controls/context-menu-items";
 
@@ -134,7 +140,12 @@ export function DocumentIslands({
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
   // A split's top panes always have their tabs; one pane, when shown;
   // none in Zen, its documents plain paper.
-  const tabsInBar = !zen && (docsSplit || showTabBar);
+  // A drag's preview (one island spelt out, say) keeps its rows of tabs.
+  const previewing = useSyncExternalStore(
+    subscribeSplit,
+    () => splitPreview() !== null,
+  );
+  const tabsInBar = !zen && (docsSplit || showTabBar || previewing);
   useLayoutEffect(() => onTabsInBar(tabsInBar), [tabsInBar, onTabsInBar]);
   // Each pane's sheet in the area's grid, as the area places them; without
   // its row, the sheet reaches up into the bar's.
