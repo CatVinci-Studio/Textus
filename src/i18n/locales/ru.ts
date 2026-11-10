@@ -1037,7 +1037,7 @@ export default {
   shortcutTakeChange: "Принять правку, на которую указывает панель проверки",
   shortcutKeepOriginal: "Оставить оригинал этой правки",
   contentThemeLabel: "Тема редактора",
-  themeDeleteButton: "Удалить тему",
+  themeDeleteButton: "Удалить",
   themeImportLabel: "Добавить тему из файла CSS",
   themeGetMore: "Другие темы",
   themeImportButton: "Импортировать CSS…",

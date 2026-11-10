@@ -927,7 +927,7 @@ export default {
   shortcutTakeChange: "採納審閱列指向的修改",
   shortcutKeepOriginal: "保留該處修改的原文",
   contentThemeLabel: "編輯器主題",
-  themeDeleteButton: "刪除主題",
+  themeDeleteButton: "刪除",
   themeImportLabel: "從 CSS 檔案加入主題",
   themeGetMore: "取得更多主題",
   themeImportButton: "匯入 CSS…",

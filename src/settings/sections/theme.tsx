@@ -381,6 +381,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 key={theme.id}
                 t={t}
                 data-user-theme={theme.id}
+                data-in-use={settings.themeId === theme.id || undefined}
                 name={theme.name}
                 description={copy?.description}
                 previews={copy?.previews}

@@ -1038,7 +1038,7 @@ para usar una.
   shortcutTakeChange: "Aceptar el cambio que señala la barra de revisión",
   shortcutKeepOriginal: "Mantener el original de ese cambio",
   contentThemeLabel: "Tema del editor",
-  themeDeleteButton: "Eliminar tema",
+  themeDeleteButton: "Eliminar",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
   themeGetMore: "Conseguir más temas",
   themeImportButton: "Importar CSS…",

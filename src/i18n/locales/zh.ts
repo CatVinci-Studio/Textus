@@ -925,7 +925,7 @@ export default {
   shortcutTakeChange: "采纳审阅条指向的修改",
   shortcutKeepOriginal: "保留该处修改的原文",
   contentThemeLabel: "编辑器主题",
-  themeDeleteButton: "删除该主题",
+  themeDeleteButton: "删除",
   themeImportLabel: "从 CSS 文件添加主题",
   themeGetMore: "获取更多主题",
   themeImportButton: "导入 CSS…",

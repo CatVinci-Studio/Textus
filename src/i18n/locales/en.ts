@@ -1001,7 +1001,7 @@ type /name in a conversation to use one.
   shortcutTakeChange: "Take the change the review bar points at",
   shortcutKeepOriginal: "Keep the original of that change",
   contentThemeLabel: "Editor theme",
-  themeDeleteButton: "Delete Theme",
+  themeDeleteButton: "Delete",
   themeImportLabel: "Add a theme from a CSS file",
   themeGetMore: "Get more themes",
   themeImportButton: "Import CSS…",

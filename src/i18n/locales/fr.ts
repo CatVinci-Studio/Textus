@@ -1051,7 +1051,7 @@ utiliser une.
     "Accepter la modification que désigne la barre de révision",
   shortcutKeepOriginal: "Garder l’original de cette modification",
   contentThemeLabel: "Thème de l'éditeur",
-  themeDeleteButton: "Supprimer le thème",
+  themeDeleteButton: "Supprimer",
   themeImportLabel: "Ajouter un thème depuis un fichier CSS",
   themeGetMore: "Obtenir d’autres thèmes",
   themeImportButton: "Importer du CSS…",

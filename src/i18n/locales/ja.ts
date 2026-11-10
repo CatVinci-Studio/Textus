@@ -981,7 +981,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutTakeChange: "レビューバーが指す変更を採用",
   shortcutKeepOriginal: "その変更の元の文を残す",
   contentThemeLabel: "エディターのテーマ",
-  themeDeleteButton: "テーマを削除",
+  themeDeleteButton: "削除",
   themeImportLabel: "CSS ファイルからテーマを追加",
   themeGetMore: "テーマをさらに入手",
   themeImportButton: "CSSをインポート…",

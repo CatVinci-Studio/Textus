@@ -1023,7 +1023,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutTakeChange: "Aceitar a alteração que a barra de revisão indica",
   shortcutKeepOriginal: "Manter o original dessa alteração",
   contentThemeLabel: "Tema do editor",
-  themeDeleteButton: "Apagar Tema",
+  themeDeleteButton: "Excluir",
   themeImportLabel: "Adicionar um tema de um arquivo CSS",
   themeGetMore: "Obter mais temas",
   themeImportButton: "Importar CSS…",

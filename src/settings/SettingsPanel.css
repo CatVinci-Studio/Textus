@@ -1321,14 +1321,16 @@ button.settings-skill-action:focus-visible {
   color: var(--ui-muted);
 }
 
-/* Themes, installed and in the store: in their group's frame, a grid of
-   tiles - the screenshot, the name (and a tag when in use), the line and
-   who made it, then the buttons. */
+/* Themes, installed and in the store: in their group's grey frame, a
+   grid of cards of one size - the screenshot, the name (a tag when in
+   use), two lines about it, who made it, then the buttons. Hover tints a
+   card; the one in use rings its screenshot. */
 .settings-group-body:has(> .theme-gallery-item) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-6) var(--space-4);
-  padding: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+  justify-content: start;
+  gap: var(--space-3);
+  padding: var(--space-3);
 }
 .settings-group-body:has(> .theme-gallery-item) > * + * {
   border-top: 0;
@@ -1340,29 +1342,50 @@ button.settings-skill-action:focus-visible {
   flex-direction: column;
   align-items: stretch;
   gap: var(--space-2);
-  padding: 0;
+  padding: var(--space-2);
+  border-radius: var(--shape-s);
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.settings-group-body > .theme-gallery-item:hover {
+  background: var(--ui-hover);
 }
 .settings-group-body > .theme-gallery-item > .theme-gallery-preview {
   width: 100%;
+  border-radius: var(--shape-xs);
+}
+.settings-group-body > .theme-gallery-item[data-in-use] > .theme-gallery-preview {
+  box-shadow: 0 0 0 2px var(--ui-accent);
 }
 .settings-group-body > .theme-gallery-item > .plugin-card-open {
+  gap: 2px;
   padding: 0;
+}
+.settings-group-body > .theme-gallery-item .plugin-card-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--text-caption);
+}
+.settings-group-body > .theme-gallery-item .plugin-byline {
+  font-size: var(--text-caption);
 }
 .settings-group-body > .theme-gallery-item > .settings-row-control {
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
   max-width: none;
+  margin-top: auto;
 }
-/* Appearance's advanced fold, then the store's groups: a group's gap. */
-.settings-advanced + .settings-group,
-.settings-advanced + * > .settings-group:first-child {
-  margin-top: var(--space-6);
-}
-
 .theme-card-name {
   display: flex;
   align-items: center;
   gap: var(--space-2);
   font-weight: 600;
+}
+
+/* Appearance's advanced fold, then the store's groups: a group's gap. */
+.settings-advanced + .settings-group,
+.settings-advanced + * > .settings-group:first-child {
+  margin-top: var(--space-6);
 }
