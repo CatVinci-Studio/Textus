@@ -14,9 +14,16 @@ describe("rowInsets", () => {
     // The controls end past the sheet's edge: past them.
     expect(rowInsets(row, 130, 900, 8, 20).start).toBe(38);
     // Barely past it: past the corner instead, never into its curve.
-    expect(rowInsets(row, 95, 900, 8, 20)).toMatchObject({
+    expect(rowInsets(row, 105, 900, 8, 20)).toMatchObject({
       start: 20,
       atCorner: false,
+    });
+  });
+  it("takes controls wholly before the row as no obstacle", () => {
+    // The app menu in the rail's column, beside a flush classic sheet.
+    expect(rowInsets(row, 95, 900, 8, 20)).toMatchObject({
+      start: 0,
+      atCorner: true,
     });
   });
   it("ends clear of the bar's status, or of the corner", () => {

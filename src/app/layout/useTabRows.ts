@@ -27,7 +27,9 @@ export function rowInsets(
   air: number,
   corner: number,
 ): RowInsets {
-  const clear = leadEnd + air - row.left;
+  // Controls wholly before the row (the menu in the rail's column) are no
+  // obstacle: the first tab can stand at the sheet's edge.
+  const clear = leadEnd <= row.left ? 0 : leadEnd + air - row.left;
   const atCorner = clear <= 0;
   return {
     start: atCorner ? 0 : Math.max(clear, corner),
