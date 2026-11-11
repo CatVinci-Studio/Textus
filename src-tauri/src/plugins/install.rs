@@ -1,9 +1,9 @@
-//! Installing a plugin from a folder or a `.textusplugin` zip, developer-mode
-//! loading, listing and uninstalling. A manifest is checked in full
+//! Installing a plugin from a folder or a `.textusplugin` zip, listing and
+//! uninstalling. A manifest is checked in full
 //! (`manifest::check`) before a plugin is put in place or loaded; listing
 //! reads only its id and version, so Settings can still show what is wrong.
 
-use super::state::{self, PluginEntry};
+use super::state;
 use super::{data_dir, plugins_root, require_id, MANIFEST};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
@@ -27,8 +27,8 @@ pub struct InstalledPlugin {
 }
 
 #[derive(Deserialize)]
-struct ManifestId {
-    id: String,
+pub(super) struct ManifestId {
+    pub(super) id: String,
     version: String,
 }
 
@@ -45,13 +45,21 @@ fn read_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
 }
 
 /// A folder's manifest, checked in full: what installing or loading needs.
-fn read_checked_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
+pub(super) fn read_checked_manifest(dir: &Path) -> Result<(ManifestId, String), String> {
     let (head, text) = read_manifest(dir)?;
     super::manifest::check(&text).map_err(|e| format!("{MANIFEST}: {e}"))?;
     Ok((head, text))
 }
 
-fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPlugin {
+/// The programs a manifest's agents run: `contributes.agents`, as written.
+fn agent_commands(manifest: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(manifest)
+        .ok()
+        .and_then(|m| m.pointer("/contributes/agents").map(|a| a.to_string()))
+        .unwrap_or_default()
+}
+
+pub(super) fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPlugin {
     InstalledPlugin {
         id,
         dir: dir.to_string_lossy().to_string(),
@@ -148,7 +156,12 @@ pub(super) fn install_sync(
         let dir = plugin_dir_in(&staging)?;
         let (head, text) = read_checked_manifest(&dir)?;
         let target = root.join(&head.id);
+        let agents_before = read_manifest(&target)
+            .ok()
+            .map(|(_, old)| agent_commands(&old));
         swap_in(&dir, &target, &staging.with_extension("old"))?;
+        // New programs to run are asked for again, an update or not.
+        let agents_changed = agents_before.is_some_and(|before| before != agent_commands(&text));
         // Installed now, so no longer a developer folder, and not Official until the
         // catalog says so. A file is code from anywhere under the same id:
         // off, asked again for what it may do, and given no secret kept for
@@ -159,6 +172,8 @@ pub(super) fn install_sync(
                 if from_file {
                     entry.enabled = false;
                     entry.granted.clear();
+                } else if agents_changed {
+                    entry.granted.retain(|g| g != "agents");
                 }
                 entry.dev_path = None;
                 entry.official = false;
@@ -361,77 +376,6 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
         std::fs::write(&target, bytes).map_err(|e| e.to_string())?;
     }
     Ok(())
-}
-
-/// Load a plugin folder…: the plugin runs from where it is, so changes show on
-/// reload. It starts off, like any new plugin - over one already here as
-/// well: other code under its id gets none of its permissions or secrets.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
-    let dir = PathBuf::from(&path);
-    let (head, text) = read_checked_manifest(&dir)?;
-    let id = head.id.clone();
-    let other_code = state::update(&app, |state| {
-        let entry = state.plugins.entry(id.clone()).or_default();
-        let other = entry.dev_path.as_deref() != Some(path.as_str());
-        if other {
-            *entry = PluginEntry {
-                dev_path: Some(path.clone()),
-                ..PluginEntry::default()
-            };
-        }
-        other
-    })?;
-    if other_code {
-        super::files::forget_secrets(&app, &id)?;
-    }
-    Ok(installed(head.id, &dir, text, true))
-}
-
-/// When a developer's plugin folder last changed (newest file, in ms, ignoring
-/// node_modules and .git), so the window reloads it. None for other plugins.
-#[tauri::command(async)]
-#[cfg_attr(test, specta::specta)]
-pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
-    require_id(&id)?;
-    let state = state::read(&app);
-    if let Some(path) = state.plugins.get(&id).and_then(|p| p.dev_path.clone()) {
-        return Ok(newest_change(&PathBuf::from(path), 0));
-    }
-    // A script runs from the scripts folder: a change to one of them
-    // reloads it.
-    Ok(super::scripts::script_file(&app, &id)
-        .and_then(|_| super::scripts::scripts_dir(&app).ok())
-        .and_then(|dir| newest_change(&dir, 0)))
-}
-
-fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
-    if depth > 6 {
-        return None;
-    }
-    let mut newest: Option<f64> = None;
-    for entry in std::fs::read_dir(dir).ok()?.flatten() {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if name.starts_with('.') || name == "node_modules" || name == "dist" {
-            continue;
-        }
-        let Ok(meta) = entry.metadata() else { continue };
-        let here = if meta.is_dir() {
-            newest_change(&entry.path(), depth + 1)
-        } else {
-            meta.modified()
-                .ok()
-                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                .map(|d| d.as_millis() as f64)
-        };
-        newest = match (newest, here) {
-            (Some(a), Some(b)) => Some(a.max(b)),
-            (a, b) => a.or(b),
-        };
-    }
-    newest
 }
 
 /// Removes a plugin: its entry, its storage and, unless loaded from a
