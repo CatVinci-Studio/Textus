@@ -16,9 +16,6 @@ export interface FrameIsland {
   row: Rect | null;
   sheet: Rect;
   whole: Rect;
-  /** Its tabs in order and the one in front. */
-  tabs: readonly string[];
-  front: string | null;
 }
 
 interface FrameLayout {

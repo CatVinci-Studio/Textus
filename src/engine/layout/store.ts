@@ -115,6 +115,19 @@ export function previewSplit(next: SplitLayout | null): void {
   publish();
 }
 
+/** Island `paneId` (null: the one island unsplit) as it is drawn - a drag's
+ *  preview, else the split, else the window's tabs: its tabs in order and
+ *  the one in front. */
+export function shownIsland(
+  paneId: string | null,
+): { tabs: readonly string[]; front: string | null } | null {
+  const shown = preview ?? layout;
+  if (paneId === null)
+    return shown ? null : { tabs: records.map((t) => t.id), front: active };
+  const pane = shown && panesOf(shown.root).find((p) => p.id === paneId);
+  return pane ? { tabs: pane.tabs, front: pane.front } : null;
+}
+
 /** The id of the pane `tabId` is in, or null when not split or in none. */
 export function paneOf(
   current: SplitLayout | null,

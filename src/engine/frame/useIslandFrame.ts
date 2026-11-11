@@ -97,14 +97,12 @@ function publish(
   const dy = room.origin.y + room.shellAt.y;
   const at = (r: Rect): Rect => ({ ...r, x: r.x + dx, y: r.y + dy });
   setFrameLayout({
-    islands: islands.map(({ key, paneId, rects, tabs, front }) => ({
+    islands: islands.map(({ key, paneId, rects }) => ({
       key,
       paneId,
       row: rects.row && at(rects.row),
       sheet: at(rects.sheet),
       whole: at(rects.whole),
-      tabs,
-      front,
     })),
     dividers: solved.dividers.map((d) => {
       const by = d.line.direction === "row" ? dx : dy;

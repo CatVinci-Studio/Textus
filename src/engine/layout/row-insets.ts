@@ -1,3 +1,4 @@
+import { shownIsland } from "./store";
 import { onAppearance } from "../tokens/appearance";
 import { useSyncExternalStore } from "react";
 import { scaledPx } from "../tokens/chrome-scale";
@@ -186,7 +187,8 @@ function insetsFor(
     air,
     Math.max(air, bar.corner),
   );
-  const joined = insets.atCorner && !!island && island.front === island.tabs[0];
+  const shown = island ? shownIsland(island.paneId) : null;
+  const joined = insets.atCorner && !!shown && shown.front === shown.tabs[0];
   return { ...insets, joined };
 }
 

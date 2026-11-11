@@ -1,3 +1,4 @@
+import { shownIsland } from "./store";
 import { scaledPx } from "../tokens/chrome-scale";
 import { isPhoneLayout } from "../controls/usePhoneLayout";
 import { frameLayout } from "../frame/frame-store";
@@ -114,11 +115,14 @@ export function dropGeometry(): DropGeometry {
   return {
     panes: split.map((island) => ({
       rect: domRect(island.sheet),
-      tabId: island.front ?? undefined,
+      tabId: shownIsland(island.paneId)?.front ?? undefined,
     })),
     single:
       !split.length && one
-        ? { rect: domRect(one.sheet), tabId: one.front ?? undefined }
+        ? {
+            rect: domRect(one.sheet),
+            tabId: shownIsland(null)?.front ?? undefined,
+          }
         : null,
     bars: split.flatMap((island) => {
       const pane = island.paneId!;
