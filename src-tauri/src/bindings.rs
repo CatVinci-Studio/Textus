@@ -338,7 +338,6 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::ai::workspace::ensure_global_agent_md,
                 crate::ai::workspace::load_agent_workspace,
                 crate::ai::workspace::open_global_agent_dir,
-                crate::ai::workspace::pick_workspace_root,
             ]),
         ),
         (

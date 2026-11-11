@@ -209,21 +209,10 @@ pub async fn export_save_dialog(
     filter_name: String,
     ext: String,
 ) -> Option<String> {
-    use super::fs::with_default_extension;
-    use crate::dialogs::window_file_dialog;
     if let Some(target) = take_cli_export_target() {
         return Some(target);
     }
-    tauri::async_runtime::spawn_blocking(move || {
-        window_file_dialog(&window)
-            .set_file_name(&default_name)
-            .add_filter(&filter_name, &[ext.as_str()])
-            .blocking_save_file()
-            .map(|p| with_default_extension(p.to_string(), &ext))
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::save_file(window, default_name, None, (filter_name, ext)).await
 }
 
 #[cfg(desktop)]

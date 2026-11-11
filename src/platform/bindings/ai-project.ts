@@ -57,11 +57,6 @@ export const commands = {
 	 *  reveals it in the file manager. Desktop only: iOS has no file manager.
 	 */
 	open_global_agent_dir: (template: string) => __TAURI_INVOKE<null>("open_global_agent_dir", { template }),
-	/**
-	 *  Folder picker behind "Choose project folder…". Desktop only: the dialog
-	 *  plugin has no folder picker on iOS.
-	 */
-	pick_workspace_root: () => __TAURI_INVOKE<string | null>("pick_workspace_root"),
 };
 
 /* Types */

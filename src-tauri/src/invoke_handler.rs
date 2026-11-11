@@ -302,7 +302,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         cancel_session_quit,
         #[cfg(desktop)]
-        crate::ai::workspace::pick_workspace_root,
         #[cfg(desktop)]
         crate::ai::workspace::open_global_agent_dir,
         #[cfg(desktop)]

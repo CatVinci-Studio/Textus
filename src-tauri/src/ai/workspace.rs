@@ -245,29 +245,6 @@ pub async fn list_skills(
     .unwrap_or_default()
 }
 
-/// Folder picker behind "Choose project folder…". Desktop only: the dialog
-/// plugin has no folder picker on iOS.
-#[cfg(desktop)]
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<String>, String> {
-    let picked = tauri::async_runtime::spawn_blocking(move || {
-        crate::dialogs::window_file_dialog(&window).blocking_pick_folder()
-    })
-    .await
-    .map_err(|e| e.to_string())?;
-    let picked = picked.map(|p| p.to_string());
-    // The home directory or a drive root would hand the agent everything the user
-    // owns: refuse it here, with a reason the panel can show.
-    if picked
-        .as_deref()
-        .is_some_and(|p| crate::ai::project::is_too_broad(Path::new(p)))
-    {
-        return Err(crate::errors::error("tooBroad"));
-    }
-    Ok(picked)
-}
-
 /// Creates the global config folder (with a starter agent.md and skills/) and
 /// reveals it in the file manager. Desktop only: iOS has no file manager.
 #[cfg(desktop)]

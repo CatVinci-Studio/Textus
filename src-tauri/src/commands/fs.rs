@@ -73,49 +73,29 @@ pub async fn open_file_dialog(
         word_filter.as_deref().unwrap_or("Word documents"),
         all_filter.as_deref().unwrap_or("All files"),
     );
-    tauri::async_runtime::spawn_blocking(move || {
-        filters
-            .iter()
-            .fold(
-                crate::dialogs::window_file_dialog(&window),
-                |dialog, (name, exts)| dialog.add_filter(name, exts),
-            )
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    let filters = filters
+        .into_iter()
+        .map(|(name, exts)| (name, exts.iter().map(|e| e.to_string()).collect()))
+        .collect();
+    crate::dialogs::pick_file(window, filters).await
+}
+
+fn one(name: &str, ext: &str) -> Vec<(String, Vec<String>)> {
+    vec![(name.to_string(), vec![ext.to_string()])]
 }
 
 /// Opens a native file picker for a CSS theme file.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_css_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::dialogs::window_file_dialog(&window)
-            .add_filter("CSS", &["css"])
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, one("CSS", "css")).await
 }
 
 /// Picks a settings file to import (Settings › General).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn open_settings_file_dialog(window: tauri::WebviewWindow) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::dialogs::window_file_dialog(&window)
-            .add_filter("JSON", &["json"])
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, one("JSON", "json")).await
 }
 
 /// Asks where to export the settings to, as `default_name`.
@@ -125,16 +105,7 @@ pub async fn save_settings_file_dialog(
     window: tauri::WebviewWindow,
     default_name: String,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        crate::dialogs::window_file_dialog(&window)
-            .set_file_name(default_name)
-            .add_filter("JSON", &["json"])
-            .blocking_save_file()
-            .map(|p| with_default_extension(p.to_string(), "json"))
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::save_file(window, default_name, None, ("JSON".into(), "json".into())).await
 }
 
 /// Opens a native file picker for one image, for a missing image's card. The
@@ -146,16 +117,7 @@ pub async fn open_image_file_dialog(
     filter_name: String,
     extensions: Vec<String>,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let exts: Vec<&str> = extensions.iter().map(String::as_str).collect();
-        crate::dialogs::window_file_dialog(&window)
-            .add_filter(&filter_name, &exts)
-            .blocking_pick_file()
-            .map(|p| p.to_string())
-    })
-    .await
-    .ok()
-    .flatten()
+    crate::dialogs::pick_file(window, vec![(filter_name, extensions)]).await
 }
 
 /// Opens a native "Save As" dialog for a never-saved document, in `default_dir`
@@ -167,26 +129,11 @@ pub async fn save_file_dialog(
     default_name: String,
     default_dir: Option<String>,
 ) -> Option<String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let default_name = if default_name.trim().is_empty() {
-            "Untitled.md"
-        } else {
-            default_name.trim()
-        };
-        let dialog = crate::dialogs::window_file_dialog(&window);
-        let dialog = match default_dir.filter(|dir| Path::new(dir).is_dir()) {
-            Some(dir) => dialog.set_directory(dir),
-            None => dialog,
-        };
-        dialog
-            .set_file_name(default_name)
-            .add_filter("Markdown", &["md"])
-            .blocking_save_file()
-            .map(|p| with_default_extension(p.to_string(), "md"))
-    })
-    .await
-    .ok()
-    .flatten()
+    let name = match default_name.trim() {
+        "" => "Untitled.md".to_string(),
+        name => name.to_string(),
+    };
+    crate::dialogs::save_file(window, name, default_dir, ("Markdown".into(), "md".into())).await
 }
 
 /// GTK and the desktop portal return the name as typed ("notes"), where Windows
