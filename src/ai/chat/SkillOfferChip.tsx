@@ -41,7 +41,7 @@ export function SkillOfferChip({
    *  project's skill goes. */
   docPath: string | null;
 }) {
-  const { t } = useSettings();
+  const { settings, t } = useSettings();
   const [modes, setModes] = useState<AgentMode[]>(["write"]);
   const [state, setState] = useState<
     | { kind: "offered" }
@@ -54,7 +54,14 @@ export function SkillOfferChip({
     modes,
   );
   const save = (scope: "personal" | "project") => {
-    ai.saveOfferedSkill(offer, scope, docPath, null, modes, !!confirming).then(
+    ai.saveOfferedSkill(
+      offer,
+      scope,
+      docPath,
+      settings.agentWorkspaceRoot || null,
+      modes,
+      !!confirming,
+    ).then(
       () => setState({ kind: "saved" }),
       (err: unknown) => {
         const warnings = warningsIn(err);

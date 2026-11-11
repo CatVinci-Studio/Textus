@@ -375,7 +375,7 @@ fn is_data_uri(src: &str) -> bool {
 
 /// A link a reader can follow: relative, or http(s), file or mailto. A
 /// `javascript:` link keeps its text and loses the link.
-fn followable(href: &str) -> bool {
+pub(super) fn followable(href: &str) -> bool {
     let href = href.trim();
     if href.is_empty() {
         return false;

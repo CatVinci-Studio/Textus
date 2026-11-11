@@ -138,17 +138,17 @@ function ChatHistoryList({
               : t.chatHistoryUnsaved}
           </div>
           {group.entries.map((entry) => (
-            <div
-              key={entry.id}
-              className="chat-history-entry"
-              title={
-                entry.docPath
-                  ? t.chatHistoryRestoreHint
-                  : t.chatHistoryRestoreHereHint
-              }
-              onClick={() => onReopen(entry)}
-            >
-              <div className="chat-history-entry-main">
+            <div key={entry.id} className="chat-history-entry">
+              <button
+                type="button"
+                className="chat-history-entry-main"
+                aria-description={
+                  entry.docPath
+                    ? t.chatHistoryRestoreHint
+                    : t.chatHistoryRestoreHereHint
+                }
+                onClick={() => onReopen(entry)}
+              >
                 <span className="chat-history-entry-title">
                   {entry.title || "…"}
                 </span>
@@ -156,7 +156,7 @@ function ChatHistoryList({
                   {new Date(entry.updatedAt).toLocaleString(locale)}
                   {entry.docPath ? ` · ${basename(entry.docPath)}` : ""}
                 </span>
-              </div>
+              </button>
               <Tooltip text={t.chatHistoryDelete}>
                 <button
                   className="chat-history-entry-delete"
@@ -195,12 +195,12 @@ function SearchHits({
   return (
     <section className="chat-history-group">
       {hits.map((hit) => (
-        <div
-          key={hit.id}
-          className="chat-history-entry"
-          onClick={() => onReopen(hit)}
-        >
-          <div className="chat-history-entry-main">
+        <div key={hit.id} className="chat-history-entry">
+          <button
+            type="button"
+            className="chat-history-entry-main"
+            onClick={() => onReopen(hit)}
+          >
             <span className="chat-history-entry-title">{hit.title || "…"}</span>
             <span className="chat-history-hit">
               {hit.role === "user" ? t.chatHistoryByYou : t.chatHistoryByAi}:{" "}
@@ -210,7 +210,7 @@ function SearchHits({
               {new Date(hit.updatedAt).toLocaleString(locale)}
               {hit.docPath ? ` · ${basename(hit.docPath)}` : ""}
             </span>
-          </div>
+          </button>
         </div>
       ))}
     </section>

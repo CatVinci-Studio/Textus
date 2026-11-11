@@ -44,7 +44,11 @@ export function MessageQueue({
 }) {
   if (queue.length === 0) return null;
   return (
-    <div className="chat-queue" role="list" aria-label={labels.queued}>
+    <div
+      className="chat-queue"
+      role="list"
+      aria-label={labels.queued.replace("{n}", String(queue.length))}
+    >
       <div className="chat-queue-title">
         <span>
           {(paused ? labels.queuedPaused : labels.queued).replace(

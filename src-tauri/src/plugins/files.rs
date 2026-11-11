@@ -2,7 +2,7 @@
 //! no-overwrite create, a read-then-write that never loses a change), and the
 //! plugin's secrets. Each is checked against `state.json`.
 
-use super::access::{inside, refused, require_not_app_data};
+use super::access::{inside, refused, require_not_app_data, writable};
 use super::{require_id, state};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -69,7 +69,7 @@ pub async fn plugin_fs_create(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = writable(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
@@ -152,7 +152,7 @@ pub async fn plugin_fs_write_if(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = writable(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     let now = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,

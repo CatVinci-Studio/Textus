@@ -95,6 +95,8 @@ impl Numbering {
     /// counts, so a list starting at 5 or resuming reads as in Word. Letters and
     /// Roman numerals become the numbers they count.
     pub(crate) fn next_number(&mut self, num_id: &str, level: usize) -> usize {
+        // Word has nine levels; a file saying more is held to them.
+        let level = level.min(8);
         let start = self
             .start_overrides
             .get(&(num_id.to_string(), level))
@@ -109,5 +111,17 @@ impl Numbering {
         let number = counters[level].map_or(start, |last| last + 1);
         counters[level] = Some(number);
         number
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_list_level_past_words_nine_counts_as_the_last() {
+        let mut numbering = Numbering::default();
+        assert_eq!(numbering.next_number("1", 4_000_000_000), 1);
+        assert_eq!(numbering.counters["1"].len(), 9);
     }
 }

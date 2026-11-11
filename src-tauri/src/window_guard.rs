@@ -1,13 +1,23 @@
-//! A window showing the app stays on the app's own pages: a link or a script
-//! sending it anywhere else opens that address in the browser instead.
+//! What a window showing the app may load: its own pages and the plugins'
+//! and pictures it serves, and HTTPS (the webviews ask this of every frame,
+//! a plugin page's embeds too, and can't say which one is asking). Anything
+//! else - plain HTTP elsewhere, file:, other schemes - goes to the browser
+//! or nowhere; a page without the app's origin gets no IPC either way.
 
 use tauri::{AppHandle, Url};
 
-/// The app's own pages: its bundled ones, and the dev server while developing.
-pub(crate) fn stays_in_app(url: &Url, dev: bool) -> bool {
+/// The app's own hosts, as Windows and Android serve its schemes.
+const OWN_HOSTS: [&str; 4] = [
+    "tauri.localhost",
+    "textus-plugin.localhost",
+    "asset.localhost",
+    "ipc.localhost",
+];
+
+pub(crate) fn may_load(url: &Url, dev: bool) -> bool {
     match (url.scheme(), url.host_str()) {
-        ("tauri", _) | ("about", _) => true,
-        ("http" | "https", Some("tauri.localhost")) => true,
+        ("tauri" | "textus-plugin" | "asset" | "about" | "blob" | "data" | "https", _) => true,
+        ("http", Some(host)) if OWN_HOSTS.contains(&host) => true,
         ("http", Some("localhost" | "127.0.0.1")) => dev,
         _ => false,
     }
@@ -28,7 +38,7 @@ pub(crate) fn guard<'a, R: tauri::Runtime, M: tauri::Manager<R>>(
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
     let app = app.clone();
     builder.on_navigation(move |url| {
-        if stays_in_app(url, tauri::is_dev()) {
+        if may_load(url, tauri::is_dev()) {
             return true;
         }
         open_outside(&app, url);
@@ -40,22 +50,25 @@ pub(crate) fn guard<'a, R: tauri::Runtime, M: tauri::Manager<R>>(
 mod tests {
     use super::*;
 
-    fn stays(url: &str, dev: bool) -> bool {
-        stays_in_app(&Url::parse(url).unwrap(), dev)
+    fn loads(url: &str, dev: bool) -> bool {
+        may_load(&Url::parse(url).unwrap(), dev)
     }
 
     #[test]
-    fn only_the_apps_own_pages_load_in_its_windows() {
-        assert!(stays("tauri://localhost/index.html", false));
-        assert!(stays(
+    fn the_app_its_plugins_and_https_load_nothing_else() {
+        assert!(loads("tauri://localhost/index.html", false));
+        assert!(loads(
             "http://tauri.localhost/index.html?window=small",
             false
         ));
-        assert!(stays("about:blank", false));
-        assert!(stays("http://localhost:1420/", true));
-        assert!(!stays("http://localhost:1420/", false));
-        assert!(!stays("https://example.com/", false));
-        assert!(!stays("file:///etc/passwd", false));
-        assert!(!stays("http://tauri.localhost.evil.com/", false));
+        assert!(loads("http://textus-plugin.localhost/p/view.html", false));
+        assert!(loads("textus-plugin://localhost/p/view.html", false));
+        assert!(loads("about:srcdoc", false));
+        assert!(loads("https://www.youtube.com/embed/x", false));
+        assert!(loads("http://localhost:1420/", true));
+        assert!(!loads("http://localhost:1420/", false));
+        assert!(!loads("http://example.com/", false));
+        assert!(!loads("file:///etc/passwd", false));
+        assert!(!loads("http://tauri.localhost.evil.com/", false));
     }
 }

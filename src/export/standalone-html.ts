@@ -8,7 +8,7 @@ import {
 import { imageMimeForPath } from "../editor/images/pasted-files";
 import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
-import { escapeHtml } from "../utils/html";
+import { escapeHtml, styleText } from "../utils/html";
 import { lazyModule } from "../lazy/lazy-module";
 import {
   DETAILS_CLASS_PREFIX,
@@ -362,8 +362,8 @@ export function buildStandaloneHtml(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(base)}</title>
-<style>${collectInlinedCss()}</style>
-<style>${layoutCss}</style>
+<style>${styleText(collectInlinedCss())}</style>
+<style>${styleText(layoutCss)}</style>
 </head>
 <body class="${document.body.className}">
 <div class="app-shell"><div class="main-pane"><div class="editor-scroll"><div class="editor-content">${contentHtml}</div></div></div></div>

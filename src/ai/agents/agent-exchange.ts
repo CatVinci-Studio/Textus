@@ -1,4 +1,7 @@
 import { filesChanged } from "../chat/file-changes";
+import { isInside } from "../../utils/path";
+import { IpcError } from "../../platform/ipc-call";
+import { AI_CANCELLED } from "../../platform/ipc-ai-types";
 import { agentsIpc } from "../../platform/ipc-plugins";
 import { fs } from "../../platform/ipc-files";
 import { appVersion } from "../../platform/app-info";
@@ -50,6 +53,8 @@ interface Session {
   events: ExchangeEvents | null;
   /** Refuses the permission being asked, if one is. */
   refuse: (() => void) | null;
+  /** Ended by Stop: what it was doing ends as a stop does, not an error. */
+  stopped?: boolean;
 }
 
 const sessions = new Map<string, Session>();
@@ -72,9 +77,19 @@ export function cancelAgentExchange(conversation: string): void {
   session.refuse?.();
   session.connection.notify("session/cancel", { sessionId: session.sessionId });
   setTimeout(() => {
-    if (sessions.get(conversation) === session && session.events)
-      endAgentSession(conversation);
+    if (sessions.get(conversation) !== session || !session.events) return;
+    session.stopped = true;
+    endAgentSession(conversation);
   }, STOP_GRACE_MS);
+}
+
+/** What an agent reads or writes through Textus stays in its session's
+ *  folder and out of hidden folders, as Textus AI's own tools do. */
+function withinFolder(folder: string, path: string): void {
+  const rest = isInside(path, folder) ? path.slice(folder.length) : null;
+  const parts = rest?.split(/[\\/]/).filter(Boolean) ?? [];
+  if (!rest || parts.some((part) => part.startsWith(".")))
+    throw new Error(`${path} is outside the folder this session works in.`);
 }
 
 /** `content` from line `line` (1-based), at most `limit` lines. */
@@ -113,6 +128,7 @@ async function start(
       requestPermission: (p) => ask(session, p.toolCall.title ?? "", p.options),
       // An open document as the editor has it, typed or not.
       readTextFile: async ({ path, line, limit }) => {
+        withinFolder(session.cwd, path);
         const doc = openDocumentAt(path);
         const content = doc ? doc.text() : await fs.readTextFile(path);
         return { content: lines(content, line, limit) };
@@ -122,6 +138,7 @@ async function start(
       // conversation beside it. Either way the file is marked as Textus
       // AI's own changes are, each place in it put back from the editor.
       writeTextFile: async ({ path, content }) => {
+        withinFolder(session.cwd, path);
         const doc = openDocumentAt(path);
         if (doc) {
           const before = doc.text();
@@ -284,6 +301,7 @@ export async function runAgentExchange(o: {
     });
     return finish(current.get(session)!);
   } catch (err) {
+    if (session.stopped) throw new IpcError("agent", AI_CANCELLED);
     throw explain(o.agent, err);
   } finally {
     session.events = null;

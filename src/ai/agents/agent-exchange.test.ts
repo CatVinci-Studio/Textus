@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // being asked to cancel.
 const ipc = vi.hoisted(() => ({
   stop: vi.fn(),
+  answers: [] as { id?: number; result?: unknown; error?: unknown }[],
   out: null as ((o: { type: "line"; text: string }) => void) | null,
 }));
 vi.mock("../../platform/ipc-plugins", () => ({
@@ -13,10 +14,9 @@ vi.mock("../../platform/ipc-plugins", () => ({
       return Promise.resolve(1);
     },
     send: (_h: number, line: string) => {
-      const { id, method } = JSON.parse(line) as {
-        id?: number;
-        method: string;
-      };
+      const sent = JSON.parse(line) as { id?: number; method?: string };
+      const { id, method } = sent;
+      if (!method) return void ipc.answers.push(sent);
       if (id === undefined || method === "session/prompt") return;
       const result = method === "session/new" ? { sessionId: "s" } : {};
       queueMicrotask(() =>
@@ -70,15 +70,37 @@ describe("stopping an agent", () => {
     });
     const settled = reply.then(
       () => "done",
-      () => "ended",
+      (err: { cause?: unknown }) => err.cause,
     );
     await vi.waitFor(() => expect(ipc.out).not.toBeNull());
     await vi.advanceTimersByTimeAsync(0);
+    // A file outside the session's folder, or hidden in it, is refused.
+    for (const [id, path] of [
+      [90, "/etc/hosts"],
+      [91, "/w/../etc/hosts"],
+      [92, "/w/.textus/agent.md"],
+    ] as const)
+      ipc.out!({
+        type: "line",
+        text: JSON.stringify({
+          jsonrpc: "2.0",
+          id,
+          method: "fs/read_text_file",
+          params: { sessionId: "s", path },
+        }),
+      });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ipc.answers.map((a) => [a.id, !!a.error])).toEqual([
+      [90, true],
+      [91, true],
+      [92, true],
+    ]);
     cancelAgentExchange("c");
     await vi.advanceTimersByTimeAsync(4000);
     expect(ipc.stop).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1500);
     expect(ipc.stop).toHaveBeenCalledWith(1);
-    expect(await settled).toBe("ended");
+    // Ended as a stop, not as a failure to retry.
+    expect(await settled).toBe("cancelled");
   });
 });

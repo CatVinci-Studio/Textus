@@ -10,7 +10,7 @@ use aicompat::agent::{AgentTurn, StepResult, ToolSpec};
 use futures_util::future::BoxFuture;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::Duration;
-use tokio::sync::Semaphore;
+use tokio::sync::{Semaphore, SemaphorePermit};
 
 /// Tries of one call before its error stands.
 const TRIES: u32 = 5;
@@ -49,6 +49,28 @@ pub(crate) struct Throttled<'a, M: Model> {
     inner: &'a M,
     slots: Semaphore,
     at_once: AtomicUsize,
+    /// Slots given up while every one was busy: the next to come back
+    /// goes for good instead.
+    to_drop: AtomicUsize,
+}
+
+/// A step's slot: back to the others when it ends, unless one is owed.
+struct Slot<'s> {
+    permit: Option<SemaphorePermit<'s>>,
+    to_drop: &'s AtomicUsize,
+}
+
+impl Drop for Slot<'_> {
+    fn drop(&mut self) {
+        let owed = self
+            .to_drop
+            .try_update(Ordering::Relaxed, Ordering::Relaxed, |n| {
+                (n > 0).then(|| n - 1)
+            });
+        if let (Ok(_), Some(permit)) = (owed, self.permit.take()) {
+            permit.forget();
+        }
+    }
 }
 
 impl<'a, M: Model> Throttled<'a, M> {
@@ -58,10 +80,11 @@ impl<'a, M: Model> Throttled<'a, M> {
             inner,
             slots: Semaphore::new(at_once),
             at_once: AtomicUsize::new(at_once),
+            to_drop: AtomicUsize::new(0),
         }
     }
 
-    /// Gives up one slot not in use, keeping one.
+    /// Gives up one slot, keeping one: a free one now, else the next back.
     fn ask_fewer(&self) {
         let fewer = self
             .at_once
@@ -69,8 +92,8 @@ impl<'a, M: Model> Throttled<'a, M> {
                 (n > 1).then(|| n - 1)
             });
         if fewer.is_ok() && self.slots.forget_permits(1) == 0 {
-            // Every other slot is busy: given up as the first comes back.
-            self.at_once.fetch_add(1, Ordering::Relaxed);
+            // Every slot is busy: given up as the first comes back.
+            self.to_drop.fetch_add(1, Ordering::Relaxed);
         }
     }
 
@@ -85,7 +108,10 @@ impl<'a, M: Model> Throttled<'a, M> {
         F: FnMut() -> BoxFuture<'s, Result<StepResult, String>>,
     {
         // Dropped with the future: a stopped paper frees its slot.
-        let _slot = self.slots.acquire().await.map_err(|e| e.to_string())?;
+        let _slot = Slot {
+            permit: Some(self.slots.acquire().await.map_err(|e| e.to_string())?),
+            to_drop: &self.to_drop,
+        };
         let mut tried = 0;
         loop {
             tried += 1;
@@ -245,6 +271,20 @@ mod tests {
         let throttled = Throttled::new(&slow, 3);
         assert!(throttled.step("", &[], &[]).await.is_ok());
         assert_eq!(throttled.at_once(), 2);
+        let steps = (0..6).map(|_| throttled.step("", &[], &[]));
+        futures_util::future::join_all(steps).await;
+        assert_eq!(slow.most.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_busy_answer_with_every_slot_taken_still_asks_for_fewer() {
+        let slow = Slow::default();
+        *slow.errors.lock().unwrap() = vec!["request failed (429): slow down".into()];
+        let throttled = Throttled::new(&slow, 3);
+        let full = (0..3).map(|_| throttled.step("", &[], &[]));
+        futures_util::future::join_all(full).await;
+        assert_eq!(throttled.at_once(), 2);
+        slow.most.store(0, Ordering::SeqCst);
         let steps = (0..6).map(|_| throttled.step("", &[], &[]));
         futures_util::future::join_all(steps).await;
         assert_eq!(slow.most.load(Ordering::SeqCst), 2);

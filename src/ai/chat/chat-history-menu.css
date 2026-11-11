@@ -35,7 +35,6 @@
   padding: 8px 8px 4px;
   font-size: var(--text-caption);
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.02em;
   color: var(--ui-muted);
   overflow: hidden;
@@ -70,12 +69,20 @@
   background: var(--ui-hover);
 }
 
+/* The row's own button: the whole entry reopens, by pointer or key. */
 .chat-history-entry-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
 }
 
 .chat-history-entry-title {
