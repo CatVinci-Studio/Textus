@@ -294,7 +294,7 @@ export function DocumentList({
           ghostsUnder={false}
         />
         {entries !== null && entries.length === 0 && (
-          <p className="document-list-empty">{t.docListEmpty}</p>
+          <p className="tx-empty">{t.docListEmpty}</p>
         )}
         {entries?.map((entry) => (
           <DocumentItem

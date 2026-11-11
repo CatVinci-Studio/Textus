@@ -60,9 +60,9 @@ export function AvailablePlugins({
         })}
       />
     ) : !ready ? (
-      <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
+      <p className="tx-list-note">{t.pluginsCatalogLoading}</p>
     ) : query.trim() && !shown.length ? (
-      <p className="plugin-empty">
+      <p className="tx-list-note">
         {fill(t.pluginsSearchNone, { query: query.trim() })}
       </p>
     ) : undefined;

@@ -62,11 +62,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.quick-pick-empty {
-  padding: var(--space-3);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
 .quick-pick-keys {
   margin-left: auto;
   color: var(--ui-muted);

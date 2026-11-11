@@ -33,7 +33,7 @@ export function AcpAgentsSection({ t }: { t: Strings }) {
       }
     >
       {agents.length === 0 ? (
-        <p className="plugin-empty">{t.acpAgentsNone}</p>
+        <p className="tx-list-note">{t.acpAgentsNone}</p>
       ) : (
         agents.map((agent) => {
           const record = pluginRecord(agent.plugin);

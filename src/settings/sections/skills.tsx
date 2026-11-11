@@ -159,7 +159,7 @@ export function OwnSkillsList({
 
   if (own.length === 0)
     return (
-      <p className="plugin-empty">
+      <p className="tx-list-note">
         {query.trim()
           ? fill(t.skillPickerNoMatch, { query: query.trim() })
           : fill(t.skillsInstalledNone, { section: t.extensionsAvailable })}

@@ -423,7 +423,7 @@ export function ThemesTab({ t }: { t: Strings }) {
             );
           })
         ) : (
-          <p className="plugin-empty">
+          <p className="tx-list-note">
             {query.trim()
               ? fill(t.pluginsSearchNone, { query: query.trim() })
               : t.extensionsThemesNone}

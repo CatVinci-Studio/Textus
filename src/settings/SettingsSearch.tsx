@@ -170,7 +170,7 @@ export function SettingsSearchResults({
     <>
       <h1 className="settings-category-title">{t.settingsSearchResults}</h1>
       {empty ? (
-        <div className="settings-row-hint settings-search-empty">
+        <div className="tx-list-note">
           {t.settingsSearchNoMatches}
         </div>
       ) : (

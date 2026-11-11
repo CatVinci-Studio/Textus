@@ -43,8 +43,6 @@ export function MemoryPage({
   useEffect(() => {
     if (!indexing) void loadCatalog();
   }, [indexing]);
-  if (!settings.textusAi)
-    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
   return (
     <>
       <SettingsGroup title={t.memoryGroup}>

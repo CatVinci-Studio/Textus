@@ -197,7 +197,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         snapshot.records.length ? (
           <>
             {!shown.length && (
-              <p className="plugin-empty">
+              <p className="tx-list-note">
                 {fill(t.pluginsSearchNone, { query: query.trim() })}
               </p>
             )}
@@ -210,7 +210,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
             )}
           </>
         ) : (
-          <p className="plugin-empty">{t.pluginsInstalledNone}</p>
+          <p className="tx-list-note">{t.pluginsInstalledNone}</p>
         )
       }
       available={

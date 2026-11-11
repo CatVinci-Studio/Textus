@@ -74,13 +74,6 @@
   padding: 8px 0 24px;
 }
 
-.document-list-empty {
-  margin: 48px 24px;
-  text-align: center;
-  color: var(--ui-muted);
-  font-size: var(--text-body);
-}
-
 .document-list-toolbar {
   display: flex;
   align-items: center;

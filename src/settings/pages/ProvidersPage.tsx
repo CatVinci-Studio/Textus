@@ -30,8 +30,6 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
     settings.aiProvider,
   );
   const entry = catalog.find((e) => e.id === picked) ?? catalog[0];
-  if (!settings.textusAi)
-    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
   return (
     <>
       <ModelChoices t={t} />

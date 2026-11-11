@@ -214,11 +214,11 @@ export function PluginPage({
           !manifest.contributes.settingsPage) && (
           <SettingsGroup title={t.pluginSettingsGroup}>
             {!on ? (
-              <p className="plugin-empty">
+              <p className="tx-list-note">
                 {fill(t.pluginSettingsOff, { name })}
               </p>
             ) : manifest.contributes.settings.length === 0 ? (
-              <p className="plugin-empty">
+              <p className="tx-list-note">
                 {fill(t.pluginNoSettings, { name })}
               </p>
             ) : (

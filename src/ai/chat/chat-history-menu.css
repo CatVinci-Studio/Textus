@@ -17,12 +17,6 @@
   animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
 
-.chat-history-empty {
-  padding: 16px 12px;
-  font-size: var(--text-footnote);
-  color: var(--ui-muted);
-}
-
 /* Entries are hairline-separated: a title and a date line per entry would
    otherwise run together. */
 .chat-history {

@@ -31,8 +31,6 @@ export function ChatWritingPage({
   phone,
   marginAvailable,
 }: SettingsPageProps) {
-  if (!settings.textusAi)
-    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
   return (
     <>
       <SettingsGroup title={t.aiAskLabel}>

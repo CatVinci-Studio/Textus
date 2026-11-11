@@ -347,13 +347,6 @@ button.plugin-card-open:hover .plugin-card-name {
   font-family: var(--font-mono);
   resize: vertical;
 }
-/* Inside a group's card, which already keeps the text off its edge. */
-.plugin-empty {
-  margin: 0;
-  padding: var(--space-3) 0;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
 /* A plugin's recent errors. */
 .plugin-errors {
   margin: 0;

@@ -174,7 +174,7 @@ function QuickPick({
           ref={listRef}
         >
           {shown.length === 0 && (
-            <li className="quick-pick-empty">{emptyLabel}</li>
+            <li className="tx-list-note">{emptyLabel}</li>
           )}
           {shown.map((item, i) => (
             <li

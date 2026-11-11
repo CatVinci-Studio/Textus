@@ -135,7 +135,7 @@ export function McpSection({
             />
           ))
         ) : (
-          <p className="plugin-empty">{t.mcpNone}</p>
+          <p className="tx-list-note">{t.mcpNone}</p>
         )
       }
       footer={after}

@@ -48,9 +48,33 @@ const BUILT_IN: Record<string, ComponentType<SettingsPageProps>> = {
   about: AboutPage,
 };
 
+/** Each Textus AI page, drawn only while Textus AI is on. */
+const NEEDS_AI = new Map<
+  ComponentType<SettingsPageProps>,
+  ComponentType<SettingsPageProps>
+>();
+
+function needsAi(
+  Page: ComponentType<SettingsPageProps>,
+): ComponentType<SettingsPageProps> {
+  let Guarded = NEEDS_AI.get(Page);
+  if (!Guarded) {
+    Guarded = function NeedsAi(props: SettingsPageProps) {
+      return props.settings.textusAi ? (
+        <Page {...props} />
+      ) : (
+        <p className="tx-list-note">{props.t.textusAiOffHint}</p>
+      );
+    };
+    NEEDS_AI.set(Page, Guarded);
+  }
+  return Guarded;
+}
+
 /** What draws `page`: a plugin's own component, or the built-in one. */
 export function pageComponent(
   page: SettingsPageDef,
 ): ComponentType<SettingsPageProps> {
-  return page.Page ?? BUILT_IN[page.id] ?? (() => null);
+  const Page = page.Page ?? BUILT_IN[page.id] ?? (() => null);
+  return page.group === "ai" ? needsAi(Page) : Page;
 }

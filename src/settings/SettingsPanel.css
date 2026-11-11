@@ -93,10 +93,6 @@
   overflow: hidden;
 }
 
-.settings-search-empty {
-  padding: 4px 4px 0;
-}
-
 /* The row a result led to, tinted for a moment and fading back: opacity
    only, so reduced motion keeps it. */
 .settings-search-hit {

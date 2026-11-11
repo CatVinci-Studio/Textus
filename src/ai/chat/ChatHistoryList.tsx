@@ -45,7 +45,7 @@ export function ChatHistoryList({
   const hits = useHistorySearch(query);
 
   if (entries.length === 0) {
-    return <div className="chat-history-empty">{t.chatHistoryEmpty}</div>;
+    return <div className="tx-list-note">{t.chatHistoryEmpty}</div>;
   }
 
   const search = (
@@ -157,7 +157,7 @@ function SearchHits({
   const { t } = useSettings();
   if (hits === null) return null;
   if (hits.length === 0)
-    return <div className="chat-history-empty">{t.chatHistorySearchNone}</div>;
+    return <div className="tx-list-note">{t.chatHistorySearchNone}</div>;
   return (
     <section className="chat-history-group">
       {hits.map((hit) => (

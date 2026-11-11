@@ -4,8 +4,6 @@ import { AcpAgentsSection } from "../sections/acp-agents";
 
 /** Settings › Textus AI › External tools: the MCP servers that give the AI
  *  more tools, and the ACP agents plugins bring. */
-export function McpPage({ t, settings }: SettingsPageProps) {
-  if (!settings.textusAi)
-    return <p className="tx-list-note">{t.textusAiOffHint}</p>;
+export function McpPage({ t }: SettingsPageProps) {
   return <McpSection t={t} after={<AcpAgentsSection t={t} />} />;
 }

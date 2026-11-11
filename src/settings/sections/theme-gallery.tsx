@@ -107,7 +107,7 @@ export function AvailableThemes({
   ) : !catalog ? (
     <GalleryLoading t={t} />
   ) : query.trim() && !shown.length ? (
-    <p className="plugin-empty">
+    <p className="tx-list-note">
       {fill(t.pluginsSearchNone, { query: query.trim() })}
     </p>
   ) : undefined;

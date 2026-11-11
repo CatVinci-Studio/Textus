@@ -30,11 +30,6 @@
   outline: none;
 }
 
-.plugin-list-empty {
-  padding: var(--space-3);
-  color: var(--ui-muted);
-}
-
 .plugin-list-group {
   padding: var(--space-3) var(--space-2) var(--space-1);
   color: var(--ui-muted);
