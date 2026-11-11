@@ -258,15 +258,6 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--ui-muted);
   font-size: var(--text-caption);
 }
-.plugin-official {
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-primary) 12%, transparent);
-  color: var(--ui-primary);
-  font-weight: 600;
-  line-height: 18px;
-}
 .plugin-version {
   font-variant-numeric: tabular-nums;
 }

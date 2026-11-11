@@ -241,7 +241,6 @@
   padding: 0 16px;
 }
 
-
 .settings-row-control {
   display: flex;
   align-items: center;
@@ -302,7 +301,6 @@ button.settings-link-row {
 .settings-fold[open] .settings-fold-chevron {
   transform: rotate(90deg);
 }
-
 
 /* Indented a step: they belong to the row above. */
 .settings-fold-body {
@@ -691,29 +689,11 @@ button.settings-inline-button {
   flex: none;
 }
 
-/* "Replaces a built-in skill", "This project", "Customized": a quiet pill
-   after the name. */
-.settings-skill-tag {
-  flex-shrink: 0;
-  display: inline-block;
+/* "Replaces a built-in skill", "This project", "Customized": after the
+   name. */
+:is(.settings-skill-title, .settings-row-label) > .tx-badge {
   margin-left: 8px;
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-muted) 14%, transparent);
-  color: var(--ui-muted);
-  font-size: var(--text-caption);
-  font-weight: 500;
-  line-height: calc(18px * var(--ui-text-scale, 1));
   vertical-align: 1px;
-  white-space: nowrap;
-}
-
-/* "Built-in updated": a customized copy older than the bundled skill -
-   the one tag that asks for a look, so it takes the accent. */
-.settings-skill-tag-notice {
-  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-  color: var(--ui-accent-text);
 }
 
 .settings-builtin-category-title {
@@ -722,7 +702,6 @@ button.settings-inline-button {
   font-size: var(--text-footnote);
   font-weight: 600;
 }
-
 
 .settings-builtin-skill-name {
   font-family: var(--font-mono);

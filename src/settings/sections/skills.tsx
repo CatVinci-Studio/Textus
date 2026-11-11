@@ -189,12 +189,12 @@ export function OwnSkillsList({
                   {words?.label ?? skill.name}
                 </span>
                 {(shadows || skill.source === "project") && (
-                  <span className="settings-skill-tag">
+                  <span className="tx-badge">
                     {shadows ? t.agentSkillsShadows : t.skillGroupProject}
                   </span>
                 )}
                 {madeHere(skill.name) && (
-                  <span className="settings-skill-tag">{t.madeByTextusAi}</span>
+                  <span className="tx-badge">{t.madeByTextusAi}</span>
                 )}
               </span>
               <span className="settings-skill-desc">
@@ -343,7 +343,7 @@ export function BuiltinSkillsSection({
                   <div className="settings-row-text">
                     <div className="settings-row-label">
                       {text.label}
-                      <span className="settings-skill-tag" data-search-ignore>
+                      <span className="tx-badge" data-search-ignore>
                         {customized
                           ? t.agentSkillsCustomized
                           : own
@@ -352,7 +352,8 @@ export function BuiltinSkillsSection({
                       </span>
                       {outdated && (
                         <span
-                          className="settings-skill-tag settings-skill-tag-notice"
+                          className="tx-badge"
+                          data-tone="accent"
                           data-search-ignore
                         >
                           {t.agentSkillsBuiltinUpdated}

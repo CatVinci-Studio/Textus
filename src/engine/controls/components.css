@@ -235,6 +235,42 @@ textarea.tx-input {
   --tag-text: var(--tone-pink-text);
   --tag-tint: var(--tone-pink-tint);
 }
+
+/* A word or two beside a name - Official, Built-in, a count - smaller than
+   a tag: neutral, or a status tone (data-tone accent, warning, danger), or
+   strong for who made it. */
+.tx-badge {
+  --badge: var(--ui-muted);
+  --badge-tint: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  display: inline-block;
+  flex: none;
+  padding: 0 4px;
+  border-radius: var(--shape-pill);
+  corner-shape: round;
+  background: var(--badge-tint);
+  color: var(--badge);
+  font-size: var(--text-caption);
+  font-weight: 500;
+  line-height: calc(18px * var(--ui-text-scale, 1));
+  white-space: nowrap;
+}
+.tx-badge[data-tone="accent"] {
+  --badge: var(--ui-accent-text);
+  --badge-tint: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+.tx-badge[data-tone="warning"] {
+  --badge: var(--ui-warning);
+  --badge-tint: color-mix(in srgb, var(--ui-warning) 14%, transparent);
+}
+.tx-badge[data-tone="danger"] {
+  --badge: var(--ui-danger);
+  --badge-tint: color-mix(in srgb, var(--ui-danger) 14%, transparent);
+}
+.tx-badge[data-tone="strong"] {
+  --badge: var(--ui-primary);
+  --badge-tint: color-mix(in srgb, var(--ui-primary) 12%, transparent);
+  font-weight: 600;
+}
 .tx-tag[data-tone="gray"] {
   --tag: var(--tone-gray);
   --tag-text: var(--tone-gray-text);

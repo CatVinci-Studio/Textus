@@ -331,7 +331,7 @@ export const PluginListPane = memo(function PluginListPane({
                 </span>
                 {item.badge && (
                   <span
-                    className="plugin-list-badge"
+                    className="tx-badge"
                     data-tone={item.badge.tone ?? "muted"}
                   >
                     {item.badge.text}

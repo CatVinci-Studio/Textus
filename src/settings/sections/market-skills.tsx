@@ -137,7 +137,9 @@ export function AvailableSkills({
                       .join(" · ")}
                   </span>
                   {skill.official && (
-                    <span className="plugin-official">{t.pluginOfficial}</span>
+                    <span className="tx-badge" data-tone="strong">
+                      {t.pluginOfficial}
+                    </span>
                   )}
                   {skill.author &&
                     fill(t.themeGalleryBy, { author: skill.author })}

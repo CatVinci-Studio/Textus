@@ -75,8 +75,16 @@ export function Byline({
 }) {
   return (
     <div className="plugin-byline">
-      {official && <span className="plugin-official">{t.pluginOfficial}</span>}
-      {madeHere && <span className="plugin-official">{t.madeByTextusAi}</span>}
+      {official && (
+        <span className="tx-badge" data-tone="strong">
+          {t.pluginOfficial}
+        </span>
+      )}
+      {madeHere && (
+        <span className="tx-badge" data-tone="strong">
+          {t.madeByTextusAi}
+        </span>
+      )}
       <span>
         {fill(t.pluginBy, { author: manifest.author || manifest.publisher })}
       </span>

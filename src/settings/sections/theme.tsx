@@ -392,7 +392,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                   ) : (
                     madeByAi(settings.creations, "theme", theme.id) && (
                       <span className="plugin-byline">
-                        <span className="plugin-official">
+                        <span className="tx-badge" data-tone="strong">
                           {t.madeByTextusAi}
                         </span>
                       </span>

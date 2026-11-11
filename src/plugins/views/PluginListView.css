@@ -126,32 +126,6 @@
   font-size: var(--text-caption);
 }
 
-.plugin-list-badge {
-  flex: none;
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  font-size: var(--text-caption);
-  line-height: 18px;
-  color: var(--ui-muted);
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
-}
-
-.plugin-list-badge[data-tone="accent"] {
-  color: var(--ui-accent-text);
-  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
-}
-
-.plugin-list-badge[data-tone="warning"] {
-  color: var(--ui-warning);
-  background: color-mix(in srgb, var(--ui-warning) 14%, transparent);
-}
-
-.plugin-list-badge[data-tone="danger"] {
-  color: var(--ui-danger);
-  background: color-mix(in srgb, var(--ui-danger) 14%, transparent);
-}
-
 /* Where the next page of rows starts drawing as it scrolls into view. */
 .plugin-list-more {
   height: 1px;

@@ -39,22 +39,23 @@ and its colours from the theme, so it follows light, dark and every theme.
 
 ### Buttons and fields
 
-| Control        | Markup                                                                                                                      | Notes                                                      |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Button         | `<button class="tx-button">Cancel</button>`                                                                                 | `small` in bars and cards                                  |
-| Primary button | `<button class="tx-button primary">Save</button>`                                                                           | at most one per group, last                                |
-| Icon button    | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`              | a circle; `aria-label` required                            |
-| Icon           | `<span class="tx-icon" data-icon="calendar"></span>`                                                                        | names in design-language.md §15.4                          |
-| Field          | `<input class="tx-input">`                                                                                                  | a capsule; `<textarea class="tx-input">` a box             |
-| Field in place | `<input class="tx-inline-input">`                                                                                           | no frame: the cell or card it sits in is the field         |
-| Square corners | add `tx-square` to a button, field or select                                                                                | capsules by default; square where a grid or table wants it |
-| Checkbox       | `<input type="checkbox" class="ui-check">`                                                                                  | ticking things off                                         |
-| Switch         | `<input type="checkbox" role="switch" class="tx-switch">`                                                                   | turning a setting on and off                               |
-| Select         | `<button class="tx-select">Week<span class="tx-icon" data-icon="chevron"></span></button>`                                  | opens Textus's menu: `api.menu(items, button)`             |
-| Slider         | `<input type="range" class="tx-slider">`                                                                                    | `var(--slider-width)` wide                                 |
-| Segmented      | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>` | 2–5 views or modes                                         |
-| Chip           | `<button class="tx-chip">Status is Done</button>`                                                                           | a rule in force; opens it                                  |
-| Tag            | `<span class="tx-tag" data-tone="green">Done</span>`                                                                        | `status` adds a dot; tones in their order                  |
+| Control        | Markup                                                                                                                      | Notes                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Button         | `<button class="tx-button">Cancel</button>`                                                                                 | `small` in bars and cards                                    |
+| Primary button | `<button class="tx-button primary">Save</button>`                                                                           | at most one per group, last                                  |
+| Icon button    | `<button class="tx-icon-button" aria-label="Filter"><span class="tx-icon" data-icon="filter"></span></button>`              | a circle; `aria-label` required                              |
+| Icon           | `<span class="tx-icon" data-icon="calendar"></span>`                                                                        | names in design-language.md §15.4                            |
+| Field          | `<input class="tx-input">`                                                                                                  | a capsule; `<textarea class="tx-input">` a box               |
+| Field in place | `<input class="tx-inline-input">`                                                                                           | no frame: the cell or card it sits in is the field           |
+| Square corners | add `tx-square` to a button, field or select                                                                                | capsules by default; square where a grid or table wants it   |
+| Checkbox       | `<input type="checkbox" class="ui-check">`                                                                                  | ticking things off                                           |
+| Switch         | `<input type="checkbox" role="switch" class="tx-switch">`                                                                   | turning a setting on and off                                 |
+| Select         | `<button class="tx-select">Week<span class="tx-icon" data-icon="chevron"></span></button>`                                  | opens Textus's menu: `api.menu(items, button)`               |
+| Slider         | `<input type="range" class="tx-slider">`                                                                                    | `var(--slider-width)` wide                                   |
+| Segmented      | `<div class="tx-segmented" role="tablist"><button class="tx-segment" role="tab" aria-selected="true">Table</button>…</div>` | 2–5 views or modes                                           |
+| Chip           | `<button class="tx-chip">Status is Done</button>`                                                                           | a rule in force; opens it                                    |
+| Tag            | `<span class="tx-tag" data-tone="green">Done</span>`                                                                        | `status` adds a dot; tones in their order                    |
+| Badge          | `<span class="tx-badge" data-tone="accent">New</span>`                                                                      | beside a name; tones `accent`, `warning`, `danger`, `strong` |
 
 ### Bars and navigation
 
