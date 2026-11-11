@@ -13,6 +13,16 @@ const doc = (title: string) => ({
   title,
 });
 
+/** A point of the page where the native side reports the pointer: on the
+ *  screen, which the window is placed on (not at 0, 0 in WebKit). */
+async function onScreen(page: Page, x: number, y: number) {
+  const { left, top } = await page.evaluate(() => ({
+    left: window.screenX,
+    top: window.screenY,
+  }));
+  return { x: x + left, y: y + top };
+}
+
 async function open(page: Page) {
   await page.setViewportSize({ width: 1200, height: 760 });
   await openApp(page, { settings: { menuBarShown: false } });
@@ -23,7 +33,11 @@ test("let go over the documents' right edge, it opens an island there", async ({
 }) => {
   await open(page);
   const sheet = (await page.locator("section.island").first().boundingBox())!;
-  const at = { x: sheet.x + sheet.width - 30, y: sheet.y + sheet.height / 2 };
+  const at = await onScreen(
+    page,
+    sheet.x + sheet.width - 30,
+    sheet.y + sheet.height / 2,
+  );
   await emit(page, "drag-hover", {
     title: "Elsewhere",
     dirty: false,
@@ -51,7 +65,11 @@ test("let go over the documents' right edge, it opens an island there", async ({
 test("let go over the row, it joins the row", async ({ page }) => {
   await open(page);
   const pill = (await page.locator(".tab-pill").first().boundingBox())!;
-  const at = { x: pill.x + pill.width + 40, y: pill.y + pill.height / 2 };
+  const at = await onScreen(
+    page,
+    pill.x + pill.width + 40,
+    pill.y + pill.height / 2,
+  );
   await emit(page, "drag-hover", {
     title: "Elsewhere",
     dirty: false,
@@ -77,7 +95,7 @@ test("in a split, let go over an island's row, it joins that island at that slot
   await expect(rows).toHaveCount(2);
   // Before the left island's tab, on its row.
   const pill = (await rows.first().locator(".tab-pill").first().boundingBox())!;
-  const at = { x: pill.x + 4, y: pill.y + pill.height / 2 };
+  const at = await onScreen(page, pill.x + 4, pill.y + pill.height / 2);
   await emit(page, "drag-hover", {
     title: "Elsewhere",
     dirty: false,
