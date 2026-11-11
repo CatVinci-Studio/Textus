@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { pluginsInReply, type ReplyPlugin } from "../../plugins/chat-plugin";
+import { pluginsInReply, type ReplyPlugin } from "./reply-plugin";
 import {
   checkPlugin,
   type PluginCheck,

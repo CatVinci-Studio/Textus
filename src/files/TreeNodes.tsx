@@ -1,8 +1,7 @@
 // The file tree's rows: a folder, which reads and lists its entries, and
 // a file.
 
-import { useChangedFiles } from "../ai/chat/file-changes";
-import { useAiFileMarks } from "../ai/revision/file-revisions";
+import { useFileMark } from "../registry/file-marks";
 import { plural } from "../i18n/plural";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { DirEntryInfo } from "../platform/fs-types";
@@ -209,8 +208,8 @@ function FileNode({
   const tree = useTree();
   const Icon = fileIconFor(entry.name);
   const press = useLongPress();
-  const mark = useAiFileMarks()[entry.path];
-  const changed = useChangedFiles().has(entry.path) || !!mark;
+  const mark = useFileMark(entry.path);
+  const changed = !!mark?.changed;
   // What Textus AI left here waiting for the writer, said after the name.
   const waiting = mark?.pending
     ? plural(t.aiPendingCount, mark.pending, lang)

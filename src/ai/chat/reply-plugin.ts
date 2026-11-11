@@ -1,6 +1,6 @@
-import type { PluginFile } from "../platform/ipc";
-import { replyFiles } from "../ai/chat/reply-files";
-import { parseManifest, type PluginManifest } from "./store/manifest";
+import type { PluginFile } from "../../platform/ipc";
+import { replyFiles } from "./reply-files";
+import { parseManifest, type PluginManifest } from "../../plugins/store/manifest";
 
 /**
  * A plugin Textus AI wrote in a reply: each file in a fenced block whose info

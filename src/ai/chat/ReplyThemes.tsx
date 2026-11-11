@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
-import { themesInReply, type ReplyTheme } from "../../theme/chat-theme";
+import { themesInReply, type ReplyTheme } from "./reply-theme";
 import { saveUserTheme, withUserTheme } from "../../theme/theme-import";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { useLatest } from "../../utils/hooks/useLatest";

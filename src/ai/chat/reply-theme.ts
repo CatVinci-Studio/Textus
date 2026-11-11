@@ -1,8 +1,8 @@
 /// The themes Textus AI writes in a reply: found in its Markdown, so the chat
 /// can offer "Use this theme" under it.
 
-import { replyFiles } from "../ai/chat/reply-files";
-import { allowedThemeCss } from "./theme-allowlist";
+import { replyFiles } from "./reply-files";
+import { allowedThemeCss } from "../../theme/theme-allowlist";
 
 /** A ```css block of a reply that is a whole, installable theme. */
 export interface ReplyTheme {

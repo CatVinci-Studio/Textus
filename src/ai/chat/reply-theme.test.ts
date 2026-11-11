@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { isSelfContained, themeName, themesInReply } from "./chat-theme";
+import { isSelfContained, themeName, themesInReply } from "./reply-theme";
 
 // What the theme skill produced for "a calm dark theme for night writing,
 // teal accent, a serif", as a reply the chat offers "Use this theme" for.

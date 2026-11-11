@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pluginsInReply } from "./chat-plugin";
+import { pluginsInReply } from "./reply-plugin";
 
 const manifest = {
   id: "local.word-count",

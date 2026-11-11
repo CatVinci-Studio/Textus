@@ -78,6 +78,9 @@ function publish() {
 }
 
 /** Calls `listener` when the files changed, or their texts before, do. */
+/** The files changed now, outside React. */
+export const changedFilesNow = () => snapshot;
+
 export function onChangedFiles(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);

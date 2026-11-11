@@ -1,3 +1,4 @@
+import { provideAiFileMarks } from "../ai/revision/file-marks";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
@@ -50,6 +51,9 @@ import { ReportProblemHost } from "./report/report-open";
 import { lazyModule } from "../lazy/lazy-module";
 import { lazyComponent } from "../lazy/lazy-component";
 import { usePanelsReport } from "../plugins/panels-state";
+
+// The folder's rows show what Textus AI changed in their files.
+provideAiFileMarks();
 
 // The phone's own parts load on the phone, not with every desktop window.
 const phoneParts = lazyModule(
