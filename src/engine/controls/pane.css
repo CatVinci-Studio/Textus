@@ -13,12 +13,6 @@
 :root {
   /* The text of lists and their tops: the sidebar's own (Files, Outline). */
   --pane-text: var(--text-body);
-  /* From a pane's edge to its text: its title's, and its rows'. A scrolling
-     body keeps --pane-edge for itself (rows' hover fills stop short of the
-     edge); a row's own padding is the rest, so every line starts level. */
-  --pane-inset: 12px;
-  --pane-edge: 4px;
-  --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
 }
 
 .tx-search-expanded {

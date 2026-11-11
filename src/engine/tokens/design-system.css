@@ -17,6 +17,13 @@
   /* Control heights: in bars, cards and segments; in forms and dialogs. */
   --control-height-sm: 24px;
   --control-height: 28px;
+  /* From a pane's edge to its text: its title's, and its rows'. A scrolling
+     body keeps --pane-edge for itself (rows' fills stop short of the edge);
+     a row's own padding is the rest, so every line starts level - a plugin's
+     sidebar page's too. */
+  --pane-inset: 12px;
+  --pane-edge: 4px;
+  --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
   /* Layout sizes the shared controls and plugin pages take (5.6): a tab
      view's bar, the room a document block leaves its source button, a
      board's list, a find field, a slider, a progress ring, a bubble. */
