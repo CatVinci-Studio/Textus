@@ -229,9 +229,9 @@ pub(crate) fn document_text(path: &Path) -> Result<Arc<String>, String> {
     // Extracted outside the lock: a slow PDF holds up no other read.
     let ext = crate::extract::extension_of(path);
     let text = crate::extract::document_text(path, &ext)
-        .unwrap_or_else(|| Err("It isn't a document Textus can read.".to_string()))?;
+        .unwrap_or_else(|| Err(crate::errors::error("notDocument")))?;
     if text.trim().is_empty() {
-        return Err("It has no readable text.".to_string());
+        return Err(crate::errors::error("noText"));
     }
     let text = Arc::new(text);
     let mut cache = EXTRACTED.lock().unwrap();

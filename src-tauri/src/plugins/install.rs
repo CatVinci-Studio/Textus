@@ -266,10 +266,10 @@ pub(super) fn install_files_sync(
 ) -> Result<InstalledPlugin, String> {
     let total: usize = files.iter().map(|f| f.text.len()).sum();
     if total > MAX_WRITTEN_BYTES {
-        return Err("The plugin is too big to install from the conversation.".into());
+        return Err(crate::errors::error("pluginTooBig"));
     }
     let Some(manifest) = files.iter().find(|f| f.path == MANIFEST) else {
-        return Err(format!("No {MANIFEST} among the plugin's files."));
+        return Err(crate::errors::error("pluginNoManifest"));
     };
     written_id(&manifest.text)?;
     let root = plugins_root(app)?;
@@ -284,7 +284,7 @@ pub(super) fn install_files_sync(
     let result = (|| {
         for file in files {
             if !plain_relative(&file.path) {
-                return Err(format!("A plugin file can't be at {}.", file.path));
+                return Err(crate::errors::error("pluginBadPackage"));
             }
             let target = folder.join(&file.path);
             if let Some(parent) = target.parent() {
@@ -313,7 +313,7 @@ fn plugin_dir_in(dir: &Path) -> Result<PathBuf, String> {
         .collect();
     match subdirs.as_slice() {
         [only] if only.join(MANIFEST).is_file() => Ok(only.clone()),
-        _ => Err(format!("No {MANIFEST} in the package.")),
+        _ => Err(crate::errors::error("pluginNoManifest")),
     }
 }
 
@@ -336,7 +336,7 @@ fn copy_dir(from: &Path, to: &Path, total: &mut u64) -> Result<(), String> {
         } else if file_type.is_file() {
             *total += entry.metadata().map(|m| m.len()).unwrap_or(0);
             if *total > MAX_PACKAGE_BYTES {
-                return Err("The plugin is too big.".to_string());
+                return Err(crate::errors::error("pluginTooBig"));
             }
             std::fs::copy(entry.path(), target).map_err(|e| e.to_string())?;
         }
@@ -354,7 +354,7 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
         let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
         // A name with `..` or an absolute path would land outside `to`.
         let Some(rel) = entry.enclosed_name() else {
-            return Err("The package names a file outside itself.".to_string());
+            return Err(crate::errors::error("pluginBadPackage"));
         };
         let target = to.join(rel);
         if entry.is_dir() {
@@ -371,7 +371,7 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
         total += bytes.len() as u64;
         if total > MAX_PACKAGE_BYTES {
-            return Err("The plugin is too big.".to_string());
+            return Err(crate::errors::error("pluginTooBig"));
         }
         std::fs::write(&target, bytes).map_err(|e| e.to_string())?;
     }

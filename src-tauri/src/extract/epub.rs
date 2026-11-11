@@ -51,7 +51,7 @@ pub(super) fn epub_markdown(path: &Path) -> Result<String, String> {
     }
 
     if chapters == 0 {
-        return Err("This e-book has no text to read.".to_string());
+        return Err(crate::errors::error("noText"));
     }
     Ok(out.join("\n\n"))
 }

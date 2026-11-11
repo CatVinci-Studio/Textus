@@ -661,6 +661,30 @@ utiliser une.
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
   errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
   errorNoFolder: "Ouvrez d'abord un dossier.",
+  errorPdfUnsupported: "L'export PDF n'est pas disponible sur ce système.",
+  errorNoText: "Il ne contient aucun texte lisible.",
+  errorUnreadable: "Ce fichier ne peut pas être lu.",
+  errorExists: "Un élément porte déjà ce nom.",
+  errorAlreadyThere: "Il est déjà dans ce dossier.",
+  errorNotFolder: "Ce n'est pas un dossier.",
+  errorTrashShownFolder:
+    "Le dossier affiché par l'arborescence ne peut pas aller à la corbeille.",
+  errorOutsideDocuments: "C'est en dehors du dossier Textus.",
+  errorPluginBadPackage:
+    "Ce n'est pas un paquet de plugin que Textus peut installer.",
+  errorPictureTooLarge:
+    "Cette image est trop grande pour être envoyée, même réduite.",
+  errorPictureUnreadable: "Textus n'a pas pu lire cette image.",
+  errorPictureFormat:
+    "Textus ne lit pas encore les images HEIC ou AVIF ici. Enregistrez-la en JPEG ou PNG et joignez-la.",
+  errorArchiveTooLarge: "Cette archive est trop grande pour être décompressée.",
+  errorSecretsFile:
+    "Ce fichier contient les clés de Textus ; il ne s'ouvre pas ici.",
+  errorHttpsOnly: "Seule une page https:// s'ouvre dans un onglet.",
+  errorSkillTooLong: "Cette compétence est trop longue pour être enregistrée.",
+  errorNotSkill:
+    "Ce n'est pas un fichier de compétence : il faut un nom et des instructions.",
+  errorSkillNoMode: "Une compétence a besoin d'au moins un mode.",
   treeNameTaken: "Il y a déjà un élément nommé « {name} » ici.",
   treeActionFailed: "Impossible : {reason}",
   shortcutSearchFiles: "Rechercher",

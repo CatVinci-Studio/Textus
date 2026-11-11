@@ -352,7 +352,7 @@ fn checked_root(app: &tauri::AppHandle, id: &str, root: &str) -> Result<(), Stri
         return Err(refused(id, "files.read"));
     }
     if root.is_empty() || !Path::new(root).is_dir() {
-        return Err("No folder is open.".to_string());
+        return Err(crate::errors::error("noFolder"));
     }
     require_not_app_data(app, Path::new(root))
 }

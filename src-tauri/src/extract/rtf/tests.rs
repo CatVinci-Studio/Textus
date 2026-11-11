@@ -63,6 +63,6 @@ fn a_file_that_is_not_rtf_says_so() {
     std::fs::write(&path, b"plain text").unwrap();
     assert_eq!(
         rtf_markdown(&path).unwrap_err(),
-        "This .rtf is not a readable RTF file."
+        crate::errors::error("unreadable")
     );
 }

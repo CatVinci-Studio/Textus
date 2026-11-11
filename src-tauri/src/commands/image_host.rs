@@ -324,7 +324,7 @@ pub async fn upload_image(
 
     let bytes = STANDARD.decode(data_base64).map_err(|e| e.to_string())?;
     if bytes.is_empty() || bytes.len() > MAX_IMAGE_BYTES {
-        return Err("image is empty or exceeds the 25 MB limit".to_string());
+        return Err(crate::errors::error("imageTooBig"));
     }
     let token = load_provider_key(&app, host.credential_id())?;
 

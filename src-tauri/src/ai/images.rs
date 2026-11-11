@@ -45,7 +45,7 @@ pub async fn ai_generated_image(id: String) -> Result<GeneratedImageData, String
             return found;
         }
         if std::time::Instant::now() >= deadline {
-            return Err("The image service didn't send the picture in time.".to_string());
+            return Err(crate::errors::error("imageServiceTimeout"));
         }
         tokio::time::sleep(std::time::Duration::from_millis(250)).await;
     }

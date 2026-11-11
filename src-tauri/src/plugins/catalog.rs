@@ -133,7 +133,7 @@ fn parse_all(text: &str) -> Result<(Vec<CatalogEntry>, Vec<SkillEntry>), String>
     let catalog: Catalog =
         serde_json::from_str(text).map_err(|e| format!("The plugin catalog can't be read: {e}"))?;
     if catalog.schema != 1 {
-        return Err("The plugin catalog is for a newer Textus - update Textus to see it.".into());
+        return Err(crate::errors::error("catalogNewer"));
     }
     let plugins = catalog
         .plugins

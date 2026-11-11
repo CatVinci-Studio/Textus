@@ -39,7 +39,7 @@ pub(super) fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), Str
                 .any(|s| name == *s || name.starts_with(&format!("{s}.")))
     });
     if secret {
-        return Err("This file holds Textus's keys; it isn't opened here.".into());
+        return Err(crate::errors::error("secretsFile"));
     }
     Ok(())
 }

@@ -645,6 +645,31 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
   errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
   errorNoFolder: "Abra uma pasta primeiro.",
+  errorPdfUnsupported:
+    "A exportação para PDF não está disponível neste sistema.",
+  errorNoText: "Não há texto legível nele.",
+  errorUnreadable: "Não é possível ler este arquivo.",
+  errorExists: "Já existe algo com esse nome.",
+  errorAlreadyThere: "Ele já está nessa pasta.",
+  errorNotFolder: "Isso não é uma pasta.",
+  errorTrashShownFolder:
+    "A pasta que a árvore mostra não pode ir para a lixeira.",
+  errorOutsideDocuments: "Isso está fora da pasta do Textus.",
+  errorPluginBadPackage:
+    "Este não é um pacote de plugin que o Textus possa instalar.",
+  errorPictureTooLarge: "A imagem é grande demais para enviar, mesmo reduzida.",
+  errorPictureUnreadable: "O Textus não conseguiu ler essa imagem.",
+  errorPictureFormat:
+    "O Textus ainda não lê imagens HEIC ou AVIF aqui. Salve como JPEG ou PNG e anexe.",
+  errorArchiveTooLarge:
+    "Esse arquivo compactado é grande demais para descompactar.",
+  errorSecretsFile:
+    "Este arquivo guarda as chaves do Textus; ele não é aberto aqui.",
+  errorHttpsOnly: "Só uma página https:// abre em uma aba.",
+  errorSkillTooLong: "Essa habilidade é longa demais para salvar.",
+  errorNotSkill:
+    "Não é um arquivo de habilidade: ele precisa de um nome e de instruções.",
+  errorSkillNoMode: "Uma habilidade precisa de pelo menos um modo.",
   treeNameTaken: "Já existe algo chamado “{name}” aqui.",
   treeActionFailed: "Não deu certo: {reason}",
   shortcutSearchFiles: "Pesquisar",

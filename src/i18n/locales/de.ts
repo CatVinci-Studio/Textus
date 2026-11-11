@@ -647,6 +647,29 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
   errorImageTooBig: "Das Bild ist leer oder größer als 25 MB.",
   errorNoFolder: "Öffne zuerst einen Ordner.",
+  errorPdfUnsupported: "PDF-Export ist auf diesem System nicht verfügbar.",
+  errorNoText: "Es enthält keinen lesbaren Text.",
+  errorUnreadable: "Diese Datei kann nicht gelesen werden.",
+  errorExists: "Dieser Name ist dort schon vergeben.",
+  errorAlreadyThere: "Es liegt schon in diesem Ordner.",
+  errorNotFolder: "Das ist kein Ordner.",
+  errorTrashShownFolder:
+    "Der Ordner, den der Baum zeigt, kann nicht in den Papierkorb.",
+  errorOutsideDocuments: "Das liegt außerhalb des Textus-Ordners.",
+  errorPluginBadPackage:
+    "Das ist kein Plugin-Paket, das Textus installieren kann.",
+  errorPictureTooLarge: "Das Bild ist zu groß zum Senden, auch verkleinert.",
+  errorPictureUnreadable: "Textus konnte das Bild nicht lesen.",
+  errorPictureFormat:
+    "HEIC- oder AVIF-Bilder kann Textus hier noch nicht lesen. Speichere es als JPEG oder PNG und hänge das an.",
+  errorArchiveTooLarge: "Das Archiv ist zu groß zum Entpacken.",
+  errorSecretsFile:
+    "Diese Datei enthält die Schlüssel von Textus und wird hier nicht geöffnet.",
+  errorHttpsOnly: "Nur eine https://-Seite öffnet sich in einem Tab.",
+  errorSkillTooLong: "Der Skill ist zu lang zum Speichern.",
+  errorNotSkill:
+    "Das ist keine Skill-Datei: Sie braucht einen Namen und Anweisungen.",
+  errorSkillNoMode: "Ein Skill braucht mindestens einen Modus.",
   treeNameTaken: "Hier gibt es schon etwas namens „{name}“.",
   treeActionFailed: "Das hat nicht geklappt: {reason}",
   shortcutSearchFiles: "Suchen",

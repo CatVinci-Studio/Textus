@@ -10,7 +10,7 @@ use tokio::fs;
 fn check_name(name: &str) -> Result<&str, String> {
     let name = name.trim();
     if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err("Invalid name".into());
+        return Err(crate::errors::error("badName"));
     }
     Ok(name)
 }
@@ -33,7 +33,7 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
         .map_err(|e| e.to_string())?
         .is_dir()
     {
-        return Err("Not a folder".into());
+        return Err(crate::errors::error("notFolder"));
     }
     Ok(dir)
 }
@@ -50,7 +50,7 @@ pub async fn tree_create_document(dir: String, name: String) -> Result<String, S
         .open(&path)
         .await
         .map_err(|e| match e.kind() {
-            std::io::ErrorKind::AlreadyExists => "Already exists".to_string(),
+            std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
             _ => e.to_string(),
         })?;
     Ok(path.to_string_lossy().to_string())
@@ -63,7 +63,7 @@ pub async fn tree_create_folder(dir: String, name: String) -> Result<String, Str
     let dir = existing_dir(&dir).await?;
     let path = dir.join(check_name(&name)?);
     fs::create_dir(&path).await.map_err(|e| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => "Already exists".to_string(),
+        std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
         _ => e.to_string(),
     })?;
     Ok(path.to_string_lossy().to_string())
@@ -74,10 +74,10 @@ pub async fn tree_create_folder(dir: String, name: String) -> Result<String, Str
 fn move_target(path: &Path, into: &Path) -> Result<PathBuf, String> {
     let name = path.file_name().ok_or("No file name")?;
     if path.parent() == Some(into) {
-        return Err("Already there".into());
+        return Err(crate::errors::error("alreadyThere"));
     }
     if into.starts_with(path) {
-        return Err("A folder can't move into itself".into());
+        return Err(crate::errors::error("moveIntoItself"));
     }
     Ok(into.join(name))
 }
@@ -130,7 +130,7 @@ pub async fn tree_move_entry(path: String, into: String) -> Result<String, Strin
         .map_err(|e| e.to_string())?;
     let to = move_target(&from, &into)?;
     if fs::try_exists(&to).await.unwrap_or(true) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
     fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
@@ -164,7 +164,7 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
     let case_only =
         to.to_string_lossy().to_lowercase() == path.to_lowercase() && same_file(&from, &to);
     if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
     fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
@@ -177,7 +177,7 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
 pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
     let target = itself(&path)?;
     if std::fs::canonicalize(&root).is_ok_and(|r| target == r || r.starts_with(&target)) {
-        return Err("The folder the tree shows can't be moved to the Trash".into());
+        return Err(crate::errors::error("trashShownFolder"));
     }
     #[cfg(desktop)]
     return tauri::async_runtime::spawn_blocking(move || {

@@ -121,7 +121,7 @@ pub async fn ensure_project_file(
             .split(['/', '\\'])
             .any(|part| part == ".." || part.is_empty())
         {
-            return Err("Invalid file name.".to_string());
+            return Err(crate::errors::error("badName"));
         }
         let path = project_dir(&root).join(rel);
         if !path.exists() {

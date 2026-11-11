@@ -141,7 +141,7 @@ pub(super) async fn read_bytes(path: PathBuf) -> Result<Response, String> {
         .await
         .map_err(|e| e.to_string())?;
     if meta.len() > MAX_READ_BYTES {
-        return Err("The file is too big to open here.".to_string());
+        return Err(crate::errors::error("fileTooBig"));
     }
     let bytes = tokio::fs::read(&path).await.map_err(|e| e.to_string())?;
     Ok(Response::new(bytes))

@@ -1,3 +1,4 @@
+import ERRORS from "../i18n/errors.json";
 /**
  * What a caught error says to a person: IpcError's message leads with the
  * command name, for logs. Recognized by name, not `instanceof`, since tests
@@ -8,6 +9,17 @@ export function errorText(err: unknown): string {
     return errorText((err as Error & { cause: unknown }).cause);
   if (err instanceof Error) return err.message;
   return String(err);
+}
+
+/** A Textus error by its code, as the backend gives one (errors.rs): its
+ *  English, then the code the user's words are found by. */
+export function ownError(code: keyof typeof ERRORS): string {
+  return `${ERRORS[code].en} [${code}]`;
+}
+
+/** The code a Textus error ends with ("… [exists]"), or null. */
+export function errorCode(text: string): string | null {
+  return /\s\[([a-z][a-zA-Z]*)\]$/.exec(text)?.[1] ?? null;
 }
 
 /**

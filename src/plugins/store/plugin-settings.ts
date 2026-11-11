@@ -1,3 +1,4 @@
+import { ownError } from "../../utils/error-text";
 import { fill } from "../../i18n/fill";
 import {
   readProjectSettings,
@@ -157,7 +158,7 @@ export async function setPluginValue(
     notify();
     return;
   }
-  if (!project) throw new Error("No folder is open.");
+  if (!project) throw new Error(ownError("noFolder"));
   const { root } = project;
   // Set here by the user: this folder's plugin settings are theirs to use.
   rememberFolder(root, true);

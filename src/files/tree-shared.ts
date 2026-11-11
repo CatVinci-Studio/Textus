@@ -9,6 +9,7 @@ import type { SearchScope } from "./file-search";
 import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
+import { errorCode } from "../utils/error-text";
 
 // What the file tree and its rows share.
 
@@ -86,7 +87,7 @@ export function canMoveInto(
 /** The backend's refusal in the user's words. */
 export function failureText(t: Strings, err: unknown, name: string): string {
   const reason = err instanceof Error ? err.message : String(err);
-  if (reason.includes("Already exists")) return fill(t.treeNameTaken, { name });
+  if (errorCode(reason) === "exists") return fill(t.treeNameTaken, { name });
   return fill(t.treeActionFailed, { reason: explainError(err, t) });
 }
 

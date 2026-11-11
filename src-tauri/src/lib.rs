@@ -9,6 +9,7 @@ mod auth;
 mod background;
 #[cfg(desktop)]
 pub mod cli;
+mod errors;
 // Checks src/platform/bindings/; desktop builds hold every command it lists.
 #[cfg(desktop)]
 mod agents;

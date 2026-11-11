@@ -81,7 +81,7 @@ describe("following a link to a note", () => {
 
   it("opens nothing when the note couldn't be made, nor for a Markdown link", async () => {
     fs.resolveNoteLink.mockResolvedValue({ path: "/v/Idea.md", exists: false });
-    fs.createDocument.mockRejectedValue("Already exists");
+    fs.createDocument.mockRejectedValue("Already exists. [exists]");
     await followNoteLink(view, "[[Idea]]", "/v/a.md", "/v");
     await followNoteLink(view, "Idea.md", "/v/a.md", "/v");
     expect(fs.createDocument).toHaveBeenCalledTimes(1);

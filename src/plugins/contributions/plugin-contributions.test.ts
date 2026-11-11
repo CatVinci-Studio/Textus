@@ -47,7 +47,8 @@ it("says a plugin command's failure in the user's language, under the plugin's n
       official: false,
     } as never,
     {
-      runPluginCommand: () => Promise.reject(new Error("No folder is open.")),
+      runPluginCommand: () =>
+        Promise.reject(new Error("No folder is open. [noFolder]")),
       start: async () => {},
     },
   );

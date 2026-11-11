@@ -1,3 +1,4 @@
+import { ownError } from "../../utils/error-text";
 import type { QuickPickItem } from "../../engine/controls/quick-pick";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
@@ -314,7 +315,7 @@ export class PluginHost {
       root: () => {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
-        if (!root) throw new Error("No folder is open.");
+        if (!root) throw new Error(ownError("noFolder"));
         return root;
       },
       ownWebview: (id) => {

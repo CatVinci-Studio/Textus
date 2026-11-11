@@ -27,7 +27,7 @@ fn inside_documents(
         parent.canonicalize().map_err(|e| e.to_string())?.join(name)
     };
     if resolved == docs || !resolved.starts_with(&docs) {
-        return Err("Outside the Textus folder".into());
+        return Err(crate::errors::error("outsideDocuments"));
     }
     Ok(resolved)
 }
@@ -37,7 +37,7 @@ fn inside_documents(
 fn check_name(name: &str) -> Result<(), String> {
     let name = name.trim();
     if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err("Invalid name".into());
+        return Err(crate::errors::error("badName"));
     }
     Ok(())
 }
@@ -54,7 +54,7 @@ pub async fn rename_entry(
     let to = from.with_file_name(name.trim());
     let to = inside_documents(&app, &to.to_string_lossy(), false)?;
     if fs::try_exists(&to).await.unwrap_or(false) {
-        return Err("Already exists".into());
+        return Err(crate::errors::error("exists"));
     }
     fs::rename(&from, &to).await.map_err(|e| e.to_string())?;
     Ok(to.to_string_lossy().to_string())
@@ -70,7 +70,7 @@ pub async fn delete_entry(app: tauri::AppHandle, path: String) -> Result<(), Str
         .map_err(|e| e.to_string())?
         .is_dir()
     {
-        return Err("Not a document".into());
+        return Err(crate::errors::error("notDocument"));
     }
     fs::remove_file(&target).await.map_err(|e| e.to_string())
 }

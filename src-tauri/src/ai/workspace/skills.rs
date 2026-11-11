@@ -234,7 +234,7 @@ pub(crate) fn safe_file_stem(name: &str, fallback: &str, max_bytes: usize) -> St
 pub(crate) fn skill_file_path(skills_dir: &Path, name: &str) -> Result<PathBuf, String> {
     let path = skills_dir.join(format!("{}.md", skill_file_stem(name)));
     if path.parent() != Some(skills_dir) {
-        return Err("That skill's name can't be used as a file name.".to_string());
+        return Err(crate::errors::error("skillName"));
     }
     Ok(path)
 }
@@ -373,14 +373,14 @@ pub(crate) fn save_written_in(
     confirmed: bool,
 ) -> Result<PathBuf, String> {
     if text.len() > MAX_WRITTEN_SKILL {
-        return Err("That skill is too long to save.".to_string());
+        return Err(crate::errors::error("skillTooLong"));
     }
     let skill = parse_skill_file("", text);
     if skill.name.is_empty() || skill.prompt.is_empty() {
-        return Err("That isn't a skill file: it needs a name and instructions.".to_string());
+        return Err(crate::errors::error("notSkill"));
     }
     if modes.is_empty() {
-        return Err("A skill needs at least one mode.".to_string());
+        return Err(crate::errors::error("skillNoMode"));
     }
     // The description is shown to the model too, in the list of skills.
     let read = format!("{}\n{}", skill.description, skill.prompt);
@@ -412,7 +412,7 @@ pub(crate) fn set_modes_in(
     modes.sort();
     modes.dedup();
     if modes.is_empty() {
-        return Err("A skill needs at least one mode.".to_string());
+        return Err(crate::errors::error("skillNoMode"));
     }
     let (path, _) = read_skill_files(skills_dir)
         .into_iter()

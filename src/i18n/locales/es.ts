@@ -657,6 +657,32 @@ para usar una.
     "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
   errorImageTooBig: "La imagen está vacía o supera los 25 MB.",
   errorNoFolder: "Abre primero una carpeta.",
+  errorPdfUnsupported:
+    "La exportación a PDF no está disponible en este sistema.",
+  errorNoText: "No tiene texto legible.",
+  errorUnreadable: "No se puede leer este archivo.",
+  errorExists: "Ya hay algo con ese nombre.",
+  errorAlreadyThere: "Ya está en esa carpeta.",
+  errorNotFolder: "No es una carpeta.",
+  errorTrashShownFolder:
+    "La carpeta que muestra el árbol no se puede mover a la papelera.",
+  errorOutsideDocuments: "Está fuera de la carpeta de Textus.",
+  errorPluginBadPackage:
+    "No es un paquete de plugin que Textus pueda instalar.",
+  errorPictureTooLarge:
+    "La imagen es demasiado grande para enviarla, incluso reducida.",
+  errorPictureUnreadable: "Textus no pudo leer esa imagen.",
+  errorPictureFormat:
+    "Textus aún no puede leer imágenes HEIC o AVIF aquí. Guárdala como JPEG o PNG y adjunta esa.",
+  errorArchiveTooLarge:
+    "Ese archivo comprimido es demasiado grande para descomprimirlo.",
+  errorSecretsFile:
+    "Este archivo guarda las claves de Textus; no se abre aquí.",
+  errorHttpsOnly: "Solo una página https:// se abre en una pestaña.",
+  errorSkillTooLong: "Esa habilidad es demasiado larga para guardarla.",
+  errorNotSkill:
+    "No es un archivo de habilidad: necesita un nombre e instrucciones.",
+  errorSkillNoMode: "Una habilidad necesita al menos un modo.",
   treeNameTaken: "Ya hay algo llamado «{name}» aquí.",
   treeActionFailed: "No se pudo: {reason}",
   shortcutSearchFiles: "Buscar",

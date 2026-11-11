@@ -23,6 +23,7 @@ import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
 import { pathIndex, resolveTarget } from "../files/link-resolve";
+import { ownError } from "../utils/error-text";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
 const DEV_BUILTIN_SKILLS: [string, string, string, string, string][] = [
@@ -693,7 +694,8 @@ export function installDevTauriShim(): void {
       case "tree_create_document":
       case "tree_create_folder": {
         const name = String(args.name).trim();
-        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        if (!name || name.includes("/"))
+          return Promise.reject(ownError("badName"));
         const doc = cmd === "tree_create_document";
         const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
         if (
@@ -701,7 +703,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         files[doc ? target : `${target}/.keep`] = "";
         return Promise.resolve(target);
       }
@@ -717,7 +719,7 @@ export function installDevTauriShim(): void {
         const into = String(args.into);
         const target = `${into}/${path.split("/").pop()}`;
         if (into === path.slice(0, path.lastIndexOf("/")))
-          return Promise.reject("Already there");
+          return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
         if (
@@ -725,7 +727,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
           files[target + file.slice(path.length)] = files[file];
@@ -735,7 +737,8 @@ export function installDevTauriShim(): void {
       }
       case "tree_rename_entry": {
         const name = String(args.name).trim();
-        if (!name || name.includes("/")) return Promise.reject("Invalid name");
+        if (!name || name.includes("/"))
+          return Promise.reject(ownError("badName"));
         const isDoc =
           /\.(md|markdown)$/i.test(path) && !(`${path}/.keep` in files);
         const leaf = isDoc && !name.includes(".") ? `${name}.md` : name;
@@ -746,7 +749,7 @@ export function installDevTauriShim(): void {
             (f) => f === target || f.startsWith(`${target}/`),
           )
         )
-          return Promise.reject("Already exists");
+          return Promise.reject(ownError("exists"));
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
           files[target + file.slice(path.length)] = files[file];

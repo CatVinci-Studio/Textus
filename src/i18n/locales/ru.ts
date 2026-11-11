@@ -651,6 +651,28 @@ export default {
     "Для магазина плагинов нужна более новая версия Textus. Обновите Textus.",
   errorImageTooBig: "Изображение пустое или больше 25 МБ.",
   errorNoFolder: "Сначала откройте папку.",
+  errorPdfUnsupported: "Экспорт в PDF недоступен в этой системе.",
+  errorNoText: "В нём нет читаемого текста.",
+  errorUnreadable: "Не удаётся прочитать этот файл.",
+  errorExists: "Там уже есть что-то с таким именем.",
+  errorAlreadyThere: "Он уже в этой папке.",
+  errorNotFolder: "Это не папка.",
+  errorTrashShownFolder:
+    "Папку, которую показывает дерево, нельзя переместить в корзину.",
+  errorOutsideDocuments: "Это вне папки Textus.",
+  errorPluginBadPackage:
+    "Это не пакет плагина, который Textus может установить.",
+  errorPictureTooLarge: "Изображение слишком большое, даже уменьшенное.",
+  errorPictureUnreadable: "Textus не удалось прочитать изображение.",
+  errorPictureFormat:
+    "Textus пока не читает изображения HEIC и AVIF здесь. Сохраните его в JPEG или PNG и прикрепите.",
+  errorArchiveTooLarge: "Архив слишком большой, чтобы его распаковать.",
+  errorSecretsFile:
+    "В этом файле хранятся ключи Textus, здесь он не открывается.",
+  errorHttpsOnly: "Во вкладке открывается только страница https://.",
+  errorSkillTooLong: "Навык слишком длинный, чтобы его сохранить.",
+  errorNotSkill: "Это не файл навыка: нужны имя и инструкции.",
+  errorSkillNoMode: "Навыку нужен хотя бы один режим.",
   treeNameTaken: "Здесь уже есть что-то с именем «{name}».",
   treeActionFailed: "Не получилось: {reason}",
   shortcutSearchFiles: "Поиск",

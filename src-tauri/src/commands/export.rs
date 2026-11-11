@@ -282,9 +282,9 @@ pub async fn export_pdf_native(
         .map_err(|e| e.to_string())?
     {
         Ok(result) => result,
-        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err("PDF export timed out".to_string()),
+        Err(std::sync::mpsc::RecvTimeoutError::Timeout) => Err(crate::errors::error("pdfTimeout")),
         Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
-            Err("PDF export ended without a result".to_string())
+            Err(crate::errors::error("pdfFailed"))
         }
     }?;
     add_page_numbers(output_path, page_numbers).await
@@ -340,7 +340,7 @@ pub async fn export_pdf_native(
     _output_path: String,
     _page_numbers: bool,
 ) -> Result<(), String> {
-    Err("PDF export is not supported on this platform".to_string())
+    Err(crate::errors::error("pdfUnsupported"))
 }
 
 #[cfg(any(windows, target_os = "linux"))]

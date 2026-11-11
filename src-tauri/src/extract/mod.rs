@@ -171,7 +171,7 @@ fn spreadsheet_text(path: &Path) -> Result<String, String> {
     }
 
     if out.trim().is_empty() {
-        return Err("This spreadsheet has no data.".to_string());
+        return Err(crate::errors::error("noText"));
     }
     Ok(out.trim_end().to_string())
 }

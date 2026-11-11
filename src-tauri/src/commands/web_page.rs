@@ -55,7 +55,7 @@ fn label(window: &Window, id: &str) -> String {
 fn https(url: &str) -> Result<Url, String> {
     let url = Url::parse(url).map_err(|e| e.to_string())?;
     if url.scheme() != "https" {
-        return Err("Only an https:// page opens in a tab.".into());
+        return Err(crate::errors::error("httpsOnly"));
     }
     Ok(url)
 }

@@ -117,7 +117,7 @@ pub async fn plugin_fs_read_versioned(
         .await
         .is_ok_and(|m| m.len() > super::access::MAX_READ_BYTES)
     {
-        return Err("The file is too big to open here.".to_string());
+        return Err(crate::errors::error("fileTooBig"));
     }
     let bytes = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,
