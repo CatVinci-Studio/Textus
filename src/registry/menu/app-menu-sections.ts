@@ -1,4 +1,5 @@
 import type { Strings } from "../../i18n/strings";
+import { PANDOC_FORMATS } from "../export-formats";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
@@ -38,19 +39,13 @@ export function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
   ];
 }
 
-/** Keep in step with the native menu's pandoc export list. */
+/** File › Export: PDF and HTML, then the pandoc formats (one list:
+ *  export-formats.json). */
 export function exportEntries(t: Strings): MenuNode[] {
-  const pandoc: [string, string][] = [
-    ["docx", t.menuExportDocx],
-    ["odt", t.menuExportOdt],
-    ["rtf", t.menuExportRtf],
-    ["epub", t.menuExportEpub],
-    ["latex", t.menuExportLatex],
-    ["mediawiki", t.menuExportMediawiki],
-    ["rst", t.menuExportRst],
-    ["textile", t.menuExportTextile],
-    ["opml", t.menuExportOpml],
-  ];
+  const pandoc: [string, string][] = PANDOC_FORMATS.map((f) => [
+    f.format,
+    t[f.key],
+  ]);
   return [
     {
       label: t.menuExportPdf,

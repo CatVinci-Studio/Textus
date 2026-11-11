@@ -120,19 +120,9 @@ pub(crate) fn build(
         .item(&export_html_item)
         .separator();
     // These all convert through a user-installed pandoc.
-    for (format, label) in [
-        ("docx", "Word (.docx)…"),
-        ("odt", "OpenDocument (.odt)…"),
-        ("rtf", "RTF…"),
-        ("epub", "EPUB…"),
-        ("latex", "LaTeX…"),
-        ("mediawiki", "MediaWiki…"),
-        ("rst", "reStructuredText…"),
-        ("textile", "Textile…"),
-        ("opml", "OPML…"),
-    ] {
-        let id = format!("{EXPORT_PANDOC_PREFIX}{format}");
-        let item = MenuItemBuilder::with_id(&id, l(&id, label)).build(app)?;
+    for format in crate::export_formats::pandoc_formats() {
+        let id = format!("{EXPORT_PANDOC_PREFIX}{}", format.format);
+        let item = MenuItemBuilder::with_id(&id, l(&id, &format.menu)).build(app)?;
         export_menu_builder = export_menu_builder.item(&item);
     }
     let export_menu = export_menu_builder.build()?;

@@ -41,25 +41,9 @@ export {
   buildStandaloneHtml,
 } from "./standalone-html";
 import { explainError } from "../utils/error-explain";
+import { pandocFormat } from "../registry/export-formats";
 // File > Export: HTML serializes the live editor DOM, PDF prints a themed
 // render, everything else converts through a user-installed pandoc.
-
-// Keys are pandoc writer names; keep in step with menu.rs's export ids.
-const PANDOC_FORMATS: Record<string, { ext: string; label: string }> = {
-  docx: { ext: "docx", label: "Word" },
-  odt: { ext: "odt", label: "OpenDocument" },
-  rtf: { ext: "rtf", label: "RTF" },
-  epub: { ext: "epub", label: "EPUB" },
-  latex: { ext: "tex", label: "LaTeX" },
-  mediawiki: { ext: "wiki", label: "MediaWiki" },
-  rst: { ext: "rst", label: "reStructuredText" },
-  textile: { ext: "textile", label: "Textile" },
-  opml: { ext: "opml", label: "OPML" },
-};
-
-// The formats that carry pictures inside the file, so a diagram can go in
-// as one; the plain-text ones (LaTeX, MediaWiki, ...) keep its source.
-const EMBEDS_IMAGES = new Set(["docx", "odt", "epub", "rtf"]);
 
 function exportBaseName(tab: DocTab, t: Strings): string {
   return tab.path
@@ -336,7 +320,7 @@ export async function exportViaPandoc(
   diagramEngine: DiagramEngine,
   settings: PandocSettings,
 ): Promise<void> {
-  const info = PANDOC_FORMATS[format];
+  const info = pandocFormat(format);
   if (!info || !canExportWithPandoc) return;
   const pandoc = await exportDoc.detectPandoc();
   if (!pandoc) {
@@ -352,7 +336,7 @@ export async function exportViaPandoc(
   const base = exportBaseName(tab, t);
   const picked = await exportDoc.exportSaveDialog(
     `${base}.${info.ext}`,
-    info.label,
+    info.name,
     info.ext,
   );
   if (!picked) return;
@@ -379,7 +363,7 @@ export async function exportViaPandoc(
     });
     await exportDoc.exportViaPandoc({
       pandocPath: pandoc,
-      markdown: EMBEDS_IMAGES.has(format)
+      markdown: info.embedsImages
         ? await drawnBlocksToImages(
             await diagramsToImages(text, diagramEngine),
             await drawnPictures(tab),

@@ -17,6 +17,7 @@ mod bindings;
 mod commands;
 mod conventions;
 mod distribution;
+mod export_formats;
 mod ext_stats;
 mod extract;
 #[cfg(desktop)]

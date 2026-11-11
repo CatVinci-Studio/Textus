@@ -24,22 +24,6 @@ const WINDOW_READY_WITHIN: Duration = Duration::from_secs(30);
 /// How long the export has to reach its save dialog.
 const EXPORT_STARTS_WITHIN: Duration = Duration::from_secs(30);
 
-/// `--to` formats and their files' extensions: PDF, HTML and the pandoc
-/// writers of src/export/exporters.ts.
-const EXPORT_FORMATS: &[(&str, &str)] = &[
-    ("pdf", "pdf"),
-    ("html", "html"),
-    ("docx", "docx"),
-    ("odt", "odt"),
-    ("rtf", "rtf"),
-    ("epub", "epub"),
-    ("latex", "tex"),
-    ("mediawiki", "wiki"),
-    ("rst", "rst"),
-    ("textile", "textile"),
-    ("opml", "opml"),
-];
-
 #[derive(Default)]
 pub struct CliBridge {
     /// Windows whose frontend takes requests, by label.
@@ -365,7 +349,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
         Ok(job) => job,
         Err(why) => return Answer::fail(why, 2),
     };
-    let pandoc = !matches!(job.format, "pdf" | "html");
+    let pandoc = !matches!(job.format.as_str(), "pdf" | "html");
     if pandoc && crate::commands::export::detect_pandoc().await.is_none() {
         return Answer::fail(
             format!(
@@ -403,7 +387,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
 #[derive(Debug)]
 pub(super) struct ExportJob {
     file: PathBuf,
-    format: &'static str,
+    format: String,
     pub(super) out: PathBuf,
 }
 
@@ -421,10 +405,9 @@ pub(super) fn export_job(request: &Request) -> Result<ExportJob, String> {
         return Err(format!("{} isn't a file.", file.display()));
     }
     let to = to.ok_or("Say which format with --to (pdf, html, docx, ...).")?;
-    let &(format, ext) = EXPORT_FORMATS
-        .iter()
-        .find(|(name, _)| *name == to)
+    let ext = crate::export_formats::export_extension(&to)
         .ok_or_else(|| format!("Textus doesn't export to '{to}'. See 'textus help export'."))?;
+    let format = to.clone();
     let out = match out {
         Some(out) => cwd.join(out),
         None => file.with_extension(ext),
