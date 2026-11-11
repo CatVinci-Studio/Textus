@@ -148,7 +148,7 @@ test("opening the AI with only Settings open, its island grows from nothing as S
   page,
 }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   const doc = page.locator(".tab-pill").filter({ hasText: "未命名" });
   await doc.click();
   await doc.locator(".tab-pill-close").click();

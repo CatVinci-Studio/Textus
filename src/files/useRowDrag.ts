@@ -55,7 +55,17 @@ export function useRowDrag(
     [],
   );
   useEffect(() => {
+    /** The tree's box as the drag began: off it, nothing to hit-test. */
+    let treeBox: DOMRect | null = null;
     const targetAt = (x: number, y: number, path: string, isDir: boolean) => {
+      treeBox ??= treeRef.current?.getBoundingClientRect() ?? null;
+      const over =
+        treeBox &&
+        x >= treeBox.left &&
+        x <= treeBox.right &&
+        y >= treeBox.top &&
+        y <= treeBox.bottom;
+      if (!over) return null;
       const el = document
         .elementFromPoint(x, y)
         ?.closest<HTMLElement>("[data-drop-dir]");
@@ -70,8 +80,12 @@ export function useRowDrag(
     let ghost: DragGhost | null = null;
     const show = (next: Drag | null) => {
       if (!current !== !next) setDragging(!!next);
+      // The tree redraws only when where it would land changes; the copy
+      // follows the pointer by itself.
+      const redraw = !current !== !next || current?.into !== next?.into;
       current = next;
-      setDrag(next);
+      if (redraw) setDrag(next);
+      if (!next) treeBox = null;
       // The copy under the pointer, as every drag elsewhere has it.
       if (next && !ghost)
         ghost = dragGhost(next.name, "tree-drag-ghost floating-surface");

@@ -10,10 +10,14 @@ import {
   fitTabs,
   readTabRoom,
   sameRoom,
+  type PillMeasures,
   type TabRoom,
   type TabShape,
 } from "./tab-room";
 import type { TabFit } from "./tab-widths";
+
+/** A tab's measures by its row's kind and the parts its tabs have. */
+const PILLS = new Map<string, PillMeasures>();
 
 /**
  * Many tabs: each as wide as its name needs, the widest giving way first
@@ -33,24 +37,31 @@ export function useTabFit(
   useLayoutEffect(() => {
     const el = bar.current;
     if (!el) return;
-    const read = () => {
-      const next = readTabRoom(el);
+    // A tab's measures: every row's stylesheet is the same, so one row's
+    // serve all with the same parts, until the look or a font changes.
+    const read = (fresh = false) => {
+      if (fresh) PILLS.clear();
+      const key = `${el.className}|${parts}`;
+      const next = readTabRoom(el, PILLS.get(key));
+      if (next) PILLS.set(key, next.pill);
       setRoom((was) => (sameRoom(was, next) ? was : next));
     };
     read();
     // Before the frame is drawn: the tabs never show a width the row has
     // already left. (A row is laid out at the width it slides to.)
-    const resized = new ResizeObserver(() => flushSync(read));
+    const resized = new ResizeObserver(() => flushSync(() => read()));
     resized.observe(el);
     // The interface's size, font or theme: the row may keep its width.
-    const restyled = onAppearance(read);
+    const restyled = onAppearance(() => read(true));
     // A font arriving draws the same names at other widths.
-    const fonts = onFontsChange(() => setRoom(readTabRoom(el)));
+    const fonts = onFontsChange(() => read(true));
     const scrolled = () =>
       el.toggleAttribute("data-scrolled", el.scrollLeft > 1);
-    scrolled();
+    // Next frame: read now, it would lay the new row out first.
+    const first = requestAnimationFrame(scrolled);
     el.addEventListener("scroll", scrolled, { passive: true });
     return () => {
+      cancelAnimationFrame(first);
       resized.disconnect();
       restyled();
       fonts();

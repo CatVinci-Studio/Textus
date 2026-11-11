@@ -3,7 +3,7 @@
 
 import { useFileMark } from "../registry/file-marks";
 import { plural } from "../i18n/plural";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { memo, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import {
   ChevronIcon,
@@ -41,7 +41,7 @@ function byModified(a: DirEntryInfo, b: DirEntryInfo): number {
   return (b.modified_ms ?? -Infinity) - (a.modified_ms ?? -Infinity);
 }
 
-export function DirNode({
+export const DirNode = memo(function DirNode({
   path,
   depth,
   ignored = false,
@@ -190,9 +190,10 @@ export function DirNode({
       )}
     </div>
   );
-}
+});
 
-function FileNode({
+/** A file's row; drawn again only when what it shows changed. */
+const FileNode = memo(function FileNode({
   entry,
   depth,
   active,
@@ -270,4 +271,4 @@ function FileNode({
       </Presence>
     </>
   );
-}
+});

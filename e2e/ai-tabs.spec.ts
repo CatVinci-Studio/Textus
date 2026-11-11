@@ -121,7 +121,7 @@ test("the window's other tabs stay with the document when the AI opens", async (
   page,
 }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await aiButton(page).click();
   await expect(islands(page)).toHaveCount(2);
@@ -135,7 +135,7 @@ test("the window's other tabs stay with the document when the AI opens", async (
 
 test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await aiButton(page).click();
   const rows = page.locator(".island-row");
   await expect(rows).toHaveCount(2);
@@ -153,7 +153,10 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.mouse.up();
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
-  await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置：通用"]);
+  await expect(rows.last().locator(".tab-pill")).toHaveText([
+    "未命名",
+    "设置：通用",
+  ]);
 
   // And back, the document's island to the left of the AI's: each first
   // open tab at its island's edge still joins its sheet's square corner.
@@ -202,7 +205,7 @@ test("with only Settings open, the AI opens beside it and can be used; Settings'
     settings: { menuBarShown: false },
     animations: true,
   });
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   const doc = tabs(page).filter({ hasText: "未命名" });
   await doc.click();
   await doc.hover();

@@ -293,7 +293,7 @@ for (const lang of LANGS) {
       const s = textsFor("settings");
       await launch(page, { lang, file: heroFile(s) });
       await caretAtEnd(page);
-      await emit(page, "menu-open-settings");
+      await emit(page, "menu-settings");
       await page
         .locator(".settings-nav-item", { hasText: "Textus AI" })
         .click();

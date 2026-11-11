@@ -41,7 +41,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     await pasteMarkdown(page, SAMPLE_DOC);
     await scan(page, "document");
 
-    await emit(page, "menu-open-settings");
+    await emit(page, "menu-settings");
     await expect(page.locator(".settings-tab-page")).toBeVisible();
     await scan(page, "settings");
 

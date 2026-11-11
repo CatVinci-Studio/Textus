@@ -35,7 +35,7 @@ test("⌘, opens the list in the sidebar and the Settings tab; the gear toggles 
   page,
 }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await expect(sidebarTitle(page)).toHaveText("设置");
   await expect(gear(page)).toHaveAttribute("aria-pressed", "true");
@@ -48,7 +48,7 @@ test("⌘, opens the list in the sidebar and the Settings tab; the gear toggles 
 
 test("every page draws, in the one tab, without an error", async ({ page }) => {
   const errors = await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   for (const id of PAGES) {
     await page.evaluate(
       (page) =>
@@ -65,7 +65,7 @@ test("every page draws, in the one tab, without an error", async ({ page }) => {
 
 test("groups fold, and open on the page shown", async ({ page }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   const nav = page.locator(".sidebar");
   await expect(nav.getByText("图片", { exact: true })).toHaveCount(0);
   await nav.getByText("编辑", { exact: true }).click();
@@ -87,7 +87,7 @@ test("Check for Updates opens About; a plugin's settings open its page's tab", a
 
 test("the list's last item goes to the plugins panel", async ({ page }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await page.locator(".settings-nav-away").click();
   await expect(sidebarTitle(page)).toHaveText("插件");
 });
@@ -120,7 +120,7 @@ test("in too narrow a column, Settings asks for room instead of squeezing its ro
   // still share too little.
   await page.setViewportSize({ width: 640, height: 700 });
   await openApp(page, { settings: { menuBarShown: false } });
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator(".settings-tab-narrow")).toBeVisible();
   await expect(page.locator(".settings-tab-page")).toBeHidden();

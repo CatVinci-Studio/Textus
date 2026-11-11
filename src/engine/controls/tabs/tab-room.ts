@@ -9,7 +9,7 @@ import { tabWidths, type TabFit } from "./tab-widths";
  */
 
 /** What a tab is made of, whatever its name. */
-interface PillMeasures {
+export interface PillMeasures {
   /** Its name's font. */
   font: string;
   /** How much wider the page draws a name than the canvas measures it
@@ -128,13 +128,17 @@ function measurePill(strip: HTMLElement, pill: HTMLElement): PillMeasures {
 }
 
 /** The row's measures now; null while it has no tab to measure by or is
- *  not laid out. */
-export function readTabRoom(bar: HTMLElement): TabRoom | null {
+ *  not laid out. `pill`: a tab's measures already read, which only the
+ *  interface's size, a font or a theme change, not the row's width. */
+export function readTabRoom(
+  bar: HTMLElement,
+  pill?: PillMeasures,
+): TabRoom | null {
   const strip = bar.querySelector<HTMLElement>(":scope > .tab-strip");
-  const pill = strip?.querySelector<HTMLElement>(
+  const tab = strip?.querySelector<HTMLElement>(
     ":scope > .tab-pill:not(.tab-pill-preview)",
   );
-  if (!strip || !pill) return null;
+  if (!strip || !tab) return null;
   const style = getComputedStyle(bar);
   const between = px(style.columnGap);
   const inner =
@@ -154,7 +158,7 @@ export function readTabRoom(bar: HTMLElement): TabRoom | null {
   return {
     available: Math.floor(inner - taken),
     between,
-    pill: measurePill(strip, pill),
+    pill: pill ?? measurePill(strip, tab),
   };
 }
 

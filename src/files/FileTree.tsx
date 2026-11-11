@@ -1,4 +1,5 @@
-import { useMemo, useRef, type MouseEvent as ReactMouseEvent } from "react";
+import { useLatestCallback } from "../utils/hooks/useLatest";
+import { useMemo, type MouseEvent as ReactMouseEvent } from "react";
 import {
   ChevronIcon,
   CloseIcon,
@@ -74,17 +75,18 @@ export function FileTree({
   // a folder picked in Files is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
   const parent = isIOSApp || root === folder ? null : parentDir(root);
-  const treeRef = useRef<HTMLDivElement>(null);
-  const treeKeys = useTreeKeys(treeRef);
+  const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
+  // One handler for the tree's life: a row redraws only when it changes.
+  const select = useLatestCallback(onFileSelect);
   const desktop = !isIOSApp && canOpenFolder;
-  const { draft, setDraft, finishDraft } = useNewEntry(t, reload, onFileSelect);
+  const { draft, setDraft, finishDraft } = useNewEntry(t, reload, select);
 
   const { menu, setMenu, onRowMenu } = useRowMenu(
     root,
     folder ?? root,
     t,
     reload,
-    onFileSelect,
+    select,
     onEntryMoved,
     setDraft,
     folder ? null : onRootChange,
@@ -318,7 +320,7 @@ export function FileTree({
               path={root}
               depth={0}
               activePath={activePath}
-              onFileSelect={onFileSelect}
+              onFileSelect={select}
             />
           </div>
         </div>

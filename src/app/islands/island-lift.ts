@@ -2,6 +2,7 @@ import { frameLayout } from "../../engine/frame/frame-store";
 import type { Rect } from "../../engine/frame/rect";
 import "./island-lift.css";
 import "./split-drop.css";
+import { transientStyle } from "../../engine/tokens/appearance";
 
 /** An island lifted to be moved whole: what follows the pointer, and its
  *  place (wherever the preview puts it) left as a dashed outline. */
@@ -78,7 +79,7 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
     layer,
   );
   // Its own place, as the layout has it: an outline, nothing in it.
-  const style = document.createElement("style");
+  const style = transientStyle();
   style.textContent = `
     .island-row${pane}, .split-pane${pane}, section.island${pane} > * {
       visibility: hidden;
@@ -87,7 +88,7 @@ export function liftIsland(id: string, x: number, y: number): IslandLift {
       background: var(--drop-room-island) center / 100% 100% no-repeat !important;
       box-shadow: none !important;
     }`;
-  document.head.append(style);
+
   return {
     move(px, py) {
       layer.style.translate = `${px - x}px ${py - y}px`;

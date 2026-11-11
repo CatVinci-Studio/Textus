@@ -1,5 +1,5 @@
 import { tabElement } from "../engine/layout/tab-element";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
@@ -96,8 +96,7 @@ export function Outline({ content, tabId }: OutlineProps) {
     ];
   };
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
-  const treeRef = useRef<HTMLDivElement>(null);
-  const treeKeys = useTreeKeys(treeRef);
+  const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
   const current = useCurrentHeading(content);
   /** Where the menu is open, and the heading row it is on, if any. */
   const [menu, setMenu] = useState<{

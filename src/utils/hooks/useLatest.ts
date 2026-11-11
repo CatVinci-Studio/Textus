@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 
 /**
  * A ref that always holds the latest value, for long-lived closures that
@@ -11,4 +11,13 @@ export function useLatest<T>(value: T): { readonly current: T } {
     ref.current = value;
   }, [value]);
   return ref;
+}
+
+/** `fn` as one function for the component's life, calling the latest `fn`:
+ *  handed down, it changes nothing below when the caller redraws. */
+export function useLatestCallback<A extends unknown[], R>(
+  fn: (...args: A) => R,
+): (...args: A) => R {
+  const latest = useLatest(fn);
+  return useCallback((...args: A) => latest.current(...args), [latest]);
 }

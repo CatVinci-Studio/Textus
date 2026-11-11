@@ -18,6 +18,7 @@ import {
   type DropTarget,
 } from "../../engine/layout/drop-zones";
 import "./split-drop.css";
+import { transientStyle } from "../../engine/tokens/appearance";
 
 /**
  * The layout once `tabId` is dropped at `target`: on a pane's edge, in a
@@ -142,7 +143,7 @@ export function arrivalPreview(tabIds: () => readonly string[]) {
       style = null;
       return;
     }
-    style ??= document.head.appendChild(document.createElement("style"));
+    style ??= transientStyle();
     style.textContent = rules.join("\n");
   };
   const clear = () => {

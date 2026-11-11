@@ -401,7 +401,11 @@ export function createMermaidPreviewPlugin(options: {
           restyle();
         });
 
-        void renderAll();
+        // The first pass waits for the observer's first call, made once the
+        // browser has laid the new editor out: asking its width now would
+        // lay the whole document out in the middle of opening it.
+        if (shown) waitingToBeShown = true;
+        else void renderAll();
         registerDrawAll(editorView.dom, () => renderAll(true));
 
         return {

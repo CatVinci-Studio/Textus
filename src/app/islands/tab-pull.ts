@@ -25,6 +25,7 @@ import { setDragging } from "../../engine/controls/document-drop";
 import { commitDrop, dropLayout, roomMarks } from "./split-drop";
 import { liftIsland, type IslandLift } from "./island-lift";
 import "./split-drop.css";
+import { transientStyle } from "../../engine/tokens/appearance";
 
 /** How far the tab travels before its place closes behind it (interface
  *  px): a short pull and back leaves the layout untouched. */
@@ -268,8 +269,7 @@ export function pullTab(
  * island still empty.
  */
 function placeMarks(tabId: string) {
-  const style = document.createElement("style");
-  document.head.append(style);
+  const style = transientStyle();
   const tab = CSS.escape(tabId);
   /** The row whose slot it would take (a pane). */
   let roomRow: string | undefined;

@@ -148,7 +148,7 @@ test("Settings open and close", async ({ page }) => {
   await pasteMarkdown(page, LONG_DOC);
   await bench(page, "settings", async () => {
     for (let i = 0; i < ROUNDS; i++) {
-      await emit(page, "menu-open-settings");
+      await emit(page, "menu-settings");
       await page.waitForTimeout(450);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(350);
@@ -187,7 +187,7 @@ test("menus and popovers", async ({ page }) => {
 
 test("InfoTip", async ({ page }) => {
   await open(page);
-  await emit(page, "menu-open-settings");
+  await emit(page, "menu-settings");
   await page.getByRole("button", { name: "Editor & Appearance" }).click();
   const tip = page.locator(".info-tip-button").first();
   await tip.scrollIntoViewIfNeeded();

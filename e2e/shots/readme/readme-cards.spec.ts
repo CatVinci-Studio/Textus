@@ -611,7 +611,7 @@ for (const lang of LANGS) {
           window as unknown as {
             __devEmitTauriEvent: (name: string) => void;
           }
-        ).__devEmitTauriEvent("menu-open-settings"),
+        ).__devEmitTauriEvent("menu-settings"),
       );
       // Textus AI › Models: the model choice over the
       // providers, list and picked one side by side.

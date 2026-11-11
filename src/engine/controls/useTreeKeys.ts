@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type KeyboardEvent,
-  type RefObject,
-} from "react";
+import { useCallback, useEffect, useRef, type KeyboardEvent } from "react";
 
 const ITEM = '[role="treeitem"]';
 
@@ -20,10 +14,11 @@ function level(el: HTMLElement): number {
   return Number(el.getAttribute("aria-level")) || 1;
 }
 
-/** Keyboard handling for a tree, per the WAI-ARIA tree pattern: one row is in
+/** The tree's element (its `ref`) and keyboard handling for it, per the WAI-ARIA tree pattern: one row is in
  *  the tab order, arrows move and fold, Enter and Space click. A row folds
  *  through its `data-tree-toggle` element, else its own click. */
-export function useTreeKeys(ref: RefObject<HTMLElement | null>) {
+export function useTreeKeys<T extends HTMLElement>() {
+  const ref = useRef<T>(null);
   const current = useRef<HTMLElement | null>(null);
 
   // Keeps exactly one row tabbable as rows come and go.
@@ -72,7 +67,7 @@ export function useTreeKeys(ref: RefObject<HTMLElement | null>) {
     };
   }, [ref, rove]);
 
-  return useCallback(
+  const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLElement>) => {
       const root = ref.current;
       const item = (e.target as HTMLElement).closest<HTMLElement>(ITEM);
@@ -126,4 +121,5 @@ export function useTreeKeys(ref: RefObject<HTMLElement | null>) {
     },
     [ref],
   );
+  return { ref, onKeyDown };
 }
