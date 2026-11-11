@@ -115,7 +115,7 @@
 /* With its row of conversations (ChatWindowRoot) the window is the editor's
    AI island alone: the frame, the row over the island, the island inset in
    it (island.css). */
-.chat-window[data-layout] {
+:root[data-layout] .chat-window {
   --ui-frame: var(--ui-frame-sunk);
   --ui-frame-fill: var(--ui-frame);
   background: var(--ui-frame-fill);
@@ -147,11 +147,11 @@
   width: 70px;
 }
 
-.chat-window[data-layout] > [data-island] {
+:root[data-layout] .chat-window > [data-island] {
   margin: 0 var(--island-inset) var(--island-inset);
   overflow: hidden;
 }
 
-.chat-window[data-layout] .chat-window-body {
+:root[data-layout] .chat-window .chat-window-body {
   --chat-card-bg: color-mix(in srgb, var(--ui-text) 4%, var(--ui-surface));
 }

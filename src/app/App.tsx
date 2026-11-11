@@ -168,7 +168,6 @@ function App() {
           // The layout's switches for the styles (layout/layout*.css): floating islands or classic, and the tabs in the
           // window bar's row, in a row of their own under the menu bar, or
           // none.
-          data-layout={settings.layout}
           data-tabs={tabRow}
           // Its column open: the grid and the rail's edge follow the model.
           data-sidebar={sidebarShown ? "open" : undefined}

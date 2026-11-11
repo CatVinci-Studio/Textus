@@ -67,7 +67,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
   // note, and comes back as it was once Textus AI is on again.
   if (!settings.textusAi)
     return (
-      <div className="chat-window" data-layout={settings.layout}>
+      <div className="chat-window">
         {header}
         <IslandSheet ui className="chat-window-ai-off">
           <TextusAiOffNote />
@@ -77,7 +77,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     );
   if (lost)
     return (
-      <div className="chat-window" data-layout={settings.layout}>
+      <div className="chat-window">
         {header}
         <IslandSheet ui className="chat-window-lost">
           {t.chatWindowLost}
@@ -87,7 +87,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     );
   if (!claimed || !context)
     return (
-      <div className="chat-window" data-layout={settings.layout}>
+      <div className="chat-window">
         {header}
         <IslandSheet ui className="chat-window-loading">
           {t.agentThinking}
@@ -97,7 +97,7 @@ export function ChatWindowApp({ tabs }: { tabs?: ChatTabs }) {
     );
 
   return (
-    <div className="chat-window" data-layout={settings.layout}>
+    <div className="chat-window">
       {header}
       <IslandSheet ui className="chat-window-body">
         <ChatBody
