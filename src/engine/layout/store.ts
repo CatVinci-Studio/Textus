@@ -139,8 +139,8 @@ export function shownIsland(
 }
 
 /** The id of the island `tabId` is in, or null when in none. */
-export function paneOf(current: SplitLayout | null, tabId: string): string | null {
-  return (current && paneWithTab(current.root, tabId)?.id) ?? null;
+export function paneOf(current: SplitLayout, tabId: string): string | null {
+  return paneWithTab(current.root, tabId)?.id ?? null;
 }
 
 /** Splits the pane in use (or the window) this way, a document of its
@@ -229,8 +229,7 @@ export function arrangeBranch(
 export function closeSplit(): void {
   request = null;
   if (!isSplit(layout)) return;
-  const home =
-    paneWithTab(layout.root, active) ?? panesOf(layout.root)[0];
+  const home = paneWithTab(layout.root, active) ?? panesOf(layout.root)[0];
   const only = {
     ...home,
     tabs: records.map((tab) => tab.id),

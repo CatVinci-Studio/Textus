@@ -137,7 +137,7 @@ export function dropGeometry(): DropGeometry {
   };
 }
 
-/** Where tab `id` of pane `pane`'s row (null: the one row unsplit) is
+/** Where tab `id` of pane `pane`'s row (null: a row of no island) is
  *  drawn, in the viewport: its strip's place for it on its row. */
 export function tabRectOf(pane: string | null, id: string): DOMRect | null {
   const island = frameLayout().islands.find((i) => i.paneId === pane);

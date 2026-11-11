@@ -10,7 +10,7 @@ import {
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
-import { placeOnArrival, splitLayout } from "../../engine/layout/store";
+import { placeOnArrival, windowLayout } from "../../engine/layout/store";
 import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
@@ -110,8 +110,7 @@ export function useAiTabs({
     opening.current = false;
     // Each placed as it arrives: its place asked for before it is added.
     const kept = current.find((tab) => !gone.includes(tab.id));
-    const layout = splitLayout();
-    const home = kept && layout && paneWithTab(layout.root, kept.id);
+    const home = kept && paneWithTab(windowLayout().root, kept.id);
     if (made.length) {
       // Beside the AI's other tabs; the first in an island of its own at
       // the right of everything, not beside whichever island came last.
@@ -161,16 +160,9 @@ export function useAiTabs({
       const target =
         ai.find((tab) => conversationOf(tab) === (live ?? DRAFT)) ?? ai[0];
       if (!target) return setShown(false);
-      const layout = splitLayout();
-      const pane = layout && paneWithTab(layout.root, target.id);
-      // In front of its island (the window's one tab, unsplit).
-      const inFront = pane
-        ? pane.front === target.id
-        : activeTabId === target.id;
-      if (!inFront) return tabs.setActiveTabId(target.id);
-      // The island's tabs: a pane's, or every tab of a window not split.
-      const island = pane ? pane.tabs : tabsRef.current.map((tab) => tab.id);
-      const onlyAi = island.every((id) =>
+      const pane = paneWithTab(windowLayout().root, target.id);
+      if (pane?.front !== target.id) return tabs.setActiveTabId(target.id);
+      const onlyAi = pane.tabs.every((id) =>
         tabsRef.current.some((tab) => tab.id === id && isAiTab(tab)),
       );
       if (onlyAi) setShown(false);

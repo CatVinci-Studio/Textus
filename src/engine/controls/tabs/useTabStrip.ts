@@ -29,7 +29,7 @@ export function useTabStrip({
   incomingX,
 }: {
   strip: React.RefObject<HTMLElement | null>;
-  /** Its pane (null: the one row unsplit), for a drag to find its tabs. */
+  /** Its pane (null: a row of no island), for a drag to find its tabs. */
   pane: string | null;
   ids: readonly string[];
   /** The tabs' widths, the incoming one's last while it rides in; null

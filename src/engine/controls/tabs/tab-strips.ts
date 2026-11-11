@@ -25,7 +25,7 @@ export function dropStripPlaces(
   if (strips.get(pane)?.scrolled === scrolled) strips.delete(pane);
 }
 
-/** Pane `pane`'s tabs (null: the one row unsplit), if laid out. */
+/** Pane `pane`'s tabs (null: a row of no island), if laid out. */
 export function stripPlaces(pane: string | null): StripPlaces | undefined {
   return strips.get(pane);
 }

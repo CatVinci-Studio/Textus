@@ -1,10 +1,5 @@
 import { useMemo, useSyncExternalStore } from "react";
-import {
-  splitPreview,
-  subscribeSplit,
-  tabInUse,
-  windowLayout,
-} from "./store";
+import { splitPreview, subscribeSplit, tabInUse, windowLayout } from "./store";
 import { asRoot, type SplitLayout } from "./ops";
 import { paneWithTab, panesOf } from "./tree";
 

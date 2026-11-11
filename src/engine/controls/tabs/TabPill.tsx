@@ -68,7 +68,7 @@ export function TabPill({
   onUnlock,
 }: {
   tab: TabInfo;
-  /** Its row's pane (null: the one row unsplit). */
+  /** Its row's pane (null: a row of no island). */
   pane: string | null;
   /** Its ref in its strip, which places it (useTabStrip). */
   place: (el: HTMLElement | null) => void;

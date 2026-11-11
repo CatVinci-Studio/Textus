@@ -200,7 +200,7 @@ export function useRowInsets(
   return insetsFor(island ?? null, bar);
 }
 
-/** Where the tabs of pane `paneId`'s row (null: the one island unsplit)
+/** Where the tabs of pane `paneId`'s row (null: a row of no island)
  *  start, in the viewport, unscrolled; null while it has no row. */
 export function tabsStartOf(paneId: string | null): number | null {
   const island = frameLayout().islands.find((i) => i.paneId === paneId);
