@@ -1068,10 +1068,6 @@ export default {
   themeDeleteAsk: "Удалить тему «{name}»?",
   themeImportLabel: "Добавить тему из файла CSS",
   themeImportButton: "Импортировать CSS…",
-  themeGalleryLoading: "Загрузка тем…",
-  themeGalleryUnreachable:
-    "Не удалось подключиться к галерее тем. Проверьте соединение или посмотрите темы на сайте.",
-  themeGalleryRetry: "Повторить",
   themeGalleryWebsite: "Открыть сайт",
   themeGalleryInstall: "Установить",
   themeGalleryInstalled: "Установлена",

@@ -1065,10 +1065,6 @@ para usar una.
   themeDeleteAsk: "¿Eliminar el tema «{name}»?",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
   themeImportButton: "Importar CSS…",
-  themeGalleryLoading: "Cargando temas…",
-  themeGalleryUnreachable:
-    "No se pudo conectar con la galería de temas. Revisa tu conexión o mira los temas en el sitio web.",
-  themeGalleryRetry: "Reintentar",
   themeGalleryWebsite: "Abrir sitio web",
   themeGalleryInstall: "Instalar",
   themeGalleryInstalled: "Instalado",

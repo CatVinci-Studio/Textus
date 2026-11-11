@@ -1007,10 +1007,6 @@ type /name in a conversation to use one.
   themeDeleteAsk: 'Delete the theme "{name}"?',
   themeImportLabel: "Add a theme from a CSS file",
   themeImportButton: "Import CSS…",
-  themeGalleryLoading: "Loading themes…",
-  themeGalleryUnreachable:
-    "Couldn't reach the theme gallery. Check your connection, or see the themes on the website.",
-  themeGalleryRetry: "Try again",
   themeGalleryWebsite: "Open website",
   themeGalleryInstall: "Install",
   themeGalleryInstalled: "Installed",

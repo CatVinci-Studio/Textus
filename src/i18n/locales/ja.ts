@@ -987,10 +987,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   themeDeleteAsk: "テーマ「{name}」を削除しますか？",
   themeImportLabel: "CSS ファイルからテーマを追加",
   themeImportButton: "CSSをインポート…",
-  themeGalleryLoading: "テーマを読み込み中…",
-  themeGalleryUnreachable:
-    "テーマギャラリーに接続できません。接続を確認するか、ウェブサイトでテーマをご覧ください。",
-  themeGalleryRetry: "再試行",
   themeGalleryWebsite: "ウェブサイトを開く",
   themeGalleryInstall: "インストール",
   themeGalleryInstalled: "インストール済み",

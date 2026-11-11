@@ -2,11 +2,11 @@ import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import { Byline, CatalogRow } from "./CatalogRow";
+import { CatalogProblem, catalogMessage, catalogStatus } from "./CatalogStatus";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
 import { pluginName, pluginText } from "../../plugins/store/plugin-records";
 import {
-  loadCatalog,
   searchCatalog,
   sortCatalog,
   type CatalogItem,
@@ -51,21 +51,13 @@ export function AvailablePlugins({
         installed,
       )
     : [];
-  const message =
-    catalog.status === "failed" ? (
-      <CatalogProblem
-        t={t}
-        text={fill(t.pluginsCatalogFailed, {
-          reason: explainError(catalog.error, t),
-        })}
-      />
-    ) : !ready ? (
-      <p className="tx-list-note">{t.pluginsCatalogLoading}</p>
-    ) : query.trim() && !shown.length ? (
-      <p className="tx-list-note">
-        {fill(t.pluginsSearchNone, { query: query.trim() })}
-      </p>
-    ) : undefined;
+  const message = catalogMessage({
+    t,
+    status: catalogStatus(catalog),
+    error: catalog.status === "failed" ? catalog.error : undefined,
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}
@@ -109,26 +101,6 @@ export function AvailablePlugins({
         />
       ))}
     />
-  );
-}
-
-/** Why the catalog couldn't be read, with a button to try again. */
-export function CatalogProblem({ t, text }: { t: Strings; text: string }) {
-  return (
-    <div className="settings-row plugin-catalog-problem">
-      <div className="settings-row-text">
-        <div className="settings-error">{text}</div>
-      </div>
-      <div className="settings-row-control">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={() => void loadCatalog(true)}
-        >
-          {t.pluginsCatalogRetry}
-        </button>
-      </div>
-    </div>
   );
 }
 

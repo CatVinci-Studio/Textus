@@ -1,5 +1,5 @@
+import { catalogMessage } from "../pages/CatalogStatus";
 import { Byline } from "../pages/CatalogRow";
-import { fill } from "../../i18n/fill";
 import { useSettingsIndexing } from "../indexing";
 import {
   useEffect,
@@ -99,19 +99,27 @@ export function AvailableThemes({
   onOpen: (theme: GalleryTheme) => void;
 }) {
   const { settings } = useSettings();
-  const { catalog, unreachable, retry } = gallery;
+  const { catalog, failed, retry } = gallery;
   const shown = (catalog ? searchThemes(catalog, query) : []).filter(
     (theme) => !installedCopy(theme, settings.userThemes),
   );
-  const message = unreachable ? (
-    <GalleryUnreachable t={t} retry={retry} />
-  ) : !catalog ? (
-    <GalleryLoading t={t} />
-  ) : query.trim() && !shown.length ? (
-    <p className="tx-list-note">
-      {fill(t.pluginsSearchNone, { query: query.trim() })}
-    </p>
-  ) : undefined;
+  const message = catalogMessage({
+    t,
+    status: failed !== null ? "failed" : catalog ? "ready" : "loading",
+    error: failed,
+    retry,
+    extra: (
+      <button
+        type="button"
+        className="text-button settings-inline-button"
+        onClick={() => void links.openAboutLink("themes")}
+      >
+        {t.themeGalleryWebsite}
+      </button>
+    ),
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}
@@ -136,38 +144,6 @@ export function AvailableThemes({
         />
       ))}
     />
-  );
-}
-
-function GalleryLoading({ t }: { t: Strings }) {
-  return (
-    <div className="theme-gallery-message settings-row-hint" role="status">
-      {t.themeGalleryLoading}
-    </div>
-  );
-}
-
-function GalleryUnreachable({ t, retry }: { t: Strings; retry: () => void }) {
-  return (
-    <div className="theme-gallery-message" role="status">
-      <div className="settings-row-hint">{t.themeGalleryUnreachable}</div>
-      <div className="theme-gallery-message-actions">
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={retry}
-        >
-          {t.themeGalleryRetry}
-        </button>
-        <button
-          type="button"
-          className="text-button settings-inline-button"
-          onClick={() => void links.openAboutLink("themes")}
-        >
-          {t.themeGalleryWebsite}
-        </button>
-      </div>
-    </div>
   );
 }
 
@@ -386,13 +362,13 @@ export function GalleryPreview({
 }
 
 /** The gallery's catalog, fetched as the page opens and again on `retry`;
- *  `unreachable` when the fetch failed. */
+ *  `failed` the error when the fetch failed. */
 export function useGalleryCatalog() {
   const { settings } = useSettings();
   const [themes, setCatalog] = useState<GalleryTheme[] | null>(null);
   const catalog =
     themes?.map((theme) => localizedTheme(theme, settings.language)) ?? null;
-  const [unreachable, setUnreachable] = useState(false);
+  const [failed, setFailed] = useState<unknown>(null);
   const [attempt, setAttempt] = useState(0);
 
   const indexing = useSettingsIndexing();
@@ -400,15 +376,15 @@ export function useGalleryCatalog() {
     if (indexing) return;
     let cancelled = false;
     setCatalog(null);
-    setUnreachable(false);
+    setFailed(null);
     themeGallery
       .catalog()
       .then((themes) => !cancelled && setCatalog(themes))
-      .catch(() => !cancelled && setUnreachable(true));
+      .catch((error: unknown) => !cancelled && setFailed(error ?? "?"));
     return () => {
       cancelled = true;
     };
   }, [attempt, indexing]);
 
-  return { catalog, unreachable, retry: () => setAttempt((n) => n + 1) };
+  return { catalog, failed, retry: () => setAttempt((n) => n + 1) };
 }

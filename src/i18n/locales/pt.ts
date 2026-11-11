@@ -1050,10 +1050,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   themeDeleteAsk: "Excluir o tema “{name}”?",
   themeImportLabel: "Adicionar um tema de um arquivo CSS",
   themeImportButton: "Importar CSS…",
-  themeGalleryLoading: "Carregando temas…",
-  themeGalleryUnreachable:
-    "Não foi possível acessar a galeria de temas. Verifique sua conexão ou veja os temas no site.",
-  themeGalleryRetry: "Tentar novamente",
   themeGalleryWebsite: "Abrir site",
   themeGalleryInstall: "Instalar",
   themeGalleryInstalled: "Instalado",

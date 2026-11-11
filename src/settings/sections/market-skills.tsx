@@ -10,7 +10,7 @@ import { ai, plugins as pluginsIpc } from "../../platform/ipc";
 import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
 import { useSettings } from "../../prefs/SettingsContext";
 import { AvailableSection } from "../pages/AvailableSection";
-import { CatalogProblem } from "../pages/AvailablePlugins";
+import { catalogMessage, catalogStatus } from "../pages/CatalogStatus";
 import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
 
@@ -96,23 +96,16 @@ export function AvailableSkills({
     }
     announceChange();
   };
-  const message =
-    catalog.status === "failed" ? (
-      <CatalogProblem
-        t={t}
-        text={fill(t.pluginsCatalogFailed, {
-          reason: explainError(catalog.error, t),
-        })}
-      />
-    ) : !ready ? (
-      <p className="tx-list-note">{t.pluginsCatalogLoading}</p>
-    ) : !catalog.skills.length ? (
-      <p className="tx-list-note">{t.marketSkillsNone}</p>
-    ) : query.trim() && !shown.length ? (
-      <p className="tx-list-note">
-        {fill(t.pluginsSearchNone, { query: query.trim() })}
-      </p>
-    ) : undefined;
+  const message = catalogMessage({
+    t,
+    // Its list is ready once the user's skills are read too.
+    status:
+      catalog.status === "ready" && !ready ? "loading" : catalogStatus(catalog),
+    error: catalog.status === "failed" ? catalog.error : undefined,
+    none: ready && !catalog.skills.length ? t.marketSkillsNone : undefined,
+    query,
+    shown: shown.length,
+  });
   return (
     <AvailableSection
       t={t}

@@ -1,4 +1,4 @@
-import { explainError } from "../../utils/error-explain";
+import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
   useEffect,
@@ -188,42 +188,37 @@ export function PluginsPanel({
           open={!folded.has("available")}
           onToggle={() => fold("available")}
         />
-        {folded.has("available") ? null : catalog.status !== "ready" ? (
-          <p className="tx-list-note">
-            {catalog.status === "failed"
-              ? fill(t.pluginsCatalogFailed, {
-                  reason: explainError(catalog.error, t),
-                })
-              : t.pluginsCatalogLoading}
-          </p>
-        ) : query.trim() && offered.length === 0 ? (
-          <p className="tx-list-note">
-            {fill(t.pluginsSearchNone, { query: query.trim() })}
-          </p>
-        ) : (
-          offered.map((item) => (
-            <PluginRow
-              key={item.id}
-              id={item.id}
-              name={pluginName({ id: item.id, manifest: item.manifest })}
-              line={pluginText(
-                { manifest: item.manifest },
-                item.manifest.description,
-              )}
-              manifest={item.manifest}
-              picked={picked === item.id}
-              onOpen={() => onPick(item.id)}
-              end={actionFor(item.id)}
-              icon={
-                <PluginIcon
-                  id={item.id}
-                  manifest={item.manifest}
-                  url={item.icon}
-                />
-              }
-            />
-          ))
-        )}
+        {folded.has("available")
+          ? null
+          : (catalogMessage({
+              t,
+              status: catalogStatus(catalog),
+              error: catalog.status === "failed" ? catalog.error : undefined,
+              query,
+              shown: offered.length,
+            }) ??
+            offered.map((item) => (
+              <PluginRow
+                key={item.id}
+                id={item.id}
+                name={pluginName({ id: item.id, manifest: item.manifest })}
+                line={pluginText(
+                  { manifest: item.manifest },
+                  item.manifest.description,
+                )}
+                manifest={item.manifest}
+                picked={picked === item.id}
+                onOpen={() => onPick(item.id)}
+                end={actionFor(item.id)}
+                icon={
+                  <PluginIcon
+                    id={item.id}
+                    manifest={item.manifest}
+                    url={item.icon}
+                  />
+                }
+              />
+            )))}
       </section>
     </div>
   );
