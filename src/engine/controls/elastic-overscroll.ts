@@ -1,4 +1,4 @@
-import { motionAllowed } from "../motion/motion";
+import { animate, motionAllowed } from "../motion/motion";
 import { isIOSApp } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 
@@ -65,9 +65,9 @@ export function elasticOverscroll(
     travel = 0;
     pull = 0;
     content.style.translate = "";
-    settling = content.animate([{ translate: from }, { translate: "0 0" }], {
-      duration: 360,
-      easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+    settling = animate(content, [{ translate: from }, { translate: "0 0" }], {
+      duration: "--dur-settle",
+      easing: "--ease-out",
     });
   };
   // Momentum that runs into an end bounces off it once, as far as it was
@@ -75,9 +75,10 @@ export function elasticOverscroll(
   const bounce = (deltaY: number) => {
     const out =
       -Math.sign(deltaY) * Math.min(Math.abs(deltaY) * 4, MAX_PULL / 2);
-    settling = content.animate(
+    settling = animate(
+      content,
       [{ translate: "0 0" }, { translate: `0 ${out}px` }, { translate: "0 0" }],
-      { duration: 420, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+      { duration: "--dur-land", easing: "--ease-out" },
     );
   };
 

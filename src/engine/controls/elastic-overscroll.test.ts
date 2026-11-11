@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../motion/motion", () => ({ motionAllowed: () => true }));
+vi.mock("../motion/motion", () => ({
+  motionAllowed: () => true,
+  animate: (el: Element, frames: Keyframe[]) => el.animate(frames),
+}));
 vi.mock("../../platform/os", () => ({ isMacPlatform: () => true }));
 vi.mock("../../platform/capabilities", () => ({ isIOSApp: false }));
 

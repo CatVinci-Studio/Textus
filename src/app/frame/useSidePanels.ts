@@ -22,10 +22,6 @@ function subscribeWindowResize(onChange: () => void) {
   return () => window.removeEventListener("resize", onChange);
 }
 
-/**
- * Layout state of the sidebar and the docked Agent panel. `aiOn` is Textus
- * AI's switch: off, the AI panel closes and its toggles do nothing.
- */
 /** Whether the window shows the activity rail: on in Settings, or turned
  *  off but with the sidebar open; never on an iPad, whose sidebar is its
  *  own. */
@@ -36,26 +32,28 @@ function railShown(
   return (settings.activityRail || open) && !isIOSApp;
 }
 
+/**
+ * Layout state of the sidebar and the docked Agent panel. `aiOn` is Textus
+ * AI's switch: off, the AI panel closes and its toggles do nothing.
+ */
 export function useSidePanels(aiOn: boolean) {
   // Remembered on the desktop; on iOS it is a drawer and starts closed.
-  const [panelOpen, setPanelOpen] = useState(
+  const [open, setOpen] = useState(
     () => !isIOSApp && getUiState("sidebarOpen") === true,
   );
   const { settings } = useSettings();
   // With the rail turned off, the window bar's button opens the sidebar
   // with the rail and folds both away; the rail stays off.
-  const open = panelOpen;
-  const toggleSidebar = useCallback(() => setPanelOpen((v) => !v), []);
-  const showPanel = setPanelOpen;
+  const toggleSidebar = useCallback(() => setOpen((v) => !v), []);
   useEffect(() => {
-    if (!isIOSApp) setUiState("sidebarOpen", panelOpen);
-  }, [panelOpen]);
+    if (!isIOSApp) setUiState("sidebarOpen", open);
+  }, [open]);
   // On iOS the sidebar is a drawer over the page, and the find bar sits at
   // the top of the page: they would overlap, so opening one closes the bar.
   useEffect(() => {
-    if (isIOSApp && panelOpen)
+    if (isIOSApp && open)
       window.dispatchEvent(new CustomEvent(CLOSE_FIND_REPLACE_EVENT));
-  }, [panelOpen]);
+  }, [open]);
   // The docked Agent panel: App owns the frame.
   // Both panels narrow with a small window, by one rule; the AI panel also
   // leaves the document room beside an open sidebar.
@@ -64,14 +62,12 @@ export function useSidePanels(aiOn: boolean) {
   );
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
-  const rail = railShown(settings, panelOpen)
-    ? Math.round(RAIL_WIDTH * chromeScale())
-    : 0;
+  const scale = chromeScale();
+  const rail = railShown(settings, open) ? Math.round(RAIL_WIDTH * scale) : 0;
   // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
   // a small window still keeps the document its room. On the desktop the AI
   // is an island: the solver keeps its room.
   const agentShown = useAgentPanelOpen();
-  const scale = chromeScale();
   const sidebarWidth = useSidebarWidth(
     windowWidth,
     rail + (isIOSApp && agentShown ? PANEL_FLOOR * scale : 0),
@@ -83,8 +79,8 @@ export function useSidePanels(aiOn: boolean) {
   );
   // An iPhone's or iPad's sidebar is a drawer over the page: never put away.
   useNarrowSidebar(
-    panelOpen,
-    setPanelOpen,
+    open,
+    setOpen,
     isIOSApp ? Infinity : windowWidth - rail,
     sidebarWidth.width,
     panelsFolded,
@@ -100,7 +96,7 @@ export function useSidePanels(aiOn: boolean) {
 
   return {
     panelOpen: open,
-    setPanelOpen: showPanel,
+    setPanelOpen: setOpen,
     toggleSidebar,
     sidebarWidth,
     agentPanel,

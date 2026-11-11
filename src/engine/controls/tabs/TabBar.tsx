@@ -1,3 +1,4 @@
+import { listMove } from "../list-keys";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../Tooltip";
 import { ContextMenu, type ContextMenuEntry } from "../ContextMenu";
@@ -118,12 +119,9 @@ export function TabBar({
     const id = (e.target as HTMLElement).dataset.tab;
     const at = id === undefined ? -1 : ids.indexOf(id);
     if (at === -1 || e.altKey || e.ctrlKey || e.metaKey) return;
-    let next: string | undefined;
-    if (e.key === "ArrowRight") next = ids[(at + 1) % ids.length];
-    else if (e.key === "ArrowLeft")
-      next = ids[(at - 1 + ids.length) % ids.length];
-    else if (e.key === "Home") next = ids[0];
-    else if (e.key === "End") next = ids[ids.length - 1];
+    const moved = listMove(e.key, at, ids.length, true, "row");
+    const next = moved === null ? undefined : ids[moved];
+    if (next !== undefined) pillOf(next)?.focus();
     else if (e.key === "Enter" || e.key === " ") onActivate(id!);
     else if (e.key === "Delete") {
       const near = ids[at + 1] ?? ids[at - 1];
@@ -131,7 +129,6 @@ export function TabBar({
       onClose(id!);
     } else return;
     e.preventDefault();
-    if (next) pillOf(next)?.focus();
   }
 
   return (

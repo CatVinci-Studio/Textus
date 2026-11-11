@@ -1,3 +1,4 @@
+import { listMove } from "./list-keys";
 import {
   useRef,
   type CSSProperties,
@@ -33,10 +34,10 @@ export function Segmented<T extends string>({
   const row = useRef<HTMLDivElement>(null);
   const at = options.findIndex((o) => o.id === value);
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-    if (!step) return;
+    const moved = listMove(e.key, at, options.length, true, "row");
+    if (moved === null) return;
     e.preventDefault();
-    const next = options[(at + step + options.length) % options.length];
+    const next = options[moved];
     onChange(next.id);
     row.current
       ?.querySelector<HTMLElement>(`[data-segment="${next.id}"]`)
