@@ -403,7 +403,7 @@ export default {
   paperGenreThread: "推文串",
   paperGenreBrief: "快讯",
   paperAsk: "研究并写作：{topic}",
-  paperCardTitle: "研究写作",
+  paperCardTitle: "专业写作",
   paperPlanning: "正在规划研究…",
   paperResearching:
     "正在研究：已搜索 {searches} 次、阅读 {pages} 个网页、检索论文 {papers} 次…",
@@ -1220,7 +1220,7 @@ export default {
   closeLastStartPage: "显示起始页",
   startPageRemoveRecent: "从最近列表中移除",
   startPageRecentProjects: "最近的文件夹",
-  startPagePickDocument: "从侧栏里选一篇 {folder} 中的文档开始。",
+  startPagePickDocument: "从侧边栏里选一篇 {folder} 中的文档开始。",
   startPageRecentFiles: "最近的文件",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   autosaveLabel: "自动保存",
@@ -1450,7 +1450,7 @@ export default {
   navExtensions: "扩展",
   extensionsTabPlugins: "插件",
   extensionsTabThemes: "主题",
-  extensionsTabSkills: "Skill",
+  extensionsTabSkills: "技能",
   extensionsTabMcp: "MCP",
   extensionsTabCreate: "创造",
   createTitle: "创造模式",
@@ -1458,7 +1458,7 @@ export default {
   createPlaceholder: "它要做什么？（@\u00a0引用文件，/\u00a0指定类型）",
   createMakeTheme: "制作你的主题",
   createMakePlugin: "制作你的插件",
-  createMakeSkill: "制作你的 Skill",
+  createMakeSkill: "制作你的技能",
   createNew: "新建",
   createAiOff: "打开 Textus AI 后才能创造。",
   createExamples: "试试这些",
@@ -1631,7 +1631,7 @@ export default {
   pluginsMine: "我做的插件",
   pluginsInstalledNone: "还没有安装插件。",
   skillsInstalledNone:
-    "还没有添加 Skill。可以在下方“{section}”里挑一个，或自己做一个。",
+    "还没有添加技能。可以在下方“{section}”里挑一个，或自己做一个。",
   pluginStatusBroken: "无法读取：{reason}",
   pluginStatusDesktopOnly: "只能在电脑上使用，不支持 iPhone 和 iPad。",
   pluginStatusIncompatible: "为其他版本的 Textus 制作（{range}）。",
@@ -1710,7 +1710,7 @@ export default {
   webPageHint:
     "如果页面一直是空白，说明这个网站不允许嵌入到其他应用里，请在浏览器中打开。",
   pluginKeysTaken:
-    "「{name}」无法接管键盘：「{holder}」正在使用。请在侧栏的插件列表里关掉其中一个。",
+    "「{name}」无法接管键盘：「{holder}」正在使用。请在侧边栏的插件列表里关掉其中一个。",
   shortcutIndentListItem: "列表项缩进",
   shortcutOutdentListItem: "列表项取消缩进",
   pluginKeyTaken:
