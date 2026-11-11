@@ -36,12 +36,13 @@ export function MemoryPage({
   onOpenFile,
   onFilesDeleted,
   onClose,
+  indexing,
 }: SettingsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   useEffect(() => {
-    void loadCatalog();
-  }, []);
+    if (!indexing) void loadCatalog();
+  }, [indexing]);
   if (!settings.textusAi)
     return <p className="tx-list-note">{t.textusAiOffHint}</p>;
   return (

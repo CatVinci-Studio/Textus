@@ -76,22 +76,23 @@ export function useTabRemoval(opts: {
         !showsStartPage(closing)
           ? makeStartTab()
           : null;
+      const last = tabsRef.current.every((tb) => tb.id === id);
+      // The last one closes the window - none on iOS, where it simply stays
+      // - decided here, as the window's own state says, not in an updater.
+      if (last && !start) {
+        if (!canUseWindows) return;
+        // Destroying the window skips the draft cleanup effect, so clear
+        // the snapshot here or a discarded tab returns as a draft.
+        cancelDraftFlushes();
+        void Promise.allSettled([
+          drafts.clearDraftSnapshot(id),
+          flushPendingWrites(),
+        ]).then(() => void thisWindow().destroy());
+        return;
+      }
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
-        if (next.length === 0) {
-          if (start) return [start];
-          // No window to close on iOS: the last tab simply stays.
-          if (!canUseWindows) return prev;
-          // Destroying the window skips the draft cleanup effect, so clear
-          // the snapshot here or a discarded tab returns as a draft.
-          cancelDraftFlushes();
-          void Promise.allSettled([
-            drafts.clearDraftSnapshot(id),
-            flushPendingWrites(),
-          ]).then(() => void thisWindow().destroy());
-          return prev;
-        }
-        return next;
+        return next.length === 0 && start ? [start] : next;
       });
       setActiveTabId((prevActive) => {
         if (prevActive !== id) return prevActive;

@@ -103,8 +103,25 @@ export function guessLanguage(): Lang {
 /** Stored settings -> a complete, valid `Settings`. Nothing stored at all is
  *  a new installation, which starts in the OS's language. */
 export function normaliseSettings(parsed: Raw | null): Settings {
-  const settings = readSettings(parsed);
+  const settings = withDefaultShapes(readSettings(parsed));
   return hasTextusAi ? settings : { ...settings, textusAi: false };
+}
+
+/** Each setting of another kind than its default (a number where a list
+ *  goes, text where a switch goes) back to the default: a hand-edited or
+ *  older file can't break what reads it. */
+function withDefaultShapes(settings: Settings): Settings {
+  const shape = (value: unknown) =>
+    value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
+  const out: Record<string, unknown> = { ...settings };
+  for (const [key, fallback] of Object.entries(DEFAULT_SETTINGS))
+    if (
+      fallback !== null &&
+      fallback !== undefined &&
+      shape(out[key]) !== shape(fallback)
+    )
+      out[key] = fallback;
+  return out as unknown as Settings;
 }
 
 function readSettings(parsed: Raw | null): Settings {

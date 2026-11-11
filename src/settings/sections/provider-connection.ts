@@ -1,3 +1,4 @@
+import { useSettingsIndexing } from "../indexing";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
@@ -71,9 +72,10 @@ export function useConnectedProviders(
       .catch(() => {});
   }, []);
 
+  const indexing = useSettingsIndexing();
   useEffect(() => {
-    for (const entry of catalog) refreshConnected(entry);
-  }, [catalog, refreshConnected]);
+    if (!indexing) for (const entry of catalog) refreshConnected(entry);
+  }, [catalog, refreshConnected, indexing]);
 
   const activeConnected = connected[activeId];
   const isConnected = !!(activeConnected?.oauth || activeConnected?.apiKey);

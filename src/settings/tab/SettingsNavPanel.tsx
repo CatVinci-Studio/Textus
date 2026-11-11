@@ -1,3 +1,4 @@
+import { SettingsIndexing } from "../indexing";
 import { Fragment, useState, useSyncExternalStore } from "react";
 import { pageComponent } from "../builtin-pages";
 import {
@@ -83,7 +84,11 @@ export function SettingsNavPanel() {
     return {
       key: p.id,
       name: p.label(t),
-      render: () => <Page {...indexProps} indexing />,
+      render: () => (
+        <SettingsIndexing.Provider value>
+          <Page {...indexProps} indexing />
+        </SettingsIndexing.Provider>
+      ),
     };
   });
   // Plugins' own settings are in their panel: the way there, before

@@ -1,3 +1,4 @@
+import { SettingsIndexing } from "./indexing";
 import { AboutSection } from "./sections/about";
 import { pageComponent } from "./builtin-pages";
 import { GuidesSection } from "./sections/guides";
@@ -159,7 +160,11 @@ export function SettingsPanel({
     const page = settingsPage(c);
     if (!page) return null;
     const Page = pageComponent(page);
-    return <Page {...pageProps} indexing={indexing} />;
+    return (
+      <SettingsIndexing.Provider value={indexing}>
+        <Page {...pageProps} indexing={indexing} />
+      </SettingsIndexing.Provider>
+    );
   };
   const tabTitles: Partial<Record<ExtensionsTab, string>> = {
     themes: t.extensionsTabThemes,

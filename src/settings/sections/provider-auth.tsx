@@ -138,8 +138,12 @@ export function OauthPanel({
   }
 
   async function logout() {
-    await auth.oauthLogout(providerId);
-    setConfigured(false);
+    try {
+      await auth.oauthLogout(providerId);
+      setConfigured(false);
+    } catch (err) {
+      setError(explainError(err, t));
+    }
   }
 
   return (
@@ -217,6 +221,8 @@ export function ApiKeyProviderPanel({
 }) {
   const [configured, setConfiguredState] = useState(false);
   const [input, setInput] = useState("");
+  // Why the key couldn't be kept or let go (the keychain refused).
+  const [error, setError] = useState<string | null>(null);
 
   // The parent hears each status; its handler is read through a ref.
   const onStatus = useLatest(onStatusChange);
@@ -229,19 +235,31 @@ export function ApiKeyProviderPanel({
   );
 
   useEffect(() => {
-    auth.providerApiKeyStatus(providerId).then(setConfigured);
+    auth
+      .providerApiKeyStatus(providerId)
+      .then(setConfigured, () => setConfigured(false));
   }, [providerId, setConfigured]);
 
   async function save() {
     if (!input.trim()) return;
-    await auth.setProviderApiKey(providerId, input.trim());
-    setInput("");
-    setConfigured(true);
+    try {
+      await auth.setProviderApiKey(providerId, input.trim());
+      setError(null);
+      setInput("");
+      setConfigured(true);
+    } catch (err) {
+      setError(explainError(err, t));
+    }
   }
 
   async function clear() {
-    await auth.clearProviderApiKey(providerId);
-    setConfigured(false);
+    try {
+      await auth.clearProviderApiKey(providerId);
+      setError(null);
+      setConfigured(false);
+    } catch (err) {
+      setError(explainError(err, t));
+    }
   }
 
   return (
@@ -255,6 +273,7 @@ export function ApiKeyProviderPanel({
             </RowHelp>
           )}
         </div>
+        {error && <div className="settings-error">{error}</div>}
       </div>
       <SecretInput
         t={t}
@@ -337,11 +356,17 @@ export function CustomProviderPanel({
   async function save() {
     if (!baseUrl.trim() || !selectedModel.trim()) return;
     const typed = apiKey.trim();
-    await auth.setCustomEndpoint(
-      baseUrl.trim(),
-      typed || null,
-      selectedModel.trim(),
-    );
+    try {
+      await auth.setCustomEndpoint(
+        baseUrl.trim(),
+        typed || null,
+        selectedModel.trim(),
+      );
+    } catch (err) {
+      setStatus("error");
+      setStatusMessage(explainError(err, t));
+      return;
+    }
     setConfig({
       base_url: baseUrl.trim(),
       api_key: null,
@@ -354,7 +379,13 @@ export function CustomProviderPanel({
   }
 
   async function clear() {
-    await auth.clearCustomEndpoint();
+    try {
+      await auth.clearCustomEndpoint();
+    } catch (err) {
+      setStatus("error");
+      setStatusMessage(explainError(err, t));
+      return;
+    }
     setConfig(null);
     setBaseUrl("");
     setApiKey("");

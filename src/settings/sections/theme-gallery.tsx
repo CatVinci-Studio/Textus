@@ -1,3 +1,4 @@
+import { useSettingsIndexing } from "../indexing";
 import {
   useEffect,
   useRef,
@@ -398,7 +399,9 @@ export function useGalleryCatalog() {
   const [unreachable, setUnreachable] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
+  const indexing = useSettingsIndexing();
   useEffect(() => {
+    if (indexing) return;
     let cancelled = false;
     setCatalog(null);
     setUnreachable(false);
@@ -409,7 +412,7 @@ export function useGalleryCatalog() {
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, indexing]);
 
   return { catalog, unreachable, retry: () => setAttempt((n) => n + 1) };
 }

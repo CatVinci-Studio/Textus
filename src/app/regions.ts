@@ -16,7 +16,7 @@ const REGIONS: { region: string; start?: string }[] = [
   },
   {
     region:
-      '[data-active-tab="true"] > :is(.editor-scroll, .source-view, .split-view)',
+      ':is(.split-pane, [data-active-tab="true"]) > :is(.editor-scroll, .source-view, .split-view)',
     start: ".ProseMirror, .cm-content",
   },
   { region: ".review-bar" },
@@ -35,10 +35,14 @@ function shown(el: Element): boolean {
   return el.getClientRects().length > 0 && !el.closest("[inert]");
 }
 
+/** Each region on screen, every island's own row and document among them,
+ *  in the order the page has them. */
 function regionsOnScreen(): Element[] {
-  return REGIONS.map(({ region }) => document.querySelector(region)).filter(
-    (el): el is Element => !!el && shown(el),
-  );
+  return [
+    ...new Set(
+      REGIONS.flatMap(({ region }) => [...document.querySelectorAll(region)]),
+    ),
+  ].filter(shown);
 }
 
 /** Remembers where the focus was in each region, for coming back. */

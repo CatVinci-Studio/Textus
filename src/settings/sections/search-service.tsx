@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { explainError } from "../../utils/error-explain";
 import {
   SEARCH_SERVICES,
   useSettings,
@@ -124,6 +125,7 @@ function SearchKeyRow({
 }) {
   const [saved, setSaved] = useState(false);
   const [input, setInput] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const label = t.apiKeyLabelTemplate.replace("{name}", name);
   useEffect(() => {
     let live = true;
@@ -139,18 +141,28 @@ function SearchKeyRow({
   }, [keyId]);
   async function save() {
     if (!input.trim()) return;
-    await auth.setProviderApiKey(keyId, input.trim());
-    setInput("");
-    setSaved(true);
-    notifyWebSearchSetup();
+    try {
+      await auth.setProviderApiKey(keyId, input.trim());
+      setError(null);
+      setInput("");
+      setSaved(true);
+      notifyWebSearchSetup();
+    } catch (err) {
+      setError(explainError(err, t));
+    }
   }
   async function clear() {
-    await auth.clearProviderApiKey(keyId);
-    setSaved(false);
-    notifyWebSearchSetup();
+    try {
+      await auth.clearProviderApiKey(keyId);
+      setError(null);
+      setSaved(false);
+      notifyWebSearchSetup();
+    } catch (err) {
+      setError(explainError(err, t));
+    }
   }
   return (
-    <SettingRow label={label}>
+    <SettingRow label={label} error={error}>
       <SecretInput
         t={t}
         label={label}

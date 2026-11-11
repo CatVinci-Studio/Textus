@@ -1,3 +1,4 @@
+import { useSettingsIndexing } from "../indexing";
 import {
   formatContext,
   modelInfo,
@@ -107,13 +108,14 @@ function ProviderModelRow({
 
   // The OAuth backend only accepts its preset family, so a saved API model id
   // becomes that mode's default rather than a blank select.
+  const indexing = useSettingsIndexing();
   useEffect(() => {
-    if (!signIn || !current) return;
+    if (indexing || !signIn || !current) return;
     const presets = kind === "agent" ? signIn.agent : signIn.writing;
     if (!presets.some((option) => option.value === current)) {
       setCurrent("");
     }
-  }, [signIn, current, kind, setCurrent]);
+  }, [signIn, current, kind, setCurrent, indexing]);
 
   const knownAndFetched = [
     ...(entry?.knownModels ?? []),

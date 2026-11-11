@@ -2,6 +2,7 @@
 
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { loadSettings } from "./SettingsContext";
+import { DEFAULT_SETTINGS } from "./settings-types";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
 const SETTINGS_KEY = "catvinci-settings";
@@ -255,5 +256,23 @@ describe("where images go", () => {
     expect(settings.imageUploadEndpoint).toBe(
       "https://images.example.com/upload",
     );
+  });
+});
+
+describe("a setting of the wrong kind", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  it("reads as its default, so nothing that reads it breaks", () => {
+    localStorage.setItem(
+      SETTINGS_KEY,
+      JSON.stringify({ activityRailHidden: 5, proxyHost: 7, zoom: "big" }),
+    );
+    const settings = loadSettings();
+    expect(settings.activityRailHidden).toEqual(
+      DEFAULT_SETTINGS.activityRailHidden,
+    );
+    expect(settings.proxyHost).toBe(DEFAULT_SETTINGS.proxyHost);
+    expect(settings.zoom).toBe(DEFAULT_SETTINGS.zoom);
   });
 });
