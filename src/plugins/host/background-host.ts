@@ -1,3 +1,4 @@
+import { grants } from "../api-permissions";
 import { guarded } from "../api-permissions";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
@@ -54,7 +55,7 @@ const noWindow = new Proxy({} as BrokerDeps, {
 function scopeOf(run: BackgroundRun): PluginScope {
   const id = run.info.manifest.id;
   const need: PluginScope["need"] = (permission) => {
-    if (!run.info.granted.includes(permission))
+    if (!grants(run.info.granted, permission))
       throw new Error(`${id} was not granted ${permission}.`);
   };
   return {

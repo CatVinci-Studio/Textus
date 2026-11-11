@@ -10,12 +10,8 @@ import {
   subscribePluginLog,
 } from "../../plugins/store/plugin-log";
 import { askAi } from "./ask-ai";
-import {
-  installPlugin,
-  pluginsSnapshot,
-  setPluginEnabled,
-  subscribePlugins,
-} from "../../plugins/manager";
+import { pluginsSnapshot, subscribePlugins } from "../../plugins/manager";
+import { installPlugin, setPluginEnabled } from "../../plugins/plugin-switches";
 import { localize, type Permission } from "../../plugins/store/manifest";
 import { openReadme } from "../../plugins/store/readme";
 import { showMessage } from "../../engine/controls/app-dialog";

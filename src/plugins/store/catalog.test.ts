@@ -18,6 +18,8 @@ vi.mock("../manager", () => ({
     installed.has(id)
       ? { id, status: "on", manifest: { version: installed.get(id) } }
       : undefined,
+}));
+vi.mock("../plugin-switches", () => ({
   setPluginEnabled: vi.fn(() => Promise.resolve()),
 }));
 

@@ -6,10 +6,12 @@ import {
   pluginName,
   pluginText,
   pluginsSnapshot,
-  setPluginEnabled,
-  uninstallPlugin,
   type PluginRecord,
 } from "../../plugins/manager";
+import {
+  setPluginEnabled,
+  uninstallPlugin,
+} from "../../plugins/plugin-switches";
 import {
   installFromCatalog,
   type CatalogItem,

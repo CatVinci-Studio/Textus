@@ -1,6 +1,7 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { installFromCatalog, loadCatalog, catalogSnapshot } from "./catalog";
-import { loadPlugins, uninstallPlugin } from "../manager";
+import { loadPlugins } from "../manager";
+import { uninstallPlugin } from "../plugin-switches";
 
 /**
  * Moves the official plugins written for the pre-1.0 plugin API to their

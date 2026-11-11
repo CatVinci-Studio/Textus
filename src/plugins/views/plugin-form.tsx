@@ -28,6 +28,8 @@ export type PluginFormField =
     };
 
 interface PluginFormRequest {
+  /** The plugin asking: always shown, whatever title it gives. */
+  from: string;
   title: string;
   okLabel: string;
   cancelLabel: string;
@@ -139,6 +141,9 @@ function PluginForm({ request }: { request: Request }) {
           answer(request, values);
         }}
       >
+        {request.title !== request.from && (
+          <p className="plugin-form-from">{request.from}</p>
+        )}
         <h2 className="app-dialog-title app-dialog-info">{request.title}</h2>
         {request.fields.map((field, i) => {
           const id = `${base}-${i}`;

@@ -1,10 +1,8 @@
 // What plugins add to the editor registers before any editor is made.
 import "./contributions/editor-extensions";
 import { logPluginError } from "./store/plugin-log";
-import { forgetPluginSettings } from "./store/plugin-settings";
 import { version as APP_VERSION } from "../../package.json";
 import { plugins as pluginsIpc, type PluginsState } from "../platform/ipc";
-import type { PluginFile } from "../platform/ipc";
 import { registerCommand, runCommand } from "../app/commands";
 import { pickWithCommands } from "../app/command-palette-entry";
 import { showMessage } from "../engine/controls/app-dialog";
@@ -31,7 +29,7 @@ import {
   webviewState,
   type WebviewRecord,
 } from "./views/webviews";
-import { canRun, canSwitch, nextStatus } from "./store/lifecycle";
+import { canRun, nextStatus } from "./store/lifecycle";
 import {
   pluginName,
   pluginRecord,
@@ -62,7 +60,6 @@ import { compareNames } from "../utils/name-order";
 import { pluginPlatform, runsHere } from "./plugin-platform";
 import { hosts, stopHost } from "./running-hosts";
 import { pluginSetting, setPluginSetting } from "./plugin-setting-values";
-import { askPermissions } from "./store/ask-permissions";
 
 // ---------------------------------------------------------------------------
 // Loading
@@ -117,8 +114,17 @@ function makeRecord(
 
 let loading: Promise<void> | null = null;
 
+/** The same plugin, run the same way: nothing to withdraw or apply. */
+const runsAlike = (a: PluginRecord, b: PluginRecord) =>
+  a.dir === b.dir &&
+  a.status === b.status &&
+  a.granted.join() === b.granted.join() &&
+  JSON.stringify(a.manifest) === JSON.stringify(b.manifest);
+
 /** Reads every plugin and turns on those that are on. Once per window;
- *  `reload` reads them again (after an install). */
+ *  `reload` reads them again (after an install, or another window's change)
+ *  and changes only what differs: the window that made a change finds
+ *  nothing left to do. */
 export function loadPlugins(reload = false): Promise<void> {
   if (loading && !reload) return loading;
   loading = (async () => {
@@ -134,10 +140,27 @@ export function loadPlugins(reload = false): Promise<void> {
         makeRecord(p.id, p.dev ? "dev" : "installed", p.manifest, state, p.dir),
       );
     records.sort((a, b) => compareNames(pluginName(a), pluginName(b)));
-    for (const id of contributingPlugins()) withdraw(id);
+    const was = pluginsSnapshot();
+    const before = new Map(was.records.map((r) => [r.id, r]));
+    const kept = (record: PluginRecord) => {
+      const old = before.get(record.id);
+      return (
+        !!old &&
+        canRun(old.status, was.allOn) &&
+        canRun(record.status, state.allOn) &&
+        runsAlike(old, record)
+      );
+    };
+    const keep = new Set(records.filter(kept).map((r) => r.id));
+    for (const id of contributingPlugins())
+      if (!keep.has(id)) {
+        stopHost(id);
+        withdraw(id);
+      }
     publish({ loaded: true, allOn: state.allOn, records });
     for (const record of records)
-      if (canRun(record.status, state.allOn)) apply(record);
+      if (canRun(record.status, state.allOn) && !keep.has(record.id))
+        apply(record);
   })();
   return loading;
 }
@@ -209,7 +232,9 @@ async function host(record: PluginRecord): Promise<PluginHost> {
           );
           addContribution(id, () => removeDynamicCommand(command));
         },
-        commandUnregistered: (_id, command) => {
+        commandUnregistered: (id, command) => {
+          // Only its own, as registering is.
+          if (!command.startsWith(`${id}.`)) return;
           editorCommands.delete(command);
           removeDynamicCommand(command);
         },
@@ -401,103 +426,12 @@ const contributionDeps: ContributionDeps = {
   },
 };
 
-function apply(record: PluginRecord) {
+/** A plugin's contributions in; its code starts on first use. */
+export function apply(record: PluginRecord) {
   applyContributions(record, contributionDeps);
 }
 
-function withdraw(id: string) {
+/** A plugin's contributions out. */
+export function withdraw(id: string) {
   withdrawContributions(id, contributionDeps);
-}
-
-// ---------------------------------------------------------------------------
-// Switching on and off, installing
-// ---------------------------------------------------------------------------
-
-/** Settings' switch for one plugin. Turning it on asks for its
- *  permissions first; refused, it stays off. */
-export async function setPluginEnabled(id: string, on: boolean): Promise<void> {
-  const record = pluginRecord(id);
-  if (!record || !record.manifest) return;
-  if (!canSwitch(record.status)) return;
-  if (!on) {
-    stopHost(id);
-    withdraw(id);
-    await pluginsIpc.set(id, false, record.granted);
-    update(id, {
-      status: nextStatus(record.status, { type: "disable" }),
-      problem: undefined,
-    });
-    return;
-  }
-  const granted = await askPermissions(record);
-  if (!granted) return;
-  await pluginsIpc.set(id, true, granted);
-  const next = {
-    ...record,
-    granted,
-    status: nextStatus(record.status, { type: "enable" }),
-    problem: undefined,
-  };
-  update(id, next);
-  if (canRun(next.status, pluginsSnapshot().allOn)) apply(next);
-}
-
-export async function revokePermission(
-  id: string,
-  permission: Permission,
-): Promise<void> {
-  const record = pluginRecord(id);
-  if (!record) return;
-  const granted = record.granted.filter((p) => p !== permission);
-  stopHost(id);
-  withdraw(id);
-  // Without a permission it asks for, it can't run: off until granted.
-  await pluginsIpc.set(id, false, granted);
-  update(id, {
-    granted,
-    status: nextStatus(record.status, { type: "revoke" }),
-  });
-}
-
-/** Settings › Extensions › Plugins › Plugins: every plugin at once. */
-export async function setAllPlugins(on: boolean): Promise<void> {
-  await pluginsIpc.setAll(on);
-  if (!on) for (const id of [...hosts.keys()]) stopHost(id);
-  if (!on) for (const id of contributingPlugins()) withdraw(id);
-  publish({ allOn: on });
-  for (const record of pluginsSnapshot().records)
-    if (canRun(record.status, on)) apply(record);
-}
-
-export async function reloadPlugin(id: string): Promise<void> {
-  stopHost(id);
-  withdraw(id);
-  await loadPlugins(true);
-}
-
-/** A package or folder at `source`, or files Textus AI wrote, installed. */
-export async function installPlugin(
-  source: string | PluginFile[],
-): Promise<string> {
-  const installed = await (typeof source === "string"
-    ? pluginsIpc.install(source)
-    : pluginsIpc.installFiles(source));
-  stopHost(installed.id);
-  await loadPlugins(true);
-  return installed.id;
-}
-
-export async function loadDevPlugin(path: string): Promise<string> {
-  const loaded = await pluginsIpc.loadDev(path);
-  stopHost(loaded.id);
-  await loadPlugins(true);
-  return loaded.id;
-}
-
-export async function uninstallPlugin(id: string): Promise<void> {
-  stopHost(id);
-  withdraw(id);
-  await forgetPluginSettings(id);
-  await pluginsIpc.uninstall(id);
-  await loadPlugins(true);
 }

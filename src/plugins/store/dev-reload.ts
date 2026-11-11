@@ -1,5 +1,5 @@
 import { plugins as pluginsIpc } from "../../platform/ipc";
-import { reloadPlugin } from "../manager";
+import { reloadPlugin } from "../plugin-switches";
 import { pluginsSnapshot } from "./plugin-records";
 
 /** Reloads a developer's plugin whenever its folder changes, checking every

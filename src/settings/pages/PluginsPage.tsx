@@ -18,15 +18,17 @@ import { MarketPluginPage } from "./MarketPluginPage";
 import { isDesktopApp } from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import {
-  installPlugin,
-  loadDevPlugin,
   pluginName,
   pluginText,
   pluginsSnapshot,
-  setAllPlugins,
   subscribePlugins,
   type PluginRecord,
 } from "../../plugins/manager";
+import {
+  installPlugin,
+  loadDevPlugin,
+  setAllPlugins,
+} from "../../plugins/plugin-switches";
 import {
   catalogSnapshot,
   loadCatalog,

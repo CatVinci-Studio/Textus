@@ -106,6 +106,7 @@ export function uiHandlers(p: PluginScope) {
     },
     "ui.form": ({ title, okLabel, fields }: Params) =>
       showPluginForm({
+        from: p.name(),
         title: optionalStr(title) ?? p.name(),
         okLabel: optionalStr(okLabel) ?? p.t().pluginOk,
         cancelLabel: p.t().pluginCancel,
@@ -155,6 +156,7 @@ function pickOne(
   value: unknown,
 ): Promise<string | null> {
   return showPluginForm({
+    from: p.name(),
     title: optionalStr(title) ?? p.name(),
     okLabel: p.t().pluginOk,
     cancelLabel: p.t().pluginCancel,

@@ -11,11 +11,13 @@ import type { Strings } from "../../i18n/strings";
 import {
   pluginName,
   pluginText,
+  type PluginRecord,
+} from "../../plugins/manager";
+import {
   reloadPlugin,
   revokePermission,
   uninstallPlugin,
-  type PluginRecord,
-} from "../../plugins/manager";
+} from "../../plugins/plugin-switches";
 import { runsHere } from "../../plugins/plugin-platform";
 import {
   requirementLabel,

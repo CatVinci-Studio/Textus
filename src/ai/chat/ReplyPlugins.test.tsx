@@ -15,15 +15,17 @@ vi.mock("./ask-ai", () => ({ askAi: vi.fn() }));
 vi.mock("../../plugins/manager", () => {
   const none = { loaded: true, allOn: true, records: [] };
   return {
-    installPlugin: vi.fn(async () => "local.toggle"),
-    setPluginEnabled: vi.fn(async () => {}),
     pluginsSnapshot: () => none,
     subscribePlugins: () => () => {},
   };
 });
 
-vi.mock("../../platform/ipc", () => ({
+vi.mock("../../plugins/plugin-switches", () => ({
+  installPlugin: vi.fn(async () => "local.toggle"),
+  setPluginEnabled: vi.fn(async () => {}),
 }));
+
+vi.mock("../../platform/ipc", () => ({}));
 
 beforeEach(() => {
   const saved = new Map<string, string>();

@@ -1,11 +1,8 @@
 import { currentStrings } from "../i18n/current";
 import type { Settings } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
-import {
-  installPlugin,
-  loadPlugins,
-  setPluginEnabled,
-} from "../plugins/manager";
+import { loadPlugins } from "../plugins/manager";
+import { installPlugin, setPluginEnabled } from "../plugins/plugin-switches";
 import { pluginName, pluginsSnapshot } from "../plugins/store/plugin-records";
 import { installFromCatalog, loadCatalog } from "../plugins/store/catalog";
 import { emitToWindow } from "../platform/events";
