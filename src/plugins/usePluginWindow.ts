@@ -32,7 +32,11 @@ import {
 import { setPluginProject } from "./plugin-setting-values";
 import { watchTheme, windowIsDark } from "./views/theme-vars";
 import { usePluginMenuSync } from "./contributions/usePluginMenu";
-import { openBeside } from "../engine/layout/store";
+import {
+  besideLayout,
+  openBeside,
+  placeOnArrival,
+} from "../engine/layout/store";
 import { takePluginUris } from "./plugin-uri";
 import { migrateOfficialPlugins } from "./store/migrate-official";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
@@ -115,6 +119,12 @@ export function usePluginWindow({
     // or in its place.
     const placeTab = (made: DocTab, where: Where) => {
       const from = activeIdRef.current;
+      // Beside: its place taken as it arrives, never first drawn in front.
+      if (where === "beside")
+        placeOnArrival(
+          made.id,
+          (now) => besideLayout(now, made.id, from) ?? now,
+        );
       setTabs((prev) => {
         if (where !== "current") return [...prev, made];
         const at = prev.findIndex((tab) => tab.id === activeIdRef.current);
@@ -123,8 +133,6 @@ export function usePluginWindow({
           : prev.map((tab, i) => (i === at ? made : tab));
       });
       setActiveTabId(made.id);
-      if (where === "beside")
-        requestAnimationFrame(() => openBeside(made.id, from));
     };
     const info = (tab: DocTab): PluginTabInfo => ({
       id: tab.id,
