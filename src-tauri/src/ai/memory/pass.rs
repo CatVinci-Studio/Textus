@@ -49,14 +49,6 @@ pub struct Exchange {
     pub reply: String,
 }
 
-fn clip(text: &str) -> String {
-    let text = text.trim();
-    match text.char_indices().nth(CLIP_CHARS) {
-        Some((at, _)) => format!("{}…", &text[..at]),
-        None => text.to_string(),
-    }
-}
-
 /// What the pass is shown: what is remembered (with ids), the library
 /// entries the exchange names, whether there is a project, the exchange.
 pub(crate) fn pass_input(dirs: &MemoryDirs, exchange: &Exchange) -> String {
@@ -101,14 +93,18 @@ pub(crate) fn pass_input(dirs: &MemoryDirs, exchange: &Exchange) -> String {
             } else {
                 format!(" (also {})", e.aliases.join(", "))
             };
-            format!("- {}{aliases}{whose}: {}", e.name, clip(&e.body))
+            format!(
+                "- {}{aliases}{whose}: {}",
+                e.name,
+                crate::ai::clip(&e.body, CLIP_CHARS)
+            )
         })
         .collect();
     let recent = exchange.messages.len().saturating_sub(RECENT_MESSAGES);
     let messages: Vec<String> = exchange.messages[recent..]
         .iter()
         .enumerate()
-        .map(|(i, m)| format!("{}. {}", i + 1, clip(m)))
+        .map(|(i, m)| format!("{}. {}", i + 1, crate::ai::clip(m, CLIP_CHARS)))
         .collect();
     let none = || "(none)".to_string();
     let join = |lines: Vec<String>| {
@@ -124,7 +120,7 @@ pub(crate) fn pass_input(dirs: &MemoryDirs, exchange: &Exchange) -> String {
         join(library),
         if dirs.project.is_some() { "yes" } else { "none - keep only what is personal" },
         join(messages),
-        clip(&exchange.reply),
+        crate::ai::clip(&exchange.reply, CLIP_CHARS),
     )
 }
 

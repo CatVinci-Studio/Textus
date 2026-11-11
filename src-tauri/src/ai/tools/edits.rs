@@ -227,11 +227,14 @@ pub(super) fn text_size(text: &str) -> (usize, &'static str) {
     let text = without_pictures.as_str();
     let cjk = text
         .chars()
-        .filter(|c| matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}'))
+        .filter(|c| crate::ai::rules::text::is_cjk(*c))
         .count();
     let words = text
         .split_whitespace()
-        .filter(|w| w.chars().any(|c| c.is_alphanumeric() && !matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}')))
+        .filter(|w| {
+            w.chars()
+                .any(|c| c.is_alphanumeric() && !crate::ai::rules::text::is_cjk(c))
+        })
         .count();
     if cjk > words {
         (
@@ -243,10 +246,6 @@ pub(super) fn text_size(text: &str) -> (usize, &'static str) {
     }
 }
 
-pub(super) fn is_cjk_char(c: char) -> bool {
-    matches!(c, '\u{3040}'..='\u{30ff}' | '\u{3400}'..='\u{4dbf}' | '\u{4e00}'..='\u{9fff}' | '\u{ac00}'..='\u{d7af}')
-}
-
 /// A replacement that can't be what the model meant: a whole CJK clause
 /// replaced by one short Latin token. Refused so the model resends; the
 /// identical call sent again goes through ("replace the sentence with TBD").
@@ -254,12 +253,15 @@ pub(super) fn degenerate_replacement(action: &str, anchor: &str, text: &str) -> 
     if action != "replace" {
         return None;
     }
-    let anchor_cjk = anchor.chars().filter(|&c| is_cjk_char(c)).count();
+    let anchor_cjk = anchor
+        .chars()
+        .filter(|&c| crate::ai::rules::text::is_cjk(c))
+        .count();
     let text = text.trim();
     let latin_token = !text.is_empty()
         && text.chars().count() <= 12
         && !text.contains(char::is_whitespace)
-        && !text.chars().any(is_cjk_char);
+        && !text.chars().any(crate::ai::rules::text::is_cjk);
     (anchor_cjk >= 12 && latin_token).then(|| {
         format!("Not proposed: `text` is only \"{text}\", which looks cut off for a passage this long. Send the proposal again with the full new text - or, if the user really asked for exactly this text, send the same call again unchanged.")
     })

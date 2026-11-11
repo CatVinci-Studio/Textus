@@ -46,6 +46,16 @@ fn allows(setting: Option<serde_json::Value>) -> Result<(), String> {
     }
 }
 
+/// `text` trimmed and cut to at most `most` characters, an ellipsis where
+/// it was cut: what the model or a card is shown of something long.
+pub(crate) fn clip(text: &str, most: usize) -> String {
+    let text = text.trim();
+    match text.char_indices().nth(most) {
+        Some((at, _)) => format!("{}…", text[..at].trim_end()),
+        None => text.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
