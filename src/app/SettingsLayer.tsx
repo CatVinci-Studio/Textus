@@ -1,3 +1,4 @@
+import { CreateChat } from "../settings/pages/create-chat-lazy";
 import { Suspense, useEffect, useState } from "react";
 import { OPEN_CREATE_EVENT } from "../ai/chat/create-request";
 import { lazyModule } from "../lazy/lazy-module";
@@ -30,15 +31,6 @@ const SettingsTab = lazyComponent(
     warm: true,
   }),
   (m) => m.SettingsTab,
-);
-
-// Create - the AI making a theme, plugin or skill - loads once the window
-// is idle, so opening it doesn't wait.
-const CreateChat = lazyComponent(
-  lazyModule("create-chat", () => import("../settings/pages/CreateChat"), {
-    warm: true,
-  }),
-  (m) => m.CreateChat,
 );
 
 /** The Create tab's page: its conversation, filling the tab. */

@@ -6,7 +6,8 @@ import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { ThemesTab } from "../sections/theme";
 import { OwnSkillsList, importSkill } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
-import { CreateTab } from "./CreateTab";
+import { Suspense } from "react";
+import { CreateChat } from "./create-chat-lazy";
 import { AvailableSkills } from "../sections/market-skills";
 import {
   catalogSnapshot,
@@ -116,7 +117,11 @@ export function ExtensionsPage(props: SettingsPageProps) {
             />
           )}
           {tab === "mcp" && <McpSection t={t} />}
-          {tab === "create" && <CreateTab t={t} />}
+          {tab === "create" && (
+            <Suspense fallback={null}>
+              <CreateChat t={t} />
+            </Suspense>
+          )}
         </div>
       )}
     </>
