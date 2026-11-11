@@ -1,3 +1,4 @@
+import { explainAiError } from "../error-messages";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { plural, type Lang, type Strings } from "../../i18n/strings";
@@ -335,7 +336,7 @@ export function PaperCard({ info }: { info: PaperCardInfo }) {
       )}
       {run?.error ? (
         <p className="paper-card-error" role="alert">
-          {run.error}
+          {explainAiError(run.error, t)}
         </p>
       ) : (
         line && (

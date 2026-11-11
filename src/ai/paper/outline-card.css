@@ -290,8 +290,10 @@
   color: var(--ui-muted);
 }
 
+/* What to do, then the service's own words on the next line. */
 .paper-card-error {
   color: var(--ui-danger);
+  white-space: pre-line;
 }
 
 .paper-card-actions {
