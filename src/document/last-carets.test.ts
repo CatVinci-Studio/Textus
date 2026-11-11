@@ -10,7 +10,7 @@ import {
 } from "vitest";
 import { cleanup, renderHook } from "@testing-library/react";
 import { installTestLocalStorage } from "../dev/test-local-storage";
-import { registerTabCaret, reportTabCaret } from "../editor/tab-caret";
+import { registerTabEditor, reportTabCaret } from "../editor/tab-editor";
 import { makeBlankTab, type DocTab } from "./doc-tabs";
 import { flushPendingWrites } from "../storage/pending-writes";
 import {
@@ -123,7 +123,7 @@ describe("useLastCarets", () => {
     setWindowTabs(() => [tab("t", "/a.md")]);
     activateTab("t");
     renderHook(() => useLastCarets([tab("t", "/a.md")], true));
-    const stop = registerTabCaret("t", () => ({ offset: 12 }));
+    const stop = registerTabEditor("t", "caret", () => ({ offset: 12 }));
     await flushPendingWrites();
     expect(stored()).toEqual({ "/a.md": { offset: 12, mtime: 5 } });
     stop();
@@ -139,7 +139,7 @@ describe("useLastCarets", () => {
     tabs = [{ ...tabs[0], diskMtime: 6 }, tabs[1], tabs[2]];
     rerender();
     const stops = ["a", "b", "c"].map((id) =>
-      registerTabCaret(id, () => ({ offset: 9 })),
+      registerTabEditor(id, "caret", () => ({ offset: 9 })),
     );
     await flushPendingWrites();
     expect(stored()).toEqual({

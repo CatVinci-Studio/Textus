@@ -4,7 +4,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { flushEditor } from "../../editor/editor-flush";
+import { flushEditor } from "../../editor/tab-editor";
 import {
   makeBlankTab,
   makeStartTab,

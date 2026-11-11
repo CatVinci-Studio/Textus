@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import { registerEditorFlush } from "../editor/editor-flush";
+import { registerTabEditor } from "../editor/tab-editor";
 import {
   readSourceBlocks,
   writePreservingSource,
@@ -88,7 +88,7 @@ export function useEditorFlush(
     [run, reportDoc, reportedDocRef, reportedMarkdownRef],
   );
   // The debounce reports the same doc again later: a harmless repeat.
-  useEffect(() => registerEditorFlush(tabId, flush), [tabId, flush]);
+  useEffect(() => registerTabEditor(tabId, "flush", flush), [tabId, flush]);
   // Let go when its tab leaves the front: what was typed a moment before
   // goes out first, while the editor is still there to read it from.
   const last = useLatest(flush);

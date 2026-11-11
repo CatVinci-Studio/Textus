@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
-import type { CaretPlace } from "../editor/tab-caret";
-import { readTabCaret, setTabCaretSink } from "../editor/tab-caret";
+import type { CaretPlace } from "../editor/tab-editor";
+import { readTabCaret, setTabCaretSink } from "../editor/tab-editor";
 import { onFlush } from "../storage/pending-writes";
 import { getUiState, updateUiState, type UiState } from "../storage/ui-state";
 import type { DocTab } from "./doc-tabs";

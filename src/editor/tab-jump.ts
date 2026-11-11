@@ -1,4 +1,4 @@
-import type { CaretPlace } from "./tab-caret";
+import type { CaretPlace } from "./tab-editor";
 import type { DocumentPlace } from "../plugins/app-bridge";
 
 /**
