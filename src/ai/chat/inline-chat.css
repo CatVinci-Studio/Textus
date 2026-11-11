@@ -1018,25 +1018,6 @@
   opacity: 0.7;
 }
 
-.quick-ask-split-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 10;
-  white-space: nowrap;
-  transform-origin: top right;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-
-.quick-ask-split-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
-}
-
-.quick-ask-split-menu-item {
-  display: block;
-  width: 100%;
-}
-
 /* Busy indicator: a label plus three staggered pulsing dots, not a fake
    progress bar. */
 .agent-thinking {

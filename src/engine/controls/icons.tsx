@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Columns2,
   Ellipsis,
+  Eye,
   File,
   FileImage,
   FilePlus,
@@ -92,6 +93,7 @@ export function lucide(Shape: LucideIcon, size: number) {
 
 /** A disclosure triangle's stand-in: turned by CSS when open. */
 export const ChevronIcon = lucide(ChevronRight, 10);
+export const EyeIcon = lucide(Eye, 15);
 
 export const FolderIcon = lucide(Folder, 15);
 export const FolderOpenIcon = lucide(FolderOpen, 15);

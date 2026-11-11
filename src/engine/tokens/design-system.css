@@ -784,7 +784,6 @@
   .app-menu-item,
   .context-menu-item,
   .project-bar-menu button,
-  .quick-ask-split-menu-item,
   .ui-select-option,
   .combobox-option,
   .inline-chat-skill-item,
@@ -800,7 +799,6 @@
   .app-menu-item,
   .context-menu-item,
   .project-bar-menu button,
-  .quick-ask-split-menu-item,
   .ui-select-option,
   .combobox-option,
   .inline-chat-skill-item,
@@ -812,17 +810,12 @@
 }
 
 /* Menus: one panel padding, one item size, one hover. */
-:is(.app-menu-list, .context-menu, .project-bar-menu, .quick-ask-split-menu) {
+:is(.app-menu-list, .context-menu, .project-bar-menu) {
   padding: 4px;
   font-size: var(--text-body);
 }
 
-:is(
-  .app-menu-item,
-  .context-menu-item,
-  .project-bar-menu button,
-  .quick-ask-split-menu-item
-) {
+:is(.app-menu-item, .context-menu-item, .project-bar-menu button) {
   width: 100%;
   padding: 4px 8px;
   border: none;
@@ -834,12 +827,9 @@
   cursor: pointer;
 }
 
-:is(
-    .app-menu-item,
-    .context-menu-item,
-    .project-bar-menu button,
-    .quick-ask-split-menu-item
-  ):not(:disabled):is(:hover, :focus-visible) {
+:is(.app-menu-item, .context-menu-item, .project-bar-menu button):not(
+    :disabled
+  ):is(:hover, :focus-visible) {
   background: var(--ui-hover);
   outline: none;
 }
@@ -983,7 +973,6 @@ input[type="checkbox"].ui-check:checked {
       .context-menu,
       .project-bar-menu,
       .chat-history-menu,
-      .quick-ask-split-menu,
       .grammar-popover,
       .info-tip-card,
       .find-replace-bar,

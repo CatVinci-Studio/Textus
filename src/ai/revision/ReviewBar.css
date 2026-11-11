@@ -113,14 +113,6 @@
   opacity: 0.85;
 }
 
-.review-bar-view-button svg {
-  width: 15px;
-  height: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.25;
-}
-
 /* The chosen view waits for room: the eye names what shows meanwhile. */
 .review-bar-view-waiting {
   display: inline-flex;
@@ -141,89 +133,10 @@
   opacity: 1;
 }
 
-.review-bar-menu {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  min-width: 250px;
-  padding: 4px;
-  color: var(--ui-text);
-  font-size: var(--text-control);
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-
-.review-bar-menu button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 8px 8px 24px;
-  border: 0;
-  border-radius: var(--shape-s);
-  background: none;
-  color: inherit;
-  text-align: start;
-  white-space: nowrap;
-  position: relative;
-}
-
-.review-bar-menu button:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
-}
-
-.review-bar-menu button:disabled {
-  cursor: default;
-  opacity: 0.45;
-}
-
-.review-bar-menu button[aria-checked="true"]::before,
-.review-bar-menu .review-bar-menu-waiting::before {
-  content: "";
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  width: 8px;
-  height: 8px;
-  margin-top: -4px;
-  border-radius: 50%;
-  corner-shape: round;
-  background: var(--ui-accent);
-}
-
-/* Chosen, but waiting for room: a ring where the dot will be. */
-.review-bar-menu .review-bar-menu-waiting::before {
-  background: none;
-  box-shadow: inset 0 0 0 1.5px var(--ui-accent);
-}
-
-.review-bar-menu-note {
-  max-width: 250px;
-  margin: 4px 0 0;
-  padding: 8px 8px 4px 24px;
-  border-top: 1px solid var(--ui-border);
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-  line-height: 1.4;
-  white-space: normal;
-}
-
-.review-bar-menu-note + .review-bar-menu-note {
-  margin-top: 0;
-  border-top: none;
-}
-
 .review-bar-phone .review-bar-view-button {
   width: 34px;
   height: 34px;
   background: color-mix(in srgb, var(--ui-text) 6%, transparent);
-}
-
-.review-bar-phone .review-bar-menu {
-  left: auto;
-  right: 0;
-  transform: none;
 }
 
 .review-bar-sep {

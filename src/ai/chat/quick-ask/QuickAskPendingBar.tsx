@@ -1,9 +1,5 @@
-import { useState } from "react";
+import { useMenuButton } from "../../../engine/controls/useMenuButton";
 import { ChevronIcon } from "../../../engine/controls/icons";
-import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
-import { Presence, PresenceDiv } from "../../../engine/motion/usePresence";
-import { ActionSheet } from "../../../engine/controls/ActionSheet";
-import { usePhoneLayout } from "../../../engine/controls/usePhoneLayout";
 import { Tooltip } from "../../../engine/controls/Tooltip";
 
 export interface QuickAskPendingBarLabels {
@@ -145,19 +141,12 @@ function SplitButton({
   onMenuClick: () => void;
   primary?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  // A phone shows the bulk action as an action sheet, which closes itself;
-  // the outside-click hook would count a tap on it (portalled to <body>)
-  // as outside and swallow the choice.
-  const phone = usePhoneLayout();
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setOpen(false),
-    false,
-    open && !phone,
-  );
-
+  // The one way a button hangs a menu (a sheet on a phone).
+  const menu = useMenuButton(() => [
+    { label: menuLabel, onSelect: onMenuClick },
+  ]);
   return (
-    <div className="quick-ask-split-button" ref={ref}>
+    <div className="quick-ask-split-button">
       <button
         type="button"
         className={`inline-chat-action${primary ? " inline-chat-action-primary" : ""} quick-ask-split-main`}
@@ -169,34 +158,11 @@ function SplitButton({
         type="button"
         className={`inline-chat-action${primary ? " inline-chat-action-primary" : ""} quick-ask-split-chevron`}
         aria-label={menuLabel}
-        onClick={() => setOpen((prev) => !prev)}
+        {...menu.button}
       >
         <ChevronIcon className="quick-ask-split-chevron-icon" />
       </button>
-      <Presence show={open && phone}>
-        {open && phone && (
-          <ActionSheet
-            items={[{ label: menuLabel, onSelect: onMenuClick }]}
-            onClose={() => setOpen(false)}
-          />
-        )}
-      </Presence>
-      <Presence show={open && !phone}>
-        {open && !phone && (
-          <PresenceDiv className="quick-ask-split-menu floating-surface">
-            <button
-              type="button"
-              className="quick-ask-split-menu-item"
-              onClick={() => {
-                setOpen(false);
-                onMenuClick();
-              }}
-            >
-              {menuLabel}
-            </button>
-          </PresenceDiv>
-        )}
-      </Presence>
+      {menu.menu}
     </div>
   );
 }

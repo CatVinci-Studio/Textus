@@ -1,11 +1,14 @@
-import { Eye } from "lucide-react";
-import { useId, useRef, useState } from "react";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
+import { useRef, useState } from "react";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
 import {
   REVISION_DISPLAYS,
   type RevisionDisplay,
 } from "../../prefs/SettingsContext";
-import { AssistantIcon, ChevronIcon } from "../../engine/controls/icons";
+import {
+  AssistantIcon,
+  ChevronIcon,
+  EyeIcon,
+} from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { useMarginAvailable } from "../margin/margin-room";
 import {
@@ -99,12 +102,6 @@ export function ReviewBar({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const presence = usePresenceProps(rootRef);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setMenuOpen(false),
-    true,
-    menuOpen,
-  );
   // A phone lists only the views needing no margin. Elsewhere margin views
   // stay listed without room, unpickable, and a chosen one waits.
   const modes = phone
@@ -121,14 +118,29 @@ export function ReviewBar({
     phone,
   );
   const waiting = noMargin && shown !== display;
-  const noMarginId = useId();
   const streaming = !!changes?.streaming;
   const picking = !!notes && notes.bar.picked !== null;
   // Once shown, the count stays, even if the rewrite ends with one change.
   const [counted, setCounted] = useState(false);
   if (!counted && (stops > 1 || streaming)) setCounted(true);
+  // Without room for a margin, the menu's title says why its margin views
+  // can't be picked.
+  const menu = useMenuButton(
+    () =>
+      modes.map((mode) => ({
+        label: displayName(mode),
+        checked: shown === mode,
+        disabled: marginViewBlocked(mode, { phone, marginAvailable }),
+        onSelect: () => onDisplay(mode),
+      })),
+    {
+      title: noMargin
+        ? labels.revisionDisplayNoRoom
+        : labels.revisionDisplayLabel,
+    },
+  );
   const view = (
-    <div className="review-bar-view" ref={menuRef}>
+    <div className="review-bar-view">
       <Tooltip
         side="above"
         text={
@@ -138,60 +150,21 @@ export function ReviewBar({
         <button
           type="button"
           className={`review-bar-view-button${waiting ? " review-bar-view-waiting" : ""}`}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
           aria-label={
             waiting
               ? `${labels.revisionDisplayLabel}: ${displayName(shown)}`
               : labels.revisionDisplayLabel
           }
-          onClick={() => setMenuOpen(!menuOpen)}
+          {...menu.button}
         >
-          <Eye aria-hidden />
+          <EyeIcon aria-hidden />
           {/* The chosen view waits for room: what shows meanwhile. */}
           {waiting && (
             <span className="review-bar-view-name">{displayName(shown)}</span>
           )}
         </button>
       </Tooltip>
-      {menuOpen && (
-        <div
-          className="review-bar-menu floating-surface"
-          role="menu"
-          aria-label={labels.revisionDisplayLabel}
-        >
-          {modes.map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="menuitemradio"
-              aria-checked={shown === mode}
-              disabled={marginViewBlocked(mode, { phone, marginAvailable })}
-              aria-describedby={
-                marginViewBlocked(mode, { phone, marginAvailable })
-                  ? noMarginId
-                  : undefined
-              }
-              className={
-                waiting && mode === display
-                  ? "review-bar-menu-waiting"
-                  : undefined
-              }
-              onClick={() => {
-                onDisplay(mode);
-                setMenuOpen(false);
-              }}
-            >
-              {displayName(mode)}
-            </button>
-          ))}
-          {noMargin && (
-            <p id={noMarginId} className="review-bar-menu-note">
-              {labels.revisionDisplayNoRoom}
-            </p>
-          )}
-        </div>
-      )}
+      {menu.menu}
     </div>
   );
   const counts = [
