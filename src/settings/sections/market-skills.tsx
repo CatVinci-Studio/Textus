@@ -1,3 +1,4 @@
+import { compareVersions } from "../../plugins/store/manifest";
 import { isError } from "../../utils/error-text";
 import { Byline, CatalogRow } from "../pages/CatalogRow";
 import { explainError } from "../../utils/error-explain";
@@ -12,8 +13,6 @@ import { AvailableSection } from "../pages/AvailableSection";
 import { CatalogProblem } from "../pages/AvailablePlugins";
 import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
-
-/** The error the backend gives for a skill of that name the user already has. */
 
 /** The catalog's skills whose name, description, author or names in any
  *  language hold every word of `query`. */
@@ -32,8 +31,9 @@ function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   });
 }
 
-/** Under the user's skills: the catalog's skills not installed yet, each
- *  installed with a click into the global skills folder. */
+/** Under the user's skills: the catalog's skills not installed yet, or
+ *  installed at an older version (then updated), each a click into the
+ *  global skills folder. */
 export function AvailableSkills({
   t,
   catalog,
@@ -43,7 +43,8 @@ export function AvailableSkills({
   catalog: CatalogState;
   query: string;
 }) {
-  const [have, setHave] = useState<Set<string> | null>(null);
+  // The user's skills by name: their version when it came from the catalog.
+  const [have, setHave] = useState<Map<string, string | null> | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { settings } = useSettings();
@@ -54,9 +55,13 @@ export function AvailableSkills({
         .listSkills(null, null)
         .then((list) => {
           if (live && Array.isArray(list))
-            setHave(new Set(list.map((s) => s.name.toLowerCase())));
+            setHave(
+              new Map(
+                list.map((s) => [s.name.toLowerCase(), s.version ?? null]),
+              ),
+            );
         })
-        .catch(() => live && setHave(new Set()));
+        .catch(() => live && setHave(new Map()));
     load();
     window.addEventListener(SKILLS_CHANGED_EVENT, load);
     return () => {
@@ -65,9 +70,14 @@ export function AvailableSkills({
     };
   }, []);
   const ready = catalog.status === "ready" && have !== null;
+  /** An older version of it installed: what the button updates. */
+  const older = (skill: SkillEntry) => {
+    const installed = have?.get(skill.name.toLowerCase());
+    return !!installed && compareVersions(skill.version, installed) > 0;
+  };
   const shown = ready
     ? searchSkills(catalog.skills, query).filter(
-        (s) => !have.has(s.name.toLowerCase()),
+        (s) => !have.has(s.name.toLowerCase()) || older(s),
       )
     : [];
   const install = async (skill: SkillEntry) => {
@@ -76,8 +86,11 @@ export function AvailableSkills({
     try {
       await pluginsIpc.installSkillFromCatalog(skill.name);
     } catch (err) {
-      if (!isError(err, "skillExists"))
-        setError(`${t.marketSkillFailed} ${explainError(err, t)}`);
+      setError(
+        isError(err, "skillExists")
+          ? explainError(err, t)
+          : `${t.marketSkillFailed} ${explainError(err, t)}`,
+      );
     } finally {
       setBusy(null);
     }
@@ -147,7 +160,11 @@ export function AvailableSkills({
                 disabled={busy === skill.name}
                 onClick={() => void install(skill)}
               >
-                {busy === skill.name ? t.pluginInstalling : t.pluginInstall}
+                {busy === skill.name
+                  ? t.pluginInstalling
+                  : older(skill)
+                    ? fill(t.pluginUpdate, { version: skill.version })
+                    : t.pluginInstall}
               </button>
             }
           />

@@ -161,7 +161,7 @@
   },
   "skillExists": {
     "en": "A skill of that name is already there.",
-    "text": null
+    "text": "errorExists"
   },
   "sendLimit": {
     "en": "You've sent several reports today. Try again tomorrow, or submit it on GitHub.",

@@ -313,12 +313,14 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         .find(|s| s.name == name)
         .cloned()
         .ok_or_else(|| format!("{name} isn't in the catalog."))?;
+    let skills = crate::ai::workspace::global_agent_dir(&app)?.join("skills");
+    let present = installed_skill_version(&skills, &entry.name);
     let package = ext_stats::Download {
         kind: ext_stats::Kind::Skill,
         id: &entry.name,
         version: &entry.version,
-        update: false,
-        present: false,
+        update: present.is_some(),
+        present: present.is_some(),
         direct: &entry.url,
     };
     let bytes = download_counted(&app, package, &name).await?;
@@ -330,16 +332,22 @@ pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Resul
         ));
     }
     let text = String::from_utf8(bytes).map_err(|_| format!("{name} isn't a skill file."))?;
-    let path = install_skill_in(
-        &crate::ai::workspace::global_agent_dir(&app)?.join("skills"),
-        &entry.name,
-        &text,
-    )?;
+    let path = install_skill_in(&skills, &entry.name, &text)?;
     ext_stats::installed(&app, ext_stats::Kind::Skill, &entry.name);
     Ok(path.to_string_lossy().into_owned())
 }
 
-/// Writes a skill file named `name` into `dir`, never over one there.
+/// The version of the catalog skill `name` installed in `dir`, when one of
+/// that name is there with a version (one the user wrote has none).
+fn installed_skill_version(dir: &std::path::Path, name: &str) -> Option<semver::Version> {
+    crate::ai::workspace::read_skill_files(dir)
+        .into_iter()
+        .find(|(_, s)| s.name.eq_ignore_ascii_case(name))
+        .and_then(|(_, s)| semver::Version::parse(s.version?.trim()).ok())
+}
+
+/// Writes a skill file named `name` into `dir`: never over one there, but
+/// over an older version of the same catalog skill (an update).
 fn install_skill_in(
     dir: &std::path::Path,
     name: &str,
@@ -350,17 +358,31 @@ fn install_skill_in(
         return Err(format!("{name} isn't a skill file."));
     }
     let taken = crate::ai::workspace::read_skill_files(dir)
-        .iter()
-        .any(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
-    if taken {
+        .into_iter()
+        .find(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
+    let Some((path, _)) = taken else {
+        return crate::ai::workspace::write_skill_file(
+            dir,
+            name,
+            crate::ai::workspace::OnTaken::Refuse(SKILL_EXISTS),
+            |_| text.to_string(),
+        );
+    };
+    let newer = match (
+        installed_skill_version(dir, &skill.name),
+        skill
+            .version
+            .as_deref()
+            .and_then(|v| semver::Version::parse(v.trim()).ok()),
+    ) {
+        (Some(have), Some(offered)) => offered > have,
+        _ => false,
+    };
+    if !newer {
         return Err(crate::errors::error(SKILL_EXISTS));
     }
-    crate::ai::workspace::write_skill_file(
-        dir,
-        name,
-        crate::ai::workspace::OnTaken::Refuse(SKILL_EXISTS),
-        |_| text.to_string(),
-    )
+    crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())?;
+    Ok(path)
 }
 
 /// Installs `id` from the catalog last fetched after checking its package,

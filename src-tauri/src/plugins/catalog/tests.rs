@@ -58,6 +58,28 @@ fn a_skill_installs_once_and_never_over_one_there() {
     assert!(install_skill_in(dir.path(), "empty", "---\nname: empty\n---\n").is_err());
 }
 
+#[test]
+fn a_newer_catalog_skill_updates_its_older_self_but_not_the_users_own() {
+    let dir = tempfile::tempdir().unwrap();
+    let at = |v: &str| {
+        format!("---\nname: tone\ndescription: Tone.\nmetadata:\n  textus-version: \"{v}\"\n---\n\nTone {v}.")
+    };
+    let path = install_skill_in(dir.path(), "tone", &at("1.0.0")).unwrap();
+    assert!(install_skill_in(dir.path(), "tone", &at("1.0.0")).is_err());
+    assert_eq!(
+        install_skill_in(dir.path(), "tone", &at("1.1.0")).unwrap(),
+        path
+    );
+    assert!(std::fs::read_to_string(&path)
+        .unwrap()
+        .contains("Tone 1.1.0."));
+    // One the user wrote, with no version, is never replaced.
+    let own = "---\nname: mine\ndescription: Mine.\n---\n\nMine.";
+    install_skill_in(dir.path(), "mine", own).unwrap();
+    let offered = "---\nname: mine\ndescription: Mine.\nmetadata:\n  textus-version: \"2.0.0\"\n---\n\nTheirs.";
+    assert!(install_skill_in(dir.path(), "mine", offered).is_err());
+}
+
 fn entry(bytes: &[u8]) -> CatalogEntry {
     CatalogEntry {
         id: "catvinci.tasks".into(),
