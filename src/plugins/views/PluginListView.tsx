@@ -27,6 +27,7 @@ import {
   SearchIcon,
 } from "../../engine/controls/icons";
 import { getWindowAccess } from "../app-bridge";
+import { mayOpen } from "../may-open";
 import { askPlugin, pluginRecord } from "../manager";
 import {
   listView,
@@ -89,11 +90,14 @@ function keyOf(item: PluginListItem, index: number): string {
 }
 
 /** What a click on an item does when the plugin doesn't take it: its
- *  place opens, or its command runs. */
-function defaultSelect(item: PluginListItem) {
+ *  place opens - one the plugin may open - or its command runs. */
+function defaultSelect(plugin: string, item: PluginListItem) {
   if (item.location) {
     const { path, ...place } = item.location;
-    getWindowAccess()?.openFile(path, { place, preview: true });
+    const access = getWindowAccess();
+    const granted = pluginRecord(plugin)?.granted ?? [];
+    if (access && mayOpen(plugin, granted, access.rootPath(), path))
+      access.openFile(path, { place, preview: true });
   } else if (item.command) runCommand(item.command.id, item.command.args ?? []);
 }
 
@@ -124,7 +128,7 @@ export const PluginListPane = memo(function PluginListPane({
   const select = (item: PluginListItem) => {
     if (info?.select)
       void askPlugin(plugin, "$listSelect", { view, item }).catch(() => {});
-    else defaultSelect(item);
+    else defaultSelect(plugin, item);
   };
 
   const check = (item: PluginListItem) => {

@@ -1,4 +1,4 @@
-import { isInside } from "../../utils/path";
+import { mayOpen } from "../may-open";
 import { emitToThisWindow } from "../../platform/menu-events";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { links } from "../../platform/ipc";
@@ -6,7 +6,6 @@ import { splitLayout } from "../../engine/layout/store";
 import { panesOf } from "../../engine/layout/tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
-import { webviewsOf } from "../views/webviews";
 import {
   closeFloating,
   floatingSide,
@@ -69,14 +68,15 @@ export function layoutHandlers(p: PluginScope) {
   return {
     "layout.open": ({ location, where, asDocument }: Params) => {
       const place = locationOf(location);
-      // Its own view's file, or a file of the folder it may read: never one
-      // elsewhere on the disk.
-      if (!webviewsOf(p.id).some((view) => view.resource === place.path)) {
-        p.need("files.read");
-        const root = p.root();
-        if (place.path !== root && !isInside(place.path, root))
-          throw new Error("Only files inside the folder open.");
-      }
+      if (
+        !mayOpen(
+          p.id,
+          p.info.granted,
+          getWindowAccess()?.rootPath() ?? null,
+          place.path,
+        )
+      )
+        throw new Error("Only its own files and the folder's open.");
       const { path, ...rest } = place;
       access().openFile(path, {
         place: rest,
