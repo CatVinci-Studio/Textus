@@ -7,7 +7,7 @@ import { fs } from "../platform/ipc";
 
 import { basename, parentDir } from "../utils/path";
 import { type ContextMenuItem } from "../engine/controls/ContextMenu";
-import { contributedContextItems } from "../engine/controls/context-menu-items";
+import { contributedContextItems } from "../registry/context-menu-items";
 import {
   showConfirm,
   showMessage,

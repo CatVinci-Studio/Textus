@@ -11,7 +11,7 @@ import { getActiveDocument, getWindowAccess } from "../app-bridge";
 import {
   registerContextItems,
   type ContextMenuPlace,
-} from "../../engine/controls/context-menu-items";
+} from "../../registry/context-menu-items";
 import { setHoverStarter } from "./hover-providers";
 import { startOnEmbed } from "./embeds";
 import { localize, type MenuContribution } from "../store/manifest";

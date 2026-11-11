@@ -40,7 +40,7 @@ import {
 } from "../../engine/layout/store";
 import { pullTab } from "./tab-pull";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
-import { contributedContextItems } from "../../engine/controls/context-menu-items";
+import { contributedContextItems } from "../../registry/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
 

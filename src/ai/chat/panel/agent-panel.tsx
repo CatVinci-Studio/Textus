@@ -1,3 +1,7 @@
+import {
+  setPanelWidth,
+  usePanelWidth,
+} from "../../../engine/frame/panel-width";
 import { chromeScale } from "../../../engine/tokens/chrome-scale";
 import {
   createContext,
@@ -44,7 +48,6 @@ export function useAgentPanel(): AgentPanelFrame {
 
 const AGENT_PANEL_MIN_WIDTH = 300;
 const AGENT_PANEL_MAX_WIDTH = 720;
-export const AGENT_PANEL_DEFAULT_WIDTH = 380;
 
 const LIMITS = { min: AGENT_PANEL_MIN_WIDTH, max: AGENT_PANEL_MAX_WIDTH };
 
@@ -55,12 +58,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   const [open, setOpenState] = useState(
     () => getUiState("agentPanelOpen") === true,
   );
-  const [chosen, setChosen] = useState(() => {
-    const stored = getUiState("agentPanelWidth");
-    return typeof stored === "number" && Number.isFinite(stored) && stored > 0
-      ? stored
-      : AGENT_PANEL_DEFAULT_WIDTH;
-  });
+  const chosen = usePanelWidth();
   // Kept in the interface's size units, shown at its size now.
   const scale = chromeScale();
   const width = clampSidePanel(
@@ -88,8 +86,7 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
       const base = Math.round(
         clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
       );
-      setChosen(base);
-      if (persist) setUiState("agentPanelWidth", base);
+      setPanelWidth(base, persist);
     },
     [windowWidth, beside],
   );

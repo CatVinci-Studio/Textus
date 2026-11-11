@@ -11,7 +11,9 @@ export interface UiState {
   /** The onboarding tour's step. */
   tutorialProgress: unknown;
   agentPanelOpen: boolean;
-  agentPanelWidth: number;
+  /** The width a panel keeps (the AI's, Settings', a plugin page's;
+   *  an iPad's docked AI), in interface pixels before its scale. */
+  panelWidth: number;
   /** The sidebar's width as last dragged. */
   sidebarWidth: number;
   /** Whether the sidebar was left open. */
@@ -145,8 +147,8 @@ const LOCAL: {
     decode: (raw) => raw === "1",
     encode: (value) => (value ? "1" : "0"),
   },
-  agentPanelWidth: {
-    key: "textus-agent-panel-width",
+  panelWidth: {
+    key: "textus-panel-width",
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },

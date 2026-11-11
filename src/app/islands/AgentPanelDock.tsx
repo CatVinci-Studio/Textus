@@ -1,5 +1,5 @@
 import type { PresenceHandle } from "../../engine/motion/usePresence";
-import { AGENT_PANEL_DEFAULT_WIDTH } from "../../ai/chat/panel/agent-panel";
+import { PANEL_DEFAULT } from "../../engine/frame/panel-width";
 import { ResizeHandle } from "../../engine/controls/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
 import { TextusAiOffNote } from "../../ai/TextusAiSwitch";
@@ -52,7 +52,7 @@ export function AgentPanelDock({
         min={min}
         max={max}
         onResize={onResize}
-        onReset={() => onResize(AGENT_PANEL_DEFAULT_WIDTH, true)}
+        onReset={() => onResize(PANEL_DEFAULT, true)}
         label={t.agentPanelResize}
       />
       <div className="agent-island">

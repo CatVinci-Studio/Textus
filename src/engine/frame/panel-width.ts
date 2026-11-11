@@ -1,37 +1,31 @@
 import { useSyncExternalStore } from "react";
+import { getUiState, setUiState } from "../../storage/ui-state";
 
 /**
- * The width a panel's island keeps (the AI's, Settings', a plugin page's),
- * in interface pixels before the interface scale: the one a divider was
- * last dragged to, kept for the next one opened, as VS Code keeps its
- * panel's. Per viewer, in localStorage.
+ * The width a panel keeps (the AI's island, Settings', a plugin page's; an
+ * iPad's docked AI), in interface pixels before the interface scale: the
+ * one it was last dragged to, kept for the next one opened, as VS Code
+ * keeps its panel's. Its one owner; kept in the window's UI state.
  */
-const KEY = "textus-panel-width";
-const PANEL_DEFAULT = 400;
+/** Before any panel was dragged: where a double-click on its edge puts it. */
+export const PANEL_DEFAULT = 400;
 
 let width = read();
 const listeners = new Set<() => void>();
 
 function read(): number {
-  try {
-    const n = Number(localStorage.getItem(KEY));
-    return n > 0 ? n : PANEL_DEFAULT;
-  } catch {
-    return PANEL_DEFAULT;
-  }
+  const n = Number(getUiState("panelWidth"));
+  return n > 0 ? n : PANEL_DEFAULT;
 }
 
 export function panelWidth(): number {
   return width;
 }
 
-export function setPanelWidth(next: number): void {
+/** `persist` false: drawn at it while a drag lasts, kept once it ends. */
+export function setPanelWidth(next: number, persist = true): void {
   width = Math.round(next);
-  try {
-    localStorage.setItem(KEY, String(width));
-  } catch {
-    // Kept for this window.
-  }
+  if (persist) setUiState("panelWidth", width);
   for (const listener of listeners) listener();
 }
 

@@ -130,6 +130,7 @@ export default tseslint.config(
       ...SHELL,
       ...FEATURES,
       "motion",
+      "frame",
       "drag",
       "controls",
       "layout",
@@ -137,6 +138,20 @@ export default tseslint.config(
   },
   {
     files: ["src/engine/motion/**/*.{ts,tsx}"],
+    ignores: ["**/*.test.*"],
+    rules: above([
+      ...SHELL,
+      ...FEATURES,
+      "frame",
+      "drag",
+      "controls",
+      "layout",
+    ]),
+  },
+  {
+    // The solver and the clock: what the drags, the controls and the
+    // islands are placed and moved by.
+    files: ["src/engine/frame/**/*.{ts,tsx}"],
     ignores: ["**/*.test.*"],
     rules: above([...SHELL, ...FEATURES, "drag", "controls", "layout"]),
   },

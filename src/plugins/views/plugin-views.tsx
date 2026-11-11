@@ -5,7 +5,7 @@ import {
   contextItemsVersion,
   contributedContextItems,
   subscribeContextItems,
-} from "../../engine/controls/context-menu-items";
+} from "../../registry/context-menu-items";
 import { pluginRecord } from "../store/plugin-records";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
