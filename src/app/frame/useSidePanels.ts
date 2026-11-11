@@ -43,7 +43,24 @@ export function useSidePanels(aiOn: boolean) {
   const [panelOpen, setPanelOpen] = useState(
     () => !isIOSApp && getUiState("sidebarOpen") === true,
   );
-  const toggleSidebar = useCallback(() => setPanelOpen((v) => !v), []);
+  const { settings, setSettings } = useSettings();
+  // The rail hidden, the sidebar is put away with it, down to the window
+  // bar's one button, which brings both back as they were.
+  const railOff = !isIOSApp && !settings.activityRail;
+  const open = panelOpen && !railOff;
+  const toggleSidebar = useCallback(() => {
+    if (railOff) setSettings({ activityRail: true });
+    else setPanelOpen((v) => !v);
+  }, [railOff, setSettings]);
+  // Asked to show a panel (a folder opened, search, a plugin's tab): the
+  // rail comes back with it.
+  const showPanel = useCallback(
+    (show: boolean) => {
+      if (show && railOff) setSettings({ activityRail: true });
+      setPanelOpen(show);
+    },
+    [railOff, setSettings],
+  );
   useEffect(() => {
     if (!isIOSApp) setUiState("sidebarOpen", panelOpen);
   }, [panelOpen]);
@@ -61,7 +78,6 @@ export function useSidePanels(aiOn: boolean) {
   );
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
-  const { settings } = useSettings();
   const rail = railShown(settings) ? Math.round(RAIL_WIDTH * chromeScale()) : 0;
   // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
   // a small window still keeps the document its room (the panel's open
@@ -84,7 +100,7 @@ export function useSidePanels(aiOn: boolean) {
   );
   const agentPanel = useAgentPanelState(
     windowWidth,
-    rail + (panelOpen ? sidebarWidth.width : 0),
+    rail + (open ? sidebarWidth.width : 0),
   );
   useEffect(() => setAgentShown(agentPanel.open), [agentPanel.open]);
   // On a phone, the document gives up focus here and the AI page's input
@@ -125,7 +141,7 @@ export function useSidePanels(aiOn: boolean) {
   // Both side panels play their way out before their contents go; the
   // editor makes or takes back its room at once.
   // Out on the islands' clock (sidebar-frame.css).
-  const sidebarPresence = usePresence(panelOpen);
+  const sidebarPresence = usePresence(open);
   const sidebarClosing = sidebarPresence.state === "closing";
   const agentPresence = usePresence(agentPanel.open);
   const agentClosing = agentPresence.state === "closing";
@@ -139,8 +155,8 @@ export function useSidePanels(aiOn: boolean) {
   }, [panelMode]);
 
   return {
-    panelOpen,
-    setPanelOpen,
+    panelOpen: open,
+    setPanelOpen: showPanel,
     toggleSidebar,
     sidebarWidth,
     agentPanel,
