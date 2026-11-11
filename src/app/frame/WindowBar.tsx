@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import { Fragment, Suspense, useSyncExternalStore } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { WindowCaptionButtons } from "../../engine/controls/WindowCaptionButtons";
@@ -186,8 +187,7 @@ export function WindowBar({
           )}
           {!canUseWindows && !pages && (
             <span className="word-count">
-              {words > 0 &&
-                `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`}
+              {words > 0 && counted(t.wordCount, words)}
             </span>
           )}
           {/* Struck through while Textus AI is off; right-click pauses or

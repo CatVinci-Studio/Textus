@@ -1,3 +1,4 @@
+import { counted as inWords } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { cornerKey } from "../../engine/frame/island-parts";
 import { useDeferredValue, useMemo, type CSSProperties } from "react";
@@ -67,7 +68,7 @@ function DocumentCorner({
       {shown > 0 && (
         <Tooltip text={detail} side="above">
           <span className="word-count" tabIndex={-1}>
-            {`${shown} ${shown === 1 ? t.wordUnit : t.wordsUnit}`}
+            {inWords(t.wordCount, shown)}
           </span>
         </Tooltip>
       )}

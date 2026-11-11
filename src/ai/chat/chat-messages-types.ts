@@ -1,3 +1,4 @@
+import type { Plural } from "../../i18n/plural";
 import type { ApplySuggestion } from "./CommentCard";
 import type { BlockNames } from "../revision/markdown-forms";
 import { type AgentTurnLabels } from "./AgentTurnView";
@@ -43,7 +44,7 @@ export interface ChatMessagesLabels
    *  "{n}". */
   proposalAcceptSome: string;
   /** How many sentences a rewrite changes: "{n} changes". */
-  proposalChangeCount: string;
+  proposalChangeCount: Plural;
   /** The ✓ / ✕ on a sentence (the card's and the text's). */
   proposalTakeSentence: string;
   proposalKeepSentence: string;
@@ -72,7 +73,7 @@ export interface ChatMessagesLabels
   filesDiscard: string;
   filesDismiss: string;
   /** "{n} notes", heading a reply's notes shown as one card. */
-  commentCount: string;
+  commentCount: Plural;
   commentGroupMore: string;
   /** Plain-language help per kind of provider failure. */
   aiErrors: Record<AiErrorKind, string>;

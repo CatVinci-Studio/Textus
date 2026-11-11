@@ -1,4 +1,4 @@
-import { fill } from "../../i18n/fill";
+import { counted } from "../../i18n/current";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { memo } from "react";
 import type { ReviewNote } from "./review-notes-plugin";
@@ -17,8 +17,8 @@ function groupLabel(items: MarginItem[], labels: ReviewMarginLabels): string {
   const notes = items.filter((i) => i.kind === "note").length;
   const changes = items.length - notes;
   return [
-    notes > 0 && fill(labels.reviewGroupNotes, { n: String(notes) }),
-    changes > 0 && fill(labels.proposalChangeCount, { n: String(changes) }),
+    notes > 0 && counted(labels.reviewGroupNotes, notes),
+    changes > 0 && counted(labels.proposalChangeCount, changes),
   ]
     .filter(Boolean)
     .join(" · ");

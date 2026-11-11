@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import { type PluginMenuEntry } from "./plugin-menu";
@@ -296,7 +297,7 @@ export function buildMobileMenu(
     ...(words
       ? [
           {
-            label: `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`,
+            label: counted(t.wordCount, words),
             disabled: true,
           },
           "separator" as const,

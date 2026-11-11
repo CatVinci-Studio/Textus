@@ -1,3 +1,5 @@
+import { counted } from "../../i18n/current";
+import type { Plural } from "../../i18n/plural";
 import { fill } from "../../i18n/fill";
 import { MessageSquare } from "lucide-react";
 import { useRef, useState, type CSSProperties } from "react";
@@ -163,7 +165,7 @@ export function CommentGroup({
   labels: {
     commentTitle: string;
     commentLocate: string;
-    commentCount: string;
+    commentCount: Plural;
     commentGroupMore: string;
     proposalGroupLess: string;
     commentApplySuggestion: string;
@@ -195,7 +197,7 @@ export function CommentGroup({
           {labels.commentTitle}
           <span className="agent-proposal-kind">
             {" · "}
-            {fill(labels.commentCount, { n: String(items.length) })}
+            {counted(labels.commentCount, items.length)}
           </span>
         </span>
       </div>

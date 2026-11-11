@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import { explainAiError } from "../error-messages";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
@@ -135,7 +136,7 @@ function questionStatus(q: QuestionState, t: Strings): string {
     case "done":
       return q.state === "active" && q.notes === 0
         ? t.paperQuestionActive
-        : fill(t.paperQuestionNotes, { n: String(q.notes) });
+        : counted(t.paperQuestionNotes, q.notes);
   }
 }
 

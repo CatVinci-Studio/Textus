@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { FlipOnChange } from "../../engine/motion/flip";
@@ -216,7 +217,7 @@ export function ProposalGroup({
           {labels.proposalTitle}
           <span className="agent-proposal-kind">
             {" · "}
-            {fill(labels.proposalChangeCount, { n: String(items.length) })}
+            {counted(labels.proposalChangeCount, items.length)}
           </span>
         </span>
       </div>

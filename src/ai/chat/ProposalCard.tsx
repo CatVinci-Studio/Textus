@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { Check, X } from "lucide-react";
 import {
@@ -175,9 +176,7 @@ export function ProposalCard({
             {proposal.image
               ? labels.proposalImage
               : sentences && sentences.length > 1
-                ? fill(labels.proposalChangeCount, {
-                    n: String(sentences.length),
-                  })
+                ? counted(labels.proposalChangeCount, sentences.length)
                 : labels.actionNames[proposal.action]}
           </span>
         </span>

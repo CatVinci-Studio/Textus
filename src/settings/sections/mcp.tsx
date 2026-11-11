@@ -1,3 +1,4 @@
+import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -150,7 +151,7 @@ function stateText(
   if (!status || status.state === "starting") return t.mcpStateStarting;
   if (status.state === "failed")
     return fill(t.mcpStateFailed, { reason: status.error ?? "" });
-  return fill(t.mcpStateReady, { count: String(status.tools.length) });
+  return counted(t.mcpStateReady, status.tools.length);
 }
 
 function ServerCard({
@@ -253,9 +254,8 @@ function useMcpTry(t: Strings) {
     try {
       const result = await mcp.try(server);
       setTried(
-        fill(t.mcpTried, {
+        fill(counted(t.mcpTried, result.tools.length), {
           server: result.server,
-          count: String(result.tools.length),
           names: result.tools.map((x) => x.name).join(", "),
         }),
       );

@@ -1,4 +1,4 @@
-import { currentLanguage } from "../../i18n/current";
+import { counted, currentLanguage } from "../../i18n/current";
 import { localeOf } from "../../i18n/strings";
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
@@ -14,9 +14,7 @@ interface InstallCounts {
 export function installsText(counts: InstallCounts, t: Strings): string | null {
   if (counts.installs === undefined || counts.installs === null) return null;
   const locale = localeOf(currentLanguage());
-  const all = fill(t.pluginInstalls, {
-    n: counts.installs.toLocaleString(locale),
-  });
+  const all = counted(t.pluginInstalls, counts.installs);
   return counts.installs30
     ? `${all} · ${fill(t.pluginInstalls30, { n: counts.installs30.toLocaleString(locale) })}`
     : all;

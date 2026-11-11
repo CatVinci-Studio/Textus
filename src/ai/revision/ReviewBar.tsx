@@ -1,3 +1,5 @@
+import { counted as inWords } from "../../i18n/current";
+import type { Plural } from "../../i18n/plural";
 import { fill } from "../../i18n/fill";
 import { useRef, useState } from "react";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
@@ -31,14 +33,14 @@ interface ReviewBarLabels {
   proposalPicturePainting: string;
   proposalReject: string;
   proposalAcceptSome: string;
-  proposalChangeCount: string;
+  proposalChangeCount: Plural;
   quickAskPosition: string;
   quickAskPrevEdit: string;
   quickAskNextEdit: string;
   /** In place of the bar's name while a rewrite is still being written. */
   agentWritingEdit: string;
   reviewNotesLabel: string;
-  reviewGroupNotes: string;
+  reviewGroupNotes: Plural;
   reviewNotesPick: string;
   reviewNotesAllDone: string;
   reviewNotesPicked: string;
@@ -169,8 +171,8 @@ export function ReviewBar({
     </div>
   );
   const counts = [
-    changes && fill(labels.proposalChangeCount, { n: String(changes.total) }),
-    notes && fill(labels.reviewGroupNotes, { n: String(notes.count) }),
+    changes && inWords(labels.proposalChangeCount, changes.total),
+    notes && inWords(labels.reviewGroupNotes, notes.count),
   ]
     .filter(Boolean)
     .join(" · ");

@@ -1,3 +1,4 @@
+import type { Plural } from "../../i18n/plural";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { watchContentZoom } from "../../plugins/views/frame-zoom";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
@@ -17,11 +18,11 @@ import { noteAnchorClass } from "./review-notes-plugin";
 export interface ReviewMarginLabels {
   reviewNoteBy: string;
   /** "{n} notes": a run of them as one chip. */
-  reviewGroupNotes: string;
+  reviewGroupNotes: Plural;
   /** A note's box while picking on the notes bar. */
   reviewNotesPickOne: string;
   /** "{n} changes", likewise. */
-  proposalChangeCount: string;
+  proposalChangeCount: Plural;
   reviewNoteAsk: string;
   reviewNoteDone: string;
   /** An own note's mark, by-line and actions. */
