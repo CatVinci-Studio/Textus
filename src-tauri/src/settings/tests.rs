@@ -351,3 +351,24 @@ fn invalid_history_entries_are_rejected() {
     assert!(!HistoryKind::Clipboard.valid(&json!({ "text": long, "at": 1 })));
     assert!(HistoryKind::Clipboard.valid(&json!({ "text": "ok", "at": 1 })));
 }
+
+#[test]
+fn the_proxy_follows_the_settings() {
+    proxy_changed(
+        &json!({ "proxyType": "socks5", "proxyHost": " 127.0.0.1 ", "proxyPort": "7890" }),
+    );
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("socks5://127.0.0.1:7890")
+    );
+    proxy_changed(&json!({ "proxyType": "http", "proxyHost": "proxy.lan" }));
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("http://proxy.lan")
+    );
+    // None, or no host: direct.
+    proxy_changed(&json!({ "proxyType": "none", "proxyHost": "proxy.lan" }));
+    assert_eq!(aicompat::http::proxy_url(), None);
+    proxy_changed(&json!({ "proxyType": "http", "proxyHost": "" }));
+    assert_eq!(aicompat::http::proxy_url(), None);
+}

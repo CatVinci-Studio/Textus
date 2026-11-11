@@ -23,7 +23,6 @@ vi.mock("../../plugins/manager", () => {
 });
 
 vi.mock("../../platform/ipc", () => ({
-  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
 }));
 
 beforeEach(() => {

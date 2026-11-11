@@ -87,7 +87,7 @@ impl Connection {
                 Transport::Stdio(Box::new(spawn(program, args, env)?))
             }
             Endpoint::Url { url, headers } => Transport::Http(Http {
-                client: crate::net::client(Duration::from_secs(15), TOOL_TIMEOUT)
+                client: crate::net::public_client(Duration::from_secs(15), TOOL_TIMEOUT)?
                     .build()
                     .map_err(|e| e.to_string())?,
                 url: url.clone(),

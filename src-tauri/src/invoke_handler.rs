@@ -3,7 +3,7 @@
 //! iOS, where the frontend never calls them.
 
 use super::*;
-use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models, set_ai_proxy};
+use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
 use ai::{agent::ai_agent_message, cancel::ai_cancel};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
@@ -100,7 +100,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::paper::figures::ai_paper_figures_drawn,
         crate::ai::paper::status::ai_paper_status,
         fetch_agent_models,
-        set_ai_proxy,
         crate::ai::catalog::list_providers,
         crate::ai::catalog::ai_can_think_deeper,
         crate::ai::images::list_image_providers,

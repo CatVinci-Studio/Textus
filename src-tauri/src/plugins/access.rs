@@ -437,7 +437,7 @@ pub async fn plugin_http(
     }
     // A redirect must stay within what was granted too.
     let redirect_grants = granted.clone();
-    let client = crate::net::client(Duration::from_secs(10), Duration::from_secs(60))
+    let client = crate::net::public_client(Duration::from_secs(10), Duration::from_secs(60))?
         .redirect(reqwest::redirect::Policy::custom(move |attempt| {
             if attempt.previous().len() > 5 || !url_allowed(&redirect_grants, attempt.url()) {
                 attempt.stop()

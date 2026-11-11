@@ -13,7 +13,6 @@ import { themes } from "../../platform/ipc";
 import { ReplyThemes } from "./ReplyThemes";
 
 vi.mock("../../platform/ipc", () => ({
-  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: {
     loadThemeCss: vi.fn().mockResolvedValue(""),
     saveThemeCss: vi.fn().mockResolvedValue(undefined),

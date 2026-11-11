@@ -36,7 +36,6 @@ import { installTestLocalStorage } from "../dev/test-local-storage";
 const handlers: Record<string, (event: { payload: unknown }) => void> = {};
 
 vi.mock("../platform/ipc", () => ({
-  ai: { setAiProxy: vi.fn().mockResolvedValue(null) },
   themes: { loadThemeCss: vi.fn().mockResolvedValue(null) },
   storage: {
     settingsGet: vi.fn(),

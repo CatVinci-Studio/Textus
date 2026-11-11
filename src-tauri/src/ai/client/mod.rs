@@ -104,14 +104,5 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
     }
 }
 
-/// Mirrors the frontend's proxy setting into aicompat's shared HTTP client:
-/// Rust can't read localStorage, so the frontend re-sends it on startup and on
-/// every change. Rejects unparseable proxy URLs.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn set_ai_proxy(proxy: Option<String>) -> Result<(), String> {
-    aicompat::http::set_proxy(proxy)
-}
-
 #[cfg(test)]
 mod tests;

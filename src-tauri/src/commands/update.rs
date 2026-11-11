@@ -96,8 +96,12 @@ pub async fn check_for_update<R: Runtime>(
     };
     let endpoints = endpoints_for(&channel, &configured_endpoints(&webview));
     let rpm_install = is_rpm_install();
-    let updater = webview
-        .updater_builder()
+    let mut builder = webview.updater_builder();
+    // Through the app's proxy, as every other request goes.
+    if let Some(proxy) = aicompat::http::proxy_url().and_then(|p| p.parse().ok()) {
+        builder = builder.proxy(proxy);
+    }
+    let updater = builder
         .endpoints(endpoints)
         .map_err(|e| e.to_string())?
         .version_comparator(move |current, remote| {

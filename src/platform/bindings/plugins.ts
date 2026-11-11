@@ -37,7 +37,8 @@ export const commands = {
 	plugin_install_files: (files: PluginFile[]) => __TAURI_INVOKE<InstalledPlugin>("plugin_install_files", { files }),
 	/**
 	 *  Load a plugin folder…: the plugin runs from where it is, so changes show on
-	 *  reload. It starts off, like any new plugin.
+	 *  reload. It starts off, like any new plugin - over one already here as
+	 *  well: other code under its id gets none of its permissions or secrets.
 	 */
 	plugin_load_dev: (path: string) => __TAURI_INVOKE<InstalledPlugin>("plugin_load_dev", { path }),
 	/**

@@ -9,9 +9,37 @@ use super::*;
 pub fn init(app: &AppHandle) {
     let config_dir = app.path().app_config_dir().unwrap_or_default();
     let data_dir = app.path().app_data_dir().unwrap_or_default();
-    app.manage(Stores::load(&config_dir, &data_dir));
+    let stores = Stores::load(&config_dir, &data_dir);
+    proxy_changed(&stores.settings.snapshot().0);
+    app.manage(stores);
     #[cfg(target_os = "macos")]
     apply_app_theme(app);
+}
+
+/// The settings' proxy, for every request the app makes: read here, at
+/// launch and on each change, so a request made before any window (a
+/// scheduled job in background mode) goes through it too. An unreadable one
+/// is left out: requests go direct.
+pub(crate) fn proxy_changed(settings: &Value) {
+    let text = |key: &str| {
+        settings
+            .get(key)
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .trim()
+            .to_string()
+    };
+    let (kind, host, port) = (text("proxyType"), text("proxyHost"), text("proxyPort"));
+    let proxy = (!host.is_empty() && !kind.is_empty() && kind != "none").then(|| {
+        if port.is_empty() {
+            format!("{kind}://{host}")
+        } else {
+            format!("{kind}://{host}:{port}")
+        }
+    });
+    if aicompat::http::set_proxy(proxy).is_err() {
+        let _ = aicompat::http::set_proxy(None);
+    }
 }
 
 /// The appearance setting changed: brings the native side in line so what a

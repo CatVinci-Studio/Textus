@@ -57,6 +57,12 @@ pub fn settings_patch(
     if patch.contains_key("theme") {
         theme_changed(&app);
     }
+    if ["proxyType", "proxyHost", "proxyPort"]
+        .iter()
+        .any(|key| patch.contains_key(*key))
+    {
+        proxy_changed(&stores.settings.snapshot().0);
+    }
     // Background mode's tray follows the setting and the UI language.
     #[cfg(desktop)]
     if patch.contains_key(crate::background::ENABLED_SETTING) {

@@ -13,10 +13,11 @@ pub fn client(connect: Duration, total: Duration) -> reqwest::ClientBuilder {
         .user_agent(concat!("Textus/", env!("CARGO_PKG_VERSION")))
 }
 
-/// [`client`] for servers on the public internet: through the app's network
-/// proxy when one is set, like the AI providers' requests. An app started
-/// from the desktop doesn't inherit HTTPS_PROXY, so where only a proxy
-/// reaches GitHub, going direct fails (the plugin and theme catalogs, #512).
+/// [`client`] for servers elsewhere: through the app's network proxy when
+/// one is set, like the AI providers' requests; this computer's own servers
+/// (PicGo, a plugin's local app) directly. An app started from the desktop
+/// doesn't inherit HTTPS_PROXY, so where only a proxy reaches GitHub, going
+/// direct fails (the plugin and theme catalogs, #512, #580).
 pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::ClientBuilder, String> {
     through(client(connect, total), aicompat::http::proxy_url())
 }
@@ -27,7 +28,11 @@ fn through(
     proxy: Option<String>,
 ) -> Result<reqwest::ClientBuilder, String> {
     Ok(match proxy {
-        Some(proxy) => builder.proxy(reqwest::Proxy::all(proxy).map_err(|e| e.to_string())?),
+        Some(proxy) => builder.proxy(
+            reqwest::Proxy::all(proxy)
+                .map_err(|e| e.to_string())?
+                .no_proxy(reqwest::NoProxy::from_string("localhost,127.0.0.1,::1")),
+        ),
         None => builder,
     })
 }
@@ -138,6 +143,25 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(response.text().await.unwrap(), "ok");
+    }
+
+    #[tokio::test]
+    async fn this_computers_servers_are_reached_directly() {
+        // A proxy that answers nothing: only a direct request can succeed.
+        let dead = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let proxy = format!("http://{}", dead.local_addr().unwrap());
+        let local =
+            serve_once("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok");
+        let client = through(
+            client(Duration::from_secs(5), Duration::from_millis(500)),
+            Some(proxy),
+        )
+        .unwrap()
+        .build()
+        .unwrap();
+        let response = client.get(local).send().await.unwrap();
+        assert_eq!(response.text().await.unwrap(), "ok");
+        drop(dead);
     }
 
     #[test]

@@ -256,7 +256,6 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::ai::catalog::list_providers,
                     crate::ai::catalog::ai_can_think_deeper,
                     crate::ai::client::fetch_agent_models,
-                    crate::ai::client::set_ai_proxy,
                     crate::ai::web::web_search_status,
                     crate::ai::next_message::suggest_next_message,
                     crate::ai::doc_title::suggest_doc_title,

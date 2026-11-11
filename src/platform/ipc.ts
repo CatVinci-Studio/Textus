@@ -126,7 +126,6 @@ export const ai = {
     ),
   fetchAgentModels: (provider: string) =>
     aiCommand("fetch_agent_models", provider),
-  setAiProxy: (proxy: string | null) => command("set_ai_proxy", proxy),
   complete: (
     provider: string,
     before: string,

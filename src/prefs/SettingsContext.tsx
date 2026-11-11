@@ -13,7 +13,6 @@ import {
   resolveStrings,
   type Strings,
 } from "../i18n/strings";
-import { ai } from "../platform/ipc";
 import { readBoot } from "../storage/boot";
 import type { Settings } from "./settings-types";
 import { htmlLang } from "./settings-normalise";
@@ -115,19 +114,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = htmlLang(settings.language);
     setCurrentLanguage(settings.language);
   }, [settings.language]);
-
-  // An unparseable proxy is rejected by the backend (and requests fall back
-  // to a direct connection), so a half-typed host while editing the setting
-  // can't wedge anything.
-  useEffect(() => {
-    const host = settings.proxyHost.trim();
-    const port = settings.proxyPort.trim();
-    const proxy =
-      settings.proxyType !== "none" && host
-        ? `${settings.proxyType}://${host}${port ? `:${port}` : ""}`
-        : null;
-    ai.setAiProxy(proxy).catch(() => {});
-  }, [settings.proxyType, settings.proxyHost, settings.proxyPort]);
 
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {

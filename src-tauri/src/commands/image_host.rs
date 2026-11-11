@@ -212,16 +212,10 @@ async fn send(
     if let (Auth::KeyQuery, Some(token)) = (&preset.auth, &token) {
         url.query_pairs_mut().append_pair("key", token);
     }
-    // Through the app's proxy, as other public calls go; a host on this
-    // machine (PicGo) directly.
-    let here = matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
-    let client = if here {
-        crate::net::client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)
-    } else {
-        crate::net::public_client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)?
-    }
-    .build()
-    .map_err(|e| e.to_string())?;
+    // Through the app's proxy, as other calls go; PicGo here directly.
+    let client = crate::net::public_client(CONNECT_TIMEOUT, UPLOAD_TIMEOUT)?
+        .build()
+        .map_err(|e| e.to_string())?;
     let mut request = client.post(url);
     request = match preset.body {
         Body::Multipart(field) => {

@@ -19,12 +19,6 @@ export const commands = {
 	 *  fetch_custom_models instead.
 	 */
 	fetch_agent_models: (provider: string) => __TAURI_INVOKE<string[]>("fetch_agent_models", { provider }),
-	/**
-	 *  Mirrors the frontend's proxy setting into aicompat's shared HTTP client:
-	 *  Rust can't read localStorage, so the frontend re-sends it on startup and on
-	 *  every change. Rejects unparseable proxy URLs.
-	 */
-	set_ai_proxy: (proxy: string | null) => __TAURI_INVOKE<null>("set_ai_proxy", { proxy }),
 	web_search_status: (provider: string, model: string | null, searchService: string | null, searxngUrl: string | null) => __TAURI_INVOKE<WebSearchStatus_Serialize>("web_search_status", { provider, model, searchService, searxngUrl }),
 	/**
 	 *  The messages the writer will probably send next, most likely first;
