@@ -1,8 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { holdGrip } from "../frame/grip";
+import { GRIP_KEY_STEP, gripKey, useGrip } from "../frame/useGrip";
 import "./resize-handle.css";
-
-const KEY_STEP = 20;
 
 /** The drag handle on a side panel's inner edge. `onResize(w, false)` follows
  *  the pointer; `onResize(w, true)` comes on release and each key press, for
@@ -27,35 +24,19 @@ export function ResizeHandle({
   label: string;
 }) {
   const outward = edge === "right" ? 1 : -1;
-  const drag = useRef<{ startX: number; startWidth: number; last: number }>(
-    null,
-  );
-  const [dragging, setDragging] = useState(false);
-  const end = () => {
-    const d = drag.current;
-    if (!d) return;
-    drag.current = null;
-    holdGrip(false);
-    setDragging(false);
-    onResize(d.last, true);
-  };
-  // Gone while held (⌘B put the sidebar away mid-drag): let go all the same,
-  // the width where it was.
-  const resize = useRef(onResize);
-  resize.current = onResize;
-  useEffect(
-    () => () => {
-      const d = drag.current;
-      if (!d) return;
-      holdGrip(false);
-      resize.current(d.last, true);
+  const grip = useGrip({
+    start: (e) => ({ startX: e.clientX, startWidth: width, last: width }),
+    move: (e, held) => {
+      held.last = held.startWidth + (e.clientX - held.startX) * outward;
+      onResize(held.last, false);
     },
-    [],
-  );
+    // Let go however it ends, the width where it was.
+    end: (held) => onResize(held.last, true),
+  });
   return (
     <div
-      className={`resize-handle tx-grip ${className}${dragging ? " resize-handle-active" : ""}`}
-      data-gripped={dragging || undefined}
+      className={`resize-handle tx-grip ${className}${grip.gripped ? " resize-handle-active" : ""}`}
+      data-gripped={grip.gripped || undefined}
       role="separator"
       aria-orientation="vertical"
       aria-label={label}
@@ -63,30 +44,11 @@ export function ResizeHandle({
       aria-valuemin={min}
       aria-valuemax={max}
       tabIndex={0}
-      onPointerDown={(e) => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        // Captured, so the drag (and its cursor) keeps going over the
-        // editor or past the window's edge.
-        e.currentTarget.setPointerCapture(e.pointerId);
-        drag.current = { startX: e.clientX, startWidth: width, last: width };
-        holdGrip(true);
-        setDragging(true);
-      }}
-      onPointerMove={(e) => {
-        const d = drag.current;
-        if (!d) return;
-        d.last = d.startWidth + (e.clientX - d.startX) * outward;
-        onResize(d.last, false);
-      }}
-      onPointerUp={end}
-      onPointerCancel={end}
-      onLostPointerCapture={end}
+      {...grip.props}
       onDoubleClick={onReset}
       onKeyDown={(e) => {
-        if (e.key === "ArrowRight") onResize(width + KEY_STEP * outward, true);
-        else if (e.key === "ArrowLeft")
-          onResize(width - KEY_STEP * outward, true);
+        const sign = gripKey(e.key, "row");
+        if (sign) onResize(width + sign * GRIP_KEY_STEP * outward, true);
         else if (e.key === "Home") onResize(min, true);
         else if (e.key === "End") onResize(max, true);
         else return;

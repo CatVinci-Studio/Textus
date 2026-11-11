@@ -43,13 +43,13 @@ describe("a side panel's resize handle", () => {
     fireEvent.keyDown(right.handle, { key: "ArrowRight" });
     fireEvent.keyDown(right.handle, { key: "ArrowLeft" });
     expect(right.onResize.mock.calls).toEqual([
-      [260, true],
-      [220, true],
+      [264, true],
+      [216, true],
     ]);
     cleanup();
     const left = renderHandle("left");
     fireEvent.keyDown(left.handle, { key: "ArrowLeft" });
-    expect(left.onResize).toHaveBeenCalledWith(260, true);
+    expect(left.onResize).toHaveBeenCalledWith(264, true);
   });
 
   it("goes to its bounds with Home and End", () => {

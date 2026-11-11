@@ -1,7 +1,7 @@
 import { frameLayout } from "../frame/frame-store";
-import { holdGrip } from "../frame/grip";
+import { GRIP_KEY_STEP, gripKey, useGrip } from "../frame/useGrip";
 import "../controls/resize-handle.css";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
 import type { Strings } from "../../i18n/strings";
 import { Presence } from "../motion/usePresence";
@@ -14,7 +14,6 @@ import { nodeAt, type Divider } from "./tree";
 /** How far one arrow key press moves the divider: a share of the two
  *  panes it parts, or a panel's width in pixels. */
 const KEY_STEP = 0.05;
-const KEY_PIXELS = 24;
 
 type Span = { start: number; end: number };
 
@@ -45,8 +44,6 @@ export function SplitDivider({
   t: Strings;
 }) {
   const row = line.direction === "row";
-  const drag = useRef<{ origin: number } | null>(null);
-  const [dragging, setDragging] = useState(false);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const branch = nodeAt(layout.root, line.path);
   const sizes = branch?.kind === "split" ? branch.sizes : [0.5, 0.5];
@@ -76,28 +73,26 @@ export function SplitDivider({
   };
   const step = (sign: number) => {
     if (fixed)
-      setPanelWidth(drawn() + (fixed === "after" ? -sign : sign) * KEY_PIXELS);
+      setPanelWidth(
+        drawn() + (fixed === "after" ? -sign : sign) * GRIP_KEY_STEP,
+      );
     else share(current + sign * KEY_STEP);
   };
-  const end = () => {
-    if (drag.current) letGo(fixed, drawn());
-    drag.current = null;
-    setDragging(false);
-  };
-  // Gone while held (its island closed mid-drag): let go all the same.
-  const side = useRef(fixed);
-  side.current = fixed;
-  useEffect(
-    () => () => {
-      if (drag.current) letGo(side.current, panelWidth());
+  const grip = useGrip({
+    start: () => {
+      const { origin } = frameLayout();
+      return { origin: row ? origin.x : origin.y };
     },
-    [],
-  );
+    move: (e, held) => moveTo((row ? e.clientX : e.clientY) - held.origin),
+    end: (_held, how) => {
+      if (fixed) setPanelWidth(how === "gone" ? panelWidth() : drawn(), true);
+    },
+  });
   return (
     <>
       <div
-        className={`split-divider tx-grip split-divider-${line.direction}${dragging ? " split-divider-active" : ""}`}
-        data-gripped={dragging || undefined}
+        className={`split-divider tx-grip split-divider-${line.direction}${grip.gripped ? " split-divider-active" : ""}`}
+        data-gripped={grip.gripped || undefined}
         data-reach={reach || undefined}
         style={style}
         data-frame={frame}
@@ -108,33 +103,15 @@ export function SplitDivider({
         aria-valuemin={0}
         aria-valuemax={100}
         tabIndex={0}
-        onPointerDown={(e) => {
-          if (e.button !== 0) return;
-          e.preventDefault();
-          e.currentTarget.setPointerCapture(e.pointerId);
-          const { origin } = frameLayout();
-          drag.current = { origin: row ? origin.x : origin.y };
-          holdGrip(true);
-          setDragging(true);
-        }}
-        onPointerMove={(e) => {
-          const d = drag.current;
-          if (!d) return;
-          moveTo((row ? e.clientX : e.clientY) - d.origin);
-        }}
-        onPointerUp={end}
-        onPointerCancel={end}
-        onLostPointerCapture={end}
+        {...grip.props}
         onContextMenu={(e) => {
           e.preventDefault();
           setMenu({ x: e.clientX, y: e.clientY });
         }}
         onKeyDown={(e) => {
-          const back = row ? "ArrowLeft" : "ArrowUp";
-          const on = row ? "ArrowRight" : "ArrowDown";
-          if (e.key === back) step(-1);
-          else if (e.key === on) step(1);
-          else return;
+          const sign = gripKey(e.key, line.direction);
+          if (!sign) return;
+          step(sign);
           e.preventDefault();
         }}
       />
@@ -156,9 +133,3 @@ export function SplitDivider({
 /** Half the gap between the two sides: the divider sits in its middle. */
 const gapHalf = ({ before, after }: { before: Span; after: Span }) =>
   (after.start - before.end) / 2;
-
-/** A drag ends: the grip is let go, a panel's width kept as drawn. */
-function letGo(fixed: "before" | "after" | null, width: number): void {
-  holdGrip(false);
-  if (fixed) setPanelWidth(width, true);
-}
