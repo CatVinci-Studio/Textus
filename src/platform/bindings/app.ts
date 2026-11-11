@@ -228,6 +228,12 @@ export const commands = {
 /* Constants */
 export const BACKGROUND_STATUS = "background-status" as const;
 
+export const CHAT_WINDOWS_CHANGED = "chat:windows-changed" as const;
+
+export const MAX_CONVERSATIONS = 500 as const;
+
+export const TUTORIAL_CLIPS = ["wysiwyg","blocks","modes-themes","sidebar-export","ai-panel","continuation","grammar","revision","review","skills","memory"] as const;
+
 /* Types */
 /**
  *  Everything a detached chat window needs to carry on where the window's

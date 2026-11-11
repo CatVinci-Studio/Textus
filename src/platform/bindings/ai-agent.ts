@@ -55,6 +55,11 @@ export const commands = {
 	kept_proposals_write: (docPath: string, workspaceRoot: string | null, kept: Value | null, pictures: string[]) => __TAURI_INVOKE<null>("kept_proposals_write", { docPath, workspaceRoot, kept, pictures }),
 };
 
+/* Constants */
+export const MEMORY_TURN = "remember" as const;
+
+export const PAPER_TURN = "write_paper" as const;
+
 /* Types */
 /**  One entry in an agent conversation, kept provider-agnostic. */
 export type AgentTurn = AgentTurn_Serialize | AgentTurn_Deserialize;

@@ -22,7 +22,7 @@ pub(crate) use settle::*;
 
 mod chapters;
 mod context;
-mod history;
+pub(crate) mod history;
 pub(crate) mod lists;
 mod model;
 mod past;

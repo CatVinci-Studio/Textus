@@ -1,3 +1,4 @@
+import { CHAT_WINDOWS_CHANGED } from "../../../platform/bindings/app";
 import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { emitToWindow } from "../../../platform/events";
 import { listenToThisWindow } from "../../../platform/events";
@@ -43,8 +44,8 @@ export interface FilesChangedMessage {
 }
 
 /** Rust -> every editor window: the set of open chat windows changed. Only the
- *  backend sees chats closed from another editor window. Keep in step with Rust. */
-export const CHAT_WINDOWS_CHANGED = "chat:windows-changed";
+ *  backend sees chats closed from another editor window. */
+export { CHAT_WINDOWS_CHANGED };
 
 /** Rust -> one chat window: claim the handoff parked under your label. Sent
  *  when detaching reveals an already-open window, which won't re-read it alone. */

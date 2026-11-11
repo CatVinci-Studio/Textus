@@ -1,3 +1,4 @@
+import { TUTORIAL_CLIPS } from "../platform/bindings/app";
 import type { TextKey } from "../i18n/strings";
 import type { AgentMode } from "../prefs/SettingsContext";
 import { hasTextusAi } from "../platform/capabilities";
@@ -22,21 +23,9 @@ export type TutorialStepId =
   | "continuation"
   | "done";
 
-/** The clips on the website's tutorials page. Rust opens the page and
- *  accepts only these; keep in step with its TUTORIAL_CLIPS. */
-export const TUTORIAL_CLIPS = [
-  "wysiwyg",
-  "blocks",
-  "modes-themes",
-  "sidebar-export",
-  "ai-panel",
-  "continuation",
-  "grammar",
-  "revision",
-  "review",
-  "skills",
-  "memory",
-] as const;
+/** The clips on the website's tutorials page; Rust opens the page and
+ *  accepts only these. */
+export { TUTORIAL_CLIPS };
 
 export type TutorialClipId = (typeof TUTORIAL_CLIPS)[number];
 

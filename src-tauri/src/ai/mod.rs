@@ -30,7 +30,6 @@ pub mod workspace;
 pub(crate) const TEXTUS_AI_SETTING: &str = "textusAi";
 
 /// What a request to an AI service is refused with while Textus AI is off.
-/// Keep in step with the frontend's `AI_OFF`.
 pub(crate) const TEXTUS_AI_OFF: &str = "textus-ai-off";
 
 /// Refuses a command that would send something to an AI service while Textus

@@ -52,8 +52,7 @@ pub(crate) fn without_memory_turns(history: Vec<AgentTurn>) -> Vec<AgentTurn> {
 /// The name a memory chip's turns go by.
 pub(crate) const MEMORY_TURN: &str = "remember";
 
-/// The name a paper card's turns go by. Keep in step with the frontend's
-/// `PAPER_TURN`.
+/// The name a paper card's turns go by.
 pub(crate) const PAPER_TURN: &str = "write_paper";
 
 /// Shrinks the replayed conversation to what a writing agent still needs;

@@ -1,3 +1,4 @@
+import { PAPER_TURN } from "../../platform/bindings/ai-agent";
 import { useSyncExternalStore } from "react";
 import type { AgentTurn } from "../types";
 import type {
@@ -11,10 +12,9 @@ import type {
 } from "../../platform/bindings/ai-paper";
 import type { PaperSources } from "./paper-document";
 
-/** The name a paper card's turns go by in the conversation. Keep in step
- *  with Rust's `PAPER_TURN` (ai/agent/history.rs), which keeps them from
- *  the model. */
-export const PAPER_TURN = "write_paper";
+/** The name a paper card's turns go by in the conversation; Rust keeps
+ *  them from the model. */
+export { PAPER_TURN };
 
 /** What the conversation keeps of a paper: enough to draw its card. */
 export interface PaperCardInfo {

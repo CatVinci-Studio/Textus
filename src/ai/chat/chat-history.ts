@@ -1,3 +1,4 @@
+import { MAX_CONVERSATIONS } from "../../platform/bindings/app";
 import { useEffect, useMemo, useState } from "react";
 import type { AgentTurn } from "../types";
 import { userMessageBody } from "./user-message";
@@ -40,8 +41,7 @@ export interface ChatHistoryEntry extends ChatSummary {
 
 /** Where the browser fallback (no Rust) keeps the list. */
 const CHAT_HISTORY_KEY = "textus-chat-history";
-/** Keep in step with Rust's MAX_CONVERSATIONS. */
-const MAX_ENTRIES = 500;
+const MAX_ENTRIES = MAX_CONVERSATIONS;
 const MAX_TITLE_CHARS = 60;
 
 const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
