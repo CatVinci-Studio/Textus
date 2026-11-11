@@ -125,15 +125,17 @@ Text names a role, never a size. Sizes are set in `src/engine/tokens/design-syst
 
 | Role (`--text-…`) | Desktop | Phone | Line height | Weight  | Used for                                                                          |
 | ----------------- | ------- | ----- | ----------- | ------- | --------------------------------------------------------------------------------- |
-| `caption`         | 11      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
+| `caption`         | 12      | 12    | 1.2         | 400/500 | Badges, counts, keycaps                                                           |
 | `footnote`        | 12      | 13    | 1.4         | 400     | Hints, group titles, empty states                                                 |
-| `secondary`       | 12      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
-| `control`         | 13      | 15    | 1.2         | 400/500 | A control's label                                                                 |
-| `body`            | 13      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
+| `list`            | 13      | 17    | 1.35        | 400     | A long list read at a glance (the file tree)                                      |
+| `secondary`       | 14      | 15    | 1.4         | 400     | Text beside the main text in a dense surface (a card, a list entry's second line) |
+| `control`         | 14      | 15    | 1.2         | 400/500 | A control's label                                                                 |
+| `body`            | 14      | 17    | 1.5         | 400     | The main text of a panel, menu, list or field                                     |
 | `body-large`      | 14      | 17    | 1.5         | 400     | Main text where there is room: Settings' rows, dialogs                            |
-| `title`           | 17      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
-| `large-title`     | 22      | 34    | 1.2         | 600     | A page's own title                                                                |
+| `title`           | 18      | 17    | 1.3         | 600     | A sheet's, panel's or navigation bar's title                                      |
+| `large-title`     | 24      | 34    | 1.2         | 600     | A page's own title                                                                |
 
+- `--text-mark` (9) is not a text size: the digit in a count badge or a numbered mark.
 - Weights are 400, 500 and 600 only.
 - The line heights and weights in the table are the rule for new work; they become tokens later (Planned). Today the base sets 1.5 for text and 1.2 for controls.
 - A size written in px instead of a role MUST be `calc(Npx * var(--ui-text-scale, 1))`, and a fixed box around text scales with it.
@@ -307,7 +309,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 | Select                   | `engine/controls/Select.tsx` with the drawn arrow, in the two control heights. Native dropdowns MUST NOT be used                                                                                                                                                                                                         |
 | Checkbox                 | `.ui-check`: 15 px, `--shape-xs`, accent fill when checked                                                                                                                                                                                                                                                               |
 | Switch                   | 1.5 times its row's text tall (em-based) on every platform and text size                                                                                                                                                                                                                                                 |
-| Segmented control / tabs | Capsule track and thumb; the chosen one `--ui-selected`                                                                                                                                                                                                                                                                  |
+| Segmented control / tabs | Capsule track and thumb; the chosen one a raised `--ui-surface` thumb                                                                                                                                                                                                                                                    |
 | Tags, chips, badges      | Capsules at 20–24; tags take a tone (3.4); a chip shows a rule in force and opens it                                                                                                                                                                                                                                     |
 | Menus                    | Every menu is `ContextMenu` - at the pointer, or hung from a button with `useMenuButton` - with one panel padding (4), one item size (4×8 padding, `body`), one hover, separators (1 px, 4×8 margin). A menu that stays open while its checks are changed, or holds a note, keeps its own rows on the same surface (5.5) |
 | Dialogs                  | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`); native alert and confirm MUST NOT be used                                                                                                                                                                                                               |

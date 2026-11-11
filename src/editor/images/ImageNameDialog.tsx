@@ -66,6 +66,7 @@ export function ImageNameDialog({
           <span>{label}</span>
           <span className="image-name-input-row">
             <input
+              className="tx-input"
               aria-label={label}
               value={stem}
               aria-invalid={!valid}

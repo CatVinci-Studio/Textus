@@ -1,3 +1,4 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import {
@@ -206,14 +207,15 @@ function ShortcutRecorder({
             </button>
           )}
           {fallback && combo !== fallback && !recording && (
-            <button
-              className="text-button settings-inline-button"
-              aria-label={`${t.shortcutReset}: ${label}`}
-              title={formatCombo(fallback)}
-              onClick={() => bind(fallback)}
-            >
-              {t.shortcutReset}
-            </button>
+            <Tooltip text={formatCombo(fallback)}>
+              <button
+                className="text-button settings-inline-button"
+                aria-label={`${t.shortcutReset}: ${label}`}
+                onClick={() => bind(fallback)}
+              >
+                {t.shortcutReset}
+              </button>
+            </Tooltip>
           )}
           <button
             className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}

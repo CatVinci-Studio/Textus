@@ -175,9 +175,9 @@ export function WindowBar({
           {/* On the desktop each document says these at its own corner
               (DocumentCorner); a phone or an iPad has one, up here. */}
           {!canUseWindows && largeDoc && (
-            <span className="large-doc-badge" title={t.largeDocHint}>
-              {t.largeDocBadge}
-            </span>
+            <Tooltip text={t.largeDocHint}>
+              <span className="large-doc-badge">{t.largeDocBadge}</span>
+            </Tooltip>
           )}
           {!canUseWindows && !pages && (
             <span className="word-count">

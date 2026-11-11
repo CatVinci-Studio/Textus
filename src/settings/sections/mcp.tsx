@@ -1,3 +1,4 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { Segmented } from "../../engine/controls/Segmented";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
@@ -258,9 +259,9 @@ function ToolList({ tools }: { tools: McpToolInfo[] }) {
   return (
     <span className="mcp-tools" data-search-ignore>
       {tools.map((tool) => (
-        <span key={tool.name} className="mcp-tool" title={tool.description}>
-          {tool.name}
-        </span>
+        <Tooltip key={tool.name} text={tool.description || tool.name}>
+          <span className="mcp-tool">{tool.name}</span>
+        </Tooltip>
       ))}
     </span>
   );

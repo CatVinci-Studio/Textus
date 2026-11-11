@@ -29,14 +29,9 @@
   color: var(--ui-muted);
 }
 
-.insert-table-fields input {
-  width: 70px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: transparent;
-  color: var(--ui-text);
-  font: inherit;
+.insert-table-fields .tx-input {
+  flex: none;
+  width: 72px;
 }
 
 .insert-table-buttons {

@@ -69,6 +69,7 @@ export function InsertTableDialog({
           <label>
             {rowsLabel}
             <input
+              className="tx-input"
               type="number"
               min={1}
               max={50}
@@ -81,6 +82,7 @@ export function InsertTableDialog({
           <label>
             {columnsLabel}
             <input
+              className="tx-input"
               type="number"
               min={1}
               max={20}

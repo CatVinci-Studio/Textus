@@ -1,3 +1,4 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { fill } from "../../i18n/fill";
 import { DRAG_START_PX } from "../../utils/gesture";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -175,19 +176,20 @@ function FloatingBox({
 
   if (view.folded)
     return (
-      <button
-        type="button"
-        className="floating-view-dot"
-        style={{ left: at.left, top: at.top }}
-        aria-label={fill(t.floatingUnfold, { name: view.title })}
-        title={view.title}
-        {...dragHandlers}
-        onClick={() => {
-          if (!moved.current) moveFloating(view.view, { folded: false });
-        }}
-      >
-        {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
-      </button>
+      <Tooltip text={view.title} description={null}>
+        <button
+          type="button"
+          className="floating-view-dot"
+          style={{ left: at.left, top: at.top }}
+          aria-label={fill(t.floatingUnfold, { name: view.title })}
+          {...dragHandlers}
+          onClick={() => {
+            if (!moved.current) moveFloating(view.view, { folded: false });
+          }}
+        >
+          {view.icon ? <img src={view.icon} alt="" /> : view.title.slice(0, 1)}
+        </button>
+      </Tooltip>
     );
 
   const own = floatingMenuItems(view);

@@ -24,22 +24,6 @@
   gap: 8px;
 }
 
-.image-name-input-row input {
-  min-width: 0;
-  flex: 1;
-  padding: 8px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: transparent;
-  color: var(--ui-text);
-  font: inherit;
-}
-
-.image-name-input-row input:focus {
-  outline: none;
-  border-color: var(--ui-accent);
-}
-
 .image-name-error {
   margin-top: 8px;
   color: var(--ui-danger);
