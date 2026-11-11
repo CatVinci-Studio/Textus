@@ -179,6 +179,8 @@ export const RevisionCard = memo(
     // What the card's text is, said in its heading; the text on the line
     // under it, a chip's too.
     const original = item.shows === "new" && !!item.before.trim();
+    // Result only, new text alone: it reads in the text, the card just says so.
+    const inText = item.shows === "new" && !item.before.trim();
     const what = original
       ? labels.proposalDeletedSentence
       : !item.before.trim() && item.after.trim()
@@ -264,6 +266,10 @@ export const RevisionCard = memo(
             after={item.after}
             shows={item.shows}
           />
+        ) : inText ? (
+          <span className="visually-hidden">
+            <RevisionNoteText text={revisionText(item.after, labels)} />
+          </span>
         ) : original ? (
           // Result only: the text reads as it will; the card keeps what
           // the change takes out of it.

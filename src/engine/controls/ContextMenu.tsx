@@ -122,7 +122,10 @@ function PointerMenu({
     open,
     anchor ?? "",
   );
-  const pos = usePlacement(ref, x, y, { alignEnd });
+  const pos = usePlacement(ref, x, y, {
+    alignEnd,
+    anchor: () => anchor,
+  });
   const presence = usePresenceProps(ref);
   // It grows out of the point that was clicked - a corner, unless the menu
   // was pulled back from a window edge.

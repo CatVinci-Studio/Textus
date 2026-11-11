@@ -1,6 +1,9 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
 import type { TabState } from "./useTabState";
+import { placeOnArrival, tabInUse } from "../../engine/layout/store";
+import { moveTab } from "../../engine/layout/ops";
+import { panesOf } from "../../engine/layout/tree";
 import "./page-tabs.css";
 
 /**
@@ -47,6 +50,15 @@ export function showPage(
     ...makeBlankTab(),
     view: { plugin: "textus", view: page, kind: "page", state, title },
   };
+  // Asked for from the AI's column: into an island of documents, not the
+  // AI's narrow one.
+  const isAi = (id: string) =>
+    pageOf(tabs.tabsRef.current.find((tab) => tab.id === id)) === "ai";
+  if (page !== "ai" && isAi(tabInUse()))
+    placeOnArrival(made.id, (now) => {
+      const home = now && panesOf(now.root).find((p) => !p.tabs.some(isAi));
+      return (home && moveTab(now, made.id, home.id)) || now;
+    });
   tabs.setTabs((prev) => [...prev, made]);
   tabs.setActiveTabId(made.id);
 }
