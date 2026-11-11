@@ -1,3 +1,4 @@
+import { fnv1a } from "../../utils/hash";
 import { ai, type GeneratedImageData } from "../../platform/ipc";
 import { EDIT_ACTIONS, type EditAction, type EditProposal } from "../types";
 import { explainAiError } from "../error-messages";
@@ -82,12 +83,7 @@ function aspectSize(aspect: string): { width: number; height: number } | null {
 
 /** The stand-in id of a picture its call is still asking for. */
 function draftPictureId(callId: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < callId.length; i++) {
-    h ^= callId.charCodeAt(i);
-    h = Math.imul(h, 0x01000193) >>> 0;
-  }
-  return `draft${h.toString(36)}`;
+  return `draft${fnv1a(callId).toString(36)}`;
 }
 
 function isDraftPicture(id: string): boolean {

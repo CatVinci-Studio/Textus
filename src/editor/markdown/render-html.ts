@@ -99,18 +99,23 @@ const chatMarked = new Marked({
  * shows - a remote picture is a link to it, a style naming a URL goes - so
  * text an injected prompt puts in an address never leaves on its own.
  */
-const purify = createDOMPurify(window);
-purify.addHook("afterSanitizeAttributes", (node) => {
-  if (/url\(/i.test(node.getAttribute("style") ?? ""))
-    node.removeAttribute("style");
-  if (node.tagName !== "IMG") return;
-  const src = node.getAttribute("src") ?? "";
-  if (!/^https?:/i.test(src)) return;
-  const link = node.ownerDocument.createElement("a");
-  link.href = src;
-  link.textContent = node.getAttribute("alt") || src;
-  node.replaceWith(link);
-});
+let made: ReturnType<typeof createDOMPurify> | null = null;
+function purify() {
+  if (made) return made;
+  made = createDOMPurify(window);
+  made.addHook("afterSanitizeAttributes", (node) => {
+    if (/url\(/i.test(node.getAttribute("style") ?? ""))
+      node.removeAttribute("style");
+    if (node.tagName !== "IMG") return;
+    const src = node.getAttribute("src") ?? "";
+    if (!/^https?:/i.test(src)) return;
+    const link = node.ownerDocument.createElement("a");
+    link.href = src;
+    link.textContent = node.getAttribute("alt") || src;
+    node.replaceWith(link);
+  });
+  return made;
+}
 const AUTHORED = {
   FORBID_TAGS: ["style", "form", "button", "textarea", "select"],
 };
@@ -122,7 +127,7 @@ export function renderMarkdownHtml(markdown: string): string {
   const parsed = chatMarked.parse(normalizeMathDelimiters(markdown), {
     async: false,
   });
-  return purify.sanitize(parsed, AUTHORED);
+  return purify().sanitize(parsed, AUTHORED);
 }
 
 // Footnotes, which marked has no syntax for: a reference `[^2]` as its
@@ -188,7 +193,7 @@ const documentMarked = new Marked({
   breaks: false,
   extensions: [
     ...mathExtensions((source, display, block) => {
-      mathSlots.push(purify.sanitize(mathHtml(source, display, block)));
+      mathSlots.push(purify().sanitize(mathHtml(source, display, block)));
       return `<${MATH_SLOT_TAG} data-slot="${mathSlots.length - 1}"></${MATH_SLOT_TAG}>`;
     }),
     ...footnotes,
@@ -249,5 +254,5 @@ export function renderMarkdownInlineHtml(markdown: string): string {
   const parsed = inlineMarked.parseInline(normalizeMathDelimiters(markdown), {
     async: false,
   });
-  return purify.sanitize(parsed, AUTHORED);
+  return purify().sanitize(parsed, AUTHORED);
 }

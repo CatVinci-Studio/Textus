@@ -1,3 +1,4 @@
+import { CJK_SCRIPT } from "../../utils/cjk";
 import { focusInPlace } from "../../editor/focus-in-place";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import { useCallback, useRef, useState, type MouseEvent } from "react";
@@ -46,9 +47,6 @@ function popoverFor(
   };
 }
 
-const CJK_CHAR =
-  /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]$/u;
-
 /** A one-character CJK fix (必 -> 毕 for 必竟) shown with its neighbour on
  *  the card, while Apply still changes only the one. */
 function withContext(
@@ -57,16 +55,16 @@ function withContext(
   spec: GrammarDecorationSpec,
 ): { original: string; suggestion: string } | null {
   const original = spec.original ?? "";
-  if ([...original].length !== 1 || !CJK_CHAR.test(original)) return null;
+  if ([...original].length !== 1 || !CJK_SCRIPT.test(original)) return null;
   const $pos = state.doc.resolve(deco.from);
   const end = $pos.end();
   const start = $pos.start();
   const next = deco.to < end ? state.doc.textBetween(deco.to, deco.to + 1) : "";
-  if (CJK_CHAR.test(next))
+  if (CJK_SCRIPT.test(next))
     return { original: original + next, suggestion: spec.suggestion + next };
   const prev =
     deco.from > start ? state.doc.textBetween(deco.from - 1, deco.from) : "";
-  if (CJK_CHAR.test(prev))
+  if (CJK_SCRIPT.test(prev))
     return { original: prev + original, suggestion: prev + spec.suggestion };
   return null;
 }

@@ -4,6 +4,8 @@
  * never `red` or `var(--x)`.
  */
 
+import { CJK_SCRIPT } from "../../utils/cjk";
+
 const NUM = String.raw`[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?`;
 const PCT = `${NUM}%`;
 const NUM_OR_PCT = `${NUM}%?`;
@@ -66,15 +68,13 @@ const FUNCTION_RE = new RegExp(`(?:${FUNCTION_FORMS.join("|")})`, "gi");
 
 // Scripts written without spaces between words, where a colour code can
 // follow a letter directly: 颜色#ff8800.
-const CJK =
-  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 // Next to a hex code, these make it part of something else: a word, a path
 // or URL, a footnote, another tag.
 const WORDLIKE = /[\p{L}\p{N}_\-#/\\@&=?%~+^*$]/u;
 const BEFORE_FUNCTION = /[\p{L}\p{N}_\-.]/u;
 
 const isWordlike = (ch: string | undefined) =>
-  ch !== undefined && WORDLIKE.test(ch) && !CJK.test(ch);
+  ch !== undefined && WORDLIKE.test(ch) && !CJK_SCRIPT.test(ch);
 
 // English words spelled in hex digits: tags, not colours (#facade).
 const HEX_WORDS = new Set([
@@ -126,7 +126,7 @@ export function findColorCodes(text: string, inCode = false): ColorCode[] {
     if (
       before !== undefined &&
       BEFORE_FUNCTION.test(before) &&
-      !CJK.test(before)
+      !CJK_SCRIPT.test(before)
     )
       continue;
     if (inUrl(tokenAround(text, from, to))) continue;

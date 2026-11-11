@@ -1,3 +1,4 @@
+import { fnv1a } from "../../utils/hash";
 import { revealPosition } from "../../editor/reveal-position";
 import type { Ctx } from "@milkdown/kit/ctx";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -131,12 +132,7 @@ export function selectionText(ctx: Ctx): string {
 /** A short name for the document's version: changes whenever its text
  *  does. */
 export function documentRevision(markdown: string): string {
-  let h = 0x811c9dc5;
-  for (let i = 0; i < markdown.length; i++) {
-    h ^= markdown.charCodeAt(i);
-    h = Math.imul(h, 0x01000193);
-  }
-  return `${markdown.length}-${(h >>> 0).toString(36)}`;
+  return `${markdown.length}-${fnv1a(markdown).toString(36)}`;
 }
 
 /**
