@@ -1,14 +1,11 @@
-import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
 
 import type { CreateKind } from "../../ai/chat/create-request";
 
 export type { CreateKind };
 
-/** The kinds offered, plugins first where the app shows them. */
-export function createKinds(pluginsShown = PLUGINS_SHOWN): CreateKind[] {
-  return pluginsShown ? ["plugin", "theme", "skill"] : ["theme", "skill"];
-}
+/** The kinds offered, plugins first. */
+export const CREATE_KINDS: readonly CreateKind[] = ["plugin", "theme", "skill"];
 
 /** The first message: the kind's skill called by name, so the AI starts
  *  with its instructions loaded instead of guessing what is wanted. */

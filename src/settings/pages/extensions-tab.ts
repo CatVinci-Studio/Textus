@@ -1,21 +1,17 @@
 // Which tab Settings › Extensions opens on, kept apart from the page so
 // what links there needn't load it.
 
-import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
 
 export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp" | "create";
 
-/** The page's tabs, in order; Plugins only where the app shows plugins,
- *  MCP servers only where the app can run their programs. Create, where
- *  Textus AI makes a theme, plugin or skill, comes last. */
-export function extensionsTabs(
-  pluginsShown = PLUGINS_SHOWN,
-  mcp = isDesktopApp,
-): ExtensionsTab[] {
+/** The page's tabs, in order; MCP servers only where the app can run their
+ *  programs. Create, where Textus AI makes a theme, plugin or skill, comes
+ *  last. */
+export function extensionsTabs(mcp = isDesktopApp): ExtensionsTab[] {
   return [
     "themes",
-    ...(pluginsShown ? (["plugins"] as const) : []),
+    "plugins",
     "skills",
     ...(mcp ? (["mcp"] as const) : []),
     "create",

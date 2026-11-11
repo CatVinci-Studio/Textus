@@ -6,7 +6,6 @@ import {
   GoToIcon,
   PluginsTabIcon,
 } from "../../engine/controls/icons";
-import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -99,7 +98,7 @@ export function SettingsNavPanel() {
   });
   // Plugins' own settings are in their panel: the way there, before
   // Shortcuts.
-  const pluginsItem = PLUGINS_SHOWN && isDesktopApp && (
+  const pluginsItem = isDesktopApp && (
     <button
       type="button"
       key="plugins"

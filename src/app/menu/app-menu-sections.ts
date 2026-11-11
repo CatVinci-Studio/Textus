@@ -1,4 +1,3 @@
-import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import type { Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
@@ -117,13 +116,11 @@ export function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   ];
 }
 
-/** The Plugins menu: plugin commands, then Manage Plugins…; none where the
- *  app doesn't show plugins. */
+/** The Plugins menu: plugin commands, then Manage Plugins…. */
 export function pluginsMenu(
   t: Strings,
   plugins: readonly PluginMenuEntry[],
 ): MenuNode[] {
-  if (!PLUGINS_SHOWN) return [];
   return [
     {
       label: t.menuPlugins,

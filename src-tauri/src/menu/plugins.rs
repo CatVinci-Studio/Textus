@@ -2,9 +2,6 @@
 
 use super::*;
 
-/// Whether the bar has a Plugins menu.
-pub(crate) const PLUGINS_SHOWN: bool = true;
-
 /// Plugins menu ids carry the command to run: "plugin-command:<command>".
 pub(crate) const PLUGIN_COMMAND_PREFIX: &str = "plugin-command:";
 /// Plugins > Manage Plugins…: Settings, at its Plugins page.

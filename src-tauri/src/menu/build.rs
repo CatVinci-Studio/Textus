@@ -398,18 +398,16 @@ pub(crate) fn build(
         .text(REPORT_ID, l(REPORT_ID, "Report a Problem…"))
         .build()?;
 
-    // Filled by rebuild_plugin_menu from the enabled plugins; none where plugins
-    // aren't shown.
-    let plugins_menu = if PLUGINS_SHOWN {
-        Some(SubmenuBuilder::new(app, l("menu:plugins", "Plugins")).build()?)
-    } else {
-        None
-    };
-    let mut items: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
-        vec![&app_menu, &file_menu, &edit_menu, &format_menu, &view_menu];
-    if let Some(plugins) = &plugins_menu {
-        items.push(plugins);
-    }
+    // Filled by rebuild_plugin_menu from the enabled plugins.
+    let plugins_menu = SubmenuBuilder::new(app, l("menu:plugins", "Plugins")).build()?;
+    let mut items: Vec<&dyn tauri::menu::IsMenuItem<Wry>> = vec![
+        &app_menu,
+        &file_menu,
+        &edit_menu,
+        &format_menu,
+        &view_menu,
+        &plugins_menu,
+    ];
     items.extend([
         &window_menu as &dyn tauri::menu::IsMenuItem<Wry>,
         &help_menu,
@@ -430,7 +428,7 @@ pub(crate) fn build(
     Ok(BuiltMenu {
         menu,
         open_recent: open_recent_menu,
-        plugins: plugins_menu,
+        plugins: Some(plugins_menu),
         check_items,
     })
 }

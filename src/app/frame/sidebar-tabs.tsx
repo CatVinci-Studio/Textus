@@ -14,7 +14,6 @@ import {
 import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { PLUGINS_SHOWN } from "../../plugins/store/availability";
 import { isDesktopApp } from "../../platform/capabilities";
 import { SearchPanel } from "../../files/SearchPanel";
 import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
@@ -157,7 +156,7 @@ const PLUGINS_TAB: SidebarTabDef = {
   ),
 };
 
-const pluginsTab = () => (PLUGINS_SHOWN && isDesktopApp ? [PLUGINS_TAB] : []);
+const pluginsTab = () => (isDesktopApp ? [PLUGINS_TAB] : []);
 
 // Settings' pages, loaded when the gear first opens them.
 const SettingsNavPanel = lazyComponent(

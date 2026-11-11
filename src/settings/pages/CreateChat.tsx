@@ -18,7 +18,7 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import { useBoxSlide } from "./useBoxSlide";
 import {
   CREATE_EXAMPLES,
-  createKinds,
+  CREATE_KINDS,
   createMessage,
   type CreateKind,
 } from "./create-studio";
@@ -26,7 +26,7 @@ import {
 /** Nothing is being written: what is made goes in the reply, and is
  *  installed from the card under it. */
 const NO_DOCUMENT: DocumentSnapshot = { markdown: "", blocks: [] };
-const KINDS = createKinds();
+const KINDS = CREATE_KINDS;
 /** The starting points under the empty box, one of each kind. */
 const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
 
