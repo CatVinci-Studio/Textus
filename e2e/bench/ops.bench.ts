@@ -15,9 +15,16 @@ const OUT = process.env.BENCH_OUT ?? "test-results/ops-bench.json";
 const LONG = Array.from({ length: 12 }, () => SAMPLE_DOC).join("\n\n");
 const results: Record<string, number> = {};
 
+/** The CPU slowed from the start; the network only once the window is up:
+ *  the dev server's hundreds of modules would make a slow network the
+ *  whole of the startup, which the app, read from disk, never pays. */
 async function slow(page: Page) {
   const cdp = await page.context().newCDPSession(page);
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: CPU });
+  return cdp;
+}
+
+async function slowNetwork(cdp: Awaited<ReturnType<typeof slow>>) {
   await cdp.send("Network.enable");
   await cdp.send("Network.emulateNetworkConditions", {
     offline: false,
@@ -25,7 +32,6 @@ async function slow(page: Page) {
     downloadThroughput: (1.5 * 1024 * 1024) / 8,
     uploadThroughput: (750 * 1024) / 8,
   });
-  return cdp;
 }
 
 /** Milliseconds from a key's press to the frame that shows it, median. */
@@ -70,6 +76,7 @@ test("everyday operations on a weak machine", async ({ page }) => {
   const start = Date.now();
   await openApp(page, { settings: { language: "en" } });
   results.startupMs = Date.now() - start;
+  await slowNetwork(cdp);
 
   const open = async (path: string, heading: string) => {
     const t0 = Date.now();
