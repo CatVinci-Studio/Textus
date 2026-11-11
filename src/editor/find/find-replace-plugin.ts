@@ -2,74 +2,21 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { escapeRegExp } from "../../utils/regexp";
+import {
+  compileQuery,
+  matchesIn,
+  nextFind,
+  NO_FIND,
+  type FindMeta,
+  type FindReplaceMatch,
+  type FindState,
+} from "./find-query";
 
-export const findReplaceKey = new PluginKey<FindReplaceState>("find-replace");
-
-export interface FindReplaceMatch {
-  from: number;
-  to: number;
-  /** The exact matched text. */
-  text: string;
-  /** What the query captured, as found in its text block: a regex
-   *  replacement's $1, $<name>. */
-  groups: (string | undefined)[];
-  named?: Record<string, string | undefined>;
-}
-
-/** A regex replacement for one match: $1, $<name>, $& and $$ written out
- *  from what was captured where it was found. */
-export function expandReplacement(
-  replacement: string,
-  match: FindReplaceMatch,
-): string {
-  return replacement.replace(
-    /\$(\$|&|<([^>]+)>|\d{1,2})/g,
-    (all, token: string, name?: string) => {
-      if (token === "$") return "$";
-      if (token === "&") return match.text;
-      if (name !== undefined) return match.named?.[name] ?? "";
-      const n = Number(token);
-      return n >= 1 && n < match.groups.length ? (match.groups[n] ?? "") : all;
-    },
-  );
-}
-
-interface FindReplaceState {
-  query: string;
-  caseSensitive: boolean;
-  useRegex: boolean;
-  /** Set when a regex-mode `query` fails to compile; matches is then empty. */
-  error: boolean;
-  matches: FindReplaceMatch[];
-  activeIndex: number;
+interface FindReplaceState extends FindState {
   decorations: DecorationSet;
 }
 
-type FindReplaceMeta =
-  | { type: "search"; query: string; caseSensitive: boolean; useRegex: boolean }
-  | { type: "setActive"; index: number }
-  | { type: "clear" };
-
-/**
- * The one place a find query becomes a RegExp, so search and replacement
- * can't drift apart. Null when a regex-mode query doesn't compile.
- */
-function compileQuery(
-  query: string,
-  caseSensitive: boolean,
-  useRegex: boolean,
-  global = true,
-): RegExp | null {
-  try {
-    return new RegExp(
-      useRegex ? query : escapeRegExp(query),
-      `${caseSensitive ? "" : "i"}${global ? "g" : ""}`,
-    );
-  } catch {
-    return null;
-  }
-}
+export const findReplaceKey = new PluginKey<FindReplaceState>("find-replace");
 
 /**
  * Flattens a textblock's inline content, nested enclosures included, into a
@@ -92,6 +39,7 @@ function textblockCharMap(
   return { text, posMap };
 }
 
+/** The query's matches in the document's text, block by block. */
 export function computeMatches(
   doc: ProseNode,
   query: string,
@@ -99,128 +47,55 @@ export function computeMatches(
   useRegex: boolean,
 ): { matches: FindReplaceMatch[]; error: boolean } {
   if (!query) return { matches: [], error: false };
-
   const regex = compileQuery(query, caseSensitive, useRegex);
   if (!regex) return { matches: [], error: true };
-
   const matches: FindReplaceMatch[] = [];
   doc.descendants((node, pos) => {
     if (!node.isTextblock) return true;
-
     const { text, posMap } = textblockCharMap(node, pos + 1);
-    regex.lastIndex = 0;
-    let m: RegExpExecArray | null;
-    while ((m = regex.exec(text)) !== null) {
-      const start = m.index;
-      const end = start + m[0].length;
-      matches.push({
+    matches.push(
+      ...matchesIn(text, regex, (start, end) => ({
         from: posMap[start],
-        // The next character may sit outside an inline enclosure, past node tokens
-        // that aren't matched.
+        // The next character may sit outside an inline enclosure, past
+        // node tokens that aren't matched.
         to: end > start ? posMap[end - 1] + 1 : posMap[start],
-        text: m[0],
-        groups: [...m],
-        named: m.groups,
-      });
-      // Zero-width matches would otherwise spin forever.
-      regex.lastIndex = end > start ? end : end + 1;
-    }
+      })),
+    );
     return false;
   });
-
   return { matches, error: false };
 }
 
-function buildDecorations(
-  doc: ProseNode,
-  matches: FindReplaceMatch[],
-  activeIndex: number,
-): DecorationSet {
-  const decorations = matches.map((match, i) =>
+function decorated(doc: ProseNode, find: FindState): FindReplaceState {
+  const decorations = find.matches.map((match, i) =>
     Decoration.inline(match.from, match.to, {
-      class: i === activeIndex ? "find-match find-match-active" : "find-match",
+      class:
+        i === find.activeIndex ? "find-match find-match-active" : "find-match",
     }),
   );
-  return DecorationSet.create(doc, decorations);
+  return { ...find, decorations: DecorationSet.create(doc, decorations) };
 }
 
-const EMPTY_STATE: FindReplaceState = {
-  query: "",
-  caseSensitive: false,
-  useRegex: false,
-  error: false,
-  matches: [],
-  activeIndex: -1,
-  decorations: DecorationSet.empty,
-};
-
 /**
- * Search/highlight engine for the find & replace bar, driven by meta
- * commands; inert until a query is set.
+ * Search/highlight engine for the find & replace bar in the rich editor,
+ * driven by meta commands; inert until a query is set.
  */
 export const findReplacePlugin = $prose(
   () =>
     new Plugin<FindReplaceState>({
       key: findReplaceKey,
       state: {
-        init: () => EMPTY_STATE,
+        init: () => ({ ...NO_FIND, decorations: DecorationSet.empty }),
         apply(tr, prev) {
-          const meta = tr.getMeta(findReplaceKey) as
-            FindReplaceMeta | undefined;
-
-          if (meta?.type === "clear") return EMPTY_STATE;
-
-          if (meta?.type === "search") {
-            const { matches, error } = computeMatches(
-              tr.doc,
-              meta.query,
-              meta.caseSensitive,
-              meta.useRegex,
-            );
-            // The first match from the caret on (wrapping), not the document's first.
-            const caret = tr.selection.from;
-            const fromCaret = matches.findIndex((m) => m.from >= caret);
-            const activeIndex = matches.length ? Math.max(fromCaret, 0) : -1;
-            return {
-              query: meta.query,
-              caseSensitive: meta.caseSensitive,
-              useRegex: meta.useRegex,
-              error,
-              matches,
-              activeIndex,
-              decorations: buildDecorations(tr.doc, matches, activeIndex),
-            };
-          }
-
-          if (meta?.type === "setActive") {
-            return {
-              ...prev,
-              activeIndex: meta.index,
-              decorations: buildDecorations(tr.doc, prev.matches, meta.index),
-            };
-          }
-
-          if (!tr.docChanged || !prev.query) return prev;
-
-          // Live re-search, so results follow edits.
-          const { matches, error } = computeMatches(
-            tr.doc,
-            prev.query,
-            prev.caseSensitive,
-            prev.useRegex,
+          const meta = tr.getMeta(findReplaceKey) as FindMeta | undefined;
+          const next = nextFind(
+            prev,
+            meta,
+            tr.docChanged,
+            tr.selection.from,
+            (q, cs, re) => computeMatches(tr.doc, q, cs, re),
           );
-          const activeIndex = matches.length
-            ? prev.activeIndex < 0
-              ? 0
-              : Math.min(prev.activeIndex, matches.length - 1)
-            : -1;
-          return {
-            ...prev,
-            error,
-            matches,
-            activeIndex,
-            decorations: buildDecorations(tr.doc, matches, activeIndex),
-          };
+          return next === prev ? prev : decorated(tr.doc, next);
         },
       },
       props: {

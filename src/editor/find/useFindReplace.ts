@@ -1,18 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { editorViewCtx } from "@milkdown/kit/core";
-import { closeHistory } from "@milkdown/kit/prose/history";
-import { TextSelection } from "@milkdown/kit/prose/state";
-import type { EditorView } from "@milkdown/kit/prose/view";
 import {
   expandReplacement,
-  findReplaceKey,
   type FindReplaceMatch,
-} from "./find-replace-plugin";
+  type FindState,
+} from "./find-query";
+import type { FindBackend } from "./find-backend";
 import { scrollBehavior } from "../../engine/motion/motion";
-import type { EditorRunner } from "../useEditorRunner";
 import { isImeKeydown } from "../../utils/ime";
-import { SMOOTH_SCROLL_MS } from "../lazy-blocks/lazy-blocks-drawer";
-import { makeReachable } from "../reveal-position";
 
 interface FindReplaceStatus {
   matchCount: number;
@@ -26,39 +20,17 @@ const IDLE_STATUS: FindReplaceStatus = {
   error: false,
 };
 
-/** The bar-facing view of the plugin's state, read back after a dispatch. */
-function readStatus(view: EditorView): FindReplaceStatus {
-  const s = findReplaceKey.getState(view.state);
-  return s
-    ? {
-        matchCount: s.matches.length,
-        activeIndex: s.activeIndex,
-        error: s.error,
-      }
-    : IDLE_STATUS;
-}
+const statusOf = (s: FindState): FindReplaceStatus => ({
+  matchCount: s.matches.length,
+  activeIndex: s.activeIndex,
+  error: s.error,
+});
 
-function scrollToActive(view: EditorView, behavior = scrollBehavior()) {
-  const s = findReplaceKey.getState(view.state);
-  const match = s?.matches[s.activeIndex];
-  if (!match) return;
-  makeReachable(
-    view,
-    match.from,
-    match.to,
-    behavior === "smooth" ? SMOOTH_SCROLL_MS : 0,
-  );
-  try {
-    const dom = view.domAtPos(match.from).node;
-    const el = dom instanceof Element ? dom : dom.parentElement;
-    el?.scrollIntoView({ block: "center", behavior });
-  } catch {
-    // Not representable in the DOM right now.
-  }
-}
+const activeOf = (s: FindState) => s.matches[s.activeIndex];
 
-/** Owns the find & replace bar's open state and drives the plugin. */
-export function useFindReplace(run: EditorRunner) {
+/** Owns the find & replace bar's open state and drives its editor's search,
+ *  the rich document's or its source's (`editor`). */
+export function useFindReplace(editor: FindBackend) {
   const [open, setOpenState] = useState(false);
   // The window-event listeners are re-attached after each render, so a quick
   // second Find event can reach stale callbacks; reading `open` there closed
@@ -85,21 +57,17 @@ export function useFindReplace(run: EditorRunner) {
   // a kept query when the bar reopens.
   useEffect(() => {
     if (!open) return;
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(
-        view.state.tr.setMeta(findReplaceKey, {
-          type: "search",
-          query,
-          caseSensitive,
-          useRegex,
-        }),
-      );
-      setStatus(readStatus(view));
-      // Instant: a smooth scroll per keystroke would chase its own tail.
-      if (query) scrollToActive(view, "auto");
+    const found = editor.apply({
+      type: "search",
+      query,
+      caseSensitive,
+      useRegex,
     });
-  }, [open, query, caseSensitive, useRegex, run]);
+    setStatus(statusOf(found));
+    // Instant: a smooth scroll per keystroke would chase its own tail.
+    const active = activeOf(found);
+    if (query && active) editor.reveal(active, false);
+  }, [open, query, caseSensitive, useRegex, editor]);
 
   const toggleCaseSensitive = useCallback(
     () => setCaseSensitive((v) => !v),
@@ -109,21 +77,17 @@ export function useFindReplace(run: EditorRunner) {
 
   const step = useCallback(
     (delta: 1 | -1) => {
-      run((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const s = findReplaceKey.getState(view.state);
-        if (!s || s.matches.length === 0) return;
-        const index =
-          (s.activeIndex + delta + s.matches.length) % s.matches.length;
-        view.dispatch(
-          view.state.tr.setMeta(findReplaceKey, { type: "setActive", index }),
-        );
-        stepped.current = true;
-        setStatus(readStatus(view));
-        scrollToActive(view);
-      });
+      const s = editor.state();
+      if (s.matches.length === 0) return;
+      const index =
+        (s.activeIndex + delta + s.matches.length) % s.matches.length;
+      const found = editor.apply({ type: "setActive", index });
+      stepped.current = true;
+      setStatus(statusOf(found));
+      const active = activeOf(found);
+      if (active) editor.reveal(active, scrollBehavior() === "smooth");
     },
-    [run],
+    [editor],
   );
 
   const next = useCallback(() => step(1), [step]);
@@ -139,83 +103,55 @@ export function useFindReplace(run: EditorRunner) {
     [useRegex, replacement],
   );
 
-  const replaceOne = useCallback(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const s = findReplaceKey.getState(view.state);
-      const match = s?.matches[s.activeIndex];
-      if (!match) return;
-      // A replacement is an undo step of its own, as in Word.
-      view.dispatch(
-        closeHistory(
-          view.state.tr.insertText(makeReplacer()(match), match.from, match.to),
-        ),
-      );
-      view.focus();
-      setStatus(readStatus(view));
-    });
-  }, [run, makeReplacer]);
-
-  const replaceAll = useCallback(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const s = findReplaceKey.getState(view.state);
-      if (!s || s.matches.length === 0) return;
+  /** `matches` replaced, as one undo step. */
+  const replaceMatches = useCallback(
+    (matches: FindReplaceMatch[]) => {
+      if (!matches.length) return;
       const replace = makeReplacer();
-      let tr = view.state.tr;
-      // Reverse order, so a replacement never shifts matches still to come.
-      for (let i = s.matches.length - 1; i >= 0; i--) {
-        const match = s.matches[i];
-        tr = tr.insertText(replace(match), match.from, match.to);
-      }
-      view.dispatch(closeHistory(tr));
-      view.focus();
-      setStatus(readStatus(view));
-    });
-  }, [run, makeReplacer]);
+      editor.replace(
+        matches.map((m) => ({ from: m.from, to: m.to, text: replace(m) })),
+      );
+      setStatus(statusOf(editor.state()));
+    },
+    [editor, makeReplacer],
+  );
+  const replaceOne = useCallback(() => {
+    const match = activeOf(editor.state());
+    if (match) replaceMatches([match]);
+  }, [editor, replaceMatches]);
+  const replaceAll = useCallback(
+    () => replaceMatches(editor.state().matches),
+    [editor, replaceMatches],
+  );
 
   const close = useCallback(() => {
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const s = findReplaceKey.getState(view.state);
-      const match = stepped.current ? s?.matches[s.activeIndex] : undefined;
-      const tr = view.state.tr.setMeta(findReplaceKey, { type: "clear" });
-      if (match)
-        tr.setSelection(TextSelection.create(tr.doc, match.from, match.to));
-      view.dispatch(tr);
-      view.focus();
-    });
+    const match = stepped.current ? activeOf(editor.state()) : undefined;
+    editor.clear(match ?? null, true);
     setOpen(false);
     setStatus(IDLE_STATUS);
-  }, [run, setOpen]);
+  }, [editor, setOpen]);
 
   /** Closes the bar without focusing the document: something else is taking
    *  the screen, and focus would bring the iPhone keyboard up under it. */
   const dismiss = useCallback(() => {
     if (!openRef.current) return;
-    run((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      view.dispatch(view.state.tr.setMeta(findReplaceKey, { type: "clear" }));
-    });
+    editor.clear(null, false);
     setOpen(false);
     setStatus(IDLE_STATUS);
-  }, [run, setOpen]);
+  }, [editor, setOpen]);
 
   /** Find: opens the bar, or takes the focus back to it. Words selected on
    *  one line become the query. */
   const show = useCallback(() => {
-    run((ctx) => {
-      const { selection, doc } = ctx.get(editorViewCtx).state;
-      const words = doc.textBetween(selection.from, selection.to, "\n");
-      if (words.trim() && !words.includes("\n") && words.length <= 200)
-        setQuery(words);
-    });
+    const words = editor.selectedText();
+    if (words.trim() && !words.includes("\n") && words.length <= 200)
+      setQuery(words);
     if (openRef.current) setFocusRequest((n) => n + 1);
     else {
       stepped.current = false;
       setOpen(true);
     }
-  }, [run, setOpen]);
+  }, [editor, setOpen]);
 
   /** Replace…: the bar with its replace row open. */
   const showReplace = useCallback(() => {
@@ -239,15 +175,13 @@ export function useFindReplace(run: EditorRunner) {
       // Escape mid-composition cancels the IME candidate, not the bar.
       if (isImeKeydown(e) || e.key !== "Escape") return;
       const at = e.target instanceof Element ? e.target : null;
-      let ours = !!at?.closest(".find-replace-bar");
-      run((ctx) => {
-        ours ||= !!at && ctx.get(editorViewCtx).dom.contains(at);
-      });
+      const ours =
+        !!at && (!!at.closest(".find-replace-bar") || editor.contains(at));
       if (ours) close();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, close, run]);
+  }, [open, close, editor]);
 
   return {
     open,

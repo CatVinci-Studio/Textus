@@ -38,3 +38,27 @@ test("the Edit menu's Undo, Redo and Select All act on the document in use", asy
   // The first island's document kept its own.
   expect(await text(page, 0)).toBe("alpha");
 });
+
+test("Find and Replace work in source mode, on the source in use", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await docs(page).first().click();
+  await page.keyboard.type("cat dog cat");
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(".source-view .cm-content");
+  await expect(source).toContainText("cat dog cat");
+  await source.click();
+  await emit(page, "menu-find-replace");
+  const bar = page.locator(".find-replace-bar");
+  await expect(bar).toBeVisible();
+  await bar.getByRole("textbox").first().fill("cat");
+  await expect(page.locator(".source-view .find-match")).toHaveCount(2);
+  await emit(page, "menu-replace");
+  await bar.getByRole("textbox").nth(1).fill("cow");
+  await bar.getByRole("button", { name: /全部替换|Replace All/ }).click();
+  await expect(source).toContainText("cow dog cow");
+  await page.keyboard.press("Escape");
+  await expect(bar).toHaveCount(0);
+});

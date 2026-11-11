@@ -1,3 +1,5 @@
+import { sourceFind } from "../find/cm-find";
+import { useSourceFind } from "../find/useSourceFind";
 import { useEffect, useRef } from "react";
 import {
   Annotation,
@@ -115,6 +117,7 @@ export function SourceEditor({
           // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
           // Textus's own find bar), and Tab moves the focus as in any field.
           keymap.of([...standardKeymap, ...historyKeymap]),
+          sourceFind,
           sourceHighlighting(),
           sourceEscapes(),
           // A caller's paste handler (a document's source stores pictures);
@@ -172,7 +175,27 @@ export function SourceEditor({
     };
   }, []);
 
-  // The tab's markdown can change from outside: open, reload, an AI edit.
+  useFollowProps(viewRef, readOnlyRef, value, readOnly);
+  const findBar = useSourceFind(viewRef);
+  return (
+    <>
+      <div
+        ref={hostRef}
+        className={`source-view tx-scroll-reveal ${className}${typewriter ? " typewriter-source" : ""}`}
+      />
+      {findBar}
+    </>
+  );
+}
+
+/** The view follows its props: the tab's markdown changed from outside
+ *  (open, reload, an AI edit), and read-only switched. */
+function useFollowProps(
+  viewRef: React.RefObject<EditorView | null>,
+  readOnlyRef: React.RefObject<Compartment | null>,
+  value: string,
+  readOnly: boolean,
+) {
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -203,7 +226,7 @@ export function SourceEditor({
       },
       annotations: [Transaction.addToHistory.of(false), outside.of(true)],
     });
-  }, [value]);
+  }, [value, viewRef]);
 
   useEffect(() => {
     const view = viewRef.current;
@@ -212,12 +235,5 @@ export function SourceEditor({
       view.dispatch({
         effects: compartment.reconfigure(readOnlyOf(readOnly)),
       });
-  }, [readOnly]);
-
-  return (
-    <div
-      ref={hostRef}
-      className={`source-view tx-scroll-reveal ${className}${typewriter ? " typewriter-source" : ""}`}
-    />
-  );
+  }, [readOnly, viewRef, readOnlyRef]);
 }

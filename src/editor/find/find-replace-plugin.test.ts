@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Schema } from "@milkdown/kit/prose/model";
 import { EditorState } from "@milkdown/kit/prose/state";
-import { computeMatches, expandReplacement } from "./find-replace-plugin";
+import { computeMatches } from "./find-replace-plugin";
+import { expandReplacement } from "./find-query";
 
 const schema = new Schema({
   nodes: {
