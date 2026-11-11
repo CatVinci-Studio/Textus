@@ -1,3 +1,5 @@
+import { grants } from "../api-permissions";
+import type { PluginTabInfo } from "../app-bridge";
 import { mayOpen } from "../may-open";
 import { emitToThisWindow } from "../../platform/menu-events";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
@@ -59,6 +61,19 @@ function hostGranted(p: PluginScope, host: string): boolean {
  * a new document, and what the window shows. Opening a file needs files.read,
  * except the file a view of the plugin's already shows.
  */
+/** A tab as plugin `id` may see it: what file or page it shows, and its
+ *  name, only with a permission to read documents - its own views always. */
+export function seenBy<T extends PluginTabInfo | null>(
+  id: string,
+  granted: readonly string[],
+  tab: T,
+): T {
+  if (!tab || tab.plugin === id) return tab;
+  const reads =
+    grants(granted, "files.read") || granted.includes("editor.read");
+  return reads ? tab : { ...tab, path: null, title: "" };
+}
+
 export function layoutHandlers(p: PluginScope) {
   const access = () => {
     const w = getWindowAccess();
@@ -169,8 +184,12 @@ export function layoutHandlers(p: PluginScope) {
           place: v.place,
           side: floatingSide(v),
         })),
-    "layout.activeTab": () => access().activeTab(),
-    "layout.tabs": () => access().tabs(),
+    "layout.activeTab": () =>
+      seenBy(p.id, p.info.granted, access().activeTab()),
+    "layout.tabs": () =>
+      access()
+        .tabs()
+        .map((tab) => seenBy(p.id, p.info.granted, tab)),
     "layout.panels": () => panelsState(),
     "layout.split": () => {
       // The outermost way the panes run, and each pane's tab in front.

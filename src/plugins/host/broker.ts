@@ -5,6 +5,7 @@ import {
   getWindowAccess,
   onPluginEvent,
   type PluginEventMap,
+  type PluginTabInfo,
 } from "../app-bridge";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
@@ -15,7 +16,7 @@ import {
   type PluginManifest,
 } from "../store/manifest";
 import { fileHandlers } from "./broker-files";
-import { layoutHandlers } from "./broker-layout";
+import { layoutHandlers, seenBy } from "./broker-layout";
 import { editorHandlers, stopPluginEditor } from "./broker-editor";
 import { metadataHandlers } from "./broker-metadata";
 import { stopPluginUi, uiHandlers } from "./broker-ui";
@@ -364,7 +365,14 @@ export class PluginHost {
               ? onPluginEvent(event, (data) => {
                   if (data.plugin === this.id) this.event(event, data);
                 })
-              : onPluginEvent(event, (data) => this.event(event, data)),
+              : event === "activeTab"
+                ? onPluginEvent(event, (data) =>
+                    this.event(
+                      event,
+                      seenBy(this.id, this.info.granted, data as PluginTabInfo),
+                    ),
+                  )
+                : onPluginEvent(event, (data) => this.event(event, data)),
         );
       },
       "plugin.readFile": ({ path }: Params) =>
