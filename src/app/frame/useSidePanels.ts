@@ -10,7 +10,10 @@ import { isIOSApp } from "../../platform/capabilities";
 import { keyboardUp, whenKeyboardDown } from "../../mobile/keyboard";
 import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
-import { useAgentPanelState } from "../../ai/chat/panel/agent-panel";
+import {
+  useAgentPanelOpen,
+  useAgentPanelState,
+} from "../../ai/chat/panel/agent-panel";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useNarrowSidebar } from "./useNarrowSidebar";
 import { useSidebarWidth } from "./sidebar-width";
@@ -82,12 +85,9 @@ export function useSidePanels(aiOn: boolean) {
   // the document keeps its room after all of them.
   const rail = railShown(settings) ? Math.round(RAIL_WIDTH * chromeScale()) : 0;
   // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
-  // a small window still keeps the document its room (the panel's open
-  // state, one render late, is enough: it only bounds the sidebar). On the
-  // desktop the AI is an island: the solver keeps its room.
-  const [agentShown, setAgentShown] = useState(
-    () => getUiState("agentPanelOpen") === true,
-  );
+  // a small window still keeps the document its room. On the desktop the AI
+  // is an island: the solver keeps its room.
+  const agentShown = useAgentPanelOpen();
   const scale = chromeScale();
   const sidebarWidth = useSidebarWidth(
     windowWidth,
@@ -104,7 +104,6 @@ export function useSidePanels(aiOn: boolean) {
     windowWidth,
     rail + (open ? sidebarWidth.width : 0),
   );
-  useEffect(() => setAgentShown(agentPanel.open), [agentPanel.open]);
   // On a phone, the document gives up focus here and the AI page's input
   // doesn't take it, so the keyboard goes away in one movement. With the
   // keyboard up, the page comes once it has gone, or its bottom jumps.

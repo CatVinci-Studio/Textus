@@ -9,6 +9,7 @@ import {
   useContext,
   useMemo,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { getUiState, setUiState } from "../../../storage/ui-state";
@@ -51,13 +52,25 @@ const AGENT_PANEL_MAX_WIDTH = 720;
 
 const LIMITS = { min: AGENT_PANEL_MIN_WIDTH, max: AGENT_PANEL_MAX_WIDTH };
 
+// Whether the panel is open: one value, read by the frame and the panel.
+let openNow: boolean | null = null;
+const openListeners = new Set<() => void>();
+const openSnapshot = () => (openNow ??= getUiState("agentPanelOpen") === true);
+const onOpenChange = (listener: () => void) => {
+  openListeners.add(listener);
+  return () => openListeners.delete(listener);
+};
+
+/** Whether the docked panel is open. */
+export function useAgentPanelOpen(): boolean {
+  return useSyncExternalStore(onOpenChange, openSnapshot);
+}
+
 /** The panel's open state and width, remembered across launches. Shown
  *  narrower in a window too small for it, as the sidebar is
  *  (side-panel-width): `beside` is the open sidebar's width. */
 export function useAgentPanelState(windowWidth: number, beside: number) {
-  const [open, setOpenState] = useState(
-    () => getUiState("agentPanelOpen") === true,
-  );
+  const open = useAgentPanelOpen();
   const chosen = usePanelWidth();
   // Kept in the interface's size units, shown at its size now.
   const scale = chromeScale();
@@ -71,8 +84,11 @@ export function useAgentPanelState(windowWidth: number, beside: number) {
   const [tab, setTab] = useState<AgentPanelTab>("chat");
   const setOpen = useCallback(
     (next: boolean) => {
-      setOpenState(next);
       setUiState("agentPanelOpen", next);
+      if (openNow !== next) {
+        openNow = next;
+        for (const listener of openListeners) listener();
+      }
       // Whatever opens the panel - the shortcut, Ask AI, a restored chat,
       // "ask about this note" - wants the conversation.
       if (next) setTab("chat");
