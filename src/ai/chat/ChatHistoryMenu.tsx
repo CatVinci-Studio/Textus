@@ -118,10 +118,18 @@ function ChatHistoryList({
         <SearchHits
           hits={hits}
           locale={locale}
-          onReopen={(hit) => {
-            const entry = entries.find((e) => e.id === hit.id);
-            if (entry) onReopen(entry);
-          }}
+          // A hit is a summary itself: an older conversation found by
+          // search may be past the list's end.
+          onReopen={({ id, docPath, title, updatedAt }) =>
+            onReopen(
+              entries.find((e) => e.id === id) ?? {
+                id,
+                docPath,
+                title,
+                updatedAt,
+              },
+            )
+          }
         />
       </div>
     );
