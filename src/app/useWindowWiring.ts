@@ -1,4 +1,5 @@
 import { linkToFile } from "./islands/link-to-file";
+import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
 import { useEffect } from "react";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
@@ -134,6 +135,7 @@ export function useWindowWiring({
   );
 
   useExternalChangeReload(liveTabs, tabState.updateTab);
+  useHoldScrollOnReturn();
 
   const actions = useDocumentActions({
     tabState,

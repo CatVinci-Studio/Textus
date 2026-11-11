@@ -81,3 +81,35 @@ test("with unsaved changes, saving over a file changed elsewhere offers to take 
     ),
   ).toContain("Flood");
 });
+
+test("coming back from another app leaves the document where it was read", async ({
+  page,
+}) => {
+  const long = Array.from({ length: 200 }, (_, i) => `Line ${i}.`).join("\n\n");
+  await page.addInitScript((text) => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/work/long.md": `# Long\n\n${text}\n`,
+    };
+  }, long);
+  await openApp(page);
+  await openPath(page, "/work/long.md");
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Line 199");
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  // Away, then back: the webview scrolls to the caret as it gives the
+  // editor its focus back.
+  type Dev = { __devEmitTauriEvent(name: string, payload?: unknown): void };
+  await page.evaluate(() =>
+    (window as unknown as Dev).__devEmitTauriEvent("tauri://blur"),
+  );
+  await page.evaluate(() => {
+    (window as unknown as Dev).__devEmitTauriEvent("tauri://focus");
+    const el = document.querySelector<HTMLElement>(
+      '[data-active-tab="true"] .editor-scroll',
+    )!;
+    el.scrollTop = el.scrollHeight;
+  });
+  await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(600);
+});
