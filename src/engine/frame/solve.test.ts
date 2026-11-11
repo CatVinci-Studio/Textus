@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LayoutNode, Pane } from "../layout/tree";
 import { leastWidth, solveIslands, type IslandsInput } from "./solve";
+import { islandRule } from "./island-rules";
 
 const pane = (id: string): Pane => ({
   kind: "pane",
@@ -102,6 +103,28 @@ describe("solveIslands", () => {
     const { islands } = solveIslands(input(root));
     expect(islands.get("ai")!.sheet.w).toBe(400);
     expect(islands.get("settings")!.sheet.w).toBe(792);
+  });
+
+  it("a panel keeps the least width its content measured, past its usual width", () => {
+    const root: LayoutNode = {
+      kind: "split",
+      direction: "row",
+      children: [pane("doc"), pane("settings")],
+      sizes: [0.5, 0.5],
+    };
+    const measured = (content: number): IslandsInput => ({
+      ...input(root, 900),
+      rule: (p, direction) =>
+        islandRule(ui.has(p.id), direction, 400, ui.has(p.id) ? content : 0),
+    });
+    // Narrower content keeps the panel's own width; wider content raises it.
+    expect(solveIslands(measured(250)).islands.get("settings")!.sheet.w).toBe(
+      400,
+    );
+    const wide = solveIslands(measured(450)).islands;
+    expect(wide.get("settings")!.sheet.w).toBe(450);
+    expect(wide.get("doc")!.sheet.w).toBe(900 - 8 - 450);
+    expect(leastWidth(measured(450))).toBe(360 + 8 + 450);
   });
 
   it("the least width: each island at its minimum, the gaps between", () => {

@@ -691,10 +691,12 @@ button.settings-inline-button {
 }
 
 /* "Replaces a built-in skill", "This project", "Customized": after the
-   name. */
-:is(.settings-skill-title, .settings-row-label) > .tx-badge {
-  margin-left: 8px;
-  vertical-align: 1px;
+   name, or under it from the name's start when there's no room. */
+:is(.settings-skill-title, .settings-row-label:has(> .tx-badge)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
 }
 
 .settings-builtin-category-title {

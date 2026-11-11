@@ -10,11 +10,13 @@ const STACKED_MIN = 160;
 
 /** An island's rule along `direction` (VS Code's workbench: the editor
  *  high priority, its side panels low and of a fixed width). `panel` is
- *  the panels' width before the interface scale. */
+ *  the panels' width before the interface scale; `content` the least its
+ *  content measured (content-min.ts), which raises the floor across. */
 export function islandRule(
   panel: boolean,
   direction: SplitDirection,
   width: number,
+  content = 0,
 ): Omit<SizeRule, "size"> & { pixels: number } {
   if (direction === "column")
     return {
@@ -25,10 +27,15 @@ export function islandRule(
     };
   return panel
     ? {
-        min: scaledPx(PANEL_MIN),
+        min: Math.max(scaledPx(PANEL_MIN), content),
         pixels: scaledPx(width),
         fixed: true,
         priority: "low",
       }
-    : { min: scaledPx(DOC_MIN), pixels: 0, fixed: false, priority: "high" };
+    : {
+        min: Math.max(scaledPx(DOC_MIN), content),
+        pixels: 0,
+        fixed: false,
+        priority: "high",
+      };
 }

@@ -1,3 +1,4 @@
+import { useContentMin } from "../../engine/frame/content-min";
 import { useEffect, useRef, useSyncExternalStore } from "react";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { pageComponent } from "../builtin-pages";
@@ -58,6 +59,7 @@ export function SettingsTab({
     settingsListShown,
   );
   useReveal(content, jump ?? null);
+  useContentMin(content, ".settings-tab-page");
   const props = pageProps({
     t,
     settings,

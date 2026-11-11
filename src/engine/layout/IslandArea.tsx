@@ -1,6 +1,7 @@
 import {
   useMemo,
   useRef,
+  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from "react";
@@ -16,6 +17,11 @@ import { dividerKey, type PlacedIsland } from "../frame/island-parts";
 import { useIslandRoom, type IslandRoom } from "../frame/useIslandRoom";
 import { usePanelWidth } from "../frame/panel-width";
 import { islandRule } from "../frame/island-rules";
+import {
+  contentMinOf,
+  contentMinVersion,
+  onContentMin,
+} from "../frame/content-min";
 import { useIslandFrame } from "../frame/useIslandFrame";
 import "./split-panes.css";
 
@@ -69,6 +75,8 @@ export function IslandArea({
   const ref = useRef<HTMLElement>(null);
   const keyed = useRef(new Map<string, string>());
   const panel = usePanelWidth();
+  // Solved again as an island's content measures a new least width.
+  useSyncExternalStore(onContentMin, contentMinVersion);
   const split = isSplit(layout);
   const room = useIslandRoom(ref, `${split} ${rows} ${plain}`);
   const all = panesOf(layout.root);
@@ -116,7 +124,8 @@ export function IslandArea({
       root: layout.root,
       gap: room.gap,
       rowHeight: 0,
-      rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
+      rule: (pane, direction) =>
+        islandRule(isPanel(pane), direction, panel, contentMinOf(pane.id)),
     }) +
       2 * room.inset;
   useIslandFrame(ref, room, area, solved, placed, need || 0);
@@ -129,20 +138,20 @@ export function IslandArea({
       {drawn}
       <IslandNumbers />
       {solved?.dividers.map(({ line, rect, before, after }) => (
-          <SplitDivider
-            key={dividerKey(line.path, line.index)}
-            frame={dividerKey(line.path, line.index)}
-            layout={layout}
-            line={line}
-            style={rectStyle(rect)}
-            // Up through the window bar's row only from the islands' top:
-            // one lower down stops at the island above.
-            reach={!!area && rect.y <= area.y + 0.5}
-            sides={{ before, after }}
-            fixed={fixedSide(layout, line.path, line.index, isPanel)}
-            t={t}
-          />
-        ))}
+        <SplitDivider
+          key={dividerKey(line.path, line.index)}
+          frame={dividerKey(line.path, line.index)}
+          layout={layout}
+          line={line}
+          style={rectStyle(rect)}
+          // Up through the window bar's row only from the islands' top:
+          // one lower down stops at the island above.
+          reach={!!area && rect.y <= area.y + 0.5}
+          sides={{ before, after }}
+          fixed={fixedSide(layout, line.path, line.index, isPanel)}
+          t={t}
+        />
+      ))}
     </main>
   );
 }
@@ -172,7 +181,8 @@ function solve(
     box,
     gap: room.gap,
     rowHeight: rows ? room.bar : 0,
-    rule: (pane, direction) => islandRule(isPanel(pane), direction, panel),
+    rule: (pane, direction) =>
+      islandRule(isPanel(pane), direction, panel, contentMinOf(pane.id)),
   });
 }
 
