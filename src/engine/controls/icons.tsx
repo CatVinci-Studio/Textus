@@ -101,7 +101,6 @@ export const FolderOpenIcon = lucide(FolderOpen, 15);
 export const ProjectIcon = lucide(FolderOpenDot, 14);
 /** The tree's New Folder, and File > Open Folder…. */
 export const NewFolderIcon = lucide(FolderPlus, 14);
-export const OpenFolderIcon = NewFolderIcon;
 export const NewDocumentIcon = lucide(FilePlus, 14);
 export const MarkdownFileIcon = lucide(FileText, 15);
 export const ImageFileIcon = lucide(FileImage, 15);

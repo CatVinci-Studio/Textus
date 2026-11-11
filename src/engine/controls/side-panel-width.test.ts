@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { DOC_MIN } from "../frame/island-rules";
 import {
-  DOCUMENT_MIN_WIDTH,
   clampSidePanel,
   sidePanelMax,
   sidePanelMin,
@@ -19,7 +19,7 @@ describe("a side panel in a window too small for it", () => {
   });
 
   it("leaves the document its room beside the other panel", () => {
-    expect(sidePanelMax(1000, AI, 240)).toBe(1000 - 240 - DOCUMENT_MIN_WIDTH);
+    expect(sidePanelMax(1000, AI, 240)).toBe(1000 - 240 - DOC_MIN);
   });
 
   it("gives way to the document in a small window, and can still be dragged", () => {

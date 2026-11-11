@@ -277,7 +277,6 @@
   font-size: var(--text-mark);
 }
 
-.tutorial-controls,
 .tutorial-links {
   display: flex;
   flex-wrap: wrap;

@@ -6,9 +6,6 @@ import { DOC_MIN } from "../frame/island-rules";
  * always leaving the document room between them.
  */
 
-/** The narrowest the document column is squeezed to by a panel: an
- *  island's own least (island-rules). */
-export const DOCUMENT_MIN_WIDTH = DOC_MIN;
 /** The most of the window one panel takes. */
 const PANEL_SHARE = 0.45;
 
@@ -39,7 +36,7 @@ export function sidePanelMax(
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - DOCUMENT_MIN_WIDTH * scale,
+      windowWidth - beside - DOC_MIN * scale,
     ),
   );
 }

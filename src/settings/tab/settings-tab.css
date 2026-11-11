@@ -118,7 +118,7 @@
     margin-inline-start: auto;
   }
   /* A segmented switch keeps its segments, a little tighter. */
-  .settings-row :is(.appearance-option, .tx-segment) {
+  .settings-row .appearance-option {
     padding-inline: var(--space-2);
   }
 }
