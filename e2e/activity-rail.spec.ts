@@ -48,6 +48,12 @@ test("plugin icons scroll under the line; one dragged above it is pinned", async
   await page.mouse.move(at.x + at.width / 2, at.y + at.height / 2);
   await page.mouse.down();
   await page.mouse.move(at.x + at.width / 2, line.y - 40, { steps: 10 });
+  // One column: the line and the icons above slide aside to let it in,
+  // as they do within a group.
+  await expect(page.locator(".activity-rail-divider")).toHaveCSS(
+    "transform",
+    /matrix/,
+  );
   await page.mouse.up();
   await expect(
     page

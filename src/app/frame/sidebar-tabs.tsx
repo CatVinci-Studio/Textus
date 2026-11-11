@@ -203,15 +203,20 @@ reserveSidebarTabIds(isOwnTab);
 /** The tabs, in the header's order: as the user dragged them, a tab new
  *  since then where it comes - Textus's own before any a plugin adds. */
 export function sidebarTabs(): SidebarTabDef[] {
-  const kept = getUiState("sidebarTabOrder");
-  const all = orderTabs(
-    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
-    Array.isArray(kept) ? kept : [],
-  );
+  const all = railTabs();
   return [
     ...all.filter((tab) => isOwnTab(tab.id)),
     ...all.filter((tab) => !isOwnTab(tab.id)),
   ];
+}
+
+/** The tabs as the rail shows them: plugins' pinned among Textus's own. */
+export function railTabs(): SidebarTabDef[] {
+  const kept = getUiState("sidebarTabOrder");
+  return orderTabs(
+    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
+    Array.isArray(kept) ? kept : [],
+  );
 }
 
 /** `tabs` in `order`, those it doesn't name kept after the one before them. */
@@ -240,6 +245,17 @@ export function moveSidebarTab(id: string, target: string): void {
   if (isOwnTab(id) !== isOwnTab(target)) return;
   ids.splice(from, 1);
   ids.splice(to, 0, id);
+  setUiState("sidebarTabOrder", ids);
+}
+
+/** The tabs shown in `shown`'s order (a rail dragged), those not shown
+ *  (hidden from the rail) kept where they were. */
+export function orderSidebarTabs(shown: readonly string[]): void {
+  const keep = new Set(shown);
+  let next = 0;
+  const ids = railTabs().map((tab) =>
+    keep.has(tab.id) ? shown[next++] : tab.id,
+  );
   setUiState("sidebarTabOrder", ids);
 }
 

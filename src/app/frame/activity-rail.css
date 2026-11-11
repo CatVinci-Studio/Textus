@@ -188,20 +188,3 @@
 .activity-rail-group > * {
   flex-shrink: 0;
 }
-
-/* An icon carried out of its group (rail-lift.ts): its place fades, and
-   the group it would join marks where it lands - the pinned group's end,
-   or the start of the plugins under the line. */
-.activity-rail-carried {
-  opacity: 0.35;
-}
-.activity-rail-group[data-drop-here]:not(.activity-rail-scroll)::after,
-.activity-rail-scroll[data-drop-here]::before {
-  content: "";
-  flex-shrink: 0;
-  align-self: stretch;
-  height: 2px;
-  margin: 2px 8px;
-  border-radius: var(--shape-pill);
-  background: var(--ui-accent);
-}

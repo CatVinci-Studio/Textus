@@ -14,7 +14,13 @@ import type { OpenFolder } from "../useOpenFolder";
 import { SidebarTabBar } from "./SidebarTabBar";
 import { ActivityRail } from "./ActivityRail";
 import { useSettings } from "../../prefs/SettingsContext";
-import { moveSidebarTab, sidebarTab, sidebarTabs } from "./sidebar-tabs";
+import {
+  moveSidebarTab,
+  orderSidebarTabs,
+  railTabs,
+  sidebarTab,
+  sidebarTabs,
+} from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
 import type { FileOpenHow } from "../../files/tree-shared";
 
@@ -86,7 +92,7 @@ export function Sidebar({
     <>
       {rail && (
         <ActivityRail
-          tabs={sidebarTabs()}
+          tabs={railTabs()}
           shownId={shown.id}
           sidebarOpen={open}
           onSelect={(id) => {
@@ -94,7 +100,10 @@ export function Sidebar({
             if (!open) onToggle();
           }}
           onCloseSidebar={onToggle}
-          onMove={move}
+          onReorder={(shown) => {
+            orderSidebarTabs(shown);
+            moved();
+          }}
           t={t}
         />
       )}
