@@ -25,26 +25,39 @@ held to it.
 
 ```
 shell     app/  document-view/  lazy/  playground/  help/       may import anything
-features  ai/  clipboard/  document/  editor/  export/  links/
-          mobile/  onboarding/  settings/  sidebar/  theme/     each other, ui/ and base; never the shell
-ui        ui/                                                   base only
-base      platform/  utils/  i18n/  storage/  prefs/            each other; never ui/, a feature or the shell
--         plugins/, the entry files src/*.ts(x), dev/            not layered (below)
+features  ai/  clipboard/  document/  editor/  export/  files/
+          mobile/  onboarding/  plugins/  settings/  theme/     each other, registry/, engine/ and base; never the shell
+registry  registry/                                             engine/ and base
+engine    engine/ (tokens, motion, frame, drag, controls, layout)   base only
+base      platform/  utils/  i18n/  storage/  prefs/            each other; nothing above
+-         the entry files src/*.ts(x), dev/                      not layered (below)
 ```
 
 What the lint enforces:
 
 - **Base** (`platform/`, `utils/`, `i18n/`, `storage/`, `prefs/`) imports
-  no `engine/`, feature or shell folder. The five are one layer to the lint:
-  nothing stops `utils/` importing `storage/` or `prefs/`.
-- **`engine/`** imports no feature or shell folder; inside it each part
-  uses only those before it - `tokens/`, `motion/`, `drag/`, `controls/`,
-  `layout/` - and `controls/` never the layout.
+  no `engine/`, `registry/`, feature or shell folder. The five are one
+  layer to the lint.
+- **`engine/`** imports no feature, registry or shell folder; inside it
+  each part uses only those before it - `tokens/`, `motion/`, `frame/`
+  (the solver and the clock), `drag/`, `controls/`, `layout/` - and
+  `controls/` never the layout.
+- **`registry/`** holds what the shell and the features both register into
+  or read: commands (`commands.ts`), the menu model (`menu/`), the fixed
+  shortcuts, the sidebar tabs and context-menu items plugins add, the file
+  marks a feature puts on the tree's rows. It imports only the engine and
+  base, so `plugins/` and the features reach these without the shell.
 - **Features** import no shell folder (`app/`, `document-view/`). They may
   import each other, with one exception: **`editor/`** never imports
-  `ai/`, `document/`, `export/`, `files/`, `mobile/`, `onboarding/`,
-  `files/` or `plugins/`. The Markdown editor works on its own; features
-  and plugins attach to it, plugins through `editor/extension-points.ts`.
+  `ai/`, `document/`, `export/`, `files/`, `mobile/`, `onboarding/` or
+  `plugins/`. The Markdown editor works on its own - its block model
+  (`editor/markdown/doc-blocks.ts`, `doc-markdown.ts`, `edit-actions.ts`)
+  included, which the AI and plugins build on; plugins attach through
+  `editor/extension-points.ts`.
+- **`plugins/`** is a feature like the others: what the window lends it
+  comes through `plugins/app-bridge.ts` and `configurePlugins` (its
+  window info: strings, keys, the command palette), set by
+  `app/usePluginWindow.ts`.
 - **The shell** (`app/`, `document-view/`, `lazy/`, `playground/`,
   `help/`) may import anything except the plugin system's insides.
 - **Nothing outside `plugins/` imports `plugins/host/`**: the sandbox, the
@@ -55,15 +68,6 @@ What the lint enforces:
 
 What is only convention:
 
-- **`plugins/`, `src/*.ts(x)` and `dev/` are not layered.** Their own
-  imports are limited only by the Tauri rule, and any folder but `editor/`
-  may import `plugins/`. Features do: Settings' plugin pages use
-  `plugins/store/*` (catalog, manifest, permissions, lifecycle), the chat
-  uses `plugins/chat-plugin.ts` and `plugins/ai-state.ts`, `document/` and
-  `files/` use `plugins/manager.ts` and `plugins/app-bridge.ts`. Prefer
-  `manager.ts` (records, install, on and off), `app-bridge.ts` (what the
-  window lends plugins and the events they hear) and `store/` over
-  anything deeper.
 - **`lazy/` and `help/`** are linted as shell but are used from every
   layer: `lazy/lazy-module.ts` is how anything loads on first use, and
   `help/` is only the bundled guides.
@@ -72,6 +76,12 @@ What is only convention:
   window, the detached chat, a floating plugin view, the background host);
   `plugin-api.ts` is the in-process registry API (`window.__textusPlugins`
   in a development build); `test-setup.ts` is vitest's.
+
+**The window's model has one owner**: `engine/layout/store.ts` holds the
+tabs, the tab in use and the islands, and settles the layout with every
+change. React reads it (`app/tabs/useTabState.ts`), the frame store keeps
+only geometry, and code that needs the tab in use asks it
+(`tabInUse()`, `engine/layout/tab-element.ts`), never the DOM.
 
 The other checks `npm run check` runs (cycles, copies, dead code, code
 shape) are listed in [CONTRIBUTING.md](../../CONTRIBUTING.md#before-you-push).
@@ -89,10 +99,10 @@ for each are in [design-language.md](../design/design-language.md).
 | Styles     | `src/engine/tokens/design-system.css` (controls, states), `src/plugins/host/runtime/plugin-ui.css` | Control looks and states, once          |
 | Components | `src/engine/controls/*.tsx` (`Select`, `Tooltip`, `ContextMenu`, `app-dialog`, `InfoTip`, `icons`) | React wrappers; no own colours or sizes |
 | Patterns   | Settings rows, the sidebar, menus, the command palette                                             | Arrangements of components              |
-| Features   | `src/editor`, `src/ai`, `src/sidebar`, `src/settings`, `src/plugins`…                              | Compose the layers above                |
+| Features   | `src/editor`, `src/ai`, `src/files`, `src/settings`, `src/plugins`…                                | Compose the layers above                |
 
-Held by tests: `src/engine/controls/spacing-grid.test.ts`, `theme-reach.test.ts`,
-`motion-tokens.test.ts`, `motion-properties.test.ts`,
+Held by tests: `src/engine/controls/theme-reach.test.ts`,
+`engine/motion/motion-tokens.test.ts`, `motion-properties.test.ts`,
 `style-invalidation.test.ts`, `e2e/a11y.spec.ts`, and the contrast tests in
 `src/engine/tokens/palette.test.ts`.
 
@@ -109,11 +119,11 @@ that is also the visual regression target.
 
 | Folder           | Holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `app/`           | The editor window. `App.tsx` composes it from the window hooks (`useWindowShell`, `useWindowDocuments`, `useWindowWiring`, `useFileOpening`, `useSaveTabs`, `close-flow.ts`, `ClosePrompt.tsx`), `WindowBar`, `StartPage`, the sidebar frame and its draggable tabs (`sidebar-tabs.tsx`, `SidebarTabBar.tsx`), the command palette, global shortcuts, zoom, F6 regions (`regions.ts`), plugins' status items.                                                                                                            |
+| `app/`           | The editor window. `App.tsx` composes it from the window hooks (`useWindowShell`, `useWindowDocuments`, `useWindowWiring`, `useFileOpening`, `useSaveTabs`, `close-flow.ts`, `ClosePrompt.tsx`), `WindowBar`, `StartPage`, the command palette, global shortcuts, zoom, F6 regions (`regions.ts`), plugins' status items.                                                                                                                                                                                                |
 | `app/tabs/`      | The tabs' state (`useTabState`), tabs that show a page - Settings, a plugin's page, Create, an AI conversation (`page-tabs.tsx`) - and tab drag between windows (`useTabDragMerge`).                                                                                                                                                                                                                                                                                                                                     |
-| `app/frame/`     | The window's frame: the window bar, the activity rail, the sidebar and the panels' state.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `app/frame/`     | The window's frame: the window bar (`WindowBar`), the activity rail, the sidebar with Textus's own tabs (`sidebar-tabs.tsx`, the iPhone's `SidebarTabBar.tsx`) and the panels' state.                                                                                                                                                                                                                                                                                                                                    |
 | `app/islands/`   | What this window's islands show (the layout itself is `engine/layout/`): the documents' islands, Textus AI's conversations as tabs (`useAiTabs`), a tab pulled out of its row (`tab-pull.ts`), the split saved and restored.                                                                                                                                                                                                                                                                                             |
-| `app/menu/`      | The menu model (`app-menu-model.ts`, drawn by `AppMenu.tsx` and `MenuBar.tsx` on Windows, Linux and iPad, and on the phone), native menu events (`menu-bridge.ts`), the macOS bar's labels (`native-menu-text.ts`), plugins' items (`plugin-menu.ts`), Open Recent (`recents.ts`).                                                                                                                                                                                                                                       |
+| `app/menu/`      | The menu drawn (`AppMenu.tsx` and `MenuBar.tsx` on Windows, Linux and iPad, and on the phone) from the model in `registry/menu/`, native menu events (`menu-bridge.ts`), the macOS bar's labels (`native-menu-text.ts`), Open Recent (`recents.ts`).                                                                                                                                                                                                                                                                     |
 | `app/report/`    | The error boundary and **Help › Report a Problem**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `document-view/` | One tab's document on screen. `MilkdownEditor.tsx` is the editor with everything attached (AI panel, Quick Ask, review margin, grammar card, tutorial hooks), split into `use*.ts` hooks beside it. `editor-extensions.ts` puts the editor core and the AI plugins together. `EditorPane` switches between the rich editor, source and split view. `plugins/` is what plugins do in the editor. The editor test harnesses live here too.                                                                                 |
 | `document/`      | A document's life outside the editor ([documents.md](documents.md)): the tab model (`doc-tabs.ts`), autosave, draft recovery, reload after an outside change, the session and reload restore, read-only, line endings (`file-format.ts`), Word import, last carets, the iPhone's recent documents.                                                                                                                                                                                                                       |
@@ -256,7 +266,7 @@ live beside it (`document-view/use*.ts`, `app/useWindow*.ts`,
 `app/frame/Sidebar.tsx`, `app/islands/DocumentIslands.tsx`) or in the feature's own folder
 (`ai/margin/useReviewNotes.ts`, `editor/modes/...`). When you add to them,
 add a hook or a component the same way - as `WindowBar`,
-`useDraftAutosave` or `useApplyAppearance` are - rather than more code in
+`useSidePanels` or `useUpdateChecks` are - rather than more code in
 the file itself, and keep the hooks' call order.
 
 ## The window's Content Security Policy
@@ -282,7 +292,7 @@ below.
 | `media-src`   | `'self'`, `data:`, `blob:`, the asset protocol, the plugins' files                                  | What a plugin's page may play.                                                                                                                       |
 | `connect-src` | `'self'`, `ipc:` / `http://ipc.localhost`, `data:`, `blob:`, the asset protocol, the plugins' files | Tauri's IPC, and reading a picture's bytes back for export and copy. No `fetch` to the web.                                                          |
 | `worker-src`  | `'self'`, `data:`, `blob:`, the plugins' files                                                      | A plugin's page may start a worker from its own files.                                                                                               |
-| `frame-src`   | `'self'`, `https:`, `http:`                                                                         | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
+| `frame-src`   | `'self'`, `https:`                                                                                  | The framed web page on Linux and phones, and a plugin page's frames of the hosts the user granted (`webviewCsp` narrows them per plugin).            |
 | `object-src`  | `'none'`                                                                                            | No plugins of the old kind.                                                                                                                          |
 | `base-uri`    | `'self'`                                                                                            | A `<base>` can't move where relative URLs go.                                                                                                        |
 
