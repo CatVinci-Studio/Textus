@@ -10,7 +10,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 /// A package bigger than this, unpacked, is refused.
-const MAX_PACKAGE_BYTES: u64 = 200 * 1024 * 1024;
+pub(super) const MAX_PACKAGE_BYTES: u64 = 200 * 1024 * 1024;
 
 /// One installed plugin, as Settings › Plugins lists it.
 #[derive(Serialize, Clone, Debug)]

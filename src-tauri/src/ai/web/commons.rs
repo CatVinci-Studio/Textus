@@ -150,17 +150,9 @@ pub(crate) async fn fetch(
         .unwrap_or("")
         .to_string();
     let (mime, ext) = picture_type(&declared, &image.url);
-    // Refused before the download when the server says how large it is.
-    if response
-        .content_length()
-        .is_some_and(|n| n > MAX_BYTES as u64)
-    {
-        return Err("The picture is too large.".into());
-    }
-    let bytes = response.bytes().await.map_err(|e| e.to_string())?;
-    if bytes.len() > MAX_BYTES {
-        return Err("The picture is too large.".into());
-    }
+    let bytes = crate::net::read_limited(response, MAX_BYTES)
+        .await?
+        .ok_or("The picture is too large.")?;
     Ok(aicompat::images::GeneratedImage {
         bytes: bytes.to_vec(),
         mime,

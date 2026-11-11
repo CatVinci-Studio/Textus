@@ -28,7 +28,7 @@ fn mirrored(url: &str) -> Option<String> {
 }
 
 /// A package this large is not a plugin.
-const MAX_PACKAGE: u64 = 200 * 1024 * 1024;
+use super::install::MAX_PACKAGE_BYTES as MAX_PACKAGE;
 
 /// One plugin in the catalog.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
