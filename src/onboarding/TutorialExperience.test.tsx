@@ -160,7 +160,7 @@ describe("the connect lesson", () => {
   it("turns Connected on when a key is saved from the lesson", async () => {
     resumeAt("connect");
     render(<Harness />);
-    fireEvent.click(screen.getByRole("button", { name: t.authTabApiKey }));
+    fireEvent.click(screen.getByRole("tab", { name: t.authTabApiKey }));
     fireEvent.change(screen.getByPlaceholderText(t.apiKeyPlaceholder), {
       target: { value: "sk-test" },
     });
