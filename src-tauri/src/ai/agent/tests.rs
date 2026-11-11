@@ -574,7 +574,7 @@ fn the_workspace_section_says_which_folder_and_why() {
     // the user's UI language - only that one.
     assert!(text.contains("Learn my style") && !text.contains("English |"));
     let chinese = workspace_section(&too_broad, "zh");
-    assert!(chinese.contains("English | 中文\nfolder | 文件夹\n"));
+    assert!(chinese.contains("English | 简体中文\nfolder | 文件夹\n"));
     assert!(chinese.contains("not \"style profile (文风档案)\", not \"资料库 (library)\""));
     assert!(!chinese.contains("日本語"));
     // A language whose names aren't translated yet gets the English
@@ -664,7 +664,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
             "ui-names/{code}.txt names every line of en.txt, in its order"
         );
         let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", code);
-        assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native)));
+        assert!(prompt.contains(&format!("\nEnglish | {}\n", language.native())));
         for (en, name) in &pairs {
             assert!(
                 prompt.contains(&format!("{en} | {name}")),

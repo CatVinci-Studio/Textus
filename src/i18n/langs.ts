@@ -19,18 +19,7 @@ export const LANGS = [
 export type Lang = (typeof LANGS)[number];
 
 /** Each language's name in that language, so a user finds their own. */
-export const LANG_NAMES: Record<Lang, string> = {
-  en: "English",
-  zh: "简体中文",
-  "zh-Hant": "繁體中文",
-  ja: "日本語",
-  ko: "한국어",
-  es: "Español",
-  fr: "Français",
-  de: "Deutsch",
-  ru: "Русский",
-  pt: "Português",
-};
+export const LANG_NAMES = TABLES.langNames as Record<Lang, string>;
 
 /** The BCP 47 tag for a UI language: `<html lang>`, which the CSS :lang()
  *  font stacks key off, and the locale for dates and numbers. One table

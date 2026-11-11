@@ -3,7 +3,7 @@ use crate::ai::doc_blocks::{self, Document};
 use crate::ai::images::InlinePictures;
 use crate::ai::rules::Conventions;
 use crate::ai::tools::{self, ToolContext, ToolRegistry};
-use crate::ai::ui_language::{UiLanguage, UiNames};
+use crate::ai::ui_language::UiNames;
 use crate::ai::web::{self, WebPlan};
 use crate::ai::workspace::AgentWorkspace;
 use aicompat::agent::{

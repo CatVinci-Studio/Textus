@@ -79,9 +79,8 @@ pub(super) fn workspace_section(workspace: &AgentWorkspace, ui_language: &str) -
                 .map(|(en, name)| format!("{en} | {name}"))
                 .collect::<Vec<_>>()
                 .join("\n");
-            let UiLanguage {
-                english, native, ..
-            } = ui.language;
+            let english = ui.language.english;
+            let native = ui.language.native();
             format!(
                 "The app's names for things in the {english} UI the user sees, beside the English ones - use these when you reply in {english}, and never add a name from another language, in parentheses or otherwise (not \"style profile ({})\", not \"{} (library)\"); Settings paths keep their \" > \" and {AI_NAME}:\nEnglish | {native}\n{rows}",
                 ui.of_english("style profile"),
