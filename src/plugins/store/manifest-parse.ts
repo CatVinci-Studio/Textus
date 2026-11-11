@@ -1,3 +1,4 @@
+import { DIAGRAM_LANGUAGES } from "../../editor/diagram-engine";
 import type {
   CompletionContribution,
   Contributes,
@@ -99,7 +100,8 @@ const HOVER_KINDS: readonly HoverContribution[] = [
 const known = <T extends string>(values: string[], kinds: readonly T[]) =>
   values.filter((v): v is T => (kinds as readonly string[]).includes(v));
 
-const BUILT_IN_BLOCKS = ["mermaid", "math", "latex", "katex", "tex"];
+/** Code blocks Textus draws itself: no plugin takes them over. */
+const BUILT_IN_BLOCKS = [...DIAGRAM_LANGUAGES, "math", "latex", "katex", "tex"];
 
 /** `main`: one file, or several run in order; the host takes no imports. */
 export function parseMain(value: unknown): string[] | undefined {
