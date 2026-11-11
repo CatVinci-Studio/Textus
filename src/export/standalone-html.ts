@@ -6,6 +6,7 @@ import {
   isDrivePath,
 } from "../utils/path";
 import { imageMimeForPath } from "../editor/images/pasted-files";
+import { rootedImagePath } from "../editor/images/rooted-image";
 import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import { fs } from "../platform/ipc";
 import { escapeHtml, styleText } from "../utils/html";
@@ -269,12 +270,19 @@ export function cloneEditorContent(
   return clone.outerHTML;
 }
 
-// The file a document image's src names; null for a URL, or a relative src
-// with no folder on disk.
-function localImagePath(src: string, docPath: string | null): string | null {
+// The file a document image's src names, as the editor finds it (a `/` one
+// under the document's link root); null for a URL, a `//host` share, or a
+// relative src with no folder on disk.
+async function localImagePath(
+  src: string,
+  docPath: string | null,
+): Promise<string | null> {
   if (isDrivePath(src)) return decodeUrlPath(src);
-  if (!src || hasUrlScheme(src)) return null;
-  if (src.startsWith("/")) return decodeUrlPath(src);
+  if (!src || hasUrlScheme(src) || src.startsWith("//")) return null;
+  if (src.startsWith("/"))
+    return docPath && !hasUrlScheme(docPath)
+      ? rootedImagePath(src, docPath)
+      : decodeUrlPath(src);
   // An iOS document picked in Files is a file: URL, its images no plain path.
   if (!docPath || hasUrlScheme(docPath)) return null;
   return `${dirname(docPath)}/${decodeUrlPath(src)}`;
@@ -304,7 +312,7 @@ export async function inlineImages(
   );
   await Promise.all(
     images.map(async (img) => {
-      const path = localImagePath(img.dataset.docSrc ?? "", docPath);
+      const path = await localImagePath(img.dataset.docSrc ?? "", docPath);
       img.removeAttribute("data-doc-src");
       const mime = path && imageMimeForPath(path);
       if (path && mime) {

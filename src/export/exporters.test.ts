@@ -8,7 +8,12 @@ const mocks = vi.hoisted(() => ({
     revealInDir: vi.fn(),
   },
   showMessage: vi.fn(),
-  fs: { readBinaryFileBase64: vi.fn(), writeTextFile: vi.fn() },
+  fs: {
+    readBinaryFileBase64: vi.fn(),
+    writeTextFile: vi.fn(),
+    documentLinkRoot: vi.fn().mockResolvedValue(null),
+    fileMtimeMs: vi.fn().mockResolvedValue(null),
+  },
 }));
 
 vi.mock("../platform/ipc", () => ({
@@ -364,6 +369,29 @@ describe("exportPdf", () => {
     expect(html).toContain('src="data:image/png;base64,QUJD"');
     expect(html).not.toContain("asset://");
     expect(html).not.toContain("data-doc-src");
+  });
+
+  it("finds a /-rooted image under the document's link root, as shown", async () => {
+    document.body.innerHTML = activeEditorWithImage.replace(
+      'data-doc-src="assets/my%20pic.png"',
+      'data-doc-src="/assets/my%20pic.png"',
+    );
+    mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/b.pdf");
+    mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
+    mocks.fs.readBinaryFileBase64.mockReset().mockResolvedValue("QUJD");
+    mocks.fs.documentLinkRoot.mockResolvedValue("/docs");
+    mocks.fs.fileMtimeMs.mockImplementation(async (p: string) =>
+      p === "/docs/assets/my pic.png" ? 1 : null,
+    );
+    const img = document.querySelector("img")!;
+    Object.defineProperty(img, "complete", { value: true });
+    Object.defineProperty(img, "naturalWidth", { value: 10 });
+
+    await exportPdf({ ...tab, path: "/docs/b.md" }, t);
+
+    expect(mocks.fs.readBinaryFileBase64).toHaveBeenCalledWith(
+      "/docs/assets/my pic.png",
+    );
   });
 });
 
