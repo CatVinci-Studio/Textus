@@ -743,16 +743,6 @@
   color: var(--ui-success);
 }
 
-.agent-proposal-icon svg {
-  width: 11px;
-  height: 11px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .agent-proposal-head .agent-diff-summary {
   margin-left: auto;
 }
@@ -1062,13 +1052,6 @@
 }
 
 .agent-thought-chevron {
-  width: 12px;
-  height: 12px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.1;
-  stroke-linecap: round;
-  stroke-linejoin: round;
   transition: transform var(--dur-fast) var(--ease-standard);
 }
 
@@ -1445,15 +1428,6 @@ li[data-state="kept"] .agent-proposal-sentence-text {
   border-radius: var(--shape-xs);
   background: var(--review-anchor-bg);
   color: var(--review-note-line);
-}
-
-.agent-comment-icon svg {
-  width: 11px;
-  height: 11px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.7;
-  stroke-linejoin: round;
 }
 
 /* The note's badge in the text: same number, same disc. */

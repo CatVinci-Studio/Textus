@@ -9,11 +9,8 @@ import { StepMap } from "@milkdown/kit/prose/transform";
 import { ChangeSet } from "@milkdown/kit/prose/changeset";
 import { $prose } from "@milkdown/kit/utils";
 import { shownChanges, type ChangeSpan } from "./own-change-spans";
-import {
-  CHECK_SVG,
-  CROSS_SVG,
-  type SentencePickLabels,
-} from "../revision/pending-widgets";
+import { type SentencePickLabels } from "../revision/pending-widgets";
+import { CHECK_ICON_HTML, CROSS_ICON_HTML } from "../../engine/controls/icons";
 
 /** Track My Changes: the writer's edits shown against the text as tracking
  *  began. The document holds the new text; the original never enters it. */
@@ -148,7 +145,7 @@ function pick(view: EditorView, index: number): HTMLElement {
     const b = document.createElement("button");
     b.type = "button";
     b.className = take ? "pending-pick-take" : "pending-pick-keep";
-    b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+    b.innerHTML = take ? CHECK_ICON_HTML : CROSS_ICON_HTML;
     const picker = pickers.get(view);
     const label = picker ? picker.labels[take ? "take" : "keep"] : "";
     b.title = label;

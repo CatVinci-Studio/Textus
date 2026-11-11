@@ -480,11 +480,6 @@ br:is(.pending-delete, .pending-sentence-hot) {
 :is(.pending-pick, .agent-proposal-pick) button svg {
   width: 11px;
   height: 11px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 :is(.pending-pick, .agent-proposal-pick) .pending-pick-take {

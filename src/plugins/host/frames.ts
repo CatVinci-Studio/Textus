@@ -1,6 +1,7 @@
 import { pluginString } from "./plugin-string";
 import webviewRuntime from "./runtime/webview.js?raw";
 import componentsCss from "../../engine/controls/components.css?inline";
+import iconMasksCss from "../../engine/controls/icon-masks.css?inline";
 import controlsCss from "../../engine/controls/controls.css?inline";
 import designSystemCss from "../../engine/tokens/design-system.css?inline";
 import motionCss from "../../engine/motion/motion.css?inline";
@@ -13,6 +14,7 @@ const SHARED_CSS = [
   motionCss,
   designSystemCss.replace(/^@import [^;]+;$/gm, ""),
   componentsCss,
+  iconMasksCss,
   controlsCss,
 ].join("\n");
 import { createEndpoint, type Endpoint, type Handlers } from "./rpc";

@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { changeGlimpse } from "./change-glimpse";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
@@ -32,9 +32,6 @@ function revisionText(after: string, labels: ReviewMarginLabels): string {
 
 /** The margin's cards: revisions, notes, and the note popover a phone shows
  *  instead. */
-
-const CHECK = <Check aria-hidden />;
-const CROSS = <X aria-hidden />;
 
 /** What a card is told by the margin: where it sits, and the margin's
  *  callbacks, which keep their identity across renders. */
@@ -237,7 +234,7 @@ export const RevisionCard = memo(
                   )
                 }
               >
-                {CHECK}
+                <TakeIcon />
               </button>
             </Tooltip>
             <Tooltip text={labels.proposalKeepSentence}>
@@ -255,7 +252,7 @@ export const RevisionCard = memo(
                   )
                 }
               >
-                {CROSS}
+                <DropIcon />
               </button>
             </Tooltip>
           </span>

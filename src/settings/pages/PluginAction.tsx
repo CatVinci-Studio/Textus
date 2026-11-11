@@ -1,5 +1,5 @@
+import { ChevronDownIcon } from "../../engine/controls/icons";
 import { fill } from "../../i18n/fill";
-import { ChevronDown } from "lucide-react";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import { useSyncExternalStore } from "react";
 import type { Strings } from "../../i18n/strings";
@@ -149,7 +149,7 @@ function PluginAction({
           disabled={installing}
           {...more.button}
         >
-          <ChevronDown aria-hidden />
+          <ChevronDownIcon />
         </button>
       )}
       {more.menu}

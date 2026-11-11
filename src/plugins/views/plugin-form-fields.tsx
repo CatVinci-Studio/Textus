@@ -1,3 +1,4 @@
+import { NextIcon, PreviousIcon } from "../../engine/controls/icons";
 import { useState } from "react";
 import { announce } from "../../engine/controls/announce";
 import { currentStrings } from "../../i18n/current";
@@ -63,7 +64,7 @@ export function DateField({
           aria-label={t.pluginFormPrevMonth}
           onClick={() => shift(-1)}
         >
-          <span className="tx-icon" data-icon="left" />
+          <PreviousIcon />
         </button>
         <span className="tx-value">{monthName(month)}</span>
         <button
@@ -72,7 +73,7 @@ export function DateField({
           aria-label={t.pluginFormNextMonth}
           onClick={() => shift(1)}
         >
-          <span className="tx-icon" data-icon="right" />
+          <NextIcon />
         </button>
       </div>
       <div className="tx-calendar" role="grid">

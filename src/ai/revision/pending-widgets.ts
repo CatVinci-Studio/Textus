@@ -20,6 +20,7 @@ import {
   updateAnimation,
 } from "./pending-animation";
 import { renderPendingHtml, hasBlocks } from "./pending-fill";
+import { CHECK_ICON_HTML, CROSS_ICON_HTML } from "../../engine/controls/icons";
 import { type SentenceHooks } from "./pending-decorations";
 
 /** The pieces a proposal is drawn with: the green text widget, a sentence's
@@ -89,12 +90,6 @@ export function textWidget(
     },
   );
 }
-
-/** Lucide's check and x, as markup (icons.tsx draws the same). */
-export const CHECK_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
-export const CROSS_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
 
 export interface SentencePickLabels {
   take: string;
@@ -263,7 +258,7 @@ export function changeDecorations(
           const b = document.createElement("button");
           b.type = "button";
           b.className = take ? "pending-pick-take" : "pending-pick-keep";
-          b.innerHTML = take ? CHECK_SVG : CROSS_SVG;
+          b.innerHTML = take ? CHECK_ICON_HTML : CROSS_ICON_HTML;
           const label = take ? labels.take : labels.keep;
           b.title = label;
           b.setAttribute("aria-label", label);

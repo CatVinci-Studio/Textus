@@ -273,7 +273,7 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 
 ## 8. Icons - In force
 
-- One set: Lucide's (ISC, `lucide-react`), one weight for every icon - a line as thick at every size (`ICON_STROKE`), round caps and joins, `currentColor` - drawn at each icon's design size and grown with the interface (`iconSize`, `--icon-scale`). `src/engine/controls/icons.tsx` names them for the app; file types (`file-icons.tsx`), the format bar (`format-icons.tsx`) and plugins' `tx-icon` names (`components.css`) use the same set and weight.
+- One set: Lucide's (ISC, `lucide-react`), one weight for every icon - a line as thick at every size (`ICON_STROKE`), round caps and joins, `currentColor` - drawn at each icon's design size and grown with the interface (`iconSize`, `--icon-scale`). `src/engine/controls/icons.tsx` names them for the app; file types (`file-icons.tsx`) and plugins' `tx-icon` names (`icon-masks.css`) use the same set and weight; a node view built outside React takes an icon's markup from `iconMarkup`.
 - Only the Windows caption buttons are drawn by hand: they follow the system's 10×10 glyphs.
 - A new icon takes a Lucide one, added to `icons.tsx`; a surface MUST NOT draw a one-off icon.
 - Plugins name icons (`icon: "calendar"` in a list item; `<span class="tx-icon" data-icon="filter">` in a page, names in 15.4) instead of drawing their own.
@@ -402,8 +402,8 @@ A plugin MUST NOT ship its own copy of any of these, and MUST NOT restyle a `tx-
 
 The list of controls a plugin page may use, with their markup, is
 [docs/dev/plugins/ui.md](../dev/plugins/ui.md) › Controls - one list, for
-the app and plugins alike; the styles are `src/engine/controls/components.css` and
-`src/engine/controls/controls.css`. Class names are public API (2.1): write them exactly
+the app and plugins alike; the styles are `src/engine/controls/components.css`,
+`src/engine/controls/icon-masks.css` and `src/engine/controls/controls.css`. Class names are public API (2.1): write them exactly
 as there; combine only the modifiers listed. Icons (`<span class="tx-icon"
 data-icon="…">`): `text`, `number`, `select`, `multi`, `date`, `checkbox`,
 `url`, `page`, `filter`, `sort`, `plus`, `more`, `table`, `board`,

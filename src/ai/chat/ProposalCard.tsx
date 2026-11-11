@@ -1,6 +1,6 @@
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
-import { Check, X } from "lucide-react";
 import {
   useEffect,
   useMemo,
@@ -27,9 +27,6 @@ import type { ChatMessagesLabels } from "./chat-messages-types";
 import { InlineMarkdownText } from "../MarkdownText";
 import { blockSummary, type BlockNames } from "../revision/markdown-forms";
 import { inlineSentence } from "../revision/sentence-diff";
-
-export const CHECK = <Check aria-hidden />;
-export const CROSS = <X aria-hidden />;
 
 /** What the user is told of a generate_image call that made no picture.
  *  Null for a call the model got wrong and sends again: the model's to fix. */
@@ -167,7 +164,7 @@ export function ProposalCard({
     >
       <div className="agent-proposal-head">
         <span className="agent-proposal-icon" aria-hidden="true">
-          {CHECK}
+          <TakeIcon />
         </span>
         <span className="agent-proposal-title">
           {labels.proposalTitle}
@@ -269,7 +266,7 @@ export function ProposalCard({
                           onDecide(callId, k, s.take === true ? null : true)
                         }
                       >
-                        {CHECK}
+                        <TakeIcon />
                       </button>
                     </Tooltip>
                     <Tooltip text={labels.proposalKeepSentence}>
@@ -282,7 +279,7 @@ export function ProposalCard({
                           onDecide(callId, k, s.take === false ? null : false)
                         }
                       >
-                        {CROSS}
+                        <DropIcon />
                       </button>
                     </Tooltip>
                   </span>

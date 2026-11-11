@@ -1,3 +1,4 @@
+import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
@@ -7,7 +8,7 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { diffLines } from "./line-diff";
-import { CHECK, CROSS, ChangeText } from "./ProposalCard";
+import { ChangeText } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 
 /**
@@ -131,7 +132,7 @@ function GroupRow({
                   aria-label={labels.proposalAccept}
                   onClick={() => onAccept(callId)}
                 >
-                  {CHECK}
+                  <TakeIcon />
                 </button>
               </Tooltip>
               <Tooltip text={labels.proposalReject}>
@@ -141,7 +142,7 @@ function GroupRow({
                   aria-label={labels.proposalReject}
                   onClick={() => onReject(callId)}
                 >
-                  {CROSS}
+                  <DropIcon />
                 </button>
               </Tooltip>
             </span>
@@ -211,7 +212,7 @@ export function ProposalGroup({
       <FlipOnChange watch={shape} targets={() => following(ref.current)} />
       <div className="agent-proposal-head">
         <span className="agent-proposal-icon" aria-hidden="true">
-          {CHECK}
+          <TakeIcon />
         </span>
         <span className="agent-proposal-title">
           {labels.proposalTitle}

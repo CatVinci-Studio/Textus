@@ -1,4 +1,4 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { useEffect, useState } from "react";
 import { thoughtSeconds, type Thought } from "./thought";
 
@@ -44,7 +44,7 @@ export function ThoughtRow({
           onClick={() => setOpen(!open)}
         >
           <span className="agent-thought-label">{label}</span>
-          <ChevronRight className="agent-thought-chevron" aria-hidden />
+          <ChevronIcon className="agent-thought-chevron" />
         </button>
       ) : (
         <span className="agent-thought-label">{label}</span>

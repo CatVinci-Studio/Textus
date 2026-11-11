@@ -1,7 +1,7 @@
+import { CommentIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import type { Plural } from "../../i18n/plural";
 import { fill } from "../../i18n/fill";
-import { MessageSquare } from "lucide-react";
 import { useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { FlipOnChange } from "../../engine/motion/flip";
@@ -81,7 +81,7 @@ export function CommentCard({
           <span className="agent-comment-num">{num}</span>
         ) : (
           <span className="agent-comment-icon" aria-hidden="true">
-            <MessageSquare aria-hidden />
+            <CommentIcon />
           </span>
         )}
         <span className="agent-proposal-title">{labels.commentTitle}</span>
@@ -164,7 +164,7 @@ export function CommentGroup({
       />
       <div className="agent-proposal-head">
         <span className="agent-comment-icon" aria-hidden="true">
-          <MessageSquare aria-hidden />
+          <CommentIcon />
         </span>
         <span className="agent-proposal-title">
           {labels.commentTitle}

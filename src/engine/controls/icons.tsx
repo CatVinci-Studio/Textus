@@ -1,50 +1,77 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowUp,
-  ArrowUpRight,
   ArrowUpDown,
+  ArrowUpRight,
   BetweenHorizontalEnd,
   BetweenHorizontalStart,
   BetweenVerticalEnd,
   BetweenVerticalStart,
+  Bold,
+  Book,
+  BookMarked,
+  BookOpenText,
   Check,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  Code,
   Columns2,
   Download,
   Ellipsis,
   Eye,
   File,
+  FileArchive,
+  FileCode,
+  FileCode2,
   FileImage,
+  FileJson,
+  FileMusic,
+  FilePenLine,
   FilePlus,
+  FileSpreadsheet,
   FileText,
+  FileType,
+  FileVideo,
   Folder,
   FolderOpen,
   FolderOpenDot,
   FolderPlus,
   Grid2x2X,
+  Heading,
+  Highlighter,
   History,
+  Italic,
   LayoutGrid,
   LayoutList,
   Lightbulb,
+  Link,
   List,
   ListOrdered,
   Lock,
   Menu,
+  MessageSquare,
   MessageSquareText,
   PanelLeft,
   Paperclip,
   PenLine,
   Pin,
   Plus,
+  Presentation,
   Puzzle,
   RotateCw,
   Rows2,
   Search,
   Settings,
+  Shapes,
   Sparkles,
   Square,
   SquareArrowOutUpRight,
+  SquareCode,
+  Strikethrough,
+  Table,
   Telescope,
+  TextQuote,
   Trash2,
   Undo2,
   WandSparkles,
@@ -94,6 +121,15 @@ export function lucide(Shape: LucideIcon, size: number) {
 
 /** A disclosure triangle's stand-in: turned by CSS when open. */
 export const ChevronIcon = lucide(ChevronRight, 10);
+/** A menu button's "opens below". */
+export const ChevronDownIcon = lucide(ChevronDown, 12);
+/** Back and on, a step at a time (a month, a page). */
+export const PreviousIcon = lucide(ChevronLeft, 16);
+export const NextIcon = lucide(ChevronRight, 16);
+export const CommentIcon = lucide(MessageSquare, 11);
+/** Take and keep, on a change the AI proposes. */
+export const TakeIcon = lucide(Check, 11);
+export const DropIcon = lucide(X, 11);
 /** A newer release to install (the rail's foot). */
 export const DownloadIcon = lucide(Download, 15);
 export const EyeIcon = lucide(Eye, 15);
@@ -174,6 +210,38 @@ export const UndoIcon = lucide(Undo2, 16);
 export const BulletListIcon = lucide(List, 16);
 export const NumberedListIcon = lucide(ListOrdered, 16);
 
+/** The format bar's. */
+export const HeadingIcon = lucide(Heading, 16);
+export const BoldIcon = lucide(Bold, 16);
+export const ItalicIcon = lucide(Italic, 16);
+export const StrikeIcon = lucide(Strikethrough, 16);
+export const HighlightIcon = lucide(Highlighter, 16);
+export const InlineCodeIcon = lucide(Code, 16);
+export const LinkIcon = lucide(Link, 16);
+export const QuoteIcon = lucide(TextQuote, 16);
+export const CodeBlockIcon = lucide(SquareCode, 16);
+export const TableIcon = lucide(Table, 16);
+
+/** A file's kind, by the shape the file tree shows (file-icons.ts). */
+export const FILE_KIND_SHAPES: Record<string, LucideIcon> = {
+  text: FileText,
+  table: Table,
+  canvas: Shapes,
+  pdf: BookOpenText,
+  word: FilePenLine,
+  sheet: FileSpreadsheet,
+  slides: Presentation,
+  audio: FileMusic,
+  video: FileVideo,
+  archive: FileArchive,
+  code: FileCode,
+  data: FileJson,
+  tex: FileCode2,
+  bib: BookMarked,
+  book: Book,
+  font: FileType,
+};
+
 /** A table's row and column actions, by what they do. */
 const TABLE_EDIT_ICONS = {
   "row-above": lucide(BetweenHorizontalStart, 16),
@@ -204,16 +272,33 @@ export const CreateModeIcon = lucide(WandSparkles, 13);
 export const ReviewModeIcon = lucide(MessageSquareText, 13);
 export const ResearchModeIcon = lucide(Telescope, 13);
 
-/** Lucide's file-image and plus as markup, for what a node view builds. */
-const MARKUP_ATTRS = `width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"`;
-export const IMAGE_ICON_HTML =
-  `<svg ${MARKUP_ATTRS}>` +
-  `<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>` +
-  `<path d="M14 2v4a2 2 0 0 0 2 2h4"/>` +
-  `<circle cx="10" cy="12" r="2"/>` +
-  `<path d="m20 17-1.296-1.296a2.41 2.41 0 0 0-3.408 0L9 22"/>` +
-  `</svg>`;
-export const PLUS_ICON_HTML = `<svg ${MARKUP_ATTRS}><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
+type IconNode = [string, Record<string, string | number>][];
+
+/** `Shape` as svg markup, `size` px in the icons' one weight: for what a
+ *  node view builds outside React. */
+export function iconMarkup(Shape: LucideIcon, size: number): string {
+  // lucide-react (pinned) keeps its shape on the element it renders.
+  const render = (
+    Shape as unknown as {
+      render: (p: object, r: null) => { props: { iconNode: IconNode } };
+    }
+  ).render;
+  const parts = render({}, null).props.iconNode.map(
+    ([tag, attrs]) =>
+      `<${tag} ${Object.entries(attrs)
+        .filter(([k]) => k !== "key")
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(" ")}/>`,
+  );
+  const stroke = (ICON_STROKE * 24) / size;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${stroke}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${parts.join("")}</svg>`;
+}
+
+export const IMAGE_ICON_HTML = iconMarkup(FileImage, 15);
+export const PLUS_ICON_HTML = iconMarkup(Plus, 15);
+/** Take and keep, on a change the AI proposes. */
+export const CHECK_ICON_HTML = iconMarkup(Check, 11);
+export const CROSS_ICON_HTML = iconMarkup(X, 11);
 
 /* The window caption, drawn only where the app owns the frame (Windows).
    These break the 16-unit grid on purpose: Windows caption glyphs are fixed

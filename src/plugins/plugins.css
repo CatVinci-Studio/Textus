@@ -191,13 +191,6 @@ button.plugin-card-open:hover .plugin-card-name {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
-.plugin-action-more svg {
-  width: 12px;
-  height: 12px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-}
 /* Turned off: its words and icon quieter. */
 .plugin-card.is-off .plugin-card-open {
   opacity: 0.6;

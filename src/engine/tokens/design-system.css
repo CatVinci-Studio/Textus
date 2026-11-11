@@ -1,6 +1,7 @@
 /* Application UI contract. Content themes remain scoped to the document. */
 @import "../motion/motion.css";
 @import "../controls/components.css";
+@import "../controls/icon-masks.css";
 @import "../controls/controls.css";
 
 :root {

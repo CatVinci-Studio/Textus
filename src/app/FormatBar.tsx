@@ -12,12 +12,12 @@ import {
   InlineCodeIcon,
   ItalicIcon,
   LinkIcon,
-  ListIcon,
-  OrderedListIcon,
+  BulletListIcon,
+  NumberedListIcon,
   QuoteIcon,
   StrikeIcon,
   TableIcon,
-} from "../engine/controls/format-icons";
+} from "../engine/controls/icons";
 import { formatCombo } from "../utils/shortcuts";
 import {
   INSERT_BLOCK_EVENT,
@@ -101,14 +101,14 @@ const GROUPS: Button[][] = [
   [
     {
       label: (t) => t.menuBulletList,
-      Icon: ListIcon,
+      Icon: BulletListIcon,
       event: TOGGLE_BLOCK_EVENT,
       detail: "bullet-list",
       on: (b) => b.bulletList,
     },
     {
       label: (t) => t.menuOrderedList,
-      Icon: OrderedListIcon,
+      Icon: NumberedListIcon,
       event: TOGGLE_BLOCK_EVENT,
       detail: "ordered-list",
       on: (b) => b.orderedList,
