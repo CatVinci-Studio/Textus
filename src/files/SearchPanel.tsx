@@ -20,8 +20,16 @@ interface TextHit {
 type TextState =
   | { kind: "idle" }
   | { kind: "loading" }
-  | { kind: "ready"; hits: TextHit[]; truncated: boolean }
-  | { kind: "failed" };
+  /** `needle`: what these hits were found for; `stale` while the next
+   *  search runs. */
+  | {
+      kind: "ready";
+      hits: TextHit[];
+      truncated: boolean;
+      needle: string;
+      stale?: boolean;
+    }
+  | { kind: "failed"; tooBroad: boolean };
 
 /**
  * The sidebar's Search page, as VS Code's: one box over the folder the
@@ -66,11 +74,21 @@ function useTextSearch(root: string, query: string): TextState {
       return;
     }
     let cancelled = false;
-    setState((prev) => (prev.kind === "ready" ? prev : { kind: "loading" }));
+    // The last hits stay, dimmed, while the next search runs: no flicker
+    // of an empty list at each key.
+    setState((prev) =>
+      prev.kind === "ready" ? { ...prev, stale: true } : { kind: "loading" },
+    );
     const timer = setTimeout(() => {
       fs.searchFolderText(root, needle).then(
-        (result) => !cancelled && setState({ kind: "ready", ...result }),
-        () => !cancelled && setState({ kind: "failed" }),
+        (result) =>
+          !cancelled && setState({ kind: "ready", ...result, needle }),
+        (err: unknown) =>
+          !cancelled &&
+          setState({
+            kind: "failed",
+            tooBroad: String(err).includes("TOO_BROAD"),
+          }),
       );
     }, TEXT_DELAY_MS);
     return () => {
@@ -119,17 +137,24 @@ function TextMatches({
         byPath.set(hit.path, [...(byPath.get(hit.path) ?? []), hit]);
     return [...byPath.values()];
   }, [state]);
-  const needle = query.trim();
+  // Marked with what they were found for, not what is typed since.
+  const needle = state.kind === "ready" ? state.needle : query.trim();
   const note =
     state.kind === "failed"
-      ? t.treeSearchFailed
-      : state.kind !== "ready"
+      ? state.tooBroad
+        ? t.treeSearchTooBroad
+        : t.treeSearchFailed
+      : state.kind !== "ready" || state.stale
         ? t.treeSearchIndexing
         : groups.length === 0
           ? t.searchTextNone
           : null;
   return (
-    <section className="search-text" aria-label={t.searchTextHeading}>
+    <section
+      className="search-text"
+      aria-label={t.searchTextHeading}
+      aria-busy={state.kind === "ready" && state.stale ? true : undefined}
+    >
       <h3 className="tx-list-heading">{t.searchTextHeading}</h3>
       {groups.map((hits) => {
         const Icon = fileIconFor(hits[0].path);

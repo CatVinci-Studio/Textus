@@ -317,6 +317,16 @@
   corner-shape: round;
   font-size: var(--text-caption);
   color: var(--ui-muted);
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* A long name ends in "…", never past the composer's edge. */
+.inline-chat-attachment-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .inline-chat-attachment-remove {

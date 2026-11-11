@@ -1,3 +1,5 @@
+import { explainError } from "../utils/error-explain";
+import { currentStrings } from "../i18n/current";
 // The file tree's rows: a folder, which reads and lists its entries, and
 // a file.
 
@@ -59,6 +61,8 @@ export const DirNode = memo(function DirNode({
   const [loaded, setLoaded] = useState<{
     listing: string;
     entries: DirEntryInfo[];
+    /** Why it couldn't be read, in the UI's language. */
+    failed?: string;
   } | null>(null);
   // A document opened further down shows where it is, and so does a folder
   // asked to be shown (a plugin's showFolder): the folders on the way open,
@@ -82,8 +86,15 @@ export const DirNode = memo(function DirNode({
     let cancelled = false;
     fs.listDir(path).then(
       (entries) => !cancelled && setLoaded({ listing, entries }),
-      // Unreadable (permissions, vanished): show it empty rather than retry.
-      () => !cancelled && setLoaded({ listing, entries: [] }),
+      // Unreadable (permissions, vanished): said so, not shown empty with a
+      // New Document that would fail too.
+      (err: unknown) =>
+        !cancelled &&
+        setLoaded({
+          listing,
+          entries: [],
+          failed: explainError(err, currentStrings()),
+        }),
     );
     return () => {
       cancelled = true;
@@ -151,7 +162,13 @@ export const DirNode = memo(function DirNode({
               entries={loaded.entries}
             />
           )}
+          {loaded?.failed && (
+            <div className="tx-list-note" role="status">
+              {loaded?.failed}
+            </div>
+          )}
           {depth === 0 &&
+            !loaded?.failed &&
             sorted.length === 0 &&
             !drafting &&
             tree.newDocument && (

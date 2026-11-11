@@ -150,7 +150,7 @@ function ChatHistoryList({
                 onClick={() => onReopen(entry)}
               >
                 <span className="chat-history-entry-title">
-                  {entry.title || "…"}
+                  {entry.title || t.untitledTab}
                 </span>
                 <span className="chat-history-entry-meta">
                   {new Date(entry.updatedAt).toLocaleString(locale)}
@@ -201,7 +201,9 @@ function SearchHits({
             className="chat-history-entry-main"
             onClick={() => onReopen(hit)}
           >
-            <span className="chat-history-entry-title">{hit.title || "…"}</span>
+            <span className="chat-history-entry-title">
+              {hit.title || t.untitledTab}
+            </span>
             <span className="chat-history-hit">
               {hit.role === "user" ? t.chatHistoryByYou : t.chatHistoryByAi}:{" "}
               {hit.snippet}

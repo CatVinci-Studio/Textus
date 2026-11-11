@@ -55,3 +55,8 @@
   font-size: var(--text-secondary);
   color: var(--ui-muted);
 }
+
+/* The last hits, while the next search runs. */
+.search-text[aria-busy="true"] .search-text-file {
+  color: var(--ui-muted);
+}

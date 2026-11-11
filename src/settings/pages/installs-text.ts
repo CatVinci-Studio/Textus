@@ -1,3 +1,5 @@
+import { currentLanguage } from "../../i18n/current";
+import { localeOf } from "../../i18n/strings";
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 
@@ -11,8 +13,11 @@ interface InstallCounts {
  *  month left out when nothing came in it; nothing when uncounted. */
 export function installsText(counts: InstallCounts, t: Strings): string | null {
   if (counts.installs === undefined || counts.installs === null) return null;
-  const all = fill(t.pluginInstalls, { n: counts.installs.toLocaleString() });
+  const locale = localeOf(currentLanguage());
+  const all = fill(t.pluginInstalls, {
+    n: counts.installs.toLocaleString(locale),
+  });
   return counts.installs30
-    ? `${all} · ${fill(t.pluginInstalls30, { n: counts.installs30.toLocaleString() })}`
+    ? `${all} · ${fill(t.pluginInstalls30, { n: counts.installs30.toLocaleString(locale) })}`
     : all;
 }

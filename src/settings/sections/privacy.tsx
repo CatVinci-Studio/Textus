@@ -1,8 +1,9 @@
+import { explainError } from "../../utils/error-explain";
 import { useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "./controls";
-import { showConfirm } from "../../engine/controls/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { CheckIcon } from "../../engine/controls/icons";
 import { clearAllConversations } from "../../ai/chat/chat-history";
 import { drafts } from "../../platform/ipc";
@@ -22,7 +23,7 @@ function ClearRow({
   label: string;
   warning: string;
   t: Strings;
-  onClear: () => void;
+  onClear: () => Promise<unknown> | void;
 }) {
   const [cleared, setCleared] = useState(false);
 
@@ -34,8 +35,12 @@ function ClearRow({
       danger: true,
     });
     if (!ok) return;
-    onClear();
-    setCleared(true);
+    try {
+      await onClear();
+      setCleared(true);
+    } catch (err) {
+      await showMessage(explainError(err, t), { tone: "error" });
+    }
   }
 
   // The button stays enabled: it holds the focus the confirm dialog handed
@@ -98,7 +103,7 @@ export function PrivacySection({ t }: { t: Strings }) {
             label={t.privacyClearDrafts}
             warning={t.privacyDraftRecoveryClearHint}
             t={t}
-            onClear={() => void drafts.clearAllDrafts()}
+            onClear={() => drafts.clearAllDrafts()}
           />
         </div>
       </section>

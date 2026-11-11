@@ -1,3 +1,4 @@
+import { currentStrings } from "../../i18n/current";
 import type { Dispatch, SetStateAction } from "react";
 import {
   CloseIcon,
@@ -37,7 +38,7 @@ export function AttachmentChips({
           ) : (
             <GenericFileIcon className="inline-chat-attachment-kind" />
           )}
-          {file.name}
+          <span className="inline-chat-attachment-name">{file.name}</span>
           {/* A file cut at the extraction cap says so, or a partial answer
             looks like the model misread the document. */}
           {file.kind === "text" && file.truncated && (
@@ -47,6 +48,7 @@ export function AttachmentChips({
           )}
           <button
             className="inline-chat-attachment-remove"
+            aria-label={`${currentStrings().agentQueueRemove}: ${file.name}`}
             onClick={() =>
               setAttachments((prev) => prev.filter((_, j) => j !== i))
             }

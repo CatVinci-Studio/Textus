@@ -9,6 +9,10 @@ export function setCurrentLanguage(lang: Lang) {
   current = lang;
 }
 
+export function currentLanguage(): Lang {
+  return current;
+}
+
 export function currentStrings(): Strings {
   return resolveStrings(current);
 }

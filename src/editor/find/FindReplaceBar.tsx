@@ -113,6 +113,8 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
             <button
               type="button"
               className={`find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`}
+              aria-label={labels.matchCase}
+              aria-pressed={caseSensitive}
               onClick={findReplace.toggleCaseSensitive}
             >
               Aa
@@ -122,6 +124,8 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
             <button
               type="button"
               className={`find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`}
+              aria-label={labels.useRegex}
+              aria-pressed={useRegex}
               onClick={findReplace.toggleUseRegex}
             >
               .*

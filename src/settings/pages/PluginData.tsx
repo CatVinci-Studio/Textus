@@ -1,7 +1,8 @@
+import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { SettingRow } from "../sections/controls";
-import { showConfirm } from "../../engine/controls/app-dialog";
+import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
 import { projectRoot } from "../../plugins/store/plugin-settings";
@@ -56,9 +57,13 @@ export function PluginData({
       danger: true,
     });
     if (!ok) return;
-    await pluginsIpc.storeClear(id, "global", null).catch(() => {});
-    // With no folder open, the hidden place the plugin kept data in instead.
-    await pluginsIpc.storeClear(id, "project", root).catch(() => {});
+    try {
+      await pluginsIpc.storeClear(id, "global", null);
+      // With no folder open, the hidden place the plugin kept data in instead.
+      await pluginsIpc.storeClear(id, "project", root);
+    } catch (err) {
+      await showMessage(explainError(err, t), { tone: "error" });
+    }
     setRound((n) => n + 1);
   };
   return (
