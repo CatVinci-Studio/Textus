@@ -35,10 +35,7 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
       <ModelChoices t={t} />
       {/* One panel: the list on the left, the picked one's sign-in and
           models on the right, nothing boxed inside it. */}
-      <section className="settings-group" aria-label={t.providersGroup}>
-        <div className="settings-group-head">
-          <h2 className="settings-group-title">{t.providersGroup}</h2>
-        </div>
+      <SettingsGroup title={t.providersGroup}>
         <div className="providers-page">
           <div className="providers-list">
             {catalog.map((e) => (
@@ -75,7 +72,7 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
             />
           )}
         </div>
-      </section>
+      </SettingsGroup>
     </>
   );
 }

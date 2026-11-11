@@ -271,7 +271,7 @@ export const PluginListPane = memo(function PluginListPane({
           return (
             // The row's place too: two items a plugin gave one id still draw.
             <div key={`${key}@${index}`} className="plugin-list-entry">
-              {heading && <div className="plugin-list-group">{heading}</div>}
+              {heading && <div className="tx-list-heading">{heading}</div>}
               <div
                 role="treeitem"
                 aria-level={depth + 1}

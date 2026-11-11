@@ -73,13 +73,17 @@ export function RowHelp({
 /** A page's rarely needed settings, folded away at its foot. */
 export function AdvancedFold({
   t,
+  className,
   children,
 }: {
   t: Strings;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <details className="disclosure settings-advanced">
+    <details
+      className={`disclosure settings-advanced${className ? ` ${className}` : ""}`}
+    >
       <summary>{t.agentAdvancedGroupLabel}</summary>
       <div className="settings-advanced-body">{children}</div>
     </details>

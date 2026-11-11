@@ -3,7 +3,7 @@ import { ExpandingSearch } from "../../engine/controls/ExpandingSearch";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import type { ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
-import { RowHelp } from "../sections/controls";
+import { AdvancedFold, RowHelp } from "../sections/controls";
 import { SettingsGroup } from "./SettingsGroup";
 
 interface ExtensionsAction {
@@ -61,11 +61,8 @@ export function ExtensionsTabLayout({
       {top}
       <div className={off ? "extensions-off" : undefined}>
         <SettingsGroup
-          title={
-            installedCount
-              ? `${installedTitle} ${installedCount}`
-              : installedTitle
-          }
+          title={installedTitle}
+          count={installedCount || undefined}
           actions={
             <>
               {onQuery && (
@@ -108,10 +105,9 @@ export function ExtensionsTabLayout({
         {footer}
       </div>
       {advanced && (
-        <details className="disclosure settings-advanced extensions-advanced">
-          <summary>{t.agentAdvancedGroupLabel}</summary>
-          <div className="settings-advanced-body">{advanced}</div>
-        </details>
+        <AdvancedFold t={t} className="extensions-advanced">
+          {advanced}
+        </AdvancedFold>
       )}
     </>
   );

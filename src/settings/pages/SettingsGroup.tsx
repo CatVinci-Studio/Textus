@@ -7,24 +7,42 @@ import type { ReactNode } from "react";
  */
 export function SettingsGroup({
   title,
+  count,
   actions,
+  className,
   children,
 }: {
   /** None for a page's first section when it would only repeat the page's
    *  own name. */
   title?: string;
+  /** How many it lists, after the title. */
+  count?: number;
   actions?: ReactNode;
-  children: ReactNode;
+  className?: string;
+  /** None while the section is folded: only its head shows. */
+  children?: ReactNode;
 }) {
   return (
-    <section className="settings-group" aria-label={title}>
+    <section
+      className={className ? `settings-group ${className}` : "settings-group"}
+      aria-label={title}
+    >
       {(title || actions) && (
         <div className="settings-group-head">
-          {title && <h2 className="settings-group-title">{title}</h2>}
+          {title && (
+            <h2 className="settings-group-title">
+              {title}
+              {count !== undefined && (
+                <span className="settings-group-count" data-search-ignore>
+                  {count}
+                </span>
+              )}
+            </h2>
+          )}
           {actions && <div className="settings-group-actions">{actions}</div>}
         </div>
       )}
-      <div className="settings-group-body">{children}</div>
+      {children && <div className="settings-group-body">{children}</div>}
     </section>
   );
 }

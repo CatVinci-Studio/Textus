@@ -565,39 +565,6 @@ button.plugin-card-open:hover .plugin-card-name {
 
 /* Installed, then Available: a count after each title; Available folds,
    with its sort and the fold button on its title's line. */
-.extensions-count {
-  margin-left: 8px;
-  color: var(--ui-muted);
-  font-weight: 400;
-}
-/* Update All, at the end of the Installed title's line while there are updates. */
-.settings-group-title:has(> .extensions-title-action) {
-  display: flex;
-  align-items: center;
-}
-.settings-group-title:has(> .extensions-title-action) {
-  white-space: nowrap;
-}
-.settings-group-title > .extensions-title-action {
-  flex: none;
-  width: auto;
-  margin-left: auto;
-  font-size: var(--text-control);
-  font-weight: 500;
-}
-.extensions-available-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 8px;
-}
-.extensions-available-head .settings-group-title {
-  flex: 1;
-  margin: 0;
-}
-.extensions-available-head .market-sort {
-  margin: 0;
-}
 /* Where the list's end comes into sight: the next rows come. */
 .extensions-more-rows {
   height: 1px;

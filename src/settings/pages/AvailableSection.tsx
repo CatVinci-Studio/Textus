@@ -1,3 +1,4 @@
+import { SettingsGroup } from "./SettingsGroup";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import { getUiState, setUiState } from "../../storage/ui-state";
@@ -57,34 +58,36 @@ export function AvailableSection({
     return () => observer.disconnect();
   }, [left, folded]);
   return (
-    <section className="settings-group extensions-available">
-      <div className="extensions-available-head">
-        <h2 className="settings-group-title">
-          {t.extensionsAvailable}
-          {!message && <span className="extensions-count">{rows.length}</span>}
-        </h2>
-        {!folded && head}
-        {/* A short list has nothing to fold away. */}
-        {(folded || rows.length > FOLD_FROM) && (
-          <button
-            type="button"
-            className="text-button settings-inline-button"
-            aria-expanded={!folded}
-            onClick={toggle}
-          >
-            {folded ? t.extensionsUnfold : t.extensionsFold}
-          </button>
-        )}
-      </div>
+    <SettingsGroup
+      className="extensions-available"
+      title={t.extensionsAvailable}
+      count={message ? undefined : rows.length}
+      actions={
+        <>
+          {!folded && head}
+          {/* A short list has nothing to fold away. */}
+          {(folded || rows.length > FOLD_FROM) && (
+            <button
+              type="button"
+              className="text-button settings-inline-button"
+              aria-expanded={!folded}
+              onClick={toggle}
+            >
+              {folded ? t.extensionsUnfold : t.extensionsFold}
+            </button>
+          )}
+        </>
+      }
+    >
       {!folded && (
-        <div className="settings-group-body">
+        <>
           {!message && note}
           {message ?? shown}
           {!message && left > 0 && (
             <div ref={end} className="extensions-more-rows" aria-hidden />
           )}
-        </div>
+        </>
       )}
-    </section>
+    </SettingsGroup>
   );
 }

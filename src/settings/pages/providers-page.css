@@ -42,7 +42,13 @@
   }
 }
 
-/* The list and the picked provider: one panel, framed as a group is. */
+/* The list and the picked provider: one panel, framed as a group is; the
+   group's own card steps aside for it. */
+.settings-group-body:has(> .providers-page) {
+  padding: 0;
+  border: 0;
+  background: none;
+}
 .providers-page {
   padding: var(--space-3);
   border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);

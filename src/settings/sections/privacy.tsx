@@ -1,3 +1,4 @@
+import { SettingsGroup } from "../pages/SettingsGroup";
 import { explainError } from "../../utils/error-explain";
 import { useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -64,57 +65,48 @@ export function PrivacySection({ t }: { t: Strings }) {
   return (
     <>
       {hasTextusAi && (
-        <section className="settings-group">
-          <h2 className="settings-group-title">{t.privacyChatHistoryLabel}</h2>
-          <div className="settings-group-body">
-            <ToggleRow
-              label={t.privacyChatHistoryToggle}
-              checked={settings.enableChatHistory}
-              onChange={(v) => setSettings({ enableChatHistory: v })}
-            />
-            <ClearRow
-              label={t.privacyClearChatHistory}
-              warning={t.privacyChatHistoryClearHint}
-              t={t}
-              onClear={clearAllConversations}
-            />
-          </div>
-        </section>
+        <SettingsGroup title={t.privacyChatHistoryLabel}>
+          <ToggleRow
+            label={t.privacyChatHistoryToggle}
+            checked={settings.enableChatHistory}
+            onChange={(v) => setSettings({ enableChatHistory: v })}
+          />
+          <ClearRow
+            label={t.privacyClearChatHistory}
+            warning={t.privacyChatHistoryClearHint}
+            t={t}
+            onClear={clearAllConversations}
+          />
+        </SettingsGroup>
       )}
 
-      <section className="settings-group">
-        <h2 className="settings-group-title">{t.privacyDraftRecoveryLabel}</h2>
-        <div className="settings-group-body">
+      <SettingsGroup title={t.privacyDraftRecoveryLabel}>
+        <ToggleRow
+          label={t.privacyDraftRecoveryToggle}
+          checked={settings.enableDraftRecovery}
+          onChange={(v) => setSettings({ enableDraftRecovery: v })}
+        />
+        {/* Kept as drafts: only while drafts are kept at all. */}
+        {settings.enableDraftRecovery && (
           <ToggleRow
-            label={t.privacyDraftRecoveryToggle}
-            checked={settings.enableDraftRecovery}
-            onChange={(v) => setSettings({ enableDraftRecovery: v })}
+            label={t.privacyKeepUnsavedToggle}
+            help={t.privacyKeepUnsavedHelp}
+            checked={settings.keepUnsavedOnClose}
+            onChange={(v) => setSettings({ keepUnsavedOnClose: v })}
           />
-          {/* Kept as drafts: only while drafts are kept at all. */}
-          {settings.enableDraftRecovery && (
-            <ToggleRow
-              label={t.privacyKeepUnsavedToggle}
-              help={t.privacyKeepUnsavedHelp}
-              checked={settings.keepUnsavedOnClose}
-              onChange={(v) => setSettings({ keepUnsavedOnClose: v })}
-            />
-          )}
-          <ClearRow
-            label={t.privacyClearDrafts}
-            warning={t.privacyDraftRecoveryClearHint}
-            t={t}
-            onClear={() => drafts.clearAllDrafts()}
-          />
-        </div>
-      </section>
+        )}
+        <ClearRow
+          label={t.privacyClearDrafts}
+          warning={t.privacyDraftRecoveryClearHint}
+          t={t}
+          onClear={() => drafts.clearAllDrafts()}
+        />
+      </SettingsGroup>
 
       {isDesktopApp && (
-        <section className="settings-group">
-          <h2 className="settings-group-title">{t.settingsFileLabel}</h2>
-          <div className="settings-group-body">
-            <SettingsFileSection t={t} />
-          </div>
-        </section>
+        <SettingsGroup title={t.settingsFileLabel}>
+          <SettingsFileSection t={t} />
+        </SettingsGroup>
       )}
     </>
   );

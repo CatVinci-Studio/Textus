@@ -185,7 +185,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         updates.length > 1 && (
           <button
             type="button"
-            className="text-button extensions-title-action"
+            className="text-button settings-inline-button"
             disabled={installing !== null}
             onClick={() => void updateAll(updates)}
           >

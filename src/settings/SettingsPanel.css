@@ -187,18 +187,24 @@
   min-height: 28px;
 }
 
-/* The title whole; its tools move to a line of their own under it, at its
-   end, when the two don't fit side by side (a long language, a narrow
-   window). */
+/* The title whole; its tools move to a line of their own under it when
+   the two don't fit side by side (a long language, a narrow window). */
 .settings-group-head > .settings-group-title {
   flex: 1 0 auto;
   max-width: 100%;
 }
 
+/* How many a group lists, after its title. */
+.settings-group-count {
+  margin-left: 8px;
+  color: var(--ui-muted);
+  font-weight: 400;
+}
+
+/* Beside the title its end; wrapped under it, from the title's start. */
 .settings-group-actions {
   display: flex;
   flex: none;
-  margin-left: auto;
   align-items: center;
   gap: 4px;
   margin-bottom: 8px;

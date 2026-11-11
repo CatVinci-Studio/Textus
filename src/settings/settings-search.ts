@@ -38,7 +38,9 @@ function groupOf(el: Element): string {
   const fixed = el.closest(".shortcut-fixed-section");
   if (fixed) return labelText(fixed.querySelector(".shortcut-fixed-title"));
   const group = el.closest(".settings-group");
-  return labelText(group?.querySelector(":scope > .settings-group-title"));
+  return labelText(
+    group?.querySelector(":scope > .settings-group-head > .settings-group-title"),
+  );
 }
 
 interface Found {

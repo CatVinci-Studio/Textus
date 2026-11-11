@@ -4,7 +4,7 @@ import { findEntryElement, harvestPage, matchEntries } from "./settings-search";
 
 const PAGE = `
   <section class="settings-group">
-    <h2 class="settings-group-title">Theme</h2>
+    <div class="settings-group-head"><h2 class="settings-group-title">Theme</h2></div>
     <div class="settings-group-body">
       <div class="settings-row">
         <div class="settings-row-text">
