@@ -66,19 +66,14 @@ export const auth = {
     aiCommand("test_custom_endpoint", baseUrl, apiKey),
 };
 
-/** Image-host credentials in the provider-key store, one per host under a
- *  reserved id never shown as a provider. Keep in step with the Rust side. */
-const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
-  picgo: "__image_host_picgo",
-  smms: "__image_host_smms",
-  imgur: "__image_host_imgur",
-  custom: "__image_host",
-};
+/** Image-host tokens, kept in the provider-key store under the id Rust
+ *  gives each host. */
+const keyOf = (host: ImageHost) => command("image_host_key_id", host);
 export const imageHostAuth = {
-  tokenStatus: (host: ImageHost) =>
-    auth.providerApiKeyStatus(IMAGE_HOST_CREDENTIAL_IDS[host]),
-  setToken: (host: ImageHost, token: string) =>
-    auth.setProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host], token),
-  clearToken: (host: ImageHost) =>
-    auth.clearProviderApiKey(IMAGE_HOST_CREDENTIAL_IDS[host]),
+  tokenStatus: async (host: ImageHost) =>
+    auth.providerApiKeyStatus(await keyOf(host)),
+  setToken: async (host: ImageHost, token: string) =>
+    auth.setProviderApiKey(await keyOf(host), token),
+  clearToken: async (host: ImageHost) =>
+    auth.clearProviderApiKey(await keyOf(host)),
 };

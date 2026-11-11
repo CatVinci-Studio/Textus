@@ -117,6 +117,8 @@ export const commands = {
 	folder_conventions: (path: string) => __TAURI_INVOKE<Conventions_Serialize>("folder_conventions", { path }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
+	/**  Where `host`'s token is kept, for Settings to save or clear it. */
+	image_host_key_id: (host: ImageHost) => __TAURI_INVOKE<string>("image_host_key_id", { host }),
 	update_session_paths: (paths: string[]) => __TAURI_INVOKE<void>("update_session_paths", { paths }),
 	/**
 	 *  A dirty-window prompt cancelled File > Quit after other windows closed:

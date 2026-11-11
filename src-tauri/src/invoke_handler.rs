@@ -29,7 +29,7 @@ use commands::fs::{
     open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
     save_file_dialog, save_pasted_image, save_settings_file_dialog, write_text_file,
 };
-use commands::image_host::upload_image;
+use commands::image_host::{image_host_key_id, upload_image};
 #[cfg(desktop)]
 use commands::linked_file::open_linked_file;
 #[cfg(desktop)]
@@ -78,6 +78,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::link_root::document_link_root,
         conventions::folder_conventions,
         upload_image,
+        image_host_key_id,
         migrate_draft_images,
         save_theme_css,
         load_theme_css,

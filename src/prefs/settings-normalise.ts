@@ -90,7 +90,7 @@ export function storedCreations(value: unknown): Creation[] {
 }
 
 /** The `lang` attribute for the UI language, which the CSS `:lang()` font
- *  stacks key off. Keep in step with the boot script. */
+ *  stacks key off; the boot script reads the same table. */
 export function htmlLang(language: Lang): string {
   return localeOf(language);
 }

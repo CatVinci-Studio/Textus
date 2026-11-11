@@ -297,6 +297,13 @@ async fn send(
     Ok(src)
 }
 
+/// Where `host`'s token is kept, for Settings to save or clear it.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub fn image_host_key_id(host: ImageHost) -> &'static str {
+    host.credential_id()
+}
+
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn upload_image(
