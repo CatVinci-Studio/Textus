@@ -1,3 +1,4 @@
+import PERMISSIONS from "./permissions.json";
 /**
  * A plugin's manifest, `textus-plugin.json`, read and checked before any of
  * the plugin runs. User-facing strings may be `%key%`, looked up in `l10n`.
@@ -14,40 +15,29 @@ import {
 
 export { ManifestError } from "./manifest-parse";
 
-/** A permission, as the manifest names it. `network:<host>` names one
- *  host (`*.domain` for its subdomains, `host:port`, or `*` for any). */
-export type Permission =
+/** The permissions without a host, and the platforms: one list with the
+ *  backend's (plugins/manifest.rs reads permissions.json too). */
+const PLAIN_PERMISSIONS = PERMISSIONS.plain as readonly PlainPermission[];
+const PLUGIN_PLATFORMS = PERMISSIONS.platforms as readonly PluginPlatform[];
+
+type PlainPermission =
   | "editor.read"
   | "editor.write"
   | "editor.propose"
+  | "editor.input"
   | "files.read"
   | "files.write"
   | "clipboard"
-  | "editor.input"
   | "project.data"
   | "ai.tools"
   | "notifications"
   | "background"
-  | "agents"
-  | `network:${string}`;
+  | "agents";
+export type PluginPlatform = "desktop" | "ios";
 
-const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
-export type PluginPlatform = (typeof PLUGIN_PLATFORMS)[number];
-
-const PLAIN_PERMISSIONS = [
-  "editor.read",
-  "editor.write",
-  "editor.propose",
-  "files.read",
-  "files.write",
-  "clipboard",
-  "editor.input",
-  "project.data",
-  "ai.tools",
-  "notifications",
-  "background",
-  "agents",
-] as const;
+/** A permission, as the manifest names it. `network:<host>` names one
+ *  host (`*.domain` for its subdomains, `host:port`, or `*` for any). */
+export type Permission = PlainPermission | `network:${string}`;
 
 export function isPermission(value: unknown): value is Permission {
   if (typeof value !== "string") return false;

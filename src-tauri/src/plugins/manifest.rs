@@ -11,29 +11,25 @@
 use super::require_id;
 use serde_json::{Map, Value};
 
-/// Permissions without a host. `network:<host>` is checked apart.
-const PLAIN_PERMISSIONS: &[&str] = &[
-    "editor.read",
-    "editor.write",
-    "editor.propose",
-    "files.read",
-    "files.write",
-    "clipboard",
-    "editor.input",
-    "project.data",
-    "ai.tools",
-    "notifications",
-    "background",
-    "agents",
-];
+/// The permissions without a host (`network:<host>` is checked apart) and
+/// the platforms: one list with the frontend's.
+#[derive(serde::Deserialize)]
+struct Lists {
+    plain: Vec<String>,
+    platforms: Vec<String>,
+}
+
+static LISTS: std::sync::LazyLock<Lists> = std::sync::LazyLock::new(|| {
+    serde_json::from_str(include_str!("../../../src/plugins/store/permissions.json"))
+        .expect("src/plugins/store/permissions.json is the permissions' list")
+});
 
 const REQUIRED_SETTINGS: &[&str] = &["runInBackground"];
-const PLATFORMS: &[&str] = &["desktop", "ios"];
 
 /// Whether `value` is a permission a plugin may name: one of the plain ones,
 /// or `network:` and `*`, a host, `*.` a domain, each maybe with `:port`.
 pub fn is_permission(value: &str) -> bool {
-    if PLAIN_PERMISSIONS.contains(&value) {
+    if LISTS.plain.iter().any(|p| p == value) {
         return true;
     }
     let Some(host) = value.strip_prefix("network:") else {
@@ -158,7 +154,10 @@ pub fn check(manifest: &str) -> Result<(), String> {
     if m.get("platforms").is_some() {
         let platforms = list(m.get("platforms"), "platforms")?;
         for p in platforms {
-            if !p.as_str().is_some_and(|p| PLATFORMS.contains(&p)) {
+            if !p
+                .as_str()
+                .is_some_and(|p| LISTS.platforms.iter().any(|q| q == p))
+            {
                 return Err(format!("No platform {p}: desktop or ios."));
             }
         }
@@ -224,6 +223,22 @@ mod tests {
             None => o.remove(field),
         };
         m.to_string()
+    }
+
+    #[test]
+    fn a_permission_is_judged_as_the_frontend_judges_it() {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../src/plugins/store/permissions.json"))
+                .unwrap();
+        let list = |key: &str| -> Vec<String> {
+            serde_json::from_value(cases["hosts"][key].clone()).unwrap()
+        };
+        for p in LISTS.plain.iter().chain(&list("valid")) {
+            assert!(is_permission(p), "{p}");
+        }
+        for p in list("invalid") {
+            assert!(!is_permission(&p), "{p}");
+        }
     }
 
     #[test]

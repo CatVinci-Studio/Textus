@@ -2,7 +2,7 @@ import type { Strings } from "../../i18n/strings";
 import type { Permission } from "./manifest";
 
 /** Each permission's words, but `network:<host>`'s. */
-const LABELS: Record<
+export const PERMISSION_LABELS: Record<
   Exclude<Permission, `network:${string}`>,
   keyof Strings
 > = {
@@ -23,7 +23,7 @@ const LABELS: Record<
 /** A permission in plain words, as the install dialog and a plugin's page
  *  in Settings name it. */
 export function permissionLabel(permission: Permission, t: Strings): string {
-  const label = LABELS[permission as keyof typeof LABELS];
+  const label = PERMISSION_LABELS[permission as keyof typeof PERMISSION_LABELS];
   if (label) return t[label] as string;
   const host = permission.slice("network:".length);
   return host === "*"
