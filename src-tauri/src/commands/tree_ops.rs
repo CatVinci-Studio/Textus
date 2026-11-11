@@ -5,16 +5,6 @@
 use std::path::{Path, PathBuf};
 use tokio::fs;
 
-/// A name the user typed: one path component, nothing that walks out of the
-/// folder it is meant for.
-fn check_name(name: &str) -> Result<&str, String> {
-    let name = name.trim();
-    if name.is_empty() || name == "." || name == ".." || name.contains(['/', '\\']) {
-        return Err(crate::errors::error("badName"));
-    }
-    Ok(name)
-}
-
 /// A new document's file name: what was typed, with `.md` added unless it
 /// already names a Markdown file.
 fn document_name(name: &str) -> String {
@@ -43,7 +33,7 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_document(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
-    let path = dir.join(document_name(check_name(&name)?));
+    let path = dir.join(document_name(crate::ids::typed_name(&name)?));
     fs::OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -61,7 +51,7 @@ pub async fn tree_create_document(dir: String, name: String) -> Result<String, S
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_folder(dir: String, name: String) -> Result<String, String> {
     let dir = existing_dir(&dir).await?;
-    let path = dir.join(check_name(&name)?);
+    let path = dir.join(crate::ids::typed_name(&name)?);
     fs::create_dir(&path).await.map_err(|e| match e.kind() {
         std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
         _ => e.to_string(),
@@ -146,7 +136,7 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
         .await
         .map_err(|e| e.to_string())?
         .is_dir();
-    let name = check_name(&name)?;
+    let name = crate::ids::typed_name(&name)?;
     let was_doc = !is_dir && document_name(&path) == path;
     let name = if was_doc && !name.contains('.') {
         document_name(name)
@@ -176,33 +166,16 @@ pub async fn tree_rename_entry(path: String, name: String) -> Result<String, Str
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_trash_entry(path: String, root: String) -> Result<(), String> {
     let target = itself(&path)?;
-    if std::fs::canonicalize(&root).is_ok_and(|r| target == r || r.starts_with(&target)) {
-        return Err(crate::errors::error("trashShownFolder"));
-    }
-    #[cfg(desktop)]
-    return tauri::async_runtime::spawn_blocking(move || {
-        trash::delete(&target).map_err(|e| e.to_string())
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::atomic::user_file_to_trash(&target, Some(std::path::Path::new(&root)))
     })
     .await
-    .map_err(|e| e.to_string())?;
-    #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        target.display()
-    ))
+    .map_err(|e| e.to_string())?
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn names_stay_one_component() {
-        assert_eq!(check_name("  笔记 ").unwrap(), "笔记");
-        for bad in ["", "  ", ".", "..", "a/b", "a\\b", "../x"] {
-            assert!(check_name(bad).is_err(), "{bad:?} should be rejected");
-        }
-    }
 
     #[test]
     fn documents_get_md() {

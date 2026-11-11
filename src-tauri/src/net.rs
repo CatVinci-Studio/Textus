@@ -22,24 +22,6 @@ pub fn public_client(connect: Duration, total: Duration) -> Result<reqwest::Clie
     through(client(connect, total), aicompat::http::proxy_url())
 }
 
-/// Whether `host` is this machine or the local network, as written: an
-/// address in a private range, or a name that only resolves nearby.
-pub fn local_host(host: &str) -> bool {
-    let host = host.trim_matches(['[', ']']).to_ascii_lowercase();
-    match host.parse::<std::net::IpAddr>() {
-        Ok(std::net::IpAddr::V4(ip)) => {
-            ip.is_loopback() || ip.is_private() || ip.is_link_local() || ip.is_unspecified()
-        }
-        Ok(std::net::IpAddr::V6(ip)) => {
-            ip.is_loopback() || ip.is_unspecified() || (ip.segments()[0] & 0xfe00) == 0xfc00
-        }
-        Err(_) => {
-            let name = host.trim_end_matches('.');
-            name == "localhost" || name.ends_with(".localhost") || name.ends_with(".local")
-        }
-    }
-}
-
 /// `builder` through `proxy`, if there is one.
 fn through(
     builder: reqwest::ClientBuilder,

@@ -275,3 +275,24 @@ pub(crate) fn to_trash(path: &std::path::Path) -> Result<(), String> {
         .map_err(|e| e.to_string())
     }
 }
+
+/// A file of the user's to the Trash, never deleted: refused where the
+/// system has no Trash (the iPhone). The folder `shown` (the tree's root,
+/// a plugin's folder) and any folder holding it are refused too.
+pub(crate) fn user_file_to_trash(
+    path: &std::path::Path,
+    shown: Option<&std::path::Path>,
+) -> Result<(), String> {
+    if let Some(root) = shown.and_then(|r| std::fs::canonicalize(r).ok()) {
+        if root.starts_with(path) {
+            return Err(crate::errors::error("trashShownFolder"));
+        }
+    }
+    #[cfg(desktop)]
+    return trash::delete(path).map_err(|e| e.to_string());
+    #[cfg(not(desktop))]
+    Err(format!(
+        "{} can't be moved to the Trash here.",
+        path.display()
+    ))
+}

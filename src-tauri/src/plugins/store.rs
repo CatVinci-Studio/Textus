@@ -76,10 +76,7 @@ pub(super) fn forget_global(app: &tauri::AppHandle, id: &str) -> Result<(), Stri
         if !place.is_dir() {
             continue;
         }
-        #[cfg(desktop)]
-        trash::delete(&place).map_err(|e| e.to_string())?;
-        #[cfg(not(desktop))]
-        std::fs::remove_dir_all(&place).map_err(|e| e.to_string())?;
+        crate::atomic::to_trash(&place)?;
     }
     Ok(())
 }

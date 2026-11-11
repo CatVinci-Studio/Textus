@@ -321,21 +321,11 @@ pub async fn plugin_fs_trash(
     path: String,
 ) -> Result<(), String> {
     let path = granted_path(&app, &id, "files.write", &root, &path)?;
-    if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
-        return Err("The folder itself can't be moved to the Trash.".into());
-    }
-    // The trash crate is desktop-only; the iPhone has no Trash.
-    #[cfg(desktop)]
-    return tauri::async_runtime::spawn_blocking(move || {
-        trash::delete(&path).map_err(|e| e.to_string())
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::atomic::user_file_to_trash(&path, Some(Path::new(&root)))
     })
     .await
-    .map_err(|e| e.to_string())?;
-    #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        path.display()
-    ))
+    .map_err(|e| e.to_string())?
 }
 
 /// Makes a folder (and the folders it is in) in the folder.

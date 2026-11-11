@@ -446,7 +446,8 @@ pub async fn move_picture_to_trash(
         doc_path.as_deref().map(Path::new),
         Path::new(&path),
     )?;
-    trash::delete(&file).map_err(|e| format!("Couldn't move the old picture to the Trash: {e}"))
+    crate::atomic::user_file_to_trash(&file, None)
+        .map_err(|e| format!("Couldn't move the old picture to the Trash: {e}"))
 }
 
 #[cfg(test)]

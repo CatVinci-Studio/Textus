@@ -397,9 +397,8 @@ pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String>
     crate::atomic::to_trash(&data_dir(&app, &id)?)?;
     super::store::forget_global(&app, &id)?;
     // A script's file goes to the Trash, or it would be found again.
-    #[cfg(desktop)]
     if let Some(file) = super::scripts::script_file(&app, &id) {
-        trash::delete(&file).map_err(|e| e.to_string())?;
+        crate::atomic::to_trash(&file)?;
     }
     super::files::forget_secrets(&app, &id)
 }

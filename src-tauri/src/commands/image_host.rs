@@ -317,8 +317,7 @@ pub async fn upload_image(
 ) -> Result<UploadedImage, String> {
     let preset = host.preset();
     let url = upload_url(&preset, &endpoint)?;
-    if filename.is_empty() || filename.contains(['/', '\\']) || filename == "." || filename == ".."
-    {
+    if crate::ids::one_name(&filename) != Some(filename.as_str()) {
         return Err("invalid image filename".to_string());
     }
 

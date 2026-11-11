@@ -442,10 +442,7 @@ pub async fn delete_global_skill(app: AppHandle, name: String) -> Result<Vec<Str
     tauri::async_runtime::spawn_blocking(move || {
         let files = skill_files_named(&dir, &name)?;
         for file in &files {
-            #[cfg(desktop)]
-            trash::delete(file).map_err(|e| e.to_string())?;
-            #[cfg(not(desktop))]
-            std::fs::remove_file(file).map_err(|e| e.to_string())?;
+            crate::atomic::to_trash(file)?;
         }
         Ok(files
             .iter()

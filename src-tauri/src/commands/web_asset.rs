@@ -64,7 +64,12 @@ fn public_url(url: &str) -> Option<reqwest::Url> {
     if !matches!(parsed.scheme(), "https" | "http") {
         return None;
     }
-    (!crate::net::local_host(parsed.host_str()?)).then_some(parsed)
+    let host = parsed.host_str()?.trim_matches(['[', ']']);
+    let local = aicompat::public_address::is_local_name(host)
+        || host
+            .parse::<std::net::IpAddr>()
+            .is_ok_and(|ip| !aicompat::public_address::is_public(ip));
+    (!local).then_some(parsed)
 }
 
 fn cache_path(app: &tauri::AppHandle, url: &str) -> Option<PathBuf> {
@@ -156,6 +161,10 @@ mod tests {
             "http://[::1]/x.css",
             "http://printer.local/x.css",
             "asset://localhost/x.css",
+            // What only the shared check knew: CGNAT, internal names.
+            "http://100.64.0.1/x.css",
+            "http://nas.internal/x.css",
+            "http://router.home.arpa/x.css",
         ] {
             assert!(public_url(refused).is_none(), "{refused}");
         }
