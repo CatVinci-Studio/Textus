@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 
+import {
+  clampSidePanel,
+  sidePanelMax,
+} from "../../engine/controls/side-panel-width";
 import { act, renderHook } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { installTestLocalStorage } from "../../dev/test-local-storage";
 import {
   SIDEBAR_DEFAULT_WIDTH,
   SIDEBAR_MIN_WIDTH,
-  clampSidebarWidth,
-  sidebarMaxWidth,
+  SIDEBAR_LIMITS,
   storedSidebarWidth,
   useSidebarWidth,
 } from "./sidebar-width";
@@ -29,21 +32,21 @@ beforeEach(() => {
 
 describe("the sidebar's width bounds", () => {
   it("allows up to 480px on a wide window", () => {
-    expect(sidebarMaxWidth(1920)).toBe(480);
+    expect(sidePanelMax(1920, SIDEBAR_LIMITS)).toBe(480);
   });
 
   it("allows under half of a small window", () => {
-    expect(sidebarMaxWidth(800)).toBe(360);
+    expect(sidePanelMax(800, SIDEBAR_LIMITS)).toBe(360);
   });
 
   it("never goes below the minimum, however small the window", () => {
-    expect(sidebarMaxWidth(200)).toBe(SIDEBAR_MIN_WIDTH);
+    expect(sidePanelMax(200, SIDEBAR_LIMITS)).toBe(SIDEBAR_MIN_WIDTH);
   });
 
   it("clamps into the bounds and rounds", () => {
-    expect(clampSidebarWidth(50, 1400)).toBe(SIDEBAR_MIN_WIDTH);
-    expect(clampSidebarWidth(9999, 1400)).toBe(480);
-    expect(clampSidebarWidth(300.4, 1400)).toBe(300);
+    expect(clampSidePanel(50, 1400, SIDEBAR_LIMITS)).toBe(SIDEBAR_MIN_WIDTH);
+    expect(clampSidePanel(9999, 1400, SIDEBAR_LIMITS)).toBe(480);
+    expect(clampSidePanel(300.4, 1400, SIDEBAR_LIMITS)).toBe(300);
   });
 });
 

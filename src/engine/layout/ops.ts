@@ -8,9 +8,7 @@ import {
   resizeAt,
   splitPane,
   splitWhole,
-  swapAt,
   tidy,
-  turnAt,
   type Branch,
   type LayoutNode,
   type Path,
@@ -136,21 +134,17 @@ export function movePane(
   return settled(root, id);
 }
 
-/** A branch rearranged: turned the other way, the two children either side
- *  of boundary `index` swapped, or that boundary moved to `share` of the
- *  two (0.5 evens them). */
+/** A branch's boundary `index` moved to `share` of the two children
+ *  either side of it (0.5 evens them). */
 export function arrange(
   layout: SplitLayout,
   path: Path,
-  change: "turn" | { swap: number } | { index: number; share: number },
+  change: { index: number; share: number },
 ): SplitLayout | null {
-  const root =
-    change === "turn"
-      ? turnAt(layout.root, path)
-      : "swap" in change
-        ? swapAt(layout.root, path, change.swap)
-        : resizeAt(layout.root, path, change.index, change.share);
-  return settled(root, layout.focus);
+  return settled(
+    resizeAt(layout.root, path, change.index, change.share),
+    layout.focus,
+  );
 }
 
 /** Pane `id` in use: a tab opened next joins it. Only documents' panes

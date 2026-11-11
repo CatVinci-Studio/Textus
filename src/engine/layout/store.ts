@@ -3,7 +3,6 @@ import {
   paneBeside,
   paneWithTab,
   type Path,
-  type Side,
   type SplitDirection,
 } from "./tree";
 import {
@@ -112,21 +111,9 @@ function commit(next: SplitLayout | null) {
   else closeSplit();
 }
 
-/** Moves `tabId` into pane `id`, in front there. */
-export function moveToPane(tabId: string, id: string): void {
-  if (layout) commit(moveTab(layout, tabId, id));
-}
-
 /** A pane's tab bar reordered: `tabId` to `index` among its tabs. */
 export function reorderInPane(id: string, tabId: string, index: number): void {
   if (layout) commit(reorderTab(layout, id, tabId, index));
-}
-
-/** `tabId` taken from its pane into a new one on `side` of pane `id`; a
- *  pane's only tab stays where it is. */
-export function splitBeside(tabId: string, id: string, side: Side): void {
-  const next = layout && splitOff(layout, tabId, id, side);
-  if (next) setSplitLayout(next);
 }
 
 /** The pane a tab opened next joins. */
@@ -204,12 +191,11 @@ export function arrivalsTaken(tabIds: readonly string[]): void {
   for (const id of tabIds) arriving.delete(id);
 }
 
-/** A branch rearranged: turned the other way, or the two children either
- *  side of boundary `index` swapped, or that boundary moved to `share` of
- *  the two (0.5 evens them). */
+/** A branch's boundary `index` moved to `share` of the two either side of
+ *  it (0.5 evens them): a divider dragged. */
 export function arrangeBranch(
   path: Path,
-  change: "turn" | { swap: number } | { index: number; share: number },
+  change: { index: number; share: number },
 ): void {
   if (layout) commit(arrange(layout, path, change));
 }

@@ -75,9 +75,6 @@ export interface UiState {
   movedToPluginsOffered: string[];
   /** "plugin key" pairs whose manifest key was someone else's, told once. */
   pluginKeysTold: string[];
-  /** Who the user chose to do what more than one plugin on claims
-   *  ("codeBlock:chart" -> plugin id). */
-  pluginOwners: Record<string, string>;
   /** The split the window was left in, its panes by their documents'
    *  paths (app/layout/restore.ts); null when it showed one. Read
    *  loosely: earlier versions kept a pair. */

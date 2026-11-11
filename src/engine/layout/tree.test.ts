@@ -6,9 +6,7 @@ import {
   resizeAt,
   splitPane,
   splitWhole,
-  swapAt,
   tidy,
-  turnAt,
   type Branch,
   type LayoutNode,
 } from "./tree";
@@ -116,13 +114,6 @@ describe("resizing and arranging", () => {
     expect(next.sizes.map((s) => +s.toFixed(3))).toEqual([0.2, 0.6, 0.2]);
     const squeezed = resizeAt(root(), [], 1, 1) as Branch;
     expect(squeezed.sizes.map((s) => +s.toFixed(3))).toEqual([0.4, 0.5, 0.1]);
-  });
-
-  it("turns a branch, and swaps the two children either side of a boundary", () => {
-    expect((turnAt(root(), []) as Branch).direction).toBe("column");
-    const swapped = swapAt(root(), [], 1) as Branch;
-    expect(fronts(swapped)).toEqual(["a", "c", "b"]);
-    expect(swapped.sizes).toEqual([0.4, 0.2, 0.4]);
   });
 });
 

@@ -239,33 +239,6 @@ export function resizeAt(
   });
 }
 
-/** The branch at `path` laid out the other way. */
-export function turnAt(node: LayoutNode, path: Path): LayoutNode {
-  return mapBranch(node, path, (b) => ({
-    ...b,
-    direction: b.direction === "row" ? "column" : "row",
-  }));
-}
-
-/** The two children either side of boundary `index` of the branch at
- *  `path` swapped, each keeping its share. */
-export function swapAt(
-  node: LayoutNode,
-  path: Path,
-  index: number,
-): LayoutNode {
-  return mapBranch(node, path, (b) => {
-    const children = [...b.children];
-    const sizes = [...b.sizes];
-    [children[index], children[index + 1]] = [
-      children[index + 1],
-      children[index],
-    ];
-    [sizes[index], sizes[index + 1]] = [sizes[index + 1], sizes[index]];
-    return { ...b, children, sizes };
-  });
-}
-
 /** A line between two children of a branch. */
 export interface Divider {
   path: Path;

@@ -11,17 +11,9 @@ import {
  *  under this the tree's names are cut to a few letters. */
 export const SIDEBAR_DEFAULT_WIDTH = 240;
 export const SIDEBAR_MIN_WIDTH = 180;
-/** The widest it can be dragged to, in a window with room. */
-const LIMITS = { min: SIDEBAR_MIN_WIDTH, max: 480 };
-
-/** The widest the sidebar may be in a window this wide (side-panel-width). */
-export function sidebarMaxWidth(windowWidth: number): number {
-  return sidePanelMax(windowWidth, LIMITS);
-}
-
-export function clampSidebarWidth(width: number, windowWidth: number): number {
-  return clampSidePanel(width, windowWidth, LIMITS);
-}
+/** Its narrowest, and the widest it can be dragged to in a window with
+ *  room (side-panel-width keeps the document's room). */
+export const SIDEBAR_LIMITS = { min: SIDEBAR_MIN_WIDTH, max: 480 };
 
 /** The width last chosen, or the default for anything invalid there. */
 export function storedSidebarWidth(): number {
@@ -42,7 +34,7 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
   const width = clampSidePanel(
     chosen * scale,
     windowWidth,
-    LIMITS,
+    SIDEBAR_LIMITS,
     beside,
     scale,
   );
@@ -50,7 +42,7 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
     (next: number, persist = true) => {
       const step = chromeScale();
       const base = Math.round(
-        clampSidePanel(next, windowWidth, LIMITS, beside, step) / step,
+        clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step) / step,
       );
       setChosen(base);
       if (persist) setUiState("sidebarWidth", base);
@@ -63,8 +55,8 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
   }, []);
   return {
     width,
-    min: Math.round(sidePanelMin(windowWidth, LIMITS, beside, scale)),
-    max: sidePanelMax(windowWidth, LIMITS, beside, scale),
+    min: Math.round(sidePanelMin(windowWidth, SIDEBAR_LIMITS, beside, scale)),
+    max: sidePanelMax(windowWidth, SIDEBAR_LIMITS, beside, scale),
     setWidth,
     resetWidth,
   };
