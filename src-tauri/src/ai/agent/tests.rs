@@ -709,14 +709,11 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         read("src/i18n/locales/ja.ts"),
     );
     for (strings, entry) in [
-        (&en_ts, "projectStyleChip: \"Style\""),
-        (&zh_ts, "projectStyleChip: \"文风\""),
-        (&ja_ts, "projectStyleChip: \"文体\""),
         (&en_ts, "agentWorkspaceRootLabel: \"Folder\""),
         (&zh_ts, "agentWorkspaceRootLabel: \"文件夹\""),
         (&ja_ts, "agentWorkspaceRootLabel: \"フォルダー\""),
-        (&zh_ts, "agentSkillsLabel: \"技能\""),
-        (&ja_ts, "agentSkillsLabel: \"スキル\""),
+        (&zh_ts, "navSkills: \"技能\""),
+        (&ja_ts, "navSkills: \"スキル\""),
         (&zh_ts, "settingsTitle: \"设置\""),
         (&ja_ts, "settingsTitle: \"設定\""),
         (&zh_ts, "tutorialContinuationTitle: \"续写\""),

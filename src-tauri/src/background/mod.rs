@@ -46,9 +46,7 @@ pub fn ends_when_turned_off(os: Os, windows_open: bool) -> bool {
 }
 
 pub fn enabled(app: &AppHandle) -> bool {
-    crate::settings::read_setting(app, ENABLED_SETTING)
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
+    crate::settings::read_flag(app, ENABLED_SETTING)
 }
 
 /// The tray, for Settings.

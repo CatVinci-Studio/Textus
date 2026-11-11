@@ -420,10 +420,12 @@ fn the_revision_choices_log_sits_beside_the_personal_memories_unlisted() {
 }
 
 #[test]
-fn the_setting_is_the_field_settings_writes_on_by_default() {
-    let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-    let settings = std::fs::read_to_string(repo.join("src/prefs/settings-types.ts")).unwrap();
-    assert!(settings.contains(&format!("  {REMEMBER_SETTING}: true,\n")));
+fn every_flag_rust_reads_has_its_shared_default() {
+    use crate::settings::flag_default;
+    assert!(flag_default(REMEMBER_SETTING));
+    assert!(flag_default(crate::ai::TEXTUS_AI_SETTING));
+    assert!(flag_default("restoreSessionOnStartup"));
+    assert!(!flag_default(crate::background::ENABLED_SETTING));
 }
 
 #[test]

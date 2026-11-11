@@ -38,9 +38,7 @@ fn write_pref(app: &AppHandle, key: &str, value: serde_json::Value) -> Result<()
 
 /// Whether to reopen last session's documents (default) or start blank.
 pub fn read_restore_session_on_startup(app: &AppHandle) -> bool {
-    crate::settings::read_setting(app, "restoreSessionOnStartup")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(true)
+    crate::settings::read_flag(app, "restoreSessionOnStartup")
 }
 
 /// The inner size (logical px) the last closed editor window had, for the next

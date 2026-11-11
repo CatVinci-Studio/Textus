@@ -1,3 +1,4 @@
+import BACKEND_DEFAULTS from "./backend-defaults.json";
 import type { Lang } from "../i18n/strings";
 import type { McpServer } from "./mcp";
 import type { UpdateChannel } from "../platform/update-channel";
@@ -262,10 +263,14 @@ export interface Settings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  // The defaults Rust reads too.
+  ...(BACKEND_DEFAULTS as Pick<
+    Settings,
+    keyof typeof BACKEND_DEFAULTS
+  >),
   language: "en",
   languageChosen: false,
   theme: "system",
-  textusAi: true,
   textusAiResumeAt: null,
   enableCompletion: true,
   enableGrammarCheck: true,
@@ -299,7 +304,6 @@ export const DEFAULT_SETTINGS: Settings = {
   searchService: "auto",
   searxngUrl: "",
   sourcesAsFootnotes: false,
-  rememberAutomatically: true,
   researchSubHelpers: false,
   researchCheckClaims: false,
   mcpServers: [],
@@ -339,7 +343,6 @@ export const DEFAULT_SETTINGS: Settings = {
   themeId: "default",
   userThemes: [],
   creations: [],
-  restoreSessionOnStartup: true,
   startPageOnLaunch: false,
   closeLastToStartPage: false,
   autoSuggestFilename: true,
@@ -357,7 +360,6 @@ export const DEFAULT_SETTINGS: Settings = {
   enableChatHistory: true,
   enableDraftRecovery: true,
   keepUnsavedOnClose: false,
-  runInBackground: false,
 };
 
 /** The provider writing assistance uses: its own, else the chat's. */

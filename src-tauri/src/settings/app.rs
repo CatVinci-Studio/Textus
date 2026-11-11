@@ -85,6 +85,30 @@ pub fn flush_all(app: &AppHandle) {
 
 /// A settings field as Rust sees it, for the few decisions Rust makes itself
 /// (some before any webview exists).
+/// An on/off setting Rust reads, or its default from
+/// src/prefs/backend-defaults.json, which the frontend's defaults take too.
+pub fn read_flag(app: &AppHandle, key: &str) -> bool {
+    flag(read_setting(app, key), key)
+}
+
+/// `stored` as on/off, or `key`'s default when unset (a build from before it).
+pub(crate) fn flag(stored: Option<Value>, key: &str) -> bool {
+    stored
+        .and_then(|v| v.as_bool())
+        .unwrap_or_else(|| flag_default(key))
+}
+
+pub(crate) fn flag_default(key: &str) -> bool {
+    static DEFAULTS: std::sync::LazyLock<Map<String, Value>> = std::sync::LazyLock::new(|| {
+        serde_json::from_str(include_str!("../../../src/prefs/backend-defaults.json"))
+            .expect("backend-defaults.json")
+    });
+    DEFAULTS
+        .get(key)
+        .and_then(Value::as_bool)
+        .expect("a flag Rust reads is in backend-defaults.json")
+}
+
 pub fn read_setting(app: &AppHandle, key: &str) -> Option<Value> {
     let stores = app.try_state::<Stores>()?;
     let (settings, _) = stores.settings.snapshot();
