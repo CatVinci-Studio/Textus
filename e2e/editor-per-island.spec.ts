@@ -36,3 +36,30 @@ test("only the tab in front has an editor; back again, its edit and its undo are
   await page.keyboard.press("Control+z");
   await expect(front.locator("p").first()).toHaveText("alpha line");
 });
+
+test("a formula's preview belongs to its document: under the formula, gone with its tab", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/w/m.md": "# M\n\n$$\n\\int_0^1 x\\,dx\n$$\n\nafter\n",
+      "/w/b.md": "# B\n\nbeta line\n",
+    };
+  });
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/w/b.md");
+  await openPath(page, "/w/m.md");
+  const front = page.locator('[data-active-tab="true"] .ProseMirror');
+  await front.locator(".math-block-rendered").click();
+  const preview = page.locator(".math-float-preview:visible");
+  await expect(preview).toHaveCount(1);
+  // In the document, under its formula: not a popup of the window.
+  const box = await preview.boundingBox();
+  const formula = await front.locator(".math-block-revealed").boundingBox();
+  expect(box!.y).toBeGreaterThan(formula!.y + formula!.height - 1);
+  await page.locator(".tab-pill").filter({ hasText: "b.md" }).click();
+  await expect(front.locator("h1")).toContainText("B");
+  await expect(page.locator(".math-float-preview:visible")).toHaveCount(0);
+});

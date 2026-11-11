@@ -1,12 +1,10 @@
 import { onMemoryIdle } from "../../utils/memory-idle";
-import { clampLeft } from "../../engine/controls/placement";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { duration, motionAllowed } from "../../engine/motion/motion";
 import {
   applyReveal,
   caretToSourceOnClick,
@@ -55,14 +53,20 @@ function renderKatex(value: string, displayMode: boolean): string | null {
   return html;
 }
 
-// Empty room under a block formula for the floating preview to sit over, so
-// it doesn't cover the next paragraph. An inline formula gets none: room
-// would make the lines below jump as the caret passes.
-const ROOM = "math-preview-room";
-function blockRoom(): HTMLElement {
-  const el = document.createElement("div");
-  el.className = ROOM;
-  return el;
+/** Where a formula's live preview shows while its source is edited: in
+ *  the document, under the formula - in the flow under a block, hanging
+ *  below the line from an inline one - so it scrolls, moves and hides with
+ *  its document. Filled by the plugin's view as the source changes. */
+const PREVIEW = "math-float-preview";
+function previewBox(block: boolean): HTMLElement {
+  const holder = document.createElement(block ? "div" : "span");
+  holder.className = block ? "math-preview-room" : "math-preview-anchor";
+  const box = document.createElement(block ? "div" : "span");
+  box.className = PREVIEW;
+  box.setAttribute("aria-hidden", "true");
+  box.hidden = true;
+  holder.append(box);
+  return holder;
 }
 
 /** GitHub's ```math fence, drawn as a display formula. */
@@ -87,17 +91,17 @@ function decorateMath(
   const fence = isMathFence(node);
   if (touches(from, to)) {
     if (fence) return [];
-    // A block's preview room: there whenever the source is revealed, because
+    // The preview's place: there whenever the source is revealed, because
     // this set is only redrawn when cursorTouches flips.
-    return node.type.name === "math_block"
-      ? [
-          Decoration.widget(to, blockRoom, {
-            side: 1,
-            key: "math-room",
-            ignoreSelection: true,
-          }),
-        ]
-      : [];
+    const block = node.type.name === "math_block";
+    // Under a block; from an inline formula's start, as its line reads.
+    return [
+      Decoration.widget(block ? to : from, () => previewBox(block), {
+        side: block ? 1 : -1,
+        key: block ? "math-preview-block" : "math-preview-inline",
+        ignoreSelection: true,
+      }),
+    ];
   }
 
   // KaTeX still loading: the source stays in view until it is drawn.
@@ -180,8 +184,8 @@ function findMathNodeAtSelection(state: EditorState): {
 
 /**
  * Math extras on the shared enclosure model: while the cursor is away a
- * formula's source hides behind its KaTeX render; while inside, a floating
- * live preview follows below the cursor.
+ * formula's source hides behind its KaTeX render; while inside, a live
+ * preview shows under it, in the document.
  */
 export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
   const reveal = mathReveal(options.enabled);
@@ -211,206 +215,52 @@ export function createMathPreviewPlugin(options: { enabled: () => boolean }) {
                 .setMeta("addToHistory", false),
             );
           });
-          const floatEl = document.createElement("div");
-          floatEl.className = "math-float-preview";
-          floatEl.style.display = "none";
-          document.body.appendChild(floatEl);
-
-          // The preview shows on a short delay and hides at once: the selection can
-          // pass through a math node for one update (WKWebView normalization, fast
-          // arrowing), which flashed the box. Once visible, updates stay synchronous.
-          let showTimer: number | null = null;
-          const cancelShow = () => {
-            if (showTimer !== null) {
-              window.clearTimeout(showTimer);
-              showTimer = null;
-            }
-          };
-          // Hiding plays the box's short exit first; coming back mid-exit cancels it.
-          let hideTimer: number | null = null;
-          const cancelHide = () => {
-            if (hideTimer !== null) {
-              window.clearTimeout(hideTimer);
-              hideTimer = null;
-            }
-            delete floatEl.dataset.state;
-          };
-          // The room closes with the box, so the text doesn't slide back under a box
-          // still fading out.
-          const closeRooms = (keep?: HTMLElement) => {
-            editorView.dom
-              .querySelectorAll<HTMLElement>(`.${ROOM}`)
-              .forEach((el) => {
-                if (el === keep) return;
-                el.style.display = "";
-                el.style.height = "";
-              });
-          };
-          const hide = () => {
-            cancelShow();
-            if (floatEl.style.display === "none" || hideTimer !== null) return;
-            if (!motionAllowed()) {
-              floatEl.style.display = "none";
-              closeRooms();
-              return;
-            }
-            floatEl.dataset.state = "closing";
-            hideTimer = window.setTimeout(() => {
-              hideTimer = null;
-              delete floatEl.dataset.state;
-              floatEl.style.display = "none";
-              closeRooms();
-            }, duration("--dur-fast"));
-          };
-
-          function updateFloat(view: EditorView, fromTimer = false) {
-            if (!options.enabled()) {
-              hide();
-              return;
-            }
-            const found = findMathNodeAtSelection(view.state);
-            // Nothing to preview until there's source: an empty shell would show a bare
-            // box.
-            if (!found || !found.node.textContent.trim()) {
-              hide();
-              return;
-            }
-            cancelHide();
-            if (floatEl.style.display === "none" && !fromTimer) {
-              if (showTimer === null) {
-                showTimer = window.setTimeout(() => {
-                  showTimer = null;
-                  updateFloat(view, true);
-                }, 150);
+          /** The preview box beside the formula at `from` (before an
+           *  inline one, after a block), if revealed. */
+          const boxOf = (view: EditorView, from: number) => {
+            const formula = view.nodeDOM(from);
+            for (const side of ["previousSibling", "nextSibling"] as const) {
+              let el = formula?.[side] ?? null;
+              for (let i = 0; el && i < 3; i++, el = el[side]) {
+                const box =
+                  el instanceof HTMLElement ? el.firstElementChild : null;
+                if (
+                  box instanceof HTMLElement &&
+                  box.classList.contains(PREVIEW)
+                )
+                  return box;
               }
-              return;
-            }
-
-            const displayMode = found.node.type.name === "math_block";
-            floatEl.innerHTML =
-              renderKatex(found.node.textContent, displayMode) ??
-              mathSourceHtml(found.node.textContent);
-            floatEl.style.display = "block";
-            // Brought into view as it opens and grows; a scroll or column move only
-            // re-places it, or it would fight the user's scrolling.
-            place(view, true);
-          }
-
-          /** The room widget after the block formula at `from`. */
-          function roomOf(view: EditorView, from: number): HTMLElement | null {
-            let el = view.nodeDOM(from)?.nextSibling ?? null;
-            for (let i = 0; el && i < 3; i++, el = el.nextSibling) {
-              if (el instanceof HTMLElement && el.classList.contains(ROOM))
-                return el;
             }
             return null;
-          }
+          };
 
-          function place(view: EditorView, reveal = false) {
+          function updatePreview(view: EditorView) {
             const found = findMathNodeAtSelection(view.state);
-            if (!found) return;
-            const block = found.node.type.name === "math_block";
-            const end = found.from + found.node.nodeSize - 1;
-            // Below the formula, as other popups appear: under a block's panel,
-            // centred; under an inline formula's line, starting at the caret.
-            // offsetWidth/Height, not the rect: the pop-in plays as a scale.
-            const width = floatEl.offsetWidth;
-            const height = floatEl.offsetHeight;
-            const caret = view.coordsAtPos(view.state.selection.from);
-            const panel = block
-              ? (view.nodeDOM(found.from) as HTMLElement | null)
-              : null;
-            const panelBox = panel?.getBoundingClientRect();
-            let top: number;
-            let left: number;
-            if (panelBox) {
-              top = panelBox.bottom + 10;
-              left = panelBox.left + (panelBox.width - width) / 2;
-            } else {
-              top = view.coordsAtPos(end, -1).bottom + 10;
-              left = caret.left;
-            }
-            left = clampLeft(left, width);
-
-            // A block's room, sized from its own top and in layout px: the column is
-            // zoomed with CSS zoom, the box in <body> is not.
-            const room = roomOf(view, found.from);
-            closeRooms(room ?? undefined);
-            if (room) {
-              room.style.display = "flow-root";
-              const roomTop = room.getBoundingClientRect().top;
-              const host = room.parentElement!;
-              const scale =
-                host.getBoundingClientRect().width /
-                Math.max(1, host.offsetWidth);
-              const need = Math.max(0, top + height + 6 - roomTop) / scale;
-              room.style.height = `${Math.ceil(need)}px`;
-              if (reveal) room.scrollIntoView({ block: "nearest" });
-              // Scrolling (or the room itself) moved the formula.
-              if (panel) top = panel.getBoundingClientRect().bottom + 10;
-              else top = view.coordsAtPos(end, -1).bottom + 10;
-            }
-
-            // Flipped above only when even the room is cut off.
-            const above = top + height > window.innerHeight - 8;
-            if (above) {
-              const lineTop = panel
-                ? panel.getBoundingClientRect().top
-                : view.coordsAtPos(view.state.selection.from).top;
-              top = Math.max(8, lineTop - height - 10);
-            }
-            floatEl.style.left = `${left}px`;
-            floatEl.style.top = `${top}px`;
-            // It grows out of the corner nearest the caret.
-            floatEl.style.setProperty(
-              "--transform-origin",
-              `${above ? "bottom" : "top"} ${block ? "center" : "left"}`,
-            );
+            const box = found ? boxOf(view, found.from) : null;
+            // Only the formula being edited shows one: a revealed one the
+            // caret only touches, or left, shows none.
+            for (const other of view.dom.querySelectorAll<HTMLElement>(
+              `.${PREVIEW}:not([hidden])`,
+            ))
+              if (other !== box) other.hidden = true;
+            if (!found || !box) return;
+            const source = found.node.textContent;
+            // Nothing to preview until there's source: an empty box would
+            // show bare.
+            box.hidden = !options.enabled() || !source.trim();
+            const displayMode = found.node.type.name === "math_block";
+            const drawn = renderKatex(source, displayMode);
+            const key = `${drawn === null ? "?" : ""}${source}`;
+            if (box.dataset.source === key) return;
+            box.dataset.source = key;
+            box.innerHTML = drawn ?? mathSourceHtml(source);
           }
 
-          updateFloat(editorView);
-
-          // The page can move under an open preview without a transaction (the AI
-          // panel narrowing the column, a scroll); it follows the caret.
-          let frame = 0;
-          let settleTimer: number | undefined;
-          const placeIfShown = () => {
-            if (floatEl.style.display !== "none") place(editorView);
-          };
-          const follow = () => {
-            if (floatEl.style.display === "none" || hideTimer !== null) return;
-            cancelAnimationFrame(frame);
-            frame = requestAnimationFrame(placeIfShown);
-            // Once more after the column's glide to its new place has ended.
-            window.clearTimeout(settleTimer);
-            settleTimer = window.setTimeout(placeIfShown, 400);
-          };
-          const resize =
-            typeof ResizeObserver === "undefined"
-              ? null
-              : new ResizeObserver(follow);
-          resize?.observe(editorView.dom);
-          // The pane too: a column that keeps its width still moves when the pane
-          // beside it narrows.
-          const pane = editorView.dom.closest(".editor-scroll");
-          if (pane) resize?.observe(pane);
-          window.addEventListener("resize", follow);
-          document.addEventListener("scroll", follow, true);
+          updatePreview(editorView);
 
           return {
-            // Wrapped: the update callback's second argument would land in fromTimer.
-            update: (view) => updateFloat(view),
-            destroy() {
-              stopWaiting();
-              cancelShow();
-              cancelHide();
-              cancelAnimationFrame(frame);
-              window.clearTimeout(settleTimer);
-              resize?.disconnect();
-              window.removeEventListener("resize", follow);
-              document.removeEventListener("scroll", follow, true);
-              floatEl.remove();
-            },
+            update: (view) => updatePreview(view),
+            destroy: stopWaiting,
           };
         },
       }),

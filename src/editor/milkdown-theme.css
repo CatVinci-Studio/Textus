@@ -1174,29 +1174,44 @@ br:is(.pending-delete, .pending-sentence-hot) {
   text-align: center;
 }
 
+/* A formula's live preview while its source is edited: in the document,
+   so it scrolls and hides with it. Under a block, in the flow and centred;
+   from an inline one, hanging below its line, over the next. */
 .math-float-preview {
-  position: fixed;
-  z-index: var(--z-popover);
-  max-width: 420px;
+  display: inline-block;
+  max-width: min(420px, 100%);
   padding: 0.5em 0.7em;
   border: 1px solid var(--doc-border);
   border-radius: var(--shape-m);
   background: var(--ui-bg);
   box-shadow: var(--shadow-popover);
   pointer-events: none;
-  /* Plays each time it is shown (display: none in between); typing in the
-     formula re-renders it without moving it. */
-  transform-origin: var(--transform-origin, top left);
+  text-align: center;
+  white-space: normal;
+  transform-origin: top center;
   animation: motion-pop-in var(--dur-base) var(--ease-out);
 }
-
-/* The room a block formula's preview sits over. */
-.math-preview-room {
+.math-float-preview[hidden] {
   display: none;
 }
 
-.math-float-preview[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+.math-preview-room {
+  margin-top: var(--space-2);
+  text-align: center;
+}
+
+.math-preview-anchor {
+  position: relative;
+}
+.math-preview-anchor > .math-float-preview {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  left: 0;
+  z-index: var(--z-popover);
+  width: max-content;
+  /* Of the column, not of the anchor (no width of its own). */
+  max-width: min(420px, 80cqi);
+  transform-origin: top left;
 }
 
 .math-inline-rendered {
