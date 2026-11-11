@@ -142,6 +142,14 @@ export function loadPlugins(reload = false): Promise<void> {
   return loading;
 }
 
+// Another window changed which plugins are on: read them again.
+if (typeof window !== "undefined" && "__TAURI_INTERNALS__" in window)
+  void import("@tauri-apps/api/event").then(({ listen }) =>
+    listen("plugins-changed", () => {
+      if (loading) void loadPlugins(true);
+    }),
+  );
+
 // ---------------------------------------------------------------------------
 // Running
 // ---------------------------------------------------------------------------

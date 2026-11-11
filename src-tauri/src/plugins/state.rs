@@ -95,6 +95,9 @@ pub fn update<T>(
     // A plugin switched on again: its paused jobs may be due.
     #[cfg(desktop)]
     crate::schedule::rearm(app);
+    // Every window reloads, so a plugin turned off anywhere stops everywhere.
+    use tauri::Emitter;
+    let _ = app.emit("plugins-changed", ());
     Ok(out)
 }
 
