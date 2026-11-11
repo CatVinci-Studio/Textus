@@ -12,7 +12,7 @@ fn every_label_key_is_one_the_frontend_sends() {
     // silently leave that label English.
     let source = include_str!("build.rs");
     let frontend = [
-        include_str!("../../../src/app/menu/app-menu-model.ts"),
+        include_str!("../../../src/registry/menu/app-menu-model.ts"),
         include_str!("../../../src/app/menu/native-menu-text.ts"),
     ]
     .concat();

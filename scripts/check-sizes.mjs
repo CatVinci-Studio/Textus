@@ -58,7 +58,7 @@ const ALLOWED = {
     "the document's scrolling: its zoom",
   "src/editor/keys/keyboard-reveal-plugin.ts:MARGIN":
     "the document's scrolling: its zoom",
-  "src/utils/nav-history.ts:NEAR": "places in the document: its zoom",
+  "src/editor/nav-history.ts:NEAR": "places in the document: its zoom",
   "src/mobile/usePageSwipe.ts:EDGE": "the phone, whose chrome is 1",
 };
 

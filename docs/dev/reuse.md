@@ -17,7 +17,7 @@ The pieces:
 | A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading)             |
 | A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/motion/motion.css`)                                              |
 | Closing it on a press outside or Escape    | `utils/hooks/useCloseOnOutsideClick.ts` (input methods spared; `inside` for a badge or the opener)                                      |
-| Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `opensBelow`), or `useViewportClamp` for a point                                           |
+| Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `clampTop`, `opensBelow`), or `usePlacement` for a point                                           |
 | A dialog                                   | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`, `showPrompt`); a dialog of your own takes the `.close-prompt` box       |
 | A list to pick from                        | `showQuickPick` (`engine/controls/quick-pick.tsx`)                                                                                      |
 | A note that goes by itself, a progress bar | `showNotice`, `startProgress` (`engine/controls/notices.tsx`)                                                                           |

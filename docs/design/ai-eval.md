@@ -17,7 +17,7 @@ Each case goes through the app's real code path: the same system prompts,
 tools, agent loop, completion and grammar prompts, and the same
 post-processing (`finish_completion`, `finish_grammar`). Where the
 frontend changes the model's output, the eval does the same: an accepted
-`propose_edit` is composed as `src/ai/doc-markdown.ts` composes it, and a
+`propose_edit` is composed as `src/editor/markdown/doc-markdown.ts` composes it, and a
 completion is shown after the editor's `stripEcho` and `tidySuggestion`.
 
 | Suite (test)                                      | What it covers                                                                                                                                                                                                                   |
