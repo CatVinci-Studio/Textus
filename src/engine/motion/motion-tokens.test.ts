@@ -25,8 +25,6 @@ const OWN_KEYFRAMES: Record<string, string> = {
   "editor/milkdown-theme.css pending-landed": "tint after landing",
   "editor/milkdown-theme.css pending-fade-kept": "kept text settling",
   // A plugin's webview has no motion.css: its own copies of the moves.
-  "plugins/host/runtime/plugin-ui.css motion-enter": "plugin webview",
-  "plugins/host/runtime/plugin-ui.css motion-exit": "plugin webview",
 };
 
 /** A time written out: 200ms, 1.2s. Zero and 1ms (a step, not a motion)
