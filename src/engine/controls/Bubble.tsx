@@ -10,34 +10,10 @@ import {
 import { createPortal } from "react-dom";
 import { scaledPx } from "../tokens/chrome-scale";
 import { usePlacement } from "./usePlacement";
+import { sideThatFits, type PopupSide } from "./placement";
 import { usePresenceProps } from "../motion/usePresence";
 
-export type BubbleSide = "above" | "below" | "left" | "right";
-
-/** The side a bubble takes, `side` or the one across from it, whichever
- *  fits (`side` when neither does). */
-function placeSide(
-  side: BubbleSide,
-  box: DOMRect,
-  width: number,
-  height: number,
-  space: number,
-): BubbleSide {
-  const margin = 8;
-  const fits: Record<BubbleSide, boolean> = {
-    above: box.top - space - height >= margin,
-    below: box.bottom + space + height <= window.innerHeight - margin,
-    left: box.left - space - width >= margin,
-    right: box.right + space + width <= window.innerWidth - margin,
-  };
-  const across: Record<BubbleSide, BubbleSide> = {
-    above: "below",
-    below: "above",
-    left: "right",
-    right: "left",
-  };
-  return fits[side] || !fits[across[side]] ? side : across[side];
-}
+export type BubbleSide = PopupSide;
 
 /** The edge of the bubble its tail leaves from: the one facing the
  *  element. */
@@ -92,7 +68,7 @@ export function Bubble({
     const width = el.offsetWidth;
     const height = el.offsetHeight;
     const space = scaledPx(gap);
-    const placed = placeSide(side, box, width, height, space);
+    const placed = sideThatFits(side, box, { width, height }, space);
     const across = placed === "left" || placed === "right";
     setAt({
       x: across

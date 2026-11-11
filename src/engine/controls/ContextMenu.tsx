@@ -20,6 +20,8 @@ function menuHost(): Element {
 }
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { usePlacement } from "./usePlacement";
+import { clampLeft, clampTop, sideThatFits } from "./placement";
+import { scaledPx } from "../tokens/chrome-scale";
 import { ActionSheet } from "./ActionSheet";
 import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
@@ -27,6 +29,9 @@ import { usePresenceProps, usePresenceState } from "../motion/usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
 import { listMove } from "./list-keys";
+
+/** A submenu's gap from its menu, in interface pixels. */
+const SUBMENU_GAP = 4;
 
 export interface ContextMenuItem {
   label: string;
@@ -343,18 +348,14 @@ function SubMenu({
     const menu = (
       anchor.closest(".context-menu") ?? anchor
     ).getBoundingClientRect();
-    const { width, height } = el.getBoundingClientRect();
-    const margin = 8;
-    const gap = 4;
-    const left =
-      menu.right + gap + width + margin <= window.innerWidth
-        ? menu.right + gap
-        : Math.max(margin, menu.left - gap - width);
-    const top = Math.max(
-      margin,
-      Math.min(row.top - 4, window.innerHeight - height - margin),
+    const size = el.getBoundingClientRect();
+    const gap = scaledPx(SUBMENU_GAP);
+    const side = sideThatFits("right", menu, size, gap);
+    const left = clampLeft(
+      side === "right" ? menu.right + gap : menu.left - gap - size.width,
+      size.width,
     );
-    setPos({ left, top });
+    setPos({ left, top: clampTop(row.top - gap, size.height) });
   }, [anchor, items]);
   useEffect(() => {
     if (focus && pos)

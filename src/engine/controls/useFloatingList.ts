@@ -7,6 +7,10 @@ import {
   type CSSProperties,
 } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
+import { EDGE, clampLeft, opensBelow } from "./placement";
+
+/** The list's gap from its trigger, in interface pixels. */
+const LIST_GAP = 4;
 
 const MENU_MAX_HEIGHT = 280;
 
@@ -32,16 +36,19 @@ export function useFloatingList(
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) return;
     placedAt.current = rect;
-    const below = window.innerHeight - rect.bottom - 8;
-    const above = rect.top - 8;
-    const up = below < Math.min(maxHeight, 160) && above > below;
+    const margin = scaledPx(EDGE);
+    const gap = scaledPx(LIST_GAP);
+    const up = !opensBelow(rect, Math.min(maxHeight, 160), gap);
+    const room = up
+      ? rect.top - gap - margin
+      : window.innerHeight - rect.bottom - gap - margin;
     setPlace({
-      left: Math.min(rect.left, window.innerWidth - rect.width - 8),
+      left: clampLeft(rect.left, rect.width),
       minWidth: rect.width,
-      maxHeight: Math.min(maxHeight, up ? above : below),
+      maxHeight: Math.min(maxHeight, room),
       ...(up
-        ? { bottom: window.innerHeight - rect.top + 4 }
-        : { top: rect.bottom + 4 }),
+        ? { bottom: window.innerHeight - rect.top + gap }
+        : { top: rect.bottom + gap }),
       // It grows out of the edge that touches the trigger.
       ...({
         "--transform-origin": up ? "bottom left" : "top left",
@@ -57,15 +64,16 @@ export function useFloatingList(
     const placed = place.left;
     if (!open || !list || !rect || typeof placed !== "number") return;
     const width = list.offsetWidth;
-    const room = window.innerWidth - 8;
+    const margin = scaledPx(EDGE);
+    const room = window.innerWidth - margin;
     if (placed + width <= room) return;
-    const left = Math.max(8, Math.min(rect.right, room) - width);
+    const left = Math.max(margin, Math.min(rect.right, room) - width);
     setPlace(
       (p) =>
         ({
           ...p,
           left,
-          maxWidth: room - 8,
+          maxWidth: room - margin,
           "--transform-origin": `${p.bottom !== undefined ? "bottom" : "top"} right`,
         }) as CSSProperties,
     );

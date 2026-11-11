@@ -35,3 +35,30 @@ export function opensBelow(
   const above = anchor.top - gap - margin;
   return below >= height || below >= above;
 }
+
+export type PopupSide = "above" | "below" | "left" | "right";
+
+const ACROSS: Record<PopupSide, PopupSide> = {
+  above: "below",
+  below: "above",
+  left: "right",
+  right: "left",
+};
+
+/** The side of `anchor` a box `size` takes, `gap` away: `side`, or the one
+ *  across from it when only that fits (`side` when neither does). */
+export function sideThatFits(
+  side: PopupSide,
+  anchor: { top: number; bottom: number; left: number; right: number },
+  size: { width: number; height: number },
+  gap: number,
+  margin = scaledPx(EDGE),
+): PopupSide {
+  const fits: Record<PopupSide, boolean> = {
+    above: anchor.top - gap - size.height >= margin,
+    below: anchor.bottom + gap + size.height <= window.innerHeight - margin,
+    left: anchor.left - gap - size.width >= margin,
+    right: anchor.right + gap + size.width <= window.innerWidth - margin,
+  };
+  return fits[side] || !fits[ACROSS[side]] ? side : ACROSS[side];
+}
