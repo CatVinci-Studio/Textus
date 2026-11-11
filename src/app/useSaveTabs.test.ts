@@ -5,7 +5,11 @@ import { saveFolder, useSaveTabs } from "./useSaveTabs";
 import { setUiState } from "../storage/ui-state";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
-import { showConfirm, showMessage } from "../engine/controls/app-dialog";
+import {
+  showChoice,
+  showConfirm,
+  showMessage,
+} from "../engine/controls/app-dialog";
 import en from "../i18n/locales/en";
 import type { DocTab } from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
@@ -22,6 +26,7 @@ vi.mock("../platform/ipc", () => ({
   session: { addRecentFile: vi.fn() },
 }));
 vi.mock("../engine/controls/app-dialog", () => ({
+  showChoice: vi.fn(),
   showConfirm: vi.fn(),
   showMessage: vi.fn(),
 }));
@@ -204,12 +209,12 @@ describe("autosaveTab", () => {
 
   it("keeps a file changed on disk unless the user chooses to overwrite", async () => {
     vi.mocked(fs.fileMtimeMs).mockResolvedValue(5);
-    vi.mocked(showConfirm).mockResolvedValue(false);
+    vi.mocked(showChoice).mockResolvedValue(null);
     const result = setup(doc);
     await act(async () => {
       expect(await result.current.autosaveTab("a")).toBe("conflict");
     });
-    expect(showConfirm).toHaveBeenCalledTimes(1);
+    expect(showChoice).toHaveBeenCalledTimes(1);
     expect(fs.writeTextFile).not.toHaveBeenCalled();
   });
 
@@ -228,14 +233,14 @@ describe("autosaveTab", () => {
 
   it("starts an autosave's conflict prompt on Cancel, a manual save's on Overwrite", async () => {
     vi.mocked(fs.fileMtimeMs).mockResolvedValue(5);
-    vi.mocked(showConfirm).mockResolvedValue(false);
+    vi.mocked(showChoice).mockResolvedValue(null);
     const result = setup(doc);
     await act(async () => {
       await result.current.autosaveTab("a");
       await result.current.saveTab("a");
     });
     const focusCancel = vi
-      .mocked(showConfirm)
+      .mocked(showChoice)
       .mock.calls.map(([, options]) => options.focusCancel);
     expect(focusCancel).toEqual([true, false]);
   });
