@@ -59,8 +59,9 @@ impl ImageFolder {
 }
 
 /// A path as a Markdown link's destination: a space as %20, and what would
-/// end the link or be read as an escape (`(`, `)`, `%`) escaped too, so it
-/// needs no angle brackets and reads back as written.
+/// end the link or be read as an escape or a fragment (`(`, `)`, `%`, `#`)
+/// escaped too, so it needs no angle brackets and reads back as written.
+/// The frontend's linkPath writes the same.
 pub(crate) fn markdown_path(path: &str) -> String {
     let mut out = String::with_capacity(path.len());
     for c in path.chars() {
@@ -69,6 +70,7 @@ pub(crate) fn markdown_path(path: &str) -> String {
             ' ' => out.push_str("%20"),
             '(' => out.push_str("%28"),
             ')' => out.push_str("%29"),
+            '#' => out.push_str("%23"),
             _ => out.push(c),
         }
     }

@@ -1,6 +1,13 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
 import type { Nodes } from "mdast";
-import { isNoteFile, noteStem, relativePath, slashed } from "../utils/path";
+import {
+  decodeUrlPath,
+  isNoteFile,
+  linkPath,
+  noteStem,
+  relativePath,
+  slashed,
+} from "../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
 
 /**
@@ -46,13 +53,7 @@ function join(dir: string, link: string): string {
   return parts.join("/") || "/";
 }
 
-function decode(path: string): string {
-  try {
-    return decodeURI(path);
-  } catch {
-    return path; // not encoded
-  }
-}
+const decode = decodeUrlPath;
 
 function codeRanges(text: string): [number, number][] {
   const ranges: [number, number][] = [];
@@ -203,7 +204,7 @@ function rewriteWith(
         ? null
         : angle
           ? `<${path}${fragment}>`
-          : path.replace(/ /g, "%20") + fragment,
+          : linkPath(path) + fragment,
     );
   }
 

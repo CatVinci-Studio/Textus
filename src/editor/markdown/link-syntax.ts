@@ -1,4 +1,4 @@
-import { noteStem } from "../../utils/path";
+import { linkPath, noteStem } from "../../utils/path";
 
 /**
  * A link's Markdown, read: the link node holds its source as text, and what
@@ -342,9 +342,10 @@ export function noteLinkSource(link: NoteLinkParts): string {
   const name = noteStem(link.target.slice(link.target.lastIndexOf("/") + 1));
   const label =
     link.alias || (link.target ? name : (link.heading ?? `^${link.block}`));
-  // Obsidian's Markdown links write a space as %20, nothing else encoded.
+  // The path as every link Textus writes; the anchor's spaces as %20.
   return (
-    bang + linkSource(label, `${link.target}${anchor}`.replace(/ /g, "%20"))
+    bang +
+    linkSource(label, linkPath(link.target) + anchor.replace(/ /g, "%20"))
   );
 }
 

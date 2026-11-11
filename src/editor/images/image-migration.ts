@@ -1,5 +1,10 @@
 import { fs } from "../../platform/ipc";
-import { decodeUrlPath, hasUrlScheme, isDrivePath } from "../../utils/path";
+import {
+  decodeUrlPath,
+  hasUrlScheme,
+  isDrivePath,
+  linkPath,
+} from "../../utils/path";
 
 // ![alt](src "title"), the form pasted images are written in. A src with a
 // space is in angle brackets, as a macOS draft path ("Application Support").
@@ -35,15 +40,6 @@ function extractImageSrcs(
   return srcs;
 }
 
-// A space or a parenthesis would end a bare link destination, so those are
-// percent-encoded.
-function linkDestination(src: string): string {
-  return src.replace(
-    /[ ()]/g,
-    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
-  );
-}
-
 /** Rewrites the src of every image whose src is in `moved`; the same words
  *  in the text stay. */
 function rewriteImageSrcs(content: string, moved: Map<string, string>): string {
@@ -54,7 +50,7 @@ function rewriteImageSrcs(content: string, moved: Map<string, string>): string {
       if (next === undefined) return whole;
       return bracketed !== undefined
         ? `${open}<${next}>${close}`
-        : `${open}${linkDestination(next)}${close}`;
+        : `${open}${linkPath(next)}${close}`;
     },
   );
 }

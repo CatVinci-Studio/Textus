@@ -146,6 +146,16 @@ describe("links follow a rename by the file they lead to", () => {
     ).toBe("[g](howto.md)");
   });
 
+  it("reads %23 as a click does and writes # and parentheses escaped", () => {
+    const files = [...FILES, "/v/C#.md"];
+    expect(
+      rewriteMovedLinks("[c](C%23.md)", "/v/index.md", {
+        ...move("/v/C#.md", "/v/C# (1).md"),
+        files,
+      }).text,
+    ).toBe("[c](C%23%20%281%29.md)");
+  });
+
   it("changes only the target's bytes, keeping each line's ending", () => {
     const text = "\uFEFFa [[Note]]\r\nb ![](../assets/pic.png)\nc\r\n";
     const out = rewriteMovedLinks(

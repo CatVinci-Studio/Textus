@@ -4,7 +4,8 @@
 // Code and math are left untouched.
 
 import { WIKILINK_SOURCE } from "../utils/note-link";
-import { parseImageTag } from "../editor/images/image-html";
+import { parseImageTag, splitAltSize } from "../editor/images/image-html";
+import { splitImageTitle } from "../editor/images/image-rotation";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { shownWikilink } from "../editor/markdown/wikilink-reveal";
 import {
@@ -18,8 +19,7 @@ import type { NoteLinkOut } from "./note-links";
 const FENCE = /^ {0,3}(`{3,}|~{3,})/;
 const MATH_FENCE = /^\s*\$\$/;
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
-const IMAGE_WIDTH =
-  /!\[([^\]]*)\]\((\S+?)\s+"([^"]*?)\s*\{textus-width=(\d{1,3})%\}"\)/g;
+const IMAGE = /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g;
 const QUOTE = /^(?:[ \t]*>)+[ \t]?/;
 // A block a comment can't run on into: a list item, heading or table row.
 const BLOCK_START = /^\s*(?:[-+*]\s|\d{1,9}[.)]\s|#{1,6}\s|\|)/;
@@ -85,6 +85,25 @@ function imageTag(tag: string): string {
   return `![${alt}](${src}${title})${width ? `{width=${width}}` : ""}`;
 }
 
+/** A Markdown image with Textus's size or turn in its title, or
+ *  Obsidian's size in its alt, as pandoc writes a width; any other as is. */
+function sizedImage(
+  whole: string,
+  alt: string,
+  src: string,
+  title: string | undefined,
+): string {
+  const kept = splitImageTitle(title);
+  const sized = splitAltSize(alt);
+  if (kept.title === (title ?? "") && !sized.width) return whole;
+  const width =
+    kept.widthPercent !== null
+      ? `${kept.widthPercent}%`
+      : sized.width && `${sized.width}px`;
+  const shown = kept.title.trim() ? ` "${kept.title.trim()}"` : "";
+  return `![${sized.alt}](${src}${shown})${width ? `{width=${width}}` : ""}`;
+}
+
 function noteLink(source: string, options: PandocRewrite): string {
   const out = options.noteLinks?.get(source) ?? null;
   const embed = parseEmbed(source);
@@ -120,13 +139,7 @@ function rewriteProse(line: string, options: PandocRewrite): string {
     between(
       prose
         .replace(IMG_TAG, imageTag)
-        .replace(
-          IMAGE_WIDTH,
-          (_m, alt: string, src: string, title: string, w) => {
-            const kept = title.trim() ? ` "${title.trim()}"` : "";
-            return `![${alt}](${src}${kept}){width=${w}%}`;
-          },
-        ),
+        .replace(IMAGE, sizedImage),
       LINKS,
       (words) => rewriteText(words, options),
       (span) => (span.endsWith("]]") ? noteLink(span, options) : span),

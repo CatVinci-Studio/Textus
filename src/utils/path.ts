@@ -66,6 +66,16 @@ export function decodeUrlPath(src: string): string {
   }
 }
 
+/** A path as a Markdown link's destination, as the Rust side writes one
+ *  (markdown_path): `%`, space, `(`, `)` and `#` escaped, so it needs no
+ *  angle brackets and decodeUrlPath reads it back as written. */
+export function linkPath(path: string): string {
+  return path.replace(
+    /[% ()#]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+}
+
 // A Windows drive path, "C:\..." or "C:/...". Test it before hasUrlScheme,
 // which reads the drive letter as a one-letter scheme.
 export function isDrivePath(path: string): boolean {
