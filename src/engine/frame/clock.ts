@@ -83,8 +83,10 @@ class FrameClock {
     animate: boolean,
   ): void {
     const was = this.groups.get(name);
-    // The same places again (a render that moved nothing): nothing to write.
-    if (was && same(was, parts, origin) && !this.runningIn(parts)) {
+    // The same places again, every part already drawn there (a render that
+    // moved nothing): nothing to write. One a gesture left elsewhere (a tab
+    // let go where it started) still goes home.
+    if (was && same(was, parts, origin) && this.allAt(parts)) {
       this.groups.set(name, { parts, origin });
       return;
     }
@@ -114,9 +116,13 @@ class FrameClock {
       this.frame = requestAnimationFrame((t) => this.tick(t));
   }
 
-  private runningIn(parts: Map<string, FramePart>): boolean {
-    for (const key of parts.keys()) if (this.runs.has(key)) return true;
-    return false;
+  private allAt(parts: Map<string, FramePart>): boolean {
+    for (const [key, part] of parts) {
+      if (this.runs.has(key)) return false;
+      const at = this.shown.get(key);
+      if (at && !sameRect(at, part.rect)) return false;
+    }
+    return true;
   }
 
   /** Group `name` gone with its container. */
