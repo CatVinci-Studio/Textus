@@ -5,6 +5,7 @@
 mod client;
 pub(crate) mod path;
 pub(crate) mod process;
+pub(crate) mod secrets;
 
 pub use client::{Connection, Endpoint, McpTool};
 
@@ -19,7 +20,7 @@ use tauri::{AppHandle, Manager};
 use tokio::sync::watch;
 
 /// The settings.json field listing the servers.
-const SERVERS_KEY: &str = "mcpServers";
+pub(crate) const SERVERS_KEY: &str = "mcpServers";
 /// How long a request waits for a server still starting.
 const WAIT_FOR_START: Duration = Duration::from_secs(10);
 /// The most of one tool's answer the model is given.
@@ -47,6 +48,11 @@ struct ServerConfig {
 }
 
 impl ServerConfig {
+    /// Its secrets as kept, where the settings say MASK.
+    fn unmask(&mut self, app: &AppHandle) {
+        secrets::unmask(app, &self.id, &mut self.env, &mut self.headers);
+    }
+
     fn endpoint(&self) -> Option<Endpoint> {
         let pairs = |map: &HashMap<String, String>| {
             let mut pairs: Vec<(String, String)> =
@@ -100,9 +106,13 @@ pub struct McpHub {
 }
 
 fn configs(app: &AppHandle) -> Vec<ServerConfig> {
-    crate::settings::read_setting(app, SERVERS_KEY)
-        .and_then(|v| serde_json::from_value::<Vec<ServerConfig>>(v).ok())
-        .unwrap_or_default()
+    let mut configs: Vec<ServerConfig> = crate::settings::read_setting(app, SERVERS_KEY)
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default();
+    for config in &mut configs {
+        config.unmask(app);
+    }
+    configs
 }
 
 impl McpHub {
@@ -232,8 +242,9 @@ pub struct Tried {
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn mcp_try(server: Value) -> Result<Tried, String> {
-    let config: ServerConfig = serde_json::from_value(server).map_err(|e| e.to_string())?;
+pub async fn mcp_try(app: AppHandle, server: Value) -> Result<Tried, String> {
+    let mut config: ServerConfig = serde_json::from_value(server).map_err(|e| e.to_string())?;
+    config.unmask(&app);
     let endpoint = config.endpoint().ok_or("Give a command or a URL.")?;
     let connection = Connection::open(&endpoint).await?;
     let tools = connection.list_tools().await?;

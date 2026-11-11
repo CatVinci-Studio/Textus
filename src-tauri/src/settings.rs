@@ -51,8 +51,13 @@ pub fn settings_patch(
     app: AppHandle,
     window: tauri::WebviewWindow,
     stores: tauri::State<Stores>,
-    patch: Map<String, Value>,
+    mut patch: Map<String, Value>,
 ) -> u64 {
+    // MCP servers' secrets go to the key store before any window hears them.
+    #[cfg(desktop)]
+    if let Some(servers) = patch.get_mut(crate::mcp::SERVERS_KEY) {
+        crate::mcp::secrets::seal(&app, servers);
+    }
     let rev = stores.patch_settings(&patch);
     if patch.contains_key("theme") {
         theme_changed(&app);

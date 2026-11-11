@@ -153,6 +153,8 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
 
     commands::cli::try_silent_install();
     cli::app::start(app.handle());
+    // Secrets an older build left in the settings go to the key store.
+    mcp::secrets::seal_saved(app.handle());
 
     menu::install(app)?;
 
