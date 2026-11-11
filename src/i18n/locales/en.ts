@@ -1794,6 +1794,11 @@ type /name in a conversation to use one.
   pluginPermClipboard: "Read and write the clipboard",
   pluginPermEditorInput:
     "Take over the keys you type in the editor and edit as you type: what it copies, cuts or deletes it reads, and puts on the clipboard",
+  /** A folder with plugin settings, opened the first time. */
+  pluginFolderAsk:
+    "This folder brings its own settings for {plugins} - an address to sync with, for example. Use them?",
+  pluginFolderUse: "Use Them",
+  pluginFolderSkip: "Don't Use",
   pluginPermProjectData:
     "Keep its own data in the open folder, in .textus/plugins",
   pluginPermAiTools: "Give Textus AI tools of its own to use",

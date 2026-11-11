@@ -87,6 +87,9 @@ export interface UiState {
   /** Each project's tabs as it was left, by folder, the one in front last
    *  (app/start-project.ts). */
   projectTabs: Record<string, string[]>;
+  /** Each folder's plugin settings, by folder: used, or left out - asked
+   *  the first time one is opened with any (plugins/store/plugin-settings). */
+  pluginFolders: Record<string, "use" | "skip">;
 }
 
 export interface ThemeChromeCache {
@@ -191,6 +194,11 @@ const LOCAL: {
     key: "textus-agent-root-from-folder",
     decode: (raw) => raw,
     encode: (value) => value,
+  },
+  pluginFolders: {
+    key: "textus-plugin-folders",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
   },
   fileSearchScope: {
     key: "textus-file-search-scope",

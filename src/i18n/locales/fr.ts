@@ -1864,6 +1864,10 @@ utiliser une.
   pluginPermClipboard: "Lire et écrire le presse-papiers",
   pluginPermEditorInput:
     "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe : ce qu’il copie, coupe ou supprime, il le lit et le met dans le presse-papiers",
+  pluginFolderAsk:
+    "Ce dossier apporte ses propres réglages pour {plugins}, comme l’adresse d’un serveur de synchronisation. Les utiliser ?",
+  pluginFolderUse: "Utiliser",
+  pluginFolderSkip: "Ne pas utiliser",
   pluginPermProjectData:
     "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermAiTools: "Donner à Textus AI ses propres outils",

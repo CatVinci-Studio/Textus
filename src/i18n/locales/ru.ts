@@ -1835,6 +1835,10 @@ export default {
   pluginPermClipboard: "Читать и записывать буфер обмена",
   pluginPermEditorInput:
     "Перехватывать клавиши в редакторе и править текст по ним: читает то, что копирует, вырезает или удаляет, и кладёт это в буфер обмена",
+  pluginFolderAsk:
+    "Эта папка содержит свои настройки для {plugins}, например адрес сервера синхронизации. Использовать их?",
+  pluginFolderUse: "Использовать",
+  pluginFolderSkip: "Не использовать",
   pluginPermProjectData:
     "Хранить свои данные в открытой папке, в .textus/plugins",
   pluginPermAiTools: "Давать Textus AI свои инструменты",

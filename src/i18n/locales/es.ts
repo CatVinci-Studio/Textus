@@ -1841,6 +1841,10 @@ para usar una.
   pluginPermClipboard: "Leer y escribir el portapapeles",
   pluginPermEditorInput:
     "Tomar las teclas que pulsas en el editor y editar según las pulsas: lee lo que copia, corta o borra, y lo pone en el portapapeles",
+  pluginFolderAsk:
+    "Esta carpeta trae ajustes propios para {plugins}, como la dirección de un servidor de sincronización. ¿Usarlos?",
+  pluginFolderUse: "Usarlos",
+  pluginFolderSkip: "No usar",
   pluginPermProjectData:
     "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",

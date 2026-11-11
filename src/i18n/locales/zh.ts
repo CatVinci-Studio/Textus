@@ -1676,6 +1676,10 @@ export default {
   pluginPermClipboard: "读取和写入剪贴板",
   pluginPermEditorInput:
     "接管你在编辑器里的按键并按键编辑：它复制、剪切或删除的内容，它能读到，也会放进剪贴板",
+  pluginFolderAsk:
+    "这个文件夹带有 {plugins} 的设置，比如同步用的服务器地址。要使用这些设置吗？",
+  pluginFolderUse: "使用",
+  pluginFolderSkip: "不使用",
   pluginPermProjectData: "在打开的文件夹里（.textus/plugins）保存它自己的数据",
   pluginPermAiTools: "给 Textus AI 提供它自己的工具",
   pluginPermNotifications: "显示系统通知",

@@ -1747,6 +1747,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermClipboard: "클립보드 읽기 및 쓰기",
   pluginPermEditorInput:
     "편집기에서 누르는 키를 넘겨받아 누른 대로 편집: 복사·잘라내기·삭제한 내용을 읽고 클립보드에 넣음",
+  pluginFolderAsk:
+    "이 폴더에는 {plugins}의 설정(예: 동기화할 서버 주소)이 들어 있습니다. 사용할까요?",
+  pluginFolderUse: "사용",
+  pluginFolderSkip: "사용 안 함",
   pluginPermProjectData:
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",

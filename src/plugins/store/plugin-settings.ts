@@ -3,6 +3,10 @@ import {
   updateProjectSettings,
 } from "../../storage/project-settings";
 import { isRecord } from "../../prefs/settings-sync";
+import { getUiState, setUiState } from "../../storage/ui-state";
+import { showConfirm } from "../../engine/controls/app-dialog";
+import { currentStrings } from "../../i18n/current";
+import { pluginName, pluginRecord } from "./plugin-records";
 import {
   loadSettings,
   persist,
@@ -51,15 +55,44 @@ export async function loadProjectPluginSettings(
   }
   if (project?.root === root) return;
   const plugins = (await readProjectSettings(root)).plugins;
-  project = {
-    root,
-    values: isRecord(plugins)
-      ? (Object.fromEntries(
-          Object.entries(plugins).filter(([, v]) => isRecord(v)),
-        ) as Layer)
-      : {},
-  };
+  const values = isRecord(plugins)
+    ? (Object.fromEntries(
+        Object.entries(plugins).filter(([, v]) => isRecord(v)),
+      ) as Layer)
+    : {};
+  // A folder may come from anyone (a clone, a share): what it sets for
+  // plugins - a sync server, an address - is used only once the user says
+  // so, asked the first time; their own settings stand meanwhile.
+  const use =
+    Object.keys(values).length === 0 || (await folderTrusted(root, values));
+  project = { root, values: use ? values : {} };
   notify();
+}
+
+/** Whether to use the plugin settings folder `root` brings: as decided
+ *  before, else asked now. */
+async function folderTrusted(root: string, values: Layer): Promise<boolean> {
+  const decided = (getUiState("pluginFolders") ?? {}) as Record<string, string>;
+  if (decided[root]) return decided[root] === "use";
+  const t = currentStrings();
+  const names = Object.keys(values).map((id) => {
+    const record = pluginRecord(id);
+    return record ? pluginName(record) : id;
+  });
+  const use = await showConfirm(
+    t.pluginFolderAsk.replace("{plugins}", names.join(" · ")),
+    { okLabel: t.pluginFolderUse, cancelLabel: t.pluginFolderSkip },
+  );
+  rememberFolder(root, use);
+  return use;
+}
+
+function rememberFolder(root: string, use: boolean) {
+  const decided = (getUiState("pluginFolders") ?? {}) as Record<
+    string,
+    "use" | "skip"
+  >;
+  setUiState("pluginFolders", { ...decided, [root]: use ? "use" : "skip" });
 }
 
 /** The folder whose settings are read, if one is open. */
@@ -125,6 +158,8 @@ export async function setPluginValue(
   }
   if (!project) throw new Error("No folder is open.");
   const { root } = project;
+  // Set here by the user: this folder's plugin settings are theirs to use.
+  rememberFolder(root, true);
   let next: Layer = {};
   await updateProjectSettings(root, "plugins", (plugins) => {
     next = { ...(plugins as Layer), [id]: put((plugins as Layer)[id]) };
