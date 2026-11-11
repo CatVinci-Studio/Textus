@@ -696,7 +696,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         "Agent",
         "Writing assist",
         "Continue & Check",
-        "Turn on memory",
+        "Memory",
     ] {
         assert!(prompt.contains(label), "the prompt lacks {label}");
         assert!(

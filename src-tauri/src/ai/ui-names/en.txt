@@ -35,7 +35,7 @@ Built-in skills (Settings, under Skills)
 Customize… (a built-in skill)
 Reset (a customized built-in skill)
 Writing conventions (Settings row)
-Enable AI completion
+AI completion
 Completion tone
 General
 Review
