@@ -128,6 +128,8 @@ export const plugins = {
   fsCreate: (id: string, root: string, path: string, text: string) =>
     command("plugin_fs_create", id, root, path, text),
   /** A text file and a token naming its version. */
+  appSettings: (id: string, vault: string, name: string) =>
+    command("plugin_app_settings", id, vault, name),
   fsReadVersioned: (id: string, root: string, path: string) =>
     command("plugin_fs_read_versioned", id, root, path),
   /** Writes only if the file is still the version `token` names. */

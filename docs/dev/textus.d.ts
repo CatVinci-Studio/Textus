@@ -1001,7 +1001,8 @@ declare global {
       /** From 1.3.10: a settings file of the nearest Obsidian vault -
        *  `appSettings("obsidian", "bookmarks.json")` reads
        *  `.obsidian/bookmarks.json` - parsed as JSON, found above the open
-       *  folder too; null where there is none. Read only (files.read). */
+       *  folder too; null where there is none. A file at the settings
+       *  folder's top only. Read only (files.read). */
       appSettings(
         app: "obsidian",
         file: string,

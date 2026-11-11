@@ -263,3 +263,58 @@ mod tests {
         assert_eq!(token_of(b"").len(), 64);
     }
 }
+
+/// An Obsidian vault's own settings file, `<vault>/.obsidian/<name>`, as
+/// text; None when it isn't there. The one hidden folder plugins may read
+/// from, and only a file at its top: a plugin's saved data lives deeper
+/// (plugins/<id>/data.json) and holds its tokens.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_app_settings(
+    app: tauri::AppHandle,
+    id: String,
+    vault: String,
+    name: String,
+) -> Result<Option<String>, String> {
+    if !super::state::read(&app).allows(&id, "files.read") {
+        return Err(super::access::refused(&id, "files.read"));
+    }
+    if !settings_file_name(&name) {
+        return Err(format!("{name} isn't a settings file's name."));
+    }
+    let path = super::access::inside(
+        std::path::Path::new(&vault),
+        &std::path::Path::new(".obsidian").join(&name),
+    )?;
+    super::access::require_not_app_data(&app, &path)?;
+    match tokio::fs::read(&path).await {
+        Ok(bytes) if bytes.len() as u64 <= super::access::MAX_READ_BYTES => {
+            Ok(Some(String::from_utf8_lossy(&bytes).into_owned()))
+        }
+        Ok(_) => Err(crate::errors::error("fileTooBig")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+/// A file's name at the top of the settings folder: no folders, nothing
+/// hidden.
+fn settings_file_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name.starts_with('.')
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '_' | '-' | '.'))
+}
+
+#[cfg(test)]
+mod app_settings_tests {
+    #[test]
+    fn only_a_file_at_the_settings_folders_top_is_named() {
+        assert!(super::settings_file_name("bookmarks.json"));
+        assert!(!super::settings_file_name("plugins/x/data.json"));
+        assert!(!super::settings_file_name("../.env"));
+        assert!(!super::settings_file_name(".hidden"));
+        assert!(!super::settings_file_name(""));
+    }
+}

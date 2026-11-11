@@ -44,6 +44,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::files::plugin_fs_stat,
             $crate::plugins::files::plugin_fs_create,
             $crate::plugins::files::plugin_fs_read_versioned,
+            $crate::plugins::files::plugin_app_settings,
             $crate::plugins::files::plugin_fs_write_if,
             $crate::plugins::files::plugin_secret_get,
             $crate::plugins::files::plugin_secret_set,

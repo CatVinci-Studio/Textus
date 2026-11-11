@@ -110,7 +110,7 @@ export function fileHandlers(p: PluginScope) {
     // other apps' plugins keep (bookmarks.json, a plugin's data.json).
     "files.appSettings": async ({ app, file, path }: Params) => {
       const name = str(file, "file");
-      if (!/^[\w.-]+(\/[\w.-]+)*$/.test(name) || name.includes(".."))
+      if (!/^[\w-][\w.-]*$/.test(name))
         throw new Error(`${name} isn't a settings file's name.`);
       if (str(app, "app") !== "obsidian") return null;
       const found = await fs.folderConventions(
@@ -120,12 +120,12 @@ export function fileHandlers(p: PluginScope) {
         (s) => s.app === "obsidian",
       )?.root;
       if (!vault) return null;
-      const read = await pluginsIpc
-        .fsReadVersioned(p.id, vault, `.obsidian/${name}`)
+      const text = await pluginsIpc
+        .appSettings(p.id, vault, name)
         .catch(() => null);
-      if (!read) return null;
+      if (!text) return null;
       try {
-        return JSON.parse(read.text) as unknown;
+        return JSON.parse(text) as unknown;
       } catch {
         return null;
       }

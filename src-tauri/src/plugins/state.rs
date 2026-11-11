@@ -55,13 +55,16 @@ pub struct PluginEntry {
 
 impl PluginsState {
     /// Whether `id` is on and was granted `permission` - what every
-    /// privileged call checks first.
+    /// privileged call checks first. Writing files includes reading them,
+    /// as the window's own check (api-permissions.ts grants) has it.
     pub fn allows(&self, id: &str, permission: &str) -> bool {
         self.all_on
-            && self
-                .plugins
-                .get(id)
-                .is_some_and(|p| p.enabled && p.granted.iter().any(|g| g == permission))
+            && self.plugins.get(id).is_some_and(|p| {
+                p.enabled
+                    && p.granted.iter().any(|g| {
+                        g == permission || (permission == "files.read" && g == "files.write")
+                    })
+            })
     }
 
     /// Whether `id` is on at all.
@@ -188,6 +191,9 @@ mod tests {
         assert!(!state(true, false, &["files.read"]).allows("a.b", "files.read"));
         assert!(!state(false, true, &["files.read"]).allows("a.b", "files.read"));
         assert!(!state(true, true, &["files.read"]).allows("c.d", "files.read"));
+        // Writing includes reading, as the window's check has it.
+        assert!(state(true, true, &["files.write"]).allows("a.b", "files.read"));
+        assert!(!state(true, true, &["files.write"]).allows("a.b", "net"));
     }
 
     #[test]
