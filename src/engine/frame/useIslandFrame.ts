@@ -6,6 +6,10 @@ import type { IslandRoom } from "./useIslandRoom";
 import type { Rect } from "./rect";
 import { setFrameLayout } from "./frame-store";
 
+/** The room left of the islands' area (the rail, the sidebar's column),
+ *  moving with them: what the sidebar is revealed by, on their frames. */
+export const BEFORE_ISLANDS = "before-islands";
+
 /** Something held by the pointer moves with it, not after it. */
 const GRIPPED = ".tx-grip[data-gripped], .sidebar-resizer[data-gripped]";
 
@@ -41,6 +45,9 @@ export function useIslandFrame(
       box,
       room.origin,
     );
+    parts.set(BEFORE_ISLANDS, {
+      rect: { x: 0, y: 0, w: room.origin.x, h: room.shell.h },
+    });
     const sign = [...parts]
       .map(([k, p]) => `${k}:${p.rect.x},${p.rect.y},${p.rect.w},${p.rect.h}`)
       .join(" ");

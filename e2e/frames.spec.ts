@@ -21,8 +21,8 @@ const AREA = ".main-pane";
 const NEW_SHEET = "section.island:not([data-frame-mark])";
 const NEW_ROW = ".island-row:not([data-frame-mark])";
 
-async function open(page: Page) {
-  await page.setViewportSize({ width: 1200, height: 760 });
+async function open(page: Page, width = 1200) {
+  await page.setViewportSize({ width, height: 760 });
   await openApp(page, { settings: { menuBarShown: false }, animations: true });
   await settled(page);
 }
@@ -167,34 +167,51 @@ test("opening the AI with only Settings open, its island grows from nothing as S
   expectIslandGrewIn("b. AI from Settings alone", frames);
 });
 
-test("toggling the sidebar, the first island slides over and its row stays on it @perf", async ({
-  page,
-}) => {
-  await open(page);
-  const targets = await islandsNow(page);
-  for (const turn of ["first", "second"]) {
-    const frames = await recordFrames(page, targets, () =>
-      emit(page, "menu-toggle-sidebar"),
-    );
-    kept(frames, "sheet0", "row0");
-    const row = rowOnSheet(frames, "sheet0", "row0");
-    const travel = Math.abs(
-      frames[0]!.boxes.sheet0!.left -
-        frames[frames.length - 1]!.boxes.sheet0!.left,
-    );
-    const step = maxStep(frames, "sheet0");
-    report(`c. sidebar, ${turn} toggle`, {
-      frames: frames.length,
-      sheetTravel: Math.round(travel),
-      rowOnSheet: told(row),
-      sheetMaxStep: step,
-    });
-    expect.soft(travel, "the island moves over").toBeGreaterThan(100);
-    expect.soft(step, "it never jumps").toBeLessThan(travel * 0.4);
-    expect.soft(told(row), "the row stays on its sheet").toBe("none");
-    await settled(page);
-  }
-});
+for (const width of [1200, 640]) {
+  test(`toggling the sidebar at ${width}px, the first island slides over, its row stays on it and it never covers the sidebar @perf`, async ({
+    page,
+  }) => {
+    await open(page, width);
+    const targets = {
+      ...(await islandsNow(page)),
+      sidebar: ".app-shell > .sidebar",
+    };
+    for (const turn of ["first", "second"]) {
+      const frames = await recordFrames(page, targets, () =>
+        emit(page, "menu-toggle-sidebar"),
+      );
+      kept(frames, "sheet0", "row0");
+      const row = rowOnSheet(frames, "sheet0", "row0");
+      const travel = Math.abs(
+        frames[0]!.boxes.sheet0!.left -
+          frames[frames.length - 1]!.boxes.sheet0!.left,
+      );
+      const step = maxStep(frames, "sheet0");
+      // What shows of the sidebar ends where the island begins, or before.
+      const covered = frames.flatMap((frame, i) => {
+        const side = frame.boxes.sidebar;
+        const sheet = frame.boxes.sheet0;
+        if (!side || !sheet || side.shownWidth < 1) return [];
+        const by = Math.round(side.left + side.shownWidth - sheet.left);
+        return by > 1 ? [{ frame: i, t: frame.t, by }] : [];
+      });
+      report(`c. sidebar at ${width}, ${turn} toggle`, {
+        frames: frames.length,
+        sheetTravel: Math.round(travel),
+        rowOnSheet: told(row),
+        sheetMaxStep: step,
+        sidebarCovered: told(covered),
+      });
+      expect.soft(travel, "the island moves over").toBeGreaterThan(100);
+      expect.soft(step, "it never jumps").toBeLessThan(travel * 0.4);
+      expect.soft(told(row), "the row stays on its sheet").toBe("none");
+      expect
+        .soft(told(covered), "the island never covers the sidebar")
+        .toBe("none");
+      await settled(page);
+    }
+  });
+}
 
 test("splitting right, the new island grows from nothing as the old one gives way @perf", async ({
   page,
