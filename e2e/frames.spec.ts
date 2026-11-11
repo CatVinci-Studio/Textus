@@ -152,7 +152,7 @@ test("opening the AI with only Settings open, its island grows from nothing as S
   const doc = page.locator(".tab-pill").filter({ hasText: "未命名" });
   await doc.click();
   await doc.locator(".tab-pill-close").click();
-  await expect(page.locator(".tab-pill")).toHaveText(["设置"]);
+  await expect(page.locator(".tab-pill")).toHaveText(["设置：通用"]);
   await settled(page);
   const frames = await recordFrames(
     page,

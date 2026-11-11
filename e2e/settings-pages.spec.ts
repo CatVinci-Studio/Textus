@@ -36,12 +36,12 @@ test("⌘, opens the list in the sidebar and the Settings tab; the gear toggles 
 }) => {
   await open(page);
   await emit(page, "menu-open-settings");
-  await expect(tabs(page)).toHaveText(["未命名", "设置"]);
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await expect(sidebarTitle(page)).toHaveText("设置");
   await expect(gear(page)).toHaveAttribute("aria-pressed", "true");
   await gear(page).click();
   await expect(gear(page)).toHaveAttribute("aria-pressed", "false");
-  await expect(tabs(page)).toHaveText(["未命名", "设置"]);
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await gear(page).click();
   await expect(sidebarTitle(page)).toHaveText("设置");
 });

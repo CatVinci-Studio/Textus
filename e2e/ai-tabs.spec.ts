@@ -122,13 +122,13 @@ test("the window's other tabs stay with the document when the AI opens", async (
 }) => {
   await open(page);
   await emit(page, "menu-open-settings");
-  await expect(tabs(page)).toHaveText(["未命名", "设置"]);
+  await expect(tabs(page)).toHaveText(["未命名", "设置：通用"]);
   await aiButton(page).click();
   await expect(islands(page)).toHaveCount(2);
   const rows = page.locator(".island-row");
   await expect(rows.first().locator(".tab-pill")).toHaveText([
     "未命名",
-    "设置",
+    "设置：通用",
   ]);
   await expect(rows.last().locator(".tab-pill")).toHaveText(["新对话"]);
 });
@@ -153,7 +153,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.mouse.up();
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText(["新对话"]);
-  await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置"]);
+  await expect(rows.last().locator(".tab-pill")).toHaveText(["未命名", "设置：通用"]);
 
   // And back, the document's island to the left of the AI's: each first
   // open tab at its island's edge still joins its sheet's square corner.
@@ -170,7 +170,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText([
     "未命名",
-    "设置",
+    "设置：通用",
   ]);
   await page.waitForTimeout(600);
   const corners = await page.evaluate(() =>
@@ -207,7 +207,7 @@ test("with only Settings open, the AI opens beside it and can be used; Settings'
   await doc.click();
   await doc.hover();
   await doc.locator(".tab-pill-close").click();
-  await expect(tabs(page)).toHaveText(["设置"]);
+  await expect(tabs(page)).toHaveText(["设置：通用"]);
   const settings = page.locator("section.island").first();
   await settings.evaluate((el) => ((el as HTMLElement).dataset.mark = "kept"));
   await aiButton(page).click();
