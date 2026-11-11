@@ -22,10 +22,10 @@ interface OutlineProps {
 // A long document's headings out of sight are placeholders, in their place.
 const HEADINGS = `:scope > :is(h1, h2, h3, h4, h5, h6, ${HEADING_PLACEHOLDER})`;
 
-/** The index of the section being read in the active editor: the last
+/** The index of the section being read in `tabId`'s editor: the last
  *  top-level heading just below the scroller's top, or -1 above the first. */
-function currentHeading(): number {
-  const scroller = tabElement()?.querySelector(":scope > .editor-scroll");
+function currentHeading(tabId: string): number {
+  const scroller = tabElement(tabId)?.querySelector(":scope > .editor-scroll");
   const root = scroller?.querySelector(".editor-content .ProseMirror");
   if (!scroller || !root) return -1;
   const line = scroller.getBoundingClientRect().top + 80;
@@ -97,7 +97,7 @@ export function Outline({ content, tabId }: OutlineProps) {
   };
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
   const { ref: treeRef, onKeyDown: treeKeys } = useTreeKeys<HTMLDivElement>();
-  const current = useCurrentHeading(content);
+  const current = useCurrentHeading(content, tabId);
   /** Where the menu is open, and the heading row it is on, if any. */
   const [menu, setMenu] = useState<{
     x: number;
@@ -217,13 +217,13 @@ export function Outline({ content, tabId }: OutlineProps) {
 
 /** The index of the heading the reader is at, following any scroller: the
  *  scroll event doesn't bubble, so it is caught on the way down. */
-function useCurrentHeading(content: string): number {
+function useCurrentHeading(content: string, tabId: string): number {
   const [current, setCurrent] = useState(-1);
   useEffect(() => {
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => setCurrent(currentHeading()));
+      frame = requestAnimationFrame(() => setCurrent(currentHeading(tabId)));
     };
     update();
     document.addEventListener("scroll", update, true);
@@ -231,6 +231,6 @@ function useCurrentHeading(content: string): number {
       cancelAnimationFrame(frame);
       document.removeEventListener("scroll", update, true);
     };
-  }, [content]);
+  }, [content, tabId]);
   return current;
 }

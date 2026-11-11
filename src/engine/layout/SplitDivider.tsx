@@ -1,4 +1,5 @@
 import { frameLayout } from "../frame/frame-store";
+import { holdGrip } from "../frame/grip";
 import "../controls/resize-handle.css";
 import { useRef, useState, type CSSProperties } from "react";
 import { ContextMenu } from "../controls/ContextMenu";
@@ -72,6 +73,7 @@ export function SplitDivider({
     else share(current + sign * KEY_STEP);
   };
   const end = () => {
+    if (drag.current) holdGrip(false);
     drag.current = null;
     setDragging(false);
   };
@@ -96,6 +98,7 @@ export function SplitDivider({
           e.currentTarget.setPointerCapture(e.pointerId);
           const { origin } = frameLayout();
           drag.current = { origin: row ? origin.x : origin.y };
+          holdGrip(true);
           setDragging(true);
         }}
         onPointerMove={(e) => {

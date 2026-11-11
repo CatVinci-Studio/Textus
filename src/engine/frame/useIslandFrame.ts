@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from "react";
+import { gripHeld } from "./grip";
 import { frameClock } from "./clock";
 import { islandParts, type PlacedIsland } from "./island-parts";
 import type { IslandsLayout } from "./solve";
@@ -9,9 +10,6 @@ import { setFrameLayout } from "./frame-store";
 /** The room left of the islands' area (the rail, the sidebar's column),
  *  moving with them: what the sidebar is revealed by, on their frames. */
 export const BEFORE_ISLANDS = "before-islands";
-
-/** Something held by the pointer moves with it, not after it. */
-const GRIPPED = ".tx-grip[data-gripped], .sidebar-resizer[data-gripped]";
 
 /**
  * Hands the islands' parts to the window's clock after each commit, before
@@ -72,7 +70,7 @@ export function useIslandFrame(
     publish(room, box, solved, islands);
     const resized =
       was && (was.shell.w !== room.shell.w || was.shell.h !== room.shell.h);
-    const animate = !!was && !resized && !document.querySelector(GRIPPED);
+    const animate = !!was && !resized && !gripHeld();
     last.current = { shell: room.shell, sign, held };
     frameClock.set("islands", parts, room.origin, animate);
   });

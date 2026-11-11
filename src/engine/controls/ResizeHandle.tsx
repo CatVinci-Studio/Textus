@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { holdGrip } from "../frame/grip";
 import "./resize-handle.css";
 
 const KEY_STEP = 20;
@@ -34,6 +35,7 @@ export function ResizeHandle({
     const d = drag.current;
     if (!d) return;
     drag.current = null;
+    holdGrip(false);
     setDragging(false);
     onResize(d.last, true);
   };
@@ -55,6 +57,7 @@ export function ResizeHandle({
         // editor or past the window's edge.
         e.currentTarget.setPointerCapture(e.pointerId);
         drag.current = { startX: e.clientX, startWidth: width, last: width };
+        holdGrip(true);
         setDragging(true);
       }}
       onPointerMove={(e) => {
