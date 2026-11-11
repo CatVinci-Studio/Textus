@@ -5,10 +5,8 @@
 //! sends back what is wrong. Each section is kept as soon as it is written;
 //! sections are handed on in the outline's order.
 
-#[cfg(test)]
-pub(crate) use super::checks::prose_length;
 use super::checks::*;
-pub(crate) use super::checks::{all_soft, cited_link, length, problems, Problem, WEB_FIGURE_MARK};
+use super::checks::{all_soft, cited_link, length, problems, Problem};
 use super::figures::Draw;
 use super::grounding::{figures_by_source, unsupported_figures};
 use super::handover::{hand_over_checked, Checked, Task};
@@ -23,7 +21,7 @@ use std::time::Duration;
 
 pub(crate) const SUBMIT_SECTION_TOOL: &str = "submit_section";
 
-pub(crate) use super::brief::{revision_message, writer_instructions};
+use super::brief::{revision_message, writer_instructions};
 use super::brief::{submit_section_spec, writer_message};
 use super::tuning::WRITER_STEPS;
 /// Section `index` written: its Markdown under its heading.

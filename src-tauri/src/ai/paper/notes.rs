@@ -3,7 +3,8 @@
 //! files by their paths.
 
 use super::grounding::{excerpt, has_quote, missing_figures};
-use super::research::{clip, is_search_page};
+use super::model::clip;
+use super::research::is_search_page;
 use super::sources::cited_file;
 use super::{Grounding, Lead, LeadKind, Note, PaperEvent};
 use crate::ai::tools::{Access, Run, Tool, ToolContext};

@@ -285,7 +285,7 @@ impl crate::ai::agent::Model for Scripted {
             };
             let call = |id: &str, args: serde_json::Value| AgentTurn::ToolCall {
                 call_id: format!("{id}-{}", text.len()),
-                name: research::ADD_NOTE_TOOL.into(),
+                name: notes::ADD_NOTE_TOOL.into(),
                 arguments: args.to_string(),
                 reasoning: None,
             };
@@ -388,7 +388,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
                 question,
                 tool,
                 arguments,
-            } if tool == research::ADD_NOTE_TOOL => Some((*question, arguments.clone())),
+            } if tool == notes::ADD_NOTE_TOOL => Some((*question, arguments.clone())),
             _ => None,
         })
         .collect();
@@ -424,7 +424,7 @@ async fn research_plans_questions_and_keeps_each_helper_s_sourced_notes() {
 #[test]
 fn a_note_s_claim_is_told_in_one_line() {
     let long = "城".repeat(300);
-    let clipped = research::clip(&long);
+    let clipped = model::clip(&long);
     assert_eq!(clipped.chars().count(), 120);
     assert!(clipped.ends_with('…'));
 }
@@ -685,15 +685,15 @@ fn a_section_is_checked_for_length_citations_and_figures() {
         &format!("```mermaid\nflowchart LR\n  A --> B\n```\n\n{chart}"),
     );
     assert_eq!(
-        draft::problems(&good, &section, &sources, "en"),
-        Vec::<draft::Problem>::new()
+        checks::problems(&good, &section, &sources, "en"),
+        Vec::<checks::Problem>::new()
     );
 
     let bad = format!(
         "{} cool [3](https://wrong.example/) and [4](https://x.example/) and [3] alone.\n\n```chart\n{{\"type\": \"radar\", \"series\": []}}\n```",
         "Green ".repeat(20)
     );
-    let found = draft::problems(&bad, &section, &sources, "en").join("\n");
+    let found = checks::problems(&bad, &section, &sources, "en").join("\n");
     assert!(
         found.contains("Far too short: 25 against about 100"),
         "{found}"
@@ -719,8 +719,8 @@ fn a_section_is_checked_for_length_citations_and_figures() {
 
 #[test]
 fn chinese_sections_count_characters_and_skip_figures() {
-    assert_eq!(draft::length("屋顶 绿化\n降温", "zh-CN"), 6);
-    assert_eq!(draft::length("Green roofs cool", "en"), 3);
+    assert_eq!(checks::length("屋顶 绿化\n降温", "zh-CN"), 6);
+    assert_eq!(checks::length("Green roofs cool", "en"), 3);
 }
 
 /// Writes every section, the second only on its second try.
@@ -942,7 +942,7 @@ fn a_chart_s_categories_labels_and_source_are_checked() {
         spec: "votes".into(),
     }];
     let found = |chart: &str| {
-        draft::problems(
+        checks::problems(
             &section_text(97, &format!("```chart\n{chart}\n```")),
             &section,
             &[(3, "https://example.org/study".to_string())],
@@ -1219,9 +1219,10 @@ impl crate::ai::agent::Model for Librarian {
                     json!({"path": "../secret.md"}),
                 ),
             ])
-        } else if !turns.iter().any(
-            |t| matches!(t, AgentTurn::ToolCall { name, .. } if name == research::ADD_NOTE_TOOL),
-        ) {
+        } else if !turns
+            .iter()
+            .any(|t| matches!(t, AgentTurn::ToolCall { name, .. } if name == notes::ADD_NOTE_TOOL))
+        {
             let results: Vec<&str> = turns
                 .iter()
                 .filter_map(|t| match t {
@@ -1241,7 +1242,7 @@ impl crate::ai::agent::Model for Librarian {
             );
             StepResult::ToolCalls(vec![call(
                 "n",
-                research::ADD_NOTE_TOOL,
+                notes::ADD_NOTE_TOOL,
                 json!({"claim": "Barrages store energy at high tide.", "evidence": "As the notes say.", "sources": ["references/Tides 2024/a.md"]}),
             )])
         } else {
@@ -1294,8 +1295,8 @@ async fn helpers_search_the_user_s_library_and_cite_its_files() {
     );
     let sources = vec![(1, dossier.sources[0].url.clone())];
     assert_eq!(
-        draft::problems(&cited, &section, &sources, "en"),
-        Vec::<draft::Problem>::new()
+        checks::problems(&cited, &section, &sources, "en"),
+        Vec::<checks::Problem>::new()
     );
     let listed = finish::references(
         std::slice::from_ref(&cited),
@@ -1434,7 +1435,7 @@ fn each_question_gets_an_even_share_of_the_research() {
         share.spend(crate::ai::web::WEB_FETCH_TOOL, &mut spent),
         None
     );
-    assert_eq!(share.spend(research::ADD_NOTE_TOOL, &mut spent), None);
+    assert_eq!(share.spend(notes::ADD_NOTE_TOOL, &mut spent), None);
     assert_eq!(spent, [0, 1, 5]);
 }
 
@@ -1443,14 +1444,14 @@ fn only_length_and_missing_figures_are_soft() {
     let mut section = outline().sections.remove(0);
     section.target_words = 100;
     let sources = vec![(3, "https://example.org/study".to_string())];
-    let found = |text: &str| draft::problems(text, &section, &sources, "en");
+    let found = |text: &str| checks::problems(text, &section, &sources, "en");
     // Too long, a planned figure missing: soft, whatever the wording.
     let long = found(&section_text(127, ""));
-    assert!(!long.is_empty() && draft::all_soft(&long), "{long:?}");
+    assert!(!long.is_empty() && checks::all_soft(&long), "{long:?}");
     // A source that isn't the section's, nothing cited: never soft.
     let wrong = found(&section_text(100, "").replace("[3]", "[4]"));
-    assert!(!draft::all_soft(&wrong), "{wrong:?}");
-    assert!(draft::all_soft(&[]));
+    assert!(!checks::all_soft(&wrong), "{wrong:?}");
+    assert!(checks::all_soft(&[]));
 }
 
 /// Always hands over a section three times too long, citing its source.
@@ -1551,7 +1552,7 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
     section.figures.clear();
     let sources = vec![(3, "https://example.org/study".to_string())];
     let problems =
-        |words: usize| draft::problems(&section_text(words, ""), &section, &sources, "en");
+        |words: usize| checks::problems(&section_text(words, ""), &section, &sources, "en");
     let found = |words: usize| problems(words).join(" ");
     assert_eq!(found(107), "");
     assert!(
@@ -1559,13 +1560,13 @@ fn a_section_s_length_holds_is_soft_or_is_sent_back() {
         "{}",
         found(127)
     );
-    assert!(draft::all_soft(&problems(127)));
+    assert!(checks::all_soft(&problems(127)));
     assert!(
         found(147).starts_with("Far too long: 150 against about 100 - cut it to at most 120"),
         "{}",
         found(147)
     );
-    assert!(!draft::all_soft(&problems(147)));
+    assert!(!checks::all_soft(&problems(147)));
     assert!(found(57).starts_with("It is 60 long"), "{}", found(57));
     assert!(found(37).starts_with("Far too short"), "{}", found(37));
     assert_eq!(super::checks::most(900), 1080);
@@ -1640,12 +1641,12 @@ fn an_address_with_parentheses_is_cited_whole() {
     let cited = format!("Green roofs cool the roof surface by day, as measured [66]({safe}).");
     // Either way of writing it is the same source.
     assert_eq!(
-        draft::problems(&cited, &section, &[(66, safe.clone())], "en"),
-        Vec::<draft::Problem>::new()
+        checks::problems(&cited, &section, &[(66, safe.clone())], "en"),
+        Vec::<checks::Problem>::new()
     );
     assert_eq!(
-        draft::problems(&cited, &section, &[(66, doi.to_string())], "en"),
-        Vec::<draft::Problem>::new()
+        checks::problems(&cited, &section, &[(66, doi.to_string())], "en"),
+        Vec::<checks::Problem>::new()
     );
 }
 
@@ -1688,7 +1689,7 @@ impl crate::ai::agent::Model for SearchCiter {
         use aicompat::agent::{AgentTurn, StepResult};
         let note = |id: &str, source: &str| AgentTurn::ToolCall {
             call_id: format!("{id}{}", turns.len()),
-            name: research::ADD_NOTE_TOOL.into(),
+            name: notes::ADD_NOTE_TOOL.into(),
             arguments: json!({"claim": "c", "evidence": "e", "sources": [source]}).to_string(),
             reasoning: None,
         };
@@ -1754,18 +1755,18 @@ fn a_figure_named_by_number_is_sent_back_and_a_slash_doesn_t_matter() {
     let sources = vec![(3, "https://example.org/study".to_string())];
     let numbered =
         "Roofs cool by day, as 图1 shows, and so on here [3](https://example.org/study/).";
-    let wrong = draft::problems(numbered, &section, &sources, "en");
+    let wrong = checks::problems(numbered, &section, &sources, "en");
     let found = wrong.join(" ");
     assert!(
         found.contains("\"图1\" names a figure by a number"),
         "{found}"
     );
-    assert!(!draft::all_soft(&wrong));
+    assert!(!checks::all_soft(&wrong));
     let fine =
         "Roofs cool by day, as the chart below shows and more [3](https://example.org/study/).";
     assert_eq!(
-        draft::problems(fine, &section, &sources, "en"),
-        Vec::<draft::Problem>::new()
+        checks::problems(fine, &section, &sources, "en"),
+        Vec::<checks::Problem>::new()
     );
 }
 
@@ -2453,7 +2454,7 @@ fn every_prompt_fills_in_for_every_genre() {
             };
             unfilled(&finish::opening_instructions(&paper));
             unfilled(&research::plan_instructions(&paper));
-            unfilled(&research::helper_instructions(
+            unfilled(&helper::helper_instructions(
                 &paper,
                 &research::material_prompt(&["notes.md".into()], true),
                 true,
@@ -2462,8 +2463,8 @@ fn every_prompt_fills_in_for_every_genre() {
                 let shape = outline::Shape::of(&genre.profile().scale, paper.target_chars, images);
                 unfilled(&outline::instructions(&paper, &shape));
             }
-            unfilled(&draft::writer_instructions(&paper));
-            unfilled(&draft::revision_message(
+            unfilled(&brief::writer_instructions(&paper));
+            unfilled(&brief::revision_message(
                 &paper,
                 &outline(),
                 0,
@@ -2516,7 +2517,7 @@ fn every_genre_s_profile_is_read_from_its_file() {
 /// whose diagram does; keeps what it was told.
 struct Redrawing(Mutex<Vec<String>>);
 
-impl research::Model for Redrawing {
+impl crate::ai::agent::Model for Redrawing {
     fn step<'a>(
         &'a self,
         _instructions: &'a str,
