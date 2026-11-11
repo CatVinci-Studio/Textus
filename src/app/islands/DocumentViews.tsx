@@ -1,4 +1,5 @@
 import { viewKey } from "../../engine/frame/island-parts";
+import { tabZoomStyle } from "../../engine/zoom/tab-zoom";
 import { Suspense, type CSSProperties, type ReactNode } from "react";
 import { EditorKept, KeptWhileHidden } from "./kept";
 import { PageTabContent } from "../tabs/page-tabs";
@@ -94,7 +95,11 @@ export function DocumentViews({
             data-pane-id={pane?.id}
             data-frame={shown ? viewKey(tab.id) : undefined}
             className={shown ? "split-pane" : undefined}
-            style={shown ? placed : { display: single ? "contents" : "none" }}
+            style={
+              shown
+                ? { ...placed, ...tabZoomStyle(tab.id) }
+                : { display: single ? "contents" : "none" }
+            }
             onPointerDownCapture={
               pane && tab.id !== activeTabId
                 ? () => onActivate(tab.id)

@@ -6,6 +6,7 @@ import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
 import { CONTENT_ZOOM_EVENT, contentZoom } from "../plugins/views/frame-zoom";
+import { clearTabZooms, setTabZoom, tabZoom } from "../engine/zoom/tab-zoom";
 
 /// Document zoom, each tab its own (or, with zoomTogether, all documents
 /// one), scoped to the editor content; the window chrome stays at 100%. Published as `--content-zoom` on the tab's own
@@ -192,8 +193,7 @@ export function useZoom(
   // Turned on: every document takes the window's one zoom.
   useEffect(() => {
     if (!together) return;
-    for (const tab of document.querySelectorAll<HTMLElement>("[data-tab-id]"))
-      tab.style.removeProperty("--content-zoom");
+    clearTabZooms();
     window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
   }, [together]);
 
@@ -219,7 +219,7 @@ export function useZoom(
             "--content-zoom",
             String(next),
           );
-        else tab.style.setProperty("--content-zoom", String(next));
+        else setTabZoom(tab.dataset.tabId!, next);
         window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
       };
       // Zoom leaves scrollTop alone, so without this the text under the
@@ -270,8 +270,8 @@ export function useZoom(
       const root = document.documentElement;
       const was = contentZoom(root);
       for (const tab of document.querySelectorAll<HTMLElement>("[data-tab-id]"))
-        if (!tab.style.getPropertyValue("--content-zoom"))
-          tab.style.setProperty("--content-zoom", String(was));
+        if (tabZoom(tab.dataset.tabId!) === undefined)
+          setTabZoom(tab.dataset.tabId!, was);
       root.style.setProperty("--content-zoom", String(zoomRef.current));
       persistRef.current(zoomRef.current);
     };
