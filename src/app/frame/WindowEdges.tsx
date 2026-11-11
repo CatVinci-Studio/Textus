@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useWindowState } from "../../platform/window-state";
 import { thisWindow } from "../../platform/this-window";
 import { drawsWindowEdges } from "../../platform/window-chrome";
 import "./window-edges.css";
@@ -30,35 +30,8 @@ const EDGES: ResizeDirection[] = [
  * while the window fills the screen.
  */
 export function WindowEdges() {
-  const [filled, setFilled] = useState(false);
-
-  useEffect(() => {
-    if (!drawsWindowEdges) return;
-    const win = thisWindow();
-    let alive = true;
-    const sync = () => {
-      void Promise.all([win.isMaximized(), win.isFullscreen()])
-        .then(([maximized, fullscreen]) => {
-          if (alive) setFilled(maximized || fullscreen);
-        })
-        .catch(() => {
-          // No backend (dev shim) - keep the edges.
-        });
-    };
-    sync();
-    // A drag-resize fires this every frame, and each sync is three IPC
-    // round trips; only where the resize ends matters.
-    let settle: ReturnType<typeof setTimeout> | undefined;
-    const unlisten = win.onResized(() => {
-      clearTimeout(settle);
-      settle = setTimeout(sync, 100);
-    });
-    return () => {
-      alive = false;
-      clearTimeout(settle);
-      void unlisten.then((off) => off());
-    };
-  }, []);
+  const { maximized, fullscreen } = useWindowState();
+  const filled = maximized || fullscreen;
 
   if (!drawsWindowEdges || filled) return null;
 

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const isFullscreen = vi.fn(() => Promise.resolve(false));
@@ -12,7 +12,12 @@ const listen = vi.fn(
   },
 );
 vi.mock("@tauri-apps/api/window", () => ({
-  getCurrentWindow: () => ({ isFullscreen, listen }),
+  getCurrentWindow: () => ({
+    isFullscreen,
+    isMaximized: () => Promise.resolve(false),
+    onResized: () => Promise.resolve(() => {}),
+    listen,
+  }),
 }));
 
 import { useFullscreenMark } from "./useFullscreenMark";
@@ -35,15 +40,15 @@ describe("the full-screen mark", () => {
 
   it("follows AppKit's word, in and out", async () => {
     const { unmount } = renderHook(() => useFullscreenMark());
-    await settle();
+    await act(settle);
     expect(listen).toHaveBeenCalledWith(
       "window-fullscreen",
       expect.any(Function),
     );
     expect(marked()).toBe(false);
-    onFullscreen!({ payload: true });
+    act(() => onFullscreen!({ payload: true }));
     expect(marked()).toBe(true);
-    onFullscreen!({ payload: false });
+    act(() => onFullscreen!({ payload: false }));
     expect(marked()).toBe(false);
     unmount();
   });
@@ -51,16 +56,17 @@ describe("the full-screen mark", () => {
   it("a window opened in full screen starts marked", async () => {
     isFullscreen.mockResolvedValue(true);
     const { unmount } = renderHook(() => useFullscreenMark());
-    await settle();
+    await act(settle);
     expect(marked()).toBe(true);
     unmount();
     expect(marked()).toBe(false);
+    await settle();
     expect(unlisten).toHaveBeenCalled();
   });
 
   it("a resize alone changes nothing", async () => {
     const { unmount } = renderHook(() => useFullscreenMark());
-    await settle();
+    await act(settle);
     Object.defineProperty(window, "innerWidth", {
       value: window.screen.width,
       configurable: true,
@@ -70,13 +76,12 @@ describe("the full-screen mark", () => {
     unmount();
   });
 
-  it("asks nothing off the Mac", async () => {
+  it("marks nothing off the Mac", async () => {
     root.dataset.windowChrome = "app";
-    isFullscreen.mockClear();
     const { unmount } = renderHook(() => useFullscreenMark());
-    await settle();
-    expect(isFullscreen).not.toHaveBeenCalled();
-    expect(listen).not.toHaveBeenCalled();
+    await act(settle);
+    act(() => onFullscreen!({ payload: true }));
+    expect(marked()).toBe(false);
     unmount();
   });
 });

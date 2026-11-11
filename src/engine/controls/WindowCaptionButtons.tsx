@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useWindowState } from "../../platform/window-state";
 import { thisWindow } from "../../platform/this-window";
 import { useSettings } from "../../prefs/SettingsContext";
 import {
@@ -17,37 +17,7 @@ import "./window-caption.css";
  */
 export function WindowCaptionButtons() {
   const { t } = useSettings();
-  const [maximized, setMaximized] = useState(false);
-
-  useEffect(() => {
-    if (!appDrawsWindowFrame) return;
-    const win = thisWindow();
-    let alive = true;
-    const sync = () => {
-      void win
-        .isMaximized()
-        .then((v) => {
-          if (alive) setMaximized(v);
-        })
-        .catch(() => {
-          // No backend (dev shim) - the glyph just stays on "maximize".
-        });
-    };
-    sync();
-    // Snap, Win+Up and a double-click on the drag region also maximise, so the
-    // glyph follows resizes. A drag-resize fires every frame and each sync is
-    // three IPC round trips; only where the resize ends matters.
-    let settle: ReturnType<typeof setTimeout> | undefined;
-    const unlisten = win.onResized(() => {
-      clearTimeout(settle);
-      settle = setTimeout(sync, 100);
-    });
-    return () => {
-      alive = false;
-      clearTimeout(settle);
-      void unlisten.then((off) => off());
-    };
-  }, []);
+  const { maximized } = useWindowState();
 
   if (!appDrawsWindowFrame) return null;
 
