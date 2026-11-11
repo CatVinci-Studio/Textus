@@ -15,13 +15,9 @@ export function useEditorPane() {
   const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
   const [contentEl, setContentEl] = useState<HTMLElement | null>(null);
   useEffect(() => {
-    // The document's own place: its island when split (the bars centred
-    // on it, not on the AI's beside it), the whole area when not.
-    setPaneEl(
-      (rootRef.current?.closest("[data-tab-id]") as HTMLElement | null) ??
-        (rootRef.current?.closest(".main-pane") as HTMLElement | null) ??
-        null,
-    );
+    // The document's own place: its tab's view (the bars centred on it,
+    // not on the AI's beside it).
+    setPaneEl(rootRef.current?.closest<HTMLElement>("[data-tab-id]") ?? null);
     setScrollEl(
       (rootRef.current?.closest(".editor-scroll") as HTMLElement | null) ??
         null,

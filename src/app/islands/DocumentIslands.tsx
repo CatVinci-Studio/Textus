@@ -304,8 +304,6 @@ export function DocumentIslands({
   );
 }
 
-/** The format bar across the top of a sheet: its left and width, its top
- *  the sheet's (its height its own). */
 /** A document in the rendered editor: what the format bar formats. */
 function formatsShown(tab: DocTab | undefined): boolean {
   return !!tab && !tab.view && !tab.sourceMode && !showsStartPage(tab);
