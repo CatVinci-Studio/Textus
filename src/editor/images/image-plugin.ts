@@ -1,4 +1,5 @@
 import { editorInUse } from "../editor-in-use";
+import { islandAt } from "../../engine/frame/frame-store";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -344,12 +345,11 @@ export function createImagePlugin(options: ImageStore) {
               point: { x: number; y: number };
             }>
           ).detail;
-          const under = document
-            .elementFromPoint(point.x, point.y)
-            ?.closest(".split-pane");
+          const under = islandAt(point.x, point.y)?.paneId;
           if (
             under
-              ? under !== view.dom.closest(".split-pane")
+              ? under !==
+                view.dom.closest<HTMLElement>("[data-pane-id]")?.dataset.paneId
               : !editorInUse(view.dom)
           )
             return;

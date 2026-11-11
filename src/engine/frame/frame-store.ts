@@ -57,3 +57,12 @@ function onFrameLayout(listener: () => void): () => void {
 export function useFrameLayout(): FrameLayout {
   return useSyncExternalStore(onFrameLayout, frameLayout);
 }
+
+/** The island whose box holds the viewport point, if any. */
+export function islandAt(x: number, y: number): FrameIsland | null {
+  return (
+    current.islands.find(
+      ({ whole: r }) => x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h,
+    ) ?? null
+  );
+}

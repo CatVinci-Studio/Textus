@@ -1,4 +1,7 @@
 import { tabElement } from "../engine/layout/tab-element";
+import { islandAt } from "../engine/frame/frame-store";
+import { splitLayout } from "../engine/layout/store";
+import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../engine/controls/hold-line";
@@ -51,11 +54,13 @@ type Pane =
 /// The tab a zoom is for: the one under the pointer, else the one in use;
 /// null when it shows no document.
 function zoomTab(x: number | null, y: number | null): HTMLElement | null {
-  const under =
-    x !== null && y !== null
-      ? document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-tab-id]")
+  const island = x !== null && y !== null ? islandAt(x, y) : null;
+  const layout = splitLayout();
+  const front =
+    island?.paneId && layout
+      ? paneById(layout.root, island.paneId)?.front
       : null;
-  const tab = under ?? tabElement();
+  const tab = (front && tabElement(front)) || tabElement();
   return tab?.querySelector(".editor-scroll, .source-view") ? tab : null;
 }
 
