@@ -14,9 +14,9 @@ vi.mock("../../platform/ipc", () => ({
   storage: { historyList: async () => state.history },
 }));
 vi.mock("../../storage/ui-state", () => ({
-  getUiState: () => state.offered,
-  setUiState: (_key: string, value: string[]) => {
-    state.offered = value;
+  uiList: () => state.offered ?? [],
+  keepInList: (_key: string, item: string) => {
+    state.offered = [...(state.offered ?? []), item];
   },
 }));
 vi.mock("./plugin-records", () => ({
