@@ -64,6 +64,14 @@ export function useAiTabs({
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
   const { tabsRef, setTabs, updateTab, activeTabId } = tabs;
+  // What the effects below follow: the AI tabs, the conversations wanted
+  // and History's names - not every render of the window.
+  const aiTabs = tabsRef.current.filter(isAiTab);
+  const aiKey = aiTabs.map((tab) => `${tab.id}:${conversationOf(tab)}`).join();
+  const wantedKey = wanted.join();
+  const titlesKey = aiTabs
+    .map((tab) => titles.get(conversationOf(tab)) ?? "")
+    .join("\n");
 
   // The tabs follow the conversations: one each, a closed one's gone, a
   // draft's tab becoming its conversation once sent.
@@ -141,7 +149,8 @@ export function useAiTabs({
     // Opened with the button, the AI is what is in use.
     if (made.length && !home && !starting) tabs.setActiveTabId(made[0].id);
     had.current = new Set(wanted);
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
+  }, [aiKey, wantedKey, shown, scope]);
 
   // Titles as History names them.
   useEffect(() => {
@@ -151,7 +160,8 @@ export function useAiTabs({
       if (title && tab.view?.title !== title)
         updateTab(tab.id, { view: { ...tab.view!, title } });
     }
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the keys stand for the lists
+  }, [aiKey, titlesKey]);
 
   // The tab brought to the front makes its conversation the live one.
   const front = tabsRef.current.find((tab) => tab.id === activeTabId);
