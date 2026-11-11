@@ -1,9 +1,6 @@
 import { editorInUse } from "../editor/editor-in-use";
 import { useCallback, useEffect } from "react";
-import {
-  openToText,
-  parseMarkdownSource,
-} from "../editor/markdown/parse-markdown-source";
+import { insertMarkdown } from "../editor/markdown/parse-markdown-source";
 import { editorViewCtx } from "@milkdown/kit/core";
 import {
   wrapInBlockquoteCommand,
@@ -242,13 +239,9 @@ export function useEditorWindowEvents({
     if (!isOnScreen()) return;
     const markdown = (e as CustomEvent<string>).detail;
     run((ctx) => {
-      const parsed = parseMarkdownSource(ctx, markdown);
-      if (!parsed || typeof parsed === "string") return;
       const view = ctx.get(editorViewCtx);
       view.dispatch(
-        view.state.tr
-          .replaceSelection(openToText(parsed.content))
-          .scrollIntoView(),
+        insertMarkdown(view.state.tr, ctx, markdown).scrollIntoView(),
       );
       view.focus();
     });

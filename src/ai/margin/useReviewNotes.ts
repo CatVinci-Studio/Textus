@@ -7,11 +7,11 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { revealPosition } from "../../editor/reveal-position";
 import {
-  commentCalls,
   numberNotes,
   reviewNotesKey,
   type ReviewNote,
 } from "./review-notes-plugin";
+import { commentCalls } from "../chat/comment-args";
 import { type MarginItem } from "./margin-layout";
 import { setMarginAvailable } from "./margin-room";
 import { blockAt, holdBlock } from "../../engine/controls/hold-line";

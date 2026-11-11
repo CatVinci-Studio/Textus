@@ -2,7 +2,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { editorViewCtx, serializerCtx, type Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import { replaceWithMarkdown } from "./apply-edit";
+import { replaceWithMarkdown } from "./parse-markdown-source";
 
 vi.mock("mermaid", () => ({
   default: { initialize() {}, render: () => new Promise(() => {}) },

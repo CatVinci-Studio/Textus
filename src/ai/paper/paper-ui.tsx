@@ -1,3 +1,4 @@
+import { citationPattern } from "../citations";
 import { counted } from "../../i18n/current";
 import { explainAiError } from "../error-messages";
 import { fill } from "../../i18n/fill";
@@ -168,7 +169,7 @@ export function previewText(
 ): string {
   return markdown
     .replace(
-      /\[(\d+)\]\([^)\s]*\)/g,
+      citationPattern(true),
       (_, n: string) => `[${order.get(Number(n)) ?? n}]`,
     )
     .replace(/^#{1,6}\s+/gm, "")

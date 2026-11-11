@@ -9,7 +9,8 @@ import {
   matchTarget,
   serializeBlocks,
 } from "../../editor/markdown/doc-markdown";
-import { applyEditRange, replaceWithMarkdown } from "./apply-edit";
+import { applyEditRange, normalizeAiMarkdown } from "./apply-edit";
+import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
 import {
   citationsAsFootnotes,
   footnoteLabels,
@@ -101,7 +102,7 @@ export function writeAccept(
         ctx,
         c.from,
         c.to,
-        withoutCitations(c.after).replace(/\s+$/, ""),
+        normalizeAiMarkdown(withoutCitations(c.after).replace(/\s+$/, "")),
       );
     const landed = findInOrder(
       tr.doc,

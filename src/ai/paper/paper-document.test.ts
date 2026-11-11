@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { paperDraft, sectionBody, withoutPictures } from "./paper-document";
+import {
+  citationOrder,
+  paperDraft,
+  sectionBody,
+  withoutPictures,
+} from "./paper-document";
 import type { Outline } from "../../platform/bindings/ai-paper";
 
 const outline = {
@@ -59,6 +64,16 @@ describe("the paper as it is written", () => {
     expect(paperDraft("Green roofs", outline, {}, sources)).not.toContain(
       "参考文献",
     );
+    // An attached file is cited as a web page is, as the finished paper has it.
+    expect([
+      ...citationOrder(
+        ["[500](attached/x.pdf) [93](https://a.example)"],
+        new Set([93, 500]),
+      ),
+    ]).toEqual([
+      [500, 1],
+      [93, 2],
+    ]);
   });
 
   it("puts a piece without headings straight under its title", () => {

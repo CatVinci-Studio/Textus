@@ -1,3 +1,4 @@
+import { citationPattern } from "../citations";
 import type { Outline, SourceEntry } from "../../platform/bindings/ai-paper";
 
 /** The sources a paper may cite, as its reference list gives them. */
@@ -7,8 +8,9 @@ export interface PaperSources {
 }
 
 /** A citation as a writer writes it, `[n](address)`: a web page's address
- *  or a file of the reference library. Rust's `cited_link`. */
-const CITED = /\[(\d{1,3})\]\(((?:https?:\/\/|references\/)[^)\s]+)\)/g;
+ *  or a file (the reference library, an attachment), as Rust's
+ *  `cited_link` takes it. */
+const CITED = citationPattern(true);
 
 /** The research's numbers of the sources `texts` cite, given 1, 2, … in
  *  the order they are first cited; numbers not in `known` are left out. */

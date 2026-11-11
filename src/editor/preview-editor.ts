@@ -1,13 +1,12 @@
 import { Editor, editorViewCtx } from "@milkdown/kit/core";
 import { configureEditorRoot, withEditorCore } from "./editor-extensions";
 import { parseMarkdownSource } from "./markdown/parse-markdown-source";
+import { replaceChanged } from "./replace-changed";
 import { pastReadOnly, setReadOnly } from "./read-only-plugin";
 import { loadSettings } from "../prefs/settings-store";
 import type { Settings } from "../prefs/SettingsContext";
 import "./preview-editor.css";
 import { normalizeMathDelimiters } from "../utils/markdown-math";
-import type { Node as ProseNode } from "@milkdown/kit/prose/model";
-import type { Transaction } from "@milkdown/kit/prose/state";
 
 /** More for a preview to draw, from the layer above (plugins' blocks). */
 export type PreviewExtras = (
@@ -63,7 +62,11 @@ export async function drawPreview(
         const view = ctx.get(editorViewCtx);
         const doc = parseMarkdownSource(ctx, next);
         if (!doc) return;
-        const tr = replaceChanged(view.state.tr, view.state.doc, doc);
+        const tr = replaceChanged(
+          view.state.tr,
+          view.state.doc.content,
+          doc.content,
+        );
         if (tr) view.dispatch(pastReadOnly(tr.setMeta("addToHistory", false)));
       }),
     destroy: () => void editor.destroy(),
@@ -73,22 +76,4 @@ export async function drawPreview(
 export interface PreviewHandle {
   update: (markdown: string) => void;
   destroy: () => void;
-}
-
-/** `tr` with only the top-level blocks of `old` that differ from `next`
- *  replaced, so the rest keep what they drew; null when nothing differs. */
-export function replaceChanged(
-  tr: Transaction,
-  old: ProseNode,
-  next: ProseNode,
-): Transaction | null {
-  const start = old.content.findDiffStart(next.content);
-  if (start === null) return null;
-  let { a, b } = old.content.findDiffEnd(next.content)!;
-  const overlap = start - Math.min(a, b);
-  if (overlap > 0) {
-    a += overlap;
-    b += overlap;
-  }
-  return tr.replace(start, a, next.slice(start, b));
 }

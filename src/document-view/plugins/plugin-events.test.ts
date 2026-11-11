@@ -1,3 +1,4 @@
+import { TextSelection } from "@milkdown/kit/prose/state";
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
 import { editorViewCtx, type Editor } from "@milkdown/kit/core";
@@ -98,5 +99,16 @@ describe("replacing the document", () => {
     });
     expect(results).toBe(false);
     expect(editor.action((ctx) => view(ctx).state.doc.textContent)).toBe("one");
+  });
+
+  it("keeps the caret in a paragraph whose end it rewrites", async () => {
+    editor = await createTestEditor("alpha beta\n\nsecond\n");
+    const caret = editor.action((ctx) => {
+      const v = view(ctx);
+      v.dispatch(v.state.tr.setSelection(TextSelection.create(v.state.doc, 3)));
+      replaceDocument(ctx, "alpha beta gamma\n\nsecond\n");
+      return v.state.selection.from;
+    });
+    expect(caret).toBe(3);
   });
 });

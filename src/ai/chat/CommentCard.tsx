@@ -7,39 +7,12 @@ import { Tooltip } from "../../engine/controls/Tooltip";
 import { FlipOnChange } from "../../engine/motion/flip";
 import { InlineMarkdownText } from "../MarkdownText";
 import type { AgentTurn } from "../types";
+import { parseComment, type Comment } from "./comment-args";
 
-export interface Comment {
-  anchor: string;
-  comment: string;
-  block?: string;
-  /** The passage (`anchor`, or the whole block) as it would read fixed:
-   *  one click makes it a proposal. */
-  suggestion?: string;
-}
+export type { Comment };
 
 /** What a comment's suggested fix calls back with. */
 export type ApplySuggestion = (callId: string, comment: Comment) => void;
-
-/** An add_comment call's arguments: one of a reply's comments, each a call
- *  of its own. */
-function parseComment(argumentsJson: string): Comment | null {
-  try {
-    const parsed = JSON.parse(argumentsJson);
-    if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")
-      return null;
-    return {
-      anchor: parsed.anchor,
-      comment: parsed.comment,
-      block: typeof parsed.block === "string" ? parsed.block : undefined,
-      suggestion:
-        typeof parsed.suggestion === "string" && parsed.suggestion.trim()
-          ? parsed.suggestion
-          : undefined,
-    };
-  } catch {
-    return null;
-  }
-}
 
 /** A note's suggested fix, and the button that proposes it. */
 function SuggestedFix({

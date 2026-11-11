@@ -184,45 +184,6 @@ export function createReviewNotesPlugin(options: {
   );
 }
 
-/** The add_comment calls in a conversation's turns, in order. */
-export function commentCalls(
-  turns: readonly {
-    kind: string;
-    name?: string;
-    call_id?: string;
-    arguments?: string;
-  }[],
-): { id: string; anchor: string; comment: string; block?: string }[] {
-  const out: {
-    id: string;
-    anchor: string;
-    comment: string;
-    block?: string;
-  }[] = [];
-  for (const turn of turns) {
-    if (
-      turn.kind !== "ToolCall" ||
-      turn.name !== "add_comment" ||
-      !turn.call_id
-    )
-      continue;
-    try {
-      const args = JSON.parse(turn.arguments ?? "");
-      if (typeof args.anchor !== "string" || typeof args.comment !== "string")
-        continue;
-      out.push({
-        id: turn.call_id,
-        anchor: args.anchor,
-        comment: args.comment,
-        block: typeof args.block === "string" ? args.block : undefined,
-      });
-    } catch {
-      // Still streaming in: its arguments aren't JSON yet.
-    }
-  }
-  return out;
-}
-
 /** The class naming the note a passage's anchor belongs to. */
 export function noteAnchorClass(id: string): string {
   return `review-anchor-of-${id.replace(/[^\w-]/g, "_")}`;

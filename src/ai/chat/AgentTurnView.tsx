@@ -21,6 +21,7 @@ import {
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { INSERT_MARKDOWN_EVENT } from "../../utils/events";
+import { normalizeAiMarkdown } from "../revision/apply-edit";
 
 /** The main window, whose document a reply can go into. */
 const inEditorWindow = () =>
@@ -123,7 +124,7 @@ export function AgentTurnView({
                       onSelect: () =>
                         window.dispatchEvent(
                           new CustomEvent(INSERT_MARKDOWN_EVENT, {
-                            detail: turn.text,
+                            detail: normalizeAiMarkdown(turn.text),
                           }),
                         ),
                     },

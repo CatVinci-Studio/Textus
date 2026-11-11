@@ -3,11 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { editorViewCtx } from "@milkdown/kit/core";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
-import {
-  commentCalls,
-  numberNotes,
-  reviewNotesKey,
-} from "./review-notes-plugin";
+import { numberNotes, reviewNotesKey } from "./review-notes-plugin";
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -16,34 +12,6 @@ afterEach(() => {
 });
 
 describe("review notes", () => {
-  it("reads add_comment calls, skipping ones still streaming", () => {
-    expect(
-      commentCalls([
-        { kind: "User", text: "x" } as never,
-        {
-          kind: "ToolCall",
-          name: "add_comment",
-          call_id: "a",
-          arguments: JSON.stringify({ anchor: "One", comment: "Why?" }),
-        },
-        {
-          kind: "ToolCall",
-          name: "add_comment",
-          call_id: "b",
-          arguments: '{"anchor": "Tw',
-        },
-        {
-          kind: "ToolCall",
-          name: "propose_edit",
-          call_id: "c",
-          arguments: "{}",
-        },
-      ]),
-    ).toEqual([
-      { id: "a", anchor: "One", comment: "Why?", context: undefined },
-    ]);
-  });
-
   // The badge "2" is the chat's second note card, wherever in the text
   // its passage is - and a later note never renumbers the ones on screen.
   it("are numbered in the order they were left, not by position", () => {

@@ -1,3 +1,4 @@
+import { replaceChanged } from "../../editor/replace-changed";
 import { fnv1a } from "../../utils/hash";
 import { revealPosition } from "../../editor/reveal-position";
 import type { Ctx } from "@milkdown/kit/ctx";
@@ -8,7 +9,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditProposal } from "../../ai/types";
 import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import { resolveAnchored } from "../../ai/revision/pending-place";
-import { replaceWithMarkdown } from "../../ai/revision/apply-edit";
+import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
 import { locatePlainText } from "../../ai/revision/text-locate";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import type { DocumentPlace } from "../../plugins/app-bridge";
@@ -136,41 +137,16 @@ export function documentRevision(markdown: string): string {
 }
 
 /**
- * The document made to read `markdown`, as one undo step: only the blocks
- * that differ are rewritten, so the caret stays.
+ * The document made to read `markdown`, as one undo step: only what
+ * differs is rewritten, so the caret stays.
  */
 export function replaceDocument(ctx: Ctx, markdown: string): boolean {
   const view = ctx.get(editorViewCtx);
   const parsed = parseMarkdownSource(ctx, markdown);
-  if (!parsed || typeof parsed === "string") return false;
+  if (!parsed) return false;
   const doc = view.state.doc;
-  const before = doc.content;
-  const after = parsed.content;
-  let start = 0;
-  while (
-    start < before.childCount &&
-    start < after.childCount &&
-    before.child(start).eq(after.child(start))
-  )
-    start++;
-  let endBefore = before.childCount;
-  let endAfter = after.childCount;
-  while (
-    endBefore > start &&
-    endAfter > start &&
-    before.child(endBefore - 1).eq(after.child(endAfter - 1))
-  ) {
-    endBefore--;
-    endAfter--;
-  }
-  if (start === endBefore && start === endAfter) return true;
-  let from = 0;
-  for (let i = 0; i < start; i++) from += before.child(i).nodeSize;
-  let to = from;
-  for (let i = start; i < endBefore; i++) to += before.child(i).nodeSize;
-  const nodes = [];
-  for (let i = start; i < endAfter; i++) nodes.push(after.child(i));
-  const tr = view.state.tr.replaceWith(from, to, nodes);
+  const tr = replaceChanged(view.state.tr, doc.content, parsed.content);
+  if (!tr) return true;
   closeHistory(tr);
   view.dispatch(markChangeSource(tr, "plugin"));
   // Refused (a read-only document): the caller learns the text didn't take.
