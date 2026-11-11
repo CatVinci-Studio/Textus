@@ -85,7 +85,6 @@ export const windowIpc = {
       "take_chat_handoff",
       null,
     ) as Promise<ChatHandoff | null>,
-  closeChatWindow: () => desktopQueryCommand("close_chat_window", undefined),
   /** The chat window serving THIS editor window, if any. */
   currentChatWindow: () => desktopQueryCommand("current_chat_window", null),
   /** Whether a plugin's floating view can float over the desktop here. */

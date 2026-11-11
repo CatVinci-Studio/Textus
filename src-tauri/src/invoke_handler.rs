@@ -259,7 +259,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         commands::chat_window::take_chat_handoff,
         #[cfg(desktop)]
-        commands::chat_window::close_chat_window,
         #[cfg(desktop)]
         commands::web_page::web_page_show,
         #[cfg(desktop)]

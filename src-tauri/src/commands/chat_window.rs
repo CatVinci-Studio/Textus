@@ -193,25 +193,6 @@ pub fn take_chat_handoff(
     pending.0.lock().unwrap().remove(window.label())
 }
 
-/// Closes the detached chat serving this editor, if one is open (its
-/// conversation back in the window's AI tab).
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn close_chat_window(
-    app: tauri::AppHandle,
-    window: tauri::WebviewWindow,
-    open: State<OpenChatWindows>,
-) {
-    let Some(label) = chat_serving(window.label(), &open) else {
-        return;
-    };
-    open.0.lock().unwrap().retain(|entry| entry.label != label);
-    if let Some(win) = app.get_webview_window(&label) {
-        let _ = win.close();
-    }
-    notify_chat_windows_changed(&app);
-}
-
 /// Told to every editor window when the set of chat windows changes, so none
 /// keeps pushing at a destroyed label (an `emitTo` a dead window fails silently).
 pub const CHAT_WINDOWS_CHANGED: &str = "chat:windows-changed";

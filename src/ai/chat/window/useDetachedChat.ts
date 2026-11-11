@@ -228,17 +228,11 @@ export function useDetachedChat(handlers: DetachedChatHandlers) {
     [chatLabel],
   );
 
-  const closeDetached = useCallback(() => {
-    void windowIpc.closeChatWindow();
-    setSharedChatLabel(null);
-  }, []);
-
   return {
     /** Non-null while a detached chat window serves this editor window. */
     chatLabel,
     detach,
     pushContext,
     pushStatuses,
-    closeDetached,
   };
 }

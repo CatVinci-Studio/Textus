@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { Slice, type Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Transform } from "@milkdown/kit/prose/transform";
-import type { EditorView } from "@milkdown/kit/prose/view";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { parseMarkdownSource } from "../../editor/markdown/parse-markdown-source";
 import { ownNotes as ownNotesIpc } from "../../platform/ipc";
@@ -24,17 +23,17 @@ import { setTrackingShown } from "./track-changes-state";
 import { originalChanged, trackFile } from "../../document/tracked-file";
 import { reportUndecided } from "../../document/undecided";
 
-const onScreen = (view: EditorView) =>
-  !!view.dom.closest('[data-active-tab="true"]');
-
 /** Track My Changes for one document. The file holds the original with the
  *  changes accepted; the changes still undecided are kept beside it
  *  (document/tracked-file.ts), so tracking carries on when it reopens. */
 export function useOwnRevisions({
+  isActive,
   run,
   filePath,
   t,
 }: {
+  /** The document on screen, the one the menu's items act on. */
+  isActive: boolean;
   run: EditorRunner;
   filePath: string | null;
   t: Strings;
@@ -63,7 +62,7 @@ export function useOwnRevisions({
 
   // The menu's check mark follows the document on screen.
   useEffect(() => {
-    if (!view || !onScreen(view)) return;
+    if (!view || !isActive) return;
     setTrackingShown(changes !== null);
   });
 
@@ -193,7 +192,7 @@ export function useOwnRevisions({
   }
 
   useWindowEvent(TRACK_CHANGES_EVENT, (e) => {
-    if (!view || !onScreen(view)) return;
+    if (!view || !isActive) return;
     const action = (e as CustomEvent<TrackChangesAction>).detail;
     if (action === "toggle") void toggle();
     else if (action === "accept-all") acceptAll();

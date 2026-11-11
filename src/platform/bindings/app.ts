@@ -74,11 +74,6 @@ export const commands = {
 	 */
 	take_chat_handoff: () => __TAURI_INVOKE<ChatHandoff | null>("take_chat_handoff"),
 	/**
-	 *  Closes the detached chat serving this editor, if one is open (its
-	 *  conversation back in the window's AI tab).
-	 */
-	close_chat_window: () => __TAURI_INVOKE<void>("close_chat_window"),
-	/**
 	 *  Shows tab `id`'s page at `bounds`, making it the first time; an existing
 	 *  page is moved and shown again where it was left.
 	 */

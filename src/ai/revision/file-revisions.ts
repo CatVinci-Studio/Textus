@@ -43,9 +43,16 @@ const storeOf = (path: string) => `${path}#ai-changes`;
 export async function readFileRevisions(
   path: string,
 ): Promise<FileRevisions | null> {
-  const value = (await ai
-    .keptProposalsRead(storeOf(path), null)
-    .catch(() => null)) as Partial<FileRevisions> | null;
+  return storedRevisions(path).catch(() => null);
+}
+
+/** What is kept for `path`, null for none; a store that can't be read
+ *  rejects, so nothing is written over what it holds. */
+async function storedRevisions(path: string): Promise<FileRevisions | null> {
+  const value = (await ai.keptProposalsRead(
+    storeOf(path),
+    null,
+  )) as Partial<FileRevisions> | null;
   if (!value || value.version !== 1 || !Array.isArray(value.incoming))
     return null;
   return value as FileRevisions;
@@ -78,7 +85,7 @@ export function updateFileRevisions(
   change: (kept: FileRevisions) => FileRevisions | null | undefined,
 ): Promise<void> {
   const next = (queues.get(path) ?? Promise.resolve()).then(async () => {
-    const kept = (await readFileRevisions(path)) ?? {
+    const kept = (await storedRevisions(path)) ?? {
       version: 1 as const,
       incoming: [],
     };

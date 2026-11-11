@@ -1,4 +1,4 @@
-import { fillComposer } from "../chat/ask-ai";
+import { askInComposer } from "../chat/composer-asks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { TextSelection } from "@milkdown/kit/prose/state";
@@ -71,6 +71,7 @@ function wholeChange(p: PendingPreview): PendingSentence | null {
 /** Review notes, the AI's and the writer's own, until done or cleared; also
  *  the margin's revision cards, which share their hover. */
 export function useReviewNotes({
+  isActive,
   run,
   reviewNotesRef,
   noMarginRef,
@@ -83,6 +84,8 @@ export function useReviewNotes({
   showAiNotice,
   filePath,
 }: {
+  /** The document on screen: the one Track My Changes' menu acts on. */
+  isActive: boolean;
   run: EditorRunner;
   /** The document's file, whose own notes are kept for it. */
   filePath: string | null;
@@ -251,7 +254,7 @@ export function useReviewNotes({
   }
 
   const own = useOwnNotes({ run, filePath, notes, t });
-  const revisions = useOwnRevisions({ run, filePath, t });
+  const revisions = useOwnRevisions({ isActive, run, filePath, t });
 
   const bar = useNotesBar({
     notes,
@@ -268,7 +271,7 @@ export function useReviewNotes({
   function askInPanel(text: string) {
     setOpenNote(null);
     agentPanel.setOpen(true);
-    window.setTimeout(() => fillComposer(text), 60);
+    askInComposer(text);
   }
 
   // No room for a margin: notes go behind badges and a rewrite's

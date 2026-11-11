@@ -56,6 +56,7 @@ export function useEditorReview({
   });
 
   const notes = useReviewNotes({
+    isActive,
     run,
     reviewNotesRef: setup.reviewNotesRef,
     noMarginRef: setup.noMarginRef,

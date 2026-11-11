@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DocumentSnapshot } from "../../doc-markdown";
 import { MODES } from "../../modes";
 import { ChatBody } from "../ChatBody";
+import type { ChatComposerHandle } from "../ChatComposer";
+import { takeComposerAsks } from "../composer-asks";
 import { AgentPanelView } from "./AgentPanelView";
 import { ChatHistoryMenu } from "../ChatHistoryMenu";
 import { reopenConversation } from "../reopen-conversation";
@@ -62,6 +64,12 @@ export function ConversationPanel({
   // Research mode's kind of piece, "auto" for the model's choice; the
   // message sent is its topic.
   const [paperGenre, setPaperGenre] = useState<PaperGenreChoice>("auto");
+  // What is asked into the AI from elsewhere lands in this composer.
+  const composer = useRef<ChatComposerHandle>(null);
+  useEffect(
+    () => takeComposerAsks((text) => composer.current?.restore(text)),
+    [],
+  );
   const port = document?.port ?? null;
   // A reply still arriving is about the document it was asked of: brought
   // in front meanwhile, another takes none of its proposals.
@@ -107,6 +115,7 @@ export function ConversationPanel({
         </div>
       )}
       <ChatBody
+        composerRef={composer}
         {...chat}
         document={NO_DOCUMENT}
         selectionMarkdown={null}

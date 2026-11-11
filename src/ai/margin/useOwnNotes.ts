@@ -63,10 +63,9 @@ export function useOwnNotes({
       return;
     }
     let alive = true;
-    void ownNotesIpc
-      .read(filePath, "notes")
-      .catch(() => null)
-      .then((text) => {
+    // Notes that can't be read stay unloaded: none is written over them.
+    void ownNotesIpc.read(filePath, "notes").then(
+      (text) => {
         if (!alive) return;
         const kept = parseOwnNotes(text);
         run((ctx) => {
@@ -89,7 +88,9 @@ export function useOwnNotes({
         });
         written.current = text;
         loadedFor.current = filePath;
-      });
+      },
+      () => {},
+    );
     return () => {
       alive = false;
     };
