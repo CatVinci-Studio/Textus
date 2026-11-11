@@ -41,7 +41,7 @@ fn session_file(app: &AppHandle) -> Option<PathBuf> {
     app.path()
         .app_config_dir()
         .ok()
-        .map(|dir| dir.join("session.json"))
+        .map(|dir| dir.join(crate::settings::file_name("session")))
 }
 
 /// The last session's windows.
@@ -49,10 +49,22 @@ pub fn read_session_windows(app: &AppHandle) -> Vec<WindowSession> {
     let Some(path) = session_file(app) else {
         return Vec::new();
     };
-    fs::read_to_string(path)
-        .ok()
-        .map(|raw| parse_session(&raw))
-        .unwrap_or_default()
+    let Ok(raw) = fs::read_to_string(&path) else {
+        return Vec::new();
+    };
+    // One no version wrote: kept aside, not lost under the next write.
+    if !readable_session(&raw) {
+        crate::json_file::move_aside(&path);
+        return Vec::new();
+    }
+    parse_session(&raw)
+}
+
+/// Whether `raw` is a session file some version wrote.
+fn readable_session(raw: &str) -> bool {
+    serde_json::from_str::<Vec<WindowSession>>(raw).is_ok()
+        || serde_json::from_str::<Vec<Vec<String>>>(raw).is_ok()
+        || serde_json::from_str::<Vec<String>>(raw).is_ok()
 }
 
 /// The file as each version wrote it: windows' sessions; up to 1.3.12 each
@@ -84,12 +96,7 @@ fn write_session(app: &AppHandle, windows: &[WindowSession]) {
     let Some(path) = session_file(app) else {
         return;
     };
-    if let Some(parent) = path.parent() {
-        let _ = fs::create_dir_all(parent);
-    }
-    if let Ok(json) = serde_json::to_string(windows) {
-        let _ = crate::atomic::write_sync(&path, json);
-    }
+    let _ = crate::json_file::save(&path, windows);
 }
 
 /// Every window's session, the main window first, each path in one window
@@ -275,6 +282,19 @@ mod tests {
             }]
         );
         assert!(parse_session("nonsense").is_empty());
+    }
+
+    #[test]
+    fn only_a_file_no_version_wrote_is_set_aside() {
+        for written in [
+            r#"["a.md"]"#,
+            r#"[["a.md"]]"#,
+            r#"[{"paths":["a.md"]}]"#,
+            "[]",
+        ] {
+            assert!(readable_session(written), "{written}");
+        }
+        assert!(!readable_session(r#"[{"paths":["a.md"]"#));
     }
 
     #[test]

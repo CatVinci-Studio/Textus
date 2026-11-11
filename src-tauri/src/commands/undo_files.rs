@@ -35,18 +35,16 @@ fn file_for(dir: &Path, path: &str) -> PathBuf {
 }
 
 fn read(file: &Path) -> Option<UndoFile> {
-    serde_json::from_slice(&std::fs::read(file).ok()?).ok()
+    crate::json_file::read_or_set_aside(file)
 }
 
 pub(crate) fn save_in(dir: &Path, path: &str, hash: &str, history: &str) -> Result<(), String> {
-    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    let json = serde_json::to_vec(&UndoFile {
+    let kept = UndoFile {
         path: path.into(),
         hash: hash.into(),
         history: history.into(),
-    })
-    .map_err(|e| e.to_string())?;
-    crate::atomic::write_sync(&file_for(dir, path), json).map_err(|e| e.to_string())?;
+    };
+    crate::json_file::save(&file_for(dir, path), &kept).map_err(|e| e.to_string())?;
     sweep(dir, SystemTime::now());
     Ok(())
 }
@@ -77,8 +75,7 @@ pub(crate) fn move_in(dir: &Path, from: &str, to: &str) -> Result<(), String> {
         };
         let old = file_for(dir, &kept.path);
         kept.path = moved;
-        let json = serde_json::to_vec(&kept).map_err(|e| e.to_string())?;
-        crate::atomic::write_sync(&file_for(dir, &kept.path), json).map_err(|e| e.to_string())?;
+        crate::json_file::save(&file_for(dir, &kept.path), &kept).map_err(|e| e.to_string())?;
         let _ = std::fs::remove_file(old);
     }
     Ok(())

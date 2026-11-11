@@ -8,17 +8,14 @@ fn prefs_path(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_config_dir()
         .map_err(|e| e.to_string())
-        .map(|p| p.join("prefs.json"))
+        .map(|p| p.join(crate::settings::file_name("prefs")))
 }
 
 fn read_prefs(app: &AppHandle) -> serde_json::Value {
     let Ok(path) = prefs_path(app) else {
         return serde_json::json!({});
     };
-    let Ok(raw) = std::fs::read_to_string(path) else {
-        return serde_json::json!({});
-    };
-    serde_json::from_str(&raw).unwrap_or_else(|_| serde_json::json!({}))
+    crate::json_file::read_or_set_aside(&path).unwrap_or_else(|| serde_json::json!({}))
 }
 
 /// Merges `value` into prefs.json under `key`, keeping its other keys; a

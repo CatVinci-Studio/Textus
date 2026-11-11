@@ -79,12 +79,7 @@ fn save_targets(app: &tauri::AppHandle, list: &VecDeque<Target>) {
     let Some(path) = targets_file(app) else {
         return;
     };
-    if let Some(dir) = path.parent() {
-        let _ = std::fs::create_dir_all(dir);
-    }
-    if let Ok(json) = serde_json::to_vec(list) {
-        let _ = crate::atomic::write_sync(&path, json);
-    }
+    let _ = crate::json_file::save(&path, list);
 }
 
 fn now_ms() -> i64 {

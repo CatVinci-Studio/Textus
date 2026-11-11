@@ -53,8 +53,7 @@ mod desktop {
 
     fn load(app: &tauri::AppHandle) -> Store {
         file(app)
-            .and_then(|p| std::fs::read(p).ok())
-            .and_then(|b| serde_json::from_slice(&b).ok())
+            .map(|p| crate::json_file::load_or_default(&p))
             .unwrap_or_default()
     }
 
@@ -62,13 +61,8 @@ mod desktop {
         let Some(path) = file(app) else {
             return;
         };
-        if let Some(dir) = path.parent() {
-            let _ = std::fs::create_dir_all(dir);
-        }
-        if let Ok(json) = serde_json::to_vec_pretty(store) {
-            if let Err(err) = crate::atomic::write_sync(&path, json) {
-                eprintln!("schedule: could not save the jobs: {err}");
-            }
+        if let Err(err) = crate::json_file::save_pretty(&path, store) {
+            eprintln!("schedule: could not save the jobs: {err}");
         }
     }
 

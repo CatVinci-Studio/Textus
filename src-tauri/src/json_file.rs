@@ -2,13 +2,37 @@
 //! aside for recovery by hand so a fresh one can take its place - one bad
 //! byte never locks the user out of what the file held.
 
-use serde::de::DeserializeOwned;
+use serde::{de::DeserializeOwned, Serialize};
 use std::path::{Path, PathBuf};
 
 /// `path` read as `T`; None when it isn't there, or when it doesn't parse
 /// (then moved aside first).
 pub(crate) fn read_or_set_aside<T: DeserializeOwned>(path: &Path) -> Option<T> {
     parse_or_set_aside(path, &std::fs::read(path).ok()?)
+}
+
+/// `path` read as `T`, or `T`'s default when it isn't there or doesn't
+/// parse (then moved aside first).
+pub(crate) fn load_or_default<T: DeserializeOwned + Default>(path: &Path) -> T {
+    read_or_set_aside(path).unwrap_or_default()
+}
+
+/// `value` written to `path` whole or not at all, its folder made first.
+pub(crate) fn save<T: Serialize + ?Sized>(path: &Path, value: &T) -> std::io::Result<()> {
+    write(path, serde_json::to_vec(value))
+}
+
+/// As `save`, indented for a file people may read by hand.
+pub(crate) fn save_pretty<T: Serialize + ?Sized>(path: &Path, value: &T) -> std::io::Result<()> {
+    write(path, serde_json::to_vec_pretty(value))
+}
+
+fn write(path: &Path, json: serde_json::Result<Vec<u8>>) -> std::io::Result<()> {
+    let json = json.map_err(std::io::Error::other)?;
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir)?;
+    }
+    crate::atomic::write_sync(path, json)
 }
 
 /// `bytes` (read from `path`) as `T`, or None with `path` moved aside.

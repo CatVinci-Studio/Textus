@@ -261,8 +261,7 @@ pub(crate) fn load(root: &Path, id: &str) -> Result<PaperFiles, String> {
 }
 
 fn write_json(path: &Path, value: &impl Serialize) -> Result<(), String> {
-    let json = serde_json::to_vec_pretty(value).map_err(|e| e.to_string())?;
-    crate::atomic::write_sync(path, json).map_err(|e| e.to_string())
+    crate::json_file::save_pretty(path, value).map_err(|e| e.to_string())
 }
 
 /// None when the file isn't there; an error when it is but can't be read.

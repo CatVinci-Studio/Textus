@@ -17,7 +17,7 @@ fn drafts_dir(app: &AppHandle) -> Result<PathBuf, String> {
     app.path()
         .app_data_dir()
         .map_err(|e| e.to_string())
-        .map(|p| p.join("drafts"))
+        .map(|p| p.join(crate::settings::dir_name("drafts")))
 }
 
 #[derive(Serialize, Deserialize)]

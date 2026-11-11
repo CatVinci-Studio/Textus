@@ -14,10 +14,16 @@ pub(crate) const FLUSH_DELAY: Duration = Duration::from_millis(250);
 /// Debug builds get their own files: a dev build shares the installed app's
 /// config directory and must not rewrite the real settings.
 pub(crate) fn file_name(stem: &str) -> String {
+    format!("{}.json", dir_name(stem))
+}
+
+/// A folder of the app's own state, kept apart for debug builds as its
+/// files are (drafts: a dev build must not take the app's crash drafts).
+pub(crate) fn dir_name(stem: &str) -> String {
     if cfg!(debug_assertions) {
-        format!("{stem}.dev.json")
+        format!("{stem}.dev")
     } else {
-        format!("{stem}.json")
+        stem.to_string()
     }
 }
 

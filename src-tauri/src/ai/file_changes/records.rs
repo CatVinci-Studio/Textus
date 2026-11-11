@@ -5,9 +5,7 @@ use super::{write, FileChange};
 use std::path::{Path, PathBuf};
 
 pub(super) fn save(record: &Path, change: &FileChange) -> Result<(), String> {
-    std::fs::create_dir_all(record).map_err(|e| e.to_string())?;
-    let text = serde_json::to_string(change).map_err(|e| e.to_string())?;
-    crate::atomic::write_sync(&record.join(format!("{}.json", change.id)), text)
+    crate::json_file::save(&record.join(format!("{}.json", change.id)), change)
         .map_err(|e| e.to_string())
 }
 
