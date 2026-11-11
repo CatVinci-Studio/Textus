@@ -4,8 +4,10 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  /* The tabs' size: a name reads the same in the tree and on its tab. */
-  font-size: var(--text-secondary);
+  /* Many names at a glance: list-size text, icons at their design size. */
+  font-size: var(--text-list);
+  line-height: 1.35;
+  --icon-scale: 1;
   color: var(--ui-text);
   user-select: none;
 }
@@ -24,13 +26,15 @@
    icon stands under the folders' icons. The step and the chevron are the
    tree's measures, not spacing. */
 .tree-row {
-  --tree-step: 14px;
+  --tree-step: 12px;
   --tree-chevron: calc(10px * var(--icon-scale, 1));
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 4px 8px 4px calc(var(--depth, 0) * var(--tree-step));
+  /* The small control height: a long list stays dense. */
+  min-height: 24px;
+  padding: 2px 8px 2px calc(var(--depth, 0) * var(--tree-step));
   background: none;
   border: none;
   color: inherit;
@@ -85,7 +89,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 2px 4px 8px;
+  /* The tools' height whether shown or not: their coming on hover moves
+     nothing below. */
+  min-height: var(--icon-button-s);
+  margin-bottom: 4px;
+  padding: 0 2px 0 8px;
 }
 
 .tree-root-label {

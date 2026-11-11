@@ -44,12 +44,8 @@ const ALLOWED = {
     "a pointer's slop, not a size drawn",
   "src/editor/mermaid-plugin.ts:RESIZE_REDRAW_PX":
     "a threshold for redrawing, not a size drawn",
-  "src/engine/drag/pointer-drag.ts:DRAG_START_PX":
-    "a pointer's slop, not a size drawn",
-  "src/engine/controls/tabs/TabPill.tsx:LIFT_SLOP_PX":
-    "a pointer's slop, not a size drawn",
-  "src/engine/controls/tabs/TabPill.tsx:REORDER_THRESHOLD_PX":
-    "a pointer's slop, not a size drawn",
+  "src/utils/gesture.ts:DRAG_START_PX": "a pointer's slop, not a size drawn",
+  "src/utils/gesture.ts:TOUCH_SLOP_PX": "a finger's slop, not a size drawn",
   "src/ai/paper/figure-check.ts:WIDTH":
     "a figure drawn to be checked, not shown",
   "src/ai/revision/stream-follow-plugin.ts:NEAR":

@@ -37,12 +37,10 @@ const COPIES_NOW = {
   "ai/rules/tw.rs | ai/rules/zh/wording.rs": 1,
   "ai/web/search.rs | ai/web/search.rs": 1,
   "ai/workspace.rs | ai/workspace.rs": 1,
-  "app/frame/WindowEdges.tsx | engine/controls/WindowCaptionButtons.tsx": 1,
   "auth/claude.rs | auth/openai_codex.rs": 2,
   "document/save-default-name.ts | document/save-default-name.ts": 1,
   "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,
   "editor/marks/enclosure-moves.ts | editor/marks/enclosure-moves.ts": 1,
-  "plugins/access.rs | plugins/access.rs": 1,
   "plugins/metadata.rs | plugins/workspace.rs": 1,
   "engine/controls/ContextMenu.tsx | engine/controls/ContextMenu.tsx": 1,
 };

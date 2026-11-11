@@ -2,12 +2,11 @@
 //! no-overwrite create, a read-then-write that never loses a change), and the
 //! plugin's secrets. Each is checked against `state.json`.
 
-use super::access::{in_folder, refused, require_not_app_data};
+use super::access::granted_path;
 use super::{require_id, state};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
-use std::path::Path;
 use tauri::Manager;
 
 /// A file's details (textus.files.stat).
@@ -31,11 +30,7 @@ pub async fn plugin_fs_stat(
     root: String,
     path: String,
 ) -> Result<Option<FsStat>, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
     let Ok(meta) = tokio::fs::metadata(&path).await else {
         return Ok(None);
     };
@@ -66,11 +61,7 @@ pub async fn plugin_fs_create(
     path: String,
     text: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
             .await
@@ -121,11 +112,7 @@ pub async fn plugin_fs_read_versioned(
     root: String,
     path: String,
 ) -> Result<VersionedText, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
     if tokio::fs::metadata(&path)
         .await
         .is_ok_and(|m| m.len() > super::access::MAX_READ_BYTES)
@@ -155,11 +142,7 @@ pub async fn plugin_fs_write_if(
     text: String,
     token: String,
 ) -> Result<bool, String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     let now = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),

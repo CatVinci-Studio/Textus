@@ -97,3 +97,22 @@ test("its edge dragged out, the sidebar widens and the islands make room", async
   const moved = (await page.locator("section.island").first().boundingBox())!;
   expect(moved.x).toBeGreaterThan(island.x + 100);
 });
+
+test("the folder's tools coming on hover move none of the tree's rows", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/b.md": "# B\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = page.locator(".tree-row").first();
+  await expect(row).toBeVisible();
+  await page.mouse.move(900, 400);
+  const before = (await row.boundingBox())!.y;
+  await row.hover();
+  await expect(page.locator(".tree-tool").first()).toBeVisible();
+  expect((await row.boundingBox())!.y).toBe(before);
+});

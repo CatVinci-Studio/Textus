@@ -34,6 +34,8 @@ const ALLOWED = {
   "src/app/frame/WindowControls.tsx": "a menu's anchor: the button pressed",
   "src/app/frame/ActivityRail.tsx":
     "the rail's groups, a list its stylesheet places, at a drag's end",
+  "src/app/frame/useSidebarFrame.ts":
+    "the sidebar's left, as its stylesheet places it by the rail: where its reveal's clip starts",
   "src/app/frame/rail-lift.ts":
     "the rail's groups, a list its stylesheet places, as an icon is carried",
 };

@@ -59,6 +59,8 @@
   --icon-scale: 1.15;
   --chrome-scale: calc(var(--chrome-base) * var(--ui-text-scale, 1));
   --window-bar-height: calc(28px * var(--chrome-scale));
+  /* The small round icon button: a panel's tools (.tx-icon-button). */
+  --icon-button-s: calc(24px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
      styles) under :root[data-window-chrome="mobile"] below. The desktop's
@@ -72,6 +74,8 @@
      name; title (18) for a dialog's or a sheet's; large (24) for a welcome.
      Whole pixels after the interface's size (below), so text stays sharp. */
   --text-caption: calc(12px * var(--chrome-scale, 1));
+  /* A long list read at a glance (the file tree): a step under the body. */
+  --text-list: calc(13px * var(--chrome-scale, 1));
   --text-footnote: var(--text-caption);
   --text-secondary: var(--text-body);
   --text-control: var(--text-body);
@@ -185,6 +189,7 @@
    areas reach 44 on their own (mobile/styles). */
 :root[data-window-chrome="mobile"] {
   --icon-scale: 1;
+  --text-list: var(--text-body);
   --control-height-sm: 32px;
   --control-height: 36px;
   --chrome-scale: 1;
@@ -618,8 +623,8 @@
   .tree-tool,
   .tx-icon-button
 ) {
-  width: calc(24px * var(--chrome-scale));
-  height: calc(24px * var(--chrome-scale));
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
 }
 
 .icon-button {

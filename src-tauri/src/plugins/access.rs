@@ -91,6 +91,23 @@ pub(crate) fn inside(root: &Path, path: &Path) -> Result<PathBuf, String> {
 
 /// The app's own folders (other plugins' storage, settings, keys), which no
 /// plugin reaches through the workspace calls.
+/// `path` for plugin `id` to use with `permission`: granted, inside `root`
+/// and none of the app's own data.
+pub(super) fn granted_path(
+    app: &tauri::AppHandle,
+    id: &str,
+    permission: &str,
+    root: &str,
+    path: &str,
+) -> Result<PathBuf, String> {
+    if !state::read(app).allows(id, permission) {
+        return Err(refused(id, permission));
+    }
+    let path = in_folder(Path::new(root), Path::new(path))?;
+    require_not_app_data(app, &path)?;
+    Ok(path)
+}
+
 pub(super) fn require_not_app_data(app: &tauri::AppHandle, path: &Path) -> Result<(), String> {
     let own = [app.path().app_data_dir(), app.path().app_config_dir()];
     for dir in own.into_iter().flatten() {
@@ -167,11 +184,7 @@ pub async fn plugin_fs_read(
     root: String,
     path: String,
 ) -> Result<Response, String> {
-    if !state::read(&app).allows(&id, "files.read") {
-        return Err(refused(&id, "files.read"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.read", &root, &path)?;
     read_bytes(path).await
 }
 
@@ -239,11 +252,7 @@ pub async fn plugin_fs_write(
     contents: String,
     base64: Option<bool>,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     let bytes = if base64.unwrap_or(false) {
         use base64::{engine::general_purpose::STANDARD, Engine};
         STANDARD.decode(contents).map_err(|e| e.to_string())?
@@ -302,11 +311,7 @@ pub async fn plugin_fs_trash(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     if std::fs::canonicalize(&root).is_ok_and(|r| r == path) {
         return Err("The folder itself can't be moved to the Trash.".into());
     }
@@ -333,11 +338,7 @@ pub async fn plugin_fs_mkdir(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    if !state::read(&app).allows(&id, "files.write") {
-        return Err(refused(&id, "files.write"));
-    }
-    let path = in_folder(Path::new(&root), Path::new(&path))?;
-    require_not_app_data(&app, &path)?;
+    let path = granted_path(&app, &id, "files.write", &root, &path)?;
     tokio::fs::create_dir_all(&path)
         .await
         .map_err(|e| e.to_string())
