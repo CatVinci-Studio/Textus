@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { setEditorHeld } from "../document/editor-held";
+import { registerTabEditor } from "../editor/tab-editor";
 import type { PendingStatus } from "../ai/revision/usePendingEdits";
 
 /** Keeps a hidden tab's editor loaded while Quick Ask lives in it or
@@ -25,8 +25,8 @@ export function useHeldWhileBusy({
     quickAsk.history.length > 0 ||
     writing ||
     Object.values(statuses).some((s) => s === "streaming");
-  useEffect(() => {
-    setEditorHeld(tabId, held);
-  }, [tabId, held]);
-  useEffect(() => () => setEditorHeld(tabId, false), [tabId]);
+  useEffect(
+    () => (held ? registerTabEditor(tabId, "held", true) : undefined),
+    [tabId, held],
+  );
 }
