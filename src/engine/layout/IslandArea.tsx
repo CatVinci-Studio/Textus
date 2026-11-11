@@ -1,4 +1,10 @@
-import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { nodeAt, panesOf, type Pane } from "./tree";
 import type { SplitLayout } from "./ops";
 import { islandKeys } from "./island-keys";
@@ -115,6 +121,16 @@ export function IslandArea({
       : [];
   });
   useIslandFrame(ref, room, area, solved, placed);
+  // Drawn again when an island comes, goes or changes its tabs - not as
+  // they only move or resize: the window's clock places them (useIslandFrame).
+  const shape = places
+    .map(
+      ({ pane, key, place }) =>
+        `${key}:${pane?.id ?? ""}:${pane?.front ?? ""}:${pane?.tabs.join(",") ?? ""}:${place.inner}:${place.plain}:${!!place.sheet}`,
+    )
+    .join(" ");
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- by shape alone
+  const drawn = useMemo(() => content(places), [content, shape]);
   // What the docks beside the area leave room for (useNarrowSidebar).
   const need =
     room &&
@@ -140,7 +156,7 @@ export function IslandArea({
       data-split={layout?.root.direction}
     >
       <div ref={probe} className="frame-probe" aria-hidden="true" />
-      {content(places)}
+      {drawn}
       <IslandNumbers />
       {layout &&
         solved?.dividers.map(({ line, rect, before, after }) => (

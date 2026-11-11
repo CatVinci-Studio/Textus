@@ -44,8 +44,16 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
       const base = Math.round(
         clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step) / step,
       );
+      // While the edge is held, only the shell's column follows: the
+      // islands make room as their area resizes, and nothing else redraws.
+      if (!persist) {
+        document
+          .querySelector<HTMLElement>(".app-shell")
+          ?.style.setProperty("--sidebar-width", `${base * step}px`);
+        return;
+      }
       setChosen(base);
-      if (persist) setUiState("sidebarWidth", base);
+      setUiState("sidebarWidth", base);
     },
     [windowWidth, beside],
   );

@@ -176,8 +176,10 @@ test("menus and popovers", async ({ page }) => {
   await open(page);
   await pasteMarkdown(page, LONG_DOC);
   await bench(page, "menus", async () => {
+    // The editor's right-click menu: every platform has it (a Mac's menu
+    // bar is native, with no button in the window).
     for (let i = 0; i < ROUNDS * 2; i++) {
-      await page.locator(".window-menu-button").click();
+      await page.locator(".ProseMirror p").first().click({ button: "right" });
       await page.waitForTimeout(250);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(200);
