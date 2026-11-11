@@ -147,7 +147,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   revisionDisplayInline: "모두 본문에",
   revisionDisplayOriginal: "본문에 원문, 여백에 수정",
   revisionDisplayFinal: "결과만, 원문은 여백에",
-  settingsNeedsRoom: "설정에는 더 넓은 공간이 필요합니다.",
   revisionDisplayNoRoom: "공간이 부족합니다: 사이드바나 AI 패널을 닫아 주세요",
   proposalDeletedSentence: "원문",
   proposalAddedSentence: "추가",

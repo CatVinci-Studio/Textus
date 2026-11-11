@@ -123,17 +123,22 @@ test("installed themes show as the store's do", async ({ page }) => {
   await expect(mine.locator(".theme-gallery-preview")).toBeVisible();
 });
 
-test("in too narrow a column, Settings asks for room instead of squeezing its rows", async ({
+test("beside a document in a small window, Settings keeps its least width and shows its page", async ({
   page,
 }) => {
-  // Narrow enough that, the sidebar stepped aside, Settings and the AI
-  // still share too little.
-  await page.setViewportSize({ width: 640, height: 700 });
+  await page.setViewportSize({ width: 900, height: 700 });
   await openApp(page, { settings: { menuBarShown: false } });
   await emit(page, "menu-settings");
-  await page.getByRole("button", { name: "Textus AI" }).first().click();
-  await expect(page.locator(".settings-tab-narrow")).toBeVisible();
-  await expect(page.locator(".settings-tab-page")).toBeHidden();
+  await emit(page, "menu-split-right");
+  await expect(page.locator(".settings-tab-page")).toBeVisible();
+  const width = await page.evaluate(
+    () =>
+      document
+        .querySelector(".settings-tab")!
+        .closest("[data-pane-id]")!
+        .getBoundingClientRect().width,
+  );
+  expect(width).toBeGreaterThan(300);
 });
 
 test("first-line indent sets in the document's paragraphs, not a list's", async ({

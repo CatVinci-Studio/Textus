@@ -141,7 +141,6 @@ export default {
   revisionDisplayInline: "全部在正文中",
   revisionDisplayOriginal: "原文在正文，修改在頁邊",
   revisionDisplayFinal: "只看結果，原文在頁邊",
-  settingsNeedsRoom: "設定面板需要更寬的空間。",
   revisionDisplayNoRoom: "空間不夠：關掉側邊欄或 AI 面板即可",
   proposalDeletedSentence: "原文",
   proposalAddedSentence: "新增",

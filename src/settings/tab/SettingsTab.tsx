@@ -78,9 +78,6 @@ export function SettingsTab({
   });
   return (
     <div className="settings-tab tx-scroll-reveal" ref={content}>
-      {/* Too narrow a column to set anything in: shown instead of the page
-          (settings-tab.css). */}
-      <p className="tx-empty settings-tab-narrow">{t.settingsNeedsRoom}</p>
       <div className="settings-tab-page settings-content">
         {/* The list of pages is the sidebar's: with it put away, the way
             back to it. */}

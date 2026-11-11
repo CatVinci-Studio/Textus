@@ -13,6 +13,8 @@ export function useNarrowSidebar(
   setOpen: Dispatch<SetStateAction<boolean>>,
   room: number,
   sidebar: number,
+  /** Panels folded for room come back before it does (useNarrowIslands). */
+  wait = false,
 ): void {
   const need = useIslandsNeed();
   const fits = room - sidebar >= need;
@@ -23,10 +25,10 @@ export function useNarrowSidebar(
     if (was.fits && !fits && open && room < was.room) {
       putAway.current = true;
       setOpen(false);
-    } else if (fits && putAway.current) {
+    } else if (fits && putAway.current && !wait) {
       putAway.current = false;
       if (!open) setOpen(true);
     }
     before.current = { fits, room };
-  }, [fits, room, open, setOpen]);
+  }, [fits, room, open, setOpen, wait]);
 }

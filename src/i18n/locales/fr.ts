@@ -173,7 +173,6 @@ utiliser une.
   revisionDisplayOriginal:
     "Original dans le texte, modifications dans la marge",
   revisionDisplayFinal: "Résultat seul, original dans la marge",
-  settingsNeedsRoom: "Les réglages ont besoin de plus d'espace.",
   revisionDisplayNoRoom:
     "Pas assez de place : fermez la barre latérale ou le panneau IA",
   proposalDeletedSentence: "Original",

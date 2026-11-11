@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { isIOSApp } from "../../platform/capabilities";
 import { usePresence } from "../../engine/motion/usePresence";
 import { CLOSE_FIND_REPLACE_EVENT } from "../../utils/events";
@@ -12,6 +7,7 @@ import { useAgentDock } from "./useAgentDock";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 import { getUiState, setUiState } from "../../storage/ui-state";
 import { useNarrowSidebar } from "./useNarrowSidebar";
+import { useNarrowIslands } from "./useNarrowIslands";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
@@ -80,12 +76,18 @@ export function useSidePanels(aiOn: boolean) {
     windowWidth,
     rail + (isIOSApp && agentShown ? PANEL_FLOOR * scale : 0),
   );
+  // The panels give way after the sidebar, and come back before it.
+  const panelsFolded = useNarrowIslands(
+    isIOSApp ? Infinity : windowWidth - rail - (open ? sidebarWidth.width : 0),
+    open,
+  );
   // An iPhone's or iPad's sidebar is a drawer over the page: never put away.
   useNarrowSidebar(
     panelOpen,
     setPanelOpen,
     isIOSApp ? Infinity : windowWidth - rail,
     sidebarWidth.width,
+    panelsFolded,
   );
   const { agentPanel, toggleAgentPanel, agentPresence, agentClosing } =
     useAgentDock(aiOn, windowWidth, rail + (open ? sidebarWidth.width : 0));

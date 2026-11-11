@@ -172,7 +172,6 @@ para usar una.
   revisionDisplayInline: "Todo en el texto",
   revisionDisplayOriginal: "Original en el texto, cambios en el margen",
   revisionDisplayFinal: "Solo el resultado, original en el margen",
-  settingsNeedsRoom: "Los ajustes necesitan más espacio.",
   revisionDisplayNoRoom:
     "No hay espacio: cierra la barra lateral o el panel de IA",
   proposalDeletedSentence: "Original",

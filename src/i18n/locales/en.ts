@@ -159,7 +159,6 @@ type /name in a conversation to use one.
   revisionDisplayInline: "All in the text",
   revisionDisplayOriginal: "Original in the text, changes in the margin",
   revisionDisplayFinal: "Result only, originals in the margin",
-  settingsNeedsRoom: "Settings need a wider space.",
   revisionDisplayNoRoom: "Not enough room - close the sidebar or the AI panel",
   proposalDeletedSentence: "Original",
   proposalAddedSentence: "Added",

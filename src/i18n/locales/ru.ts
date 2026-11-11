@@ -170,7 +170,6 @@ export default {
   revisionDisplayInline: "Всё в тексте",
   revisionDisplayOriginal: "Оригинал в тексте, правки на полях",
   revisionDisplayFinal: "Только результат, оригинал на полях",
-  settingsNeedsRoom: "Настройкам нужно больше места.",
   revisionDisplayNoRoom:
     "Не хватает места: закройте боковую панель или панель ИИ",
   proposalDeletedSentence: "Оригинал",

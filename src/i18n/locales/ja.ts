@@ -148,7 +148,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   revisionDisplayInline: "すべて本文に",
   revisionDisplayOriginal: "本文に元の文、修正は余白に",
   revisionDisplayFinal: "結果だけ、元の文は余白に",
-  settingsNeedsRoom: "設定にはもっと広いスペースが必要です。",
   revisionDisplayNoRoom:
     "余白が足りません：サイドバーか AIパネルを閉じてください",
   proposalDeletedSentence: "元の文",

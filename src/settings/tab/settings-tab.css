@@ -81,21 +81,6 @@
   display: contents;
 }
 
-.settings-tab-narrow {
-  display: none;
-}
-@container settings-page (max-width: 300px) {
-  .settings-tab-narrow {
-    display: flex;
-    height: 100%;
-    justify-content: center;
-    margin: 0;
-  }
-  .settings-tab .settings-tab-page {
-    display: none;
-  }
-}
-
 /* A group's heading keeps its words whole; its buttons wrap under it. */
 .settings-group-head {
   flex-wrap: wrap;

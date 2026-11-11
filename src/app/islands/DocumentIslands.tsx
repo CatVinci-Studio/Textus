@@ -1,3 +1,4 @@
+import { isPanelPane } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
 import { IslandArea, type IslandContent } from "../../engine/layout/IslandArea";
 import { useChangedFiles } from "../../ai/chat/file-changes";
@@ -274,10 +275,7 @@ export function DocumentIslands({
       rows={tabsInBar}
       plain={!tabsInBar}
       // A panel's island holds pages only (the AI, Settings, a plugin's).
-      isPanel={(pane) =>
-        pane.tabs.length > 0 &&
-        pane.tabs.every((id) => byId.get(id)?.view?.kind === "page")
-      }
+      isPanel={(pane) => isPanelPane(pane, (id) => byId.get(id)?.view)}
       content={documents}
       t={t}
     />

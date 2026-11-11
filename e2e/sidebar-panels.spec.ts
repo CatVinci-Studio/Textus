@@ -44,7 +44,7 @@ test("Select All in the second island selects that island's document", async ({
   expect(selected).not.toContain("第一篇");
 });
 
-test("too narrow for the sidebar and the islands at their least, the sidebar steps aside, and comes back with the room", async ({
+test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({
   page,
 }) => {
   await open(page);
@@ -55,6 +55,14 @@ test("too narrow for the sidebar and the islands at their least, the sidebar ste
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator("section.island")).toHaveCount(2);
   await page.setViewportSize({ width: 900, height: 760 });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  // Narrower still, the AI's island folds into the document's, and comes
+  // back first; the sidebar after it.
+  await page.setViewportSize({ width: 780, height: 760 });
+  await expect(page.locator("section.island")).toHaveCount(1);
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  await page.setViewportSize({ width: 900, height: 760 });
+  await expect(page.locator("section.island")).toHaveCount(2);
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
   await page.setViewportSize({ width: 1200, height: 760 });
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);

@@ -104,7 +104,8 @@ export function useContentMin(
     const measure = () => {
       frame = 0;
       const target = el.querySelector<HTMLElement>(inner);
-      if (!target) return;
+      // Not laid out (hidden for now): the last measure stands.
+      if (!target || !target.getClientRects().length) return;
       setContentMin(
         id,
         Math.ceil(minContent(target) + chromeAround(target, island)),
