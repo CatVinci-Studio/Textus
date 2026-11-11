@@ -549,3 +549,28 @@ fn deleting_a_skill_finds_every_file_of_that_name() {
     assert!(skill_files_named(&skills, "missing").is_err());
     std::fs::remove_dir_all(&root).ok();
 }
+
+#[test]
+fn a_skills_switch_keeps_its_name_its_keys_and_one_front_matter() {
+    // No front matter: the file's own name stands, none is written.
+    let plain = with_metadata("Proofread it.\n", "off", "true");
+    assert!(!plain.contains("name:"), "{plain}");
+    assert_eq!(parse_skill_file("proofread", &plain).name, "proofread");
+    // A BOM before the front matter: still the one front matter.
+    let bom = with_metadata("\u{feff}---\nname: tidy\n---\nTidy.\n", "off", "true");
+    assert_eq!(bom.matches("---").count(), 2, "{bom}");
+    assert_eq!(parse_skill_file("x", &bom).name, "tidy");
+    // Four-space keys: the new one beside them, the others kept.
+    let four = "---\nname: four\nmetadata:\n    textus-category: \"write\"\n---\nBody.\n";
+    let changed = with_metadata(four, "off", "true");
+    assert!(changed.contains("    textus-off: \"true\""), "{changed}");
+    assert!(
+        changed.contains("    textus-category: \"write\""),
+        "{changed}"
+    );
+    let again = with_metadata(&changed, "off", "false");
+    assert!(
+        again.contains("    textus-off: \"false\"") && !again.contains("\"true\""),
+        "{again}"
+    );
+}

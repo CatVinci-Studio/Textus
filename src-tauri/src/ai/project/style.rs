@@ -15,7 +15,7 @@ pub(crate) fn style_samples(files: &[String]) -> Result<String, String> {
         if samples.chars().count() >= STYLE_TOTAL_CHARS {
             break;
         }
-        let Ok(text) = std::fs::read_to_string(file) else {
+        let Some(text) = sample_text(Path::new(file)) else {
             continue;
         };
         let name = Path::new(file)
@@ -31,6 +31,29 @@ pub(crate) fn style_samples(files: &[String]) -> Result<String, String> {
         return Err("NO_SAMPLES".to_string());
     }
     Ok(samples)
+}
+
+/// A writing sample's text: a plain-text file of the writer's, none hidden,
+/// read no further than its first STYLE_SAMPLE_CHARS need.
+fn sample_text(path: &Path) -> Option<String> {
+    use std::io::Read;
+    const TEXT: [&str; 5] = ["md", "markdown", "txt", "text", "rst"];
+    let hidden = path.components().any(
+        |c| matches!(c, std::path::Component::Normal(n) if n.to_string_lossy().starts_with('.')),
+    );
+    let text_file = path
+        .extension()
+        .is_some_and(|e| TEXT.contains(&e.to_string_lossy().to_lowercase().as_str()));
+    if hidden || !text_file {
+        return None;
+    }
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(STYLE_SAMPLE_CHARS as u64 * 4)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    Some(String::from_utf8_lossy(&bytes).into_owned())
 }
 
 /// The prompt that drafts the style profile from samples, written in the

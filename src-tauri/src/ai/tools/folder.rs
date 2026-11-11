@@ -168,7 +168,11 @@ pub(super) fn read_file(ctx: &ToolContext, arguments: &str) -> ToolOutput {
         start: line("start_line"),
         end: line("end_line"),
     };
-    let text = crate::ai::project::read_part(root, path, range).unwrap_or_else(|err| err);
+    let text = match crate::ai::project::read_part(root, path, range) {
+        Ok(text) => text,
+        // Refused (outside the folder, hidden) or unread: nothing of it.
+        Err(err) => return err.into(),
+    };
     // What it left waiting there: its revisions, a change that met edits.
     // Named from the folder as the editor names it, as file changes are.
     let file = root.join(path.trim_start_matches('@'));

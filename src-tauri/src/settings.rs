@@ -182,7 +182,7 @@ pub fn history_upsert(
 }
 
 /// Every conversation and memory, for a settings file.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_records_export(
     app: AppHandle,
@@ -194,7 +194,7 @@ pub fn ai_records_export(
 
 /// Adds a settings file's conversations and memories; every window's history
 /// hears of each conversation saved.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ai_records_import(
     app: AppHandle,
@@ -277,7 +277,7 @@ pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Valu
 
 /// The saved conversations with every word of `query` in a message or a
 /// reply, newest first (the history list's search).
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_search(stores: tauri::State<Stores>, query: String) -> Vec<Value> {
     stores.chat.search(&query, 50)

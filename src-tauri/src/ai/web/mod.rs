@@ -5,7 +5,7 @@
 mod budget;
 pub(crate) mod commons;
 pub(crate) mod extract;
-mod fetch;
+pub(crate) mod fetch;
 mod scholar;
 pub(crate) mod search;
 mod seen;

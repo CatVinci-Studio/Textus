@@ -161,9 +161,10 @@ impl AgentProvider {
                         _ => None,
                     };
                     // `stream` support varies across compatible servers even more than
-                    // `tools` does, so a failed streamed step is retried once without
-                    // streaming (and without thinking parameters, which some servers take
-                    // only when streaming).
+                    // `tools` does, so a step the server refused as asked is retried
+                    // once without streaming (and without thinking parameters, which
+                    // some servers take only when streaming). Anything else - a key, a
+                    // limit, a cut-off reply - is said as it is, not paid for twice.
                     match custom::agent_step_streaming(
                         base_url,
                         api_key,
@@ -180,7 +181,7 @@ impl AgentProvider {
                     .await
                     {
                         Ok(result) => Ok(result),
-                        Err(error) if capabilities::is_thinking_refusal(&error) => Err(error),
+                        Err(error) if !streaming_refused(&error) => Err(error),
                         Err(_) => {
                             custom::agent_step(
                                 base_url,
@@ -202,6 +203,20 @@ impl AgentProvider {
         };
         step
     }
+}
+
+/// Whether a streamed step's error reads as the server refusing the request
+/// as made (a 4xx other than a key, a permission or a rate), which a request
+/// without streaming may get past.
+fn streaming_refused(error: &str) -> bool {
+    if capabilities::is_thinking_refusal(error) {
+        return false;
+    }
+    let status = error
+        .split_once("failed (")
+        .and_then(|(_, rest)| rest.get(..3))
+        .and_then(|code| code.parse::<u16>().ok());
+    matches!(status, Some(400..=499)) && !matches!(status, Some(401 | 403 | 429))
 }
 
 #[cfg(test)]
@@ -236,5 +251,24 @@ mod tests {
             api_key: "k".into()
         })
         .falls_back_to_plain_chat());
+    }
+
+    #[test]
+    fn only_a_request_refused_as_made_is_tried_again_unstreamed() {
+        assert!(streaming_refused(
+            "Custom endpoint request failed (400): stream not supported"
+        ));
+        assert!(streaming_refused(
+            "Custom endpoint request failed (422): bad field"
+        ));
+        for kept in [
+            "Custom endpoint request failed (401): bad key",
+            "Custom endpoint request failed (429): slow down",
+            "Custom endpoint request failed (500): oops",
+            "The model hit its output limit in the middle of an edit.",
+            "The connection ended in the middle of the reply. Try again.",
+        ] {
+            assert!(!streaming_refused(kept), "{kept}");
+        }
     }
 }

@@ -113,7 +113,7 @@ pub fn plugins_set_all(app: tauri::AppHandle, on: bool) -> Result<(), String> {
 
 /// Turns a plugin on or off with the permissions the user granted it. A
 /// developer-mode folder is kept.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_set(
     app: tauri::AppHandle,

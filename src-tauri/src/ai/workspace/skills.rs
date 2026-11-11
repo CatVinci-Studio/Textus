@@ -300,10 +300,13 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
 }
 
 /// `raw` with its `metadata:` key `textus-<key>` set to `value`: replaced, or
-/// added under `metadata:`, adding that or the front matter when missing.
+/// added under `metadata:` at its keys' indent, adding that or the front
+/// matter when missing. A file with no front matter keeps its file's name
+/// (none is written), a leading BOM goes.
 pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
-    let line = format!("  {META_PREFIX}-{key}: \"{value}\"");
-    let prefix = format!("  {META_PREFIX}-{key}:");
+    let raw = raw.strip_prefix('\u{feff}').unwrap_or(raw);
+    let field = format!("{META_PREFIX}-{key}:");
+    let entry = |indent: &str| format!("{indent}{field} \"{value}\"");
     let mut lines: Vec<String> = raw.lines().map(str::to_string).collect();
     let closing = (lines.first().map(|l| l.trim_end()) == Some("---"))
         .then(|| {
@@ -314,27 +317,35 @@ pub(crate) fn with_metadata(raw: &str, key: &str, value: &str) -> String {
                 .map(|i| i + 1)
         })
         .flatten();
+    let indent_of = |l: &str| l[..l.len() - l.trim_start().len()].to_string();
     match closing {
         Some(end) => {
-            if let Some(i) = lines[..end].iter().position(|l| l.starts_with(&prefix)) {
-                lines[i] = line;
+            if let Some(i) = lines[..end]
+                .iter()
+                .position(|l| l.trim_start().starts_with(&field))
+            {
+                lines[i] = entry(&indent_of(&lines[i]));
             } else if let Some(i) = lines[..end]
                 .iter()
                 .position(|l| l.trim_end() == "metadata:")
             {
-                lines.insert(i + 1, line);
+                // Beside the keys already there, at their indent.
+                let indent = lines[i + 1..end]
+                    .first()
+                    .map(|l| indent_of(l))
+                    .filter(|d| !d.is_empty())
+                    .unwrap_or_else(|| "  ".into());
+                lines.insert(i + 1, entry(&indent));
             } else {
-                lines.insert(end, line);
+                lines.insert(end, entry("  "));
                 lines.insert(end, "metadata:".to_string());
             }
         }
         None => {
-            let stem = "skill";
             let mut head = vec![
                 "---".to_string(),
-                format!("name: {stem}"),
                 "metadata:".to_string(),
-                line,
+                entry("  "),
                 "---".to_string(),
             ];
             head.extend(lines);

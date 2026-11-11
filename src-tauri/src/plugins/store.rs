@@ -215,7 +215,7 @@ pub fn plugin_store_get(
 }
 
 /// Keeps `value` under `key`; null takes the key away.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_set(
     app: tauri::AppHandle,
@@ -255,7 +255,7 @@ pub fn plugin_store_read(
 }
 
 /// Writes one of the plugin's own files there.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_write(
     app: tauri::AppHandle,

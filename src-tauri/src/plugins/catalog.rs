@@ -397,9 +397,11 @@ pub async fn plugin_install_catalog(
     let installed = {
         let app = app.clone();
         let package = package.clone();
-        tauri::async_runtime::spawn_blocking(move || install::install_sync(&app, &package))
-            .await
-            .map_err(|e| e.to_string())?
+        tauri::async_runtime::spawn_blocking(move || {
+            install::install_sync(&app, &package, install::Origin::Catalog)
+        })
+        .await
+        .map_err(|e| e.to_string())?
     };
     let _ = std::fs::remove_file(&package);
     let installed = installed?;

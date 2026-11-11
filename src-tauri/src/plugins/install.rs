@@ -62,7 +62,7 @@ fn installed(id: String, dir: &Path, manifest: String, dev: bool) -> InstalledPl
 
 /// Every installed plugin: `plugins/` and the developer folders in
 /// `state.json`. Unreadable manifests are left out; a developer folder wins.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugins_installed(app: tauri::AppHandle) -> Result<Vec<InstalledPlugin>, String> {
     let mut out: Vec<InstalledPlugin> = Vec::new();
@@ -110,14 +110,22 @@ pub async fn plugin_install(
     app: tauri::AppHandle,
     path: String,
 ) -> Result<InstalledPlugin, String> {
-    tauri::async_runtime::spawn_blocking(move || install_sync(&app, Path::new(&path)))
+    tauri::async_runtime::spawn_blocking(move || install_sync(&app, Path::new(&path), Origin::File))
         .await
         .map_err(|e| e.to_string())?
+}
+
+/// Where a package came from: the catalog's is the plugin it says it is.
+#[derive(Clone, Copy, PartialEq)]
+pub(super) enum Origin {
+    File,
+    Catalog,
 }
 
 pub(super) fn install_sync(
     app: &tauri::AppHandle,
     source: &Path,
+    origin: Origin,
 ) -> Result<InstalledPlugin, String> {
     let root = plugins_root(app)?;
     std::fs::create_dir_all(&root).map_err(|e| e.to_string())?;
@@ -145,6 +153,12 @@ pub(super) fn install_sync(
         // catalog says so.
         state::update(app, |state| {
             if let Some(entry) = state.plugins.get_mut(&head.id) {
+                // A file put over CatVinci's own plugin isn't it: off, and
+                // asked again for what it may do.
+                if entry.official && origin == Origin::File {
+                    entry.enabled = false;
+                    entry.granted.clear();
+                }
                 entry.dev_path = None;
                 entry.official = false;
             }
@@ -259,7 +273,7 @@ pub(super) fn install_files_sync(
             }
             std::fs::write(&target, &file.text).map_err(|e| e.to_string())?;
         }
-        install_sync(app, &folder)
+        install_sync(app, &folder, Origin::File)
     })();
     if folder.exists() {
         let _ = std::fs::remove_dir_all(&folder);
@@ -365,7 +379,7 @@ pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledP
 
 /// When a developer's plugin folder last changed (newest file, in ms, ignoring
 /// node_modules and .git), so the window reloads it. None for other plugins.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_dev_stamp(app: tauri::AppHandle, id: String) -> Result<Option<f64>, String> {
     require_id(&id)?;
@@ -410,7 +424,7 @@ fn newest_change(dir: &std::path::Path, depth: usize) -> Option<f64> {
 
 /// Removes a plugin: its entry, its storage and, unless loaded from a
 /// developer's folder, its files.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_uninstall(app: tauri::AppHandle, id: String) -> Result<(), String> {
     require_id(&id)?;

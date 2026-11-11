@@ -53,7 +53,7 @@ pub struct SentReport {
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn send_problem_report(report: ProblemReport) -> Result<SentReport, String> {
-    let client = crate::net::client(Duration::from_secs(10), Duration::from_secs(30))
+    let client = crate::net::public_client(Duration::from_secs(10), Duration::from_secs(30))?
         .build()
         .map_err(|e| e.to_string())?;
     let response = client

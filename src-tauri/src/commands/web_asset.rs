@@ -10,7 +10,6 @@ use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use std::time::Duration;
 
-const CONNECT_TIMEOUT: Duration = Duration::from_secs(8);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_BYTES: usize = 20 * 1024 * 1024;
 /// Font services pick the format by browser: this one gets woff2.
@@ -96,13 +95,15 @@ fn cache_path(app: &tauri::AppHandle, url: &str) -> Option<PathBuf> {
     )
 }
 
+/// Only a public host, its addresses checked and pinned, no redirect
+/// followed: an asset named in a theme or a document reaches nothing on
+/// this machine or its network (web_fetch's client).
 async fn fetch(url: reqwest::Url) -> Result<Vec<u8>, String> {
-    let client = crate::net::public_client(CONNECT_TIMEOUT, REQUEST_TIMEOUT)?
-        .user_agent(BROWSER_AGENT)
-        .build()
-        .map_err(|e| e.to_string())?;
+    let client = crate::ai::web::fetch::client_for(&url, Default::default()).await?;
     let response = client
         .get(url)
+        .header(reqwest::header::USER_AGENT, BROWSER_AGENT)
+        .timeout(REQUEST_TIMEOUT)
         .send()
         .await
         .map_err(|e| crate::net::error_text(&e))?;
