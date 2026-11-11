@@ -91,17 +91,7 @@ const SUPPORTED_EXTENSIONS: &[&str] = &[
 
 /// A free name for `name` in `dir`: `report.pdf`, then `report (2).pdf`.
 fn free_name(dir: &Path, name: &str) -> String {
-    if !dir.join(name).exists() {
-        return name.to_string();
-    }
-    let (stem, ext) = match name.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() => (stem, format!(".{ext}")),
-        _ => (name, String::new()),
-    };
-    (2..)
-        .map(|n| format!("{stem} ({n}){ext}"))
-        .find(|candidate| !dir.join(candidate).exists())
-        .unwrap_or_default()
+    crate::ids::free_name(dir, name, crate::ids::Numbered::Paren)
 }
 
 /// Copies one picked file into `attached` and reads it, all inside one

@@ -100,13 +100,7 @@ pub(crate) fn draft_assets_dir(app: &tauri::AppHandle) -> Result<PathBuf, String
 
 /// `name` with "-n" before its extension: "a.png", "a-1.png", "a-2.png"...
 pub(crate) fn numbered_name(name: &str, n: usize) -> String {
-    if n == 0 {
-        return name.to_string();
-    }
-    match name.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() => format!("{stem}-{n}.{ext}"),
-        _ => format!("{name}-{n}"),
-    }
+    crate::ids::numbered(name, n, crate::ids::Numbered::Dash)
 }
 
 /// Writes `bytes` into `dir` as `name`, or the first free `numbered_name`, and

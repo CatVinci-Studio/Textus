@@ -15,6 +15,37 @@ pub(crate) fn path_key(path: &str, bytes: usize) -> String {
     hex(&digest[..bytes.min(digest.len())])
 }
 
+/// How a taken name is numbered: `notes-2.md` or `report (2).pdf`.
+#[derive(Clone, Copy)]
+pub(crate) enum Numbered {
+    Dash,
+    Paren,
+}
+
+/// `name` numbered `n`, before its extension; `n` 0 is `name` itself.
+pub(crate) fn numbered(name: &str, n: usize, style: Numbered) -> String {
+    if n == 0 {
+        return name.to_string();
+    }
+    let (stem, ext) = match name.rsplit_once('.') {
+        Some((stem, ext)) if !stem.is_empty() => (stem, format!(".{ext}")),
+        _ => (name, String::new()),
+    };
+    match style {
+        Numbered::Dash => format!("{stem}-{n}{ext}"),
+        Numbered::Paren => format!("{stem} ({n}){ext}"),
+    }
+}
+
+/// `name`, or the first of it numbered from 2 that `dir` hasn't.
+pub(crate) fn free_name(dir: &std::path::Path, name: &str, style: Numbered) -> String {
+    (0..)
+        .filter(|&n| n != 1)
+        .map(|n| numbered(name, n, style))
+        .find(|candidate| !dir.join(candidate).exists())
+        .unwrap_or_else(|| name.to_string())
+}
+
 pub(crate) fn safe_id(id: &str, max: usize, allowed: impl Fn(char) -> bool) -> bool {
     !id.is_empty() && id.len() <= max && id.chars().all(allowed)
 }
