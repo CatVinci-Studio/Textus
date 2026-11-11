@@ -139,8 +139,8 @@ describe("which CI jobs a pull request needs", () => {
 
   it("runs both for a frontend file the Rust tests embed", () => {
     expect(rustReads).toContain("index.html");
-    expect(rustReads).toContain("src/registry/menu/app-menu-model.ts");
-    expect(edit(["src/registry/menu/app-menu-model.ts"])).toEqual(ALL);
+    expect(rustReads).toContain("src/registry/menu/menu.json");
+    expect(edit(["src/registry/menu/menu.json"])).toEqual(ALL);
   });
 
   it("runs both for the src-tauri files the browser sees", () => {

@@ -1,6 +1,6 @@
 //! The native menu bar: construction, the id -> frontend-event dispatch, and
-//! File > Open Recent. Windows and Linux hide it and draw the menu in HTML
-//! with the same ids, so renaming an id here means renaming it there.
+//! File > Open Recent. Its items are src/registry/menu/menu.json, which
+//! Windows and Linux draw in HTML from the same table.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -11,7 +11,6 @@ use tauri::menu::{
 };
 use tauri::{AppHandle, Emitter, EventTarget, Manager, Wry};
 
-use crate::app_identity;
 use crate::commands;
 
 mod state;
@@ -19,6 +18,7 @@ pub(crate) use state::*;
 mod recent;
 pub(crate) use recent::*;
 mod build;
+pub(crate) mod table;
 pub(crate) use build::*;
 #[cfg(target_os = "macos")]
 mod dock;
@@ -26,93 +26,22 @@ mod plugins;
 pub use plugins::set_plugin_menu;
 pub(crate) use plugins::*;
 
-const SETTINGS_MENU_ID: &str = "settings";
-const NEW_FILE_ID: &str = "new-file";
-const OPEN_FILE_ID: &str = "open-file";
-const OPEN_FOLDER_ID: &str = "open-folder";
-const CLOSE_FOLDER_ID: &str = "close-folder";
-const COPY_PATH_ID: &str = "copy-path";
-const SAVE_FILE_ID: &str = "save-file";
-const SAVE_FILE_AS_ID: &str = "save-file-as";
-const RECENT_CLEAR_ID: &str = "recent-clear";
 /// Menu ids of File > Open Recent entries carry their path: "recent:<path>".
 const RECENT_PREFIX: &str = "recent:";
 /// Open Recent's folders, listed above its files, carry theirs the same way.
 const RECENT_FOLDER_PREFIX: &str = "recent-folder:";
-const EXPORT_PDF_ID: &str = "export-pdf";
-const EXPORT_HTML_ID: &str = "export-html";
-/// Pandoc-backed File > Export ids carry the writer name. Keep the formats
-/// in step with the frontend's PANDOC_FORMATS.
+const RECENT_CLEAR_ID: &str = "recent-clear";
+/// File > Export's pandoc ids carry the writer name.
 const EXPORT_PANDOC_PREFIX: &str = "export-pandoc:";
-const QUIT_ID: &str = "quit";
-const CLOSE_TAB_ID: &str = "close-tab";
-/// File > Reopen Closed Tab: the focused window opens the document it
-/// closed last (app/close-flow.ts).
-const REOPEN_CLOSED_TAB_ID: &str = "reopen-closed-tab";
-const CLOSE_WINDOW_ID: &str = "close-window";
-const TOGGLE_SOURCE_MODE_ID: &str = "toggle-source-mode";
-const TOGGLE_TYPEWRITER_MODE_ID: &str = "toggle-typewriter-mode";
-const TRACK_CHANGES_ID: &str = "track-changes";
-const TOGGLE_SIDEBAR_ID: &str = "toggle-sidebar";
-const TOGGLE_AGENT_PANEL_ID: &str = "toggle-agent-panel";
-/// View > Format Bar: the formatting row under the title bar.
-const TOGGLE_FORMAT_BAR_ID: &str = "toggle-format-bar";
-/// Textus AI's master switch, flipped by the focused window, which owns the
-/// setting. Not in the View menu, but the iPhone's app-drawn menu runs it.
-const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
-const TOGGLE_SPLIT_VIEW_ID: &str = "toggle-split-view";
-const TOGGLE_ZEN_MODE_ID: &str = "toggle-zen-mode";
-/// View > Read Only: the document on screen can't be changed.
-const TOGGLE_READ_ONLY_ID: &str = "toggle-read-only";
-/// View > Mode > Default: the rendered editor, the document writable.
-const VIEW_MODE_DEFAULT_ID: &str = "view-mode-default";
-/// Two documents at once, side by side or one above the other.
-const SPLIT_RIGHT_ID: &str = "split-right";
-/// Everything the menus do, found by typing.
-const COMMAND_PALETTE_ID: &str = "command-palette";
-const SPLIT_DOWN_ID: &str = "split-down";
-const CLOSE_SPLIT_ID: &str = "close-split";
-const ZOOM_IN_ID: &str = "zoom-in";
-const ZOOM_OUT_ID: &str = "zoom-out";
-const ZOOM_RESET_ID: &str = "zoom-reset";
-const FIND_REPLACE_ID: &str = "find-replace";
-/// Edit > Replace…: the find bar with its replace row open.
-const REPLACE_ID: &str = "replace";
-/// Edit > Find Next: the next match of what the find bar last looked for.
-const FIND_NEXT_ID: &str = "find-next";
-/// Edit > Copy as Plain Text and Paste as Plain Text: the words without the
-/// Markdown marks Copy's plain text carries, and the clipboard's text as is.
-const COPY_AS_PLAIN_TEXT_ID: &str = "copy-as-plain-text";
-const PASTE_AS_PLAIN_TEXT_ID: &str = "paste-as-plain-text";
-/// Edit items macOS gets as the app's own, in place of the predefined ones:
-/// undo: and redo: reach WebKit's history, never the editor's, and
-/// selectAll: with no field focused takes the whole window. Each runs in the
-/// focused window as "menu-<id>": (id, English label, accelerator).
-const MAC_EDIT_ITEMS: [(&str, &str, &str); 3] = [
-    ("undo", "Undo", "CmdOrCtrl+Z"),
-    ("redo", "Redo", "CmdOrCtrl+Shift+Z"),
-    ("select-all", "Select All", "CmdOrCtrl+A"),
-];
-const NEW_WINDOW_ID: &str = "new-window";
-/// Help menu ids carry the bundled doc they open: "help-doc:<doc>".
-const HELP_DOC_PREFIX: &str = "help-doc:";
-/// Help > Join the Community, in the UI's language (the focused window knows it).
-const COMMUNITY_ID: &str = "help-community";
-/// Help > Report a Problem, the window's own dialog.
-const REPORT_ID: &str = "help-report";
-/// Textus > Check for Updates… (macOS): Settings › About, checking.
-const UPDATES_ID: &str = "check-updates";
-/// Help > Online Tutorials, opened the same way as Join the Community.
-const TUTORIALS_ID: &str = "help-tutorials";
 /// Format menu ids carry the block kind to insert: "insert-block:<kind>".
 const INSERT_BLOCK_PREFIX: &str = "insert-block:";
-/// Format > Highlight, Strikethrough and Inline Code, each sent as the inline
-/// mark to toggle.
-const HIGHLIGHT_ID: &str = "toggle-mark:highlight";
-const STRIKETHROUGH_ID: &str = "toggle-mark:strikethrough";
-const INLINE_CODE_ID: &str = "toggle-mark:code";
-/// Format > Link: a link around the selection, its address to type.
-const INSERT_LINK_ID: &str = "insert-link";
+/// Format > Highlight, Strikethrough and Inline Code carry the mark to toggle.
+const TOGGLE_MARK_PREFIX: &str = "toggle-mark:";
+/// Help menu ids carry the bundled doc they open: "help-doc:<doc>".
+const HELP_DOC_PREFIX: &str = "help-doc:";
+/// Textus AI's master switch, flipped by the focused window, which owns the
+/// setting. In no menu of the bar; the iPhone's app-drawn menu runs it.
+const TOGGLE_TEXTUS_AI_ID: &str = "toggle-textus-ai";
 
 /// Emit a menu event only to the focused window. `emit_to`, not `emit` on a
 /// window handle: that one looks scoped but broadcasts to every window.
@@ -160,13 +89,13 @@ pub(crate) fn focused_editor_window(app: &tauri::AppHandle) -> Option<String> {
     })
 }
 
-/// `emit_to_focused`, or with no window open, a fresh window that runs it once
-/// mounted. Not run now: a panel with no window attached itself to a closed one.
-fn emit_or_open_window(app: &tauri::AppHandle, event: &'static str) {
+/// Item `id` run in the focused window, or with no window open, in a fresh
+/// window once mounted. Not run now: a panel with no window attached itself to a closed one.
+fn emit_or_open_window(app: &tauri::AppHandle, id: &'static str) {
     if focused_editor_window(app).is_some() {
-        emit_to_focused(app, event);
+        emit_to_focused(app, &format!("menu-{id}"));
     } else {
-        *crate::PENDING_MENU_EVENT.lock().unwrap() = Some(event);
+        *crate::PENDING_MENU_EVENT.lock().unwrap() = Some(id);
         let _ = crate::editor_windows::open_new_window(app);
     }
 }
@@ -317,12 +246,22 @@ fn open_folder_in_sidebar(app_handle: &tauri::AppHandle, path: &str) {
 }
 
 /// What a menu id does, for native clicks, the app-drawn menu and the tray alike.
+/// Most run in the focused window as "menu-<id>"; those below need more.
 fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
-    if id == SETTINGS_MENU_ID {
-        emit_or_open_window(app_handle, "menu-open-settings");
-    } else if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
+    let with_payload = [
+        (PLUGIN_COMMAND_PREFIX, "menu-plugin-command"),
+        (EXPORT_PANDOC_PREFIX, "menu-export-pandoc"),
+        (INSERT_BLOCK_PREFIX, "menu-insert-block"),
+        (TOGGLE_MARK_PREFIX, "menu-toggle-mark"),
+    ];
+    if let Some(item) = id.strip_prefix(crate::background::tray::MENU_PREFIX) {
         crate::background::tray::on_menu(app_handle, item);
-    } else if id == NEW_FILE_ID {
+    } else if let Some((payload, event)) = with_payload
+        .iter()
+        .find_map(|(prefix, event)| id.strip_prefix(prefix).map(|rest| (rest, *event)))
+    {
+        emit_to_focused_payload(app_handle, event, payload.to_string());
+    } else if id == "new-file" {
         // New Tab, as a browser's: a tab in the focused window whatever
         // Settings says files open in; a window when there is none.
         if focused_editor_window(app_handle).is_some() {
@@ -330,22 +269,8 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             let _ = crate::editor_windows::open_new_window(app_handle);
         }
-    } else if let Some(command) = id.strip_prefix(PLUGIN_COMMAND_PREFIX) {
-        emit_to_focused_payload(app_handle, "menu-plugin-command", command.to_string());
     } else if id == MANAGE_PLUGINS_ID {
-        emit_or_open_window(app_handle, "menu-manage-plugins");
-    } else if id == OPEN_FILE_ID {
-        emit_or_open_window(app_handle, "menu-open-file");
-    } else if id == OPEN_FOLDER_ID {
-        emit_or_open_window(app_handle, "menu-open-folder");
-    } else if id == CLOSE_FOLDER_ID {
-        emit_to_focused(app_handle, "menu-close-folder");
-    } else if id == COPY_PATH_ID {
-        emit_to_focused(app_handle, "menu-copy-path");
-    } else if id == SAVE_FILE_ID {
-        emit_to_focused(app_handle, "menu-save-file");
-    } else if id == SAVE_FILE_AS_ID {
-        emit_to_focused(app_handle, "menu-save-file-as");
+        emit_or_open_window(app_handle, MANAGE_PLUGINS_ID);
     } else if id == RECENT_CLEAR_ID {
         commands::recents::clear_recent_files(app_handle);
     } else if let Some(path) = id.strip_prefix(RECENT_FOLDER_PREFIX) {
@@ -358,77 +283,9 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             crate::queue_paths_to_open(app_handle, vec![path.to_string()]);
         }
-    } else if id == EXPORT_PDF_ID {
-        emit_to_focused(app_handle, "menu-export-pdf");
-    } else if id == EXPORT_HTML_ID {
-        emit_to_focused(app_handle, "menu-export-html");
-    } else if let Some(format) = id.strip_prefix(EXPORT_PANDOC_PREFIX) {
-        emit_to_focused_payload(app_handle, "menu-export-pandoc", format);
-    } else if id == QUIT_ID {
+    } else if id == "quit" {
         quit(app_handle);
-    } else if let Some(kind) = id.strip_prefix(INSERT_BLOCK_PREFIX) {
-        emit_to_focused_payload(app_handle, "menu-insert-block", kind);
-    } else if id == HIGHLIGHT_ID {
-        emit_to_focused_payload(app_handle, "menu-toggle-mark", "highlight");
-    } else if id == STRIKETHROUGH_ID {
-        emit_to_focused_payload(app_handle, "menu-toggle-mark", "strikethrough");
-    } else if id == INLINE_CODE_ID {
-        emit_to_focused_payload(app_handle, "menu-toggle-mark", "code");
-    } else if id == INSERT_LINK_ID {
-        emit_to_focused(app_handle, "menu-insert-link");
-    } else if id == TOGGLE_SOURCE_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-source-mode");
-    } else if id == TOGGLE_TYPEWRITER_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-typewriter-mode");
-    } else if id == TRACK_CHANGES_ID {
-        emit_to_focused(app_handle, "menu-track-changes");
-    } else if id == TOGGLE_SIDEBAR_ID {
-        emit_to_focused(app_handle, "menu-toggle-sidebar");
-    } else if id == TOGGLE_AGENT_PANEL_ID {
-        emit_to_focused(app_handle, "menu-toggle-agent-panel");
-    } else if id == TOGGLE_TEXTUS_AI_ID {
-        emit_to_focused(app_handle, "menu-toggle-textus-ai");
-    } else if id == TOGGLE_SPLIT_VIEW_ID {
-        emit_to_focused(app_handle, "menu-toggle-split-view");
-    } else if id == TOGGLE_FORMAT_BAR_ID {
-        emit_to_focused(app_handle, "menu-toggle-format-bar");
-    } else if id == TOGGLE_ZEN_MODE_ID {
-        emit_to_focused(app_handle, "menu-toggle-zen-mode");
-    } else if id == TOGGLE_READ_ONLY_ID {
-        emit_to_focused(app_handle, "menu-toggle-read-only");
-    } else if id == VIEW_MODE_DEFAULT_ID {
-        emit_to_focused(app_handle, "menu-view-mode-default");
-    } else if id == COMMAND_PALETTE_ID {
-        emit_to_focused(app_handle, "menu-command-palette");
-    } else if id == SPLIT_RIGHT_ID {
-        emit_to_focused(app_handle, "menu-split-right");
-    } else if id == SPLIT_DOWN_ID {
-        emit_to_focused(app_handle, "menu-split-down");
-    } else if id == CLOSE_SPLIT_ID {
-        emit_to_focused(app_handle, "menu-close-split");
-    } else if id == COPY_AS_PLAIN_TEXT_ID {
-        emit_to_focused(app_handle, "menu-copy-as-plain-text");
-    } else if id == PASTE_AS_PLAIN_TEXT_ID {
-        emit_to_focused(app_handle, "menu-paste-as-plain-text");
-    } else if cfg!(target_os = "macos") && MAC_EDIT_ITEMS.iter().any(|(item, ..)| *item == id) {
-        emit_to_focused(app_handle, &format!("menu-{id}"));
-    } else if id == FIND_REPLACE_ID {
-        emit_to_focused(app_handle, "menu-find-replace");
-    } else if id == REPLACE_ID {
-        emit_to_focused(app_handle, "menu-replace");
-    } else if id == FIND_NEXT_ID {
-        emit_to_focused(app_handle, "menu-find-next");
-    } else if id == ZOOM_IN_ID {
-        emit_to_focused(app_handle, "menu-zoom-in");
-    } else if id == ZOOM_OUT_ID {
-        emit_to_focused(app_handle, "menu-zoom-out");
-    } else if id == ZOOM_RESET_ID {
-        emit_to_focused(app_handle, "menu-zoom-reset");
-    } else if id == REOPEN_CLOSED_TAB_ID {
-        emit_to_focused(app_handle, "menu-reopen-closed-tab");
-    } else if id == CLOSE_TAB_ID {
-        emit_to_focused(app_handle, "menu-close-tab");
-    } else if id == CLOSE_WINDOW_ID {
+    } else if id == "close-window" {
         // close() (not destroy()) so the frontend's dirty-tab prompt still
         // runs, same as the red traffic-light button.
         if let Some((_, window)) = app_handle
@@ -438,31 +295,15 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         {
             let _ = window.close();
         }
-    } else if id == NEW_WINDOW_ID {
+    } else if id == "new-window" {
         let _ = crate::editor_windows::open_new_window(app_handle);
-    } else if id == COMMUNITY_ID {
+    } else if id == "help-community" || id == "help-tutorials" {
         // A window knows the UI's language; with none open (macOS keeps
         // running after the last one closes), the site picks it.
-        if let Some(label) = focused_editor_window(app_handle) {
-            let _ = app_handle.emit_to(
-                EventTarget::webview_window(&label),
-                "menu-open-community",
-                (),
-            );
-        } else {
+        if focused_editor_window(app_handle).is_some() {
+            emit_to_focused(app_handle, &format!("menu-{id}"));
+        } else if id == "help-community" {
             let _ = commands::links::open_community(app_handle, None);
-        }
-    } else if id == REPORT_ID {
-        emit_to_focused(app_handle, "menu-help-report");
-    } else if id == UPDATES_ID {
-        emit_to_focused(app_handle, "menu-check-updates");
-    } else if id == TUTORIALS_ID {
-        if let Some(label) = focused_editor_window(app_handle) {
-            let _ = app_handle.emit_to(
-                EventTarget::webview_window(&label),
-                "menu-open-tutorials",
-                (),
-            );
         } else {
             let _ = commands::links::open_tutorials(app_handle, None, None);
         }
@@ -474,6 +315,19 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
         } else {
             *crate::PENDING_SHOW_HELP.lock().unwrap() = Some(doc.to_string());
             let _ = crate::editor_windows::open_new_window(app_handle);
+        }
+    } else if id == TOGGLE_TEXTUS_AI_ID {
+        emit_to_focused(app_handle, "menu-toggle-textus-ai");
+    } else if let Some(item) = table::find_item(id).or_else(|| table::find_own(id)) {
+        let id = item
+            .id
+            .as_deref()
+            .or(item.predefined.as_deref())
+            .unwrap_or_default();
+        if item.or_open {
+            emit_or_open_window(app_handle, id);
+        } else {
+            emit_to_focused(app_handle, &format!("menu-{id}"));
         }
     }
 }

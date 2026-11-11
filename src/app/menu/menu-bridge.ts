@@ -119,7 +119,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       return liveTabs().find((tb) => tb.id === activeTabId);
     };
     return unlistenAll(
-      listenToThisWindow("menu-open-settings", () => h().onOpenSettings()),
+      listenToThisWindow("menu-settings", () => h().onOpenSettings()),
       listenToThisWindow("menu-check-updates", () => h().onCheckUpdates()),
       listenToThisWindow("menu-manage-plugins", () =>
         h().onOpenPluginSettings(),
@@ -274,8 +274,8 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           new CustomEvent(TOGGLE_MARK_EVENT, { detail: event.payload }),
         );
       }),
-      listenToThisWindow("menu-open-community", () => h().openCommunity()),
-      listenToThisWindow("menu-open-tutorials", () => h().openTutorials()),
+      listenToThisWindow("menu-help-community", () => h().openCommunity()),
+      listenToThisWindow("menu-help-tutorials", () => h().openTutorials()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
         else if (event.payload === "markdown" || event.payload === "agent")
@@ -301,19 +301,20 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
     if (hasNativeMenuBar) void menuIpc.setMenuLabels(nativeMenuLabels(t));
   }, [t]);
 
-  // A menu command chosen with no window open: Rust opened this window to
-  // carry it out. Taken once, so no later window repeats it.
+  // A menu item chosen with no window open (by id): Rust opened this window
+  // to carry it out. Taken once, so no later window repeats it.
   useEffect(() => {
     windowIpc
       .takePendingMenuEvent()
-      .then((event) => {
-        if (event === "menu-open-settings") latest.current.onOpenSettings();
-        else if (event === "menu-manage-plugins")
-          latest.current.onOpenPluginSettings();
-        else if (event === "menu-open-file")
-          void latest.current.openFileDialog();
-        else if (event === "menu-open-folder")
-          void latest.current.openFolderDialog();
+      .then((id) => {
+        const h = latest.current;
+        const run: Record<string, () => void> = {
+          settings: () => h.onOpenSettings(),
+          "manage-plugins": () => h.onOpenPluginSettings(),
+          "open-file": () => void h.openFileDialog(),
+          "open-folder": () => void h.openFolderDialog(),
+        };
+        if (id) run[id]?.();
       })
       .catch(() => {});
   }, []);

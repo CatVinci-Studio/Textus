@@ -309,14 +309,6 @@ describe("the Format menu's heading keys", () => {
       "insert-block:h6": "CmdOrCtrl+6",
     });
   });
-
-  it("match the ids menu.rs builds the heading items with", () => {
-    const source = ["menu.rs", "menu/build.rs"]
-      .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
-      .join("\n");
-    expect(source).toContain('("h2", "Heading 2")');
-    expect(source).toContain('INSERT_BLOCK_PREFIX: &str = "insert-block:"');
-  });
 });
 
 describe("menu bar", () => {
@@ -343,12 +335,14 @@ describe("the menu ids", () => {
       .filter((file) => file.endsWith(".rs"))
       .map((file) => readFileSync(`src-tauri/src/${file}`, "utf8"))
       .join("\n");
-    const rust = [...source.matchAll(/const \w+: &str = "([^"]+)";/g)].map(
+    const prefixes = [...source.matchAll(/const \w+: &str = "([^"]+:)";/g)].map(
       (match) => match[1],
     );
+    const tableIds = new Set(
+      Object.keys(nativeMenuLabels(t)).filter((key) => !key.includes(":")),
+    );
     const known = (id: string) =>
-      rust.includes(id) ||
-      rust.some((prefix) => prefix.endsWith(":") && id.startsWith(prefix));
+      tableIds.has(id) || prefixes.some((prefix) => id.startsWith(prefix));
     const ids: string[] = [];
     const collect = (nodes: MenuNode[]) => {
       for (const node of nodes) {

@@ -51,11 +51,11 @@ it("names only style variables a plugin page is given", () => {
 });
 
 it("gives every permission a row on the permissions page", () => {
-  const manifest = read("src/plugins/store/manifest.ts");
-  const list = manifest.slice(manifest.indexOf("const PLAIN_PERMISSIONS"));
-  const names = [
-    ...list.slice(0, list.indexOf("] as const")).matchAll(/"([\w.]+)"/g),
-  ].map((m) => m[1]);
+  const names = (
+    JSON.parse(read("src/plugins/store/permissions.json")) as {
+      plain: string[];
+    }
+  ).plain;
   const page = read("docs/dev/plugins/permissions.md");
   expect(names.length).toBeGreaterThan(5);
   for (const name of names) expect(page, name).toContain(`| \`${name}\``);

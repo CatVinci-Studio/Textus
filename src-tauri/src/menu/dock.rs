@@ -31,7 +31,7 @@ define_class!(
         #[unsafe(method(newWindow:))]
         fn new_window(&self, _sender: Option<&AnyObject>) {
             if let Some(app) = APP.get() {
-                dispatch(app, NEW_WINDOW_ID);
+                dispatch(app, "new-window");
             }
         }
     }
@@ -82,7 +82,7 @@ extern "C-unwind" fn dock_menu(
         .and_then(|app| {
             let labels = app.try_state::<MenuLabels>()?;
             let labels = labels.0.lock().unwrap();
-            labels.get(NEW_WINDOW_ID).cloned()
+            labels.get("new-window").cloned()
         })
         .unwrap_or_else(|| "New Window".to_string());
     let menu = NSMenu::new(mtm);

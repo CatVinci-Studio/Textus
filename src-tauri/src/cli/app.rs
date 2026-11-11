@@ -365,7 +365,7 @@ async fn export(app: &AppHandle, request: Request) -> Answer {
         app,
         Request {
             command: "export".into(),
-            args: vec![job.file.to_string_lossy().into_owned(), job.format.into()],
+            args: vec![job.file.to_string_lossy().into_owned(), job.format],
             ..request
         },
     )

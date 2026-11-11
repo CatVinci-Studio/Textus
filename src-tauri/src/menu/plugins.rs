@@ -66,7 +66,11 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
         if items.is_empty() {
             if let Ok(item) = MenuItemBuilder::with_id(
                 NO_PLUGIN_COMMANDS_ID,
-                label(&labels, NO_PLUGIN_COMMANDS_ID, "No Plugin Commands"),
+                label(
+                    &labels,
+                    NO_PLUGIN_COMMANDS_ID,
+                    super::table::text_en(NO_PLUGIN_COMMANDS_ID),
+                ),
             )
             .enabled(false)
             .build(&app)
@@ -103,7 +107,11 @@ pub(crate) fn rebuild_plugin_menu(app: &tauri::AppHandle) {
         }
         if let Ok(item) = MenuItemBuilder::with_id(
             MANAGE_PLUGINS_ID,
-            label(&labels, MANAGE_PLUGINS_ID, "Manage Plugins…"),
+            label(
+                &labels,
+                MANAGE_PLUGINS_ID,
+                super::table::text_en(MANAGE_PLUGINS_ID),
+            ),
         )
         .build(&app)
         {

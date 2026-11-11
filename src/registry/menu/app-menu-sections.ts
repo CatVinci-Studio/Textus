@@ -39,93 +39,41 @@ export function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
   ];
 }
 
-/** File › Export: PDF and HTML, then the pandoc formats (one list:
- *  export-formats.json). */
-export function exportEntries(t: Strings): MenuNode[] {
-  const pandoc: [string, string][] = PANDOC_FORMATS.map((f) => [
-    f.format,
-    t[f.key],
-  ]);
-  return [
-    {
-      label: t.menuExportPdf,
-      accel: "mod+p",
-      action: { native: "export-pdf" },
-    },
-    { label: t.menuExportHtml, action: { native: "export-html" } },
-    "separator",
-    ...pandoc.map(([format, label]): MenuNode => ({
-      label,
-      action: { native: `export-pandoc:${format}` },
-    })),
-  ];
+/** File › Export's pandoc formats (export-formats.json). */
+export function pandocEntries(t: Strings): MenuNode[] {
+  return PANDOC_FORMATS.map((f) => ({
+    label: t[f.key],
+    action: { native: `export-pandoc:${f.format}` },
+  }));
 }
 
-/** Format › Highlight's key, fixed as Bold's and Italic's are: the editor
- *  answers it itself (format-shortcut-plugin.ts), and menu/build.rs gives
- *  the macOS item the same. */
-const HIGHLIGHT_COMBO = "mod+shift+h";
-
-export function formatEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
-  const headings = [1, 2, 3, 4, 5, 6].map((level): MenuNode => ({
+/** Format's heading levels, each with the key Settings gives it. */
+export function headingEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
+  return [1, 2, 3, 4, 5, 6].map((level) => ({
     label: t.menuHeadingTemplate.replace("{n}", String(level)),
     accel: shortcuts[`setHeading${level}` as HeadingAction] || undefined,
     action: { native: `insert-block:h${level}` },
   }));
-  const blocks: [string, string][] = [
-    ["bullet-list", t.menuBulletList],
-    ["ordered-list", t.menuOrderedList],
-    ["blockquote", t.menuBlockquote],
-    ["code-block", t.menuCodeBlock],
-    ["table", t.menuTable],
-  ];
-  return [
-    {
-      label: t.toolbarHighlight,
-      accel: HIGHLIGHT_COMBO,
-      action: { native: "toggle-mark:highlight" },
-    },
-    // Typora's keys: Control on a Mac too, where Cmd+` is the system's.
-    {
-      label: t.menuStrikethrough,
-      accel: "ctrl+shift+`",
-      action: { native: "toggle-mark:strikethrough" },
-    },
-    {
-      label: t.menuInlineCode,
-      accel: "ctrl+`",
-      action: { native: "toggle-mark:code" },
-    },
-    {
-      label: t.menuInsertLink,
-      accel: "mod+k",
-      action: { native: "insert-link" },
-    },
-    "separator",
-    ...headings,
-    "separator",
-    ...blocks.map(([kind, label]): MenuNode => ({
-      label,
-      action: { native: `insert-block:${kind}` },
-    })),
-  ];
 }
 
-/** The Plugins menu: plugin commands, then Manage Plugins…. */
-export function pluginsMenu(
+/** The Plugins menu's entries: plugin commands, then Manage Plugins…. */
+export function pluginEntries(
   t: Strings,
   plugins: readonly PluginMenuEntry[],
 ): MenuNode[] {
   return [
-    {
-      label: t.menuPlugins,
-      submenu: [
-        ...(plugins.length
-          ? pluginMenuNodes(plugins)
-          : [{ label: t.menuNoPluginCommands, disabled: true }]),
-        "separator",
-        { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
-      ],
-    },
+    ...(plugins.length
+      ? pluginMenuNodes(plugins)
+      : [{ label: t.menuNoPluginCommands, disabled: true }]),
+    "separator",
+    { label: t.menuManagePlugins, action: { native: "manage-plugins" } },
   ];
+}
+
+/** The Plugins menu, for the phone's flat list. */
+export function pluginsMenu(
+  t: Strings,
+  plugins: readonly PluginMenuEntry[],
+): MenuNode[] {
+  return [{ label: t.menuPlugins, submenu: pluginEntries(t, plugins) }];
 }

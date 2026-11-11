@@ -1,91 +1,83 @@
 import { readFileSync } from "node:fs";
+import {
+  MENU_TABLE,
+  isMenu,
+  type TableItem,
+  type TableNode,
+} from "../registry/menu/menu-table";
 
-// Test-only: the native menu's keys as src-tauri writes them, read from
-// its source, for tests that check the frontend against it.
+// Test-only: the native menu's keys as menu.json gives them and the events
+// menu.rs's dispatch sends, for tests that check the frontend against them.
 
 export type Platform = "macos" | "windows" | "linux";
 
-const rust = (file: string) =>
-  readFileSync(`src-tauri/src/${file}`, "utf8").replace(/\r\n/g, "\n");
-const MENU_RS = rust("menu.rs");
-const BUILD_RS = rust("menu/build.rs");
-
-/** The id each `X_ID` constant stands for. */
-const ids = Object.fromEntries(
-  [...MENU_RS.matchAll(/const (\w+_ID): &str = "([^"]+)";/g)].map((m) => [
-    m[1],
-    m[2],
-  ]),
+const MENU_RS = readFileSync("src-tauri/src/menu.rs", "utf8").replace(
+  /\r\n/g,
+  "\n",
 );
 
-const combo = (accelerator: string) =>
-  accelerator.toLowerCase().replace("cmdorctrl", "mod");
+const TABLE_PLATFORM: Record<Platform, string> = {
+  macos: "mac",
+  windows: "windows",
+  linux: "linux",
+};
 
-/** The menu items with a fixed accelerator, per platform: build.rs's
- *  builders, followed variable by variable, and MAC_EDIT_ITEMS. */
-export function nativeAccelerators(platform: Platform): Map<string, string> {
-  const consts = Object.fromEntries(
-    [...BUILD_RS.matchAll(/const (\w+): &str = "([^"]+)";/g)].map((m) => [
-      m[1],
-      m[2],
-    ]),
+function items(nodes: readonly TableNode[] = []): TableItem[] {
+  return nodes.flatMap((node): TableItem[] =>
+    typeof node !== "object" || "sep" in node || "section" in node
+      ? []
+      : isMenu(node)
+        ? items(node.items)
+        : [node],
   );
+}
+
+const ALL = MENU_TABLE.bar.flatMap((menu) => items(menu.items));
+
+/** The menu items with a fixed accelerator on `platform`'s native bar, by
+ *  key: the app's own items, not muda's predefined ones. */
+export function nativeAccelerators(platform: Platform): Map<string, string> {
+  const here = TABLE_PLATFORM[platform];
   const out = new Map<string, string>();
-  const idOf = new Map<string, string>();
-  // One `let` statement at a time, with the cfg line above it.
-  const statements = BUILD_RS.split(/;\n/);
-  for (const statement of statements) {
-    const cfg = statement.match(
-      /#\[cfg\((not\()?(windows|target_os = "macos")\)?\)\]\s*let/,
-    );
-    if (cfg) {
-      const os = cfg[2] === "windows" ? "windows" : "macos";
-      const applies = cfg[1] ? platform !== os : platform === os;
-      if (!applies) continue;
-    }
-    const assign = statement.match(/let (\w+) =\s*([\s\S]*)$/);
-    if (!assign) continue;
-    const [, name, value] = assign;
-    const from = value.match(/^(\w+)\s*\./)?.[1];
+  for (const item of ALL) {
+    if (!item.keys || item.keysOff?.includes(here)) continue;
+    if (item.on && !item.on.includes(here)) continue;
     const id =
-      value.match(/(?:with_id|item)\(\s*(\w+_ID)\b/)?.[1] ??
-      (from ? idOf.get(from) : undefined);
-    if (id) idOf.set(name, id);
-    else idOf.delete(name);
-    const accelerator = value.match(/\.accelerator\((?:"([^"]+)"|(\w+))\)/);
-    if (id && accelerator)
-      out.set(combo(accelerator[1] ?? consts[accelerator[2]]), ids[id]);
+      item.id ?? (item.macOwn && here === "mac" ? item.predefined : undefined);
+    if (id) out.set(item.keys, id);
   }
-  if (platform === "macos")
-    for (const m of MENU_RS.matchAll(/\("([\w-]+)", "[^"]+", "([^"]+)"\)/g))
-      out.set(combo(m[2]), m[1]);
   return out;
 }
 
 /** Which of muda's predefined Undo, Redo and Select All a Mac's menu
  *  builds: each takes its key before the page, running WebKit's own
- *  action. Each is built in a statement under a cfg line, or none. */
+ *  action. */
 export function predefinedOnMac(): string[] {
-  return ["undo", "redo", "select_all"].filter((name) =>
-    BUILD_RS.split(/;\n/).some(
-      (statement) =>
-        statement.includes(`.${name}_with_text(`) &&
-        !statement.includes('#[cfg(not(target_os = "macos"))]'),
-    ),
-  );
+  return ALL.filter(
+    (item) =>
+      ["undo", "redo", "select-all"].includes(item.predefined ?? "") &&
+      !item.macOwn,
+  ).map((item) => item.predefined!);
 }
 
 /** The window event each menu id is sent as, from menu.rs's dispatch;
  *  null when the backend acts itself. */
 export function eventOf(id: string): string | null {
-  const constant = Object.keys(ids).find((key) => ids[key] === id);
-  const branch = constant
-    ? MENU_RS.match(
-        new RegExp(`id == ${constant} \\{([\\s\\S]*?)\\n    \\}`),
-      )?.[1]
-    : null;
-  if (branch) return branch.match(/"(menu-[a-z-]+)"/)?.[1] ?? null;
-  // MAC_EDIT_ITEMS go out as menu-<id>.
-  if (MENU_RS.includes(`("${id}", `)) return `menu-${id}`;
-  return null;
+  for (const [, constant, event] of MENU_RS.matchAll(
+    /\((\w+_PREFIX), "(menu-[a-z-]+)"\)/g,
+  )) {
+    const prefix = MENU_RS.match(
+      new RegExp(`const ${constant}: &str = "([^"]+)";`),
+    )?.[1];
+    if (prefix && id.startsWith(prefix)) return event;
+  }
+  const branch = MENU_RS.match(
+    new RegExp(`id == "${id}"[^{]*\\{([\\s\\S]*?)\\n    \\}`),
+  )?.[1];
+  if (branch !== undefined)
+    return branch.includes('format!("menu-{id}")')
+      ? `menu-${id}`
+      : (branch.match(/"(menu-[a-z-]+)"/)?.[1] ?? null);
+  const own = ALL.some((item) => item.id === id || item.predefined === id);
+  return own ? `menu-${id}` : null;
 }

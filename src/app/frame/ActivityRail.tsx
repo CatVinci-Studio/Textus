@@ -128,7 +128,7 @@ export function ActivityRail({
           onClick={() =>
             settingsOn
               ? onCloseSidebar()
-              : emitToThisWindow("menu-open-settings")
+              : emitToThisWindow("menu-settings")
           }
         >
           <SettingsIcon />

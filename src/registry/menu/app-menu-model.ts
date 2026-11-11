@@ -3,11 +3,22 @@ import type { Shortcuts } from "../../prefs/SettingsContext";
 import { type PluginMenuEntry } from "./plugin-menu";
 
 import {
-  exportEntries,
-  formatEntries,
+  headingEntries,
+  pandocEntries,
+  pluginEntries,
   pluginsMenu,
   recentEntries,
 } from "./app-menu-sections";
+import {
+  MENU_TABLE,
+  isMenu,
+  isSection,
+  isSeparator,
+  menuText,
+  type TableItem,
+  type TableNode,
+  type TableSection,
+} from "./menu-table";
 /**
  * The app-drawn menu, as data, for windows with no native menu bar. Entries
  * that reach the backend use the same ids as the native menu.
@@ -160,6 +171,14 @@ export interface RecentLists {
 
 export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
+/** Entries that stay off unless something is open or on. */
+const DISABLED: Record<string, (checks: MenuChecks) => boolean> = {
+  "close-folder": (checks) => !checks.folderOpen,
+  "toggle-agent-panel": (checks) => checks.textusAi === false,
+};
+
+/** The app-drawn menu (Windows, Linux), from the same table as the macOS
+ *  bar: menus the drawn bar lacks give up their items to File or the end. */
 export function buildAppMenu(
   t: Strings,
   shortcuts: Shortcuts,
@@ -167,227 +186,75 @@ export function buildAppMenu(
   checks: MenuChecks = {},
   plugins: readonly PluginMenuEntry[] = [],
 ): MenuNode[] {
-  const mode = viewModeChecks(checks);
-  return [
-    {
-      label: t.menuFile,
-      submenu: [
-        {
-          // Ctrl+N, as other editors have it; Ctrl+T works too.
-          label: t.menuNewTab,
-          accel: "mod+n",
-          action: { native: "new-file" },
-        },
-        {
-          // menu.rs's NEW_WINDOW_ACCEL.
-          label: t.menuNewWindow,
-          accel: "mod+shift+n",
-          action: { native: "new-window" },
-        },
-        {
-          label: t.menuOpenFile,
-          accel: "mod+o",
-          action: { native: "open-file" },
-        },
-        { label: t.menuOpenFolder, action: { native: "open-folder" } },
-        { label: t.menuOpenRecent, submenu: recentEntries(t, recents) },
-        {
-          label: t.menuCloseFolder,
-          action: { native: "close-folder" },
-          disabled: !checks.folderOpen,
-        },
-        "separator",
-        { label: t.menuSave, accel: "mod+s", action: { native: "save-file" } },
-        {
-          label: t.menuSaveAs,
-          accel: "mod+shift+s",
-          action: { native: "save-file-as" },
-        },
-        { label: t.menuExport, submenu: exportEntries(t) },
-        { label: t.menuCopyPath, action: { native: "copy-path" } },
-        "separator",
-        {
-          label: t.menuCloseTab,
-          accel: "mod+w",
-          action: { native: "close-tab" },
-        },
-        {
-          label: t.menuReopenClosedTab,
-          accel: "mod+shift+t",
-          action: { native: "reopen-closed-tab" },
-        },
-        {
-          label: t.menuCloseWindow,
-          accel: "mod+shift+w",
-          action: { native: "close-window" },
-        },
-      ],
-    },
-    {
-      label: t.menuEdit,
-      submenu: [
-        { label: t.menuUndo, accel: "mod+z", action: { local: "undo" } },
-        // Ctrl+Y is the redo Windows advertises; the history keymap binds
-        // both.
-        { label: t.menuRedo, accel: "mod+y", action: { local: "redo" } },
-        "separator",
-        { label: t.cut, accel: "mod+x", action: { local: "cut" } },
-        { label: t.copy, accel: "mod+c", action: { local: "copy" } },
-        { label: t.copyAsPlainText, action: { native: "copy-as-plain-text" } },
-        { label: t.paste, accel: "mod+v", action: { local: "paste" } },
-        {
-          label: t.pasteAsPlainText,
-          accel: "mod+shift+v",
-          action: { native: "paste-as-plain-text" },
-        },
-        { label: t.selectAll, accel: "mod+a", action: { local: "select-all" } },
-        "separator",
-        {
-          label: t.menuFindReplace,
-          accel: shortcuts.findReplace,
-          action: { native: "find-replace" },
-        },
-        {
-          label: t.menuReplace,
-          accel: "mod+alt+f",
-          action: { native: "replace" },
-        },
-        {
-          label: t.menuFindNext,
-          accel: "mod+g",
-          action: { native: "find-next" },
-        },
-      ],
-    },
-    { label: t.menuFormat, submenu: formatEntries(t, shortcuts) },
-    {
-      label: t.menuView,
-      submenu: [
-        {
-          label: t.menuToggleSidebar,
-          accel: shortcuts.toggleSidebar,
-          action: { native: "toggle-sidebar" },
-          checked: !!checks.sidebar,
-        },
-        {
-          label: t.menuToggleAgentPanel,
-          accel: shortcuts.toggleAgentPanel,
-          action: { native: "toggle-agent-panel" },
-          checked: !!checks.agentPanel,
-          disabled: checks.textusAi === false,
-        },
-        {
-          label: t.menuFormatBar,
-          action: { native: "toggle-format-bar" },
-          checked: !!checks.formatBar,
-        },
-        "separator",
-        {
-          label: t.menuViewMode,
-          submenu: [
+  const native = nativeMenuChecks(checks);
+  const moved: Record<"file" | "end", MenuNode[]> = { file: [], end: [] };
+  const section = (name: TableSection): MenuNode[] =>
+    name === "recent"
+      ? recentEntries(t, recents)
+      : name === "pandoc"
+        ? pandocEntries(t)
+        : name === "headings"
+          ? headingEntries(t, shortcuts)
+          : pluginEntries(t, plugins);
+  const entry = (item: TableItem): MenuEntry => {
+    const drawn = item.drawn ?? {};
+    const id = item.id ?? "";
+    const accel =
+      drawn.keys ??
+      (item.setting ? shortcuts[item.setting] || undefined : item.keys);
+    const checked = item.check
+      ? !!native[id]
+      : drawn.check
+        ? !!checks.fullscreen
+        : undefined;
+    return {
+      label: menuText(t, drawn.label ?? item.label) + (item.suffix ?? ""),
+      ...(accel ? { accel } : {}),
+      action: item.predefined
+        ? { local: item.predefined as LocalMenuAction }
+        : { native: id as NativeMenuId },
+      ...(checked === undefined ? {} : { checked }),
+      ...(DISABLED[id] ? { disabled: DISABLED[id](checks) } : {}),
+    };
+  };
+  const nodes = (items: TableNode[], shown: boolean): MenuNode[] =>
+    tidy(
+      items.flatMap((node): MenuNode[] => {
+        if (isSeparator(node)) return ["separator"];
+        if (isSection(node)) return section(node.section);
+        if (isMenu(node))
+          return [
             {
-              label: t.menuViewModeDefault,
-              action: { native: "view-mode-default" },
-              checked: mode.default,
+              label: menuText(t, node.label!),
+              submenu: nodes(node.items, shown),
             },
-            {
-              label: t.menuToggleSourceMode,
-              accel: shortcuts.toggleSourceMode,
-              action: { native: "toggle-source-mode" },
-              checked: mode.source,
-            },
-            {
-              label: t.menuToggleSplitView,
-              accel: shortcuts.toggleSplitView,
-              action: { native: "toggle-split-view" },
-              checked: mode.split,
-            },
-            {
-              label: t.menuToggleReadOnly,
-              action: { native: "toggle-read-only" },
-              checked: mode.readOnly,
-            },
-          ],
-        },
-        {
-          label: t.menuTrackChanges,
-          action: { native: "track-changes" },
-          checked: !!checks.trackChanges,
-        },
-        {
-          label: t.menuToggleZenMode,
-          accel: shortcuts.toggleZenMode,
-          action: { native: "toggle-zen-mode" },
-          checked: !!checks.zen,
-        },
-        {
-          label: t.menuToggleTypewriterMode,
-          accel: shortcuts.toggleTypewriterMode,
-          action: { native: "toggle-typewriter-mode" },
-          checked: !!checks.typewriter,
-        },
-        "separator",
-        {
-          label: t.menuCommandPalette,
-          accel: shortcuts.commandPalette,
-          action: { native: "command-palette" },
-        },
-        "separator",
-        {
-          label: t.menuSplitRight,
-          accel: shortcuts.splitEditor,
-          action: { native: "split-right" },
-        },
-        { label: t.menuSplitDown, action: { native: "split-down" } },
-        { label: t.menuCloseSplit, action: { native: "close-split" } },
-        "separator",
-        { label: t.menuZoomIn, accel: "mod+=", action: { native: "zoom-in" } },
-        {
-          label: t.menuZoomOut,
-          accel: "mod+-",
-          action: { native: "zoom-out" },
-        },
-        {
-          label: t.menuZoomReset,
-          accel: "mod+0",
-          action: { native: "zoom-reset" },
-        },
-        "separator",
-        // The predefined fullscreen item is unsupported on Windows, so this
-        // calls the window API directly.
-        {
-          label: t.menuFullscreen,
-          accel: "f11",
-          action: { local: "fullscreen" },
-          checked: !!checks.fullscreen,
-        },
-      ],
-    },
-    ...pluginsMenu(t, plugins),
-    {
-      label: t.menuHelp,
-      submenu: [
-        {
-          label: t.menuHelpWelcome,
-          action: { native: "help-doc:welcome" },
-        },
-        "separator",
-        { label: t.menuHelpMarkdown, action: { native: "help-doc:markdown" } },
-        { label: t.menuHelpAgent, action: { native: "help-doc:agent" } },
-        { label: t.menuHelpTutorials, action: { native: "help-tutorials" } },
-        "separator",
-        {
-          label: t.menuHelpCommunity,
-          action: { native: "help-community" },
-        },
-        { label: t.menuHelpReport, action: { native: "help-report" } },
-      ],
-    },
-    "separator",
-    { label: t.menuSettings, accel: "mod+,", action: { native: "settings" } },
-    // Ctrl+Q closes nothing on Windows; Alt+F4 is the OS's own hint.
-    { label: t.menuExit, accel: "alt+f4", action: { native: "quit" } },
-  ];
+          ];
+        const item = node as TableItem;
+        if (item.drawn?.in) {
+          moved[item.drawn.in].push(entry(item));
+          return [];
+        }
+        return shown && (!item.on || item.drawn) ? [entry(item)] : [];
+      }),
+    );
+  const menus = MENU_TABLE.bar.flatMap((menu): MenuNode[] => {
+    const items = nodes(menu.items, menu.drawn !== false);
+    return menu.drawn === false
+      ? []
+      : [{ label: menuText(t, menu.label!), submenu: items }];
+  });
+  const file = menus[0] as MenuEntry;
+  file.submenu = [...file.submenu!, ...moved.file];
+  return [...menus, "separator", ...moved.end];
+}
+
+/** No separator first, last or twice in a row. */
+function tidy(nodes: MenuNode[]): MenuNode[] {
+  return nodes.filter(
+    (node, i) =>
+      node !== "separator" ||
+      (i > 0 && i < nodes.length - 1 && nodes[i + 1] !== "separator"),
+  );
 }
 
 /** One of the menu bar's titles and the list it opens. */
