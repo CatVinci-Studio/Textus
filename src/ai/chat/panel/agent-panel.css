@@ -284,39 +284,6 @@
   opacity: 0.55;
 }
 
-.project-bar-chip {
-  flex-shrink: 0;
-  padding: 1px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: none;
-  color: var(--ui-muted);
-  font: inherit;
-  font-size: var(--text-caption);
-  cursor: pointer;
-}
-
-.project-bar-chip-static {
-  cursor: default;
-}
-
-.project-bar-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  z-index: 30;
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-  transform-origin: top left;
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
-}
-
-.project-bar-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
-}
-
 .project-bar-naming {
   display: flex;
   gap: 8px;

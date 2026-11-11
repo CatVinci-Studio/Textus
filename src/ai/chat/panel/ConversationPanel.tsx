@@ -99,7 +99,6 @@ export function ConversationPanel({
       memory={() => (
         <ProjectBar
           docPath={docPath}
-          memory
           documentText={doc?.documentText() ?? ""}
         />
       )}

@@ -36,14 +36,12 @@ export function useProjectActions({
   docPath,
   root,
   reload,
-  closeMenu,
   endNaming,
 }: {
   docPath: string | null;
   root: string | null;
   /** Re-reads the project once an action ends. */
   reload: () => void;
-  closeMenu: () => void;
   endNaming: () => void;
 }) {
   const { t, settings, setSettings } = useSettings();
@@ -54,7 +52,6 @@ export function useProjectActions({
 
   /** `label`: what to show while it runs; null for something instant. */
   async function run(label: string | null, work: () => Promise<void>) {
-    closeMenu();
     setBusy(label);
     setMessage(null);
     try {

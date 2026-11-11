@@ -8,34 +8,15 @@ import {
   isDesktopApp,
 } from "../../../platform/capabilities";
 import { useSettings } from "../../../prefs/SettingsContext";
-import { useCloseOnOutsideClick } from "../../../utils/hooks/useCloseOnOutsideClick";
-import { Presence, PresenceDiv } from "../../../engine/motion/usePresence";
 import { basename } from "../../../utils/path";
 import { knownDocumentsDir } from "../../../platform/documents-path";
 import { APP_NAME } from "../../../i18n/names";
 import { ChevronIcon, FolderIcon } from "../../../engine/controls/icons";
-import {
-  ActionSheet,
-  type ActionSheetItem,
-} from "../../../engine/controls/ActionSheet";
-import { usePhoneLayout } from "../../../engine/controls/usePhoneLayout";
+import { useMenuButton } from "../../../engine/controls/useMenuButton";
+import type { ContextMenuEntry } from "../../../engine/controls/ContextMenu";
 import { MemorySections } from "./MemoryView";
 import { RememberedSection } from "./RememberedSection";
 import { useProjectActions } from "./project-actions";
-
-/** The folder row's menu. Not closed by an outside click on a phone: a tap
- *  on the portalled action sheet would count as outside. */
-function useProjectMenu() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
-  const phone = usePhoneLayout();
-  const menuRef = useCloseOnOutsideClick<HTMLDivElement>(
-    closeMenu,
-    true,
-    menuOpen && !phone,
-  );
-  return { menuOpen, setMenuOpen, closeMenu, menuRef, phone };
-}
 
 /** The project the document belongs to: undefined until the first load
  *  answers, so "no root" is never said before anyone has looked. */
@@ -64,7 +45,6 @@ function useProjectWorkspace(
 /** The Memory tab's "used" marks: which library entries Rust sent. Asked
  *  once typing rests: the text is only the guess before any request. */
 function useLibraryUse(
-  memory: boolean,
   info: AgentWorkspaceInfo | null | undefined,
   docPath: string | null,
   workspaceRoot: string | null,
@@ -72,7 +52,7 @@ function useLibraryUse(
 ) {
   const [libraryUse, setLibraryUse] = useState<LibraryUse | null>(null);
   useEffect(() => {
-    if (!memory || !info?.root) return;
+    if (!info?.root) return;
     let live = true;
     // Once typing rests: the text is only the guess before any request.
     const timer = setTimeout(() => {
@@ -84,7 +64,7 @@ function useLibraryUse(
       live = false;
       clearTimeout(timer);
     };
-  }, [memory, info, docPath, workspaceRoot, documentText]);
+  }, [info, docPath, workspaceRoot, documentText]);
   return libraryUse;
 }
 
@@ -105,27 +85,16 @@ function useEntryNaming() {
  */
 export function ProjectBar({
   docPath,
-  memory = false,
   documentText = "",
 }: {
   docPath: string | null;
-  /** The AI panel's Memory tab: the folder row without its chips, then
-   *  everything the project keeps. */
-  memory?: boolean;
   /** The open document's text, to mark the library entries it mentions. */
   documentText?: string;
 }) {
   const { t, settings, setSettings } = useSettings();
   const workspaceRoot = settings.agentWorkspaceRoot || null;
-  const { menuOpen, setMenuOpen, closeMenu, menuRef, phone } = useProjectMenu();
   const { info, reload } = useProjectWorkspace(docPath, workspaceRoot);
-  const libraryUse = useLibraryUse(
-    memory,
-    info,
-    docPath,
-    workspaceRoot,
-    documentText,
-  );
+  const libraryUse = useLibraryUse(info, docPath, workspaceRoot, documentText);
   const { naming, setNaming, entryName, setEntryName, nameInput } =
     useEntryNaming();
   const root = info?.root ?? null;
@@ -144,49 +113,16 @@ export function ProjectBar({
     docPath,
     root,
     reload,
-    closeMenu,
     endNaming: () => {
       setNaming(false);
       setEntryName("");
     },
   });
 
-  // Still loading: say nothing, or "too broad" flashes on a slow device each
-  // time the panel opens.
-  if (info === undefined) return null;
-  // No folder open simply means no project yet: nothing to say up front. A
-  // folder too broad to read is worth saying, once.
-  if (!root) {
-    const tooBroad = info?.root_source === "tooBroad";
-    if (memory)
-      return (
-        <>
-          <div className="project-bar project-bar-empty memory-no-project">
-            {tooBroad ? t.projectTooBroad : t.memoryNeedsSave}
-          </div>
-          {info && info.memories.items.length > 0 && (
-            <div className="project-bar project-bar-memory">
-              <RememberedSection
-                info={info}
-                t={t}
-                lang={settings.language}
-                {...memoryActions}
-              />
-            </div>
-          )}
-        </>
-      );
-    if (!tooBroad) return null;
-    return (
-      <div className="project-bar project-bar-empty">{t.projectTooBroad}</div>
-    );
-  }
-
-  // One list for both forms: a dropdown under the folder name, or on a
-  // phone the same items as an action sheet headed by the folder.
+  // The folder row's menu (a sheet headed by the folder on a phone).
   const hasFolderItems =
     canPickFolder || !!workspaceRoot || canRevealInFileManager;
-  const menuItems: (ActionSheetItem | "separator")[] = [
+  const menuItems: ContextMenuEntry[] = [
     ...(canPickFolder
       ? [{ label: t.projectPickFolder, onSelect: pickFolder }]
       : []),
@@ -194,10 +130,7 @@ export function ProjectBar({
       ? [
           {
             label: t.projectNoFolder,
-            onSelect: () => {
-              setMenuOpen(false);
-              setSettings({ agentWorkspaceRoot: "" });
-            },
+            onSelect: () => setSettings({ agentWorkspaceRoot: "" }),
           },
         ]
       : []),
@@ -205,10 +138,7 @@ export function ProjectBar({
       ? [
           {
             label: t.projectReveal,
-            onSelect: () => {
-              setMenuOpen(false);
-              void exportDoc.revealInDir(root);
-            },
+            onSelect: () => root && void exportDoc.revealInDir(root),
           },
         ]
       : []),
@@ -220,10 +150,7 @@ export function ProjectBar({
     },
     {
       label: t.projectNewEntry,
-      onSelect: () => {
-        setMenuOpen(false);
-        setNaming(true);
-      },
+      onSelect: () => setNaming(true),
     },
     { label: t.projectEditInstructions, onSelect: openInstructions },
     "separator",
@@ -243,73 +170,53 @@ export function ProjectBar({
   ];
   // iOS: the app's own Documents folder is "Textus" in the Files app, and
   // "Documents" was English in every language.
-  const trimmed = root.replace(/[\\/]+$/, "");
+  const trimmed = (root ?? "").replace(/[\\/]+$/, "");
   const documents = knownDocumentsDir()?.replace(/[\\/]+$/, "");
   const folderName =
-    documents && trimmed === documents ? APP_NAME : basename(trimmed) || root;
+    documents && trimmed === documents
+      ? APP_NAME
+      : basename(trimmed) || (root ?? "");
+
+  const menu = useMenuButton(() => menuItems, { title: folderName });
+
+  // Still loading: say nothing, or "too broad" flashes on a slow device each
+  // time the panel opens.
+  if (info === undefined) return null;
+  // No folder open simply means no project yet: nothing to say up front. A
+  // folder too broad to read is worth saying, once.
+  if (!root) {
+    const tooBroad = info?.root_source === "tooBroad";
+    return (
+      <>
+        <div className="project-bar project-bar-empty memory-no-project">
+          {tooBroad ? t.projectTooBroad : t.memoryNeedsSave}
+        </div>
+        {info && info.memories.items.length > 0 && (
+          <div className="project-bar project-bar-memory">
+            <RememberedSection
+              info={info}
+              t={t}
+              lang={settings.language}
+              {...memoryActions}
+            />
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
-    <div className={`project-bar${memory ? " project-bar-memory" : ""}`}>
-      <div className="project-bar-row" ref={menuRef}>
-        <button
-          type="button"
-          className="project-bar-folder"
-          title={t.projectFolderTitle.replace("{path}", root)}
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <FolderIcon className="project-bar-icon" />
-          <span className="project-bar-name">{folderName}</span>
-          <ChevronIcon className="project-bar-chevron" />
-        </button>
-        {info?.style && !memory && (
-          <Tooltip text={t.projectOpenStyle}>
-            <button
-              type="button"
-              className="project-bar-chip"
-              onClick={openStyle}
-            >
-              {t.projectStyleChip}
-            </button>
-          </Tooltip>
-        )}
-        {(info?.library.length ?? 0) > 0 && !memory && (
-          <span className="project-bar-chip project-bar-chip-static">
-            {t.projectLibraryChip.replace(
-              "{n}",
-              String(info?.library.length ?? 0),
-            )}
-          </span>
-        )}
-        <Presence show={menuOpen && !phone}>
-          {menuOpen && !phone && (
-            <PresenceDiv
-              className="project-bar-menu floating-surface"
-              role="menu"
-            >
-              {menuItems.map((item, i) =>
-                item === "separator" ? (
-                  <div key={i} className="project-bar-menu-sep" />
-                ) : (
-                  <button key={i} role="menuitem" onClick={item.onSelect}>
-                    {item.label}
-                  </button>
-                ),
-              )}
-            </PresenceDiv>
-          )}
-        </Presence>
+    <div className="project-bar project-bar-memory">
+      <div className="project-bar-row">
+        <Tooltip text={t.projectFolderTitle.replace("{path}", root)}>
+          <button type="button" className="project-bar-folder" {...menu.button}>
+            <FolderIcon className="project-bar-icon" />
+            <span className="project-bar-name">{folderName}</span>
+            <ChevronIcon className="project-bar-chevron" />
+          </button>
+        </Tooltip>
       </div>
-      <Presence show={menuOpen && phone}>
-        {menuOpen && phone && (
-          <ActionSheet
-            title={folderName}
-            items={menuItems}
-            onClose={closeMenu}
-          />
-        )}
-      </Presence>
+      {menu.menu}
       {naming && (
         <form
           className="project-bar-naming"
@@ -341,7 +248,7 @@ export function ProjectBar({
           {busy ?? message}
         </div>
       )}
-      {memory && info && (
+      {info && (
         <MemorySections
           info={info}
           t={t}
