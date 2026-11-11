@@ -23,6 +23,7 @@ mod distribution;
 mod export_formats;
 mod ext_stats;
 mod extract;
+mod ids;
 #[cfg(desktop)]
 mod mcp;
 mod media;

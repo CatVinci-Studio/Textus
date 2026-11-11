@@ -1,7 +1,7 @@
 import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
-import { basename } from "../../utils/path";
+import { basename, isNoteFile } from "../../utils/path";
 import { localize, matchesFilename } from "./manifest";
 import { claimKey, frontMatterClaim, ownerOf } from "../contributions/owners";
 import {
@@ -53,7 +53,7 @@ export function customEditorForContent(
   path: string,
   content: string,
 ): { plugin: string; viewType: string; title: string } | null {
-  if (!pluginsSnapshot().allOn || !/\.(md|markdown)$/i.test(path)) return null;
+  if (!pluginsSnapshot().allOn || !isNoteFile(path)) return null;
   const keys = frontMatterKeys(content);
   if (!keys.length) return null;
   for (const record of pluginsSnapshot().records) {

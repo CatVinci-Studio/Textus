@@ -86,11 +86,7 @@ pub struct GalleryInstall {
 /// A gallery theme id: what the gallery's own check allows (lowercase
 /// letters, digits, `-`), and a safe path component.
 fn valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 64
-        && id
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    crate::ids::safe_id(id, 64, |c| crate::ids::lower_alnum(c) || c == '-')
 }
 
 fn valid_file_name(name: &str) -> bool {

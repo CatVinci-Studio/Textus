@@ -42,11 +42,7 @@ pub(crate) fn new_id() -> String {
 /// Letters and digits only, so an id names one folder under `papers/` and
 /// can't climb out of it.
 fn valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 32
-        && id
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+    crate::ids::safe_id(id, 32, crate::ids::lower_alnum)
 }
 
 /// `<base>/papers/<id>/`.

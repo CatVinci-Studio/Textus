@@ -59,11 +59,7 @@ fn pictures_dir(file: &Path) -> PathBuf {
 /// A picture id as the image module makes them: letters and digits only, so
 /// it can name a file and nothing else.
 fn valid_id(id: &str) -> bool {
-    !id.is_empty()
-        && id.len() <= 16
-        && id
-            .chars()
-            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+    crate::ids::safe_id(id, 16, crate::ids::lower_alnum)
 }
 
 /// The kept picture files in `dir`, as (id, path).
