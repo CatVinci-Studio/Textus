@@ -89,10 +89,15 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // launch reads the same, not a partial write's.
     if (!readBoot() && readLocalSettings() === null)
       writeLocalSettings({ ...loadSettings() });
-    // Another window changed something. `zoom` stays this window's own.
+    // Another window changed something. `zoom` stays this window's own, and
+    // so does the AI's folder: each window works in the folder it opened.
     const adopt = () => {
       const incoming = loadSettings();
-      setSettingsState((prev) => ({ ...incoming, zoom: prev.zoom }));
+      setSettingsState((prev) => ({
+        ...incoming,
+        zoom: prev.zoom,
+        agentWorkspaceRoot: prev.agentWorkspaceRoot,
+      }));
     };
     // Another window's language, once its strings are here too.
     const adoptStore = () => {

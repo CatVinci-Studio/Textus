@@ -80,7 +80,8 @@ function Probe() {
   });
   return (
     <div data-testid="probe">
-      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.settingsTitle}
+      {settings.theme}|{settings.zoom}|{settings.customCss}|{t.settingsTitle}|
+      {settings.agentWorkspaceRoot}
     </div>
   );
 }
@@ -154,16 +155,23 @@ describe("file-backed settings", () => {
     expect(loadSettings().customCss).toBe("/* abc */");
   });
 
-  it("applies other windows' changes, except zoom and its own echo", () => {
-    boot({ theme: "light", zoom: 1.5, languageChosen: true });
+  it("applies other windows' changes, except zoom, the AI's folder and its own echo", () => {
+    boot({
+      theme: "light",
+      zoom: 1.5,
+      agentWorkspaceRoot: "/a",
+      languageChosen: true,
+    });
     render(
       <SettingsProvider>
         <Probe />
       </SettingsProvider>,
     );
     const probe = screen.getByTestId("probe");
-    remote({ theme: "dark", zoom: 2 }, 10);
+    remote({ theme: "dark", zoom: 2, agentWorkspaceRoot: "/b" }, 10);
     expect(probe.textContent).toContain("dark|1.5|");
+    // Each window works in the folder it opened.
+    expect(probe.textContent).toContain("|/a");
     // An event this window's own patch caused is not applied twice (here:
     // it would be a stale value).
     remote({ theme: "light" }, 11, "main");
