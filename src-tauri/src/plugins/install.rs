@@ -150,19 +150,23 @@ pub(super) fn install_sync(
         let target = root.join(&head.id);
         swap_in(&dir, &target, &staging.with_extension("old"))?;
         // Installed now, so no longer a developer folder, and not Official until the
-        // catalog says so.
-        state::update(app, |state| {
-            if let Some(entry) = state.plugins.get_mut(&head.id) {
-                // A file put over CatVinci's own plugin isn't it: off, and
-                // asked again for what it may do.
-                if entry.official && origin == Origin::File {
+        // catalog says so. A file is code from anywhere under the same id:
+        // off, asked again for what it may do, and given no secret kept for
+        // the code before it.
+        let from_file = origin == Origin::File;
+        let had = state::update(app, |state| {
+            state.plugins.get_mut(&head.id).map(|entry| {
+                if from_file {
                     entry.enabled = false;
                     entry.granted.clear();
                 }
                 entry.dev_path = None;
                 entry.official = false;
-            }
+            })
         })?;
+        if from_file && had.is_some() {
+            super::files::forget_secrets(app, &head.id)?;
+        }
         Ok(installed(head.id, &target, text, false))
     })();
     if staging.exists() {
@@ -360,20 +364,28 @@ fn unzip(file: &Path, to: &Path) -> Result<(), String> {
 }
 
 /// Load a plugin folder…: the plugin runs from where it is, so changes show on
-/// reload. It starts off, like any new plugin.
+/// reload. It starts off, like any new plugin - over one already here as
+/// well: other code under its id gets none of its permissions or secrets.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_load_dev(app: tauri::AppHandle, path: String) -> Result<InstalledPlugin, String> {
     let dir = PathBuf::from(&path);
     let (head, text) = read_checked_manifest(&dir)?;
     let id = head.id.clone();
-    state::update(&app, |state| {
-        state
-            .plugins
-            .entry(id)
-            .or_insert_with(PluginEntry::default)
-            .dev_path = Some(path.clone());
+    let other_code = state::update(&app, |state| {
+        let entry = state.plugins.entry(id.clone()).or_default();
+        let other = entry.dev_path.as_deref() != Some(path.as_str());
+        if other {
+            *entry = PluginEntry {
+                dev_path: Some(path.clone()),
+                ..PluginEntry::default()
+            };
+        }
+        other
     })?;
+    if other_code {
+        super::files::forget_secrets(&app, &id)?;
+    }
     Ok(installed(head.id, &dir, text, true))
 }
 
