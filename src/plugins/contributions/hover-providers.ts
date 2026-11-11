@@ -7,7 +7,7 @@
 
 import type { HoverCard, HoverTarget } from "../../editor/extension-points";
 import { claimKey, ownerOf } from "./owners";
-export type { HoverCard, HoverTarget };
+export type { HoverCard };
 
 type Provide = (target: HoverTarget) => Promise<HoverCard | null>;
 

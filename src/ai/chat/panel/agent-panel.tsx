@@ -42,8 +42,8 @@ export function useAgentPanel(): AgentPanelFrame {
   return useContext(AgentPanelContext);
 }
 
-export const AGENT_PANEL_MIN_WIDTH = 300;
-export const AGENT_PANEL_MAX_WIDTH = 720;
+const AGENT_PANEL_MIN_WIDTH = 300;
+const AGENT_PANEL_MAX_WIDTH = 720;
 export const AGENT_PANEL_DEFAULT_WIDTH = 380;
 
 const LIMITS = { min: AGENT_PANEL_MIN_WIDTH, max: AGENT_PANEL_MAX_WIDTH };

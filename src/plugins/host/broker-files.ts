@@ -336,7 +336,7 @@ export function fileHandlers(p: PluginScope) {
 }
 
 /** `path` in the folder `root`, `/`-separated. */
-export function relOf(root: string, path: string): string {
+function relOf(root: string, path: string): string {
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);

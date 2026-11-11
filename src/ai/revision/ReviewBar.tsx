@@ -18,7 +18,7 @@ import { ThinkingIndicator } from "../chat/ThinkingIndicator";
 import type { NotesBarState } from "../margin/useNotesBar";
 import "./ReviewBar.css";
 
-export interface ReviewBarLabels {
+interface ReviewBarLabels {
   revisionDisplayLabel: string;
   revisionDisplayNoRoom: string;
   reviewBarLabel: string;
@@ -60,7 +60,7 @@ export interface BarChanges {
 }
 
 /** The notes waiting: marked done together, or picked to ask about. */
-export interface BarNotes {
+interface BarNotes {
   count: number;
   bar: NotesBarState;
   /** Picking needs the margin's cards (not a phone's badges). */

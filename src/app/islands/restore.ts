@@ -16,7 +16,7 @@ import {
 
 /** A split as saved: its branches, and each pane by the path of the
  *  document it showed. */
-export type SavedNode =
+type SavedNode =
   | { direction: SplitDirection; sizes: number[]; children: SavedNode[] }
   | { path: string };
 

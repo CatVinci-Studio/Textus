@@ -36,7 +36,7 @@ export interface MarkdownBlock {
 
 /** The current selection in the forms every AI surface needs. Shared so
  *  Quick Ask and the detached chat agree on what "the selection" is. */
-export interface SelectionSnapshot {
+interface SelectionSnapshot {
   /** Plain text, for display only. */
   selectedText: string | null;
   /** Markdown: what the model is shown, and what a replace_selection

@@ -5,7 +5,7 @@ import { lazyModule } from "../../lazy/lazy-module";
 // window is idle, so the first click doesn't wait. Its own module: what
 // holds this import is placed with the startup code, so it holds nothing
 // else.
-export const appMenuModule = lazyModule("app-menu", () => import("./AppMenu"), {
+const appMenuModule = lazyModule("app-menu", () => import("./AppMenu"), {
   warm: true,
 });
 

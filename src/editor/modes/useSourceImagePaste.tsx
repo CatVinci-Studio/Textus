@@ -12,7 +12,7 @@ export function imageMarkdown(src: string): string {
 }
 
 /** Where a stored picture's `![](src)` goes: the source editor's caret. */
-export type InsertImageMarkdown = (markdown: string) => void;
+type InsertImageMarkdown = (markdown: string) => void;
 
 /** What a paste event has to offer, as React's and the DOM's both do. */
 interface PasteEvent {

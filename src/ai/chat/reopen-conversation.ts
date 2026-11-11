@@ -19,7 +19,7 @@ export interface ReopenTarget {
 
 /** The docked panel's: the editor of the conversation's document claims it,
  *  in a tab of this window. */
-export const PANEL_REOPEN: ReopenTarget = {
+const PANEL_REOPEN: ReopenTarget = {
   restore: requestChatRestore,
   openDocument: (path) =>
     window.dispatchEvent(

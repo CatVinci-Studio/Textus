@@ -61,7 +61,7 @@ interface Action {
  * in the installed list: Install; once installed, Update when there is
  * one, else Turn Off or Turn On; the rest, and Uninstall, in the menu.
  */
-export function PluginAction({
+function PluginAction({
   t,
   name,
   record,

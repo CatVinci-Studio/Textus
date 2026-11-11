@@ -57,8 +57,6 @@ import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 export {
   safeImageStem,
   imageStemForMode,
-  type PastedImage,
-  type ImageStore,
   storeImage,
   copyToImageFolder,
   pickImageFile,

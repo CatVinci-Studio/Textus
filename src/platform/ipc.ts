@@ -28,7 +28,6 @@ export * from "./ipc-plugins";
 export type { UpdateChannel } from "./update-channel";
 export {
   type IndexedFile,
-  type FolderIndex,
   fs,
   session,
   type HistoryKind,
@@ -71,7 +70,6 @@ export {
   type MemoryScope,
   type LibraryUse,
   type AgentWorkspaceInfo,
-  WRITING_CONVENTIONS_AUTOMATIC,
   WRITING_CONVENTIONS,
   type SkillListItem,
   type RememberedChange,

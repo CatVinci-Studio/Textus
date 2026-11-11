@@ -28,7 +28,7 @@ declare module "micromark-util-types" {
 }
 
 /** An embed as mdast: `value` is its source, `![[` to `]]`. */
-export interface ObsidianEmbed extends Literal {
+interface ObsidianEmbed extends Literal {
   type: "obsidianEmbed";
 }
 

@@ -28,7 +28,7 @@ export function localizedLabel(
 
 /// Normalizes each provider's differently shaped "is it connected" check to
 /// one boolean per auth method.
-export async function fetchConnected(
+async function fetchConnected(
   entry: ProviderCatalogEntry,
 ): Promise<{ oauth: boolean; apiKey: boolean }> {
   if (entry.id === "custom") {

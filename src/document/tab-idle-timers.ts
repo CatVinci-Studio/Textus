@@ -3,7 +3,7 @@
  * skips a snapshot equal (`same`) to the pending one; `maxWaitMs` caps how
  * long a typing burst holds a write off.
  */
-export interface TabIdleTimers<S> {
+interface TabIdleTimers<S> {
   schedule: (id: string, snapshot: S, fire: (snapshot: S) => void) => void;
   /** Drops a tab's timer and entry; true when it had one. */
   cancel: (id: string) => boolean;

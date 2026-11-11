@@ -15,7 +15,7 @@ export function selectedTextBlock(markdown: string): string {
 /** Marks where the cursor is when nothing is selected: the text just
  *  before and after it, with ⟦cursor⟧ at the spot - what "write a
  *  transition here" refers to (and where insert_at_cursor writes). */
-export function cursorBlock(before: string, after: string): string {
+function cursorBlock(before: string, after: string): string {
   return `<cursor>\n${before}⟦cursor⟧${after}\n</cursor>`;
 }
 
@@ -59,7 +59,7 @@ export function userMessageBody(text: string): string {
   return parseUserMessage(text).body;
 }
 
-export interface ParsedUserMessage {
+interface ParsedUserMessage {
   /** What the user actually typed, with the context blocks removed - a
    *  skill's expanded instructions folded back into the /name they typed. */
   body: string;

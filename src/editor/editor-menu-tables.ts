@@ -29,7 +29,7 @@ import type { MenuEntry } from "./editor-menu";
 
 /** Tables in the editor's menus. */
 
-export function runTableCommand(
+function runTableCommand(
   run: EditorRunner,
   command: (state: EditorState, dispatch: (tr: Transaction) => void) => boolean,
 ) {
@@ -41,7 +41,7 @@ export function runTableCommand(
 }
 
 // Grows the selection to the whole row/column of the current cell.
-export function selectTableLine(run: EditorRunner, kind: "row" | "column") {
+function selectTableLine(run: EditorRunner, kind: "row" | "column") {
   run((ctx) => {
     const view = ctx.get(editorViewCtx);
     const $cell = selectionCell(view.state);
@@ -57,7 +57,7 @@ export function selectTableLine(run: EditorRunner, kind: "row" | "column") {
 
 // Markdown alignment is per column (the `:---:` row), so a cell alone would
 // serialize to something other than what the editor showed.
-export function alignTableColumn(
+function alignTableColumn(
   run: EditorRunner,
   alignment: "left" | "center" | "right",
 ) {
@@ -146,7 +146,7 @@ export function moveCaretToClickedCell(
   );
 }
 
-export function leaveTableForClick(
+function leaveTableForClick(
   view: EditorView,
   target: EventTarget | null,
   coords: { left: number; top: number } | null,

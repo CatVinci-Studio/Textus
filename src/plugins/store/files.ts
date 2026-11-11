@@ -13,7 +13,7 @@ import { scaleStylesheet } from "../../engine/tokens/scale-lengths";
 export type PluginOrigin = "installed" | "dev";
 
 /** A relative path inside the plugin, or an error: no `..`, no root. */
-export function pluginPath(rel: string): string {
+function pluginPath(rel: string): string {
   const parts = rel
     .replace(/\\/g, "/")
     .replace(/^\.?\//, "")
@@ -55,7 +55,7 @@ const MIME: Record<string, string> = {
   bcmap: "application/octet-stream",
 };
 
-export function mimeOf(path: string): string {
+function mimeOf(path: string): string {
   const ext = /\.([a-z0-9]+)$/i.exec(path)?.[1]?.toLowerCase() ?? "";
   return MIME[ext] ?? "application/octet-stream";
 }

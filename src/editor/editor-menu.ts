@@ -14,11 +14,7 @@ import type {
 } from "../engine/controls/ContextMenu";
 import { contributedMenuItems } from "./editor-menu-items";
 import { linkMenuItems, menuLinkAt, type MenuLink } from "./editor-menu-links";
-export {
-  registerEditorMenuItems,
-  type EditorMenuContext,
-  type EditorMenuProvider,
-} from "./editor-menu-items";
+export {} from "./editor-menu-items";
 import { imageLocation, type ImageLocation } from "./images/missing-image";
 import { embedFileAt } from "./images/obsidian-embed-preview";
 import {
@@ -49,11 +45,7 @@ import {
   imageTurnItems,
   imageWidthItems,
 } from "./editor-menu-images";
-export {
-  TABLE_ACTIONS,
-  type TableAction,
-  runTableAction,
-} from "./editor-menu-tables";
+export { type TableAction, runTableAction } from "./editor-menu-tables";
 export {
   selectedImagePos,
   selectImage,
@@ -89,7 +81,7 @@ export function insertHeading(run: EditorRunner, level: number) {
 }
 
 /** What a right-click landed on, for the menu's image items. */
-export interface ContextMenuTarget {
+interface ContextMenuTarget {
   /** The image node's doc position, for the width items. */
   imagePos: number | null;
   /** Where the picture's file is, for Show in folder and Copy image path. */

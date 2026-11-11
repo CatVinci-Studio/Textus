@@ -188,7 +188,7 @@ export async function openDoc(page: Page, doc: LargeDoc, path: string) {
   );
 }
 
-export function firstLine(doc: LargeDoc): string {
+function firstLine(doc: LargeDoc): string {
   return doc.markdown.split("\n")[0].replace(/^#+ /, "");
 }
 

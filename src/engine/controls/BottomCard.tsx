@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Sheet } from "./Sheet";
 import "./BottomCard.css";
 
-export interface BottomCardAction {
+interface BottomCardAction {
   label: string;
   onSelect: () => void;
   primary?: boolean;

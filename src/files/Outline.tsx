@@ -43,7 +43,7 @@ function currentHeading(): number {
 
 /** A heading's source as it reads in the document: inline code, emphasis
  *  and link syntax dropped, so "`text-spacing`" shows as text-spacing. */
-export function headingLabel(text: string): string {
+function headingLabel(text: string): string {
   return text
     .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/`+([^`]+)`+/g, "$1")

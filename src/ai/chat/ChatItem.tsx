@@ -47,7 +47,7 @@ export const ChatItems = createContext<ChatItemsContext | null>(null);
 
 /** How the item comes in: whether it fades in, and its place in the
  *  stagger. */
-export interface Arrival {
+interface Arrival {
   reveal: boolean;
   style: CSSProperties | undefined;
 }

@@ -1,7 +1,7 @@
 // A file's line endings and BOM, kept through an edit: the editor works in
 // "\n", and a file is written back the way it is on disk.
 
-export interface FileFormat {
+interface FileFormat {
   crlf: boolean;
   bom: boolean;
 }

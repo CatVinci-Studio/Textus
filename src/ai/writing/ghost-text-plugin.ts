@@ -33,7 +33,6 @@ export {
   tidySuggestion,
   isOneLineBlock,
   stripEcho,
-  completionHints,
   proseText,
   hasProse,
   completionContext,

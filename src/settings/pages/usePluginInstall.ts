@@ -118,7 +118,7 @@ export function usePluginInstall(t: Strings) {
 
 /** What a plugin needs that is off: asked to turn each on, once, in the
  *  plugin's words. */
-export async function askForRequirements(
+async function askForRequirements(
   id: string,
   t: Strings,
   settings: ReturnType<typeof useSettings>["settings"],

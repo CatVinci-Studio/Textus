@@ -75,7 +75,7 @@ interface Anchor {
   top: number;
 }
 
-export interface Plan {
+interface Plan {
   draw: number[];
   release: number[];
   anchor: Anchor | null;

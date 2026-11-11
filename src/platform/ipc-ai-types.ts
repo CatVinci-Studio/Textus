@@ -95,7 +95,7 @@ export type AgentWorkspaceInfo = AgentWorkspace_Serialize;
 export const WRITING_CONVENTIONS_AUTOMATIC = "automatic";
 
 /** A document language as the rules engine names it. */
-export type ConventionsLang = Lang;
+type ConventionsLang = Lang;
 
 /**
  * The profiles each language offers, the first being Automatic's (null: no

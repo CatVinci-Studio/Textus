@@ -7,8 +7,6 @@ import {
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { inBrowser } from "./runtime";
 
-export type { EventCallback, UnlistenFn };
-
 /**
  * Listen to an event addressed to this window only. Never the bare
  * `listen()`: its Any target also receives what Rust's `emit_to` meant

@@ -14,12 +14,12 @@ import { measure, play } from "../motion/flip";
 /** Where an element comes from or goes to: a short way below ("up": it
  *  rises into place), above, before or after it in the line, or nowhere
  *  (a fade in place). "start" and "end" follow the writing direction. */
-export type Direction = "none" | "up" | "down" | "start" | "end";
+type Direction = "none" | "up" | "down" | "start" | "end";
 
 /** How far it travels: --motion-distance-sm / -md. */
-export type Distance = "sm" | "md";
+type Distance = "sm" | "md";
 
-export interface MoveOptions {
+interface MoveOptions {
   from?: Direction;
   distance?: Distance;
   /** A scale to grow from (enter) or shrink to (exit), e.g. 0.96. */
@@ -244,7 +244,7 @@ export function crossfade(
 }
 
 /** A copy fading out: none of its own entrances replay. */
-export const GHOST_CLASS = "motion-ghost";
+const GHOST_CLASS = "motion-ghost";
 
 /** Where the fading copies are laid: an empty copy of `root` beside it, out
  *  of its DOM (ProseMirror reads any change there as an edit) but styled alike. */

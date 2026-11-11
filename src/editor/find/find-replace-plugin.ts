@@ -35,7 +35,7 @@ export function expandReplacement(
   );
 }
 
-export interface FindReplaceState {
+interface FindReplaceState {
   query: string;
   caseSensitive: boolean;
   useRegex: boolean;
@@ -55,7 +55,7 @@ type FindReplaceMeta =
  * The one place a find query becomes a RegExp, so search and replacement
  * can't drift apart. Null when a regex-mode query doesn't compile.
  */
-export function compileQuery(
+function compileQuery(
   query: string,
   caseSensitive: boolean,
   useRegex: boolean,

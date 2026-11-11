@@ -89,7 +89,7 @@ export function blockIds(markdowns: readonly string[]): string[] {
 }
 
 /** An id as the model may write it (`k3f9`, `#k3f9`, `[#k3f9]`) as the id. */
-export function cleanId(id: string): string {
+function cleanId(id: string): string {
   return id
     .trim()
     .replace(/^\[/, "")
@@ -113,7 +113,7 @@ export function runOf(
 }
 
 /** Edit fields as a call has them (streaming, or complete). */
-export interface BlockEditFields {
+interface BlockEditFields {
   action: string;
   block: string;
   lastBlock?: string;

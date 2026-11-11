@@ -4,7 +4,7 @@ import { replaceWithMarkdown } from "../revision/apply-edit";
 
 /** One of a finished paper's pictures: its id in the picture store, its alt
  *  text, and the caption under it, which says where it goes. */
-export interface PaperPicture {
+interface PaperPicture {
   id: string;
   alt: string;
   caption: string;

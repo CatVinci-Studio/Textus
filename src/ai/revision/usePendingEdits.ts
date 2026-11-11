@@ -11,7 +11,6 @@ import { liveStatus, type RecordedStatus } from "./proposal-lifecycle";
 import { usePicturesState } from "./usePicturesState";
 export { locateTarget } from "./pending-place";
 export type { DecidedChange, SelectionTarget } from "./pending-place";
-export type { ReviewStop } from "./pending-review";
 
 /** `streaming`: the proposal exists but can't be decided yet. */
 export type PendingStatus =

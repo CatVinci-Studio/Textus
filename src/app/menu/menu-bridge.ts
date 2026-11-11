@@ -38,7 +38,7 @@ import { openCommandPalette } from "../command-palette-entry";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/report-open";
 
-export interface MenuBridgeHandlers {
+interface MenuBridgeHandlers {
   activeTabId: string;
   /** The heading keys: with the islands' numbers up they go to an island. */
   shortcuts: Shortcuts;

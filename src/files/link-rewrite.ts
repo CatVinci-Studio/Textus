@@ -12,7 +12,7 @@ import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
  */
 
 /** A rename or move: the files there were, and where each went. */
-export interface LinkMove {
+interface LinkMove {
   /** The folder whose files are known; a wiki link's path starts here. */
   root: string;
   /** Every file under `root` before the move, absolute. */
@@ -278,13 +278,13 @@ export function movedBy(from: string, to: string) {
 }
 
 /** A document whose links a rename changed, and how many. */
-export interface LinkUpdate {
+interface LinkUpdate {
   path: string;
   text: string;
   count: number;
 }
 
-export interface LinkPlan {
+interface LinkPlan {
   root: string;
   from: string;
   to: string;

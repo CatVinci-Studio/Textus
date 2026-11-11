@@ -44,11 +44,9 @@ export {
   stopRewrite,
   stoppedRewrite,
 } from "./pending-animation";
-export { type SentencePickLabels } from "./pending-widgets";
-export { REVISION_DISPLAY_ATTR } from "./pending-decorations";
 
 /** The call ids accepted and not undone - what the cards show as applied. */
-export function appliedCallIds(state: EditorState): string[] {
+function appliedCallIds(state: EditorState): string[] {
   return (pendingEditKey.getState(state)?.applied ?? [])
     .filter((entry) => !entry.undone)
     .map((entry) => entry.preview.callId);

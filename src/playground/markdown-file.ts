@@ -5,7 +5,7 @@ import { imageMimeForPath } from "../editor/images/pasted-files";
 /** What the playground's Import button and a drop on the page take. */
 export const IMPORT_EXTENSIONS = [".md", ".markdown", ".txt"];
 
-export type FileKind = "markdown" | "image" | "other";
+type FileKind = "markdown" | "image" | "other";
 
 /** Sorts a picked or dropped file by its name (and type, for an image
  *  pasted from a screenshot tool, which has no useful name). */
@@ -29,7 +29,7 @@ export function exportFilename(markdown: string, fallback: string): string {
 
 /** Hands the document to the browser as a .md download - made in the page,
  *  nothing uploaded. */
-export function downloadMarkdown(markdown: string, filename: string): void {
+function downloadMarkdown(markdown: string, filename: string): void {
   const url = URL.createObjectURL(
     new Blob([markdown], { type: "text/markdown;charset=utf-8" }),
   );

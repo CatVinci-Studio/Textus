@@ -3,7 +3,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 
 /** The part of the document a paper is being written into. */
-export interface PaperRegion {
+interface PaperRegion {
   from: number;
   to: number;
 }

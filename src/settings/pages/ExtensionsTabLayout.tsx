@@ -6,7 +6,7 @@ import type { Strings } from "../../i18n/strings";
 import { RowHelp } from "../sections/controls";
 import { SettingsGroup } from "./SettingsGroup";
 
-export interface ExtensionsAction {
+interface ExtensionsAction {
   label: string;
   onSelect: () => void;
 }

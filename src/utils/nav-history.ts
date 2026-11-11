@@ -3,7 +3,7 @@
  * heading, another tab - as a tab and how far down it was scrolled.
  */
 
-export interface NavPlace {
+interface NavPlace {
   tabId: string;
   top: number;
 }

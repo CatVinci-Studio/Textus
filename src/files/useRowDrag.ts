@@ -17,7 +17,7 @@ import { DRAG_START_PX } from "../engine/drag/pointer-drag";
 import { dragGhost, type DragGhost } from "../engine/drag/ghost";
 
 /** A row being dragged, and the folder under the pointer. */
-export interface Drag {
+interface Drag {
   path: string;
   name: string;
   isDir: boolean;

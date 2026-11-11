@@ -4,7 +4,7 @@ import type { Strings } from "../i18n/strings";
  * Commands other code adds to the app: an id, its name, what it does, and
  * optionally a shortcut. The app's own actions are not commands yet.
  */
-export interface CommandDef {
+interface CommandDef {
   /** Namespaced by its owner: "example.word-count". */
   id: string;
   title: (t: Strings) => string;

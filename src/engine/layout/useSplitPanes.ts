@@ -27,7 +27,7 @@ import {
 
 /** A split asked for that needs a blank tab: the layout waiting for it,
  *  its new pane (in use) without a tab yet. */
-export interface Blank {
+interface Blank {
   blank: SplitLayout;
 }
 

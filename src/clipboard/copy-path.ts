@@ -10,7 +10,7 @@ export function copyPath(path: string): void {
   void navigator.clipboard.writeText(path).catch(() => {});
 }
 
-export function copyPathItem(t: Strings, path: string): ContextMenuItem {
+function copyPathItem(t: Strings, path: string): ContextMenuItem {
   return { label: t.menuCopyPath, onSelect: () => copyPath(path) };
 }
 

@@ -1,4 +1,4 @@
-import { devices, expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 /** A document exercising most of the content styling. */
 export const SAMPLE_DOC = `# 老城区更新的几点思考
@@ -26,111 +26,11 @@ console.log("a fairly long first line of code to see whether the language label 
 - 再制定方案
 `;
 
-/** A line's start and end: on a Mac Home and End scroll, and Cmd+Left and
- *  Cmd+Right move the caret. */
 /** Whether the page runs on a Mac: Mod is ⌘ there, and keys read so. */
 export const MAC = process.platform === "darwin";
 
-const MODS: Record<string, [mac: string, other: string]> = {
-  mod: ["⌘", "Ctrl"],
-  ctrl: ["⌃", "Ctrl"],
-  meta: ["⌘", "Win"],
-  alt: ["⌥", "Alt"],
-  shift: ["⇧", "Shift"],
-};
-const KEYS: Record<string, string> = {
-  tab: "Tab",
-  enter: "Enter",
-  space: "Space",
-  escape: "Esc",
-};
-
-/** A combo ("mod+shift+p") as the app shows it on this machine: Ctrl+Shift+P,
- *  or ⌘⇧P on a Mac - formatCombo's rule (src/utils/shortcuts.ts). */
-/** A position or size within `px` of where it should be: layout lands on
- *  fractional pixels that differ by engine and scale, so e2e checks place
- *  and size, not exact pixels. */
-export function expectNear(actual: number, expected: number, px = 2) {
-  expect(
-    Math.abs(actual - expected),
-    `${actual} within ${px}px of ${expected}`,
-  ).toBeLessThanOrEqual(px);
-}
-
-export function keyLabel(combo: string): string {
-  return combo
-    .split("+")
-    .map(
-      (part) => MODS[part]?.[MAC ? 0 : 1] ?? KEYS[part] ?? part.toUpperCase(),
-    )
-    .join(MAC ? "" : "+");
-}
-
-export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
+/** A line's end: on a Mac End scrolls, and Cmd+Right moves the caret. */
 export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
-
-/** The raw Markdown source mode is showing, one `.cm-line` per line. Short
- *  documents are fully rendered; CodeMirror only draws lines near the viewport
- *  in a long one. */
-export async function sourceValue(
-  page: Page,
-  root = '[data-active-tab="true"]',
-): Promise<string> {
-  return (
-    await page.locator(`${root} .source-view .cm-line`).allTextContents()
-  ).join("\n");
-}
-
-/** The active document's Markdown, read from source mode (and back). */
-export async function sourceOf(page: Page): Promise<string> {
-  const source = page.locator(
-    '[data-active-tab="true"] .source-view .cm-content',
-  );
-  await emit(page, "menu-toggle-source-mode");
-  await expect(source).toBeAttached();
-  const value = await sourceValue(page);
-  await emit(page, "menu-toggle-source-mode");
-  await expect(source).toHaveCount(0);
-  return value.trim();
-}
-
-/** Has ProseMirror read the selection a click or a key made. It reads it
- *  on the selectionchange that follows, which in WebKit the next key sent
- *  at once can overtake; and 20ms after it hears the editor focused it puts
- *  its own caret back, undoing a key pressed before - on a busy machine the
- *  focus comes late. So: focused, past that, the read done now (dev-only
- *  view, see enclosure.ts), and a frame for what it draws. */
-export async function selectionRead(page: Page) {
-  await page.evaluate(
-    () =>
-      new Promise((resolve) => {
-        const view = (
-          window as unknown as {
-            __pmView?: {
-              focused: boolean;
-              dom: HTMLElement;
-              domObserver: { flush(): void };
-            };
-          }
-        ).__pmView;
-        const settle = () =>
-          setTimeout(() => {
-            view?.domObserver.flush();
-            requestAnimationFrame(resolve);
-          }, 30);
-        if (!view || view.focused) settle();
-        else {
-          view.dom.addEventListener("focus", settle, { once: true });
-          // Never focused (a key aimed elsewhere): on anyway.
-          setTimeout(settle, 1000);
-        }
-      }),
-  );
-}
-
-/** For the first wait on something KaTeX draws: the dev server bundles KaTeX
- *  on its first request, which on a CI runner can exceed the default 5s. */
-export const FIRST_LOAD = { timeout: 20_000 };
 
 /** Opens the app with onboarding done and the given extra localStorage,
  *  and makes rendering deterministic (no animations, no blinking caret).
@@ -212,21 +112,6 @@ export async function pasteMarkdown(page: Page, markdown: string) {
   await settled(page);
 }
 
-/** The ids of a document's blocks, as the app makes them - its own module,
- *  from the dev server (the e2e project can't import src/). For documents
- *  whose every paragraph the editor writes back as it was pasted. */
-export async function blockIds(page: Page, doc: string): Promise<string[]> {
-  return page.evaluate(
-    async ({ doc, path }) => {
-      const mod = (await import(/* @vite-ignore */ path)) as {
-        blockIds: (markdowns: string[]) => string[];
-      };
-      return mod.blockIds(doc.split("\n\n"));
-    },
-    { doc, path: "/src/ai/doc-blocks.ts" },
-  );
-}
-
 /** Answers a backend command with a canned value. */
 export async function mockInvoke(page: Page, results: Record<string, unknown>) {
   await page.evaluate((r) => {
@@ -234,9 +119,6 @@ export async function mockInvoke(page: Page, results: Record<string, unknown>) {
       r;
   }, results);
 }
-
-/** The active tab's editor. */
-export const editor = '[data-active-tab="true"] .ProseMirror';
 
 type DevWindow = {
   __devEmitTauriEvent: (name: string, payload?: unknown) => void;
@@ -254,11 +136,6 @@ export function emit(page: Page, name: string, payload?: unknown) {
   );
 }
 
-/** Opens files the way dropping them on the window does. */
-export function dropPaths(page: Page, paths: string[]) {
-  return emit(page, "tauri://drag-drop", { paths, position: { x: 0, y: 0 } });
-}
-
 /** The calls made to a mocked command, with their arguments. */
 export function invokeCalls(
   page: Page,
@@ -271,33 +148,6 @@ export function invokeCalls(
       ),
     cmd,
   );
-}
-
-/** Changes settings while the app runs, as another window's change arrives. */
-export function changeSettings(page: Page, patch: Record<string, unknown>) {
-  return page.evaluate((patch) => {
-    const key = "catvinci-settings";
-    const next = JSON.stringify({
-      ...JSON.parse(localStorage.getItem(key) ?? "{}"),
-      ...patch,
-    });
-    localStorage.setItem(key, next);
-    window.dispatchEvent(new StorageEvent("storage", { key, newValue: next }));
-  }, patch);
-}
-
-/** The interface's size factor (--chrome-scale) in this window: what a
- *  design px of the app's chrome measures on screen. */
-export function chromeScale(page: Page): Promise<number> {
-  return page.evaluate(() => {
-    const probe = document.createElement("div");
-    probe.style.cssText =
-      "position:fixed;visibility:hidden;width:calc(1000px * var(--chrome-scale, 1))";
-    document.body.append(probe);
-    const width = probe.getBoundingClientRect().width;
-    probe.remove();
-    return width / 1000;
-  });
 }
 
 /** Waits until nothing moves: no animation running and every scroll
@@ -352,49 +202,6 @@ export async function release(page: Page, cmd: string) {
     (c) => (window as unknown as DevWindow).__devRelease(c),
     cmd,
   );
-}
-
-/** An iPhone, as far as Chromium can be one: touch and a phone-sized
- *  viewport. Playwright can't drive iOS WebKit itself; the layout is keyed
- *  off the platform, which openPhone fakes. For `test.use(PHONE)`. */
-export const PHONE = {
-  viewport: { width: 430, height: 932 },
-  isMobile: true,
-  hasTouch: true,
-  userAgent: devices["iPhone 15 Pro Max"].userAgent,
-};
-
-/** openApp as an iPhone: the phone layout is on. */
-export async function openPhone(
-  page: Page,
-  options: {
-    animations?: boolean;
-    storage?: Record<string, string>;
-    colorScheme?: "light" | "dark";
-    /** Settings over English. */
-    settings?: Record<string, unknown>;
-  } = {},
-) {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "platform", { get: () => "iPhone" });
-  });
-  await openApp(page, {
-    ...options,
-    settings: { language: "en", ...options.settings },
-  });
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-window-chrome",
-    "mobile",
-  );
-}
-
-/** As in the app's window, whose file drop swallows HTML drag and drop: a
- *  drag that still works here works there. Call before openApp. */
-export async function swallowHtmlDrop(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    for (const type of ["dragover", "drop"])
-      window.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
-  });
 }
 
 /** Presses on `from`, moves in steps onto `to` (nudged by `dx`), lets go. */

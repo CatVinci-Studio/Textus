@@ -24,7 +24,7 @@ export interface KeptTab {
   text?: { content: string; savedContent: string; diskMtime: number | null };
 }
 
-export interface KeptTabs {
+interface KeptTabs {
   tabs: KeptTab[];
   active: number;
 }

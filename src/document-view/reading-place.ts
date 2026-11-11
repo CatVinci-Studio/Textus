@@ -4,7 +4,7 @@ import { LOCAL_KEYS, readLocalJson, writeLocal } from "../storage/local";
  * Where each file was being read when last shown, so it opens there again.
  * Kept as a block index and offset: scrollTop moves with window width.
  */
-export interface ReadingPlace {
+interface ReadingPlace {
   block: number;
   into: number;
   /** When it was kept, for dropping the oldest past MAX. */

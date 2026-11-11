@@ -14,7 +14,7 @@ import { isImeKeydown } from "../../utils/ime";
 import { SMOOTH_SCROLL_MS } from "../lazy-blocks/lazy-blocks-drawer";
 import { makeReachable } from "../reveal-position";
 
-export interface FindReplaceStatus {
+interface FindReplaceStatus {
   matchCount: number;
   activeIndex: number;
   error: boolean;

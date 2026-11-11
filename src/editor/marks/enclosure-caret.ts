@@ -14,11 +14,7 @@ import type { DeleteAction } from "./enclosure-moves";
  *  enclosure, applied to the view. */
 
 /** Remove an empty shell entirely, like erasing an auto-closed bracket pair. */
-export function deleteShell(
-  view: EditorView,
-  start: number,
-  node: ProseNode,
-): void {
+function deleteShell(view: EditorView, start: number, node: ProseNode): void {
   const tr = view.state.tr.delete(start, start + node.nodeSize);
   tr.setSelection(TextSelection.create(tr.doc, start));
   view.dispatch(tr);
@@ -29,7 +25,7 @@ export function deleteShell(
  * that keeps the other delimiter ("*hello*" minus its closer -> "*hello").
  * Retyping the deleted delimiter re-forms the enclosure.
  */
-export function deleteDelimiter(
+function deleteDelimiter(
   view: EditorView,
   start: number,
   node: ProseNode,

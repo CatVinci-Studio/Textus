@@ -35,7 +35,7 @@ function token(text: string): string {
 }
 
 /** What a document holds, as the backend's index reads it. */
-export function shimDocumentMeta(path: string, rel: string, text: string) {
+function shimDocumentMeta(path: string, rel: string, text: string) {
   const lines = text.split(/\r?\n/);
   let start = 0;
   let frontmatter: string | null = null;

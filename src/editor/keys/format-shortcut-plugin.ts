@@ -13,7 +13,7 @@ import { caretAt, stateWithLiveSelection } from "../live-selection";
 import { isImeKeyEvent } from "./ime";
 import { LINK } from "../markdown/link-source";
 
-export interface FormatSpec {
+interface FormatSpec {
   delim: string;
   rung: number;
 }

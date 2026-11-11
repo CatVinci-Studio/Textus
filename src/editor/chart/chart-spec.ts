@@ -1,7 +1,7 @@
 // What a ```chart block says: a small JSON spec, checked before drawing so a
 // mistake keeps the source on screen, as a broken diagram does.
 
-export const CHART_TYPES = ["bar", "line", "area", "pie", "scatter"] as const;
+const CHART_TYPES = ["bar", "line", "area", "pie", "scatter"] as const;
 export type ChartType = (typeof CHART_TYPES)[number];
 
 export interface ChartSeries {
@@ -24,7 +24,7 @@ export interface ChartSpec {
 }
 
 /** Past this, hues stop telling series apart: fold the rest into "Other". */
-export const MAX_SERIES = 8;
+const MAX_SERIES = 8;
 const MAX_POINTS = 1000;
 
 const fail = (message: string): never => {

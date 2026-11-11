@@ -1,4 +1,4 @@
-export interface HeadingInfo {
+interface HeadingInfo {
   level: number;
   text: string;
 }

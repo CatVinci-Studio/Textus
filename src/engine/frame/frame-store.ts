@@ -21,7 +21,7 @@ export interface FrameIsland {
   front: string | null;
 }
 
-export interface FrameLayout {
+interface FrameLayout {
   islands: readonly FrameIsland[];
   dividers: readonly DividerRects[];
   /** The islands' box, inset from the area's sides. */

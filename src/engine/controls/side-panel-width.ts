@@ -12,7 +12,7 @@ export const DOCUMENT_MIN_WIDTH = DOC_MIN;
 /** The most of the window one panel takes. */
 const PANEL_SHARE = 0.45;
 
-export interface PanelLimits {
+interface PanelLimits {
   /** The narrowest it is dragged to. */
   min: number;
   /** The widest it is dragged to, in a window with room. */

@@ -23,13 +23,13 @@ import { FILE_LIMIT } from "./composer-types";
  */
 
 /** What a picked file reads as in the message. */
-export function mentionText(path: string): string {
+function mentionText(path: string): string {
   return `@${basename(path)}`;
 }
 
 /** Where each of `paths`' mentions sits in `input`: a whole word, followed
  *  by a space or the end. */
-export function mentionRanges(
+function mentionRanges(
   input: string,
   paths: readonly string[],
 ): { start: number; end: number }[] {
@@ -48,16 +48,13 @@ export function mentionRanges(
 }
 
 /** The mentioned paths still in `input`. */
-export function stillMentioned(
-  input: string,
-  paths: readonly string[],
-): string[] {
+function stillMentioned(input: string, paths: readonly string[]): string[] {
   return paths.filter((p) => mentionRanges(input, [p]).length > 0);
 }
 
 /** Backspace at a mention's end (or the space after it): the input without
  *  it, and where the caret goes; null where the caret ends no mention. */
-export function backspaceMention(
+function backspaceMention(
   input: string,
   caret: number,
   paths: readonly string[],
@@ -120,7 +117,7 @@ export function MentionLayer({
 
 /** The files mentioned in the message: added as one is picked, dropped with
  *  their attachment once their mention leaves the text. */
-export function useMentions(
+function useMentions(
   input: string,
   setInput: Dispatch<SetStateAction<string>>,
   setAttachments: Dispatch<SetStateAction<ChatAttachment[]>>,

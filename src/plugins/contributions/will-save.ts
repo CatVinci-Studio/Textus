@@ -8,7 +8,7 @@ import { mergeWholeText, textBlocks, type TextBlock } from "./save-blocks";
  * blocks it changed are written back, and a change that would change again
  * on a second run is dropped.
  */
-export interface WillSaveRequest {
+interface WillSaveRequest {
   path: string;
   text: string;
   trigger: "manual" | "auto";
@@ -21,7 +21,7 @@ type Ask = (request: WillSaveRequest) => Promise<string | null>;
 const listeners = new Map<string, Ask>();
 
 /** How long a save waits for one plugin. */
-export const WILL_SAVE_MS = 1000;
+const WILL_SAVE_MS = 1000;
 
 export function setWillSave(plugin: string, on: boolean, ask: Ask): void {
   if (on) listeners.set(plugin, ask);

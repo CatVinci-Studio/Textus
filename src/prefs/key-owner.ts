@@ -48,7 +48,7 @@ function actionLabels(t: Strings): Record<ShortcutAction, string> {
   };
 }
 
-export interface KeyOwners {
+interface KeyOwners {
   t: Strings;
   /** The fixed shortcuts, the editor's own keys among them. */
   fixed: FixedShortcutGroup[];

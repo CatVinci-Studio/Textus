@@ -3,7 +3,7 @@ import snapshot from "./models-snapshot.json";
 
 /** What models.dev says about one model, from a bundled snapshot. Absent for
  *  models it doesn't list, which show as a bare id. */
-export interface ModelInfo {
+interface ModelInfo {
   name: string;
   released: string | null;
   tools: boolean;
@@ -27,7 +27,7 @@ export function formatContext(tokens: number): string {
   return `${Math.round(tokens / 1000)}K`;
 }
 
-export interface FetchedModels {
+interface FetchedModels {
   models: string[];
   /** Epoch ms. */
   at: number;

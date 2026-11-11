@@ -29,7 +29,7 @@ async function opensInPlugin(path: string): Promise<boolean> {
 // webview, so each still drains exactly once.
 let drained = false;
 
-export interface StartupRestoreOptions {
+interface StartupRestoreOptions {
   activeTabId: string;
   enableDraftRecovery: boolean;
   language: string;

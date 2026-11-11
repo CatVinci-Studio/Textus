@@ -48,7 +48,6 @@ import {
  * code starts on first use, or at startup if it asks.
  */
 
-export type { PluginStatus } from "./store/lifecycle";
 export {
   configurePlugins,
   pluginName,

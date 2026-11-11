@@ -126,7 +126,7 @@ export function sentenceDecorations(
 
 /** How one change is drawn: settled (with its ✓ / ✕), or while its
  *  rewrite still streams in (`stream`). */
-export interface ChangeDraw {
+interface ChangeDraw {
   focused: boolean;
   stagger: number;
   labels: SentencePickLabels;
@@ -294,7 +294,7 @@ export function changeDecorations(
 
 /** The ranges a change strikes: each original sentence, and the space
  *  between two of them. */
-export function strikeParts(
+function strikeParts(
   c: Pick<PendingSentence, "from" | "to" | "parts">,
 ): { from: number; to: number }[] {
   const parts = c.parts;
@@ -354,14 +354,14 @@ function blockStrike(
 }
 
 /** The beat a change enters on, shared by its new text and its card. */
-export function changeBeat(callId: string, index: number): string {
+function changeBeat(callId: string, index: number): string {
   return `rev:${callId}:${index}`;
 }
 
 /** How a completed change's new text comes in while streaming: a paragraph's
  *  changes on one beat with their cards. One already on screen from the
  *  partial span gets no entrance; one realigned comes in again. */
-export function streamEntrance(
+function streamEntrance(
   span: HTMLElement,
   s: StreamState,
   index: number,

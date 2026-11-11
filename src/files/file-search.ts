@@ -8,7 +8,7 @@ import {
 
 /** Most results the sidebar draws: past this the list is a wall, and the
  *  answer is a longer query. */
-export const MAX_SHOWN_MATCHES = 200;
+const MAX_SHOWN_MATCHES = 200;
 
 /** The search box's filter beside it: every file, or documents only. */
 export type SearchScope = "all" | "documents";

@@ -61,7 +61,7 @@ function nestedHeadingPos(doc: ProseNode, levels: string[]): number | null {
 
 /** The block with the Obsidian id `id`: a textblock ending " ^id", or for an
  *  `^id` line of its own, the block before it (a list, a table, a quote). */
-export function blockPos(doc: ProseNode, id: string): number | null {
+function blockPos(doc: ProseNode, id: string): number | null {
   if (!/^[\w-]+$/.test(id)) return null;
   const tail = new RegExp(`(?:^|\\s)\\^${id}$`);
   let found: number | null = null;

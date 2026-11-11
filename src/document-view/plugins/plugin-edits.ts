@@ -62,7 +62,7 @@ export function applyPluginEdits(ctx: Ctx, edits: EditProposal[]): boolean {
 
 /** Where `place` is in `doc`: its block, its heading, its words, or the
  *  block its line falls in - the first of them that is found. */
-export function findPlace(
+function findPlace(
   ctx: Ctx,
   doc: ProseNode,
   place: DocumentPlace,

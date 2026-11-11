@@ -87,7 +87,7 @@ export interface PluginTabView {
   target?: PluginLocation;
 }
 
-export interface WindowAccess {
+interface WindowAccess {
   /** The folder the sidebar shows, if any. */
   rootPath(): string | null;
   /** Opens a file in a tab - `where` it says - at `place` if given;

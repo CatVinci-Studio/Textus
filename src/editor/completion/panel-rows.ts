@@ -77,8 +77,8 @@ export type PanelRow =
   | { kind: "loading" };
 
 /** Rows of each group when several have some, and of a lone group. */
-export const SHARED_ROWS = 8;
-export const LONE_ROWS = 50;
+const SHARED_ROWS = 8;
+const LONE_ROWS = 50;
 
 function rowsOf(group: Group, limit: number): PanelItem[] {
   return group.list

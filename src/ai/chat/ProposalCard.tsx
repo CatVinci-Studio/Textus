@@ -50,7 +50,7 @@ export function notMadeLine(
 
 /** A proposed picture on its card, small: its frame while it is made,
  *  then the picture, or why it wasn't made. */
-export function ProposedPicture({ id, alt }: { id: string; alt: string }) {
+function ProposedPicture({ id, alt }: { id: string; alt: string }) {
   // Read again whenever a picture comes or goes: one redrawn in the
   // document paints here too until the new one has come.
   const url = useSyncExternalStore(onPictureSettled, () =>

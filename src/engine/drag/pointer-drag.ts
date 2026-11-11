@@ -5,7 +5,7 @@
 
 export const DRAG_START_PX = 5;
 
-export interface DragHandlers {
+interface DragHandlers {
   /** The press moved far enough: the drag begins. */
   start?: (x: number, y: number) => void;
   move: (x: number, y: number) => void;

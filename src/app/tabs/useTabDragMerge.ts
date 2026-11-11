@@ -47,7 +47,7 @@ function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
   );
 }
 
-export interface DragHoverPreview {
+interface DragHoverPreview {
   title: string;
   dirty: boolean;
   x: number;

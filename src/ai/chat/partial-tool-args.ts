@@ -98,7 +98,7 @@ export function parsePartialToolArgs(
 
 /** A streaming proposal that already knows where it lands: `proposal.text`
  *  holds what has arrived of the text so far (possibly empty). */
-export interface DraftProposal {
+interface DraftProposal {
   proposal: EditProposal;
   /** True once the `text` value's closing quote arrived. */
   textComplete: boolean;

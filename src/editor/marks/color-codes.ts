@@ -51,7 +51,7 @@ export function colorOfCode(text: string): string | null {
  *  reads. */
 export const OPAQUE = "\uFFFC";
 
-export interface ColorCode {
+interface ColorCode {
   /** Offsets of the code in the text. */
   from: number;
   to: number;

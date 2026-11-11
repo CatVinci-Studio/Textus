@@ -1,6 +1,6 @@
 /** A change as a chip shows it: what goes and what comes, with a few
  *  characters either side. */
-export interface Glimpse {
+interface Glimpse {
   /** Before the change; "" at the sentence's start. */
   lead: string;
   removed: string;

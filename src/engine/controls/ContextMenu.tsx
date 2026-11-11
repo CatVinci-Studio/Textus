@@ -45,14 +45,12 @@ export interface ContextMenuGroup {
 
 export type ContextMenuEntry = ContextMenuItem | ContextMenuGroup | "separator";
 
-export function isMenuGroup(
-  entry: ContextMenuEntry,
-): entry is ContextMenuGroup {
+function isMenuGroup(entry: ContextMenuEntry): entry is ContextMenuGroup {
   return typeof entry === "object" && "items" in entry;
 }
 
 /** A phone's sheet has no submenus: each group's items stand in its place. */
-export function flatMenu(
+function flatMenu(
   entries: ContextMenuEntry[],
 ): (ContextMenuItem | "separator")[] {
   const flat: (ContextMenuItem | "separator")[] = [];

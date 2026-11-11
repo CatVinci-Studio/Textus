@@ -33,7 +33,6 @@ import {
 } from "./useChatBodyState";
 export {
   type ChatBodyLabels,
-  type ChatBodyProps,
   proposalsFromTurns,
   quickReplyExpands,
 } from "./chat-body-types";

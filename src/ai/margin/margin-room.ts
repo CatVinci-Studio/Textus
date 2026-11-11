@@ -9,7 +9,7 @@ const MIN_LEFT = 16;
 /** The air kept between a card and the editor's right edge. */
 const RIGHT_EDGE = 16;
 
-export interface MarginRoom {
+interface MarginRoom {
   /** Where the column's left edge sits on its own, centred. */
   natural: number;
   /** The text's right edge, in the scroller's coordinates. */

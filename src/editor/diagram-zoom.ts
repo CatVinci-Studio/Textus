@@ -12,7 +12,7 @@ export function nextScale(scale: number, deltaY: number): number {
   return clampScale(scale * Math.exp(-deltaY * 0.0015));
 }
 
-export const clampScale = (scale: number) =>
+const clampScale = (scale: number) =>
   Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));
 
 /** WebKit's pinch: the zoom since the fingers went down, and where. */
@@ -26,7 +26,7 @@ const ARROW_STEPS: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1 };
 
 /** Pictures to page through with ← and →, the one shown at `at`; each a
  *  URL, or one still loading. */
-export interface PictureSet {
+interface PictureSet {
   pictures: (string | Promise<string | null>)[];
   at: number;
 }

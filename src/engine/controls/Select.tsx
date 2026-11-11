@@ -26,7 +26,7 @@ interface OptionItem {
   group?: string;
 }
 
-export interface SelectProps {
+interface SelectProps {
   value: string;
   onChange: (event: { target: { value: string } }) => void;
   children: ReactNode;

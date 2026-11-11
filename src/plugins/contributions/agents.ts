@@ -36,7 +36,7 @@ export function addAgents(
   return () => publish(agents.filter((a) => a.plugin !== plugin));
 }
 
-export function externalAgents(): ExternalAgent[] {
+function externalAgents(): ExternalAgent[] {
   return agents;
 }
 

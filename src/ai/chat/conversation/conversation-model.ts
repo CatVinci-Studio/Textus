@@ -33,7 +33,7 @@ export function stopConversations(): void {
   for (const model of running) model.stop();
 }
 
-export interface ConversationOptions {
+interface ConversationOptions {
   env: () => ConversationEnv;
   /** False for Quick Ask: a one-off exchange that stays out of the History
    *  list unless it is carried over to the full conversation. */

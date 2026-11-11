@@ -36,7 +36,7 @@ import { LANGS, LANG_NAMES } from "../i18n/langs";
 import { Select } from "../engine/controls/Select";
 import mark from "../../src-tauri/icons/128x128.png";
 
-export const DOWNLOAD_URL = "https://textus.md/#download";
+const DOWNLOAD_URL = "https://textus.md/#download";
 
 const SAMPLES = import.meta.glob<string>("./samples/*.md", {
   query: "?raw",

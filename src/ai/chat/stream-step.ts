@@ -24,7 +24,7 @@ export interface StreamingState {
   permission?: PendingPermission | null;
 }
 
-export interface StreamStep {
+interface StreamStep {
   next: StreamingState;
   /** Only text grew: drawn once a frame, not on every event. */
   textOnly?: boolean;

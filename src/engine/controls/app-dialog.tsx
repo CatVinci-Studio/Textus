@@ -7,7 +7,7 @@ import { isImeKeydown } from "../../utils/ime";
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
  * Callable from anywhere, shown by each window's AppDialogHost; requests queue.
  */
-export interface AppDialogOptions {
+interface AppDialogOptions {
   title?: string;
   /** Tints the title; a plain notice by default. */
   tone?: "info" | "warning" | "error";

@@ -7,15 +7,13 @@ import type { ContextMenuItem } from "../engine/controls/ContextMenu";
 
 /** What an item added to the editor's menu is told: the text selected,
  *  empty for none. */
-export interface EditorMenuContext {
+interface EditorMenuContext {
   selectedText: string;
 }
 
 /** Asked when the menu opens; its items are a group of their own before
  *  Select All. */
-export type EditorMenuProvider = (
-  context: EditorMenuContext,
-) => ContextMenuItem[];
+type EditorMenuProvider = (context: EditorMenuContext) => ContextMenuItem[];
 
 const menuProviders: EditorMenuProvider[] = [];
 

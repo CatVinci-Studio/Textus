@@ -35,7 +35,7 @@ export type FoldMeta = { set: [number, boolean][] };
 // What the fold draws. An export reads them back to put a body inside its
 // <details> again.
 export const DETAILS_CLASS_PREFIX = "raw-html-details-";
-export const DETAILS_HEAD_CLASS = "raw-html-details-head";
+const DETAILS_HEAD_CLASS = "raw-html-details-head";
 export const DETAILS_END_CLASS = "raw-html-details-end";
 export const DETAILS_FOLDED_CLASS = "raw-html-details-folded";
 /** Followed by a head's position: the <details> a body block belongs to. */

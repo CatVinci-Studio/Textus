@@ -146,7 +146,7 @@ export function ToggleRow({
 
 /** How a key reads in its field: its first six and last four characters
  *  around ***; a short one, still being typed, as dots. */
-export function maskKey(key: string): string {
+function maskKey(key: string): string {
   if (key.length <= 12) return "•".repeat(key.length);
   return `${key.slice(0, 6)}***${key.slice(-4)}`;
 }

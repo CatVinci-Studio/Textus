@@ -391,7 +391,7 @@ export function buildAppMenu(
 }
 
 /** One of the menu bar's titles and the list it opens. */
-export interface MenuBarSection {
+interface MenuBarSection {
   label: string;
   items: MenuNode[];
 }

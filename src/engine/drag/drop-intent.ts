@@ -13,7 +13,7 @@ const SPLIT_DWELL = 150;
 /** Faster than this (px per ms) the pointer is passing through. */
 const SWEEPING = 1.5;
 
-export interface DropIntent {
+interface DropIntent {
   /**
    * The place under the pointer is `key` (null: none; `opens`: it opens a
    * new island). Returns the place to show now, and when to ask again if

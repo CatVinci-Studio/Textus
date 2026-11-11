@@ -11,7 +11,7 @@ import { normaliseSettings } from "./settings-normalise";
 /** Where the settings live: the shared settings file, a local copy for a
  *  fast start, and changes to and from other windows. */
 
-export const STORAGE_KEY = LOCAL_KEYS.settings;
+const STORAGE_KEY = LOCAL_KEYS.settings;
 
 /** The settings blob in localStorage: the store without Rust (the browser
  *  dev shim, vitest). */
@@ -29,18 +29,18 @@ export function writeLocalSettings(patch: Raw) {
 // read from the boot snapshot, changed by sending only changed fields, and
 // synced across windows by "settings-changed". Without it, localStorage.
 
-export interface SettingsChanged {
+interface SettingsChanged {
   rev: number;
   patch: Raw;
   from: string;
 }
 
-export let sync: SettingsSync | null = null;
-export let normalised: { raw: Raw; settings: Settings } | null = null;
-export const remoteListeners = new Set<() => void>();
+let sync: SettingsSync | null = null;
+let normalised: { raw: Raw; settings: Settings } | null = null;
+const remoteListeners = new Set<() => void>();
 
 /** The file-backed store, set up on first use; null without Rust. */
-export function fileStore(): SettingsSync | null {
+function fileStore(): SettingsSync | null {
   if (sync) return sync;
   const boot = readBoot();
   if (!boot) return null;
@@ -75,7 +75,7 @@ export function fileStore(): SettingsSync | null {
 }
 
 /** Adopts a full snapshot from Rust, keeping this window's zoom. */
-export function adopt(value: Raw, rev: number) {
+function adopt(value: Raw, rev: number) {
   if (!sync) return;
   const next = { ...value };
   if (sync.raw.zoom !== undefined) next.zoom = sync.raw.zoom;
@@ -86,12 +86,12 @@ export function adopt(value: Raw, rev: number) {
  *  whether one came between its first render and its subscription. */
 export let remoteVersion = 0;
 
-export function notifyRemote() {
+function notifyRemote() {
   remoteVersion += 1;
   for (const fn of remoteListeners) fn();
 }
 
-export function send(ticket: Map<string, number>) {
+function send(ticket: Map<string, number>) {
   const store = sync;
   if (!store) return;
   const patch: Raw = {};

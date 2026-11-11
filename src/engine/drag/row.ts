@@ -2,7 +2,7 @@ import { trackDrag } from "./pointer-drag";
 
 /** One slide for every item making way, so overlapping moves read as one:
  *  the settle spring (motion.css). */
-export const SLIDE =
+const SLIDE =
   "transform calc(var(--dur-settle) * var(--motion-travel)) var(--ease-settle)";
 
 /**
@@ -12,7 +12,7 @@ export const SLIDE =
  * untouched by transforms in flight); each move finds the place by binary
  * search and restyles only the items whose shift changed.
  */
-export interface RowItem {
+interface RowItem {
   id: string;
   node: HTMLElement;
 }

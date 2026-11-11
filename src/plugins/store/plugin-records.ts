@@ -33,7 +33,7 @@ let snapshot: PluginsSnapshot = { loaded: false, allOn: true, records: [] };
 const listeners = new Set<() => void>();
 
 /** What the window tells the manager about itself. */
-export interface WindowInfo {
+interface WindowInfo {
   strings: () => Strings;
   language: () => string;
   dark: () => boolean;

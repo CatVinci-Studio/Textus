@@ -16,7 +16,7 @@ const INTENT_MS = 800;
  *  rewrite has reached (its reading cursor). */
 const WRITING = ".pending-insert-typing, .pending-reading";
 
-export const streamFollowKey = new PluginKey("textus-stream-follow");
+const streamFollowKey = new PluginKey("textus-stream-follow");
 
 /** The page follows AI writing while the reader is with it. A scroll they
  *  didn't make of over a screen is undone, as WebKit pulls the caret back. */

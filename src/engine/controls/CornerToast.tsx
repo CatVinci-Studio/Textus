@@ -4,7 +4,7 @@ import { Tooltip } from "./Tooltip";
 import { Presence, PresenceDiv } from "../motion/usePresence";
 import "./corner-toast.css";
 
-export interface CornerToastAction {
+interface CornerToastAction {
   label: string;
   onSelect: () => void;
   primary?: boolean;

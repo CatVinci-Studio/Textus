@@ -9,7 +9,7 @@
 /** What Create makes; each is the name of the built-in skill that makes it. */
 export type CreateKind = "plugin" | "theme" | "skill";
 
-export interface CreateRequest {
+interface CreateRequest {
   text: string;
   kind: CreateKind;
 }

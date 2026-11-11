@@ -8,7 +8,7 @@ import { formKey } from "./markdown-forms";
 
 /** A hunk with both sides kept: a "same" sentence may differ in the
  *  paragraph break it carries (two paragraphs joined into one). */
-export interface Pair {
+interface Pair {
   same: boolean;
   before: string;
   after: string;
@@ -16,17 +16,17 @@ export interface Pair {
 
 /** A paragraph with more of its sentences changed than this, reading less
  *  like its original than REWRITTEN, is one change, not sentence confetti. */
-export const DENSE = 0.5;
-export const REWRITTEN = 0.55;
+const DENSE = 0.5;
+const REWRITTEN = 0.55;
 
 /** A paragraph this short, changed whole next to another such, is decided
  *  with it, not a card a line. */
-export const SHORT_PARAGRAPH = 80;
+const SHORT_PARAGRAPH = 80;
 /** Short paragraphs taken together up to this much, then a new change. */
-export const MERGED_AT_MOST = 320;
+const MERGED_AT_MOST = 320;
 /** Plain text: not a heading, a list item, a quote, a table, a fence, a
  *  formula, a footnote, a picture or HTML - those keep their own card. */
-export const PLAIN =
+const PLAIN =
   /^(?!\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|>|\||```|~~~|\$\$|!\[|\[\^|<|\[toc\]))/i;
 
 /** Adjacent changes that are each a whole short paragraph on both sides,
@@ -72,11 +72,11 @@ export function mergeShortParagraphs(pairs: Pair[]): Pair[] {
 export const ENDS_PARAGRAPH = /\n[ \t]*\n\s*$/;
 
 /** A paragraph's end inside a text. */
-export const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
+const PARAGRAPH_END = /\n[ \t]*\n\s*/g;
 
 /** `text` cut after each paragraph's end, the breaks kept with the part
  *  before them - so the parts join back into `text`. */
-export function paragraphsOf(text: string): string[] {
+function paragraphsOf(text: string): string[] {
   const parts: string[] = [];
   let from = 0;
   for (const m of text.matchAll(PARAGRAPH_END)) {
@@ -145,7 +145,7 @@ export function paragraphCount(text: string): number {
 }
 
 /** One run of `regroup`, shaped. */
-export function shapeRun(run: Pair[]): Pair[] {
+function shapeRun(run: Pair[]): Pair[] {
   const before = run.map((p) => p.before).join("");
   const after = run.map((p) => p.after).join("");
   const count = paragraphCount;
@@ -184,7 +184,7 @@ export function shapeRun(run: Pair[]): Pair[] {
 /** What a paragraph is, by how its Markdown starts (or, for speech, by
  *  its quotes): a heading pairs with a heading, a picture with a picture,
  *  a line of dialogue with one. */
-export function paragraphKind(text: string): string {
+function paragraphKind(text: string): string {
   const t = text.trimStart();
   if (/^#{1,6}\s/.test(t)) return "heading";
   if (/^(!\[|<img\b)/.test(t)) return "picture";
@@ -198,14 +198,14 @@ export function paragraphKind(text: string): string {
 }
 
 /** A paragraph left out or added on its own costs this much. */
-export const LONE_PARAGRAPH = 1.5;
+const LONE_PARAGRAPH = 1.5;
 
 /** The most paragraphs one paragraph is joined from or split into. */
-export const MAX_GROUP = 4;
+const MAX_GROUP = 4;
 
 /** Pairs the paragraphs of a rewrite with a different number of them, by
  *  relative length (so translations pair too), kind, and shared words. */
-export function alignParagraphs(
+function alignParagraphs(
   olds: string[],
   news: string[],
 ): { olds: string[]; news: string[] }[] {
@@ -268,7 +268,7 @@ export function alignParagraphs(
 }
 
 /** One paragraph's pairs, whole when it was rewritten (DENSE). */
-export function dense(run: Pair[]): Pair[] {
+function dense(run: Pair[]): Pair[] {
   const sentences = run.reduce(
     (n, p) => n + splitSentences(p.before).filter((s) => s.trim()).length,
     0,

@@ -29,7 +29,7 @@ interface TutorialButton {
   onClick: () => void;
 }
 
-export interface TutorialTaskLine {
+interface TutorialTaskLine {
   text: string;
   done: boolean;
 }

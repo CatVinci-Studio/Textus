@@ -24,7 +24,7 @@ const NOTICE_TEXT: Record<AiNoticeCode, TextKey> = {
   "grammar-no-issues": "noticeGrammarNoIssues",
 };
 
-export interface AiActions {
+interface AiActions {
   triggerCompletion: () => void;
   triggerGrammarCheck: () => void;
 }

@@ -9,7 +9,7 @@ import { askPlugin, loadPlugins } from "./manager";
  * goes to that plugin; `textus://command/<id>?<query>` runs a command once the
  * user agrees, since a link is anyone's to write.
  */
-export type TextusUri =
+type TextusUri =
   | {
       kind: "plugin";
       plugin: string;

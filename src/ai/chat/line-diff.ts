@@ -1,6 +1,6 @@
 type DiffKind = "context" | "add" | "remove";
 
-export interface DiffLine {
+interface DiffLine {
   kind: DiffKind;
   text: string;
 }

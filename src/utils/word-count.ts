@@ -1,6 +1,6 @@
 import { onMemoryIdle } from "./memory-idle";
 
-export interface WordCount {
+interface WordCount {
   words: number;
   /** Letters, digits and CJK punctuation - what 文字数 counts: no spaces,
    *  no Markdown marks. */

@@ -43,7 +43,7 @@ export const mcp = {
 };
 
 /** What an external agent's process says: a protocol line, or its end. */
-export type AgentOutput = Generated.AgentOutput_Deserialize;
+type AgentOutput = Generated.AgentOutput_Deserialize;
 
 /** External agents a plugin names, started by Rust from its manifest
  *  (src-tauri/src/agents.rs). Desktop only. */

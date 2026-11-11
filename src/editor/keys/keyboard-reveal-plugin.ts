@@ -7,7 +7,7 @@ const MARGIN = 12;
 
 /** Scrolls `view`'s caret up into view if the container's bottom has come
  *  down over it. Never down, never centred. */
-export function revealCaret(view: EditorView) {
+function revealCaret(view: EditorView) {
   const container = view.dom.closest(".editor-scroll");
   if (!container || view.dom.offsetParent === null) return;
   let coords: { bottom: number };

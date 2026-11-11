@@ -17,7 +17,7 @@ export interface Box {
 }
 
 /** What a card must stay off, by the elements that show it. */
-export const CARD_OBSTACLES = [
+const CARD_OBSTACLES = [
   ".pending-insert",
   ".pending-edit",
   ".pending-delete",

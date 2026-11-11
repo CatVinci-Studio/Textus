@@ -4,13 +4,14 @@
     "src/playground/main.tsx",
     "src/plugin-api.ts",
     "src/**/*.test.{ts,tsx}",
-    "e2e/**/*.ts",
     "scripts/**/*.mjs",
-    "*.config.ts"
+    "*.config.ts",
+    "e2e/**/*.{spec,perf,bench}.ts",
+    "e2e/shots/**/*.ts"
   ],
   "project": ["src/**/*.{ts,tsx}", "e2e/**/*.ts", "scripts/**/*.mjs"],
   "ignore": ["src/platform/bindings/**"],
-  "ignoreExportsUsedInFile": true,
+  "ignoreExportsUsedInFile": false,
   "rules": {
     "duplicates": "off"
   },

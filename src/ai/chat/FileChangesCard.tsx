@@ -13,7 +13,7 @@ import {
 import type { AiFileMark } from "../../storage/ui-state";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 
-export interface FileChangesLabels {
+interface FileChangesLabels {
   filesChangedTitle: string;
   filesKeptTitle: string;
   filesNew: string;

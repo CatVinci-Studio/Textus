@@ -11,7 +11,7 @@ import {
 const AIR = 8;
 
 /** Where one tab row in the window bar's row starts and ends its tabs. */
-export interface RowInsets {
+interface RowInsets {
   start: number;
   end: number;
   /** The first tab rises from its sheet's own edge. */
@@ -45,7 +45,7 @@ export function rowInsets(
 }
 
 /** What of the window bar the rows keep clear of, in the viewport. */
-export interface BarObstacles {
+interface BarObstacles {
   /** The end of its leading controls (the menu, the sidebar's toggle). */
   leadEnd: number;
   /** Where each control ending it starts (its status, the window's

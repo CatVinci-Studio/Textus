@@ -21,7 +21,7 @@ import { explainError } from "../../utils/error-explain";
  */
 
 /** The official plugin in the catalog whose custom editor opens `path`. */
-export function catalogEditorFor(
+function catalogEditorFor(
   path: string,
   items: CatalogItem[],
 ): CatalogItem | null {

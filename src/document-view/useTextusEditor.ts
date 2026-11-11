@@ -22,7 +22,7 @@ import {
 
 /** Ref-indirected callbacks the plugin chain reads at call time: the chain
  *  is built once on mount, before the hooks that own them exist. */
-export interface EditorBridges {
+interface EditorBridges {
   pendingEditActionsRef: { current: PendingEditCallbacks };
   onSelectionChangeRef: { current: () => void };
   noMarginRef: { current: boolean };

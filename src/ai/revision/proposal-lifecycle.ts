@@ -5,7 +5,7 @@ import type { PendingStatus } from "./usePendingEdits";
 
 export type RecordedStatus = Exclude<PendingStatus, "pending" | "streaming">;
 
-export type ProposalEvent =
+type ProposalEvent =
   /** The writer, or a later request, decided on it. */
   | { type: "decided"; outcome: RecordedStatus }
   /** Its preview left the document without a decision recorded: written

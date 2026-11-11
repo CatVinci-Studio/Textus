@@ -4,7 +4,7 @@ import type { PickerLabels, PickerRow, PickerSection } from "./ComposerPicker";
 import { groupSkills, matchSkills, type PickerSkill } from "./skill-picker";
 
 /** One of a mode's own kinds `/` picks (Research's pieces, Create's makings). */
-export interface PickerKind {
+interface PickerKind {
   key: string;
   label: string;
   pick: () => void;

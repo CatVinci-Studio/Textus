@@ -7,7 +7,7 @@ import {
   ProjectIcon,
 } from "../../../engine/controls/icons";
 
-export interface AgentPanelLabels {
+interface AgentPanelLabels {
   title: string;
   newConversation: string;
   popOut: string;

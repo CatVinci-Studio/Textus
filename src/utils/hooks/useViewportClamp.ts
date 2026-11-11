@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
-export interface ViewportClampOptions {
+interface ViewportClampOptions {
   margin?: number;
   /** "down" (default): top pinned at `y`, grows downward. "up": bottom pinned
    *  near `y` on first render, grows upward, so an input row stays put while

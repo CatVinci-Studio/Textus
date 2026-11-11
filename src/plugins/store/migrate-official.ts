@@ -9,7 +9,7 @@ import { loadPlugins, uninstallPlugin } from "../manager";
  */
 
 /** Permissions as the API before 1.0 named them. */
-export const RENAMED_PERMISSIONS: Record<string, string> = {
+const RENAMED_PERMISSIONS: Record<string, string> = {
   "document.read": "editor.read",
   "document.propose": "editor.propose",
   "workspace.read": "files.read",
@@ -17,7 +17,7 @@ export const RENAMED_PERMISSIONS: Record<string, string> = {
 };
 
 /** Official plugins no longer offered: what they did is Textus's own. */
-export const DELISTED = ["catvinci.split-panes"];
+const DELISTED = ["catvinci.split-panes"];
 
 const major = (version: unknown) =>
   typeof version === "string" ? Number(version.split(".")[0]) : NaN;

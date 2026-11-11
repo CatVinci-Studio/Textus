@@ -34,7 +34,7 @@ export class ManifestError extends Error {}
 /** A contributed id: the plugin's own namespace, then a name. */
 const LOCAL_ID = /^[a-z0-9][a-z0-9.-]*$/i;
 
-export type Json = Record<string, unknown>;
+type Json = Record<string, unknown>;
 
 export function object(value: unknown, what: string): Json {
   if (!value || typeof value !== "object" || Array.isArray(value))

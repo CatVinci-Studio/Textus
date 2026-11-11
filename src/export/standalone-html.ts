@@ -44,7 +44,7 @@ export function nextFrame(): Promise<void> {
 }
 
 // Inlines every same-origin stylesheet's rules into one string.
-export function collectInlinedCss(): string {
+function collectInlinedCss(): string {
   let css = "";
   for (const sheet of Array.from(document.styleSheets)) {
     try {
@@ -61,7 +61,7 @@ export function collectInlinedCss(): string {
 
 // Editing affordances in the editor DOM that aren't document content. Keep
 // in step with print.css's @media print list.
-export const EDITOR_CHROME_SELECTOR = [
+const EDITOR_CHROME_SELECTOR = [
   ".heading-marker",
   `.${EMOJI_SOURCE_CLASS}`,
   ".enclosure-delimiter",
@@ -85,11 +85,11 @@ export const EDITOR_CHROME_SELECTOR = [
 
 /** Marks over the text drawn for the editor alone (a plugin's highlight
  *  or underline): the copy keeps their text, not them. */
-export const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
+const EDITOR_MARK_SELECTOR = "[data-editor-mark]";
 
 // A resized table carries pixel widths sized for the editor column, cut off
 // on a narrower page, so the export keeps each column's share instead.
-export function fitTablesToWidth(root: HTMLElement): void {
+function fitTablesToWidth(root: HTMLElement): void {
   root.querySelectorAll("table").forEach((table) => {
     table.style.width = "";
     table.style.minWidth = "";
@@ -112,7 +112,7 @@ export function fitTablesToWidth(root: HTMLElement): void {
 // Folded <details> are paragraphs hidden below a head widget in the editor;
 // a page puts them back inside one real <details>. Innermost first, so a
 // nested one moves into its parent whole.
-export function gatherDetails(root: HTMLElement): void {
+function gatherDetails(root: HTMLElement): void {
   const heads = Array.from(
     root.querySelectorAll<HTMLDetailsElement>(`details[${DETAILS_HEAD_ATTR}]`),
   ).reverse();
@@ -271,10 +271,7 @@ export function cloneEditorContent(
 
 // The file a document image's src names; null for a URL, or a relative src
 // with no folder on disk.
-export function localImagePath(
-  src: string,
-  docPath: string | null,
-): string | null {
+function localImagePath(src: string, docPath: string | null): string | null {
   if (isDrivePath(src)) return decodeUrlPath(src);
   if (!src || hasUrlScheme(src)) return null;
   if (src.startsWith("/")) return decodeUrlPath(src);
@@ -283,7 +280,7 @@ export function localImagePath(
   return `${dirname(docPath)}/${decodeUrlPath(src)}`;
 }
 
-export function blobToDataUrl(blob: Blob): Promise<string> {
+function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);

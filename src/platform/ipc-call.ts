@@ -48,7 +48,7 @@ const commands = {
 };
 type Commands = typeof commands;
 /** A backend command with generated types: its name, as Rust registers it. */
-export type Command = keyof Commands;
+type Command = keyof Commands;
 type Args<K extends Command> = Parameters<Commands[K]>;
 // A command answering `Result<(), _>` is generated as answering `null`,
 // one answering `()` as `void`; both are nothing to the caller.

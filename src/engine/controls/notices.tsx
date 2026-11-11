@@ -5,7 +5,7 @@ import "./notices.css";
  *  progress bars for slow work: what a plugin says without stopping the user.
  *  Shown by the one NoticeHost App mounts. */
 
-export interface Notice {
+interface Notice {
   id: number;
   text: string;
   tone: "info" | "warning" | "error";

@@ -42,7 +42,7 @@ export function splitUnits(text: string): string[] {
 
 /** Aligns the run of changed units that ends what a stream has reached:
  *  `before` are originals from `start` on. */
-export type AlignTail = (
+type AlignTail = (
   before: string[],
   after: string[],
   start: number,

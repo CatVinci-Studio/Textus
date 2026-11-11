@@ -39,7 +39,7 @@ import {
   withSingleLineEnds,
   withoutLatexPairs,
 } from "./text-output";
-export { documentBreaks, displayWidth } from "./text-output";
+
 // How the editor writes markdown back out: every rule keeps a saved file
 // close to what the user wrote, not remark-stringify's house style.
 
@@ -356,7 +356,7 @@ const root: Handle = (node, parent, state, info) => {
  * The bullet the document's own lists use, by majority, or null. remark
  * writes "*" whatever the file had, rewriting every bullet on the first edit.
  */
-export function documentBullet(markdown: string): "-" | "*" | "+" | null {
+function documentBullet(markdown: string): "-" | "*" | "+" | null {
   const counts = { "-": 0, "*": 0, "+": 0 };
   for (const match of markdown.matchAll(/^[ \t]*([-*+])[ \t]+\S/gm))
     counts[match[1] as keyof typeof counts]++;

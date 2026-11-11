@@ -139,7 +139,7 @@ export function SettingsSearchField({
   );
 }
 
-export interface SearchResultGroup {
+interface SearchResultGroup {
   key: string;
   name: string;
   matches: SearchMatch[];

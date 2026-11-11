@@ -17,7 +17,7 @@ import { renderPendingHtml } from "./pending-fill";
  *  text it fills in. DOM side effects only, kept outside the editor state
  *  as streamed text can arrive before its widget exists. */
 
-export interface InsertAnimation {
+interface InsertAnimation {
   callId: string;
   /** Full text known so far - grows while the proposal streams. */
   target: string;
@@ -171,7 +171,7 @@ export function refreshStream(anim: InsertAnimation) {
 
 /** Rebuilds the decorations after the current dispatch (this runs inside
  *  decoration draws too) but before paint; the text below glides. */
-export function queueRelayout(anim: InsertAnimation) {
+function queueRelayout(anim: InsertAnimation) {
   const s = anim.stream;
   const view = anim.view;
   if (!s || !view || s.relayoutQueued) return;
@@ -367,7 +367,7 @@ export function stoppedRewrite(callId: string): string | null | undefined {
   return animations.get(callId)?.stream?.stopped;
 }
 
-export function keptOnStop(s: StreamState, text: string): string | null {
+function keptOnStop(s: StreamState, text: string): string | null {
   const pieces = splitUnits(text);
   const last = pieces.at(-1) ?? "";
   // Stopped right after a sentence's stop: that one is complete.

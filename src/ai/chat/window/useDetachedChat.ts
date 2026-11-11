@@ -89,7 +89,7 @@ function watchChatWindows(): () => void {
   };
 }
 
-export interface DetachedChatHandlers {
+interface DetachedChatHandlers {
   /** Whether a doc-scoped message for `docPath` is for this tab. Checked by
    *  the hook before the doc-scoped handlers fire. */
   isTarget: (docPath: string | null) => boolean;

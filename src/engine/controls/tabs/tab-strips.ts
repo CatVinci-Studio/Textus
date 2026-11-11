@@ -5,7 +5,7 @@ import type { Slot } from "./tab-strip";
  * along it and how far it is scrolled, for a drag to find a slot by
  * without measuring the page.
  */
-export interface StripPlaces {
+interface StripPlaces {
   ids: readonly string[];
   slots: readonly Slot[];
   scrolled: () => number;

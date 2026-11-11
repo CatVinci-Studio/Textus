@@ -15,7 +15,7 @@ const SKILL_EXISTS = "SKILL_EXISTS";
 
 /** The catalog's skills whose name, description, author or names in any
  *  language hold every word of `query`. */
-export function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
+function searchSkills(list: SkillEntry[], query: string): SkillEntry[] {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   if (!words.length) return list;
   return list.filter((s) => {

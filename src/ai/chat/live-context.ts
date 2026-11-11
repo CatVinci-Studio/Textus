@@ -9,7 +9,7 @@ import type { ChatContext } from "./window/chat-bridge";
  * window holds no snapshot of its own. Serializing is not free, so callers
  * push on selection, tab and file changes and before a send, never per key.
  */
-export interface LiveEditorState {
+interface LiveEditorState {
   /** What crosses the window boundary. */
   context: ChatContext;
   /** The selection, in THIS window's coordinates (ProseMirror positions mean

@@ -15,7 +15,7 @@ import {
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import { useSettings } from "../prefs/SettingsContext";
 /** View › Mode's four. */
-export type ViewModeChoice = "default" | "source" | "split" | "read-only";
+type ViewModeChoice = "default" | "source" | "split" | "read-only";
 import type { TabState } from "./tabs/useTabState";
 
 /** The rich editor, plain source mode and split view, one for every tab of

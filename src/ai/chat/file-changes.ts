@@ -144,7 +144,7 @@ export function relayFileChanges(to: typeof relay): () => void {
 }
 
 /** Files whose revisions changed here, for the window that shows them. */
-export function revisionsChanged(files: string[]) {
+function revisionsChanged(files: string[]) {
   if (files.length) relay?.([], files);
 }
 

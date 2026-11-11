@@ -33,7 +33,7 @@ declare module "micromark-util-types" {
 }
 
 /** Markdown "==highlighted==" text, registered below. */
-export interface Mark extends Parent {
+interface Mark extends Parent {
   type: "mark";
   children: PhrasingContent[];
 }

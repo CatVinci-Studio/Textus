@@ -11,7 +11,7 @@ import { pluginsSnapshot, windowInfo } from "./plugin-records";
  */
 
 /** The file names to try for `language`, in order. */
-export function readmeNames(language: string): string[] {
+function readmeNames(language: string): string[] {
   const base = language.split("-")[0];
   const langs = [...new Set([language, base])];
   return [

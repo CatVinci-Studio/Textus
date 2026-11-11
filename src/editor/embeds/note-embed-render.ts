@@ -20,14 +20,14 @@ import { drawEmbeddedBlocks } from "./embed-plugin-blocks";
  * anything that can't be drawn, show as a chip with the link's name.
  */
 
-export const MAX_DEPTH = 5;
+const MAX_DEPTH = 5;
 const ANSWER_MS = 3000;
 /** `![[x.pdf]]`, `![[pic.png]]`: files, not notes ("v1.2" is a note). */
 const OTHER_FILE = /\.(?!md$|markdown$)[a-z][a-z0-9]{1,4}$/i;
 const EMBED = new RegExp(`!${WIKILINK_SOURCE}`, "g");
 const WIKILINK = new RegExp(`(?<!!)${WIKILINK_SOURCE}`, "g");
 
-export interface EmbedPlace {
+interface EmbedPlace {
   /** The document the embed is written in. */
   docPath: string;
   folder: string | null;

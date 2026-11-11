@@ -9,7 +9,7 @@ import type { Strings } from "../../i18n/strings";
 import type { SidebarTabDef } from "./sidebar-tabs";
 
 /** The narrowest a tab's button gets before the rest go under "More". */
-export const TAB_MIN_PX = 30;
+const TAB_MIN_PX = 30;
 
 /** The tabs that fit in `fit` buttons, and those that go under "More" (one
  *  button of its own). The tab shown always keeps a button. */

@@ -18,7 +18,7 @@ declare module "mdast" {
 }
 
 /** A definition as mdast: `value` is its source, `[ref]: url "title"`. */
-export interface LinkDefinition extends Literal {
+interface LinkDefinition extends Literal {
   type: "linkDefinition";
 }
 
@@ -37,7 +37,7 @@ export interface LinkReference {
 
 /** A link's or image's `reference` attr, read back; null for one that
  *  wasn't written as a reference. */
-export function readReference(attr: unknown): LinkReference | null {
+function readReference(attr: unknown): LinkReference | null {
   if (typeof attr !== "string" || !attr) return null;
   try {
     const parsed = JSON.parse(attr) as LinkReference;

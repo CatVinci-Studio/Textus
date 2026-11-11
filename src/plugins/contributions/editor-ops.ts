@@ -71,7 +71,7 @@ export type EditorOp =
     }
   | { op: "flashClear" };
 
-export interface EditorOpResult {
+interface EditorOpResult {
   /** What a delete or copy took; a line copy ends with "\n". */
   text?: string;
   /** For flash: how many places it found. */

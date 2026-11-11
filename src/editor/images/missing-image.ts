@@ -134,7 +134,7 @@ export function revealNearest(path: string): void {
     .catch(() => {});
 }
 
-export interface MissingCardContent {
+interface MissingCardContent {
   name: string;
   alt: string;
   reason: MissingReason;

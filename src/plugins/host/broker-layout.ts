@@ -24,7 +24,7 @@ import {
 } from "./broker-scope";
 
 /** A location as the runtime sends it, checked. */
-export function locationOf(value: unknown): PluginLocation {
+function locationOf(value: unknown): PluginLocation {
   if (!value || typeof value !== "object")
     throw new Error("A location is { path, ... }.");
   const v = value as Record<string, unknown>;
@@ -42,7 +42,7 @@ export function locationOf(value: unknown): PluginLocation {
 }
 
 /** Whether `host` is one the plugin may reach (`network:<host>`). */
-export function hostGranted(p: PluginScope, host: string): boolean {
+function hostGranted(p: PluginScope, host: string): boolean {
   const granted = p.info.granted;
   return (
     granted.includes("network:*") ||

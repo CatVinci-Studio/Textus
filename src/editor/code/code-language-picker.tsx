@@ -7,7 +7,7 @@ import { usePresence, useMergedRef } from "../../engine/motion/usePresence";
 import { useFloatingList } from "../../engine/controls/useFloatingList";
 import { isImeKeydown } from "../../utils/ime";
 
-export interface LanguagePickerProps {
+interface LanguagePickerProps {
   /** "" for plain text. */
   value: string;
   languages: readonly string[];

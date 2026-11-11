@@ -14,12 +14,12 @@ export const HOLD_MS = 500;
 /** As many islands as ⌘ has heading keys. */
 const MOST = 6;
 
-export type Hold = "idle" | "waiting" | "shown";
+type Hold = "idle" | "waiting" | "shown";
 
 /** What the hold hears: a key going down (`mod`: the ⌘ key itself, no
  *  other modifier with it; `digit`: ⌘ with 1–6), ⌘ let go or the window
  *  left (`end`), and its own timer, told how many islands there are. */
-export type HoldEvent =
+type HoldEvent =
   | { type: "key"; mod: boolean; digit: boolean; repeat: boolean }
   | { type: "end" }
   | { type: "timer"; islands: number };
@@ -34,7 +34,7 @@ export function holdStep(state: Hold, event: HoldEvent): Hold {
   return state === "shown" && event.digit ? "shown" : "idle";
 }
 
-export interface IslandAnchor {
+interface IslandAnchor {
   paneId: string;
   rect: DOMRect;
 }

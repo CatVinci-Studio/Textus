@@ -7,7 +7,7 @@ export function easingFn(token: EasingToken): (t: number) => number {
   return parseEasing(easing(token));
 }
 
-export function parseEasing(value: string): (t: number) => number {
+function parseEasing(value: string): (t: number) => number {
   const linear = /^linear\((.*)\)$/s.exec(value.trim());
   if (linear) return linearStops(linear[1]);
   const bezier = /^cubic-bezier\(([^)]*)\)$/.exec(value.trim());

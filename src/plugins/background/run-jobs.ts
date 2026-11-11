@@ -27,7 +27,7 @@ const host = lazyModule(
 );
 
 /** What a run is told of where it runs. */
-export interface RunPlace {
+interface RunPlace {
   language: string;
   platform: string;
   theme: "light" | "dark";

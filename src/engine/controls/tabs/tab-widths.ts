@@ -14,7 +14,7 @@ export interface TabParts {
   fixed: number;
 }
 
-export interface TabLimits {
+interface TabLimits {
   /** The narrowest and the widest a tab may be. */
   min: number;
   max: number;

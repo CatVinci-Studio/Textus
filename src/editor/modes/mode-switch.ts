@@ -11,7 +11,7 @@ import { parseMarkdownSource } from "../markdown/parse-markdown-source";
  * down the pane the caret sat. It is approximate where markdown syntax and
  * document structure disagree, by a few characters at most.
  */
-export interface ModeSwitchCaret {
+interface ModeSwitchCaret {
   /** Offset into the tab's markdown. */
   offset: number;
   /** The caret's distance from the top of the visible pane, in screen px;
@@ -158,7 +158,7 @@ export function placeEditorCaret(
   }
 }
 
-export function zoomOf(el: Element): number {
+function zoomOf(el: Element): number {
   return parseFloat(getComputedStyle(el).zoom) || 1;
 }
 

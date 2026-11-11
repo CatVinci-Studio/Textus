@@ -37,7 +37,7 @@ export interface PendingPermission {
   choose(optionId: string | null): void;
 }
 
-export interface ExchangeEvents {
+interface ExchangeEvents {
   /** The exchange so far. */
   view(view: AgentView): void;
   thinking(text: string): void;

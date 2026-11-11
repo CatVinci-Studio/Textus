@@ -55,9 +55,9 @@ function between(
   return out + outside(text.slice(at));
 }
 
-export type AlertLabels = Record<AlertType, string>;
+type AlertLabels = Record<AlertType, string>;
 
-export interface PandocRewrite {
+interface PandocRewrite {
   /** The editor's labels for GitHub's alerts; without them a callout stays. */
   alertLabels?: AlertLabels;
   /** Where each `[[link]]` and `![[embed]]` leads; any other is its text. */

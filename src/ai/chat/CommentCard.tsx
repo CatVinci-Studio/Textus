@@ -19,7 +19,7 @@ export type ApplySuggestion = (callId: string, comment: Comment) => void;
 
 /** An add_comment call's arguments: one of a reply's comments, each a call
  *  of its own. */
-export function parseComment(argumentsJson: string): Comment | null {
+function parseComment(argumentsJson: string): Comment | null {
   try {
     const parsed = JSON.parse(argumentsJson);
     if (typeof parsed.anchor !== "string" || typeof parsed.comment !== "string")

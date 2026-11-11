@@ -37,7 +37,7 @@ export function setCompletionAsker(
 const ICON = /^[a-z-]{1,24}$/;
 
 /** What a plugin's item may hold; anything else is dropped. */
-export function pluginItem(plugin: string, value: unknown): PanelItem | null {
+function pluginItem(plugin: string, value: unknown): PanelItem | null {
   const v = value as Record<string, unknown> | null;
   if (!v || typeof v.label !== "string" || typeof v.insert !== "string")
     return null;
@@ -64,7 +64,7 @@ export function pluginItem(plugin: string, value: unknown): PanelItem | null {
 
 /** A plugin's answer as the panel takes it: a whole list, or what it
  *  filtered itself. */
-export function pluginAnswer(plugin: string, value: unknown): CompletionAnswer {
+function pluginAnswer(plugin: string, value: unknown): CompletionAnswer {
   const v = value as { items?: unknown; complete?: unknown } | null;
   const whole = !!v && !Array.isArray(v) && v.complete === true;
   const raw = whole ? v.items : value;

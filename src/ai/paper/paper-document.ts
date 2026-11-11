@@ -30,7 +30,7 @@ export function citationOrder(
  *  in `order`, linked to its entry in the reference list (`#ref-k`), the
  *  brackets escaped so they stay text; inside a code block a bare `[k]`,
  *  since a chart's JSON can't hold a backslash. Rust's `plain_citations`. */
-export function numberedCitations(
+function numberedCitations(
   markdown: string,
   order: ReadonlyMap<number, number>,
 ): string {

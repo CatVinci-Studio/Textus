@@ -228,8 +228,8 @@ export function setSplitLayout(next: SplitLayout | null): void {
 }
 
 /** The share of the space a pane may take at least, in a pair. */
-export const MIN_RATIO = 0.2;
+const MIN_RATIO = 0.2;
 
-export function clampRatio(ratio: number): number {
+function clampRatio(ratio: number): number {
   return Math.min(1 - MIN_RATIO, Math.max(MIN_RATIO, ratio));
 }

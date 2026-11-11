@@ -142,7 +142,7 @@ function wrap(
 
 /** After an input method committed `committed`: what typing its last
  *  character would have done. `wrapped` is what the composition replaced. */
-export function pairAfterComposition(
+function pairAfterComposition(
   view: EditorView,
   committed: string,
   wrapped?: { from: number; content: Slice; sizeAfter: number },

@@ -26,7 +26,7 @@ export interface GrammarPopoverInfo {
   count: number;
 }
 
-export interface GrammarPopoverLabels {
+interface GrammarPopoverLabels {
   grammarKinds: Record<GrammarKind, string>;
   /** "Change to “{s}”". */
   grammarApplyTo: string;

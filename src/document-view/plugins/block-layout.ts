@@ -29,7 +29,7 @@ export function layoutOf(meta: Record<string, string>): BlockLayout {
 }
 
 /** `meta` with the layout written in, the rest of it kept as it was. */
-export function withLayout(meta: string, layout: BlockLayout): string {
+function withLayout(meta: string, layout: BlockLayout): string {
   const rest = meta
     .split(/\s+/)
     .filter((part) => part && part !== "wide" && !/^zoom=/.test(part));

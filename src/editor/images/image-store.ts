@@ -15,7 +15,7 @@ import { LINK } from "../markdown/link-source";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
-export const EXT_BY_MIME: Record<string, string> = {
+const EXT_BY_MIME: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/gif": "gif",
@@ -25,7 +25,7 @@ export const EXT_BY_MIME: Record<string, string> = {
   "image/tiff": "tiff",
 };
 
-export function blobToBase64(blob: Blob): Promise<string> {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -49,7 +49,7 @@ export function safeImageStem(name: string): string {
   );
 }
 
-export function automaticImageStem(): string {
+function automaticImageStem(): string {
   const now = new Date();
   const two = (value: number) => String(value).padStart(2, "0");
   const stamp = `${now.getFullYear()}${two(now.getMonth() + 1)}${two(now.getDate())}-${two(now.getHours())}${two(now.getMinutes())}${two(now.getSeconds())}`;
@@ -66,7 +66,7 @@ export function imageStemForMode(
 
 /** An image to store. Its bytes are read only once it is known to be
  *  wanted, since a file-manager copy only names a file on disk. */
-export interface PastedImage {
+interface PastedImage {
   name: string;
   type: string;
   base64: () => Promise<string>;
@@ -81,7 +81,7 @@ export interface ImageStore {
 
 /** A stored image: its src, and in a vault that writes wiki links the
  *  `![[…]]` to insert instead. */
-export interface StoredImage {
+interface StoredImage {
   src: string;
   embed?: string | null;
 }
@@ -130,7 +130,7 @@ export async function storeImageAs(
 
 /** In the folder the document's own conventions name (a vault's attachment
  *  folder, Typora's front matter), else Settings > Images > Folder. */
-export function saveToImageFolder(
+function saveToImageFolder(
   image: PastedImage,
   ext: string,
   store: Pick<ImageStore, "docPath" | "settings">,

@@ -38,16 +38,14 @@ export {
 export {
   addEmbedProvider,
   embedProvider,
-  onEmbedsChange,
   refreshEmbeds,
   setEmbedOwners,
   setEmbedStarter,
   type EmbedContent,
   type EmbedKind,
-  type EmbedTarget,
 } from "./embeds/embed-sources";
 
-export interface EditorExtensions {
+interface EditorExtensions {
   /** Editor plugins that see keys before the editor's own (a plugin
    *  holding the keyboard, as Vim's normal mode does). */
   keyInput: MilkdownPlugin[];

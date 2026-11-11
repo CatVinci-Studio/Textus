@@ -12,7 +12,7 @@ import type { MathData, Phrasing } from "./span-output";
  * Obsidian's fold sign) is written as typed: remark escapes the bracket,
  * which GitHub and Obsidian then no longer read as a callout.
  */
-export const ALERT_MARKER = /^\\(\[![A-Za-z]+\])/;
+const ALERT_MARKER = /^\\(\[![A-Za-z]+\])/;
 
 export function keepAlertMarker(text: Handle): Handle {
   return (node, parent, state, info) => {
@@ -62,17 +62,17 @@ export function escapingBeforeSpaces(text: Handle): Handle {
 }
 
 /** Per serialization: the escaped openers, `\\[` and `\\(`, written so far. */
-export const openEscapes = new WeakMap<State, Set<string>>();
-export const OPENERS: Record<string, string> = { "]": "[", ")": "(" };
-export const REFERENCES: Record<string, string> = {
+const openEscapes = new WeakMap<State, Set<string>>();
+const OPENERS: Record<string, string> = { "]": "[", ")": "(" };
+const REFERENCES: Record<string, string> = {
   "]": "&#93;",
   ")": "&#41;",
 };
 
 /** Text nodes with a LaTeX-bracket formula after them in their block, by
  *  its opening bracket. */
-export const latexAhead = new WeakMap<Phrasing, Set<string>>();
-export const PHRASING_BLOCKS = new Set(["paragraph", "heading", "tableCell"]);
+const latexAhead = new WeakMap<Phrasing, Set<string>>();
+const PHRASING_BLOCKS = new Set(["paragraph", "heading", "tableCell"]);
 
 export function markLatexAhead(node: Phrasing): void {
   if (!PHRASING_BLOCKS.has(node.type)) {
@@ -221,7 +221,7 @@ export function displayWidth(text: string): number {
   return width;
 }
 
-export function isWide(code: number): boolean {
+function isWide(code: number): boolean {
   return (
     (code >= 0x1100 && code <= 0x115f) ||
     (code >= 0x2e80 && code <= 0x303e) ||

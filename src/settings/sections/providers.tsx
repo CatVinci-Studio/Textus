@@ -13,11 +13,7 @@ import {
 } from "./provider-connection";
 import { CustomProviderPanel, ProviderAuthPanel } from "./provider-auth";
 import { isImeKeydown } from "../../utils/ime";
-export {
-  ProviderAuthPanel,
-  ApiKeyProviderPanel,
-  CustomProviderPanel,
-} from "./provider-auth";
+export { ApiKeyProviderPanel } from "./provider-auth";
 
 /// Two compact rows: a searchable provider list, then the active provider's
 /// credentials. The tutorial's connect lesson embeds this same panel.

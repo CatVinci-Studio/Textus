@@ -47,7 +47,7 @@ const SAME_KEY_IMAGES = new Set([
   "siliconflow",
 ]);
 
-export function followingChat(
+function followingChat(
   chatProvider: string,
   chatGptSignedIn: boolean,
 ): string | null {

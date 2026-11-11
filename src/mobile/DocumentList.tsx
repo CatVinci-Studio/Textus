@@ -74,7 +74,7 @@ export function previewText(markdown: string): string {
     .slice(0, 600);
 }
 
-export interface DocumentListProps {
+interface DocumentListProps {
   activePath: string | null;
   onClose: () => void;
   onOpen: (path: string) => void;

@@ -13,7 +13,7 @@ const CITATION = /\[[^\]\n]*?@[^\]\n]*\]/g;
 const CITE_KEY = /@([\w:.#$%&+?<>~/-]+)/g;
 
 /** What the pointer is over and where it is on screen. */
-export interface HoverSpot {
+interface HoverSpot {
   /** What stays the same while the pointer moves within it. */
   key: string;
   /** As drawn on screen, inside the document's zoom or not. */

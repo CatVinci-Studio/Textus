@@ -8,7 +8,7 @@ import { revealHeading } from "./heading-jump";
 
 /** Where in a note a link points: `^id` for a block, `A#B` for nested
  *  headings; undefined for its top. */
-export function linkAnchor(link: NoteLink): string | undefined {
+function linkAnchor(link: NoteLink): string | undefined {
   if (link.block) return `^${link.block}`;
   return link.headings.join("#") || undefined;
 }

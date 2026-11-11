@@ -16,7 +16,7 @@ export interface KeyCapture {
   keys: string[];
 }
 
-export interface Owner {
+interface Owner {
   plugin: string;
   name: string;
   capture: KeyCapture;

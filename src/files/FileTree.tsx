@@ -29,7 +29,6 @@ import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";
 import { useNewEntry } from "./useNewEntry";
-export type { TreeSort } from "./tree-shared";
 
 interface FileTreeProps {
   /** Where the tree is rooted. With no folder opened, the toolbar's parent

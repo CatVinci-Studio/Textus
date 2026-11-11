@@ -18,7 +18,7 @@ import {
 import type { DecidedChange } from "./usePendingEdits";
 import "./ReviewBar.css";
 
-export interface RevisionLearningLabels extends LearnLabels {
+interface RevisionLearningLabels extends LearnLabels {
   learnSuggestion: string;
   learnRemember: string;
   learnNotNow: string;
@@ -112,7 +112,7 @@ export function useRevisionLearning({
   };
 }
 
-export type RevisionLearning = ReturnType<typeof useRevisionLearning>;
+type RevisionLearning = ReturnType<typeof useRevisionLearning>;
 
 /** The suggestion to remember a repeated choice as a personal memory, shown
  *  in the review bar's place only after a review is finished. */

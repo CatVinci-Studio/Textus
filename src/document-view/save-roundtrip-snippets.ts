@@ -4,7 +4,7 @@ import { random } from "./save-roundtrip";
 // suite so nothing third-party is committed.
 
 /** One construct each, in the many ways files write them. */
-export const CONSTRUCTS: readonly string[] = [
+const CONSTRUCTS: readonly string[] = [
   // Headings
   "# Title",
   "Setext title\n============",
@@ -100,7 +100,7 @@ export const CONSTRUCTS: readonly string[] = [
 ];
 
 /** Shapes that have broken the round trip, each as a document. */
-export const REGRESSIONS: readonly string[] = [
+const REGRESSIONS: readonly string[] = [
   "- MAJOR 版本包括不兼容变更<br>\n  `1.0.0` → `2.0.0`\n- MINOR 版本<br>\n  `1.0.0` → `1.1.0`",
   "**[⬆ Back to Index](#index)**\n<br >\n\n<br >\n\nNext",
   "foo**bar**\n\n*foo**bar**baz*",

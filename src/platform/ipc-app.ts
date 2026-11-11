@@ -19,7 +19,7 @@ import {
  * export, themes, background mode, the default editor and updates.
  */
 
-export interface FloatingDragArgs {
+interface FloatingDragArgs {
   tab: Generated.DetachedTab_Deserialize & { helpDoc: HelpDoc | null };
   title: string;
   dirty: boolean;
@@ -356,7 +356,7 @@ export const defaultEditor = {
 // Distribution
 
 /** The channel this build was installed through. */
-export type Distribution = "direct" | "homebrew" | "aur";
+type Distribution = "direct" | "homebrew" | "aur";
 
 export const distribution = {
   appDistribution: () => command("app_distribution") as Promise<Distribution>,
@@ -365,7 +365,7 @@ export const distribution = {
 // Update (desktop only)
 
 /** What the updater plugin's `Update` is made from. */
-export type UpdateMetadata = ConstructorParameters<typeof Update>[0];
+type UpdateMetadata = ConstructorParameters<typeof Update>[0];
 
 export const updater = {
   /** The plugin's `check()` on `channel`'s endpoints. `backToStable` offers

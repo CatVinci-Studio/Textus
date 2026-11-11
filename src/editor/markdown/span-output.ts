@@ -82,10 +82,10 @@ export interface Phrasing {
   marker?: string;
 }
 
-export const SPANS = new Set(["strong", "emphasis", "delete", "mark"]);
+const SPANS = new Set(["strong", "emphasis", "delete", "mark"]);
 
 /** Inline math written between dollars, not LaTeX's `\\(...\\)`. */
-export const inDollars = (node: Phrasing | undefined) =>
+const inDollars = (node: Phrasing | undefined) =>
   node?.type === "inlineMath" &&
   !(node.data as MathData)?.mathDelimiter?.startsWith("\\");
 
@@ -125,7 +125,7 @@ export function joinAdjacent(node: Phrasing): void {
 
 /** The first or last character a node is written with. A link, image, code
  *  or maths starts and ends with punctuation, whatever is inside. */
-export function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
+function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
   if (node.type === "text") {
     const chars = [...(node.value ?? "")];
     return (end === "first" ? chars[0] : chars.at(-1)) ?? "";
@@ -135,10 +135,7 @@ export function edgeCharacter(node: Phrasing, end: "first" | "last"): string {
 }
 
 /** The first or last character of a span's text, inside its delimiters. */
-export function innerEdgeCharacter(
-  span: Phrasing,
-  end: "first" | "last",
-): string {
+function innerEdgeCharacter(span: Phrasing, end: "first" | "last"): string {
   if (!span.children?.length) return "";
   const child = span.children[end === "first" ? 0 : span.children.length - 1];
   // A span inside written with other delimiters doesn't join this one's.
@@ -147,17 +144,17 @@ export function innerEdgeCharacter(
     : edgeCharacter(child, end);
 }
 
-export const ATTENTION = new Set(["strong", "emphasis"]);
+const ATTENTION = new Set(["strong", "emphasis"]);
 /** Spans whose delimiters open and close by the same rule as bold's. */
-export const FLANKED = new Set([...ATTENTION, "delete", "mark"]);
-export const PUNCTUATION = /^[\p{P}\p{S}]$/u;
+const FLANKED = new Set([...ATTENTION, "delete", "mark"]);
+const PUNCTUATION = /^[\p{P}\p{S}]$/u;
 // CJK text is read by remark-cjk-friendly, which lets bold stand against it.
-export const WORD =
+const WORD =
   /^(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}])[\p{L}\p{N}]$/u;
 
 /** `text` with its first or last character as a character reference (an
  *  inline HTML node, written as it is), and the rest. */
-export function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
+function referenced(text: Phrasing, end: "first" | "last"): Phrasing[] {
   const chars = [...(text.value ?? "")];
   const char = end === "first" ? chars.shift()! : chars.pop()!;
   const html: Phrasing = {

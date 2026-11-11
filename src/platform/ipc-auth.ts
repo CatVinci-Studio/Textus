@@ -6,7 +6,7 @@ import { aiCommand, command } from "./ipc-call";
 /** Backend commands for signing in: AI providers, custom endpoints, picture hosts. */
 
 /** What every sign-in's status command answers (more, for some). */
-export interface OauthStatus {
+interface OauthStatus {
   configured: boolean;
 }
 
@@ -16,7 +16,7 @@ export type CustomEndpointConfig = CustomEndpointStatus_Serialize;
 
 /** Provider ids with an OAuth flow and their command names, looked up by
  *  provider id as the picker iterates the catalog. */
-export const OAUTH_COMMANDS: Record<
+const OAUTH_COMMANDS: Record<
   string,
   {
     status: "codex_auth_status" | "claude_auth_status";
@@ -68,7 +68,7 @@ export const auth = {
 
 /** Image-host credentials in the provider-key store, one per host under a
  *  reserved id never shown as a provider. Keep in step with the Rust side. */
-export const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
+const IMAGE_HOST_CREDENTIAL_IDS: Record<ImageHost, string> = {
   picgo: "__image_host_picgo",
   smms: "__image_host_smms",
   imgur: "__image_host_imgur",

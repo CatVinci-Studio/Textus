@@ -12,7 +12,7 @@ import {
 import "./textus-ai-switch.css";
 
 /** How long "Pause for an hour" keeps Textus AI off. */
-export const TEXTUS_AI_PAUSE_MS = 60 * 60 * 1000;
+const TEXTUS_AI_PAUSE_MS = 60 * 60 * 1000;
 
 /** Textus AI's master switch and the ways to flip it. Turning it on or off
  *  clears a pause. `toggle` announces the new state, since nothing under the

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Locator, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 import JSZip from "jszip";
 import { pluginsCheckout } from "../vite.dev-plugins";
 import { openApp } from "./helpers";
@@ -104,63 +104,9 @@ export async function openPath(page: Page, path: string) {
   );
 }
 
-/** The sidebar open on the tab called `name`, from the activity rail: a
- *  click on the tab already open would close it. */
-async function showSidebarTab(page: Page, name: string) {
-  const button = page.locator(".activity-rail").getByRole("button", { name });
-  const open = !(await page.locator(".sidebar.sidebar-collapsed").count());
-  if (!open || (await button.getAttribute("aria-pressed")) !== "true")
-    await button.click();
-  await page.locator(".sidebar:not(.sidebar-collapsed)").waitFor();
-}
-
-/** Opens the sidebar on the tab called `name`; its plugin's frame. */
-export async function openSidebarTab(page: Page, name: string) {
-  await showSidebarTab(page, name);
-  return page.frameLocator(".sidebar .plugin-webview-frame");
-}
-
-/** A plugin's list in the sidebar (views.registerList): drawn by Textus
- *  in the page itself, not in a frame. */
-export async function openSidebarList(page: Page, name: string) {
-  await showSidebarTab(page, name);
-  return page.locator(".sidebar .plugin-list");
-}
-
 /** The frame of the plugin's tab in front. */
 export const tabFrame = (page: Page) =>
   page.frameLocator('[data-active-tab="true"] .plugin-webview-frame');
-
-/** A trackpad pinch over `target` in a plugin's page, to `scale`, as
- *  WebKit sends it: gesture events only, in small steps, each with the
- *  scale since the start. */
-export async function pinch(target: Locator, scale: number) {
-  const scales = Array.from(
-    { length: 20 },
-    (_, i) => 1 + ((scale - 1) * (i + 1)) / 20,
-  );
-  await target.evaluate((el, scales) => {
-    const box = el.getBoundingClientRect();
-    const send = (type: string, scale: number) => {
-      const event = new Event(type, { bubbles: true, cancelable: true });
-      Object.assign(event, {
-        scale,
-        clientX: box.left + box.width / 2,
-        clientY: box.top + box.height / 2,
-      });
-      window.dispatchEvent(event);
-    };
-    send("gesturestart", 1);
-    for (const scale of scales) send("gesturechange", scale);
-    send("gestureend", scales[scales.length - 1]);
-  }, scales);
-}
-
-/** The document's zoom, "" at 100%. */
-export const documentZoom = (page: Page) =>
-  page.evaluate(() =>
-    document.documentElement.style.getPropertyValue("--content-zoom"),
-  );
 
 /** A one-page PDF saying `text`, base64 - built by hand, with its
  *  cross-reference table, so a test needs no fixture file. */

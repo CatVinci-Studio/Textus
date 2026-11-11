@@ -12,7 +12,7 @@ import {
  * `play` in a layout effect after React commits.
  */
 
-export type Snapshot = Map<Element, DOMRect>;
+type Snapshot = Map<Element, DOMRect>;
 
 const FLIP_ID = "flip";
 

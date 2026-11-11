@@ -7,7 +7,7 @@ import { useTree } from "./tree-shared";
 
 /** A name nothing in the folder has yet: "Untitled", then "Untitled 2"…
  *  A document's name is checked with the .md the backend adds. */
-export function freeName(
+function freeName(
   base: string,
   kind: "document" | "folder",
   entries: readonly DirEntryInfo[],

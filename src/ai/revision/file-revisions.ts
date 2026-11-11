@@ -17,7 +17,7 @@ import { blockHunks } from "./block-hunks";
  */
 
 /** A change to the file, not yet placed in its editor. */
-export interface IncomingRevision {
+interface IncomingRevision {
   /** Its changes' ids, in its conversation's record. */
   ids: string[];
   /** The file as the change found it, and as the change leaves it. */
@@ -28,7 +28,7 @@ export interface IncomingRevision {
   conflict?: boolean;
 }
 
-export interface FileRevisions {
+interface FileRevisions {
   version: 1;
   incoming: IncomingRevision[];
   /** Made by Textus AI, waiting to be kept. */

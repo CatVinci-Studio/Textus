@@ -96,7 +96,7 @@ function draws(
   });
 }
 
-export interface FontChoices {
+interface FontChoices {
   recommended: string[];
   more: string[];
 }

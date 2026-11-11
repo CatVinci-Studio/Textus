@@ -51,9 +51,7 @@ export {
   type DocTextSize,
   type DocLineSpacing,
   type UiTextScale,
-  DIAGRAM_ENGINES,
   type DiagramEngine,
-  COLOR_SWATCH_MODES,
   type ColorSwatchMode,
   REVISION_DISPLAYS,
   type RevisionDisplay,
@@ -64,13 +62,11 @@ export {
   SEARCH_SERVICES,
   type GrammarStrictness,
   type UserThemeMeta,
-  type GalleryOrigin,
   type ImageStorageMode,
   type ImageHost,
   type ImageNamingMode,
   type AgentMode,
   type PanelMode,
-  AGENT_MODES,
   storedAgentMode,
 } from "./settings-values";
 export { htmlLang, normaliseSettings } from "./settings-normalise";

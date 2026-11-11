@@ -16,7 +16,7 @@ interface Kept {
 
 const groups = new Map<string, Map<object, Kept>>();
 
-export interface KeptHandle {
+interface KeptHandle {
   /** On screen now: kept, and others of its kind beyond `max` let go. */
   shown(): void;
   /** Out of sight: let go after `hiddenMs`. */
@@ -25,7 +25,7 @@ export interface KeptHandle {
   drop(): void;
 }
 
-export interface KeepOptions {
+interface KeepOptions {
   hiddenMs?: number;
   max?: number;
 }

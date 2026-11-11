@@ -15,7 +15,6 @@ import {
  * `nextDue` is null once an `at` job has fired; a turned-off plugin's jobs
  * keep their `nextDue` and wait.
  */
-export type { ScheduledJob };
 
 export function listJobs(pluginId: string): Promise<ScheduledJob[]> {
   return scheduleIpc.list(pluginId);

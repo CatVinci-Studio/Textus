@@ -19,7 +19,7 @@ export function zoomedRectScale(inside: HTMLElement): number {
   return Math.abs(drawn - laid) < Math.abs(drawn - laid * zoom) ? zoom : 1;
 }
 
-export interface Box {
+interface Box {
   left: number;
   top: number;
   right: number;

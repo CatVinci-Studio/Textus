@@ -2,7 +2,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 
-export const zenFocusKey = new PluginKey("zen-focus");
+const zenFocusKey = new PluginKey("zen-focus");
 
 /**
  * Zen mode's focus: marks the top-level block the caret is in as

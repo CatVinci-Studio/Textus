@@ -241,7 +241,7 @@ export function usePaperRun(key: string): PaperRunState | undefined {
 }
 
 /** What a card's buttons do, registered by the editor that runs papers. */
-export interface PaperActions {
+interface PaperActions {
   approve: (key: string, outline: Outline) => void;
   /** Pauses the run: what it kept stays, to go on from. */
   stop: (key: string) => void;

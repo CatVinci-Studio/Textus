@@ -57,7 +57,7 @@ export function useTreeView(base: string) {
 
 /** A count bumped each time the window comes back to the front, when Git,
  *  Obsidian or a file manager may have changed the folder. */
-export function useRefreshOnFocus(): number {
+function useRefreshOnFocus(): number {
   const [count, setCount] = useState(0);
   useEffect(() => {
     const onFocus = () => setCount((n) => n + 1);
@@ -76,10 +76,7 @@ function bump(counts: Record<string, number>, dirs: string[]) {
 /** What a plugin wrote, moved or trashed shows in the folders it touched,
  *  read again together a moment later. `base` is the opened folder, which a
  *  plugin's relative paths are in. */
-export function usePluginWrites(
-  base: string,
-  refresh: (dirs: string[]) => void,
-) {
+function usePluginWrites(base: string, refresh: (dirs: string[]) => void) {
   useEffect(() => {
     const dirs = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | undefined;

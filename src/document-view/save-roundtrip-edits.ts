@@ -40,24 +40,23 @@ export function random(seed: number): () => number {
 /** A file's seed for random(), from its name. */
 export { fnv1a as hashString } from "../utils/hash";
 
-export const pick = <T>(rand: () => number, list: readonly T[]): T =>
+const pick = <T>(rand: () => number, list: readonly T[]): T =>
   list[Math.floor(rand() * list.length)];
 
 /** Which top-level blocks an edit touched (indexes in the opened doc),
  *  and where a new block went in. Null: nowhere to make this edit. */
-export interface Edited {
+interface Edited {
   touched: number[];
   insertedAt?: number;
   /** The edit was undone: the document is the file again. */
   undone?: boolean;
 }
 
-export const topIndex = (doc: ProseNode, pos: number) =>
-  doc.resolve(pos).index(0);
+const topIndex = (doc: ProseNode, pos: number) => doc.resolve(pos).index(0);
 
 /** Text nodes of prose: straight in a paragraph or heading, or in a bold or
  *  italic span there - not raw HTML, code, a definition or a wikilink. */
-export function proseTexts(doc: ProseNode) {
+function proseTexts(doc: ProseNode) {
   const found: { pos: number; node: ProseNode }[] = [];
   doc.descendants((node, pos, parent) => {
     if (node.isText) {
@@ -72,7 +71,7 @@ export function proseTexts(doc: ProseNode) {
 }
 
 /** Words in prose, as document ranges. */
-export function proseWords(doc: ProseNode) {
+function proseWords(doc: ProseNode) {
   const words: { from: number; to: number }[] = [];
   for (const { pos, node } of proseTexts(doc))
     for (const match of node.text!.matchAll(/\p{L}[\p{L}\p{N}]*/gu))
@@ -84,17 +83,15 @@ export function proseWords(doc: ProseNode) {
 }
 
 /** Markdown pasted as text, which the editor reads as Markdown. */
-export const PASTED =
+const PASTED =
   "Pasted **bold**, a [link](https://example.com/p) and `code`.\n\n- one\n- two";
 
 /** A paragraph as an assistant rewrites it, in Markdown. */
-export const REWRITTEN =
+const REWRITTEN =
   "Rewritten with *emphasis*, a [link](https://example.com/ai) and $x^2$.";
 
 /** End positions of the top-level paragraphs that hold text. */
-export function paragraphEnds(
-  doc: ProseNode,
-): { index: number; end: number }[] {
+function paragraphEnds(doc: ProseNode): { index: number; end: number }[] {
   const ends: { index: number; end: number }[] = [];
   let pos = 0;
   doc.forEach((node, _offset, index) => {

@@ -24,7 +24,7 @@ export interface TextBlock {
   to: number;
 }
 
-export interface BlockEdit {
+interface BlockEdit {
   block: string;
   markdown: string;
 }

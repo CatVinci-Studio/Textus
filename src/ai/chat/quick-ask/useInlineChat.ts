@@ -23,7 +23,7 @@ export function blockPositionAfter(doc: ProseNode, pos: number): number {
   return next ? $pos.pos + next.nodeSize : doc.content.size;
 }
 
-export interface InlineChatInfo {
+interface InlineChatInfo {
   /** The whole document as markdown source. */
   document: DocumentSnapshot;
   /** The selection as plain text. Display only (the composer's "{n} chars

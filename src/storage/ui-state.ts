@@ -114,7 +114,7 @@ export interface AiFileMark {
   changed?: boolean;
 }
 
-export type UiStateKey = keyof UiState;
+type UiStateKey = keyof UiState;
 
 /** Each field's localStorage key without Rust, and its encoding. A field
  *  without one is kept in the file only. */

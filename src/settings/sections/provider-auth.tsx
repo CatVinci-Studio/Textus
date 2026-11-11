@@ -83,7 +83,7 @@ export function ProviderAuthPanel({
   );
 }
 
-export function OauthPanel({
+function OauthPanel({
   t,
   providerId,
   label,
@@ -290,7 +290,7 @@ export function ApiKeyProviderPanel({
 
 /** Whether two base URLs name the same endpoint, by the backend's rule for
  *  sending a stored key to a URL. */
-export function sameEndpoint(a: string, b: string): boolean {
+function sameEndpoint(a: string, b: string): boolean {
   const norm = (url: string) => url.trim().replace(/\/+$/, "");
   return norm(a) === norm(b);
 }

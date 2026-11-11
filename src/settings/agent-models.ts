@@ -1,12 +1,12 @@
 /// OpenAI's "sign in with ChatGPT" token can't list models (GET /v1/models
 /// 403s), so that auth method gets a hardcoded list instead.
-export const OPENAI_OAUTH_AGENT_MODEL_PRESETS = [
+const OPENAI_OAUTH_AGENT_MODEL_PRESETS = [
   { value: "", label: "gpt-6.1-sol (default)" },
   { value: "gpt-6-astra", label: "gpt-6-astra (strongest)" },
   { value: "gpt-6-luna", label: "gpt-6-luna (faster)" },
 ];
 
-export const OPENAI_OAUTH_WRITING_MODEL_PRESETS = [
+const OPENAI_OAUTH_WRITING_MODEL_PRESETS = [
   { value: "", label: "gpt-6-luna (default, lower cost)" },
   { value: "gpt-6.1-sol", label: "gpt-6.1-sol (stronger)" },
   { value: "gpt-6-astra", label: "gpt-6-astra (strongest)" },

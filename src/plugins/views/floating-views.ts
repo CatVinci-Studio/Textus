@@ -37,8 +37,8 @@ export interface FloatingView {
 }
 
 /** How far the user may shrink or grow a view. */
-export const MIN_SCALE = 0.6;
-export const MAX_SCALE = 1.4;
+const MIN_SCALE = 0.6;
+const MAX_SCALE = 1.4;
 
 export function clampScale(scale: number) {
   return Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale));

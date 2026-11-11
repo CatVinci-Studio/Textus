@@ -18,16 +18,13 @@ import {
 
 /** A sentence as a card shows it on a line: a title's text without the
  *  `# ` that makes it one. */
-export function plainLine(text: string): string {
+function plainLine(text: string): string {
   return text.trim().replace(/^#{1,6}\s+/, "");
 }
 
 /** A change's new text on its card: a whole block other than a picture by
  *  what it is. */
-export function revisionText(
-  after: string,
-  labels: ReviewMarginLabels,
-): string {
+function revisionText(after: string, labels: ReviewMarginLabels): string {
   const text = after.trim();
   if (wholeBlockKind(text) === "picture") return text;
   return blockSummary(text, blockNames(labels)) ?? text;
@@ -36,8 +33,8 @@ export function revisionText(
 /** The margin's cards: revisions, notes, and the note popover a phone shows
  *  instead. */
 
-export const CHECK = <Check aria-hidden />;
-export const CROSS = <X aria-hidden />;
+const CHECK = <Check aria-hidden />;
+const CROSS = <X aria-hidden />;
 
 /** What a card is told by the margin: where it sits, and the margin's
  *  callbacks, which keep their identity across renders. */
@@ -147,7 +144,7 @@ export function useCardBox(
   return ref;
 }
 
-export type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
+type RevisionItem = Extract<MarginItem, { kind: "revision" }>;
 
 /** A changed sentence in the margin: what replaces it, and ✓ / ✕ - the same
  *  decision as the AI card's. A kept one dims, its replacement struck. */

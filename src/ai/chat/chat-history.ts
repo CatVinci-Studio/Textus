@@ -72,14 +72,14 @@ const history = createPersistedList<ChatSummary, ChatHistoryEntry>(
 );
 
 /** `entry` with its document path in the stored form (see docPath). */
-export function storedEntry<E extends ChatSummary>(entry: E): E {
+function storedEntry<E extends ChatSummary>(entry: E): E {
   if (!entry.docPath) return entry;
   const docPath = storedDocumentPath(entry.docPath, knownDocumentsDir());
   return docPath === entry.docPath ? entry : { ...entry, docPath };
 }
 
 /** `entry` with a stored document path resolved against Documents `docs`. */
-export function resolvedEntry(entry: ChatSummary, docs: string): ChatSummary {
+function resolvedEntry(entry: ChatSummary, docs: string): ChatSummary {
   if (!entry.docPath) return entry;
   const docPath = resolvedDocumentPath(entry.docPath, docs);
   return docPath === entry.docPath ? entry : { ...entry, docPath };

@@ -33,7 +33,7 @@ export type Path = number[];
 export type Side = "left" | "right" | "top" | "bottom";
 
 /** The least share of its branch a child keeps. */
-export const MIN_SHARE = 0.1;
+const MIN_SHARE = 0.1;
 
 let made = 0;
 
@@ -74,7 +74,7 @@ export function mapPanes(
 }
 
 /** The branch at `path` passed through `change`. */
-export function mapBranch(
+function mapBranch(
   node: LayoutNode,
   path: Path,
   change: (branch: Branch) => Branch,

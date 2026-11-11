@@ -19,7 +19,7 @@ function monthOf(value: string): Date {
 }
 
 /** The 42 days a month's grid shows, Monday first. */
-export function monthDays(month: Date): Date[] {
+function monthDays(month: Date): Date[] {
   const start = new Date(month);
   start.setDate(1 - ((month.getDay() + 6) % 7));
   return Array.from({ length: 42 }, (_, i) => {

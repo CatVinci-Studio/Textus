@@ -6,7 +6,7 @@ import type { Strings } from "../../i18n/strings";
 import { projectRoot } from "../../plugins/store/plugin-settings";
 
 /** "12.3 KB", the way a file manager says it. */
-export function sizeText(bytes: number): string {
+function sizeText(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   const units = ["KB", "MB", "GB"];
   let n = bytes / 1024;

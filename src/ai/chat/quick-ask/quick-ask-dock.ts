@@ -5,7 +5,7 @@ import { useLatest } from "../../../utils/hooks/useLatest";
 
 /** On the root while the docked Quick Ask is up: the keyboard toolbar gives
  *  way to it, and the document scrolls clear of it. */
-export const QUICK_ASK_DOCK_CLASS = "has-quick-ask-dock";
+const QUICK_ASK_DOCK_CLASS = "has-quick-ask-dock";
 
 /**
  * The docked Quick Ask's footprint: while mounted the root carries

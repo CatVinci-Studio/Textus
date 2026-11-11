@@ -17,7 +17,7 @@ const accent = v("--doc-accent", "#315ed1");
  * fenced code each get their own; the values come from the document theme so
  * source mode follows light/dark and imported themes with no second palette.
  */
-export const sourceHighlightStyle = HighlightStyle.define([
+const sourceHighlightStyle = HighlightStyle.define([
   {
     tag: t.processingInstruction,
     color: v("--src-marker", muted),

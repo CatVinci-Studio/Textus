@@ -18,7 +18,7 @@ const FORMAT = "textus-settings";
 
 /** Never leave this computer: they name its folders and network, or what
  *  it has already been through. */
-export const DEVICE_SETTINGS = [
+const DEVICE_SETTINGS = [
   "agentWorkspaceRoot",
   "onboardingShown",
   "languageChosen",
@@ -34,7 +34,7 @@ export const DEVICE_SETTINGS = [
 /** An imported theme's CSS, by theme id. */
 export type ThemeCss = Record<string, { light: string; dark?: string }>;
 
-export interface SettingsFile {
+interface SettingsFile {
   settings: Settings;
   themes: ThemeCss;
   /** The conversations and memories, when the file has them. */

@@ -6,14 +6,14 @@ export type ContextMenuPlace =
   "file/context" | "tab/context" | "view/title" | "floating/context";
 
 /** What the menu was opened on. */
-export interface ContextMenuTarget {
+interface ContextMenuTarget {
   /** The file, or the tab's file (null for a tab without one). */
   path: string | null;
   /** For "view/title" and "floating/context": the view's id. */
   view?: string;
 }
 
-export interface ContributedItem {
+interface ContributedItem {
   label: string;
   /** For "view/title": an icon in place of the label. */
   icon?: string;

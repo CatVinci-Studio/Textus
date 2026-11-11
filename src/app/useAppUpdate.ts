@@ -8,7 +8,7 @@ import { updater, type UpdateChannel } from "../platform/ipc";
 import { currentStrings } from "../i18n/current";
 import { explainError } from "../utils/error-explain";
 
-export type UpdateStatus = "idle" | "available" | "downloading" | "error";
+type UpdateStatus = "idle" | "available" | "downloading" | "error";
 
 /**
  * Checks for releases and drives the update banner. Checking fails silently

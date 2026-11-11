@@ -50,7 +50,7 @@ interface Group {
 
 const SETTLE = "--dur-settle";
 
-export class FrameClock {
+class FrameClock {
   private elements = new Map<string, HTMLElement>();
   private groups = new Map<string, Group>();
   /** Where each part is drawn now. */

@@ -27,7 +27,7 @@ export type PluginFormField =
       options: { value: string; label: string }[];
     };
 
-export interface PluginFormRequest {
+interface PluginFormRequest {
   title: string;
   okLabel: string;
   cancelLabel: string;
@@ -85,9 +85,7 @@ function answer(request: Request, values: Record<string, unknown> | null) {
 }
 
 /** Each field's starting value. */
-export function initialValues(
-  fields: PluginFormField[],
-): Record<string, unknown> {
+function initialValues(fields: PluginFormField[]): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const f of fields) {
     if (f.type === "boolean") values[f.key] = f.value === true;

@@ -4,7 +4,7 @@
 
 export const OBJECT = "￼";
 
-export type InlineSyntax =
+type InlineSyntax =
   | { kind: "comment"; from: number; to: number }
   | { kind: "blockId"; from: number; to: number }
   /** `inner` is the note's words, between `^[` and `]`. */

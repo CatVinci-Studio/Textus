@@ -12,7 +12,7 @@ export const PICTURES_IN_TEXT =
   /!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)/g;
 
 /** The kinds of block a rewrite changes whole (wholeBlockKind). */
-export type WholeBlockKind =
+type WholeBlockKind =
   | "picture"
   | "rule"
   | "table"

@@ -28,13 +28,13 @@ function keep(
   setUiState(name, on ? [...rest, key].slice(-KEPT) : rest);
 }
 
-export function blockFolded(key: string): boolean {
+function blockFolded(key: string): boolean {
   return kept("foldedBlocks").includes(key);
 }
 
 /** Folded or opened by the user, kept; an opened one is remembered too, so
  *  a block that starts folded in a narrow column stays open once opened. */
-export function setBlockFolded(key: string, on: boolean): void {
+function setBlockFolded(key: string, on: boolean): void {
   keep("foldedBlocks", key, on);
   keep("openedBlocks", key, !on);
 }

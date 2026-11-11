@@ -21,7 +21,7 @@ export interface AcpClient {
 }
 
 /** A line out and the end of the process, as Rust gives them. */
-export interface AcpTransport {
+interface AcpTransport {
   send(line: string): Promise<void>;
   stop(): void;
 }

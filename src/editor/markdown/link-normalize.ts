@@ -33,7 +33,7 @@ const key = new PluginKey<number[]>("link-normalize");
 /** What `source` reads as on its own: the inline content of the one
  *  paragraph it makes, or else itself as text. `definitions` are the
  *  document's `[ref]: url` lines, for a reference link. */
-export function parseLinkSource(
+function parseLinkSource(
   parse: (markdown: string) => ProseNode,
   schema: Schema,
   source: string,

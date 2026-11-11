@@ -10,14 +10,7 @@ import { command, desktopActionCommand, desktopQueryCommand } from "./ipc-call";
  * folders, pictures, the session, stored history and drafts.
  */
 
-export type {
-  NoteLinkTarget,
-  SavedImage,
-  IndexedFile,
-  Conventions,
-  FolderIndex,
-  WordDocument,
-} from "./bindings/files";
+export type { IndexedFile, Conventions } from "./bindings/files";
 export type HistoryKind = Generated.HistoryKind;
 
 export const fs = {
@@ -178,7 +171,7 @@ export const session = {
 // Only called when Rust booted this window; otherwise the stores use localStorage.
 
 /** A settings snapshot and its revision. */
-export interface StoredSnapshot {
+interface StoredSnapshot {
   value: Record<string, unknown>;
   rev: number;
 }

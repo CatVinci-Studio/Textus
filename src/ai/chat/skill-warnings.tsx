@@ -46,7 +46,7 @@ export function SkillWarnings({
 
 /** Warnings shown for these modes; confirmed only for them, so ticking
  *  Create afterwards asks again. */
-export interface Confirming {
+interface Confirming {
   warnings: string[];
   modes: AgentMode[];
 }

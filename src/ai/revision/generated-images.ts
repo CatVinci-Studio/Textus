@@ -81,7 +81,7 @@ function aspectSize(aspect: string): { width: number; height: number } | null {
 }
 
 /** The stand-in id of a picture its call is still asking for. */
-export function draftPictureId(callId: string): string {
+function draftPictureId(callId: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < callId.length; i++) {
     h ^= callId.charCodeAt(i);

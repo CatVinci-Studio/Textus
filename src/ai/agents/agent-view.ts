@@ -15,7 +15,7 @@ export interface AgentView {
 }
 
 /** The name an external agent's steps go under in the history. */
-export const AGENT_TOOL = "agent_tool";
+const AGENT_TOOL = "agent_tool";
 
 function textOf(block: ContentBlock | undefined): string {
   return block?.type === "text" && typeof block.text === "string"

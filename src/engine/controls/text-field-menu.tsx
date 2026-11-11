@@ -14,8 +14,7 @@ import "./text-field-menu.css";
  */
 
 /** What a text field's menu does: its value, as a page's menu returns it. */
-export type TextFieldAction =
-  "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll";
+type TextFieldAction = "undo" | "redo" | "cut" | "copy" | "paste" | "selectAll";
 
 /** The menu's items as a plugin page's menu takes them. */
 export function textFieldItems(

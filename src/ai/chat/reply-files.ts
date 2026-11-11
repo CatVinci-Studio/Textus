@@ -2,7 +2,7 @@
 /// chat offers under it (plugins, themes, skills).
 
 /** A closed fenced block of a reply: ```js host.js ... ``` */
-export interface ReplyFile {
+interface ReplyFile {
   /** The info string's first word, lower-cased ("" when it has none). */
   lang: string;
   /** The info string's last word when it names a file - it has a dot or a

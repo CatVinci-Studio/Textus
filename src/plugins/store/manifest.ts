@@ -31,7 +31,7 @@ export type Permission =
   | "agents"
   | `network:${string}`;
 
-export const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
+const PLUGIN_PLATFORMS = ["desktop", "ios"] as const;
 export type PluginPlatform = (typeof PLUGIN_PLATFORMS)[number];
 
 const PLAIN_PERMISSIONS = [

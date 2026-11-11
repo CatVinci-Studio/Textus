@@ -1,7 +1,7 @@
 import type { Strings } from "../../i18n/strings";
 
 /** An extension's counts as the catalog has them; absent when uncounted. */
-export interface InstallCounts {
+interface InstallCounts {
   installs?: number | null;
   installs30?: number | null;
 }

@@ -84,7 +84,7 @@ export function isEffectiveDark(themeMode: ThemeMode): boolean {
   return systemPrefersDark();
 }
 
-export function useApplyAppearance(
+function useApplyAppearance(
   settings: Settings,
   setSettings: (patch: Partial<Settings>) => void,
 ): void {

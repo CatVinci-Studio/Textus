@@ -77,7 +77,7 @@ export const LINE_DRIFT = 20;
 export const CHIP_HEIGHT = 35;
 /** The least room a cut card is given - its heading and a line; with less,
  *  it is a chip. */
-export const MIN_CUT = 88;
+const MIN_CUT = 88;
 /** How far a run of cards may push one of its own below its passage
  *  before the whole run is cut to fit beside its passages. */
 export const CROWDED_DRIFT = 120;

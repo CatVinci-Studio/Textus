@@ -198,7 +198,7 @@ export function matchSkills(
 
 export type PickerGroupId = "recent" | "project" | "global" | SkillCategory;
 
-export interface PickerGroup {
+interface PickerGroup {
   id: PickerGroupId;
   skills: PickerSkill[];
 }

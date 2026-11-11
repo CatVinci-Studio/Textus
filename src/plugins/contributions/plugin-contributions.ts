@@ -55,7 +55,7 @@ export function addContribution(id: string, undo: () => void): void {
 }
 
 /** The keys a menu item's `when` reads, as the window is now. */
-export function whenContext(extra: WhenContext = {}): WhenContext {
+function whenContext(extra: WhenContext = {}): WhenContext {
   const doc = getActiveDocument();
   const path = (extra.resourcePath as string | undefined) ?? doc?.path ?? null;
   return {

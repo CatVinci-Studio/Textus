@@ -26,7 +26,7 @@ export interface Frame {
   boxes: Record<string, FrameBox | null>;
 }
 
-export type Edge = "left" | "right" | "top" | "bottom";
+type Edge = "left" | "right" | "top" | "bottom";
 
 /** A frame that broke a claim, and by how much. */
 export interface Miss {
