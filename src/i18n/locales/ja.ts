@@ -984,6 +984,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   shortcutKeepOriginal: "その変更の元の文を残す",
   contentThemeLabel: "エディターのテーマ",
   themeDeleteButton: "削除",
+  themeDeleteAsk: "テーマ「{name}」を削除しますか？",
   themeImportLabel: "CSS ファイルからテーマを追加",
   themeImportButton: "CSSをインポート…",
   themeGalleryLoading: "テーマを読み込み中…",

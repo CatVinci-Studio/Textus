@@ -971,6 +971,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   shortcutKeepOriginal: "그 수정의 원문 유지",
   contentThemeLabel: "편집기 테마",
   themeDeleteButton: "삭제",
+  themeDeleteAsk: "테마 '{name}'을(를) 삭제할까요?",
   themeImportLabel: "CSS 파일에서 테마 추가",
   themeImportButton: "CSS 가져오기…",
   themeGalleryLoading: "테마를 불러오는 중…",

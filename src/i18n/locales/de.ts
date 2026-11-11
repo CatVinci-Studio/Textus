@@ -1033,6 +1033,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   shortcutKeepOriginal: "Das Original dieser Änderung behalten",
   contentThemeLabel: "Editor-Design",
   themeDeleteButton: "Löschen",
+  themeDeleteAsk: "Design „{name}“ löschen?",
   themeImportLabel: "Design aus einer CSS-Datei hinzufügen",
   themeImportButton: "CSS importieren…",
   themeGalleryLoading: "Themes werden geladen…",

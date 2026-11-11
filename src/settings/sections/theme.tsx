@@ -1,3 +1,4 @@
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { Byline } from "../pages/CatalogRow";
 import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
@@ -170,31 +171,8 @@ function useThemeAction() {
  *  theme, and whether the title bar frosts what scrolls beneath it. */
 export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const latest = useLatest(settings);
   const { busy, error, run } = useThemeAction();
   const importTheme = useImportTheme(run);
-
-  // Beside the picker, as it removes the theme picked there.
-  const deleteCurrentTheme = () =>
-    run(async () => {
-      const current = latest.current.userThemes.find(
-        (th) => th.id === latest.current.themeId,
-      );
-      if (!current) return;
-      await themes.deleteTheme(current.id);
-      setSettings({
-        userThemes: latest.current.userThemes.filter(
-          (th) => th.id !== current.id,
-        ),
-        ...(latest.current.themeId === current.id
-          ? { themeId: "default" }
-          : {}),
-      });
-    });
-
-  const isUserThemeSelected = settings.userThemes.some(
-    (th) => th.id === settings.themeId,
-  );
 
   return (
     <>
@@ -242,15 +220,6 @@ export function ThemeSection({ t }: { t: Strings }) {
             </option>
           ))}
         </Select>
-        {isUserThemeSelected && (
-          <button
-            className="text-button settings-inline-button"
-            disabled={busy}
-            onClick={() => void deleteCurrentTheme()}
-          >
-            {t.themeDeleteButton}
-          </button>
-        )}
       </SettingRow>
 
       <SettingRow label={t.themeImportLabel}>
@@ -326,8 +295,15 @@ export function ThemesTab({ t }: { t: Strings }) {
   const mine = settings.userThemes.filter((theme) =>
     matchesWords(theme.name, query),
   );
-  const remove = (id: string) =>
+  // Asked first, as a plugin's or a skill's removal is.
+  const remove = (id: string, name: string) =>
     run(async () => {
+      const ok = await showConfirm(fill(t.themeDeleteAsk, { name }), {
+        okLabel: t.themeDeleteButton,
+        cancelLabel: t.cancel,
+        danger: true,
+      });
+      if (!ok) return;
       await themes.deleteTheme(id);
       setSettings({
         userThemes: latest.current.userThemes.filter((th) => th.id !== id),
@@ -412,7 +388,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                   type="button"
                   className="text-button settings-inline-button"
                   disabled={busy}
-                  onClick={() => void remove(theme.id)}
+                  onClick={() => void remove(theme.id, theme.name)}
                 >
                   {t.themeDeleteButton}
                 </button>

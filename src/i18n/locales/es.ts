@@ -1062,6 +1062,7 @@ para usar una.
   shortcutKeepOriginal: "Mantener el original de ese cambio",
   contentThemeLabel: "Tema del editor",
   themeDeleteButton: "Eliminar",
+  themeDeleteAsk: "¿Eliminar el tema «{name}»?",
   themeImportLabel: "Añadir un tema desde un archivo CSS",
   themeImportButton: "Importar CSS…",
   themeGalleryLoading: "Cargando temas…",

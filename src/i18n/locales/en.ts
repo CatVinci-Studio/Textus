@@ -1004,6 +1004,7 @@ type /name in a conversation to use one.
   shortcutKeepOriginal: "Keep the original of that change",
   contentThemeLabel: "Editor theme",
   themeDeleteButton: "Delete",
+  themeDeleteAsk: 'Delete the theme "{name}"?',
   themeImportLabel: "Add a theme from a CSS file",
   themeImportButton: "Import CSS…",
   themeGalleryLoading: "Loading themes…",

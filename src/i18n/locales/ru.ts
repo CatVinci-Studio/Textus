@@ -1065,6 +1065,7 @@ export default {
   shortcutKeepOriginal: "Оставить оригинал этой правки",
   contentThemeLabel: "Тема редактора",
   themeDeleteButton: "Удалить",
+  themeDeleteAsk: "Удалить тему «{name}»?",
   themeImportLabel: "Добавить тему из файла CSS",
   themeImportButton: "Импортировать CSS…",
   themeGalleryLoading: "Загрузка тем…",

@@ -1047,6 +1047,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   shortcutKeepOriginal: "Manter o original dessa alteração",
   contentThemeLabel: "Tema do editor",
   themeDeleteButton: "Excluir",
+  themeDeleteAsk: "Excluir o tema “{name}”?",
   themeImportLabel: "Adicionar um tema de um arquivo CSS",
   themeImportButton: "Importar CSS…",
   themeGalleryLoading: "Carregando temas…",

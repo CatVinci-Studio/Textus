@@ -925,6 +925,7 @@ export default {
   shortcutKeepOriginal: "保留该处修改的原文",
   contentThemeLabel: "编辑器主题",
   themeDeleteButton: "删除",
+  themeDeleteAsk: "删除主题“{name}”？",
   themeImportLabel: "从 CSS 文件添加主题",
   themeImportButton: "导入 CSS…",
   themeGalleryLoading: "正在加载主题…",
