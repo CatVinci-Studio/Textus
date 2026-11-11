@@ -1,3 +1,4 @@
+import { Segmented } from "../../engine/controls/Segmented";
 import { requestCreate } from "../../ai/chat/create-request";
 import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
@@ -52,24 +53,13 @@ export function ExtensionsPage(props: SettingsPageProps) {
   };
   return (
     <>
-      <div
-        className="auth-tabs extensions-tabs"
-        role="tablist"
-        aria-label={t.navExtensions}
-      >
-        {TABS.map((id) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            className={`auth-tab${tab === id ? " auth-tab-active" : ""}`}
-            onClick={() => setTab(id)}
-          >
-            {label[id]}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        className="extensions-tabs"
+        label={t.navExtensions}
+        options={TABS.map((id) => ({ id, label: label[id] }))}
+        value={tab}
+        onChange={setTab}
+      />
       {!props.indexing && (
         <div
           role="tabpanel"

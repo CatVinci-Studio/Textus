@@ -1,3 +1,4 @@
+import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
 import { useCallback, useEffect, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -42,22 +43,16 @@ export function ProviderAuthPanel({
   return (
     <div>
       {hasOauth && hasApiKey && (
-        <div className="auth-tabs">
-          <button
-            type="button"
-            className={`auth-tab${tab === "oauth" ? " auth-tab-active" : ""}`}
-            onClick={() => setTab("oauth")}
-          >
-            {t.authTabAccount}
-          </button>
-          <button
-            type="button"
-            className={`auth-tab${tab === "api_key" ? " auth-tab-active" : ""}`}
-            onClick={() => setTab("api_key")}
-          >
-            {t.authTabApiKey}
-          </button>
-        </div>
+        <Segmented
+          className="settings-segmented"
+          label={label}
+          options={[
+            { id: "oauth", label: t.authTabAccount },
+            { id: "api_key", label: t.authTabApiKey },
+          ]}
+          value={tab}
+          onChange={setTab}
+        />
       )}
       {hasOauth && (!hasApiKey || tab === "oauth") && (
         <OauthPanel

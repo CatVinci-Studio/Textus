@@ -663,39 +663,10 @@ button.settings-inline-button {
   padding: 8px 0;
 }
 
-/* Account vs API key: a segmented control, which reads as the mode switch
-   it is. */
-.auth-tabs {
-  display: inline-flex;
-  gap: 2px;
+/* Account vs API key, a command vs an address: the shared segmented
+   control, in its place in the panel. */
+.settings-segmented {
   margin: 12px 0 4px;
-  padding: 2px;
-  background: var(--ui-subtle);
-  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-}
-
-.auth-tab {
-  padding: 4px 12px;
-  border: none;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: transparent;
-  color: var(--ui-muted);
-  font-size: var(--text-control);
-  cursor: pointer;
-}
-
-.auth-tab:hover {
-  color: var(--ui-text);
-}
-
-.auth-tab-active {
-  background: var(--ui-bg);
-  color: var(--ui-text);
-  font-weight: 500;
-  box-shadow: none;
 }
 
 /* ---- Label + control rows that aren't toggle rows ---- */

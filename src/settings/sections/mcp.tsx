@@ -1,3 +1,4 @@
+import { Segmented } from "../../engine/controls/Segmented";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState, type ReactNode } from "react";
@@ -320,20 +321,16 @@ function McpForm({
             onChange={(e) => setName(e.target.value)}
           />
         </label>
-        <div className="auth-tabs" role="tablist" aria-label={t.mcpFormKind}>
-          {(["command", "url"] as const).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={kind === k}
-              className={`auth-tab${kind === k ? " auth-tab-active" : ""}`}
-              onClick={() => setKind(k)}
-            >
-              {k === "command" ? t.mcpFormKindCommand : t.mcpFormKindUrl}
-            </button>
-          ))}
-        </div>
+        <Segmented
+          className="settings-segmented"
+          label={t.mcpFormKind}
+          options={[
+            { id: "command", label: t.mcpFormKindCommand },
+            { id: "url", label: t.mcpFormKindUrl },
+          ]}
+          value={kind}
+          onChange={setKind}
+        />
         {kind === "command" ? (
           <>
             <label className="settings-field-label">
