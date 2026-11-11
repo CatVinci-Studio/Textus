@@ -7,7 +7,7 @@ import { defaultShortcuts } from "../../prefs/SettingsContext";
 import { platformName } from "../../platform/window-chrome";
 import { modIsMeta } from "../../platform/os";
 import { formatCombo, isReservedCombo } from "../../utils/shortcuts";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 import { showNotice } from "../../engine/controls/notices";
 import { logPluginMessage } from "../store/plugin-log";
 import { windowInfo } from "../store/plugin-records";
@@ -46,11 +46,9 @@ export function pluginKey(
   if (!owner) return key;
   logPluginMessage(plugin.id, "warn", `${key} is ${owner}'s: not bound.`);
   const pair = `${plugin.id} ${key}`;
-  const saved = getUiState("pluginKeysTold");
-  const list = Array.isArray(saved) ? (saved as string[]) : [];
-  if (!told.has(pair) && !list.includes(pair)) {
+  if (!told.has(pair) && !uiList("pluginKeysTold").includes(pair)) {
     told.add(pair);
-    setUiState("pluginKeysTold", [...list, pair]);
+    keepInList("pluginKeysTold", pair, true);
     showNotice(
       fill(t.pluginKeyTaken, {
         name: plugin.name,

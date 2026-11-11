@@ -362,6 +362,42 @@ export function updateUiState<K extends UiStateKey>(
   trackWrite(next).catch(() => {});
 }
 
+/** The fields that are lists of names. */
+type ListKey = {
+  [K in UiStateKey]: UiState[K] extends string[] ? K : never;
+}[UiStateKey];
+
+const names = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.filter((v): v is string => typeof v === "string")
+    : [];
+
+/** A list of names kept here, its valid entries only. */
+export function uiList(key: ListKey): string[] {
+  return names(getUiState(key));
+}
+
+/** `item` into list `key` (`on`), at its `newest` end, or out of it; at
+ *  most `max` kept, the oldest going. Built on the live list, so another
+ *  window's change to it stays. */
+export function keepInList(
+  key: ListKey,
+  item: string,
+  on: boolean,
+  {
+    max = Infinity,
+    newest = "last",
+  }: { max?: number; newest?: "first" | "last" } = {},
+): void {
+  updateUiState(key, (live) => {
+    const rest = names(live).filter((k) => k !== item);
+    if (!on) return rest;
+    return newest === "first"
+      ? [item, ...rest].slice(0, max)
+      : [...rest, item].slice(-max);
+  });
+}
+
 /** Each field's updates in this window, one after another. */
 const updating = new Map<string, Promise<void>>();
 

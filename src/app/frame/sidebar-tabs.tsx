@@ -1,4 +1,4 @@
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { setUiState, uiList } from "../../storage/ui-state";
 import {
   addedSidebarTabs,
   reserveSidebarTabIds,
@@ -212,10 +212,9 @@ export function sidebarTabs(): SidebarTabDef[] {
 
 /** The tabs as the rail shows them: plugins' pinned among Textus's own. */
 export function railTabs(): SidebarTabDef[] {
-  const kept = getUiState("sidebarTabOrder");
   return orderTabs(
     [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
-    Array.isArray(kept) ? kept : [],
+    uiList("sidebarTabOrder"),
   );
 }
 

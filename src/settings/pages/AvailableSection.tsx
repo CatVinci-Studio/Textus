@@ -1,7 +1,7 @@
 import { SettingsGroup } from "./SettingsGroup";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 
 /** Rows shown at first, and how many more come as the list's end
  *  scrolls into sight. */
@@ -11,8 +11,7 @@ const MORE = 12;
 const FOLD_FROM = 3;
 
 function foldedKinds(): string[] {
-  const kinds = getUiState("extensionsFolded");
-  return Array.isArray(kinds) ? kinds : [];
+  return uiList("extensionsFolded");
 }
 
 /** Below what is installed: what could be. Folds away, remembered per
@@ -42,8 +41,7 @@ export function AvailableSection({
   const toggle = () => {
     const next = !folded;
     setFolded(next);
-    const others = foldedKinds().filter((k) => k !== kind);
-    setUiState("extensionsFolded", next ? [...others, kind] : others);
+    keepInList("extensionsFolded", kind, next);
   };
   const shown = searching ? rows : rows.slice(0, limit);
   const left = rows.length - shown.length;

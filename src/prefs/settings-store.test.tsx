@@ -29,7 +29,7 @@ import {
   flushPendingWrites,
   resetPendingWritesForTests,
 } from "../storage/pending-writes";
-import { resetUiStateForTests } from "../storage/ui-state";
+import { keepInList, resetUiStateForTests } from "../storage/ui-state";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 
 // The file-backed path, run when Rust booted the window with a snapshot.
@@ -482,5 +482,20 @@ describe("heading shortcuts", () => {
     const next = normaliseSettings({ shortcuts });
     expect(next.shortcuts.setHeading2).toBe("");
     expect(next.shortcuts.setHeading1).toBe("mod+1");
+  });
+});
+
+describe("a list every window adds to", () => {
+  it("keeps another window's entry when this one adds its own", async () => {
+    boot({ languageChosen: true }, { uiState: { foldedBlocks: [] } });
+    // Another window folded a block since this one booted.
+    vi.mocked(storage.uiStateGet).mockResolvedValue({
+      foldedBlocks: ["other.md#2"],
+    });
+    keepInList("foldedBlocks", "mine.md#1", true, { max: 300 });
+    await flushPendingWrites();
+    expect(storage.uiStatePatch).toHaveBeenLastCalledWith({
+      foldedBlocks: ["other.md#2", "mine.md#1"],
+    });
   });
 });

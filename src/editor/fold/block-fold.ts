@@ -1,5 +1,5 @@
 import { currentStrings } from "../../i18n/current";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 import "./block-fold.css";
 
 /**
@@ -12,20 +12,14 @@ import "./block-fold.css";
 /** Folds remembered at most; the oldest goes first. */
 const KEPT = 300;
 
-function kept(name: "foldedBlocks" | "openedBlocks"): string[] {
-  const list = getUiState(name);
-  return Array.isArray(list)
-    ? list.filter((k): k is string => typeof k === "string")
-    : [];
-}
+const kept = uiList;
 
 function keep(
   name: "foldedBlocks" | "openedBlocks",
   key: string,
   on: boolean,
 ): void {
-  const rest = kept(name).filter((k) => k !== key);
-  setUiState(name, on ? [...rest, key].slice(-KEPT) : rest);
+  keepInList(name, key, on, { max: KEPT });
 }
 
 function blockFolded(key: string): boolean {

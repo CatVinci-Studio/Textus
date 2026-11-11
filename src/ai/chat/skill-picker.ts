@@ -11,7 +11,7 @@ import {
 } from "../skills/builtin";
 import type { AgentSkill } from "../types";
 import type { AgentMode } from "../../prefs/settings-values";
-import { getUiState, setUiState } from "../../storage/ui-state";
+import { keepInList, uiList } from "../../storage/ui-state";
 import { CJK_SCRIPT } from "../../utils/cjk";
 
 /** The composer's two pickers: when they open, what they list, and what a
@@ -248,15 +248,12 @@ export function resolveSkillName(
 
 /** The recently used skills, newest first (ui-state.json). */
 export function recentSkills(): string[] {
-  const value = getUiState("recentSkills");
-  return Array.isArray(value)
-    ? value.filter((v): v is string => typeof v === "string")
-    : [];
+  return uiList("recentSkills");
 }
 
 export function rememberSkill(name: string): void {
-  setUiState(
-    "recentSkills",
-    [name, ...recentSkills().filter((n) => n !== name)].slice(0, RECENT_LIMIT),
-  );
+  keepInList("recentSkills", name, true, {
+    max: RECENT_LIMIT,
+    newest: "first",
+  });
 }

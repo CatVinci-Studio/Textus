@@ -9,7 +9,10 @@ import {
   showNotice,
   startProgress,
 } from "../../engine/controls/notices";
-import { showPluginForm, type PluginFormField } from "../views/plugin-form-queue";
+import {
+  showPluginForm,
+  type PluginFormField,
+} from "../views/plugin-form-queue";
 import {
   showQuickPick,
   type QuickPickItem,
