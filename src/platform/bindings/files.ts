@@ -115,6 +115,12 @@ export const commands = {
 	document_link_root: (docPath: string, folder: string | null) => __TAURI_INVOKE<string | null>("document_link_root", { docPath, folder }),
 	/**  A document's or folder's conventions, for the editor and for plugins. */
 	folder_conventions: (path: string) => __TAURI_INVOKE<Conventions_Serialize>("folder_conventions", { path }),
+	/**
+	 *  A project's own settings file (`.textus/settings.json`) as a whole, read
+	 *  as the conventions read it (comments and trailing commas allowed); {}
+	 *  when it isn't there or isn't a settings file.
+	 */
+	project_settings_read: (root: string) => __TAURI_INVOKE<Value>("project_settings_read", { root }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	/**  Where `host`'s token is kept, for Settings to save or clear it. */

@@ -1,4 +1,7 @@
-import { type DirEntryInfo, type WindowSession_Deserialize } from "./bindings/files";
+import {
+  type DirEntryInfo,
+  type WindowSession_Deserialize,
+} from "./bindings/files";
 import type { ImageHost } from "../prefs/SettingsContext";
 import type * as Generated from "./bindings/files";
 import { isIOSApp } from "./capabilities";
@@ -140,6 +143,9 @@ export const fs = {
    *  made it: links, pictures, line breaks, templates, daily notes. Read
    *  only; a field no app sets is left to Textus's settings. */
   folderConventions: (path: string) => command("folder_conventions", path),
+  /** A project's .textus/settings.json as a whole, comments allowed; {}
+   *  when there is none. */
+  projectSettings: (root: string) => command("project_settings_read", root),
   /** `sourceDocPath`: the file a Save As started from, whose relative
    *  images are copied along. */
   migrateDraftImages: (

@@ -591,6 +591,19 @@ export function installDevTauriShim(): void {
   ): Promise<unknown> | null {
     const files = w.__devFs as Record<string, string> | undefined;
     switch (cmd) {
+      case "project_settings_read": {
+        // As the backend reads it, less its comment tolerance.
+        const root = String(args.root ?? "").replace(/[\\/]+$/, "");
+        const text = files?.[`${root}/.textus/settings.json`];
+        try {
+          const parsed: unknown = text ? JSON.parse(text) : {};
+          return Promise.resolve(
+            parsed && typeof parsed === "object" ? parsed : {},
+          );
+        } catch {
+          return Promise.resolve({});
+        }
+      }
       case "pick_open_folder": {
         const picked = w.__devPickFolder ?? null;
         return picked === "TOO_BROAD"

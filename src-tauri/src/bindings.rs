@@ -44,6 +44,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::vault::resolve_note_link,
                     crate::commands::link_root::document_link_root,
                     crate::conventions::folder_conventions,
+                    crate::conventions::project_settings_read,
                     crate::commands::word_import::open_word_document,
                     crate::commands::image_host::upload_image,
                     crate::commands::image_host::image_host_key_id,

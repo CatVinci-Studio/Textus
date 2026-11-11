@@ -9,19 +9,14 @@ export const projectSettingsFile = (root: string) =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === "object" && !Array.isArray(value);
 
-/** The project's settings file as a whole; {} when it isn't there or can't
- *  be read. */
+/** The project's settings file as a whole, read as the folder's
+ *  conventions are (comments allowed); {} when it isn't there or can't be
+ *  read. */
 export async function readProjectSettings(
   root: string,
 ): Promise<Record<string, unknown>> {
-  try {
-    const parsed: unknown = JSON.parse(
-      await fs.readTextFile(projectSettingsFile(root)),
-    );
-    return isRecord(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
+  const parsed: unknown = await fs.projectSettings(root).catch(() => ({}));
+  return isRecord(parsed) ? parsed : {};
 }
 
 /** The file to change: {} only when there is none yet. One that is there

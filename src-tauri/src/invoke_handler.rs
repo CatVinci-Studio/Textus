@@ -77,6 +77,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::vault::resolve_note_link,
         commands::link_root::document_link_root,
         conventions::folder_conventions,
+        conventions::project_settings_read,
         upload_image,
         image_host_key_id,
         migrate_draft_images,
