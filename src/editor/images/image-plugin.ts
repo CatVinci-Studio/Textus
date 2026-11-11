@@ -71,6 +71,11 @@ export function resolveImageSrc(src: string, docPath: string | null): string {
   // single-letter URL scheme to the test below.
   if (isDrivePath(src)) return fileSrc(decodeUrlPath(src));
   if (!src || hasUrlScheme(src)) return src; // http(s), data:, asset:, file:, ...
+  // "//host/x.png" is a web address without its scheme, as on the web; and
+  // another machine's share isn't looked at: on Windows that alone sends
+  // the user's sign-in to it.
+  if (src.startsWith("//")) return `https:${src}`;
+  if (src.startsWith("\\\\")) return "";
   if (src.startsWith("/")) return fileSrc(decodeUrlPath(src));
   // Unsaved: left as written (shows missing). The sidebar folder is no
   // stand-in, since the document may be saved elsewhere.

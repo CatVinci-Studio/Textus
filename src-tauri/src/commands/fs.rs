@@ -222,15 +222,26 @@ const SECRET_FILES: [&str; 5] = [
 
 fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
     use tauri::Manager;
-    let path = Path::new(path);
-    let named = path
-        .file_name()
-        .is_some_and(|n| SECRET_FILES.iter().any(|s| n == *s));
-    let Ok(config) = app.path().app_config_dir() else {
+    let Ok(config) = app.path().app_config_dir().and_then(|c| Ok(std::fs::canonicalize(c)?))
+    else {
         return Ok(());
     };
-    let beside = |p: &Path| p.parent().and_then(|d| std::fs::canonicalize(d).ok());
-    if named && beside(path) == std::fs::canonicalize(&config).ok() {
+    // Where it really is (a link elsewhere may lead here), named in any case
+    // (macOS and Windows don't tell them apart), set-aside copies included.
+    let path = Path::new(path);
+    let real = std::fs::canonicalize(path).ok().or_else(|| {
+        let dir = std::fs::canonicalize(path.parent()?).ok()?;
+        Some(dir.join(path.file_name()?))
+    });
+    let secret = real.is_some_and(|real| {
+        let name = real
+            .file_name()
+            .map(|n| n.to_string_lossy().to_lowercase())
+            .unwrap_or_default();
+        real.parent() == Some(config.as_path())
+            && SECRET_FILES.iter().any(|s| name == *s || name.starts_with(&format!("{s}.")))
+    });
+    if secret {
         return Err("This file holds Textus's keys; it isn't opened here.".into());
     }
     Ok(())

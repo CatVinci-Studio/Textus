@@ -29,6 +29,17 @@ const DEVICE_SETTINGS = [
   "zoom",
   "runInBackground",
   "updateChannel",
+  // Addresses a stored key or the user's pictures and searches go to: a
+  // shared file could name any server.
+  "imageStorageMode",
+  "imageHost",
+  "imagePicgoEndpoint",
+  "imageUploadEndpoint",
+  "imageUploadUrlField",
+  "imageModelProvider",
+  "imageModelEndpoint",
+  "searchService",
+  "searxngUrl",
 ] as const satisfies readonly (keyof Settings)[];
 
 /** An imported theme's CSS, by theme id. */
