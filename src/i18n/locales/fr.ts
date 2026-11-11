@@ -1467,8 +1467,9 @@ utiliser une.
     "Un document Markdown ne peut pas être enregistré à la place d'un document Word. Choisissez un nom qui se termine par .md.",
   fileChangedOnDiskTitle: "Fichier modifié sur le disque",
   fileChangedOnDiskMessage:
-    "Ce fichier a été modifié sur le disque par une autre application. L'enregistrer écrasera ces modifications.",
+    "Ce fichier a été modifié sur le disque par une autre application. Écraser le remplace par votre version ; Recharger abandonne vos modifications non enregistrées et ouvre la version du disque.",
   fileChangedOnDiskOverwrite: "Écraser",
+  fileChangedOnDiskReload: "Recharger",
   fileGoneOnDiskTitle: "Fichier déplacé ou supprimé",
   fileGoneOnDiskMessage:
     "Ce fichier n’est plus à l’endroit où il a été ouvert. Il a peut-être été déplacé, renommé ou supprimé dans une autre application. L’enregistrer le recrée à l’ancien emplacement.",

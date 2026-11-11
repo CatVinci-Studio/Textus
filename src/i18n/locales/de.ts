@@ -1437,8 +1437,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Ein Markdown-Dokument kann nicht über ein Word-Dokument gespeichert werden. Wähle einen Namen, der auf .md endet.",
   fileChangedOnDiskTitle: "Datei wurde extern geändert",
   fileChangedOnDiskMessage:
-    "Diese Datei wurde von einem anderen Programm geändert. Beim Speichern werden diese Änderungen überschrieben.",
+    "Diese Datei wurde von einem anderen Programm geändert. Überschreiben ersetzt sie durch deine Fassung; Neu laden verwirft deine ungesicherten Änderungen und öffnet die Fassung auf dem Datenträger.",
   fileChangedOnDiskOverwrite: "Überschreiben",
+  fileChangedOnDiskReload: "Neu laden",
   fileGoneOnDiskTitle: "Datei verschoben oder gelöscht",
   fileGoneOnDiskMessage:
     "Diese Datei liegt nicht mehr dort, wo sie geöffnet wurde. Sie wurde vielleicht in einem anderen Programm verschoben, umbenannt oder gelöscht. Beim Sichern wird sie am alten Ort neu angelegt.",

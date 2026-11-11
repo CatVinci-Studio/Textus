@@ -1433,8 +1433,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Um documento Markdown não pode ser salvo por cima de um documento do Word. Escolha um nome terminado em .md.",
   fileChangedOnDiskTitle: "Arquivo alterado no disco",
   fileChangedOnDiskMessage:
-    "Outro programa alterou este arquivo no disco. Se você salvar, essas alterações serão substituídas.",
+    "Outro programa alterou este arquivo no disco. Substituir coloca a sua versão no lugar; Recarregar descarta as alterações não salvas e abre a versão do disco.",
   fileChangedOnDiskOverwrite: "Substituir",
+  fileChangedOnDiskReload: "Recarregar",
   fileGoneOnDiskTitle: "Arquivo movido ou excluído",
   fileGoneOnDiskMessage:
     "Este arquivo não está mais onde foi aberto. Talvez tenha sido movido, renomeado ou excluído em outro programa. Salvar o recria no local antigo.",

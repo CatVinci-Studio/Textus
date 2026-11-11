@@ -29,6 +29,41 @@ function shownTabIds(): Set<string> {
   );
 }
 
+/**
+ * Tab `tab` takes `content`, its file's text on disk at `mtime`, as saved:
+ * in place when open in an editor - one undo step, so the AI conversation
+ * the editor holds goes on (an agent writing the file itself, mid-turn) -
+ * otherwise by a remount.
+ */
+export function takeDiskText(
+  tab: DocTab,
+  content: string,
+  mtime: number,
+  liveTabs: () => DocTab[],
+  updateTab: (id: string, patch: Partial<DocTab>) => void,
+): void {
+  if (!tab.path) return;
+  const open = openDocumentAt(tab.path);
+  if (open?.replaceText(content, open.revision())) {
+    // As the editor writes it out: what it reports from now on.
+    const shown = liveTabs().find((tb) => tb.id === tab.id)?.content ?? content;
+    updateTab(tab.id, {
+      content: shown,
+      savedContent: shown,
+      diskMtime: mtime,
+    });
+  } else
+    updateTab(tab.id, {
+      content,
+      savedContent: content,
+      diskMtime: mtime,
+      reloadKey: tab.reloadKey + 1,
+    });
+  window.dispatchEvent(
+    new CustomEvent(FILE_RELOADED_EVENT, { detail: tab.path }),
+  );
+}
+
 export function useExternalChangeReload(
   liveTabs: () => DocTab[],
   updateTab: (id: string, patch: Partial<DocTab>) => void,
@@ -68,29 +103,7 @@ export function useExternalChangeReload(
             updateTab(tab.id, { diskMtime: mtime });
             continue;
           }
-          // Open in an editor: the new text taken in place, one undo step,
-          // so the AI conversation the editor holds goes on (an agent
-          // writing the file itself, mid-turn). Otherwise a remount.
-          const open = openDocumentAt(tab.path);
-          if (open?.replaceText(content, open.revision())) {
-            // As the editor writes it out: what it reports from now on.
-            const shown =
-              liveTabs().find((tb) => tb.id === tab.id)?.content ?? content;
-            updateTab(tab.id, {
-              content: shown,
-              savedContent: shown,
-              diskMtime: mtime,
-            });
-          } else
-            updateTab(tab.id, {
-              content,
-              savedContent: content,
-              diskMtime: mtime,
-              reloadKey: live.reloadKey + 1,
-            });
-          window.dispatchEvent(
-            new CustomEvent(FILE_RELOADED_EVENT, { detail: tab.path }),
-          );
+          takeDiskText(live, content, mtime, liveTabs, updateTab);
         }
       })().finally(() => {
         checking = false;

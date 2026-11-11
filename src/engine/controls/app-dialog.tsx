@@ -25,6 +25,8 @@ interface Request extends AppDialogOptions {
   /** Confirm only: start on the way out, for a question the user didn't ask
    *  for - an Enter typed on the way back must not do something irreversible. */
   focusCancel?: boolean;
+  /** Choice only: a second way forward, beside the action button. */
+  altLabel?: string;
   confirm: boolean;
   /** Prompt only: the text field's starting value, and its hint while
    *  empty. */
@@ -69,6 +71,36 @@ export function showConfirm(
 ): Promise<boolean> {
   return enqueue({ ...options, text, confirm: true });
 }
+
+/** A question with two ways forward: resolves "ok" for the action button,
+ *  "alt" for the other, null for cancel, Escape or the backdrop. */
+export function showChoice(
+  text: string,
+  options: AppDialogOptions & {
+    okLabel: string;
+    altLabel: string;
+    cancelLabel: string;
+    focusCancel?: boolean;
+  },
+): Promise<"ok" | "alt" | null> {
+  return new Promise((resolve) => {
+    queue = [
+      ...queue,
+      {
+        ...options,
+        text,
+        confirm: true,
+        id: nextId++,
+        resolve: (ok, value) =>
+          resolve(value === ALT ? "alt" : ok ? "ok" : null),
+      },
+    ];
+    publish();
+  });
+}
+
+/** What the second way forward answers with. */
+const ALT = "\u0000alt";
 
 /** A one-line text question (a new file name). Resolves the text, or null
  *  for cancel, Escape or the backdrop. */
@@ -174,6 +206,11 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
               onClick={() => current && answer(current, false)}
             >
               {shown.cancelLabel}
+            </button>
+          )}
+          {shown.altLabel && (
+            <button onClick={() => current && answer(current, true, ALT)}>
+              {shown.altLabel}
             </button>
           )}
           <button

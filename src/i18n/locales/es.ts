@@ -1449,8 +1449,9 @@ para usar una.
     "Un documento Markdown no se puede guardar sobre un documento de Word. Elige un nombre que termine en .md.",
   fileChangedOnDiskTitle: "El archivo cambió en el disco",
   fileChangedOnDiskMessage:
-    "Otro programa modificó este archivo en el disco. Si guardas, se sobrescribirán esos cambios.",
+    "Otro programa modificó este archivo en el disco. Sobrescribir lo reemplaza con tu versión; Recargar descarta tus cambios sin guardar y abre la versión del disco.",
   fileChangedOnDiskOverwrite: "Sobrescribir",
+  fileChangedOnDiskReload: "Recargar",
   fileGoneOnDiskTitle: "Archivo movido o eliminado",
   fileGoneOnDiskMessage:
     "Este archivo ya no está donde se abrió. Puede que otro programa lo haya movido, renombrado o eliminado. Al guardar se volverá a crear en el lugar anterior.",

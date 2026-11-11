@@ -1307,8 +1307,10 @@ export default {
   wordSaveRefused:
     "Markdown 文档不能保存到 Word 文档上。请选择以 .md 结尾的文件名。",
   fileChangedOnDiskTitle: "文件已在磁盘上被修改",
-  fileChangedOnDiskMessage: "该文件已被其他程序修改。保存将覆盖磁盘上的更改。",
+  fileChangedOnDiskMessage:
+    "该文件已被其他程序修改。覆盖：用你的版本替换磁盘上的文件；重新加载：放弃你未保存的修改，改用磁盘上的版本。",
   fileChangedOnDiskOverwrite: "覆盖",
+  fileChangedOnDiskReload: "重新加载",
   fileGoneOnDiskTitle: "文件已移动或删除",
   fileGoneOnDiskMessage:
     "该文件已不在打开时的位置，可能在其他程序中被移动、改名或删除。保存会在原位置重新建立它。",

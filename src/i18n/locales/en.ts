@@ -1406,8 +1406,9 @@ type /name in a conversation to use one.
     "A Markdown document can't be saved over a Word document. Choose a name ending in .md.",
   fileChangedOnDiskTitle: "File Changed on Disk",
   fileChangedOnDiskMessage:
-    "This file has been changed on disk by another program. Saving will overwrite those changes.",
+    "This file has been changed on disk by another program. Overwrite puts your version in its place; Reload drops your unsaved changes and opens the version on disk.",
   fileChangedOnDiskOverwrite: "Overwrite",
+  fileChangedOnDiskReload: "Reload",
   fileGoneOnDiskTitle: "File Moved or Deleted",
   fileGoneOnDiskMessage:
     "This file is no longer where it was opened from. It may have been moved, renamed or deleted in another program. Saving puts it back at the old place.",

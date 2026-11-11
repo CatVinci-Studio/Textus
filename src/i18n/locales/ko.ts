@@ -1362,8 +1362,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "Markdown 문서는 Word 문서에 덮어써서 저장할 수 없습니다. .md로 끝나는 이름을 고르세요.",
   fileChangedOnDiskTitle: "디스크에서 파일이 변경됨",
   fileChangedOnDiskMessage:
-    "다른 프로그램이 디스크에 있는 이 파일을 변경했습니다. 저장하면 그 변경 내용을 덮어씁니다.",
+    "다른 프로그램이 디스크에 있는 이 파일을 변경했습니다. 덮어쓰기는 내 버전으로 바꾸고, 다시 불러오기는 저장하지 않은 변경 내용을 버리고 디스크의 버전을 엽니다.",
   fileChangedOnDiskOverwrite: "덮어쓰기",
+  fileChangedOnDiskReload: "다시 불러오기",
   fileGoneOnDiskTitle: "파일이 이동되었거나 삭제됨",
   fileGoneOnDiskMessage:
     "이 파일이 연 위치에 더 이상 없습니다. 다른 프로그램에서 이동, 이름 변경 또는 삭제되었을 수 있습니다. 저장하면 원래 위치에 다시 만듭니다.",

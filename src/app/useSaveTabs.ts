@@ -1,9 +1,15 @@
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
-import { showConfirm, showMessage } from "../engine/controls/app-dialog";
+import {
+  showChoice,
+  showConfirm,
+  showMessage,
+} from "../engine/controls/app-dialog";
+import { takeDiskText } from "../document/useExternalChangeReload";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename, parentDir } from "../utils/path";
 import {
+  readDocText,
   statMtime,
   tabIsDirty,
   tabTitle,
@@ -231,7 +237,8 @@ export function useSaveTabs(opts: {
     [tabsRef, updateTab],
   );
 
-  // "conflict": the file changed on disk and the user kept that version.
+  // "conflict": the file changed on disk and the user didn't overwrite it
+  // (kept it, or took its text).
   // `auto`: the prompt starts on Cancel, since the user didn't ask to save.
   const saveToPath = useCallback(
     async (tabId: string, auto: boolean): Promise<SaveOutcome> => {
@@ -242,19 +249,31 @@ export function useSaveTabs(opts: {
       if (tab.diskMtime !== null) {
         const current = await statMtime(tab.path);
         if (current !== tab.diskMtime) {
-          const gone = current === null;
-          const overwrite = await showConfirm(
-            gone ? t.fileGoneOnDiskMessage : t.fileChangedOnDiskMessage,
-            {
-              title: gone ? t.fileGoneOnDiskTitle : t.fileChangedOnDiskTitle,
-              okLabel: gone
-                ? t.fileGoneOnDiskRecreate
-                : t.fileChangedOnDiskOverwrite,
+          if (current === null) {
+            const recreate = await showConfirm(t.fileGoneOnDiskMessage, {
+              title: t.fileGoneOnDiskTitle,
+              okLabel: t.fileGoneOnDiskRecreate,
               cancelLabel: t.closePromptCancel,
               focusCancel: auto,
-            },
-          );
-          if (!overwrite) return "conflict";
+            });
+            if (!recreate) return "conflict";
+          } else {
+            // Overwrite it with this text, or take the other text instead.
+            const choice = await showChoice(t.fileChangedOnDiskMessage, {
+              title: t.fileChangedOnDiskTitle,
+              okLabel: t.fileChangedOnDiskOverwrite,
+              altLabel: t.fileChangedOnDiskReload,
+              cancelLabel: t.closePromptCancel,
+              focusCancel: auto,
+            });
+            if (choice === "alt") {
+              const disk = await readDocText(tab.path).catch(() => null);
+              const live = liveTabs().find((tb) => tb.id === tabId);
+              if (disk !== null && live)
+                takeDiskText(live, disk, current, liveTabs, updateTab);
+            }
+            if (choice !== "ok") return "conflict";
+          }
         }
       }
       // Changed by a plugin, what the editor now holds, as it writes files.
@@ -269,7 +288,7 @@ export function useSaveTabs(opts: {
       await commitSaved(tabId, tab.path, content, auto);
       return "saved";
     },
-    [liveTabs, t, writeOrReport, commitSaved],
+    [liveTabs, updateTab, t, writeOrReport, commitSaved],
   );
 
   // One save per tab at a time: a racing save would see our own write as external.

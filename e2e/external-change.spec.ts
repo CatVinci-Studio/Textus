@@ -35,3 +35,49 @@ test("an open document changed on disk takes the new text in place", async ({
   // Taken as what is on disk: nothing unsaved.
   await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
 });
+
+test("with unsaved changes, saving over a file changed elsewhere offers to take its text instead", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/work/rain.md": "# Rain\n\nThree days of rain.\n" };
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/rain.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.locator("p").click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" Mine.");
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __devFs: Record<string, string>;
+      __devFsTimes?: Record<string, number>;
+    };
+    w.__devFs["/work/rain.md"] = "# Flood\n\nThree days of rain.\n";
+    w.__devFsTimes = { ...w.__devFsTimes, "/work/rain.md": 99 };
+    (
+      window as unknown as {
+        __devEmitTauriEvent: (name: string) => void;
+      }
+    ).__devEmitTauriEvent("menu-save-file");
+  });
+  const dialog = page.locator(".app-dialog");
+  await expect(dialog.getByRole("button")).toHaveText([
+    "Cancel",
+    "Reload",
+    "Overwrite",
+  ]);
+  await dialog.getByRole("button", { name: "Reload" }).click();
+  await expect(editor.locator("h1")).toContainText("Flood");
+  await expect(editor).not.toContainText("Mine.");
+  await expect(page.locator(".tab-pill-dirty-dot")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { __devFs: Record<string, string> }).__devFs[
+          "/work/rain.md"
+        ],
+    ),
+  ).toContain("Flood");
+});

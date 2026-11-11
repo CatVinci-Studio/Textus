@@ -1376,8 +1376,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "Markdown 文書を Word 文書に上書き保存することはできません。.md で終わる名前を選んでください。",
   fileChangedOnDiskTitle: "ファイルがディスク上で変更されました",
   fileChangedOnDiskMessage:
-    "このファイルは他のプログラムによって変更されています。保存するとその変更が上書きされます。",
+    "このファイルは他のプログラムによって変更されています。上書きすると、あなたの版で置き換えます。再読み込みすると、保存していない変更を破棄してディスク上の版を開きます。",
   fileChangedOnDiskOverwrite: "上書き",
+  fileChangedOnDiskReload: "再読み込み",
   fileGoneOnDiskTitle: "ファイルが移動または削除されました",
   fileGoneOnDiskMessage:
     "このファイルは開いたときの場所にありません。ほかのアプリで移動、名前変更、または削除された可能性があります。保存すると元の場所に作り直します。",

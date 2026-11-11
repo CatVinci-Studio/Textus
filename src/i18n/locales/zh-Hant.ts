@@ -1310,8 +1310,9 @@ export default {
     "Markdown 文件不能儲存到 Word 文件上。請選擇以 .md 結尾的檔名。",
   fileChangedOnDiskTitle: "磁碟上的檔案已變更",
   fileChangedOnDiskMessage:
-    "其他程式已修改磁碟上的這個檔案。儲存會覆寫那些變更。",
+    "其他程式已修改磁碟上的這個檔案。覆寫：以你的版本取代磁碟上的檔案；重新載入：捨棄你尚未儲存的變更，改用磁碟上的版本。",
   fileChangedOnDiskOverwrite: "覆寫",
+  fileChangedOnDiskReload: "重新載入",
   fileGoneOnDiskTitle: "檔案已移動或刪除",
   fileGoneOnDiskMessage:
     "該檔案已不在開啟時的位置，可能在其他程式中被移動、改名或刪除。儲存會在原位置重新建立它。",
