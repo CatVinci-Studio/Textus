@@ -1,3 +1,4 @@
+import { onAppearance } from "../tokens/appearance";
 /**
  * Timing for motion CSS can't express on its own (FLIP, the AI sheet under a
  * finger, smooth scrolling), from the same tokens and switches as motion.css.
@@ -83,14 +84,7 @@ function readSheet() {
     const forget = () => {
       sheet = null;
     };
-    new MutationObserver(forget).observe(document.head, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-      attributes: true,
-    });
-    if (typeof window.matchMedia === "function")
-      window.matchMedia(REDUCE_QUERY).addEventListener?.("change", forget);
+    onAppearance(forget);
   }
   sheet = { disabled: probeDisabled(), tokens: new Map() };
   return sheet;

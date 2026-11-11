@@ -1,3 +1,4 @@
+import { onAppearance } from "../../tokens/appearance";
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { useMenuButton } from "../useMenuButton";
@@ -42,8 +43,7 @@ export function useTabFit(
     const resized = new ResizeObserver(() => flushSync(read));
     resized.observe(el);
     // The interface's size, font or theme: the row may keep its width.
-    const restyled = new MutationObserver(read);
-    restyled.observe(document.documentElement, { attributes: true });
+    const restyled = onAppearance(read);
     // A font arriving draws the same names at other widths.
     const fonts = onFontsChange(() => setRoom(readTabRoom(el)));
     const scrolled = () =>
@@ -52,7 +52,7 @@ export function useTabFit(
     el.addEventListener("scroll", scrolled, { passive: true });
     return () => {
       resized.disconnect();
-      restyled.disconnect();
+      restyled();
       fonts();
       el.removeEventListener("scroll", scrolled);
     };

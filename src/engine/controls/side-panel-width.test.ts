@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DOC_MIN } from "../frame/island-rules";
-import {
-  clampSidePanel,
-  sidePanelMax,
-  sidePanelMin,
-} from "./side-panel-width";
+import { clampSidePanel, sidePanelMax, sidePanelMin } from "./side-panel-width";
 
 const AI = { min: 300, max: 720 };
 

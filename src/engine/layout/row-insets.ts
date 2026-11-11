@@ -1,3 +1,4 @@
+import { onAppearance } from "../tokens/appearance";
 import { useSyncExternalStore } from "react";
 import { scaledPx } from "../tokens/chrome-scale";
 import { setStripOrigins } from "../controls/tabs/tab-strips";
@@ -131,12 +132,13 @@ function watch(): () => void {
   // interface's size and theme are set on the root.
   for (const el of document.querySelectorAll(BAR))
     changed.observe(el, { childList: true, subtree: true });
-  changed.observe(document.documentElement, { attributes: true });
+  const restyled = onAppearance(soon);
   window.addEventListener("resize", soon);
   return () => {
     cancelAnimationFrame(frame);
     resized.disconnect();
     changed.disconnect();
+    restyled();
     window.removeEventListener("resize", soon);
   };
 }

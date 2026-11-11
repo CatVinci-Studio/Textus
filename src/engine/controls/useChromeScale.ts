@@ -1,3 +1,4 @@
+import { onAppearance } from "../tokens/appearance";
 import { chromeScale } from "../tokens/chrome-scale";
 import { useSyncExternalStore } from "react";
 
@@ -10,11 +11,10 @@ export function useChromeScale(): number {
 }
 
 function subscribe(changed: () => void): () => void {
-  const watch = new MutationObserver(changed);
-  watch.observe(document.documentElement, { attributeFilter: ["style"] });
+  const stop = onAppearance(changed);
   window.addEventListener("resize", changed);
   return () => {
-    watch.disconnect();
+    stop();
     window.removeEventListener("resize", changed);
   };
 }

@@ -702,11 +702,7 @@
 
 /* Selects: one look - a drawn chevron in place of the native arrow - in
    two sizes like the buttons. */
-:is(
-  .settings-select,
-  .inline-chat-mode,
-  .paper-outline-kind
-) {
+:is(.settings-select, .inline-chat-mode, .paper-outline-kind) {
   appearance: none;
   -webkit-appearance: none;
   min-height: var(--control-height);
@@ -732,11 +728,7 @@
   font-size: var(--text-secondary);
 }
 
-:is(
-  .settings-select,
-  .inline-chat-mode,
-  .paper-outline-kind
-):hover {
+:is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
   border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
 }
 

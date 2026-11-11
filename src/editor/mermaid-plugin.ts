@@ -1,3 +1,4 @@
+import { onAppearance } from "../engine/tokens/appearance";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -386,17 +387,19 @@ export function createMermaidPreviewPlugin(options: {
           if (collectMermaidBlocks(editorView.state.doc).length > 0)
             void renderAll();
         };
-        const appearance = new MutationObserver(restyle);
-        appearance.observe(document.documentElement, {
-          attributes: true,
-          attributeFilter: [
-            "data-theme",
-            "data-content-theme",
-            "data-light-page",
-          ],
+        // Only a change of colours: every diagram is drawn again.
+        const colours = () => {
+          const root = document.documentElement.dataset;
+          const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
+          return `${root.theme}|${root.contentTheme}|${root.lightPage}|${dark?.matches}`;
+        };
+        let drawnIn = colours();
+        const stopAppearance = onAppearance(() => {
+          const now = colours();
+          if (now === drawnIn) return;
+          drawnIn = now;
+          restyle();
         });
-        const systemDark = window.matchMedia?.("(prefers-color-scheme: dark)");
-        systemDark?.addEventListener("change", restyle);
 
         void renderAll();
         registerDrawAll(editorView.dom, () => renderAll(true));
@@ -437,8 +440,7 @@ export function createMermaidPreviewPlugin(options: {
             registerDrawAll(editorView.dom, null);
             registerPendingDrawer(editorView.dom, null);
             shown?.disconnect();
-            appearance.disconnect();
-            systemDark?.removeEventListener("change", restyle);
+            stopAppearance();
           },
         };
       },
