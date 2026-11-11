@@ -104,9 +104,23 @@ export function readKeptTabs(): KeptTabs | null {
 // Until the launch-time restore has put the kept tabs back, the window's
 // tabs are its blank start, not something to write over them.
 let restored = false;
+const whenRestored = new Set<() => void>();
 
 export function keptTabsRestored(): void {
   restored = true;
+  for (const done of whenRestored) done();
+  whenRestored.clear();
+}
+
+/** Calls `done` once the launch-time restore has opened everything it
+ *  opens (at once if it has); returns the cancel. */
+export function afterStartupRestore(done: () => void): () => void {
+  if (restored) {
+    done();
+    return () => {};
+  }
+  whenRestored.add(done);
+  return () => whenRestored.delete(done);
 }
 
 /** Keeps this window's tabs written down while it runs: once they rest, and

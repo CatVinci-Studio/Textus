@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { DocTab } from "../../document/doc-tabs";
 import { getUiState, setUiState } from "../../storage/ui-state";
+import { afterStartupRestore } from "../../document/reload-tabs";
 import {
   setSplitLayout,
   splitLayout,
@@ -19,10 +20,6 @@ import {
 type SavedNode =
   | { direction: SplitDirection; sizes: number[]; children: SavedNode[] }
   | { path: string };
-
-/** How long after the window opens its last split may still come back:
- *  the documents of the last session open one after another. */
-const RESTORE_MS = 8000;
 
 function readNode(raw: unknown): SavedNode | null {
   if (!raw || typeof raw !== "object") return null;
@@ -106,7 +103,8 @@ function build(node: SavedNode, idOf: Map<string, string>): LayoutNode {
 /**
  * The last split comes back with the window once all its documents are
  * open again. Until then nothing is saved, so a one-document start can't
- * undo it.
+ * undo it; once the launch's restore is done (and the tabs it opened
+ * drawn), one that didn't come back won't.
  */
 export function useSplitRestore(
   tabs: readonly DocTab[],
@@ -118,7 +116,11 @@ export function useSplitRestore(
 
   useEffect(() => {
     const settle = () => (settled.current = true);
-    const timer = setTimeout(settle, RESTORE_MS);
+    let frame = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stopWaiting = afterStartupRestore(() => {
+      frame = requestAnimationFrame(() => (timer = setTimeout(settle)));
+    });
     const stop = subscribeSplit(() => {
       const layout = splitLayout();
       if (layout) settle();
@@ -129,6 +131,8 @@ export function useSplitRestore(
       setUiState("splitLayout", tree && !("path" in tree) ? { tree } : null);
     });
     return () => {
+      stopWaiting();
+      cancelAnimationFrame(frame);
       clearTimeout(timer);
       stop();
     };
