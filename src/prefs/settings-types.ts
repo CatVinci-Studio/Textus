@@ -158,6 +158,8 @@ export interface Settings {
   /** Zen mode in every window. */
   zenMode: boolean;
   contentWidth: ContentWidth;
+  /** Each body paragraph's first line set in by two characters. */
+  firstLineIndent: boolean;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
@@ -317,6 +319,7 @@ export const DEFAULT_SETTINGS: Settings = {
   viewMode: "rich",
   zenMode: false,
   contentWidth: "auto",
+  firstLineIndent: false,
   imageAlign: "center",
   menuBarShown: false,
   activityRail: true,

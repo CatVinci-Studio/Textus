@@ -113,7 +113,8 @@ function useApplyAppearance(
     if (settings.contentWidth === "auto")
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);
-  }, [settings.contentWidth]);
+    root.toggleAttribute("data-first-line-indent", settings.firstLineIndent);
+  }, [settings.contentWidth, settings.firstLineIndent]);
 
   useEffect(() => {
     const root = document.documentElement;

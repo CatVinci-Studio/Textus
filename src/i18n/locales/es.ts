@@ -1087,6 +1087,7 @@ para usar una.
   diagramEngineHint:
     "Pele dibuja más rápido, pero distribuye los diagramas de otra forma que GitHub y Mermaid y no admite algunas funciones, como HTML en las etiquetas; Mermaid dibuja lo que Pele no puede.",
   codeLineNumbersLabel: "Números de línea en los bloques de código",
+  firstLineIndentLabel: "Sangría de primera línea",
   colorSwatchesLabel: "Muestras antes de los códigos de color",
   colorSwatchesOff: "Desactivadas",
   colorSwatchesCode: "Solo en el código",

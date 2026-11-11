@@ -39,6 +39,11 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
             <option value="full">{t.contentWidthFull}</option>
           </Select>
         </SettingRow>
+        <ToggleRow
+          label={t.firstLineIndentLabel}
+          checked={settings.firstLineIndent}
+          onChange={(v) => setSettings({ firstLineIndent: v })}
+        />
         <DocTextFold t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
       {/* One view for every document in every window. */}

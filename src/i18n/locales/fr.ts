@@ -1094,6 +1094,7 @@ utiliser une.
   diagramEngineHint:
     "Pele dessine plus vite, mais dispose les diagrammes autrement que GitHub et Mermaid et ignore quelques fonctions, comme le HTML dans les libellés ; Mermaid dessine ce que Pele ne peut pas.",
   codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
+  firstLineIndentLabel: "Retrait de première ligne",
   colorSwatchesLabel: "Pastilles avant les codes couleur",
   colorSwatchesOff: "Désactivées",
   colorSwatchesCode: "Dans le code seulement",

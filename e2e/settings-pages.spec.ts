@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, pasteMarkdown } from "./helpers";
 
 // Settings: the list of pages in the sidebar (the gear, ⌘,), one page at a
 // time in the one Settings tab; every way in lands there.
@@ -124,4 +124,19 @@ test("in too narrow a column, Settings asks for room instead of squeezing its ro
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator(".settings-tab-narrow")).toBeVisible();
   await expect(page.locator(".settings-tab-page")).toBeHidden();
+});
+
+test("first-line indent sets in the document's paragraphs, not a list's", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { firstLineIndent: true } });
+  await pasteMarkdown(page, "One.\n\nTwo.\n\n- item\n");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const indent = (sel: string) =>
+    editor
+      .locator(sel)
+      .first()
+      .evaluate((e) => parseFloat(getComputedStyle(e).textIndent));
+  await expect.poll(() => indent(":scope > p")).toBeGreaterThan(0);
+  expect(await indent("li p")).toBe(0);
 });
