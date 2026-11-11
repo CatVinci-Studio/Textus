@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useSettings } from "../../prefs/SettingsContext";
 import { readRecents } from "./recents";
 import { formatCombo } from "../../utils/shortcuts";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "../../engine/controls/usePlacement";
 import { runMenuAction } from "./app-menu-actions";
 import {
   buildAppMenu,
@@ -50,7 +50,7 @@ export function AppMenu({ x, y, onClose, checks, section }: AppMenuProps) {
   const { t, settings } = useSettings();
   const pluginEntries = usePluginMenuEntries(settings.language);
   const ref = useRef<HTMLDivElement>(null);
-  const pos = useViewportClamp(ref, x, y);
+  const pos = usePlacement(ref, x, y);
   const phone = usePhoneLayout();
   const presence = usePresenceProps(ref);
 

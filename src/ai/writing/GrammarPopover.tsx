@@ -1,5 +1,5 @@
 import { useRef, type CSSProperties } from "react";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "../../engine/controls/usePlacement";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import { ChevronIcon } from "../../engine/controls/icons";
 import type { GrammarKind } from "./grammar-kind";
@@ -73,7 +73,7 @@ export function GrammarPopover({
   onMouseLeave,
 }: GrammarPopoverProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const pos = useViewportClamp(rootRef, info.x, info.y);
+  const pos = usePlacement(rootRef, info.x, info.y);
   const presence = usePresenceProps(rootRef);
   // It grows out of the underline it explains: from its top edge, or its
   // bottom one when the window's edge pushed it up over the line.

@@ -19,7 +19,7 @@ function menuHost(): Element {
   );
 }
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "./usePlacement";
 import { ActionSheet } from "./ActionSheet";
 import { useMenuAim } from "./menu-aim";
 import { usePhoneLayout } from "./usePhoneLayout";
@@ -121,7 +121,7 @@ function PointerMenu({
     open,
     anchor ?? "",
   );
-  const pos = useViewportClamp(ref, x, y, { alignEnd });
+  const pos = usePlacement(ref, x, y, { alignEnd });
   const presence = usePresenceProps(ref);
   // It grows out of the point that was clicked - a corner, unless the menu
   // was pulled back from a window edge.

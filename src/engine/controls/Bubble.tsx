@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { scaledPx } from "../tokens/chrome-scale";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "./usePlacement";
 import { usePresenceProps } from "../motion/usePresence";
 
 export type BubbleSide = "above" | "below" | "left" | "right";
@@ -110,7 +110,7 @@ export function Bubble({
       side: placed,
     });
   }, [anchor, side, align, gap, children]);
-  const pos = useViewportClamp(ref, at.x, at.y);
+  const pos = usePlacement(ref, at.x, at.y);
 
   // The tail at the element's middle, wherever the clamp moved the body:
   // along its top or bottom edge, or its left or right one.

@@ -3,7 +3,7 @@ import { InlineMarkdownText } from "../MarkdownText";
 import { memo } from "react";
 import { createPortal } from "react-dom";
 import type { ReviewNote } from "./review-notes-plugin";
-import { useViewportClamp } from "../../utils/hooks/useViewportClamp";
+import { usePlacement } from "../../engine/controls/usePlacement";
 import "./ReviewMargin.css";
 import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { type ReviewMarginLabels } from "./margin-layout";
@@ -179,7 +179,7 @@ export function NotePopover({
     ".review-badge",
   );
   // Kept within the document's column, off the AI panel.
-  const pos = useViewportClamp(ref, x, y, {
+  const pos = usePlacement(ref, x, y, {
     right: () =>
       tabElement()
         ?.querySelector(":scope > .editor-scroll")
