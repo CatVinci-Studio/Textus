@@ -2,7 +2,7 @@
 //! matter, headings, links, tags and tasks, re-read only when a file's size or
 //! time changes. Built on the first request. Lines count from 0.
 
-use super::access::{inside, refused, require_not_app_data};
+use super::access::{in_folder, refused, require_not_app_data};
 use super::state;
 use crate::ai::doc_blocks::Document as DocBlocks;
 use regex::Regex;
@@ -408,7 +408,7 @@ pub async fn plugin_metadata_get(
     path: String,
 ) -> Result<Option<DocumentMeta>, String> {
     checked_root(&app, &id, &root)?;
-    let file = inside(Path::new(&root), Path::new(&path))?;
+    let file = in_folder(Path::new(&root), Path::new(&path))?;
     let Ok(text) = tokio::fs::read_to_string(&file).await else {
         return Ok(None);
     };

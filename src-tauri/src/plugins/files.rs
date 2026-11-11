@@ -2,7 +2,7 @@
 //! no-overwrite create, a read-then-write that never loses a change), and the
 //! plugin's secrets. Each is checked against `state.json`.
 
-use super::access::{inside, refused, require_not_app_data, writable};
+use super::access::{in_folder, refused, require_not_app_data};
 use super::{require_id, state};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -34,7 +34,7 @@ pub async fn plugin_fs_stat(
     if !state::read(&app).allows(&id, "files.read") {
         return Err(refused(&id, "files.read"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = in_folder(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     let Ok(meta) = tokio::fs::metadata(&path).await else {
         return Ok(None);
@@ -69,7 +69,7 @@ pub async fn plugin_fs_create(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = writable(Path::new(&root), Path::new(&path))?;
+    let path = in_folder(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     if let Some(parent) = path.parent() {
         tokio::fs::create_dir_all(parent)
@@ -124,8 +124,14 @@ pub async fn plugin_fs_read_versioned(
     if !state::read(&app).allows(&id, "files.read") {
         return Err(refused(&id, "files.read"));
     }
-    let path = inside(Path::new(&root), Path::new(&path))?;
+    let path = in_folder(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
+    if tokio::fs::metadata(&path)
+        .await
+        .is_ok_and(|m| m.len() > super::access::MAX_READ_BYTES)
+    {
+        return Err("The file is too big to open here.".to_string());
+    }
     let bytes = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
@@ -152,7 +158,7 @@ pub async fn plugin_fs_write_if(
     if !state::read(&app).allows(&id, "files.write") {
         return Err(refused(&id, "files.write"));
     }
-    let path = writable(Path::new(&root), Path::new(&path))?;
+    let path = in_folder(Path::new(&root), Path::new(&path))?;
     require_not_app_data(&app, &path)?;
     let now = match tokio::fs::read(&path).await {
         Ok(bytes) => bytes,

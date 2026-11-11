@@ -222,7 +222,10 @@ const SECRET_FILES: [&str; 5] = [
 
 fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
     use tauri::Manager;
-    let Ok(config) = app.path().app_config_dir().and_then(|c| Ok(std::fs::canonicalize(c)?))
+    let Ok(config) = app
+        .path()
+        .app_config_dir()
+        .and_then(|c| Ok(std::fs::canonicalize(c)?))
     else {
         return Ok(());
     };
@@ -239,7 +242,9 @@ fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
             .map(|n| n.to_string_lossy().to_lowercase())
             .unwrap_or_default();
         real.parent() == Some(config.as_path())
-            && SECRET_FILES.iter().any(|s| name == *s || name.starts_with(&format!("{s}.")))
+            && SECRET_FILES
+                .iter()
+                .any(|s| name == *s || name.starts_with(&format!("{s}.")))
     });
     if secret {
         return Err("This file holds Textus's keys; it isn't opened here.".into());

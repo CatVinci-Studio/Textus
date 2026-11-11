@@ -60,14 +60,20 @@ fn plain_http_only_to_this_computer() {
 }
 
 #[test]
-fn a_plugin_writes_no_hidden_file_but_the_folders_own_settings() {
+fn a_plugin_reaches_no_hidden_file_but_the_folders_own_settings() {
     let root = tempfile::tempdir().unwrap();
-    for hidden in [".git/hooks/post-commit", "notes/.vscode/tasks.json", ".env"] {
+    for hidden in [
+        ".git/hooks/post-commit",
+        ".git/config",
+        "notes/.vscode/tasks.json",
+        ".env",
+        ".obsidian/plugins/x/data.json",
+    ] {
         assert!(
-            writable(root.path(), Path::new(hidden)).is_err(),
+            in_folder(root.path(), Path::new(hidden)).is_err(),
             "{hidden}"
         );
     }
-    assert!(writable(root.path(), Path::new("notes/a.md")).is_ok());
-    assert!(writable(root.path(), Path::new(".textus/sync.json")).is_ok());
+    assert!(in_folder(root.path(), Path::new("notes/a.md")).is_ok());
+    assert!(in_folder(root.path(), Path::new(".textus/sync.json")).is_ok());
 }
