@@ -24,19 +24,22 @@ const floor = (limits: PanelLimits) => Math.min(limits.min, PANEL_FLOOR);
 const DRAG_ROOM = 100;
 
 /** The widest a panel may be in a window `windowWidth` wide, beside
- *  `beside` px of the other panel: the document keeps its room first. */
+ *  `beside` px of the other panel: the islands keep their room first -
+ *  `keep`, what they need at the least (frame-store's need), else one
+ *  document's. */
 export function sidePanelMax(
   windowWidth: number,
   limits: PanelLimits,
   beside = 0,
   scale = 1,
+  keep = 0,
 ): number {
   return Math.max(
     floor(limits) * scale,
     Math.min(
       limits.max * scale,
       Math.floor(windowWidth * PANEL_SHARE),
-      windowWidth - beside - DOC_MIN * scale,
+      windowWidth - beside - Math.max(keep, DOC_MIN * scale),
     ),
   );
 }
@@ -48,8 +51,9 @@ export function sidePanelMin(
   limits: PanelLimits,
   beside = 0,
   scale = 1,
+  keep = 0,
 ): number {
-  const max = sidePanelMax(windowWidth, limits, beside, scale);
+  const max = sidePanelMax(windowWidth, limits, beside, scale, keep);
   return Math.min(
     limits.min * scale,
     Math.max(floor(limits) * scale, max - DRAG_ROOM * scale),
@@ -63,11 +67,12 @@ export function clampSidePanel(
   limits: PanelLimits,
   beside = 0,
   scale = 1,
+  keep = 0,
 ): number {
   return Math.round(
     Math.min(
-      sidePanelMax(windowWidth, limits, beside, scale),
-      Math.max(sidePanelMin(windowWidth, limits, beside, scale), width),
+      sidePanelMax(windowWidth, limits, beside, scale, keep),
+      Math.max(sidePanelMin(windowWidth, limits, beside, scale, keep), width),
     ),
   );
 }

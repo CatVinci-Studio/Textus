@@ -33,6 +33,8 @@ beforeEach(() => {
 describe("the sidebar's width bounds", () => {
   it("allows up to 480px on a wide window", () => {
     expect(sidePanelMax(1920, SIDEBAR_LIMITS)).toBe(480);
+    // Beside a document and the AI, the islands keep what they need.
+    expect(sidePanelMax(1200, SIDEBAR_LIMITS, 48, 1, 860)).toBe(292);
   });
 
   it("allows under half of a small window", () => {

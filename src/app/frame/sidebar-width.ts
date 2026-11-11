@@ -1,3 +1,4 @@
+import { useIslandsNeed } from "../../engine/frame/frame-store";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { placeSidebar } from "./useSidebarFrame";
 import { useCallback, useState } from "react";
@@ -32,18 +33,22 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
   // Kept in the interface's size units, shown at its size now.
   const [chosen, setChosen] = useState(storedSidebarWidth);
   const scale = chromeScale();
+  // The islands beside it keep what they need at the least.
+  const keep = useIslandsNeed();
   const width = clampSidePanel(
     chosen * scale,
     windowWidth,
     SIDEBAR_LIMITS,
     beside,
     scale,
+    keep,
   );
   const setWidth = useCallback(
     (next: number, persist = true) => {
       const step = chromeScale();
       const base = Math.round(
-        clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step) / step,
+        clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step, keep) /
+          step,
       );
       // While the edge is held, only the shell's column and the sidebar
       // follow, written as their own (not inherited) widths: a variable
@@ -54,7 +59,7 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
       setChosen(base);
       setUiState("sidebarWidth", base);
     },
-    [windowWidth, beside],
+    [windowWidth, beside, keep],
   );
   const resetWidth = useCallback(() => {
     setChosen(SIDEBAR_DEFAULT_WIDTH);
@@ -62,8 +67,10 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
   }, []);
   return {
     width,
-    min: Math.round(sidePanelMin(windowWidth, SIDEBAR_LIMITS, beside, scale)),
-    max: sidePanelMax(windowWidth, SIDEBAR_LIMITS, beside, scale),
+    min: Math.round(
+      sidePanelMin(windowWidth, SIDEBAR_LIMITS, beside, scale, keep),
+    ),
+    max: sidePanelMax(windowWidth, SIDEBAR_LIMITS, beside, scale, keep),
     setWidth,
     resetWidth,
   };
