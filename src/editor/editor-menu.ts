@@ -48,8 +48,6 @@ import {
 // The editor commands behind the right-click, Format and Edit menus, and
 // the right-click menu itself.
 
-export type MenuEntry = ContextMenuEntry;
-
 // CmdKey<any>: the preset command keys vary in payload type (some
 // unknown, some undefined) and all are called here without a payload.
 export function runCommand(run: EditorRunner, key: CmdKey<any>) {
@@ -179,7 +177,7 @@ export interface ContextMenuOptions {
 export function buildContextMenuItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const { t, imagePos } = options;
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
@@ -189,7 +187,7 @@ export function buildContextMenuItems(
   );
   const nothingSelected =
     run((ctx) => ctx.get(editorViewCtx).state.selection.empty) ?? true;
-  const clipboard: MenuEntry[] = [
+  const clipboard: ContextMenuEntry[] = [
     {
       label: t.cut,
       disabled: nothingSelected,
@@ -223,7 +221,7 @@ export function buildContextMenuItems(
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
       : []),
   ];
-  const ownChanges: MenuEntry[] = options.ownChanges
+  const ownChanges: ContextMenuEntry[] = options.ownChanges
     ? [
         { label: t.trackAcceptAll, onSelect: options.ownChanges.acceptAll },
         { label: t.trackRejectAll, onSelect: options.ownChanges.rejectAll },
@@ -256,7 +254,7 @@ export function buildContextMenuItems(
 function drawnBlockItems(
   t: Strings,
   block: DrawnBlockActions | null,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   if (!block) return [];
   const layout = block.layout;
   return [
@@ -287,7 +285,7 @@ function grouped(
   label: string,
   items: ContextMenuItem[],
   max = 1,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   return items.length > max ? [{ label, items }] : items;
 }
 
@@ -299,10 +297,10 @@ function grouped(
 export function buildPhoneMoreItems(
   run: EditorRunner,
   options: ContextMenuOptions,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const { t, imagePos } = options;
   // The phone has no Edit menu to offer the plain text.
-  const clipboard: MenuEntry[] = [
+  const clipboard: ContextMenuEntry[] = [
     { label: t.cut, onSelect: () => options.copyOrCut(true) },
     ...(options.copyAsPlainText
       ? [{ label: t.copyAsPlainText, onSelect: options.copyAsPlainText }]
@@ -326,7 +324,7 @@ export function buildPhoneMoreItems(
 }
 
 /** The groups that have items, a separator between each two. */
-function joinGroups(...groups: MenuEntry[][]): MenuEntry[] {
+function joinGroups(...groups: ContextMenuEntry[][]): ContextMenuEntry[] {
   return groups
     .filter((group) => group.length > 0)
     .flatMap((group, i) =>
@@ -348,13 +346,15 @@ function selectedText(run: EditorRunner): string {
 }
 
 /** Select All, Find, and the AI items: offered wherever the caret is. */
-function generalItems(options: ContextMenuOptions): MenuEntry[] {
+function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   const { t, aiItems } = options;
   return [
     { label: t.selectAll, onSelect: options.selectAll },
     "separator",
     { label: t.findReplace, onSelect: options.openFindReplace },
-    ...(aiItems.length > 0 ? (["separator", ...aiItems] as MenuEntry[]) : []),
+    ...(aiItems.length > 0
+      ? (["separator", ...aiItems] as ContextMenuEntry[])
+      : []),
   ];
 }
 
@@ -381,7 +381,7 @@ function formatGroups(
   options: ContextMenuOptions,
   blocks: boolean,
   nothingSelected: boolean,
-): MenuEntry[] {
+): ContextMenuEntry[] {
   const { t } = options;
   const onView = (act: (view: EditorView) => unknown) => () =>
     run((ctx) => {
@@ -392,7 +392,7 @@ function formatGroups(
   // As the Format menu inserts them.
   const insertBlock = (kind: string) => () =>
     window.dispatchEvent(new CustomEvent(INSERT_BLOCK_EVENT, { detail: kind }));
-  const format: MenuEntry = {
+  const format: ContextMenuEntry = {
     label: t.menuFormat,
     items: [
       { label: t.toolbarBold, onSelect: onView((v) => toggleSpan(v, 2)) },

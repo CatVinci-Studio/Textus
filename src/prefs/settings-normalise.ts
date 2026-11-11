@@ -1,6 +1,6 @@
 import { normaliseMcpServers } from "./mcp";
 import { hasTextusAi } from "../platform/capabilities";
-import { detectLang, isLang, localeOf, type Lang } from "../i18n/strings";
+import { detectLang, isLang, type Lang } from "../i18n/strings";
 import {
   UPDATE_CHANNELS,
   type UpdateChannel,
@@ -87,12 +87,6 @@ export function storedCreations(value: unknown): Creation[] {
       typeof c.name === "string" &&
       typeof c.at === "number",
   );
-}
-
-/** The `lang` attribute for the UI language, which the CSS `:lang()` font
- *  stacks key off; the boot script reads the same table. */
-export function htmlLang(language: Lang): string {
-  return localeOf(language);
 }
 
 /** A new installation starts in the OS's language, when the app has it. */

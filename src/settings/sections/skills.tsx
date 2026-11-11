@@ -19,12 +19,12 @@ import { withoutCreation } from "../../ai/chat/creations";
 import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import {
-  AUTOMATIC_CONVENTIONS,
   CONVENTION_PROFILES,
   conventionsLanguageName,
   conventionsProfileName,
   isConventionsValue,
 } from "../writing-conventions";
+import { WRITING_CONVENTIONS_AUTOMATIC } from "../../platform/ipc-ai-types";
 import { errorText } from "../../utils/error-text";
 import { matchesWords } from "../../utils/match-words";
 import { explainError } from "../../utils/error-explain";
@@ -428,7 +428,7 @@ export function WritingConventionsRow({ t }: { t: Strings }) {
         value={value}
         onChange={(e) => setSettings({ writingConventions: e.target.value })}
       >
-        <option value={AUTOMATIC_CONVENTIONS}>
+        <option value={WRITING_CONVENTIONS_AUTOMATIC}>
           {t.writingConventionsAuto}
         </option>
         {/* A newer build's profile stays selectable, by its own name. */}

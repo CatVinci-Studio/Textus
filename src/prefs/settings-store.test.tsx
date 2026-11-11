@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { localeOf } from "../i18n/strings";
 import TABLES from "./appearance-tables.json";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
 import { act, cleanup, render, screen } from "@testing-library/react";
@@ -13,7 +14,6 @@ import {
   vi,
 } from "vitest";
 import {
-  htmlLang,
   loadSettings,
   normaliseSettings,
   resetSettingsStoreForTests,
@@ -329,10 +329,10 @@ describe("language", () => {
   });
 
   it("sets the document language for the CSS :lang() font stacks", () => {
-    expect(htmlLang("zh")).toBe("zh-CN");
-    expect(htmlLang("zh-Hant")).toBe("zh-TW");
-    expect(htmlLang("ja")).toBe("ja");
-    expect(htmlLang("en")).toBe("en");
+    expect(localeOf("zh")).toBe("zh-CN");
+    expect(localeOf("zh-Hant")).toBe("zh-TW");
+    expect(localeOf("ja")).toBe("ja");
+    expect(localeOf("en")).toBe("en");
     boot({ language: "zh", languageChosen: true });
     render(
       <SettingsProvider>

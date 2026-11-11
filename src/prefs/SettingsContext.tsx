@@ -1,3 +1,4 @@
+import { localeOf } from "../i18n/strings";
 import {
   createContext,
   useContext,
@@ -15,7 +16,6 @@ import {
 } from "../i18n/strings";
 import { readBoot } from "../storage/boot";
 import type { Settings } from "./settings-types";
-import { htmlLang } from "./settings-normalise";
 import { setCurrentLanguage } from "../i18n/current";
 import {
   loadSettings,
@@ -68,7 +68,7 @@ export {
   type PanelMode,
   storedAgentMode,
 } from "./settings-values";
-export { htmlLang, normaliseSettings } from "./settings-normalise";
+export { normaliseSettings } from "./settings-normalise";
 export { loadSettings, resetSettingsStoreForTests } from "./settings-store";
 
 interface SettingsContextValue {
@@ -111,7 +111,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = htmlLang(settings.language);
+    // The CSS :lang() font stacks key off it; the boot script sets the same.
+    document.documentElement.lang = localeOf(settings.language);
     setCurrentLanguage(settings.language);
   }, [settings.language]);
 

@@ -21,7 +21,7 @@ import { PANEL_FLOOR } from "../../engine/controls/side-panel-width";
 import { storeSidebarTab, storedSidebarTab } from "./sidebar-tab";
 
 /** A sidebar tab's id. */
-export type PanelMode = string;
+export type SidebarTabId = string;
 
 function subscribeWindowResize(onChange: () => void) {
   window.addEventListener("resize", onChange);
@@ -149,7 +149,7 @@ export function useSidePanels(aiOn: boolean) {
   const agentClosing = agentPresence.state === "closing";
   // Remembered on the desktop like the open state; on iOS it starts on
   // Files.
-  const [panelMode, setPanelMode] = useState<PanelMode>(() =>
+  const [panelMode, setPanelMode] = useState<SidebarTabId>(() =>
     isIOSApp ? "tree" : storedSidebarTab(),
   );
   useEffect(() => {

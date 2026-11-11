@@ -8,7 +8,7 @@ import {
 } from "../../engine/motion/usePresence";
 import { ResizeHandle } from "../../engine/controls/ResizeHandle";
 import type { Strings } from "../../i18n/strings";
-import type { PanelMode } from "./useSidePanels";
+import type { SidebarTabId } from "./useSidePanels";
 import type { useSidebarWidth } from "./sidebar-width";
 import type { OpenFolder } from "../useOpenFolder";
 import { SidebarTabBar } from "./SidebarTabBar";
@@ -41,8 +41,8 @@ export function Sidebar({
   open: boolean;
   presence: PresenceHandle;
   closing: boolean;
-  mode: PanelMode;
-  onModeChange: (mode: PanelMode) => void;
+  mode: SidebarTabId;
+  onModeChange: (mode: SidebarTabId) => void;
   width: ReturnType<typeof useSidebarWidth>;
   openFolder: OpenFolder;
   activePath: string | null;

@@ -25,7 +25,8 @@ import {
   htmlTableToMarkdown,
   type TableRefusal,
 } from "./tables/html-table-markdown";
-import type { MenuEntry } from "./editor-menu";
+
+import type { ContextMenuEntry } from "../engine/controls/ContextMenu";
 
 /** Tables in the editor's menus. */
 
@@ -169,7 +170,10 @@ export function inTable(run: EditorRunner): boolean {
 }
 
 /** Column alignment and row/column selection. */
-export function tableLayoutItems(run: EditorRunner, t: Strings): MenuEntry[] {
+export function tableLayoutItems(
+  run: EditorRunner,
+  t: Strings,
+): ContextMenuEntry[] {
   return [
     { label: t.alignLeft, onSelect: () => alignTableColumn(run, "left") },
     { label: t.alignCenter, onSelect: () => alignTableColumn(run, "center") },
@@ -182,7 +186,10 @@ export function tableLayoutItems(run: EditorRunner, t: Strings): MenuEntry[] {
 
 /** A table's right-click: the two most used additions at hand, the rest
  *  of a row's and a column's actions in their submenus. */
-export function tableMenuItems(run: EditorRunner, t: Strings): MenuEntry[] {
+export function tableMenuItems(
+  run: EditorRunner,
+  t: Strings,
+): ContextMenuEntry[] {
   const table = (action: TableAction) => () => runTableAction(run, action);
   return [
     { label: t.insertRowBelow, onSelect: table("row-below") },
@@ -235,7 +242,10 @@ const REFUSED: Record<TableRefusal, TextKey | null> = {
 
 /** "Convert to Markdown Table" for the HTML table the caret is in: one undo
  *  step, or shown disabled with the reason it can't be. */
-export function htmlTableItems(run: EditorRunner, t: Strings): MenuEntry[] {
+export function htmlTableItems(
+  run: EditorRunner,
+  t: Strings,
+): ContextMenuEntry[] {
   const found = run((ctx) => {
     const { $from } = ctx.get(editorViewCtx).state.selection;
     // The caret is in the HTML node, inside its paragraph.

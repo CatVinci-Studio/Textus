@@ -10,8 +10,6 @@ import {
  * they never change; only their names are localised.
  */
 
-export const AUTOMATIC_CONVENTIONS = WRITING_CONVENTIONS_AUTOMATIC;
-
 /** The profiles, by document language, in the order the picker lists them:
  *  the backend's list (WRITING_CONVENTIONS), each profile under the language
  *  its name says - Traditional Chinese with mainland rules is Traditional. */
@@ -32,7 +30,7 @@ const ALL_PROFILES = new Set(CONVENTION_PROFILES.flatMap((g) => g.profiles));
 
 export function isConventionsValue(value: unknown): value is string {
   return (
-    value === AUTOMATIC_CONVENTIONS ||
+    value === WRITING_CONVENTIONS_AUTOMATIC ||
     (typeof value === "string" && ALL_PROFILES.has(value))
   );
 }
