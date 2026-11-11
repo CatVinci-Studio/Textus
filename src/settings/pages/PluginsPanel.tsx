@@ -8,12 +8,9 @@ import {
 } from "react";
 import { SearchField } from "../../engine/controls/SearchField";
 import { ChevronIcon, MoreIcon } from "../../engine/controls/icons";
-import { IconButton } from "../../engine/controls/IconButton";
-import {
-  ContextMenu,
-  type ContextMenuEntry,
-} from "../../engine/controls/ContextMenu";
-import { Presence } from "../../engine/motion/usePresence";
+import { Tooltip } from "../../engine/controls/Tooltip";
+import { useMenuButton } from "../../engine/controls/useMenuButton";
+import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
 import { requestCreate } from "../../ai/chat/create-request";
 import { isDesktopApp } from "../../platform/capabilities";
 import { plugins as pluginsIpc } from "../../platform/ipc";
@@ -68,7 +65,7 @@ export function PluginsPanel({
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
   const { actionFor, install, installing, attempt, updateAll } =
     usePluginActions(t);
-  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const more = useMenuButton(() => moreMenu(t, attempt));
   const [query, setQuery] = useState("");
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
   const fold = (group: string) =>
@@ -105,29 +102,18 @@ export function PluginsPanel({
           aria-label={t.pluginsSearch}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <IconButton
-          label={t.pluginsMore}
-          className="tree-tool plugins-panel-more"
-          onClick={() => {
-            const box = document
-              .querySelector(".plugins-panel-more")
-              ?.getBoundingClientRect();
-            setMenu(box ? { x: box.left, y: box.bottom + 4 } : null);
-          }}
-        >
-          <MoreIcon />
-        </IconButton>
+        <Tooltip text={t.pluginsMore}>
+          <button
+            type="button"
+            className="tree-tool plugins-panel-more"
+            aria-label={t.pluginsMore}
+            {...more.button}
+          >
+            <MoreIcon />
+          </button>
+        </Tooltip>
       </div>
-      <Presence show={menu !== null}>
-        {menu && (
-          <ContextMenu
-            x={menu.x}
-            y={menu.y}
-            items={moreMenu(t, attempt)}
-            onClose={() => setMenu(null)}
-          />
-        )}
-      </Presence>
+      {more.menu}
       <section aria-label={t.pluginsInstalledGroup}>
         <GroupHeading
           label={t.pluginsInstalledGroup}

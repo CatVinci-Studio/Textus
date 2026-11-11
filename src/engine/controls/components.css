@@ -29,8 +29,14 @@
    Fragments flatten sections into direct children, so this covers them all. */
 .settings-group-body > * + *,
 .provider-picker > * + *,
-.tx-group > * + * {
-  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
+.tx-group > * + *,
+.settings-advanced-body > * + *,
+.settings-fold-body > *,
+.settings-builtin-category > .settings-row + .settings-row,
+.settings-skill-item + .settings-skill-item,
+.plugin-card + .plugin-card {
+  border-top: var(--divider-width, 1px) solid
+    color-mix(in srgb, var(--ui-border) 60%, transparent);
 }
 
 /* Every row: the setting's name on the left, its control on the right, one

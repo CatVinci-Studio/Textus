@@ -8,6 +8,7 @@ import { splitLayout } from "../../engine/layout/store";
 import { panesOf } from "../../engine/layout/tree";
 import { getWindowAccess, type PluginLocation } from "../app-bridge";
 import { localize } from "../store/manifest";
+import { hostAllowed } from "../store/permissions";
 import {
   closeFloating,
   floatingSide,
@@ -40,20 +41,6 @@ function locationOf(value: unknown): PluginLocation {
     page: num(v.page),
     fragment: optionalStr(v.fragment),
   };
-}
-
-/** Whether `host` is one the plugin may reach (`network:<host>`). */
-function hostGranted(p: PluginScope, host: string): boolean {
-  const granted = p.info.granted;
-  return (
-    granted.includes("network:*") ||
-    granted.includes(`network:${host}`) ||
-    granted.some(
-      (g) =>
-        g.startsWith("network:*.") &&
-        host.endsWith(g.slice("network:*".length)),
-    )
-  );
 }
 
 /**
@@ -130,8 +117,8 @@ export function layoutHandlers(p: PluginScope) {
     "layout.openWebPage": ({ url, where, title }: Params) => {
       const address = webPageUrl(str(url, "url"));
       if (!address) throw new Error("Only an https:// page opens in a tab.");
-      const host = new URL(address).hostname;
-      if (!hostGranted(p, host))
+      const { hostname: host, port } = new URL(address);
+      if (!hostAllowed(p.info.granted, host, Number(port || 443)))
         throw new Error(`${p.id} was not granted network:${host}.`);
       access().openPluginTab(
         {

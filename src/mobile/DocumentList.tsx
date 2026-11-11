@@ -7,6 +7,7 @@ import {
   ContextMenu,
   type ContextMenuItem,
 } from "../engine/controls/ContextMenu";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import {
   showConfirm,
   showMessage,
@@ -352,9 +353,9 @@ function DocumentItem({
   moreLabel: string;
 }) {
   const press = useLongPress();
-  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
-  const at = menuAt ?? press.at;
   const name = basename(entry.path);
+  const more = useMenuButton(actions, { title: name });
+  const at = press.at;
   const page = (
     <span className="document-page" aria-hidden>
       <span className="document-page-text">{entry.preview}</span>
@@ -386,14 +387,12 @@ function DocumentItem({
           type="button"
           className="document-list-icon-button"
           aria-label={moreLabel}
-          onClick={(e) => {
-            const r = e.currentTarget.getBoundingClientRect();
-            setMenuAt({ x: r.left, y: r.bottom });
-          }}
+          {...more.button}
         >
           <MoreIcon />
         </button>
       )}
+      {more.menu}
       <Presence show={!!at}>
         {at && (
           <ContextMenu
@@ -401,10 +400,7 @@ function DocumentItem({
             y={at.y}
             title={name}
             items={actions()}
-            onClose={() => {
-              setMenuAt(null);
-              press.close();
-            }}
+            onClose={press.close}
           />
         )}
       </Presence>

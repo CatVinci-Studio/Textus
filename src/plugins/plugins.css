@@ -93,9 +93,6 @@
   align-items: center;
   gap: var(--space-3);
 }
-.plugin-card + .plugin-card {
-  border-top: 1px solid var(--ui-border);
-}
 /* The card's text is its button: the whole of it opens the plugin's page,
    the switch beside it stays a switch. */
 .plugin-card-open {

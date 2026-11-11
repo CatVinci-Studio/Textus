@@ -2,6 +2,7 @@ import { splitFrontmatter } from "../../utils/frontmatter";
 import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
 import createDOMPurify from "dompurify";
 import { escapeHtml } from "../../utils/html";
+import { WIKILINK_SOURCE } from "../../utils/note-link";
 import { normalizeMathDelimiters } from "../../utils/markdown-math";
 import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
@@ -73,13 +74,15 @@ function mathExtensions(
   return [mathBlock, mathInline];
 }
 
+const WIKILINK_AT_START = new RegExp(`^${WIKILINK_SOURCE}`);
+
 // An Obsidian wikilink, drawn as the editor draws it, in the link colour.
 const wikilink: TokenizerAndRendererExtension = {
   name: "wikilink",
   level: "inline",
   start: (src) => src.indexOf("[["),
   tokenizer(src) {
-    const match = /^\[\[[^[\]\n]+\]\]/.exec(src);
+    const match = WIKILINK_AT_START.exec(src);
     if (match) return { type: "wikilink", raw: match[0] };
     return undefined;
   },

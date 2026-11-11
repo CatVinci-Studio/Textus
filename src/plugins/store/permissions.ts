@@ -36,6 +36,29 @@ export function permissionLabel(permission: Permission, t: Strings): string {
     : fill(t.pluginPermNetwork, { host });
 }
 
+/** Whether a `network:` grant covers `host` on `port`, by the rule the
+ *  Rust side fetches by: the host, `host:port`, `*.domain` for it and its
+ *  subdomains, or `*`; case aside. */
+export function hostAllowed(
+  granted: readonly string[],
+  host: string,
+  port: number,
+): boolean {
+  const name = host.toLowerCase();
+  return granted.some((g) => {
+    if (!g.startsWith("network:")) return false;
+    const rule = g.slice("network:".length).toLowerCase();
+    if (rule === "*") return true;
+    const colon = rule.lastIndexOf(":");
+    const rulePort = colon < 0 ? null : Number(rule.slice(colon + 1));
+    const ruleHost = colon < 0 ? rule : rule.slice(0, colon);
+    if (rulePort !== null && rulePort !== port) return false;
+    if (!ruleHost.startsWith("*.")) return name === ruleHost;
+    const domain = ruleHost.slice(2);
+    return name === domain || name.endsWith(`.${domain}`);
+  });
+}
+
 /** The HTTPS hosts a plugin was granted, for its webviews' frames. */
 export function grantedHosts(granted: readonly Permission[]): string[] {
   return granted

@@ -256,11 +256,12 @@
 /* A hairline is one device pixel where the screen has two or more per
    point, as iOS draws its separators. */
 @media (max-width: 760px) and (min-resolution: 2dppx) {
-  :root[data-window-chrome="mobile"] .settings-group-body > * + *,
+  :root[data-window-chrome="mobile"] {
+    --divider-width: 0.5px;
+  }
   :root[data-window-chrome="mobile"]
     .settings-nav-item
-    + .settings-nav-item::before,
-  :root[data-window-chrome="mobile"] .provider-picker > * + * {
+    + .settings-nav-item::before {
     border-top-width: 0.5px;
   }
 }

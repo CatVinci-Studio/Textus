@@ -241,9 +241,6 @@
   padding: 0 16px;
 }
 
-.settings-advanced-body > * + * {
-  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
-}
 
 .settings-row-control {
   display: flex;
@@ -306,9 +303,6 @@ button.settings-link-row {
   transform: rotate(90deg);
 }
 
-.settings-fold-body > * {
-  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
-}
 
 /* Indented a step: they belong to the row above. */
 .settings-fold-body {
@@ -729,10 +723,6 @@ button.settings-inline-button {
   font-weight: 600;
 }
 
-.settings-builtin-category > .settings-row + .settings-row,
-.settings-skill-item + .settings-skill-item {
-  border-top: 1px solid color-mix(in srgb, var(--ui-border) 60%, transparent);
-}
 
 .settings-builtin-skill-name {
   font-family: var(--font-mono);

@@ -60,6 +60,8 @@ describe("renderMarkdownHtml", () => {
     expect(renderMarkdownHtml("[[a_b_c|<b>x</b>]]")).toContain(
       '<span class="wikilink">[[a_b_c|&lt;b&gt;x&lt;/b&gt;]]</span>',
     );
+    // `[[x]](url)` is a link whose text has brackets, as elsewhere.
+    expect(renderMarkdownHtml("[[x]](https://a.b)")).not.toContain("wikilink");
   });
 });
 

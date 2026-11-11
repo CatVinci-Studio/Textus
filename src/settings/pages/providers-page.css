@@ -31,7 +31,7 @@
   font-size: var(--text-caption);
 }
 
-@container settings-page (max-width: 440px) {
+@container settings-page (max-width: 600px) {
   .providers-page {
     grid-template-columns: 1fr;
   }
