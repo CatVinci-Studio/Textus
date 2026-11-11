@@ -1769,7 +1769,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermFilesWrite: "開いているフォルダでファイルを作成・変更する",
   pluginPermClipboard: "クリップボードを読み書きする",
   pluginPermEditorInput:
-    "エディタで押すキーを引き受け、そのキーのとおりに編集する",
+    "エディタで押すキーを引き受け、そのキーのとおりに編集する（コピー・切り取り・削除した内容を読み取り、クリップボードに入れる）",
   pluginPermProjectData:
     "開いているフォルダー（.textus/plugins）に自分のデータを保存する",
   pluginPermAiTools: "Textus AI に独自のツールを提供する",

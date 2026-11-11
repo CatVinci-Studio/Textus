@@ -1684,7 +1684,8 @@ export default {
   pluginPermFilesRead: "讀取開啟的資料夾中的檔案",
   pluginPermFilesWrite: "在開啟的資料夾中建立和修改檔案",
   pluginPermClipboard: "讀取和寫入剪貼簿",
-  pluginPermEditorInput: "接管你在編輯器裡的按鍵，並按你的按鍵直接編輯",
+  pluginPermEditorInput:
+    "接管你在編輯器裡的按鍵並按鍵編輯：它複製、剪下或刪除的內容，它能讀到，也會放進剪貼簿",
   pluginPermProjectData: "在開啟的資料夾裡（.textus/plugins）儲存它自己的資料",
   pluginPermAiTools: "為 Textus AI 提供它自己的工具",
   pluginPermNotifications: "顯示系統通知",

@@ -1845,7 +1845,7 @@ para usar una.
   pluginPermFilesWrite: "Crear y modificar archivos en la carpeta abierta",
   pluginPermClipboard: "Leer y escribir el portapapeles",
   pluginPermEditorInput:
-    "Tomar las teclas que pulsas en el editor y editar según las pulsas",
+    "Tomar las teclas que pulsas en el editor y editar según las pulsas: lee lo que copia, corta o borra, y lo pone en el portapapeles",
   pluginPermProjectData:
     "Guardar sus propios datos en la carpeta abierta, en .textus/plugins",
   pluginPermAiTools: "Dar a Textus AI herramientas propias para usar",

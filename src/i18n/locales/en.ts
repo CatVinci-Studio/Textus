@@ -1798,7 +1798,7 @@ type /name in a conversation to use one.
   pluginPermFilesWrite: "Create and change files in the open folder",
   pluginPermClipboard: "Read and write the clipboard",
   pluginPermEditorInput:
-    "Take over the keys you type in the editor, and edit as you type",
+    "Take over the keys you type in the editor and edit as you type: what it copies, cuts or deletes it reads, and puts on the clipboard",
   pluginPermProjectData:
     "Keep its own data in the open folder, in .textus/plugins",
   pluginPermAiTools: "Give Textus AI tools of its own to use",

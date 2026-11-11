@@ -1868,7 +1868,7 @@ utiliser une.
   pluginPermFilesWrite: "Créer et modifier des fichiers dans le dossier ouvert",
   pluginPermClipboard: "Lire et écrire le presse-papiers",
   pluginPermEditorInput:
-    "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe",
+    "Prendre en charge les touches tapées dans l’éditeur, et modifier au fil de la frappe : ce qu’il copie, coupe ou supprime, il le lit et le met dans le presse-papiers",
   pluginPermProjectData:
     "Garder ses propres données dans le dossier ouvert, dans .textus/plugins",
   pluginPermAiTools: "Donner à Textus AI ses propres outils",

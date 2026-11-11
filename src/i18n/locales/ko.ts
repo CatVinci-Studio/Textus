@@ -1750,7 +1750,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermFilesRead: "열린 폴더의 파일 읽기",
   pluginPermFilesWrite: "열린 폴더에서 파일 만들기 및 변경",
   pluginPermClipboard: "클립보드 읽기 및 쓰기",
-  pluginPermEditorInput: "편집기에서 누르는 키를 넘겨받아, 누른 대로 편집",
+  pluginPermEditorInput:
+    "편집기에서 누르는 키를 넘겨받아 누른 대로 편집: 복사·잘라내기·삭제한 내용을 읽고 클립보드에 넣음",
   pluginPermProjectData:
     "열려 있는 폴더(.textus/plugins)에 자체 데이터를 저장하기",
   pluginPermAiTools: "Textus AI에 자체 도구를 제공하기",

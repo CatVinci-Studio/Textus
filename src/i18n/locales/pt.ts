@@ -1826,7 +1826,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermFilesWrite: "Criar e alterar arquivos na pasta aberta",
   pluginPermClipboard: "Ler e escrever na área de transferência",
   pluginPermEditorInput:
-    "Assumir as teclas que você digita no editor e editar conforme digita",
+    "Assumir as teclas que você digita no editor e editar conforme digita: lê o que copia, recorta ou apaga, e o põe na área de transferência",
   pluginPermProjectData:
     "Guardar os próprios dados na pasta aberta, em .textus/plugins",
   pluginPermAiTools: "Dar ao Textus AI ferramentas próprias para usar",

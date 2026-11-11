@@ -1836,7 +1836,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermFilesWrite: "Dateien im geöffneten Ordner anlegen und ändern",
   pluginPermClipboard: "Die Zwischenablage lesen und schreiben",
   pluginPermEditorInput:
-    "Die Tasten im Editor übernehmen und beim Tippen bearbeiten",
+    "Die Tasten im Editor übernehmen und beim Tippen bearbeiten: was es kopiert, ausschneidet oder löscht, liest es und legt es in die Zwischenablage",
   pluginPermProjectData:
     "Eigene Daten im geöffneten Ordner ablegen, unter .textus/plugins",
   pluginPermAiTools: "Textus AI eigene Werkzeuge geben",
