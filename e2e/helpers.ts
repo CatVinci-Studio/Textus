@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { type Page } from "@playwright/test";
 
 /** A document exercising most of the content styling. */
 export const SAMPLE_DOC = `# 老城区更新的几点思考
@@ -28,9 +28,6 @@ console.log("a fairly long first line of code to see whether the language label 
 
 /** Whether the page runs on a Mac: Mod is ⌘ there, and keys read so. */
 export const MAC = process.platform === "darwin";
-
-/** A line's end: on a Mac End scrolls, and Cmd+Right moves the caret. */
-export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
 
 /** Opens the app with onboarding done and the given extra localStorage,
  *  and makes rendering deterministic (no animations, no blinking caret).
@@ -136,20 +133,6 @@ export function emit(page: Page, name: string, payload?: unknown) {
   );
 }
 
-/** The calls made to a mocked command, with their arguments. */
-export function invokeCalls(
-  page: Page,
-  cmd: string,
-): Promise<Record<string, unknown>[]> {
-  return page.evaluate(
-    (c) =>
-      ((window as unknown as DevWindow).__devInvokeCalls ?? []).filter(
-        (call) => call.cmd === c,
-      ),
-    cmd,
-  );
-}
-
 /** Waits until nothing moves: no animation running and every scroll
  *  position the same for a few frames (at most 3 s). In place of a fixed
  *  pause before checking where things came to rest. */
@@ -186,46 +169,4 @@ export function settled(page: Page) {
         requestAnimationFrame(tick);
       }),
   );
-}
-
-/** Lets a mocked `{ __hold: true }` command answer, once it has been called. */
-export async function release(page: Page, cmd: string) {
-  await expect
-    .poll(() =>
-      page.evaluate(
-        (c) => (window as unknown as DevWindow).__devHeld?.[c]?.length ?? 0,
-        cmd,
-      ),
-    )
-    .toBeGreaterThan(0);
-  await page.evaluate(
-    (c) => (window as unknown as DevWindow).__devRelease(c),
-    cmd,
-  );
-}
-
-/** Presses on `from`, moves in steps onto `to` (nudged by `dx`), lets go. */
-export async function dragWithMouse(
-  page: Page,
-  from: Locator,
-  to: Locator,
-  dx = 0,
-): Promise<void> {
-  const a = (await from.boundingBox())!;
-  const b = (await to.boundingBox())!;
-  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(b.x + b.width / 2 + dx, b.y + b.height / 2, {
-    steps: 8,
-  });
-  await page.mouse.up();
-}
-
-/** Opens what Textus AI keeps for the folder: Memory, on a conversation
- *  tab's menu. */
-export async function openAgentMemory(page: Page) {
-  await page.locator("[data-island-row=ai] .tab-pill").first().click({
-    button: "right",
-  });
-  await page.getByRole("menuitem", { name: "Memory", exact: true }).click();
 }

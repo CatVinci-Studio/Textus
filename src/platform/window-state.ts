@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { thisWindow } from "./this-window";
 
 /** The window as the system holds it: filling the screen, or full screen. */
-export interface WindowState {
+interface WindowState {
   maximized: boolean;
   fullscreen: boolean;
 }

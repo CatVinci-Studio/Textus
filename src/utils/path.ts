@@ -82,7 +82,7 @@ export const slashed = (path: string): string => path.replace(/\\/g, "/");
 
 /** A Markdown document's extensions: what Textus opens and plugins read as
  *  one. The backend's list (extract::MARKDOWN_EXTENSIONS) is the same. */
-export const MARKDOWN_EXTENSIONS = ["md", "markdown"] as const;
+const MARKDOWN_EXTENSIONS = ["md", "markdown"] as const;
 const NOTE_FILE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
 
 /** A note: a Markdown file, which a wikilink names without its extension. */

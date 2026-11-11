@@ -95,10 +95,6 @@ export function splitLayout(): SplitLayout | null {
   return layout;
 }
 
-export function splitRequest(): SplitRequest | null {
-  return request;
-}
-
 /** A drop in progress, shown before it is made: drawn in the committed
  *  layout's place (useSplitPanes) and never stored, so letting go of the
  *  drag elsewhere, or Escape, leaves the layout as it was. */

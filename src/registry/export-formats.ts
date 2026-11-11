@@ -6,7 +6,7 @@ import formats from "./export-formats.json";
  *  the drawn menu's key), and whether its files carry pictures inside, so a
  *  diagram goes in as one. One list for the exporter, both menus and the
  *  command line (Rust reads the same file). */
-export interface PandocFormat {
+interface PandocFormat {
   format: string;
   ext: string;
   name: string;

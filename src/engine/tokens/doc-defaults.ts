@@ -21,7 +21,7 @@ export const DOC_DEFAULTS = {
   },
 } as const;
 
-export type DocColour = keyof (typeof DOC_DEFAULTS)["light"];
+type DocColour = keyof (typeof DOC_DEFAULTS)["light"];
 
 /** `var(--doc-<name>)` with its default for `dark` or light behind it. */
 export function docVar(name: DocColour, dark = false): string {

@@ -264,10 +264,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   // The defaults Rust reads too.
-  ...(BACKEND_DEFAULTS as Pick<
-    Settings,
-    keyof typeof BACKEND_DEFAULTS
-  >),
+  ...(BACKEND_DEFAULTS as Pick<Settings, keyof typeof BACKEND_DEFAULTS>),
   language: "en",
   languageChosen: false,
   theme: "system",

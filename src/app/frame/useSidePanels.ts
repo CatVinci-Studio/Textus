@@ -34,7 +34,7 @@ function subscribeWindowResize(onChange: () => void) {
  */
 /** Whether the window has the activity rail: on in Settings, and not on an
  *  iPad, whose sidebar is its own. */
-export function railShown(settings: Pick<Settings, "activityRail">): boolean {
+function railShown(settings: Pick<Settings, "activityRail">): boolean {
   return settings.activityRail && !isIOSApp;
 }
 

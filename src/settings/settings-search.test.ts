@@ -1,10 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import {
-  findEntryElement,
-  harvestPage,
-  matchEntries,
-} from "./settings-search";
+import { findEntryElement, harvestPage, matchEntries } from "./settings-search";
 
 const PAGE = `
   <section class="settings-group">

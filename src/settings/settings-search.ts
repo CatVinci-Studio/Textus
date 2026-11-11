@@ -14,7 +14,6 @@ export interface SearchEntry {
   help: string;
 }
 
-
 const FINDABLE =
   ".settings-group-title, .settings-advanced > summary, .settings-row, .shortcut-fixed-row";
 

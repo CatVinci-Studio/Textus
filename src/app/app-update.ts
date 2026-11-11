@@ -10,7 +10,7 @@ import { explainError } from "../utils/error-explain";
 
 type UpdateStatus = "idle" | "available" | "downloading" | "error";
 
-export interface AppUpdate {
+interface AppUpdate {
   status: UpdateStatus;
   version: string | null;
   error: string | null;

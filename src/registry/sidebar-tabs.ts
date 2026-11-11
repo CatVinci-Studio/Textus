@@ -3,7 +3,7 @@ import type { Strings } from "../i18n/strings";
 
 /** A tab added to the sidebar beside Textus's own (a plugin's): its id
  *  (what ui-state remembers), its button's name and icon, and its panel. */
-export interface AddedSidebarTab {
+interface AddedSidebarTab {
   id: string;
   label: (t: Strings) => string;
   Icon: ComponentType;
