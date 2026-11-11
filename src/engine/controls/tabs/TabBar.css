@@ -200,8 +200,8 @@
   align-items: center;
   justify-content: center;
   margin-left: auto;
-  width: calc(24px * var(--chrome-scale));
-  height: calc(22px * var(--chrome-scale));
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
   padding: 0;
   border: none;
   border-radius: var(--shape-pill);

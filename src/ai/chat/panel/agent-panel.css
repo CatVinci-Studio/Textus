@@ -68,7 +68,7 @@
 
 /* The project button stays lit while its view shows. */
 .agent-panel-actions .inline-chat-header-button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  background: var(--ui-selected);
   color: var(--ui-text);
 }
 

@@ -86,7 +86,7 @@
 }
 
 .grammar-popover-nav button:hover {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  background: var(--ui-hover);
   color: var(--ui-text);
 }
 

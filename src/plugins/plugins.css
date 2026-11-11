@@ -407,8 +407,8 @@ button.plugin-card-open:hover .plugin-card-name {
 .web-page-bar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  height: 34px;
+  gap: var(--space-1);
+  height: var(--bar-height);
   padding: 0 var(--space-2);
   border-bottom: 1px solid var(--ui-border);
   background: var(--ui-bg);
@@ -416,7 +416,7 @@ button.plugin-card-open:hover .plugin-card-name {
 .web-page-address {
   flex: 1;
   min-width: 0;
-  height: 26px;
+  height: var(--control-height-sm);
   margin: 0 var(--space-1);
   padding: 0 var(--space-2);
   font: inherit;
@@ -429,7 +429,7 @@ button.plugin-card-open:hover .plugin-card-name {
   corner-shape: round;
 }
 .web-page-address:hover {
-  background: color-mix(in srgb, currentColor 6%, transparent);
+  background: var(--ui-hover);
 }
 .web-page-address:focus {
   outline: none;
