@@ -185,19 +185,24 @@
 /* A section's heading, and what acts on the whole section at its end. */
 .settings-group-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px;
+  gap: 4px 8px;
   min-height: 28px;
 }
 
+/* The title whole; its tools move to a line of their own under it, at its
+   end, when the two don't fit side by side (a long language, a narrow
+   window). */
 .settings-group-head > .settings-group-title {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
+  max-width: 100%;
 }
 
 .settings-group-actions {
   display: flex;
   flex: none;
+  margin-left: auto;
   align-items: center;
   gap: 4px;
   margin-bottom: 8px;
@@ -1223,12 +1228,15 @@ button.settings-inline-button {
 /* The name, then its small buttons at the line's end. */
 .theme-card-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
 }
+/* The name keeps a few words' room: its buttons go under it before it is
+   cut to a few letters. */
 .theme-card-open {
-  flex: 1 1 auto;
+  flex: 1 1 8em;
   min-width: 0;
   padding: 0;
   border: 0;
