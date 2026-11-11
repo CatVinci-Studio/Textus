@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { drafts, windowIpc } from "../platform/ipc";
+import { drafts, fs, windowIpc } from "../platform/ipc";
 import { canUseWindows, hasAppMenu, isIOSApp } from "../platform/capabilities";
 import { lastIOSDocument } from "./ios-recents";
 import {
@@ -227,7 +227,16 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const paths = await windowIpc.takePendingWindowPaths();
       if (paths.length > 0) {
         opts.stopTutorial();
-        const [first, ...rest] = paths;
+        // One moved or deleted since gives its place to the next: the
+        // others still open.
+        let at = 0;
+        while (
+          at < paths.length - 1 &&
+          !recoveredFor(paths[at]) &&
+          !(await fileThere(paths[at]))
+        )
+          at++;
+        const [first, ...rest] = paths.slice(at);
         const recovered = recoveredFor(first);
         if (recovered) {
           loadRecoveredIntoInitialTab(recovered);
@@ -235,14 +244,17 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
           // Converted into the initial tab, or shown there by a plugin.
           await opts.replaceTabWithFile(opts.activeTabId, first);
         } else {
-          const { content: text, diskMtime } = await readDocFromDisk(first);
-          restoreCaret(first, diskMtime);
-          loadIntoInitialTab({
-            path: first,
-            content: text,
-            savedContent: text,
-            diskMtime,
-          });
+          // Gone too, the last of them: the blank tab stays.
+          const read = await readDocFromDisk(first).catch(() => null);
+          if (read) {
+            restoreCaret(first, read.diskMtime);
+            loadIntoInitialTab({
+              path: first,
+              content: read.content,
+              savedContent: read.content,
+              diskMtime: read.diskMtime,
+            });
+          }
         }
         for (const p of rest) {
           // Its recovered tab is already open: that is this document.
@@ -298,4 +310,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       }
     })().finally(keptTabsRestored);
   }, [latest]);
+}
+
+/** Whether a file is still where the last session left it. */
+async function fileThere(path: string): Promise<boolean> {
+  return (await fs.fileMtimeMs(path).catch(() => null)) !== null;
 }

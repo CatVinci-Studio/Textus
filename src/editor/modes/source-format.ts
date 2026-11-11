@@ -44,10 +44,15 @@ export function toggleSourceMark(view: EditorView, mark: string): boolean {
           ],
           range: EditorSelection.range(range.from - n, range.to - n),
         };
+      // Selected with its markers: one pair around words holding no other,
+      // not half of a bold (**x**) taken for italic.
+      const inner = text.slice(n, -n);
       if (
-        text.length >= 2 * n &&
+        text.length > 2 * n &&
         text.startsWith(marker) &&
-        text.endsWith(marker)
+        text.endsWith(marker) &&
+        !inner.includes(marker) &&
+        (marker !== "*" || !(inner.startsWith("*") || inner.endsWith("*")))
       )
         return {
           changes: {
@@ -102,14 +107,23 @@ export function setSourceBlock(view: EditorView, kind: string): boolean {
   if (prefix === null) return false;
   const { state } = view;
   const lines = new Set<number>();
-  for (const range of state.selection.ranges)
+  for (const range of state.selection.ranges) {
+    // A selection ending at a line's start doesn't take that line.
+    const end =
+      range.to > range.from && state.doc.lineAt(range.to).from === range.to
+        ? range.to - 1
+        : range.to;
     for (
       let at = state.doc.lineAt(range.from).number;
-      at <= state.doc.lineAt(range.to).number;
+      at <= state.doc.lineAt(end).number;
       at++
     )
       lines.add(at);
-  const all = [...lines].map((at) => state.doc.line(at));
+  }
+  // Blank lines between stay blank, not empty items.
+  const picked = [...lines].map((at) => state.doc.line(at));
+  const written = picked.filter((line) => line.text.trim() !== "");
+  const all = written.length ? written : picked;
   // Taken off when every line has it; else every line gets it.
   const has = (text: string) =>
     (PREFIX.exec(text)?.[2] ?? "").replace(/\s+$/, " ") === prefix ||

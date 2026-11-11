@@ -62,6 +62,18 @@ describe("toggleSourceMark", () => {
     expect(view.state.doc.toString()).toBe("**word**\n");
   });
 
+  it("adds italic to a bold selected with its markers", () => {
+    const view = viewOf("[**bold**]");
+    toggleSourceMark(view, "italic");
+    expect(view.state.doc.toString()).toBe("***bold***");
+  });
+
+  it("wraps two marked words rather than unwrapping across them", () => {
+    const view = viewOf("[**a** and **b**]");
+    toggleSourceMark(view, "bold");
+    expect(view.state.doc.toString()).toBe("****a** and **b****");
+  });
+
   it("refuses a mark it doesn't write", () => {
     expect(toggleSourceMark(viewOf("|"), "underline")).toBe(false);
   });
@@ -80,6 +92,12 @@ describe("setSourceBlock", () => {
     expect(view.state.doc.toString()).toBe("1. one\n2. two");
     setSourceBlock(view, "ordered-list");
     expect(view.state.doc.toString()).toBe("one\ntwo");
+  });
+
+  it("leaves the next line and blank lines alone", () => {
+    const view = viewOf("[a\n\nb\n]c");
+    setSourceBlock(view, "bullet-list");
+    expect(view.state.doc.toString()).toBe("- a\n\n- b\nc");
   });
 
   it("keeps a line's indent", () => {

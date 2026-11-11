@@ -20,14 +20,26 @@ export function useHoldScrollOnReturn(): void {
     let kept = new Map<HTMLElement, number>();
     let until = 0;
     let stop = () => {};
+    // Read while away too: a Mac scrolls a window in the background, and
+    // where the reader took it is where it stays. A hidden one (no height)
+    // has no place to keep.
+    const follow = (e: Event) => {
+      const el = e.target;
+      if (el instanceof HTMLElement && kept.has(el)) kept.set(el, el.scrollTop);
+    };
     const keep = () => {
       kept = new Map(
-        [...document.querySelectorAll<HTMLElement>(SCROLLERS)].map((el) => [
-          el,
-          el.scrollTop,
-        ]),
+        [...document.querySelectorAll<HTMLElement>(SCROLLERS)]
+          .filter((el) => el.clientHeight > 0)
+          .map((el) => [el, el.scrollTop]),
       );
+      document.addEventListener("scroll", follow, true);
     };
+    // The page's focus comes back before the window says so: from then on a
+    // scroll is the webview's, not the reader's.
+    const unfollow = () =>
+      document.removeEventListener("scroll", follow, true);
+    window.addEventListener("focus", unfollow, true);
     const putBack = (el: HTMLElement) => {
       const top = kept.get(el);
       if (top !== undefined && el.scrollTop !== top) el.scrollTop = top;
@@ -43,6 +55,7 @@ export function useHoldScrollOnReturn(): void {
     const pressed = () => (pressedAt = performance.now());
     window.addEventListener("pointerdown", pressed, true);
     const back = () => {
+      unfollow();
       stop();
       if (performance.now() - pressedAt < SETTLE_MS) return;
       until = performance.now() + SETTLE_MS;
@@ -64,6 +77,8 @@ export function useHoldScrollOnReturn(): void {
     );
     return () => {
       stop();
+      unfollow();
+      window.removeEventListener("focus", unfollow, true);
       unlistenAll(unlisten)();
       window.removeEventListener("pointerdown", pressed, true);
     };

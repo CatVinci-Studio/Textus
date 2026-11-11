@@ -81,6 +81,8 @@ export function cmFind(viewOf: () => EditorView | null): FindBackend {
     state,
     replace: (edits) =>
       on((view) => {
+        // A read-only document: CodeMirror refuses typing, not this.
+        if (view.state.readOnly) return;
         view.dispatch({
           changes: edits.map(({ from, to, text }) => ({
             from,

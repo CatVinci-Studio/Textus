@@ -17,6 +17,8 @@ const ipc = vi.hoisted(() => ({
   takePendingShowHelp: vi.fn(),
   takePendingWindowPaths: vi.fn(),
   takeDraftSnapshots: vi.fn(),
+  /** Files gone since the last session. */
+  gone: new Set<string>(),
 }));
 
 vi.mock("../platform/ipc", () => ({
@@ -24,6 +26,9 @@ vi.mock("../platform/ipc", () => ({
     takeDetachedTab: ipc.takeDetachedTab,
     takePendingShowHelp: ipc.takePendingShowHelp,
     takePendingWindowPaths: ipc.takePendingWindowPaths,
+  },
+  fs: {
+    fileMtimeMs: async (path: string) => (ipc.gone.has(path) ? null : 1),
   },
   drafts: {
     takeDraftSnapshots: ipc.takeDraftSnapshots,
@@ -160,6 +165,25 @@ describe("startup restore into the initial tab", () => {
         reloadKey: 1,
       }),
     ]);
+  });
+
+  it("skips a first document deleted since, and still opens the rest", async () => {
+    ipc.gone.add("/docs/a.md");
+    ipc.takePendingWindowPaths.mockResolvedValue([
+      "/docs/a.md",
+      "/docs/b.md",
+      "/docs/c.md",
+    ]);
+    const { tabs, openPathInTab } = await restore();
+    await waitFor(() =>
+      expect(openPathInTab).toHaveBeenCalledWith("/docs/c.md", {
+        restoreCaret: true,
+      }),
+    );
+    expect(tabs()).toEqual([
+      expect.objectContaining({ id: "initial", path: "/docs/b.md" }),
+    ]);
+    ipc.gone.clear();
   });
 
   it("converts a Word document handed over at launch into the initial tab", async () => {
