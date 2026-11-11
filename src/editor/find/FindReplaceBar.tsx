@@ -83,121 +83,122 @@ export function FindReplaceBar({ findReplace, labels }: FindReplaceBarProps) {
       className="find-replace-bar floating-surface"
       onKeyDown={onBarKeyDown}
     >
-      <div className="find-replace-row">
-        <Tooltip text={labels.replace}>
-          <button
-            type="button"
-            aria-label={labels.replace}
-            className={`find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`}
-            onClick={() => findReplace.setReplaceOpen(!replaceOpen)}
-          >
-            <ChevronIcon />
-          </button>
-        </Tooltip>
-        <div className="find-replace-field">
-          <input
-            ref={findInput}
-            className="find-replace-input"
-            type="text"
-            value={query}
-            placeholder={labels.findPlaceholder}
-            onChange={(e) => findReplace.setQuery(e.target.value)}
-            onKeyDown={onFindKeyDown}
-          />
-          <span
-            className={`find-replace-count ${status.error ? "find-replace-count-error" : ""}`}
-          >
-            {countLabel}
-          </span>
-          <Tooltip text={labels.matchCase}>
-            <button
-              type="button"
-              className={`find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`}
-              aria-label={labels.matchCase}
-              aria-pressed={caseSensitive}
-              onClick={findReplace.toggleCaseSensitive}
-            >
-              Aa
-            </button>
-          </Tooltip>
-          <Tooltip text={labels.useRegex}>
-            <button
-              type="button"
-              className={`find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`}
-              aria-label={labels.useRegex}
-              aria-pressed={useRegex}
-              onClick={findReplace.toggleUseRegex}
-            >
-              .*
-            </button>
-          </Tooltip>
-        </div>
-        <div className="find-replace-nav">
-          <Tooltip text={labels.findPreviousMatch}>
-            <button
-              type="button"
-              onClick={findReplace.prev}
-              disabled={status.matchCount === 0}
-              aria-label={labels.findPreviousMatch}
-            >
-              <ArrowUpIcon />
-            </button>
-          </Tooltip>
-          <Tooltip text={labels.findNextMatch}>
-            <button
-              type="button"
-              onClick={findReplace.next}
-              disabled={status.matchCount === 0}
-              aria-label={labels.findNextMatch}
-            >
-              <ArrowUpIcon className="find-replace-arrow-down" />
-            </button>
-          </Tooltip>
-          <Tooltip text={labels.findClose}>
-            <button
-              type="button"
-              className="find-replace-close"
-              onClick={findReplace.close}
-              aria-label={labels.findClose}
-            >
-              <CloseIcon />
-            </button>
-          </Tooltip>
-        </div>
-      </div>
-      {replaceOpen && (
+      <Tooltip text={labels.replace}>
+        <button
+          type="button"
+          aria-label={labels.replace}
+          className={`find-replace-chevron ${replaceOpen ? "find-replace-chevron-open" : ""}`}
+          onClick={() => findReplace.setReplaceOpen(!replaceOpen)}
+        >
+          <ChevronIcon />
+        </button>
+      </Tooltip>
+      <div className="find-replace-rows">
         <div className="find-replace-row">
-          <span className="find-replace-chevron-spacer" />
           <div className="find-replace-field">
             <input
+              ref={findInput}
               className="find-replace-input"
               type="text"
-              value={replacement}
-              placeholder={labels.replacePlaceholder}
-              onChange={(e) => findReplace.setReplacement(e.target.value)}
-              onKeyDown={onReplaceKeyDown}
+              value={query}
+              placeholder={labels.findPlaceholder}
+              onChange={(e) => findReplace.setQuery(e.target.value)}
+              onKeyDown={onFindKeyDown}
             />
+            <span
+              className={`find-replace-count ${status.error ? "find-replace-count-error" : ""}`}
+            >
+              {countLabel}
+            </span>
+            <Tooltip text={labels.matchCase}>
+              <button
+                type="button"
+                className={`find-replace-toggle ${caseSensitive ? "find-replace-toggle-active" : ""}`}
+                aria-label={labels.matchCase}
+                aria-pressed={caseSensitive}
+                onClick={findReplace.toggleCaseSensitive}
+              >
+                Aa
+              </button>
+            </Tooltip>
+            <Tooltip text={labels.useRegex}>
+              <button
+                type="button"
+                className={`find-replace-toggle ${useRegex ? "find-replace-toggle-active" : ""}`}
+                aria-label={labels.useRegex}
+                aria-pressed={useRegex}
+                onClick={findReplace.toggleUseRegex}
+              >
+                .*
+              </button>
+            </Tooltip>
           </div>
           <div className="find-replace-nav">
-            <button
-              type="button"
-              className="find-replace-text"
-              onClick={findReplace.replaceOne}
-              disabled={status.matchCount === 0}
-            >
-              {labels.replace}
-            </button>
-            <button
-              type="button"
-              className="find-replace-text"
-              onClick={findReplace.replaceAll}
-              disabled={status.matchCount === 0}
-            >
-              {labels.replaceAll}
-            </button>
+            <Tooltip text={labels.findPreviousMatch}>
+              <button
+                type="button"
+                onClick={findReplace.prev}
+                disabled={status.matchCount === 0}
+                aria-label={labels.findPreviousMatch}
+              >
+                <ArrowUpIcon />
+              </button>
+            </Tooltip>
+            <Tooltip text={labels.findNextMatch}>
+              <button
+                type="button"
+                onClick={findReplace.next}
+                disabled={status.matchCount === 0}
+                aria-label={labels.findNextMatch}
+              >
+                <ArrowUpIcon className="find-replace-arrow-down" />
+              </button>
+            </Tooltip>
+            <Tooltip text={labels.findClose}>
+              <button
+                type="button"
+                className="find-replace-close"
+                onClick={findReplace.close}
+                aria-label={labels.findClose}
+              >
+                <CloseIcon />
+              </button>
+            </Tooltip>
           </div>
         </div>
-      )}
+        {replaceOpen && (
+          <div className="find-replace-row">
+            <div className="find-replace-field">
+              <input
+                className="find-replace-input"
+                type="text"
+                value={replacement}
+                placeholder={labels.replacePlaceholder}
+                onChange={(e) => findReplace.setReplacement(e.target.value)}
+                onKeyDown={onReplaceKeyDown}
+              />
+            </div>
+            <div className="find-replace-nav">
+              <button
+                type="button"
+                className="find-replace-text"
+                onClick={findReplace.replaceOne}
+                disabled={status.matchCount === 0}
+              >
+                {labels.replace}
+              </button>
+              <button
+                type="button"
+                className="find-replace-text"
+                onClick={findReplace.replaceAll}
+                disabled={status.matchCount === 0}
+              >
+                {labels.replaceAll}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

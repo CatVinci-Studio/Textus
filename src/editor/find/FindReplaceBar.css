@@ -4,10 +4,16 @@
   position: absolute;
   top: var(--space-2);
   right: var(--space-4);
+  /* Never wider than its island: short of room its buttons wrap under
+     the field. */
+  max-width: calc(100% - 2 * var(--space-4));
+  box-sizing: border-box;
   z-index: var(--z-toast);
+  /* The chevron in a column of its own: wrapped, the rows' parts start
+     under the fields, not under it. */
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: flex-start;
+  gap: 8px;
   padding: 4px 8px;
   font-size: var(--text-control);
   animation: motion-drop-in var(--dur-base) var(--ease-out);
@@ -27,10 +33,19 @@
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
 
+.find-replace-rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .find-replace-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
 }
 
 .find-replace-chevron {
@@ -51,17 +66,13 @@
   transform: rotate(90deg);
 }
 
-.find-replace-chevron-spacer {
-  flex: none;
-  width: 18px;
-}
-
 .find-replace-field {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 12ch;
+  /* A few words of the search, whatever the island. */
+  min-width: 12ch;
   padding: 2px 4px;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
@@ -96,8 +107,10 @@
 }
 
 .find-replace-nav {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
 }

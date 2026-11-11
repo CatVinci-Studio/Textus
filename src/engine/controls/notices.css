@@ -10,6 +10,10 @@
   align-items: center;
   gap: 8px;
   width: min(420px, calc(100vw - 32px));
+  /* Never past the window's top: the newest, at the foot, stay in view. */
+  max-height: calc(100vh - 40px - var(--space-4));
+  justify-content: flex-end;
+  overflow: hidden;
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -41,6 +45,8 @@
   flex-wrap: wrap;
   gap: 2px 8px;
   min-width: 0;
+  /* A path or a link is one long word: it breaks rather than run out. */
+  overflow-wrap: anywhere;
 }
 
 .notice-source {

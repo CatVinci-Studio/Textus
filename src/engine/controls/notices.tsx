@@ -186,6 +186,25 @@ export function NoticeHost() {
               <span className="notice-detail">{notice.progress.message}</span>
             )}
           </div>
+          {notice.action && (
+            <button
+              type="button"
+              className="notice-cancel"
+              onClick={notice.action.run}
+            >
+              {notice.action.label}
+            </button>
+          )}
+          {notice.onCancel && notice.cancelLabel && (
+            <button
+              type="button"
+              className="notice-cancel"
+              onClick={() => notice.onCancel?.()}
+            >
+              {notice.cancelLabel}
+            </button>
+          )}
+          {/* Under the words and their buttons, the bar across. */}
           {notice.progress && (
             <div
               className={`tx-progress notice-bar${notice.progress.fraction === null ? " is-indeterminate" : ""}`}
@@ -204,24 +223,6 @@ export function NoticeHost() {
                   : Math.round(notice.progress.fraction * 100)
               }
             />
-          )}
-          {notice.action && (
-            <button
-              type="button"
-              className="notice-cancel"
-              onClick={notice.action.run}
-            >
-              {notice.action.label}
-            </button>
-          )}
-          {notice.onCancel && notice.cancelLabel && (
-            <button
-              type="button"
-              className="notice-cancel"
-              onClick={() => notice.onCancel?.()}
-            >
-              {notice.cancelLabel}
-            </button>
           )}
         </div>
       ))}

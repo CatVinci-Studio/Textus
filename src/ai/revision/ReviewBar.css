@@ -292,13 +292,21 @@
 }
 
 /* A suggestion learned from revision choices, in the bar's place once a
-   review is done; its sentence may wrap. */
+   review is done. Its sentence may wrap, so it is a box, not a pill; short
+   of room its buttons go under the sentence, from its start. */
 .learn-bar {
+  flex-wrap: wrap;
+  row-gap: 8px;
   width: max-content;
   max-width: min(620px, calc(100% - 32px));
   padding-block: 8px;
+  border-radius: var(--shape-l);
   line-height: 1.4;
   white-space: normal;
+}
+
+.learn-bar .learn-bar-text {
+  flex: 1 1 16ch;
 }
 
 .learn-bar .review-bar-actions {
