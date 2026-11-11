@@ -12,14 +12,8 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../registry/commands";
 import type { TabState } from "./tabs/useTabState";
 import type { OpenOptions } from "./useFileOpening";
-import {
-  emitPluginEvent,
-  openDocumentAt,
-  setWindowAccess,
-  getWindowAccess,
-  type PluginTabInfo,
-  type PluginTabView,
-} from "../plugins/app-bridge";
+import { emitPluginEvent, setWindowAccess, getWindowAccess, type PluginTabInfo, type PluginTabView } from "../plugins/app-bridge";
+import { openDocumentAt } from "../registry/open-documents";
 import type { Where } from "../plugins/app-bridge";
 import { askPlugin, loadPlugins, runPluginAiTool } from "../plugins/manager";
 import {

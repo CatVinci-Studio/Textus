@@ -33,11 +33,8 @@ import {
   markdownFilename,
 } from "../document/save-default-name";
 import { isWordDocument, wordSaveSuggestion } from "../document/word-import";
-import {
-  emitPluginEvent,
-  notePathMoved,
-  openDocumentAt,
-} from "../plugins/app-bridge";
+import { emitPluginEvent, notePathMoved } from "../plugins/app-bridge";
+import { openDocumentAt } from "../registry/open-documents";
 import { hasWillSave, runWillSave } from "../plugins/contributions/will-save";
 import type { Strings } from "../i18n/strings";
 import type { TabState } from "./tabs/useTabState";

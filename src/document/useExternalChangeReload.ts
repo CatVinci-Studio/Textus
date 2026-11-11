@@ -6,7 +6,7 @@ import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
 import { unlistenAll } from "../platform/events";
 import { FILE_RELOADED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { fileTextFor } from "./tracked-file";
-import { openDocumentAt } from "../plugins/app-bridge";
+import { openDocumentAt } from "../registry/open-documents";
 
 // On focus, or when something in the window wrote a file, clean tabs whose
 // file changed on disk take the new text (in place when open in an editor);

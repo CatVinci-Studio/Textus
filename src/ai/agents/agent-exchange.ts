@@ -7,7 +7,8 @@ import { agentsIpc } from "../../platform/ipc-plugins";
 import { fs } from "../../platform/ipc-files";
 import { appVersion } from "../../platform/app-info";
 import { currentStrings } from "../../i18n/current";
-import { getWindowAccess, openDocumentAt } from "../../plugins/app-bridge";
+import { getWindowAccess } from "../../plugins/app-bridge";
+import { openDocumentAt } from "../../registry/open-documents";
 import type { ExternalAgent } from "../../plugins/contributions/agents";
 import type { AgentTurn } from "../types";
 import {

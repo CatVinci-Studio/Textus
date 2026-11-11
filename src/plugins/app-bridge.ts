@@ -1,4 +1,5 @@
 import { splitLayout, subscribeSplit } from "../engine/layout/store";
+import type { OpenDocumentAccess } from "../registry/open-documents";
 import type { PanelsState } from "./panels-state";
 import type { AiState } from "./ai-state";
 import type { FloatingChange, FloatingTouch } from "./views/floating-views";
@@ -60,16 +61,6 @@ export interface ActiveDocumentAccess {
   reveal(place: DocumentPlace): boolean;
 }
 
-/** A document open in a tab, in front or not. */
-export interface OpenDocumentAccess {
-  text(): string;
-  /** Names its version: changes whenever its text does. */
-  revision(): string;
-  /** Replaces its text, as one undo step, if it is still at `revision`;
-   *  false otherwise. */
-  replaceText(text: string, revision: string): boolean;
-}
-
 /** A tab a plugin's view or custom editor is shown in. */
 export interface PluginTabView {
   plugin: string;
@@ -119,22 +110,6 @@ interface WindowAccess {
 }
 
 let activeDocument: ActiveDocumentAccess | null = null;
-/** Every document open in a tab, by its path (an editor sets its own). */
-const openDocuments = new Map<string, OpenDocumentAccess>();
-
-export function setOpenDocument(
-  path: string,
-  access: OpenDocumentAccess | null,
-  owner?: OpenDocumentAccess,
-): void {
-  if (access) openDocuments.set(path, access);
-  else if (!owner || openDocuments.get(path) === owner)
-    openDocuments.delete(path);
-}
-
-export function openDocumentAt(path: string): OpenDocumentAccess | null {
-  return openDocuments.get(path) ?? null;
-}
 let windowAccess: WindowAccess | null = null;
 
 /** The active tab's editor sets itself; null when it goes. Only the

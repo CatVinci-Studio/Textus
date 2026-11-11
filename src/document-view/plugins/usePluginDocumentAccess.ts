@@ -6,12 +6,8 @@ import {
   caretContext,
   readSelection,
 } from "../../editor/markdown/doc-markdown";
-import {
-  setActiveDocument,
-  setOpenDocument,
-  type ActiveDocumentAccess,
-  type OpenDocumentAccess,
-} from "../../plugins/app-bridge";
+import { setActiveDocument, type ActiveDocumentAccess } from "../../plugins/app-bridge";
+import { setOpenDocument, type OpenDocumentAccess } from "../../registry/open-documents";
 import {
   applyPluginEdits,
   documentRevision,
