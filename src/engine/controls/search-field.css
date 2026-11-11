@@ -6,7 +6,7 @@
   align-items: center;
   gap: 8px;
   height: var(--control-height-sm);
-  padding: 0 8px;
+  padding: 0 calc(var(--pane-row-inset) - 1px);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-s);
   background: var(--ui-bg);
@@ -49,7 +49,7 @@
 /* .tx-list-heading: pane.css. */
 
 .tx-list-note {
-  padding: 8px 8px;
+  padding: 8px var(--pane-row-inset);
   font-size: var(--text-footnote);
   opacity: 0.65;
   user-select: text;

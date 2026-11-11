@@ -13,7 +13,12 @@
 :root {
   /* The text of lists and their tops: the sidebar's own (Files, Outline). */
   --pane-text: var(--text-body);
+  /* From a pane's edge to its text: its title's, and its rows'. A scrolling
+     body keeps --pane-edge for itself (rows' hover fills stop short of the
+     edge); a row's own padding is the rest, so every line starts level. */
   --pane-inset: 12px;
+  --pane-edge: 4px;
+  --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
 }
 
 .tx-search-expanded {
@@ -39,7 +44,7 @@
 
 /* A heading between a list's items: a day, a group. */
 .tx-list-heading {
-  margin: 12px 8px 4px;
+  margin: 12px var(--pane-row-inset) 4px;
   padding: 0;
   color: var(--ui-muted);
   font-size: var(--text-caption);
@@ -51,7 +56,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-  padding: 4px 8px;
+  padding: 4px var(--pane-row-inset);
   border: 0;
   border-radius: var(--shape-s);
   background: none;
@@ -76,11 +81,13 @@
 /* A sidebar panel's second row - level with the islands' tops - holds
    its search, and what acts on the panel beside it (⋯, add). Only a panel
    that finds things has one. */
+/* A pane's first row (its search): its box from the body's edge, the
+   magnifier on the title's line as every row's first mark is. */
 .tx-pane-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 4px 8px;
+  padding: 0 0 8px;
 }
 
 .tx-pane-row > .tx-search {

@@ -206,10 +206,13 @@
 }
 
 /* The sidebar with no folder: the same three rows. */
-.sidebar-start {
-  padding: var(--space-2) var(--space-3);
-}
-
+/* In the sidebar: rows as every list's, their fill from the body's edge,
+   their icons on the title's line. */
 .sidebar-start .start-page-actions {
   margin-top: 0;
+}
+.sidebar-start .start-page-action {
+  width: 100%;
+  margin: 0;
+  padding: 0 var(--pane-row-inset);
 }

@@ -122,7 +122,7 @@ export function Outline({ content, tabId }: OutlineProps) {
   }, [headings, collapsed]);
 
   if (headings.length === 0) {
-    return <div className="clipboard-empty">{t.outlineEmpty}</div>;
+    return <p className="tx-list-note">{t.outlineEmpty}</p>;
   }
 
   const toggle = (id: string) =>
