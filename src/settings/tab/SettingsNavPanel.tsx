@@ -9,7 +9,6 @@ import {
 import { isDesktopApp } from "../../platform/capabilities";
 import { SHOW_SIDEBAR_TAB_EVENT } from "../../utils/events";
 import { useSettings } from "../../prefs/SettingsContext";
-import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { SearchField } from "../../engine/controls/SearchField";
 import {
@@ -25,7 +24,7 @@ import {
   settingsPageShown,
   setSettingsListShown,
 } from "../settings-nav";
-import type { SettingsPageProps } from "../pages/types";
+import { pageProps } from "../pages/types";
 import "./settings-nav.css";
 
 /**
@@ -66,24 +65,7 @@ export function SettingsNavPanel() {
       return next;
     });
   // The pages read for the search: rendered out of sight, never used.
-  const indexProps: SettingsPageProps = {
-    t,
-    settings,
-    setSettings,
-    phone: false,
-    percent: new Intl.NumberFormat(localeOf(settings.language), {
-      style: "percent",
-    }),
-    marginAvailable,
-    noMargin: !marginAvailable,
-    setSubpage: () => {},
-    openPage: () => {},
-    openHelp: () => {},
-    onOpenFile: () => {},
-    onClose: () => {},
-    fixedShortcuts: [],
-    pluginCommands: [],
-  };
+  const indexProps = pageProps({ t, settings, setSettings, marginAvailable });
   const searchPages: SearchablePage[] = pages.map((p) => {
     const Page = pageComponent(p);
     return {

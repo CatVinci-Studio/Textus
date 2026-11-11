@@ -27,12 +27,8 @@ import {
 import "./SettingsPanel.css";
 import { useSettingsSearch } from "./useSettingsSearch";
 import { settingsPage, settingsPages } from "./settings-pages";
-import type {
-  SettingsPageProps,
-  ShortcutCommand,
-  HelpGuide,
-  Subpage,
-} from "./pages/types";
+import { pageProps } from "./pages/types";
+import type { ShortcutCommand, HelpGuide, Subpage } from "./pages/types";
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { usePresenceProps } from "../engine/motion/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
@@ -139,7 +135,7 @@ export function SettingsPanel({
     guides: t.navGuides,
   };
 
-  const pageProps: SettingsPageProps = {
+  const props = pageProps({
     t,
     settings,
     setSettings,
@@ -156,14 +152,14 @@ export function SettingsPanel({
     onClose,
     fixedShortcuts,
     pluginCommands,
-  };
+  });
   const renderCategory = (c: Category, indexing = false) => {
     const page = settingsPage(c);
     if (!page) return null;
     const Page = pageComponent(page);
     return (
       <SettingsIndexing.Provider value={indexing}>
-        <Page {...pageProps} indexing={indexing} />
+        <Page {...props} indexing={indexing} />
       </SettingsIndexing.Provider>
     );
   };

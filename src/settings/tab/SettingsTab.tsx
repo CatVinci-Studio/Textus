@@ -2,7 +2,6 @@ import { useEffect, useRef, useSyncExternalStore } from "react";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { pageComponent } from "../builtin-pages";
 import { useSettings } from "../../prefs/SettingsContext";
-import { localeOf } from "../../i18n/strings";
 import { useMarginAvailable } from "../../ai/margin/margin-room";
 import { emitMenuEvent } from "../../platform/menu-events";
 import { settingsPage, settingsPages } from "../settings-pages";
@@ -16,7 +15,7 @@ import {
   showSettingsList,
 } from "../settings-nav";
 import { AboutPage } from "../pages/AboutPage";
-import type { SettingsPageProps, ShortcutCommand } from "../pages/types";
+import { pageProps, type ShortcutCommand } from "../pages/types";
 import type { FixedShortcutGroup } from "../../registry/fixed-shortcuts";
 import "../SettingsPanel.css";
 import "./settings-tab.css";
@@ -59,17 +58,11 @@ export function SettingsTab({
     settingsListShown,
   );
   useReveal(content, jump ?? null);
-  const pageProps: SettingsPageProps = {
+  const props = pageProps({
     t,
     settings,
     setSettings,
-    phone: false,
-    percent: new Intl.NumberFormat(localeOf(settings.language), {
-      style: "percent",
-    }),
     marginAvailable,
-    noMargin: !marginAvailable,
-    setSubpage: () => {},
     openPage: (to) =>
       window.dispatchEvent(
         new CustomEvent(OPEN_SETTINGS_PAGE_EVENT, { detail: { page: to } }),
@@ -78,10 +71,9 @@ export function SettingsTab({
     onOpenFile,
     onFilesDeleted,
     docPath,
-    onClose: () => {},
     fixedShortcuts,
     pluginCommands,
-  };
+  });
   return (
     <div className="settings-tab tx-scroll-reveal" ref={content}>
       {/* Too narrow a column to set anything in: shown instead of the page
@@ -101,9 +93,9 @@ export function SettingsTab({
           </button>
         )}
         {shown.id === "about" ? (
-          <AboutPage {...pageProps} checkUpdates={page === "updates"} />
+          <AboutPage {...props} checkUpdates={page === "updates"} />
         ) : (
-          <Page {...pageProps} />
+          <Page {...props} />
         )}
       </div>
     </div>
