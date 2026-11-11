@@ -8,6 +8,7 @@ import { documentChangedForPlugins } from "./plugin-events";
 import { applyPluginEdits, replaceDocument } from "./plugin-edits";
 import { markChangeSource } from "../../editor/change-source";
 import { onPluginEvent } from "../../plugins/app-bridge";
+import { setReadOnly } from "../../editor/read-only-plugin";
 
 let editor: Editor | null = null;
 let stop: (() => void) | null = null;
@@ -85,5 +86,17 @@ describe("the source plugins are told of a change", () => {
       documentChangedForPlugins(true, "/notes/a.md", ctx);
     });
     expect(told).toEqual(["user"]);
+  });
+});
+
+describe("replacing the document", () => {
+  it("says so when a read-only document refuses the text", async () => {
+    editor = await createTestEditor("one\n");
+    const results = editor.action((ctx) => {
+      setReadOnly(view(ctx), true);
+      return replaceDocument(ctx, "two\n");
+    });
+    expect(results).toBe(false);
+    expect(editor.action((ctx) => view(ctx).state.doc.textContent)).toBe("one");
   });
 });

@@ -173,5 +173,6 @@ export function replaceDocument(ctx: Ctx, markdown: string): boolean {
   const tr = view.state.tr.replaceWith(from, to, nodes);
   closeHistory(tr);
   view.dispatch(markChangeSource(tr, "plugin"));
-  return true;
+  // Refused (a read-only document): the caller learns the text didn't take.
+  return view.state.doc !== doc;
 }
