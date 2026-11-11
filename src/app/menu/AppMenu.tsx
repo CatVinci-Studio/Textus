@@ -1,3 +1,4 @@
+import { Tooltip } from "../../engine/controls/Tooltip";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -318,7 +319,6 @@ function MenuRow({
         role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"}
         aria-checked={item.checked}
         className="app-menu-item"
-        title={item.title}
         disabled={item.disabled}
         aria-haspopup={hasSubmenu ? "menu" : undefined}
         aria-expanded={hasSubmenu ? open : undefined}
@@ -338,7 +338,14 @@ function MenuRow({
           }
         }}
       >
-        <span className="app-menu-label">{item.label}</span>
+        {item.title ? (
+          // Its whole path on hover, where WebKitGTK shows no title.
+          <Tooltip text={item.title} description={null}>
+            <span className="app-menu-label">{item.label}</span>
+          </Tooltip>
+        ) : (
+          <span className="app-menu-label">{item.label}</span>
+        )}
         {item.accel && (
           <span className="app-menu-accel">{formatCombo(item.accel)}</span>
         )}
