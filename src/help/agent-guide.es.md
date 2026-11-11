@@ -4,86 +4,87 @@ Textus incluye una IA pensada para escribir, Textus AI: autocompletado, revisió
 
 ## Conectar un servicio
 
-1. Abre **Ajustes > Textus AI** y elige el servicio que quieras en **Conexión > Proveedor**.
-2. Despliega **Acceso y credenciales** e inicia sesión con tu cuenta o escribe una clave de API, según lo que admita ese servicio.
-3. Para un **Endpoint personalizado** (cualquier servidor compatible con OpenAI: modelos locales, proxies), escribe la URL base, una clave si la necesita y el nombre del modelo, y guarda.
-4. Elige el modelo de escritura en **Asistencia de escritura** y el modelo de chat en **Chat de Textus AI**.
+Todo lo relativo a la IA está en **Ajustes › Textus AI**, en cuatro páginas: **Modelos**, **Ayuda al escribir**, **Agente** y **Herramientas externas**.
+
+1. En **Modelos**, elige el servicio en la lista **Proveedores**. Inicia sesión con tu cuenta (**Cuenta**) o pega una clave (**Clave de API**), según lo que admita ese servicio. Un punto en la lista marca cada servicio que ya has configurado.
+2. Para un **Endpoint personalizado** (cualquier servidor compatible con OpenAI: modelos locales, proxies), escribe la URL base, una clave si la necesita y el nombre del modelo, y guarda.
+3. En **Elección de modelo**, arriba en la misma página, elige el **Proveedor del chat** y el **Modelo de chat** y, para el autocompletado y la gramática, el **Proveedor de escritura** (**Igual que el chat** por defecto) y el **Modelo de asistencia**.
 
 El inicio de sesión se hace en el navegador. Que puedas usar imágenes, búsqueda web y cambios en el documento depende del servicio y del modelo que elijas.
 
-La lista de modelos integrada solo incluye los modelos predeterminados de cada proveedor (para Anthropic: Claude Sonnet 5.5 para el chat y Claude Haiku 5.5 para el autocompletado y la gramática). Pulsa **Obtener modelos** en la fila Lista de modelos, dentro de **Conexión**, para cargar la lista actual del proveedor y elegir cualquiera de sus modelos.
+La lista de modelos integrada solo incluye los modelos predeterminados de cada proveedor (para Anthropic: Claude Sonnet 5.5 para el chat y Claude Haiku 5.5 para el autocompletado y la gramática). En **Modelos**, dentro de un proveedor, pulsa **Obtener modelos** para cargar su lista actual y elegir cualquiera de sus modelos.
 
 Para **Doubao (Volcengine)**, crea la clave de API en la [consola de Volcengine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey) y, en esa misma consola, activa los modelos que quieras usar: Ark rechaza las solicitudes a un modelo que tu cuenta no ha activado.
 
-Los atajos de esta guía usan la notación de macOS; en Windows y Linux, lee Cmd como Ctrl y Option como Alt. Si cambias un atajo, **Ajustes > Atajos de teclado** muestra el que esté vigente.
+Los atajos de esta guía usan la notación de macOS; en Windows y Linux, lee Cmd como Ctrl y Option como Alt. Si cambias un atajo, **Ajustes › Atajos de teclado** muestra el que esté vigente.
 
-## Las funciones de IA
+## El uso diario
 
-### 1. Autocompletado
+Las cinco formas que más vas a usar, empezando por hablar con ella.
 
-Mientras escribes, aparece una continuación en gris en el cursor: pulsa <kbd>Tab</kbd> para aceptarla, o <kbd>Cmd</kbd>+<kbd>→</kbd> para aceptar solo la palabra siguiente y dejar el resto como sugerencia. <kbd>Esc</kbd> la descarta. No hace falta una cantidad mínima de texto: funciona desde la primera frase del documento.
+### Conversaciones
 
-Pide una de forma explícita con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> o desde el menú contextual (el cursor debe estar al final de un párrafo): obtendrás una continuación más larga con hasta tres alternativas, que recorres con <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd>.
+Las conversaciones se abren como **pestañas**. Haz clic en el botón **Textus AI** (los destellos) del extremo derecho de la barra de la ventana, pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> o elige **Visualización › Panel de IA**: la IA se abre en una isla propia a la derecha. Sus pestañas son pestañas como las demás: arrastra una junto a un documento, a otra isla o fuera, a una ventana propia.
 
-En **Ajustes > Textus AI > Asistencia de escritura** puedes elegir un **tono del autocompletado** (según el documento / formal / informal / académico / conciso). Cuando el documento pertenece a una carpeta con perfil de estilo o biblioteca (consulta **Personaliza Textus AI** más abajo), el autocompletado también los sigue.
-
-### 2. Revisión gramatical
-
-Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca el cursor en él, para ver la explicación; **Aplicar** (o <kbd>Option</kbd>+<kbd>Enter</kbd> con el cursor encima) acepta la corrección e **Ignorar** la descarta. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> revisa el párrafo actual de inmediato.
-
-### 3. El panel de IA
-
-La conversación completa está en un panel a la derecha del editor. Ábrelo o ciérralo con el botón **Textus AI** (la pluma) del extremo derecho de la barra de la ventana o con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>.
-
-- **Una conversación por documento**: cada pestaña tiene su propia conversación, y al cambiar de pestaña el panel cambia con ella. **Nueva conversación**, en la cabecera del panel, empieza de cero (si quedan cambios por revisar, pregunta antes).
-- **Modos**: el cuadro de texto ofrece dos. **General** trabaja en el documento: redacta texto nuevo (una continuación, un párrafo o una sección nuevos) y cambia el que ya está (reescribir, traducir, recortar). Con texto seleccionado, un cambio de ese texto lo sustituye y el texto nuevo va a continuación. **Revisar** responde, comenta y deja comentarios sin cambiar nada. Cada cambio de Escribir es una propuesta que aceptas o rechazas. El panel empieza en el modo elegido en **Ajustes > Textus AI > Chat de Textus AI > Modo predeterminado**.
+- **Por carpeta**: las conversaciones pertenecen a la carpeta en la que trabajas, no a un documento. Cada conversación abierta es una pestaña; la que está delante es con la que hablas, sobre el documento que está delante. Una conversación cerrada se queda en el historial.
+- **Nueva conversación**: haz clic derecho en el papel vacío de una pestaña de IA y elige **Nueva conversación** (si quedan cambios por decidir, pregunta antes). **Memoria** está en el mismo menú.
+- **Historial**: el reloj de arriba a la derecha de una pestaña de IA muestra las conversaciones anteriores agrupadas por carpeta, con **Buscar en las conversaciones** arriba para encontrar aquellas en las que se dijeron ciertas palabras. Haz clic en una para volver a abrirla. Cuando mencionas una conversación anterior, Textus AI también las busca. En **Ajustes › Privacidad y datos** puedes dejar de guardar las conversaciones.
+- **Modo y modelo**: un botón entre los controles del cuadro de texto indica las dos cosas, «General · modelo». **General** trabaja en el documento: redacta texto nuevo (una continuación, un párrafo o una sección nuevos) y cambia el que ya está (reescribir, traducir, recortar). Con texto seleccionado, un cambio de ese texto lo sustituye y el texto nuevo va a continuación. **Revisar** responde, comenta y deja comentarios sin cambiar nada. **Investigar** toma un tema, lo investiga y lo redacta como un texto (consulta **Investigación** más abajo). La lista también contiene todos los modelos de los servicios que has configurado y los **Agentes** que has añadido (consulta **Agentes externos**). Una conversación nueva empieza en Revisar; después, el cuadro de texto conserva el último modo que elegiste.
 - **Menciones con @**: escribe `@` en el cuadro de texto para elegir un archivo de texto de la carpeta; se adjunta al mensaje.
 - **Adjuntar archivos**: el botón **+**, a la izquierda del cuadro de texto, adjunta a ese mensaje uno o varios archivos: un PDF, un documento de Word, una presentación de PowerPoint, una hoja de cálculo, un libro EPUB, un archivo RTF o HTML, cualquier archivo de texto o de código, un archivo zip o una imagen (PNG, JPEG, GIF, WebP, BMP, TIFF y, en Mac, HEIC y AVIF). Cada archivo se copia en la carpeta temporal propia de la conversación, nunca en tus carpetas, y allí Textus AI puede volver a leerlo entero. Los documentos se convierten en texto en el propio dispositivo y viajan dentro del mensaje; si es largo, solo se envía en parte, su etiqueta indica «(recortado)» y Textus AI lee el resto cuando lo necesita. Un archivo zip se descomprime allí y se enumeran sus archivos. Las imágenes se convierten a un formato que lee cualquier servicio, se reducen si son muy grandes y se envían como imágenes reales a los proveedores que pueden verlas (los que no pueden lo avisan de antemano en lugar de descartarlas sin decir nada).
-- **Modelo**: el botón entre los controles del cuadro de texto indica el modelo al que va tu próximo mensaje; haz clic en él para cambiar a otro modelo de cualquier servicio que hayas configurado en **Ajustes > Textus AI**. Si solo tienes un modelo configurado, solo muestra su nombre.
-- **Búsqueda web**: el botón de la lupa junto al campo de texto deja que Textus AI busque en la web cuando una petición lo necesite; consulta **7. Búsqueda web** más abajo.
-- **Pensamiento profundo**: el botón junto a la búsqueda web (la bombilla) pide al modelo que piense bien la respuesta antes de contestar; es más lento y más caro, para preguntas difíciles y reescrituras grandes. Sigue activado, también en otros documentos, hasta que vuelvas a pulsarlo. Mientras el modelo piensa, el panel muestra «Pensando · 8 segundos» y después «Pensó durante 12 segundos», que puedes pulsar para leer el razonamiento cuando el proveedor lo comparte. El botón solo aparece con modelos que pueden pensar más a fondo; Pregunta rápida siempre pide una respuesta rápida.
-- **Historial**: el botón **Historial** (el reloj), en la cabecera del panel de IA, muestra las conversaciones anteriores agrupadas por carpeta, con **Buscar en las conversaciones** arriba para encontrar aquellas en las que se dijeron ciertas palabras. Haz clic en una para volver a abrirla con su documento y continuarla. Cuando mencionas una conversación anterior, Textus AI también las busca.
+- **Búsqueda web**: el botón de la lupa junto al cuadro de texto deja que Textus AI busque en la web cuando una petición lo necesite; consulta **Búsqueda web** más abajo.
+- **Pensamiento profundo**: el botón junto a la búsqueda web (la bombilla) pide al modelo que piense bien la respuesta antes de contestar; es más lento y más caro, para preguntas difíciles y reescrituras grandes. Sigue activado, también en otros documentos, hasta que vuelvas a pulsarlo. Mientras el modelo piensa, la pestaña muestra «Pensando · 8 segundos» y después «Pensó durante 12 segundos», que puedes pulsar para leer el razonamiento cuando el proveedor lo comparte. El botón solo aparece con modelos que pueden pensar más a fondo; Pregunta rápida siempre pide una respuesta rápida.
 - **Errores**: cuando una petición falla, Textus indica en tu idioma qué tipo de problema es y qué hacer (revisar la clave, recargar un saldo agotado, esperar un momento, elegir otro modelo), encima del mensaje del propio proveedor; en el chat y también en el autocompletado y la revisión gramatical.
 - **Documentos largos**: si le pides traducir o reescribir un documento largo capítulo a capítulo, Textus AI encarga cada capítulo a un ayudante propio, con una lista común de cómo se escriben los nombres y términos que se repiten, para que todo el documento cambie a la vez.
 
-**Abrir en una ventana aparte**, en la cabecera del panel, lleva la conversación a su propia ventana, algo útil con un segundo monitor. Esa ventana te acompaña: si cambias de pestaña o de ventana, su documento, su título y su selección cambian también, y los cambios que propone llegan al archivo que estés editando en ese momento. Solo hay una por cada ventana del editor; **📌**, en su cabecera, la mantiene por encima del editor.
+### Cambios en tus documentos
 
-### 4. Pregunta rápida
+**Ajustes › Textus AI › Ayuda al escribir › Cómo cambia Textus AI los archivos** decide cómo llegan a tu texto los cambios de Textus AI:
 
-Pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (o haz clic con el botón derecho > Preguntar a la IA…) para abrir una pequeña barra de chat justo debajo del párrafo en el que estás. Se coloca dentro del documento y empuja hacia abajo el texto que hay debajo en lugar de taparlo. Si había texto seleccionado al abrirla, la selección se incluye. Pregunta rápida se abre en modo **General**, porque normalmente se abre sobre un fragmento para cambiarlo («acorta esto»); Revisar está a un clic en el selector de modo.
+- **Como revisiones para revisar** (el predeterminado): cada cambio es una revisión que se muestra donde se aplicaría, y nada es definitivo hasta que lo aceptas.
+- **Escritos directamente**: los cambios se escriben a medida que llegan. Quedan marcados para que veas qué ha cambiado, y cada respuesta se puede deshacer.
 
-- **El atajo otra vez**: si pulsas <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> con la barra abierta, el cursor pasa a su cuadro de texto; si vuelves a pulsarlo desde ahí, la barra se cierra. <kbd>Esc</kbd> en cualquier parte de la barra también la cierra, y el cursor vuelve al documento. Si quedan cambios por revisar, la barra pregunta antes de cerrarse o de empezar una conversación nueva.
-- Pregunta rápida tiene su propia conversación breve, separada de la del panel, que no se guarda en el historial. Se abre aunque el panel esté abierto. **Continuar en la conversación completa** (el botón de su esquina) pasa el intercambio al panel de IA, donde sigue y se guarda. Activa **Ajustes > Textus AI > Avanzado > Abrir las conversaciones completas en una ventana aparte** para enviarlo a una ventana aparte.
+Un texto de Investigar se escribe directamente en cualquier caso. <kbd>Cmd</kbd>+<kbd>Z</kbd> deshace de una vez un cambio aceptado.
 
-### 5. Cambios en el documento
+**Cómo se ven las revisiones**: **Mostrar revisiones** (en Ayuda al escribir, o el botón del ojo de la barra de revisión) tiene tres vistas:
+- **Solo el resultado, original en el margen** (la predeterminada);
+- **Original en el texto, cambios en el margen**;
+- **Todo en el texto**: el texto eliminado, tachado; el nuevo, en verde.
 
-El chat nunca escribe directamente en tu documento. Si usas un proveedor que admite llamadas a herramientas y le pides que cambie el documento, cada cambio es una propuesta que se muestra justo donde se aplicaría: el texto eliminado aparece tachado y el nuevo, insertado en verde. Nada cambia en el documento hasta que aceptas la propuesta, y <kbd>Cmd</kbd>+<kbd>Z</kbd> deshace de una vez un cambio aceptado.
+El texto nuevo siempre se muestra en el texto. Si no hay sitio para un margen (ventana estrecha, con la barra lateral y la IA abiertas), las vistas con margen esperan y el texto lo muestra todo.
 
-- **Aceptar / Rechazar**: desde la barra flotante junto al cambio, desde la tarjeta de la propuesta en el panel o con el teclado: <kbd>Cmd</kbd>+<kbd>Return</kbd> acepta, y <kbd>Cmd</kbd>+<kbd>Delete</kbd> con el cursor sobre el cambio lo rechaza. Si una respuesta trae varias propuestas, se previsualizan a la vez; pasa de una a otra con ‹› y usa Aceptar todo / Rechazar todo.
-- **Motivos**: cada tarjeta de propuesta explica por qué Textus AI propone ese cambio.
-- **Solo algunas frases**: cuando una propuesta reescribe varias frases, su tarjeta ofrece **Elegir frases (N)**. Marca las que quieras y pulsa el botón de aceptar, que indica cuántas se aplicarán (por ejemplo, «Aceptar 2 de 3»).
+- **La barra de revisión**: una sola barra al pie del documento reúne todo lo pendiente, cambios y notas por igual. Recórrelos con ‹ › (o <kbd>F7</kbd> / <kbd>Shift</kbd>+<kbd>F7</kbd>), usa **Aceptar** o **Rechazar** en cada uno, o **Aceptar todo** / **Rechazar todo**. Cada frase cambiada tiene además ✓ / ✕ en el texto; si aceptas solo algunas, la barra indica «Aceptar 2 de 5». Con el teclado: <kbd>Cmd</kbd>+<kbd>Return</kbd> acepta, y <kbd>Cmd</kbd>+<kbd>Delete</kbd> con el cursor sobre un cambio lo rechaza.
+- **Motivos**: cada tarjeta de propuesta en la conversación explica por qué Textus AI hizo ese cambio.
 - **En el cursor**: sin nada seleccionado, Textus AI sabe dónde está tu cursor, así que «escribe aquí una transición» inserta el texto justo ahí.
 - **Comentarios en lugar de cambios**: pide una revisión («¿qué flojea aquí?») y Textus AI fija comentarios a los fragmentos sin cambiarlos. Cada tarjeta de comentario tiene **Mostrar en el documento**, que selecciona el fragmento al que se refiere.
 - **Tus propias notas**: selecciona unas palabras, haz clic derecho y elige **Añadir nota**: tu nota va al margen junto a las de Textus AI, marcada como Yo. Las notas se guardan junto a los datos propios de Textus, no en tu Markdown.
 - **Control de mis cambios** (menú Visualización): mientras está activado, tus propios cambios también se muestran como cambios (lo que borraste, tachado; lo que añadiste, marcado), cada uno con una tarjeta en el margen, marcada como Yo, para aceptarlo o rechazarlo. El archivo guarda el original con solo los cambios que aceptaste; los que quedan por decidir se guardan a su lado, en la carpeta `.textus`, como los de Textus AI, y vuelven cuando abres el documento de nuevo: comparte la carpeta y van con ella.
 
-### 6. Imágenes
+**Otros archivos de la carpeta**: Textus AI puede cambiar archivos que no tienes abiertos.
 
-Textus AI puede crear una imagen para tu documento cuando eliges un **Modelo de imagen** en **Ajustes > Textus AI**. Hasta entonces es **Ninguno**, porque cada imagen cuesta un poco en el servicio. Elige un servicio y un modelo: OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow o cualquier endpoint compatible con OpenAI. Si ya usas ese servicio para el chat, se usa su clave; si no, Ajustes te pide una.
+- **Como revisiones para revisar**: un cambio en uno de esos archivos espera en él como revisiones. Entran en el texto cuando lo abres, para aceptarlas o rechazarlas como se explica arriba. El árbol de archivos y la pestaña del archivo lo marcan: «3 por revisar».
+- **Un archivo nuevo que crea** espera a que decidas: **Conservar** lo mantiene y **Descartar** lo elimina (va a la papelera).
+- **Escritos directamente**: el cambio se escribe enseguida, y el texto anterior se guarda para poder deshacerlo.
+- **La tarjeta de la respuesta** enumera los archivos que tocó, con **Deshacer**, **Aplicar**, **Conservar** y **Descartar**. Un archivo que hayas editado entretanto deja su cambio aparte, marcado como «Cambiado desde entonces»; **Descartar** lo deja pasar.
 
-- Pídelo en el modo Escribir («añade una imagen del puerto después del primer párrafo»), o haz clic derecho en un párrafo y elige **Ilustrar este párrafo**.
-- La imagen llega como una propuesta en su sitio, como cualquier inserción. No se guarda nada hasta que aceptas: entonces se guarda como dice **Ajustes > Imágenes** para una imagen pegada y se inserta como imagen de Markdown. Rechazar no deja nada.
-- Para que una imagen propuesta se dibuje de nuevo, señálala y elige **Redibujar…**, y di qué debe cambiar; solo se vuelve a dibujar esa imagen. Las imágenes de un mismo texto mantienen las mismas personas y el mismo estilo: alguien que vuelve a aparecer se describe con las mismas palabras y, cuando el modelo de imagen acepta una imagen de partida, una imagen nueva de esa persona parte de una anterior.
-- Si el servicio rechaza la descripción, el panel muestra el motivo que dio. Cada petición crea como mucho dos imágenes.
+### Autocompletado
 
-### 7. Búsqueda web
+Mientras escribes, aparece una continuación en gris en el cursor: pulsa <kbd>Tab</kbd> para aceptarla, o <kbd>Cmd</kbd>+<kbd>→</kbd> para aceptar solo la palabra siguiente y dejar el resto como sugerencia. <kbd>Esc</kbd> la descarta. No hace falta una cantidad mínima de texto: funciona desde la primera frase del documento.
 
-Activa el botón **Búsqueda web** junto al campo de texto (o **Ajustes > Textus AI > Chat de Textus AI > Búsqueda web** para que empiece activado) y Textus AI buscará en la web cuando una petición necesite datos actuales o de los que no esté seguro. También puede leer una página cuya dirección pegues.
+Pide una de forma explícita con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> o desde el menú contextual (el cursor debe estar al final de un párrafo): obtendrás una continuación más larga con hasta tres alternativas, que recorres con <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd>.
 
-- **Quién busca**: los modelos que buscan por sí mismos —OpenAI, Claude, Grok, OpenRouter, Groq, Qwen y Zhipu GLM— usan su propia búsqueda. Con cualquier otro modelo (DeepSeek, Gemini, Mistral, Kimi, modelos locales, endpoints personalizados) busca Textus, con el **Servicio de búsqueda** elegido bajo Búsqueda web en Ajustes: **Automático** usa una clave de DeepSeek, Zhipu o Kimi que ya guardaste para el chat; o elige Bocha, Tavily, Brave Search o Exa y pega su clave, o SearXNG e indica la dirección de tu propio servidor. La fila indica adónde van tus búsquedas. Si no hay con qué buscar, el botón muestra un punto rojo.
-- **Fuentes**: la respuesta cita lo que encontró como [1], [2] y enumera esas páginas debajo; haz clic en una para abrirla en el navegador. Los números se mantienen durante toda la conversación.
-- **Fuentes como notas al pie**: cuando una propuesta se basa en la web, su tarjeta muestra **Añadir las fuentes como notas al pie**. Si lo marcas, al aceptarla se añaden notas al pie de Markdown con sus fuentes al final del documento; sin marcar, el texto entra sin ellas. La tarjeta recuerda tu última elección.
-- **Las páginas se leen, no se obedecen**: lo que dice una página nunca es una instrucción para Textus AI, que sigue limitándose a proponer cambios. Textus solo lee páginas de la web pública, nunca de tu ordenador ni de tu red local.
+En **Ajustes › Textus AI › Ayuda al escribir › Continuar y revisar** puedes activar o desactivar el autocompletado y elegir un **Tono del autocompletado** (según el documento / formal / informal / académico / conciso). Cuando el documento pertenece a una carpeta con perfil de estilo o biblioteca (consulta **Personaliza Textus AI** más abajo), el autocompletado también los sigue.
+
+### Revisión gramatical
+
+Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca el cursor en él, para ver la explicación; **Aplicar** (o <kbd>Option</kbd>+<kbd>Enter</kbd> con el cursor encima) acepta la corrección e **Ignorar** la descarta. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> revisa el párrafo actual de inmediato. **Nivel de revisión** (Ayuda al escribir › Continuar y revisar) decide cuánto señala.
+
+### Pregunta rápida
+
+Pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (o haz clic derecho › **Preguntar a la IA…**) para abrir una pequeña barra de chat justo debajo del párrafo en el que estás. Se coloca dentro del documento y empuja hacia abajo el texto que hay debajo en lugar de taparlo. Si había texto seleccionado al abrirla, la selección se incluye. Pregunta rápida se abre en modo **General**, porque normalmente se abre sobre un fragmento para cambiarlo («acorta esto»); Revisar está a un clic en el selector de modo.
+
+- **El atajo otra vez**: si pulsas <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> con la barra abierta, el cursor pasa a su cuadro de texto; si vuelves a pulsarlo desde ahí, la barra se cierra. <kbd>Esc</kbd> en cualquier parte de la barra también la cierra, y el cursor vuelve al documento. Si quedan cambios por decidir, la barra pregunta antes de cerrarse o de empezar una conversación nueva.
+- Pregunta rápida tiene su propia conversación breve, separada de la de las pestañas de IA, que no se guarda en el historial. **Continuar en la conversación completa** (el botón de su esquina) pasa el intercambio a una pestaña de IA, donde sigue y se guarda.
 
 ## Personaliza Textus AI
 
@@ -99,7 +100,7 @@ Textus AI aprende sobre ti y tu trabajo a partir de unos pocos archivos Markdown
 | **Habilidades** | Instrucciones reutilizables que invocas con `/nombre` | `skills/`, global y por carpeta |
 | **Carpeta de configuración global** | Lo que se aplica a todos los documentos | La carpeta de ajustes de la aplicación |
 
-En adelante, «conversaciones» se refiere al panel de IA y a Pregunta rápida. Así se ve una carpeta completa de un vistazo:
+En adelante, «conversaciones» se refiere a las pestañas de IA y a Pregunta rápida. Así se ve una carpeta completa de un vistazo:
 
 ```
 mi-novela/               ← la carpeta
@@ -120,18 +121,18 @@ El menú de la carpeta crea `.textus/` y sus archivos la primera vez que los pid
 
 ### La carpeta
 
-**La carpeta es aquella en la que trabaja Textus AI.** Es la carpeta que abres en la barra lateral (**Archivo > Abrir carpeta…**) o una que elijas; si no, la carpeta más cercana por encima del documento que tenga una carpeta `.textus/`, de modo que un capítulo en `novel/part-1/` pertenece a `novel/`. Un documento que abres solo no tiene carpeta: Textus AI lee entonces únicamente el documento y los archivos que adjuntes, de modo que un archivo en Descargas o en el Escritorio nunca le abre toda esa carpeta.
+**La carpeta es aquella en la que trabaja Textus AI.** Es la carpeta que abres en la barra lateral (**Archivo › Abrir carpeta…**) o una que elijas; si no, la carpeta más cercana por encima del documento que tenga una carpeta `.textus/`, de modo que un capítulo en `novel/part-1/` pertenece a `novel/`. Un documento que abres solo no tiene carpeta: Textus AI lee entonces únicamente el documento y los archivos que adjuntes, de modo que un archivo en Descargas o en el Escritorio nunca le abre toda esa carpeta.
 
 - Textus AI puede listar, encontrar por nombre, leer y buscar en sus archivos para encontrar las escenas anteriores de un personaje, un término o tus notas: archivos de texto (Markdown, texto sin formato y formatos similares) de hasta 16 MB, que lee por partes cuando son largos, y el texto de los archivos PDF, Word, PowerPoint, EPUB, RTF y de hojas de cálculo. Con un proveedor que puede ver imágenes, también mira las imágenes PNG, JPEG, GIF y WebP de la carpeta, de hasta 6 MB cada una. Se omiten los archivos y las carpetas ocultos, lo que excluye un archivo `.gitignore` o `.ignore` (como en la búsqueda de archivos de la barra lateral), las carpetas de compilación y de dependencias (como `node_modules`) y los PDF escaneados sin capa de texto.
 - Escribir `@` en el cuadro de texto del chat adjunta uno de sus archivos a tu mensaje.
 - Su carpeta `.textus/` guarda el perfil de estilo, la biblioteca, las instrucciones de escritura y las habilidades de la carpeta.
 
-La barra bajo la cabecera del panel de IA muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta…** en ese menú (o **Ajustes > Textus AI > Carpeta**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **No usar ninguna carpeta**.
+Haz clic derecho en el papel vacío de una pestaña de IA y elige **Memoria**: su fila superior muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta…** en ese menú (o **Ajustes › Textus AI › Agente › Carpeta**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **No usar ninguna carpeta**.
 
 > [!TIP]
 > ¿Tu borrador está en `tesis/borradores/` y tus notas de entrevistas en `tesis/fuentes/`? Elige `tesis/` como carpeta y Textus AI podrá leer `fuentes/entrevistas.md` mientras trabajas en `borradores/capitulo-2.md`.
 
-Todo lo que lee Textus AI tiene que estar dentro de la carpeta: se rechazan `..`, las rutas absolutas y los enlaces que apuntan fuera. Sin una carpeta abierta o elegida no hay carpeta activa, y se rechaza una carpeta demasiado amplia, como tu carpeta personal o una unidad entera. Lo que Textus AI crea mientras trabaja (notas de investigación, borradores en curso) va a las carpetas propias de Textus o a la carpeta temporal del sistema, no a la tuya.
+Todo lo que lee Textus AI tiene que estar dentro de la carpeta: se rechazan `..`, las rutas absolutas y los enlaces que apuntan fuera. Sin una carpeta abierta o elegida no hay carpeta, y se rechaza una carpeta demasiado amplia, como tu carpeta personal o una unidad entera. Lo que Textus AI crea mientras trabaja (notas de investigación, borradores en curso) va a las carpetas propias de Textus o a la carpeta temporal del sistema, no a la tuya.
 
 ### El perfil de estilo: «Aprender mi estilo»
 
@@ -139,10 +140,10 @@ Todo lo que lee Textus AI tiene que estar dentro de la carpeta: se rechazan `..`
 
 Hay dos formas de crearlo, ambas en el menú de la carpeta:
 
-- **Aprender mi estilo a partir de muestras…**: elige algunos archivos escritos por ti (hasta ocho). Textus AI los estudia, redacta un perfil (voz y tono, frases y ritmo, vocabulario, puntuación y formato, estructura, lo que nunca haces y algunas citas breves como ejemplos) y lo abre en una pestaña nueva. Léelo, corrígelo y amplíalo: es tuyo. Si vuelves a usar esta opción, el perfil anterior se conserva como `style.previous.md`.
+- **Aprender mi estilo a partir de muestras…**: elige algunos archivos escritos por ti (hasta ocho). Textus AI los estudia, redacta un perfil (voz y tono, frases y ritmo, vocabulario, puntuación, estructura, lo que nunca haces y algunas citas breves como ejemplos) y lo abre en una pestaña nueva. Léelo, corrígelo y amplíalo: es tuyo. Si vuelves a usar esta opción, el perfil anterior se conserva como `style.previous.md`.
 - **Crear perfil de estilo**: empieza con un esquema vacío y escríbelo tú.
 
-Cuando ya hay un perfil, el botón **Estilo**, junto al nombre de la carpeta, lo abre.
+Cuando ya hay un perfil, **Abrir perfil de estilo** en el menú de la carpeta (y la fila del estilo en Memoria) lo abre.
 
 ```markdown
 # Perfil de estilo
@@ -155,11 +156,11 @@ Cuando ya hay un perfil, el botón **Estilo**, junto al nombre de la carpeta, lo
 - Signos de exclamación. La expresión «de repente».
 ```
 
-Los puntos concretos y comprobables funcionan mejor que los adjetivos: «frases cortas, rara vez de más de 15 palabras» en lugar de «conciso». Procura que no pase de una o dos páginas; solo se usan los primeros 6000 caracteres. El **tono del autocompletado** de Ajustes también se aplica: déjalo en *Según el documento* cuando tu perfil de estilo ya describa tu voz.
+Los puntos concretos y comprobables funcionan mejor que los adjetivos: «frases cortas, rara vez de más de 15 palabras» en lugar de «conciso». Procura que no pase de una o dos páginas; solo se usan los primeros 6000 caracteres. El **Tono del autocompletado** de Ajustes también se aplica: déjalo en *Según el documento* cuando tu perfil de estilo ya describa tu voz.
 
 ### La biblioteca
 
-**La biblioteca guarda los datos que deben mantenerse coherentes**: un archivo Markdown por personaje, lugar o término, en `.textus/library/`. **Nueva entrada de biblioteca…**, en el menú de la carpeta, pide un nombre y abre la entrada nueva; el botón **Biblioteca** muestra cuántas hay.
+**La biblioteca guarda los datos que deben mantenerse coherentes**: un archivo Markdown por personaje, lugar o término, en `.textus/library/`. **Nueva entrada de biblioteca…**, en el menú de la carpeta, pide un nombre y abre la entrada nueva; Memoria las muestra todas.
 
 ```markdown
 ---
@@ -172,13 +173,13 @@ Protagonista, 32 años, profesora de chino en una escuela secundaria de Ciudad P
 Zurda. Nunca habla de su hermano.
 ```
 
-No tienes que adjuntar las entradas. Una entrada con `include: detected` (el valor predeterminado) llega a Textus AI siempre que aparece su nombre o uno de sus alias: en tu mensaje o en el documento durante una conversación, y en el texto que rodea al cursor durante el autocompletado. `always` la envía con cada petición; `never` la deja fuera. Las entradas que no se mencionan no cuestan nada, así que la biblioteca puede crecer tanto como necesite tu carpeta.
+No tienes que adjuntar las entradas. Una entrada con `include: detected` (el valor predeterminado) llega a Textus AI siempre que aparece su nombre o uno de sus alias: en tu mensaje o en el documento durante una conversación, y en el texto que rodea al cursor durante el autocompletado. `always` la envía con cada petición; `never` la deja fuera. Las entradas que no se mencionan no cuestan nada, así que la biblioteca puede crecer tanto como necesite tu proyecto.
 
 ### Instrucciones de escritura (agent.md)
 
 **Las instrucciones de escritura son normas fijas que se envían en cada conversación**: de qué trata la carpeta, en qué idioma responder, grafías y términos, y lo que Textus AI debe hacer siempre o no hacer nunca. Están en archivos llamados `agent.md`, en dos niveles:
 
-- **Global**, para todos los documentos: **Ajustes > Textus AI > Instrucciones de escritura (agent.md) > Editar agent.md**.
+- **Global**, para todos los documentos: **Ajustes › Textus AI › Agente › Instrucciones de escritura (agent.md) › Editar agent.md**.
 - **Carpeta**, para los documentos de una carpeta: `.textus/agent.md`, que se abre con **Editar instrucciones de escritura de la carpeta** en el menú de la carpeta.
 
 Ambos se abren en una pestaña y empiezan con una breve guía en comentarios. Cuando existen los dos, Textus AI recibe ambos (primero las instrucciones globales y después las de la carpeta) y, en caso de contradicción, prevalecen las de la carpeta.
@@ -198,9 +199,9 @@ Las instrucciones de escritura solo se aplican a las conversaciones. El autocomp
 - **Esta carpeta**: lo que trata de esta obra, en `projects/<carpeta>/memory/` dentro de la carpeta de configuración global (Textus lo guarda allí, no en tu carpeta); los datos sobre personas, lugares y términos van a la biblioteca.
 - **Para todas las carpetas**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta, todo va aquí.
 
-La pestaña **Carpeta** del panel de IA lo muestra todo en **Memoria**, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. De vez en cuando, Textus AI ordena su memoria: une los recuerdos que dicen lo mismo y descarta una regla que otra más reciente ha dejado sin efecto; lo descartado está en **Olvidado hace poco**, para recuperarlo. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y la pestaña Carpeta lo indica. **Ajustes > Textus AI > Recordar automáticamente** lo desactiva.
+**Memoria** (clic derecho en el papel de una pestaña de IA › Memoria) lo muestra todo, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. De vez en cuando, Textus AI ordena su memoria: une los recuerdos que dicen lo mismo y descarta una regla que otra más reciente ha dejado sin efecto; lo descartado está en **Olvidado hace poco**, para recuperarlo. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y Memoria lo indica. El interruptor **Memoria** (Ajustes › Textus AI › Agente) lo desactiva.
 
-**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Memoria**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con Recordar automáticamente desactivado. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
+**También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Memoria**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con la memoria desactivada. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
 
 ### Habilidades (/nombre)
 
@@ -224,17 +225,17 @@ Puedes usar una habilidad de dos maneras:
 
 Cuando lo que pediste era un procedimiento propio, unos pasos que querrás repetir, Textus AI ofrece bajo su respuesta guardarlo como habilidad, para todos los documentos o solo para esta carpeta. No se guarda nada a menos que lo elijas.
 
-Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Ajustes > Extensiones > Habilidades > … > Importar habilidad…** copia ahí un archivo de habilidad), y las de la carpeta, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad de la carpeta con el mismo nombre que una global la reemplaza.
+Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Importar habilidad…**, arriba en Habilidades de **Ajustes › Textus AI › Agente**, copia ahí un archivo de habilidad), y las de la carpeta, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad de la carpeta con el mismo nombre que una global la reemplaza.
 
 ### Habilidades integradas
 
-Textus trae cuatro habilidades. **Corregir**, en Revisar, comprueba la ortografía, la gramática, la puntuación y los números según las normas del idioma del texto. **Diseñar un tema**, **Crear un complemento** y **Crear una habilidad**, en **Ajustes > Extensiones > Crear**, hacen un tema para el editor, un pequeño complemento o una habilidad propia a partir de lo que describas. Hay más habilidades —ampliar, condensar, traducir, resumir, revisar continuidad, correo, acta de reunión y otras— en **Ajustes > Extensiones > Habilidades > Conseguir más**. Escribe `/` y elige una, o escribe su nombre en cualquiera de los idiomas de la aplicación: `/proofread`, `/校对` y `/校正` llaman a la misma habilidad. Textus AI también elige una por su cuenta cuando tu petición encaja. **Diseñar un tema** pone el CSS del tema en la respuesta: **Usar este tema**, debajo, lo instala; o guárdalo como archivo .css e impórtalo con **Ajustes > Editor y aspecto > Importar CSS…**.
+Textus trae cuatro habilidades. **Corregir**, en Revisar, comprueba la ortografía, la gramática, la puntuación y los números según las normas del idioma del texto. **Diseñar un tema**, **Crear un complemento** y **Crear una habilidad** hacen un tema para el editor, un pequeño complemento o una habilidad propia a partir de lo que describas, en una pestaña propia: **Crea tu tema** está en la tienda de temas de Apariencia, y **Crea tu plugin**, en el menú **⋯** del panel Complementos. Hay más habilidades —ampliar, condensar, traducir, resumir, revisar continuidad, correo, acta de reunión y otras— en **Disponibles**, al final de Habilidades en **Ajustes › Textus AI › Agente**. Escribe `/` y elige una, o escribe su nombre en cualquiera de los idiomas de la aplicación: `/proofread`, `/校对` y `/校正` llaman a la misma habilidad. Textus AI también elige una por su cuenta cuando tu petición encaja. **Diseñar un tema** pone el CSS del tema en la respuesta: **Usar este tema**, debajo, lo instala; o guárdalo como archivo .css y añádelo con **Añadir un tema desde un archivo CSS** en **Ajustes › Apariencia**.
 
-Las habilidades integradas están en **Ajustes > Textus AI > Habilidades integradas** y siempre están activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. **Ajustes > Extensiones > Habilidades** muestra las habilidades que añadiste. Cada una indica los modos en que funciona (haz clic para cambiarlos), y su interruptor la desactiva por ahora; sus modos se guardan para cuando la vuelvas a activar. Una habilidad tuya con el nombre de una integrada la reemplaza.
+Las habilidades integradas encabezan Habilidades en **Ajustes › Textus AI › Agente** y siempre están activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. Debajo están las habilidades que añadiste. Cada una indica los modos en que funciona (haz clic para cambiarlos), y su interruptor la desactiva por ahora; sus modos se guardan para cuando la vuelvas a activar. Una habilidad tuya con el nombre de una integrada la reemplaza.
 
 ### Normas de escritura
 
-**Ajustes > Textus AI > Asistencia de escritura > Normas de escritura** decide qué normas de puntuación, espacios y números siguen Textus AI y la revisión gramatical. **Automático** aplica la norma nacional cuando el idioma la tiene (GB/T para el chino simplificado o JTF para el japonés, por ejemplo); en los demás casos sigue lo que tu documento ya hace con más frecuencia y solo señala las incoherencias. Si eliges un perfil, como **España** o **Ficción** en chino simplificado, los documentos en ese idioma se revisan según él.
+**Normas de escritura** (Ajustes › Textus AI › Ayuda al escribir › Continuar y revisar) decide qué normas de puntuación, espacios y números siguen Textus AI y la revisión gramatical. **Automático** aplica la norma nacional cuando el idioma la tiene (GB/T para el chino simplificado o JTF para el japonés, por ejemplo); en los demás casos sigue lo que tu documento ya hace con más frecuencia y solo señala las incoherencias. Si eliges un perfil, como **Ficción** en chino simplificado o **Reino Unido · GOV.UK** en inglés, los documentos en ese idioma se revisan según él.
 
 Una carpeta puede elegir el suyo: añade una línea `conventions:` entre las dos líneas `---` del principio de su perfil de estilo (`.textus/style.md`). En los documentos de esa carpeta, prevalece sobre el ajuste.
 
@@ -246,7 +247,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### La carpeta de configuración global
 
-**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a una carpeta; **Ajustes > Textus AI > Carpeta de configuración global > Mostrar** la muestra.
+**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a una carpeta; **Ajustes › Textus AI › Agente › Carpeta de configuración global › Mostrar** la muestra.
 
 ```
 agent/                ← la carpeta de configuración global
@@ -270,7 +271,7 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 | Tono del autocompletado (Ajustes) | | ✓ | |
 
 - **Primero lo global, después la carpeta.** Se envían las instrucciones de escritura de los dos niveles, las de la carpeta al final, y las de la carpeta prevalecen si hay un conflicto. Una habilidad de la carpeta reemplaza a una global con el mismo nombre.
-- **Una sola carpeta a la vez.** Solo cuenta su `.textus/`: si eliges otra carpeta, no se lee el `.textus/` que haya junto al documento.
+- **Una sola carpeta a la vez.** Solo cuenta su `.textus/`: si has elegido una carpeta, no se lee el `.textus/` que haya junto al documento.
 - **Sin reiniciar.** Edita cualquiera de estos archivos y la siguiente petición usará la versión nueva (el autocompletado, en unos diez segundos).
 
 ### ¿Qué archivo para qué?
@@ -281,11 +282,41 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 - Una tarea que pides una y otra vez → una **habilidad**.
 - Notas, documentación, capítulos anteriores → archivos normales en la **carpeta**; Textus AI los lee cuando una petición lo requiere.
 
+## Más
+
+### Investigación
+
+Elige **Investigar** en el botón de modo y envía un tema en lugar de una petición: Textus AI lo investiga (en la web, en tu carpeta, en los artículos que adjuntes), prepara un esquema y escribe el texto en el documento. Escribe `/` para elegir el tipo de texto (un ensayo, un informe, una revisión bibliográfica y otros), o déjalo en **Elegir por mí**. **Investigar con subagentes** (Ayuda al escribir) le permite repartir partes de la investigación entre ayudantes que trabajan a la vez; **Comprobar citas** hace que cada frase citada se compruebe con sus fuentes antes de terminar el texto. El texto se escribe directamente en el documento, diga lo que diga **Cómo cambia Textus AI los archivos**.
+
+### Búsqueda web
+
+Activa el botón **Búsqueda web** junto al cuadro de texto y Textus AI buscará en la web cuando una petición necesite datos actuales o de los que no esté seguro. También puede leer una página cuya dirección pegues.
+
+- **Quién busca**: los modelos que buscan por sí mismos —OpenAI, Claude, Grok, OpenRouter, Groq, Qwen y Zhipu GLM— usan su propia búsqueda. Con cualquier otro modelo (DeepSeek, Gemini, Mistral, Kimi, modelos locales, endpoints personalizados) busca Textus, con el **Servicio de búsqueda** elegido en **Ajustes › Textus AI › Ayuda al escribir › Web y proxy**: **Automático** usa una clave de DeepSeek, Zhipu o Kimi que ya guardaste para el chat; o elige Bocha, Tavily, Brave Search o Exa y pega su clave, o SearXNG e indica la dirección de tu propio servidor. La fila indica adónde van tus búsquedas. Si no hay con qué buscar, el botón muestra un punto rojo.
+- **Fuentes**: la respuesta cita lo que encontró como [1], [2] y enumera esas páginas debajo; haz clic en una para abrirla en el navegador. Los números se mantienen durante toda la conversación.
+- **Fuentes como notas al pie**: cuando una propuesta se basa en la web, su tarjeta muestra **Añadir las fuentes como notas al pie**. Si lo marcas, al aceptarla se añaden notas al pie de Markdown con sus fuentes al final del documento; sin marcar, el texto entra sin ellas. La tarjeta recuerda tu última elección.
+- **Las páginas se leen, no se obedecen**: lo que dice una página nunca es una instrucción para Textus AI, que sigue limitándose a proponer cambios. Textus solo lee páginas de la web pública, nunca de tu ordenador ni de tu red local.
+
+### Imágenes
+
+Textus AI puede crear imágenes para tu documento. **Servicio de imágenes** (Ajustes › Textus AI › Modelos › Elección de modelo) sigue por defecto a tu proveedor del chat: si has iniciado sesión con ChatGPT, las imágenes salen de la cuota de tu plan (marcado como experimental, porque no es una API publicada); con otro proveedor que crea imágenes, las suyas, con la misma clave. Un proveedor que no crea imágenes no ofrece ninguna hasta que eliges un servicio (OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow o cualquier endpoint compatible con OpenAI) y después su modelo.
+
+- Pídelo en el modo General («añade una imagen del puerto después del primer párrafo»), o haz clic derecho en un párrafo y elige **Ilustrar este párrafo**.
+- El texto y las imágenes llegan juntos: el texto aparece a medida que se escribe, y cada imagen se muestra como un marco que se mueve suavemente en su sitio hasta que está lista. Puedes aceptarla antes de que termine; se guarda cuando llega.
+- No se guarda nada hasta que aceptas: entonces la imagen se guarda como dice **Ajustes › Edición › Imágenes** para una imagen pegada y se inserta como imagen de Markdown. Rechazar no deja nada.
+- Para que una imagen propuesta se dibuje de nuevo, señálala y elige **Redibujar…**, y di qué debe cambiar; solo se vuelve a dibujar esa imagen. Las imágenes de un mismo texto mantienen las mismas personas y el mismo estilo: alguien que vuelve a aparecer se describe con las mismas palabras y, cuando el modelo de imagen acepta una imagen de partida, una imagen nueva de esa persona parte de una anterior.
+- Para cambiar una imagen, haz clic derecho en ella y elige **Cambiar esta imagen con Textus AI…**, y di cómo. La nueva se propone en su lugar; cuando la aceptas, se te pregunta si el archivo antiguo debe ir a la papelera (se queda si no dices lo contrario).
+- Di cuántas imágenes quieres y Textus AI crea esas, hasta **Imágenes por petición** (Modelos › Elección de modelo; dos si no lo cambias). Si el servicio rechaza una descripción, el sitio de la imagen muestra el motivo que dio.
+
+### Agentes externos
+
+Los agentes de programación como Claude Code o Codex pueden trabajar en Textus mediante complementos. Cuando añades uno, tiene un botón junto al botón Textus AI en la barra de la ventana y aparece en el grupo **Agentes** del botón de modo: elígelo y tus mensajes irán a él en lugar de a un modelo. Antes de cambiar un archivo, te pregunta en la conversación. **Ajustes › Textus AI › Herramientas externas** los muestra en **ACP Agent** (**Conseguir agentes…** abre el panel Complementos) y, encima, los **Servidores MCP** cuyas herramientas puede usar Textus AI.
+
 ## Desactivar Textus AI
 
-Haz clic derecho en el botón **Textus AI** del extremo derecho de la barra de la ventana para pausar Textus AI una hora o desactivarla. Mientras está desactivada, la pluma aparece tachada, y un clic en él ofrece volver a activarla; una pausa termina sola al cabo de la hora. **Ajustes > Textus AI > Activar Textus AI** y un atajo que puedes asignar en **Ajustes > Atajos de teclado** también la activan o desactivan; en el iPhone está en el menú.
+Haz clic derecho en el botón **Textus AI** del extremo derecho de la barra de la ventana para pausar Textus AI una hora o desactivarla. Mientras está desactivada, los destellos aparecen tachados, y un clic en el botón ofrece volver a activarla; una pausa termina sola al cabo de la hora. La paleta de comandos (**Activar o desactivar Textus AI**) y un atajo que puedes asignar en **Ajustes › Atajos de teclado** también lo hacen; en el iPhone está en el menú.
 
-Mientras está desactivada, no se envía nada a ningún servicio de IA desde que se abre Textus: ni completado, ni revisión gramatical, ni conversación, ni nada que recordar. El panel de IA, la pregunta rápida y las opciones de IA del menú contextual desaparecen, y una respuesta que se estaba escribiendo se detiene. Las ediciones ya propuestas en el documento se quedan para que las aceptes o rechaces. Cada función conserva su propio ajuste, y todas vuelven a aplicarse en cuanto Textus AI está activada de nuevo.
+Mientras está desactivada, no se envía nada a ningún servicio de IA desde que se abre Textus: ni autocompletado, ni revisión gramatical, ni conversación, ni nada que recordar. Las pestañas de IA, Pregunta rápida y las opciones de IA del menú contextual desaparecen, y una respuesta que se estaba escribiendo se detiene. Los cambios ya propuestos en el documento se quedan para que los aceptes o rechaces. Cada función conserva su propio ajuste, y todas vuelven a aplicarse en cuanto Textus AI está activada de nuevo.
 
 ## Una nota sobre la privacidad
 

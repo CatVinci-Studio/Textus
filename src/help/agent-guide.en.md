@@ -18,43 +18,26 @@ For **Doubao (Volcengine)**, create the API key in the [Volcengine Ark console](
 
 Shortcuts below use macOS notation; on Windows and Linux, read Cmd as Ctrl and Option as Alt. If you have changed a shortcut, **Settings › Shortcuts** has the current one.
 
-## The AI features
+## Everyday use
 
-### 1. Completion
+The five ways you'll use most, starting with talking to it.
 
-As you type, a gray continuation appears at the cursor — press <kbd>Tab</kbd> to accept it, or <kbd>Cmd</kbd>+<kbd>→</kbd> to accept just the next word and keep the rest on offer. <kbd>Esc</kbd> dismisses it. There's no minimum amount of text required; it's ready from the very first sentence of a document.
-
-Ask for one explicitly with <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> or the context menu (the cursor must be at the end of a paragraph): you get a longer continuation with up to three alternatives — <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> cycle through them.
-
-Under **Settings › Textus AI › Writing assist › Continue & Check** you can turn completion on or off and pick a **Completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a folder with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
-
-### 2. Grammar check
-
-Possible issues get underlined. Hover over one, or move the caret into it, to see the explanation; **Apply** (or <kbd>Option</kbd>+<kbd>Enter</kbd> with the caret on it) takes the fix, **Ignore** dismisses it. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> checks the current paragraph immediately. **Check level** (Writing assist › Continue & Check) sets how much it flags.
-
-### 3. Conversations
+### Conversations
 
 Conversations open as **tabs**. Click the **Textus AI** button (the sparkles) at the right end of the window bar, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>, or choose **View › AI Panel**: the AI opens in an island of its own on the right. Its tabs are tabs like any other: drag one beside a document, into another island, or out into a window of its own.
 
 - **Per folder**: conversations belong to the folder you work in, not to one document. Each open conversation is a tab; the one in front is the one you are talking to, about the document in front. A closed conversation stays in History.
 - **New conversation**: right-click the empty paper of an AI tab and choose **New conversation** (with edits still undecided, it asks first). **Memory** is in the same menu.
 - **History**: the clock at the top right of an AI tab lists past conversations, grouped by folder, with **Search conversations** at the top to find the ones where some words were said. Click one to reopen it. When you refer to an earlier conversation, Textus AI searches them too. **Settings › Privacy & Data** can stop saving conversations.
-- **Mode and model**: one button among the input's controls says both, "General · model". **General** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. **Research** takes a topic, researches it and writes it up as a piece (see **8. Research** below). The list also holds every model of the services you have set up, and the **Agents** you have added (see **9. External agents**). A new conversation starts in Review; after that, the composer keeps the mode you last picked.
+- **Mode and model**: one button among the input's controls says both, "General · model". **General** works on the document: it drafts new text (a continuation, a new paragraph or section) and changes the text that is there (a rewrite, a translation, a cut). With text selected, a change to it replaces it and more text goes after it. **Review** answers, discusses and leaves comments without changing anything. **Research** takes a topic, researches it and writes it up as a piece (see **Research** below). The list also holds every model of the services you have set up, and the **Agents** you have added (see **External agents**). A new conversation starts in Review; after that, the composer keeps the mode you last picked.
 - **@-mentions**: type `@` in the input to pick a text file from the folder; it is attached to the message.
 - **Attach files**: the **+** button on the left of the input attaches one or more files to that message: a PDF, Word document, PowerPoint deck, spreadsheet, EPUB e-book, RTF or HTML file, any text or code file, a zip archive, or a picture (PNG, JPEG, GIF, WebP, BMP, TIFF, and on a Mac HEIC and AVIF). Each file is copied into the conversation's own temporary folder, never into your folders, where Textus AI can read it again whole. Documents are extracted to text locally and travel inside the message; a long one is sent only in part, the chip says "(shortened)", and Textus AI reads the rest when it needs it. A zip archive is unpacked there and its files listed. Pictures are converted to a format every service reads, made smaller when they are very large, and sent as real images to providers that can see (ones that can't say so up front rather than dropping them silently).
-- **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **7. Web search** below.
+- **Web search**: the magnifier button next to the input lets Textus AI search the web when a request needs it — see **Web search** below.
 - **Deep thinking**: the button beside web search (the light bulb) asks the model to think its answer through before it replies — slower and more expensive, for hard questions and bigger rewrites. It stays on, across documents, until you press it again. While the model thinks, the tab shows "Thinking · 8 seconds"; afterwards "Thought for 12 seconds", which you can click to read the reasoning where the provider shares it. The button only appears for models that can think harder; Quick Ask always asks for a quick answer.
 - **Errors**: when a request fails, Textus says in your language what kind of problem it is and what to do (check the key, top up a balance that has run out, wait a moment, pick another model) above the provider's own message - in the chat, and for completion and grammar checking too.
 - **Long documents**: asked to translate or rewrite a long document chapter by chapter, Textus AI hands each chapter to a helper of its own, with a shared list of how recurring names and terms are written, so the whole document changes at once.
 
-### 4. Quick Ask
-
-Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (or right-click > **Ask AI…**) to open a small chat bar right below the paragraph you are in. It sits in the document, pushing the text below it down rather than covering it. If text was selected when you opened it, the selection is included. Quick Ask opens in **General** mode, because it is usually opened on a passage to change it ("shorten this"); Review is one click away in the mode picker.
-
-- **The shortcut again**: pressing <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> while the bar is open moves the cursor to its input; pressing it once more from the input closes it. <kbd>Esc</kbd> anywhere in the bar closes it too, and the cursor goes back to the document. With edits still undecided, closing (or starting a new conversation) asks first.
-- Quick Ask keeps its own short conversation, apart from the AI tabs' and not saved to History. **Continue in the full conversation** (the button in its corner) hands the exchange to an AI tab, where it carries on and is saved.
-
-### 5. Changes to your documents
+### Changes to your documents
 
 **Settings › Textus AI › Writing assist › How Textus AI changes files** decides how Textus AI's changes reach your text:
 
@@ -84,33 +67,24 @@ New text is always drawn in the text. Without room for a margin (narrow window, 
 - **Written straight in**: the change is written at once, and the text before it is kept so it can be undone.
 - **The reply's card** lists the files it touched, with **Undo**, **Apply**, **Keep** and **Discard**. A file you edited in the meantime keeps its change apart, marked "Changed since"; **Dismiss** lets it go.
 
-### 6. Pictures
+### Completion
 
-Textus AI can make pictures for your document. **Image service** (Settings › Textus AI › Models › Model choice) follows your chat provider by default: signed in with ChatGPT, pictures come out of your plan's own allowance (marked experimental - it is not a published API); with another provider that makes pictures, its own, with the same key. A provider that makes none offers no pictures until you choose a service - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint - and then its model.
+As you type, a gray continuation appears at the cursor — press <kbd>Tab</kbd> to accept it, or <kbd>Cmd</kbd>+<kbd>→</kbd> to accept just the next word and keep the rest on offer. <kbd>Esc</kbd> dismisses it. There's no minimum amount of text required; it's ready from the very first sentence of a document.
 
-- Ask in General mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
-- Writing and pictures come together: the text appears as it is written, and each picture shows as a softly moving frame in its place until it is ready. You can accept it before it is finished; it is saved when it arrives.
-- Nothing is saved until you accept: then the picture is stored the way **Settings › Editing › Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
-- To have a proposed picture drawn again, point at it and choose **Redraw…**, then say what should change; only that picture is redrawn. Pictures in one piece keep the same people and look: someone who comes back is described in the same words, and where the image model takes a picture to work from, a new picture of them starts from an earlier one.
-- To change a picture, right-click it and choose **Change this picture with Textus AI…**, then say how. The new one is proposed in its place; once you accept it, you are asked whether the old file should go to the Trash - it stays unless you say so.
-- Say how many pictures you want and Textus AI makes that many, up to **Pictures per request** (Models › Model choice; two unless you change it). If the service turns a description down, the picture's place shows the reason it gave.
+Ask for one explicitly with <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> or the context menu (the cursor must be at the end of a paragraph): you get a longer continuation with up to three alternatives — <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> cycle through them.
 
-### 7. Web search
+Under **Settings › Textus AI › Writing assist › Continue & Check** you can turn completion on or off and pick a **Completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a folder with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
 
-Turn on the **Web search** button next to the input, and Textus AI looks things up when a request needs facts that are current or that it isn't sure of. It can also read a page whose address you paste.
+### Grammar check
 
-- **Who searches**: models that search by themselves — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen and Zhipu GLM — use their own search. For any other model (DeepSeek, Gemini, Mistral, Kimi, local models, custom endpoints), Textus does the searching, on the **Search service** chosen in **Settings › Textus AI › Writing assist › Web and proxy**: **Automatic** uses a DeepSeek, Zhipu or Kimi key you already saved for chat; or pick Bocha, Tavily, Brave Search or Exa and paste its key, or SearXNG and enter the address of your own server. The row says where your searches go. With nothing to search with, the button shows a red dot.
-- **Sources**: the reply cites what it found as [1], [2], and lists those pages under it; click one to open it in your browser. The numbers stay the same for the whole conversation.
-- **Sources as footnotes**: when a proposal draws on the web, its card has **Add sources as footnotes**. Ticked, accepting it adds Markdown footnotes for its sources at the end of the document; unticked, the text goes in without them. The card remembers your last choice.
-- **Pages are read, not obeyed**: what a page says never instructs Textus AI, and it still only proposes edits. Textus reads pages from the public web only, never from your computer or local network.
+Possible issues get underlined. Hover over one, or move the caret into it, to see the explanation; **Apply** (or <kbd>Option</kbd>+<kbd>Enter</kbd> with the caret on it) takes the fix, **Ignore** dismisses it. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> checks the current paragraph immediately. **Check level** (Writing assist › Continue & Check) sets how much it flags.
 
-### 8. Research
+### Quick Ask
 
-Pick **Research** in the mode button and send a topic instead of a request: Textus AI researches it — the web, your folder, the papers you attach — makes an outline, and writes the piece into the document. Type `/` to choose the kind of piece (an essay, a report, a literature review and others), or leave it on **Choose for me**. **Research with sub-agents** (Writing assist) lets it hand parts of the research to helpers working at once; **Check citations** has each cited sentence checked against its sources before the piece is done. A piece is written straight into the document, whatever **How Textus AI changes files** says.
+Press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> (or right-click > **Ask AI…**) to open a small chat bar right below the paragraph you are in. It sits in the document, pushing the text below it down rather than covering it. If text was selected when you opened it, the selection is included. Quick Ask opens in **General** mode, because it is usually opened on a passage to change it ("shorten this"); Review is one click away in the mode picker.
 
-### 9. External agents
-
-Coding agents such as Claude Code or Codex can work in Textus through plugins. Once one is added, it has a button beside the Textus AI button in the window bar, and it is in the **Agents** group of the mode button: pick it, and your messages go to it instead of to a model. Before it changes a file, it asks you, in the conversation. **Settings › Textus AI › External tools** lists them under **ACP Agent** (**Get agents…** opens the Plugins panel), and above them the **MCP servers** whose tools Textus AI may use.
+- **The shortcut again**: pressing <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd> while the bar is open moves the cursor to its input; pressing it once more from the input closes it. <kbd>Esc</kbd> anywhere in the bar closes it too, and the cursor goes back to the document. With edits still undecided, closing (or starting a new conversation) asks first.
+- Quick Ask keeps its own short conversation, apart from the AI tabs' and not saved to History. **Continue in the full conversation** (the button in its corner) hands the exchange to an AI tab, where it carries on and is saved.
 
 ## Make Textus AI yours
 
@@ -225,7 +199,7 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 - **This folder**: what is about this work, in `projects/<folder>/memory/` in the global config folder (Textus keeps it there, not in your folder); facts about people, places and terms go into the library.
 - **For all folders**: your general habits, in `memory/` in the global config folder. Without a folder, everything goes here.
 
-**Memory** (right-click an AI tab's paper › Memory) lists it all, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and Memory says so. **Turn on memory** (Settings › Textus AI › Agent) turns it off.
+**Memory** (right-click an AI tab's paper › Memory) lists it all, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and Memory says so. The **Memory** switch (Settings › Textus AI › Agent) turns it off.
 
 **It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with memory turned off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
@@ -307,6 +281,36 @@ There is no global style profile or library: those describe one body of work, so
 - What Textus AI should know or always do in a conversation → **writing instructions**.
 - A task you ask for again and again → a **skill**.
 - Notes, research, earlier chapters → ordinary files in the **folder**; Textus AI reads them when a request needs them.
+
+## More
+
+### Research
+
+Pick **Research** in the mode button and send a topic instead of a request: Textus AI researches it — the web, your folder, the papers you attach — makes an outline, and writes the piece into the document. Type `/` to choose the kind of piece (an essay, a report, a literature review and others), or leave it on **Choose for me**. **Research with sub-agents** (Writing assist) lets it hand parts of the research to helpers working at once; **Check citations** has each cited sentence checked against its sources before the piece is done. A piece is written straight into the document, whatever **How Textus AI changes files** says.
+
+### Web search
+
+Turn on the **Web search** button next to the input, and Textus AI looks things up when a request needs facts that are current or that it isn't sure of. It can also read a page whose address you paste.
+
+- **Who searches**: models that search by themselves — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen and Zhipu GLM — use their own search. For any other model (DeepSeek, Gemini, Mistral, Kimi, local models, custom endpoints), Textus does the searching, on the **Search service** chosen in **Settings › Textus AI › Writing assist › Web and proxy**: **Automatic** uses a DeepSeek, Zhipu or Kimi key you already saved for chat; or pick Bocha, Tavily, Brave Search or Exa and paste its key, or SearXNG and enter the address of your own server. The row says where your searches go. With nothing to search with, the button shows a red dot.
+- **Sources**: the reply cites what it found as [1], [2], and lists those pages under it; click one to open it in your browser. The numbers stay the same for the whole conversation.
+- **Sources as footnotes**: when a proposal draws on the web, its card has **Add sources as footnotes**. Ticked, accepting it adds Markdown footnotes for its sources at the end of the document; unticked, the text goes in without them. The card remembers your last choice.
+- **Pages are read, not obeyed**: what a page says never instructs Textus AI, and it still only proposes edits. Textus reads pages from the public web only, never from your computer or local network.
+
+### Pictures
+
+Textus AI can make pictures for your document. **Image service** (Settings › Textus AI › Models › Model choice) follows your chat provider by default: signed in with ChatGPT, pictures come out of your plan's own allowance (marked experimental - it is not a published API); with another provider that makes pictures, its own, with the same key. A provider that makes none offers no pictures until you choose a service - OpenAI, Google Gemini, Doubao (Volcengine), Alibaba Qwen, Zhipu GLM, SiliconFlow, or any OpenAI-compatible endpoint - and then its model.
+
+- Ask in General mode ("add a picture of the harbour after the first paragraph"), or right-click a paragraph and choose **Illustrate this paragraph**.
+- Writing and pictures come together: the text appears as it is written, and each picture shows as a softly moving frame in its place until it is ready. You can accept it before it is finished; it is saved when it arrives.
+- Nothing is saved until you accept: then the picture is stored the way **Settings › Editing › Images** says for a pasted image and inserted as a Markdown image. Reject leaves nothing behind.
+- To have a proposed picture drawn again, point at it and choose **Redraw…**, then say what should change; only that picture is redrawn. Pictures in one piece keep the same people and look: someone who comes back is described in the same words, and where the image model takes a picture to work from, a new picture of them starts from an earlier one.
+- To change a picture, right-click it and choose **Change this picture with Textus AI…**, then say how. The new one is proposed in its place; once you accept it, you are asked whether the old file should go to the Trash - it stays unless you say so.
+- Say how many pictures you want and Textus AI makes that many, up to **Pictures per request** (Models › Model choice; two unless you change it). If the service turns a description down, the picture's place shows the reason it gave.
+
+### External agents
+
+Coding agents such as Claude Code or Codex can work in Textus through plugins. Once one is added, it has a button beside the Textus AI button in the window bar, and it is in the **Agents** group of the mode button: pick it, and your messages go to it instead of to a model. Before it changes a file, it asks you, in the conversation. **Settings › Textus AI › External tools** lists them under **ACP Agent** (**Get agents…** opens the Plugins panel), and above them the **MCP servers** whose tools Textus AI may use.
 
 ## Turning Textus AI off
 
