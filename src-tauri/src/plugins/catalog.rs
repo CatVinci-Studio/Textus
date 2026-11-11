@@ -212,7 +212,7 @@ pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, 
 
 /// The catalog as last fetched, shown while a fresh one loads. Installing from
 /// it is safe: a version's package never changes, so its checksum holds.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_catalog_cached(app: tauri::AppHandle) -> Option<Vec<CatalogEntry>> {
     let text = std::fs::read_to_string(cache_file(&app).ok()?).ok()?;

@@ -207,7 +207,7 @@ fn write_secrets(app: &tauri::AppHandle, secrets: &Secrets) -> Result<(), String
 
 /// One of the plugin's own secrets; it needs no permission, and reaches no
 /// other plugin's.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_secret_get(
     app: tauri::AppHandle,
@@ -225,7 +225,7 @@ pub fn plugin_secret_get(
 }
 
 /// Keeps a secret of the plugin's; `None` forgets it.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_secret_set(
     app: tauri::AppHandle,

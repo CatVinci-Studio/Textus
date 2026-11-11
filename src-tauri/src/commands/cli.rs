@@ -384,7 +384,7 @@ pub fn cli_command_status() -> CliStatus {
     imp::status()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn install_cli_command() -> Result<(), String> {
     imp::install()

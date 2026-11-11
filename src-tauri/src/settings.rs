@@ -275,7 +275,7 @@ pub fn history_clear(
 }
 
 /// One saved conversation whole, turns included. `None` when its file is gone.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_get(stores: tauri::State<Stores>, id: String) -> Option<Value> {
     stores.chat.get(&id)
@@ -290,14 +290,14 @@ pub fn chat_history_search(stores: tauri::State<Stores>, query: String) -> Vec<V
 }
 
 /// How many older conversations sit in the chat history's trash.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_archived(stores: tauri::State<Stores>) -> usize {
     stores.chat.archived()
 }
 
 /// A document saved under a new path: its conversations follow it.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn chat_history_move_document(
     app: AppHandle,

@@ -284,7 +284,7 @@ pub async fn open_global_agent_dir(app: AppHandle, template: String) -> Result<(
 
 /// Creates the global config folder if needed and returns the agent.md path,
 /// which the frontend opens in the editor itself.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn ensure_global_agent_md(app: AppHandle, template: String) -> Result<String, String> {
     Ok(ensure_global_layer(&app, &template)?

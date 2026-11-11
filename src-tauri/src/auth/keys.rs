@@ -80,7 +80,7 @@ pub fn load_provider_key(app: &AppHandle, provider: &str) -> Result<Option<Strin
     Ok(read_keys(app)?.get(provider).cloned())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_provider_api_key(app: AppHandle, provider: String, key: String) -> Result<(), String> {
     let mut keys = read_keys(&app)?;
@@ -88,13 +88,13 @@ pub fn set_provider_api_key(app: AppHandle, provider: String, key: String) -> Re
     write_keys(&app, &keys)
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn provider_api_key_status(app: AppHandle, provider: String) -> Result<bool, String> {
     Ok(read_keys(&app)?.contains_key(&provider))
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn clear_provider_api_key(app: AppHandle, provider: String) -> Result<(), String> {
     let mut keys = read_keys(&app)?;

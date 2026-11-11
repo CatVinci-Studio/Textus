@@ -30,7 +30,7 @@ pub struct CustomEndpointStatus {
 
 /// Saves the endpoint. A missing key keeps the stored one while the URL stays
 /// the same; for another URL the old key is dropped rather than sent to the new host.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn set_custom_endpoint(
     app: AppHandle,
@@ -61,7 +61,7 @@ pub fn load_custom_endpoint(app: &AppHandle) -> Result<Option<CustomEndpointConf
         .map_err(|e| e.to_string())
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn custom_endpoint_status(app: AppHandle) -> Result<Option<CustomEndpointStatus>, String> {
     Ok(load_custom_endpoint(&app)?.map(|c| CustomEndpointStatus {
@@ -97,7 +97,7 @@ fn same_endpoint(a: &str, b: &str) -> bool {
     a.trim().trim_end_matches('/') == b.trim().trim_end_matches('/')
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn clear_custom_endpoint(app: AppHandle) -> Result<(), String> {
     let path = config_file_path(&app)?;

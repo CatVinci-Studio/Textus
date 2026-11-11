@@ -231,7 +231,7 @@ fn list_files(dir: &Path, base: &Path, out: &mut Vec<String>) {
 }
 
 /// What the plugin kept under `key`, or null.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_get(
     app: tauri::AppHandle,
@@ -258,7 +258,7 @@ pub fn plugin_store_set(
 }
 
 /// Every key the plugin keeps there, in order.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_keys(
     app: tauri::AppHandle,
@@ -270,7 +270,7 @@ pub fn plugin_store_keys(
 }
 
 /// One of the plugin's own files there, as text.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_read(
     app: tauri::AppHandle,
@@ -300,7 +300,7 @@ pub fn plugin_store_write(
 }
 
 /// The plugin's own files there, as paths under its `files/`.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_files(
     app: tauri::AppHandle,
@@ -316,7 +316,7 @@ pub fn plugin_store_files(
 }
 
 /// Deletes one of the plugin's own files there.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_delete(
     app: tauri::AppHandle,
@@ -334,7 +334,7 @@ pub fn plugin_store_delete(
 
 /// How much a plugin keeps in each place, for Settings. `root` is the open
 /// folder, for the project's.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_usage(
     app: tauri::AppHandle,
@@ -357,7 +357,7 @@ pub fn plugin_store_usage(
 
 /// Empties one of a plugin's places (Clear data). Asked by the user, not the
 /// plugin, which may be off.
-#[tauri::command]
+#[tauri::command(async)]
 #[cfg_attr(test, specta::specta)]
 pub fn plugin_store_clear(
     app: tauri::AppHandle,
