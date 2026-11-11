@@ -1,4 +1,5 @@
 import { fill } from "../i18n/fill";
+import { tabElement } from "../engine/layout/tab-element";
 import { escapeHtml } from "../utils/html";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
@@ -240,9 +241,7 @@ export async function exportPdf(
 /** The editor of the document being exported: its own, whatever tab is in
  *  front (an AI or Settings tab may be). */
 function editorOf(tab: DocTab): Element | null {
-  return document.querySelector(
-    `[data-tab-id=${JSON.stringify(tab.id)}] .milkdown`,
-  );
+  return tabElement(tab.id)?.querySelector(".milkdown") ?? null;
 }
 
 // Saved next to the document, relative image paths are kept as-is, like

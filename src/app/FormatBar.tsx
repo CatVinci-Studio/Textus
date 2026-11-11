@@ -164,9 +164,7 @@ function useCaretBlock(tabId: string): CaretBlock {
 /** Another island's bar: its document takes the keys first, at the
  *  selection it kept, so the format lands there. */
 function focusDocument(tabId: string) {
-  const editor = document.querySelector<HTMLElement>(
-    `.main-pane [data-tab-id="${CSS.escape(tabId)}"] .ProseMirror`,
-  );
+  const editor = tabElement(tabId)?.querySelector<HTMLElement>(".ProseMirror");
   if (editor && !editor.contains(document.activeElement)) editor.focus();
 }
 

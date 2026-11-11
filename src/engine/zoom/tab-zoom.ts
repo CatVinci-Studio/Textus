@@ -1,3 +1,4 @@
+import { tabElement } from "../layout/tab-element";
 /**
  * Each document tab's own zoom, when it has one (zoom not together): kept
  * here and painted as its view's `--content-zoom`, so a view drawn again
@@ -5,8 +6,7 @@
  */
 const zooms = new Map<string, number>();
 
-const viewOf = (id: string) =>
-  document.querySelector<HTMLElement>(`[data-tab-id="${CSS.escape(id)}"]`);
+const viewOf = (id: string) => tabElement(id);
 
 /** The tab's own zoom, or undefined when it takes the window's. */
 export function tabZoom(id: string): number | undefined {
