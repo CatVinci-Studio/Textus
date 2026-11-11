@@ -1,28 +1,60 @@
 import { tabElement } from "../layout/tab-element";
+
 /**
- * Each document tab's own zoom, when it has one (zoom not together): kept
- * here and painted as its view's `--content-zoom`, so a view drawn again
- * comes back at its zoom. A tab without one takes the window's.
+ * The documents' zoom, its one owner: the window's, which a tab takes
+ * unless it has its own (zoom not together). Painted as `--content-zoom` -
+ * the window's on the page's root, a tab's on its view - for the styles;
+ * read here, never from the page.
  */
+let windowZoom = 1;
 const zooms = new Map<string, number>();
+const listeners = new Set<() => void>();
 
-const viewOf = (id: string) => tabElement(id);
+const told = () => {
+  for (const tell of listeners) tell();
+};
 
-/** The tab's own zoom, or undefined when it takes the window's. */
-export function tabZoom(id: string): number | undefined {
-  return zooms.get(id);
+/** Calls `changed` after any zoom changes; returns the stop. */
+export function onZoom(changed: () => void): () => void {
+  listeners.add(changed);
+  return () => listeners.delete(changed);
+}
+
+/** The zoom new tabs start at, and every tab without its own. */
+export function setWindowZoom(zoom: number): void {
+  windowZoom = zoom;
+  document.documentElement.style.setProperty("--content-zoom", String(zoom));
+  told();
+}
+
+/** The zoom tab `id` is drawn at; the window's for none. */
+export function zoomOf(id: string | null | undefined): number {
+  return (id && zooms.get(id)) || windowZoom;
 }
 
 export function setTabZoom(id: string, zoom: number): void {
   zooms.set(id, zoom);
-  viewOf(id)?.style.setProperty("--content-zoom", String(zoom));
+  tabElement(id)?.style.setProperty("--content-zoom", String(zoom));
+  told();
 }
 
 /** Every tab back to the window's zoom. */
 export function clearTabZooms(): void {
   for (const id of zooms.keys())
-    viewOf(id)?.style.removeProperty("--content-zoom");
+    tabElement(id)?.style.removeProperty("--content-zoom");
   zooms.clear();
+  told();
+}
+
+/** The tabs `ids` that follow the window keep the zoom it has now, before
+ *  the window's changes: a new default is for tabs to come. */
+export function keepWindowZoomIn(ids: readonly string[]): void {
+  for (const id of ids) if (!zooms.has(id)) setTabZoom(id, windowZoom);
+}
+
+/** A closed tab's zoom let go. */
+export function forgetTabZoom(id: string): void {
+  zooms.delete(id);
 }
 
 /** The style a tab's view is drawn with for its zoom. */

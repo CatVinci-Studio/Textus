@@ -8,8 +8,14 @@ import { blockAt, holdBlock } from "../engine/controls/hold-line";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { sourceViewAt } from "../editor/modes/source-view-registry";
-import { CONTENT_ZOOM_EVENT, contentZoom } from "../plugins/views/frame-zoom";
-import { clearTabZooms, setTabZoom, tabZoom } from "../engine/zoom/tab-zoom";
+import { contentZoom } from "../plugins/views/frame-zoom";
+import {
+  clearTabZooms,
+  keepWindowZoomIn,
+  setTabZoom,
+  setWindowZoom,
+} from "../engine/zoom/tab-zoom";
+import { windowTabs } from "../engine/layout/store";
 
 /// Document zoom, each tab its own (or, with zoomTogether, all documents
 /// one), scoped to the editor content; the window chrome stays at 100%. Published as `--content-zoom` on the tab's own
@@ -195,7 +201,6 @@ export function useZoom(
   useEffect(() => {
     if (!together) return;
     clearTabZooms();
-    window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
   }, [together]);
 
   useEffect(() => {
@@ -215,13 +220,8 @@ export function useZoom(
       const prev = contentZoom(tab);
       const setZoomVar = () => {
         // Together: the window's own zoom, which every document reads.
-        if (togetherRef.current)
-          document.documentElement.style.setProperty(
-            "--content-zoom",
-            String(next),
-          );
+        if (togetherRef.current) setWindowZoom(next);
         else setTabZoom(tab.dataset.tabId!, next);
-        window.dispatchEvent(new Event(CONTENT_ZOOM_EVENT));
       };
       // Zoom leaves scrollTop alone, so without this the text under the
       // pointer slides with every step.
@@ -268,17 +268,11 @@ export function useZoom(
       if (persistTimer === undefined) return;
       clearTimeout(persistTimer);
       persistTimer = undefined;
-      const root = document.documentElement;
-      const was = contentZoom(root);
       // Each on its own: the tabs on the old default keep it. Together, the
       // window's one zoom is every tab's.
       if (!togetherRef.current)
-        for (const tab of document.querySelectorAll<HTMLElement>(
-          "[data-tab-id]",
-        ))
-          if (tabZoom(tab.dataset.tabId!) === undefined)
-            setTabZoom(tab.dataset.tabId!, was);
-      root.style.setProperty("--content-zoom", String(zoomRef.current));
+        keepWindowZoomIn(windowTabs().map((tab) => tab.id));
+      setWindowZoom(zoomRef.current);
       persistRef.current(zoomRef.current);
     };
     const unregisterFlush = onFlush(persistNow);
@@ -305,12 +299,7 @@ export function useZoom(
     };
 
     // The restored zoom is the starting state, not a step to anchor.
-    if (zoomRef.current !== 1) {
-      document.documentElement.style.setProperty(
-        "--content-zoom",
-        String(zoomRef.current),
-      );
-    }
+    if (zoomRef.current !== 1) setWindowZoom(zoomRef.current);
 
     // Trackpad pinch: scale is cumulative from the gesture's start, so the
     // zoom at gesturestart is the base it multiplies.

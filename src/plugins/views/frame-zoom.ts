@@ -1,3 +1,5 @@
+import { onZoom, zoomOf } from "../../engine/zoom/tab-zoom";
+
 /**
  * Plugin pages and the document's zoom. A pinch or mod+wheel over a page
  * comes out of its frame and zooms as anywhere else; a page drawn in the
@@ -6,14 +8,9 @@
  * told the zoom to draw at instead.
  */
 
-/** Sent whenever a tab's zoom (or the window's default) changes. */
-export const CONTENT_ZOOM_EVENT = "textus:content-zoom";
-
-/** The zoom `at` is drawn at - its tab's `--content-zoom` (1 when unset). */
-export function contentZoom(at: Element = document.documentElement): number {
-  return (
-    parseFloat(getComputedStyle(at).getPropertyValue("--content-zoom")) || 1
-  );
+/** The zoom `at` is drawn at: its tab's, else the window's. */
+export function contentZoom(at?: Element): number {
+  return zoomOf(at?.closest<HTMLElement>("[data-tab-id]")?.dataset.tabId);
 }
 
 /** Calls `changed` with `at`'s zoom whenever it changes; returns the stop. */
@@ -22,14 +19,12 @@ export function watchContentZoom(
   at?: Element,
 ): () => void {
   let last = contentZoom(at);
-  const check = () => {
+  return onZoom(() => {
     const now = contentZoom(at);
     if (now === last) return;
     last = now;
     changed(now);
-  };
-  window.addEventListener(CONTENT_ZOOM_EVENT, check);
-  return () => window.removeEventListener(CONTENT_ZOOM_EVENT, check);
+  });
 }
 
 interface Point {

@@ -10,6 +10,7 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
+import { forgetTabZoom } from "../engine/zoom/tab-zoom";
 import {
   paneOf,
   shownIsland,
@@ -95,6 +96,7 @@ export function useTabRemoval(opts: {
         ]).then(() => void thisWindow().destroy());
         return;
       }
+      forgetTabZoom(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
         return next.length === 0 && start ? [start] : next;
