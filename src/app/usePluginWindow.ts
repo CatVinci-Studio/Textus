@@ -6,7 +6,12 @@ import { offerMovedFeatures } from "../plugins/store/moved-offer";
 import { watchDevPlugins } from "../plugins/store/dev-reload";
 import { watchPluginAiTools } from "../plugins/contributions/ai-tools";
 import { setCompletionAsker } from "../plugins/contributions/completion-sources";
-import { makeBlankTab, tabTitle, type DocTab } from "../document/doc-tabs";
+import {
+  makeBlankTab,
+  tabIsDirty,
+  tabTitle,
+  type DocTab,
+} from "../document/doc-tabs";
 import type { Strings } from "../i18n/strings";
 import { useLatest } from "../utils/hooks/useLatest";
 import { registerCommand } from "../registry/commands";
@@ -88,7 +93,7 @@ export function usePluginWindow({
   const saveTabRef = useLatest(saveTab);
   const saveRef = useLatest(saveActiveTab);
   const closeRef = useLatest(closeActiveTab);
-  const { tabsRef, setTabs, setActiveTabId } = tabState;
+  const { tabsRef, setTabs, setActiveTabId, liveTabs } = tabState;
   const settingsRef = useLatest(useSettings());
 
   useEffect(() => {
@@ -125,9 +130,12 @@ export function usePluginWindow({
           made.id,
           (now) => besideLayout(now, made.id, from) ?? now,
         );
+      // In its place only while nothing unsaved would go with it.
+      const front = liveTabs().find((tab) => tab.id === from);
+      const replace = where === "current" && !!front && !tabIsDirty(front);
       setTabs((prev) => {
-        if (where !== "current") return [...prev, made];
-        const at = prev.findIndex((tab) => tab.id === tabInUse());
+        if (!replace) return [...prev, made];
+        const at = prev.findIndex((tab) => tab.id === from);
         return at < 0
           ? [...prev, made]
           : prev.map((tab, i) => (i === at ? made : tab));
@@ -209,6 +217,7 @@ export function usePluginWindow({
     tabsRef,
     setTabs,
     setActiveTabId,
+    liveTabs,
     tRef,
   ]);
 
