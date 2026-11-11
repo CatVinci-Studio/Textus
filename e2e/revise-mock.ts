@@ -29,11 +29,11 @@ export async function streamRevise(
           return Promise.resolve(null);
         }
         if (cmd !== "ai_agent_message") return original(cmd, args);
-        const { message, onEvent, blocks } = args as {
-          message: string;
+        const { request, onEvent } = args as {
+          request: { message: string; blocks: unknown };
           onEvent?: { onmessage?: Send };
-          blocks: unknown;
         };
+        const { message, blocks } = request;
         const send: Send = (event) => onEvent?.onmessage?.(event);
         const steps: (() => void)[] = [];
         const turns: unknown[] = [];

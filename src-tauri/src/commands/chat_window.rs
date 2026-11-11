@@ -1,4 +1,3 @@
-use crate::args::Args;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder};
@@ -57,6 +56,7 @@ fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
 
 /// detach_chat_window's inputs. `state` is the handoff's opaque JSON.
 #[derive(serde::Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct DetachRequest {
     state: serde_json::Value,
     position: Option<(f64, f64)>,
@@ -67,19 +67,20 @@ pub struct DetachRequest {
 /// Pops this chat out of the editor into a real OS window. `command(async)` is
 /// required: a plain `#[command]` runs on the main thread, where WebView2 deadlocks.
 #[tauri::command(async)]
+#[cfg_attr(test, specta::specta)]
 pub fn detach_chat_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
-    request: Args<DetachRequest>,
+    request: DetachRequest,
     pending: State<PendingChatHandoffs>,
     open: State<OpenChatWindows>,
 ) -> Result<String, String> {
-    let Args(DetachRequest {
+    let DetachRequest {
         state,
         position,
         title,
         pinned,
-    }) = request;
+    } = request;
     let editor_label = window.label().to_string();
 
     // Already open for this editor: focus it rather than spawning a duplicate

@@ -9,7 +9,6 @@ import type { Lang } from "../i18n/langs";
 import type * as Generated from "./bindings/app";
 import {
   command,
-  desktopAction,
   desktopActionCommand,
   desktopQueryCommand,
 } from "./ipc-call";
@@ -82,8 +81,12 @@ export const windowIpc = {
     position: [number, number] | null;
     title: string;
     pinned: boolean;
-    // Rust reads these keys as one struct the generated bindings can't type.
-  }) => desktopAction<string>("detach_chat_window", args),
+  }) =>
+    desktopActionCommand("detach_chat_window", {
+      ...args,
+      // Opaque to Rust: handed back to the chat window as it is.
+      state: args.state as unknown as Generated.Value,
+    }),
   takeChatHandoff: () =>
     desktopQueryCommand(
       "take_chat_handoff",

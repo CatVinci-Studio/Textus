@@ -8,6 +8,8 @@ import { invoke as __TAURI_INVOKE } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
+	ai_complete: (request: CompletionRequest_Deserialize) => __TAURI_INVOKE<string>("ai_complete", { request }),
+	ai_grammar_check: (request: GrammarRequest_Deserialize) => __TAURI_INVOKE<GrammarIssue_Serialize[]>("ai_grammar_check", { request }),
 	/**
 	 *  Whether the chat composer offers Deep thinking for this provider and
 	 *  Agent model (None: the provider's agent default).
@@ -134,6 +136,55 @@ export type Exchange = {
 	messages: string[],
 	/**  The reply to the last one. */
 	reply: string,
+};
+
+export type GrammarIssue = GrammarIssue_Serialize | GrammarIssue_Deserialize;
+
+export type GrammarIssue_Deserialize = {
+	/**
+	 *  Unicode-scalar offsets of the span in the paragraph, computed here, so
+	 *  absent in the model's reply.
+	 */
+	start?: number,
+	end?: number,
+	issue?: string,
+	suggestion: string,
+	/**
+	 *  The span's exact text. From the model: the wrong words with some context,
+	 *  cut down to what changes. To the frontend: the span, re-verified before use.
+	 */
+	original?: string | null,
+	/**
+	 *  A longer verbatim quote around `original`, from the older contract, used
+	 *  to pick the occurrence when `original` repeats.
+	 */
+	context?: string | null,
+	/**
+	 *  The writing-rules engine's rule id (`zh.punct.halfwidth`) for an
+	 *  issue the engine found rather than the model.
+	 */
+	rule?: string | null,
+};
+
+export type GrammarIssue_Serialize = {
+	/**
+	 *  Unicode-scalar offsets of the span in the paragraph, computed here, so
+	 *  absent in the model's reply.
+	 */
+	start: number,
+	end: number,
+	issue: string,
+	suggestion: string,
+	/**
+	 *  The span's exact text. From the model: the wrong words with some context,
+	 *  cut down to what changes. To the frontend: the span, re-verified before use.
+	 */
+	original: string | null,
+	/**
+	 *  The writing-rules engine's rule id (`zh.punct.halfwidth`) for an
+	 *  issue the engine found rather than the model.
+	 */
+	rule?: string,
 };
 
 /**  ai_grammar_check's inputs, the keys of `ai.grammarCheck`'s invoke. */

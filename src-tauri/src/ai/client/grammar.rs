@@ -32,6 +32,7 @@ pub(super) fn strictness_instructions(strictness: Option<&str>) -> &'static str 
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct GrammarIssue {
     /// Unicode-scalar offsets of the span in the paragraph, computed here, so
     /// absent in the model's reply.
@@ -326,11 +327,12 @@ pub struct GrammarRequest {
 }
 
 #[tauri::command]
+#[cfg_attr(test, specta::specta)]
 pub async fn ai_grammar_check(
     app: AppHandle,
-    request: Args<GrammarRequest>,
+    request: GrammarRequest,
 ) -> Result<Vec<GrammarIssue>, String> {
-    let Args(GrammarRequest {
+    let GrammarRequest {
         provider,
         paragraph,
         strictness,
@@ -338,7 +340,7 @@ pub async fn ai_grammar_check(
         doc_path,
         workspace_root,
         ui_language,
-    }) = request;
+    } = request;
     crate::ai::ensure_on(&app)?;
     let workspace = cached_workspace(&app, doc_path, workspace_root);
     let conventions = crate::ai::conventions::for_workspace(&app, &workspace);

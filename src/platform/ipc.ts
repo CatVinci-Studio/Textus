@@ -4,17 +4,9 @@ import type { SentBlock } from "../editor/markdown/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
-import type {
-  CompletionRequest_Deserialize as CompletionRequest,
-  GrammarRequest_Deserialize as GrammarRequest,
-} from "./bindings/ai";
-import type { AgentTurn_Deserialize as AgentTurnInput } from "./bindings/ai-agent";
-import type {
-  PassRequest_Deserialize as PassRequest,
-  Value,
-  SkillOffer,
-} from "./bindings/ai-memory";
-import { aiCall, aiCommand, command } from "./ipc-call";
+import type { StreamEvent_Deserialize } from "./bindings/ai-agent";
+import type { Value, SkillOffer } from "./bindings/ai-memory";
+import { aiCommand, command } from "./ipc-call";
 import type {
   CompletionHints,
   MemoryKind,
@@ -139,8 +131,7 @@ export const ai = {
       workspaceRoot: null,
     },
   ) =>
-    // Rust reads these keys as one struct the generated bindings can't call.
-    aiCall<string>("ai_complete", {
+    aiCommand("ai_complete", {
       provider,
       before,
       after,
@@ -149,7 +140,7 @@ export const ai = {
       hints,
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
-    } satisfies CompletionRequest),
+    }),
   grammarCheck: (
     provider: string,
     paragraph: string,
@@ -164,8 +155,7 @@ export const ai = {
     /** The app's language: the explanations are written in it. */
     uiLanguage: string | null = null,
   ) =>
-    // One struct in Rust, as ai_complete's.
-    aiCall<GrammarIssue[]>("ai_grammar_check", {
+    aiCommand("ai_grammar_check", {
       provider,
       paragraph,
       strictness,
@@ -173,7 +163,7 @@ export const ai = {
       docPath: project.docPath,
       workspaceRoot: project.workspaceRoot,
       uiLanguage,
-    } satisfies GrammarRequest),
+    }) as Promise<GrammarIssue[]>,
   agentMessage: ({
     onEvent,
     ...args
@@ -214,12 +204,11 @@ export const ai = {
   }) => {
     const channel = new Channel<StreamEvent>();
     if (onEvent) channel.onmessage = onEvent;
-    // More parameters than the generated bindings take, so typed by hand.
-    return aiCall<AgentTurn[]>("ai_agent_message", {
-      ...args,
-      history: args.history satisfies AgentTurnInput[],
-      onEvent: channel,
-    });
+    return aiCommand(
+      "ai_agent_message",
+      args,
+      channel as Channel<StreamEvent_Deserialize>,
+    ) as Promise<AgentTurn[]>;
   },
   /** What the Web search button can do with this provider and model: its
    *  own search, or the search service Textus would use (none: needs setup). */
@@ -276,8 +265,7 @@ export const ai = {
     conversation: { id: string; title: string };
     exchange: { messages: string[]; reply: string };
   }) =>
-    // One struct in Rust, as ai_complete's.
-    aiCall<RememberedChange[]>("memory_pass", args satisfies PassRequest),
+    aiCommand("memory_pass", args) as Promise<RememberedChange[]>,
   /** After an exchange, its request offered as a skill to save, or null. */
   offerSkill: (args: {
     provider: string;
@@ -285,7 +273,7 @@ export const ai = {
     docPath: string | null;
     workspaceRoot: string | null;
     exchange: { messages: string[]; reply: string };
-  }) => aiCall<SkillOffer | null>("ai_offer_skill", args),
+  }) => aiCommand("ai_offer_skill", args),
   /** An offered skill saved, for every document or this project's, in
    *  `modes`; checked as saveWrittenSkill is. */
   saveOfferedSkill: (

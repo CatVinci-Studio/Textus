@@ -16,6 +16,7 @@ pub const PICTURES_IN_RUN_KEY: &str = "pictures_in_run";
 
 /// One block as the request carries it.
 #[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(test, derive(specta::Type))]
 pub struct SentBlock {
     pub id: String,
     pub markdown: String,

@@ -78,6 +78,11 @@ export const commands = {
 	 */
 	take_chat_handoff: () => __TAURI_INVOKE<ChatHandoff | null>("take_chat_handoff"),
 	/**
+	 *  Pops this chat out of the editor into a real OS window. `command(async)` is
+	 *  required: a plain `#[command]` runs on the main thread, where WebView2 deadlocks.
+	 */
+	detach_chat_window: (request: DetachRequest_Deserialize) => __TAURI_INVOKE<string>("detach_chat_window", { request }),
+	/**
 	 *  Shows tab `id`'s page at `bounds`, making it the first time; an existing
 	 *  page is moved and shown again where it was left.
 	 */
@@ -268,6 +273,25 @@ export type DefaultEditorStatus = {
 	 *  `set_default_editor` opens (Windows); elsewhere it is made outright.
 	 */
 	chooseInSettings: boolean,
+};
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest = DetachRequest_Serialize | DetachRequest_Deserialize;
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest_Deserialize = {
+	state: Value,
+	position?: [number | null, number | null] | null,
+	title: string,
+	pinned: boolean,
+};
+
+/**  detach_chat_window's inputs. `state` is the handoff's opaque JSON. */
+export type DetachRequest_Serialize = {
+	state: Value,
+	position: [number | null, number | null] | null,
+	title: string,
+	pinned: boolean,
 };
 
 /**

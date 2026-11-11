@@ -1456,8 +1456,9 @@ export function installDevTauriShim(): void {
         } | null;
         // Settled against the request's blocks, as the backend settles a model's.
         if (cmd === "ai_agent_message") {
-          const blocks = ((args as { blocks?: SentBlock[] } | undefined)
-            ?.blocks ?? []) as SentBlock[];
+          const blocks = ((
+            args as { request?: { blocks?: SentBlock[] } } | undefined
+          )?.request?.blocks ?? []) as SentBlock[];
           value =
             value && typeof value === "object" && "__hold" in value
               ? { ...value, value: settledTurns(blocks, value.value) }
@@ -1544,7 +1545,8 @@ export function installDevTauriShim(): void {
       // One canned issue, so the underline and hover popover can be tried.
       if (cmd === "ai_grammar_check") {
         const paragraph =
-          (args as unknown as { paragraph?: string })?.paragraph ?? "";
+          (args as unknown as { request?: { paragraph?: string } })?.request
+            ?.paragraph ?? "";
         return Promise.resolve(
           paragraph.length > 0
             ? [
@@ -1563,11 +1565,12 @@ export function installDevTauriShim(): void {
       // Null here crashes the tree when the reply is spread into turns. The reply
       // is drip-fed through `onEvent` (the live Channel here) to exercise streaming.
       if (cmd === "ai_agent_message") {
-        const { message = "", onEvent } =
+        const { request, onEvent } =
           (args as unknown as {
-            message?: string;
+            request?: { message?: string };
             onEvent?: { onmessage?: (event: unknown) => void };
           }) ?? {};
+        const message = request?.message ?? "";
         const reply = `Canned dev-shim reply to: ${message}`;
         return new Promise((resolve) => {
           let sent = 0;

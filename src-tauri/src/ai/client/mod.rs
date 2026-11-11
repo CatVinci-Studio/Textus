@@ -1,6 +1,5 @@
 use crate::ai::catalog;
 use crate::ai::route::{self, OpenaiAuth, NOT_CONFIGURED};
-use crate::args::Args;
 use aicompat::providers::{anthropic, custom, openai_api_key, openai_codex};
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;

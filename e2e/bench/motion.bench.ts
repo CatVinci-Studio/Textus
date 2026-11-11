@@ -330,10 +330,11 @@ test("diagram build-up", async ({ page }) => {
     const original = w.__TAURI_INTERNALS__.invoke;
     w.__TAURI_INTERNALS__.invoke = (cmd, args) => {
       if (cmd !== "ai_agent_message") return original(cmd, args);
-      const { message, onEvent } = args as {
-        message: string;
+      const { request, onEvent } = args as {
+        request: { message: string };
         onEvent?: { onmessage?: Send };
       };
+      const { message } = request;
       const send: Send = (event) => onEvent?.onmessage?.(event);
       const text = lines.join("");
       const json = JSON.stringify({

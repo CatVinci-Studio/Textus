@@ -106,6 +106,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::floating_window::floating_window_position,
                     crate::commands::floating_window::show_floating_owner,
                     crate::commands::chat_window::take_chat_handoff,
+                    crate::commands::chat_window::detach_chat_window,
                     crate::commands::web_page::web_page_show,
                     crate::commands::web_page::web_page_hide,
                     crate::commands::web_page::web_page_close,
@@ -272,6 +273,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "ai.ts",
             builder()
                 .commands(collect_commands![
+                    crate::ai::client::ai_complete,
+                    crate::ai::client::ai_grammar_check,
                     crate::ai::catalog::ai_can_think_deeper,
                     crate::ai::client::fetch_agent_models,
                     crate::ai::web::web_search_status,
@@ -289,6 +292,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "ai-agent.ts",
             builder()
                 .commands(collect_commands![
+                    crate::ai::agent::ai_agent_message,
                     crate::ai::cancel::ai_cancel,
                     crate::commands::attachment::pick_attachment_files,
                     crate::ai::images::list_image_providers,
@@ -354,6 +358,8 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
             "ai-memory.ts",
             builder()
                 .commands(collect_commands![
+                    crate::ai::memory::memory_pass,
+                    crate::ai::memory::ai_offer_skill,
                     crate::ai::project::library_use,
                     crate::ai::memory::memory_undo,
                     crate::ai::memory::memory_move,

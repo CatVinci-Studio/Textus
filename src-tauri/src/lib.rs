@@ -3,7 +3,6 @@
 
 mod ai;
 mod app_identity;
-mod args;
 mod atomic;
 mod auth;
 #[cfg(desktop)]
