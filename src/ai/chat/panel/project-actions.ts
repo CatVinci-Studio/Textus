@@ -1,3 +1,4 @@
+import { explainError } from "../../../utils/error-explain";
 import { fill } from "../../../i18n/fill";
 import { useState } from "react";
 import { ai, exportDoc } from "../../../platform/ipc";
@@ -66,7 +67,7 @@ export function useProjectActions({
             ? t.projectNoSamples
             : text === "NO_PROJECT"
               ? t.projectNeedsSave
-              : text,
+              : explainError(err, t),
       );
     } finally {
       setBusy(null);

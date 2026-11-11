@@ -1,3 +1,4 @@
+import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
@@ -76,7 +77,7 @@ export function AvailableSkills({
       await pluginsIpc.installSkillFromCatalog(skill.name);
     } catch (err) {
       if (errorText(err) !== SKILL_EXISTS)
-        setError(`${t.marketSkillFailed} ${errorText(err)}`);
+        setError(`${t.marketSkillFailed} ${explainError(err, t)}`);
     } finally {
       setBusy(null);
     }
@@ -86,7 +87,9 @@ export function AvailableSkills({
     catalog.status === "failed" ? (
       <CatalogProblem
         t={t}
-        text={fill(t.pluginsCatalogFailed, { reason: catalog.error })}
+        text={fill(t.pluginsCatalogFailed, {
+          reason: explainError(catalog.error, t),
+        })}
       />
     ) : !ready ? (
       <p className="plugin-empty">{t.pluginsCatalogLoading}</p>

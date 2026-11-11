@@ -1,3 +1,4 @@
+import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import { Byline } from "./PluginPage";
@@ -54,7 +55,9 @@ export function AvailablePlugins({
     catalog.status === "failed" ? (
       <CatalogProblem
         t={t}
-        text={fill(t.pluginsCatalogFailed, { reason: catalog.error })}
+        text={fill(t.pluginsCatalogFailed, {
+          reason: explainError(catalog.error, t),
+        })}
       />
     ) : !ready ? (
       <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
@@ -90,7 +93,9 @@ export function AvailablePlugins({
         catalog.error && (
           <CatalogProblem
             t={t}
-            text={fill(t.pluginsCatalogKept, { reason: catalog.error })}
+            text={fill(t.pluginsCatalogKept, {
+              reason: explainError(catalog.error, t),
+            })}
           />
         )
       }

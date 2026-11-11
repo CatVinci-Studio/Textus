@@ -1,3 +1,4 @@
+import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import {
   useEffect,
@@ -204,7 +205,9 @@ export function PluginsPanel({
         {folded.has("available") ? null : catalog.status !== "ready" ? (
           <p className="tx-list-note">
             {catalog.status === "failed"
-              ? fill(t.pluginsCatalogFailed, { reason: catalog.error })
+              ? fill(t.pluginsCatalogFailed, {
+                  reason: explainError(catalog.error, t),
+                })
               : t.pluginsCatalogLoading}
           </p>
         ) : query.trim() && offered.length === 0 ? (
