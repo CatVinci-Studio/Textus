@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { pluginString } from "../host/plugin-string";
 import {
   compareVersions,
   engineSatisfied,
@@ -84,6 +85,13 @@ describe("a plugin's manifest", () => {
     });
     expect(localize(zhOnly, "%hello%", "fr")).toBe("打个招呼");
     expect(localize(zhOnly, "%missing%", "fr")).toBe("missing");
+    // The frames get the lookup as source: it stands alone.
+    const inFrame = new Function(
+      `return ${pluginString.toString()}`,
+    )() as typeof pluginString;
+    expect(inFrame({ en: { n: "{0} of {1}" } }, "de", "n", [1, 2])).toBe(
+      "1 of 2",
+    );
   });
 
   it("refuses what would let a plugin take another's place or reach more", () => {
