@@ -30,10 +30,17 @@ import { resolveSplit } from "./resolve";
 /** A tab as the model knows it; the window's records are its own. */
 interface TabRecord {
   id: string;
+  /** A page that is not a document (an AI conversation, Settings, a
+   *  plugin's page). */
+  view?: unknown;
 }
 
 let records: readonly TabRecord[] = [];
 let active = "";
+/** The document in front: the tab in use when it is a document, else the
+ *  one last in use - with a conversation or a page in front, the document
+ *  the AI reads and writes. */
+let documentId = "";
 /** A blank tab, for a split asked for with no other tab to take. */
 let blankTab: (() => TabRecord) | null = null;
 let layout: SplitLayout | null = null;
@@ -62,6 +69,7 @@ export function startWindowTabs<T extends TabRecord>(
   records = first;
   active = first[0]?.id ?? "";
   blankTab = blank;
+  settle();
 }
 
 /** The window's tabs, in its order: the islands' when split. */
@@ -275,6 +283,16 @@ function settle() {
   for (const id of ids) arriving.delete(id);
   if (!ids.includes(active)) active = fallback(ids);
   if (layout) records = inIslandOrder(records, layout);
+  const isDocument = (id: string) =>
+    records.some((tab) => tab.id === id && !tab.view);
+  if (isDocument(active)) documentId = active;
+  else if (!isDocument(documentId))
+    documentId = records.find((tab) => !tab.view)?.id ?? active;
+}
+
+/** The window's document in front (see `documentId`). */
+export function documentInFront(): string {
+  return documentId;
 }
 
 /** When the tab in use went without another chosen (the AI's tabs put
@@ -302,6 +320,7 @@ function inIslandOrder(
 export function resetWindowModelForTests(): void {
   records = [];
   active = "";
+  documentId = "";
   blankTab = null;
   layout = null;
   request = null;

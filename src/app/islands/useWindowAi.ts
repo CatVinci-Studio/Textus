@@ -23,7 +23,7 @@ export function useWindowAi({
   setShown: (shown: boolean) => void;
 }): void {
   const { tabs: list, activeTabId } = tabs;
-  const docInFront = useDocumentInFront(list, activeTabId);
+  const docInFront = useDocumentInFront();
   const inFront =
     list.find((tab) => tab.id === docInFront) ??
     list.find((tab) => tab.id === activeTabId);

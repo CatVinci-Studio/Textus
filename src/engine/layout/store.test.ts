@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  activateTab,
   arrangeBranch,
+  documentInFront,
   openBeside,
   reorderInPane,
   resetWindowModelForTests,
@@ -94,5 +96,17 @@ describe("three islands (ops)", () => {
     const next = splitOff(withC, "c", first.id, "bottom")!;
     expect(tabsOf(next)).toEqual(["a", "c", "b"]);
     expect(next.focus).toBe(panesOf(next.root)[1].id);
+  });
+});
+
+describe("the document in front", () => {
+  it("stays the document last in use while a page is, and moves on when it goes", () => {
+    setWindowTabs(() => [{ id: "a" }, { id: "b" }, { id: "ai", view: {} }]);
+    activateTab("b");
+    expect(documentInFront()).toBe("b");
+    activateTab("ai");
+    expect(documentInFront()).toBe("b");
+    setWindowTabs((now) => now.filter((tab) => tab.id !== "b"));
+    expect(documentInFront()).toBe("a");
   });
 });

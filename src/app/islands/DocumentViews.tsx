@@ -68,7 +68,7 @@ export function DocumentViews({
 }) {
   // The document in front is the AI's and draws the margin, even with an
   // AI tab or a page tab active.
-  const inFront = useDocumentInFront(tabs, activeTabId);
+  const inFront = useDocumentInFront();
   return (
     <>
       {/* A document's editor is mounted while its tab is in front (or a
