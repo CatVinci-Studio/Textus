@@ -1,3 +1,4 @@
+import { isSpacedWordChar } from "../../utils/cjk";
 import { type Handle } from "mdast-util-to-markdown";
 import { writeLatexMath } from "../math/latex-math-syntax";
 import type { PeekingHandle } from "./link-output";
@@ -148,9 +149,6 @@ const ATTENTION = new Set(["strong", "emphasis"]);
 /** Spans whose delimiters open and close by the same rule as bold's. */
 const FLANKED = new Set([...ATTENTION, "delete", "mark"]);
 const PUNCTUATION = /^[\p{P}\p{S}]$/u;
-// CJK text is read by remark-cjk-friendly, which lets bold stand against it.
-const WORD =
-  /^(?![\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}])[\p{L}\p{N}]$/u;
 
 /** `text` with its first or last character as a character reference (an
  *  inline HTML node, written as it is), and the rest. */
@@ -182,16 +180,17 @@ export function encodeAroundAttention(node: Phrasing): void {
     if (!FLANKED.has(span.type)) continue;
     const before = children[i - 1];
     const after = children[i + 1];
+    // CJK text is read by remark-cjk-friendly, which lets bold stand against it.
     if (
       after?.type === "text" &&
       PUNCTUATION.test(innerEdgeCharacter(span, "last")) &&
-      WORD.test(edgeCharacter(after, "first"))
+      isSpacedWordChar(edgeCharacter(after, "first"))
     )
       children.splice(i + 1, 1, ...referenced(after, "first"));
     if (
       before?.type === "text" &&
       PUNCTUATION.test(innerEdgeCharacter(span, "first")) &&
-      WORD.test(edgeCharacter(before, "last"))
+      isSpacedWordChar(edgeCharacter(before, "last"))
     ) {
       const parts = referenced(before, "last");
       children.splice(i - 1, 1, ...parts);

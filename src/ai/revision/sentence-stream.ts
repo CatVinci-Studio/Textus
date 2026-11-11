@@ -1,3 +1,4 @@
+import { isWide } from "../../utils/cjk";
 import { alignRun, ENDS_PARAGRAPH } from "./paragraph-align";
 import { MATCH, similarity } from "./sentence-similarity";
 import { diffUnits, splitUnits } from "./unit-diff";
@@ -226,16 +227,6 @@ const LOOK_AHEAD = 3;
  *  Latin ones. */
 function weight(text: string): number {
   let n = 0;
-  for (const ch of text) n += isWide(ch.codePointAt(0) ?? 0) ? 2 : 1;
+  for (const ch of text) n += isWide(ch) ? 2 : 1;
   return n;
-}
-
-/** CJK punctuation and ideographs, Hangul, full-width forms. */
-function isWide(code: number): boolean {
-  return (
-    (code >= 0x3000 && code <= 0x9fff) ||
-    (code >= 0xac00 && code <= 0xd7af) ||
-    (code >= 0xf900 && code <= 0xfaff) ||
-    (code >= 0xff00 && code <= 0xffef)
-  );
 }

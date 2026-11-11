@@ -1,3 +1,4 @@
+import { isWide } from "../../utils/cjk";
 // Micromark + mdast support for "==highlighted==", modeled on
 // gfm-strikethrough but with a fixed 2-character delimiter.
 import { splice } from "micromark-util-chunked";
@@ -55,20 +56,10 @@ declare module "mdast-util-to-markdown" {
 
 const EQUALS = 61; // "="
 
-/** Whether a code point is CJK (ideographs, kana, hangul, CJK punctuation
- *  and fullwidth forms). Curly quotes, shared with English, stay strict. */
+/** Whether a code point is CJK (Han, kana, Hangul, CJK punctuation and
+ *  full-width forms). Curly quotes, shared with English, stay strict. */
 function isCjkCode(code: number | null): boolean {
-  if (code === null) return false;
-  return (
-    (code >= 0x2e80 && code <= 0x303f) || // CJK radicals + CJK punctuation
-    (code >= 0x3040 && code <= 0x30ff) || // kana
-    (code >= 0x3400 && code <= 0x4dbf) || // CJK extension A
-    (code >= 0x4e00 && code <= 0x9fff) || // CJK unified ideographs
-    (code >= 0xac00 && code <= 0xd7af) || // hangul syllables
-    (code >= 0xf900 && code <= 0xfaff) || // CJK compatibility ideographs
-    (code >= 0xfe30 && code <= 0xfe4f) || // CJK compatibility forms
-    (code >= 0xff00 && code <= 0xffef) // fullwidth/halfwidth forms
-  );
+  return code !== null && code >= 0 && isWide(String.fromCodePoint(code));
 }
 
 const CONSTRUCTS_WITHOUT_HIGHLIGHT: ConstructName[] = [

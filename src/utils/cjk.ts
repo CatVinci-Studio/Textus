@@ -13,6 +13,20 @@ const CJK_CHUNK = new RegExp(`^[${CJK_LETTERS}]{1,2}[${CJK_PUNCTUATION}]*`);
 export const CJK_SCRIPT =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 
+/** CJK script or CJK punctuation and full-width forms: a character set
+ *  wide, as much as two Latin ones to read. */
+const WIDE =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\u3000-\u303f\ufe30-\ufe4f\uff00-\uffef]/u;
+
+export function isWide(ch: string): boolean {
+  return WIDE.test(ch);
+}
+
+/** A letter or digit of a script that spaces its words: not CJK's. */
+export function isSpacedWordChar(ch: string): boolean {
+  return /^[\p{L}\p{N}]$/u.test(ch) && !CJK_SCRIPT.test(ch);
+}
+
 /** A kana or ideograph character. */
 export function isCjkLetter(ch: string): boolean {
   return CJK_LETTER.test(ch);
