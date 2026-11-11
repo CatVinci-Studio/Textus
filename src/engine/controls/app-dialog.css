@@ -13,8 +13,9 @@
 }
 
 .close-prompt {
-  min-width: 320px;
-  max-width: 420px;
+  /* Inside a small window, the same edge every popup keeps. */
+  min-width: min(320px, calc(100vw - 2 * var(--space-4)));
+  max-width: min(420px, calc(100vw - 2 * var(--space-4)));
   /* A long message scrolls inside the box instead of running off the top of a
      short window. */
   max-height: calc(100% - 32px);
@@ -75,10 +76,16 @@
   color: var(--ui-warning);
 }
 
+/* Short of room, the buttons wrap as a group, each label whole. */
 .close-prompt-buttons {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.close-prompt-buttons button {
+  white-space: nowrap;
 }
 
 .close-prompt-spacer {

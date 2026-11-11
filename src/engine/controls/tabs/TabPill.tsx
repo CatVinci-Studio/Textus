@@ -311,9 +311,16 @@ export function TabPill({
           </span>
         </Tooltip>
       )}
-      <span className="tab-pill-title" data-cut={cut || undefined}>
-        {title}
-      </span>
+      {cut ? (
+        // A name cut short reads whole on hover.
+        <Tooltip text={title} description={null}>
+          <span className="tab-pill-title" data-cut>
+            {title}
+          </span>
+        </Tooltip>
+      ) : (
+        <span className="tab-pill-title">{title}</span>
+      )}
       {!!tab.waiting && (
         <Tooltip text={labels.waiting?.(tab.waiting) ?? ""} description={null}>
           <span

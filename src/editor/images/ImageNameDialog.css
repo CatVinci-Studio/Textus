@@ -1,7 +1,7 @@
 /* The dialog box is the app's (.close-prompt); only its width is its own. */
 .image-name-dialog {
   box-sizing: border-box;
-  width: min(390px, calc(100vw - 40px));
+  width: min(390px, calc(100vw - 2 * var(--space-4)));
   max-width: none;
 }
 

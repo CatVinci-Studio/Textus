@@ -37,8 +37,16 @@ const SNAP = 48;
  * size over the editor, dragged anywhere to move it, folded to a dot or
  * closed from its right-click menu.
  */
+const onResize = (changed: () => void) => {
+  window.addEventListener("resize", changed);
+  return () => window.removeEventListener("resize", changed);
+};
+const windowSize = () => `${window.innerWidth}x${window.innerHeight}`;
+
 export function FloatingViews() {
   useSyncExternalStore(subscribeFloating, floatingVersion);
+  // Placed again as the window resizes: kept inside it.
+  useSyncExternalStore(onResize, windowSize);
   const [canFloat, setCanFloat] = useState(false);
   useEffect(() => {
     void floatingOnDesktop().then(setCanFloat);
@@ -105,8 +113,14 @@ function FloatingBox({
     { ...view, scale: sizing ?? view.scale },
     chrome,
   );
-  const width = view.folded ? DOT * chrome : fullWidth;
-  const height = view.folded ? DOT * chrome : fullHeight;
+  // Never larger than the window, its margins kept.
+  const room = (n: number) => n - 2 * scaledPx(MARGIN);
+  const width = view.folded
+    ? DOT * chrome
+    : Math.min(fullWidth, room(window.innerWidth));
+  const height = view.folded
+    ? DOT * chrome
+    : Math.min(fullHeight, room(window.innerHeight));
   const side = floatingSide(view);
   const at =
     live ??
