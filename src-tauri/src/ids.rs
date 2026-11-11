@@ -2,6 +2,19 @@
 //! one can never climb out of where it is kept.
 
 /// Whether `id` has 1 to `max` characters, each one `allowed`.
+/// `bytes` as lowercase hex.
+pub(crate) fn hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+/// A file name for what is kept per path (a document's undo, its notes):
+/// the first `bytes` of the path's SHA-256, in hex.
+pub(crate) fn path_key(path: &str, bytes: usize) -> String {
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(path.as_bytes());
+    hex(&digest[..bytes.min(digest.len())])
+}
+
 pub(crate) fn safe_id(id: &str, max: usize, allowed: impl Fn(char) -> bool) -> bool {
     !id.is_empty() && id.len() <= max && id.chars().all(allowed)
 }

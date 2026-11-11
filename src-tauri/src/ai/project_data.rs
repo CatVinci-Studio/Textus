@@ -4,7 +4,7 @@
 //! what the user writes (agent.md, skills, style profile, library).
 
 use crate::ai::workspace::project_dir;
-use sha2::{Digest, Sha256};
+
 use std::path::{Path, PathBuf};
 
 pub(crate) const PROJECTS: &str = "projects";
@@ -19,8 +19,7 @@ pub(crate) fn key(root: &Path) -> String {
         .map(|c| if c.is_alphanumeric() { c } else { '-' })
         .collect();
     let readable: String = readable.trim_matches('-').chars().take(80).collect();
-    let hash = Sha256::digest(path.as_bytes());
-    let short: String = hash.iter().take(4).map(|b| format!("{b:02x}")).collect();
+    let short = crate::ids::path_key(&path, 4);
     format!("{readable}-{short}")
 }
 

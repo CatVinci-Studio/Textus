@@ -2,7 +2,6 @@
 //! data folder (named by a hash of the path), never in the Markdown. They
 //! follow a move made in Textus (doc_data); one made outside loses them.
 
-use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
@@ -23,10 +22,7 @@ fn part_file(app: &AppHandle, path: &str, part: OwnPart) -> Result<PathBuf, Stri
 
 /// The file `part` of `path` is kept in, under the app's data folder.
 pub(crate) fn part_file_in(data: &std::path::Path, path: &str, part: OwnPart) -> PathBuf {
-    let hash: String = Sha256::digest(path.as_bytes())
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect();
+    let hash = crate::ids::path_key(path, 32);
     let name = match part {
         OwnPart::Notes => format!("{hash}.json"),
         OwnPart::Revisions => format!("{hash}.revisions.json"),

@@ -5,7 +5,7 @@
 //! and the oldest first once all of them pass 50 MB.
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
+
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
 use tauri::{AppHandle, Manager};
@@ -29,8 +29,7 @@ pub(crate) fn undo_dir(app: &AppHandle) -> Result<PathBuf, String> {
 }
 
 fn file_for(dir: &Path, path: &str) -> PathBuf {
-    let digest = Sha256::digest(path.as_bytes());
-    let name: String = digest[..16].iter().map(|b| format!("{b:02x}")).collect();
+    let name = crate::ids::path_key(path, 16);
     dir.join(format!("{name}.json"))
 }
 

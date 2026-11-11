@@ -3,7 +3,6 @@
 //! opaque JSON; made pictures go beside it in `<file>.pictures/`.
 
 use crate::ai::workspace::project_dir;
-use sha2::{Digest, Sha256};
 use std::path::{Component, Path, PathBuf};
 use tauri::Manager;
 
@@ -33,8 +32,7 @@ fn kept_file(doc_path: &str, workspace_root: Option<&str>, app_data: &Path) -> O
 
 /// The file `doc_path`'s proposals are kept in, by a hash of the path.
 pub(crate) fn pending_file_in(app_data: &Path, doc_path: &str) -> PathBuf {
-    let hash = Sha256::digest(doc_path.as_bytes());
-    let name: String = hash.iter().take(16).map(|b| format!("{b:02x}")).collect();
+    let name = crate::ids::path_key(doc_path, 16);
     app_data.join(PENDING_FOLDER).join(format!("{name}.json"))
 }
 

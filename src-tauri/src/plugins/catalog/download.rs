@@ -98,9 +98,7 @@ pub(super) fn checked(entry: &CatalogEntry, bytes: &[u8]) -> Result<(), String> 
     Ok(())
 }
 
-pub(super) fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
+pub(super) use crate::ids::hex;
 
 /// Downloads `url` from the catalog's own address.
 pub(super) async fn download(url: &str, what: &str) -> Result<Vec<u8>, String> {
