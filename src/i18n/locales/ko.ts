@@ -41,8 +41,6 @@ export default {
   noticeGrammarEmpty: "이 문단은 비어 있습니다.",
   noticeGrammarChanged: "검사하는 동안 문단이 바뀌었습니다. 다시 시도하세요.",
   noticeGrammarNoIssues: "발견된 문제가 없습니다.",
-  projectTooBroad:
-    "이 폴더는 범위가 너무 넓어(홈 폴더 또는 드라이브 전체) 열 수 없습니다. 더 구체적인 폴더를 선택하세요.",
   projectNoSamples: "선택한 파일 중 텍스트로 읽을 수 있는 파일이 없습니다.",
   projectNeedsSave:
     "먼저 이 문서를 저장하세요. AI는 문서가 있는 폴더에서 작업합니다.",
@@ -302,7 +300,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   changePictureWithAi: "Textus AI로 이 이미지 바꾸기…",
   oldPictureTrashQuestion:
     "새 이미지를 넣었습니다. 이전 이미지 “{name}”을(를) 휴지통으로 옮길까요?",
-  oldPictureTrashOk: "휴지통으로 옮기기",
   oldPictureKeep: "그대로 두기",
   oldPictureTrashFailed: "이전 이미지를 휴지통으로 옮기지 못했습니다.",
   imageModelLabel: "이미지 모델",
@@ -475,9 +472,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuSplitDown: "아래로 분할",
   menuCloseSplit: "분할 닫기",
   shortcutSplitEditor: "분할 / 분할 해제",
-  menuViewSidebar: "사이드바",
-  menuViewSource: "소스 모드",
-  menuViewTypewriter: "타자기 모드",
   toolbarLabel: "서식",
   toolbarHeading: "제목",
   toolbarBold: "굵게",
@@ -583,7 +577,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeUpdateLinksFailed: "다음 문서의 링크를 업데이트하지 못했습니다: {names}",
   treeDocumentFolder: "현재 문서가 있는 폴더",
   treeOpenAsFolder: "이 폴더 열기",
-  treeTrashItem: "휴지통으로 옮기기",
   treeTrash: "휴지통으로 옮기기",
   treeTrashConfirm:
     "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
@@ -799,7 +792,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   loginLinkHint:
     "브라우저가 열리지 않나요? 이 컴퓨터의 브라우저에서 이 링크를 여세요:",
   loginLinkCopy: "링크 복사",
-  loginLinkCopied: "복사됨",
   authTabAccount: "계정",
   authTabApiKey: "API 키",
   providerSearchPlaceholder: "제공업체 검색…",
@@ -943,10 +935,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   findPreviousMatch: "이전 일치 항목",
   findNextMatch: "다음 일치 항목",
   findClose: "찾기 막대 닫기",
-  insertBulletList: "글머리 기호 목록",
-  insertOrderedList: "번호 매기기 목록",
-  insertBlockquote: "인용",
-  insertCodeBlock: "코드 블록",
   triggerCompletion: "지금 이어 쓰기 제안",
   triggerGrammarCheck: "지금 문법 검사",
   grammarApply: "적용",
@@ -1133,7 +1121,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   reportWhat: "무슨 일이 있었나요? 원래 어떻게 되어야 했나요?",
   reportDetails: "함께 보내는 정보",
   reportCopy: "보고서 복사",
-  reportCopied: "복사됨",
   reportOnGithub: "GitHub에 제출",
   reportKindLabel: "유형",
   reportKindBug: "문제가 있어요",
@@ -1366,7 +1353,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",
   closePromptSave: "저장",
   closePromptDiscard: "저장 안 함",
-  closePromptCancel: "취소",
   linkOpenFileConfirm: "‘{name}’을(를) 기본 앱으로 열까요?",
   linkOpenFileOk: "열기",
   cancel: "취소",
@@ -1753,7 +1739,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginUninstallAsk:
     "{name}을(를) 제거할까요? 파일과 저장한 데이터가 삭제됩니다.",
   pluginOk: "확인",
-  pluginCancel: "취소",
   pluginAllow: "허용",
   pluginPermissionsAsk: "{name}이(가) 다음 권한을 요청합니다:",
   pluginFailedNotice: "{name}이(가) 꺼졌습니다: {reason}",

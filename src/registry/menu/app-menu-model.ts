@@ -310,7 +310,7 @@ export function buildMobileMenu(
     "separator",
     { label: t.menuFindReplace, action: { native: "find-replace" } },
     {
-      label: t.menuViewSidebar,
+      label: t.menuToggleSidebar,
       action: { native: "toggle-sidebar" },
       checked: !!checks.sidebar,
     },

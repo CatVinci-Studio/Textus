@@ -43,8 +43,6 @@ export default {
   noticeGrammarChanged:
     "Абзац изменился во время проверки — повторите попытку.",
   noticeGrammarNoIssues: "Замечаний нет.",
-  projectTooBroad:
-    "Эта папка слишком общая, чтобы её открыть (домашняя папка или целый диск). Выберите более конкретную папку.",
   projectNoSamples:
     "Ни один из выбранных файлов не удалось прочитать как текст.",
   projectNeedsSave:
@@ -327,7 +325,6 @@ export default {
   changePictureWithAi: "Изменить это изображение с Textus AI…",
   oldPictureTrashQuestion:
     "Новое изображение на месте. Переместить старое, «{name}», в корзину?",
-  oldPictureTrashOk: "Переместить в корзину",
   oldPictureKeep: "Оставить",
   oldPictureTrashFailed: "Не удалось переместить старое изображение в корзину.",
   imageModelLabel: "Модель изображений",
@@ -514,9 +511,6 @@ export default {
   menuSplitDown: "Разделить вниз",
   menuCloseSplit: "Закрыть разделение",
   shortcutSplitEditor: "Разделить или объединить",
-  menuViewSidebar: "Боковая панель",
-  menuViewSource: "Режим исходного кода",
-  menuViewTypewriter: "Режим пишущей машинки",
   toolbarLabel: "Форматирование",
   toolbarHeading: "Заголовок",
   toolbarBold: "Жирный",
@@ -624,7 +618,6 @@ export default {
     "Не удалось обновить ссылки в этих документах: {names}",
   treeDocumentFolder: "Папка текущего документа",
   treeOpenAsFolder: "Открыть эту папку",
-  treeTrashItem: "Переместить в корзину",
   treeTrash: "Переместить в корзину",
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",
   treeTrashFolderConfirm:
@@ -850,7 +843,6 @@ export default {
   loginLinkHint:
     "Браузер не открылся? Откройте эту ссылку в браузере на этом компьютере:",
   loginLinkCopy: "Копировать ссылку",
-  loginLinkCopied: "Скопировано",
   authTabAccount: "Аккаунт",
   authTabApiKey: "API-ключ",
   providerSearchPlaceholder: "Поиск провайдеров…",
@@ -1017,10 +1009,6 @@ export default {
   findPreviousMatch: "Предыдущее совпадение",
   findNextMatch: "Следующее совпадение",
   findClose: "Закрыть панель поиска",
-  insertBulletList: "Маркированный список",
-  insertOrderedList: "Нумерованный список",
-  insertBlockquote: "Цитата",
-  insertCodeBlock: "Блок кода",
   triggerCompletion: "Предложить продолжение",
   triggerGrammarCheck: "Проверить грамматику",
   grammarApply: "Применить",
@@ -1208,7 +1196,6 @@ export default {
   reportWhat: "Что случилось и чего вы ожидали?",
   reportDetails: "Отправится вместе с этим",
   reportCopy: "Копировать отчёт",
-  reportCopied: "Скопировано",
   reportOnGithub: "Отправить на GitHub",
   reportKindLabel: "Тип",
   reportKindBug: "Что-то не так",
@@ -1450,10 +1437,9 @@ export default {
   closePromptMessage: "В документе есть несохранённые изменения.",
   closePromptSave: "Сохранить",
   closePromptDiscard: "Не сохранять",
-  closePromptCancel: "Отменить",
   linkOpenFileConfirm: "Открыть «{name}» в его приложении?",
   linkOpenFileOk: "Открыть",
-  cancel: "Отменить",
+  cancel: "Отмена",
   draftRestoredMessage:
     "Восстановлено несохранённое содержимое прошлого сеанса.",
   draftRestoredDismiss: "Понятно",
@@ -1842,7 +1828,6 @@ export default {
   pluginUninstallAsk:
     "Удалить {name}? Его файлы и сохранённые данные будут удалены.",
   pluginOk: "ОК",
-  pluginCancel: "Отмена",
   pluginAllow: "Разрешить",
   pluginPermissionsAsk: "{name} запрашивает:",
   pluginFailedNotice: "{name} выключен: {reason}",

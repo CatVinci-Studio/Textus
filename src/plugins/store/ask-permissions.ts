@@ -19,7 +19,7 @@ export async function askPermissions(
     {
       title: t.pluginsTitle,
       okLabel: t.pluginAllow,
-      cancelLabel: t.pluginCancel,
+      cancelLabel: t.cancel,
     },
   );
   return ok ? wanted : null;

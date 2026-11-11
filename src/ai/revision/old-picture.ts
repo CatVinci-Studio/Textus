@@ -21,7 +21,7 @@ export async function offerOldPictureTrash(
   if (documentMarkdown().includes(oldSrc)) return;
   const name = location.path.split(/[\\/]/).pop() ?? oldSrc;
   const move = await showConfirm(fill(t.oldPictureTrashQuestion, { name }), {
-    okLabel: t.oldPictureTrashOk,
+    okLabel: t.treeTrash,
     cancelLabel: t.oldPictureKeep,
     focusCancel: true,
   });

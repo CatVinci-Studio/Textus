@@ -179,7 +179,7 @@ export function DocumentList({
     const name = await showPrompt(t.docRenamePrompt, basename(entry.path), {
       title: t.docRename,
       okLabel: t.docRenameOk,
-      cancelLabel: t.closePromptCancel,
+      cancelLabel: t.cancel,
     });
     if (!name || name === basename(entry.path)) return;
     try {
@@ -198,7 +198,7 @@ export function DocumentList({
         title: t.docDelete,
         tone: "warning",
         okLabel: t.docDeleteOk,
-        cancelLabel: t.closePromptCancel,
+        cancelLabel: t.cancel,
         danger: true,
       },
     );

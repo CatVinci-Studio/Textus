@@ -253,7 +253,7 @@ export function useSaveTabs(opts: {
             const recreate = await showConfirm(t.fileGoneOnDiskMessage, {
               title: t.fileGoneOnDiskTitle,
               okLabel: t.fileGoneOnDiskRecreate,
-              cancelLabel: t.closePromptCancel,
+              cancelLabel: t.cancel,
               focusCancel: auto,
             });
             if (!recreate) return "conflict";
@@ -263,7 +263,7 @@ export function useSaveTabs(opts: {
               title: t.fileChangedOnDiskTitle,
               okLabel: t.fileChangedOnDiskOverwrite,
               altLabel: t.fileChangedOnDiskReload,
-              cancelLabel: t.closePromptCancel,
+              cancelLabel: t.cancel,
               focusCancel: auto,
             });
             if (choice === "alt") {

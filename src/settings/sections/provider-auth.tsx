@@ -196,7 +196,7 @@ function OauthPanel({
                 .then(() => setCopied(true));
             }}
           >
-            {copied ? t.loginLinkCopied : t.loginLinkCopy}
+            {copied ? t.codeBlockCopied : t.loginLinkCopy}
           </button>
         </div>
       )}

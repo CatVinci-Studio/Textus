@@ -61,7 +61,7 @@ export function useProjectActions({
       const text = errorText(err);
       setMessage(
         text === "TOO_BROAD"
-          ? t.projectTooBroad
+          ? t.folderTooBroad
           : text === "NO_SAMPLES"
             ? t.projectNoSamples
             : text === "NO_PROJECT"

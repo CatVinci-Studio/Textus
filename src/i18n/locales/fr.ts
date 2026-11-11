@@ -45,8 +45,6 @@ export default {
   noticeGrammarChanged:
     "Le paragraphe a changé pendant la vérification. Réessayez.",
   noticeGrammarNoIssues: "Aucun problème détecté.",
-  projectTooBroad:
-    "Ce dossier est trop vaste pour être ouvert (votre dossier personnel ou un disque entier). Choisissez un dossier plus précis.",
   projectNoSamples: "Aucun des fichiers choisis n'a pu être lu comme du texte.",
   projectNeedsSave:
     "Enregistrez d'abord ce document\u00a0: l'IA travaille dans son dossier.",
@@ -336,7 +334,6 @@ utiliser une.
   changePictureWithAi: "Modifier cette image avec Textus AI…",
   oldPictureTrashQuestion:
     "La nouvelle image est en place. Mettre l’ancienne, « {name} », à la corbeille ?",
-  oldPictureTrashOk: "Mettre à la corbeille",
   oldPictureKeep: "La garder",
   oldPictureTrashFailed:
     "Impossible de mettre l’ancienne image à la corbeille.",
@@ -521,9 +518,6 @@ utiliser une.
   menuSplitDown: "Partager en bas",
   menuCloseSplit: "Fermer le partage",
   shortcutSplitEditor: "Diviser ou réunir",
-  menuViewSidebar: "Barre latérale",
-  menuViewSource: "Mode source",
-  menuViewTypewriter: "Mode machine à écrire",
   toolbarLabel: "Mise en forme",
   toolbarHeading: "Titre",
   toolbarBold: "Gras",
@@ -631,7 +625,6 @@ utiliser une.
     "Les liens de ces documents n’ont pas pu être mis à jour : {names}",
   treeDocumentFolder: "Dossier du document actuel",
   treeOpenAsFolder: "Ouvrir ce dossier",
-  treeTrashItem: "Mettre à la corbeille",
   treeTrash: "Mettre à la corbeille",
   treeTrashConfirm:
     "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
@@ -864,7 +857,6 @@ utiliser une.
   loginLinkHint:
     "Aucun navigateur ne s'est ouvert ? Ouvrez ce lien dans un navigateur de cet ordinateur :",
   loginLinkCopy: "Copier le lien",
-  loginLinkCopied: "Copié",
   authTabAccount: "Compte",
   authTabApiKey: "Clé API",
   providerSearchPlaceholder: "Rechercher un fournisseur…",
@@ -1030,10 +1022,6 @@ utiliser une.
   findPreviousMatch: "Résultat précédent",
   findNextMatch: "Résultat suivant",
   findClose: "Fermer la barre de recherche",
-  insertBulletList: "Liste à puces",
-  insertOrderedList: "Liste numérotée",
-  insertBlockquote: "Citation",
-  insertCodeBlock: "Bloc de code",
   triggerCompletion: "Suggérer une complétion",
   triggerGrammarCheck: "Vérifier la grammaire",
   grammarApply: "Appliquer",
@@ -1224,7 +1212,6 @@ utiliser une.
   reportWhat: "Que s'est-il passé, et qu'attendiez-vous ?",
   reportDetails: "Envoyé avec",
   reportCopy: "Copier le rapport",
-  reportCopied: "Copié",
   reportOnGithub: "Envoyer sur GitHub",
   reportKindLabel: "Type",
   reportKindBug: "Quelque chose ne va pas",
@@ -1474,7 +1461,6 @@ utiliser une.
     "Ce document contient des modifications non enregistrées.",
   closePromptSave: "Enregistrer",
   closePromptDiscard: "Ne pas enregistrer",
-  closePromptCancel: "Annuler",
   linkOpenFileConfirm: "Ouvrir « {name} » dans son application ?",
   linkOpenFileOk: "Ouvrir",
   cancel: "Annuler",
@@ -1873,7 +1859,6 @@ utiliser une.
   pluginUninstallAsk:
     "Désinstaller {name} ? Ses fichiers et ses données seront supprimés.",
   pluginOk: "OK",
-  pluginCancel: "Annuler",
   pluginAllow: "Autoriser",
   pluginPermissionsAsk: "{name} demande à :",
   pluginFailedNotice: "{name} a été désactivée : {reason}",

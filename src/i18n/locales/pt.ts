@@ -43,8 +43,6 @@ export default {
   noticeGrammarChanged:
     "O parágrafo mudou durante a verificação. Tente de novo.",
   noticeGrammarNoIssues: "Nenhum problema encontrado.",
-  projectTooBroad:
-    "Esta pasta é ampla demais para ser aberta (sua pasta pessoal ou um disco inteiro). Escolha uma pasta mais específica.",
   projectNoSamples: "Nenhum dos arquivos escolhidos pôde ser lido como texto.",
   projectNeedsSave:
     "Salve este documento primeiro: a IA trabalha na pasta dele.",
@@ -324,7 +322,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   changePictureWithAi: "Mudar esta imagem com o Textus AI…",
   oldPictureTrashQuestion:
     "A imagem nova já está no lugar. Mover a antiga, “{name}”, para a lixeira?",
-  oldPictureTrashOk: "Mover para a lixeira",
   oldPictureKeep: "Manter",
   oldPictureTrashFailed:
     "Não foi possível mover a imagem antiga para a lixeira.",
@@ -509,9 +506,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuSplitDown: "Dividir para baixo",
   menuCloseSplit: "Fechar a divisão",
   shortcutSplitEditor: "Dividir ou juntar",
-  menuViewSidebar: "Barra Lateral",
-  menuViewSource: "Modo Código-Fonte",
-  menuViewTypewriter: "Modo Máquina de Escrever",
   toolbarLabel: "Formatação",
   toolbarHeading: "Título",
   toolbarBold: "Negrito",
@@ -619,7 +613,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Não foi possível atualizar os links destes documentos: {names}",
   treeDocumentFolder: "Pasta do documento atual",
   treeOpenAsFolder: "Abrir esta pasta",
-  treeTrashItem: "Mover para a lixeira",
   treeTrash: "Mover para a lixeira",
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
   treeTrashFolderConfirm:
@@ -845,7 +838,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   loginLinkHint:
     "O navegador não abriu? Abra este link em um navegador neste computador:",
   loginLinkCopy: "Copiar link",
-  loginLinkCopied: "Copiado",
   authTabAccount: "Conta",
   authTabApiKey: "Chave de API",
   providerSearchPlaceholder: "Buscar provedores…",
@@ -1008,10 +1000,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   findPreviousMatch: "Resultado anterior",
   findNextMatch: "Próximo resultado",
   findClose: "Fechar a barra de busca",
-  insertBulletList: "Lista com Marcadores",
-  insertOrderedList: "Lista Numerada",
-  insertBlockquote: "Citação",
-  insertCodeBlock: "Bloco de Código",
   triggerCompletion: "Sugerir Continuação Agora",
   triggerGrammarCheck: "Verificar Gramática Agora",
   grammarApply: "Aplicar",
@@ -1198,7 +1186,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   reportWhat: "O que aconteceu e o que você esperava?",
   reportDetails: "Enviado junto",
   reportCopy: "Copiar relatório",
-  reportCopied: "Copiado",
   reportOnGithub: "Enviar no GitHub",
   reportKindLabel: "Tipo",
   reportKindBug: "Algo está errado",
@@ -1442,7 +1429,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closePromptMessage: "Este documento tem alterações não salvas.",
   closePromptSave: "Salvar",
   closePromptDiscard: "Não Salvar",
-  closePromptCancel: "Cancelar",
   linkOpenFileConfirm: "Abrir “{name}” no app dele?",
   linkOpenFileOk: "Abrir",
   cancel: "Cancelar",
@@ -1832,7 +1818,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginUninstallAsk:
     "Desinstalar {name}? Os arquivos e os dados que ele guardou serão apagados.",
   pluginOk: "OK",
-  pluginCancel: "Cancelar",
   pluginAllow: "Permitir",
   pluginPermissionsAsk: "{name} pede para:",
   pluginFailedNotice: "{name} foi desativado: {reason}",

@@ -230,7 +230,7 @@ function ReportForm({
             );
           }}
         >
-          {phase.state === "copied" ? t.reportCopied : t.reportCopy}
+          {phase.state === "copied" ? t.codeBlockCopied : t.reportCopy}
         </button>
         <div className="close-prompt-spacer" />
         <button

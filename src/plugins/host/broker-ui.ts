@@ -70,14 +70,14 @@ export function uiHandlers(p: PluginScope) {
       showConfirm(str(text, "text"), {
         title: p.name(),
         okLabel: optionalStr(okLabel) ?? p.t().pluginOk,
-        cancelLabel: p.t().pluginCancel,
+        cancelLabel: p.t().cancel,
         danger: danger === true,
       }),
     "ui.input": ({ prompt, value, placeholder }: Params) =>
       showPrompt(optionalStr(prompt) ?? "", optionalStr(value) ?? "", {
         title: p.name(),
         okLabel: p.t().pluginOk,
-        cancelLabel: p.t().pluginCancel,
+        cancelLabel: p.t().cancel,
         placeholder: optionalStr(placeholder),
       }),
     "ui.pick": async ({
@@ -109,7 +109,7 @@ export function uiHandlers(p: PluginScope) {
         from: p.name(),
         title: optionalStr(title) ?? p.name(),
         okLabel: optionalStr(okLabel) ?? p.t().pluginOk,
-        cancelLabel: p.t().pluginCancel,
+        cancelLabel: p.t().cancel,
         fields: (Array.isArray(fields) ? fields : []) as PluginFormField[],
       }),
     // One field of the form's, its value or null.
@@ -120,7 +120,7 @@ export function uiHandlers(p: PluginScope) {
     "ui.progressStart": ({ title }: Params) => {
       const id = startProgress(str(title, "title"), {
         source: p.name(),
-        cancelLabel: p.t().pluginCancel,
+        cancelLabel: p.t().cancel,
         onCancel: () => p.request("$progressCancel", { id }).catch(() => {}),
       });
       progresses.add(id);
@@ -159,7 +159,7 @@ function pickOne(
     from: p.name(),
     title: optionalStr(title) ?? p.name(),
     okLabel: p.t().pluginOk,
-    cancelLabel: p.t().pluginCancel,
+    cancelLabel: p.t().cancel,
     fields: [{ key: "value", type, label: "", value: optionalStr(value) }],
   }).then((values) => (values ? String(values.value) : null));
 }

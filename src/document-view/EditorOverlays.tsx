@@ -66,7 +66,7 @@ export function EditorOverlays({
             rowsLabel={t.insertTableRowsLabel}
             columnsLabel={t.insertTableColumnsLabel}
             confirmLabel={t.insertTableConfirm}
-            cancelLabel={t.closePromptCancel}
+            cancelLabel={t.cancel}
             onInsert={(rows, cols) => insertTable(run, rows, cols)}
             onClose={() => setTableDialogOpen(false)}
           />
@@ -80,7 +80,7 @@ export function EditorOverlays({
             label={t.imageNameDialogLabel}
             invalidLabel={t.imageNameDialogInvalid}
             uploadLabel={t.imageNameDialogUpload}
-            cancelLabel={t.closePromptCancel}
+            cancelLabel={t.cancel}
             onClose={closeImageNameDialog}
           />
         )}

@@ -190,7 +190,7 @@ export function ProjectBar({
     return (
       <>
         <div className="project-bar project-bar-empty memory-no-project">
-          {tooBroad ? t.projectTooBroad : t.memoryNeedsSave}
+          {tooBroad ? t.folderTooBroad : t.memoryNeedsSave}
         </div>
         {info && info.memories.items.length > 0 && (
           <div className="project-bar project-bar-memory">

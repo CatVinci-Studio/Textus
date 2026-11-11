@@ -383,7 +383,7 @@ export function useFileOpening(opts: {
     if (offered !== "none") return;
     const open = await showConfirm(
       fill(t.linkOpenFileConfirm, { name: basename(path) }),
-      { okLabel: t.linkOpenFileOk, cancelLabel: t.closePromptCancel },
+      { okLabel: t.linkOpenFileOk, cancelLabel: t.cancel },
     );
     if (open) await exportDoc.openLinkedFile(path);
   };

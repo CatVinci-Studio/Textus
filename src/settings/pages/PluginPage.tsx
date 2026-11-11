@@ -270,7 +270,7 @@ export function PluginPage({
                 {
                   title: t.pluginsTitle,
                   okLabel: t.pluginUninstall,
-                  cancelLabel: t.pluginCancel,
+                  cancelLabel: t.cancel,
                   danger: true,
                 },
               );

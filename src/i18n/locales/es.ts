@@ -42,8 +42,6 @@ export default {
   noticeGrammarChanged:
     "El párrafo cambió durante la revisión. Vuelve a intentarlo.",
   noticeGrammarNoIssues: "No se encontraron problemas.",
-  projectTooBroad:
-    "Esta carpeta es demasiado amplia para abrirla (es tu carpeta personal o una unidad entera). Elige una más concreta.",
   projectNoSamples:
     "No se pudo leer como texto ninguno de los archivos elegidos.",
   projectNeedsSave:
@@ -335,7 +333,6 @@ para usar una.
   changePictureWithAi: "Cambiar esta imagen con Textus AI…",
   oldPictureTrashQuestion:
     "La imagen nueva ya está. ¿Mover la antigua, «{name}», a la papelera?",
-  oldPictureTrashOk: "Mover a la papelera",
   oldPictureKeep: "Conservarla",
   oldPictureTrashFailed: "No se pudo mover la imagen antigua a la papelera.",
   imageModelLabel: "Modelo de imagen",
@@ -519,9 +516,6 @@ para usar una.
   menuSplitDown: "Dividir hacia abajo",
   menuCloseSplit: "Cerrar la división",
   shortcutSplitEditor: "Dividir o unir",
-  menuViewSidebar: "Barra lateral",
-  menuViewSource: "Modo código fuente",
-  menuViewTypewriter: "Modo máquina de escribir",
   toolbarLabel: "Formato",
   toolbarHeading: "Encabezado",
   toolbarBold: "Negrita",
@@ -629,7 +623,6 @@ para usar una.
     "No se pudieron actualizar los enlaces de estos documentos: {names}",
   treeDocumentFolder: "Carpeta del documento actual",
   treeOpenAsFolder: "Abrir esta carpeta",
-  treeTrashItem: "Mover a la papelera",
   treeTrash: "Mover a la papelera",
   treeTrashConfirm:
     "¿Mover «{name}» a la papelera? Podrás recuperarlo desde allí.",
@@ -858,7 +851,6 @@ para usar una.
   loginLinkHint:
     "¿No se abrió el navegador? Abre este enlace en un navegador de este ordenador:",
   loginLinkCopy: "Copiar enlace",
-  loginLinkCopied: "Copiado",
   authTabAccount: "Cuenta",
   authTabApiKey: "Clave de API",
   providerSearchPlaceholder: "Buscar proveedores…",
@@ -1022,10 +1014,6 @@ para usar una.
   findPreviousMatch: "Resultado anterior",
   findNextMatch: "Resultado siguiente",
   findClose: "Cerrar la barra de búsqueda",
-  insertBulletList: "Lista con viñetas",
-  insertOrderedList: "Lista numerada",
-  insertBlockquote: "Cita",
-  insertCodeBlock: "Bloque de código",
   triggerCompletion: "Sugerir continuación ahora",
   triggerGrammarCheck: "Revisar gramática ahora",
   grammarApply: "Aplicar",
@@ -1214,7 +1202,6 @@ para usar una.
   reportWhat: "¿Qué pasó y qué esperabas?",
   reportDetails: "Se envía con ello",
   reportCopy: "Copiar informe",
-  reportCopied: "Copiado",
   reportOnGithub: "Enviar en GitHub",
   reportKindLabel: "Tipo",
   reportKindBug: "Algo va mal",
@@ -1458,7 +1445,6 @@ para usar una.
   closePromptMessage: "Este documento tiene cambios sin guardar.",
   closePromptSave: "Guardar",
   closePromptDiscard: "No guardar",
-  closePromptCancel: "Cancelar",
   linkOpenFileConfirm: "¿Abrir «{name}» en su aplicación?",
   linkOpenFileOk: "Abrir",
   cancel: "Cancelar",
@@ -1852,7 +1838,6 @@ para usar una.
   pluginUninstallAsk:
     "¿Desinstalar {name}? Se eliminarán sus archivos y lo que guardó.",
   pluginOk: "Aceptar",
-  pluginCancel: "Cancelar",
   pluginAllow: "Permitir",
   pluginPermissionsAsk: "{name} pide:",
   pluginFailedNotice: "Se desactivó {name}: {reason}",

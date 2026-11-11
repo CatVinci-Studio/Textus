@@ -43,8 +43,6 @@ export default {
   noticeGrammarChanged:
     "Der Absatz hat sich während der Prüfung geändert. Versuch es noch einmal.",
   noticeGrammarNoIssues: "Keine Probleme gefunden.",
-  projectTooBroad:
-    "Dieser Ordner ist zu weit gefasst, um ihn zu öffnen (dein Benutzerordner oder ein ganzes Laufwerk). Wähle einen spezifischeren Ordner.",
   projectNoSamples:
     "Keine der ausgewählten Dateien konnte als Text gelesen werden.",
   projectNeedsSave:
@@ -325,7 +323,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   changePictureWithAi: "Dieses Bild mit Textus AI ändern…",
   oldPictureTrashQuestion:
     "Das neue Bild ist eingefügt. Das alte, „{name}“, in den Papierkorb legen?",
-  oldPictureTrashOk: "In den Papierkorb",
   oldPictureKeep: "Behalten",
   oldPictureTrashFailed:
     "Das alte Bild konnte nicht in den Papierkorb gelegt werden.",
@@ -507,9 +504,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuSplitDown: "Unten teilen",
   menuCloseSplit: "Teilung schließen",
   shortcutSplitEditor: "Teilen oder Teilung aufheben",
-  menuViewSidebar: "Seitenleiste",
-  menuViewSource: "Quellcodemodus",
-  menuViewTypewriter: "Schreibmaschinenmodus",
   toolbarLabel: "Formatierung",
   toolbarHeading: "Überschrift",
   toolbarBold: "Fett",
@@ -617,7 +611,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Die Links dieser Dokumente konnten nicht aktualisiert werden: {names}",
   treeDocumentFolder: "Ordner des aktuellen Dokuments",
   treeOpenAsFolder: "Diesen Ordner öffnen",
-  treeTrashItem: "In den Papierkorb",
   treeTrash: "In den Papierkorb",
   treeTrashConfirm:
     "„{name}“ in den Papierkorb legen? Von dort lässt es sich zurücklegen.",
@@ -843,7 +836,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   loginLinkHint:
     "Kein Browser geöffnet? Öffnen Sie diesen Link in einem Browser auf diesem Computer:",
   loginLinkCopy: "Link kopieren",
-  loginLinkCopied: "Kopiert",
   authTabAccount: "Konto",
   authTabApiKey: "API-Schlüssel",
   providerSearchPlaceholder: "Anbieter suchen…",
@@ -1002,10 +994,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   findPreviousMatch: "Vorheriger Treffer",
   findNextMatch: "Nächster Treffer",
   findClose: "Suchleiste schließen",
-  insertBulletList: "Aufzählung",
-  insertOrderedList: "Nummerierte Liste",
-  insertBlockquote: "Zitat",
-  insertCodeBlock: "Codeblock",
   triggerCompletion: "Jetzt vervollständigen",
   triggerGrammarCheck: "Grammatik jetzt prüfen",
   grammarApply: "Übernehmen",
@@ -1195,7 +1183,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   reportWhat: "Was ist passiert, und was hast du erwartet?",
   reportDetails: "Wird mitgeschickt",
   reportCopy: "Bericht kopieren",
-  reportCopied: "Kopiert",
   reportOnGithub: "Auf GitHub senden",
   reportKindLabel: "Art",
   reportKindBug: "Etwas stimmt nicht",
@@ -1443,7 +1430,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",
   closePromptSave: "Speichern",
   closePromptDiscard: "Nicht speichern",
-  closePromptCancel: "Abbrechen",
   linkOpenFileConfirm: "„{name}“ in seiner App öffnen?",
   linkOpenFileOk: "Öffnen",
   cancel: "Abbrechen",
@@ -1841,7 +1827,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginUninstallAsk:
     "{name} deinstallieren? Seine Dateien und gespeicherten Daten werden gelöscht.",
   pluginOk: "OK",
-  pluginCancel: "Abbrechen",
   pluginAllow: "Erlauben",
   pluginPermissionsAsk: "{name} möchte:",
   pluginFailedNotice: "{name} wurde ausgeschaltet: {reason}",

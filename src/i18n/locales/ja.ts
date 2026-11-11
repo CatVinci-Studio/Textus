@@ -41,8 +41,6 @@ export default {
   noticeGrammarChanged:
     "チェック中に段落が変更されました。もう一度お試しください。",
   noticeGrammarNoIssues: "問題は見つかりませんでした。",
-  projectTooBroad:
-    "このフォルダーは範囲が広すぎるため（ホームフォルダーやドライブ全体）、開けません。もっと具体的なフォルダーを選んでください。",
   projectNoSamples: "選んだファイルをテキストとして読み込めませんでした。",
   projectNeedsSave:
     "先に文書を保存してください。AIはそのフォルダーで作業します。",
@@ -309,7 +307,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   changePictureWithAi: "Textus AI でこの画像を変更…",
   oldPictureTrashQuestion:
     "新しい画像を入れました。古い画像「{name}」をゴミ箱に入れますか？",
-  oldPictureTrashOk: "ゴミ箱に入れる",
   oldPictureKeep: "残す",
   oldPictureTrashFailed: "古い画像をゴミ箱に入れられませんでした。",
   imageModelLabel: "画像モデル",
@@ -484,9 +481,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuSplitDown: "下に分割",
   menuCloseSplit: "分割を閉じる",
   shortcutSplitEditor: "分割 / 分割を解除",
-  menuViewSidebar: "サイドバー",
-  menuViewSource: "ソースモード",
-  menuViewTypewriter: "タイプライターモード",
   toolbarLabel: "書式",
   toolbarHeading: "見出し",
   toolbarBold: "太字",
@@ -593,7 +587,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeUpdateLinksFailed: "次の書類のリンクを更新できませんでした: {names}",
   treeDocumentFolder: "現在の書類のフォルダー",
   treeOpenAsFolder: "このフォルダーを開く",
-  treeTrashItem: "ゴミ箱に入れる",
   treeTrash: "ゴミ箱に入れる",
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
   treeTrashFolderConfirm:
@@ -813,7 +806,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   loginLinkHint:
     "ブラウザが開きませんか？このパソコンのブラウザでこのリンクを開いてください：",
   loginLinkCopy: "リンクをコピー",
-  loginLinkCopied: "コピーしました",
   authTabAccount: "アカウント",
   authTabApiKey: "APIキー",
   providerSearchPlaceholder: "プロバイダーを検索…",
@@ -957,10 +949,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   findPreviousMatch: "前の一致",
   findNextMatch: "次の一致",
   findClose: "検索バーを閉じる",
-  insertBulletList: "箇条書き",
-  insertOrderedList: "番号付きリスト",
-  insertBlockquote: "引用",
-  insertCodeBlock: "コードブロック",
   triggerCompletion: "今すぐ補完を提案",
   triggerGrammarCheck: "今すぐ文法をチェック",
   grammarApply: "適用",
@@ -1147,7 +1135,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   reportWhat: "何が起きましたか？本来はどうなるはずでしたか？",
   reportDetails: "一緒に送られる情報",
   reportCopy: "レポートをコピー",
-  reportCopied: "コピーしました",
   reportOnGithub: "GitHub で送信",
   reportKindLabel: "種類",
   reportKindBug: "不具合",
@@ -1381,7 +1368,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   closePromptMessage: "この文書には保存されていない変更があります。",
   closePromptSave: "保存",
   closePromptDiscard: "保存しない",
-  closePromptCancel: "キャンセル",
   linkOpenFileConfirm: "「{name}」を既定のアプリで開きますか？",
   linkOpenFileOk: "開く",
   cancel: "キャンセル",
@@ -1772,7 +1758,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginUninstallAsk:
     "{name} をアンインストールしますか？ファイルと保存したデータは削除されます。",
   pluginOk: "OK",
-  pluginCancel: "キャンセル",
   pluginAllow: "許可",
   pluginPermissionsAsk: "{name} は次の権限を求めています：",
   pluginFailedNotice: "{name} はオフになりました：{reason}",

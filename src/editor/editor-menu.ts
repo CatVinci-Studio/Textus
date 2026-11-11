@@ -426,16 +426,16 @@ function formatGroups(
         })),
         "separator",
         {
-          label: t.insertBulletList,
+          label: t.menuBulletList,
           onSelect: () => insertList(run, "bullet_list"),
         },
         {
-          label: t.insertOrderedList,
+          label: t.menuOrderedList,
           onSelect: () => insertList(run, "ordered_list"),
         },
         { label: t.menuTaskList, onSelect: insertBlock("task-list") },
         {
-          label: t.insertBlockquote,
+          label: t.menuBlockquote,
           onSelect: () => runCommand(run, wrapInBlockquoteCommand.key),
         },
       ],
@@ -445,7 +445,7 @@ function formatGroups(
       items: [
         { label: t.menuTable, onSelect: options.openTableDialog },
         {
-          label: t.insertCodeBlock,
+          label: t.menuCodeBlock,
           onSelect: () => runCommand(run, createCodeBlockCommand.key),
         },
         { label: t.menuMathBlock, onSelect: insertBlock("math-block") },

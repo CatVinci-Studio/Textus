@@ -331,7 +331,7 @@ export async function exportViaPandoc(
     const goInstall = await showConfirm(t.pandocMissingMessage, {
       title: t.pandocMissingTitle,
       okLabel: t.pandocMissingDownload,
-      cancelLabel: t.closePromptCancel,
+      cancelLabel: t.cancel,
     });
     if (goInstall) void exportDoc.openPandocInstallPage();
     return;

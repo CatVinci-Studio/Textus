@@ -112,7 +112,7 @@ export function useRowMenu(
         items.push(
           { label: t.treeRenameItem, onSelect: () => void rename(path) },
           {
-            label: t.treeTrashItem,
+            label: t.treeTrash,
             onSelect: () => void trash(path, isDir),
             danger: true,
           },

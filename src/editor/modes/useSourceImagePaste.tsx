@@ -75,7 +75,7 @@ export function useSourceImagePaste(
           label={t.imageNameDialogLabel}
           invalidLabel={t.imageNameDialogInvalid}
           uploadLabel={t.imageNameDialogUpload}
-          cancelLabel={t.closePromptCancel}
+          cancelLabel={t.cancel}
           onClose={closeImageNameDialog}
         />
       )}

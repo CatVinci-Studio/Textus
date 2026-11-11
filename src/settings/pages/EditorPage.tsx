@@ -53,7 +53,7 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
             }
           >
             <option value="rich">{t.viewModeRich}</option>
-            <option value="source">{t.menuViewSource}</option>
+            <option value="source">{t.menuToggleSourceMode}</option>
             <option value="split">{t.menuToggleSplitView}</option>
           </Select>
         </SettingRow>
@@ -69,7 +69,7 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
           onChange={(on) => setSettings({ zoomTogether: on })}
         />
         <ToggleRow
-          label={t.menuViewTypewriter}
+          label={t.menuToggleTypewriterMode}
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}
         />

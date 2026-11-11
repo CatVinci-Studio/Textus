@@ -52,7 +52,7 @@ export function PluginData({
   const clear = async () => {
     const ok = await showConfirm(fill(t.pluginDataClearAsk, { name }), {
       okLabel: t.pluginDataClear,
-      cancelLabel: t.pluginCancel,
+      cancelLabel: t.cancel,
       danger: true,
     });
     if (!ok) return;
