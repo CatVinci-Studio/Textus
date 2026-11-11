@@ -13,7 +13,8 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--ui-muted);
+  /* Muted, a step darker: it sits on the chip's tint, hovered too. */
+  color: color-mix(in srgb, var(--ui-muted) 80%, var(--ui-text));
 }
 
 /* The dot only between a mode and its model: alone, the model is all. */
