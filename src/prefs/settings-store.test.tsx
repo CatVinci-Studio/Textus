@@ -136,6 +136,23 @@ describe("file-backed settings", () => {
     expect(loadSettings().theme).toBe("dark");
   });
 
+  it("keeps the format bar turned off in a profile from before it had a mark", () => {
+    // 1.3.12's settings: no formatBarOnce, so it read as on.
+    boot({ languageChosen: true, formatBar: false });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    expect(loadSettings().formatBar).toBe(true);
+    act(() => lastSet({ formatBar: false }));
+    expect(storage.settingsPatch).toHaveBeenLastCalledWith({
+      formatBar: false,
+      formatBarOnce: true,
+    });
+    expect(loadSettings().formatBar).toBe(false);
+  });
+
   it("sends every keystroke at once, so a quick quit can't lose it", () => {
     // Rust coalesces the disk writes and flushes on exit; a debounce here would
     // lose the last keystrokes before Cmd+Q.

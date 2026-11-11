@@ -83,6 +83,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useState<Settings>(loadSettings);
   // Read in the same render as the state above.
   const renderedVersion = useRef(remoteVersion);
+  const wantedLanguage = useRef<string | null>(null);
 
   useEffect(() => {
     // A first launch writes the whole set of defaults at once, so the next
@@ -115,10 +116,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  // Read as the tree draws (counted(), the numbers' format): set before it
+  // does, not after, or a switch draws plurals in the language left.
+  setCurrentLanguage(settings.language);
   useEffect(() => {
     // The CSS :lang() font stacks key off it; the boot script sets the same.
     document.documentElement.lang = localeOf(settings.language);
-    setCurrentLanguage(settings.language);
   }, [settings.language]);
 
   function setSettings(patch: Partial<Settings>) {
@@ -127,12 +130,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       persist(patch);
     };
     // A language switched to takes effect once its strings have loaded, so
-    // nothing draws in it meanwhile with English. One that fails shows in English.
-    if (patch.language && !localeLoaded(patch.language))
-      void loadLocale(patch.language)
+    // nothing draws in it meanwhile with English. One that fails shows in
+    // English. Only the last one picked: an earlier one loading late
+    // doesn't take its place.
+    if (patch.language) wantedLanguage.current = patch.language;
+    if (patch.language && !localeLoaded(patch.language)) {
+      const lang = patch.language;
+      void loadLocale(lang)
         .catch(() => {})
-        .then(apply);
-    else apply();
+        .then(() => {
+          if (wantedLanguage.current === lang) apply();
+        });
+    } else apply();
   }
 
   const t = resolveStrings(settings.language);

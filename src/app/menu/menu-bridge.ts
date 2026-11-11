@@ -313,6 +313,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
           "manage-plugins": () => h.onOpenPluginSettings(),
           "open-file": () => void h.openFileDialog(),
           "open-folder": () => void h.openFolderDialog(),
+          "check-updates": () => h.onCheckUpdates(),
         };
         if (id) run[id]?.();
       })

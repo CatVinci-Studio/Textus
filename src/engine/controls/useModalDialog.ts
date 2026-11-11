@@ -29,6 +29,9 @@ export function useModalDialog(
   enabled = true,
   initialFocusSelector?: string,
   refocusEditorOnPhone = true,
+  /** Which request the box shows: a queued one taking its place gets the
+   *  focus as a new box would. */
+  showing?: unknown,
 ) {
   const ref = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -110,7 +113,7 @@ export function useModalDialog(
         now?.addRange(caret);
       }
     };
-  }, [active, initialFocusSelector, phone, refocusEditorOnPhone]);
+  }, [active, initialFocusSelector, phone, refocusEditorOnPhone, showing]);
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (!active) return;

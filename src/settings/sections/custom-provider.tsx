@@ -128,6 +128,7 @@ export function CustomProviderPanel({
       <div className="settings-field">
         <label className="settings-field-label">{t.customBaseUrlLabel}</label>
         <input
+          aria-label={t.customBaseUrlLabel}
           type="text"
           inputMode="url"
           {...VERBATIM_INPUT}
@@ -152,6 +153,7 @@ export function CustomProviderPanel({
         <div className="custom-model-row">
           {models.length > 0 ? (
             <Select
+              aria-label={t.customModelLabel}
               className="settings-select"
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
@@ -164,6 +166,7 @@ export function CustomProviderPanel({
             </Select>
           ) : (
             <input
+              aria-label={t.customModelLabel}
               type="text"
               {...VERBATIM_INPUT}
               className="settings-text-input"

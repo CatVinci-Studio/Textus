@@ -19,6 +19,8 @@ export function useSettingsRedraw(run: EditorRunner, settings: Settings) {
     settings.codeLineNumbers,
     settings.colorSwatches,
     settings.diagramEngine,
+    settings.enableMath,
+    settings.enableMermaid,
     run,
   ]);
 }

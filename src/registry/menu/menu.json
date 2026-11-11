@@ -11,7 +11,8 @@
           "label": "updateCheckButton",
           "suffix": "…",
           "en": "Check for Updates…",
-          "on": ["mac"]
+          "on": ["mac"],
+          "orOpen": true
         },
         "-",
         {

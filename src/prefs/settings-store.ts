@@ -108,7 +108,9 @@ function send(ticket: Map<string, number>) {
 export function persist(patch: Partial<Settings>) {
   const store = fileStore();
   if (!store) {
-    writeLocalSettings(patch);
+    writeLocalSettings(
+      "formatBar" in patch ? { ...patch, formatBarOnce: true } : patch,
+    );
     return;
   }
   // A field not stored at all reads as its default, so setting it to the
@@ -120,6 +122,9 @@ export function persist(patch: Partial<Settings>) {
       changed[key] = value;
   }
   if (Object.keys(changed).length === 0) return;
+  // The format bar as the user leaves it is kept from now on: written with
+  // the mark that says so, which a profile from before 1.3.13 lacks.
+  if ("formatBar" in changed) changed.formatBarOnce = true;
   send(store.local(changed));
 }
 

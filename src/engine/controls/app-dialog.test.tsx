@@ -67,6 +67,8 @@ describe("app dialogs", () => {
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     await a;
     expect(screen.getByRole("alertdialog")).toHaveTextContent("Second");
+    // The queued one has the focus, as a box of its own would.
+    expect(screen.getByRole("button", { name: "OK" })).toHaveFocus();
     fireEvent.click(screen.getByRole("button", { name: "OK" }));
     await b;
     expect(screen.queryByRole("alertdialog")).toBeNull();

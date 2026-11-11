@@ -60,11 +60,14 @@ export function UpdateButton({
       const found = await updater.check(
         checkChannel(settings.updateChannel, allowed),
       );
+      // As this check found it, not as the panel first assumed (a menu's
+      // Check for Updates runs before that is known).
+      setSelfUpdate(allowed);
       if (found) {
         setUpdate(found);
         setPhase("available");
         setMessage(
-          selfUpdate
+          allowed
             ? `${t.updateAvailable} v${found.version}`
             : `${t.updateAvailable} v${found.version} ${t.updateViaPackageManager}`,
         );

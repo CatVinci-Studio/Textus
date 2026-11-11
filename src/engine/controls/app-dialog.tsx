@@ -160,6 +160,8 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
       : shown?.focusCancel
         ? ".app-dialog-cancel"
         : ".close-prompt-primary",
+    true,
+    shown?.id,
   );
   const ok = () => current && answer(current, true, inputRef.current?.value);
   if (!presence.mounted || !shown) return null;
