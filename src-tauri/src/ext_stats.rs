@@ -223,7 +223,7 @@ fn remember_in(file: &Path, kind: Kind, id: &str) {
         }
         // Only a hint: a record that can't be written makes a later install
         // count as a first one.
-        let _ = std::fs::write(file, serde_json::to_string(&record).unwrap_or_default());
+        let _ = crate::atomic::write_sync(file, serde_json::to_string(&record).unwrap_or_default());
     }
 }
 

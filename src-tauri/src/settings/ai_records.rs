@@ -140,7 +140,7 @@ pub(crate) fn merge(
         let written = path
             .parent()
             .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(&path, memory.text));
+            .and_then(|()| crate::atomic::write_sync(&path, memory.text));
         if written.is_ok() {
             memories += 1;
         }

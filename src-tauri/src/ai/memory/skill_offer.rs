@@ -3,7 +3,7 @@
 //! offer it. Nothing is saved unasked.
 
 use super::*;
-use crate::ai::workspace::{skill_file_path, AgentSkill};
+use crate::ai::workspace::AgentSkill;
 
 /// A request shorter than this is never a procedure.
 const OFFER_FROM_CHARS: usize = 60;
@@ -122,19 +122,19 @@ pub(crate) fn save_offer_in(
             warnings.join(",")
         ));
     }
-    std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
-    let mut named = offer.clone();
-    let mut path = skill_file_path(skills_dir, &named.name)?;
-    let mut n = 2;
-    while path.exists() {
-        named.name = format!("{}-{n}", offer.name);
-        path = skill_file_path(skills_dir, &named.name)?;
-        n += 1;
-    }
     let words: Vec<String> = modes.iter().map(|m| m.to_string()).collect();
-    let text = crate::ai::workspace::with_metadata(&skill_file(&named), "modes", &words.join(" "));
-    std::fs::write(&path, text).map_err(|e| e.to_string())?;
-    Ok(path)
+    crate::ai::workspace::write_skill_file(
+        skills_dir,
+        &offer.name,
+        crate::ai::workspace::OnTaken::NextFree,
+        |name| {
+            let named = SkillOffer {
+                name: name.to_string(),
+                ..offer.clone()
+            };
+            crate::ai::workspace::with_metadata(&skill_file(&named), "modes", &words.join(" "))
+        },
+    )
 }
 
 #[cfg(test)]

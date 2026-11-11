@@ -205,7 +205,7 @@ pub async fn plugin_catalog(app: tauri::AppHandle) -> Result<Vec<CatalogEntry>, 
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
-        let _ = std::fs::write(path, text);
+        let _ = crate::atomic::write_sync(&path, text);
     }
     Ok(entries)
 }
@@ -348,16 +348,18 @@ fn install_skill_in(
     if skill.prompt.is_empty() {
         return Err(format!("{name} isn't a skill file."));
     }
-    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
-    let path = crate::ai::workspace::skill_file_path(dir, name)?;
     let taken = crate::ai::workspace::read_skill_files(dir)
         .iter()
         .any(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
-    if path.exists() || taken {
+    if taken {
         return Err(SKILL_EXISTS.into());
     }
-    std::fs::write(&path, text).map_err(|e| e.to_string())?;
-    Ok(path)
+    crate::ai::workspace::write_skill_file(
+        dir,
+        name,
+        crate::ai::workspace::OnTaken::Refuse(SKILL_EXISTS),
+        |_| text.to_string(),
+    )
 }
 
 /// Installs `id` from the catalog last fetched after checking its package,

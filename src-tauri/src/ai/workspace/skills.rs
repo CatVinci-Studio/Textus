@@ -239,6 +239,44 @@ pub(crate) fn skill_file_path(skills_dir: &Path, name: &str) -> Result<PathBuf, 
     Ok(path)
 }
 
+/// What writing a new skill file does where its name's file is there.
+pub(crate) enum OnTaken {
+    /// Writes over it (an imported file of that name).
+    Replace,
+    /// Writes beside it as `name-2`, `name-3`… (a copy, an offer saved).
+    NextFree,
+    /// Leaves it and fails with `refusal`.
+    Refuse(&'static str),
+}
+
+/// Writes skill `name`'s file in `dir` (made if missing), in one step:
+/// `text` is given the name the file gets.
+pub(crate) fn write_skill_file(
+    dir: &Path,
+    name: &str,
+    on_taken: OnTaken,
+    text: impl FnOnce(&str) -> String,
+) -> Result<PathBuf, String> {
+    std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    let mut chosen = name.to_string();
+    let mut path = skill_file_path(dir, name)?;
+    match on_taken {
+        OnTaken::Replace => {}
+        OnTaken::Refuse(refusal) if path.exists() => return Err(refusal.into()),
+        OnTaken::Refuse(_) => {}
+        OnTaken::NextFree => {
+            let mut n = 2;
+            while path.exists() {
+                chosen = format!("{name}-{n}");
+                path = skill_file_path(dir, &chosen)?;
+                n += 1;
+            }
+        }
+    }
+    crate::atomic::write_sync(&path, text(&chosen)).map_err(|e| e.to_string())?;
+    Ok(path)
+}
+
 /// Errors the built-in skill commands return, for the frontend to map to
 /// its own messages.
 pub(crate) const UNKNOWN_BUILTIN: &str = "UNKNOWN_BUILTIN";
@@ -255,18 +293,11 @@ pub(crate) fn customize_in(skills_dir: &Path, name: &str) -> Result<PathBuf, Str
     {
         return Ok(path);
     }
-    std::fs::create_dir_all(skills_dir).map_err(|e| e.to_string())?;
     // A file of that stem holding some other skill keeps its name.
-    let mut path = skill_file_path(skills_dir, &builtin.name)?;
-    let mut n = 2;
-    while path.exists() {
-        path = skill_file_path(skills_dir, &format!("{}-{n}", builtin.name))?;
-        n += 1;
-    }
     let version = builtin.version.as_deref().unwrap_or("1");
-    let content = builtin::with_based_on(raw, &format!("{}@{version}", builtin.name));
-    crate::atomic::write_sync(&path, content).map_err(|e| e.to_string())?;
-    Ok(path)
+    write_skill_file(skills_dir, &builtin.name, OnTaken::NextFree, |_| {
+        builtin::with_based_on(raw, &format!("{}@{version}", builtin.name))
+    })
 }
 
 pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, String> {

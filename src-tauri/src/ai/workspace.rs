@@ -328,11 +328,7 @@ pub async fn import_agent_skill(
 
     let global_dir = global_agent_dir(&app)?;
     let skills_dir = global_dir.join("skills");
-    std::fs::create_dir_all(&skills_dir).map_err(|e| e.to_string())?;
-    let target = skill_file_path(&skills_dir, &skill.name)?;
-    crate::atomic::write(&target, &content)
-        .await
-        .map_err(|e| e.to_string())?;
+    write_skill_file(&skills_dir, &skill.name, OnTaken::Replace, |_| content)?;
 
     let (_, skills) = read_layer(&global_dir, SkillSource::Global);
     Ok(Some(skills))

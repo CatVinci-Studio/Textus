@@ -52,7 +52,7 @@ pub async fn web_asset(
         if let Some(dir) = path.parent() {
             let _ = std::fs::create_dir_all(dir);
         }
-        let _ = std::fs::write(path, &answer);
+        let _ = crate::atomic::write_sync(&path, &answer);
     }
     Ok(answer)
 }
