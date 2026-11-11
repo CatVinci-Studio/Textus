@@ -31,6 +31,7 @@ import {
   type SourceEdit,
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
+import { followFormatMenu, formatSource } from "./source-format-events";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./source-editor.css";
@@ -116,7 +117,13 @@ export function SourceEditor({
           }),
           // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
           // Textus's own find bar), and Tab moves the focus as in any field.
-          keymap.of([...standardKeymap, ...historyKeymap]),
+          // Bold and italic write their Markdown, as in the rendered view.
+          keymap.of([
+            { key: "Mod-b", run: (v) => formatSource(v, "bold") },
+            { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+            ...standardKeymap,
+            ...historyKeymap,
+          ]),
           sourceFind,
           sourceHighlighting(),
           sourceEscapes(),
@@ -159,6 +166,7 @@ export function SourceEditor({
         edit(action);
     };
     host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
+    const stopFormat = followFormatMenu(view);
     const scroller = view.scrollDOM;
     const onScrollEvent = () => latest.current.onScroll?.(scroller);
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
@@ -166,6 +174,7 @@ export function SourceEditor({
     const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
       stopElastic();
+      stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);
       unregisterSourceView(host);

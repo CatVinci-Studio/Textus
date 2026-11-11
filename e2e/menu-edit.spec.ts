@@ -63,6 +63,26 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(bar).toHaveCount(0);
 });
 
+test("in source mode the format keys and the Format menu write Markdown", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await docs(page).first().click();
+  await page.keyboard.type("word");
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(".source-view .cm-content");
+  await expect(source).toContainText("word");
+  await source.click();
+  await page.keyboard.press(MAC ? "Meta+a" : "Control+a");
+  await page.keyboard.press(MAC ? "Meta+b" : "Control+b");
+  await expect(source).toHaveText("**word**");
+  await emit(page, "menu-insert-block", "h2");
+  await expect(source).toHaveText("## **word**");
+  await page.keyboard.press(MAC ? "Meta+a" : "Control+a");
+  await emit(page, "menu-toggle-mark", "highlight");
+  await expect(source).toHaveText("==## **word**==");
+});
+
 test("a ⌘ or Ctrl click in the text places the caret, never selects the block", async ({
   page,
 }) => {
