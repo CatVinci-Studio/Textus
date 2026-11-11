@@ -35,7 +35,6 @@ const ALLOWED: Record<string, string> = {
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
   "platform/mobile-viewport.ts": "the keyboard resizes the page",
   "plugins/plugin-platform.ts": "textus.env.platform tells plugins it is iOS",
-  "settings/sections/providers.tsx": "no keyboard raised on its own",
   "settings/settings-pages.tsx": "no keyboard to bind shortcuts on",
   "files/FileTree.tsx": "nothing above Documents or a granted folder",
   "files/TreeNodes.tsx": "a long press for the row's menu",

@@ -1,16 +1,14 @@
-import { useId, useState } from "react";
+import { showQuickPick } from "../../engine/controls/quick-pick";
+import { useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { AiProvider } from "../../prefs/SettingsContext";
 import { useSettings } from "../../prefs/SettingsContext";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
 import { useProviderCatalog } from "../../ai/provider-catalog";
 import { ChevronIcon } from "../../engine/controls/icons";
-import { isIOSApp } from "../../platform/capabilities";
-import { useProviderSearch, useSettingsConnected } from "./provider-connection";
+import { useSettingsConnected } from "./provider-connection";
 import { localizedLabel } from "../../ai/provider-connection";
 import { ProviderAuthPanel } from "./provider-auth";
 import { CustomProviderPanel } from "./custom-provider";
-import { isImeKeydown } from "../../utils/ime";
 
 /// Two compact rows: a searchable provider list, then the active provider's
 /// credentials. The tutorial's connect lesson embeds this same panel.
@@ -25,15 +23,7 @@ export function ProviderListPanel({
 }) {
   const { settings, setSettings } = useSettings();
   const catalog = useProviderCatalog();
-  const [open, setOpen] = useState(false);
-  const popoverId = useId();
   const [authOpen, setAuthOpen] = useState(expandCredentials);
-  const { query, setQuery, filtered } = useProviderSearch(catalog, t);
-  const popoverRef = useCloseOnOutsideClick<HTMLDivElement>(
-    () => setOpen(false),
-    true,
-    open,
-  );
   const { connected, refreshConnected, isConnected } = useSettingsConnected(
     catalog,
     settings.aiProvider,
@@ -54,92 +44,45 @@ export function ProviderListPanel({
           ? t.accountNotConnected
           : t.providerNotConfigured;
 
-  function selectProvider(id: AiProvider) {
-    setSettings({ aiProvider: id });
-    setOpen(false);
+  async function pickProvider() {
+    const picked = await showQuickPick(
+      catalog.map((entry) => {
+        const state = connected[entry.id];
+        return {
+          label: localizedLabel(entry, t),
+          // The provider's id finds it too ("moonshot" for Kimi).
+          description: [
+            entry.id,
+            state?.oauth || state?.apiKey ? t.accountConnectedAs : "",
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          value: entry.id,
+        };
+      }),
+      t.providerSearchPlaceholder,
+    );
+    if (typeof picked !== "string") return;
+    setSettings({ aiProvider: picked as AiProvider });
     setAuthOpen(expandCredentials);
-    setQuery("");
-    popoverRef.current
-      ?.querySelector<HTMLButtonElement>(".combobox-trigger")
-      ?.focus();
   }
 
   return (
     <div className="provider-picker">
-      <div
-        className="combobox"
-        ref={popoverRef}
-        onKeyDown={(event) => {
-          if (
-            open &&
-            event.key === "Escape" &&
-            !isImeKeydown(event) &&
-            event.nativeEvent.keyCode !== 229
-          ) {
-            event.preventDefault();
-            event.stopPropagation();
-            setOpen(false);
-            popoverRef.current
-              ?.querySelector<HTMLButtonElement>(".combobox-trigger")
-              ?.focus();
-          }
-        }}
+      <button
+        type="button"
+        className="combobox-trigger"
+        aria-haspopup="dialog"
+        onClick={() => void pickProvider()}
       >
-        <button
-          type="button"
-          className="combobox-trigger"
-          aria-expanded={open}
-          aria-controls={open ? popoverId : undefined}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="provider-disclosure-label">
-            {t.providerDropdownLabel}
-          </span>{" "}
-          <span className="combobox-trigger-label">
-            {active ? localizedLabel(active, t) : settings.aiProvider}
-          </span>
-          <ChevronIcon className="combobox-caret" />
-        </button>
-        {open && (
-          <div className="combobox-popover floating-surface" id={popoverId}>
-            <input
-              type="text"
-              className="combobox-search"
-              aria-label={t.providerSearchPlaceholder}
-              placeholder={t.providerSearchPlaceholder}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              // On a phone the keyboard would rise over half the list the
-              // moment it opened; the field is there for when it's wanted.
-              autoFocus={!isIOSApp}
-            />
-            <div className="combobox-list">
-              {filtered.length === 0 && (
-                <div className="combobox-empty">{t.noProvidersFound}</div>
-              )}
-              {filtered.map((entry) => {
-                const state = connected[entry.id];
-                const connectedHere = !!(state?.oauth || state?.apiKey);
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    className={`combobox-option${entry.id === settings.aiProvider ? " combobox-option-active" : ""}`}
-                    onClick={() => selectProvider(entry.id)}
-                  >
-                    <span className="combobox-option-label">
-                      {localizedLabel(entry, t)}
-                    </span>
-                    {connectedHere && (
-                      <span className="status-dot" aria-hidden />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
+        <span className="provider-disclosure-label">
+          {t.providerDropdownLabel}
+        </span>{" "}
+        <span className="combobox-trigger-label">
+          {active ? localizedLabel(active, t) : settings.aiProvider}
+        </span>
+        <ChevronIcon className="combobox-caret" />
+      </button>
 
       {active && (
         <>
