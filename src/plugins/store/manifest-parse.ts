@@ -100,7 +100,6 @@ const HOVER_KINDS: readonly HoverContribution[] = [
 const known = <T extends string>(values: string[], kinds: readonly T[]) =>
   values.filter((v): v is T => (kinds as readonly string[]).includes(v));
 
-/** Code blocks Textus draws itself: no plugin takes them over. */
 const BUILT_IN_BLOCKS = [...DIAGRAM_LANGUAGES, "math", "latex", "katex", "tex"];
 
 /** `main`: one file, or several run in order; the host takes no imports. */
