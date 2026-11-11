@@ -1,4 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { ChevronIcon } from "../../engine/controls/icons";
 import { pageComponent } from "../builtin-pages";
 import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf } from "../../i18n/strings";
@@ -9,7 +10,10 @@ import { revealEntry } from "../SettingsSearch";
 import { findEntryElement, type SearchEntry } from "../settings-search";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
+  onSettingsPageShown,
   setSettingsPageShown,
+  settingsListShown,
+  showSettingsList,
 } from "../settings-nav";
 import { AboutPage } from "../pages/AboutPage";
 import type { SettingsPageProps, ShortcutCommand } from "../pages/types";
@@ -50,6 +54,10 @@ export function SettingsTab({
   const shown = settingsPage(id) ?? settingsPages()[0];
   const Page = pageComponent(shown);
   useEffect(() => setSettingsPageShown(shown.id), [shown.id]);
+  const listShown = useSyncExternalStore(
+    onSettingsPageShown,
+    settingsListShown,
+  );
   useReveal(content, jump ?? null);
   const pageProps: SettingsPageProps = {
     t,
@@ -80,6 +88,18 @@ export function SettingsTab({
           (settings-tab.css). */}
       <p className="tx-empty settings-tab-narrow">{t.settingsNeedsRoom}</p>
       <div className="settings-tab-page settings-content">
+        {/* The list of pages is the sidebar's: with it put away, the way
+            back to it. */}
+        {!listShown && (
+          <button
+            type="button"
+            className="text-button settings-back-button"
+            onClick={showSettingsList}
+          >
+            <ChevronIcon className="settings-back-chevron" />
+            {t.settingsTitle}
+          </button>
+        )}
         {shown.id === "about" ? (
           <AboutPage {...pageProps} checkUpdates={page === "updates"} />
         ) : (

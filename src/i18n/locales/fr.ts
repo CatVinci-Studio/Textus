@@ -707,6 +707,7 @@ utiliser une.
   completionNotes: "Notes",
   tocEmpty: "Aucun titre pour l’instant",
   settingsTitle: "Réglages",
+  settingsPageTab: "Réglages : {page}",
   settingsSearchPlaceholder: "Rechercher dans les réglages",
   settingsSearchResults: "Résultats de la recherche",
   settingsSearchNoMatches: "Aucun réglage ne correspond.",

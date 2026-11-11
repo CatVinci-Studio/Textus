@@ -697,6 +697,7 @@ export default {
   completionNotes: "Заметки",
   tocEmpty: "Заголовков пока нет",
   settingsTitle: "Настройки",
+  settingsPageTab: "Настройки: {page}",
   settingsSearchPlaceholder: "Поиск по настройкам",
   settingsSearchResults: "Результаты поиска",
   settingsSearchNoMatches: "Нет подходящих настроек.",

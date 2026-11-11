@@ -619,6 +619,7 @@ export default {
   completionNotes: "筆記",
   tocEmpty: "尚無標題",
   settingsTitle: "設定",
+  settingsPageTab: "設定：{page}",
   settingsSearchPlaceholder: "搜尋設定",
   settingsSearchResults: "搜尋結果",
   settingsSearchNoMatches: "沒有符合的設定。",

@@ -80,6 +80,15 @@ export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
   ).load();
 }
 
+/** A page tab's name from what it shows now (Settings: its page), given
+ *  by the layer that knows the page. */
+type PageTitle = (state: unknown, t: Strings) => string | null;
+const pageTitles = new Map<string, PageTitle>();
+
+export function namePageTabs(view: string, title: PageTitle): void {
+  pageTitles.set(view, title);
+}
+
 // A tab's display name everywhere one is shown.
 export function tabTitle(tab: DocTab, t: Strings): string {
   if (tab.path) return basename(tab.path);
@@ -87,7 +96,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
   // Textus's own pages, named in the window's language.
   if (tab.view?.kind === "page")
     return tab.view.view === "settings"
-      ? t.settingsTitle
+      ? (pageTitles.get("settings")?.(tab.view.state, t) ?? t.settingsTitle)
       : tab.view.view === "create"
         ? t.extensionsTabCreate
         : tab.view.view === "ai"

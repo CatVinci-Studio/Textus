@@ -1,5 +1,5 @@
 import { SettingsIndexing } from "../indexing";
-import { Fragment, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
 import { pageComponent } from "../builtin-pages";
 import {
   ChevronIcon,
@@ -24,6 +24,7 @@ import {
   onSettingsPageShown,
   openSettingsPage,
   settingsPageShown,
+  setSettingsListShown,
 } from "../settings-nav";
 import type { SettingsPageProps } from "../pages/types";
 import "./settings-nav.css";
@@ -39,6 +40,11 @@ export function SettingsNavPanel() {
   const { settings, setSettings, t } = useSettings();
   const marginAvailable = useMarginAvailable();
   const shown = useSyncExternalStore(onSettingsPageShown, settingsPageShown);
+  // The Settings tab offers a way back to this list while it isn't shown.
+  useEffect(() => {
+    setSettingsListShown(true);
+    return () => setSettingsListShown(false);
+  }, []);
   const search = useSettingsSearch(() => false);
   const pages = settingsPages();
   const groupOf = (id: string | null) => pages.find((p) => p.id === id)?.group;

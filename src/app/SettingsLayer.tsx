@@ -15,10 +15,20 @@ import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
 import {
   OPEN_SETTINGS_PAGE_EVENT,
   settingsPageShown,
+  showSettingsList,
   type SettingsPageRequest,
 } from "../settings/settings-nav";
 import { pluginName, pluginRecord } from "../plugins/manager";
 import { showPage, type PageRequest } from "./tabs/page-tabs";
+import { namePageTabs } from "../document/doc-tabs";
+import { settingsPage } from "../settings/settings-pages";
+
+// A Settings tab is named by the page it shows: "Settings: General".
+namePageTabs("settings", (state, t) => {
+  const to = (state as PageRequest | undefined)?.to;
+  const page = to && settingsPage(to === "updates" ? "about" : to);
+  return page ? t.settingsPageTab.replace("{page}", page.label(t)) : null;
+});
 import type { TabState } from "./tabs/useTabState";
 import type { Strings } from "../i18n/strings";
 
@@ -49,12 +59,6 @@ const PluginTab = lazyComponent(
   lazyModule("plugin-tab", () => import("../settings/pages/PluginTab")),
   (m) => m.PluginTab,
 );
-
-/** The sidebar, open on Settings' pages. */
-const showSettingsList = () =>
-  window.dispatchEvent(
-    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "settings" }),
-  );
 
 /** A plugin's name, for its tab. */
 const pluginTitle = (id: string) => {

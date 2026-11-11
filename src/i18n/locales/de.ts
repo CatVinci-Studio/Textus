@@ -688,6 +688,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   completionNotes: "Notizen",
   tocEmpty: "Noch keine Überschriften",
   settingsTitle: "Einstellungen",
+  settingsPageTab: "Einstellungen: {page}",
   settingsSearchPlaceholder: "Einstellungen durchsuchen",
   settingsSearchResults: "Suchergebnisse",
   settingsSearchNoMatches: "Keine Einstellung passt.",

@@ -1,4 +1,5 @@
 import type { SearchEntry } from "./settings-search";
+import { SHOW_SIDEBAR_TAB_EVENT } from "../utils/events";
 
 /**
  * Settings on the desktop: its pages listed in the sidebar, the one picked
@@ -17,6 +18,26 @@ export function setSettingsPageShown(id: string): void {
   if (id === shown) return;
   shown = id;
   for (const listener of listeners) listener();
+}
+
+/** Whether the sidebar shows the list now (its panel mounted). */
+let listShown = false;
+
+export function settingsListShown(): boolean {
+  return listShown;
+}
+
+export function setSettingsListShown(on: boolean): void {
+  if (on === listShown) return;
+  listShown = on;
+  for (const listener of listeners) listener();
+}
+
+/** The sidebar, open on Settings' pages. */
+export function showSettingsList(): void {
+  window.dispatchEvent(
+    new CustomEvent(SHOW_SIDEBAR_TAB_EVENT, { detail: "settings" }),
+  );
 }
 
 export function onSettingsPageShown(listener: () => void): () => void {

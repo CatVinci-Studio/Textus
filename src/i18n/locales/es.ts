@@ -702,6 +702,7 @@ para usar una.
   completionNotes: "Notas",
   tocEmpty: "Aún no hay encabezados",
   settingsTitle: "Ajustes",
+  settingsPageTab: "Ajustes: {page}",
   settingsSearchPlaceholder: "Buscar en Ajustes",
   settingsSearchResults: "Resultados de la búsqueda",
   settingsSearchNoMatches: "Ningún ajuste coincide.",

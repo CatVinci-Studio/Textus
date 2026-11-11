@@ -21,7 +21,7 @@ export function AppearancePage({
 }: SettingsPageProps) {
   return (
     <>
-      <SettingsGroup>
+      <SettingsGroup title={t.navAppearance}>
         <SettingRow label={t.layoutLabel}>
           <Select
             className="settings-select"

@@ -662,6 +662,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   completionNotes: "ノート",
   tocEmpty: "見出しはまだありません",
   settingsTitle: "設定",
+  settingsPageTab: "設定：{page}",
   settingsSearchPlaceholder: "設定を検索",
   settingsSearchResults: "検索結果",
   settingsSearchNoMatches: "一致する設定はありません。",

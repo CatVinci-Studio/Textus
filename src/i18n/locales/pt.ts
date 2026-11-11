@@ -690,6 +690,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   completionNotes: "Notas",
   tocEmpty: "Ainda não há títulos",
   settingsTitle: "Ajustes",
+  settingsPageTab: "Ajustes: {page}",
   settingsSearchPlaceholder: "Buscar nos ajustes",
   settingsSearchResults: "Resultados da busca",
   settingsSearchNoMatches: "Nenhum ajuste corresponde.",

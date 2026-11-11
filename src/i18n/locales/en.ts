@@ -676,6 +676,8 @@ type /name in a conversation to use one.
   completionNotes: "Notes",
   tocEmpty: "No headings yet",
   settingsTitle: "Settings",
+  /** A Settings tab: the page it shows. */
+  settingsPageTab: "Settings: {page}",
   settingsSearchPlaceholder: "Search settings",
   settingsSearchResults: "Search results",
   settingsSearchNoMatches: "No settings match.",
