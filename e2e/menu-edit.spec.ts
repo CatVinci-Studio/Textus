@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
 
 // On a Mac, ⌘Z, ⇧⌘Z and ⌘A reach the app as the native Edit menu's events
 // (menu.rs MAC_EDIT_ITEMS): these send those same events, so the islands
@@ -61,4 +61,20 @@ test("Find and Replace work in source mode, on the source in use", async ({
   await expect(source).toContainText("cow dog cow");
   await page.keyboard.press("Escape");
   await expect(bar).toHaveCount(0);
+});
+
+test("a ⌘ or Ctrl click in the text places the caret, never selects the block", async ({
+  page,
+}) => {
+  await openApp(page);
+  await pasteMarkdown(page, "> **W1:** quoted words here\n\nafter\n");
+  const quoted = docs(page).first().locator("blockquote p");
+  await quoted.click({ modifiers: [MAC ? "Meta" : "Control"] });
+  await page.waitForTimeout(100);
+  await expect(page.locator(".ProseMirror-selectednode")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => !!getSelection()?.anchorNode?.parentElement?.closest("blockquote"),
+    ),
+  ).toBe(true);
 });

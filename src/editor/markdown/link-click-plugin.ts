@@ -102,6 +102,9 @@ export function createLinkClickPlugin(docPath: () => string | null) {
     () =>
       new Plugin({
         props: {
+          // ⌘/Ctrl-click follows a link; anywhere else it is a click, not
+          // ProseMirror's own select-the-whole-block.
+          handleClick: (_view, _pos, event) => isFollowClick(event),
           handleDOMEvents: {
             // The editor's own mousedown would place the caret, or with Ctrl/Cmd held
             // select the whole block, before the click.
