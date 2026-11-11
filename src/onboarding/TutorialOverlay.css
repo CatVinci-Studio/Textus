@@ -313,14 +313,6 @@
   font-weight: 600;
 }
 
-.tutorial-btn.tutorial-btn-primary:disabled {
-  border-color: var(--ui-border);
-  color: var(--ui-muted);
-  background: var(--doc-code-bg);
-  cursor: not-allowed;
-  opacity: 0.62;
-}
-
 .tutorial-link-btn {
   padding: 4px 2px;
   border: 0;
@@ -409,11 +401,6 @@
   font: inherit;
   font-size: var(--text-caption);
   cursor: pointer;
-}
-
-.tutorial-surface button:focus-visible {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: 3px;
 }
 
 /* The Connect lesson embeds Settings' provider rows; framed like a

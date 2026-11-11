@@ -14,11 +14,6 @@
   text-overflow: ellipsis;
 }
 
-.ui-select:disabled {
-  cursor: default;
-  opacity: 0.5;
-}
-
 /* The open list: a menu, like the app's other menus. */
 .ui-select-menu {
   position: fixed;

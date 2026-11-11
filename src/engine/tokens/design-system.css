@@ -773,6 +773,17 @@
   border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
 }
 
+/* Over the pointer cursor above, the one every disabled button has. */
+:is(
+  .ui-select,
+  .settings-select,
+  .inline-chat-mode,
+  .paper-outline-kind
+):disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
 /* Dialogs: the dimming fades in while the card grows out of the middle;
    closing, both go together, a little faster. */
 :is(

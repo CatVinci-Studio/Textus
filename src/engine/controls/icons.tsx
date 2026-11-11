@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   ArrowUp,
-  ArrowUpDown,
+  ArrowDownUp,
   ArrowUpRight,
   BetweenHorizontalEnd,
   BetweenHorizontalStart,
@@ -59,7 +59,7 @@ import {
   Plus,
   Presentation,
   Puzzle,
-  RotateCw,
+  RefreshCw,
   Rows2,
   Search,
   Settings,
@@ -200,8 +200,8 @@ export function StopIcon({ className }: IconProps) {
     />
   );
 }
-export const SortIcon = lucide(ArrowUpDown, 13);
-export const RefreshIcon = lucide(RotateCw, 12);
+export const SortIcon = lucide(ArrowDownUp, 13);
+export const RefreshIcon = lucide(RefreshCw, 12);
 /** The way into the app menu, once the native menu bar is gone. */
 export const HamburgerIcon = lucide(Menu, 12);
 
