@@ -17,7 +17,6 @@ export type TutorialStepId =
   | "welcome"
   | "wysiwyg"
   | "palette"
-  | "plugins"
   | "connect"
   | "write"
   | "continuation"
@@ -96,7 +95,8 @@ const ALL_STEPS: TutorialStep[] = [
     clip: "wysiwyg",
   },
   {
-    // A tip more than a lesson: a phone has no shortcut to try it with.
+    // Finding things: the command palette and the plugin store, a tip more
+    // than a lesson (a phone has no shortcut to try it with).
     id: "palette",
     chapter: "writing",
     layout: "card",
@@ -105,16 +105,6 @@ const ALL_STEPS: TutorialStep[] = [
     tasks: [
       { key: "tutorialPaletteTask", phoneKey: "tutorialPaletteTaskPhone" },
     ],
-    optional: true,
-  },
-  {
-    // A pointer to the store, nothing to do there.
-    id: "plugins",
-    chapter: "writing",
-    layout: "card",
-    titleKey: "tutorialPluginsTitle",
-    bodyKey: "tutorialPluginsBody",
-    tasks: [{ key: "tutorialPluginsTask" }],
     optional: true,
   },
   {

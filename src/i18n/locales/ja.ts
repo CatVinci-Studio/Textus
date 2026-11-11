@@ -1010,6 +1010,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "Pele は描画が速い一方、レイアウトは GitHub や Mermaid と異なり、ラベル内の HTML など一部の機能に対応していません。Pele で描けない図は Mermaid が描きます。",
   codeLineNumbersLabel: "コードブロックに行番号を表示",
   firstLineIndentLabel: "段落の先頭を字下げ",
+  emptyLineHintLabel: "空の行のヒント",
+  emptyLineHint: "/ を入力して挿入",
   colorSwatchesLabel: "カラーコードの前の色見本",
   colorSwatchesOff: "オフ",
   colorSwatchesCode: "コード内のみ",
@@ -1329,45 +1331,43 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tutorialWatchNote: "あとで{path}で AI を接続すると、自分で試せます。",
   tutorialWelcomeTitle: `${APP_NAME}へようこそ`,
   tutorialWelcomeBody:
-    "『吾輩は猫である』の読書ノートで、ひと通りご案内します。",
-  tutorialWysiwygTitle: "見たまま、書ける",
+    "Markdown を書く場所です；ファイルはあなたのコンピュータに残り、必要なときに AI が手伝います；2 分間、書きながら覚えましょう。",
+  tutorialWysiwygTitle: "書きながら整形",
   tutorialWysiwygBody:
-    "Markdown は書いたそばから整い、リストは Enter を 2 回押すと終わります。",
+    "灰色のヒントのところに入力すると、Markdown がすぐに書式になります；リストは Return を 2 回で終わります。",
   tutorialWysiwygHeading: "見出し：`# {title}` と入力して Enter",
   tutorialWysiwygList: "リスト：`- 吾輩`、Enter、`苦沙弥`",
   tutorialWysiwygNumbered: "番号付きリスト：`1. 第一章`",
   tutorialWysiwygTaskItem: "タスク：`- [ ] 十一まで読む`",
-  tutorialPaletteTitle: "コマンドパレット",
-  tutorialPaletteBody: "メニューのすべてのコマンドを、数文字の入力で探せます。",
-  tutorialPaletteTask:
-    "{shortcut} を押し、数文字入力して Enter でコマンドを実行",
-  tutorialPaletteTaskPhone: "パソコンでは Ctrl+Shift+P（Mac は ⌘⇧P）で開きます",
-  tutorialPluginsTitle: "プラグイン",
-  tutorialPluginsBody:
-    "マインドマップ、Vim キー、スライド、文献の引用など、必要なものだけをひとつのストアから入れられます。",
-  tutorialPluginsTask:
-    "左の列のパズルアイコンを開いてプラグインを見てみましょう",
-  tutorialConnectTitle: "AI を接続する",
-  tutorialConnectBody: "接続すると、この先の AI 機能を実際に試せます。",
+  tutorialPaletteTitle: "機能を探す",
+  tutorialPaletteBody:
+    "すべてのコマンドは {shortcut} で検索できます；さらに多くの機能は左のパズルのピースにあるプラグインストアから、必要なものだけ入れられます。",
+  tutorialPaletteTask: "{shortcut} を押し、「書き出し」と入力して Return",
+  tutorialPaletteTaskPhone:
+    "スマートフォンでは、プラグインストアは設定の「拡張機能」にあります",
+  tutorialConnectTitle: "AI をつなぐ",
+  tutorialConnectBody:
+    "次の 2 ステップでは AI を使います；アカウントでサインイン、API キーを入力、あとで設定のどれでも；設定 › Textus AI でいつでも変えられます。",
   tutorialConnectTask:
     "サインインするか API キーを入力。あとにしてもかまいません。",
   tutorialConnectSkip: "今はスキップ",
   tutorialConnected: "接続しました。",
-  tutorialWriteTitle: "AI で執筆",
+  tutorialWriteTitle: "AI に書いてもらう",
   tutorialWriteBody:
-    "汎用モードの AI は文章を足したり書き直したりし、適用するまで緑色で表示されます。",
+    "AI の変更はまず緑色で表示され、あなたが採用して初めて反映されます。",
   tutorialWriteOpen: "右上の羽ペンのアイコン（{shortcut}）で AIパネルを開く",
   tutorialWriteOpenPhone: "上部の羽ペンのアイコンをタップして AIパネルを開く",
   tutorialWriteSend: "`ノートの続きを一段落書いて` と送り、「適用」をクリック",
   tutorialContinuationTitle: "文章の補完",
-  tutorialContinuationBody: "手を止めると、続きを書いてくれます。",
+  tutorialContinuationBody:
+    "書く手を少し止めると灰色の続きが現れます；Tab で受け取ります。",
   tutorialContinuationTask:
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて Tab を押す",
   tutorialContinuationTaskPhone:
     "末尾に `猫の目から見ると、人間は` と入力し、手を止めて灰色の文字をタップ",
-  tutorialDoneTitle: "完了",
+  tutorialDoneTitle: "準備完了",
   tutorialDoneBody:
-    "さあ、あなた自身の文章を書きましょう、表・数式・テーマ・レビューなどはオンラインチュートリアルにあります。",
+    "新しい文書を作って書き始めましょう；Markdown と AI の詳しい説明は「ヘルプ」メニューの 2 つのガイドにあります；チュートリアルもそこからもう一度見られます。",
   tutorialDoneMemory: `${AI_NAME} はあなたの求めることや文体を少しずつ覚えていき、AIパネルの「記憶」で確かめられます。`,
   closePromptNamed: "「{name}」には保存されていない変更があります。",
   closePromptMessage: "この文書には保存されていない変更があります。",

@@ -1088,6 +1088,8 @@ para usar una.
     "Pele dibuja más rápido, pero distribuye los diagramas de otra forma que GitHub y Mermaid y no admite algunas funciones, como HTML en las etiquetas; Mermaid dibuja lo que Pele no puede.",
   codeLineNumbersLabel: "Números de línea en los bloques de código",
   firstLineIndentLabel: "Sangría de primera línea",
+  emptyLineHintLabel: "Pista en una línea vacía",
+  emptyLineHint: "Escribe / para insertar",
   colorSwatchesLabel: "Muestras antes de los códigos de color",
   colorSwatchesOff: "Desactivadas",
   colorSwatchesCode: "Solo en el código",
@@ -1415,33 +1417,29 @@ para usar una.
   tutorialWatchNote: "Conecta una IA más tarde en {path} para probarlo tú.",
   tutorialWelcomeTitle: `Te damos la bienvenida a ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Te lo enseñamos con tus notas de lectura sobre el Quijote.",
-  tutorialWysiwygTitle: "Lo que ves es lo que obtienes",
+    "Un lugar para escribir Markdown: tus archivos se quedan en tu ordenador y una IA ayuda cuando se lo pides; dos minutos, aprendiendo mientras escribes.",
+  tutorialWysiwygTitle: "Formato mientras escribes",
   tutorialWysiwygBody:
-    "El Markdown toma forma mientras escribes; pulsa Intro dos veces para cerrar una lista.",
+    "Escribe donde están las pistas grises: el Markdown se convierte en formato al momento; pulsa Intro dos veces para terminar una lista.",
   tutorialWysiwygHeading: "Un título: `# {title}` e Intro",
   tutorialWysiwygList: "Una lista: `- don Quijote`, Intro, `Sancho Panza`",
   tutorialWysiwygNumbered: "Una lista numerada: `1. Capítulo primero`",
   tutorialWysiwygTaskItem: "Una tarea: `- [ ] Terminar la primera parte`",
-  tutorialPaletteTitle: "Paleta de comandos",
-  tutorialPaletteBody: "Todos los comandos de los menús, a unas pocas letras.",
-  tutorialPaletteTask:
-    "Pulsa {shortcut}, escribe unas letras y pulsa Intro para ejecutar un comando",
+  tutorialPaletteTitle: "Encontrar funciones",
+  tutorialPaletteBody:
+    "Cualquier comando está a una búsqueda con {shortcut}; hay más funciones en la tienda de plugins, bajo la pieza de puzle, para instalar cuando las necesites.",
+  tutorialPaletteTask: "Pulsa {shortcut}, escribe «exportar» y pulsa Intro",
   tutorialPaletteTaskPhone:
-    "En el ordenador se abre con Ctrl+Mayús+P (⌘⇧P en Mac)",
-  tutorialPluginsTitle: "Complementos",
-  tutorialPluginsBody:
-    "Mapas mentales, teclas de Vim, diapositivas, citas y más: añade solo lo que necesites, desde una sola tienda.",
-  tutorialPluginsTask:
-    "Haz clic en el icono de puzle de la columna izquierda para abrir Complementos",
-  tutorialConnectTitle: "Conecta tu IA",
+    "En el móvil, la tienda de plugins está en los Ajustes, en «Extensiones»",
+  tutorialConnectTitle: "Conectar una IA",
   tutorialConnectBody:
-    "Con una IA conectada, podrás probar de verdad lo que sigue.",
+    "Los dos pasos siguientes usan una IA; inicia sesión con una cuenta, introduce una clave de API o hazlo más tarde: en Ajustes › Textus AI, cuando quieras.",
   tutorialConnectTask: "Inicia sesión o pega una clave, o sáltalo por ahora.",
   tutorialConnectSkip: "Omitir por ahora",
   tutorialConnected: "Conectado.",
-  tutorialWriteTitle: "Escribir con IA",
-  tutorialWriteBody: `En el modo General, ${AI_NAME} añade y cambia texto, en verde hasta que lo aceptes.`,
+  tutorialWriteTitle: "Deja que la IA escriba",
+  tutorialWriteBody:
+    "Los cambios de la IA aparecen primero en verde; solo cuentan cuando los aceptas.",
   tutorialWriteOpen:
     "Abre el panel de IA: el icono de la pluma, arriba a la derecha ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1449,14 +1447,15 @@ para usar una.
   tutorialWriteSend:
     "Envía `Continúa mis notas con un párrafo más` y haz clic en Aceptar",
   tutorialContinuationTitle: "Autocompletado",
-  tutorialContinuationBody: "Haz una pausa y sigue escribiendo por ti.",
+  tutorialContinuationBody:
+    "Haz una pausa al escribir: aparece una continuación en gris; pulsa Tab para quedártela.",
   tutorialContinuationTask:
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y pulsa Tab",
   tutorialContinuationTaskPhone:
     "Al final, escribe `Lo que de verdad enloquece al hidalgo es`, haz una pausa y toca el texto gris",
-  tutorialDoneTitle: "¡Listo!",
+  tutorialDoneTitle: "Todo listo",
   tutorialDoneBody:
-    "Ahora empieza a escribir lo tuyo; tablas, fórmulas, temas, revisión y lo demás están en los Tutoriales en línea.",
+    "Crea un documento nuevo; las dos guías del menú Ayuda explican Markdown y la IA a fondo; el recorrido también está ahí, para repetirlo.",
   tutorialDoneMemory: `${AI_NAME} recuerda con el tiempo lo que le pides y tu estilo; míralo en Memoria, en el panel de IA.`,
   closePromptNamed: "«{name}» tiene cambios sin guardar.",
   closePromptMessage: "Este documento tiene cambios sin guardar.",

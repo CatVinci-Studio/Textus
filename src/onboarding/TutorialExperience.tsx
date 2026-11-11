@@ -1,5 +1,6 @@
 import { fill } from "../i18n/fill";
-import { useCallback, type ReactNode } from "react";
+import { setTourLineHint } from "../editor/line-hint";
+import { useCallback, useEffect, type ReactNode } from "react";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
 import { isMacPlatform } from "../platform/os";
@@ -67,6 +68,20 @@ export function TutorialExperience({
     done:
       !watching && step.layout === "card" && isTaskDone(step, task.part, phase),
   }));
+
+  // The writing lesson's next thing to type, gray on the practice tab's
+  // empty line, where it is to be typed.
+  const nextHint =
+    step.id === "wysiwyg" && !watching
+      ? (tasks?.find((task) => !task.done)?.text.replace(/`/g, "") ?? null)
+      : null;
+  const practiceTab = tutorial.tabId;
+  useEffect(() => {
+    setTourLineHint(
+      nextHint && practiceTab ? { tabId: practiceTab, text: nextHint } : null,
+    );
+  }, [nextHint, practiceTab]);
+  useEffect(() => () => setTourLineHint(null), []);
 
   const complete = isLessonComplete(step, phase);
   const watch = step.clip
@@ -148,7 +163,9 @@ export function TutorialExperience({
       totalSteps={tutorial.totalSteps}
       chapters={chapters}
       title={t[step.titleKey]}
-      body={t[step.bodyKey]}
+      body={fill(t[step.bodyKey], {
+        shortcut: lessonShortcut(step.id, shortcuts),
+      })}
       tasks={tasks}
       status={status}
       complete={step.id !== "connect" && !watching && complete}

@@ -69,7 +69,6 @@ interface TutorialOverlayProps {
 const STEP_GLYPHS: Record<Exclude<TutorialStepId, "welcome">, string> = {
   wysiwyg: "M↓",
   palette: "❯",
-  plugins: "⊞",
   connect: "⇄",
   write: "✦",
   continuation: "↹",

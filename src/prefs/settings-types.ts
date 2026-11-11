@@ -160,6 +160,8 @@ export interface Settings {
   contentWidth: ContentWidth;
   /** Each body paragraph's first line set in by two characters. */
   firstLineIndent: boolean;
+  /** A gray "type / to insert" on the empty line the caret is on. */
+  emptyLineHint: boolean;
   /** How an image on a line of its own sits. Display only: the file is
    *  not changed. */
   imageAlign: ImageAlign;
@@ -320,6 +322,7 @@ export const DEFAULT_SETTINGS: Settings = {
   zenMode: false,
   contentWidth: "auto",
   firstLineIndent: false,
+  emptyLineHint: false,
   imageAlign: "center",
   menuBarShown: false,
   activityRail: true,

@@ -1095,6 +1095,8 @@ utiliser une.
     "Pele dessine plus vite, mais dispose les diagrammes autrement que GitHub et Mermaid et ignore quelques fonctions, comme le HTML dans les libellés ; Mermaid dessine ce que Pele ne peut pas.",
   codeLineNumbersLabel: "Numéros de ligne dans les blocs de code",
   firstLineIndentLabel: "Retrait de première ligne",
+  emptyLineHintLabel: "Indication sur une ligne vide",
+  emptyLineHint: "Tapez / pour insérer",
   colorSwatchesLabel: "Pastilles avant les codes couleur",
   colorSwatchesOff: "Désactivées",
   colorSwatchesCode: "Dans le code seulement",
@@ -1423,36 +1425,31 @@ utiliser une.
     "Connectez une IA plus tard dans {path} pour l'essayer vous-même.",
   tutorialWelcomeTitle: `Bienvenue dans ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Vos notes de lecture sur Les Misérables vont nous servir de visite guidée.",
-  tutorialWysiwygTitle: "Tel écran, tel écrit",
+    "Un endroit pour écrire en Markdown : vos fichiers restent sur votre ordinateur, et une IA aide quand vous le demandez; deux minutes, en écrivant.",
+  tutorialWysiwygTitle: "La mise en forme en tapant",
   tutorialWysiwygBody:
-    "Le Markdown se met en forme pendant que vous écrivez ; appuyez deux fois sur Entrée pour finir une liste.",
+    "Tapez là où sont les indications grises : le Markdown devient aussitôt mise en forme; deux fois Entrée termine une liste.",
   tutorialWysiwygHeading: "Un titre : `# {title}`, puis Entrée",
   tutorialWysiwygList:
     "Une liste : `- Monseigneur Bienvenu`, Entrée, `Mademoiselle Baptistine`",
   tutorialWysiwygNumbered: "Une liste numérotée : `1. Livre premier`",
   tutorialWysiwygTaskItem: "Une tâche : `- [ ] Finir le tome I`",
-  tutorialPaletteTitle: "Palette de commandes",
+  tutorialPaletteTitle: "Trouver une fonction",
   tutorialPaletteBody:
-    "Toutes les commandes des menus, trouvées en tapant quelques lettres.",
-  tutorialPaletteTask:
-    "Appuyez sur {shortcut}, tapez quelques lettres, puis Entrée pour lancer une commande",
+    "Chaque commande se trouve en tapant {shortcut} ; d’autres fonctions sont dans le magasin de plugins, sous la pièce de puzzle, à installer selon vos besoins.",
+  tutorialPaletteTask: "Appuyez sur {shortcut}, tapez « export », puis Entrée",
   tutorialPaletteTaskPhone:
-    "Sur ordinateur, elle s’ouvre avec Ctrl+Maj+P (⌘⇧P sur Mac)",
-  tutorialPluginsTitle: "Modules",
-  tutorialPluginsBody:
-    "Cartes mentales, touches Vim, diapositives, citations et plus : n'ajoutez que ce dont vous avez besoin, depuis une seule boutique.",
-  tutorialPluginsTask:
-    "Cliquez sur l'icône puzzle à gauche pour ouvrir Modules",
-  tutorialConnectTitle: "Connectez votre IA",
+    "Sur un téléphone, le magasin de plugins est dans les Réglages, sous « Extensions »",
+  tutorialConnectTitle: "Connecter une IA",
   tutorialConnectBody:
-    "Une fois connectée, vous pourrez vraiment essayer la suite.",
+    "Les deux étapes suivantes utilisent une IA; connectez-vous avec un compte, saisissez une clé d’API, ou plus tard - à tout moment dans Réglages › Textus AI.",
   tutorialConnectTask:
     "Connectez-vous ou collez une clé, ou passez pour l'instant.",
   tutorialConnectSkip: "Passer pour l'instant",
   tutorialConnected: "Connecté.",
-  tutorialWriteTitle: "Écrire avec l'IA",
-  tutorialWriteBody: `En mode Général, ${AI_NAME} ajoute et modifie du texte, en vert tant que vous ne l'avez pas accepté.`,
+  tutorialWriteTitle: "Laisser l’IA écrire",
+  tutorialWriteBody:
+    "Les modifications de l’IA s’affichent d’abord en vert ; elles ne comptent qu’une fois acceptées.",
   tutorialWriteOpen:
     "Ouvrez le panneau IA : l'icône de la plume, en haut à droite ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1460,14 +1457,15 @@ utiliser une.
   tutorialWriteSend:
     "Envoyez `Ajoute un paragraphe à mes notes`, puis cliquez sur Accepter",
   tutorialContinuationTitle: "Complétion",
-  tutorialContinuationBody: "Marquez une pause, il écrit la suite.",
+  tutorialContinuationBody:
+    "Marquez une pause en écrivant : une suite grise apparaît ; Tab l’accepte.",
   tutorialContinuationTask:
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis appuyez sur Tab",
   tutorialContinuationTaskPhone:
     "À la fin, tapez `Ce que Hugo veut montrer, c'est`, faites une pause, puis touchez le texte gris",
-  tutorialDoneTitle: "Terminé",
+  tutorialDoneTitle: "C’est prêt",
   tutorialDoneBody:
-    "À vous d'écrire, maintenant ; tableaux, formules, thèmes, relecture et le reste sont dans les Tutoriels en ligne.",
+    "Créez un nouveau document; les deux guides du menu Aide expliquent Markdown et l’IA en détail ; la visite s’y trouve aussi, pour la refaire.",
   tutorialDoneMemory: `${AI_NAME} retient peu à peu vos exigences et votre style ; voyez Mémoire, dans le panneau IA.`,
   closePromptNamed: "« {name} » a des modifications non enregistrées.",
   closePromptMessage:

@@ -1059,6 +1059,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Pele zeichnet schneller, ordnet Diagramme aber anders an als GitHub und Mermaid und kennt einige Funktionen nicht, etwa HTML in Beschriftungen; was Pele nicht zeichnen kann, zeichnet Mermaid.",
   codeLineNumbersLabel: "Zeilennummern in Codeblöcken",
   firstLineIndentLabel: "Erste Zeile einrücken",
+  emptyLineHintLabel: "Hinweis in leeren Zeilen",
+  emptyLineHint: "/ tippen, um einzufügen",
   colorSwatchesLabel: "Farbfelder vor Farbcodes",
   colorSwatchesOff: "Aus",
   colorSwatchesCode: "Nur in Code",
@@ -1386,35 +1388,30 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Verbinde später unter {path} eine KI, um es selbst auszuprobieren.",
   tutorialWelcomeTitle: `Willkommen bei ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Wir zeigen dir alles an deinen Lesenotizen zur Verwandlung.",
-  tutorialWysiwygTitle: "Was du siehst, bekommst du",
+    "Ein Ort, um Markdown zu schreiben: Deine Dateien bleiben auf deinem Computer, und eine KI hilft, wenn du fragst; zwei Minuten, beim Schreiben gelernt.",
+  tutorialWysiwygTitle: "Formatieren beim Tippen",
   tutorialWysiwygBody:
-    "Markdown wird beim Schreiben formatiert; zweimal Enter beendet eine Liste.",
+    "Tippe dort, wo die grauen Hinweise stehen: Markdown wird sofort zur Formatierung; zweimal Return beendet eine Liste.",
   tutorialWysiwygHeading: "Eine Überschrift: `# {title}`, dann Enter",
   tutorialWysiwygList: "Eine Liste: `- Gregor Samsa`, Enter, `Grete`",
   tutorialWysiwygNumbered: "Eine nummerierte Liste: `1. Kapitel I`",
   tutorialWysiwygTaskItem: "Eine Aufgabe: `- [ ] Kapitel III lesen`",
-  tutorialPaletteTitle: "Befehlspalette",
+  tutorialPaletteTitle: "Dinge finden",
   tutorialPaletteBody:
-    "Jeder Befehl aus den Menüs, gefunden mit ein paar Buchstaben.",
-  tutorialPaletteTask:
-    "Drücke {shortcut}, tippe ein paar Buchstaben und führe mit Enter einen Befehl aus",
+    "Jeder Befehl ist mit {shortcut} eine Suche entfernt; mehr Funktionen gibt es im Plugin-Store unter dem Puzzleteil, installiert, wenn du sie brauchst.",
+  tutorialPaletteTask: "Drücke {shortcut}, tippe „Export“, drücke Return",
   tutorialPaletteTaskPhone:
-    "Am Computer öffnet sie sich mit Strg+Umschalt+P (⌘⇧P auf dem Mac)",
-  tutorialPluginsTitle: "Plugins",
-  tutorialPluginsBody:
-    "Mindmaps, Vim-Tasten, Folien, Zitate und mehr – füg nur hinzu, was du brauchst, aus einem Store.",
-  tutorialPluginsTask:
-    "Klicke links auf das Puzzle-Symbol, um Plugins zu öffnen",
-  tutorialConnectTitle: "KI verbinden",
+    "Auf dem Telefon ist der Plugin-Store in den Einstellungen unter „Erweiterungen“",
+  tutorialConnectTitle: "Eine KI verbinden",
   tutorialConnectBody:
-    "Ist sie verbunden, kannst du das Folgende wirklich ausprobieren.",
+    "Die nächsten zwei Schritte nutzen eine KI; mit einem Konto anmelden, einen API-Schlüssel eingeben oder später - jederzeit unter Einstellungen › Textus AI.",
   tutorialConnectTask:
     "Melde dich an oder füge einen Schlüssel ein - oder überspring es vorerst.",
   tutorialConnectSkip: "Später",
   tutorialConnected: "Verbunden.",
-  tutorialWriteTitle: "Mit KI schreiben",
-  tutorialWriteBody: `Im Modus Allgemein fügt ${AI_NAME} Text hinzu und ändert ihn, grün, bis du ihn annimmst.`,
+  tutorialWriteTitle: "Die KI schreiben lassen",
+  tutorialWriteBody:
+    "Die Änderungen der KI erscheinen zuerst grün; sie zählen erst, wenn du sie annimmst.",
   tutorialWriteOpen:
     "Öffne den KI-Bereich: das Federsymbol oben rechts ({shortcut})",
   tutorialWriteOpenPhone:
@@ -1423,14 +1420,14 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Sende `Schreib meine Notizen um einen Absatz weiter` und klick auf Annehmen",
   tutorialContinuationTitle: "Vervollständigung",
   tutorialContinuationBody:
-    "Halte kurz inne, und sie schreibt für dich weiter.",
+    "Halte beim Schreiben kurz inne: Eine graue Fortsetzung erscheint; Tab übernimmt sie.",
   tutorialContinuationTask:
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und drück Tab",
   tutorialContinuationTaskPhone:
     "Tippe am Ende `Was Gregor wirklich quält, ist`, halte inne und tippe auf den grauen Text",
-  tutorialDoneTitle: "Fertig",
+  tutorialDoneTitle: "Alles bereit",
   tutorialDoneBody:
-    "Jetzt schreib dein Eigenes; Tabellen, Formeln, Themes, Überarbeiten und der Rest sind in den Online-Tutorials.",
+    "Leg ein neues Dokument an; die zwei Anleitungen im Menü Hilfe erklären Markdown und die KI ausführlich; dort ist auch die Tour, um sie noch einmal zu machen.",
   tutorialDoneMemory: `${AI_NAME} merkt sich mit der Zeit deine Wünsche und deinen Stil; sieh im KI-Bereich unter Gedächtnis nach.`,
   closePromptNamed: "„{name}“ hat nicht gespeicherte Änderungen.",
   closePromptMessage: "Dieses Dokument hat nicht gespeicherte Änderungen.",

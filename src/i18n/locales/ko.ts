@@ -997,6 +997,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "Pele는 더 빠르게 그리지만 배치가 GitHub·Mermaid와 다르고, 레이블 속 HTML 등 일부 기능은 지원하지 않습니다. Pele가 그리지 못하는 다이어그램은 Mermaid가 그립니다.",
   codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
   firstLineIndentLabel: "첫 줄 들여쓰기",
+  emptyLineHintLabel: "빈 줄 안내",
+  emptyLineHint: "/를 입력해 삽입",
   colorSwatchesLabel: "색상 코드 앞 색상 견본",
   colorSwatchesOff: "끄기",
   colorSwatchesCode: "코드에서만",
@@ -1315,44 +1317,44 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tutorialWatch: "애니메이션 보기",
   tutorialWatchNote: "나중에 {path}에서 AI를 연결하면 직접 해 볼 수 있습니다.",
   tutorialWelcomeTitle: `${APP_NAME}에 오신 것을 환영합니다`,
-  tutorialWelcomeBody: "「메밀꽃 필 무렵」 독서 노트로 둘러보겠습니다.",
-  tutorialWysiwygTitle: "보이는 그대로",
+  tutorialWelcomeBody:
+    "Markdown을 쓰는 곳으로, 파일은 내 컴퓨터에 남고 필요할 때 AI가 도우니 2분 동안 쓰면서 익혀 보세요.",
+  tutorialWysiwygTitle: "쓰면서 서식 적용",
   tutorialWysiwygBody:
-    "Markdown이 쓰는 즉시 서식으로 바뀌고, 목록은 Enter를 두 번 누르면 끝납니다.",
+    "회색 안내가 있는 곳에 입력하면 Markdown이 바로 서식이 되고, 목록은 Return을 두 번 누르면 끝납니다.",
   tutorialWysiwygHeading: "제목: `# {title}` 입력 후 Enter",
   tutorialWysiwygList: "목록: `- 허 생원`, Enter, `동이`",
   tutorialWysiwygNumbered: "번호 목록: `1. 봉평 장터`",
   tutorialWysiwygTaskItem: "할 일: `- [ ] 끝까지 읽기`",
-  tutorialPaletteTitle: "명령 팔레트",
-  tutorialPaletteBody: "메뉴의 모든 명령을 몇 글자만 입력해 찾을 수 있습니다.",
-  tutorialPaletteTask:
-    "{shortcut}을 누르고 몇 글자 입력한 뒤 Enter로 명령 실행",
-  tutorialPaletteTaskPhone: "컴퓨터에서는 Ctrl+Shift+P(Mac은 ⌘⇧P)로 엽니다",
-  tutorialPluginsTitle: "플러그인",
-  tutorialPluginsBody:
-    "마인드맵, Vim 키, 슬라이드, 문헌 인용 등 필요한 것만 하나의 스토어에서 설치하세요.",
-  tutorialPluginsTask: "왼쪽 열의 퍼즐 아이콘을 눌러 플러그인을 살펴보세요",
-  tutorialConnectTitle: "AI 연결하기",
-  tutorialConnectBody: "연결하면 이어지는 AI 기능을 직접 해 볼 수 있습니다.",
+  tutorialPaletteTitle: "기능 찾기",
+  tutorialPaletteBody:
+    "모든 명령은 {shortcut}로 검색하고, 더 많은 기능은 왼쪽 퍼즐 조각의 플러그인 스토어에서 필요한 것만 설치하세요.",
+  tutorialPaletteTask: '{shortcut}을 누르고 "내보내기"를 입력한 뒤 Return',
+  tutorialPaletteTaskPhone:
+    "휴대폰에서는 플러그인 스토어가 설정의 '확장'에 있습니다",
+  tutorialConnectTitle: "AI 연결",
+  tutorialConnectBody:
+    "다음 두 단계에서 AI를 쓰니 계정으로 로그인하거나 API 키를 입력하거나 나중에 하세요(설정 › Textus AI에서 언제든 바꿀 수 있음).",
   tutorialConnectTask:
     "로그인하거나 키를 입력하세요. 지금은 건너뛰어도 됩니다.",
   tutorialConnectSkip: "나중에 하기",
   tutorialConnected: "연결되었습니다.",
-  tutorialWriteTitle: "AI 쓰기",
+  tutorialWriteTitle: "AI에게 쓰게 하기",
   tutorialWriteBody:
-    "일반 모드의 AI는 글을 더하고 고치며, 수락하기 전까지 초록색으로 보입니다.",
+    "AI의 변경은 먼저 초록색으로 표시되고, 수락해야 반영됩니다.",
   tutorialWriteOpen: "오른쪽 위 깃펜 아이콘({shortcut})으로 AI 패널 열기",
   tutorialWriteOpenPhone: "위쪽 깃펜 아이콘을 탭해 AI 패널 열기",
   tutorialWriteSend: "`내 노트를 한 문단 더 이어 써 줘`를 보내고 ‘수락’ 클릭",
   tutorialContinuationTitle: "이어 쓰기",
-  tutorialContinuationBody: "잠시 멈추면 이어서 써 줍니다.",
+  tutorialContinuationBody:
+    "쓰다가 잠시 멈추면 회색 이어 쓰기가 나타납니다; tab으로 받으세요.",
   tutorialContinuationTask:
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 Tab",
   tutorialContinuationTaskPhone:
     "끝에 `달밤의 메밀밭은`을 입력하고 잠시 멈춘 뒤 회색 글자를 탭",
-  tutorialDoneTitle: "완료",
+  tutorialDoneTitle: "준비 끝",
   tutorialDoneBody:
-    "이제 당신의 글을 써 보세요, 표·수식·테마·검토 같은 나머지는 온라인 튜토리얼에 있습니다.",
+    "새 문서를 만들어 쓰기 시작하세요(Markdown과 AI의 자세한 설명과 튜토리얼은 '도움말' 메뉴에 있습니다).",
   tutorialDoneMemory: `${AI_NAME}는 당신의 요청과 문체를 차츰 기억하며, AI 패널의 ‘기억’에서 확인할 수 있습니다.`,
   closePromptNamed: "“{name}”에 저장하지 않은 변경 사항이 있습니다.",
   closePromptMessage: "이 문서에 저장하지 않은 변경 사항이 있습니다.",

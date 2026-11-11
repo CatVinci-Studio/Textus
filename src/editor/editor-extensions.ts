@@ -453,6 +453,10 @@ export function withEditorCore(
       .use(
         createPlaceholderPlugin(
           () => resolveStrings(settings.current.language).emptyDocPlaceholder,
+          () =>
+            settings.current.emptyLineHint
+              ? resolveStrings(settings.current.language).emptyLineHint
+              : null,
         ),
       )
   );

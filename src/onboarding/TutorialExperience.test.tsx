@@ -209,9 +209,7 @@ describe("the lessons' copy", () => {
     resumeAt("palette");
     render(<Harness />);
     expect(
-      screen.getByText(
-        "Press Ctrl+Shift+P, type a few letters, then Enter to run a command",
-      ),
+      screen.getByText('Press Ctrl+Shift+P, type "export", press Return'),
     ).toBeVisible();
   });
 
@@ -237,7 +235,7 @@ describe("the lessons' copy", () => {
   });
 
   it("never locks the optional tips", () => {
-    resumeAt("plugins");
+    resumeAt("palette");
     render(<Harness />);
     expect(screen.getByRole("button", { name: t.tutorialNext })).toBeEnabled();
     expect(

@@ -21,6 +21,7 @@ export function useSettingsRedraw(run: EditorRunner, settings: Settings) {
     settings.diagramEngine,
     settings.enableMath,
     settings.enableMermaid,
+    settings.emptyLineHint,
     run,
   ]);
 }

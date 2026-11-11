@@ -1091,6 +1091,8 @@ export default {
     "Pele рисует быстрее, но располагает элементы иначе, чем GitHub и Mermaid, и не поддерживает некоторые возможности, например HTML в подписях; то, что Pele нарисовать не может, рисует Mermaid.",
   codeLineNumbersLabel: "Номера строк в блоках кода",
   firstLineIndentLabel: "Отступ первой строки",
+  emptyLineHintLabel: "Подсказка в пустой строке",
+  emptyLineHint: "Введите /, чтобы вставить",
   colorSwatchesLabel: "Образцы перед кодами цвета",
   colorSwatchesOff: "Выкл.",
   colorSwatchesCode: "Только в коде",
@@ -1416,47 +1418,44 @@ export default {
     "Подключите ИИ позже в разделе {path}, чтобы попробовать самим.",
   tutorialWelcomeTitle: `Добро пожаловать в ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Покажем всё на примере ваших заметок об «Анне Карениной».",
-  tutorialWysiwygTitle: "Что видишь, то и получаешь",
+    "Место, где пишут Markdown: файлы остаются на вашем компьютере, а ИИ помогает, когда вы попросите; две минуты — учимся, пока пишем.",
+  tutorialWysiwygTitle: "Форматирование на ходу",
   tutorialWysiwygBody:
-    "Markdown оформляется прямо по ходу письма; дважды нажмите Enter, чтобы закончить список.",
+    "Печатайте там, где серые подсказки: Markdown сразу превращается в оформление; дважды Return завершает список.",
   tutorialWysiwygHeading: "Заголовок: `# {title}`, затем Enter",
   tutorialWysiwygList: "Список: `- Облонский`, Enter, `Долли`",
   tutorialWysiwygNumbered: "Нумерованный список: `1. Часть первая`",
   tutorialWysiwygTaskItem: "Задача: `- [ ] Дочитать первую часть`",
-  tutorialPaletteTitle: "Палитра команд",
-  tutorialPaletteBody: "Любая команда из меню — по нескольким буквам.",
-  tutorialPaletteTask:
-    "Нажмите {shortcut}, введите несколько букв и Enter, чтобы выполнить команду",
+  tutorialPaletteTitle: "Где что искать",
+  tutorialPaletteBody:
+    "Любая команда находится поиском по {shortcut}; больше возможностей — в магазине плагинов под значком пазла, ставьте то, что нужно.",
+  tutorialPaletteTask: "Нажмите {shortcut}, введите «экспорт», нажмите Return",
   tutorialPaletteTaskPhone:
-    "На компьютере она открывается по Ctrl+Shift+P (⌘⇧P на Mac)",
-  tutorialPluginsTitle: "Плагины",
-  tutorialPluginsBody:
-    "Интеллект-карты, клавиши Vim, слайды, цитаты и многое другое — ставьте только нужное, из одного магазина.",
-  tutorialPluginsTask:
-    "Нажмите значок пазла в левой колонке, чтобы открыть Плагины",
-  tutorialConnectTitle: "Подключите ИИ",
+    "На телефоне магазин плагинов — в настройках, в разделе «Расширения»",
+  tutorialConnectTitle: "Подключить ИИ",
   tutorialConnectBody:
-    "С подключённым ИИ всё, что дальше, можно попробовать по-настоящему.",
+    "Следующие два шага используют ИИ; войдите с учётной записью, введите ключ API или сделайте это позже — в любой момент в Настройки › Textus AI.",
   tutorialConnectTask: "Войдите или вставьте ключ - или пропустите пока.",
   tutorialConnectSkip: "Пропустить пока",
   tutorialConnected: "Подключено.",
-  tutorialWriteTitle: "Написание с ИИ",
-  tutorialWriteBody: `В режиме «Общий» ${AI_NAME} добавляет и правит текст, зелёным, пока вы его не примете.`,
+  tutorialWriteTitle: "Пусть пишет ИИ",
+  tutorialWriteBody:
+    "Правки ИИ сначала показаны зелёным; они вступают в силу, только когда вы их примете.",
   tutorialWriteOpen:
     "Откройте панель ИИ: значок пера справа вверху ({shortcut})",
   tutorialWriteOpenPhone: "Откройте панель ИИ: нажмите значок пера вверху",
   tutorialWriteSend:
     "Отправьте `Продолжи мои заметки ещё одним абзацем` и нажмите «Принять»",
   tutorialContinuationTitle: "Автодополнение",
-  tutorialContinuationBody: "Сделайте паузу - и он продолжит за вас.",
+  tutorialContinuationBody:
+    "Остановитесь на секунду: появится серое продолжение; Tab — принять его.",
   tutorialContinuationTask:
     "В конце введите `Главное в первой фразе то, что`, сделайте паузу и нажмите Tab",
   tutorialContinuationTaskPhone:
     "В конце введите `Главное в первой фразе то, что`, сделайте паузу и коснитесь серого текста",
-  tutorialDoneTitle: "Готово",
+  tutorialDoneTitle: "Всё готово",
   tutorialDoneBody:
-    "Теперь пишите своё; таблицы, формулы, темы, рецензирование и остальное — в Онлайн-уроках.",
+    "Создайте новый документ; два руководства в меню «Справка» подробно рассказывают о Markdown и ИИ; там же можно пройти обзор ещё раз.",
   tutorialDoneMemory: `${AI_NAME} со временем запоминает ваши требования и стиль; загляните в «Память» в панели ИИ.`,
   closePromptNamed: "В «{name}» есть несохранённые изменения.",
   closePromptMessage: "В документе есть несохранённые изменения.",

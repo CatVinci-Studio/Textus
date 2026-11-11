@@ -1073,6 +1073,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "O Pele desenha mais rápido, mas organiza os diagramas de forma diferente do GitHub e do Mermaid e não suporta alguns recursos, como HTML nos rótulos; o Mermaid desenha o que o Pele não consegue.",
   codeLineNumbersLabel: "Números de linha nos blocos de código",
   firstLineIndentLabel: "Recuo da primeira linha",
+  emptyLineHintLabel: "Dica em linha vazia",
+  emptyLineHint: "Digite / para inserir",
   colorSwatchesLabel: "Amostras antes dos códigos de cor",
   colorSwatchesOff: "Desligadas",
   colorSwatchesCode: "Só no código",
@@ -1400,47 +1402,45 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Conecte uma IA depois em {path} para experimentar você mesmo.",
   tutorialWelcomeTitle: `Boas-vindas ao ${APP_NAME}`,
   tutorialWelcomeBody:
-    "Vamos mostrar tudo com suas notas de leitura sobre Dom Casmurro.",
-  tutorialWysiwygTitle: "O que você vê é o que você obtém",
+    "Um lugar para escrever Markdown: seus arquivos ficam no seu computador, e uma IA ajuda quando você pede; dois minutos, aprendendo enquanto escreve.",
+  tutorialWysiwygTitle: "Formatação enquanto digita",
   tutorialWysiwygBody:
-    "O Markdown se formata enquanto você escreve; pressione Enter duas vezes para terminar uma lista.",
+    "Digite onde estão as dicas cinzas: o Markdown vira formatação na hora; pressione Enter duas vezes para terminar uma lista.",
   tutorialWysiwygHeading: "Um título: `# {title}` e Enter",
   tutorialWysiwygList: "Uma lista: `- Bentinho`, Enter, `Capitu`",
   tutorialWysiwygNumbered: "Uma lista numerada: `1. Do título`",
   tutorialWysiwygTaskItem: "Uma tarefa: `- [ ] Terminar o livro`",
-  tutorialPaletteTitle: "Paleta de comandos",
+  tutorialPaletteTitle: "Encontrar funções",
   tutorialPaletteBody:
-    "Todos os comandos dos menus, encontrados com poucas letras.",
+    "Qualquer comando está a uma busca com {shortcut}; mais funções estão na loja de plugins, na peça de quebra-cabeça, instaladas conforme você precisa.",
   tutorialPaletteTask:
-    "Pressione {shortcut}, digite algumas letras e Enter para executar um comando",
-  tutorialPaletteTaskPhone: "No computador, abre com Ctrl+Shift+P (⌘⇧P no Mac)",
-  tutorialPluginsTitle: "Plugins",
-  tutorialPluginsBody:
-    "Mapas mentais, teclas do Vim, slides, citações e mais: adicione só o que precisar, de uma única loja.",
-  tutorialPluginsTask:
-    "Clique no ícone de quebra-cabeça à esquerda para abrir Plugins",
-  tutorialConnectTitle: "Conecte sua IA",
+    'Pressione {shortcut}, digite "exportar" e pressione Enter',
+  tutorialPaletteTaskPhone:
+    'No celular, a loja de plugins fica nos Ajustes, em "Extensões"',
+  tutorialConnectTitle: "Conectar uma IA",
   tutorialConnectBody:
-    "Com ela conectada, você pode experimentar de verdade o que vem a seguir.",
+    "Os próximos dois passos usam uma IA; entre com uma conta, digite uma chave de API ou deixe para depois - em Ajustes › Textus AI, quando quiser.",
   tutorialConnectTask: "Entre ou cole uma chave - ou pule por agora.",
   tutorialConnectSkip: "Pular por agora",
   tutorialConnected: "Conectado.",
-  tutorialWriteTitle: "Escrever com IA",
-  tutorialWriteBody: `No modo Geral, o ${AI_NAME} acrescenta e altera texto, em verde até você aceitar.`,
+  tutorialWriteTitle: "Deixe a IA escrever",
+  tutorialWriteBody:
+    "As mudanças da IA aparecem primeiro em verde; só valem quando você as aceita.",
   tutorialWriteOpen:
     "Abra o painel de IA: o ícone da pena no canto superior direito ({shortcut})",
   tutorialWriteOpenPhone: "Abra o painel de IA: toque no ícone da pena no topo",
   tutorialWriteSend:
     "Envie `Continue minhas notas com mais um parágrafo` e clique em Aceitar",
   tutorialContinuationTitle: "Continuação",
-  tutorialContinuationBody: "Faça uma pausa e ele continua por você.",
+  tutorialContinuationBody:
+    "Faça uma pausa ao escrever: uma continuação cinza aparece; pressione Tab para aceitá-la.",
   tutorialContinuationTask:
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e pressione Tab",
   tutorialContinuationTaskPhone:
     "No fim, digite `O que Bentinho esconde é`, faça uma pausa e toque no texto cinza",
-  tutorialDoneTitle: "Pronto",
+  tutorialDoneTitle: "Tudo pronto",
   tutorialDoneBody:
-    "Agora comece a escrever o seu; tabelas, fórmulas, temas, revisão e o resto estão nos Tutoriais online.",
+    "Crie um novo documento; os dois guias no menu Ajuda explicam Markdown e a IA em detalhe; o tour também está lá, para refazer.",
   tutorialDoneMemory: `O ${AI_NAME} lembra, com o tempo, o que você pede e seu estilo; veja Memória, no painel de IA.`,
   closePromptNamed: "“{name}” tem alterações não salvas.",
   closePromptMessage: "Este documento tem alterações não salvas.",

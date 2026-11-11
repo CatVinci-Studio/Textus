@@ -1030,6 +1030,8 @@ type /name in a conversation to use one.
     "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
   codeLineNumbersLabel: "Line numbers in code blocks",
   firstLineIndentLabel: "First-line indent",
+  emptyLineHintLabel: "Hint on an empty line",
+  emptyLineHint: "Type / to insert",
   colorSwatchesLabel: "Swatches before colour codes",
   colorSwatchesOff: "Off",
   colorSwatchesCode: "In code only",
@@ -1354,48 +1356,45 @@ type /name in a conversation to use one.
   tutorialWatch: "Watch the animation",
   tutorialWatchNote: "Connect an AI later in {path} to try it yourself.",
   tutorialWelcomeTitle: `Welcome to ${APP_NAME}`,
-  tutorialWelcomeBody: "We'll show you around with reading notes on Hamlet.",
-  tutorialWysiwygTitle: "What you see is what you get",
+  tutorialWelcomeBody:
+    "A place to write Markdown: your files stay on your computer, and an AI helps when you ask; two minutes, learning as you write.",
+  tutorialWysiwygTitle: "Formatting as you type",
   tutorialWysiwygBody:
-    "Markdown is formatted as you type; press Enter twice to end a list.",
+    "Type where the gray hints are: Markdown turns into formatting at once; press Return twice to end a list.",
   tutorialWysiwygHeading: "A heading: `# {title}`, then Enter",
   tutorialWysiwygList: "A list: `- Hamlet`, Enter, `Horatio`",
   tutorialWysiwygNumbered: "A numbered list: `1. Act I`",
   tutorialWysiwygTaskItem: "A task: `- [ ] Finish Act V`",
-  tutorialPaletteTitle: "Command palette",
+  tutorialPaletteTitle: "Finding things",
   tutorialPaletteBody:
-    "Every command in the menus, found by typing a few letters.",
-  tutorialPaletteTask:
-    "Press {shortcut}, type a few letters, then Enter to run a command",
+    "Every command is a search away with {shortcut}; more features are in the plugin store under the puzzle piece, installed as you need them.",
+  tutorialPaletteTask: 'Press {shortcut}, type "export", press Return',
   tutorialPaletteTaskPhone:
-    "On a computer, it opens with Ctrl+Shift+P (⌘⇧P on a Mac)",
-  tutorialPluginsTitle: "Plugins",
-  tutorialPluginsBody:
-    "Mind maps, Vim keys, slides, citations and more - add only what you need, from one store.",
-  tutorialPluginsTask:
-    "Click the puzzle icon in the left column to open Plugins",
-  tutorialConnectTitle: "Connect your AI",
+    "On a phone, the plugin store is under Extensions in Settings",
+  tutorialConnectTitle: "Connect an AI",
   tutorialConnectBody:
-    "Once it's connected, you can really try the AI features that follow.",
+    "The next two steps use an AI; sign in with an account, enter an API key, or do it later - Settings › Textus AI, any time.",
   tutorialConnectTask: "Sign in or paste a key - or skip for now.",
   tutorialConnectSkip: "Skip for now",
   tutorialConnected: "Connected.",
-  tutorialWriteTitle: "AI writing",
-  tutorialWriteBody: `In General mode, ${AI_NAME} adds and changes text, shown in green until you accept it.`,
+  tutorialWriteTitle: "Let the AI write",
+  tutorialWriteBody:
+    "The AI's changes show in green first; they count only once you accept them.",
   tutorialWriteOpen:
     "Open Textus AI: the sparkles at the top right ({shortcut})",
   tutorialWriteOpenPhone: "Open Textus AI: switch to it at the top",
   tutorialWriteSend:
     "Send `Continue my notes with one more paragraph`, then click Accept",
   tutorialContinuationTitle: "Continuation",
-  tutorialContinuationBody: "Pause, and it writes on for you.",
+  tutorialContinuationBody:
+    "Pause as you write: a gray continuation appears; press Tab to take it.",
   tutorialContinuationTask:
     "At the end, type `What really stops Hamlet is`, pause, then press Tab",
   tutorialContinuationTaskPhone:
     "At the end, type `What really stops Hamlet is`, pause, then tap the gray text",
-  tutorialDoneTitle: "All done",
+  tutorialDoneTitle: "You're set",
   tutorialDoneBody:
-    "Now start writing your own; tables, formulas, themes, review and the rest are in the Online Tutorials.",
+    "Start a new document: the Help menu's two guides cover Markdown and the AI in full, and the tour is there too, to take again.",
   tutorialDoneMemory: `${AI_NAME} remembers your requirements and style over time; see Memory (right-click an AI tab).`,
   closePromptNamed: "“{name}” has unsaved changes.",
   closePromptMessage: "This document has unsaved changes.",
