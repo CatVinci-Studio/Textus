@@ -1,23 +1,25 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   arrangeBranch,
-  closeSplit,
   openBeside,
-  pairLayout,
   reorderInPane,
+  resetWindowModelForTests,
   setSplitLayout,
+  setWindowTabs,
   splitLayout,
 } from "./store";
+import { pairLayout } from "./ops";
 import { pane, panesOf, type Branch } from "./tree";
 import { movePane, moveTab, splitOff, type SplitLayout } from "./ops";
 
-afterEach(() => closeSplit());
+afterEach(() => resetWindowModelForTests());
 
 /** Each pane's tabs, in reading order. */
 const tabs = () => panesOf(splitLayout()!.root).map((p) => p.tabs);
 const ids = () => panesOf(splitLayout()!.root).map((p) => p.id);
 
 function start(groups: string[][]) {
+  setWindowTabs(() => groups.flat().map((id) => ({ id })));
   const layout = pairLayout("row", groups[0][0], groups[1][0]);
   panesOf(layout.root).forEach((p, i) => (p.tabs = groups[i]));
   setSplitLayout(layout);

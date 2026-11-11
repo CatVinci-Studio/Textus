@@ -104,24 +104,17 @@ export function useAiTabs({
         state: { conversation: id },
       },
     }));
-    if (gone.length || made.length)
-      setTabs((prev) => [
-        ...prev.filter((tab) => !gone.includes(tab.id)),
-        ...made,
-      ]);
     const starting = opening.current;
     opening.current = false;
+    // Each placed as it arrives: its place asked for before it is added.
+    const kept = current.find((tab) => !gone.includes(tab.id));
+    const layout = splitLayout();
+    const home = kept && layout && paneWithTab(layout.root, kept.id);
     if (made.length) {
       // Beside the AI's other tabs; the first in an island of its own on
-      // the right of everything.
-      const kept = current.find((tab) => !gone.includes(tab.id));
-      // The tab in use stays in front where the AI opens beside it.
+      // the right of everything. The tab in use stays in front where the
+      // AI opens beside it.
       const inUse = activeNow.current;
-      // Each placed as it arrives, in the same update as it is added.
-      const layout = splitLayout();
-      const home = kept && layout && paneWithTab(layout.root, kept.id);
-      // Opened with the button, the AI is what is in use.
-      if (!home && !starting) tabs.setActiveTabId(made[0].id);
       const windowTabs = tabsRef.current.map((t) => t.id);
       for (const tab of made)
         placeOnArrival(tab.id, (now) =>
@@ -141,6 +134,13 @@ export function useAiTabs({
                 ),
         );
     }
+    if (gone.length || made.length)
+      setTabs((prev) => [
+        ...prev.filter((tab) => !gone.includes(tab.id)),
+        ...made,
+      ]);
+    // Opened with the button, the AI is what is in use.
+    if (made.length && !home && !starting) tabs.setActiveTabId(made[0].id);
     had.current = new Set(wanted);
   });
 

@@ -114,11 +114,7 @@ export function DocumentIslands({
   // Files Textus AI changed: their tabs say so.
   const changed = useChangedFiles();
   const marks = useAiFileMarks();
-  const kept = useSplitPanes(
-    tabs.map((tab) => tab.id),
-    activeTabId,
-    onAdd,
-  );
+  const kept = useSplitPanes();
   // Zen shows the tab in use alone; the split waits until Zen ends.
   const split = zen ? null : kept;
   const phone = usePhoneLayout();

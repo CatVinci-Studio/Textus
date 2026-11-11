@@ -1,7 +1,7 @@
 import {
   useCallback,
   useRef,
-  useState,
+  useSyncExternalStore,
   type Dispatch,
   type MutableRefObject,
   type SetStateAction,
@@ -14,8 +14,14 @@ import {
   type DocTab,
 } from "../../document/doc-tabs";
 import { lastViewMode } from "../../editor/modes/view-mode";
-import { splitLayout } from "../../engine/layout/store";
-import { panesOf } from "../../engine/layout/tree";
+import {
+  activateTab,
+  setWindowTabs,
+  startWindowTabs,
+  subscribeSplit,
+  tabInUse,
+  windowTabs,
+} from "../../engine/layout/store";
 
 export interface TabState {
   tabs: DocTab[];
@@ -33,13 +39,31 @@ export interface TabState {
   addStartTab: () => void;
 }
 
+// The window starts with one blank document; a split asked for with no
+// other tab to take gets a blank one in the view last chosen.
+startWindowTabs<DocTab>([makeBlankTab()], () => ({
+  ...makeBlankTab(),
+  ...lastViewMode(),
+}));
+
+const allTabs = () => windowTabs<DocTab>() as DocTab[];
+
+const setTabs: Dispatch<SetStateAction<DocTab[]>> = (next) =>
+  setWindowTabs<DocTab>((prev) =>
+    typeof next === "function" ? next(prev as DocTab[]) : next,
+  );
+
+const setActiveTabId: Dispatch<SetStateAction<string>> = (next) =>
+  activateTab(typeof next === "function" ? next(tabInUse()) : next);
+
 /**
  * This window's open documents and which one is showing, plus the plain
- * list operations on them.
+ * list operations on them: views of the window's model (engine/layout/
+ * store.ts), which keeps them and its islands as one.
  */
 export function useTabState(): TabState {
-  const [tabs, setTabs] = useState<DocTab[]>(() => [makeBlankTab()]);
-  const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id);
+  const tabs = useSyncExternalStore(subscribeSplit, allTabs);
+  const activeTabId = useSyncExternalStore(subscribeSplit, tabInUse);
 
   // Lets callbacks read the latest state without re-creating on every
   // keystroke.
@@ -104,7 +128,7 @@ export function useTabState(): TabState {
   return {
     tabs,
     setTabs,
-    activeTabId: inFront(tabs, activeTabId),
+    activeTabId,
     setActiveTabId,
     tabsRef,
     liveTabs,
@@ -113,15 +137,4 @@ export function useTabState(): TabState {
     addBlankTab,
     addStartTab,
   };
-}
-
-/** The tab in use, or - when it went without another being chosen (the
- *  AI's tabs put away together) - the first island's front tab, else the
- *  last: never none, or keys and zoom have nowhere to go. */
-function inFront(tabs: readonly DocTab[], id: string): string {
-  if (tabs.some((tab) => tab.id === id)) return id;
-  const layout = splitLayout();
-  const fronts = layout ? panesOf(layout.root).map((pane) => pane.front) : [];
-  const front = fronts.find((f) => f && tabs.some((tab) => tab.id === f));
-  return front ?? tabs[tabs.length - 1]?.id ?? id;
 }

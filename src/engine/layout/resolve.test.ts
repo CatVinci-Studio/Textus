@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { resolveSplit } from "./useSplitPanes";
-import { besideLayout, pairLayout, type SplitLayout } from "./store";
+import { resolveSplit as resolveWith } from "./resolve";
+
+const resolveSplit = (
+  ...args: [
+    Parameters<typeof resolveWith>[0],
+    Parameters<typeof resolveWith>[1],
+    Parameters<typeof resolveWith>[2],
+    Parameters<typeof resolveWith>[3],
+    Parameters<typeof resolveWith>[4]?,
+  ]
+) => resolveWith(args[0], args[1], args[2], args[3], args[4] ?? (() => undefined));
+import { besideLayout, type SplitLayout } from "./store";
+import { pairLayout } from "./ops";
 import { panesOf } from "./tree";
 
 /** Each pane's tabs and the one in front, and which pane is in use. */

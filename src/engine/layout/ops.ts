@@ -13,6 +13,7 @@ import {
   type LayoutNode,
   type Path,
   type Side,
+  type SplitDirection,
 } from "./tree";
 
 /**
@@ -28,6 +29,45 @@ export interface SplitLayout {
   root: Branch;
   /** The pane in use, by id: a tab opened now joins it. */
   focus: string;
+}
+
+/** A split asked for, resolved against the window's tabs: the pane in use
+ *  split this way. */
+export interface SplitRequest {
+  direction: SplitDirection;
+}
+
+/** Where a tab not yet among the window's goes once it is: asked for as it
+ *  is opened (beside, on a side it was dropped on, the AI's island), and
+ *  taken by the layout as the tab arrives, so it is never drawn first in
+ *  the pane in use. */
+export type Arrival = (layout: SplitLayout | null) => SplitLayout | null;
+
+/** The share of the space a pane may take at least, in a pair. */
+const MIN_RATIO = 0.2;
+
+const clampRatio = (ratio: number) =>
+  Math.min(1 - MIN_RATIO, Math.max(MIN_RATIO, ratio));
+
+/** Two panes, one tab each (the second may be on its way: null), the
+ *  first's share `ratio`; `focus` is the pane in use. */
+export function pairLayout(
+  direction: SplitDirection,
+  first: string,
+  second: string | null,
+  focus: 0 | 1 = 0,
+  ratio = 0.5,
+): SplitLayout {
+  const panes = [pane([first]), pane(second ? [second] : [], second)];
+  return {
+    root: {
+      kind: "split",
+      direction,
+      children: panes,
+      sizes: [clampRatio(ratio), 1 - clampRatio(ratio)],
+    },
+    focus: panes[focus].id,
+  };
 }
 
 /** The layout after `root` changed: tidied, the focus kept on a pane

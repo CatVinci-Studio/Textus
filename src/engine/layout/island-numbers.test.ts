@@ -8,7 +8,13 @@ import {
   pickIsland,
   watchIslandNumbers,
 } from "./island-numbers";
-import { pairLayout, setSplitLayout, splitLayout } from "./store";
+import {
+  resetWindowModelForTests,
+  setSplitLayout,
+  setWindowTabs,
+  splitLayout,
+} from "./store";
+import { pairLayout } from "./ops";
 import { panesOf } from "./tree";
 import { setFrameLayout } from "../frame/frame-store";
 
@@ -53,6 +59,7 @@ describe("the hold in a window", () => {
 
   beforeEach(() => {
     vi.useFakeTimers();
+    setWindowTabs(() => [{ id: "left-tab" }, { id: "right-tab" }]);
     setSplitLayout(pairLayout("row", "left-tab", "right-tab"));
     const sheet = (x: number) => ({ x, y: 40, w: 400, h: 600 });
     setFrameLayout({
@@ -75,7 +82,7 @@ describe("the hold in a window", () => {
   afterEach(() => {
     stop();
     picked.mockClear();
-    setSplitLayout(null);
+    resetWindowModelForTests();
     document.body.replaceChildren();
     vi.useRealTimers();
   });
