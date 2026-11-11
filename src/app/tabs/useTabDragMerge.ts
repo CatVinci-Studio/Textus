@@ -41,12 +41,7 @@ function pointInTopStrip(lx: number, ly: number, w: WindowBounds): boolean {
   const x = w.x / w.scaleFactor;
   const y = w.y / w.scaleFactor;
   const width = w.width / w.scaleFactor;
-  return (
-    lx >= x &&
-    lx <= x + width &&
-    ly >= y &&
-    ly <= y + rowStrip()
-  );
+  return lx >= x && lx <= x + width && ly >= y && ly <= y + rowStrip();
 }
 
 interface DragHoverPreview {

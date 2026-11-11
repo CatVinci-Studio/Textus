@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useSettingsOpening } from "./SettingsLayer";
 import { useTutorial } from "../onboarding/useTutorial";
 import { useTutorialDocumentEvaluation } from "../onboarding/useTutorialDocumentEvaluation";
-import { useAppUpdate } from "./useAppUpdate";
+import { useUpdateChecks } from "./app-update";
 import { useZoom } from "./useZoom";
 import { useDraftAutosave } from "../document/draft-autosave";
 import { useTextusAi, useTextusAiResume } from "../ai/TextusAiSwitch";
@@ -31,7 +31,7 @@ export function useWindowShell({
   useTextusAiResume();
   const panels = useSidePanels(textusAi.on);
   const settingsOpening = useSettingsOpening(tabState);
-  const appUpdate = useAppUpdate(settings.updateChannel);
+  useUpdateChecks(settings.updateChannel);
   useZoom(
     settings.zoom,
     (zoom) => setSettings({ zoom }),
@@ -59,7 +59,6 @@ export function useWindowShell({
     textusAi,
     panels,
     settingsOpening,
-    appUpdate,
     tutorial,
     evaluateTutorialDocumentChange,
     cancelDraftFlushes,

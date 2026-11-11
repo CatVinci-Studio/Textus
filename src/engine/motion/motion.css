@@ -291,6 +291,13 @@
 
 /* The shared entrances and exits. Written with the tokens, so under
    reduced motion each one turns into a plain fade by itself. */
+/* Something working, waiting: it fades and comes back. */
+@keyframes motion-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
 @keyframes motion-fade-in {
   from {
     opacity: 0;

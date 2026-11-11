@@ -134,6 +134,23 @@
   margin-bottom: 8px;
 }
 
+/* A newer release, over Settings at the foot: the accent's colour while it
+   waits for a click, breathing while it downloads, the danger colour when
+   it failed. */
+.activity-rail-update {
+  margin-top: auto;
+  color: var(--ui-accent);
+}
+.activity-rail-update ~ .activity-rail-settings {
+  margin-top: 0;
+}
+.activity-rail-update[data-state="downloading"] {
+  animation: motion-breathe var(--dur-pulse) var(--ease-in-out) infinite;
+}
+.activity-rail-update[data-state="error"] {
+  color: var(--ui-danger);
+}
+
 /* A faint line where the rail meets the open sidebar - softer than the
    frame's edge against the document. Down from the window's top where the
    sidebar reaches it, else from under the bar. */

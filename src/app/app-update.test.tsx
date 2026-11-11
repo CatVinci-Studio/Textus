@@ -25,17 +25,21 @@ vi.mock("../platform/ipc", () => ({
   },
 }));
 
-import { useAppUpdate } from "./useAppUpdate";
+import { installUpdate, useAppUpdate, useUpdateChecks } from "./app-update";
 
-describe("useAppUpdate", () => {
+describe("the app update", () => {
   beforeEach(() => {
     calls.length = 0;
   });
 
   it("gives up the running instance just before the relaunch (#349)", async () => {
-    const { result } = renderHook(() => useAppUpdate("stable"));
+    const { result } = renderHook(() => {
+      useUpdateChecks("stable");
+      return useAppUpdate();
+    });
     await waitFor(() => expect(result.current.version).toBe("9.9.9"));
-    await act(() => result.current.install());
+    expect(result.current.status).toBe("available");
+    await act(() => installUpdate());
     expect(calls).toEqual(["flush", "install", "flush", "release", "relaunch"]);
   });
 });

@@ -408,7 +408,7 @@
 .paper-card-mark[data-state="revising"] {
   border-color: var(--ui-accent, var(--ui-text));
   background: var(--ui-accent, var(--ui-text));
-  animation: paper-breathe var(--dur-pulse) var(--ease-in-out) infinite;
+  animation: motion-breathe var(--dur-pulse) var(--ease-in-out) infinite;
 }
 
 .paper-card-mark[data-state="done"],
@@ -477,12 +477,6 @@
 @keyframes paper-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-@keyframes paper-breathe {
-  50% {
-    opacity: 0.35;
   }
 }
 

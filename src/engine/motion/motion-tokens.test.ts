@@ -18,7 +18,6 @@ const OWN_KEYFRAMES: Record<string, string> = {
   "ai/revision/pending-picture.css pending-picture-sheen": "picture being made",
   "export/print.css pdf-export-spin": "export spinner",
   "ai/paper/outline-card.css paper-spin": "paper being written",
-  "ai/paper/outline-card.css paper-breathe": "paper's part being worked on",
   // A state shown by colour or a stroke, not a part arriving.
   "settings/SettingsPanel.css settings-search-hit": "tint fading as read",
   "ai/margin/ReviewMargin.css review-link-draw": "connector drawn",

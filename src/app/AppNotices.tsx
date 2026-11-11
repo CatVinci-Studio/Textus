@@ -5,7 +5,6 @@ import { announce } from "../engine/controls/announce";
 import { CornerToast } from "../engine/controls/CornerToast";
 import { basename } from "../utils/path";
 import type { Strings } from "../i18n/strings";
-import type { useAppUpdate } from "./useAppUpdate";
 
 /** Zen mode's way out while it is on: a quiet × at the top right (Esc
  *  doesn't leave it - Esc closes what is open in the text). */
@@ -74,45 +73,6 @@ export function WordImportNotice({
       name="word-import-toast"
       line={notice}
       actions={[{ label: t.wordImportDismiss, onSelect: onDismiss }]}
-    />
-  );
-}
-
-/** The update banner: available, downloading, failed. */
-export function UpdateToast({
-  appUpdate,
-  t,
-}: {
-  appUpdate: ReturnType<typeof useAppUpdate>;
-  t: Strings;
-}) {
-  const later = { label: t.updateLater, onSelect: appUpdate.dismiss };
-  const state = {
-    idle: null,
-    available: {
-      line: `${t.updateAvailable} v${appUpdate.version}${
-        appUpdate.selfUpdate ? "" : ` · ${t.updateViaPackageManager}`
-      }`,
-      actions: appUpdate.selfUpdate
-        ? [
-            {
-              label: t.updateInstall,
-              onSelect: () => void appUpdate.install(),
-              primary: true,
-            },
-            later,
-          ]
-        : [later],
-    },
-    downloading: { line: t.updateDownloading, actions: [] },
-    error: { line: `${t.updateFailed} ${appUpdate.error}`, actions: [later] },
-  }[appUpdate.status];
-  return (
-    <CornerToast
-      show={state !== null}
-      name="update-toast"
-      line={state?.line ?? ""}
-      actions={state?.actions ?? []}
     />
   );
 }

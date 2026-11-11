@@ -10,6 +10,7 @@ import {
   Check,
   ChevronRight,
   Columns2,
+  Download,
   Ellipsis,
   Eye,
   File,
@@ -93,6 +94,8 @@ export function lucide(Shape: LucideIcon, size: number) {
 
 /** A disclosure triangle's stand-in: turned by CSS when open. */
 export const ChevronIcon = lucide(ChevronRight, 10);
+/** A newer release to install (the rail's foot). */
+export const DownloadIcon = lucide(Download, 15);
 export const EyeIcon = lucide(Eye, 15);
 
 export const FolderIcon = lucide(Folder, 15);

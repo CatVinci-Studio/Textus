@@ -10,6 +10,7 @@ import { reorderDrag } from "../../engine/drag/row";
 import { liftBeyondGroup } from "./rail-lift";
 import { useSettings } from "../../prefs/SettingsContext";
 import { SettingsIcon } from "../../engine/controls/icons";
+import { RailUpdate } from "./RailUpdate";
 import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
 import { isOwnTab, type SidebarTabDef } from "./sidebar-tabs";
@@ -113,6 +114,8 @@ export function ActivityRail({
         onDropBeyond={(id, side) => side === "before" && pin(id, true)}
         {...{ onSelect, onCloseSidebar, onMove, t }}
       />
+      {/* A newer release, while there is one, over Settings. */}
+      <RailUpdate t={t} />
       {/* Settings at the column's foot, out of the tabs' order. */}
       <Tooltip text={t.settingsTitle} side="right">
         <button
