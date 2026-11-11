@@ -92,7 +92,7 @@ export function useWindowDocuments({
     t,
     onWordDocumentOpened: shell.wordImported.opened,
   });
-  useLastCarets(tabs, activeTabId, settings.restoreSessionOnStartup);
+  useLastCarets(tabs, settings.restoreSessionOnStartup);
   const folderRoot = openFolder.folder ?? openFolder.treeRoot;
   // `[[` lists the folder's notes while no plugin completes it.
   useEffect(() => {

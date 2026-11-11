@@ -1,5 +1,5 @@
 import { linkToFile } from "./islands/link-to-file";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
 import { useIslandNumbers } from "./islands/useIslandNumbers";
@@ -32,6 +32,7 @@ import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
+import { tabInUse } from "../engine/layout/store";
 
 /** Everything that reaches a window from outside its own controls. */
 export function useWindowWiring({
@@ -49,8 +50,6 @@ export function useWindowWiring({
 }) {
   const { tabState, tutorial, textusAi, panels, setPendingClose } = shell;
   const { tabsRef, activeTabId, setActiveTabId, setTabs, liveTabs } = tabState;
-  const activeRef = useRef(activeTabId);
-  activeRef.current = activeTabId;
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
 
   useSettingsCommands(settings, setSettings);
@@ -118,9 +117,7 @@ export function useWindowWiring({
         // With Shift: a link to it in the document in use (one never
         // saved has no place to link from: it opens instead).
         link: (path) => {
-          const from = liveTabs().find(
-            (tab) => tab.id === activeRef.current,
-          )?.path;
+          const from = liveTabs().find((tab) => tab.id === tabInUse())?.path;
           if (from) void linkToFile(path, from, openFolder.folder);
           else void openPathInTab(path);
         },

@@ -41,7 +41,6 @@ import {
   customEditorForContent,
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
-import { useLatest } from "../utils/hooks/useLatest";
 import {
   besideLayout,
   openBeside,
@@ -52,6 +51,7 @@ import type { TabState } from "./tabs/useTabState";
 import { splitForDrop } from "./islands/split-drop";
 import type { DropTarget } from "../engine/layout/drop-zones";
 import { explainError } from "../utils/error-explain";
+import { tabInUse } from "../engine/layout/store";
 
 /** How a document opens, beyond which file. */
 export interface OpenOptions {
@@ -197,7 +197,6 @@ export function useFileOpening(opts: {
     [t, onWordDocumentOpened],
   );
 
-  const activeIdRef = useLatest(activeTabId);
   // Tabs made for a path, until they are among the window's tabs: an open
   // of the same path meanwhile shows that one instead of making another.
   const opened = useRef(new Map<string, { id: string; at: number }>());
@@ -219,7 +218,7 @@ export function useFileOpening(opts: {
   const openPathInTab = useCallback(
     async (path: string, open: OpenOptions = {}) => {
       // Beside the tab in front: once the tab is among the window's.
-      const from = activeIdRef.current;
+      const from = tabInUse();
       const show = (id: string) => {
         setActiveTabId(id);
         const { drop } = open;
@@ -288,15 +287,7 @@ export function useFileOpening(opts: {
       setTabs((prev) => [...prev, newTab]);
       show(newTab.id);
     },
-    [
-      tabsRef,
-      activeIdRef,
-      setTabs,
-      setActiveTabId,
-      restoreCarets,
-      readDocument,
-      justOpened,
-    ],
+    [tabsRef, setTabs, setActiveTabId, restoreCarets, readDocument, justOpened],
   );
 
   // Window mode's replace step, shared by the clean path and the save

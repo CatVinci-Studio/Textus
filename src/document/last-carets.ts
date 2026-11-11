@@ -4,6 +4,7 @@ import { readTabCaret, setTabCaretSink } from "../editor/tab-caret";
 import { onFlush } from "../storage/pending-writes";
 import { getUiState, updateUiState, type UiState } from "../storage/ui-state";
 import type { DocTab } from "./doc-tabs";
+import { tabInUse } from "../engine/layout/store";
 
 /**
  * Where the caret was in each recently left document, keyed by path with
@@ -95,21 +96,13 @@ export function lastCaret(
  * shown tab on close: a tab autosaved since was remembered against the old
  * file.
  */
-export function useLastCarets(
-  tabs: DocTab[],
-  activeTabId: string,
-  enabled: boolean,
-): void {
+export function useLastCarets(tabs: DocTab[], enabled: boolean): void {
   // The tabs as of the last commit: a closed tab's editor reports its
   // caret as it unmounts, after the tab has left `tabs`.
   const known = useRef(new Map<string, DocTab>());
   useEffect(() => {
     known.current = new Map(tabs.map((tab) => [tab.id, tab]));
   }, [tabs]);
-  const activeRef = useRef(activeTabId);
-  useEffect(() => {
-    activeRef.current = activeTabId;
-  }, [activeTabId]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -124,7 +117,7 @@ export function useLastCarets(
     };
     const stopSink = setTabCaretSink(remember);
     const stopFlush = onFlush(() => {
-      for (const tabId of new Set([...shown, activeRef.current]))
+      for (const tabId of new Set([...shown, tabInUse()]))
         remember(tabId, readTabCaret(tabId));
       writeCarets();
     });

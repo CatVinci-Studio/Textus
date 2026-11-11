@@ -14,6 +14,11 @@ import { registerTabCaret, reportTabCaret } from "../editor/tab-caret";
 import { makeBlankTab, type DocTab } from "./doc-tabs";
 import { flushPendingWrites } from "../storage/pending-writes";
 import {
+  activateTab,
+  resetWindowModelForTests,
+  setWindowTabs,
+} from "../engine/layout/store";
+import {
   lastCaret,
   mergeCarets,
   rememberCaret,
@@ -103,16 +108,21 @@ describe("useLastCarets", () => {
     path,
     diskMtime: 5,
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    resetWindowModelForTests();
+  });
 
   it("remembers the caret a tab's editor reports as it leaves", () => {
-    renderHook(() => useLastCarets([tab("t", "/a.md")], "t", true));
+    renderHook(() => useLastCarets([tab("t", "/a.md")], true));
     reportTabCaret("t", { offset: 4 });
     expect(lastCaret("/a.md", 5)).toEqual({ offset: 4 });
   });
 
   it("writes the active tab's caret at once when the window closes", async () => {
-    renderHook(() => useLastCarets([tab("t", "/a.md")], "t", true));
+    setWindowTabs(() => [tab("t", "/a.md")]);
+    activateTab("t");
+    renderHook(() => useLastCarets([tab("t", "/a.md")], true));
     const stop = registerTabCaret("t", () => ({ offset: 12 }));
     await flushPendingWrites();
     expect(stored()).toEqual({ "/a.md": { offset: 12, mtime: 5 } });
@@ -122,7 +132,9 @@ describe("useLastCarets", () => {
   it("asks again, at closing, of each tab that has been on screen", async () => {
     // a.md was left at 4, then saved (its time 5 -> 6) while b.md showed.
     let tabs = [tab("a", "/a.md"), tab("b", "/b.md"), tab("c", "/c.md")];
-    const { rerender } = renderHook(() => useLastCarets(tabs, "b", true));
+    setWindowTabs(() => tabs);
+    activateTab("b");
+    const { rerender } = renderHook(() => useLastCarets(tabs, true));
     reportTabCaret("a", { offset: 4 });
     tabs = [{ ...tabs[0], diskMtime: 6 }, tabs[1], tabs[2]];
     rerender();
@@ -138,13 +150,13 @@ describe("useLastCarets", () => {
   });
 
   it("remembers nothing for a document without a file", () => {
-    renderHook(() => useLastCarets([tab("t", null)], "t", true));
+    renderHook(() => useLastCarets([tab("t", null)], true));
     reportTabCaret("t", { offset: 4 });
     expect(stored()).toBeNull();
   });
 
   it("remembers nothing with Restore Previous Session off", async () => {
-    renderHook(() => useLastCarets([tab("t", "/a.md")], "t", false));
+    renderHook(() => useLastCarets([tab("t", "/a.md")], false));
     reportTabCaret("t", { offset: 4 });
     await flushPendingWrites();
     expect(lastCaret("/a.md", 5)).toBeNull();

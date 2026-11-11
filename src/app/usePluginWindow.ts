@@ -35,6 +35,7 @@ import {
   besideLayout,
   openBeside,
   placeOnArrival,
+  tabInUse,
 } from "../engine/layout/store";
 import { takePluginUris } from "../plugins/plugin-uri";
 import { migrateOfficialPlugins } from "../plugins/store/migrate-official";
@@ -88,7 +89,6 @@ export function usePluginWindow({
   const saveRef = useLatest(saveActiveTab);
   const closeRef = useLatest(closeActiveTab);
   const { tabsRef, setTabs, setActiveTabId } = tabState;
-  const activeIdRef = useLatest(tabState.activeTabId);
   const settingsRef = useLatest(useSettings());
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export function usePluginWindow({
     // A new tab where a plugin asked: after the others, beside the front one,
     // or in its place.
     const placeTab = (made: DocTab, where: Where) => {
-      const from = activeIdRef.current;
+      const from = tabInUse();
       // Beside: its place taken as it arrives, never first drawn in front.
       if (where === "beside")
         placeOnArrival(
@@ -127,7 +127,7 @@ export function usePluginWindow({
         );
       setTabs((prev) => {
         if (where !== "current") return [...prev, made];
-        const at = prev.findIndex((tab) => tab.id === activeIdRef.current);
+        const at = prev.findIndex((tab) => tab.id === tabInUse());
         return at < 0
           ? [...prev, made]
           : prev.map((tab, i) => (i === at ? made : tab));
@@ -174,14 +174,14 @@ export function usePluginWindow({
             tab.view.resource === view.resource,
         );
         if (open) {
-          const from = activeIdRef.current;
+          const from = tabInUse();
           setActiveTabId(open.id);
           if (where === "beside") openBeside(open.id, from);
         } else addTab({ view }, where);
       },
       tabs: () => tabsRef.current.map(info),
       activeTab: () => {
-        const tab = tabsRef.current.find((t) => t.id === activeIdRef.current);
+        const tab = tabsRef.current.find((t) => t.id === tabInUse());
         return tab ? info(tab) : null;
       },
       // Only a tab with unsaved changes; a clean one is changed on disk and reloads.
@@ -209,7 +209,6 @@ export function usePluginWindow({
     tabsRef,
     setTabs,
     setActiveTabId,
-    activeIdRef,
     tRef,
   ]);
 

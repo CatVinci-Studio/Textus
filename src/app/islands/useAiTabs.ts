@@ -20,6 +20,7 @@ import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
 import { pageOf } from "../tabs/page-tabs";
 import { AI_PRESS_EVENT, conversationIn } from "./ai-tabs";
+import { tabInUse } from "../../engine/layout/store";
 
 const NONE: string[] = [];
 
@@ -63,8 +64,6 @@ export function useAiTabs({
   const wanted = !shown ? NONE : open.length ? open : [live ?? DRAFT];
   const titles = new Map(history.map((entry) => [entry.id, entry.title]));
   const { tabsRef, setTabs, updateTab, activeTabId } = tabs;
-  const activeNow = useRef(activeTabId);
-  activeNow.current = activeTabId;
 
   // The tabs follow the conversations: one each, a closed one's gone, a
   // draft's tab becoming its conversation once sent.
@@ -114,7 +113,7 @@ export function useAiTabs({
       // Beside the AI's other tabs; the first in an island of its own on
       // the right of everything. The tab in use stays in front where the
       // AI opens beside it.
-      const inUse = activeNow.current;
+      const inUse = tabInUse();
       const windowTabs = tabsRef.current.map((t) => t.id);
       for (const tab of made)
         placeOnArrival(tab.id, (now) =>
