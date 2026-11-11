@@ -77,12 +77,17 @@ describe("the remembered sidebar width", () => {
     expect(result.current.width).toBe(460);
   });
 
-  it("while held, moves only the shell's column; remembers where it lets go", () => {
+  it("while held, moves only the shell's column and the sidebar; remembers where it lets go", () => {
     const shell = document.body.appendChild(document.createElement("div"));
     shell.className = "app-shell";
+    const sidebar = shell.appendChild(document.createElement("aside"));
+    sidebar.className = "sidebar";
     const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.setWidth(300, false));
-    expect(shell.style.getPropertyValue("--sidebar-width")).toMatch(/px$/);
+    expect(shell.style.gridTemplateColumns).toContain("300px");
+    expect(sidebar.style.width).toBe("300px");
+    // Not the inherited variable: that would restyle the whole window.
+    expect(shell.style.getPropertyValue("--sidebar-width")).toBe("");
     expect(result.current.width).toBe(240);
     expect(localStorage.getItem(KEY)).toBeNull();
     act(() => result.current.setWidth(310, true));

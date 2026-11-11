@@ -44,14 +44,12 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
       const base = Math.round(
         clampSidePanel(next, windowWidth, SIDEBAR_LIMITS, beside, step) / step,
       );
-      // While the edge is held, only the shell's column follows: the
-      // islands make room as their area resizes, and nothing else redraws.
-      if (!persist) {
-        document
-          .querySelector<HTMLElement>(".app-shell")
-          ?.style.setProperty("--sidebar-width", `${base * step}px`);
-        return;
-      }
+      // While the edge is held, only the shell's column and the sidebar
+      // follow, written as their own (not inherited) widths: a variable
+      // changed on the shell restyles everything in the window, the
+      // document too, every frame. The variable takes over at the end.
+      holdWidth(persist ? null : base * step);
+      if (!persist) return;
       setChosen(base);
       setUiState("sidebarWidth", base);
     },
@@ -68,4 +66,24 @@ export function useSidebarWidth(windowWidth: number, beside = 0) {
     setWidth,
     resetWidth,
   };
+}
+
+/** The column and the sidebar drawn at `width` px while a drag lasts;
+ *  null hands them back to --sidebar-width once React has drawn it. */
+function holdWidth(width: number | null): void {
+  const shell = document.querySelector<HTMLElement>(".app-shell");
+  const sidebar = shell?.querySelector<HTMLElement>(":scope > .sidebar");
+  if (!shell) return;
+  if (width === null) {
+    requestAnimationFrame(() => {
+      shell.style.removeProperty("grid-template-columns");
+      sidebar?.style.removeProperty("width");
+    });
+    return;
+  }
+  shell.style.setProperty(
+    "grid-template-columns",
+    `var(--rail-width, 0px) ${width}px minmax(0, 1fr)`,
+  );
+  sidebar?.style.setProperty("width", `${width}px`);
 }
