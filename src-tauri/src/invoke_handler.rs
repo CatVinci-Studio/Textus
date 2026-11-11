@@ -22,8 +22,7 @@ use commands::drafts::{
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
 use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_linked_file,
-    open_pandoc_install_page, reveal_in_dir,
+    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
 };
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
@@ -31,6 +30,8 @@ use commands::fs::{
     save_file_dialog, save_pasted_image, save_settings_file_dialog, write_text_file,
 };
 use commands::image_host::upload_image;
+#[cfg(desktop)]
+use commands::linked_file::open_linked_file;
 #[cfg(desktop)]
 use commands::session::{cancel_session_quit, update_session_paths};
 use commands::theme_gallery::{theme_gallery_catalog, theme_gallery_css, theme_gallery_preview};

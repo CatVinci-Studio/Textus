@@ -6,10 +6,13 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
+/// This file, in the app's config folder.
+pub(crate) const FILE: &str = "provider_keys.json";
+
 fn keys_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("provider_keys.json"))
+    Ok(dir.join(FILE))
 }
 
 fn read_keys(app: &AppHandle) -> Result<HashMap<String, String>, String> {

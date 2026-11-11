@@ -4,6 +4,9 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
+/// This file, in the app's config folder.
+pub(crate) const FILE: &str = "custom_endpoint.json";
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct CustomEndpointConfig {
     pub base_url: String,
@@ -14,7 +17,7 @@ pub struct CustomEndpointConfig {
 fn config_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("custom_endpoint.json"))
+    Ok(dir.join(FILE))
 }
 
 /// What the settings page is told about the saved endpoint. The key never

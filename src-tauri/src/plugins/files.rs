@@ -179,13 +179,16 @@ pub async fn plugin_fs_write_if(
     Ok(true)
 }
 
+/// Where plugins' secrets are kept, in the app's config folder.
+pub(crate) const SECRETS_FILE: &str = "plugin_secrets.json";
+
 type Secrets = BTreeMap<String, BTreeMap<String, String>>;
 
 /// Every plugin's secrets, in one owner-only file apart from settings and storage.
 fn secrets_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("plugin_secrets.json"))
+    Ok(dir.join(SECRETS_FILE))
 }
 
 fn read_secrets(app: &tauri::AppHandle) -> Result<Secrets, String> {

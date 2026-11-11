@@ -5,6 +5,9 @@ use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
 
+/// This file, in the app's config folder.
+pub(crate) const FILE: &str = "auth-codex.json";
+
 const LOGIN_TIMEOUT_SECS: u64 = 5 * 60;
 
 /// Held while a token refresh is in flight (see get_valid_credential).
@@ -26,7 +29,7 @@ pub struct AuthStatus {
 fn auth_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
     fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-    Ok(dir.join("auth-codex.json"))
+    Ok(dir.join(FILE))
 }
 
 fn save_credential(app: &AppHandle, cred: &CodexCredential) -> Result<(), String> {

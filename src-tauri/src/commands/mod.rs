@@ -24,6 +24,8 @@ pub mod fs;
 pub mod image_host;
 pub mod input_source;
 pub mod link_root;
+#[cfg(desktop)]
+pub mod linked_file;
 pub mod links;
 #[cfg(desktop)]
 pub mod native_edit;
