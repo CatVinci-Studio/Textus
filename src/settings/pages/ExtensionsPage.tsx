@@ -1,12 +1,11 @@
 import { requestCreate } from "../../ai/chat/create-request";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import type { SettingsPageProps } from "./types";
 import { PluginsPage } from "./PluginsPage";
 import { ExtensionsTabLayout } from "./ExtensionsTabLayout";
 import { ThemesTab } from "../sections/theme";
 import { OwnSkillsList, importSkill } from "../sections/skills";
 import { McpSection } from "../sections/mcp";
-import { Suspense } from "react";
 import { CreateChat } from "./create-chat-lazy";
 import { AvailableSkills } from "../sections/market-skills";
 import {
