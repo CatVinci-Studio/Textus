@@ -42,8 +42,8 @@ pub fn open_floating_window(
     app: tauri::AppHandle,
     window: tauri::WebviewWindow,
     view: String,
-    x: Option<f64>,
-    y: Option<f64>,
+    title: String,
+    at: Option<(f64, f64)>,
     width: f64,
     height: f64,
 ) -> Result<String, String> {
@@ -51,17 +51,16 @@ pub fn open_floating_window(
     if app.get_webview_window(&label).is_some() {
         return Ok(label);
     }
-    let (x, y) = match (x, y) {
-        (Some(x), Some(y)) => (x, y),
-        _ => corner_of(&window, width, height),
-    };
+    let (x, y) = at.unwrap_or_else(|| corner_of(&window, width, height));
     let url = format!(
         "index.html?view=floating&owner={}&key={}",
         window.label(),
         view
     );
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(url.into()))
-        .title(view.as_str())
+        // Its title as the plugin names it, for the system (Mission Control,
+        // a screen reader); the id stays in the label.
+        .title(&title)
         .decorations(false)
         .transparent(true)
         .always_on_top(true)

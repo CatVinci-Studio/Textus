@@ -93,6 +93,7 @@ export const windowIpc = {
    *  label. */
   openFloatingWindow: (
     view: string,
+    title: string,
     at: { x: number; y: number } | null,
     width: number,
     height: number,
@@ -100,8 +101,8 @@ export const windowIpc = {
     desktopActionCommand(
       "open_floating_window",
       view,
-      at?.x ?? null,
-      at?.y ?? null,
+      title,
+      at ? [at.x, at.y] : null,
       width,
       height,
     ),

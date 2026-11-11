@@ -204,7 +204,12 @@ function useWindowLabel(view: FloatingView): string | null {
     const at =
       view.x === null || view.y === null ? null : { x: view.x, y: view.y };
     windowIpc
-      .openFloatingWindow(view.view, at, ...floatingSize(view, chrome))
+      .openFloatingWindow(
+        view.view,
+        view.title,
+        at,
+        ...floatingSize(view, chrome),
+      )
       .then((opened) => live && setLabel(opened))
       .catch(() => live && moveFloating(view.view, { place: "window" }));
     return () => {

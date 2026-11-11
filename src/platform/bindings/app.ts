@@ -53,7 +53,7 @@ export const commands = {
 	 *  (screen points), or by the bottom-right corner of its screen; an open one
 	 *  stays where it is. Answers the window's label.
 	 */
-	open_floating_window: (view: string, x: number | null, y: number | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, x, y, width, height }),
+	open_floating_window: (view: string, title: string, at: [number | null, number | null] | null, width: number | null, height: number | null) => __TAURI_INVOKE<string>("open_floating_window", { view, title, at, width, height }),
 	close_floating_window: (view: string) => __TAURI_INVOKE<void>("close_floating_window", { view }),
 	/**
 	 *  The window takes the new size. Folded or unfolded, its top-left corner
