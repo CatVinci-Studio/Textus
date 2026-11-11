@@ -1,4 +1,4 @@
-import { splitLayout } from "../engine/layout/store";
+import { editorInUse } from "../editor/editor-in-use";
 import { useCallback, useEffect } from "react";
 import {
   openToText,
@@ -321,13 +321,4 @@ export function useEditorWindowEvents({
   });
   useWindowEvent(RESTORE_CHAT_EVENT, () => claimRestore.current());
   useEffect(() => claimRestore.current(), [docPath, claimRestore]);
-}
-
-function editorInUse(dom: HTMLElement): boolean {
-  if (dom.offsetParent === null) return false;
-  const focused = document.activeElement?.closest(".ProseMirror");
-  if (focused) return focused === dom;
-  const focus = splitLayout()?.focus;
-  if (!focus) return true;
-  return dom.closest<HTMLElement>(".split-pane")?.dataset.paneId === focus;
 }

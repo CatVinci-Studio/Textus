@@ -19,12 +19,23 @@ function open(detail: OpenFileInTab): void {
   );
 }
 
+/** The most folders a followed link makes on its way to a new note. */
+const MAX_NEW_FOLDERS = 8;
+
 /** A note a link names that isn't there yet, made empty so the link leads
  *  somewhere; never over a file (the backend refuses a taken name). */
 async function createNote(path: string): Promise<boolean> {
   const dir = dirname(path);
-  if ((await fs.fileMtimeMs(dir)) === null)
-    await fs.createFolder(dirname(dir), basename(dir)).catch(() => {});
+  // The folders it names that aren't there, made from the top down.
+  const missing: string[] = [];
+  for (
+    let at = dir;
+    missing.length < MAX_NEW_FOLDERS && (await fs.fileMtimeMs(at)) === null;
+    at = dirname(at)
+  )
+    missing.unshift(at);
+  for (const folder of missing)
+    await fs.createFolder(dirname(folder), basename(folder)).catch(() => {});
   return fs.createDocument(dir, basename(path)).then(
     () => true,
     () => false,

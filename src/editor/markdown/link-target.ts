@@ -56,7 +56,9 @@ export function linkTarget(
  * so a document already open in a tab is found by its path.
  */
 export function localPath(file: string, docPath: string | null): string | null {
-  if (!file) return null;
+  // A link naming another machine's share (\\host\share, //host) isn't
+  // followed: even looking at it there sends the user's sign-in on Windows.
+  if (!file || /^[\\/]{2}/.test(file)) return null;
   const absolute = isDrivePath(file) || /^[\\/]/.test(file);
   if (!absolute && !docPath) return null;
   const path = absolute ? file : `${dirname(docPath!)}/${file}`;

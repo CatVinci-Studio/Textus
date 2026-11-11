@@ -1,3 +1,4 @@
+import { editorInUse } from "../editor-in-use";
 import { Plugin, PluginKey, TextSelection } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -336,17 +337,26 @@ export function createImagePlugin(options: ImageStore) {
         trs.some((tr) => tr.docChanged)
           ? swapStoredBlobs(state.tr, storedBlobs, changedRanges(trs))
           : null,
-      // Tauri hands drops to the app, so they arrive as a window event. Every
-      // tab's editor stays mounted; only the visible one takes them.
+      // Tauri hands drops to the app, so they arrive as a window event, to
+      // every island's editor: the one under the point takes them, else
+      // (dropped on the sidebar) the one in use.
       view: (view) => {
         const onDrop = (e: Event) => {
-          if (view.dom.offsetParent === null) return;
           const { paths, point } = (
             e as CustomEvent<{
               paths: string[];
               point: { x: number; y: number };
             }>
           ).detail;
+          const under = document
+            .elementFromPoint(point.x, point.y)
+            ?.closest(".split-pane");
+          if (
+            under
+              ? under !== view.dom.closest(".split-pane")
+              : !editorInUse(view.dom)
+          )
+            return;
           const at = view.posAtCoords({ left: point.x, top: point.y });
           // Off the text (the sidebar, the margins): at the caret instead.
           if (at)

@@ -72,7 +72,8 @@ describe("withHeadingIds", () => {
     withHeadingIds(doc, idOf).descendants((node) => {
       if (node.type.name === "heading") ids.push(node.attrs.id as string);
     });
-    expect(ids).toEqual(["a", "a-#2", "b"]);
+    // Repeats as GitHub and headingIndex number them.
+    expect(ids).toEqual(["a", "a-1", "b"]);
   });
 
   it("keeps every block without a heading, and a document with its ids", () => {
