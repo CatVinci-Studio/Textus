@@ -5,7 +5,7 @@ import { loadSettings } from "../prefs/settings-store";
 import {
   showQuickPick,
   type QuickPickItem,
-} from "../engine/controls/quick-pick";
+} from "../engine/controls/quick-pick-queue";
 import { sendTourSignal } from "../utils/events";
 import { commands, commandShortcut, runCommand } from "../registry/commands";
 import { runMenuAction } from "./menu/app-menu-actions";

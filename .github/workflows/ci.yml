@@ -153,17 +153,16 @@ jobs:
           npx vite build --config vite.playground.config.ts 2>&1 | tee build-playground.log
           ! grep -q 'css-syntax-error' build-playground.log
 
-  # On one machine with one worker the flows took fifteen minutes; --shard
-  # splits them by test across four, each running two workers
-  # (playwright.config.ts).
+  # The flows split by test across two machines, each running two workers
+  # (playwright.config.ts): a few minutes each.
   e2e-shard:
     needs: changes
     if: needs.changes.outputs.e2e == 'true' && needs.changes.outputs.full == 'true'
-    name: e2e (${{ matrix.shard }}/4)
+    name: e2e (${{ matrix.shard }}/2)
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -203,7 +202,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ steps.browser.outputs.cache-primary-key }}
-      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/4
+      - run: npm run test:e2e -- --shard=${{ matrix.shard }}/2
       # A failed flow's error context (the page as it was) and any
       # screenshots and traces it left.
       - if: failure()

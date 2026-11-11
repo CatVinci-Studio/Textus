@@ -1,4 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  answer,
+  quickPickNow,
+  subscribeQuickPick,
+  valueOf,
+  type QuickPickItem,
+  type Request,
+} from "./quick-pick-queue";
 import { formatCombo } from "../../utils/shortcuts";
 import { useModalDialog } from "./useModalDialog";
 import "./quick-pick.css";
@@ -11,75 +25,6 @@ import {
   type PreparedList,
 } from "../../utils/list-filter";
 import { listMove } from "./list-keys";
-
-/** A list to choose one item from, or several ticked, filtered by what is
- *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
-export interface QuickPickItem {
-  label: string;
-  description?: string;
-  /** A second line under it. */
-  detail?: string;
-  /** What the plugin gets back; the label if left out. */
-  value?: unknown;
-  /** With `multiple`: ticked to start with. */
-  picked?: boolean;
-  /** A shortcut that does the same, shown at the row's end ("mod+s"). */
-  keys?: string;
-}
-
-interface Request {
-  id: number;
-  items: QuickPickItem[];
-  placeholder: string;
-  multiple: boolean;
-  /** The text in the box to start with; what follows it filters too. */
-  query: string;
-  /** Enter on text that matches nothing resolves { typed: text }. */
-  typed: boolean;
-  resolve: (value: unknown) => void;
-}
-
-let nextId = 1;
-let queue: Request[] = [];
-const listeners = new Set<(queue: Request[]) => void>();
-
-function publish() {
-  for (const listener of listeners) listener(queue);
-}
-
-/** Resolves the chosen item's value - with `multiple`, the ticked ones'
- *  values - or null when dismissed. */
-export function showQuickPick(
-  items: QuickPickItem[],
-  placeholder: string,
-  options: { multiple?: boolean; query?: string; typed?: boolean } = {},
-): Promise<unknown> {
-  return new Promise((resolve) => {
-    queue = [
-      ...queue,
-      {
-        id: nextId++,
-        items,
-        placeholder,
-        multiple: options.multiple === true,
-        query: options.query ?? "",
-        typed: options.typed === true,
-        resolve,
-      },
-    ];
-    publish();
-  });
-}
-
-function valueOf(item: QuickPickItem): unknown {
-  return item.value === undefined ? item.label : item.value;
-}
-
-function answer(request: Request, value: unknown) {
-  queue = queue.filter((r) => r.id !== request.id);
-  publish();
-  request.resolve(value);
-}
 
 type Entry = Filterable & { item: QuickPickItem };
 const prepared = new WeakMap<readonly QuickPickItem[], PreparedList<Entry>>();
@@ -113,14 +58,7 @@ export function QuickPickHost({
   emptyLabel: string;
   okLabel: string;
 }) {
-  const [pending, setPending] = useState<Request[]>(queue);
-  useEffect(() => {
-    listeners.add(setPending);
-    return () => {
-      listeners.delete(setPending);
-    };
-  }, []);
-  const current = pending[0];
+  const current = useSyncExternalStore(subscribeQuickPick, quickPickNow);
   if (!current) return null;
   return (
     <QuickPick

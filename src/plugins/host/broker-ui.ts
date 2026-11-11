@@ -9,11 +9,11 @@ import {
   showNotice,
   startProgress,
 } from "../../engine/controls/notices";
-import { showPluginForm, type PluginFormField } from "../views/plugin-form";
+import { showPluginForm, type PluginFormField } from "../views/plugin-form-queue";
 import {
   showQuickPick,
   type QuickPickItem,
-} from "../../engine/controls/quick-pick";
+} from "../../engine/controls/quick-pick-queue";
 import { removeStatusItem, setStatusItem } from "../contributions/status-items";
 import {
   optionalStr,

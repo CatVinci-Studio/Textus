@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { groupByProject } from "./ChatHistoryMenu";
+import { groupByProject } from "./ChatHistoryList";
 import type { ChatHistoryEntry } from "./chat-history";
 
 const entry = (id: string, docPath: string | null, updatedAt: number) =>

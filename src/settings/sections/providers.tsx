@@ -1,4 +1,4 @@
-import { showQuickPick } from "../../engine/controls/quick-pick";
+import { showQuickPick } from "../../engine/controls/quick-pick-queue";
 import { useState } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { AiProvider } from "../../prefs/SettingsContext";

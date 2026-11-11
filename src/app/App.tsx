@@ -42,8 +42,8 @@ import { AgentPanelDock } from "./islands/AgentPanelDock";
 import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, WordImportNotice, ZenExit } from "./AppNotices";
 import { OnboardingLayers } from "./OnboardingLayers";
-import { QuickPickHost } from "../engine/controls/quick-pick";
-import { PluginFormHost } from "../plugins/views/plugin-form";
+import { QuickPickSlot } from "../engine/controls/QuickPickSlot";
+import { PluginFormSlot } from "../plugins/views/PluginFormSlot";
 import { FloatingViewsHost } from "../plugins/views/floating-views-host";
 import { NoticeHost } from "../engine/controls/notices";
 import "../plugins/plugins.css";
@@ -314,11 +314,11 @@ function App() {
           </Presence>
           <AppDialogHost okLabel={t.dialogOk} />
           <ReportProblemHost t={t} settings={settings} />
-          <QuickPickHost
+          <QuickPickSlot
             emptyLabel={t.pluginQuickPickEmpty}
             okLabel={t.pluginOk}
           />
-          <PluginFormHost />
+          <PluginFormSlot />
           <FloatingViewsHost />
           <NoticeHost />
 
