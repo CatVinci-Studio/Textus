@@ -72,6 +72,8 @@
   --window-bar-height: calc(28px * var(--chrome-scale));
   /* The small round icon button: a panel's tools (.tx-icon-button). */
   --icon-button-s: calc(24px * var(--chrome-scale));
+  /* A tree's step in, a level at a time: files, the outline, plugin lists. */
+  --tree-step: calc(12px * var(--chrome-scale));
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are here, the phone's (iOS's text
      styles) under :root[data-window-chrome="mobile"] below. The desktop's

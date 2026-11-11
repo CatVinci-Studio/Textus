@@ -578,7 +578,7 @@ button.plugin-card-open:hover .plugin-card-name {
   color: var(--ui-on-primary);
   font-family: var(--font-mono);
   font-size: 0.9em;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   text-align: center;
   pointer-events: none;

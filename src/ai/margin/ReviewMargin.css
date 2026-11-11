@@ -116,7 +116,7 @@
   background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
   color: var(--ui-accent-text);
   font-size: var(--text-mark);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* The writer's own note: its mark in the text colour, not the AI's
@@ -406,7 +406,7 @@
   background: var(--ui-success);
   color: var(--ui-on-fill);
   font-size: var(--text-mark);
-  font-weight: 700;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 

@@ -136,7 +136,7 @@
 .tutorial-step-label {
   color: var(--ui-muted);
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
@@ -207,7 +207,7 @@
   color: var(--ui-accent-text);
   background: var(--ui-bg);
   font-size: var(--text-caption);
-  font-weight: 700;
+  font-weight: 600;
   transition:
     color var(--dur-base) var(--ease-standard),
     background-color var(--dur-base) var(--ease-standard),

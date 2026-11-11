@@ -26,7 +26,6 @@
    icon stands under the folders' icons. The step and the chevron are the
    tree's measures, not spacing. */
 .tree-row {
-  --tree-step: 12px;
   --tree-chevron: calc(10px * var(--icon-scale, 1));
   display: flex;
   align-items: center;
@@ -192,6 +191,7 @@
 .outline-row {
   display: flex;
   align-items: center;
+  padding-left: calc(var(--depth, 0) * var(--tree-step));
 }
 
 .outline-toggle {

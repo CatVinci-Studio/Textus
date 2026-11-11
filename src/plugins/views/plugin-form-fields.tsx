@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { announce } from "../../engine/controls/announce";
 import { currentStrings } from "../../i18n/current";
 
 /**
@@ -42,8 +43,16 @@ export function DateField({
   const [month, setMonth] = useState(() => monthOf(value));
   const lang = document.documentElement.lang || undefined;
   const today = iso(new Date());
-  const shift = (n: number) =>
-    setMonth(new Date(month.getFullYear(), month.getMonth() + n, 1));
+  const monthName = (at: Date) =>
+    new Intl.DateTimeFormat(lang, { year: "numeric", month: "long" }).format(
+      at,
+    );
+  // The month a step lands on, said as it shows.
+  const shift = (n: number) => {
+    const next = new Date(month.getFullYear(), month.getMonth() + n, 1);
+    setMonth(next);
+    announce(monthName(next));
+  };
   const days = monthDays(month);
   return (
     <div className="plugin-form-date">
@@ -56,12 +65,7 @@ export function DateField({
         >
           <span className="tx-icon" data-icon="left" />
         </button>
-        <span className="tx-value" aria-live="polite">
-          {new Intl.DateTimeFormat(lang, {
-            year: "numeric",
-            month: "long",
-          }).format(month)}
-        </span>
+        <span className="tx-value">{monthName(month)}</span>
         <button
           type="button"
           className="tx-icon-button"

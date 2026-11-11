@@ -3,7 +3,7 @@
   position: absolute;
   left: 50%;
   bottom: calc(18px + var(--status-bar-height, 0px));
-  z-index: 30;
+  z-index: var(--z-toast);
   display: flex;
   align-items: center;
   gap: 12px;

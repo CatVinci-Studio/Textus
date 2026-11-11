@@ -1,5 +1,5 @@
 import { tabElement } from "../engine/layout/tab-element";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
@@ -155,7 +155,7 @@ export function Outline({ content, tabId }: OutlineProps) {
             aria-level={h.level}
             aria-expanded={h.hasChildren ? !isCollapsed : undefined}
             aria-current={h.index === current ? "location" : undefined}
-            style={{ paddingLeft: (h.level - 1) * 14 }}
+            style={{ "--depth": h.level - 1 } as CSSProperties}
             onClick={() => goTo(h.index)}
             onContextMenu={(e) => {
               e.preventDefault();

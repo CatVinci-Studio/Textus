@@ -11,6 +11,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type KeyboardEvent,
   type ReactNode,
+  type CSSProperties,
 } from "react";
 import { ContextMenu } from "../../engine/controls/ContextMenu";
 import { useLatest } from "../../utils/hooks/useLatest";
@@ -279,7 +280,7 @@ export const PluginListPane = memo(function PluginListPane({
                 className={`plugin-list-row${index === active ? " is-active" : ""}${
                   item.checkbox ? " is-done" : ""
                 }`}
-                style={{ paddingInlineStart: `${8 + depth * 14}px` }}
+                style={{ "--depth": depth } as CSSProperties}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => select(item)}
                 {...(info?.move ? dragHandlers(item, key) : {})}
