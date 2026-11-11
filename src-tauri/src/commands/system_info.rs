@@ -48,7 +48,7 @@ pub struct SentReport {
     pub number: u32,
 }
 
-/// Files `report`. "LIMIT" when this computer has sent its share today;
+/// Files `report`. sendLimit when this computer has sent its share today;
 /// otherwise the connection's or the service's error.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -64,7 +64,7 @@ pub async fn send_problem_report(report: ProblemReport) -> Result<SentReport, St
         .map_err(|e| e.to_string())?;
     match response.status().as_u16() {
         201 => response.json().await.map_err(|e| e.to_string()),
-        429 => Err("LIMIT".into()),
+        429 => Err(crate::errors::error("sendLimit")),
         status => Err(format!("The feedback service answered {status}.")),
     }
 }

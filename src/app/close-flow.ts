@@ -11,11 +11,7 @@ import {
 } from "../document/doc-tabs";
 import { drafts, session } from "../platform/ipc";
 import { forgetTabZoom } from "../engine/zoom/tab-zoom";
-import {
-  paneOf,
-  shownIsland,
-  windowLayout,
-} from "../engine/layout/store";
+import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useLatest } from "../utils/hooks/useLatest";

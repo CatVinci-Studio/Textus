@@ -1,3 +1,4 @@
+import { isError } from "../utils/error-text";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
@@ -87,7 +88,7 @@ function useTextSearch(root: string, query: string): TextState {
           !cancelled &&
           setState({
             kind: "failed",
-            tooBroad: String(err).includes("TOO_BROAD"),
+            tooBroad: isError(err, "tooBroad"),
           }),
       );
     }, TEXT_DELAY_MS);

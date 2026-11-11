@@ -1,3 +1,4 @@
+import { isError } from "../utils/error-text";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
 import { canOpenFolder, canUseWindows } from "../platform/capabilities";
@@ -174,7 +175,7 @@ export function useOpenFolder({
       const picked = await fs.pickOpenFolder();
       if (picked) openFolder(picked);
     } catch (err) {
-      if (String(err).includes("TOO_BROAD")) void showMessage(folderTooBroad);
+      if (isError(err, "tooBroad")) void showMessage(folderTooBroad);
     }
   }, [openFolder, folderTooBroad]);
 

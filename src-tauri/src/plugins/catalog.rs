@@ -298,7 +298,8 @@ fn readme_for(
 }
 
 /// The error when a skill of that name exists already; it is never overwritten.
-pub const SKILL_EXISTS: &str = "SKILL_EXISTS";
+/// Its error code (errors.json).
+pub const SKILL_EXISTS: &str = "skillExists";
 
 /// Installs skill `name` from the catalog last fetched into the global skills/
 /// folder, after checking it. Returns its path.
@@ -352,7 +353,7 @@ fn install_skill_in(
         .iter()
         .any(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
     if taken {
-        return Err(SKILL_EXISTS.into());
+        return Err(crate::errors::error(SKILL_EXISTS));
     }
     crate::ai::workspace::write_skill_file(
         dir,

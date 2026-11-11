@@ -176,7 +176,7 @@ fn a_memory_moves_between_personal_and_project() {
     let alone = MemoryDirs::new(Some(&base.join("agent")), None);
     assert_eq!(
         alone.move_to(&personal, Scope::Project).unwrap_err(),
-        "NO_PROJECT"
+        crate::errors::error("noProject")
     );
     std::fs::remove_dir_all(&base).ok();
 }
@@ -300,7 +300,7 @@ fn facts_go_to_the_library_and_never_change_the_users_entries() {
         .contains("user's own"));
     assert_eq!(
         dirs.undo("project/library/harbour", None).unwrap_err(),
-        "NOT_REMEMBERED"
+        crate::errors::error("notRemembered")
     );
     // No project: no library.
     let alone = MemoryDirs::new(Some(&base.join("agent")), None);

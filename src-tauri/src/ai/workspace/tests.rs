@@ -317,7 +317,10 @@ fn customize_copies_and_reset_deletes_only_copies() {
         &skills.join("mine.md"),
         "---\nname: proofread\n---\nMy proofreading rules.",
     );
-    assert_eq!(reset_in(&skills, "proofread").unwrap_err(), NOT_A_COPY);
+    assert_eq!(
+        reset_in(&skills, "proofread").unwrap_err(),
+        crate::errors::error(NOT_A_COPY)
+    );
     assert!(skills.join("mine.md").exists());
     assert_eq!(
         customize_in(&skills, "proofread").unwrap(),
@@ -329,8 +332,14 @@ fn customize_copies_and_reset_deletes_only_copies() {
         customize_in(&skills, "theme").unwrap(),
         skills.join("theme-2.md")
     );
-    assert_eq!(customize_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
-    assert_eq!(reset_in(&skills, "nope").unwrap_err(), UNKNOWN_BUILTIN);
+    assert_eq!(
+        customize_in(&skills, "nope").unwrap_err(),
+        crate::errors::error(UNKNOWN_BUILTIN)
+    );
+    assert_eq!(
+        reset_in(&skills, "nope").unwrap_err(),
+        crate::errors::error(UNKNOWN_BUILTIN)
+    );
     std::fs::remove_dir_all(&root).ok();
 }
 

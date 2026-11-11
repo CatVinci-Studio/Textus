@@ -79,10 +79,7 @@ export function useTabDragMerge(opts: {
   const previewWinRef = useRef<{ left: number; top: number } | null>(null);
   // A tab from another window over the documents: room made where it
   // will open.
-  const arrival = useMemo(
-    () => arrivalPreview(),
-    [],
-  );
+  const arrival = useMemo(() => arrivalPreview(), []);
 
   const hitTestWindow = useCallback(
     async (screenX: number, screenY: number): Promise<string | null> => {

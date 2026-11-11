@@ -28,7 +28,7 @@ pub(crate) fn style_samples(files: &[String]) -> Result<String, String> {
         ));
     }
     if samples.trim().is_empty() {
-        return Err("NO_SAMPLES".to_string());
+        return Err(crate::errors::error("noSamples"));
     }
     Ok(samples)
 }

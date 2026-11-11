@@ -282,8 +282,7 @@ export function useSaveTabs(opts: {
         changed === null
           ? tab.content
           : changed.inEditor
-            ? (liveTabs().find((tb) => tb.id === tabId)?.content ??
-              tab.content)
+            ? (liveTabs().find((tb) => tb.id === tabId)?.content ?? tab.content)
             : changed.text;
       if (changed && !changed.inEditor) updateTab(tabId, { content });
       if (!(await writeOrReport(tab.path, content))) return "failed";

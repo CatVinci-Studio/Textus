@@ -53,7 +53,7 @@ fn a_skill_installs_once_and_never_over_one_there() {
     assert!(path.exists());
     assert_eq!(
         install_skill_in(dir.path(), "press-release", text).unwrap_err(),
-        SKILL_EXISTS
+        crate::errors::error(SKILL_EXISTS)
     );
     assert!(install_skill_in(dir.path(), "empty", "---\nname: empty\n---\n").is_err());
 }

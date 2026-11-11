@@ -27,7 +27,7 @@ export const commands = {
 	customize_builtin_skill: (name: string) => __TAURI_INVOKE<string>("customize_builtin_skill", { name }),
 	/**
 	 *  Reset to built-in: deletes the Customize… copies (those with
-	 *  `textus-based-on`); a same-named skill the user wrote is NOT_A_COPY. Returns
+	 *  `textus-based-on`); a same-named skill the user wrote is notACopy. Returns
 	 *  the deleted paths, so the frontend can close tabs that would write them back.
 	 */
 	reset_builtin_skill: (name: string) => __TAURI_INVOKE<string[]>("reset_builtin_skill", { name }),

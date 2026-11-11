@@ -102,7 +102,11 @@ export function Outline({ content, tabId }: OutlineProps) {
         onSelect: () =>
           void navigator.clipboard
             .writeText(
-              `[${label}](#${headingAnchor(tabId, headings.map((h) => h.text), index)})`,
+              `[${label}](#${headingAnchor(
+                tabId,
+                headings.map((h) => h.text),
+                index,
+              )})`,
             )
             .catch(() => {}),
       },

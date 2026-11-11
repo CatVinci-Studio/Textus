@@ -121,7 +121,7 @@ export const commands = {
 	system_info: () => __TAURI_INVOKE<SystemInfo>("system_info"),
 	system_font_families: () => __TAURI_INVOKE<string[]>("system_font_families"),
 	/**
-	 *  Files `report`. "LIMIT" when this computer has sent its share today;
+	 *  Files `report`. sendLimit when this computer has sent its share today;
 	 *  otherwise the connection's or the service's error.
 	 */
 	send_problem_report: (report: ProblemReport_Deserialize) => __TAURI_INVOKE<SentReport>("send_problem_report", { report }),

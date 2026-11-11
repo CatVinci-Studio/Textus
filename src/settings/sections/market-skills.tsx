@@ -1,3 +1,4 @@
+import { isError } from "../../utils/error-text";
 import { Byline, CatalogRow } from "../pages/CatalogRow";
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
@@ -6,7 +7,6 @@ import { MODES } from "../../ai/modes";
 import type { Strings } from "../../i18n/strings";
 import { ai, plugins as pluginsIpc } from "../../platform/ipc";
 import type { CatalogState, SkillEntry } from "../../plugins/store/catalog";
-import { errorText } from "../../utils/error-text";
 import { useSettings } from "../../prefs/SettingsContext";
 import { AvailableSection } from "../pages/AvailableSection";
 import { CatalogProblem } from "../pages/AvailablePlugins";
@@ -14,7 +14,6 @@ import { installsText } from "../pages/installs-text";
 import { SKILLS_CHANGED_EVENT, announceChange } from "./skills";
 
 /** The error the backend gives for a skill of that name the user already has. */
-const SKILL_EXISTS = "SKILL_EXISTS";
 
 /** The catalog's skills whose name, description, author or names in any
  *  language hold every word of `query`. */
@@ -77,7 +76,7 @@ export function AvailableSkills({
     try {
       await pluginsIpc.installSkillFromCatalog(skill.name);
     } catch (err) {
-      if (errorText(err) !== SKILL_EXISTS)
+      if (!isError(err, "skillExists"))
         setError(`${t.marketSkillFailed} ${explainError(err, t)}`);
     } finally {
       setBusy(null);

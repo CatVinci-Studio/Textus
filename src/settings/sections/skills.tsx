@@ -25,7 +25,6 @@ import {
   isConventionsValue,
 } from "../writing-conventions";
 import { WRITING_CONVENTIONS_AUTOMATIC } from "../../platform/ipc-ai-types";
-import { errorText } from "../../utils/error-text";
 import { matchesWords } from "../../utils/match-words";
 import { explainError } from "../../utils/error-explain";
 
@@ -254,17 +253,7 @@ export function BuiltinSkillsSection({
   const lang = settings.language;
   const { list } = useSkillList();
   const [error, setError] = useState<string | null>(null);
-  // The backend's error codes in the user's words.
-  const failed = (err: unknown) => {
-    const text = errorText(err);
-    setError(
-      text === "NOT_A_COPY"
-        ? t.agentSkillsNotACopy
-        : text === "UNKNOWN_BUILTIN"
-          ? t.agentSkillsUnknownBuiltin
-          : explainError(err, t),
-    );
-  };
+  const failed = (err: unknown) => setError(explainError(err, t));
 
   // One item per name: the built-in, a Customize… copy (`basedOn`), or the
   // user's own skill that replaces it outright.

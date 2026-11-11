@@ -1,3 +1,4 @@
+import { isError } from "../../utils/error-text";
 import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
@@ -6,7 +7,6 @@ import { usePresence } from "../../engine/motion/usePresence";
 import { useModalDialog } from "../../engine/controls/useModalDialog";
 import { Select } from "../../engine/controls/Select";
 import type { Settings } from "../../prefs/settings-types";
-import { errorText } from "../../utils/error-text";
 import { explainError } from "../../utils/error-explain";
 import {
   REPORT_AREAS,
@@ -148,10 +148,9 @@ function ReportForm({
     } catch (err) {
       setPhase({
         state: "failed",
-        why:
-          errorText(err) === "LIMIT"
-            ? t.reportLimit
-            : `${t.reportFailed} ${explainError(err, t)}`,
+        why: isError(err, "sendLimit")
+          ? explainError(err, t)
+          : `${t.reportFailed} ${explainError(err, t)}`,
       });
     }
   };

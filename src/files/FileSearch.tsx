@@ -1,3 +1,4 @@
+import { isError } from "../utils/error-text";
 import { fill } from "../i18n/fill";
 import { tabElement } from "../engine/layout/tab-element";
 import {
@@ -74,7 +75,7 @@ function useFolderIndex(
         if (id !== request.current) return;
         builtAt.current = 0;
         setIndex({
-          kind: String(err).includes("TOO_BROAD") ? "tooBroad" : "failed",
+          kind: isError(err, "tooBroad") ? "tooBroad" : "failed",
         });
       },
     );

@@ -6,7 +6,6 @@ import { ai, exportDoc } from "../../../platform/ipc";
 import type { LibraryEntry, Memory, MemoryScope } from "../../../platform/ipc";
 import { useSettings } from "../../../prefs/SettingsContext";
 import { useActiveProvider } from "../../provider-catalog";
-import { errorText } from "../../../utils/error-text";
 import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
 
@@ -55,16 +54,7 @@ export function useProjectActions({
     try {
       await work();
     } catch (err) {
-      const text = errorText(err);
-      setMessage(
-        text === "TOO_BROAD"
-          ? t.folderTooBroad
-          : text === "NO_SAMPLES"
-            ? t.projectNoSamples
-            : text === "NO_PROJECT"
-              ? t.projectNeedsSave
-              : explainError(err, t),
-      );
+      setMessage(explainError(err, t));
     } finally {
       setBusy(null);
       reload();

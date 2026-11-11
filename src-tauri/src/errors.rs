@@ -25,6 +25,11 @@ pub(crate) fn error(code: &str) -> String {
     }
 }
 
+/// Whether `err` is the error `code` stands for.
+pub(crate) fn is(err: &str, code: &str) -> bool {
+    err.ends_with(&format!("[{code}]"))
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

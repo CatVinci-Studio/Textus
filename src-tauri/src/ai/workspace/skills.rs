@@ -245,7 +245,7 @@ pub(crate) enum OnTaken {
     Replace,
     /// Writes beside it as `name-2`, `name-3`… (a copy, an offer saved).
     NextFree,
-    /// Leaves it and fails with `refusal`.
+    /// Leaves it and fails with the error `code` stands for.
     Refuse(&'static str),
 }
 
@@ -262,7 +262,7 @@ pub(crate) fn write_skill_file(
     let mut path = skill_file_path(dir, name)?;
     match on_taken {
         OnTaken::Replace => {}
-        OnTaken::Refuse(refusal) if path.exists() => return Err(refusal.into()),
+        OnTaken::Refuse(code) if path.exists() => return Err(crate::errors::error(code)),
         OnTaken::Refuse(_) => {}
         OnTaken::NextFree => {
             let mut n = 2;
@@ -277,15 +277,14 @@ pub(crate) fn write_skill_file(
     Ok(path)
 }
 
-/// Errors the built-in skill commands return, for the frontend to map to
-/// its own messages.
-pub(crate) const UNKNOWN_BUILTIN: &str = "UNKNOWN_BUILTIN";
+/// The built-in skill commands' errors, by code (errors.json).
+pub(crate) const UNKNOWN_BUILTIN: &str = "unknownBuiltin";
 
-pub(crate) const NOT_A_COPY: &str = "NOT_A_COPY";
+pub(crate) const NOT_A_COPY: &str = "notACopy";
 
 pub(crate) fn customize_in(skills_dir: &Path, name: &str) -> Result<PathBuf, String> {
     let (Some(builtin), Some(raw)) = (builtin::find(name), builtin::raw(name)) else {
-        return Err(UNKNOWN_BUILTIN.to_string());
+        return Err(crate::errors::error(UNKNOWN_BUILTIN));
     };
     if let Some((path, _)) = read_skill_files(skills_dir)
         .into_iter()
@@ -302,7 +301,7 @@ pub(crate) fn customize_in(skills_dir: &Path, name: &str) -> Result<PathBuf, Str
 
 pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, String> {
     if builtin::find(name).is_none() {
-        return Err(UNKNOWN_BUILTIN.to_string());
+        return Err(crate::errors::error(UNKNOWN_BUILTIN));
     }
     let prefix = format!("{name}@");
     let same_name: Vec<(PathBuf, AgentSkill)> = read_skill_files(skills_dir)
@@ -319,7 +318,7 @@ pub(crate) fn reset_in(skills_dir: &Path, name: &str) -> Result<Vec<String>, Str
         .map(|(p, _)| p)
         .collect();
     if copies.is_empty() && !same_name.is_empty() {
-        return Err(NOT_A_COPY.to_string());
+        return Err(crate::errors::error(NOT_A_COPY));
     }
     let mut deleted = Vec::new();
     for path in copies {

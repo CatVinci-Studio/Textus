@@ -22,6 +22,11 @@ export function errorCode(text: string): string | null {
   return /\s\[([a-z][a-zA-Z]*)\]$/.exec(text)?.[1] ?? null;
 }
 
+/** Whether `err` is the Textus error `code` stands for (errors.json). */
+export function isError(err: unknown, code: string): boolean {
+  return errorCode(errorText(err)) === code;
+}
+
 /**
  * A benign, expected outcome of an on-demand AI action ("no issues found"),
  * thrown with a code so the notice can be shown in the user's language.

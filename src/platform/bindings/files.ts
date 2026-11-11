@@ -64,7 +64,7 @@ export const commands = {
 	move_picture_to_trash: (docPath: string | null, path: string) => __TAURI_INVOKE<null>("move_picture_to_trash", { docPath, path }),
 	/**
 	 *  The files under `root`, for the sidebar's file-name search. Refuses the home
-	 *  folder and a drive root ("TOO_BROAD"): a walk there is everything the user owns.
+	 *  folder and a drive root ("tooBroad"): a walk there is everything the user owns.
 	 */
 	index_folder: (root: string) => __TAURI_INVOKE<FolderIndex>("index_folder", { root }),
 	/**
@@ -79,7 +79,7 @@ export const commands = {
 	folder_documents: (root: string) => __TAURI_INVOKE<WorkspaceDocuments>("folder_documents", { root }),
 	/**
 	 *  File > Open Folder…: a folder picker. The home folder or a drive root is
-	 *  refused with "TOO_BROAD" for the frontend to explain.
+	 *  refused as tooBroad for the frontend to explain.
 	 */
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
 	/**  Creates an empty Markdown document in `dir`. Returns its path. */

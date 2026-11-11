@@ -263,7 +263,7 @@ pub async fn pick_workspace_root(window: tauri::WebviewWindow) -> Result<Option<
         .as_deref()
         .is_some_and(|p| crate::ai::project::is_too_broad(Path::new(p)))
     {
-        return Err("TOO_BROAD".to_string());
+        return Err(crate::errors::error("tooBroad"));
     }
     Ok(picked)
 }
@@ -348,7 +348,7 @@ pub async fn customize_builtin_skill(app: AppHandle, name: String) -> Result<Str
 }
 
 /// Reset to built-in: deletes the Customize… copies (those with
-/// `textus-based-on`); a same-named skill the user wrote is NOT_A_COPY. Returns
+/// `textus-based-on`); a same-named skill the user wrote is notACopy. Returns
 /// the deleted paths, so the frontend can close tabs that would write them back.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -372,7 +372,7 @@ pub async fn set_skill_modes(
     modes: Vec<AgentMode>,
 ) -> Result<(), String> {
     let dir = match source {
-        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
         SkillSource::Global => global_agent_dir(&app)?,
         SkillSource::Project => project_dir(
             &project_root(doc_path.as_deref(), workspace_root.as_deref())
@@ -397,7 +397,7 @@ pub async fn set_skill_off(
     off: bool,
 ) -> Result<(), String> {
     let dir = match source {
-        SkillSource::Builtin => return Err(UNKNOWN_BUILTIN.to_string()),
+        SkillSource::Builtin => return Err(crate::errors::error(UNKNOWN_BUILTIN)),
         SkillSource::Global => global_agent_dir(&app)?,
         SkillSource::Project => project_dir(
             &project_root(doc_path.as_deref(), workspace_root.as_deref())

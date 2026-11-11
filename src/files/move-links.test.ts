@@ -124,7 +124,7 @@ it("edits a document with unsaved changes in its tab, not on disk", async () => 
 });
 
 it("does nothing in a folder too broad to search", async () => {
-  vi.mocked(fs.indexFolder).mockRejectedValue("TOO_BROAD");
+  vi.mocked(fs.indexFolder).mockRejectedValue("Too broad. [tooBroad]");
   await updateLinksAfterMove("/plan.md", "/a/plan.md", "/", t);
   expect(showConfirm).not.toHaveBeenCalled();
 });

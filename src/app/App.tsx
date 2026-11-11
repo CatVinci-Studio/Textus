@@ -77,8 +77,7 @@ function App() {
 
   const { textusAi, tutorial, settingsOpening, pendingClose } = shell;
   const { draftsRestoredCount, setDraftsRestoredCount, wordImported } = shell;
-  const { tabs, activeTabId, setActiveTabId, addBlankTab } =
-    shell.tabState;
+  const { tabs, activeTabId, setActiveTabId, addBlankTab } = shell.tabState;
   const { panelOpen, setPanelOpen, toggleSidebar, sidebarWidth } = shell.panels;
   const { agentPanel, toggleAgentPanel } = shell.panels;
   const { sidebarPresence, sidebarClosing, agentPresence, agentClosing } =

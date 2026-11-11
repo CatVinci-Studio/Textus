@@ -23,6 +23,9 @@ import { forgetShimSecrets, pluginApiShim } from "./plugin-shim-api";
 import { webPageCommand } from "./native-web-pages";
 import { makeDevSchedule } from "./schedule-shim";
 import { pathIndex, resolveTarget } from "../files/link-resolve";
+
+/** The backend's "too broad a folder", as errors.rs words it. */
+const TOO_BROAD = "This folder is too broad to open. [tooBroad]";
 import { ownError } from "../utils/error-text";
 
 /** The built-in skills as `list_skills` reports them (descriptions abridged). */
@@ -591,7 +594,7 @@ export function installDevTauriShim(): void {
       case "pick_open_folder": {
         const picked = w.__devPickFolder ?? null;
         return picked === "TOO_BROAD"
-          ? Promise.reject("TOO_BROAD")
+          ? Promise.reject(TOO_BROAD)
           : Promise.resolve(picked);
       }
       case "add_recent_file":
@@ -902,7 +905,7 @@ export function installDevTauriShim(): void {
       case "index_folder": {
         // The backend refuses these; the shim's "home" is /home/me.
         if (path === "/" || path === "/home/me")
-          return Promise.reject("TOO_BROAD");
+          return Promise.reject(TOO_BROAD);
         const indexed = Object.keys(files)
           .filter(
             (file) =>
@@ -1107,7 +1110,10 @@ export function installDevTauriShim(): void {
       case "skill_install_catalog": {
         const had = (w.__devInstalledSkills ??= []) as string[];
         const name = String(args.name);
-        if (had.includes(name)) return Promise.reject("SKILL_EXISTS");
+        if (had.includes(name))
+          return Promise.reject(
+            "A skill of that name is already there. [skillExists]",
+          );
         had.push(name);
         return Promise.resolve(`/config/skills/${name}.md`);
       }

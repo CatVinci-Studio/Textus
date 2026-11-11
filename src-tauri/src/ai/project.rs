@@ -39,7 +39,7 @@ mod tests;
 
 fn project_root(doc_path: Option<&str>, workspace_root: Option<&str>) -> Result<PathBuf, String> {
     crate::ai::workspace::project_root(doc_path, workspace_root)
-        .ok_or_else(|| "NO_PROJECT".to_string())
+        .ok_or_else(|| crate::errors::error("noProject"))
 }
 
 /// The project's text files, for the composer's @-mention picker.
