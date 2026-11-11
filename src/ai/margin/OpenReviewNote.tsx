@@ -44,7 +44,7 @@ export function OpenReviewNote({
           onClose={onClose}
         />
       )}
-      <Presence show={!!note && phone} exitMs={250}>
+      <Presence show={!!note && phone}>
         {note && phone && (
           <BottomCard
             label={own ? t.ownNoteBy : t.reviewNoteBy}

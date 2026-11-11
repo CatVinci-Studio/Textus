@@ -393,7 +393,7 @@ function DocumentItem({
           <MoreIcon />
         </button>
       )}
-      <Presence show={!!at} exitMs={250}>
+      <Presence show={!!at}>
         {at && (
           <ContextMenu
             x={at.x}

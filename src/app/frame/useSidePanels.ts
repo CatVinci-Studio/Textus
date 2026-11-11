@@ -1,5 +1,4 @@
 import { AI_PRESS_EVENT } from "../islands/ai-tabs";
-import { duration } from "../../engine/motion/motion";
 import {
   useCallback,
   useEffect,
@@ -126,11 +125,9 @@ export function useSidePanels(aiOn: boolean) {
   // Both side panels play their way out before their contents go; the
   // editor makes or takes back its room at once.
   // Out on the islands' clock (sidebar-frame.css).
-  const sidebarPresence = usePresence(panelOpen, {
-    exitMs: duration("--dur-settle"),
-  });
+  const sidebarPresence = usePresence(panelOpen);
   const sidebarClosing = sidebarPresence.state === "closing";
-  const agentPresence = usePresence(agentPanel.open, { exitMs: 250 });
+  const agentPresence = usePresence(agentPanel.open);
   const agentClosing = agentPresence.state === "closing";
   // Remembered on the desktop like the open state; on iOS it starts on
   // Files.

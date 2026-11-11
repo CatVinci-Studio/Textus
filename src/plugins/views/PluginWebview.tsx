@@ -260,7 +260,7 @@ export function PluginWebview({
       {/* On the body: a page in a document sits inside its zoom, which
           would scale the menu's window coordinates a second time. */}
       {createPortal(
-        <Presence show={menu !== null} exitMs={120}>
+        <Presence show={menu !== null}>
           {menu && (
             <ContextMenu
               x={menu.x}

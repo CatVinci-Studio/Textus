@@ -67,7 +67,7 @@ export function useSourceImagePaste(
   };
 
   const dialog = (
-    <Presence show={!!imageNameRequest} exitMs={120}>
+    <Presence show={!!imageNameRequest}>
       {imageNameRequest && (
         <ImageNameDialog
           request={imageNameRequest}

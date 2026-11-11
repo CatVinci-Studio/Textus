@@ -151,7 +151,7 @@ export function SettingsLayer({
   const { open, request, close } = opening;
   return (
     // The longest exit is the phone's: the page going back down.
-    <Presence show={open !== null} exitMs={320}>
+    <Presence show={open !== null}>
       {open && (
         <Suspense fallback={null}>
           <SettingsPanel

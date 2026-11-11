@@ -138,7 +138,7 @@ export function TextusAiButton({
       </Tooltip>
       {/* On <body>: the bar's status group takes no pointer events. */}
       {createPortal(
-        <Presence show={menu !== null} exitMs={120}>
+        <Presence show={menu !== null}>
           {menu && (
             <ContextMenu
               x={menu.x}

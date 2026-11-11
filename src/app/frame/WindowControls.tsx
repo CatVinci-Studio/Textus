@@ -68,7 +68,7 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
           <HamburgerIcon />
         </button>
       </Tooltip>
-      <Presence show={anchor !== null} exitMs={120}>
+      <Presence show={anchor !== null}>
         {anchor && (
           <Suspense fallback={null}>
             <AppMenu

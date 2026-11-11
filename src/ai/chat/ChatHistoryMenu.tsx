@@ -62,7 +62,7 @@ export function ChatHistoryMenu({
           <HistoryIcon />
         </button>
       </Tooltip>
-      <Presence show={open} exitMs={120}>
+      <Presence show={open}>
         {open && (
           <PresenceDiv
             className="chat-history-menu floating-surface"

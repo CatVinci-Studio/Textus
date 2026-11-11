@@ -50,7 +50,7 @@ export function CornerToast({
     </>
   );
   return (
-    <Presence show={show} exitMs={120}>
+    <Presence show={show}>
       {show && (
         <PresenceDiv
           className={`corner-toast floating-surface${name ? ` ${name}` : ""}`}

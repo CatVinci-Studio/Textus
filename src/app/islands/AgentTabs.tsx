@@ -164,7 +164,7 @@ export function AgentIslandTools({ t }: { t: Strings }) {
         buttonClassName="inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}
       />
-      <Presence show={menu !== null} exitMs={120}>
+      <Presence show={menu !== null}>
         {menu && (
           <ContextMenu
             x={menu.x}

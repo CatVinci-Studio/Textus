@@ -76,7 +76,7 @@ export function mountLanguagePicker(container: HTMLElement) {
 
 function useFloatingMenu(open: boolean, active: number, dismiss: () => void) {
   const floating = useFloatingList(open, active, dismiss);
-  const presence = usePresence(open, { exitMs: 120 });
+  const presence = usePresence(open);
   const listRef = useMergedRef(floating.listRef, presence.ref);
   return { ...floating, listRef, presence };
 }

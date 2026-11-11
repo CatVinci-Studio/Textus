@@ -197,7 +197,7 @@ export function Outline({ content, tabId }: OutlineProps) {
           </div>
         );
       })}
-      <Presence show={menu !== null} exitMs={120}>
+      <Presence show={menu !== null}>
         {menu && (
           <ContextMenu
             x={menu.x}

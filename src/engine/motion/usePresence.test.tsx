@@ -20,11 +20,7 @@ function Panel({ label }: { label: string }) {
 }
 
 function Host({ open, label = "Panel" }: { open: boolean; label?: string }) {
-  return (
-    <Presence show={open} exitMs={200}>
-      {open && <Panel label={label} />}
-    </Presence>
-  );
+  return <Presence show={open}>{open && <Panel label={label} />}</Presence>;
 }
 
 /** Gives the element a running exit, the way a closing stylesheet does
@@ -82,7 +78,10 @@ describe("Presence", () => {
       const { rerender } = render(<Host open />);
       rerender(<Host open={false} />);
       expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
-      act(() => vi.advanceTimersByTime(260));
+      // The longest exit the tokens have (--dur-sheet), and a little.
+      act(() => vi.advanceTimersByTime(400));
+      expect(screen.getByRole("dialog", { hidden: true })).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(110));
       expect(screen.queryByRole("dialog", { hidden: true })).toBeNull();
     } finally {
       restore();

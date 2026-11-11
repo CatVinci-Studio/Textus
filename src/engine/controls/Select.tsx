@@ -173,7 +173,7 @@ function DrawnSelect({
   const listId = useId();
   // The list stays a moment after it closes, shrinking back into the
   // trigger; the choice has already gone through by then.
-  const presence = usePresence(open, { exitMs: 120 });
+  const presence = usePresence(open);
   const presenceRef = useMergedRef(listRef, presence.ref);
 
   function openMenu() {

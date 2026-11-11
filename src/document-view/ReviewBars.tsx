@@ -140,7 +140,7 @@ export function ReviewBars({
   const shown = !!changes || notesShown;
   if (!paneEl) return null;
   return createPortal(
-    <Presence show={shown} exitMs={200}>
+    <Presence show={shown}>
       {shown && (
         <ReviewBar
           labels={t}

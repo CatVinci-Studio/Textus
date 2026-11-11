@@ -16,11 +16,7 @@ export function IslandNumbers() {
     subscribeIslandNumbers,
     islandNumbersShown,
   );
-  return (
-    <Presence show={shown} exitMs={120}>
-      {shown && <Numbers />}
-    </Presence>
-  );
+  return <Presence show={shown}>{shown && <Numbers />}</Presence>;
 }
 
 function Numbers() {

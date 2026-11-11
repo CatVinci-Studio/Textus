@@ -299,7 +299,7 @@ function App() {
               <KeyboardToolbar />
             </Suspense>
           )}
-          <Presence show={isIOSApp && documentsOpen} exitMs={320}>
+          <Presence show={isIOSApp && documentsOpen}>
             {isIOSApp && documentsOpen && (
               <Suspense fallback={null}>
                 <DocumentList

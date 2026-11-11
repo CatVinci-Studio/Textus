@@ -167,7 +167,7 @@ export function Tooltip({
           </span>,
           document.body,
         )}
-      <Presence show={open} exitMs={120}>
+      <Presence show={open}>
         {open && (
           <TooltipBubble id={tipId} anchor={anchor} side={side}>
             {text}

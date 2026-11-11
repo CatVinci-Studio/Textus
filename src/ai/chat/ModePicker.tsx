@@ -69,7 +69,7 @@ export function ModePicker({
     480,
   );
   const listId = useId();
-  const presence = usePresence(open, { exitMs: 120 });
+  const presence = usePresence(open);
   const presenceRef = useMergedRef(listRef, presence.ref);
 
   // The list takes focus while open; with holdFocus it goes back to where

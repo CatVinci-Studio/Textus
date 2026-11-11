@@ -38,7 +38,7 @@ export function GrammarSuggestion({
 
   return (
     <>
-      <Presence show={!!grammar.popover && phone} exitMs={250}>
+      <Presence show={!!grammar.popover && phone}>
         {grammar.popover && phone && (
           // A fix that no longer fits the text says so in the notice, the
           // card having closed on the tap.
@@ -82,7 +82,7 @@ export function GrammarSuggestion({
           </BottomCard>
         )}
       </Presence>
-      <Presence show={!!grammar.popover && !phone} exitMs={120}>
+      <Presence show={!!grammar.popover && !phone}>
         {grammar.popover && !phone && (
           <GrammarPopover
             info={grammar.popover}

@@ -252,7 +252,7 @@ function FileNode({
         <span className="tree-label">{entry.name}</span>
         {waiting && <span className="tree-ai-waiting">{waiting}</span>}
       </div>
-      <Presence show={!!press.at} exitMs={250}>
+      <Presence show={!!press.at}>
         {press.at && (
           <ContextMenu
             x={press.at.x}

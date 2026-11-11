@@ -53,7 +53,7 @@ export function useMenuButton(
       },
     },
     menu: (
-      <Presence show={at !== null} exitMs={120}>
+      <Presence show={at !== null}>
         {at && (
           <ContextMenu
             x={at.x}

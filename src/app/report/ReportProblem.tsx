@@ -66,7 +66,7 @@ export function ReportProblemDialog({
       );
   }, [open, settings]);
   const close = onClose;
-  const presence = usePresence(open, { exitMs: 150 });
+  const presence = usePresence(open);
   const dialog = useModalDialog(close, open, ".report-problem-text");
   if (!presence.mounted) return null;
   return (

@@ -309,7 +309,7 @@ function WebEditor({
           data-testid="playground-import-input"
         />
       </header>
-      <Presence show={menu !== null} exitMs={120}>
+      <Presence show={menu !== null}>
         {menu && (
           <ContextMenu
             x={menu.x}

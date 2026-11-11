@@ -93,7 +93,7 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
           {title}
         </button>
       ))}
-      <Presence show={open !== null} exitMs={120}>
+      <Presence show={open !== null}>
         {open && (
           // A list of its own per title, so the arrow keys start on its
           // first row each time.

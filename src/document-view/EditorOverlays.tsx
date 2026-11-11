@@ -38,7 +38,7 @@ export function EditorOverlays({
   const { findReplace, tableDialogOpen, setTableDialogOpen } = popups;
   return (
     <>
-      <Presence show={findReplace.open} exitMs={120}>
+      <Presence show={findReplace.open}>
         {findReplace.open && (
           <FindReplaceBar findReplace={findReplace} labels={t} />
         )}
@@ -59,7 +59,7 @@ export function EditorOverlays({
         own={review.notes.menu}
         onClose={() => popups.setMenu(null)}
       />
-      <Presence show={tableDialogOpen} exitMs={120}>
+      <Presence show={tableDialogOpen}>
         {tableDialogOpen && (
           <InsertTableDialog
             title={t.insertTable}
@@ -72,7 +72,7 @@ export function EditorOverlays({
           />
         )}
       </Presence>
-      <Presence show={!!imageNameRequest} exitMs={120}>
+      <Presence show={!!imageNameRequest}>
         {imageNameRequest && (
           <ImageNameDialog
             request={imageNameRequest}

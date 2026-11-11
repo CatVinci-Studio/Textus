@@ -115,7 +115,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
   const current = pending[0];
   // The answered box stays a moment to fade out; a queued one takes its
   // place without the dimming going away and coming back.
-  const presence = usePresence(!!current, { exitMs: 150 });
+  const presence = usePresence(!!current);
   const lastShown = useRef<Request | null>(null);
   if (current) lastShown.current = current;
   const shown = current ?? lastShown.current;

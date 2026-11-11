@@ -1,3 +1,4 @@
+import { duration } from "./motion";
 import {
   Fragment,
   createContext,
@@ -53,11 +54,9 @@ function hasExit(el: Element): boolean {
 }
 
 /** `open` as it should be on screen: on close it stays mounted, "closing",
- *  until its exit animations end, `exitMs` passes, or at once when none runs. */
-export function usePresence(
-  open: boolean,
-  { exitMs = 200 }: { exitMs?: number } = {},
-): PresenceHandle {
+ *  until its exit animations end, or at once when none runs; never longer
+ *  than the longest exit the tokens have (a missed end event). */
+export function usePresence(open: boolean): PresenceHandle {
   const [mounted, setMounted] = useState(open);
   const [closing, setClosing] = useState(false);
   // Adjusted while rendering rather than in an effect, so the frame that
@@ -88,7 +87,7 @@ export function usePresence(
       finish();
       return;
     }
-    const timer = window.setTimeout(finish, exitMs + 50);
+    const timer = window.setTimeout(finish, duration("--dur-sheet") + 50);
     const running = runningExit(el);
     const onEnd = (event: Event) => {
       if (event.target === el) finish();
@@ -105,7 +104,7 @@ export function usePresence(
       el.removeEventListener("animationend", onEnd);
       el.removeEventListener("transitionend", onEnd);
     };
-  }, [closing, exitMs]);
+  }, [closing]);
 
   return {
     mounted: mounted || open,
@@ -120,15 +119,12 @@ const PresenceContext = createContext<PresenceHandle | null>(null);
  *  rendered while that plays its exit: `<Presence show={open}>{open && <Menu/>}</Presence>`. */
 export function Presence({
   show,
-  exitMs,
   children,
 }: {
   show: boolean;
-  /** The longest exit the surface plays; a fallback, not a wait. */
-  exitMs?: number;
   children?: ReactNode;
 }) {
-  const presence = usePresence(show, { exitMs });
+  const presence = usePresence(show);
   const last = useRef<ReactNode>(null);
   if (show) last.current = children;
   // Opened again while its exit plays: a fresh copy, so it mounts as it always

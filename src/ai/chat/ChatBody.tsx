@@ -381,7 +381,7 @@ export function ChatBody({
       ) : (
         // Rises from the composer's edge with the first undecided edit
         // and goes back down after the last.
-        <Presence show={pendingBar && pendingCount > 0} exitMs={150}>
+        <Presence show={pendingBar && pendingCount > 0}>
           {pendingBar && pendingCount > 0 && (
             <PresenceDiv className="inline-chat-pending-bar">
               <span className="inline-chat-pending-count">

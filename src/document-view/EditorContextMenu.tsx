@@ -73,7 +73,7 @@ export function EditorContextMenu({
   const ai = aiFeatures(settings);
   const imageService = useImageService(settings);
   return (
-    <Presence show={!!menu} exitMs={250}>
+    <Presence show={!!menu}>
       {menu && (
         <ContextMenu
           x={menu.x}

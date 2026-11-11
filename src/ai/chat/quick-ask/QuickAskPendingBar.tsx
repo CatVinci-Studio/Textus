@@ -173,7 +173,7 @@ function SplitButton({
       >
         <ChevronIcon className="quick-ask-split-chevron-icon" />
       </button>
-      <Presence show={open && phone} exitMs={250}>
+      <Presence show={open && phone}>
         {open && phone && (
           <ActionSheet
             items={[{ label: menuLabel, onSelect: onMenuClick }]}
@@ -181,7 +181,7 @@ function SplitButton({
           />
         )}
       </Presence>
-      <Presence show={open && !phone} exitMs={120}>
+      <Presence show={open && !phone}>
         {open && !phone && (
           <PresenceDiv className="quick-ask-split-menu floating-surface">
             <button

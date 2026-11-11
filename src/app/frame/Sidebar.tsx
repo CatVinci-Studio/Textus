@@ -97,7 +97,7 @@ export function Sidebar({
         />
       )}
       {/* iPhone: a tap beside the drawer closes it. */}
-      <Presence show={isIOSApp && open} exitMs={250}>
+      <Presence show={isIOSApp && open}>
         {isIOSApp && open && (
           <PresenceDiv className="sidebar-scrim" onClick={onToggle} />
         )}

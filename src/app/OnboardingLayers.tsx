@@ -47,7 +47,7 @@ export function OnboardingLayers({
           />
         </Suspense>
       )}
-      <Presence show={!settings.languageChosen} exitMs={200}>
+      <Presence show={!settings.languageChosen}>
         {!settings.languageChosen && (
           <LanguageWelcome
             language={settings.language}

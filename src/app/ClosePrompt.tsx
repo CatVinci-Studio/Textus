@@ -31,7 +31,7 @@ export function ClosePrompt({
     : t.closePromptMessage;
   return (
     <>
-      <Presence show={open && phone} exitMs={250}>
+      <Presence show={open && phone}>
         {open && phone && (
           // The sheet runs its onClose before the chosen action; the
           // handlers still hold the pending close they were rendered with.
@@ -52,7 +52,7 @@ export function ClosePrompt({
           />
         )}
       </Presence>
-      <Presence show={open && !phone} exitMs={120}>
+      <Presence show={open && !phone}>
         {open && !phone && (
           <PresenceDiv className="close-prompt-overlay">
             <div

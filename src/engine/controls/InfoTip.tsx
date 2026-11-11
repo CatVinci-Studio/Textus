@@ -130,7 +130,7 @@ export function InfoTip({
       <span id={descriptionId} className="info-tip-description" hidden>
         {children}
       </span>
-      <Presence show={open} exitMs={120}>
+      <Presence show={open}>
         {open && (
           <InfoTipCard
             id={tipId}

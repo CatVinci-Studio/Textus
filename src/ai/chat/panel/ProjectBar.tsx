@@ -282,7 +282,7 @@ export function ProjectBar({
             )}
           </span>
         )}
-        <Presence show={menuOpen && !phone} exitMs={120}>
+        <Presence show={menuOpen && !phone}>
           {menuOpen && !phone && (
             <PresenceDiv
               className="project-bar-menu floating-surface"
@@ -301,7 +301,7 @@ export function ProjectBar({
           )}
         </Presence>
       </div>
-      <Presence show={menuOpen && phone} exitMs={250}>
+      <Presence show={menuOpen && phone}>
         {menuOpen && phone && (
           <ActionSheet
             title={folderName}
