@@ -24,6 +24,16 @@
   --pane-inset: 12px;
   --pane-edge: 4px;
   --pane-row-inset: calc(var(--pane-inset) - var(--pane-edge));
+  /* Layers, low to high, so an entrance and an exit stack predictably. */
+  --z-bar: 45;
+  --z-floating: 200;
+  --z-popover: 250;
+  --z-toast: 300;
+  --z-menu: 310;
+  --z-modal: 400;
+  --z-alert: 450;
+  --z-sheet: 500;
+  --z-select: 1000;
   /* Layout sizes the shared controls and plugin pages take (5.6): a tab
      view's bar, the room a document block leaves its source button, a
      board's list, a find field, a slider, a progress ring, a bubble. */

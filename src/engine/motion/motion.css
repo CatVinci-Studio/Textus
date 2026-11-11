@@ -85,17 +85,6 @@
      starts at this opacity. Reduced motion sets both to 0, leaving a fade. */
   --motion-travel: 1;
   --motion-travel-fade: 1;
-
-  /* Layers, low to high, so an entrance and an exit stack predictably. */
-  --z-bar: 45;
-  --z-floating: 200;
-  --z-popover: 250;
-  --z-toast: 300;
-  --z-menu: 310;
-  --z-modal: 400;
-  --z-alert: 450;
-  --z-sheet: 500;
-  --z-select: 1000;
 }
 
 @supports (transition-timing-function: linear(0, 1)) {
