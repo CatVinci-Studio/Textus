@@ -284,7 +284,7 @@ describe("exportPdf", () => {
 
   it("takes the progress overlay down before it reports a failure", async () => {
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div data-active-tab="true" data-tab-id="1"><div class="milkdown"><p>x</p></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockRejectedValue("Printer not found");
     let overlayUnderMessage: Element | null = null;
@@ -305,7 +305,7 @@ describe("exportPdf", () => {
 
   it("asks Rust for page numbers only when the setting is on", async () => {
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div data-active-tab="true" data-tab-id="1"><div class="milkdown"><p>x</p></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
     mocks.exportDoc.revealInDir.mockResolvedValue(undefined);
@@ -328,7 +328,7 @@ describe("exportPdf", () => {
     const mac = await import("./exporters");
     document.documentElement.setAttribute("data-theme", "dark");
     document.body.innerHTML =
-      '<div data-active-tab="true"><div class="milkdown"><p>x</p></div></div>';
+      '<div data-active-tab="true" data-tab-id="1"><div class="milkdown"><p>x</p></div></div>';
     mocks.exportDoc.exportSaveDialog.mockResolvedValue("/tmp/a.pdf");
     mocks.exportDoc.exportPdfNative.mockReset().mockResolvedValue(undefined);
     try {
@@ -369,7 +369,7 @@ describe("exportPdf", () => {
 
 // The editor's image as shown: an asset: URL, with the markdown's src beside it.
 const activeEditorWithImage =
-  '<div data-active-tab="true"><div class="milkdown"><p>' +
+  '<div data-active-tab="true" data-tab-id="1"><div class="milkdown"><p>' +
   '<img src="asset://localhost/%2Fdocs%2Fassets%2Fmy%20pic.png" data-doc-src="assets/my%20pic.png">' +
   "</p></div></div>";
 

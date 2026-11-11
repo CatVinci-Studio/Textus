@@ -183,7 +183,7 @@ export async function exportPdf(
   { pageNumbers = false, lightColors = false } = {},
 ): Promise<void> {
   if (!canExportPdf) return;
-  const editor = document.querySelector('[data-active-tab="true"] .milkdown');
+  const editor = editorOf(tab);
   if (!editor) {
     await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
     return;
@@ -251,10 +251,18 @@ export async function exportPdf(
   }
 }
 
+/** The editor of the document being exported: its own, whatever tab is in
+ *  front (an AI or Settings tab may be). */
+function editorOf(tab: DocTab): Element | null {
+  return document.querySelector(
+    `[data-tab-id=${JSON.stringify(tab.id)}] .milkdown`,
+  );
+}
+
 // Saved next to the document, relative image paths are kept as-is, like
 // Typora; anywhere else the pictures go inside the page.
 export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
-  const editor = document.querySelector('[data-active-tab="true"] .milkdown');
+  const editor = editorOf(tab);
   if (!editor) {
     await showMessage(t.exportNeedsWysiwyg, { title: t.exportFailedTitle });
     return;
@@ -303,9 +311,11 @@ export async function exportHtml(tab: DocTab, t: Strings): Promise<void> {
   }
 }
 
-// The drawn blocks' pictures in the active editor, for a pandoc export.
-async function drawnPictures(): Promise<Map<string, (string | null)[]>> {
-  const editor = document.querySelector('[data-active-tab="true"] .milkdown');
+// The drawn blocks' pictures in the document's editor, for a pandoc export.
+async function drawnPictures(
+  tab: DocTab,
+): Promise<Map<string, (string | null)[]>> {
+  const editor = editorOf(tab);
   if (!editor) return new Map();
   await drawPending(editor);
   return drawnPicturesByLanguage(editor, "light");
@@ -372,7 +382,7 @@ export async function exportViaPandoc(
       markdown: EMBEDS_IMAGES.has(format)
         ? await drawnBlocksToImages(
             await diagramsToImages(text, diagramEngine),
-            await drawnPictures(),
+            await drawnPictures(tab),
           )
         : text,
       outputPath: picked,
