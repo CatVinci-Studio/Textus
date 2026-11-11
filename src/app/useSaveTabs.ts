@@ -137,17 +137,20 @@ export function useSaveTabs(opts: {
       } catch (err) {
         console.error("[image-migration] failed:", err);
       }
-      // Typing during an autosave stays: only an editor still showing what
-      // was written takes the rewritten text (and has to load it).
-      const typedOn =
-        liveTabs().find((tb) => tb.id === tab.id)?.content !== tab.content;
+      // Typing during an autosave stays, its pictures pointed where they
+      // moved to as well: the editor loads the rewritten text either way.
+      const live = liveTabs().find((tb) => tb.id === tab.id)?.content;
+      const shown =
+        live === undefined || live === tab.content
+          ? content
+          : movedPictures(tab.content, content, live);
       const patch: Partial<DocTab> = {
         path: picked,
         importedFrom: undefined,
         savedContent: content,
         diskMtime: await statMtime(picked),
-        ...(content !== tab.content && !typedOn
-          ? { content, reloadKey: tab.reloadKey + 1 }
+        ...(shown !== (live ?? tab.content)
+          ? { content: shown, reloadKey: tab.reloadKey + 1 }
           : {}),
       };
       updateTab(tab.id, patch);
@@ -267,14 +270,22 @@ export function useSaveTabs(opts: {
           }
         }
       }
-      // Changed by a plugin, what the editor now holds, as it writes files.
-      const content = (await beforeSave(
+      // Changed by a plugin: what the editor now holds, as it writes files;
+      // with no rendered editor (source mode), the plugin's text, which the
+      // tab takes too.
+      const changed = await beforeSave(
         tab.path,
         tab.content,
         auto ? "auto" : "manual",
-      ))
-        ? (liveTabs().find((tb) => tb.id === tabId)?.content ?? tab.content)
-        : tab.content;
+      );
+      const content =
+        changed === null
+          ? tab.content
+          : changed.inEditor
+            ? (liveTabs().find((tb) => tb.id === tabId)?.content ??
+              tab.content)
+            : changed.text;
+      if (changed && !changed.inEditor) updateTab(tabId, { content });
       if (!(await writeOrReport(tab.path, content))) return "failed";
       await commitSaved(tabId, tab.path, content, auto);
       return "saved";
@@ -407,17 +418,39 @@ export function useSaveTabs(opts: {
 }
 
 /**
- * Lets onWillSave plugins change the text to save, put into the editor first
- * as one undo step so what is saved is what shows. True when it changed.
+ * Lets onWillSave plugins change the text to save, put into the rendered
+ * editor first as one undo step so what is saved is what shows. Null when
+ * unchanged; `inEditor` false when no rendered editor took it.
  */
 async function beforeSave(
   path: string,
   text: string,
   trigger: "manual" | "auto",
-): Promise<boolean> {
-  if (!hasWillSave()) return false;
+): Promise<{ text: string; inEditor: boolean } | null> {
+  if (!hasWillSave()) return null;
   const changed = await runWillSave(path, text, trigger);
-  if (changed === text) return false;
+  if (changed === text) return null;
   const doc = openDocumentAt(path);
-  return !!doc?.replaceText(changed, doc.revision());
+  return {
+    text: changed,
+    inEditor: !!doc?.replaceText(changed, doc.revision()),
+  };
+}
+
+/** A picture's address in Markdown or HTML. */
+const PICTURE = /!\[[^\]]*\]\(\s*<?([^)\s>]+)|<img\b[^>]*\bsrc=["']([^"']+)/g;
+const pictures = (text: string) =>
+  [...text.matchAll(PICTURE)].map((m) => m[1] ?? m[2]);
+
+/** `live` with each picture `before` had pointed where `after` points it:
+ *  the addresses a save moved, applied to text typed since. */
+export function movedPictures(before: string, after: string, live: string) {
+  const from = pictures(before);
+  const to = pictures(after);
+  if (from.length !== to.length) return live;
+  let out = live;
+  from.forEach((src, i) => {
+    if (src !== to[i]) out = out.split(src).join(to[i]);
+  });
+  return out;
 }

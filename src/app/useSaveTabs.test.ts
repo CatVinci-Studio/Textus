@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { saveFolder, useSaveTabs } from "./useSaveTabs";
+import { saveFolder, useSaveTabs, movedPictures } from "./useSaveTabs";
 import { setUiState } from "../storage/ui-state";
 import { useTabState } from "./tabs/useTabState";
 import { fs } from "../platform/ipc";
@@ -308,5 +308,16 @@ describe("saveFolder", () => {
     expect(saveFolder("/work/a.md", "/open")).toBe("/work");
     expect(saveFolder(null, "/open")).toBe("/open");
     expect(saveFolder(null, null)).toBe("/notes/last");
+  });
+});
+
+describe("movedPictures", () => {
+  it("points a picture typed around during a save where the save moved it", () => {
+    const before = "![a](/data/draft-assets/a.png)\n";
+    const after = "![a](assets/a.png)\n";
+    const live = "Typed on.\n\n![a](/data/draft-assets/a.png)\n";
+    expect(movedPictures(before, after, live)).toBe(
+      "Typed on.\n\n![a](assets/a.png)\n",
+    );
   });
 });

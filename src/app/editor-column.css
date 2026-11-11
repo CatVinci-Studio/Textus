@@ -75,10 +75,11 @@
 }
 
 /* First-line indent (Editing › Text): the document's own paragraphs, two
-   characters in; not those in a list, a quote or a table. */
+   characters in; not those in a list, a quote or a table, nor a picture
+   standing alone, centred. */
 :root[data-first-line-indent]
   :is(.editor-content, .split-preview)
   .ProseMirror
-  > p {
+  > p:not(.image-paragraph) {
   text-indent: 2em;
 }

@@ -214,6 +214,15 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const recoveredFor = (path: string) =>
         restored.find((tab) => tab.path === path);
       const loadRecoveredIntoInitialTab = (recovered: DocTab) => {
+        // Kept under the tab it moves into before its own goes: a crash in
+        // between still brings it back.
+        void drafts
+          .saveDraftSnapshot(
+            opts.activeTabId,
+            recovered.path,
+            recovered.content,
+          )
+          .catch(() => undefined);
         loadIntoInitialTab({
           path: recovered.path,
           content: recovered.content,
