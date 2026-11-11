@@ -398,23 +398,18 @@ fn new_note_path(
     join_within(&root, &base, &name)
 }
 
-/// The folder an Obsidian vault puts new notes in, read from `app.json`
-/// (never written); None outside a vault, or for "beside the current note".
+/// The folder new notes go in, as the folder's conventions say (Textus's
+/// own, else the app's detected - Obsidian's `newFileLocation`); None for
+/// "beside the current note".
 fn new_note_folder(root: &Path) -> Option<PathBuf> {
-    if !root.join(".obsidian").is_dir() {
-        return None;
-    }
-    let json: serde_json::Value = std::fs::read_to_string(root.join(".obsidian/app.json"))
-        .ok()
-        .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_default();
-    match json.get("newFileLocation").and_then(|v| v.as_str()) {
-        Some("current") => None,
-        Some("folder") => {
-            let sub = json.get("newFileFolderPath").and_then(|v| v.as_str())?;
-            join_within(root, root, sub)
-        }
-        _ => Some(root.to_path_buf()),
+    let found = crate::conventions::of_folder(root);
+    let setting = found
+        .new_notes
+        .or_else(|| found.detected.and_then(|d| d.new_notes))?;
+    match setting.value.as_str() {
+        "./" => None,
+        "/" | "" => Some(root.to_path_buf()),
+        sub => join_within(root, root, sub.trim_start_matches('/')),
     }
 }
 
