@@ -13,16 +13,7 @@ import {
 } from "./doc-tabs";
 import { setTabJump } from "../editor/tab-jump";
 import { lastCaret } from "./last-carets";
-import { isWordDocument } from "./word-import";
-import { loadPlugins } from "../plugins/manager";
-import { customEditorFor } from "../plugins/store/plugin-lookup";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
-
-/** Whether a plugin opens `path` in a tab of its own (a PDF). */
-async function opensInPlugin(path: string): Promise<boolean> {
-  await loadPlugins().catch(() => {});
-  return customEditorFor(path) !== null;
-}
 
 // Module-scoped, not a ref: StrictMode runs mount effects twice, and this
 // drain is a destructive pull from shared queues. Each window is its own
@@ -43,7 +34,11 @@ interface StartupRestoreOptions {
   ) => Promise<void>;
   openFile: (path: string, open?: { restoreCaret?: boolean }) => Promise<void>;
   /** Opens `path` in tab `tabId`, in place of what it holds. */
-  replaceTabWithFile: (tabId: string, path: string) => Promise<void>;
+  replaceTabWithFile: (
+    tabId: string,
+    path: string,
+    open?: { restoreCaret?: boolean },
+  ) => Promise<void>;
   /** Reopened documents come back at the caret they were left at. */
   restoreCarets: boolean;
   /** Nothing to open: the start page instead of a blank document. */
@@ -249,22 +244,14 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
         const recovered = recoveredFor(first);
         if (recovered) {
           loadRecoveredIntoInitialTab(recovered);
-        } else if (isWordDocument(first) || (await opensInPlugin(first))) {
-          // Converted into the initial tab, or shown there by a plugin.
-          await opts.replaceTabWithFile(opts.activeTabId, first);
-        } else {
-          // Gone too, the last of them: the blank tab stays.
-          const read = await readDocFromDisk(first).catch(() => null);
-          if (read) {
-            restoreCaret(first, read.diskMtime);
-            loadIntoInitialTab({
-              path: first,
-              content: read.content,
-              savedContent: read.content,
-              diskMtime: read.diskMtime,
-            });
-          }
+        } else if (await fileThere(first)) {
+          // Opened as any file is: a plugin's file or board, a Word
+          // document, the recent list, its last caret.
+          await opts.replaceTabWithFile(opts.activeTabId, first, {
+            restoreCaret: true,
+          });
         }
+        // Gone too, the last of them: the blank tab stays.
         for (const p of rest) {
           // Its recovered tab is already open: that is this document.
           if (recoveredFor(p)) continue;

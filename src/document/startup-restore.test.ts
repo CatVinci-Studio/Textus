@@ -2,7 +2,6 @@
 import { cleanup, renderHook, waitFor } from "@testing-library/react";
 import {
   afterEach,
-  beforeAll,
   beforeEach,
   describe,
   expect,
@@ -10,7 +9,6 @@ import {
   vi,
 } from "vitest";
 import type { DocTab } from "./doc-tabs";
-import { installTestLocalStorage } from "../dev/test-local-storage";
 
 const ipc = vi.hoisted(() => ({
   takeDetachedTab: vi.fn(),
@@ -82,7 +80,12 @@ async function restore(restoreCarets = true, launchStartPage = false) {
   let tabs: DocTab[] = [{ ...INITIAL }];
   const openPathInTab = vi.fn(async () => {});
   const openFile = vi.fn(async () => {});
-  const replaceTabWithFile = vi.fn(async () => {});
+  // As the window's own: the tab takes the file, its editor remounted.
+  const replaceTabWithFile = vi.fn(async (id: string, path: string) => {
+    tabs = tabs.map((tab) =>
+      tab.id === id ? { ...tab, path, reloadKey: tab.reloadKey + 1 } : tab,
+    );
+  });
   renderHook(() =>
     useStartupRestore({
       activeTabId: INITIAL.id,
@@ -146,24 +149,21 @@ describe("startup restore into the initial tab", () => {
     expect(tabs()[0].start).toBeUndefined();
   });
 
-  // The initial tab's editor can mount before the restore finishes and reads
-  // its content only at mount, so reloadKey must move.
-  it("remounts the initial tab's editor on the first restored document", async () => {
+  // Opened as any file is (a board a plugin claims, a Word document, the
+  // recent list, its last caret), into the initial tab.
+  it("opens the first document as any file opens, the rest in tabs", async () => {
     ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md", "/docs/b.md"]);
-    const { tabs, openPathInTab } = await restore();
+    const { tabs, openPathInTab, replaceTabWithFile } = await restore();
     await waitFor(() =>
       expect(openPathInTab).toHaveBeenCalledWith("/docs/b.md", {
         restoreCaret: true,
       }),
     );
+    expect(replaceTabWithFile).toHaveBeenCalledWith("initial", "/docs/a.md", {
+      restoreCaret: true,
+    });
     expect(tabs()).toEqual([
-      expect.objectContaining({
-        id: "initial",
-        path: "/docs/a.md",
-        content: "# /docs/a.md\n",
-        savedContent: "# /docs/a.md\n",
-        reloadKey: 1,
-      }),
+      expect.objectContaining({ id: "initial", path: "/docs/a.md" }),
     ]);
   });
 
@@ -186,17 +186,15 @@ describe("startup restore into the initial tab", () => {
     ipc.gone.clear();
   });
 
-  it("converts a Word document handed over at launch into the initial tab", async () => {
-    ipc.takePendingWindowPaths.mockResolvedValue(["/docs/Report.docx"]);
-    const { tabs, replaceTabWithFile, openPathInTab } = await restore();
-    await waitFor(() =>
-      expect(replaceTabWithFile).toHaveBeenCalledWith(
-        "initial",
-        "/docs/Report.docx",
-      ),
-    );
-    expect(openPathInTab).not.toHaveBeenCalled();
+  it("leaves the blank tab when the last document is gone too", async () => {
+    ipc.gone.add("/docs/a.md");
+    ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md"]);
+    const { tabs, replaceTabWithFile } = await restore();
+    await waitFor(() => expect(ipc.takeDraftSnapshots).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 20));
+    expect(replaceTabWithFile).not.toHaveBeenCalled();
     expect(tabs()[0].path).toBeNull();
+    ipc.gone.clear();
   });
 
   it("does the same for a tab dragged in from another window", async () => {
@@ -309,44 +307,5 @@ describe("startup restore into the initial tab", () => {
       expect.objectContaining({ id: "initial", content: "draft a" }),
       expect.objectContaining({ content: "draft b" }),
     ]);
-  });
-
-  describe("at the last caret", () => {
-    beforeAll(installTestLocalStorage);
-    beforeEach(() =>
-      localStorage.setItem(
-        "textus-last-carets",
-        JSON.stringify({
-          "/docs/a.md": { offset: 3, mtime: 1 },
-          "/docs/b.md": { offset: 9, mtime: 2 },
-        }),
-      ),
-    );
-    afterEach(() => localStorage.removeItem("textus-last-carets"));
-
-    it("hands the initial tab's editor the caret its file was left at", async () => {
-      ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md"]);
-      const { tabs, takeTabJump } = await restore();
-      await waitFor(() => expect(tabs()[0].path).toBe("/docs/a.md"));
-      expect(takeTabJump("initial")).toEqual({
-        kind: "caret",
-        at: { offset: 3 },
-      });
-    });
-
-    it("opens a file changed since at its top", async () => {
-      // b.md was left at mtime 2; the disk now says 1.
-      ipc.takePendingWindowPaths.mockResolvedValue(["/docs/b.md"]);
-      const { tabs, takeTabJump } = await restore();
-      await waitFor(() => expect(tabs()[0].path).toBe("/docs/b.md"));
-      expect(takeTabJump("initial")).toBeNull();
-    });
-
-    it("restores nothing with Restore Previous Session off", async () => {
-      ipc.takePendingWindowPaths.mockResolvedValue(["/docs/a.md"]);
-      const { tabs, takeTabJump } = await restore(false);
-      await waitFor(() => expect(tabs()[0].path).toBe("/docs/a.md"));
-      expect(takeTabJump("initial")).toBeNull();
-    });
   });
 });
