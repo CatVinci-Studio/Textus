@@ -6,6 +6,7 @@ import { Select } from "../../engine/controls/Select";
 import { usePresence, useMergedRef } from "../../engine/motion/usePresence";
 import { useFloatingList } from "../../engine/controls/useFloatingList";
 import { isImeKeydown } from "../../utils/ime";
+import { listMove } from "../../engine/controls/list-keys";
 
 interface LanguagePickerProps {
   /** "" for plain text. */
@@ -122,10 +123,10 @@ function LanguageMenu({
 
   function onKey(e: KeyboardEvent<HTMLInputElement>) {
     if (isImeKeydown(e)) return;
+    const moved = listMove(e.key, active, shown.length, false);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      const step = e.key === "ArrowDown" ? 1 : -1;
-      setActive((i) => (i + step + shown.length) % Math.max(1, shown.length));
+      if (moved !== null) setActive(moved);
     } else if (e.key === "Enter") {
       e.preventDefault();
       choose(shown[active]);

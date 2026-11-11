@@ -6,6 +6,7 @@ import { useFloatingList } from "../../engine/controls/useFloatingList";
 import { AGENTS_GROUP, useChatModels, type ChatModels } from "./chat-models";
 import "./ModePicker.css";
 import { isImeKeydown } from "../../utils/ime";
+import { listMove } from "../../engine/controls/list-keys";
 
 export interface ModeChoice {
   value: PanelMode;
@@ -114,14 +115,10 @@ export function ModePicker({
 
   function onListKey(e: KeyboardEvent<HTMLElement>) {
     if (isImeKeydown(e)) return;
-    const n = items.length;
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    const moved = listMove(e.key, active, items.length);
+    if (moved !== null) {
       e.preventDefault();
-      const delta = e.key === "ArrowDown" ? 1 : -1;
-      setActive((i) => (i + delta + n) % n);
-    } else if (e.key === "Home" || e.key === "End") {
-      e.preventDefault();
-      setActive(e.key === "Home" ? 0 : n - 1);
+      setActive(moved);
     } else if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       choose(active);

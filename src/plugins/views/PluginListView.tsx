@@ -38,6 +38,7 @@ import { pluginName, windowInfo } from "../store/plugin-records";
 import "./PluginListView.css";
 import { isImeKeydown } from "../../utils/ime";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { listMove } from "../../engine/controls/list-keys";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -200,12 +201,10 @@ export const PluginListPane = memo(function PluginListPane({
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (isImeKeydown(e) || !rows.length) return;
     const row = rows[Math.min(active, rows.length - 1)];
-    if (e.key === "ArrowDown") {
+    const moved = listMove(e.key, active, rows.length, false);
+    if (moved !== null) {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, rows.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActive((i) => Math.max(i - 1, 0));
+      setActive(moved);
     } else if (e.key === "Enter") {
       e.preventDefault();
       select(row.item);

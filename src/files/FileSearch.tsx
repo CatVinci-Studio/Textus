@@ -19,6 +19,7 @@ import { matchFiles, searchEntries, type SearchEntry } from "./file-search";
 import { pinyinEngine } from "../utils/pinyin";
 import type { Strings } from "../i18n/strings";
 import { isImeKeydown } from "../utils/ime";
+import { listMove } from "../engine/controls/list-keys";
 
 /** An index older than this is built again the next time the box gains
  *  focus: files come and go while the box sits unused. */
@@ -159,11 +160,10 @@ export function FileSearch({
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (isImeKeydown(e)) return;
+    const moved = listMove(e.key, active, matches.length, false);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      if (matches.length === 0) return;
-      const step = e.key === "ArrowDown" ? 1 : -1;
-      setSelected((active + step + matches.length) % matches.length);
+      if (moved !== null) setSelected(moved);
     } else if (e.key === "Enter") {
       e.preventDefault();
       open(matches[active]);

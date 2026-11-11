@@ -99,7 +99,8 @@ export function SettingsSearchField({
   /** The option ↑/↓ have reached, announced as the box's active one. */
   activeId: string | undefined;
   onQueryChange: (query: string) => void;
-  onMove: (step: 1 | -1) => void;
+  /** An arrow key, for the highlight to move by. */
+  onMove: (key: string) => void;
   onPick: () => void;
 }) {
   const searching = query.trim() !== "";
@@ -124,7 +125,7 @@ export function SettingsSearchField({
           if (isImeKeydown(e)) return;
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
-            onMove(e.key === "ArrowDown" ? 1 : -1);
+            onMove(e.key);
           } else if (e.key === "Enter") {
             e.preventDefault();
             onPick();

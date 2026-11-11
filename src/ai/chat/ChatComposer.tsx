@@ -49,6 +49,7 @@ export type {
 } from "./composer-types";
 import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
+import { listMove } from "../../engine/controls/list-keys";
 
 /**
  * The input row: textarea, attachments, selection chip, send button and the
@@ -252,12 +253,15 @@ export function ChatComposer({
         return;
       }
       if (pickerRows.length > 0) {
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        const moved = listMove(
+          e.key,
+          activePickerIndex,
+          pickerRows.length,
+          false,
+        );
+        if (moved !== null) {
           e.preventDefault();
-          const delta = e.key === "ArrowDown" ? 1 : -1;
-          setPickerIndex(
-            (activePickerIndex + delta + pickerRows.length) % pickerRows.length,
-          );
+          setPickerIndex(moved);
           return;
         }
         if (e.key === "Enter" || e.key === "Tab") {

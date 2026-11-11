@@ -26,6 +26,7 @@ import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceProps, usePresenceState } from "../motion/usePresence";
 import { CheckIcon, ChevronIcon } from "./icons";
 import "./ContextMenu.css";
+import { listMove } from "./list-keys";
 
 export interface ContextMenuItem {
   label: string;
@@ -138,12 +139,9 @@ function PointerMenu({
       ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
+    const moved = listMove(e.key, at, rows.length);
     let next: HTMLElement | undefined;
-    if (e.key === "ArrowDown") next = rows[(at + 1) % rows.length];
-    else if (e.key === "ArrowUp")
-      next = rows[(at - 1 + rows.length) % rows.length];
-    else if (e.key === "Home") next = rows[0];
-    else if (e.key === "End") next = rows[rows.length - 1];
+    if (moved !== null) next = rows[moved];
     else if (e.key === "ArrowRight") {
       const group = rows[at]?.dataset.group;
       if (group !== undefined) {
@@ -369,10 +367,9 @@ function SubMenu({
       ) ?? [],
     );
     const at = rows.indexOf(document.activeElement as HTMLElement);
+    const moved = listMove(e.key, at, rows.length);
     let next: HTMLElement | undefined;
-    if (e.key === "ArrowDown") next = rows[(at + 1) % rows.length];
-    else if (e.key === "ArrowUp")
-      next = rows[(at - 1 + rows.length) % rows.length];
+    if (moved !== null) next = rows[moved];
     else if (e.key === "ArrowLeft" || e.key === "Escape") {
       e.preventDefault();
       e.stopPropagation();

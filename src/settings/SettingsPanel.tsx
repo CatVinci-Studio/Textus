@@ -36,6 +36,7 @@ import type {
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { usePresenceProps } from "../engine/motion/usePresence";
 import { emitMenuEvent } from "../platform/menu-events";
+import { listMove } from "../engine/controls/list-keys";
 
 // The settings dialog shell: navigation, search and subpages, for every
 // platform. On a phone the same panel fills the screen as iOS's Settings
@@ -241,12 +242,10 @@ export function SettingsPanel({
               setQuery(next);
               setActive(0);
             }}
-            onMove={(step) =>
-              flatMatches.length &&
-              setActive(
-                (activeIndex + step + flatMatches.length) % flatMatches.length,
-              )
-            }
+            onMove={(key) => {
+              const moved = listMove(key, activeIndex, flatMatches.length);
+              if (moved !== null) setActive(moved);
+            }}
             onPick={() => pick(flatMatches[activeIndex])}
           />
           {(!phone || !searching) && (

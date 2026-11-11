@@ -10,6 +10,7 @@ import {
   type Filterable,
   type PreparedList,
 } from "../../utils/list-filter";
+import { listMove } from "./list-keys";
 
 /** A list to choose one item from, or several ticked, filtered by what is
  *  typed: the command palette's and a plugin's textus.ui.pick. Requests queue. */
@@ -211,12 +212,10 @@ function QuickPick({
           }}
           onKeyDown={(e) => {
             if (isImeKeydown(e)) return;
-            if (e.key === "ArrowDown") {
+            const moved = listMove(e.key, index, shown.length, false);
+            if (moved !== null) {
               e.preventDefault();
-              setIndex((i) => Math.min(i + 1, shown.length - 1));
-            } else if (e.key === "ArrowUp") {
-              e.preventDefault();
-              setIndex((i) => Math.max(i - 1, 0));
+              setIndex(moved);
             } else if (e.key === "Enter") {
               e.preventDefault();
               if (request.multiple) done();
