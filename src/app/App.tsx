@@ -1,4 +1,5 @@
 import { provideAiFileMarks } from "../ai/revision/file-marks";
+import { useTabsInBar } from "./islands/tabs-in-bar";
 import { tabElement } from "../engine/layout/tab-element";
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
@@ -7,7 +8,7 @@ import { conversationIn } from "./islands/ai-tabs";
 import { SuggestCard } from "./SuggestCard";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStack } from "../engine/controls/CornerToast";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 import { AppDialogHost } from "../engine/controls/app-dialog";
 import { WindowBar } from "./frame/WindowBar";
 import { isIOSApp } from "../platform/capabilities";
@@ -69,9 +70,6 @@ const KeyboardToolbar = lazyComponent(phoneParts, (m) => m.KeyboardToolbar);
  */
 function App() {
   const { t, settings, setSettings } = useSettings();
-  // Whether the main pane's top row has tabs (DocumentIslands says, as it knows
-  // its split).
-  const [tabsInBar, setTabsInBar] = useState(false);
   const shell = useWindowShell({ settings, setSettings });
   const docs = useWindowDocuments({ shell, settings, t });
   const wiring = useWindowWiring({ shell, docs, settings, setSettings, t });
@@ -117,6 +115,7 @@ function App() {
 
   // Whether the tabs are in the window bar's row (with the menu bar spelled
   // out, in the row under it), or none: a clean sheet; the phone's own bar.
+  const tabsInBar = useTabsInBar(zenMode, showTabBar);
   const tabRow = tabsInBar && !isIOSApp ? "bar" : undefined;
 
   // What Settings needs, as a sheet or as a tab.
@@ -237,7 +236,6 @@ function App() {
             onReorder={reorderTab}
             onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
             previewTab={dragHoverPreview}
-            onTabsInBar={setTabsInBar}
             onChange={handleChange}
             typewriter={settings.typewriterMode}
             formatBar={settings.formatBar}

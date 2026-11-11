@@ -6,12 +6,7 @@ import { plural } from "../../i18n/plural";
 import { DocumentCorners } from "./DocumentCorner";
 import { DocumentViews } from "./DocumentViews";
 import type { Lang } from "../../i18n/langs";
-import {
-  type ComponentProps,
-  type CSSProperties,
-  useLayoutEffect,
-  useSyncExternalStore,
-} from "react";
+import { type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
   canDragTabsBetweenWindows,
@@ -32,12 +27,8 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useSplitPanes } from "../../engine/layout/useSplitPanes";
 import { panesOf, type Pane } from "../../engine/layout/tree";
-import {
-  focusPane,
-  reorderInPane,
-  splitPreview,
-  subscribeSplit,
-} from "../../engine/layout/store";
+import { focusPane, reorderInPane } from "../../engine/layout/store";
+import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
@@ -72,7 +63,6 @@ export function DocumentIslands({
   onReorder,
   onKeep,
   previewTab,
-  onTabsInBar,
   onChange,
   typewriter,
   formatBar,
@@ -97,7 +87,6 @@ export function DocumentIslands({
   previewTab: TabBarProps["previewTab"];
   /** Told, before paint, whether the top row has tabs: the window bar's
    *  then (App's data-tabs). */
-  onTabsInBar: (shown: boolean) => void;
   onChange: (tabId: string, markdown: string) => void;
   typewriter: boolean;
   /** View › Format Bar is on. */
@@ -121,7 +110,6 @@ export function DocumentIslands({
   // A phone's column has its bar of its own, not islands.
   const islands = canUseWindows;
   const panes = split ? panesOf(split.root) : [];
-  const docsSplit = panes.length > 1;
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
     panes.flatMap((p, i) =>
@@ -129,15 +117,7 @@ export function DocumentIslands({
     ),
   );
   const byId = new Map(tabs.map((tab) => [tab.id, tab]));
-  // A split's top panes always have their tabs; one pane, when shown;
-  // none in Zen, its documents plain paper.
-  // A drag's preview (one island spelt out, say) keeps its rows of tabs.
-  const previewing = useSyncExternalStore(
-    subscribeSplit,
-    () => splitPreview() !== null,
-  );
-  const tabsInBar = !zen && (docsSplit || showTabBar || previewing);
-  useLayoutEffect(() => onTabsInBar(tabsInBar), [tabsInBar, onTabsInBar]);
+  const tabsInBar = useTabsInBar(zen, showTabBar);
   // Each pane's sheet in the area's grid, as the area places them; without
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
