@@ -884,6 +884,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Salvar",
   apiKeyClear: "Remover",
+  apiKeyClearAsk:
+    "Remover {name} salva? Para usar de novo, será preciso colá-la novamente.",
   apiKeyConfigured: "Configurado",
   providerNotConfigured: "Não configurado",
   providerCustom: "Endpoint personalizado",
@@ -976,6 +978,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reabrir esta conversa com o seu documento",
   chatHistoryDelete: "Apagar conversa",
+  chatHistoryDeleteAsk: "Apagar “{title}”? Não será possível recuperá-la.",
   chatHistoryRestoreHereHint:
     "Continuar esta conversa no documento atual (o documento dela nunca foi guardado)",
   chatHistoryMissingTitle: "Documento não encontrado",

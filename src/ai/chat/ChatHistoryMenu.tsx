@@ -1,3 +1,5 @@
+import { fill } from "../../i18n/fill";
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { SearchField } from "../../engine/controls/SearchField";
 import { useCallback, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -163,7 +165,16 @@ function ChatHistoryList({
                   aria-label={t.chatHistoryDelete}
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteConversation(entry.id);
+                    void showConfirm(
+                      fill(t.chatHistoryDeleteAsk, {
+                        title: entry.title || t.untitledTab,
+                      }),
+                      {
+                        okLabel: t.chatHistoryDelete,
+                        cancelLabel: t.cancel,
+                        danger: true,
+                      },
+                    ).then((ok) => ok && deleteConversation(entry.id));
                   }}
                 >
                   <CloseIcon />

@@ -871,6 +871,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Speichern",
   apiKeyClear: "Entfernen",
+  apiKeyClearAsk:
+    "Gespeicherten {name} entfernen? Um ihn wieder zu nutzen, musst du ihn erneut einfügen.",
   apiKeyConfigured: "Eingerichtet",
   providerNotConfigured: "Nicht eingerichtet",
   providerCustom: "Eigener Endpunkt",
@@ -959,6 +961,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Diese Unterhaltung mit ihrem Dokument wieder öffnen",
   chatHistoryDelete: "Unterhaltung löschen",
+  chatHistoryDeleteAsk:
+    "„{title}“ löschen? Das lässt sich nicht rückgängig machen.",
   chatHistoryRestoreHereHint:
     "Diese Unterhaltung im aktuellen Dokument fortsetzen (ihr Dokument wurde nie gespeichert)",
   chatHistoryMissingTitle: "Dokument nicht gefunden",

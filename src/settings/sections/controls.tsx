@@ -1,3 +1,4 @@
+import { showConfirm } from "../../engine/controls/app-dialog";
 import { fill } from "../../i18n/fill";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -252,7 +253,16 @@ export function SecretInput({
   return saved ? (
     <div className="api-key-configured">
       <span className="settings-row-hint">{t.apiKeyConfigured}</span>
-      <button className="text-button settings-inline-button" onClick={onClear}>
+      <button
+        className="text-button settings-inline-button"
+        onClick={() =>
+          void showConfirm(fill(t.apiKeyClearAsk, { name: label }), {
+            okLabel: t.apiKeyClear,
+            cancelLabel: t.cancel,
+            danger: true,
+          }).then((ok) => ok && onClear())
+        }
+      >
         {t.apiKeyClear}
       </button>
     </div>

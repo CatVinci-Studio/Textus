@@ -853,6 +853,8 @@ type /name in a conversation to use one.
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Save",
   apiKeyClear: "Remove",
+  apiKeyClearAsk:
+    "Remove the saved {name}? To use it again, paste it in again.",
   apiKeyConfigured: "Configured",
   providerNotConfigured: "Not configured",
   providerCustom: "Custom Endpoint",
@@ -937,6 +939,7 @@ type /name in a conversation to use one.
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reopen this conversation with its document",
   chatHistoryDelete: "Delete conversation",
+  chatHistoryDeleteAsk: "Delete “{title}”? It can't be brought back.",
   chatHistoryRestoreHereHint:
     "Continue this conversation in the current document (its document was never saved)",
   chatHistoryMissingTitle: "Document Not Found",

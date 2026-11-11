@@ -898,6 +898,8 @@ export default {
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Сохранить",
   apiKeyClear: "Удалить",
+  apiKeyClearAsk:
+    "Удалить сохранённый {name}? Чтобы снова им пользоваться, его придётся вставить заново.",
   apiKeyConfigured: "Настроен",
   providerNotConfigured: "Не настроен",
   providerCustom: "Свой сервер",
@@ -992,6 +994,7 @@ export default {
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Снова открыть этот диалог вместе с его документом",
   chatHistoryDelete: "Удалить диалог",
+  chatHistoryDeleteAsk: "Удалить «{title}»? Восстановить его не получится.",
   chatHistoryRestoreHereHint:
     "Продолжить этот диалог в текущем документе (его документ так и не был сохранён)",
   chatHistoryMissingTitle: "Документ не найден",

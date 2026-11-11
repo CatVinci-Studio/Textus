@@ -898,6 +898,8 @@ para usar una.
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Guardar",
   apiKeyClear: "Quitar",
+  apiKeyClearAsk:
+    "¿Quitar {name} guardada? Para volver a usarla, tendrás que pegarla de nuevo.",
   apiKeyConfigured: "Configurado",
   providerNotConfigured: "Sin configurar",
   providerCustom: "Endpoint personalizado",
@@ -990,6 +992,7 @@ para usar una.
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Reabrir esta conversación con su documento",
   chatHistoryDelete: "Eliminar conversación",
+  chatHistoryDeleteAsk: "¿Eliminar «{title}»? No se puede recuperar.",
   chatHistoryRestoreHereHint:
     "Continuar esta conversación en el documento actual (su documento nunca se guardó)",
   chatHistoryMissingTitle: "Documento no encontrado",

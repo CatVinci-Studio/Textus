@@ -825,6 +825,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "저장",
   apiKeyClear: "제거",
+  apiKeyClearAsk:
+    "저장된 {name}을(를) 제거할까요? 다시 사용하려면 다시 붙여 넣어야 합니다.",
   apiKeyConfigured: "설정됨",
   providerNotConfigured: "설정 안 됨",
   providerCustom: "사용자 지정 엔드포인트",
@@ -903,6 +905,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "이 대화를 해당 문서와 함께 다시 열기",
   chatHistoryDelete: "대화 삭제",
+  chatHistoryDeleteAsk: "「{title}」을(를) 삭제할까요? 되돌릴 수 없습니다.",
   chatHistoryRestoreHereHint:
     "현재 문서에서 이 대화 이어가기 (원래 문서는 저장된 적이 없음)",
   chatHistoryMissingTitle: "문서를 찾을 수 없음",

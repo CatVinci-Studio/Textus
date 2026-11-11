@@ -786,6 +786,7 @@ export default {
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "儲存",
   apiKeyClear: "移除",
+  apiKeyClearAsk: "移除已儲存的{name}？之後要再使用，需要重新貼上。",
   apiKeyConfigured: "已設定",
   providerNotConfigured: "未設定",
   providerCustom: "自訂端點",
@@ -863,6 +864,7 @@ export default {
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "連同其文件重新開啟這段對話",
   chatHistoryDelete: "刪除對話",
+  chatHistoryDeleteAsk: "刪除「{title}」？刪除後無法復原。",
   chatHistoryRestoreHereHint: "在目前的文件中繼續這段對話（它的文件從未儲存）",
   chatHistoryMissingTitle: "找不到文件",
   chatHistoryMissingText:

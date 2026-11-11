@@ -900,6 +900,8 @@ utiliser une.
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "Enregistrer",
   apiKeyClear: "Supprimer",
+  apiKeyClearAsk:
+    "Supprimer {name} enregistré ? Pour l'utiliser de nouveau, il faudra le coller à nouveau.",
   apiKeyConfigured: "Configuré",
   providerNotConfigured: "Non configuré",
   providerCustom: "Serveur personnalisé",
@@ -994,6 +996,7 @@ utiliser une.
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "Rouvrir cette conversation avec son document",
   chatHistoryDelete: "Supprimer la conversation",
+  chatHistoryDeleteAsk: "Supprimer « {title} » ? Impossible de la récupérer.",
   chatHistoryRestoreHereHint:
     "Poursuivre cette conversation dans le document actuel (son document n’a jamais été enregistré)",
   chatHistoryMissingTitle: "Document introuvable",

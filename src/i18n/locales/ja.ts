@@ -839,6 +839,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   apiKeyPlaceholder: "sk-…",
   apiKeySave: "保存",
   apiKeyClear: "削除",
+  apiKeyClearAsk:
+    "保存した{name}を削除しますか？もう一度使うには、貼り付け直す必要があります。",
   apiKeyConfigured: "設定済み",
   providerNotConfigured: "未設定",
   providerCustom: "カスタムエンドポイント",
@@ -917,6 +919,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   chatHistoryByAi: "Textus AI",
   chatHistoryRestoreHint: "この会話を元の文書と一緒に開き直す",
   chatHistoryDelete: "会話を削除",
+  chatHistoryDeleteAsk: "「{title}」を削除しますか？元に戻せません。",
   chatHistoryRestoreHereHint:
     "この会話を現在の文書で続ける（元の文書は保存されていません）",
   chatHistoryMissingTitle: "文書が見つかりません",
