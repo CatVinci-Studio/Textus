@@ -15,10 +15,12 @@ import { useFullscreenMark } from "./useFullscreenMark";
 export function useBarLayout({
   menuBarShown,
   rail,
+  railOff,
   zen,
 }: {
   menuBarShown: boolean;
   rail: boolean;
+  railOff: boolean;
   zen: boolean;
 }): BarLayout {
   const fullscreen = useFullscreenMark();
@@ -26,6 +28,7 @@ export function useBarLayout({
     platform: platformName(),
     menuBar: appDrawsWindowFrame && menuBarShown,
     rail,
+    railOff,
     zen,
     fullscreen,
   });

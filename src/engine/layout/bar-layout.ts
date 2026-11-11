@@ -1,10 +1,10 @@
 /**
  * What the window bar holds at its start, and in how many rows, for a
  * platform and a window's state (design-language.md 5.7). The rail's
- * column is the bar's first: with the rail, Windows' and Linux's app menu
- * sits in it at the rail's icons' size, and the rail's icons open the
- * sidebar, so the bar has no sidebar button; without it, the button comes
- * back. The menu bar spelled out has a row of its own, the islands and the
+ * column is the bar's first: with the rail shown, Windows' and Linux's app
+ * menu sits in it at the rail's icons' size. With the rail on, its icons
+ * open the sidebar and the bar has no sidebar button; turned off, the
+ * button opens the rail and the sidebar together and folds both away. The menu bar spelled out has a row of its own, the islands and the
  * rail under it - but in Zen, with no documents' tabs, it keeps to one.
  */
 
@@ -32,14 +32,18 @@ export function barLayout({
   platform,
   menuBar,
   rail,
+  railOff,
   zen,
   fullscreen,
 }: {
   platform: BarPlatform;
   /** The menu bar spelled out (Windows and Linux only). */
   menuBar: boolean;
-  /** The activity rail is on. */
+  /** The activity rail is shown. */
   rail: boolean;
+  /** The rail is turned off: it shows only with the sidebar, the bar's
+   *  button opening and folding both. */
+  railOff: boolean;
   zen: boolean;
   fullscreen: boolean;
 }): BarLayout {
@@ -47,7 +51,7 @@ export function barLayout({
   // An iPhone or iPad: its menu, the sidebar opened from its own bar.
   if (platform === "ios") return { rows: 1, lead: ["menu"], ...none };
   const railShown = rail && !zen;
-  const toggle: BarItem[] = railShown ? [] : ["sidebar-toggle"];
+  const toggle: BarItem[] = railOff || zen ? ["sidebar-toggle"] : [];
   // In full screen the lights are gone: with the rail, the bar leaves the
   // left columns alone.
   if (platform === "macos")

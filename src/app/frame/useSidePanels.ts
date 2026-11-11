@@ -30,10 +30,14 @@ function subscribeWindowResize(onChange: () => void) {
  * Layout state of the sidebar and the docked Agent panel. `aiOn` is Textus
  * AI's switch: off, the AI panel closes and its toggles do nothing.
  */
-/** Whether the window has the activity rail: on in Settings, and not on an
- *  iPad, whose sidebar is its own. */
-function railShown(settings: Pick<Settings, "activityRail">): boolean {
-  return settings.activityRail && !isIOSApp;
+/** Whether the window shows the activity rail: on in Settings, or turned
+ *  off but with the sidebar open; never on an iPad, whose sidebar is its
+ *  own. */
+function railShown(
+  settings: Pick<Settings, "activityRail">,
+  open: boolean,
+): boolean {
+  return (settings.activityRail || open) && !isIOSApp;
 }
 
 export function useSidePanels(aiOn: boolean) {
@@ -42,8 +46,8 @@ export function useSidePanels(aiOn: boolean) {
     () => !isIOSApp && getUiState("sidebarOpen") === true,
   );
   const { settings } = useSettings();
-  // With the rail turned off the sidebar keeps its own tabs at its top, and
-  // the window bar's button opens and folds it whole; the rail stays off.
+  // With the rail turned off, the window bar's button opens the sidebar
+  // with the rail and folds both away; the rail stays off.
   const open = panelOpen;
   const toggleSidebar = useCallback(() => setPanelOpen((v) => !v), []);
   const showPanel = setPanelOpen;
@@ -64,7 +68,9 @@ export function useSidePanels(aiOn: boolean) {
   );
   // The activity rail is beside both panels, as each is beside the other:
   // the document keeps its room after all of them.
-  const rail = railShown(settings) ? Math.round(RAIL_WIDTH * chromeScale()) : 0;
+  const rail = railShown(settings, panelOpen)
+    ? Math.round(RAIL_WIDTH * chromeScale())
+    : 0;
   // An iPad's docked AI panel open, the sidebar leaves it its narrowest, so
   // a small window still keeps the document its room. On the desktop the AI
   // is an island: the solver keeps its room.

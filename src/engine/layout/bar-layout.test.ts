@@ -9,6 +9,7 @@ const at = (
     platform,
     menuBar: false,
     rail: true,
+    railOff: false,
     zen: false,
     fullscreen: false,
     ...more,
@@ -26,8 +27,13 @@ describe("the window bar's start", () => {
       });
   });
 
-  it("brings the sidebar button back without the rail, and in Zen", () => {
-    expect(at("windows", { rail: false }).lead).toEqual([
+  it("keeps the sidebar button while the rail is turned off, open or not, and in Zen", () => {
+    // Turned off, the rail shows with the sidebar; the button folds both.
+    expect(at("windows", { railOff: true })).toMatchObject({
+      lead: ["menu", "sidebar-toggle"],
+      menuInRail: true,
+    });
+    expect(at("windows", { rail: false, railOff: true }).lead).toEqual([
       "menu",
       "sidebar-toggle",
     ]);
@@ -38,7 +44,7 @@ describe("the window bar's start", () => {
       sideToTop: false,
       railToTop: false,
     });
-    expect(at("macos", { rail: false }).lead).toEqual([
+    expect(at("macos", { rail: false, railOff: true }).lead).toEqual([
       "lights",
       "sidebar-toggle",
     ]);
@@ -47,9 +53,9 @@ describe("the window bar's start", () => {
   it("keeps the traffic lights' room on a Mac, but not in full screen", () => {
     expect(at("macos").lead).toEqual(["lights"]);
     expect(at("macos", { fullscreen: true }).lead).toEqual([]);
-    expect(at("macos", { fullscreen: true, rail: false }).lead).toEqual([
-      "sidebar-toggle",
-    ]);
+    expect(
+      at("macos", { fullscreen: true, rail: false, railOff: true }).lead,
+    ).toEqual(["sidebar-toggle"]);
   });
 
   it("lets the sidebar, and on a Mac in full screen the rail, reach the window's top where the bar leaves their columns free", () => {
@@ -60,7 +66,7 @@ describe("the window bar's start", () => {
     });
     expect(at("macos", { fullscreen: true, zen: true }).sideToTop).toBe(false);
     expect(at("windows").railToTop).toBe(false);
-    expect(at("windows", { rail: false }).sideToTop).toBe(false);
+    expect(at("windows", { rail: false, railOff: true }).sideToTop).toBe(false);
   });
 
   it("gives the menu bar spelled out a row of its own, on Windows and Linux only", () => {
@@ -71,7 +77,9 @@ describe("the window bar's start", () => {
       sideToTop: false,
       railToTop: false,
     });
-    expect(at("linux", { menuBar: true, rail: false }).rows).toBe(2);
+    expect(
+      at("linux", { menuBar: true, rail: false, railOff: true }).rows,
+    ).toBe(2);
     // Zen shows no documents' tabs: one row.
     expect(at("windows", { menuBar: true, zen: true }).rows).toBe(1);
     expect(at("macos", { menuBar: true }).rows).toBe(1);

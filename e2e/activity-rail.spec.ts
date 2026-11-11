@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
 import { openWithPlugins } from "./plugin-helpers";
+import { openApp } from "./helpers";
 
 // With more plugin icons than the rail has room for, they scroll between
 // Textus's own and Settings, neither pushed away; one dragged above the
@@ -60,4 +61,23 @@ test("plugin icons scroll under the line; one dragged above it is pinned", async
       .locator(".activity-rail-group:not(.activity-rail-scroll)")
       .getByRole("button", { name: name! }),
   ).toBeVisible();
+});
+
+test("turned off, the rail comes and goes with the sidebar under the bar's one button", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { activityRail: false, menuBarShown: false },
+  });
+  const rail = page.locator(".activity-rail");
+  const button = page.locator(".window-bar-sidebar-toggle");
+  await expect(rail).toHaveCount(0);
+  await button.click();
+  await expect(rail).toBeVisible();
+  await expect(page.locator(".sidebar-body")).toBeVisible();
+  // No row of tabs over the sidebar: the rail holds them.
+  await expect(page.locator(".sidebar-tabs")).toHaveCount(0);
+  await button.click();
+  await expect(rail).toHaveCount(0);
+  await expect(page.locator(".sidebar-body")).toHaveCount(0);
 });

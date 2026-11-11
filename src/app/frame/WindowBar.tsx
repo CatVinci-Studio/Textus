@@ -70,7 +70,8 @@ export function WindowBar({
   const { t, settings } = useSettings();
   const bar = useBarLayout({
     menuBarShown: settings.menuBarShown,
-    rail: settings.activityRail,
+    rail: settings.activityRail || sidebarOpen,
+    railOff: !settings.activityRail,
     zen: !!menuChecks.zen,
   });
   const hasStatus = useSyncExternalStore(

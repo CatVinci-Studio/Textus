@@ -80,10 +80,10 @@ export function Sidebar({
     },
     [presenceRef, frame],
   );
-  // The phone opens the sidebar from its own bar; there is no rail there.
-  // Without the rail (an iPad's drawer, or the rail turned off) the
-  // sidebar's tabs are a row at its top, and the bar's button folds it all.
-  const rail = settings.activityRail && !isIOSApp;
+  // The phone opens the sidebar from its own bar; there is no rail there,
+  // and an iPad's drawer has its tabs in a row at its top. The rail turned
+  // off comes with the sidebar and goes with it.
+  const rail = (settings.activityRail || open) && !isIOSApp;
   const move = (id: string, target: string) => {
     moveSidebarTab(id, target);
     moved();
@@ -129,7 +129,7 @@ export function Sidebar({
                   islands' tops. Without the rail its tabs are here. */}
               {/* A plugin's buttons for its panel (menus "view/title")
                   end the name's line: no row of their own. */}
-              {rail && (
+              {!isIOSApp && (
                 <>
                   <h2 className="tx-pane-title sidebar-title">
                     {shown.label(t)}
@@ -137,7 +137,7 @@ export function Sidebar({
                   <ViewTitleActions view={shown.id} />
                 </>
               )}
-              {!rail && (
+              {isIOSApp && (
                 <SidebarTabBar
                   tabs={sidebarTabs()}
                   shownId={shown.id}
@@ -148,7 +148,7 @@ export function Sidebar({
               )}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
-              {!rail && <ViewTitleActions view={shown.id} />}
+              {isIOSApp && <ViewTitleActions view={shown.id} />}
               <shown.Panel
                 t={t}
                 openFolder={openFolder}
