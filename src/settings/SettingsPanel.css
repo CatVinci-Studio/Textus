@@ -1287,8 +1287,9 @@ button.settings-inline-button {
    card; the one in use rings its screenshot. */
 .settings-group-body:has(> .theme-gallery-item) {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
-  justify-content: start;
+  /* As many as fit, sharing the row: four in a full page, two in a narrow
+     one, one in the narrowest. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: var(--space-3);
   padding: var(--space-3);
 }
