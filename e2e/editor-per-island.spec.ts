@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { openApp } from "./helpers";
+import { MAC, openApp } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // One editor per island, as VS Code keeps one per group: a tab out of
@@ -33,7 +33,7 @@ test("only the tab in front has an editor; back again, its edit and its undo are
   await tab("a.md").click();
   await expect(front.locator("p").first()).toContainText("EDITED");
   await front.focus();
-  await page.keyboard.press("Control+z");
+  await page.keyboard.press(MAC ? "Meta+z" : "Control+z");
   await expect(front.locator("p").first()).toHaveText("alpha line");
 });
 
