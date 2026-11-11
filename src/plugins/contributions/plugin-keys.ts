@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { APP_NAME } from "../../i18n/strings";
 import { commandShortcut, commands } from "../../registry/commands";
 import { fixedShortcutGroups } from "../../registry/fixed-shortcuts";
@@ -51,11 +52,12 @@ export function pluginKey(
     told.add(pair);
     setUiState("pluginKeysTold", [...list, pair]);
     showNotice(
-      t.pluginKeyTaken
-        .replace("{name}", plugin.name)
-        .replace("{key}", formatCombo(key))
-        .replace("{owner}", owner)
-        .replace("{command}", command.title),
+      fill(t.pluginKeyTaken, {
+        name: plugin.name,
+        key: formatCombo(key),
+        owner,
+        command: command.title,
+      }),
       { tone: "warning" },
     );
   }

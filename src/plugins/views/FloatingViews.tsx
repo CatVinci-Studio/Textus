@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { DRAG_START_PX } from "../../utils/gesture";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useChromeScale } from "../../engine/controls/useChromeScale";
@@ -178,7 +179,7 @@ function FloatingBox({
         type="button"
         className="floating-view-dot"
         style={{ left: at.left, top: at.top }}
-        aria-label={t.floatingUnfold.replace("{name}", view.title)}
+        aria-label={fill(t.floatingUnfold, { name: view.title })}
         title={view.title}
         {...dragHandlers}
         onClick={() => {
@@ -196,18 +197,18 @@ function FloatingBox({
     ...(view.allowed === "either" && desktop
       ? [
           {
-            label: t.floatingToDesktop.replace("{name}", view.title),
+            label: fill(t.floatingToDesktop, { name: view.title }),
             onSelect: () => moveFloating(view.view, { place: "desktop" }),
           },
         ]
       : []),
     {
-      label: t.floatingFold.replace("{name}", view.title),
+      label: fill(t.floatingFold, { name: view.title }),
       onSelect: () => moveFloating(view.view, { folded: true }),
     },
     "separator",
     {
-      label: t.floatingClose.replace("{name}", view.title),
+      label: fill(t.floatingClose, { name: view.title }),
       onSelect: () => closeFloating(view.view),
     },
   ];

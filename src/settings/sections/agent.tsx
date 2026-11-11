@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useSettingsIndexing } from "../indexing";
 import {
   formatContext,
@@ -253,10 +254,11 @@ export function ModelListRow({
       label={t.modelListLabel}
       hint={
         at
-          ? t.modelFetchedAt.replace(
-              "{date}",
-              new Date(at).toLocaleDateString(localeOf(settings.language)),
-            )
+          ? fill(t.modelFetchedAt, {
+              date: new Date(at).toLocaleDateString(
+                localeOf(settings.language),
+              ),
+            })
           : undefined
       }
       error={error}

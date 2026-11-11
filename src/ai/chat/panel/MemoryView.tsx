@@ -1,3 +1,4 @@
+import { fill } from "../../../i18n/fill";
 import { SearchField } from "../../../engine/controls/SearchField";
 import { useMemo, useState } from "react";
 import type {
@@ -243,12 +244,10 @@ export function MemorySections({
         )}
         {leftOut.length > 0 && (
           <p className="memory-note" role="note">
-            {t.memoryLibraryLeftOut
-              .replace("{names}", leftOut.map((e) => e.name).join(", "))
-              .replace(
-                "{cap}",
-                (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
-              )}
+            {fill(t.memoryLibraryLeftOut, {
+              names: leftOut.map((e) => e.name).join(", "),
+              cap: (libraryUse?.cap ?? 0).toLocaleString(localeOf(lang)),
+            })}
           </p>
         )}
       </section>

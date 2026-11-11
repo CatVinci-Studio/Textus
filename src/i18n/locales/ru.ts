@@ -1309,7 +1309,7 @@ export default {
   embedDisplayLabel: "Встроенные заметки",
   embedDisplayExpand: "Показывать целиком",
   embedDisplayCard: "Карточкой-ссылкой",
-  embedBlockCard: "{0} · нажмите, чтобы показать",
+  embedBlockCard: "{name} · нажмите, чтобы показать",
   docTextSizeLabel: "Размер текста",
   docTextSizeAuto: "Как в теме",
   docTextLabel: "Текст документа",

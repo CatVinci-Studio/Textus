@@ -1312,7 +1312,7 @@ para usar una.
   embedDisplayLabel: "Notas incrustadas",
   embedDisplayExpand: "Mostrar completas",
   embedDisplayCard: "Como tarjeta de enlace",
-  embedBlockCard: "{0} · haz clic para mostrar",
+  embedBlockCard: "{name} · haz clic para mostrar",
   docTextSizeLabel: "Tamaño del texto",
   docTextSizeAuto: "El del tema",
   docTextLabel: "Texto del documento",

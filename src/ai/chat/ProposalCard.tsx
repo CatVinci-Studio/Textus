@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { Check, X } from "lucide-react";
 import {
   useEffect,
@@ -42,7 +43,7 @@ export function notMadeLine(
     return null;
   }
   if (typeof args.limit_reached === "number")
-    return labels.imageLimitReached.replace("{n}", String(args.limit_reached));
+    return fill(labels.imageLimitReached, { n: String(args.limit_reached) });
   if (args.not_generated === undefined && args.image === undefined)
     return labels.imageNoModel;
   return null;
@@ -174,10 +175,9 @@ export function ProposalCard({
             {proposal.image
               ? labels.proposalImage
               : sentences && sentences.length > 1
-                ? labels.proposalChangeCount.replace(
-                    "{n}",
-                    String(sentences.length),
-                  )
+                ? fill(labels.proposalChangeCount, {
+                    n: String(sentences.length),
+                  })
                 : labels.actionNames[proposal.action]}
           </span>
         </span>
@@ -318,9 +318,10 @@ export function ProposalCard({
                 {pictures === "painting"
                   ? labels.proposalPicturePainting
                   : partial && sentences
-                    ? labels.proposalAcceptSome
-                        .replace("{k}", String(taken))
-                        .replace("{n}", String(sentences.length))
+                    ? fill(labels.proposalAcceptSome, {
+                        k: String(taken),
+                        n: String(sentences.length),
+                      })
                     : labels.proposalAccept}
               </button>
             )}

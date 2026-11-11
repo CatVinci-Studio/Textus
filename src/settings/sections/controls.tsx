@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import { resolveStrings, type Strings } from "../../i18n/strings";
@@ -59,7 +60,7 @@ export function RowHelp({
     <InfoTip
       label={
         typeof label === "string"
-          ? t.infoTipLabel.replace("{label}", label)
+          ? fill(t.infoTipLabel, { label })
           : t.infoTipLabelPlain
       }
     >

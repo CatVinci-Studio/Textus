@@ -1186,7 +1186,7 @@ export default {
   embedDisplayLabel: "嵌入的筆記",
   embedDisplayExpand: "展開內容",
   embedDisplayCard: "只顯示連結卡片",
-  embedBlockCard: "{0} · 點擊展開",
+  embedBlockCard: "{name} · 點擊展開",
   docTextSizeLabel: "內文字級",
   docTextSizeAuto: "跟隨主題",
   docTextLabel: "內文文字",

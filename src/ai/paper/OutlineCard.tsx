@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import type {
@@ -94,9 +95,7 @@ export function OutlineCard({
       <header className="paper-outline-head">
         <span className="paper-outline-title">{t.paperOutlineTitle}</span>
         <span className="paper-outline-total">
-          {t.paperOutlineTotal
-            .replace("{n}", String(totalLength(outline)))
-            .replace("{unit}", unit)}
+          {fill(t.paperOutlineTotal, { n: String(totalLength(outline)), unit })}
         </span>
       </header>
       {editing === "thesis" && !busy ? (
@@ -266,7 +265,7 @@ function SectionView({
         >
           {open
             ? t.paperOutlineLess
-            : t.paperOutlineMore.replace("{n}", String(hidden))}
+            : fill(t.paperOutlineMore, { n: String(hidden) })}
         </button>
       )}
       {section.figures.length > 0 && (
@@ -303,7 +302,7 @@ function SectionEditor({
         <input
           className="paper-outline-section-title"
           autoFocus
-          aria-label={t.paperOutlineSectionTitle.replace("{n}", String(i + 1))}
+          aria-label={fill(t.paperOutlineSectionTitle, { n: String(i + 1) })}
           value={section.title}
           onChange={(e) =>
             onChange(editSection(outline, i, { title: e.target.value }))

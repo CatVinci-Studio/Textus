@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { prepareList, rankList } from "../../utils/list-filter";
 import { basename } from "../../utils/path";
 import type { PickerLabels, PickerRow, PickerSection } from "./ComposerPicker";
@@ -47,7 +48,7 @@ export function pickerContent(o: {
     }));
     return {
       sections: [{ rows }],
-      empty: [labels.skillNoMatch.replace("{query}", query)],
+      empty: [fill(labels.skillNoMatch, { query })],
     };
   }
   if (o.skillTrigger) {
@@ -69,7 +70,7 @@ export function pickerContent(o: {
       empty:
         o.available.length === 0
           ? [labels.skillAbout, labels.skillHowTo]
-          : [labels.skillNoMatch.replace("{query}", query), labels.skillHowTo],
+          : [fill(labels.skillNoMatch, { query }), labels.skillHowTo],
     };
   }
   if (o.mentionQuery) {
@@ -90,7 +91,7 @@ export function pickerContent(o: {
         o.projectFiles === null
           ? [labels.mentionAbout]
           : o.projectFiles.length > 0
-            ? [labels.mentionNoMatch.replace("{query}", o.mentionQuery[1])]
+            ? [fill(labels.mentionNoMatch, { query: o.mentionQuery[1] })]
             : [
                 labels.mentionAbout,
                 o.hasProject ? labels.mentionNoFiles : labels.mentionNoProject,

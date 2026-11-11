@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { ReactNode } from "react";
 import { SettingsGroup } from "./SettingsGroup";
 import { SettingRow, LinkRow } from "../sections/controls";
@@ -40,16 +41,13 @@ export function statusText(
 ): string | null {
   switch (record.status) {
     case "broken":
-      return t.pluginStatusBroken.replace("{reason}", record.problem ?? "");
+      return fill(t.pluginStatusBroken, { reason: record.problem ?? "" });
     case "incompatible":
       if (record.manifest && !runsHere(record.manifest))
         return t.pluginStatusDesktopOnly;
-      return t.pluginStatusIncompatible.replace(
-        "{range}",
-        record.problem ?? "",
-      );
+      return fill(t.pluginStatusIncompatible, { range: record.problem ?? "" });
     case "failed":
-      return t.pluginStatusFailed.replace("{reason}", record.problem ?? "");
+      return fill(t.pluginStatusFailed, { reason: record.problem ?? "" });
     case "on":
       return allOn ? null : t.pluginStatusAllOff;
     default:
@@ -80,7 +78,7 @@ export function Byline({
       {official && <span className="plugin-official">{t.pluginOfficial}</span>}
       {madeHere && <span className="plugin-official">{t.madeByTextusAi}</span>}
       <span>
-        {t.pluginBy.replace("{author}", manifest.author || manifest.publisher)}
+        {fill(t.pluginBy, { author: manifest.author || manifest.publisher })}
       </span>
       <span className="plugin-version" data-search-ignore>
         {manifest.version}
@@ -137,7 +135,7 @@ export function PluginPage({
         <SettingRow label={t.pluginOnLabel}>
           <input
             type="checkbox"
-            aria-label={t.pluginEnableLabel.replace("{name}", name)}
+            aria-label={fill(t.pluginEnableLabel, { name })}
             disabled={!switchable}
             checked={on}
             onChange={(e) => onEnable(e.target.checked)}
@@ -146,7 +144,7 @@ export function PluginPage({
         {status && <div className="settings-error">{status}</div>}
         {manifest && (
           <SettingRow
-            label={t.pluginVersionLabel.replace("{version}", manifest.version)}
+            label={fill(t.pluginVersionLabel, { version: manifest.version })}
             hint={
               <Byline
                 manifest={manifest}
@@ -165,7 +163,7 @@ export function PluginPage({
               >
                 {installing
                   ? t.pluginInstalling
-                  : t.pluginUpdate.replace("{version}", update)}
+                  : fill(t.pluginUpdate, { version: update })}
               </button>
             )}
           </SettingRow>
@@ -209,11 +207,11 @@ export function PluginPage({
           <SettingsGroup title={t.pluginSettingsGroup}>
             {!on ? (
               <p className="plugin-empty">
-                {t.pluginSettingsOff.replace("{name}", name)}
+                {fill(t.pluginSettingsOff, { name })}
               </p>
             ) : manifest.contributes.settings.length === 0 ? (
               <p className="plugin-empty">
-                {t.pluginNoSettings.replace("{name}", name)}
+                {fill(t.pluginNoSettings, { name })}
               </p>
             ) : (
               <PluginSettingRows record={record} t={t} />
@@ -230,7 +228,7 @@ export function PluginPage({
       <PluginReadme
         id={record.id}
         installed
-        label={t.pluginReadmeLabel.replace("{name}", name)}
+        label={fill(t.pluginReadmeLabel, { name })}
       />
       <PluginErrors id={record.id} t={t} />
       {manifest && <PluginAbout record={record} t={t} attempt={attempt} />}
@@ -268,7 +266,7 @@ export function PluginPage({
           onClick={() =>
             void attempt(async () => {
               const ok = await showConfirm(
-                t.pluginUninstallAsk.replace("{name}", name),
+                fill(t.pluginUninstallAsk, { name }),
                 {
                   title: t.pluginsTitle,
                   okLabel: t.pluginUninstall,
@@ -305,12 +303,12 @@ function PluginAbout({
   const adds = [
     ...commands.map((c) => pluginText(record, c.title)),
     ...sidebarTabs.map((s) =>
-      t.pluginAddsSidebarTab.replace("{name}", pluginText(record, s.title)),
+      fill(t.pluginAddsSidebarTab, { name: pluginText(record, s.title) }),
     ),
     ...customEditors.map((e) =>
-      t.pluginAddsFileType.replace("{types}", e.filenamePatterns.join(", ")),
+      fill(t.pluginAddsFileType, { types: e.filenamePatterns.join(", ") }),
     ),
-    ...aiTools.map((tool) => t.pluginAddsAiTool.replace("{name}", tool.name)),
+    ...aiTools.map((tool) => fill(t.pluginAddsAiTool, { name: tool.name })),
   ];
   return (
     <SettingsGroup title={t.pluginAboutGroup}>
@@ -345,7 +343,7 @@ function PluginAbout({
       })}
       <PluginData id={record.id} name={pluginName(record)} t={t} />
       <SettingRow
-        label={t.pluginVersionLabel.replace("{version}", manifest.version)}
+        label={fill(t.pluginVersionLabel, { version: manifest.version })}
         hint={manifest.license}
       />
     </SettingsGroup>

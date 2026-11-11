@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   useEffect,
   useState,
@@ -141,7 +142,7 @@ export function PluginsPanel({
                 disabled={installing !== null}
                 onClick={() => void updateAll(updates)}
               >
-                {t.pluginsUpdateAll.replace("{count}", String(updates.length))}
+                {fill(t.pluginsUpdateAll, { count: String(updates.length) })}
               </button>
             )
           }
@@ -203,12 +204,12 @@ export function PluginsPanel({
         {folded.has("available") ? null : catalog.status !== "ready" ? (
           <p className="tx-list-note">
             {catalog.status === "failed"
-              ? t.pluginsCatalogFailed.replace("{reason}", catalog.error)
+              ? fill(t.pluginsCatalogFailed, { reason: catalog.error })
               : t.pluginsCatalogLoading}
           </p>
         ) : query.trim() && offered.length === 0 ? (
           <p className="tx-list-note">
-            {t.pluginsSearchNone.replace("{query}", query.trim())}
+            {fill(t.pluginsSearchNone, { query: query.trim() })}
           </p>
         ) : (
           offered.map((item) => (

@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useFilesFromChat } from "../ai/chat/window/files-to-editor";
 import { useCallback, useEffect, useRef } from "react";
 import {
@@ -148,7 +149,7 @@ export function useFileOpening(opts: {
           return { ...doc, view: undefined };
         } catch (err) {
           void showMessage(
-            `${t.wordImportFailed.replace("{name}", basename(path))}\n${explainError(err, t)}`,
+            `${fill(t.wordImportFailed, { name: basename(path) })}\n${explainError(err, t)}`,
             { tone: "error" },
           );
           return null;
@@ -171,7 +172,7 @@ export function useFileOpening(opts: {
         const now = offered === "on" ? customEditorFor(path) : null;
         if (now) return pluginTab(path, now, place);
         if (offered === "none")
-          void showMessage(t.openFileFailed.replace("{name}", basename(path)), {
+          void showMessage(fill(t.openFileFailed, { name: basename(path) }), {
             tone: "error",
           });
         return null;
@@ -381,7 +382,7 @@ export function useFileOpening(opts: {
     if (offered === "system") await exportDoc.openLinkedFile(path);
     if (offered !== "none") return;
     const open = await showConfirm(
-      t.linkOpenFileConfirm.replace("{name}", basename(path)),
+      fill(t.linkOpenFileConfirm, { name: basename(path) }),
       { okLabel: t.linkOpenFileOk, cancelLabel: t.closePromptCancel },
     );
     if (open) await exportDoc.openLinkedFile(path);

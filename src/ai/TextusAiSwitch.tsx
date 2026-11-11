@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useEffect, useState, type MouseEvent } from "react";
 import { createPortal } from "react-dom";
 import { useSettings } from "../prefs/SettingsContext";
@@ -104,7 +105,7 @@ export function TextusAiButton({
   const tip = ai.on
     ? `${t.agentPanelTitle} (${shortcut}) · ${t.textusAiMenuHint}`
     : until
-      ? t.textusAiPausedTooltip.replace("{time}", until)
+      ? fill(t.textusAiPausedTooltip, { time: until })
       : t.textusAiOffTooltip;
   const items: (ContextMenuItem | "separator")[] = ai.on
     ? [

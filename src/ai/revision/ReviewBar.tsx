@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useRef, useState } from "react";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import {
@@ -168,8 +169,8 @@ export function ReviewBar({
     </div>
   );
   const counts = [
-    changes && labels.proposalChangeCount.replace("{n}", String(changes.total)),
-    notes && labels.reviewGroupNotes.replace("{n}", String(notes.count)),
+    changes && fill(labels.proposalChangeCount, { n: String(changes.total) }),
+    notes && fill(labels.reviewGroupNotes, { n: String(notes.count) }),
   ]
     .filter(Boolean)
     .join(" · ");
@@ -188,9 +189,10 @@ export function ReviewBar({
       <span className="review-bar-pos">
         {position < 0
           ? counts
-          : labels.quickAskPosition
-              .replace("{i}", String(position + 1))
-              .replace("{n}", String(stops))}
+          : fill(labels.quickAskPosition, {
+              i: String(position + 1),
+              n: String(stops),
+            })}
       </span>
       <Tooltip text={labels.quickAskNextEdit} side="above">
         <button
@@ -205,10 +207,9 @@ export function ReviewBar({
     </span>
   );
   const name = picking
-    ? labels.reviewNotesPicked.replace(
-        "{n}",
-        String(notes!.bar.picked?.size ?? 0),
-      )
+    ? fill(labels.reviewNotesPicked, {
+        n: String(notes!.bar.picked?.size ?? 0),
+      })
     : changes && notes
       ? `${labels.reviewBarLabel} · ${labels.reviewNotesLabel}`
       : changes
@@ -278,9 +279,10 @@ export function ReviewBar({
                   {changes.painting
                     ? labels.proposalPicturePainting
                     : changes.taken < changes.total
-                      ? labels.proposalAcceptSome
-                          .replace("{k}", String(changes.taken))
-                          .replace("{n}", String(changes.total))
+                      ? fill(labels.proposalAcceptSome, {
+                          k: String(changes.taken),
+                          n: String(changes.total),
+                        })
                       : labels.proposalAccept}
                 </button>
                 <button

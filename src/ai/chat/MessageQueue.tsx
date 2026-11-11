@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { AgentRequestOptions } from "./conversation/conversation-types";
 import type { ImageAttachment } from "../types";
 
@@ -47,14 +48,13 @@ export function MessageQueue({
     <div
       className="chat-queue"
       role="list"
-      aria-label={labels.queued.replace("{n}", String(queue.length))}
+      aria-label={fill(labels.queued, { n: String(queue.length) })}
     >
       <div className="chat-queue-title">
         <span>
-          {(paused ? labels.queuedPaused : labels.queued).replace(
-            "{n}",
-            String(queue.length),
-          )}
+          {fill(paused ? labels.queuedPaused : labels.queued, {
+            n: String(queue.length),
+          })}
         </span>
         {paused && (
           <button

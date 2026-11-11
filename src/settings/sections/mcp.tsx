@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Strings } from "../../i18n/strings";
 import {
@@ -76,7 +77,7 @@ export function McpSection({
   };
   const remove = async (server: McpServer) => {
     const ok = await showConfirm(
-      t.mcpRemoveConfirm.replace("{name}", server.name),
+      fill(t.mcpRemoveConfirm, { name: server.name }),
       { okLabel: t.mcpRemove, cancelLabel: t.cancel, danger: true },
     );
     if (ok)
@@ -148,8 +149,8 @@ function stateText(
   if (!server.enabled) return t.mcpStateOff;
   if (!status || status.state === "starting") return t.mcpStateStarting;
   if (status.state === "failed")
-    return t.mcpStateFailed.replace("{reason}", status.error ?? "");
-  return t.mcpStateReady.replace("{count}", String(status.tools.length));
+    return fill(t.mcpStateFailed, { reason: status.error ?? "" });
+  return fill(t.mcpStateReady, { count: String(status.tools.length) });
 }
 
 function ServerCard({
@@ -252,10 +253,11 @@ function useMcpTry(t: Strings) {
     try {
       const result = await mcp.try(server);
       setTried(
-        t.mcpTried
-          .replace("{server}", result.server)
-          .replace("{count}", String(result.tools.length))
-          .replace("{names}", result.tools.map((x) => x.name).join(", ")),
+        fill(t.mcpTried, {
+          server: result.server,
+          count: String(result.tools.length),
+          names: result.tools.map((x) => x.name).join(", "),
+        }),
       );
     } catch (err) {
       setError(explainError(err, t));

@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useEffect } from "react";
 import { announce } from "../engine/controls/announce";
 import { CornerToast } from "../engine/controls/CornerToast";
@@ -25,11 +26,12 @@ export function SuggestCard({ t }: { t: Strings }) {
   const name = item
     ? pluginName({ id: item.id, manifest: item.manifest })
     : (request?.plugin ?? "");
-  const line = (
+  const line = fill(
     request?.situation.type === "moved"
       ? t.pluginCardMovedLine
-      : t.pluginCardLine
-  ).replace("{name}", name);
+      : t.pluginCardLine,
+    { name },
+  );
   useEffect(() => {
     if (request) announce(line);
   }, [request, line]);

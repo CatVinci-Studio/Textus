@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import type { Strings } from "../../i18n/strings";
@@ -28,7 +29,7 @@ export function AboutSection({
       <img className="settings-about-icon" src={appIcon} alt="" />
       <div className="settings-about-name">Textus</div>
       <div className="settings-about-version">
-        {version ? t.aboutVersion.replace("{version}", version) : " "}
+        {version ? fill(t.aboutVersion, { version }) : " "}
       </div>
       <div className="settings-about-links">
         <button

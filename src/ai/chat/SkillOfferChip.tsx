@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState } from "react";
 import { ai } from "../../platform/ipc";
 import type { SkillOffer } from "../../platform/bindings/ai-memory";
@@ -77,8 +78,8 @@ export function SkillOfferChip({
     <div className="agent-memory-chip skill-offer-chip" role="status">
       <span className="agent-memory-chip-text">
         {state.kind === "saved"
-          ? t.skillOfferSaved.replace("{name}", `/${offer.name}`)
-          : t.skillOffer.replace("{name}", `/${offer.name}`)}
+          ? fill(t.skillOfferSaved, { name: `/${offer.name}` })
+          : fill(t.skillOffer, { name: `/${offer.name}` })}
       </span>
       <span className="skill-offer-description">{offer.description}</span>
       {state.kind === "failed" && (

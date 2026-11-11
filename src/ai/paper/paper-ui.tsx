@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -70,9 +71,7 @@ export function concurrencyLine(
         ? t.paperRevisingAtOnce
         : t.paperSectionsAtOnce;
   const text = c.active > 1 ? plural(forms, c.active, lang) : t.paperDoneOf;
-  return text
-    .replace("{done}", String(c.done))
-    .replace("{of}", String(c.total));
+  return fill(text, { done: String(c.done), of: String(c.total) });
 }
 
 /** One line of what the run is doing now. */
@@ -83,10 +82,11 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "planning":
       return t.paperPlanning;
     case "researching":
-      return t.paperResearching
-        .replace("{searches}", String(run.used?.searches ?? 0))
-        .replace("{pages}", String(run.used?.fetches ?? 0))
-        .replace("{papers}", String(run.used?.paperLookups ?? 0));
+      return fill(t.paperResearching, {
+        searches: String(run.used?.searches ?? 0),
+        pages: String(run.used?.fetches ?? 0),
+        papers: String(run.used?.paperLookups ?? 0),
+      });
     case "outlining":
       return t.paperOutlining;
     case "awaitingOutline":
@@ -94,9 +94,10 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "drafting": {
       const c = paperConcurrency(run);
       if (c && c.active > 1) return concurrencyLine(c, run.phase, t, lang);
-      return t.paperDrafting
-        .replace("{n}", String(c?.done ?? 0))
-        .replace("{of}", String(c?.total ?? 0));
+      return fill(t.paperDrafting, {
+        n: String(c?.done ?? 0),
+        of: String(c?.total ?? 0),
+      });
     }
     case "reviewing":
       return t.paperReviewing;
@@ -105,7 +106,7 @@ function progressLine(run: PaperRunState, t: Strings, lang: Lang): string {
     case "done":
       if (!run.written) return t.paperFinishing;
       return run.picturesLeft > 0
-        ? t.paperAddingPictures.replace("{n}", String(run.picturesLeft))
+        ? fill(t.paperAddingPictures, { n: String(run.picturesLeft) })
         : t.paperWrittenCard;
   }
 }
@@ -133,7 +134,7 @@ function questionStatus(q: QuestionState, t: Strings): string {
     case "done":
       return q.state === "active" && q.notes === 0
         ? t.paperQuestionActive
-        : t.paperQuestionNotes.replace("{n}", String(q.notes));
+        : fill(t.paperQuestionNotes, { n: String(q.notes) });
   }
 }
 
@@ -225,7 +226,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
       <>
         {draft && draft.attempt > 1 && (
           <p className="paper-card-note">
-            {t.paperOutlineRetry.replace("{n}", String(draft.attempt))}
+            {fill(t.paperOutlineRetry, { n: String(draft.attempt) })}
           </p>
         )}
         {draft?.thesis ? (

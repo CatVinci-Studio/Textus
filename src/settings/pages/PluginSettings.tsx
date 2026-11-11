@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useReducer, useState } from "react";
 import { SettingRow, ToggleRow, VERBATIM_INPUT } from "../sections/controls";
 import { Select } from "../../engine/controls/Select";
@@ -48,7 +49,7 @@ export function PluginSettingRows({
           >
             <option value="global">{t.pluginSettingsScopeGlobal}</option>
             <option value="project">
-              {t.pluginSettingsScopeProject.replace("{name}", basename(root))}
+              {fill(t.pluginSettingsScopeProject, { name: basename(root) })}
             </option>
           </Select>
         </SettingRow>

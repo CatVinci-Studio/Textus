@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState } from "react";
 import { showConfirm, showMessage } from "../../engine/controls/app-dialog";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -73,7 +74,7 @@ export function usePluginInstall(t: Strings) {
     setInstalling(null);
     if (failed.length)
       void showMessage(
-        t.pluginsUpdateAllFailed.replace("{names}", failed.join(", ")),
+        fill(t.pluginsUpdateAllFailed, { names: failed.join(", ") }),
         { title: t.pluginsTitle, tone: "error" },
       );
   };
@@ -91,7 +92,7 @@ export function usePluginInstall(t: Strings) {
     let gone = false;
     await attempt(async () => {
       const ok = await showConfirm(
-        t.pluginUninstallAsk.replace("{name}", pluginName(record)),
+        fill(t.pluginUninstallAsk, { name: pluginName(record) }),
         {
           title: t.pluginsTitle,
           okLabel: t.pluginUninstall,
@@ -131,13 +132,11 @@ async function askForRequirements(
   for (const need of record.manifest.requires) {
     if (requirementMet(need, settings)) continue;
     const ok = await showConfirm(
-      t.pluginRequiresAsk
-        .replace("{name}", pluginName(record))
-        .replace("{setting}", requirementLabel(need, t))
-        .replace(
-          "{reason}",
-          need.reason ? pluginText(record, need.reason) : "",
-        ),
+      fill(t.pluginRequiresAsk, {
+        name: pluginName(record),
+        setting: requirementLabel(need, t),
+        reason: need.reason ? pluginText(record, need.reason) : "",
+      }),
       {
         title: pluginName(record),
         okLabel: t.pluginRequiresTurnOn,

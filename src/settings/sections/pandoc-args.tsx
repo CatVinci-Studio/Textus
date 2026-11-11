@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import {
@@ -33,7 +34,7 @@ function ArgsInput({ t, format }: { t: Strings; format: PandocArgsFormat }) {
   async function commit() {
     const args = splitCommandLine(text);
     const owned = await exportDoc.checkPandocArgs(args);
-    setError(owned === null ? null : t.pandocArgsOwned.replace("{arg}", owned));
+    setError(owned === null ? null : fill(t.pandocArgsOwned, { arg: owned }));
     if (owned === null)
       setSettings({ pandocArgs: { ...settings.pandocArgs, [format]: args } });
   }

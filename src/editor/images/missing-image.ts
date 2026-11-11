@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { IMAGE_ICON_HTML } from "../../engine/controls/icons";
 import { exportDoc, fs } from "../../platform/ipc";
 import type { Strings } from "../../i18n/strings";
@@ -152,10 +153,9 @@ function reasonText(content: MissingCardContent, t: Strings): string {
     case "unsupported":
       return t.missingImageUnsupported;
     case "remote":
-      return t.missingImageRemote.replace(
-        "{host}",
-        content.location.kind === "remote" ? content.location.host : "",
-      );
+      return fill(t.missingImageRemote, {
+        host: content.location.kind === "remote" ? content.location.host : "",
+      });
     case "unsaved":
       return t.missingImageUnsaved;
     case "notInVault":
@@ -189,11 +189,12 @@ export function missingImageCard(
   const icon = document.createElement("span");
   icon.className = "missing-image-icon";
   icon.innerHTML = IMAGE_ICON_HTML;
-  const title = (
+  const title = fill(
     content.reason === "unsupported"
       ? t.missingImageUnsupportedTitle
-      : t.missingImageTitle
-  ).replace("{name}", content.name);
+      : t.missingImageTitle,
+    { name: content.name },
+  );
   head.append(icon, span("missing-image-title", title));
   card.append(head);
 

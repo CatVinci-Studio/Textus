@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { notesRoot, renameRule } from "./link-style";
 import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
@@ -52,7 +53,7 @@ export async function updateLinksAfterMove(
   if (
     !automatic &&
     !(await showConfirm(
-      t.treeUpdateLinksConfirm.replace("{name}", basename(to)),
+      fill(t.treeUpdateLinksConfirm, { name: basename(to) }),
       { okLabel: t.treeUpdateLinks, cancelLabel: t.treeKeepLinks },
     ))
   )
@@ -81,10 +82,7 @@ export async function updateLinksAfterMove(
   }
   if (failed.length)
     await showMessage(
-      t.treeUpdateLinksFailed.replace(
-        "{names}",
-        failed.map(basename).join(", "),
-      ),
+      fill(t.treeUpdateLinksFailed, { names: failed.map(basename).join(", ") }),
       { tone: "error" },
     );
 }

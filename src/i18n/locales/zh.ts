@@ -1184,7 +1184,7 @@ export default {
   embedDisplayLabel: "嵌入的笔记",
   embedDisplayExpand: "展开内容",
   embedDisplayCard: "只显示链接卡片",
-  embedBlockCard: "{0} · 点击展开",
+  embedBlockCard: "{name} · 点击展开",
   docTextSizeLabel: "正文字号",
   docTextSizeAuto: "跟随主题",
   docTextLabel: "正文文字",

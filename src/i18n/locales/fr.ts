@@ -1324,7 +1324,7 @@ utiliser une.
   embedDisplayLabel: "Notes intégrées",
   embedDisplayExpand: "Afficher en entier",
   embedDisplayCard: "En carte de lien",
-  embedBlockCard: "{0} · cliquer pour afficher",
+  embedBlockCard: "{name} · cliquer pour afficher",
   docTextSizeLabel: "Taille du texte",
   docTextSizeAuto: "Celle du thème",
   docTextLabel: "Texte du document",

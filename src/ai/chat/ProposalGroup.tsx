@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { FlipOnChange } from "../../engine/motion/flip";
 import type { AgentTurn, EditProposal } from "../types";
@@ -215,7 +216,7 @@ export function ProposalGroup({
           {labels.proposalTitle}
           <span className="agent-proposal-kind">
             {" · "}
-            {labels.proposalChangeCount.replace("{n}", String(items.length))}
+            {fill(labels.proposalChangeCount, { n: String(items.length) })}
           </span>
         </span>
       </div>
@@ -254,7 +255,7 @@ export function ProposalGroup({
             >
               {unfolded
                 ? labels.proposalGroupLess
-                : labels.proposalGroupMore.replace("{n}", String(hidden))}
+                : fill(labels.proposalGroupMore, { n: String(hidden) })}
             </button>
           )}
         </>

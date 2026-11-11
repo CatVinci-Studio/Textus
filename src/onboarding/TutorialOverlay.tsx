@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useModalDialog } from "../engine/controls/useModalDialog";
 import { useCardPlacement } from "./card-placement";
@@ -155,9 +156,10 @@ export function TutorialOverlay({
   } | null>(null);
   const collapsed =
     folded?.stepId === stepId ? folded.collapsed : !placement.roomy;
-  const progressLabel = labels.stepOfCount
-    .replace("{i}", String(stepIndex + 1))
-    .replace("{n}", String(totalSteps));
+  const progressLabel = fill(labels.stepOfCount, {
+    i: String(stepIndex + 1),
+    n: String(totalSteps),
+  });
 
   useEffect(() => {
     if (layout === "overlay") primaryRef.current?.focus();

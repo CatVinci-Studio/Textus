@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { SettingsGroup } from "../pages/SettingsGroup";
 import { useCallback, useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
@@ -137,10 +138,9 @@ export function OwnSkillsList({
   async function remove(skill: SkillListItem, label: string) {
     setError(null);
     const ok = await showConfirm(
-      (canTrashFiles ? t.skillDeleteAsk : t.skillDeleteAskMobile).replace(
-        "{name}",
-        label,
-      ),
+      fill(canTrashFiles ? t.skillDeleteAsk : t.skillDeleteAskMobile, {
+        name: label,
+      }),
       { okLabel: t.skillDelete, cancelLabel: t.cancel, danger: true },
     );
     if (!ok) return;
@@ -161,8 +161,8 @@ export function OwnSkillsList({
     return (
       <p className="plugin-empty">
         {query.trim()
-          ? t.skillPickerNoMatch.replace("{query}", query.trim())
-          : t.skillsInstalledNone.replace("{section}", t.extensionsAvailable)}
+          ? fill(t.skillPickerNoMatch, { query: query.trim() })
+          : fill(t.skillsInstalledNone, { section: t.extensionsAvailable })}
       </p>
     );
   return (
@@ -289,7 +289,7 @@ export function BuiltinSkillsSection({
   async function reset(name: string, label: string) {
     setError(null);
     const ok = await showConfirm(
-      t.agentSkillsResetConfirm.replace("{name}", label),
+      fill(t.agentSkillsResetConfirm, { name: label }),
       { okLabel: t.agentSkillsReset, cancelLabel: t.cancel, danger: true },
     );
     if (!ok) return;

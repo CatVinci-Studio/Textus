@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
 import type { EditProposal } from "../../ai/types";
 import {
@@ -49,10 +50,7 @@ function keysTaken(p: PluginScope) {
   if (toldKeysTaken.has(p.id)) return;
   toldKeysTaken.add(p.id);
   showNotice(
-    p
-      .t()
-      .pluginKeysTaken.replace("{name}", p.name())
-      .replace("{holder}", holder.name),
+    fill(p.t().pluginKeysTaken, { name: p.name(), holder: holder.name }),
     { tone: "warning" },
   );
 }

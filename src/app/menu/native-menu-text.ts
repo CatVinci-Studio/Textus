@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { APP_NAME, type Strings } from "../../i18n/strings";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import {
@@ -21,7 +22,7 @@ import {
  * submenus, and the texts no item has.
  */
 export function nativeMenuLabels(t: Strings): Record<string, string> {
-  const named = (text: string) => text.replace("{name}", APP_NAME);
+  const named = (text: string) => fill(text, { name: APP_NAME });
   const labels: Record<string, string> = {};
   const collect = (nodes: readonly TableNode[]) => {
     for (const node of nodes) {

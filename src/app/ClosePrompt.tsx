@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { ActionSheet } from "../engine/controls/ActionSheet";
 import { Presence, PresenceDiv } from "../engine/motion/usePresence";
 import type { useModalDialog } from "../engine/controls/useModalDialog";
@@ -27,7 +28,7 @@ export function ClosePrompt({
   t: Strings;
 }) {
   const message = name
-    ? t.closePromptNamed.replace("{name}", name)
+    ? fill(t.closePromptNamed, { name })
     : t.closePromptMessage;
   return (
     <>

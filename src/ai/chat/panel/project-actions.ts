@@ -1,3 +1,4 @@
+import { fill } from "../../../i18n/fill";
 import { useState } from "react";
 import { ai, exportDoc } from "../../../platform/ipc";
 import type { LibraryEntry, Memory, MemoryScope } from "../../../platform/ipc";
@@ -102,12 +103,12 @@ export function useProjectActions({
       const done = await ai.importReferences(docPath, workspaceRoot, folder);
       if (!done) return;
       setMessage(
-        (done.skipped > 0
-          ? t.projectReferencesImportedSkipped
-          : t.projectReferencesImported
-        )
-          .replace("{n}", String(done.imported))
-          .replace("{skipped}", String(done.skipped)),
+        fill(
+          done.skipped > 0
+            ? t.projectReferencesImportedSkipped
+            : t.projectReferencesImported,
+          { n: String(done.imported), skipped: String(done.skipped) },
+        ),
       );
     });
 
@@ -179,7 +180,7 @@ export function useProjectActions({
     onDeleteEntry: (entry: LibraryEntry) =>
       void remove(
         libraryEntryId(entry),
-        t.memoryDeleteEntryConfirm.replace("{name}", entry.name),
+        fill(t.memoryDeleteEntryConfirm, { name: entry.name }),
       ),
     onRestoreForgotten: (id: string) =>
       void run(null, async () => {

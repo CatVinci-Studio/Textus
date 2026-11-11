@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { ChevronDown } from "lucide-react";
 import { useMenuButton } from "../../engine/controls/useMenuButton";
 import { useSyncExternalStore } from "react";
@@ -91,7 +92,7 @@ function PluginAction({
   const menu: Action[] = [];
   if (!record && needs) {
     main = {
-      label: t.pluginNeedsTextus.replace("{version}", needs),
+      label: fill(t.pluginNeedsTextus, { version: needs }),
       run: () => {},
       unavailable: true,
     };
@@ -118,7 +119,7 @@ function PluginAction({
       main = {
         label: installing
           ? t.pluginInstalling
-          : t.pluginUpdate.replace("{version}", update),
+          : fill(t.pluginUpdate, { version: update }),
         run: onUpdate,
       };
       if (toggle) menu.push(toggle);
@@ -144,7 +145,7 @@ function PluginAction({
         <button
           type="button"
           className="text-button plugin-action-more"
-          aria-label={t.pluginMoreFor.replace("{name}", name)}
+          aria-label={fill(t.pluginMoreFor, { name })}
           disabled={installing}
           {...more.button}
         >

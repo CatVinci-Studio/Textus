@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { Byline } from "./PluginPage";
 import { PluginIcon, PluginReadme } from "./PluginArt";
 import type { ReactNode } from "react";
@@ -51,7 +52,7 @@ export function MarketPluginPage({
           <Byline manifest={item.manifest} official={item.official} t={t}>
             {installs && <span className="plugin-installs">{installs}</span>}
             {item.updated && (
-              <span>{t.pluginUpdatedOn.replace("{date}", item.updated)}</span>
+              <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
             )}
           </Byline>
         </div>
@@ -64,7 +65,7 @@ export function MarketPluginPage({
               key={shot}
               className="plugin-card-shot"
               src={shot}
-              alt={t.pluginScreenshot.replace("{name}", name)}
+              alt={fill(t.pluginScreenshot, { name })}
               loading="lazy"
             />
           ))}
@@ -74,7 +75,7 @@ export function MarketPluginPage({
         <PluginReadme
           id={item.id}
           installed={installed}
-          label={t.pluginReadmeLabel.replace("{name}", name)}
+          label={fill(t.pluginReadmeLabel, { name })}
         />
       )}
       <SettingsGroup title={t.pluginPermissionsLabel}>

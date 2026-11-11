@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { DocumentSnapshot } from "../../editor/markdown/doc-markdown";
 import { useFollowBottom } from "./useFollowBottom";
 import { pictureSrc } from "../revision/generated-images";
@@ -218,7 +219,7 @@ export function ChatBody({
   function handleRelocate(proposal: EditProposal) {
     dispatchSend(
       () => ({
-        message: labels.relocateRequest.replace("{text}", proposal.text ?? ""),
+        message: fill(labels.relocateRequest, { text: proposal.text ?? "" }),
       }),
       { mode: "write", webSearch: false },
     );
@@ -380,7 +381,7 @@ export function ChatBody({
           {pendingBar && pendingCount > 0 && (
             <PresenceDiv className="inline-chat-pending-bar">
               <span className="inline-chat-pending-count">
-                {labels.pendingSummary.replace("{n}", String(pendingCount))}
+                {fill(labels.pendingSummary, { n: String(pendingCount) })}
               </span>
               <div className="inline-chat-pending-actions">
                 {onRevealPending && (

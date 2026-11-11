@@ -1,3 +1,4 @@
+import { fill } from "../../../i18n/fill";
 import { useMenuButton } from "../../../engine/controls/useMenuButton";
 import { ChevronIcon } from "../../../engine/controls/icons";
 import { Tooltip } from "../../../engine/controls/Tooltip";
@@ -63,9 +64,10 @@ export function QuickAskPendingBar({
             </button>
           </Tooltip>
           <span className="quick-ask-pending-position">
-            {labels.quickAskPosition
-              .replace("{i}", String(focusIndex + 1))
-              .replace("{n}", String(total))}
+            {fill(labels.quickAskPosition, {
+              i: String(focusIndex + 1),
+              n: String(total),
+            })}
           </span>
           <Tooltip text={labels.quickAskNextEdit}>
             <button
@@ -102,20 +104,18 @@ export function QuickAskPendingBar({
           <>
             <SplitButton
               label={labels.proposalAccept}
-              menuLabel={labels.quickAskAcceptAllCount.replace(
-                "{n}",
-                String(total),
-              )}
+              menuLabel={fill(labels.quickAskAcceptAllCount, {
+                n: String(total),
+              })}
               onClick={onAcceptFocused}
               onMenuClick={onAcceptAll}
               primary
             />
             <SplitButton
               label={labels.proposalReject}
-              menuLabel={labels.quickAskRejectAllCount.replace(
-                "{n}",
-                String(total),
-              )}
+              menuLabel={fill(labels.quickAskRejectAllCount, {
+                n: String(total),
+              })}
               onClick={onRejectFocused}
               onMenuClick={onRejectAll}
             />

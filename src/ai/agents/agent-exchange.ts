@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { filesChanged } from "../chat/file-changes";
 import { isInside } from "../../utils/path";
 import { IpcError } from "../../platform/ipc-call";
@@ -206,7 +207,7 @@ async function start(
 function stoppedText(agent: ExternalAgent, stderr: string): string {
   const tail = stderr.trim().split("\n").slice(-4).join("\n");
   return [
-    currentStrings().agentStopped.replace("{agent}", agent.name),
+    fill(currentStrings().agentStopped, { agent: agent.name }),
     tail,
     agent.setup,
   ]
@@ -219,7 +220,7 @@ function explain(agent: ExternalAgent, err: unknown): Error {
   const message = err instanceof Error ? err.message : String(err);
   if (err instanceof AcpError && err.code === AUTH_REQUIRED)
     return new Error(
-      [currentStrings().agentSignIn.replace("{agent}", agent.name), agent.setup]
+      [fill(currentStrings().agentSignIn, { agent: agent.name }), agent.setup]
         .filter(Boolean)
         .join("\n\n"),
     );

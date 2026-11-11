@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import type { Strings } from "../i18n/strings";
 import type {
   HeadingAction,
@@ -9,7 +10,7 @@ import { isMacSystemCombo } from "../utils/system-keys";
 
 /** The heading shortcuts' names: the Format menu's own, and Paragraph. */
 export function headingLabels(t: Strings): Record<HeadingAction, string> {
-  const level = (n: number) => t.menuHeadingTemplate.replace("{n}", String(n));
+  const level = (n: number) => fill(t.menuHeadingTemplate, { n: String(n) });
   return {
     setHeading1: level(1),
     setHeading2: level(2),

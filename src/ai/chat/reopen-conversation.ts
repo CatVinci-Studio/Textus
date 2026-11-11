@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   deleteConversation,
   loadConversationTurns,
@@ -53,7 +54,7 @@ export async function reopenConversation(
     return;
   }
   const continueHere = await showConfirm(
-    t.chatHistoryMissingText.replace("{name}", basename(docPath)),
+    fill(t.chatHistoryMissingText, { name: basename(docPath) }),
     {
       title: t.chatHistoryMissingTitle,
       okLabel: t.chatHistoryContinueHere,

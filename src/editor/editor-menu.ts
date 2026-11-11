@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { commandsCtx, editorViewCtx, type CmdKey } from "@milkdown/kit/core";
 import {
   wrapInBulletListCommand,
@@ -420,7 +421,7 @@ function formatGroups(
       label: t.menuParagraph,
       items: [
         ...[1, 2, 3].map((level) => ({
-          label: t.menuHeadingTemplate.replace("{n}", String(level)),
+          label: fill(t.menuHeadingTemplate, { n: String(level) }),
           onSelect: () => insertHeading(run, level),
         })),
         "separator",

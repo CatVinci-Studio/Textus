@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useState } from "react";
 import { IconButton } from "../engine/controls/IconButton";
 import { CloseIcon } from "../engine/controls/icons";
@@ -58,7 +59,7 @@ export function WordImportNotice({
   onDismiss: () => void;
   t: Strings;
 }) {
-  const notice = path && t.wordImportNotice.replace("{name}", basename(path));
+  const notice = path && fill(t.wordImportNotice, { name: basename(path) });
   useEffect(() => {
     if (notice) announce(notice);
   }, [notice]);

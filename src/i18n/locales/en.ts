@@ -1271,7 +1271,7 @@ type /name in a conversation to use one.
   embedDisplayLabel: "Embedded notes",
   embedDisplayExpand: "Shown in full",
   embedDisplayCard: "As a link card",
-  embedBlockCard: "{0} · click to show",
+  embedBlockCard: "{name} · click to show",
   docTextSizeLabel: "Document text size",
   docTextSizeAuto: "Theme's",
   docTextLabel: "Body text",

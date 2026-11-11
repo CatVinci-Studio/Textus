@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { MessageSquare } from "lucide-react";
 import { useRef, useState, type CSSProperties } from "react";
 import { Tooltip } from "../../engine/controls/Tooltip";
@@ -194,7 +195,7 @@ export function CommentGroup({
           {labels.commentTitle}
           <span className="agent-proposal-kind">
             {" · "}
-            {labels.commentCount.replace("{n}", String(items.length))}
+            {fill(labels.commentCount, { n: String(items.length) })}
           </span>
         </span>
       </div>
@@ -237,7 +238,7 @@ export function CommentGroup({
         >
           {unfolded
             ? labels.proposalGroupLess
-            : labels.commentGroupMore.replace("{n}", String(hidden))}
+            : fill(labels.commentGroupMore, { n: String(hidden) })}
         </button>
       )}
     </div>

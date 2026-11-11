@@ -1233,7 +1233,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   embedDisplayLabel: "삽입한 노트",
   embedDisplayExpand: "내용 전체 표시",
   embedDisplayCard: "링크 카드만 표시",
-  embedBlockCard: "{0} · 눌러서 보기",
+  embedBlockCard: "{name} · 눌러서 보기",
   docTextSizeLabel: "본문 글자 크기",
   docTextSizeAuto: "테마 기본값",
   docTextLabel: "본문 글자",

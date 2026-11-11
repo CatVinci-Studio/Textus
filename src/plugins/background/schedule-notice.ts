@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { Settings } from "../../prefs/SettingsContext";
 import type { Strings } from "../../i18n/strings";
 import { showNotice } from "../../engine/controls/notices";
@@ -67,9 +68,10 @@ function tellOfScheduling(
   toldNow.add(plugin);
   setUiState("pluginsToldOfSchedule", [...list, plugin]);
   showNotice(
-    t.pluginScheduleNotice
-      .replace("{name}", name)
-      .replace("{setting}", requirementLabel(BACKGROUND, t)),
+    fill(t.pluginScheduleNotice, {
+      name,
+      setting: requirementLabel(BACKGROUND, t),
+    }),
     {
       source: name,
       action: {

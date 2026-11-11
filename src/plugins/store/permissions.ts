@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import type { Permission } from "./manifest";
 
@@ -28,7 +29,7 @@ export function permissionLabel(permission: Permission, t: Strings): string {
   const host = permission.slice("network:".length);
   return host === "*"
     ? t.pluginPermNetworkAny
-    : t.pluginPermNetwork.replace("{host}", host);
+    : fill(t.pluginPermNetwork, { host });
 }
 
 /** The HTTPS hosts a plugin was granted, for its webviews' frames. */

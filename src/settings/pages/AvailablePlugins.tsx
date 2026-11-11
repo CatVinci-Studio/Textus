@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
 import { Byline } from "./PluginPage";
 import { PluginIcon } from "./PluginArt";
@@ -53,13 +54,13 @@ export function AvailablePlugins({
     catalog.status === "failed" ? (
       <CatalogProblem
         t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
+        text={fill(t.pluginsCatalogFailed, { reason: catalog.error })}
       />
     ) : !ready ? (
       <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
     ) : query.trim() && !shown.length ? (
       <p className="plugin-empty">
-        {t.pluginsSearchNone.replace("{query}", query.trim())}
+        {fill(t.pluginsSearchNone, { query: query.trim() })}
       </p>
     ) : undefined;
   return (
@@ -89,7 +90,7 @@ export function AvailablePlugins({
         catalog.error && (
           <CatalogProblem
             t={t}
-            text={t.pluginsCatalogKept.replace("{reason}", catalog.error)}
+            text={fill(t.pluginsCatalogKept, { reason: catalog.error })}
           />
         )
       }
@@ -146,7 +147,7 @@ function CatalogCard({
       <button
         type="button"
         className="plugin-card-open plugin-card-with-icon"
-        aria-label={t.pluginOpenDetails.replace("{name}", name)}
+        aria-label={fill(t.pluginOpenDetails, { name })}
         onClick={onOpen}
       >
         <PluginIcon id={item.id} manifest={item.manifest} url={item.icon} />

@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import type { Strings } from "../i18n/strings";
 import { openedText } from "./tracked-file";
 import { basename } from "../utils/path";
@@ -103,7 +104,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
           ? (tab.view.title ?? t.chatNewConversation)
           : tab.view.title
             ? // Told apart from a tab the plugin opens itself, of the same name.
-              t.pluginPageTab.replace("{name}", tab.view.title)
+              fill(t.pluginPageTab, { name: tab.view.title })
             : t.extensionsTabPlugins;
   if (tab.view)
     return (

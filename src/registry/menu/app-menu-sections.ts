@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { PANDOC_FORMATS } from "../export-formats";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
@@ -50,7 +51,7 @@ export function pandocEntries(t: Strings): MenuNode[] {
 /** Format's heading levels, each with the key Settings gives it. */
 export function headingEntries(t: Strings, shortcuts: Shortcuts): MenuNode[] {
   return [1, 2, 3, 4, 5, 6].map((level) => ({
-    label: t.menuHeadingTemplate.replace("{n}", String(level)),
+    label: fill(t.menuHeadingTemplate, { n: String(level) }),
     accel: shortcuts[`setHeading${level}` as HeadingAction] || undefined,
     action: { native: `insert-block:h${level}` },
   }));

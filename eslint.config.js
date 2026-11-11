@@ -222,6 +222,12 @@ export default tseslint.config(
           message:
             "Import the name from the module that declares it; only the folder facades re-export.",
         },
+        {
+          selector:
+            "CallExpression[callee.property.name='replace'][arguments.0.value=/^\\{[a-zA-Z]+\\}$/]",
+          message:
+            "Fill a template with fill(template, { name }) (i18n/fill.ts).",
+        },
       ],
     },
   },

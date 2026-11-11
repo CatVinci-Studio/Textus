@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import type { Strings, TextKey } from "../../i18n/strings";
 import { links, systemIpc } from "../../platform/ipc";
@@ -122,7 +123,7 @@ function ReportForm({
     return (
       <>
         <p className="report-problem-sent">
-          {t.reportSent.replace("{number}", String(phase.number))}
+          {fill(t.reportSent, { number: String(phase.number) })}
         </p>
         <div className="close-prompt-buttons">
           <div className="close-prompt-spacer" />

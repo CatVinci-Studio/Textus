@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useCallback, useEffect, useState } from "react";
 import { useLatest } from "../../utils/hooks/useLatest";
 import type { Strings } from "../../i18n/strings";
@@ -149,7 +150,7 @@ function OauthPanel({
       <div className="settings-row">
         <div>
           <div className="settings-row-label">
-            {t.accountLabelTemplate.replace("{name}", label)}
+            {fill(t.accountLabelTemplate, { name: label })}
           </div>
           <div className="settings-row-hint">
             {loggingIn
@@ -177,7 +178,7 @@ function OauthPanel({
             onClick={login}
             disabled={loggingIn}
           >
-            {t.signInTemplate.replace("{name}", label)}
+            {fill(t.signInTemplate, { name: label })}
           </button>
         )}
       </div>
@@ -263,10 +264,10 @@ export function ApiKeyProviderPanel({
     <div className="settings-row">
       <div>
         <div className="settings-row-label">
-          {t.apiKeyLabelTemplate.replace("{name}", label)}
+          {fill(t.apiKeyLabelTemplate, { name: label })}
           {keyOptional && (
-            <RowHelp label={t.apiKeyLabelTemplate.replace("{name}", label)}>
-              {t.apiKeyOptionalHintTemplate.replace("{name}", label)}
+            <RowHelp label={fill(t.apiKeyLabelTemplate, { name: label })}>
+              {fill(t.apiKeyOptionalHintTemplate, { name: label })}
             </RowHelp>
           )}
         </div>
@@ -274,7 +275,7 @@ export function ApiKeyProviderPanel({
       </div>
       <SecretInput
         t={t}
-        label={t.apiKeyLabelTemplate.replace("{name}", label)}
+        label={fill(t.apiKeyLabelTemplate, { name: label })}
         saved={configured}
         value={input}
         onChange={setInput}

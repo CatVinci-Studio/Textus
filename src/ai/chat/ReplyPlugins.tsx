@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { pluginsInReply, type ReplyPlugin } from "./reply-plugin";
 import {
@@ -105,7 +106,7 @@ function ReplyPluginChip({
     return (
       <div className="agent-theme-chip agent-plugin-chip">
         <span className="settings-error">
-          {labels.pluginCantInstall.replace("{reason}", plugin.error ?? "")}
+          {fill(labels.pluginCantInstall, { reason: plugin.error ?? "" })}
         </span>
       </div>
     );
@@ -121,7 +122,7 @@ function ReplyPluginChip({
           .pop();
   if (runError)
     problems.push(
-      labels.pluginCheck.runError.replace("{error}", runError.message),
+      fill(labels.pluginCheck.runError, { error: runError.message }),
     );
 
   async function install() {
@@ -180,7 +181,7 @@ function ReplyPluginChip({
       )}
       {manifest.permissions.length > 0 && (
         <div className="agent-plugin-permissions">
-          {labels.permissionsAsk.replace("{name}", name)}
+          {fill(labels.permissionsAsk, { name })}
           <ul>
             {manifest.permissions.map((p) => (
               <li key={p}>{labels.permission(p)}</li>
@@ -200,12 +201,10 @@ function ReplyPluginChip({
             type="button"
             onClick={() =>
               askAi(
-                labels.pluginCheck.fixRequest
-                  .replace("{name}", `${name} (${manifest.id})`)
-                  .replace(
-                    "{problems}",
-                    problems.map((p) => `- ${p}`).join("\n"),
-                  ),
+                fill(labels.pluginCheck.fixRequest, {
+                  name: `${name} (${manifest.id})`,
+                  problems: problems.map((p) => `- ${p}`).join("\n"),
+                }),
                 "create",
               )
             }
@@ -224,13 +223,12 @@ function checkText(check: PluginCheck, labels: ReplyPluginLabels): string {
     case "dom":
       return t.dom;
     case "permission":
-      return t.permission.replace(
-        "{permission}",
-        labels.permission(check.permission),
-      );
+      return fill(t.permission, {
+        permission: labels.permission(check.permission),
+      });
     case "unregistered":
-      return t.unregistered.replace("{id}", check.id);
+      return fill(t.unregistered, { id: check.id });
     case "when":
-      return t.when.replace("{key}", check.key);
+      return fill(t.when, { key: check.key });
   }
 }

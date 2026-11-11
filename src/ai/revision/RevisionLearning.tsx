@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ai } from "../../platform/ipc";
 import { announce } from "../../engine/controls/announce";
@@ -169,9 +170,7 @@ export function RevisionLearningBar({
       <span className="learn-bar-text">
         {saved === "failed"
           ? labels.memoryActionFailed
-          : labels.learnSuggestion
-              .replace("{what}", what)
-              .replace("{rule}", rule)}
+          : fill(labels.learnSuggestion, { what, rule })}
       </span>
       <div className="review-bar-actions">
         <button

@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { takeStartPlugin } from "./extensions-tab";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import {
@@ -188,7 +189,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
             disabled={installing !== null}
             onClick={() => void updateAll(updates)}
           >
-            {t.pluginsUpdateAll.replace("{count}", String(updates.length))}
+            {fill(t.pluginsUpdateAll, { count: String(updates.length) })}
           </button>
         )
       }
@@ -197,7 +198,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
           <>
             {!shown.length && (
               <p className="plugin-empty">
-                {t.pluginsSearchNone.replace("{query}", query.trim())}
+                {fill(t.pluginsSearchNone, { query: query.trim() })}
               </p>
             )}
             {others.map(card)}
@@ -233,7 +234,7 @@ function MutedSuggestions({ t }: { t: Strings }) {
   const { count, restore } = useMutedCards();
   if (!count) return null;
   return (
-    <SettingRow label={t.pluginCardsMuted.replace("{n}", String(count))}>
+    <SettingRow label={fill(t.pluginCardsMuted, { n: String(count) })}>
       <button type="button" onClick={restore}>
         {t.pluginCardsRestore}
       </button>
@@ -286,7 +287,7 @@ function PluginCard({
       <button
         type="button"
         className="plugin-card-open plugin-card-with-icon"
-        aria-label={t.pluginOpenDetails.replace("{name}", name)}
+        aria-label={fill(t.pluginOpenDetails, { name })}
         onClick={onOpen}
       >
         <PluginIcon id={record.id} manifest={manifest} origin={record.origin} />
@@ -317,11 +318,12 @@ function PluginCard({
 /** What "Edit with AI" puts in the AI panel's box: the plugin, and the
  *  error it last stopped with, for the user to say what to change. */
 export function editRequest(record: PluginRecord, t: Strings): string {
-  const ask = t.pluginEditWithAiAsk
-    .replace("{name}", pluginName(record))
-    .replace("{id}", record.id);
+  const ask = fill(t.pluginEditWithAiAsk, {
+    name: pluginName(record),
+    id: record.id,
+  });
   return record.problem
-    ? `${ask}${t.pluginEditWithAiError.replace("{error}", record.problem)}`
+    ? `${ask}${fill(t.pluginEditWithAiError, { error: record.problem })}`
     : ask;
 }
 

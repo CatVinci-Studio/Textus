@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useSettingsIndexing } from "../indexing";
 import {
   useEffect,
@@ -107,7 +108,7 @@ export function AvailableThemes({
     <GalleryLoading t={t} />
   ) : query.trim() && !shown.length ? (
     <p className="plugin-empty">
-      {t.pluginsSearchNone.replace("{query}", query.trim())}
+      {fill(t.pluginsSearchNone, { query: query.trim() })}
     </p>
   ) : undefined;
   return (
@@ -287,7 +288,7 @@ export function ThemeByline({ t, theme }: { t: Strings; theme: GalleryTheme }) {
   return (
     <span className="plugin-byline">
       {theme.author && (
-        <span>{t.themeGalleryBy.replace("{author}", theme.author)}</span>
+        <span>{fill(t.themeGalleryBy, { author: theme.author })}</span>
       )}
       {installs && <span className="plugin-installs">{installs}</span>}
     </span>

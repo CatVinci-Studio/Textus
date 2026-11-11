@@ -1,3 +1,4 @@
+import { fill } from "../../../i18n/fill";
 import type {
   AgentWorkspaceInfo,
   Memory,
@@ -64,13 +65,9 @@ export function RememberedSection({
   const number = (n: number) => n.toLocaleString(localeOf(lang));
   const note =
     notSent > 0
-      ? t.memoryOverCap
-          .replace("{n}", number(notSent))
-          .replace("{cap}", number(cap))
+      ? fill(t.memoryOverCap, { n: number(notSent), cap: number(cap) })
       : chars >= cap * NEAR_CAP
-        ? t.memoryNearCap
-            .replace("{used}", number(chars))
-            .replace("{cap}", number(cap))
+        ? fill(t.memoryNearCap, { used: number(chars), cap: number(cap) })
         : null;
 
   return (
@@ -170,7 +167,7 @@ export function RememberedSection({
       )}
       {facts > 0 && (
         <p className="memory-note">
-          {t.memoryFactsInLibrary.replace("{n}", number(facts))}
+          {fill(t.memoryFactsInLibrary, { n: number(facts) })}
         </p>
       )}
       {note && (
@@ -219,7 +216,7 @@ function RememberedItem({
   const meta = [
     kind,
     rememberedDate(remembered.updated, lang),
-    from ? t.memoryFrom.replace("{title}", from) : "",
+    from ? fill(t.memoryFrom, { title: from }) : "",
   ].filter(Boolean);
   return (
     <li className={notSent ? "memory-not-sent" : undefined} data-memory-id={id}>

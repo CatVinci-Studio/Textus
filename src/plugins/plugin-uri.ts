@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { commands, runCommand } from "../registry/commands";
 import { currentStrings } from "../i18n/current";
 import { plugins as pluginsIpc } from "../platform/ipc";
@@ -57,7 +58,7 @@ async function runLinkedCommand(
   const known = commands().find((c) => c.id === command);
   if (!known) return false;
   const ok = await showConfirm(
-    t.uriCommandConfirm.replace("{command}", known.title(t)),
+    fill(t.uriCommandConfirm, { command: known.title(t) }),
     { okLabel: t.uriCommandRun, cancelLabel: t.cancel },
   );
   // Declined is not "not taken": nothing to complain about.
@@ -93,9 +94,8 @@ export async function takePluginUris(): Promise<void> {
         ? await runLinkedCommand(uri.command, uri.query)
         : await givePlugin(uri);
     if (!taken)
-      void showMessage(
-        currentStrings().pluginUriNotTaken.replace("{link}", link),
-        { tone: "error" },
-      );
+      void showMessage(fill(currentStrings().pluginUriNotTaken, { link }), {
+        tone: "error",
+      });
   }
 }

@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useRef, type CSSProperties } from "react";
 import { usePlacement } from "../../engine/controls/usePlacement";
 import { usePresenceProps } from "../../engine/motion/usePresence";
@@ -56,7 +57,7 @@ export function applyLabel(
 ): string {
   const s = suggestion.trim();
   return s && [...s].length <= 16
-    ? labels.grammarApplyTo.replace("{s}", s)
+    ? fill(labels.grammarApplyTo, { s })
     : labels.grammarApply;
 }
 

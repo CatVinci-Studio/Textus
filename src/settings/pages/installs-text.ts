@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 
 /** An extension's counts as the catalog has them; absent when uncounted. */
@@ -10,8 +11,8 @@ interface InstallCounts {
  *  month left out when nothing came in it; nothing when uncounted. */
 export function installsText(counts: InstallCounts, t: Strings): string | null {
   if (counts.installs === undefined || counts.installs === null) return null;
-  const all = t.pluginInstalls.replace("{n}", counts.installs.toLocaleString());
+  const all = fill(t.pluginInstalls, { n: counts.installs.toLocaleString() });
   return counts.installs30
-    ? `${all} · ${t.pluginInstalls30.replace("{n}", counts.installs30.toLocaleString())}`
+    ? `${all} · ${fill(t.pluginInstalls30, { n: counts.installs30.toLocaleString() })}`
     : all;
 }

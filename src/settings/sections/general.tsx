@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useRef, useState } from "react";
 import { appVersion } from "../../platform/app-info";
 import { showConfirm } from "../../engine/controls/app-dialog";
@@ -162,11 +163,9 @@ function BackToStable({ t }: { t: Strings }) {
         return;
       }
       const ok = await showConfirm(
-        t.backToStableConfirm
-          .replace("{version}", found.version)
-          .replace("{beta}", version),
+        fill(t.backToStableConfirm, { version: found.version, beta: version }),
         {
-          okLabel: t.backToStableInstall.replace("{version}", found.version),
+          okLabel: fill(t.backToStableInstall, { version: found.version }),
           cancelLabel: t.cancel,
         },
       );

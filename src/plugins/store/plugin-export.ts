@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { showMessage, showPrompt } from "../../engine/controls/app-dialog";
@@ -26,7 +27,7 @@ export async function exportPluginForPublishing(id: string): Promise<void> {
   if (!folder) return;
   try {
     const path = await pluginsIpc.exportPlugin(id, publisher, folder);
-    await showMessage(t.pluginExportDone.replace("{path}", path), {
+    await showMessage(fill(t.pluginExportDone, { path }), {
       title: t.pluginExport,
     });
   } catch (err) {

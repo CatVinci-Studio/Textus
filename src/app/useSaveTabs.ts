@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { migrateDraftImages } from "../editor/images/image-migration";
@@ -85,7 +86,7 @@ export function useSaveTabs(opts: {
         return true;
       } catch (err) {
         const lines = [
-          t.saveFailedMessage.replace("{name}", basename(path)),
+          fill(t.saveFailedMessage, { name: basename(path) }),
           /read-only|permission denied/i.test(errorText(err))
             ? t.saveReadOnlyHint
             : explainError(err, t),

@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { SettingRow } from "../sections/controls";
 import { showConfirm } from "../../engine/controls/app-dialog";
@@ -45,11 +46,11 @@ export function PluginData({
   if (!usage || usage[0] + usage[1] === 0) return null;
   const [global, project] = usage;
   const parts = [
-    global > 0 && t.pluginDataGlobal.replace("{global}", sizeText(global)),
-    project > 0 && t.pluginDataProject.replace("{project}", sizeText(project)),
+    global > 0 && fill(t.pluginDataGlobal, { global: sizeText(global) }),
+    project > 0 && fill(t.pluginDataProject, { project: sizeText(project) }),
   ].filter(Boolean);
   const clear = async () => {
-    const ok = await showConfirm(t.pluginDataClearAsk.replace("{name}", name), {
+    const ok = await showConfirm(fill(t.pluginDataClearAsk, { name }), {
       okLabel: t.pluginDataClear,
       cancelLabel: t.pluginCancel,
       danger: true,

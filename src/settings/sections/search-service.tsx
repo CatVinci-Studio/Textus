@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import SERVICE_LIST from "../../prefs/search-services.json";
 import { useEffect, useState } from "react";
 import { explainError } from "../../utils/error-explain";
@@ -48,10 +49,9 @@ export function SearchServiceSection({ t }: { t: Strings }) {
   const hint = status.native
     ? t.searchServiceNativeHint
     : status.service
-      ? t.searchServiceSendsTo.replace(
-          "{name}",
-          searchServiceName(t, status.service),
-        )
+      ? fill(t.searchServiceSendsTo, {
+          name: searchServiceName(t, status.service),
+        })
       : t.searchServiceNone;
   const keyId = entryOf(chosen)?.key;
   return (
@@ -111,7 +111,7 @@ function SearchKeyRow({
   const [saved, setSaved] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const label = t.apiKeyLabelTemplate.replace("{name}", name);
+  const label = fill(t.apiKeyLabelTemplate, { name });
   useEffect(() => {
     let live = true;
     auth

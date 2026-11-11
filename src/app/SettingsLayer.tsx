@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { CreateChat } from "../settings/pages/create-chat-lazy";
 import { Suspense, useEffect, useState } from "react";
 import { OPEN_CREATE_EVENT } from "../ai/chat/create-request";
@@ -27,7 +28,7 @@ import { settingsPage } from "../settings/settings-pages";
 namePageTabs("settings", (state, t) => {
   const to = (state as PageRequest | undefined)?.to;
   const page = to && settingsPage(to === "updates" ? "about" : to);
-  return page ? t.settingsPageTab.replace("{page}", page.label(t)) : null;
+  return page ? fill(t.settingsPageTab, { page: page.label(t) }) : null;
 });
 import type { TabState } from "./tabs/useTabState";
 import type { Strings } from "../i18n/strings";

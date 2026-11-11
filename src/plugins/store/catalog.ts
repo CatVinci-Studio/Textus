@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   plugins as pluginsIpc,
   type PluginCatalogEntry,
@@ -185,7 +186,7 @@ export async function installFromCatalog(id: string): Promise<void> {
   const needs = offered && neededTextus(offered);
   if (needs)
     throw new Error(
-      currentStrings().pluginNeedsTextus.replace("{version}", needs),
+      fill(currentStrings().pluginNeedsTextus, { version: needs }),
     );
   const before = pluginRecord(id);
   await pluginsIpc.installFromCatalog(id);

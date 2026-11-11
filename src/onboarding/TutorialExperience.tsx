@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, type ReactNode } from "react";
 import type { Lang, Strings } from "../i18n/strings";
 import { links } from "../platform/ipc";
@@ -57,9 +58,10 @@ export function TutorialExperience({
 
   const mac = isMacPlatform();
   const lineText = (task: TutorialTask) =>
-    t[(phone && task.phoneKey) || (mac && task.macKey) || task.key]
-      .replace("{title}", notes.title)
-      .replace("{shortcut}", lessonShortcut(step.id, shortcuts));
+    fill(t[(phone && task.phoneKey) || (mac && task.macKey) || task.key], {
+      title: notes.title,
+      shortcut: lessonShortcut(step.id, shortcuts),
+    });
   const tasks = step.tasks?.map((task) => ({
     text: lineText(task),
     done:
@@ -77,7 +79,7 @@ export function TutorialExperience({
 
   let status: string | null = null;
   let note: string | null = watching
-    ? t.tutorialWatchNote.replace("{path}", settingsPath)
+    ? fill(t.tutorialWatchNote, { path: settingsPath })
     : null;
   let controls: ReactNode = null;
   if (step.id === "connect") {

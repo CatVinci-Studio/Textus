@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { explainError } from "../utils/error-explain";
 // What plugins add to the editor registers before any editor is made.
 import "./contributions/editor-extensions";
@@ -129,7 +130,7 @@ export function loadPlugins(reload = false): Promise<void> {
       // Not "none installed": what runs keeps running, and the user hears.
       const t = windowInfo().strings();
       void showMessage(
-        t.pluginsReadFailed.replace("{reason}", explainError(err, t)),
+        fill(t.pluginsReadFailed, { reason: explainError(err, t) }),
       );
       if (!pluginsSnapshot().loaded) publish({ loaded: true });
       return;
@@ -287,9 +288,7 @@ async function pluginFailed(id: string, reason: string) {
   await pluginsIpc.set(id, false, record.granted).catch(() => {});
   const t = windowInfo().strings();
   void showMessage(
-    t.pluginFailedNotice
-      .replace("{name}", pluginName(record))
-      .replace("{reason}", reason),
+    fill(t.pluginFailedNotice, { name: pluginName(record), reason }),
     {
       title: t.pluginsTitle,
       tone: "warning",

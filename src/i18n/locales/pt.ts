@@ -1297,7 +1297,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   embedDisplayLabel: "Notas incorporadas",
   embedDisplayExpand: "Mostrar inteiras",
   embedDisplayCard: "Como cartão de link",
-  embedBlockCard: "{0} · clique para mostrar",
+  embedBlockCard: "{name} · clique para mostrar",
   docTextSizeLabel: "Tamanho do texto",
   docTextSizeAuto: "O do tema",
   docTextLabel: "Texto do documento",

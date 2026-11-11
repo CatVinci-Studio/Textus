@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { MODES } from "../../ai/modes";
 import type { Strings } from "../../i18n/strings";
@@ -85,7 +86,7 @@ export function AvailableSkills({
     catalog.status === "failed" ? (
       <CatalogProblem
         t={t}
-        text={t.pluginsCatalogFailed.replace("{reason}", catalog.error)}
+        text={fill(t.pluginsCatalogFailed, { reason: catalog.error })}
       />
     ) : !ready ? (
       <p className="plugin-empty">{t.pluginsCatalogLoading}</p>
@@ -93,7 +94,7 @@ export function AvailableSkills({
       <p className="plugin-empty">{t.marketSkillsNone}</p>
     ) : query.trim() && !shown.length ? (
       <p className="plugin-empty">
-        {t.pluginsSearchNone.replace("{query}", query.trim())}
+        {fill(t.pluginsSearchNone, { query: query.trim() })}
       </p>
     ) : undefined;
   return (
@@ -136,7 +137,7 @@ export function AvailableSkills({
                     <span className="plugin-official">{t.pluginOfficial}</span>
                   )}
                   {skill.author &&
-                    t.themeGalleryBy.replace("{author}", skill.author)}
+                    fill(t.themeGalleryBy, { author: skill.author })}
                   {installsText(skill, t) && (
                     <span className="plugin-installs">
                       {installsText(skill, t)}

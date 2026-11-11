@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { showConfirm } from "../../engine/controls/app-dialog";
 import type { Permission } from "./manifest";
 import { permissionLabel } from "./permissions";
@@ -14,7 +15,7 @@ export async function askPermissions(
   const t = windowInfo().strings();
   const list = missing.map((p) => `• ${permissionLabel(p, t)}`).join("\n");
   const ok = await showConfirm(
-    `${t.pluginPermissionsAsk.replace("{name}", pluginName(record))}\n\n${list}`,
+    `${fill(t.pluginPermissionsAsk, { name: pluginName(record) })}\n\n${list}`,
     {
       title: t.pluginsTitle,
       okLabel: t.pluginAllow,

@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { cornerKey } from "../../engine/frame/island-parts";
 import { useDeferredValue, useMemo, type CSSProperties } from "react";
 import { countWords } from "../../utils/word-count";
@@ -47,9 +48,10 @@ function DocumentCorner({
   const large = content.length > PAUSE_FEATURES_THRESHOLD;
   const shown = BY_CHARACTERS.has(lang) ? count.characters : count.words;
   if (!shown && !large) return null;
-  const detail = t.wordCountDetail
-    .replace("{words}", String(count.words))
-    .replace("{characters}", String(count.characters));
+  const detail = fill(t.wordCountDetail, {
+    words: String(count.words),
+    characters: String(count.characters),
+  });
   return (
     <div
       className="document-corner"

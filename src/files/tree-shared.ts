@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import {
   createContext,
   useContext,
@@ -85,9 +86,8 @@ export function canMoveInto(
 /** The backend's refusal in the user's words. */
 export function failureText(t: Strings, err: unknown, name: string): string {
   const reason = err instanceof Error ? err.message : String(err);
-  if (reason.includes("Already exists"))
-    return t.treeNameTaken.replace("{name}", name);
-  return t.treeActionFailed.replace("{reason}", explainError(err, t));
+  if (reason.includes("Already exists")) return fill(t.treeNameTaken, { name });
+  return fill(t.treeActionFailed, { reason: explainError(err, t) });
 }
 
 /** How a file chosen in the sidebar opens: to look (a click, the preview

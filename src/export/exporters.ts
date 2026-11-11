@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { escapeHtml } from "../utils/html";
 import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
@@ -308,9 +309,10 @@ async function drawnPictures(
 
 // The menu's place a failed Pandoc export points to.
 function pandocErrorText(err: unknown, t: Strings): string {
-  const where = t.pandocErrorSettings
-    .replace("{page}", t.navEditing)
-    .replace("{group}", t.menuExport);
+  const where = fill(t.pandocErrorSettings, {
+    page: t.navEditing,
+    group: t.menuExport,
+  });
   return `${t.exportFailed} ${explainError(err, t)}\n\n${where}`;
 }
 

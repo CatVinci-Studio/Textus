@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { canUseWindows } from "../platform/capabilities";
@@ -23,9 +24,7 @@ function tellKept(path: string, t: Strings) {
   const n = undecidedIn(path);
   if (n > 0)
     showNotice(
-      t.closedWithUndecided
-        .replace("{name}", basename(path))
-        .replace("{n}", String(n)),
+      fill(t.closedWithUndecided, { name: basename(path), n: String(n) }),
     );
   forgetUndecided(path);
 }

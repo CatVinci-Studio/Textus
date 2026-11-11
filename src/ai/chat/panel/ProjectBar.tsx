@@ -1,3 +1,4 @@
+import { fill } from "../../../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Tooltip } from "../../../engine/controls/Tooltip";
 import { ai, exportDoc, type AgentWorkspaceInfo } from "../../../platform/ipc";
@@ -208,7 +209,7 @@ export function ProjectBar({
   return (
     <div className="project-bar project-bar-memory">
       <div className="project-bar-row">
-        <Tooltip text={t.projectFolderTitle.replace("{path}", root)}>
+        <Tooltip text={fill(t.projectFolderTitle, { path: root })}>
           <button type="button" className="project-bar-folder" {...menu.button}>
             <FolderIcon className="project-bar-icon" />
             <span className="project-bar-name">{folderName}</span>

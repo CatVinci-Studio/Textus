@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { askInComposer } from "../chat/composer-asks";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
@@ -237,17 +238,16 @@ export function useReviewNotes({
   // "Ask about it": into the AI panel's composer, the note quoted, for the
   // writer to finish the question.
   function askAboutNote(note: ReviewNote) {
-    askInPanel(t.reviewNoteAskPrefix.replace("{comment}", note.comment));
+    askInPanel(fill(t.reviewNoteAskPrefix, { comment: note.comment }));
   }
 
   // The notes bar's picked notes, asked about together.
   function askAboutNotes(picked: ReviewNote[]) {
     if (picked.length === 1) return askAboutNote(picked[0]);
     askInPanel(
-      t.reviewNotesAskPrefix.replace(
-        "{notes}",
-        picked.map((n) => `“${n.comment}”`).join("\n"),
-      ),
+      fill(t.reviewNotesAskPrefix, {
+        notes: picked.map((n) => `“${n.comment}”`).join("\n"),
+      }),
     );
   }
 

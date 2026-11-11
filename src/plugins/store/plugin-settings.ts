@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   readProjectSettings,
   updateProjectSettings,
@@ -80,7 +81,7 @@ async function folderTrusted(root: string, values: Layer): Promise<boolean> {
     return record ? pluginName(record) : id;
   });
   const use = await showConfirm(
-    t.pluginFolderAsk.replace("{plugins}", names.join(" · ")),
+    fill(t.pluginFolderAsk, { plugins: names.join(" · ") }),
     { okLabel: t.pluginFolderUse, cancelLabel: t.pluginFolderSkip },
   );
   rememberFolder(root, use);

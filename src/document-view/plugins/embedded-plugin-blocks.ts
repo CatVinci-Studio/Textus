@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import { currentStrings } from "../../i18n/current";
@@ -35,7 +36,7 @@ export function drawPluginBlocksIn(
     const open = document.createElement("button");
     open.type = "button";
     open.className = "note-embed-block-open";
-    open.textContent = currentStrings().embedBlockCard.replace("{0}", name);
+    open.textContent = fill(currentStrings().embedBlockCard, { name });
     // The editor never sees the press: it would select the embed and show its source.
     open.addEventListener("mousedown", (e) => {
       e.preventDefault();

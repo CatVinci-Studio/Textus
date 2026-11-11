@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { NoticeHost, showNotice } from "../engine/controls/notices";
 import { Tooltip } from "../engine/controls/Tooltip";
 import {
@@ -214,7 +215,7 @@ function WebEditor({
     const markdown = currentMarkdown();
     onChange(markdown);
     const name = await docs.save(markdown).catch(() => null);
-    if (name) setNotice(t.playgroundSavedTo.replace("{name}", name));
+    if (name) setNotice(fill(t.playgroundSavedTo, { name }));
   }
 
   usePageEvents(importFile, toggleSource, () => void save(), editorRef);

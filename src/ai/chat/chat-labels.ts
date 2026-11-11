@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { plural, type Lang, type Strings } from "../../i18n/strings";
 import { blockNames } from "../revision/markdown-forms";
 import type { InlineChatLabels } from "./quick-ask/InlineChat";
@@ -38,11 +39,10 @@ export function chatLabels(t: Strings, lang: Lang): InlineChatLabels {
     stoppedAtLimit: t.chatStoppedAtLimit,
     continueAfterLimit: t.chatContinueAfterLimit,
     proposalImage: t.proposalImage,
-    imageLimitReached: t.imageLimitReached.replace(
-      "{setting}",
-      t.imagesPerRequestLabel,
-    ),
-    imageNoModel: t.imageNoModel.replace("{setting}", t.imageModelLabel),
+    imageLimitReached: fill(t.imageLimitReached, {
+      setting: t.imagesPerRequestLabel,
+    }),
+    imageNoModel: fill(t.imageNoModel, { setting: t.imageModelLabel }),
     attachFile: t.agentAttachFile,
     attachmentTruncated: t.chatAttachmentTruncated,
     attachmentNoVision: t.chatAttachmentNoVision,

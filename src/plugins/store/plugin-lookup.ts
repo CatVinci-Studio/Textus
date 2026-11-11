@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { currentStrings } from "../../i18n/current";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
 import { basename } from "../../utils/path";
@@ -111,7 +112,7 @@ export function pluginMenuEntries(
             command: PLUGIN_SETTINGS + record.id,
             label: commands.length
               ? t.menuPluginSettings
-              : t.menuPluginSettingsOf.replace("{name}", group),
+              : fill(t.menuPluginSettingsOf, { name: group }),
             group,
           },
         ]

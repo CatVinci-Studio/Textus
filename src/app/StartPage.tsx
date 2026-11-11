@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useEffect, useState, type ReactNode } from "react";
 import { emitToThisWindow } from "../platform/menu-events";
 import { NO_RECENTS, type RecentLists } from "../registry/menu/app-menu-model";
@@ -170,10 +171,9 @@ export function StartPage({ t }: { t: Strings }) {
         aria-label={t.startPageTab}
       >
         <div className="tx-empty">
-          {t.startPagePickDocument.replace(
-            "{folder}",
-            basename(empty.replace(/[\\/]+$/, "")),
-          )}
+          {fill(t.startPagePickDocument, {
+            folder: basename(empty.replace(/[\\/]+$/, "")),
+          })}
         </div>
       </div>
     );

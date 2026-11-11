@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { localeOf, plural } from "../i18n/strings";
@@ -192,7 +193,7 @@ export function DocumentList({
 
   async function remove(entry: Entry) {
     const ok = await showConfirm(
-      t.docDeleteConfirm.replace("{name}", basename(entry.path)),
+      fill(t.docDeleteConfirm, { name: basename(entry.path) }),
       {
         title: t.docDelete,
         tone: "warning",

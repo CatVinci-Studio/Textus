@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
 import type { Strings, TextKey } from "../../i18n/strings";
@@ -86,7 +87,7 @@ export function ImageModelSection({ t }: { t: Strings }) {
                 entry.id !== "custom" && (
                   // The key is the provider's one, kept on Providers.
                   <>
-                    {t.imageServiceNoKey.replace("{name}", label(entry, t))}{" "}
+                    {fill(t.imageServiceNoKey, { name: label(entry, t) })}{" "}
                     <button
                       type="button"
                       className="text-button"
@@ -108,7 +109,7 @@ export function ImageModelSection({ t }: { t: Strings }) {
         >
           <option value={FOLLOW_CHAT}>
             {followed
-              ? t.imageServiceFollowChat.replace("{name}", followed)
+              ? fill(t.imageServiceFollowChat, { name: followed })
               : t.imageServiceFollowChatBare}
           </option>
           <option value="">{t.imageModelNone}</option>

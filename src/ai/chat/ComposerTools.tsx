@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import {
   CloseIcon,
   LightbulbIcon,
@@ -33,7 +34,7 @@ export function ComposerToggles({
           webSearch && searchUnavailable
             ? labels.webSearchNeedsService
             : webSearch
-              ? labels.toggleOnHint.replace("{label}", labels.webSearch)
+              ? fill(labels.toggleOnHint, { label: labels.webSearch })
               : labels.webSearch
         }
       >
@@ -56,7 +57,7 @@ export function ComposerToggles({
           description={labels.deepThinkingHint}
           text={
             deepThinking
-              ? labels.toggleOnHint.replace("{label}", labels.deepThinkingHint)
+              ? fill(labels.toggleOnHint, { label: labels.deepThinkingHint })
               : labels.deepThinkingHint
           }
         >

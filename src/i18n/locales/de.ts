@@ -1295,7 +1295,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   embedDisplayLabel: "Eingebettete Notizen",
   embedDisplayExpand: "Ganz zeigen",
   embedDisplayCard: "Als Linkkarte",
-  embedBlockCard: "{0} · zum Zeigen klicken",
+  embedBlockCard: "{name} · zum Zeigen klicken",
   docTextSizeLabel: "Textgröße",
   docTextSizeAuto: "Wie im Design",
   docTextLabel: "Fließtext",

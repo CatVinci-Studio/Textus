@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useRef } from "react";
 import type { Strings } from "../../i18n/strings";
 import type { Lang } from "../../i18n/langs";
@@ -31,9 +32,10 @@ export function useRevisionAnnouncements({
       announce(plural(t.announceChangesProposed, stops, lang));
     if (position >= 0 && position !== before.position)
       announce(
-        t.announceChangePosition
-          .replace("{i}", String(position + 1))
-          .replace("{n}", String(stops)),
+        fill(t.announceChangePosition, {
+          i: String(position + 1),
+          n: String(stops),
+        }),
       );
   }, [active, stops, streaming, position, t, lang]);
 }

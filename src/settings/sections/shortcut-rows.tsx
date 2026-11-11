@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { useEffect, useState } from "react";
 import {
   defaultShortcuts,
@@ -148,7 +149,7 @@ function ShortcutRecorder({
   function bind(next: string): boolean {
     const owner = ownerOf(next);
     if (owner) {
-      setError(t.shortcutConflict.replace("{action}", owner));
+      setError(fill(t.shortcutConflict, { action: owner }));
       return false;
     }
     setError("");
@@ -171,7 +172,7 @@ function ShortcutRecorder({
       // Named where another owns the key, before the reserved ones.
       const owner = ownerOf(captured);
       if (owner) {
-        setError(t.shortcutConflict.replace("{action}", owner));
+        setError(fill(t.shortcutConflict, { action: owner }));
         return;
       }
       if (isReservedCombo(captured)) {
@@ -234,7 +235,7 @@ function ShortcutRecorder({
       </div>
       {(error || taken) && (
         <div className="settings-error" role="alert">
-          {error || t.shortcutConflict.replace("{action}", taken!)}
+          {error || fill(t.shortcutConflict, { action: taken! })}
         </div>
       )}
     </div>

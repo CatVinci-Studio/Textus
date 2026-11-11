@@ -1245,7 +1245,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   embedDisplayLabel: "埋め込んだノート",
   embedDisplayExpand: "内容をすべて表示",
   embedDisplayCard: "リンクカードだけ表示",
-  embedBlockCard: "{0} · クリックで表示",
+  embedBlockCard: "{name} · クリックで表示",
   docTextSizeLabel: "本文の文字サイズ",
   docTextSizeAuto: "テーマに合わせる",
   docTextLabel: "本文の文字",

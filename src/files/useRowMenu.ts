@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import {
   useCallback,
   useState,
@@ -64,10 +65,7 @@ export function useRowMenu(
     async (path: string, isDir: boolean) => {
       const name = basename(path);
       const ok = await showConfirm(
-        (isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm).replace(
-          "{name}",
-          name,
-        ),
+        fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, { name }),
         { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
       );
       if (!ok) return;

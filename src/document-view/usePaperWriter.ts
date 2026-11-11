@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { useCallback, useEffect, useRef } from "react";
 import { AI_CANCELLED, ai } from "../platform/ipc";
 import { errorText } from "../utils/error-text";
@@ -326,7 +327,7 @@ export function usePaperWriter({
       }));
       agentPanel.setOpen(true);
       latest.current.conversation.append(
-        paperCardTurns(key, topic, strings.paperAsk.replace("{topic}", topic)),
+        paperCardTurns(key, topic, fill(strings.paperAsk, { topic })),
       );
       research(key, topic, genre, null, conversation);
     },

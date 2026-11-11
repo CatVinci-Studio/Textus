@@ -1,3 +1,4 @@
+import { fill } from "../../i18n/fill";
 import { requestCreate } from "../../ai/chat/create-request";
 import { useId, useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
@@ -434,7 +435,7 @@ export function ThemesTab({ t }: { t: Strings }) {
         ) : (
           <p className="plugin-empty">
             {query.trim()
-              ? t.pluginsSearchNone.replace("{query}", query.trim())
+              ? fill(t.pluginsSearchNone, { query: query.trim() })
               : t.extensionsThemesNone}
           </p>
         )

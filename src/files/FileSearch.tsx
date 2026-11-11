@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { tabElement } from "../engine/layout/tab-element";
 import {
   useCallback,
@@ -272,7 +273,7 @@ function SearchNote({
       {note && <div className="tx-list-note">{note}</div>}
       {index.kind === "ready" && index.truncated && (
         <div className="tx-list-note">
-          {t.treeSearchCapped.replace("{n}", String(index.entries.length))}
+          {fill(t.treeSearchCapped, { n: String(index.entries.length) })}
         </div>
       )}
     </>

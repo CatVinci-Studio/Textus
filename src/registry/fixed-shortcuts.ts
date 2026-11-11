@@ -1,3 +1,4 @@
+import { fill } from "../i18n/fill";
 import { APP_NAME, type Strings } from "../i18n/strings";
 import { EDITOR_BLOCK_COMBOS } from "../utils/shortcuts";
 import { defaultShortcuts, type Shortcuts } from "../prefs/SettingsContext";
@@ -38,8 +39,7 @@ export function macTabStep(e: KeyboardEvent, mac: boolean): 1 | -1 | null {
 
 /** The editor's own block keys, named for Settings. */
 function editorKeys(t: Strings): FixedShortcut[] {
-  const heading = (n: number) =>
-    t.menuHeadingTemplate.replace("{n}", String(n));
+  const heading = (n: number) => fill(t.menuHeadingTemplate, { n: String(n) });
   const labels: Record<keyof typeof EDITOR_BLOCK_COMBOS, string> = {
     paragraph: t.shortcutParagraph,
     h1: heading(1),
@@ -102,7 +102,7 @@ export function fixedShortcutGroups(
   const exit = find(t.menuExit);
   if (exit && mac) {
     // Cmd+Q on a Mac; Alt+F4 is Windows'.
-    exit.label = t.menuQuit.replace("{name}", APP_NAME);
+    exit.label = fill(t.menuQuit, { name: APP_NAME });
     exit.combos = ["mod+q"];
   } else if (exit && platform === "linux") {
     // Ctrl+Q also quits on Linux.
