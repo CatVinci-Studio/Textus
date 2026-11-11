@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
 import { blockAt, holdBlock } from "../engine/controls/hold-line";
@@ -53,8 +54,7 @@ function zoomTab(x: number | null, y: number | null): HTMLElement | null {
     x !== null && y !== null
       ? document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-tab-id]")
       : null;
-  const tab =
-    under ?? document.querySelector<HTMLElement>('[data-active-tab="true"]');
+  const tab = under ?? tabElement();
   return tab?.querySelector(".editor-scroll, .source-view") ? tab : null;
 }
 

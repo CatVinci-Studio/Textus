@@ -1,3 +1,4 @@
+import { tabInUse } from "../engine/layout/store";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { phoneTitleRowBottom } from "../engine/controls/usePhoneLayout";
 
@@ -98,7 +99,10 @@ function visibleObstacles(card: HTMLElement): Box[] {
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
     const host = range.startContainer.parentElement;
-    if (host?.closest('[data-active-tab="true"] .ProseMirror')) {
+    if (
+      host?.closest(".ProseMirror") &&
+      host.closest<HTMLElement>("[data-tab-id]")?.dataset.tabId === tabInUse()
+    ) {
       const rect = range.getBoundingClientRect();
       const line = rect.height > 0 ? rect : host.getBoundingClientRect();
       if (line.height > 0)

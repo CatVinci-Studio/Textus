@@ -7,7 +7,7 @@ import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
-import { noteJump } from "../../utils/nav-history";
+import { noteJump } from "../nav-history";
 import { linkHrefAt } from "./link-reveal";
 import { linkTarget, type LinkTarget } from "./link-target";
 import { followNoteLink } from "./note-link-follow";

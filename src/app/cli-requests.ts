@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { currentStrings } from "../i18n/current";
 import type { Settings } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../theme/builtin-themes";
@@ -181,7 +182,7 @@ const exportDocument: Handler = async (request, window) => {
   const deadline = Date.now() + EDITOR_WITHIN_MS;
   while (
     window().activePath !== path ||
-    !document.querySelector('[data-active-tab="true"] .milkdown')
+    !tabElement()?.querySelector(".milkdown")
   ) {
     if (Date.now() > deadline)
       return fail(`${path} didn't open in Textus's editor.`);

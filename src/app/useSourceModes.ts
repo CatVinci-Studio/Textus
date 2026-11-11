@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { useCallback, useEffect, useLayoutEffect } from "react";
 import {
   applySourceCaret,
@@ -39,7 +40,7 @@ export function useSourceModes(tabState: TabState) {
       if (mode === "rich") {
         // The view being left records its caret; the one entered places it.
         if (front) {
-          const activeTab = document.querySelector('[data-active-tab="true"]');
+          const activeTab = tabElement();
           const source = activeTab ? sourceViewAt(activeTab) : null;
           setPendingCaret(source ? readSourceCaret(source.view) : null);
         }
@@ -109,7 +110,7 @@ export function useSourceModes(tabState: TabState) {
     let frames = 180;
     let frame = 0;
     const place = () => {
-      const activeTab = document.querySelector('[data-active-tab="true"]');
+      const activeTab = tabElement();
       const source = activeTab ? sourceViewAt(activeTab) : null;
       if (source) applySourceCaret(source.view, caret);
       else if (--frames > 0) frame = requestAnimationFrame(place);

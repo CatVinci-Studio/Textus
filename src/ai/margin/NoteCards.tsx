@@ -1,3 +1,4 @@
+import { tabElement } from "../../engine/layout/tab-element";
 import { InlineMarkdownText } from "../MarkdownText";
 import { memo } from "react";
 import { createPortal } from "react-dom";
@@ -180,8 +181,8 @@ export function NotePopover({
   // Kept within the document's column, off the AI panel.
   const pos = useViewportClamp(ref, x, y, {
     right: () =>
-      document
-        .querySelector('[data-active-tab="true"] > .editor-scroll')
+      tabElement()
+        ?.querySelector(":scope > .editor-scroll")
         ?.getBoundingClientRect().right,
   });
   return createPortal(

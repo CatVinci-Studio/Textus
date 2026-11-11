@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { parseHeadings } from "./outline-parse";
 import { ChevronIcon } from "../engine/controls/icons";
@@ -7,7 +8,7 @@ import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
-import { noteJump } from "../utils/nav-history";
+import { noteJump } from "../editor/nav-history";
 import { setTabJump } from "../editor/tab-jump";
 import { headingSlug } from "../editor/markdown/link-target";
 import "./FileTree.css";
@@ -24,9 +25,7 @@ const HEADINGS = `:scope > :is(h1, h2, h3, h4, h5, h6, ${HEADING_PLACEHOLDER})`;
 /** The index of the section being read in the active editor: the last
  *  top-level heading just below the scroller's top, or -1 above the first. */
 function currentHeading(): number {
-  const scroller = document.querySelector(
-    '[data-active-tab="true"] > .editor-scroll',
-  );
+  const scroller = tabElement()?.querySelector(":scope > .editor-scroll");
   const root = scroller?.querySelector(".editor-content .ProseMirror");
   if (!scroller || !root) return -1;
   const line = scroller.getBoundingClientRect().top + 80;

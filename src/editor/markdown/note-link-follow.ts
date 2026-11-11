@@ -1,7 +1,7 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
 import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
-import { noteJump } from "../../utils/nav-history";
+import { noteJump } from "../nav-history";
 import { basename, dirname, isNoteFile } from "../../utils/path";
 import { parseNoteLink, type NoteLink } from "../../utils/note-link";
 import { revealHeading } from "./heading-jump";

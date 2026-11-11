@@ -1,3 +1,5 @@
+import { tabElement } from "../engine/layout/tab-element";
+import { tabInUse } from "../engine/layout/store";
 import { useEffect, useState, type ComponentType } from "react";
 import type { Strings } from "../i18n/strings";
 import { caretBlock, NO_BLOCK, type CaretBlock } from "../editor/caret-block";
@@ -144,13 +146,7 @@ function useCaretBlock(tabId: string): CaretBlock {
     const read = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() =>
-        setBlock(
-          caretBlock(
-            document.querySelector(
-              `.main-pane [data-active-tab="true"][data-tab-id="${CSS.escape(tabId)}"]`,
-            ),
-          ),
-        ),
+        setBlock(caretBlock(tabInUse() === tabId ? tabElement(tabId) : null)),
       );
     };
     read();

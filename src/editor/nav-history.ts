@@ -1,3 +1,5 @@
+import { tabElement } from "../engine/layout/tab-element";
+import { tabInUse } from "../engine/layout/store";
 /**
  * Back and Forward: the places a jump left - a followed link, an outline
  * heading, another tab - as a tab and how far down it was scrolled.
@@ -51,15 +53,13 @@ function scrollerIn(tab: Element | null): HTMLElement | null {
 }
 
 export function tabScroller(tabId: string): HTMLElement | null {
-  return scrollerIn(
-    document.querySelector(`[data-tab-id="${CSS.escape(tabId)}"]`),
-  );
+  return scrollerIn(tabElement(tabId));
 }
 
 /** Where the front tab is now. */
 export function frontPlace(): NavPlace | null {
-  const tab = document.querySelector<HTMLElement>('[data-active-tab="true"]');
-  const tabId = tab?.dataset.tabId;
+  const tabId = tabInUse();
+  const tab = tabElement(tabId);
   const scroller = scrollerIn(tab);
   return tabId && scroller ? { tabId, top: scroller.scrollTop } : null;
 }

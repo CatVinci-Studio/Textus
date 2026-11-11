@@ -1,3 +1,4 @@
+import { tabInUse } from "../../engine/layout/store";
 import { dragGhost } from "../../engine/drag/ghost";
 import { dropIntent } from "../../engine/drag/drop-intent";
 import { scaledPx } from "../../engine/tokens/chrome-scale";
@@ -69,12 +70,7 @@ export function pullTab(
   // preview (one island, spelt out, for a window not split).
   const geometry = dropGeometry();
   const base: SplitLayout =
-    splitLayout() ??
-    oneIsland(
-      opts.tabIds,
-      document.querySelector<HTMLElement>('[data-active-tab="true"]')?.dataset
-        .tabId ?? null,
-    );
+    splitLayout() ?? oneIsland(opts.tabIds, tabInUse() || null);
   const marks = placeMarks(tabId);
   const intent = dropIntent();
   let start: { x: number; y: number } | null = null;

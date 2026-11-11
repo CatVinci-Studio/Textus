@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import {
   useCallback,
   useDeferredValue,
@@ -83,10 +84,10 @@ function useFolderIndex(
 /** The editor in front, for Esc to hand the keyboard back to: source
  *  mode's (also split view's left pane) before the rendered one. */
 function focusEditor() {
-  const tab = '[data-active-tab="true"]';
-  const editor = [`${tab} .source-view .cm-content`, `${tab} .ProseMirror`]
+  const tab = tabElement();
+  const editor = [".source-view .cm-content", ".ProseMirror"]
     .flatMap((selector) => [
-      ...document.querySelectorAll<HTMLElement>(selector),
+      ...(tab?.querySelectorAll<HTMLElement>(selector) ?? []),
     ])
     .find((el) => el.getClientRects().length > 0 && el.isContentEditable);
   editor?.focus();

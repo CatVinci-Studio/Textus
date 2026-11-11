@@ -1,3 +1,5 @@
+import { splitLayout, tabInUse } from "../engine/layout/store";
+import { panesOf } from "../engine/layout/tree";
 import { useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
 import { readDocText, statMtime, tabIsDirty, type DocTab } from "./doc-tabs";
@@ -19,12 +21,11 @@ const WATCH_MS = 1500;
 /** The tabs whose documents are on screen: the one in front, or one per
  *  pane of a split. */
 function shownTabIds(): Set<string> {
+  const split = splitLayout();
   return new Set(
-    [
-      ...document.querySelectorAll<HTMLElement>(
-        '[data-active-tab="true"], .split-pane[data-tab-id]',
-      ),
-    ].map((el) => el.dataset.tabId ?? ""),
+    split
+      ? panesOf(split.root).flatMap((pane) => (pane.front ? [pane.front] : []))
+      : [tabInUse()],
   );
 }
 

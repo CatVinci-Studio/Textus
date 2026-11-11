@@ -1,3 +1,5 @@
+import { tabElement } from "../../engine/layout/tab-element";
+import { tabInUse } from "../../engine/layout/store";
 import { useEffect } from "react";
 import { watchIslandNumbers } from "../../engine/layout/island-numbers";
 import { modIsMeta } from "../../platform/os";
@@ -11,10 +13,7 @@ const TYPED_IN = ".ProseMirror, .cm-content, textarea";
 function focusTab(tabId: string, tries = 10): void {
   requestAnimationFrame(() => {
     const id = CSS.escape(tabId);
-    // The tab's view, not its corner's readout, which carries its id too.
-    const view = document.querySelector(
-      `[data-active-tab="true"][data-tab-id="${id}"]`,
-    );
+    const view = tabInUse() === tabId ? tabElement(tabId) : null;
     const target = view?.querySelector<HTMLElement>(TYPED_IN);
     if (target) target.focus({ preventScroll: true });
     else if (tries > 0) focusTab(tabId, tries - 1);

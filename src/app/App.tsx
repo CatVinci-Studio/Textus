@@ -1,3 +1,4 @@
+import { tabElement } from "../engine/layout/tab-element";
 import { tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
 import { AiTab } from "./islands/AiTab";
@@ -150,11 +151,11 @@ function App() {
         {isIOSApp && (
           <FlipOnChange
             watch={agentPresence.mounted}
-            targets={() =>
-              document.querySelectorAll(
-                '[data-active-tab="true"] > .editor-scroll > .editor-content, [data-active-tab="true"] > .source-view',
-              )
-            }
+            targets={() => [
+              ...(tabElement()?.querySelectorAll(
+                ":scope > .editor-scroll > .editor-content, :scope > .source-view",
+              ) ?? []),
+            ]}
             duration="--dur-settle"
             easing="--ease-settle"
           />
