@@ -12,15 +12,15 @@ export const commands = {
 	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
 	 *  the app config dir (0600). Uses the Codex CLI's own OAuth client id.
 	 */
-	codex_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus_Serialize>("codex_login", { onUrl }),
-	codex_auth_status: () => __TAURI_INVOKE<AuthStatus_Serialize>("codex_auth_status"),
+	codex_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus>("codex_login", { onUrl }),
+	codex_auth_status: () => __TAURI_INVOKE<AuthStatus>("codex_auth_status"),
 	codex_logout: () => __TAURI_INVOKE<null>("codex_logout"),
 	/**
 	 *  Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own
 	 *  OAuth client.
 	 */
-	claude_login: (onUrl: Channel<string>) => __TAURI_INVOKE<ClaudeAuthStatus>("claude_login", { onUrl }),
-	claude_auth_status: () => __TAURI_INVOKE<ClaudeAuthStatus>("claude_auth_status"),
+	claude_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus>("claude_login", { onUrl }),
+	claude_auth_status: () => __TAURI_INVOKE<AuthStatus>("claude_auth_status"),
 	claude_logout: () => __TAURI_INVOKE<null>("claude_logout"),
 	set_provider_api_key: (provider: string, key: string) => __TAURI_INVOKE<null>("set_provider_api_key", { provider, key }),
 	provider_api_key_status: (provider: string) => __TAURI_INVOKE<boolean>("provider_api_key_status", { provider }),
@@ -37,19 +37,8 @@ export const commands = {
 };
 
 /* Types */
-export type AuthStatus = AuthStatus_Serialize | AuthStatus_Deserialize;
-
-export type AuthStatus_Deserialize = {
-	configured: boolean,
-	account_id?: string | null,
-};
-
-export type AuthStatus_Serialize = {
-	configured: boolean,
-	account_id: string | null,
-};
-
-export type ClaudeAuthStatus = {
+/**  Whether a provider's sign-in is kept. */
+export type AuthStatus = {
 	configured: boolean,
 };
 

@@ -1,21 +1,10 @@
 import { useEffect, useState } from "react";
 import { ai, auth } from "../platform/ipc";
 import type { Settings } from "../prefs/SettingsContext";
+import type { ImageProviderEntry_Serialize } from "../platform/bindings/ai-agent";
 
 /** A service Settings offers as the image model, from the backend's list. */
-export interface ImageProviderEntry {
-  id: string;
-  /** A brand name; "custom" and "doubao" are localized (imageProviderLabel). */
-  label: string;
-  api: string;
-  /** Null for the OpenAI-compatible endpoint, whose address is typed in. */
-  baseUrl: string | null;
-  /** Where its key is kept: the chat provider's own id where one key serves
-   *  both, so a provider set up for chat asks for nothing more. */
-  keyId: string;
-  /** The default first; empty for the compatible endpoint. */
-  models: string[];
-}
+export type ImageProviderEntry = ImageProviderEntry_Serialize;
 
 /** The setting as a request carries it. */
 export interface ImageModel {
@@ -29,31 +18,21 @@ export interface ImageModel {
 /** The default setting: follow the chat provider. Must match the backend's. */
 export const FOLLOW_CHAT = "chat";
 
-/** The image service that goes with a chat provider, as the backend picks it:
- *  its sign-in's while there is one, else the provider's own on the same key;
- *  null when it makes none. */
-const SIGN_IN_IMAGES: Partial<Record<string, string>> = {
-  openai: "openai-chatgpt",
-};
-
-const SAME_KEY_IMAGES = new Set([
-  "openai",
-  "google",
-  "doubao",
-  "qwen",
-  "zhipu",
-  "minimax",
-  "minimax-intl",
-  "siliconflow",
-]);
-
+/** The image service that goes with a chat provider, by the backend's rule
+ *  (images/services.rs following_chat) over its list: its sign-in's while
+ *  there is one, else the provider's own on the same key; null when it
+ *  makes none. */
 function followingChat(
+  entries: readonly ImageProviderEntry[],
   chatProvider: string,
   chatGptSignedIn: boolean,
 ): string | null {
-  const signInImages = SIGN_IN_IMAGES[chatProvider];
-  if (signInImages && chatGptSignedIn) return signInImages;
-  return SAME_KEY_IMAGES.has(chatProvider) ? chatProvider : null;
+  const signIn = entries.find((e) => e.signInFor === chatProvider);
+  if (signIn && chatGptSignedIn) return signIn.id;
+  return (
+    entries.find((e) => e.keyId === chatProvider && e.id === chatProvider)
+      ?.id ?? null
+  );
 }
 
 /** Whether a ChatGPT sign-in is kept, for following an OpenAI chat. */
@@ -78,9 +57,10 @@ export function useImageService(
   settings: Pick<Settings, "imageModelProvider" | "aiProvider">,
 ): string | null {
   const signedIn = useChatGptSignedIn();
+  const entries = useImageProviders();
   const chosen = settings.imageModelProvider;
   if (chosen === FOLLOW_CHAT)
-    return followingChat(settings.aiProvider, signedIn);
+    return followingChat(entries, settings.aiProvider, signedIn);
   return chosen || null;
 }
 
@@ -103,18 +83,28 @@ export function imageModelOf(
   };
 }
 
-/** The image catalog, fetched once per mount; empty until it arrives. */
+let providers: Promise<ImageProviderEntry[]> | null = null;
+
+/** The backend's image services, asked once per window. */
+function loadImageProviders(): Promise<ImageProviderEntry[]> {
+  providers ??= ai
+    .listImageProviders()
+    .then((list) => (Array.isArray(list) ? list : []))
+    .catch(() => {
+      providers = null;
+      return [];
+    });
+  return providers;
+}
+
+/** The image services; empty until they arrive. */
 export function useImageProviders(): ImageProviderEntry[] {
   const [entries, setEntries] = useState<ImageProviderEntry[]>([]);
   useEffect(() => {
-    let cancelled = false;
-    ai.listImageProviders()
-      .then((list) => {
-        if (!cancelled && Array.isArray(list)) setEntries(list);
-      })
-      .catch(() => {});
+    let live = true;
+    void loadImageProviders().then((list) => live && setEntries(list));
     return () => {
-      cancelled = true;
+      live = false;
     };
   }, []);
   return entries;

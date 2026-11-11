@@ -1,6 +1,5 @@
 use super::pkce_login::{run_pkce_login, PkceLoginRequest};
 use aicompat::providers::anthropic::{self, ClaudeCredential};
-use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
@@ -17,12 +16,6 @@ static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 /// refresh: a minute's margin, so it doesn't lapse mid-request.
 fn expires_soon(expires: i64) -> bool {
     expires - aicompat::pkce::now_ms() < 60_000
-}
-
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-pub struct ClaudeAuthStatus {
-    configured: bool,
 }
 
 fn auth_file_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -54,7 +47,7 @@ fn load_credential(app: &AppHandle) -> Result<Option<ClaudeCredential>, String> 
 pub async fn claude_login(
     app: AppHandle,
     on_url: tauri::ipc::Channel<String>,
-) -> Result<ClaudeAuthStatus, String> {
+) -> Result<super::AuthStatus, String> {
     let (authorize_url, verifier, state) = anthropic::build_authorize_request()?;
 
     let code = run_pkce_login(
@@ -75,13 +68,13 @@ pub async fn claude_login(
     let credential = anthropic::exchange_code(&code, &state, &verifier).await?;
     save_credential(&app, &credential)?;
 
-    Ok(ClaudeAuthStatus { configured: true })
+    Ok(super::AuthStatus { configured: true })
 }
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn claude_auth_status(app: AppHandle) -> Result<ClaudeAuthStatus, String> {
-    Ok(ClaudeAuthStatus {
+pub fn claude_auth_status(app: AppHandle) -> Result<super::AuthStatus, String> {
+    Ok(super::AuthStatus {
         configured: load_credential(&app)?.is_some(),
     })
 }

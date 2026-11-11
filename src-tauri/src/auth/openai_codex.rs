@@ -1,6 +1,5 @@
 use super::pkce_login::{run_pkce_login, PkceLoginRequest};
 use aicompat::providers::openai_codex::{self, CodexCredential};
-use serde::Serialize;
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
@@ -17,13 +16,6 @@ static REFRESH_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 /// refresh: a minute's margin, so it doesn't lapse mid-request.
 fn expires_soon(expires: i64) -> bool {
     expires - aicompat::pkce::now_ms() < 60_000
-}
-
-#[derive(Serialize)]
-#[cfg_attr(test, derive(specta::Type))]
-pub struct AuthStatus {
-    configured: bool,
-    account_id: Option<String>,
 }
 
 fn auth_file_path(app: &AppHandle) -> Result<PathBuf, String> {
@@ -55,7 +47,7 @@ fn load_credential(app: &AppHandle) -> Result<Option<CodexCredential>, String> {
 pub async fn codex_login(
     app: AppHandle,
     on_url: tauri::ipc::Channel<String>,
-) -> Result<AuthStatus, String> {
+) -> Result<super::AuthStatus, String> {
     let (authorize_url, verifier, state) =
         openai_codex::build_authorize_request(crate::app_identity::ORIGINATOR)?;
 
@@ -75,28 +67,16 @@ pub async fn codex_login(
     .await?;
 
     let credential = openai_codex::exchange_code(&code, &verifier).await?;
-    let account_id = credential.account_id.clone();
     save_credential(&app, &credential)?;
-
-    Ok(AuthStatus {
-        configured: true,
-        account_id: Some(account_id),
-    })
+    Ok(super::AuthStatus { configured: true })
 }
 
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn codex_auth_status(app: AppHandle) -> Result<AuthStatus, String> {
-    match load_credential(&app)? {
-        Some(cred) => Ok(AuthStatus {
-            configured: true,
-            account_id: Some(cred.account_id),
-        }),
-        None => Ok(AuthStatus {
-            configured: false,
-            account_id: None,
-        }),
-    }
+pub fn codex_auth_status(app: AppHandle) -> Result<super::AuthStatus, String> {
+    Ok(super::AuthStatus {
+        configured: load_credential(&app)?.is_some(),
+    })
 }
 
 /// Whether a ChatGPT sign-in is stored (it may still need refreshing).

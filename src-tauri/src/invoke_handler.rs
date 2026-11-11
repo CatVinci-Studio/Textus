@@ -111,7 +111,6 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::images::ai_redraw_generated_image,
         crate::ai::web::web_search_status,
         crate::ai::workspace::load_agent_workspace,
-        crate::ai::conventions::measure_text,
         crate::ai::workspace::ensure_global_agent_md,
         crate::ai::workspace::import_agent_skill,
         crate::ai::workspace::list_skills,

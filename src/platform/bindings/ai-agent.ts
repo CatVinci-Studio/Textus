@@ -162,14 +162,14 @@ export type ImageAttachment = {
 };
 
 /**
- *  One service Settings offers as Image model. Keep in step with the frontend's
- *  `ImageProviderEntry`.
+ *  One service Settings offers as Image model; the frontend uses its
+ *  generated type.
  */
 export type ImageProviderEntry = ImageProviderEntry_Serialize | ImageProviderEntry_Deserialize;
 
 /**
- *  One service Settings offers as Image model. Keep in step with the frontend's
- *  `ImageProviderEntry`.
+ *  One service Settings offers as Image model; the frontend uses its
+ *  generated type.
  */
 export type ImageProviderEntry_Deserialize = {
 	id: string,
@@ -197,8 +197,8 @@ export type ImageProviderEntry_Deserialize = {
 };
 
 /**
- *  One service Settings offers as Image model. Keep in step with the frontend's
- *  `ImageProviderEntry`.
+ *  One service Settings offers as Image model; the frontend uses its
+ *  generated type.
  */
 export type ImageProviderEntry_Serialize = {
 	id: string,

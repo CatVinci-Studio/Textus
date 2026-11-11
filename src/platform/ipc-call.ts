@@ -3,7 +3,6 @@ import { isDesktopApp } from "./capabilities";
 import { AI_OFF, aiRequestsAllowed } from "./ai-gate";
 import { commands as aiCommands } from "./bindings/ai";
 import { commands as aiAgentCommands } from "./bindings/ai-agent";
-import { commands as aiConventionsCommands } from "./bindings/ai-conventions";
 import { commands as aiMemoryCommands } from "./bindings/ai-memory";
 import { commands as aiProjectCommands } from "./bindings/ai-project";
 import { commands as aiSkillsCommands } from "./bindings/ai-skills";
@@ -36,7 +35,6 @@ export class IpcError extends Error {
 const commands = {
   ...aiCommands,
   ...aiAgentCommands,
-  ...aiConventionsCommands,
   ...aiMemoryCommands,
   ...aiProjectCommands,
   ...aiSkillsCommands,

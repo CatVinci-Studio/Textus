@@ -234,9 +234,6 @@ export const ai = {
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
     command("load_agent_workspace", docPath, rootOverride),
-  /** Exact platform counts: "x_weighted", "bluesky", "wechat_title"... */
-  measureText: (text: string, metric: string) =>
-    command("measure_text", text, metric),
   /** The project folder's text files, for @-mentions. */
   listProjectFiles: (docPath: string | null, workspaceRoot: string | null) =>
     command("list_project_files", docPath, workspaceRoot),
