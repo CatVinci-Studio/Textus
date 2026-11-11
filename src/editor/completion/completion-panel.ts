@@ -63,7 +63,7 @@ export class CompletionPanel {
     if (this.open) return;
     this.open = true;
     el.hidden = false;
-    document.documentElement.classList.add(OPEN_CLASS);
+    document.body.classList.add(OPEN_CLASS);
     this.place(el, at());
   }
 
@@ -88,7 +88,7 @@ export class CompletionPanel {
     if (!this.open) return;
     this.open = false;
     if (this.el) this.el.hidden = true;
-    document.documentElement.classList.remove(OPEN_CLASS);
+    document.body.classList.remove(OPEN_CLASS);
   }
 
   destroy(): void {

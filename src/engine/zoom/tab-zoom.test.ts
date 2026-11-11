@@ -27,3 +27,17 @@ it("gives a tab the window's zoom until it has its own, and keeps it as the defa
   stop();
   setWindowZoom(1);
 });
+
+it("zooming is no change of look: what measures the look isn't asked again", async () => {
+  const { onAppearance } = await import("../tokens/appearance");
+  let told = 0;
+  const stop = onAppearance(() => told++);
+  setWindowZoom(1.25);
+  setWindowZoom(1.5);
+  await Promise.resolve();
+  expect(told).toBe(0);
+  document.documentElement.dataset.theme = "dark";
+  await Promise.resolve();
+  expect(told).toBe(1);
+  stop();
+});

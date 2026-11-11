@@ -3,7 +3,8 @@ import { tabElement } from "../layout/tab-element";
 /**
  * The documents' zoom, its one owner: the window's, which a tab takes
  * unless it has its own (zoom not together). Painted as `--content-zoom` -
- * the window's on the page's root, a tab's on its view - for the styles;
+ * the window's on the page's body (off the root, whose changes mean a new
+ * look), a tab's on its view - for the styles;
  * read here, never from the page.
  */
 let windowZoom = 1;
@@ -23,7 +24,7 @@ export function onZoom(changed: () => void): () => void {
 /** The zoom new tabs start at, and every tab without its own. */
 export function setWindowZoom(zoom: number): void {
   windowZoom = zoom;
-  document.documentElement.style.setProperty("--content-zoom", String(zoom));
+  document.body.style.setProperty("--content-zoom", String(zoom));
   told();
 }
 
