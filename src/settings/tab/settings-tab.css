@@ -81,13 +81,6 @@
   display: contents;
 }
 
-/* A narrow page (an island beside others, a small window): each row's name
-   over its control, the name kept whole, never a character a line. */
-.settings-row-label,
-.settings-row > :first-child {
-  word-break: keep-all;
-  overflow-wrap: break-word;
-}
 .settings-tab-narrow {
   display: none;
 }
@@ -100,26 +93,6 @@
   }
   .settings-tab .settings-tab-page {
     display: none;
-  }
-}
-
-@container settings-page (max-width: 460px) {
-  .settings-row {
-    flex-wrap: wrap;
-    row-gap: var(--space-2);
-  }
-  /* The name keeps a readable width; its control goes under it only when
-     the two don't fit side by side. */
-  .settings-row > :first-child:not(:only-child) {
-    flex: 1 1 8em;
-  }
-  .settings-row > :last-child:not(:first-child) {
-    max-width: none;
-    margin-inline-start: auto;
-  }
-  /* A segmented switch keeps its segments, a little tighter. */
-  .settings-row .appearance-option {
-    padding-inline: var(--space-2);
   }
 }
 

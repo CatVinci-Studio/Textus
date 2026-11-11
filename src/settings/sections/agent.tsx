@@ -1,3 +1,4 @@
+import { PathText } from "../../engine/controls/PathText";
 import { fill } from "../../i18n/fill";
 import { useSettingsIndexing } from "../indexing";
 import {
@@ -322,7 +323,7 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
   return (
     <SettingRow
       label={t.agentWorkspaceRootLabel}
-      hint={root || t.agentWorkspaceRootDefault}
+      hint={root ? <PathText path={root} /> : t.agentWorkspaceRootDefault}
       error={error}
     >
       <div className="settings-inline-buttons">

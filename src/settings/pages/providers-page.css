@@ -42,23 +42,6 @@
   }
 }
 
-/* A narrow picked side: a row's control goes under its words rather than
-   breaking them mid-word; the sign-in tabs stay one line each. */
-.providers-detail .settings-row {
-  flex-wrap: wrap;
-  row-gap: 8px;
-}
-.providers-detail .settings-row:not(:has(.api-key-input-row)) > :first-child {
-  flex: 1 1 10em;
-  overflow-wrap: normal;
-}
-/* Wrapped under its words, a control keeps to the row's end. */
-.providers-detail
-  .settings-row:not(:has(.api-key-input-row))
-  > :last-child:not(:first-child) {
-  margin-inline-start: auto;
-}
-
 /* The list and the picked provider: one panel, framed as a group is. */
 .providers-page {
   padding: var(--space-3);

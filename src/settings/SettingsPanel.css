@@ -249,7 +249,7 @@
   gap: 8px;
   flex: 0 1 auto;
   min-width: 0;
-  max-width: 62%;
+  max-width: 100%;
 }
 
 /* A read-out beside a control (installed / not installed). */
@@ -330,6 +330,8 @@ button.settings-danger-button {
   line-height: 1.45;
   margin-top: 2px;
   max-width: 420px;
+  /* Running text, not a name: it breaks as text does. */
+  word-break: normal;
   overflow-wrap: anywhere;
 }
 
@@ -373,13 +375,10 @@ button.settings-inline-button {
 /* A row with two actions, stacked so a long folder path beside them has room. */
 .settings-inline-buttons {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 8px;
-  flex-shrink: 0;
 }
 
-/* The resolved project folder gets its own mono line: a path is long and
-   matters exactly. */
 .shortcut-row-controls {
   display: flex;
   align-items: center;
@@ -791,19 +790,6 @@ button.settings-inline-button {
 
   .settings-content {
     padding: 16px 12px 24px;
-  }
-
-  .settings-row {
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .settings-row > *:first-child {
-    flex-basis: 140px;
-  }
-
-  .settings-row-control {
-    max-width: 100%;
   }
 
   .settings-field,

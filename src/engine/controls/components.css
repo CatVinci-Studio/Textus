@@ -40,13 +40,15 @@
 }
 
 /* Every row: the setting's name on the left, its control on the right, one
-   height throughout. */
+   height throughout. Short of room for both, the control goes under the
+   name, from the same start; the name breaks only between its words. */
 .settings-row,
 .tx-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: var(--space-2) 24px;
   min-height: 48px;
   padding: 8px 0;
   box-sizing: border-box;
@@ -55,8 +57,8 @@
 
 .settings-row > *:first-child,
 .tx-row > *:first-child {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 0;
+  word-break: keep-all;
 }
 
 .settings-text-input,
@@ -132,6 +134,32 @@ textarea.tx-input {
 .tx-segment:focus-visible {
   outline: 2px solid var(--ui-accent);
   outline-offset: 2px;
+}
+
+/* A path on one line (PathText): its folders give way first, then its
+   last name. */
+.tx-path {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  /* As wide as its place, never widening it, but with a folder name's
+     room kept: past that its row's controls wrap instead. */
+  contain: inline-size;
+  min-width: 16ch;
+}
+.tx-path-head,
+.tx-path-tail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tx-path-head {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.tx-path-tail {
+  flex: none;
+  max-width: 100%;
 }
 
 /* A card's or a group's head (HeadRow): a mark, the title, the tools at
