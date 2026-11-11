@@ -312,7 +312,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Dein Chat-Anbieter erstellt keine Bilder – wähle einen Dienst dafür.",
   imageProviderChatGpt: "OpenAI · ChatGPT-Anmeldung (experimentell)",
   imageServiceNoKey: "Für {name} ist noch kein API-Schlüssel hinterlegt.",
-  imageServiceSetKey: "Unter Anbieter festlegen",
   imageChatGptSignInHint:
     "Melde dich zuerst oben beim Chat-Anbieter mit ChatGPT an.",
   imageChatGptHelp:

@@ -279,7 +279,6 @@ export default {
     "目前的對話服務不能畫圖，請為圖片另選一個服務。",
   imageProviderChatGpt: "OpenAI · ChatGPT 訂閱（實驗性）",
   imageServiceNoKey: "{name} 還沒有 API Key。",
-  imageServiceSetKey: "到 Providers 設定",
   imageChatGptSignInHint: "請先在上方的對話服務裡用 ChatGPT 登入。",
   imageChatGptHelp:
     "圖片使用你 ChatGPT 訂閱自帶的畫圖額度，不消耗 API 餘額。它走的是 ChatGPT 自家應用程式使用的介面，不是公開的 API，可能隨時失效；OpenAI API Key 的方式不受影響。",

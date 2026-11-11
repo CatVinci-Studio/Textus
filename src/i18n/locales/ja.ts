@@ -296,7 +296,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "チャットのサービスは画像を作れません。画像用のサービスを選んでください。",
   imageProviderChatGpt: "OpenAI · ChatGPT サインイン（試験的）",
   imageServiceNoKey: "{name} の API キーがまだありません。",
-  imageServiceSetKey: "プロバイダーで設定",
   imageChatGptSignInHint:
     "まず上のチャットサービスで ChatGPT にサインインしてください。",
   imageChatGptHelp:
