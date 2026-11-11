@@ -75,8 +75,7 @@
   color: var(--ui-text);
 }
 
-.plugins-panel-line,
-.plugins-panel-by {
+.plugins-panel-line {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -93,18 +92,20 @@
 }
 
 /* Under the text, from its start: the open button's padding, the icon and
-   the gap after it. */
+   the gap after it. Short of room, the button goes under the maker, from
+   the same start, rather than cutting the name to a letter. */
 .plugins-panel-foot {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 8px;
   min-height: var(--control-height-sm);
   margin-top: -6px;
   padding: 0 8px 8px 56px;
 }
 
-.plugins-panel-foot > .plugins-panel-by {
-  flex: 1;
+.plugins-panel-foot > .plugin-byline {
+  flex: 1 1 auto;
 }
 
 .plugins-panel-end {

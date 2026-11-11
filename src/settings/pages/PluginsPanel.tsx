@@ -1,3 +1,4 @@
+import { Byline } from "./CatalogRow";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
@@ -149,6 +150,8 @@ export function PluginsPanel({
                   : ""
               }
               manifest={record.manifest}
+              official={record.official}
+              t={t}
               off={record.status !== "on"}
               picked={picked === record.id}
               onOpen={() => onPick(record.id)}
@@ -207,6 +210,8 @@ export function PluginsPanel({
                   item.manifest.description,
                 )}
                 manifest={item.manifest}
+                official={item.official}
+                t={t}
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
                 end={actionFor(item.id)}
@@ -225,20 +230,24 @@ export function PluginsPanel({
 }
 
 function PluginRow({
+  t,
   id,
   name,
   line,
   manifest,
+  official,
   off = false,
   icon,
   end,
   onOpen,
   picked = false,
 }: {
+  t: Strings;
   id: string;
   name: string;
   line: string;
   manifest: PluginManifest | null;
+  official: boolean;
   off?: boolean;
   icon: ReactNode;
   /** Its button: install, or update. */
@@ -270,9 +279,9 @@ function PluginRow({
       {/* Its author and its button on a line of their own, under the text:
           the name and what it does keep the row's width, a long label
           (Installieren) cutting neither. */}
-      {(by || end) && (
+      {(by || official || end) && (
         <div className="plugins-panel-foot">
-          <span className="plugins-panel-by">{by}</span>
+          <Byline t={t} official={official} author={by} />
           {end && <span className="plugins-panel-end">{end}</span>}
         </div>
       )}
