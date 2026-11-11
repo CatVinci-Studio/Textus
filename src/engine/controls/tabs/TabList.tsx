@@ -50,9 +50,10 @@ export function useTabFit(
         sameRoom(was, next) || sameFit(was, next) ? was : next,
       );
     };
-    read();
-    // Before the frame is drawn: the tabs never show a width the row has
-    // already left. (A row is laid out at the width it slides to.)
+    // First as the observer starts, then as the row resizes: after layout
+    // and before the frame is drawn, so the tabs never show a width the
+    // row has already left, and nothing lays the page out early to read it.
+    // (A row is laid out at the width it slides to.)
     const resized = new ResizeObserver(() => flushSync(() => read()));
     resized.observe(el);
     // The interface's size, font or theme: the row may keep its width.
