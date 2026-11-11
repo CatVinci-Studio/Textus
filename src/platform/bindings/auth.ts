@@ -8,17 +8,9 @@ import { invoke as __TAURI_INVOKE, Channel } from "@tauri-apps/api/core";
 
 /** Commands */
 export const commands = {
-	/**
-	 *  Runs the Codex (ChatGPT Plus/Pro) OAuth login and stores the credential in
-	 *  the app config dir (0600). Uses the Codex CLI's own OAuth client id.
-	 */
 	codex_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus>("codex_login", { onUrl }),
 	codex_auth_status: () => __TAURI_INVOKE<AuthStatus>("codex_auth_status"),
 	codex_logout: () => __TAURI_INVOKE<null>("codex_logout"),
-	/**
-	 *  Runs the Claude (Anthropic Pro/Max) OAuth login against Anthropic's own
-	 *  OAuth client.
-	 */
 	claude_login: (onUrl: Channel<string>) => __TAURI_INVOKE<AuthStatus>("claude_login", { onUrl }),
 	claude_auth_status: () => __TAURI_INVOKE<AuthStatus>("claude_auth_status"),
 	claude_logout: () => __TAURI_INVOKE<null>("claude_logout"),
