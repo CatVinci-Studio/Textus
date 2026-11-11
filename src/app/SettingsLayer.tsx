@@ -32,10 +32,13 @@ const SettingsTab = lazyComponent(
   (m) => m.SettingsTab,
 );
 
-// Create - the AI making a theme, plugin or skill - loads on first open.
-const CreateTab = lazyComponent(
-  lazyModule("create-tab", () => import("../settings/pages/CreateTab")),
-  (m) => m.CreateTab,
+// Create - the AI making a theme, plugin or skill - loads once the window
+// is idle, so opening it doesn't wait.
+const CreateChat = lazyComponent(
+  lazyModule("create-chat", () => import("../settings/pages/CreateChat"), {
+    warm: true,
+  }),
+  (m) => m.CreateChat,
 );
 
 /** The Create tab's page: its conversation, filling the tab. */
@@ -43,7 +46,7 @@ export function CreateTabPage({ t }: { t: Strings }) {
   return (
     <Suspense fallback={null}>
       <div className="create-tab">
-        <CreateTab t={t} />
+        <CreateChat t={t} />
       </div>
     </Suspense>
   );

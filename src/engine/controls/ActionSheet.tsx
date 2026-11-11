@@ -2,7 +2,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { Sheet } from "./Sheet";
 import "./ActionSheet.css";
 
-export interface ActionSheetItem {
+interface ActionSheetItem {
   label: string;
   onSelect: () => void;
   danger?: boolean;
