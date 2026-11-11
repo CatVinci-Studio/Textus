@@ -1680,6 +1680,13 @@ br:is(.pending-delete, .pending-sentence-hot) {
   position: relative;
 }
 
+/* A table sized by its content keeps each column a few words wide: in
+   a narrow column it scrolls sideways rather than setting a name one
+   character a line. A column the user sized keeps that width. */
+.milkdown table:not([data-sized]) :is(th, td) {
+  min-width: 6em;
+}
+
 /* prosemirror-tables' column-resize handle. */
 .milkdown .column-resize-handle {
   position: absolute;
