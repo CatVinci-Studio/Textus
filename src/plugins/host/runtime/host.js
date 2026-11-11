@@ -7,7 +7,7 @@
 //
 // Plain JavaScript, put into the frame as is: no imports, nothing of the
 // app's build.
-/* global createEndpoint, __textusText */
+/* global createEndpoint, localized, __textusText */
 (function () {
   "use strict";
   var API_VERSION = "1.5";
@@ -133,28 +133,8 @@
     return value === undefined || value === null ? "" : String(value);
   }
 
-  // A string of the plugin's manifest (`l10n`) in the UI's language: its
-  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
-  // any language that has it, then the key. "{0}", "{1}"... are the
-  // arguments after it.
-  function localized(l10n, language, key, args) {
-    var base = String(language).split("-")[0];
-    var value =
-      (l10n[language] && l10n[language][key]) ||
-      (l10n[base] && l10n[base][key]) ||
-      (l10n.en && l10n.en[key]) ||
-      anyLanguage(l10n, key) ||
-      key;
-    return value.replace(/\{(\d+)\}/g, function (all, n) {
-      return args[n] === undefined ? all : String(args[n]);
-    });
-  }
-
-  function anyLanguage(l10n, key) {
-    for (var language in l10n)
-      if (l10n[language] && l10n[language][key]) return l10n[language][key];
-    return undefined;
-  }
+  // localized(l10n, language, key, args): the frame is given it
+  // (plugin-string.ts).
 
   // ---------------------------------------------------------------
   // Webviews and the files and blocks they show

@@ -24,10 +24,10 @@ export function headingLabels(t: Strings): Record<HeadingAction, string> {
 
 /** A menu item's name as an action's: without the "…" of one that asks
  *  for more. The shortcuts use the menu's names, so the two never differ. */
-export const plain = (label: string) => label.replace(/…$/, "");
+const plain = (label: string) => label.replace(/…$/, "");
 
-/** Every action's name, for a conflict's message. */
-function actionLabels(t: Strings): Record<ShortcutAction, string> {
+/** Every action's name: its row in Settings, a conflict's message. */
+export function actionLabels(t: Strings): Record<ShortcutAction, string> {
   return {
     triggerCompletion: t.shortcutTriggerCompletion,
     triggerGrammarCheck: t.shortcutTriggerGrammarCheck,

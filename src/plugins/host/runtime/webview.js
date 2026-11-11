@@ -4,7 +4,7 @@
 // plugin's host only, through the window - as a VS Code webview does.
 //
 // Plain JavaScript, put into the frame as is.
-/* global createEndpoint */
+/* global createEndpoint, localized */
 (function () {
   "use strict";
   var app = null;
@@ -233,28 +233,8 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
   }
 
-  // A string of the plugin's manifest (`l10n`) in the UI's language: its
-  // own, then its base language's ("zh-Hant" -> "zh"), then English, then
-  // any language that has it, then the key. "{0}", "{1}"... are the
-  // arguments after it.
-  function localized(l10n, language, key, args) {
-    var base = String(language).split("-")[0];
-    var text =
-      (l10n[language] && l10n[language][key]) ||
-      (l10n[base] && l10n[base][key]) ||
-      (l10n.en && l10n.en[key]) ||
-      anyLanguage(l10n, key) ||
-      key;
-    return text.replace(/\{(\d+)\}/g, function (all, n) {
-      return args[n] === undefined ? all : String(args[n]);
-    });
-  }
-
-  function anyLanguage(l10n, key) {
-    for (var language in l10n)
-      if (l10n[language] && l10n[language][key]) return l10n[language][key];
-    return undefined;
-  }
+  // localized(l10n, language, key, args): the frame is given it
+  // (plugin-string.ts).
 
   // The language and the plugin's strings, written into the page ahead of
   // this script (frames.ts), so the page's own scripts have them at once.

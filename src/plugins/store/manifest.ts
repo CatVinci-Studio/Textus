@@ -1,3 +1,4 @@
+import { pluginString } from "../host/plugin-string";
 import PERMISSIONS from "./permissions.json";
 /**
  * A plugin's manifest, `textus-plugin.json`, read and checked before any of
@@ -400,22 +401,15 @@ export function parseManifest(raw: string | unknown): PluginManifest {
   };
 }
 
-/** `%key%` looked up for `lang` (its own, then its base language's, then
- *  English, then any language that has it); anything else as written. */
+/** `%key%` looked up for `lang` (pluginString's order); anything else as
+ *  written. */
 export function localize(
   manifest: Pick<PluginManifest, "l10n">,
   value: string,
   lang: string,
 ): string {
   const key = /^%([^%]+)%$/.exec(value)?.[1];
-  if (!key) return value;
-  return (
-    manifest.l10n[lang]?.[key] ??
-    manifest.l10n[lang.split("-")[0]]?.[key] ??
-    manifest.l10n.en?.[key] ??
-    Object.values(manifest.l10n).find((table) => key in table)?.[key] ??
-    key
-  );
+  return key ? pluginString(manifest.l10n, lang, key) : value;
 }
 
 function versionParts(version: string): [number, number, number, string] {

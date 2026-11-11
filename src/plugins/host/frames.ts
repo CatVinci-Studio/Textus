@@ -1,3 +1,4 @@
+import { pluginString } from "./plugin-string";
 import webviewRuntime from "./runtime/webview.js?raw";
 import componentsCss from "../../engine/controls/components.css?inline";
 import controlsCss from "../../engine/controls/controls.css?inline";
@@ -23,7 +24,7 @@ import { createEndpoint, type Endpoint, type Handlers } from "./rpc";
  */
 
 /** The RPC endpoint as source, for the frames' runtimes. */
-export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};`;
+export const RPC_SOURCE = `var createEndpoint = ${createEndpoint.toString()};\nvar localized = ${pluginString.toString()};`;
 
 /** Text inside a `<script>`/`<style>` element can't hold its end tag; a
  *  script can't hold "<!--" and "<script" either, which take the HTML
