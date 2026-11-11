@@ -77,13 +77,18 @@ describe("the remembered sidebar width", () => {
     expect(result.current.width).toBe(460);
   });
 
-  it("remembers a drag only once it lets go", () => {
+  it("while held, moves only the shell's column; remembers where it lets go", () => {
+    const shell = document.body.appendChild(document.createElement("div"));
+    shell.className = "app-shell";
     const { result } = renderHook(() => useSidebarWidth(1200));
     act(() => result.current.setWidth(300, false));
-    expect(result.current.width).toBe(300);
+    expect(shell.style.getPropertyValue("--sidebar-width")).toMatch(/px$/);
+    expect(result.current.width).toBe(240);
     expect(localStorage.getItem(KEY)).toBeNull();
     act(() => result.current.setWidth(310, true));
+    expect(result.current.width).toBe(310);
     expect(localStorage.getItem(KEY)).toBe("310");
+    shell.remove();
   });
 
   it("stores the clamped width", () => {

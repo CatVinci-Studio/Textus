@@ -265,8 +265,7 @@ describe("autosaveTab", () => {
     const result = setup(doc);
     await act(async () => {
       expect(await result.current.saveTab("a")).toBe(true);
-      const { tabsRef } = result.current.tabState;
-      tabsRef.current = [{ ...tabsRef.current[0], content: "more" }];
+      result.current.tabState.updateTab("a", { content: "more" });
       expect(await result.current.autosaveTab("a")).toBe("saved");
     });
     expect(showConfirm).not.toHaveBeenCalled();

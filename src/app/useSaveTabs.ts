@@ -72,7 +72,7 @@ export function useSaveTabs(opts: {
 }) {
   const { tabState, t, autoSuggestFilename, imageFolder, aiTitleFor } = opts;
   const folder = opts.folder ?? null;
-  const { liveTabs, updateTab, tabsRef } = tabState;
+  const { liveTabs, updateTab } = tabState;
 
   // Writes a document, or says why it couldn't and resolves false; the tab
   // stays dirty, so nothing is lost. A tracked document's file gets its
@@ -150,9 +150,6 @@ export function useSaveTabs(opts: {
           ? { content, reloadKey: tab.reloadKey + 1 }
           : {}),
       };
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tab.id ? { ...tb, ...patch } : tb,
-      );
       updateTab(tab.id, patch);
       // Its past conversations follow it to the new name.
       if (tab.path) moveConversations(tab.path, picked);
@@ -164,7 +161,7 @@ export function useSaveTabs(opts: {
       if (!auto) emitPluginEvent("activity", { kind: "saved" });
       return true;
     },
-    [updateTab, liveTabs, tabsRef, t, imageFolder, writeOrReport],
+    [updateTab, liveTabs, t, imageFolder, writeOrReport],
   );
 
   const suggestedName = useCallback(
@@ -214,14 +211,11 @@ export function useSaveTabs(opts: {
     [liveTabs, t, suggestedName, adoptFile, folder],
   );
 
-  // tabsRef is patched as well as the state, so a save right behind this one
-  // compares against this write's mtime and doesn't see it as external.
+  // Into the model at once, so a save right behind this one compares
+  // against this write's mtime and doesn't see it as external.
   const commitSaved = useCallback(
     async (tabId: string, path: string, content: string, auto: boolean) => {
       const patch = { savedContent: content, diskMtime: await statMtime(path) };
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tabId && tb.path === path ? { ...tb, ...patch } : tb,
-      );
       updateTab(tabId, patch);
       // Plugins listening for saves (version history) are told.
       emitPluginEvent("didSave", {
@@ -231,7 +225,7 @@ export function useSaveTabs(opts: {
       });
       if (!auto) emitPluginEvent("activity", { kind: "saved" });
     },
-    [tabsRef, updateTab],
+    [updateTab],
   );
 
   // "conflict": the file changed on disk and the user didn't overwrite it
@@ -370,15 +364,12 @@ export function useSaveTabs(opts: {
         return;
       }
       autoNamed.current.set(tabId, moved);
-      tabsRef.current = tabsRef.current.map((tb) =>
-        tb.id === tabId ? { ...tb, path: moved } : tb,
-      );
       updateTab(tabId, { path: moved });
       moveConversations(from, moved);
       void notePathMoved(from, moved);
       void session.addRecentFile(moved);
     },
-    [liveTabs, tabsRef, updateTab, suggestedName],
+    [liveTabs, updateTab, suggestedName],
   );
 
   /** Autosave: File > Save for a changed document that has a file, never a

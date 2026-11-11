@@ -1,9 +1,7 @@
 import {
   useCallback,
-  useRef,
   useSyncExternalStore,
   type Dispatch,
-  type MutableRefObject,
   type SetStateAction,
 } from "react";
 import { flushEditor } from "../../editor/editor-flush";
@@ -28,9 +26,11 @@ export interface TabState {
   setTabs: Dispatch<SetStateAction<DocTab[]>>;
   activeTabId: string;
   setActiveTabId: Dispatch<SetStateAction<string>>;
-  /** Mirrors `tabs` synchronously. */
-  tabsRef: MutableRefObject<DocTab[]>;
-  /** tabsRef with every editor's still-debounced edit pulled in. */
+  /** The window's tabs now, read from its model: for callbacks that must
+   *  not wait for a render. */
+  tabsRef: { readonly current: DocTab[] };
+  /** The tabs with every editor's still-debounced edit pulled into the
+   *  model first. */
   liveTabs: () => DocTab[];
   updateTab: (id: string, patch: Partial<DocTab>) => void;
   reorderTab: (id: string, index: number) => void;
@@ -61,26 +61,33 @@ const setActiveTabId: Dispatch<SetStateAction<string>> = (next) =>
  * list operations on them: views of the window's model (engine/layout/
  * store.ts), which keeps them and its islands as one.
  */
+/** The model's tabs, as a ref's `current`. */
+const tabsRef = {
+  get current() {
+    return allTabs();
+  },
+};
+
 export function useTabState(): TabState {
   const tabs = useSyncExternalStore(subscribeSplit, allTabs);
   const activeTabId = useSyncExternalStore(subscribeSplit, tabInUse);
 
-  // Lets callbacks read the latest state without re-creating on every
-  // keystroke.
-  const tabsRef = useRef(tabs);
-  tabsRef.current = tabs;
-
   // Anything that writes, hands off, reloads or judges dirtiness reads
-  // through this. Patches the ref in place: the flush's onChange only lands
-  // in `tabs` on the next render.
+  // through this: each editor's text not yet reported goes into the model.
   const liveTabs = useCallback((): DocTab[] => {
-    tabsRef.current = tabsRef.current.map((tab) => {
+    const flushed = new Map<string, string>();
+    for (const tab of allTabs()) {
       const content = flushEditor(tab.id);
-      return content === null || content === tab.content
-        ? tab
-        : { ...tab, content };
-    });
-    return tabsRef.current;
+      if (content !== null && content !== tab.content)
+        flushed.set(tab.id, content);
+    }
+    if (flushed.size)
+      setTabs((prev) =>
+        prev.map((tab) =>
+          flushed.has(tab.id) ? { ...tab, content: flushed.get(tab.id)! } : tab,
+        ),
+      );
+    return allTabs();
   }, []);
 
   const updateTab = useCallback((id: string, patch: Partial<DocTab>) => {
