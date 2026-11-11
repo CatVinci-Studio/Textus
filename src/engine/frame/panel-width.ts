@@ -29,9 +29,14 @@ export function setPanelWidth(next: number, persist = true): void {
   for (const listener of listeners) listener();
 }
 
-export function usePanelWidth(): number {
-  return useSyncExternalStore((listener) => {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  }, panelWidth);
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+const unwatched = () => () => {};
+
+/** The width, kept current; `live` false reads it without drawing again
+ *  as a drag moves it. */
+export function usePanelWidth(live = true): number {
+  return useSyncExternalStore(live ? subscribe : unwatched, panelWidth);
 }

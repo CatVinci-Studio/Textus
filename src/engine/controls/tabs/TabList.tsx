@@ -1,5 +1,5 @@
 import { onAppearance } from "../../tokens/appearance";
-import { useLayoutEffect, useState, type RefObject } from "react";
+import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { useMenuButton } from "../useMenuButton";
 import { ChevronIcon } from "../icons";
@@ -32,6 +32,8 @@ export function useTabFit(
   tabs: readonly TabShape[],
 ): (TabFit & { available: number; between: number }) | null {
   const [room, setRoom] = useState<TabRoom | null>(null);
+  const shapes = useRef(tabs);
+  shapes.current = tabs;
   // What the row's measures are read from: a tab, and each part one has.
   const parts = `${tabs.length > 0}${tabs.some((tab) => tab.dirty)}${tabs.some((tab) => tab.readOnly)}${tabs.some((tab) => tab.waiting)}`;
   useLayoutEffect(() => {
@@ -44,7 +46,9 @@ export function useTabFit(
       const key = `${el.className}|${parts}`;
       const next = readTabRoom(el, PILLS.get(key));
       if (next) PILLS.set(key, next.pill);
-      setRoom((was) => (sameRoom(was, next) ? was : next));
+      setRoom((was) =>
+        sameRoom(was, next) || sameFit(was, next) ? was : next,
+      );
     };
     read();
     // Before the frame is drawn: the tabs never show a width the row has
@@ -68,6 +72,16 @@ export function useTabFit(
       el.removeEventListener("scroll", scrolled);
     };
   }, [bar, parts]);
+  /** A row resized (a divider dragged) whose tabs all fit as before at the
+   *  same widths: nothing to draw again. */
+  function sameFit(was: TabRoom | null, next: TabRoom | null): boolean {
+    if (!was || !next || was.between !== next.between) return false;
+    const a = fitTabs(shapes.current, was);
+    const b = fitTabs(shapes.current, next);
+    return (
+      !a.overflow && !b.overflow && JSON.stringify(a) === JSON.stringify(b)
+    );
+  }
   return (
     room && {
       ...fitTabs(tabs, room),

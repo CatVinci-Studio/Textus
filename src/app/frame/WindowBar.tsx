@@ -88,9 +88,6 @@ export function WindowBar({
     agentOpen,
     onToggleAgent,
   );
-  const titleRef = useTitleRoom(
-    !bar.lead.includes("menu-bar") && canUseWindows,
-  );
   return (
     <>
       <header className="window-bar" data-tauri-drag-region>
@@ -141,31 +138,13 @@ export function WindowBar({
               );
           }
         })}
-        {/* The unsaved dot leads the title, as a native edited title does. */}
-        <span className="window-bar-title" ref={titleRef}>
-          {dirty && (
-            <Tooltip text={t.unsavedIndicator}>
-              <span
-                className="unsaved-dot"
-                role="img"
-                aria-label={t.unsavedIndicator}
-              />
-            </Tooltip>
-          )}
-          <span className="window-bar-title-text">{title}</span>
-          {menuChecks.readOnly && (
-            <Tooltip text={t.readOnlyLock}>
-              <button
-                type="button"
-                className="window-bar-lock"
-                aria-label={t.readOnlyLock}
-                onClick={onToggleReadOnly}
-              >
-                <LockIcon />
-              </button>
-            </Tooltip>
-          )}
-        </span>
+        <WindowTitle
+          placed={!bar.lead.includes("menu-bar") && canUseWindows}
+          title={title}
+          dirty={dirty}
+          readOnly={!!menuChecks.readOnly}
+          onToggleReadOnly={onToggleReadOnly}
+        />
         <div className="window-bar-status">
           {hasStatus && (
             <Suspense fallback={null}>
@@ -209,5 +188,51 @@ export function WindowBar({
         <WindowCaptionButtons />
       </header>
     </>
+  );
+}
+
+/** The document's name over its island, followed as the islands move
+ *  (useTitleRoom): drawn on its own, so a divider dragged redraws only it. */
+function WindowTitle({
+  placed,
+  title,
+  dirty,
+  readOnly,
+  onToggleReadOnly,
+}: {
+  placed: boolean;
+  title: string;
+  dirty: boolean;
+  readOnly: boolean;
+  onToggleReadOnly: () => void;
+}) {
+  const { t } = useSettings();
+  const titleRef = useTitleRoom(placed);
+  // The unsaved dot leads the title, as a native edited title does.
+  return (
+    <span className="window-bar-title" ref={titleRef}>
+      {dirty && (
+        <Tooltip text={t.unsavedIndicator}>
+          <span
+            className="unsaved-dot"
+            role="img"
+            aria-label={t.unsavedIndicator}
+          />
+        </Tooltip>
+      )}
+      <span className="window-bar-title-text">{title}</span>
+      {readOnly && (
+        <Tooltip text={t.readOnlyLock}>
+          <button
+            type="button"
+            className="window-bar-lock"
+            aria-label={t.readOnlyLock}
+            onClick={onToggleReadOnly}
+          >
+            <LockIcon />
+          </button>
+        </Tooltip>
+      )}
+    </span>
   );
 }

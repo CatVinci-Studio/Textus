@@ -1,3 +1,4 @@
+import { isIOSApp } from "../../../platform/capabilities";
 import {
   setPanelWidth,
   usePanelWidth,
@@ -71,7 +72,9 @@ export function useAgentPanelOpen(): boolean {
  *  (side-panel-width): `beside` is the open sidebar's width. */
 export function useAgentPanelState(windowWidth: number, beside: number) {
   const open = useAgentPanelOpen();
-  const chosen = usePanelWidth();
+  // Only an iPad's or iPhone's docked panel is drawn at it; on the desktop
+  // the AI is an island, which the islands' area sizes itself.
+  const chosen = usePanelWidth(isIOSApp);
   // Kept in the interface's size units, shown at its size now.
   const scale = chromeScale();
   const width = clampSidePanel(
