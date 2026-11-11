@@ -1,6 +1,6 @@
+import { openDocument, type OpenRequest } from "../../utils/open-document";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { fs } from "../../platform/ipc";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { noteJump } from "../nav-history";
 import { basename, dirname, isNoteFile } from "../../utils/path";
 import { parseNoteLink, type NoteLink } from "../../utils/note-link";
@@ -13,10 +13,8 @@ function linkAnchor(link: NoteLink): string | undefined {
   return link.headings.join("#") || undefined;
 }
 
-function open(detail: OpenFileInTab): void {
-  window.dispatchEvent(
-    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, { detail }),
-  );
+function open({ path, ...request }: { path: string } & OpenRequest): void {
+  openDocument(path, request);
 }
 
 /** The most folders a followed link makes on its way to a new note. */

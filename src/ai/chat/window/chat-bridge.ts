@@ -1,3 +1,4 @@
+import type { OpenRequest } from "../../../utils/open-document";
 import { CHAT_WINDOWS_CHANGED } from "../../../platform/bindings/app";
 import type { DocumentSnapshot } from "../../../editor/markdown/doc-markdown";
 import { emitToWindow } from "../../../platform/events";
@@ -118,7 +119,8 @@ export interface ReembedMessage {
   docPath: string | null;
 }
 
-export interface OpenDocumentMessage {
+/** A file the detached chat asks its editor's window to open, as asked. */
+export interface OpenDocumentMessage extends OpenRequest {
   path: string;
 }
 

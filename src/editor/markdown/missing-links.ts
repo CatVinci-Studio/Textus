@@ -1,3 +1,4 @@
+import { onDocumentOpened } from "../../utils/open-document";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import {
   Decoration,
@@ -8,7 +9,7 @@ import { $prose } from "@milkdown/kit/utils";
 import { fs } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import { windowFolder } from "../../platform/window-folder";
-import { FILE_WRITTEN_EVENT, OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
+import { FILE_WRITTEN_EVENT } from "../../utils/events";
 import { parseNoteLink } from "../../utils/note-link";
 import { metaDecorations } from "../meta-decorations";
 
@@ -86,8 +87,9 @@ export function createMissingLinksPlugin(docPath: () => string | null) {
             check();
           };
           // A click on a missing link makes its note, then opens it.
-          const events = [FILE_WRITTEN_EVENT, OPEN_FILE_IN_TAB_EVENT, "focus"];
+          const events = [FILE_WRITTEN_EVENT, "focus"];
           events.forEach((name) => window.addEventListener(name, again));
+          const stopOpened = onDocumentOpened(again);
           check();
           return {
             update(next, prev) {
@@ -96,6 +98,7 @@ export function createMissingLinksPlugin(docPath: () => string | null) {
             destroy() {
               if (timer) clearTimeout(timer);
               events.forEach((name) => window.removeEventListener(name, again));
+              stopOpened();
             },
           };
         },

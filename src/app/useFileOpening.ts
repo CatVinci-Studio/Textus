@@ -1,16 +1,10 @@
 import { fill } from "../i18n/fill";
-import { useFilesFromChat } from "../ai/chat/window/files-to-editor";
 import { useCallback, useEffect, useRef } from "react";
 import {
   listenToThisWebview,
   listenToThisWindow,
   unlistenAll,
 } from "../platform/events";
-import {
-  CHAT_TO_EDITOR,
-  onWindowEvent,
-  type OpenDocumentMessage,
-} from "../ai/chat/window/chat-bridge";
 import {
   makeBlankTab,
   readDocFromDisk,
@@ -19,12 +13,9 @@ import {
   type DocTab,
 } from "../document/doc-tabs";
 import { exportDoc, fs, session, windowIpc } from "../platform/ipc";
-import { useWindowEvent } from "../utils/hooks/useWindowEvent";
-import {
-  DROP_IMAGE_FILES_EVENT,
-  OPEN_FILE_IN_TAB_EVENT,
-  type OpenFileInTab,
-} from "../utils/events";
+import { DROP_IMAGE_FILES_EVENT } from "../utils/events";
+import { openDocument } from "../utils/open-document";
+import { useDocumentOpener } from "./useDocumentOpener";
 import { setTabJump, type TabJump } from "../editor/tab-jump";
 import { lastCaret } from "../document/last-places";
 import { lastViewMode } from "../editor/modes/view-mode";
@@ -32,7 +23,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
 import { isWordDocument, wordDocumentTab } from "../document/word-import";
-import { showConfirm, showMessage } from "../engine/controls/app-dialog";
+import { showMessage } from "../engine/controls/app-dialog";
 import { loadPlugins, revealInPluginTab } from "../plugins/manager";
 import type { DocumentPlace } from "../plugins/app-bridge";
 import type { Where } from "../plugins/app-bridge";
@@ -229,8 +220,7 @@ export function useFileOpening(opts: {
           if (arriving)
             placeOnArrival(id, (now) => besideLayout(now, id, from) ?? now);
           else openBeside(id, from);
-        } else if (drop)
-          splitForDrop(id, drop, arriving);
+        } else if (drop) splitForDrop(id, drop, arriving);
       };
       const existing = tabsRef.current.find(
         (tab) =>
@@ -340,51 +330,8 @@ export function useFileOpening(opts: {
     [activeTabId, openPathInTab, replaceTabWithFile, liveTabs, setActiveTabId],
   );
 
-  // Project-bar entries and followed links always open in a new tab, never
-  // replacing the document being written.
-  useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) => {
-    const detail = (e as CustomEvent<string | OpenFileInTab>).detail;
-    const { path, anchor, linked } =
-      typeof detail === "string" ? { path: detail } : detail;
-    if (typeof path !== "string" || !path) return;
-    if (linked) void openLinkedFile(path);
-    else void openPathInTab(path, { anchor });
-  });
-
-  // A linked file: in a tab when Textus shows it, or when an official plugin
-  // would and the user installs it; else, once the user agrees, in the
-  // system's app (a document's link shouldn't open things unseen; a program
-  // is only shown in its folder, which the backend decides).
-  const openLinkedFile = async (path: string) => {
-    await loadPlugins().catch(() => {});
-    if (isWordDocument(path) || customEditorFor(path)) {
-      await openPathInTab(path);
-      return;
-    }
-    const { offerPluginToOpen } = await import("../plugins/store/open-offer");
-    const offered = await offerPluginToOpen(path, t);
-    if (offered === "on") await openPathInTab(path);
-    // The card's "Open with system app" was the user's say-so.
-    if (offered === "system") await exportDoc.openLinkedFile(path);
-    if (offered !== "none") return;
-    const open = await showConfirm(
-      fill(t.linkOpenFileConfirm, { name: basename(path) }),
-      { okLabel: t.linkOpenFileOk, cancelLabel: t.cancel },
-    );
-    if (open) await exportDoc.openLinkedFile(path);
-  };
-  useFilesFromChat();
-  // The detached chat window reopened a past conversation.
-  useEffect(
-    () =>
-      unlistenAll(
-        onWindowEvent<OpenDocumentMessage>(
-          CHAT_TO_EDITOR.openDocument,
-          ({ path }) => void openPathInTab(path),
-        ),
-      ),
-    [openPathInTab],
-  );
+  // Links, cards, projects and the detached chat: each in a tab of its own.
+  useDocumentOpener(openPathInTab, t);
 
   const openFileDialog = useCallback(async () => {
     const picked = await fs.openFileDialog(dialogFilters);
@@ -423,8 +370,7 @@ export function useOpenPathsPush(
       "open-paths-as-tabs",
       async (event) => {
         // Open Recent from a non-empty window arrives this way too.
-        for (const p of event.payload)
-          await openPathInTab(p, { restoreCaret: true });
+        for (const p of event.payload) openDocument(p, { restoreCaret: true });
       },
     );
     return unlistenAll(unlisten);

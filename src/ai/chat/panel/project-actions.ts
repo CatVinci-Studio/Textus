@@ -1,3 +1,4 @@
+import { openDocument } from "../../../utils/open-document";
 import { explainError } from "../../../utils/error-explain";
 import { fill } from "../../../i18n/fill";
 import { useState } from "react";
@@ -6,15 +7,10 @@ import type { LibraryEntry, Memory, MemoryScope } from "../../../platform/ipc";
 import { useSettings } from "../../../prefs/SettingsContext";
 import { useActiveProvider } from "../../provider-catalog";
 import { errorText } from "../../../utils/error-text";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../../utils/events";
 import { showConfirm } from "../../../engine/controls/app-dialog";
 import { libraryEntryId } from "./memory-text";
 
-function openInTab(path: string) {
-  window.dispatchEvent(
-    new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
-  );
-}
+const openInTab = (path: string) => openDocument(path);
 
 /** A library entry's file name: the name as typed, minus characters no
  *  file system accepts. Kept readable (CJK and all) - it is what the user

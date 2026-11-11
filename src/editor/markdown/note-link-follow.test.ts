@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
+import { setDocumentOpener, type OpenRequest } from "../../utils/open-document";
 
 const fs = vi.hoisted(() => ({
   resolveNoteLink: vi.fn(),
@@ -14,19 +14,20 @@ vi.mock("../../platform/ipc", () => ({ fs }));
 const { followNoteLink } = await import("./note-link-follow");
 
 const view = {} as EditorView;
-let opened: OpenFileInTab[] = [];
-const onOpen = (e: Event) =>
-  opened.push((e as CustomEvent<OpenFileInTab>).detail);
+let opened: ({ path: string } & OpenRequest)[] = [];
+let stopOpening = () => {};
 
 beforeEach(() => {
   opened = [];
-  window.addEventListener(OPEN_FILE_IN_TAB_EVENT, onOpen);
+  stopOpening = setDocumentOpener((path, request) =>
+    opened.push({ path, ...request }),
+  );
   fs.fileMtimeMs.mockResolvedValue(1);
   fs.createDocument.mockResolvedValue("ok");
   fs.createFolder.mockResolvedValue("ok");
 });
 afterEach(() => {
-  window.removeEventListener(OPEN_FILE_IN_TAB_EVENT, onOpen);
+  stopOpening();
   vi.clearAllMocks();
 });
 

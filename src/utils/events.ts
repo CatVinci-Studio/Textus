@@ -90,18 +90,6 @@ export function sendTourSignal(signal: TourSignal): void {
   );
 }
 
-/** Open a file in a new tab. detail: the absolute path, or an OpenFileInTab. */
-export const OPEN_FILE_IN_TAB_EVENT = "textus:open-file-in-tab";
-
-/** A link into a file: the heading it names is scrolled to once it's on screen. */
-export interface OpenFileInTab {
-  path: string;
-  anchor?: string;
-  /** A link to a file of any type: one Textus can't show is offered to the
-   *  system's app for it instead, after asking. */
-  linked?: boolean;
-}
-
 /** Zen mode turned on/off (detail: boolean). */
 export const ZEN_MODE_EVENT = "textus:zen-mode";
 

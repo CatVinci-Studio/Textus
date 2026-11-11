@@ -35,12 +35,13 @@ const keep = (page: Page, file: string, before: string, after: string) =>
     pictures: [],
   });
 
+// As a click on a link to it opens it (open-document.ts's dev hook).
 const open = (page: Page, file: string) =>
   page.evaluate(
     (file) =>
-      window.dispatchEvent(
-        new CustomEvent("textus:open-file-in-tab", { detail: file }),
-      ),
+      (
+        window as unknown as { __devOpenDocument: (path: string) => void }
+      ).__devOpenDocument(file),
     file,
   );
 

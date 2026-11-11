@@ -1,3 +1,4 @@
+import { openDocument } from "../../utils/open-document";
 import { Plugin } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -5,7 +6,6 @@ import { fs, links } from "../../platform/ipc";
 import { isScopedUrl } from "../../platform/ios-files";
 import { editorExtensions } from "../extension-points";
 import { modIsMeta } from "../../platform/os";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import { revealHeading } from "./heading-jump";
 import { noteJump } from "../nav-history";
 import { linkHrefAt } from "./link-reveal";
@@ -59,13 +59,9 @@ async function follow(
   // A Markdown file opens in a tab; another kind in a tab too when Textus
   // shows it (a Word file, a plugin's PDF), else the app asks to open it
   // outside.
-  window.dispatchEvent(
-    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
-      detail:
-        target.kind === "document"
-          ? { path: target.path, anchor: target.anchor }
-          : { path: target.path, linked: true },
-    }),
+  openDocument(
+    target.path,
+    target.kind === "document" ? { anchor: target.anchor } : { linked: true },
   );
 }
 

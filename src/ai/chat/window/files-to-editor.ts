@@ -1,7 +1,6 @@
 import { useEffect, type RefObject } from "react";
 import { unlistenAll } from "../../../platform/events";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../../utils/events";
-import { useWindowEvent } from "../../../utils/hooks/useWindowEvent";
+import { setDocumentOpener } from "../../../utils/open-document";
 import { filesChanged, relayFileChanges } from "../file-changes";
 import { revisionsArrived } from "../../revision/file-revisions";
 import {
@@ -27,10 +26,14 @@ export function useFilesToEditor(editorLabel: RefObject<string | null>): void {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [editorLabel],
   );
-  useWindowEvent(OPEN_FILE_IN_TAB_EVENT, (e) =>
-    send(CHAT_TO_EDITOR.openDocument, {
-      path: (e as CustomEvent<string>).detail,
-    }),
+  // The files asked for here open in the editor's window, as asked.
+  useEffect(
+    () =>
+      setDocumentOpener((path, request) =>
+        send(CHAT_TO_EDITOR.openDocument, { path, ...request }),
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editorLabel],
   );
 }
 

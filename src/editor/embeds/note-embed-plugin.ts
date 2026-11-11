@@ -1,3 +1,4 @@
+import { openDocument } from "../../utils/open-document";
 import { foldButtonKey, showBlockFold } from "../fold/block-fold";
 import { onMemoryIdle } from "../../utils/memory-idle";
 import { slashed } from "../../utils/path";
@@ -7,7 +8,6 @@ import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isScopedUrl } from "../../platform/ios-files";
 import { windowFolder } from "../../platform/window-folder";
-import { OPEN_FILE_IN_TAB_EVENT, type OpenFileInTab } from "../../utils/events";
 import {
   embedDepthOf,
   embedKey,
@@ -57,11 +57,7 @@ function openSource(el: HTMLElement): void {
   const path = el.closest<HTMLElement>(".note-embed")?.dataset.path;
   if (!path) return;
   const anchor = el.closest<HTMLElement>(".note-embed")?.dataset.anchor;
-  window.dispatchEvent(
-    new CustomEvent<OpenFileInTab>(OPEN_FILE_IN_TAB_EVENT, {
-      detail: { path, ...(anchor ? { anchor } : {}) },
-    }),
-  );
+  openDocument(path, anchor ? { anchor } : {});
 }
 
 function embedWidget(state: EmbedView, source: string, docPath: string) {

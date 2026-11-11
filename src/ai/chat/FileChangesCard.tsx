@@ -1,6 +1,6 @@
+import { openDocument } from "../../utils/open-document";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ai } from "../../platform/ipc";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import type { FileChange_Serialize as FileChange } from "../../platform/bindings/ai-project";
 import { filesChanged, type FileChangeCall } from "./file-changes";
 import {
@@ -117,11 +117,7 @@ export function FileChangesCard({
               type="button"
               className="agent-file-changes-path"
               disabled={!c.applied && c.before === null}
-              onClick={() =>
-                window.dispatchEvent(
-                  new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: c.file }),
-                )
-              }
+              onClick={() => openDocument(c.file)}
             >
               {c.path}
             </button>

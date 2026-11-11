@@ -82,9 +82,9 @@ test("everyday operations on a weak machine", async ({ page }) => {
     const t0 = Date.now();
     await page.evaluate(
       (p) =>
-        window.dispatchEvent(
-          new CustomEvent("textus:open-file-in-tab", { detail: { path: p } }),
-        ),
+        (
+          window as unknown as { __devOpenDocument: (path: string) => void }
+        ).__devOpenDocument(p),
       path,
     );
     await page.waitForFunction(

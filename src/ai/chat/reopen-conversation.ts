@@ -1,3 +1,4 @@
+import { openDocument } from "../../utils/open-document";
 import { fill } from "../../i18n/fill";
 import {
   deleteConversation,
@@ -7,7 +8,6 @@ import {
 import { requestChatRestore, type ChatRestore } from "./chat-restore";
 import { fs } from "../../platform/ipc";
 import { showConfirm } from "../../engine/controls/app-dialog";
-import { OPEN_FILE_IN_TAB_EVENT } from "../../utils/events";
 import { basename } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 
@@ -22,10 +22,7 @@ export interface ReopenTarget {
  *  in a tab of this window. */
 const PANEL_REOPEN: ReopenTarget = {
   restore: requestChatRestore,
-  openDocument: (path) =>
-    window.dispatchEvent(
-      new CustomEvent(OPEN_FILE_IN_TAB_EVENT, { detail: path }),
-    ),
+  openDocument: (path) => openDocument(path),
 };
 
 /**
